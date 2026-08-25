@@ -5,7 +5,7 @@ export function SiteLogo({ className }: { className?: string }) {
     // eslint-disable-next-line @next/next/no-img-element
     <img
       alt="Bury Steps Walking Group"
-      className={cn("h-14 w-auto object-contain object-left", className)}
+      className={cn("h-8 w-auto object-contain object-left", className)}
       src="/bury-steps-logo.png"
     />
   );

@@ -167,7 +167,7 @@ export function HomepageSlideManager({
     <div className="space-y-6">
       {slides.length === 0 ? (
         <p className="rounded-lg border py-8 text-center text-sm text-muted-foreground">
-          No slides yet. Add one below and it will show at the top of the homepage.
+          No slides yet. Add one below and it will show in the homepage hero carousel.
         </p>
       ) : (
         <ul className="space-y-4">

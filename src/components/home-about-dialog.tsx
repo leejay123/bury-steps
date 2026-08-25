@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -103,11 +104,11 @@ function BulletList({ items, columns = false }: { items: string[]; columns?: boo
   );
 }
 
-export function HomeAboutDialog() {
+export function HomeAboutDialog({ trigger }: { trigger?: ReactNode }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline">Read more</Button>
+        {trigger ?? <Button variant="outline">Read more</Button>}
       </DialogTrigger>
       <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
         <DialogHeader className="shrink-0 border-b px-6 py-4 pr-12 text-left">
