@@ -103,7 +103,9 @@ export default async function AdminPage() {
         <CardHeader>
           <CardTitle className="text-base">Create a walk</CardTitle>
           <CardDescription>
-            A share link is generated automatically. Members need an account to clock in.
+            A share link is generated automatically. People must be signed in to clock in. If they
+            do not have an account yet, they create one first. If they already have one, they sign
+            in. The link brings them back to this walk afterwards.
           </CardDescription>
         </CardHeader>
         <CardContent>

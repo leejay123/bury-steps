@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 const isPublic = createRouteMatcher([
   "/",
   "/home",
+  "/w(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/privacy",
@@ -27,9 +28,8 @@ export default clerkMiddleware(
       return NextResponse.redirect(url, 308);
     }
 
-    // Walk links are protected on purpose: you must be a signed-in member to
-    // clock in. Clerk sends unauthenticated visitors to sign-in and returns
-    // them to /w/<token> afterwards.
+    // Walk links can be opened without an account. Clock-in still needs a
+    // signed-in member; the walk page asks guests to join first.
     if (!isPublic(req)) await auth.protect();
   },
   {

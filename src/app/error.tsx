@@ -1,17 +1,35 @@
 "use client";
 
+import { useEffect } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-export default function Error({ reset }: { error: Error; reset: () => void }) {
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
   return (
     <div className="space-y-4 py-12 text-center">
       <h1 className="text-xl font-semibold">Something went wrong loading this page</h1>
       <p className="text-sm text-muted-foreground">
-        Nothing was saved. Try again, and tell an organiser if it keeps happening.
+        Nothing was saved. Try again, or go back to the homepage. Tell an organiser if it keeps
+        happening.
       </p>
-      <Button onClick={reset} variant="outline">
-        Try again
-      </Button>
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <Button onClick={reset} variant="outline">
+          Try again
+        </Button>
+        <Button asChild variant="outline">
+          <Link href="/">Home</Link>
+        </Button>
+      </div>
     </div>
   );
 }

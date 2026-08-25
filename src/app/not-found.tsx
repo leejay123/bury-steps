@@ -9,7 +9,7 @@ export default function NotFound() {
         The walk link may be mistyped, or the walk may have been removed.
       </p>
       <Button asChild variant="outline">
-        <Link href="/dashboard">Go to walks</Link>
+        <Link href="/">Home</Link>
       </Button>
     </div>
   );

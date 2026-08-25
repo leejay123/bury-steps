@@ -249,6 +249,7 @@ async function readSlideImage(
 function revalidateHomepage() {
   revalidatePath("/");
   revalidatePath("/admin/homepage");
+  revalidatePath("/admin/settings");
 }
 
 export async function addHomepageSlide(

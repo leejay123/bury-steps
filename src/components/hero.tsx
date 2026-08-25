@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -57,26 +58,36 @@ export function HeroSection({
   slides,
   signInHref,
   signUpHref,
+  signedIn = false,
+  walksHref = "/dashboard",
 }: {
   slides: SlideView[];
   signInHref: string;
   signUpHref: string;
+  signedIn?: boolean;
+  walksHref?: string;
 }) {
   return (
     <section>
       <HeroCopy title="Bury Steps Walking Group" titleAs="h1"
         actions={
-          <>
-            <Button asChild>
-              <a href={signUpHref}>
-                Join the group
-                <ArrowRightIcon data-icon="inline-end" />
-              </a>
-            </Button>
+          signedIn ? (
             <Button asChild variant="outline">
-              <a href={signInHref}>Sign in</a>
+              <Link href={walksHref}>Your walks</Link>
             </Button>
-          </>
+          ) : (
+            <>
+              <Button asChild>
+                <a href={signUpHref}>
+                  Join the group
+                  <ArrowRightIcon data-icon="inline-end" />
+                </a>
+              </Button>
+              <Button asChild variant="outline">
+                <a href={signInHref}>Sign in</a>
+              </Button>
+            </>
+          )
         }
       >
         <p>

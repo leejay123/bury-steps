@@ -36,13 +36,24 @@ export async function SiteNav() {
         </Button>
       </Show>
       <Show when="signed-in">
-        <Link href="/dashboard" className="text-muted-foreground hover:text-foreground">
+        <Link href="/" className="text-muted-foreground hover:text-foreground">
+          Home
+        </Link>
+        <Link
+          href={isAdmin ? "/admin" : "/dashboard"}
+          className="text-muted-foreground hover:text-foreground"
+        >
           Walks
         </Link>
         {isAdmin ? (
-          <Link href="/admin/members" className="text-muted-foreground hover:text-foreground">
-            Members
-          </Link>
+          <>
+            <Link href="/admin/members" className="text-muted-foreground hover:text-foreground">
+              Members
+            </Link>
+            <Link href="/admin/settings" className="text-muted-foreground hover:text-foreground">
+              Settings
+            </Link>
+          </>
         ) : null}
         <UserButton />
       </Show>
