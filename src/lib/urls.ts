@@ -4,9 +4,8 @@ export const SIGN_UP_PATH = "/sign-up";
 export const AFTER_AUTH_PATH = "/dashboard";
 
 /**
- * Public origin for share links.
- * Localhost in dev; Vercel provides the host in production. Override with
- * NEXT_PUBLIC_APP_URL only if you use a custom domain that Vercel does not know.
+ * Public origin for share links. On Vercel this is your deployment URL.
+ * Override with NEXT_PUBLIC_APP_URL only if you use a custom domain.
  */
 export function appUrl(): string {
   const explicit = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");

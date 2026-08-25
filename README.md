@@ -3,219 +3,172 @@
 A website for a walking group. Members create an account, organisers add walks,
 and people clock in when they arrive.
 
-You do **not** need to be a programmer to follow this. You will click through a
-few websites, copy and paste three secret values, and run a handful of commands.
+You set this up in the browser. You do **not** need Terminal, Node.js, or to
+run anything on your own computer. When you finish, the site is live on the
+internet.
 
-When you are done, the app runs on your computer at [http://localhost:3000](http://localhost:3000).
+You will use three free websites:
 
----
+| Website | What it does for this app | Open this |
+|---|---|---|
+| **Clerk** | The login box (sign up and sign in) | [dashboard.clerk.com](https://dashboard.clerk.com) |
+| **Supabase** | The database (walks, members, clock-ins) | [supabase.com/dashboard](https://supabase.com/dashboard) |
+| **Vercel** | Hosts the website | [vercel.com](https://vercel.com) |
 
-## What you are setting up (in plain English)
-
-The app is already written. You are plugging in two services it needs:
-
-1. **Clerk** — the login box (sign up, sign in, “forgot password”).
-2. **Supabase** — the filing cabinet (who is in the group, which walks exist,
-   who clocked in).
-
-You will copy **three values** into a file called `.env`:
-
-- two keys from Clerk
-- one database address from Supabase
-
-That is the whole setup.
+You will copy **three values** from Clerk and Supabase, paste them into Vercel,
+and press deploy. Keep a notes app or a blank document open so you can paste
+as you go.
 
 ---
 
 ## Before you start
 
-### 1. Install Node.js
+1. Sign up at [GitHub](https://github.com) if you do not have an account.
+   Vercel uses GitHub to get the code.
+2. Sign up at [Clerk](https://dashboard.clerk.com),
+   [Supabase](https://supabase.com/dashboard) and
+   [Vercel](https://vercel.com). Google or GitHub login is fine for all of them.
+3. Open this code on GitHub:
+   [https://github.com/leejay123/bury-steps](https://github.com/leejay123/bury-steps)
 
-Node.js is the program that runs this website on your computer.
-
-1. Open [https://nodejs.org](https://nodejs.org).
-2. Download the **LTS** version (the button that says “Recommended”).
-3. Install it. Click Next until it finishes.
-4. **Quit and reopen** Terminal (Mac) or Command Prompt (Windows).
-
-Check it worked. Type this and press Enter:
-
-```bash
-node -v
-```
-
-You should see something like `v20.11.0` or `v22.4.0`. If you see “command not
-found”, Node is not installed yet — reopen the terminal after installing.
-
-### 2. Create two free accounts
-
-Open these in your browser and sign up (Google or GitHub login is fine):
-
-| Website | What it is for | Link |
-|---|---|---|
-| Clerk | Member login | [https://dashboard.clerk.com](https://dashboard.clerk.com) |
-| Supabase | Database | [https://supabase.com/dashboard](https://supabase.com/dashboard) |
-
-Keep both tabs open. You will come back to them.
+If this is **not** your repository, click **Fork** (top right) so you have your
+own copy. Vercel will deploy your copy.
 
 ---
 
-## Step 1 — Put the project on your computer
+## Step 1 — Clerk (two keys)
 
-Open **Terminal** (Mac: search “Terminal” in Spotlight) or **Command Prompt**
-(Windows).
+This is the login system.
 
-Copy each block below, paste it, press Enter, and wait until it finishes before
-the next one.
-
-```bash
-git clone https://github.com/leejay123/bury-steps.git
-```
-
-That downloads the project.
-
-```bash
-cd bury-steps
-```
-
-That moves you into the project folder. Your prompt should now end with
-`bury-steps`.
-
-```bash
-npm install
-```
-
-That installs the extra pieces the app needs. It can take a minute. Warnings
-in yellow are usually fine. Red errors are not.
-
-```bash
-cp .env.example .env
-```
-
-That makes a private settings file. You will paste your three keys into it
-next. **Never share `.env` or put it on GitHub** — it holds secrets.
-
----
-
-## Step 2 — Get the two Clerk keys
-
-Clerk is the login system.
-
-1. Go to [https://dashboard.clerk.com](https://dashboard.clerk.com).
+1. Open [https://dashboard.clerk.com](https://dashboard.clerk.com).
 2. Click **Create application**.
 3. Name it `Bury Steps`.
 4. Tick **Email**. You can also tick **Google** so people can sign in with a
-   Google account. Then create the application.
-5. On the next screen you should see **API keys**. If not, look in the left
-   sidebar for **API Keys** (sometimes under **Configure**).
+   Google account.
+5. Create the application.
+6. You should now see **API keys**. If not, look in the left sidebar for
+   **API Keys** (sometimes under **Configure**).
 
-You will see two keys:
+Copy these two into your notes:
 
-| Name on the page | Starts with | Paste it next to this line in `.env` |
+| What Clerk calls it | Starts with | You will paste it in Vercel as |
 |---|---|---|
-| Publishable key | `pk_test_` | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=` |
-| Secret key | `sk_test_` | `CLERK_SECRET_KEY=` |
+| Publishable key | `pk_test_` | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` |
+| Secret key | `sk_test_` | `CLERK_SECRET_KEY` |
 
-Open the `.env` file in any text editor (on a Mac you can run `open -e .env`).
-Replace the placeholder text. Keep the quote marks.
-
-It should look like this (your keys will be longer and different):
-
-```
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_abc123..."
-CLERK_SECRET_KEY="sk_test_xyz789..."
-```
-
-Leave the `DATABASE_URL` line for the next step.
+Leave this tab open. After Vercel gives you a web address, you will come back
+and add that address under **Domains**.
 
 ---
 
-## Step 3 — Get the Supabase database address
+## Step 2 — Supabase (one database address)
 
-Supabase is where walks and attendance are stored. We only use it as a
-database. You can ignore anything labelled Auth, Storage, or `anon` key.
+This is where walks and attendance are stored. We only use it as a database.
+You can ignore Auth, Storage, and anything labelled `anon` or `service_role`.
 
-1. Go to [https://supabase.com/dashboard](https://supabase.com/dashboard).
+1. Open [https://supabase.com/dashboard](https://supabase.com/dashboard).
 2. Click **New project**.
 3. Fill in:
    - **Name:** `bury-steps`
    - **Database password:** click generate, then **copy it somewhere safe**.
      You will not see it again.
-   - **Region:** **West EU (London)**. Pick this so the data stays in the UK.
-4. Click **Create new project** and wait until the spinning icon stops
-   (about a minute).
+   - **Region:** **West EU (London)** — pick this so the data stays in the UK.
+4. Click **Create new project** and wait until it finishes (about a minute).
 
 Now copy the connection address:
 
-1. Click **Connect** near the top of the project page.
-   (If you cannot see it: **Project Settings** → **Database** → **Connect**.)
-2. Find **Session pooler**. The port number in the address must be **5432**.
-   Do not pick the one that says 6543 or “transaction”.
+1. Click **Connect** near the top of the page.
+   (If you cannot see it: the gear icon **Project Settings** → **Database** →
+   **Connect**.)
+2. Choose **Session pooler**. The port in the address must be **5432**.
+   Do not pick 6543 or “transaction”.
 3. Copy the whole URI. It is a long line starting with `postgresql://`.
-4. Paste it into `.env` on the `DATABASE_URL=` line, inside the quotes.
 
-Example (yours will have a different project name and password):
-
-```
-DATABASE_URL="postgresql://postgres.abcdefghijkl:YOUR_PASSWORD@aws-0-eu-west-2.pooler.supabase.com:5432/postgres"
-```
-
-**If the password has** `@`, `#`, `%`, `/` **or a space**, the address will
-fail until those characters are encoded. The easiest fix is to generate a
-password that is only letters and numbers.
-
-Save the `.env` file.
-
-Your finished `.env` has exactly three filled-in lines:
+Paste it into your notes as `DATABASE_URL`. It looks like this (yours will be
+different):
 
 ```
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_..."
-CLERK_SECRET_KEY="sk_test_..."
-DATABASE_URL="postgresql://postgres....:....@....pooler.supabase.com:5432/postgres"
+postgresql://postgres.abcdefghijkl:YOUR_PASSWORD@aws-0-eu-west-2.pooler.supabase.com:5432/postgres
 ```
+
+If the password contains `@`, `#`, `%`, `/` or a space, the site will fail to
+talk to the database. The easiest fix is to generate a password that is only
+letters and numbers, then copy the Connect URI again.
+
+The tables (`User`, `Walk`, `Attendance`) are created automatically the first
+time Vercel deploys. You do not paste SQL yourself.
 
 ---
 
-## Step 4 — Create the tables and start the app
+## Step 3 — Vercel (put the site online)
 
-Back in Terminal, still inside the `bury-steps` folder:
+Vercel builds the site from GitHub and hosts it.
 
-```bash
-npx prisma migrate deploy
-```
+1. Open [https://vercel.com](https://vercel.com) and sign in **with GitHub**.
+2. Click **Add New…** → **Project**.
+3. Import **bury-steps** (your fork, or `leejay123/bury-steps` if that is yours).
+4. **Before you click Deploy**, open **Environment Variables**.
+5. Add these three, one at a time. Names must match exactly.
 
-This creates three tables in Supabase (`User`, `Walk`, `Attendance`). You
-should see a success message, not a long hang or a red error.
+| Name | Value |
+|---|---|
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | the Clerk publishable key (`pk_test_…`) |
+| `CLERK_SECRET_KEY` | the Clerk secret key (`sk_test_…`) |
+| `DATABASE_URL` | the Supabase Session pooler URI (`postgresql://…5432…`) |
 
-Then start the website:
+For each one, tick **Production**, **Preview** and **Development**.
 
-```bash
-npm run dev
-```
+6. Click **Deploy**. Wait until it says the deployment is ready. The first
+   deploy can take a couple of minutes.
 
-Leave this running. Open your browser and go to:
+If Vercel warns that `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` looks like a secret,
+that is a false alarm. Confirm it and save it anyway. It is meant to be public.
 
-[http://localhost:3000](http://localhost:3000)
+7. Click **Visit** (or open the `.vercel.app` link). **Copy that web address.**
+   You need it for Clerk in the next step. Do not try to sign in yet.
 
-You should see **Bury Steps Walking Group** and buttons to join or sign in.
+---
 
-### First person to sign up is the organiser
+## Step 4 — Tell Clerk about your live site
 
-Click **Join the group** and create an account.
+1. Go back to the Clerk dashboard.
+2. Open **Domains** (sometimes under **Configure**).
+3. Add your Vercel address, for example `https://bury-steps.vercel.app`.
+   Include `https://`. Do not add a slash at the end.
 
-**Whoever signs up first becomes the organiser.** They can create walks.
-Everyone after that is a normal member.
+Now open your Vercel site in the browser.
 
-Try it:
+---
 
-1. After signing up you should land on the walks page (`/dashboard`).
-2. Open [http://localhost:3000/admin](http://localhost:3000/admin).
-3. Create a walk (pick a time about 30 minutes from now so you can test
-   clock-in).
-4. Copy the share link and open it while signed in. Clock-in only works from
-   **1 hour before** the start until **1 hour after** the walk is due to finish.
+## Step 5 — Create the first account
 
-To stop the app later, go back to Terminal and press `Ctrl+C`.
+You should see **Bury Steps Walking Group** and a way to join or sign in.
+
+**The first person to create an account becomes the organiser.** They can add
+walks. Everyone after that is a normal member.
+
+1. Click **Join the group** and create an account.
+2. You should land on the walks page.
+3. Open `/admin` on your site (add `/admin` to the end of your Vercel address).
+4. Create a walk. Copy the share link to send to members.
+5. Clock-in on that link only works from **1 hour before** the start until
+   **1 hour after** the walk is due to finish. Members must be signed in —
+   having the link is not enough.
+
+---
+
+## Make someone else an organiser
+
+This is done in Supabase, not Clerk.
+
+1. Open your Supabase project.
+2. Click **Table Editor** in the left sidebar.
+3. Open the **User** table.
+4. Find the person. Change **role** from `MEMBER` to `ADMIN`.
+5. Ask them to refresh the page.
+
+If the User table is empty, nobody has signed in yet, or the first deploy did
+not finish creating tables — check that the Vercel deploy succeeded.
 
 ---
 
@@ -223,69 +176,30 @@ To stop the app later, go back to Terminal and press `Ctrl+C`.
 
 | What you see | What it usually means | What to do |
 |---|---|---|
-| Clerk talks about a missing publishable key | `.env` was not saved, or you edited `.env.example` by mistake | Make sure you are editing `.env`, the `pk_test_` value is real, then stop the app (`Ctrl+C`) and run `npm run dev` again |
-| `P1001`, timeout, or migrate never finishes | Wrong database address | In Supabase, copy **Session pooler** again. The port must be **5432**, not 6543 |
-| Password / authentication failed | The password in the URL does not match | Reset the database password in Supabase, put the new one into `DATABASE_URL`, save, try migrate again |
-| `localhost:3000` will not load | The app is not running | In the `bury-steps` folder, run `npm run dev` and wait until it says “Ready” |
-| You signed up first but cannot open `/admin` | Someone else already created an account | See “Make someone an organiser” below |
-| Tables are missing in Supabase | Step 4 did not run | Run `npx prisma migrate deploy` again |
+| Vercel deploy fails and mentions the database or Prisma | `DATABASE_URL` is missing, or it is the wrong pooler | In Vercel → Settings → Environment Variables, check the name is exactly `DATABASE_URL`. In Supabase, copy **Session pooler** again (port **5432**, not 6543). Redeploy |
+| Vercel deploy fails on a Clerk key | A key was not pasted, or there is an extra space | Re-copy both Clerk keys into Vercel. No quotes around the value in the Vercel form. Redeploy |
+| The site loads but sign-in errors or loops | Clerk does not know your Vercel address yet | Add `https://your-app.vercel.app` under Clerk → **Domains** |
+| `/admin` sends you back to walks | Your account is a member, not an organiser | In Supabase → Table Editor → User, set `role` to `ADMIN` |
+| Tables are missing in Supabase | Deploy did not run, or it failed before the database step | Open the failed Vercel deployment log. Fix `DATABASE_URL`, then **Redeploy** |
+| Password / authentication failed | The password inside `DATABASE_URL` is wrong | Reset the database password in Supabase, copy the Connect URI again, update Vercel, redeploy |
 
----
-
-## Make someone an organiser
-
-Organiser status is stored in the database, not in Clerk.
-
-**Easiest way:**
-
-1. Open your Supabase project.
-2. Click **Table Editor** in the left sidebar.
-3. Click the **User** table.
-4. Find the person. Change **role** from `MEMBER` to `ADMIN`.
-5. Save.
-
-They may need to refresh the page.
-
----
-
-## Put the site on the internet (optional)
-
-Do this when the app already works on your computer.
-
-1. Create a free account at [https://vercel.com](https://vercel.com) (sign in
-   with GitHub).
-2. In Terminal:
-
-   ```bash
-   npx vercel
-   ```
-
-   Follow the questions. Accept the defaults if you are unsure.
-3. When it asks about environment variables, add the **same three** from `.env`.
-   You can also add them later: Vercel project → **Settings** →
-   **Environment Variables**. Tick Production, Preview and Development.
-4. Redeploy after saving the variables.
-5. In Clerk, open **Domains** and add the Vercel web address
-   (something like `https://bury-steps.vercel.app`).
-
-Share links are built from your Vercel address automatically. You do not need
-an extra URL variable unless you later buy a custom domain and the copied
-links look wrong.
+To redeploy without changing code: Vercel → **Deployments** → the latest one →
+**⋯** → **Redeploy**.
 
 ---
 
 ## What each page does
 
-| Address | Who can use it | What it is for |
-|---|---|---|
-| `/` | Anyone | Home page |
-| `/sign-up` and `/sign-in` | Anyone | Create an account / log in |
-| `/dashboard` | Signed-in members | Upcoming walks and your clock-ins |
-| `/admin` | Organisers only | Create walks and copy share links |
-| `/admin/walks/...` | Organisers only | Who is coming, download a list, cancel |
-| `/w/...` | Signed-in members | Clock in for that walk |
+Replace `your-app.vercel.app` with your real address.
 
-The share link is not a secret password. People still have to be signed in.
+| Page | Who it is for | What it is for |
+|---|---|---|
+| `https://your-app.vercel.app/` | Anyone | Home |
+| `https://your-app.vercel.app/sign-up` | Anyone | Create an account |
+| `https://your-app.vercel.app/dashboard` | Signed-in members | Upcoming walks |
+| `https://your-app.vercel.app/admin` | Organisers only | Create walks and copy share links |
+| `https://your-app.vercel.app/admin/walks/…` | Organisers only | Who is coming, download a list, cancel |
+| `https://your-app.vercel.app/w/…` | Signed-in members | Clock in for that walk |
 
 Times are shown in UK time (GMT in winter, BST in summer).
 
@@ -296,7 +210,7 @@ Times are shown in UK time (GMT in winter, BST in summer).
 Clock-in can store a short health note. That is sensitive information.
 
 - People tick an explicit consent box before it is saved.
-- Notes are wiped 90 days after the walk.
+- Notes are wiped automatically 90 days after the walk.
 - Only organisers can read them.
 - Choosing the **London** region in Supabase keeps the data in the UK.
 
@@ -305,20 +219,14 @@ the clock-in page. This README is not legal advice.
 
 ---
 
-## Commands you will use again
+## The three values (checklist)
 
-Run these from inside the `bury-steps` folder.
+Paste these in **Vercel → Project → Settings → Environment Variables**.
 
-| Command | What it does |
+| Name | Where you copied it |
 |---|---|
-| `npm run dev` | Start the app on your computer |
-| `npx prisma migrate deploy` | Create / update database tables |
-| `npm run db:studio` | Open a simple window to view the data |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk → API Keys → Publishable key |
+| `CLERK_SECRET_KEY` | Clerk → API Keys → Secret key |
+| `DATABASE_URL` | Supabase → Connect → Session pooler (port 5432) |
 
----
-
-## Need help?
-
-Check the “If something goes wrong” table first. The three values in `.env`
-are the cause of almost every first-time problem — a missing quote, a
-placeholder that was never replaced, or the 6543 pooler instead of 5432.
+That is everything. There is no fourth required value.
