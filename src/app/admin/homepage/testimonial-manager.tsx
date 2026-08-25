@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -87,17 +87,16 @@ function AddTestimonialForm({ disabled }: { disabled: boolean }) {
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Add a testimonial</CardTitle>
-        <CardDescription>
+    <section className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1.5">
+        <h3 className="font-semibold">Add a testimonial</h3>
+        <p className="text-muted-foreground text-sm">
           {disabled
             ? "You already have 12 testimonials. Remove one to add another."
             : "Name, the line under the name, and the quote. Photo is optional. Use the example if you want a starting point."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form ref={formRef} action={action} className="flex flex-col gap-3">
+        </p>
+      </div>
+      <form ref={formRef} action={action} className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="new-name">Name</Label>
             <Input
@@ -161,8 +160,7 @@ function AddTestimonialForm({ disabled }: { disabled: boolean }) {
             <PendingSubmit label="Add testimonial" pendingLabel="Adding…" disabled={disabled} />
           </div>
         </form>
-      </CardContent>
-    </Card>
+    </section>
   );
 }
 
@@ -237,8 +235,8 @@ function TestimonialCard({
   useActionToast(moveState);
 
   return (
-    <li className="overflow-hidden rounded-lg border">
-      <div className="flex items-center gap-3 border-b bg-muted/40 p-4">
+    <li>
+      <div className="flex items-center gap-3 bg-muted/40 p-4">
         {testimonial.image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={testimonial.image} alt="" className="size-10 rounded-full object-cover" />
@@ -319,12 +317,13 @@ export function HomepageTestimonialManager({
   return (
     <div className="flex flex-col gap-6">
       <AddTestimonialForm disabled={testimonials.length >= maxTestimonials} />
+      <Separator />
       {testimonials.length === 0 ? (
-        <p className="rounded-lg border py-8 text-center text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           No testimonials on the homepage yet. Add one above, or fill the example and then add it.
         </p>
       ) : (
-        <ul className="flex flex-col gap-4">
+        <ul className="divide-y overflow-hidden rounded-xl border">
           {testimonials.map((testimonial, index) => (
             <TestimonialCard
               key={testimonial.id}

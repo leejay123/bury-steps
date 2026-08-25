@@ -3,7 +3,7 @@ import { Show, UserButton } from "@clerk/nextjs";
 import { getOptionalUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { AFTER_AUTH_PATH, accountPortalHref } from "@/lib/urls";
-import { SiteNavMenu } from "@/components/site-nav-menu";
+import { SiteNavLinks, SiteMobileNavBar } from "@/components/site-nav-menu";
 
 export async function SiteNav() {
   const headerList = await headers();
@@ -13,14 +13,16 @@ export async function SiteNav() {
   const user = await getOptionalUser();
   const isAdmin = user?.role === "ADMIN";
 
+  const walksHref = isAdmin ? "/admin" : "/dashboard";
+
   return (
     <>
-      <div className="flex min-w-0 items-center justify-center">
+      <div className="hidden min-w-0 items-center justify-center md:flex">
         <Show when="signed-in">
-          <SiteNavMenu isAdmin={isAdmin} walksHref={isAdmin ? "/admin" : "/dashboard"} />
+          <SiteNavLinks isAdmin={isAdmin} walksHref={walksHref} />
         </Show>
       </div>
-      <div className="flex min-w-0 items-center justify-end gap-3 justify-self-end">
+      <div className="flex min-w-0 items-center justify-end gap-2 justify-self-end sm:gap-3">
         <Show when="signed-out">
           <Button variant="outline" size="sm" asChild>
             <a href={accountPortalHref("sign-in", afterAuth)}>Sign in</a>
@@ -35,4 +37,13 @@ export async function SiteNav() {
       </div>
     </>
   );
+}
+
+export async function SiteMobileNav() {
+  const user = await getOptionalUser();
+  if (!user) return null;
+
+  const isAdmin = user.role === "ADMIN";
+
+  return <SiteMobileNavBar isAdmin={isAdmin} walksHref={isAdmin ? "/admin" : "/dashboard"} />;
 }

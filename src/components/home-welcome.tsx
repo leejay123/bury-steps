@@ -3,6 +3,7 @@ import { FeatureSection } from "@/components/feature-section";
 import { HeroCopy } from "@/components/hero";
 import { TestimonialsSection } from "@/components/testimonials-section";
 import { FaqsSection } from "@/components/faqs-section";
+import { FullWidthDivider } from "@/components/full-width-divider";
 import { Button } from "@/components/ui/button";
 import type { TestimonialView } from "@/lib/testimonials";
 import type { FaqView } from "@/lib/faqs";
@@ -17,7 +18,7 @@ export function HomeWelcome({
   return (
     <>
       <FeatureSection />
-      <section>
+      <section className="relative">
         <HeroCopy
           actions={
             <HomeAboutDialog
@@ -35,6 +36,7 @@ export function HomeWelcome({
             hours of taking that first step I started this group, with no idea what it would become.
           </p>
         </HeroCopy>
+        <FullWidthDivider position="bottom" />
       </section>
       <TestimonialsSection testimonials={testimonials} />
       <FaqsSection faqs={faqs} />

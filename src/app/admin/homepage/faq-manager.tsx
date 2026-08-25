@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -128,17 +128,16 @@ function AddFaqForm({ disabled }: { disabled: boolean }) {
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Add an FAQ</CardTitle>
-        <CardDescription>
+    <section className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1.5">
+        <h3 className="font-semibold">Add an FAQ</h3>
+        <p className="text-muted-foreground text-sm">
           {disabled
             ? "You already have 20 FAQs. Remove one to add another."
             : "Question, answer, and a category for the filters on the homepage."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form action={action} className="flex flex-col gap-3" ref={formRef}>
+        </p>
+      </div>
+      <form action={action} className="flex flex-col gap-3" ref={formRef}>
           <CategorySelect
             disabled={disabled}
             id="new-faq-category"
@@ -187,8 +186,7 @@ function AddFaqForm({ disabled }: { disabled: boolean }) {
             <PendingSubmit disabled={disabled} label="Add FAQ" pendingLabel="Adding…" />
           </div>
         </form>
-      </CardContent>
-    </Card>
+    </section>
   );
 }
 
@@ -247,7 +245,7 @@ function FaqCard({ faq, index, total }: { faq: FaqView; index: number; total: nu
   useActionToast(moveState);
 
   return (
-    <li className="overflow-hidden rounded-lg border">
+    <li>
       <div className="flex flex-col gap-3 p-4">
         <p className="text-sm font-medium">
           FAQ {index + 1} · {faqCategoryLabel(faq.category)}
@@ -308,12 +306,11 @@ export function HomepageFaqManager({
   return (
     <div className="flex flex-col gap-6">
       <AddFaqForm disabled={faqs.length >= maxFaqs} />
+      <Separator />
       {faqs.length === 0 ? (
-        <p className="rounded-lg border py-8 text-center text-sm text-muted-foreground">
-          No FAQs on the homepage yet. Add one above.
-        </p>
+        <p className="text-sm text-muted-foreground">No FAQs on the homepage yet. Add one above.</p>
       ) : (
-        <ul className="flex flex-col gap-4">
+        <ul className="divide-y overflow-hidden rounded-xl border">
           {faqs.map((faq, index) => (
             <FaqCard faq={faq} index={index} key={faq.id} total={faqs.length} />
           ))}

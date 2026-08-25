@@ -14,7 +14,7 @@ import type { SlideView } from "@/lib/slides";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 function PendingSubmit({
   label,
@@ -51,15 +51,14 @@ function AddSlideForm({ disabled }: { disabled: boolean }) {
   }, [state]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Add a slide</CardTitle>
-        <CardDescription>
+    <section className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1.5">
+        <h3 className="font-semibold">Add a slide</h3>
+        <p className="text-muted-foreground text-sm">
           {disabled ? "You already have 3 slides. Remove one to add another." : "JPEG, PNG or WebP, under 4 MB."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form ref={formRef} action={action} className="space-y-3">
+        </p>
+      </div>
+      <form ref={formRef} action={action} className="space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="new-image">Image</Label>
             <Input id="new-image" name="image" type="file" accept="image/jpeg,image/png,image/webp" required disabled={disabled} />
@@ -75,8 +74,7 @@ function AddSlideForm({ disabled }: { disabled: boolean }) {
           </div>
           <PendingSubmit label="Add slide" pendingLabel="Adding…" disabled={disabled} />
         </form>
-      </CardContent>
-    </Card>
+    </section>
   );
 }
 
@@ -104,7 +102,7 @@ function SlideCard({
   useActionToast(deleteState);
 
   return (
-    <li className="overflow-hidden rounded-lg border">
+    <li>
       <div className="aspect-[16/9] bg-muted">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={slide.src} alt={slide.alt} className="size-full object-cover" />
@@ -164,18 +162,19 @@ export function HomepageSlideManager({
   maxSlides: number;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       {slides.length === 0 ? (
-        <p className="rounded-lg border py-8 text-center text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           No slides yet. Add one below and it will show in the homepage hero carousel.
         </p>
       ) : (
-        <ul className="space-y-4">
+        <ul className="divide-y overflow-hidden rounded-xl border">
           {slides.map((slide, index) => (
             <SlideCard key={slide.id} slide={slide} index={index} total={slides.length} />
           ))}
         </ul>
       )}
+      <Separator />
       <AddSlideForm disabled={slides.length >= maxSlides} />
     </div>
   );

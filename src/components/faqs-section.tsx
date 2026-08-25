@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import { FullWidthDivider } from "@/components/full-width-divider";
 import { FACEBOOK_GROUP_URL } from "@/lib/urls";
 import { FAQ_CATEGORIES, type FaqView } from "@/lib/faqs";
 
@@ -37,8 +36,7 @@ export function FaqsSection({ faqs }: { faqs: FaqView[] }) {
   if (faqs.length === 0) return null;
 
   return (
-    <section className="relative">
-      <FullWidthDivider position="top" />
+    <section>
       <div className="flex flex-col gap-6 px-4 py-12 md:px-8">
         <div className="flex flex-col gap-2">
           <h2 className="text-balance font-semibold text-3xl tracking-wide md:text-4xl xl:font-bold">
