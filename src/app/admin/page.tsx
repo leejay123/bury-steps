@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { formatWalkDate } from "@/lib/dates";
+import { appUrl } from "@/lib/urls";
 import { CreateWalkForm } from "./create-walk-form";
 import { ShareLink } from "@/components/share-link";
 import { Badge } from "@/components/ui/badge";
@@ -88,7 +89,7 @@ export default async function AdminPage() {
     }),
   ]);
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const baseUrl = appUrl();
 
   return (
     <div className="space-y-8">

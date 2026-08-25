@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { requireAdmin, displayName } from "@/lib/auth";
 import { formatWalkDate, formatDateTime, formatTime } from "@/lib/dates";
 import { windowState } from "@/lib/walk-window";
+import { appUrl } from "@/lib/urls";
 import { ShareLink } from "@/components/share-link";
 import { CancelWalkButton } from "./cancel-walk-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -80,7 +81,7 @@ export default async function WalkDetailPage({
         {walk.description && <p className="text-sm leading-relaxed">{walk.description}</p>}
       </header>
 
-      <ShareLink url={`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/w/${walk.token}`} />
+      <ShareLink url={`${appUrl()}/w/${walk.token}`} />
 
       <div className="flex flex-wrap items-center gap-2">
         <Button asChild size="sm" variant="outline">

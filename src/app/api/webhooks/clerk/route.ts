@@ -5,8 +5,9 @@ import { prisma } from "@/lib/db";
 /**
  * Keeps the local User table in sync with Clerk. Optional — `requireUser()`
  * creates rows on demand — but this keeps names and emails current.
- * Set CLERK_WEBHOOK_SIGNING_SECRET and point a Clerk webhook at
- * <app-url>/api/webhooks/clerk for user.created, user.updated, user.deleted.
+ * Optional. Point a Clerk webhook at <app-url>/api/webhooks/clerk for
+ * user.created, user.updated, user.deleted. Without a signing secret this
+ * route returns 400; the app still creates users on first sign-in.
  */
 export async function POST(req: NextRequest) {
   let evt;

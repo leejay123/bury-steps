@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { ClerkProvider, SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/sonner";
+import { AFTER_AUTH_PATH, SIGN_IN_PATH, SIGN_UP_PATH } from "@/lib/urls";
 import Link from "next/link";
 import "./globals.css";
 
@@ -17,7 +18,12 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      signInUrl={SIGN_IN_PATH}
+      signUpUrl={SIGN_UP_PATH}
+      signInFallbackRedirectUrl={AFTER_AUTH_PATH}
+      signUpFallbackRedirectUrl={AFTER_AUTH_PATH}
+    >
       <html lang="en-GB" suppressHydrationWarning>
         <body className="min-h-dvh bg-background text-foreground antialiased">
           <header className="border-b">
