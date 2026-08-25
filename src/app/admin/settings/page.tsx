@@ -1,68 +1,56 @@
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
-import { getHomepageSlides } from "@/lib/homepage-slides";
-import { getHomepageTestimonials } from "@/lib/homepage-testimonials";
-import { getHomepageFaqs } from "@/lib/homepage-faqs";
+import { prisma } from "@/lib/db";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { MAX_HOMEPAGE_FAQS } from "@/lib/faqs";
-import { HomepageSlideManager } from "../homepage/slide-manager";
-import { HomepageTestimonialManager } from "../homepage/testimonial-manager";
-import { HomepageFaqManager } from "../homepage/faq-manager";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminSettingsPage() {
   await requireAdmin();
 
-  const [slides, testimonials, faqs] = await Promise.all([
-    getHomepageSlides(),
-    getHomepageTestimonials(),
-    getHomepageFaqs(),
+  const [slideCount, testimonialCount, faqCount] = await Promise.all([
+    prisma.homepageSlide.count(),
+    prisma.homepageTestimonial.count(),
+    prisma.homepageFaq.count().catch(() => 0),
   ]);
 
+  const items = [
+    {
+      href: "/admin/settings/hero-photos",
+      title: "Hero photos",
+      description: `Homepage carousel. ${slideCount} of ${MAX_HOMEPAGE_SLIDES} slides.`,
+    },
+    {
+      href: "/admin/settings/testimonials",
+      title: "Testimonials",
+      description: `Quotes on the homepage. ${testimonialCount} of ${MAX_HOMEPAGE_TESTIMONIALS}.`,
+    },
+    {
+      href: "/admin/settings/faqs",
+      title: "FAQs",
+      description: `Questions on the homepage. ${faqCount} of ${MAX_HOMEPAGE_FAQS}.`,
+    },
+  ];
+
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Hero photos</CardTitle>
-          <CardDescription>
-            The carousel at the top of the public homepage. You can keep up to {MAX_HOMEPAGE_SLIDES}{" "}
-            slides, change each picture, and move them into the order visitors will see. With two or
-            more slides, the photos rotate automatically.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <HomepageSlideManager slides={slides} maxSlides={MAX_HOMEPAGE_SLIDES} />
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Testimonials</CardTitle>
-          <CardDescription>
-            Up to {MAX_HOMEPAGE_TESTIMONIALS} quotes on the public homepage. For each one you can
-            change the name, the line under the name, the testimonial text, and an optional photo.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <HomepageTestimonialManager
-            testimonials={testimonials}
-            maxTestimonials={MAX_HOMEPAGE_TESTIMONIALS}
-          />
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>FAQs</CardTitle>
-          <CardDescription>
-            Up to {MAX_HOMEPAGE_FAQS} questions on the public homepage. You can add, edit, reorder,
-            or remove them, and choose a category for the filters.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <HomepageFaqManager faqs={faqs} maxFaqs={MAX_HOMEPAGE_FAQS} />
-        </CardContent>
-      </Card>
+    <div className="grid gap-4 sm:grid-cols-2">
+      {items.map((item) => (
+        <Link className="block" href={item.href} key={item.href}>
+          <Card className="h-full transition-colors hover:bg-accent/40">
+            <CardHeader className="flex flex-row items-start justify-between gap-3">
+              <div className="flex flex-col gap-1.5">
+                <CardTitle>{item.title}</CardTitle>
+                <CardDescription>{item.description}</CardDescription>
+              </div>
+              <ChevronRight className="mt-0.5 shrink-0 text-muted-foreground" />
+            </CardHeader>
+          </Card>
+        </Link>
+      ))}
     </div>
   );
 }

@@ -85,7 +85,7 @@ export function FaqsSection({ faqs }: { faqs: FaqView[] }) {
 
       <Accordion className="flex flex-col gap-2 border-0 px-4 py-12 lg:px-6" collapsible type="single">
         {filtered.map((faq) => (
-          <AccordionItem className="rounded-lg border px-4 shadow-xs" key={faq.id} value={faq.id}>
+          <AccordionItem className="rounded-lg border last:border-b px-4 shadow-xs" key={faq.id} value={faq.id}>
             <AccordionTrigger>{faq.question}</AccordionTrigger>
             <AccordionContent className="text-muted-foreground">{faq.answer}</AccordionContent>
           </AccordionItem>
@@ -120,7 +120,6 @@ export function FaqsSection({ faqs }: { faqs: FaqView[] }) {
           Ask in the Facebook group
         </a>
       </p>
-      <FullWidthDivider position="bottom" />
     </section>
   );
 }
