@@ -14,6 +14,7 @@ import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/comp
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { FACEBOOK_GROUP_URL } from "@/lib/urls";
 import { FAQ_CATEGORIES, type FaqView } from "@/lib/faqs";
+import { HeroCopy } from "@/components/hero-copy";
 
 export function FaqsSection({ faqs }: { faqs: FaqView[] }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -37,40 +38,40 @@ export function FaqsSection({ faqs }: { faqs: FaqView[] }) {
 
   return (
     <section>
-      <div className="flex flex-col gap-6 px-4 py-12 md:px-8">
-        <div className="flex flex-col gap-2">
-          <h2 className="text-balance font-semibold text-3xl tracking-wide md:text-4xl xl:font-bold">
-            Frequently asked questions
-          </h2>
-          <p className="text-muted-foreground text-sm md:text-base lg:text-lg">
-            How to join, what to bring, and how clock-in works. If you still have a question, ask
-            in the Facebook group.
-          </p>
-        </div>
+      <HeroCopy
+        after={
+          <InputGroup className="w-full max-w-md">
+            <InputGroupInput
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Search FAQs…"
+              value={searchTerm}
+            />
+            <InputGroupAddon>
+              <Search data-icon="inline-start" />
+            </InputGroupAddon>
+          </InputGroup>
+        }
+        eyebrow={null}
+        title="Frequently asked questions"
+        titleAs="h2"
+      >
+        <p>
+          How to join, what to bring, and how clock-in works. If you still have a question, ask in
+          the Facebook group.
+        </p>
+      </HeroCopy>
 
-        <InputGroup className="max-w-md">
-          <InputGroupInput
-            onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Search FAQs…"
-            value={searchTerm}
-          />
-          <InputGroupAddon>
-            <Search data-icon="inline-start" />
-          </InputGroupAddon>
-        </InputGroup>
-      </div>
-
-      <div className="flex flex-wrap gap-1 border-y px-4 md:px-8">
+      <div className="flex gap-2 overflow-x-auto overscroll-x-contain border-y px-3 [scrollbar-width:none] [-ms-overflow-style:none] sm:flex-wrap sm:overflow-visible md:px-8 [&::-webkit-scrollbar]:hidden">
         {categories.map((category) => (
           <button
-            className="flex flex-col"
+            className="flex shrink-0 flex-col"
             key={category.id}
             onClick={() => setActiveCategory(category.id)}
             type="button"
           >
             <span
               className={cn(
-                "p-1 text-muted-foreground text-sm hover:text-primary md:p-2 md:text-base",
+                "px-3 py-3 text-base text-muted-foreground hover:text-primary md:px-4 md:py-3.5 md:text-lg",
                 activeCategory === category.id && "text-primary",
               )}
             >

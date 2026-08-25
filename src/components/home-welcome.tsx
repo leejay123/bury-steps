@@ -1,6 +1,6 @@
 import { HomeAboutDialog } from "@/components/home-about-dialog";
 import { FeatureSection } from "@/components/feature-section";
-import { HeroCopy } from "@/components/hero";
+import { HeroCopy } from "@/components/hero-copy";
 import { TestimonialsSection } from "@/components/testimonials-section";
 import { FaqsSection } from "@/components/faqs-section";
 import { FullWidthDivider } from "@/components/full-width-divider";

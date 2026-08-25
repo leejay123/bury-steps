@@ -4,6 +4,7 @@ import { GridPattern } from "@/components/ui/grid-pattern";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { GridFiller } from "@/components/grid-filler";
+import { HeroCopy } from "@/components/hero-copy";
 import type { TestimonialView } from "@/lib/testimonials";
 
 export function TestimonialsSection({
@@ -14,15 +15,10 @@ export function TestimonialsSection({
   if (testimonials.length === 0) return null;
 
   return (
-    <section className="space-y-8 pt-6">
-      <div className="flex flex-col gap-2 px-4 md:px-8">
-        <h2 className="text-balance font-semibold text-3xl tracking-wide md:text-4xl xl:font-bold">
-          From the group
-        </h2>
-        <p className="text-muted-foreground text-sm md:text-base lg:text-lg">
-          A few words from people who walk with us on Sundays.
-        </p>
-      </div>
+    <section>
+      <HeroCopy eyebrow={null} title="From the group" titleAs="h2">
+        <p>A few words from people who walk with us on Sundays.</p>
+      </HeroCopy>
       <div className="relative grid grid-cols-1 gap-px bg-border sm:grid-cols-2 lg:grid-cols-3">
         <FullWidthDivider position="top" />
         {testimonials.map((testimonial) => (
