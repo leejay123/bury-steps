@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "./db";
@@ -8,10 +9,12 @@ import { SIGN_IN_URL } from "./urls";
  * Returns the local User row for the signed-in Clerk user, creating it on
  * first sight. This makes the app work even if the Clerk webhook is delayed
  * or misconfigured — the webhook is an optimisation, not a dependency.
+ *
+ * Cached per request so the header and the page share one database lookup.
  */
-export async function requireUser(): Promise<User> {
+export const getOptionalUser = cache(async (): Promise<User | null> => {
   const { userId } = await auth();
-  if (!userId) redirect(SIGN_IN_URL);
+  if (!userId) return null;
 
   const existing = await prisma.user.findUnique({ where: { clerkId: userId } });
   if (existing) return existing;
@@ -22,16 +25,26 @@ export async function requireUser(): Promise<User> {
     clerkUser?.emailAddresses[0]?.emailAddress ??
     "";
 
-  return prisma.user.create({
-    data: {
-      clerkId: userId,
-      email,
-      firstName: clerkUser?.firstName ?? null,
-      lastName: clerkUser?.lastName ?? null,
-      // First account to sign up becomes the organiser. Everyone else is a member.
-      role: (await prisma.user.count()) === 0 ? "ADMIN" : "MEMBER",
-    },
-  });
+  try {
+    return await prisma.user.create({
+      data: {
+        clerkId: userId,
+        email,
+        firstName: clerkUser?.firstName ?? null,
+        lastName: clerkUser?.lastName ?? null,
+        // First account to sign up becomes the organiser. Everyone else is a member.
+        role: (await prisma.user.count()) === 0 ? "ADMIN" : "MEMBER",
+      },
+    });
+  } catch {
+    return prisma.user.findUnique({ where: { clerkId: userId } });
+  }
+});
+
+export async function requireUser(): Promise<User> {
+  const user = await getOptionalUser();
+  if (!user) redirect(SIGN_IN_URL);
+  return user;
 }
 
 export async function requireAdmin(): Promise<User> {

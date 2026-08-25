@@ -75,7 +75,9 @@ export default async function WalkLinkPage({
       {walk.cancelledAt ? (
         <Alert variant="destructive">
           <AlertTitle>This walk has been cancelled</AlertTitle>
-          <AlertDescription>Check the walks list for the next one.</AlertDescription>
+          <AlertDescription>
+            Check the walks list for the next one.
+          </AlertDescription>
         </Alert>
       ) : !userId ? (
         <div className="space-y-4 rounded-lg border bg-muted/40 p-5">

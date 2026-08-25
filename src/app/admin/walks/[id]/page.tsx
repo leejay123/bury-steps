@@ -7,6 +7,7 @@ import { windowState } from "@/lib/walk-window";
 import { appUrl } from "@/lib/urls";
 import { ShareLink } from "@/components/share-link";
 import { CancelWalkButton } from "./cancel-walk-button";
+import { DeleteWalkButton } from "./delete-walk-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +43,15 @@ export default async function WalkDetailPage({
 
   const walk = await prisma.walk.findUnique({
     where: { id },
-    include: {
+    select: {
+      id: true,
+      token: true,
+      title: true,
+      description: true,
+      location: true,
+      startsAt: true,
+      durationMins: true,
+      cancelledAt: true,
       attendances: {
         orderBy: { clockedInAt: "asc" },
         include: { user: { select: { firstName: true, lastName: true, email: true } } },
@@ -90,6 +99,7 @@ export default async function WalkDetailPage({
         {!walk.cancelledAt && (
           <CancelWalkButton walkId={walk.id} attendanceCount={walk.attendances.length} />
         )}
+        <DeleteWalkButton walkId={walk.id} attendanceCount={walk.attendances.length} />
       </div>
 
       <Separator />

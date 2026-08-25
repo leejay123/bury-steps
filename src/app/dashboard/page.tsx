@@ -24,7 +24,15 @@ export default async function DashboardPage() {
       where: { startsAt: { gte: new Date(now.getTime() - 3 * 60 * 60 * 1000) } },
       orderBy: { startsAt: "asc" },
       take: 10,
-      include: {
+      select: {
+        id: true,
+        token: true,
+        title: true,
+        description: true,
+        location: true,
+        startsAt: true,
+        durationMins: true,
+        cancelledAt: true,
         attendances: { where: { userId: user.id }, select: { clockedInAt: true } },
       },
     }),
@@ -76,6 +84,9 @@ export default async function DashboardPage() {
                 {walk.description && (
                   <p className="text-sm leading-relaxed">{walk.description}</p>
                 )}
+                {walk.cancelledAt ? (
+                  <p className="text-sm text-destructive">This walk has been cancelled.</p>
+                ) : null}
                 {!walk.cancelledAt && !clockedIn && (
                   <Button asChild size="sm" disabled={state === "closed"}>
                     <Link href={`/w/${walk.token}`}>

@@ -8,7 +8,6 @@ import { ShareLink } from "@/components/share-link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AdminNav } from "./admin-nav";
 
 export const dynamic = "force-dynamic";
 
@@ -93,15 +92,10 @@ export default async function AdminPage() {
   const baseUrl = appUrl();
 
   return (
-    <div className="space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Organiser tools</h1>
-        <AdminNav current="walks" />
-      </div>
-
+    <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Create a walk</CardTitle>
+          <CardTitle>Create a walk</CardTitle>
           <CardDescription>
             A share link is generated automatically. People must be signed in to clock in. If they
             do not have an account yet, they create one first. If they already have one, they sign
@@ -113,18 +107,26 @@ export default async function AdminPage() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="upcoming" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
-          <TabsTrigger value="past">Past ({past.length})</TabsTrigger>
-        </TabsList>
-        <TabsContent value="upcoming">
-          <WalkList walks={upcoming} baseUrl={baseUrl} empty="No walks scheduled. Create one above." />
-        </TabsContent>
-        <TabsContent value="past">
-          <WalkList walks={past} baseUrl={baseUrl} empty="No past walks yet." />
-        </TabsContent>
-      </Tabs>
+      <Card>
+        <CardHeader>
+          <CardTitle>Walks</CardTitle>
+          <CardDescription>Upcoming walks and recent ones. Open a walk to cancel or remove it.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="upcoming" className="w-full">
+            <TabsList>
+              <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
+              <TabsTrigger value="past">Past ({past.length})</TabsTrigger>
+            </TabsList>
+            <TabsContent value="upcoming" className="mt-4">
+              <WalkList walks={upcoming} baseUrl={baseUrl} empty="No walks scheduled. Create one above." />
+            </TabsContent>
+            <TabsContent value="past" className="mt-4">
+              <WalkList walks={past} baseUrl={baseUrl} empty="No past walks yet." />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 }

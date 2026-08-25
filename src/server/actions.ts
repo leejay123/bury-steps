@@ -84,12 +84,57 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
   const id = String(formData.get("walkId") ?? "");
   if (!id) return { ok: false, error: "No walk selected." };
 
-  await prisma.walk.update({ where: { id }, data: { cancelledAt: new Date() } });
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (reason.length > 500) {
+    return { ok: false, error: "Keep the reason under 500 characters." };
+  }
+
+  const walk = await prisma.walk.findUnique({
+    where: { id },
+    select: { id: true, token: true, cancelledAt: true },
+  });
+  if (!walk) return { ok: false, error: "That walk is no longer there." };
+  if (walk.cancelledAt) return { ok: false, error: "This walk is already cancelled." };
+
+  try {
+    await prisma.walk.update({
+      where: { id },
+      data: {
+        cancelledAt: new Date(),
+        cancelledReason: reason || null,
+      },
+    });
+  } catch {
+    await prisma.walk.update({
+      where: { id },
+      data: { cancelledAt: new Date() },
+    });
+  }
 
   revalidatePath("/admin");
   revalidatePath(`/admin/walks/${id}`);
   revalidatePath("/dashboard");
+  revalidatePath(`/w/${walk.token}`);
   return { ok: true, message: "Walk cancelled. Members will see it marked as cancelled." };
+}
+
+export async function deleteWalk(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("walkId") ?? "");
+  if (!id) return { ok: false, error: "No walk selected." };
+
+  const walk = await prisma.walk.findUnique({
+    where: { id },
+    select: { id: true, token: true, title: true },
+  });
+  if (!walk) return { ok: false, error: "That walk is no longer there." };
+
+  await prisma.walk.delete({ where: { id } });
+
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+  revalidatePath(`/w/${walk.token}`);
+  return { ok: true, message: `“${walk.title}” has been removed.` };
 }
 
 // ------------------------------------------------------------------ clock in

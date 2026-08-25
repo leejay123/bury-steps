@@ -5,6 +5,8 @@ import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 import { cancelWalk, type ActionResult } from "@/server/actions";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +19,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-function Confirm({ attendanceCount }: { attendanceCount: number }) {
+function Confirm() {
   const { pending } = useFormStatus();
   return (
     <AlertDialogAction type="submit" disabled={pending}>
@@ -59,14 +61,24 @@ export function CancelWalkButton({
           <AlertDialogDescription>
             {attendanceCount > 0
               ? `${attendanceCount} ${attendanceCount === 1 ? "person has" : "people have"} already clocked in. Their records are kept, but the walk will show as cancelled and nobody else can clock in.`
-              : "The walk will show as cancelled and nobody will be able to clock in. You can't undo this from the app."}
+              : "The walk will show as cancelled and nobody will be able to clock in."}
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <form action={action}>
+        <form action={action} className="space-y-4">
           <input type="hidden" name="walkId" value={walkId} />
+          <div className="space-y-1.5">
+            <Label htmlFor={`cancel-reason-${walkId}`}>Reason (optional)</Label>
+            <Textarea
+              id={`cancel-reason-${walkId}`}
+              name="reason"
+              rows={3}
+              maxLength={500}
+              placeholder="Weather, illness, not enough people…"
+            />
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel type="button">Keep the walk</AlertDialogCancel>
-            <Confirm attendanceCount={attendanceCount} />
+            <Confirm />
           </AlertDialogFooter>
         </form>
       </AlertDialogContent>

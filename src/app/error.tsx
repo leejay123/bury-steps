@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { unstable_rethrow } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 export default function Error({
@@ -11,6 +12,8 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  unstable_rethrow(error);
+
   useEffect(() => {
     console.error(error);
   }, [error]);

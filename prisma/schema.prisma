@@ -36,6 +36,7 @@ model Walk {
   startsAt     DateTime
   durationMins Int       @default(90)
   cancelledAt  DateTime?
+  cancelledReason String?
   createdAt    DateTime  @default(now())
 
   createdById String
