@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Neon pools connections; migrations need the direct (non-pooler) URL.
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  MEMBER
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String
+  firstName String?
+  lastName  String?
+  role      Role     @default(MEMBER)
+  createdAt DateTime @default(now())
+
+  walksCreated Walk[]       @relation("WalkCreator")
+  attendances  Attendance[]
+}
+
+model Walk {
+  id           String    @id @default(cuid())
+  /// Unguessable slug used in the share link: /w/<token>
+  token        String    @unique
+  title        String
+  description  String?
+  location     String?
+  /// Stored in UTC. Always render with timeZone: "Europe/London".
+  startsAt     DateTime
+  durationMins Int       @default(90)
+  cancelledAt  DateTime?
+  createdAt    DateTime  @default(now())
+
+  createdById String
+  createdBy   User   @relation("WalkCreator", fields: [createdById], references: [id])
+
+  attendances Attendance[]
+
+  @@index([startsAt])
+}
+
+model Attendance {
+  id     String @id @default(cuid())
+  walkId String
+  userId String
+
+  /// Set by the database, never by the client.
+  clockedInAt  DateTime @default(now())
+  /// When the member gave explicit consent to store health information.
+  medicalAckAt DateTime
+
+  /// UK GDPR Art. 9 special category data. Nullable — members may leave it blank.
+  conditions           String?
+  /// Cron/route clears `conditions` after this date. Retention limit.
+  conditionsPurgeAfter DateTime
+
+  walk Walk @relation(fields: [walkId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Makes double clock-ins impossible at the database level.
+  @@unique([walkId, userId])
+  @@index([walkId])
+  @@index([conditionsPurgeAfter])
+}
