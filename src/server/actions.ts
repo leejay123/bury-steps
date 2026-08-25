@@ -9,6 +9,7 @@ import { requireAdmin, requireUser, displayName } from "@/lib/auth";
 import { londonWallClockToUtc } from "@/lib/dates";
 import { windowState } from "@/lib/walk-window";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
+import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 
 /** No look-alike characters — organisers read these out loud. */
 const makeToken = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 12);
@@ -366,4 +367,150 @@ export async function deleteHomepageSlide(
 
   revalidateHomepage();
   return { ok: true, message: "Slide removed." };
+}
+
+// ----------------------------------------------------------- homepage testimonials
+
+function readTestimonialCopy(
+  formData: FormData,
+): { name: string; role: string; quote: string } | { error: string } {
+  const name = String(formData.get("name") ?? "").trim();
+  const role = String(formData.get("role") ?? "").trim();
+  const quote = String(formData.get("quote") ?? "").trim();
+  if (!name) return { error: "Add a name." };
+  if (!quote) return { error: "Add the testimonial text." };
+  if (name.length > 80) return { error: "Keep the name under 80 characters." };
+  if (role.length > 120) return { error: "Keep the line under the name under 120 characters." };
+  if (quote.length > 600) return { error: "Keep the testimonial under 600 characters." };
+  return { name, role, quote };
+}
+
+async function readOptionalImage(formData: FormData) {
+  const file = formData.get("image");
+  if (!(file instanceof File) || file.size === 0) return null;
+  return readSlideImage(formData);
+}
+
+export async function addHomepageTestimonial(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+
+  const count = await prisma.homepageTestimonial.count();
+  if (count >= MAX_HOMEPAGE_TESTIMONIALS) {
+    return { ok: false, error: "You can have up to 12 testimonials." };
+  }
+
+  const copy = readTestimonialCopy(formData);
+  if ("error" in copy) return { ok: false, error: copy.error };
+
+  const image = await readOptionalImage(formData);
+  if (image && "error" in image) return { ok: false, error: image.error };
+
+  await prisma.homepageTestimonial.create({
+    data: {
+      sortOrder: count,
+      name: copy.name,
+      role: copy.role,
+      quote: copy.quote,
+      imagePath: null,
+      imageMime: image?.mime ?? null,
+      imageData: image?.data ?? null,
+    },
+  });
+
+  revalidateHomepage();
+  return { ok: true, message: "Testimonial added." };
+}
+
+export async function updateHomepageTestimonial(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("testimonialId") ?? "");
+  if (!id) return { ok: false, error: "No testimonial selected." };
+
+  const copy = readTestimonialCopy(formData);
+  if ("error" in copy) return { ok: false, error: copy.error };
+
+  const image = await readOptionalImage(formData);
+  if (image && "error" in image) return { ok: false, error: image.error };
+
+  try {
+    await prisma.homepageTestimonial.update({
+      where: { id },
+      data: {
+        name: copy.name,
+        role: copy.role,
+        quote: copy.quote,
+        ...(image
+          ? { imagePath: null, imageMime: image.mime, imageData: image.data }
+          : {}),
+      },
+    });
+  } catch {
+    return { ok: false, error: "That testimonial is no longer there." };
+  }
+
+  revalidateHomepage();
+  return { ok: true, message: "Testimonial saved." };
+}
+
+export async function moveHomepageTestimonial(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("testimonialId") ?? "");
+  const direction = String(formData.get("direction") ?? "");
+  if (!id || (direction !== "up" && direction !== "down")) {
+    return { ok: false, error: "Could not move that testimonial." };
+  }
+
+  const rows = await prisma.homepageTestimonial.findMany({ orderBy: { sortOrder: "asc" } });
+  const index = rows.findIndex((row) => row.id === id);
+  if (index < 0) return { ok: false, error: "That testimonial is no longer there." };
+
+  const swapWith = direction === "up" ? index - 1 : index + 1;
+  if (swapWith < 0 || swapWith >= rows.length) {
+    return { ok: false, error: "Already at the end." };
+  }
+
+  const a = rows[index]!;
+  const b = rows[swapWith]!;
+
+  await prisma.$transaction([
+    prisma.homepageTestimonial.update({ where: { id: a.id }, data: { sortOrder: b.sortOrder } }),
+    prisma.homepageTestimonial.update({ where: { id: b.id }, data: { sortOrder: a.sortOrder } }),
+  ]);
+
+  revalidateHomepage();
+  return { ok: true, message: "Testimonial order updated." };
+}
+
+export async function deleteHomepageTestimonial(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("testimonialId") ?? "");
+  if (!id) return { ok: false, error: "No testimonial selected." };
+
+  try {
+    await prisma.homepageTestimonial.delete({ where: { id } });
+  } catch {
+    return { ok: false, error: "That testimonial is no longer there." };
+  }
+
+  const remaining = await prisma.homepageTestimonial.findMany({ orderBy: { sortOrder: "asc" } });
+  await prisma.$transaction(
+    remaining.map((row, index) =>
+      prisma.homepageTestimonial.update({ where: { id: row.id }, data: { sortOrder: index } }),
+    ),
+  );
+
+  revalidateHomepage();
+  return { ok: true, message: "Testimonial removed." };
 }

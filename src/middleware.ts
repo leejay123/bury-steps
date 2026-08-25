@@ -12,6 +12,7 @@ const isPublic = createRouteMatcher([
   "/api/webhooks(.*)",
   "/api/cron(.*)",
   "/api/slides(.*)",
+  "/api/testimonials(.*)",
   "/__clerk(.*)",
 ]);
 

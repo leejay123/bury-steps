@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { HeroSection } from "@/components/hero";
 import { HomeWelcome } from "@/components/home-welcome";
 import { getHomepageSlides } from "@/lib/homepage-slides";
+import { getHomepageTestimonials } from "@/lib/homepage-testimonials";
 import { AFTER_AUTH_PATH, accountPortalHref } from "@/lib/urls";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +20,10 @@ export default async function Home() {
   const proto = headerList.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
   const afterAuth = `${proto}://${host}${AFTER_AUTH_PATH}`;
 
-  const slides = await getHomepageSlides();
+  const [slides, testimonials] = await Promise.all([
+    getHomepageSlides(),
+    getHomepageTestimonials(),
+  ]);
 
   return (
     <div className="-mx-4 -my-8 md:-mx-8">
@@ -28,7 +32,7 @@ export default async function Home() {
         signUpHref={accountPortalHref("sign-up", afterAuth)}
         slides={slides}
       />
-      <HomeWelcome />
+      <HomeWelcome testimonials={testimonials} />
     </div>
   );
 }

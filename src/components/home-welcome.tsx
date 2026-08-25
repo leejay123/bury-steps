@@ -1,10 +1,11 @@
-import { ArrowRightIcon } from "lucide-react";
 import { HomeAboutDialog } from "@/components/home-about-dialog";
 import { FeatureSection } from "@/components/feature-section";
 import { HeroCopy } from "@/components/hero";
+import { TestimonialsSection } from "@/components/testimonials-section";
 import { Button } from "@/components/ui/button";
+import type { TestimonialView } from "@/lib/testimonials";
 
-export function HomeWelcome() {
+export function HomeWelcome({ testimonials }: { testimonials: TestimonialView[] }) {
   return (
     <>
       <FeatureSection />
@@ -13,13 +14,11 @@ export function HomeWelcome() {
           actions={
             <HomeAboutDialog
               trigger={
-                <Button>
-                  Read more
-                  <ArrowRightIcon data-icon="inline-end" />
-                </Button>
+                <Button variant="outline">Read more</Button>
               }
             />
           }
+          eyebrow="Kindness · Friendship · Welcome"
           title="How this started"
           titleAs="h2"
         >
@@ -29,6 +28,7 @@ export function HomeWelcome() {
           </p>
         </HeroCopy>
       </section>
+      <TestimonialsSection testimonials={testimonials} />
     </>
   );
 }
