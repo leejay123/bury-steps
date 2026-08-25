@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AFTER_AUTH_PATH, SIGN_IN_URL, SIGN_UP_URL } from "@/lib/urls";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
+import { SiteLogo } from "@/components/site-logo";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import Link from "next/link";
 import "./globals.css";
@@ -49,9 +50,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           <div className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x">
             <header className="sticky top-0 z-40 bg-white/70 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/55">
-              <div className="relative flex h-14 items-center justify-between px-4 md:px-6">
-                <Link href="/" className="text-sm font-semibold tracking-tight">
-                  Bury Steps
+              <div className="relative flex h-16 items-center justify-between px-4 md:px-6">
+                <Link href="/" className="flex h-14 items-center">
+                  <SiteLogo />
                 </Link>
                 <SiteNav />
                 <FullWidthDivider position="bottom" />

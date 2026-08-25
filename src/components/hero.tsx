@@ -87,7 +87,7 @@ export function HeroSection({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               alt={heroSlides[0].alt}
-              className="aspect-video w-full object-cover"
+              className="aspect-[2/1] w-full object-cover"
               src={heroSlides[0].src}
             />
           )}

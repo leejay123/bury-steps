@@ -31,17 +31,14 @@ const features: FeatureType[] = [
 export function FeatureSection() {
   return (
     <div className="relative w-full">
-      <DecorIcon className="size-4" position="top-left" />
-      <DecorIcon className="size-4" position="top-right" />
       <DecorIcon className="size-4" position="bottom-left" />
       <DecorIcon className="size-4" position="bottom-right" />
-      <div className="relative grid grid-cols-1 gap-px bg-border sm:grid-cols-3">
-        <FullWidthDivider position="top" />
+      <div className="grid grid-cols-1 divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
         {features.map((feature) => (
           <FeatureCard feature={feature} key={feature.title} />
         ))}
-        <FullWidthDivider position="bottom" />
       </div>
+      <FullWidthDivider position="bottom" />
     </div>
   );
 }
@@ -55,10 +52,7 @@ export function FeatureCard({
 }) {
   return (
     <div
-      className={cn(
-        "relative flex flex-col justify-between overflow-hidden bg-background p-6 md:p-8",
-        className,
-      )}
+      className={cn("relative flex flex-col justify-between bg-background p-6 md:p-8", className)}
       {...props}
     >
       <div className={cn("relative z-10 flex items-center pt-2 pb-5", "[&_svg]:size-5 [&_svg]:text-primary")}>

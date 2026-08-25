@@ -56,7 +56,7 @@ export function HomeCarousel({
                 alt={slide.alt}
                 className={cn(
                   "block w-full object-cover",
-                  framed ? "aspect-video" : "h-auto object-contain",
+                  framed ? "aspect-[2/1]" : "h-auto object-contain",
                 )}
               />
             </div>
