@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AFTER_AUTH_PATH, SIGN_IN_URL, SIGN_UP_URL } from "@/lib/urls";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
+import { FullWidthDivider } from "@/components/full-width-divider";
 import Link from "next/link";
 import "./globals.css";
 
@@ -26,7 +27,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="en-GB" suppressHydrationWarning>
-      <body className="min-h-dvh bg-background text-foreground antialiased">
+      <body className="min-h-dvh overflow-x-hidden bg-background text-foreground antialiased">
         <ClerkProvider
           {...(useVercelAppProxy ? { proxyUrl: "/__clerk" } : {})}
           appearance={{
@@ -46,16 +47,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           signInFallbackRedirectUrl={AFTER_AUTH_PATH}
           signUpFallbackRedirectUrl={AFTER_AUTH_PATH}
         >
-          <header className="sticky top-0 z-40 border-b border-black/[0.06] bg-white/70 shadow-[0_8px_24px_-20px_rgba(15,23,15,0.45)] backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/55">
-            <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
-              <Link href="/" className="text-sm font-semibold tracking-tight">
-                Bury Steps
-              </Link>
-              <SiteNav />
-            </div>
-          </header>
-          <main className="mx-auto max-w-3xl px-4 py-8">{children}</main>
-          <SiteFooter />
+          <div className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x">
+            <header className="sticky top-0 z-40 bg-white/70 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/55">
+              <div className="relative flex h-14 items-center justify-between px-4 md:px-6">
+                <Link href="/" className="text-sm font-semibold tracking-tight">
+                  Bury Steps
+                </Link>
+                <SiteNav />
+                <FullWidthDivider position="bottom" />
+              </div>
+            </header>
+            <main className="flex-1 px-4 py-8 md:px-8">{children}</main>
+            <SiteFooter />
+          </div>
           <Toaster position="top-center" />
         </ClerkProvider>
       </body>

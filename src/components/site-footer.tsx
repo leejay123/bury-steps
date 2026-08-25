@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { Facebook } from "lucide-react";
+import { FullWidthDivider } from "@/components/full-width-divider";
 import { FACEBOOK_GROUP_URL } from "@/lib/urls";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t">
+    <footer className="relative">
+      <FullWidthDivider position="top" />
       <nav
         aria-label="Footer"
-        className="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 py-4 text-xs text-muted-foreground"
+        className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 py-4 text-xs text-muted-foreground md:justify-between md:px-6"
       >
         <Link href="/privacy-policy" className="whitespace-nowrap hover:text-foreground">
           Privacy Policy

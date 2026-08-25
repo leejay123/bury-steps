@@ -13,7 +13,13 @@ import {
 import { cn } from "@/lib/utils";
 import type { SlideView } from "@/lib/slides";
 
-export function HomeCarousel({ slides }: { slides: SlideView[] }) {
+export function HomeCarousel({
+  slides,
+  framed = false,
+}: {
+  slides: SlideView[];
+  framed?: boolean;
+}) {
   const plugin = React.useRef(
     Autoplay({ delay: 5500, stopOnInteraction: false, stopOnMouseEnter: true }),
   );
@@ -38,7 +44,7 @@ export function HomeCarousel({ slides }: { slides: SlideView[] }) {
       setApi={setApi}
       opts={{ loop: showControls, align: "start" }}
       plugins={showControls ? [plugin.current] : []}
-      className="w-full overflow-hidden rounded-xl"
+      className={cn("w-full", framed ? "overflow-hidden" : "overflow-hidden rounded-xl")}
     >
       <CarouselContent className="-ml-0">
         {slides.map((slide) => (
@@ -48,7 +54,10 @@ export function HomeCarousel({ slides }: { slides: SlideView[] }) {
               <img
                 src={slide.src}
                 alt={slide.alt}
-                className="block h-auto w-full object-contain"
+                className={cn(
+                  "block w-full object-cover",
+                  framed ? "aspect-video" : "h-auto object-contain",
+                )}
               />
             </div>
           </CarouselItem>

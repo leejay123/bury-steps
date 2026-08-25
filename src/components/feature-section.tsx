@@ -1,5 +1,6 @@
 import { CalendarDays, Footprints, UserPlus } from "lucide-react";
 import type React from "react";
+import { DecorIcon } from "@/components/decor-icon";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { cn } from "@/lib/utils";
 
@@ -30,12 +31,16 @@ const features: FeatureType[] = [
 export function FeatureSection() {
   return (
     <div className="relative w-full">
+      <DecorIcon className="size-4" position="top-left" />
+      <DecorIcon className="size-4" position="top-right" />
+      <DecorIcon className="size-4" position="bottom-left" />
+      <DecorIcon className="size-4" position="bottom-right" />
       <div className="relative grid grid-cols-1 gap-px bg-border sm:grid-cols-3">
-        <FullWidthDivider contained position="top" />
+        <FullWidthDivider position="top" />
         {features.map((feature) => (
           <FeatureCard feature={feature} key={feature.title} />
         ))}
-        <FullWidthDivider contained position="bottom" />
+        <FullWidthDivider position="bottom" />
       </div>
     </div>
   );
@@ -51,7 +56,7 @@ export function FeatureCard({
   return (
     <div
       className={cn(
-        "relative flex flex-col justify-between overflow-hidden bg-background p-4 md:p-6",
+        "relative flex flex-col justify-between overflow-hidden bg-background p-6 md:p-8",
         className,
       )}
       {...props}
