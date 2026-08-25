@@ -7,6 +7,8 @@ import { windowState } from "@/lib/walk-window";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { WalkMembers } from "@/components/walk-members";
+import { getWalkMemberNamesByWalkIds } from "@/lib/walk-members";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +45,11 @@ export default async function DashboardPage() {
       include: { walk: { select: { title: true, startsAt: true } } },
     }),
   ]);
+
+  const clockedWalkIds = upcoming
+    .filter((walk) => walk.attendances.length > 0)
+    .map((walk) => walk.id);
+  const memberNamesByWalk = await getWalkMemberNamesByWalkIds(clockedWalkIds);
 
   return (
     <div className="space-y-8">
@@ -95,9 +102,12 @@ export default async function DashboardPage() {
                   </Button>
                 )}
                 {clockedIn && (
-                  <p className="text-xs text-muted-foreground">
-                    Clocked in at {formatDateTime(clockedIn.clockedInAt)}
-                  </p>
+                  <div className="flex flex-col gap-3">
+                    <p className="text-xs text-muted-foreground">
+                      Clocked in at {formatDateTime(clockedIn.clockedInAt)}
+                    </p>
+                    <WalkMembers names={memberNamesByWalk.get(walk.id) ?? []} />
+                  </div>
                 )}
               </CardContent>
             </Card>

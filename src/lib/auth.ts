@@ -61,3 +61,12 @@ export function displayName(user: {
   const name = [user.firstName, user.lastName].filter(Boolean).join(" ").trim();
   return name || user.email;
 }
+
+/** First and last name only. Never email — used where members can see each other. */
+export function memberDisplayName(user: {
+  firstName: string | null;
+  lastName: string | null;
+}): string {
+  const name = [user.firstName, user.lastName].filter(Boolean).join(" ").trim();
+  return name || "Member";
+}

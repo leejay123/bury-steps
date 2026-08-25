@@ -1,10 +1,13 @@
 import { requireAdmin } from "@/lib/auth";
 import { getHomepageSlides } from "@/lib/homepage-slides";
 import { getHomepageTestimonials } from "@/lib/homepage-testimonials";
+import { getHomepageFaqs } from "@/lib/homepage-faqs";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
+import { MAX_HOMEPAGE_FAQS } from "@/lib/faqs";
 import { HomepageSlideManager } from "../homepage/slide-manager";
 import { HomepageTestimonialManager } from "../homepage/testimonial-manager";
+import { HomepageFaqManager } from "../homepage/faq-manager";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
@@ -12,9 +15,10 @@ export const dynamic = "force-dynamic";
 export default async function AdminSettingsPage() {
   await requireAdmin();
 
-  const [slides, testimonials] = await Promise.all([
+  const [slides, testimonials, faqs] = await Promise.all([
     getHomepageSlides(),
     getHomepageTestimonials(),
+    getHomepageFaqs(),
   ]);
 
   return (
@@ -45,6 +49,18 @@ export default async function AdminSettingsPage() {
             testimonials={testimonials}
             maxTestimonials={MAX_HOMEPAGE_TESTIMONIALS}
           />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>FAQs</CardTitle>
+          <CardDescription>
+            Up to {MAX_HOMEPAGE_FAQS} questions on the public homepage. You can add, edit, reorder,
+            or remove them, and choose a category for the filters.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <HomepageFaqManager faqs={faqs} maxFaqs={MAX_HOMEPAGE_FAQS} />
         </CardContent>
       </Card>
     </div>

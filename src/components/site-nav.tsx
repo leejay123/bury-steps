@@ -1,9 +1,9 @@
 import { headers } from "next/headers";
-import Link from "next/link";
 import { Show, UserButton } from "@clerk/nextjs";
 import { getOptionalUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { AFTER_AUTH_PATH, accountPortalHref } from "@/lib/urls";
+import { SiteNavMenu } from "@/components/site-nav-menu";
 
 export async function SiteNav() {
   const headerList = await headers();
@@ -14,31 +14,13 @@ export async function SiteNav() {
   const isAdmin = user?.role === "ADMIN";
 
   return (
-    <nav className="flex min-w-0 flex-1 items-center gap-3 text-sm">
-      <Show when="signed-in">
-        <div className="flex min-w-0 items-center gap-3 overflow-x-auto">
-          <Link href="/" className="text-muted-foreground hover:text-foreground">
-            Home
-          </Link>
-          <Link
-            href={isAdmin ? "/admin" : "/dashboard"}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            Walks
-          </Link>
-          {isAdmin ? (
-            <>
-              <Link href="/admin/members" className="text-muted-foreground hover:text-foreground">
-                Members
-              </Link>
-              <Link href="/admin/settings" className="text-muted-foreground hover:text-foreground">
-                Settings
-              </Link>
-            </>
-          ) : null}
-        </div>
-      </Show>
-      <div className="ml-auto flex shrink-0 items-center gap-3">
+    <>
+      <div className="flex min-w-0 items-center justify-center">
+        <Show when="signed-in">
+          <SiteNavMenu isAdmin={isAdmin} walksHref={isAdmin ? "/admin" : "/dashboard"} />
+        </Show>
+      </div>
+      <div className="flex min-w-0 items-center justify-end gap-3 justify-self-end">
         <Show when="signed-out">
           <Button variant="outline" size="sm" asChild>
             <a href={accountPortalHref("sign-in", afterAuth)}>Sign in</a>
@@ -51,6 +33,6 @@ export async function SiteNav() {
           <UserButton />
         </Show>
       </div>
-    </nav>
+    </>
   );
 }

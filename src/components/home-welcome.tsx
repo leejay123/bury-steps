@@ -2,10 +2,18 @@ import { HomeAboutDialog } from "@/components/home-about-dialog";
 import { FeatureSection } from "@/components/feature-section";
 import { HeroCopy } from "@/components/hero";
 import { TestimonialsSection } from "@/components/testimonials-section";
+import { FaqsSection } from "@/components/faqs-section";
 import { Button } from "@/components/ui/button";
 import type { TestimonialView } from "@/lib/testimonials";
+import type { FaqView } from "@/lib/faqs";
 
-export function HomeWelcome({ testimonials }: { testimonials: TestimonialView[] }) {
+export function HomeWelcome({
+  testimonials,
+  faqs,
+}: {
+  testimonials: TestimonialView[];
+  faqs: FaqView[];
+}) {
   return (
     <>
       <FeatureSection />
@@ -29,6 +37,7 @@ export function HomeWelcome({ testimonials }: { testimonials: TestimonialView[] 
         </HeroCopy>
       </section>
       <TestimonialsSection testimonials={testimonials} />
+      <FaqsSection faqs={faqs} />
     </>
   );
 }

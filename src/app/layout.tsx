@@ -50,11 +50,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           <div className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x">
             <header className="sticky top-0 z-40 bg-white/70 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/55">
-              <div className="relative flex h-14 items-center gap-4 px-4 md:px-6">
-                <Link href="/" className="flex h-8 shrink-0 items-center">
-                  <SiteLogo />
-                </Link>
-                <SiteNav />
+              <div className="relative">
+                <div className="grid h-14 grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 md:px-6">
+                  <Link href="/" className="flex h-8 min-w-0 items-center justify-self-start">
+                    <SiteLogo />
+                  </Link>
+                  <SiteNav />
+                </div>
                 <FullWidthDivider position="bottom" />
               </div>
             </header>

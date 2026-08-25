@@ -8,6 +8,8 @@ import { formatWalkDate, formatDateTime } from "@/lib/dates";
 import { windowState } from "@/lib/walk-window";
 import { accountPortalHref } from "@/lib/urls";
 import { ClockInForm } from "./clock-in-form";
+import { WalkMembers } from "@/components/walk-members";
+import { getWalkMemberNames } from "@/lib/walk-members";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,6 +51,8 @@ export default async function WalkLinkPage({
         select: { clockedInAt: true },
       })
     : null;
+
+  const memberNames = alreadyIn ? await getWalkMemberNames(walk.id) : [];
 
   const state = windowState(walk.startsAt, walk.durationMins);
 
@@ -99,16 +103,19 @@ export default async function WalkLinkPage({
           </div>
         </div>
       ) : alreadyIn ? (
-        <div className="space-y-4 rounded-lg border bg-muted/40 p-5">
-          <div className="space-y-1">
-            <p className="font-medium">You are clocked in</p>
-            <p className="text-sm tabular-nums text-muted-foreground">
-              Recorded at {formatDateTime(alreadyIn.clockedInAt)}
-            </p>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 rounded-lg border bg-muted/40 p-5">
+            <div className="flex flex-col gap-1">
+              <p className="font-medium">You are clocked in</p>
+              <p className="text-sm tabular-nums text-muted-foreground">
+                Recorded at {formatDateTime(alreadyIn.clockedInAt)}
+              </p>
+            </div>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/dashboard">Back to walks</Link>
+            </Button>
           </div>
-          <Button asChild size="sm" variant="outline">
-            <Link href="/dashboard">Back to walks</Link>
-          </Button>
+          <WalkMembers names={memberNames} />
         </div>
       ) : state === "too-early" ? (
         <Alert>

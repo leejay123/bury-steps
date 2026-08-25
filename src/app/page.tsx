@@ -4,6 +4,7 @@ import { HomeWelcome } from "@/components/home-welcome";
 import { getOptionalUser } from "@/lib/auth";
 import { getHomepageSlides } from "@/lib/homepage-slides";
 import { getHomepageTestimonials } from "@/lib/homepage-testimonials";
+import { getHomepageFaqs } from "@/lib/homepage-faqs";
 import { accountPortalHref } from "@/lib/urls";
 
 export const dynamic = "force-dynamic";
@@ -16,9 +17,10 @@ export default async function Home() {
   const origin = `${proto}://${host}`;
   const walksHref = user?.role === "ADMIN" ? "/admin" : "/dashboard";
 
-  const [slides, testimonials] = await Promise.all([
+  const [slides, testimonials, faqs] = await Promise.all([
     getHomepageSlides(),
     getHomepageTestimonials(),
+    getHomepageFaqs(),
   ]);
 
   return (
@@ -30,7 +32,7 @@ export default async function Home() {
         slides={slides}
         walksHref={walksHref}
       />
-      <HomeWelcome testimonials={testimonials} />
+      <HomeWelcome testimonials={testimonials} faqs={faqs} />
     </div>
   );
 }

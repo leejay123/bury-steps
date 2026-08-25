@@ -10,6 +10,7 @@ import { londonWallClockToUtc } from "@/lib/dates";
 import { windowState } from "@/lib/walk-window";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
+import { isFaqCategory, MAX_HOMEPAGE_FAQS } from "@/lib/faqs";
 
 /** No look-alike characters — organisers read these out loud. */
 const makeToken = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 12);
@@ -105,10 +106,14 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
       },
     });
   } catch {
-    await prisma.walk.update({
-      where: { id },
-      data: { cancelledAt: new Date() },
-    });
+    try {
+      await prisma.walk.update({
+        where: { id },
+        data: { cancelledAt: new Date() },
+      });
+    } catch {
+      return { ok: false, error: "Could not cancel this walk. Try again." };
+    }
   }
 
   revalidatePath("/admin");
@@ -129,7 +134,11 @@ export async function deleteWalk(_prev: ActionResult | null, formData: FormData)
   });
   if (!walk) return { ok: false, error: "That walk is no longer there." };
 
-  await prisma.walk.delete({ where: { id } });
+  try {
+    await prisma.walk.delete({ where: { id } });
+  } catch {
+    return { ok: false, error: "Could not remove this walk. Try again." };
+  }
 
   revalidatePath("/admin");
   revalidatePath("/dashboard");
@@ -559,4 +568,132 @@ export async function deleteHomepageTestimonial(
 
   revalidateHomepage();
   return { ok: true, message: "Testimonial removed." };
+}
+
+// ------------------------------------------------------------------ homepage FAQs
+
+function readFaqCopy(
+  formData: FormData,
+): { category: string; question: string; answer: string } | { error: string } {
+  const category = String(formData.get("category") ?? "").trim();
+  const question = String(formData.get("question") ?? "").trim();
+  const answer = String(formData.get("answer") ?? "").trim();
+  if (!isFaqCategory(category)) return { error: "Choose a category." };
+  if (!question) return { error: "Add a question." };
+  if (!answer) return { error: "Add an answer." };
+  if (question.length > 160) return { error: "Keep the question under 160 characters." };
+  if (answer.length > 1200) return { error: "Keep the answer under 1,200 characters." };
+  return { category, question, answer };
+}
+
+export async function addHomepageFaq(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+
+  const count = await prisma.homepageFaq.count();
+  if (count >= MAX_HOMEPAGE_FAQS) {
+    return { ok: false, error: "You can have up to 20 FAQs." };
+  }
+
+  const copy = readFaqCopy(formData);
+  if ("error" in copy) return { ok: false, error: copy.error };
+
+  await prisma.homepageFaq.create({
+    data: {
+      sortOrder: count,
+      category: copy.category,
+      question: copy.question,
+      answer: copy.answer,
+    },
+  });
+
+  revalidateHomepage();
+  return { ok: true, message: "FAQ added." };
+}
+
+export async function updateHomepageFaq(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("faqId") ?? "");
+  if (!id) return { ok: false, error: "No FAQ selected." };
+
+  const copy = readFaqCopy(formData);
+  if ("error" in copy) return { ok: false, error: copy.error };
+
+  try {
+    await prisma.homepageFaq.update({
+      where: { id },
+      data: {
+        category: copy.category,
+        question: copy.question,
+        answer: copy.answer,
+      },
+    });
+  } catch {
+    return { ok: false, error: "That FAQ is no longer there." };
+  }
+
+  revalidateHomepage();
+  return { ok: true, message: "FAQ saved." };
+}
+
+export async function moveHomepageFaq(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("faqId") ?? "");
+  const direction = String(formData.get("direction") ?? "");
+  if (!id || (direction !== "up" && direction !== "down")) {
+    return { ok: false, error: "Could not move that FAQ." };
+  }
+
+  const rows = await prisma.homepageFaq.findMany({ orderBy: { sortOrder: "asc" } });
+  const index = rows.findIndex((row) => row.id === id);
+  if (index < 0) return { ok: false, error: "That FAQ is no longer there." };
+
+  const swapWith = direction === "up" ? index - 1 : index + 1;
+  if (swapWith < 0 || swapWith >= rows.length) {
+    return { ok: false, error: "Already at the end." };
+  }
+
+  const a = rows[index]!;
+  const b = rows[swapWith]!;
+
+  await prisma.$transaction([
+    prisma.homepageFaq.update({ where: { id: a.id }, data: { sortOrder: b.sortOrder } }),
+    prisma.homepageFaq.update({ where: { id: b.id }, data: { sortOrder: a.sortOrder } }),
+  ]);
+
+  revalidateHomepage();
+  return { ok: true, message: "FAQ order updated." };
+}
+
+export async function deleteHomepageFaq(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("faqId") ?? "");
+  if (!id) return { ok: false, error: "No FAQ selected." };
+
+  try {
+    await prisma.homepageFaq.delete({ where: { id } });
+  } catch {
+    return { ok: false, error: "That FAQ is no longer there." };
+  }
+
+  const remaining = await prisma.homepageFaq.findMany({ orderBy: { sortOrder: "asc" } });
+  await prisma.$transaction(
+    remaining.map((row, index) =>
+      prisma.homepageFaq.update({ where: { id: row.id }, data: { sortOrder: index } }),
+    ),
+  );
+
+  revalidateHomepage();
+  return { ok: true, message: "FAQ removed." };
 }

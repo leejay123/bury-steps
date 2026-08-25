@@ -5,6 +5,8 @@ import { formatWalkDate } from "@/lib/dates";
 import { appUrl } from "@/lib/urls";
 import { CreateWalkForm } from "./create-walk-form";
 import { ShareLink } from "@/components/share-link";
+import { CancelWalkButton } from "./walks/[id]/cancel-walk-button";
+import { DeleteWalkButton } from "./walks/[id]/delete-walk-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -54,6 +56,12 @@ function WalkList({ walks, baseUrl, empty }: { walks: WalkRow[]; baseUrl: string
           </div>
           <div className="mt-3">
             <ShareLink url={`${baseUrl}/w/${walk.token}`} />
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {!walk.cancelledAt ? (
+              <CancelWalkButton walkId={walk.id} attendanceCount={walk._count.attendances} />
+            ) : null}
+            <DeleteWalkButton walkId={walk.id} attendanceCount={walk._count.attendances} />
           </div>
         </li>
       ))}
@@ -110,7 +118,10 @@ export default async function AdminPage() {
       <Card>
         <CardHeader>
           <CardTitle>Walks</CardTitle>
-          <CardDescription>Upcoming walks and recent ones. Open a walk to cancel or remove it.</CardDescription>
+          <CardDescription>
+            Upcoming walks and recent ones. Cancel keeps a record. Remove deletes the walk and its
+            clock-ins.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="upcoming" className="w-full">

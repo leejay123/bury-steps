@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { clockIn, type ActionResult } from "@/server/actions";
 import { Button } from "@/components/ui/button";
@@ -20,15 +21,20 @@ function Submit({ disabled }: { disabled: boolean }) {
 }
 
 export function ClockInForm({ token }: { token: string }) {
+  const router = useRouter();
   const [state, action] = useActionState<ActionResult | null, FormData>(clockIn, null);
   const [ack, setAck] = useState(false);
   const [hasConditions, setHasConditions] = useState<"yes" | "no" | null>(null);
 
   useEffect(() => {
     if (!state) return;
-    if (state.ok) toast.success(state.message ?? "Clocked in.");
-    else toast.error(state.error);
-  }, [state]);
+    if (state.ok) {
+      toast.success(state.message ?? "Clocked in.");
+      router.refresh();
+    } else {
+      toast.error(state.error);
+    }
+  }, [router, state]);
 
   return (
     <form action={action} className="space-y-6">

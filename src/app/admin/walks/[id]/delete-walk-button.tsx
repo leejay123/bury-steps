@@ -8,7 +8,6 @@ import { deleteWalk, type ActionResult } from "@/server/actions";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -21,13 +20,9 @@ import {
 function Confirm() {
   const { pending } = useFormStatus();
   return (
-    <AlertDialogAction
-      type="submit"
-      disabled={pending}
-      className="bg-destructive text-white hover:bg-destructive/90"
-    >
+    <Button type="submit" variant="destructive" disabled={pending}>
       {pending ? "Removing…" : "Remove walk"}
-    </AlertDialogAction>
+    </Button>
   );
 }
 
@@ -48,6 +43,7 @@ export function DeleteWalkButton({
       toast.success(state.message ?? "Walk removed.");
       setOpen(false);
       router.push("/admin");
+      router.refresh();
     } else {
       toast.error(state.error);
     }
@@ -61,26 +57,26 @@ export function DeleteWalkButton({
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Remove this walk?</AlertDialogTitle>
-          <AlertDialogDescription asChild>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <p>
-                The walk and its share link will be deleted. People who open the old link will see
-                that it no longer exists.
-              </p>
-              {attendanceCount > 0 ? (
+        <form action={action} className="space-y-4">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove this walk?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm text-muted-foreground">
                 <p>
-                  {attendanceCount === 1
-                    ? "The one clock-in record for this walk will also be deleted."
-                    : `The ${attendanceCount} clock-in records for this walk will also be deleted.`}
+                  The walk and its share link will be deleted. People who open the old link will see
+                  that it no longer exists.
                 </p>
-              ) : null}
-              <p>This cannot be undone from the app. To keep a record, cancel the walk instead.</p>
-            </div>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <form action={action}>
+                {attendanceCount > 0 ? (
+                  <p>
+                    {attendanceCount === 1
+                      ? "The one clock-in record for this walk will also be deleted."
+                      : `The ${attendanceCount} clock-in records for this walk will also be deleted.`}
+                  </p>
+                ) : null}
+                <p>This cannot be undone from the app. To keep a record, cancel the walk instead.</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
           <input type="hidden" name="walkId" value={walkId} />
           <AlertDialogFooter>
             <AlertDialogCancel type="button">Keep the walk</AlertDialogCancel>
