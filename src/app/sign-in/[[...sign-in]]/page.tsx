@@ -1,10 +1,10 @@
-import { SignIn } from "@clerk/nextjs";
-import { AFTER_AUTH_PATH, SIGN_UP_PATH } from "@/lib/urls";
+import { redirect } from "next/navigation";
+import { accountPortalUrl } from "@/lib/urls";
 
-export default function Page() {
-  return (
-    <div className="flex justify-center py-8">
-      <SignIn fallbackRedirectUrl={AFTER_AUTH_PATH} signUpUrl={SIGN_UP_PATH} />
-    </div>
-  );
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  redirect(accountPortalUrl("sign-in", await searchParams));
 }

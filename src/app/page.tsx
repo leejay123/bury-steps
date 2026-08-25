@@ -1,7 +1,11 @@
-import { SignInButton, SignUpButton, SignedOut } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { HomeCarousel } from "@/components/home-carousel";
+import { HomeWelcome } from "@/components/home-welcome";
+import { prisma } from "@/lib/db";
+import { slideSrc } from "@/lib/slides";
+
+export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const { userId } = await auth();
@@ -9,25 +13,22 @@ export default async function Home() {
     redirect("/dashboard");
   }
 
+  const rows = await prisma.homepageSlide.findMany({
+    orderBy: { sortOrder: "asc" },
+    select: { id: true, sortOrder: true, alt: true, imagePath: true, updatedAt: true },
+  });
+
+  const slides = rows.map((row) => ({
+    id: row.id,
+    sortOrder: row.sortOrder,
+    alt: row.alt,
+    src: slideSrc(row),
+  }));
+
   return (
-    <div className="space-y-6">
-      <div className="space-y-3">
-        <h1 className="text-3xl font-semibold tracking-tight">Bury Steps Walking Group</h1>
-        <p className="text-muted-foreground">
-          Weekly walks around Bury and the surrounding countryside. Create an account to see
-          what&rsquo;s coming up, then clock in when you arrive.
-        </p>
-      </div>
-      <div className="flex gap-3">
-        <SignedOut>
-          <SignUpButton mode="modal">
-            <Button>Join the group</Button>
-          </SignUpButton>
-          <SignInButton mode="modal">
-            <Button variant="outline">Sign in</Button>
-          </SignInButton>
-        </SignedOut>
-      </div>
+    <div className="space-y-8">
+      {slides.length > 0 && <HomeCarousel slides={slides} />}
+      <HomeWelcome />
     </div>
   );
 }

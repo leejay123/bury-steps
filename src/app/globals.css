@@ -8,11 +8,34 @@
   background-color: rgba(18, 28, 22, 0.42) !important;
 }
 
+/* Clerk's shadcn theme draws the field with box-shadow, then adds a 4px
+   --ring halo on focus. That is the thick green border. Keep a 1px edge. */
+.cl-input,
+.cl-formFieldInput,
+.cl-otpCodeFieldInput,
+.cl-phoneInputInput {
+  outline: none !important;
+  background-color: var(--background) !important;
+  box-shadow: 0 0 0 1px var(--border) !important;
+}
+
+.cl-input:focus,
+.cl-input:focus-visible,
+.cl-formFieldInput:focus,
+.cl-formFieldInput:focus-visible,
+.cl-otpCodeFieldInput:focus,
+.cl-otpCodeFieldInput:focus-visible,
+.cl-phoneInputInput:focus,
+.cl-phoneInputInput:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 1px var(--ring) !important;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
   --radius: 0.5rem;
-  --background: oklch(0.99 0.005 120);
+  --background: oklch(1 0 0);
   --foreground: oklch(0.22 0.02 150);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.22 0.02 150);

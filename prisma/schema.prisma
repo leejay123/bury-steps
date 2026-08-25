@@ -69,3 +69,18 @@ model Attendance {
   @@index([walkId])
   @@index([conditionsPurgeAfter])
 }
+
+/// Public homepage carousel. Organisers can keep up to 3 slides.
+model HomepageSlide {
+  id        String   @id @default(cuid())
+  sortOrder Int
+  alt       String   @default("Bury Steps Walking Group")
+  /// Bundled file such as /slides/bury-steps-hero.jpg. Null once an upload is stored.
+  imagePath String?
+  imageMime String?
+  imageData Bytes?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+}

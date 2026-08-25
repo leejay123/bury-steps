@@ -124,19 +124,25 @@ For each one, tick **Production**, **Preview** and **Development**.
 If Vercel warns that `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` looks like a secret,
 that is a false alarm. Confirm it and save it anyway. It is meant to be public.
 
-7. Click **Visit** (or open the `.vercel.app` link). **Copy that web address.**
-   You need it for Clerk in the next step. Do not try to sign in yet.
+7. Click **Visit** (or open the `.vercel.app` link).
+
+For a first go-live, a `*.vercel.app` address is enough. Clerk talks to the
+app through `https://your-app.vercel.app/__clerk` — you do **not** add DNS
+records on `vercel.app`. Prefer a custom domain when you want branded emails,
+email-link sign-in, invitations, and custom email templates.
 
 ---
 
-## Step 4 — Tell Clerk about your live site
+## Step 4 — Production Clerk keys
 
-1. Go back to the Clerk dashboard.
-2. Open **Domains** (sometimes under **Configure**).
-3. Add your Vercel address, for example `https://bury-steps.vercel.app`.
-   Include `https://`. Do not add a slash at the end.
+In Clerk, switch to the **Production** instance and copy the **live** keys
+(`pk_live_…` and `sk_live_…`). In Vercel → **Settings** → **Environment
+Variables**, set those on **Production** (keep development keys on Preview if
+you want). Redeploy.
 
-Now open your Vercel site in the browser.
+Sign-in, sign-up, verification codes, and password-reset emails on
+`*.vercel.app` use Clerk’s shared `accounts.dev` mail. You cannot add DNS for
+`vercel.app`.
 
 ---
 
@@ -178,7 +184,7 @@ not finish creating tables — check that the Vercel deploy succeeded.
 |---|---|---|
 | Vercel deploy fails and mentions the database or Prisma | `DATABASE_URL` is missing, or it is the wrong pooler | In Vercel → Settings → Environment Variables, check the name is exactly `DATABASE_URL`. In Supabase, copy **Session pooler** again (port **5432**, not 6543). Redeploy |
 | Vercel deploy fails on a Clerk key | A key was not pasted, or there is an extra space | Re-copy both Clerk keys into Vercel. No quotes around the value in the Vercel form. Redeploy |
-| The site loads but sign-in errors or loops | Clerk does not know your Vercel address yet | Add `https://your-app.vercel.app` under Clerk → **Domains** |
+| The site loads but sign-in does nothing | Production keys without the `/__clerk` proxy, or test keys on Production | Confirm Vercel Production has `pk_live_` / `sk_live_` keys, the app is on Clerk SDK 7+, and middleware matches `/__clerk/:path*`. Do not add DNS for `vercel.app` |
 | `/admin` sends you back to walks | Your account is a member, not an organiser | In Supabase → Table Editor → User, set `role` to `ADMIN` |
 | Tables are missing in Supabase | Deploy did not run, or it failed before the database step | Open the failed Vercel deployment log. Fix `DATABASE_URL`, then **Redeploy** |
 | Password / authentication failed | The password inside `DATABASE_URL` is wrong | Reset the database password in Supabase, copy the Connect URI again, update Vercel, redeploy |
@@ -190,16 +196,16 @@ To redeploy without changing code: Vercel → **Deployments** → the latest one
 
 ## What each page does
 
-Replace `your-app.vercel.app` with your real address.
+The live site is [https://burysteps-walkinggroup.co.uk](https://burysteps-walkinggroup.co.uk).
 
 | Page | Who it is for | What it is for |
 |---|---|---|
-| `https://your-app.vercel.app/` | Anyone | Home |
-| `https://your-app.vercel.app/sign-up` | Anyone | Create an account |
-| `https://your-app.vercel.app/dashboard` | Signed-in members | Upcoming walks |
-| `https://your-app.vercel.app/admin` | Organisers only | Create walks and copy share links |
-| `https://your-app.vercel.app/admin/walks/…` | Organisers only | Who is coming, download a list, cancel |
-| `https://your-app.vercel.app/w/…` | Signed-in members | Clock in for that walk |
+| `https://burysteps-walkinggroup.co.uk/` | Anyone | Home |
+| `https://burysteps-walkinggroup.co.uk/sign-up` | Anyone | Create an account |
+| `https://burysteps-walkinggroup.co.uk/dashboard` | Signed-in members | Upcoming walks |
+| `https://burysteps-walkinggroup.co.uk/admin` | Organisers only | Create walks and copy share links |
+| `https://burysteps-walkinggroup.co.uk/admin/walks/…` | Organisers only | Who is coming, download a list, cancel |
+| `https://burysteps-walkinggroup.co.uk/w/…` | Signed-in members | Clock in for that walk |
 
 Times are shown in UK time (GMT in winter, BST in summer).
 

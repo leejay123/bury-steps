@@ -8,6 +8,7 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { requireAdmin, requireUser, displayName } from "@/lib/auth";
 import { londonWallClockToUtc } from "@/lib/dates";
 import { windowState } from "@/lib/walk-window";
+import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 
 /** No look-alike characters — organisers read these out loud. */
 const makeToken = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 12);
@@ -218,4 +219,151 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
   revalidatePath("/admin/members");
   revalidatePath("/dashboard");
   return { ok: true, message: `${displayName(target)} has been removed from the group.` };
+}
+
+// ----------------------------------------------------------- homepage slides
+
+const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+const MAX_SLIDE_BYTES = 4 * 1024 * 1024;
+
+async function readSlideImage(
+  formData: FormData,
+): Promise<{ data: Uint8Array<ArrayBuffer>; mime: string } | { error: string }> {
+  const file = formData.get("image");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Choose an image to upload." };
+  }
+  if (file.size > MAX_SLIDE_BYTES) {
+    return { error: "Keep the image under 4 MB." };
+  }
+  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+    return { error: "Use a JPEG, PNG or WebP image." };
+  }
+  return {
+    data: new Uint8Array(await file.arrayBuffer()) as Uint8Array<ArrayBuffer>,
+    mime: file.type,
+  };
+}
+
+function revalidateHomepage() {
+  revalidatePath("/");
+  revalidatePath("/admin/homepage");
+}
+
+export async function addHomepageSlide(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+
+  const count = await prisma.homepageSlide.count();
+  if (count >= MAX_HOMEPAGE_SLIDES) {
+    return { ok: false, error: "You can have up to 3 slides." };
+  }
+
+  const image = await readSlideImage(formData);
+  if ("error" in image) return { ok: false, error: image.error };
+
+  const alt = String(formData.get("alt") ?? "").trim() || "Bury Steps Walking Group";
+
+  await prisma.homepageSlide.create({
+    data: {
+      sortOrder: count,
+      alt,
+      imagePath: null,
+      imageMime: image.mime,
+      imageData: image.data,
+    },
+  });
+
+  revalidateHomepage();
+  return { ok: true, message: "Slide added." };
+}
+
+export async function replaceHomepageSlideImage(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("slideId") ?? "");
+  if (!id) return { ok: false, error: "No slide selected." };
+
+  const image = await readSlideImage(formData);
+  if ("error" in image) return { ok: false, error: image.error };
+
+  const alt = String(formData.get("alt") ?? "").trim();
+
+  try {
+    await prisma.homepageSlide.update({
+      where: { id },
+      data: {
+        imagePath: null,
+        imageMime: image.mime,
+        imageData: image.data,
+        ...(alt ? { alt } : {}),
+      },
+    });
+  } catch {
+    return { ok: false, error: "That slide is no longer there." };
+  }
+
+  revalidateHomepage();
+  return { ok: true, message: "Slide image updated." };
+}
+
+export async function moveHomepageSlide(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("slideId") ?? "");
+  const direction = String(formData.get("direction") ?? "");
+  if (!id || (direction !== "up" && direction !== "down")) {
+    return { ok: false, error: "Could not move that slide." };
+  }
+
+  const slides = await prisma.homepageSlide.findMany({ orderBy: { sortOrder: "asc" } });
+  const index = slides.findIndex((slide) => slide.id === id);
+  if (index < 0) return { ok: false, error: "That slide is no longer there." };
+
+  const swapWith = direction === "up" ? index - 1 : index + 1;
+  if (swapWith < 0 || swapWith >= slides.length) {
+    return { ok: false, error: "Already at the end." };
+  }
+
+  const a = slides[index]!;
+  const b = slides[swapWith]!;
+
+  await prisma.$transaction([
+    prisma.homepageSlide.update({ where: { id: a.id }, data: { sortOrder: b.sortOrder } }),
+    prisma.homepageSlide.update({ where: { id: b.id }, data: { sortOrder: a.sortOrder } }),
+  ]);
+
+  revalidateHomepage();
+  return { ok: true, message: "Slide order updated." };
+}
+
+export async function deleteHomepageSlide(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("slideId") ?? "");
+  if (!id) return { ok: false, error: "No slide selected." };
+
+  try {
+    await prisma.homepageSlide.delete({ where: { id } });
+  } catch {
+    return { ok: false, error: "That slide is no longer there." };
+  }
+
+  const remaining = await prisma.homepageSlide.findMany({ orderBy: { sortOrder: "asc" } });
+  await prisma.$transaction(
+    remaining.map((slide, index) =>
+      prisma.homepageSlide.update({ where: { id: slide.id }, data: { sortOrder: index } }),
+    ),
+  );
+
+  revalidateHomepage();
+  return { ok: true, message: "Slide removed." };
 }

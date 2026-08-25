@@ -2,6 +2,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "./db";
 import type { User } from "@prisma/client";
+import { SIGN_IN_URL } from "./urls";
 
 /**
  * Returns the local User row for the signed-in Clerk user, creating it on
@@ -10,7 +11,7 @@ import type { User } from "@prisma/client";
  */
 export async function requireUser(): Promise<User> {
   const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
+  if (!userId) redirect(SIGN_IN_URL);
 
   const existing = await prisma.user.findUnique({ where: { clerkId: userId } });
   if (existing) return existing;
