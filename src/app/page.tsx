@@ -1,7 +1,6 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
+import { SignInButton, SignUpButton, SignedOut } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
-import { SignedOut } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 export default async function Home() {
@@ -21,12 +20,12 @@ export default async function Home() {
       </div>
       <div className="flex gap-3">
         <SignedOut>
-          <Button asChild>
-            <Link href="/sign-up">Join the group</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/sign-in">Sign in</Link>
-          </Button>
+          <SignUpButton mode="modal">
+            <Button>Join the group</Button>
+          </SignUpButton>
+          <SignInButton mode="modal">
+            <Button variant="outline">Sign in</Button>
+          </SignInButton>
         </SignedOut>
       </div>
     </div>

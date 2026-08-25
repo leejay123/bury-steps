@@ -66,6 +66,15 @@ export function formatTime(at: Date): string {
   }).format(at);
 }
 
+export function formatDate(at: Date): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: LONDON,
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(at);
+}
+
 export function formatDateTime(at: Date): string {
   return new Intl.DateTimeFormat("en-GB", {
     timeZone: LONDON,

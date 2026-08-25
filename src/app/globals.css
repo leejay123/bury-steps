@@ -1,5 +1,12 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "@clerk/themes/shadcn.css";
+
+.cl-modalBackdrop {
+  backdrop-filter: blur(16px) saturate(1.15);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+  background-color: rgba(18, 28, 22, 0.42) !important;
+}
 
 @custom-variant dark (&:is(.dark *));
 

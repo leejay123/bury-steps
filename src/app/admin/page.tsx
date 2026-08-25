@@ -8,6 +8,7 @@ import { ShareLink } from "@/components/share-link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AdminNav } from "./admin-nav";
 
 export const dynamic = "force-dynamic";
 
@@ -93,7 +94,10 @@ export default async function AdminPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-semibold tracking-tight">Organiser tools</h1>
+      <div className="space-y-2">
+        <h1 className="text-2xl font-semibold tracking-tight">Organiser tools</h1>
+        <AdminNav current="walks" />
+      </div>
 
       <Card>
         <CardHeader>

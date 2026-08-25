@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { customAlphabet } from "nanoid";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { requireAdmin, requireUser } from "@/lib/auth";
+import { clerkClient } from "@clerk/nextjs/server";
+import { requireAdmin, requireUser, displayName } from "@/lib/auth";
 import { londonWallClockToUtc } from "@/lib/dates";
 import { windowState } from "@/lib/walk-window";
 
@@ -159,4 +160,62 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
   revalidatePath("/dashboard");
   revalidatePath(`/admin/walks/${walk.id}`);
   return { ok: true, message: "Clocked in. Enjoy the walk." };
+}
+
+// ---------------------------------------------------------------- delete member
+
+function isNotFoundStatus(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "status" in err &&
+    (err as { status?: unknown }).status === 404
+  );
+}
+
+export async function deleteMember(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  const id = String(formData.get("userId") ?? "");
+  if (!id) return { ok: false, error: "No member selected." };
+
+  if (id === admin.id) {
+    return { ok: false, error: "You cannot delete your own account from here." };
+  }
+
+  const target = await prisma.user.findUnique({
+    where: { id },
+    include: { _count: { select: { walksCreated: true, attendances: true } } },
+  });
+  if (!target) return { ok: false, error: "That member is no longer in the group." };
+
+  if (target.role === "ADMIN") {
+    const adminCount = await prisma.user.count({ where: { role: "ADMIN" } });
+    if (adminCount <= 1) {
+      return { ok: false, error: "You cannot delete the last organiser." };
+    }
+  }
+
+  const clerk = await clerkClient();
+  try {
+    await clerk.users.deleteUser(target.clerkId);
+  } catch (err) {
+    if (!isNotFoundStatus(err)) {
+      return { ok: false, error: "Could not remove their login. Try again in a moment." };
+    }
+  }
+
+  await prisma.$transaction(async (tx) => {
+    if (target._count.walksCreated > 0) {
+      await tx.walk.updateMany({
+        where: { createdById: target.id },
+        data: { createdById: admin.id },
+      });
+    }
+    await tx.user.delete({ where: { id: target.id } });
+  });
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/members");
+  revalidatePath("/dashboard");
+  return { ok: true, message: `${displayName(target)} has been removed from the group.` };
 }
