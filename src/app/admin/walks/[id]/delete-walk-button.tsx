@@ -52,7 +52,7 @@ export function DeleteWalkButton({
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <Button size="sm" variant="destructive">
+        <Button size="xs" variant="destructive">
           Remove walk
         </Button>
       </AlertDialogTrigger>

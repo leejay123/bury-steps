@@ -82,7 +82,11 @@ export function HeroCopy({
         </motion.div>
       ) : null}
 
-      {after ? <motion.div variants={item}>{after}</motion.div> : null}
+      {after ? (
+        <motion.div className="flex w-full max-w-3xl justify-center" variants={item}>
+          {after}
+        </motion.div>
+      ) : null}
     </motion.div>
   );
 }

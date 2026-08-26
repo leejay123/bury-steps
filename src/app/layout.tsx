@@ -10,6 +10,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteLogo } from "@/components/site-logo";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { MotionPage } from "@/components/motion";
+import { BackToTop } from "@/components/back-to-top";
 import Link from "next/link";
 import "./globals.css";
 
@@ -74,6 +75,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <SiteFooter />
           </div>
           <Toaster position="top-center" />
+          <BackToTop />
         </ClerkProvider>
       </body>
     </html>

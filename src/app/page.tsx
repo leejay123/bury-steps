@@ -5,6 +5,7 @@ import { getOptionalUser } from "@/lib/auth";
 import { getHomepageSlides } from "@/lib/homepage-slides";
 import { getHomepageTestimonials } from "@/lib/homepage-testimonials";
 import { getHomepageFaqs } from "@/lib/homepage-faqs";
+import { getSiteTheme } from "@/lib/site-theme";
 import { accountPortalHref } from "@/lib/urls";
 
 export const dynamic = "force-dynamic";
@@ -17,15 +18,17 @@ export default async function Home() {
   const origin = `${proto}://${host}`;
   const walksHref = user?.role === "ADMIN" ? "/admin" : "/dashboard";
 
-  const [slides, testimonials, faqs] = await Promise.all([
+  const [slides, testimonials, faqs, theme] = await Promise.all([
     getHomepageSlides(),
     getHomepageTestimonials(),
     getHomepageFaqs(),
+    getSiteTheme(),
   ]);
 
   return (
-    <div className="-mx-4 -my-8 md:-mx-8">
+    <div className="-mx-4 -mt-8 md:-mx-8">
       <HeroSection
+        carouselEnabled={theme.carouselEnabled}
         signInHref={accountPortalHref("sign-in", `${origin}/dashboard`)}
         signUpHref={accountPortalHref("sign-up", `${origin}/dashboard`)}
         signedIn={Boolean(user)}

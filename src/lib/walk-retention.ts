@@ -1,0 +1,1 @@
+export const CANCELLED_WALK_RETENTION_DAYS = 30;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { ChevronRight, ImageIcon } from "lucide-react";
@@ -8,13 +8,14 @@ import { toast } from "sonner";
 import {
   addHomepageSlide,
   deleteHomepageSlide,
-  moveHomepageSlide,
+  reorderHomepageSlides,
   replaceHomepageSlideImage,
   type ActionResult,
 } from "@/server/actions";
 import type { SlideView } from "@/lib/slides";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { EmptyState } from "@/components/empty-state";
+import { DragHandle, useSortableIds } from "@/components/sortable-rows";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -145,27 +146,18 @@ function AddDrawerForm({
 }
 
 function EditDrawerForm({
-  index,
   onSaved,
   slide,
-  total,
 }: {
-  index: number;
   onSaved: () => void;
   slide: SlideView;
-  total: number;
 }) {
   const [updateState, updateAction] = useActionState<ActionResult | null, FormData>(
     replaceHomepageSlideImage,
     null,
   );
-  const [moveState, moveAction] = useActionState<ActionResult | null, FormData>(
-    moveHomepageSlide,
-    null,
-  );
 
   useActionToast(updateState, onSaved);
-  useActionToast(moveState);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -177,22 +169,6 @@ function EditDrawerForm({
           <PendingSubmit label="Save" pendingLabel="Saving…" />
         </DrawerFooter>
       </form>
-      <div className="flex flex-wrap gap-2 px-4 pb-4">
-        <form action={moveAction}>
-          <input name="slideId" type="hidden" value={slide.id} />
-          <input name="direction" type="hidden" value="up" />
-          <Button disabled={index === 0} size="sm" type="submit" variant="outline">
-            Move up
-          </Button>
-        </form>
-        <form action={moveAction}>
-          <input name="slideId" type="hidden" value={slide.id} />
-          <input name="direction" type="hidden" value="down" />
-          <Button disabled={index === total - 1} size="sm" type="submit" variant="outline">
-            Move down
-          </Button>
-        </form>
-      </div>
     </div>
   );
 }
@@ -216,7 +192,7 @@ function RemoveSlideButton({
   return (
     <AlertDialog onOpenChange={setOpen} open={open}>
       <AlertDialogTrigger asChild>
-        <Button size="sm" variant="destructive">
+        <Button size="xs" variant="destructive">
           Remove
         </Button>
       </AlertDialogTrigger>
@@ -256,6 +232,17 @@ export function HomepageSlideManager({
   slides: SlideView[];
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
+  const [, startTransition] = useTransition();
+  const slideIds = slides.map((item) => item.id);
+  const { order, rowProps } = useSortableIds(slideIds, (ids) => {
+    if (ids.join() === slideIds.join()) return;
+    startTransition(() => {
+      void reorderHomepageSlides(ids);
+    });
+  });
+  const sorted = order
+    .map((id) => slides.find((item) => item.id === id))
+    .filter((item): item is SlideView => Boolean(item));
   const atLimit = slides.length >= maxSlides;
   const editingId = mode?.type === "edit" ? mode.slide.id : null;
   const liveIndex = editingId ? slides.findIndex((item) => item.id === editingId) : -1;
@@ -290,10 +277,13 @@ export function HomepageSlideManager({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-8">
+                <span className="sr-only">Reorder</span>
+              </TableHead>
               <TableHead className="w-16">Photo</TableHead>
               <TableHead>Slide</TableHead>
               <TableHead>Description</TableHead>
-              <TableHead className="w-24 text-right">
+              <TableHead className="w-20 text-right">
                 <span className="sr-only">Remove</span>
               </TableHead>
               <TableHead className="w-8">
@@ -302,12 +292,16 @@ export function HomepageSlideManager({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {slides.map((slide, index) => (
+            {sorted.map((slide, index) => (
               <TableRow
                 className="relative cursor-pointer"
                 key={slide.id}
                 onClick={() => setMode({ type: "edit", slide, index })}
+                {...rowProps(slide.id)}
               >
+                <TableCell onClick={(event) => event.stopPropagation()}>
+                  <DragHandle label={`Reorder slide ${index + 1}`} />
+                </TableCell>
                 <TableCell>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -359,11 +353,9 @@ export function HomepageSlideManager({
           ) : null}
           {editing ? (
             <EditDrawerForm
-              index={editing.index}
               key={editing.slide.id}
               onSaved={() => setMode(null)}
               slide={editing.slide}
-              total={slides.length}
             />
           ) : null}
         </DrawerContent>

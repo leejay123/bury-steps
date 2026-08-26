@@ -8,15 +8,27 @@ import {
   themeStyle,
 } from "@/lib/theme";
 
-export const getSiteTheme = cache(async (): Promise<{ primaryColor: string; style: CSSProperties }> => {
+export const getSiteTheme = cache(async (): Promise<{
+  primaryColor: string;
+  style: CSSProperties;
+  carouselEnabled: boolean;
+}> => {
   try {
     const row = await prisma.siteSetting.findUnique({
       where: { id: SITE_SETTING_ID },
-      select: { primaryColor: true },
+      select: { primaryColor: true, carouselEnabled: true },
     });
     const primaryColor = normalizeHex(row?.primaryColor ?? "") ?? DEFAULT_PRIMARY_COLOR;
-    return { primaryColor, style: themeStyle(primaryColor) };
+    return {
+      primaryColor,
+      style: themeStyle(primaryColor),
+      carouselEnabled: row?.carouselEnabled ?? true,
+    };
   } catch {
-    return { primaryColor: DEFAULT_PRIMARY_COLOR, style: themeStyle(DEFAULT_PRIMARY_COLOR) };
+    return {
+      primaryColor: DEFAULT_PRIMARY_COLOR,
+      style: themeStyle(DEFAULT_PRIMARY_COLOR),
+      carouselEnabled: true,
+    };
   }
 });

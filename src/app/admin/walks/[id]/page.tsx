@@ -15,6 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
   Table,
@@ -71,14 +72,20 @@ export default async function WalkDetailPage({
   const withConditions = walk.attendances.filter((a) => a.conditions).length;
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">
         &larr; All walks
       </Link>
 
-      <header className="space-y-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-semibold tracking-tight">{walk.title}</h1>
+      <Card>
+        <CardHeader className="flex flex-row items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <CardTitle className="text-2xl">{walk.title}</CardTitle>
+            <CardDescription>
+              {formatWalkDate(walk.startsAt)}
+              {walk.location ? ` · ${walk.location}` : ""} · {walk.durationMins} min
+            </CardDescription>
+          </div>
           {walk.cancelledAt ? (
             <Badge variant="destructive">Cancelled</Badge>
           ) : state === "open" ? (
@@ -88,16 +95,18 @@ export default async function WalkDetailPage({
           ) : (
             <Badge variant="outline">Finished</Badge>
           )}
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {formatWalkDate(walk.startsAt)}
-          {walk.location ? ` \u00B7 ${walk.location}` : ""} &middot; {walk.durationMins} min
-        </p>
-        {walk.description && <p className="text-sm leading-relaxed">{walk.description}</p>}
-        {walk.cancelledAt && walk.cancelledReason ? (
-          <p className="text-sm text-destructive">Cancelled: {walk.cancelledReason}</p>
+        </CardHeader>
+        {walk.description || (walk.cancelledAt && walk.cancelledReason) ? (
+          <CardContent className="flex flex-col gap-2">
+            {walk.description ? (
+              <p className="text-sm leading-relaxed">{walk.description}</p>
+            ) : null}
+            {walk.cancelledAt && walk.cancelledReason ? (
+              <p className="text-sm text-destructive">Cancelled: {walk.cancelledReason}</p>
+            ) : null}
+          </CardContent>
         ) : null}
-      </header>
+      </Card>
 
       <ShareLink url={`${appUrl()}/w/${walk.token}`} />
 
@@ -126,7 +135,7 @@ export default async function WalkDetailPage({
         </Alert>
       )}
 
-      <section className="space-y-3">
+      <section className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between">
           <h2 className="text-sm font-medium text-muted-foreground">Attendance</h2>
           <span className="text-sm tabular-nums text-muted-foreground">
@@ -155,28 +164,30 @@ export default async function WalkDetailPage({
                   const name = displayName(a.user);
                   return (
                     <TableRow key={a.id}>
-                      <TableCell className="space-y-1.5 align-top">
-                        <div className="flex items-center gap-2.5">
-                          <Avatar className="size-7">
-                            <AvatarFallback className="text-xs">{initials(name)}</AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-medium">{name}</p>
-                            <p className="truncate text-xs text-muted-foreground">{a.user.email}</p>
+                      <TableCell className="align-top">
+                        <div className="flex flex-col gap-1.5">
+                          <div className="flex items-center gap-2.5">
+                            <Avatar className="size-7">
+                              <AvatarFallback className="text-xs">{initials(name)}</AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium">{name}</p>
+                              <p className="truncate text-xs text-muted-foreground">{a.user.email}</p>
+                            </div>
                           </div>
+                          {a.clockedOutAt && a.clockedOutReason ? (
+                            <p className="rounded-md bg-muted px-2.5 py-1.5 text-xs leading-relaxed">
+                              Clock-out: {a.clockedOutReason}
+                            </p>
+                          ) : null}
+                          {a.conditions ? (
+                            <p className="rounded-md bg-accent px-2.5 py-1.5 text-xs leading-relaxed">
+                              {a.conditions}
+                            </p>
+                          ) : (
+                            <p className="text-xs text-muted-foreground">No conditions reported</p>
+                          )}
                         </div>
-                        {a.clockedOutAt && a.clockedOutReason ? (
-                          <p className="rounded-md bg-muted px-2.5 py-1.5 text-xs leading-relaxed">
-                            Clock-out: {a.clockedOutReason}
-                          </p>
-                        ) : null}
-                        {a.conditions ? (
-                          <p className="rounded-md bg-accent px-2.5 py-1.5 text-xs leading-relaxed">
-                            {a.conditions}
-                          </p>
-                        ) : (
-                          <p className="text-xs text-muted-foreground">No conditions reported</p>
-                        )}
                       </TableCell>
                       <TableCell className="align-top">
                         {a.clockedOutAt ? (

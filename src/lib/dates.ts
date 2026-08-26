@@ -62,7 +62,6 @@ export function formatTime(at: Date): string {
     timeZone: LONDON,
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit",
   }).format(at);
 }
 
@@ -79,6 +78,6 @@ export function formatDateTime(at: Date): string {
   return new Intl.DateTimeFormat("en-GB", {
     timeZone: LONDON,
     dateStyle: "short",
-    timeStyle: "medium",
+    timeStyle: "short",
   }).format(at);
 }

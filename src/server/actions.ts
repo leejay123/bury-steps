@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { customAlphabet } from "nanoid";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import type { Prisma } from "@prisma/client";
 import { clerkClient } from "@clerk/nextjs/server";
 import { requireAdmin, requireUser, displayName } from "@/lib/auth";
 import { londonWallClockToUtc } from "@/lib/dates";
@@ -12,7 +13,7 @@ import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { isFaqCategory, MAX_HOMEPAGE_FAQS } from "@/lib/faqs";
 import { MAX_SITE_NOTICES } from "@/lib/notices";
-import { SITE_SETTING_ID, normalizeHex } from "@/lib/theme";
+import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR, normalizeHex } from "@/lib/theme";
 
 /** No look-alike characters — organisers read these out loud. */
 const makeToken = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 12);
@@ -403,6 +404,23 @@ function revalidateHomepage() {
   revalidatePath("/");
   revalidatePath("/admin/homepage");
   revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/hero-photos");
+  revalidatePath("/admin/settings/testimonials");
+  revalidatePath("/admin/settings/faqs");
+}
+
+async function applySortOrder(
+  ids: string[],
+  existing: { id: string }[],
+  update: (id: string, sortOrder: number) => Prisma.PrismaPromise<unknown>,
+) {
+  const allowed = new Set(existing.map((row) => row.id));
+  const next = ids.filter((id) => allowed.has(id));
+  for (const row of existing) {
+    if (!next.includes(row.id)) next.push(row.id);
+  }
+  if (next.length === 0) return;
+  await prisma.$transaction(next.map((id, index) => update(id, index)));
 }
 
 export async function addHomepageSlide(
@@ -915,4 +933,105 @@ export async function updateSiteTheme(
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/appearance");
   return { ok: true, message: "Site colour saved." };
+}
+
+export async function updateCarouselEnabled(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const enabled = String(formData.get("carouselEnabled") ?? "") === "on";
+
+  await prisma.siteSetting.upsert({
+    where: { id: SITE_SETTING_ID },
+    create: {
+      id: SITE_SETTING_ID,
+      primaryColor: DEFAULT_PRIMARY_COLOR,
+      carouselEnabled: enabled,
+    },
+    update: { carouselEnabled: enabled },
+  });
+
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/hero-photos");
+  return { ok: true, message: enabled ? "Carousel is on." : "Carousel is hidden on the homepage." };
+}
+
+export async function reorderHomepageSlides(ids: string[]): Promise<ActionResult> {
+  await requireAdmin();
+  const existing = await prisma.homepageSlide.findMany({ select: { id: true } });
+  await applySortOrder(ids, existing, (id, sortOrder) =>
+    prisma.homepageSlide.update({ where: { id }, data: { sortOrder } }),
+  );
+  revalidateHomepage();
+  return { ok: true };
+}
+
+export async function reorderHomepageTestimonials(ids: string[]): Promise<ActionResult> {
+  await requireAdmin();
+  const existing = await prisma.homepageTestimonial.findMany({ select: { id: true } });
+  await applySortOrder(ids, existing, (id, sortOrder) =>
+    prisma.homepageTestimonial.update({ where: { id }, data: { sortOrder } }),
+  );
+  revalidateHomepage();
+  return { ok: true };
+}
+
+export async function reorderHomepageFaqs(ids: string[]): Promise<ActionResult> {
+  await requireAdmin();
+  const existing = await prisma.homepageFaq.findMany({ select: { id: true } });
+  await applySortOrder(ids, existing, (id, sortOrder) =>
+    prisma.homepageFaq.update({ where: { id }, data: { sortOrder } }),
+  );
+  revalidateHomepage();
+  return { ok: true };
+}
+
+export type MemberHistoryItem = {
+  id: string;
+  walkTitle: string;
+  location: string | null;
+  startsAt: string;
+  cancelledAt: string | null;
+  clockedInAt: string;
+  clockedOutAt: string | null;
+  clockedOutReason: string | null;
+};
+
+export async function getMemberHistory(userId: string): Promise<{
+  name: string;
+  email: string;
+  role: "ADMIN" | "MEMBER";
+  items: MemberHistoryItem[];
+} | null> {
+  await requireAdmin();
+  const member = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      attendances: {
+        orderBy: { clockedInAt: "desc" },
+        include: {
+          walk: { select: { title: true, location: true, startsAt: true, cancelledAt: true } },
+        },
+      },
+    },
+  });
+  if (!member) return null;
+
+  return {
+    name: displayName(member),
+    email: member.email,
+    role: member.role,
+    items: member.attendances.map((attendance) => ({
+      id: attendance.id,
+      walkTitle: attendance.walk.title,
+      location: attendance.walk.location,
+      startsAt: attendance.walk.startsAt.toISOString(),
+      cancelledAt: attendance.walk.cancelledAt?.toISOString() ?? null,
+      clockedInAt: attendance.clockedInAt.toISOString(),
+      clockedOutAt: attendance.clockedOutAt?.toISOString() ?? null,
+      clockedOutReason: attendance.clockedOutReason,
+    })),
+  };
 }

@@ -53,7 +53,7 @@ export function DeleteMemberButton({
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <Button size="sm" variant="outline">
+        <Button size="xs" variant="outline">
           Remove
         </Button>
       </AlertDialogTrigger>

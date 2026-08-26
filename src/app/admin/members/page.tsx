@@ -1,19 +1,9 @@
 import { Users } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { displayName, requireAdmin } from "@/lib/auth";
-import { formatDate } from "@/lib/dates";
-import { DeleteMemberButton } from "./delete-member-button";
+import { MembersTable } from "./members-table";
 import { AdminPageIntro } from "../admin-page-intro";
 import { EmptyState } from "@/components/empty-state";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +20,7 @@ export default async function MembersPage() {
   return (
     <div className="flex flex-col gap-6">
       <AdminPageIntro
-        description="Everyone who has signed up. Removing someone deletes their login and clock-in records. Walks they created stay with the group."
+        description="Everyone who has signed up. Click a row to see their walk history. Removing someone deletes their login and clock-in records. Walks they created stay with the group."
         title="Members"
       />
       {members.length === 0 ? (
@@ -40,56 +30,18 @@ export default async function MembersPage() {
           title="No members yet"
         />
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Joined</TableHead>
-              <TableHead className="text-right">Clock-ins</TableHead>
-              <TableHead className="text-right"> </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {members.map((member) => {
-              const name = displayName(member);
-              const isYou = member.id === admin.id;
-              return (
-                <TableRow key={member.id}>
-                  <TableCell className="font-medium">
-                    {name}
-                    {isYou ? <span className="ml-2 text-xs text-muted-foreground">You</span> : null}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{member.email || "—"}</TableCell>
-                  <TableCell>
-                    <Badge variant={member.role === "ADMIN" ? "default" : "secondary"}>
-                      {member.role === "ADMIN" ? "Organiser" : "Member"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="tabular-nums text-muted-foreground">
-                    {formatDate(member.createdAt)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {member._count.attendances}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {isYou ? (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    ) : (
-                      <DeleteMemberButton
-                        attendanceCount={member._count.attendances}
-                        name={name}
-                        userId={member.id}
-                        walkCount={member._count.walksCreated}
-                      />
-                    )}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+        <MembersTable
+          members={members.map((member) => ({
+            id: member.id,
+            name: displayName(member),
+            email: member.email,
+            role: member.role,
+            createdAt: member.createdAt.toISOString(),
+            attendanceCount: member._count.attendances,
+            walkCount: member._count.walksCreated,
+            isYou: member.id === admin.id,
+          }))}
+        />
       )}
     </div>
   );

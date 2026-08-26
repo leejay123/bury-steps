@@ -185,7 +185,7 @@ function RemoveNoticeButton({
   return (
     <AlertDialog onOpenChange={setOpen} open={open}>
       <AlertDialogTrigger asChild>
-        <Button size="sm" variant="destructive">
+        <Button size="xs" variant="destructive">
           Remove
         </Button>
       </AlertDialogTrigger>

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { DEFAULT_HERO_PATH, slideSrc, type SlideView } from "@/lib/slides";
 
 /** If organisers have not added slides yet, keep the bundled hero photo as slide 1 so they can replace it in admin. */
-async function ensureDefaultHomepageSlide() {
+export async function ensureDefaultHomepageSlide() {
   const count = await prisma.homepageSlide.count();
   if (count > 0) return;
 
@@ -20,8 +20,6 @@ async function ensureDefaultHomepageSlide() {
 }
 
 export async function getHomepageSlides(): Promise<SlideView[]> {
-  await ensureDefaultHomepageSlide();
-
   const rows = await prisma.homepageSlide.findMany({
     orderBy: { sortOrder: "asc" },
     select: { id: true, sortOrder: true, alt: true, imagePath: true, updatedAt: true },

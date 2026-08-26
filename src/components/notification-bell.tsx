@@ -6,7 +6,6 @@ import { markSiteNoticesRead } from "@/server/actions";
 import { formatDate } from "@/lib/dates";
 import type { NoticeView } from "@/lib/notices";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,13 +57,7 @@ export function NotificationBell({
           <DropdownMenuLabel className="px-3 py-2">Notices</DropdownMenuLabel>
         </DropdownMenuGroup>
         {notices.length === 0 ? (
-          <div className="px-3 pb-3">
-            <Alert>
-              <Bell />
-              <AlertTitle>No notices</AlertTitle>
-              <AlertDescription>Nothing in the bell right now.</AlertDescription>
-            </Alert>
-          </div>
+          <p className="px-3 pb-3 text-sm text-muted-foreground">Nothing in the bell right now.</p>
         ) : (
           <div className="max-h-96 overflow-y-auto">
             {notices.map((notice) => (

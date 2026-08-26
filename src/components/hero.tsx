@@ -16,12 +16,14 @@ export function HeroSection({
   signUpHref,
   signedIn = false,
   walksHref = "/dashboard",
+  carouselEnabled = true,
 }: {
   slides: SlideView[];
   signInHref: string;
   signUpHref: string;
   signedIn?: boolean;
   walksHref?: string;
+  carouselEnabled?: boolean;
 }) {
   return (
     <section>
@@ -52,6 +54,7 @@ export function HeroSection({
         </p>
       </HeroCopy>
 
+      {carouselEnabled ? (
       <div className="relative">
         <DecorIcon className="size-4" position="top-left" />
         <DecorIcon className="size-4" position="top-right" />
@@ -65,6 +68,7 @@ export function HeroSection({
         </FadeIn>
         <FullWidthDivider className="-bottom-px" />
       </div>
+      ) : null}
     </section>
   );
 }

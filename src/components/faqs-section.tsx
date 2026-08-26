@@ -43,7 +43,7 @@ export function FaqsSection({ faqs }: { faqs: FaqView[] }) {
     <section>
       <HeroCopy
         after={
-          <InputGroup className="w-full max-w-md">
+          <InputGroup className="w-full">
             <InputGroupInput
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Search FAQs…"

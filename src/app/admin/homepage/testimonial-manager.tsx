@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Quote } from "lucide-react";
@@ -8,13 +8,14 @@ import { toast } from "sonner";
 import {
   addHomepageTestimonial,
   deleteHomepageTestimonial,
-  moveHomepageTestimonial,
+  reorderHomepageTestimonials,
   updateHomepageTestimonial,
   type ActionResult,
 } from "@/server/actions";
 import type { TestimonialView } from "@/lib/testimonials";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { EmptyState } from "@/components/empty-state";
+import { DragHandle, useSortableIds } from "@/components/sortable-rows";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -201,27 +202,18 @@ function AddDrawerForm({
 }
 
 function EditDrawerForm({
-  index,
   onSaved,
   testimonial,
-  total,
 }: {
-  index: number;
   onSaved: () => void;
   testimonial: TestimonialView;
-  total: number;
 }) {
   const [updateState, updateAction] = useActionState<ActionResult | null, FormData>(
     updateHomepageTestimonial,
     null,
   );
-  const [moveState, moveAction] = useActionState<ActionResult | null, FormData>(
-    moveHomepageTestimonial,
-    null,
-  );
 
   useActionToast(updateState, onSaved);
-  useActionToast(moveState);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -233,22 +225,6 @@ function EditDrawerForm({
           <PendingSubmit label="Save" pendingLabel="Saving…" />
         </DrawerFooter>
       </form>
-      <div className="flex flex-wrap gap-2 px-4 pb-4">
-        <form action={moveAction}>
-          <input name="testimonialId" type="hidden" value={testimonial.id} />
-          <input name="direction" type="hidden" value="up" />
-          <Button disabled={index === 0} size="sm" type="submit" variant="outline">
-            Move up
-          </Button>
-        </form>
-        <form action={moveAction}>
-          <input name="testimonialId" type="hidden" value={testimonial.id} />
-          <input name="direction" type="hidden" value="down" />
-          <Button disabled={index === total - 1} size="sm" type="submit" variant="outline">
-            Move down
-          </Button>
-        </form>
-      </div>
     </div>
   );
 }
@@ -275,7 +251,7 @@ function RemoveTestimonialButton({
   return (
     <AlertDialog onOpenChange={setOpen} open={open}>
       <AlertDialogTrigger asChild>
-        <Button size="sm" variant="destructive">
+        <Button size="xs" variant="destructive">
           Remove
         </Button>
       </AlertDialogTrigger>
@@ -315,6 +291,17 @@ export function HomepageTestimonialManager({
   testimonials: TestimonialView[];
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
+  const [, startTransition] = useTransition();
+  const testimonialIds = testimonials.map((item) => item.id);
+  const { order, rowProps } = useSortableIds(testimonialIds, (ids) => {
+    if (ids.join() === testimonialIds.join()) return;
+    startTransition(() => {
+      void reorderHomepageTestimonials(ids);
+    });
+  });
+  const sorted = order
+    .map((id) => testimonials.find((item) => item.id === id))
+    .filter((item): item is TestimonialView => Boolean(item));
   const atLimit = testimonials.length >= maxTestimonials;
   const editingId = mode?.type === "edit" ? mode.testimonial.id : null;
   const liveIndex = editingId ? testimonials.findIndex((item) => item.id === editingId) : -1;
@@ -350,9 +337,12 @@ export function HomepageTestimonialManager({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-8">
+                <span className="sr-only">Reorder</span>
+              </TableHead>
               <TableHead>Testimonial</TableHead>
               <TableHead>Name</TableHead>
-              <TableHead className="w-24 text-right">
+              <TableHead className="w-20 text-right">
                 <span className="sr-only">Remove</span>
               </TableHead>
               <TableHead className="w-8">
@@ -361,12 +351,16 @@ export function HomepageTestimonialManager({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {testimonials.map((testimonial, index) => (
+            {sorted.map((testimonial, index) => (
               <TableRow
                 className="relative cursor-pointer"
                 key={testimonial.id}
                 onClick={() => setMode({ type: "edit", testimonial, index })}
+                {...rowProps(testimonial.id)}
               >
+                <TableCell onClick={(event) => event.stopPropagation()}>
+                  <DragHandle label={`Reorder testimonial ${index + 1}`} />
+                </TableCell>
                 <TableCell className="font-medium">Testimonial {index + 1}</TableCell>
                 <TableCell className="text-muted-foreground">{testimonial.name}</TableCell>
                 <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
@@ -414,11 +408,9 @@ export function HomepageTestimonialManager({
           ) : null}
           {editing ? (
             <EditDrawerForm
-              index={editing.index}
               key={editing.testimonial.id}
               onSaved={() => setMode(null)}
               testimonial={editing.testimonial}
-              total={testimonials.length}
             />
           ) : null}
         </DrawerContent>

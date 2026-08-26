@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { ChevronRight, CircleHelp } from "lucide-react";
@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   addHomepageFaq,
   deleteHomepageFaq,
-  moveHomepageFaq,
+  reorderHomepageFaqs,
   updateHomepageFaq,
   type ActionResult,
 } from "@/server/actions";
@@ -20,6 +20,7 @@ import {
   type FaqView,
 } from "@/lib/faqs";
 import { EmptyState } from "@/components/empty-state";
+import { DragHandle, useSortableIds } from "@/components/sortable-rows";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -218,28 +219,13 @@ function AddFaqForm({ disabled, onSaved }: { disabled: boolean; onSaved: () => v
   );
 }
 
-function EditFaqForm({
-  faq,
-  index,
-  onSaved,
-  total,
-}: {
-  faq: FaqView;
-  index: number;
-  onSaved: () => void;
-  total: number;
-}) {
+function EditFaqForm({ faq, onSaved }: { faq: FaqView; onSaved: () => void }) {
   const [updateState, updateAction] = useActionState<ActionResult | null, FormData>(
     updateHomepageFaq,
     null,
   );
-  const [moveState, moveAction] = useActionState<ActionResult | null, FormData>(
-    moveHomepageFaq,
-    null,
-  );
 
   useActionToast(updateState, onSaved);
-  useActionToast(moveState);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -251,22 +237,6 @@ function EditFaqForm({
           <PendingSubmit label="Save" pendingLabel="Saving…" />
         </DrawerFooter>
       </form>
-      <div className="flex flex-wrap gap-2 px-4 pb-4">
-        <form action={moveAction}>
-          <input name="faqId" type="hidden" value={faq.id} />
-          <input name="direction" type="hidden" value="up" />
-          <Button disabled={index === 0} size="sm" type="submit" variant="outline">
-            Move up
-          </Button>
-        </form>
-        <form action={moveAction}>
-          <input name="faqId" type="hidden" value={faq.id} />
-          <input name="direction" type="hidden" value="down" />
-          <Button disabled={index === total - 1} size="sm" type="submit" variant="outline">
-            Move down
-          </Button>
-        </form>
-      </div>
     </div>
   );
 }
@@ -290,7 +260,7 @@ function RemoveFaqButton({
   return (
     <AlertDialog onOpenChange={setOpen} open={open}>
       <AlertDialogTrigger asChild>
-        <Button size="sm" variant="destructive">
+        <Button size="xs" variant="destructive">
           Remove
         </Button>
       </AlertDialogTrigger>
@@ -330,6 +300,17 @@ export function HomepageFaqManager({
   maxFaqs: number;
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
+  const [, startTransition] = useTransition();
+  const faqIds = faqs.map((item) => item.id);
+  const { order, rowProps } = useSortableIds(faqIds, (ids) => {
+    if (ids.join() === faqIds.join()) return;
+    startTransition(() => {
+      void reorderHomepageFaqs(ids);
+    });
+  });
+  const sorted = order
+    .map((id) => faqs.find((item) => item.id === id))
+    .filter((item): item is FaqView => Boolean(item));
   const atLimit = faqs.length >= maxFaqs;
   const editingId = mode?.type === "edit" ? mode.faq.id : null;
   const liveIndex = editingId ? faqs.findIndex((item) => item.id === editingId) : -1;
@@ -364,10 +345,13 @@ export function HomepageFaqManager({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-8">
+                <span className="sr-only">Reorder</span>
+              </TableHead>
               <TableHead>FAQ</TableHead>
               <TableHead>Question</TableHead>
               <TableHead className="hidden sm:table-cell">Category</TableHead>
-              <TableHead className="w-24 text-right">
+              <TableHead className="w-20 text-right">
                 <span className="sr-only">Remove</span>
               </TableHead>
               <TableHead className="w-8">
@@ -376,12 +360,16 @@ export function HomepageFaqManager({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {faqs.map((faq, index) => (
+            {sorted.map((faq, index) => (
               <TableRow
                 className="cursor-pointer"
                 key={faq.id}
                 onClick={() => setMode({ type: "edit", faq, index })}
+                {...rowProps(faq.id)}
               >
+                <TableCell onClick={(event) => event.stopPropagation()}>
+                  <DragHandle label={`Reorder FAQ ${index + 1}`} />
+                </TableCell>
                 <TableCell className="font-medium">FAQ {index + 1}</TableCell>
                 <TableCell className="max-w-56 truncate text-muted-foreground sm:max-w-xs">
                   {faq.question}
@@ -431,10 +419,8 @@ export function HomepageFaqManager({
           {editing ? (
             <EditFaqForm
               faq={editing.faq}
-              index={editing.index}
               key={editing.faq.id}
               onSaved={() => setMode(null)}
-              total={faqs.length}
             />
           ) : null}
         </DrawerContent>

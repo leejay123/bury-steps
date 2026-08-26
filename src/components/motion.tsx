@@ -14,14 +14,15 @@ const fadeUp = {
 export function MotionPage({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const reduce = useReducedMotion();
+  const instant = reduce || pathname === "/";
 
   return (
     <AnimatePresence mode="wait">
       <motion.div
         animate={{ opacity: 1, y: 0 }}
-        initial={reduce ? false : { opacity: 0, y: 10 }}
+        initial={instant ? false : { opacity: 0, y: 8 }}
         key={pathname}
-        transition={{ duration: 0.4, ease: motionEase }}
+        transition={{ duration: instant ? 0 : 0.18, ease: motionEase }}
       >
         {children}
       </motion.div>
