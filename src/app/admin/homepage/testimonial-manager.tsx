@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Quote } from "lucide-react";
 import { toast } from "sonner";
 import {
   addHomepageTestimonial,
@@ -14,6 +14,7 @@ import {
 } from "@/server/actions";
 import type { TestimonialView } from "@/lib/testimonials";
 import { ImageDropzone } from "@/components/image-dropzone";
+import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -341,9 +342,11 @@ export function HomepageTestimonialManager({
       ) : null}
 
       {testimonials.length === 0 ? (
-        <p className="py-8 text-sm text-muted-foreground">
-          No testimonials on the homepage yet. Add one to show it on the homepage.
-        </p>
+        <EmptyState
+          description="Add one to show it on the homepage."
+          icon={Quote}
+          title="No testimonials yet"
+        />
       ) : (
         <Table>
           <TableHeader>

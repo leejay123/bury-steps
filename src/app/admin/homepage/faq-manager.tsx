@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
+import { CircleHelp } from "lucide-react";
 import { toast } from "sonner";
 import {
   addHomepageFaq,
@@ -18,6 +19,7 @@ import {
   type FaqCategoryId,
   type FaqView,
 } from "@/lib/faqs";
+import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -308,7 +310,11 @@ export function HomepageFaqManager({
       <AddFaqForm disabled={faqs.length >= maxFaqs} />
       <Separator />
       {faqs.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No FAQs on the homepage yet. Add one above.</p>
+        <EmptyState
+          description="Add one above and it will show in the homepage FAQ."
+          icon={CircleHelp}
+          title="No FAQs yet"
+        />
       ) : (
         <ul className="divide-y overflow-hidden rounded-xl border">
           {faqs.map((faq, index) => (

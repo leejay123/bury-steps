@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Bell } from "lucide-react";
 import { toast } from "sonner";
 import {
   addSiteNotice,
@@ -13,6 +13,7 @@ import {
 } from "@/server/actions";
 import type { NoticeView } from "@/lib/notices";
 import { formatDate } from "@/lib/dates";
+import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -252,9 +253,11 @@ export function SiteNoticeManager({
       ) : null}
 
       {notices.length === 0 ? (
-        <p className="py-8 text-sm text-muted-foreground">
-          No notices yet. Add one and signed-in members will see it in the bell.
-        </p>
+        <EmptyState
+          description="Add one and signed-in members will see it in the bell."
+          icon={Bell}
+          title="No notices yet"
+        />
       ) : (
         <Table>
           <TableHeader>

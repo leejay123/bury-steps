@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Footprints } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { formatWalkDate } from "@/lib/dates";
 import { CreateWalkForm } from "./create-walk-form";
 import { AdminPageIntro } from "./admin-page-intro";
+import { EmptyState } from "@/components/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,9 +29,17 @@ type WalkRow = {
   _count: { attendances: number };
 };
 
-function WalkTable({ walks, empty }: { walks: WalkRow[]; empty: string }) {
+function WalkTable({
+  emptyDescription,
+  emptyTitle,
+  walks,
+}: {
+  emptyDescription: string;
+  emptyTitle: string;
+  walks: WalkRow[];
+}) {
   if (walks.length === 0) {
-    return <p className="py-8 text-sm text-muted-foreground">{empty}</p>;
+    return <EmptyState description={emptyDescription} icon={Footprints} title={emptyTitle} />;
   }
 
   return (
@@ -125,10 +134,18 @@ export default async function AdminPage() {
             <TabsTrigger value="past">Past ({past.length})</TabsTrigger>
           </TabsList>
           <TabsContent className="mt-4" value="upcoming">
-            <WalkTable empty="No walks scheduled. Create one above." walks={upcoming} />
+            <WalkTable
+              emptyDescription="Create one above and it will show here."
+              emptyTitle="No walks scheduled"
+              walks={upcoming}
+            />
           </TabsContent>
           <TabsContent className="mt-4" value="past">
-            <WalkTable empty="No past walks yet." walks={past} />
+            <WalkTable
+              emptyDescription="Finished walks will show here."
+              emptyTitle="No past walks yet"
+              walks={past}
+            />
           </TabsContent>
         </Tabs>
       </section>

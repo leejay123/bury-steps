@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ClipboardList } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireAdmin, displayName } from "@/lib/auth";
 import { formatWalkDate, formatDateTime, formatTime } from "@/lib/dates";
 import { windowState } from "@/lib/walk-window";
 import { appUrl } from "@/lib/urls";
 import { ShareLink } from "@/components/share-link";
+import { EmptyState } from "@/components/empty-state";
 import { CancelWalkButton } from "./cancel-walk-button";
 import { ReopenWalkButton } from "./reopen-walk-button";
 import { DeleteWalkButton } from "./delete-walk-button";
@@ -134,9 +136,11 @@ export default async function WalkDetailPage({
         </div>
 
         {walk.attendances.length === 0 ? (
-          <p className="py-8 text-sm text-muted-foreground">
-            Nobody has clocked in yet. Share the link above with the group.
-          </p>
+          <EmptyState
+            description="Share the link above with the group."
+            icon={ClipboardList}
+            title="Nobody has clocked in yet"
+          />
         ) : (
           <Table>
               <TableHeader>

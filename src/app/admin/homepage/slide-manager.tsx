@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import {
   addHomepageSlide,
@@ -14,6 +14,7 @@ import {
 } from "@/server/actions";
 import type { SlideView } from "@/lib/slides";
 import { ImageDropzone } from "@/components/image-dropzone";
+import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -281,9 +282,11 @@ export function HomepageSlideManager({
       ) : null}
 
       {slides.length === 0 ? (
-        <p className="py-8 text-sm text-muted-foreground">
-          No slides yet. Add one to show it in the homepage carousel.
-        </p>
+        <EmptyState
+          description="Add one to show it in the homepage carousel."
+          icon={ImageIcon}
+          title="No slides yet"
+        />
       ) : (
         <Table>
           <TableHeader>

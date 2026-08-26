@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Footprints } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { formatWalkDate, formatDateTime } from "@/lib/dates";
 import { windowState } from "@/lib/walk-window";
+import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,11 +65,11 @@ export default async function DashboardPage() {
 
       <section className="space-y-3">
         {upcoming.length === 0 && (
-          <Card>
-            <CardContent className="py-8 text-center text-sm text-muted-foreground">
-              No walks scheduled yet. Your organiser will post the next one here.
-            </CardContent>
-          </Card>
+          <EmptyState
+            description="Your organiser will post the next one here."
+            icon={Footprints}
+            title="No walks scheduled yet"
+          />
         )}
 
         {upcoming.map((walk) => {

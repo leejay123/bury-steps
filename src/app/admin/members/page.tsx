@@ -1,8 +1,10 @@
+import { Users } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { displayName, requireAdmin } from "@/lib/auth";
 import { formatDate } from "@/lib/dates";
 import { DeleteMemberButton } from "./delete-member-button";
 import { AdminPageIntro } from "../admin-page-intro";
+import { EmptyState } from "@/components/empty-state";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -32,7 +34,11 @@ export default async function MembersPage() {
         title="Members"
       />
       {members.length === 0 ? (
-        <p className="py-8 text-sm text-muted-foreground">No members yet.</p>
+        <EmptyState
+          description="When someone signs up, they will show here."
+          icon={Users}
+          title="No members yet"
+        />
       ) : (
         <Table>
           <TableHeader>
