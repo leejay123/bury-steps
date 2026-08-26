@@ -12,6 +12,7 @@ import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { isFaqCategory, MAX_HOMEPAGE_FAQS } from "@/lib/faqs";
 import { MAX_SITE_NOTICES } from "@/lib/notices";
+import { SITE_SETTING_ID, normalizeHex } from "@/lib/theme";
 
 /** No look-alike characters — organisers read these out loud. */
 const makeToken = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 12);
@@ -894,4 +895,24 @@ export async function markSiteNoticesRead(): Promise<ActionResult> {
 
   revalidatePath("/", "layout");
   return { ok: true };
+}
+
+export async function updateSiteTheme(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const hex = normalizeHex(String(formData.get("primaryColor") ?? ""));
+  if (!hex) return { ok: false, error: "Pick a colour, or type a hex code such as #1f3d2b." };
+
+  await prisma.siteSetting.upsert({
+    where: { id: SITE_SETTING_ID },
+    create: { id: SITE_SETTING_ID, primaryColor: hex },
+    update: { primaryColor: hex },
+  });
+
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/appearance");
+  return { ok: true, message: "Site colour saved." };
 }

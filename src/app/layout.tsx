@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/themes";
 import { Toaster } from "@/components/ui/sonner";
 import { AFTER_AUTH_PATH, SIGN_IN_URL, SIGN_UP_URL } from "@/lib/urls";
+import { getSiteTheme } from "@/lib/site-theme";
 import { SiteMobileNav, SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteLogo } from "@/components/site-logo";
@@ -17,24 +18,29 @@ export const metadata: Metadata = {
   description: "Weekly walks around Bury. Sign up, join a walk, clock in.",
 };
 
-export const viewport: Viewport = {
-  themeColor: "#1f3d2b",
-  width: "device-width",
-  initialScale: 1,
-};
+export async function generateViewport(): Promise<Viewport> {
+  const { primaryColor } = await getSiteTheme();
+  return {
+    themeColor: primaryColor,
+    width: "device-width",
+    initialScale: 1,
+  };
+}
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const host = (await headers()).get("host") ?? "";
   const useVercelAppProxy = host.endsWith(".vercel.app");
+  const theme = await getSiteTheme();
 
   return (
-    <html lang="en-GB" suppressHydrationWarning>
+    <html lang="en-GB" style={theme.style} suppressHydrationWarning>
       <body className="min-h-dvh overflow-x-hidden bg-background text-foreground antialiased">
         <ClerkProvider
           {...(useVercelAppProxy ? { proxyUrl: "/__clerk" } : {})}
           appearance={{
             theme: shadcn,
             variables: {
+              colorPrimary: theme.primaryColor,
               colorModalBackdrop: "rgba(18, 28, 22, 0.4)",
               colorInput: "var(--background)",
             },

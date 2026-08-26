@@ -39,6 +39,11 @@ export default async function AdminSettingsPage() {
       title: "Notices",
       description: `Messages in the bell. ${noticeCount} of ${MAX_SITE_NOTICES}.`,
     },
+    {
+      href: "/admin/settings/appearance",
+      title: "Site colour",
+      description: "Buttons, links, and highlights across the site.",
+    },
   ];
 
   return <SettingsGrid items={items} />;

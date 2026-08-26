@@ -145,3 +145,11 @@ model SiteNoticeRead {
   @@id([noticeId, userId])
   @@index([userId])
 }
+
+/// Singleton row (`id` is always `site`). Controls the public theme colour.
+model SiteSetting {
+  id           String   @id
+  /// Hex like #1f3d2b. Used for buttons, links, and highlights.
+  primaryColor String
+  updatedAt    DateTime @updatedAt
+}
