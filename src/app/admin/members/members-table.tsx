@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Footprints } from "lucide-react";
 import { toast } from "sonner";
 import { getMemberHistory, type MemberHistoryItem } from "@/server/actions";
-import { formatDate, formatDateTime, formatWalkDate } from "@/lib/dates";
+import { formatDate } from "@/lib/dates";
 import { DeleteMemberButton } from "./delete-member-button";
 import { EmptyState } from "@/components/empty-state";
+import { AttendanceHistory } from "@/components/attendance-history";
 import { Badge } from "@/components/ui/badge";
 import {
   Drawer,
@@ -24,7 +25,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Footprints } from "lucide-react";
 
 type MemberRow = {
   id: string;
@@ -141,11 +141,11 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
         }}
         open={openId !== null}
       >
-        <DrawerContent className="sm:max-w-lg">
+        <DrawerContent className="sm:max-w-2xl">
           <DrawerHeader>
             <DrawerTitle>{history?.name ?? selected?.name ?? "Member"}</DrawerTitle>
             <DrawerDescription>
-              Walks they have clocked in to, with clock-in and clock-out times.
+              Every walk they have clocked in to, with clock-in and clock-out times.
             </DrawerDescription>
           </DrawerHeader>
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pb-6">
@@ -164,43 +164,30 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
               />
             ) : null}
             {history && history.items.length > 0 ? (
-              <div className="flex flex-col gap-3">
-                <p className="text-sm text-muted-foreground">{history.email || "No email"}</p>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Walk</TableHead>
-                      <TableHead>In</TableHead>
-                      <TableHead>Out</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {history.items.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>
-                          <p className="font-medium">{item.walkTitle}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {formatWalkDate(new Date(item.startsAt))}
-                            {item.cancelledAt ? " · Cancelled" : ""}
-                          </p>
-                          {item.clockedOutReason ? (
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              {item.clockedOutReason}
-                            </p>
-                          ) : null}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap text-muted-foreground">
-                          {formatDateTime(new Date(item.clockedInAt))}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap text-muted-foreground">
-                          {item.clockedOutAt
-                            ? formatDateTime(new Date(item.clockedOutAt))
-                            : "Still on the walk"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+              <div className="flex flex-col gap-4">
+                <p className="text-sm text-muted-foreground">
+                  {history.email || "No email"}
+                  {" · "}
+                  {history.items.length === 1
+                    ? "1 walk"
+                    : `${history.items.length} walks`}
+                  {" · First clock-in "}
+                  {formatDate(new Date(history.items[history.items.length - 1].clockedInAt))}
+                </p>
+                <AttendanceHistory
+                  rows={history.items.map((item) => ({
+                    id: item.id,
+                    title: item.walkTitle,
+                    location: item.location,
+                    startsAt: item.startsAt,
+                    durationMins: item.durationMins,
+                    cancelledAt: item.cancelledAt,
+                    clockedInAt: item.clockedInAt,
+                    clockedOutAt: item.clockedOutAt,
+                    clockedOutReason: item.clockedOutReason,
+                    href: `/admin/walks/${item.walkId}`,
+                  }))}
+                />
               </div>
             ) : null}
           </div>

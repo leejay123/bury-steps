@@ -990,8 +990,10 @@ export async function reorderHomepageFaqs(ids: string[]): Promise<ActionResult> 
 
 export type MemberHistoryItem = {
   id: string;
+  walkId: string;
   walkTitle: string;
   location: string | null;
+  durationMins: number;
   startsAt: string;
   cancelledAt: string | null;
   clockedInAt: string;
@@ -1012,7 +1014,16 @@ export async function getMemberHistory(userId: string): Promise<{
       attendances: {
         orderBy: { clockedInAt: "desc" },
         include: {
-          walk: { select: { title: true, location: true, startsAt: true, cancelledAt: true } },
+          walk: {
+            select: {
+              id: true,
+              title: true,
+              location: true,
+              durationMins: true,
+              startsAt: true,
+              cancelledAt: true,
+            },
+          },
         },
       },
     },
@@ -1025,8 +1036,10 @@ export async function getMemberHistory(userId: string): Promise<{
     role: member.role,
     items: member.attendances.map((attendance) => ({
       id: attendance.id,
+      walkId: attendance.walk.id,
       walkTitle: attendance.walk.title,
       location: attendance.walk.location,
+      durationMins: attendance.walk.durationMins,
       startsAt: attendance.walk.startsAt.toISOString(),
       cancelledAt: attendance.walk.cancelledAt?.toISOString() ?? null,
       clockedInAt: attendance.clockedInAt.toISOString(),

@@ -16,12 +16,15 @@ export function navItems(isAdmin: boolean, walksHref: string) {
           { href: "/admin/settings", label: "Settings" },
           { href: "/admin/guide", label: "Guide" },
         ]
-      : []),
+      : [{ href: "/dashboard/history", label: "History" }]),
   ];
 }
 
 export function isNavItemActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
+  if (href === "/dashboard") {
+    return pathname === "/dashboard";
+  }
   if (href === "/admin") {
     return pathname === "/admin" || pathname.startsWith("/admin/walks");
   }

@@ -1,113 +1,59 @@
-import Link from "next/link";
-import { ChevronRight, Footprints } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
-import { formatWalkDate } from "@/lib/dates";
 import { CreateWalkForm } from "./create-walk-form";
 import { AdminPageIntro } from "./admin-page-intro";
-import { EmptyState } from "@/components/empty-state";
-import { Badge } from "@/components/ui/badge";
+import { AdminWalkTable } from "./admin-walk-table";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 export const dynamic = "force-dynamic";
 
-type WalkRow = {
+function toRow(walk: {
   id: string;
   title: string;
   location: string | null;
   startsAt: Date;
   cancelledAt: Date | null;
   _count: { attendances: number };
-};
-
-function WalkTable({
-  emptyDescription,
-  emptyTitle,
-  walks,
-}: {
-  emptyDescription: string;
-  emptyTitle: string;
-  walks: WalkRow[];
 }) {
-  if (walks.length === 0) {
-    return <EmptyState description={emptyDescription} icon={Footprints} title={emptyTitle} />;
-  }
-
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Walk</TableHead>
-          <TableHead>When</TableHead>
-          <TableHead className="hidden sm:table-cell">Meeting point</TableHead>
-          <TableHead className="text-right">Clock-ins</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead className="w-8">
-            <span className="sr-only">Open</span>
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {walks.map((walk) => (
-          <TableRow key={walk.id} className="relative cursor-pointer">
-            <TableCell className="font-medium">
-              <Link className="after:absolute after:inset-0" href={`/admin/walks/${walk.id}`}>
-                {walk.title}
-              </Link>
-            </TableCell>
-            <TableCell className="text-muted-foreground whitespace-nowrap">
-              {formatWalkDate(walk.startsAt)}
-            </TableCell>
-            <TableCell className="hidden text-muted-foreground sm:table-cell">
-              {walk.location || "—"}
-            </TableCell>
-            <TableCell className="text-right tabular-nums">{walk._count.attendances}</TableCell>
-            <TableCell>
-              {walk.cancelledAt ? <Badge variant="destructive">Cancelled</Badge> : "—"}
-            </TableCell>
-            <TableCell className="text-muted-foreground">
-              <ChevronRight className="size-4" />
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
+  return {
+    id: walk.id,
+    title: walk.title,
+    location: walk.location,
+    startsAt: walk.startsAt.toISOString(),
+    cancelledAt: walk.cancelledAt?.toISOString() ?? null,
+    attendanceCount: walk._count.attendances,
+  };
 }
 
 export default async function AdminPage() {
   await requireAdmin();
 
   const cutoff = new Date(Date.now() - 3 * 60 * 60 * 1000);
-  const select = {
+  const base = {
     id: true,
     title: true,
     location: true,
     startsAt: true,
     cancelledAt: true,
-    _count: { select: { attendances: { where: { clockedOutAt: null } } } },
   } as const;
 
   const [upcoming, past] = await Promise.all([
     prisma.walk.findMany({
       where: { startsAt: { gte: cutoff } },
       orderBy: { startsAt: "asc" },
-      select,
+      select: {
+        ...base,
+        _count: { select: { attendances: { where: { clockedOutAt: null } } } },
+      },
     }),
     prisma.walk.findMany({
       where: { startsAt: { lt: cutoff } },
       orderBy: { startsAt: "desc" },
-      take: 30,
-      select,
+      select: {
+        ...base,
+        _count: { select: { attendances: true } },
+      },
     }),
   ]);
 
@@ -125,26 +71,28 @@ export default async function AdminPage() {
 
       <section className="flex flex-col gap-4">
         <AdminPageIntro
-          description="Upcoming walks and recent ones. Open a walk to share the link, cancel it, reopen it, or remove it."
+          description="Upcoming walks, and every finished walk. Open a walk to share the link, cancel it, reopen it, or remove it."
           title="Walks"
         />
         <Tabs className="w-full" defaultValue="upcoming">
           <TabsList>
             <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
-            <TabsTrigger value="past">Past ({past.length})</TabsTrigger>
+            <TabsTrigger value="past">History ({past.length})</TabsTrigger>
           </TabsList>
           <TabsContent className="mt-4" value="upcoming">
-            <WalkTable
+            <AdminWalkTable
+              attendanceLabel="On the walk"
               emptyDescription="Create one above and it will show here."
               emptyTitle="No walks scheduled"
-              walks={upcoming}
+              walks={upcoming.map(toRow)}
             />
           </TabsContent>
           <TabsContent className="mt-4" value="past">
-            <WalkTable
+            <AdminWalkTable
               emptyDescription="Finished walks will show here."
               emptyTitle="No past walks yet"
-              walks={past}
+              searchable
+              walks={past.map(toRow)}
             />
           </TabsContent>
         </Tabs>

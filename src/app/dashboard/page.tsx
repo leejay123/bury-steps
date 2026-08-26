@@ -37,7 +37,7 @@ export default async function DashboardPage() {
     now.getTime() - CANCELLED_WALK_RETENTION_DAYS * 24 * 60 * 60 * 1000,
   );
 
-  const [walks, history] = await Promise.all([
+  const [walks, history, historyCount] = await Promise.all([
     prisma.walk.findMany({
       where: {
         OR: [{ startsAt: { gte: upcomingFrom } }, { cancelledAt: { gte: cancelledFrom } }],
@@ -62,9 +62,10 @@ export default async function DashboardPage() {
     prisma.attendance.findMany({
       where: { userId: user.id },
       orderBy: { clockedInAt: "desc" },
-      take: 10,
+      take: 5,
       include: { walk: { select: { title: true, startsAt: true, cancelledAt: true } } },
     }),
+    prisma.attendance.count({ where: { userId: user.id } }),
   ]);
 
   const clockedWalkIds = walks
@@ -78,6 +79,7 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Walks</h1>
         <p className="text-sm text-muted-foreground">
           Upcoming walks, including any that have been cancelled. Clock in on the day from here.
+          Past walks are in History.
         </p>
       </div>
 
@@ -156,9 +158,16 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {history.length > 0 ? (
+      {historyCount > 0 ? (
         <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-medium text-muted-foreground">Your recent walks</h2>
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="text-sm font-medium text-muted-foreground">Your recent walks</h2>
+            <Button asChild size="sm" variant="ghost">
+              <Link href="/dashboard/history">
+                {historyCount === 1 ? "View history" : `View all ${historyCount}`}
+              </Link>
+            </Button>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>

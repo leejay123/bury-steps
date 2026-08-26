@@ -76,10 +76,10 @@ export function OrganiserGuide() {
                 terms, and open a walk share link. They cannot clock in until they have an account.
               </p>
               <p>
-                <Badge variant="secondary">Members</Badge> see Walks in the menu. They get upcoming
-                walks and cancelled walks from the last {CANCELLED_WALK_RETENTION_DAYS} days, clock
-                in and out, see who else is still on a walk (names only), and read notices in the
-                bell.
+                <Badge variant="secondary">Members</Badge> see Walks and History in the menu. They
+                get upcoming walks and cancelled walks from the last {CANCELLED_WALK_RETENTION_DAYS}{" "}
+                days, clock in and out, see who else is still on a walk (names only), read notices
+                in the bell, and look back over every walk they have clocked in to.
               </p>
               <p>
                 <Badge>Organisers</Badge> also get Members, Settings, and this Guide. You create
@@ -119,8 +119,9 @@ export function OrganiserGuide() {
           <AccordionContent>
             <GuideBody>
               <p>
-                Open <Link href="/admin">Walks</Link>. Upcoming walks are on one tab, recent past
-                walks on the other. Click a row to open the walk.
+                Open <Link href="/admin">Walks</Link>. Upcoming walks are on one tab. History is
+                every finished walk, with a search box. Click a row to open the walk. History shows
+                how many people clocked in, not how many are still on the walk.
               </p>
               <p className="font-medium text-foreground">Create a walk</p>
               <Steps>
@@ -195,9 +196,9 @@ export function OrganiserGuide() {
                 longer on the list — not why they left.
               </p>
               <p>
-                Clock-in and clock-out are stored as two separate times. The member’s Walks page
-                and the member history drawer both show the clock-out time when they have left,
-                not the clock-in time again.
+                Clock-in and clock-out are stored as two separate times. The member’s History page
+                and the member history drawer both show the clock-out time when they have left, not
+                the clock-in time again.
               </p>
               <p>
                 After clocking out, they can clock in again on the same walk if the window is still
@@ -222,9 +223,9 @@ export function OrganiserGuide() {
               </p>
               <p className="font-medium text-foreground">Walk history</p>
               <p>
-                Click a row to open a drawer with that person’s walks: clock-in time, clock-out
-                time, and any clock-out reason. Use this for a quick glance at what they have
-                attended.
+                Click a row to open a drawer with that person’s full walk history, grouped by year:
+                meeting point, length, clock-in time, clock-out time, and any clock-out reason.
+                Search if the list is long. Click a walk name to open that walk.
               </p>
               <p className="font-medium text-foreground">Remove someone</p>
               <Steps>
@@ -355,9 +356,9 @@ export function OrganiserGuide() {
               </p>
               <p>
                 Members open Walks from the menu. Each walk is a card with the date, length,
-                meeting point, and a badge if clock-in is open, they are already in, or the walk
-                is cancelled. Recent clock-ins are in a table underneath, with separate in and out
-                times.
+                meeting point, and a badge if clock-in is open, they are already in, or the walk is
+                cancelled. Recent clock-ins are in a table underneath. History in the menu is every
+                walk they have clocked in to, grouped by year, with a search box.
               </p>
             </GuideBody>
           </AccordionContent>
