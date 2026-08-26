@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { MAX_HOMEPAGE_FAQS } from "@/lib/faqs";
+import { MAX_SITE_NOTICES } from "@/lib/notices";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
@@ -12,10 +13,11 @@ export const dynamic = "force-dynamic";
 export default async function AdminSettingsPage() {
   await requireAdmin();
 
-  const [slideCount, testimonialCount, faqCount] = await Promise.all([
+  const [slideCount, testimonialCount, faqCount, noticeCount] = await Promise.all([
     prisma.homepageSlide.count(),
     prisma.homepageTestimonial.count(),
     prisma.homepageFaq.count().catch(() => 0),
+    prisma.siteNotice.count().catch(() => 0),
   ]);
 
   const items = [
@@ -33,6 +35,11 @@ export default async function AdminSettingsPage() {
       href: "/admin/settings/faqs",
       title: "FAQs",
       description: `Questions on the homepage. ${faqCount} of ${MAX_HOMEPAGE_FAQS}.`,
+    },
+    {
+      href: "/admin/settings/notices",
+      title: "Notices",
+      description: `Messages in the bell. ${noticeCount} of ${MAX_SITE_NOTICES}.`,
     },
   ];
 

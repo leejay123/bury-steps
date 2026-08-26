@@ -11,6 +11,7 @@ import { windowState } from "@/lib/walk-window";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { isFaqCategory, MAX_HOMEPAGE_FAQS } from "@/lib/faqs";
+import { MAX_SITE_NOTICES } from "@/lib/notices";
 
 /** No look-alike characters — organisers read these out loud. */
 const makeToken = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 12);
@@ -696,4 +697,104 @@ export async function deleteHomepageFaq(
 
   revalidateHomepage();
   return { ok: true, message: "FAQ removed." };
+}
+
+// ------------------------------------------------------------------ site notices
+
+function revalidateNotices() {
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/notices");
+}
+
+function readNoticeCopy(formData: FormData): { title: string; body: string } | { error: string } {
+  const title = String(formData.get("title") ?? "").trim();
+  const body = String(formData.get("body") ?? "").trim();
+  if (!title) return { error: "Add a title." };
+  if (!body) return { error: "Add a message." };
+  if (title.length > 80) return { error: "Keep the title under 80 characters." };
+  if (body.length > 500) return { error: "Keep the message under 500 characters." };
+  return { title, body };
+}
+
+export async function addSiteNotice(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+
+  const count = await prisma.siteNotice.count();
+  if (count >= MAX_SITE_NOTICES) {
+    return { ok: false, error: "You can have up to 10 notices." };
+  }
+
+  const copy = readNoticeCopy(formData);
+  if ("error" in copy) return { ok: false, error: copy.error };
+
+  await prisma.siteNotice.create({
+    data: { title: copy.title, body: copy.body },
+  });
+
+  revalidateNotices();
+  return { ok: true, message: "Notice added. Members will see it in the bell." };
+}
+
+export async function updateSiteNotice(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("noticeId") ?? "");
+  if (!id) return { ok: false, error: "No notice selected." };
+
+  const copy = readNoticeCopy(formData);
+  if ("error" in copy) return { ok: false, error: copy.error };
+
+  try {
+    await prisma.$transaction([
+      prisma.siteNotice.update({
+        where: { id },
+        data: { title: copy.title, body: copy.body },
+      }),
+      prisma.siteNoticeRead.deleteMany({ where: { noticeId: id } }),
+    ]);
+  } catch {
+    return { ok: false, error: "That notice is no longer there." };
+  }
+
+  revalidateNotices();
+  return { ok: true, message: "Notice updated. Members will see it as new." };
+}
+
+export async function deleteSiteNotice(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("noticeId") ?? "");
+  if (!id) return { ok: false, error: "No notice selected." };
+
+  try {
+    await prisma.siteNotice.delete({ where: { id } });
+  } catch {
+    return { ok: false, error: "That notice is no longer there." };
+  }
+
+  revalidateNotices();
+  return { ok: true, message: "Notice removed." };
+}
+
+export async function markSiteNoticesRead(): Promise<ActionResult> {
+  const user = await requireUser();
+
+  const notices = await prisma.siteNotice.findMany({ select: { id: true } });
+  if (notices.length === 0) return { ok: true };
+
+  await prisma.siteNoticeRead.createMany({
+    data: notices.map((notice) => ({ noticeId: notice.id, userId: user.id })),
+    skipDuplicates: true,
+  });
+
+  revalidatePath("/", "layout");
+  return { ok: true };
 }

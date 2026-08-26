@@ -23,6 +23,7 @@ model User {
 
   walksCreated Walk[]       @relation("WalkCreator")
   attendances  Attendance[]
+  noticeReads  SiteNoticeRead[]
 }
 
 model Walk {
@@ -115,4 +116,28 @@ model HomepageFaq {
   updatedAt DateTime @updatedAt
 
   @@index([sortOrder])
+}
+
+/// Messages in the nav bell for signed-in members. Organisers can keep up to 10.
+model SiteNotice {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  reads     SiteNoticeRead[]
+
+  @@index([createdAt])
+}
+
+model SiteNoticeRead {
+  noticeId String
+  userId   String
+  readAt   DateTime @default(now())
+
+  notice SiteNotice @relation(fields: [noticeId], references: [id], onDelete: Cascade)
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([noticeId, userId])
+  @@index([userId])
 }
