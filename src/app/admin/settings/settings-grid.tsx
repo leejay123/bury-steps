@@ -15,7 +15,7 @@ export function SettingsGrid({
       {items.map((item) => (
         <StaggerItem key={item.href}>
           <HoverLift>
-            <Link className="block" href={item.href}>
+            <Link className="block cursor-pointer" href={item.href}>
               <Card className="h-full hover:bg-accent/40">
                 <CardHeader className="flex flex-row items-start justify-between gap-3">
                   <div className="flex flex-col gap-1.5">

@@ -58,7 +58,7 @@ function WalkTable({
       </TableHeader>
       <TableBody>
         {walks.map((walk) => (
-          <TableRow key={walk.id} className="relative">
+          <TableRow key={walk.id} className="relative cursor-pointer">
             <TableCell className="font-medium">
               <Link className="after:absolute after:inset-0" href={`/admin/walks/${walk.id}`}>
                 {walk.title}

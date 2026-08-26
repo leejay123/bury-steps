@@ -22,7 +22,7 @@ function SelectTrigger({ className, children, ...props }: React.ComponentProps<t
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
       className={cn(
-        "border-input data-[placeholder]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex h-9 w-full items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+        "border-input data-[placeholder]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex h-9 w-full cursor-pointer items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
         className,
       )}
       {...props}
@@ -49,7 +49,7 @@ function SelectContent({ className, children, position = "popper", ...props }: R
         position={position}
         {...props}
       >
-        <SelectPrimitive.ScrollUpButton className="flex cursor-default items-center justify-center py-1">
+        <SelectPrimitive.ScrollUpButton className="flex cursor-pointer items-center justify-center py-1">
           <ChevronUpIcon className="size-4" />
         </SelectPrimitive.ScrollUpButton>
         <SelectPrimitive.Viewport
@@ -57,7 +57,7 @@ function SelectContent({ className, children, position = "popper", ...props }: R
         >
           {children}
         </SelectPrimitive.Viewport>
-        <SelectPrimitive.ScrollDownButton className="flex cursor-default items-center justify-center py-1">
+        <SelectPrimitive.ScrollDownButton className="flex cursor-pointer items-center justify-center py-1">
           <ChevronDownIcon className="size-4" />
         </SelectPrimitive.ScrollDownButton>
       </SelectPrimitive.Content>
@@ -70,7 +70,7 @@ function SelectItem({ className, children, ...props }: React.ComponentProps<type
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "focus:bg-accent focus:text-accent-foreground relative flex w-full cursor-pointer items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className,
       )}
       {...props}

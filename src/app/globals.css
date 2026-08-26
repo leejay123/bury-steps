@@ -87,6 +87,40 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  a[href],
+  button:not(:disabled),
+  summary,
+  label,
+  select:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="tab"]:not([aria-disabled="true"]),
+  [role="menuitem"],
+  [role="option"],
+  [role="checkbox"]:not([aria-disabled="true"]),
+  [role="radio"]:not([aria-disabled="true"]),
+  [role="switch"]:not([aria-disabled="true"]),
+  [role="combobox"]:not([aria-disabled="true"]),
+  [role="link"],
+  input[type="button"]:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="reset"]:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="file"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+.cl-userButtonTrigger,
+.cl-button,
+.cl-socialButtonsIconButton,
+.cl-formButtonPrimary,
+.cl-menuButton,
+.cl-navbarButton,
+.cl-profileSectionPrimaryButton,
+.cl-breadcrumbsItem {
+  cursor: pointer;
 }
 
 @media (prefers-reduced-motion: reduce) {
