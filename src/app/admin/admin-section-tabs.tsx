@@ -7,6 +7,7 @@ const HREF = {
   walks: "/admin",
   members: "/admin/members",
   settings: "/admin/settings",
+  guide: "/admin/guide",
 } as const;
 
 export function AdminSectionTabs() {
@@ -16,7 +17,9 @@ export function AdminSectionTabs() {
     ? "members"
     : pathname.startsWith("/admin/settings") || pathname.startsWith("/admin/homepage")
       ? "settings"
-      : "walks";
+      : pathname.startsWith("/admin/guide")
+        ? "guide"
+        : "walks";
 
   return (
     <Tabs
@@ -28,6 +31,7 @@ export function AdminSectionTabs() {
         <TabsTrigger value="walks">Walks</TabsTrigger>
         <TabsTrigger value="members">Members</TabsTrigger>
         <TabsTrigger value="settings">Settings</TabsTrigger>
+        <TabsTrigger value="guide">Guide</TabsTrigger>
       </TabsList>
     </Tabs>
   );

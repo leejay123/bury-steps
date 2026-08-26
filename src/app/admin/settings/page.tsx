@@ -44,6 +44,11 @@ export default async function AdminSettingsPage() {
       title: "Site colour",
       description: "Buttons, links, and highlights across the site.",
     },
+    {
+      href: "/admin/guide",
+      title: "Guide",
+      description: "How to use this site as an organiser.",
+    },
   ];
 
   return <SettingsGrid items={items} />;

@@ -14,6 +14,7 @@ export function navItems(isAdmin: boolean, walksHref: string) {
       ? [
           { href: "/admin/members", label: "Members" },
           { href: "/admin/settings", label: "Settings" },
+          { href: "/admin/guide", label: "Guide" },
         ]
       : []),
   ];
