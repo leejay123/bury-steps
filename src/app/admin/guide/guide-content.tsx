@@ -39,7 +39,7 @@ function GuideBody({ children }: { children: React.ReactNode }) {
 
 export function OrganiserGuide() {
   return (
-    <div className="flex max-w-3xl flex-col gap-6">
+    <div className="flex w-full flex-col gap-6">
       <p className="text-sm text-muted-foreground">
         Open a section for the steps. This is the same place members use for walks, plus the
         organiser tools for members, settings, and the homepage.
