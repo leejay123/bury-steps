@@ -141,7 +141,7 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
         }}
         open={openId !== null}
       >
-        <DrawerContent className="sm:max-w-2xl">
+        <DrawerContent className="data-[vaul-drawer-direction=right]:sm:max-w-2xl">
           <DrawerHeader>
             <DrawerTitle>{history?.name ?? selected?.name ?? "Member"}</DrawerTitle>
             <DrawerDescription>
@@ -175,6 +175,7 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
                   {formatDate(new Date(history.items[history.items.length - 1].clockedInAt))}
                 </p>
                 <AttendanceHistory
+                  layout="list"
                   rows={history.items.map((item) => ({
                     id: item.id,
                     title: item.walkTitle,

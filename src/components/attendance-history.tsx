@@ -30,7 +30,13 @@ export type AttendanceHistoryRow = {
   href?: string;
 };
 
-export function AttendanceHistory({ rows }: { rows: AttendanceHistoryRow[] }) {
+export function AttendanceHistory({
+  layout = "table",
+  rows,
+}: {
+  layout?: "table" | "list";
+  rows: AttendanceHistoryRow[];
+}) {
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
@@ -88,61 +94,110 @@ export function AttendanceHistory({ rows }: { rows: AttendanceHistoryRow[] }) {
             <h2 className="text-sm font-medium text-muted-foreground">
               {year} · {yearRows.length} {yearRows.length === 1 ? "walk" : "walks"}
             </h2>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Walk</TableHead>
-                  <TableHead className="hidden sm:table-cell">Meeting point</TableHead>
-                  <TableHead>Clocked in</TableHead>
-                  <TableHead>Clocked out</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {yearRows.map((row) => {
-                  const startsAt = new Date(row.startsAt);
-                  return (
-                    <TableRow key={row.id}>
-                      <TableCell>
-                        <p className="font-medium">
-                          {row.href ? (
-                            <Link className="hover:underline" href={row.href}>
-                              {row.title}
-                            </Link>
-                          ) : (
-                            row.title
-                          )}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDate(startsAt)} · {formatTime(startsAt)} · {row.durationMins} min
-                        </p>
-                        {row.cancelledAt ? (
-                          <Badge className="mt-1.5" variant="destructive">
-                            Cancelled
-                          </Badge>
-                        ) : null}
-                        {row.clockedOutReason ? (
-                          <p className="mt-1 text-xs text-muted-foreground">{row.clockedOutReason}</p>
-                        ) : null}
-                      </TableCell>
-                      <TableCell className="hidden text-muted-foreground sm:table-cell">
-                        {row.location || "—"}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap text-muted-foreground">
-                        {formatDateTime(new Date(row.clockedInAt))}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap text-muted-foreground">
-                        {row.clockedOutAt
-                          ? formatDateTime(new Date(row.clockedOutAt))
-                          : "Still on the walk"}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            {layout === "list" ? (
+              <HistoryList rows={yearRows} />
+            ) : (
+              <HistoryTable rows={yearRows} />
+            )}
           </section>
         ))
       )}
     </div>
+  );
+}
+
+function HistoryList({ rows }: { rows: AttendanceHistoryRow[] }) {
+  return (
+    <div className="flex flex-col divide-y rounded-xl border">
+      {rows.map((row) => {
+        const startsAt = new Date(row.startsAt);
+        return (
+          <div className="flex flex-col gap-2 p-4" key={row.id}>
+            <div className="flex items-start justify-between gap-3">
+              <p className="font-medium">
+                {row.href ? (
+                  <Link className="hover:underline" href={row.href}>
+                    {row.title}
+                  </Link>
+                ) : (
+                  row.title
+                )}
+              </p>
+              {row.cancelledAt ? <Badge variant="destructive">Cancelled</Badge> : null}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {formatDate(startsAt)} · {formatTime(startsAt)} · {row.durationMins} min
+              {row.location ? ` · ${row.location}` : ""}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              In {formatDateTime(new Date(row.clockedInAt))}
+              {row.clockedOutAt
+                ? ` · Out ${formatDateTime(new Date(row.clockedOutAt))}`
+                : " · Still on the walk"}
+            </p>
+            {row.clockedOutReason ? (
+              <p className="text-sm text-muted-foreground">{row.clockedOutReason}</p>
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function HistoryTable({ rows }: { rows: AttendanceHistoryRow[] }) {
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Walk</TableHead>
+          <TableHead className="hidden sm:table-cell">Meeting point</TableHead>
+          <TableHead>Clocked in</TableHead>
+          <TableHead>Clocked out</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {rows.map((row) => {
+          const startsAt = new Date(row.startsAt);
+          return (
+            <TableRow key={row.id}>
+              <TableCell>
+                <p className="font-medium">
+                  {row.href ? (
+                    <Link className="hover:underline" href={row.href}>
+                      {row.title}
+                    </Link>
+                  ) : (
+                    row.title
+                  )}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {formatDate(startsAt)} · {formatTime(startsAt)} · {row.durationMins} min
+                </p>
+                {row.cancelledAt ? (
+                  <Badge className="mt-1.5" variant="destructive">
+                    Cancelled
+                  </Badge>
+                ) : null}
+                {row.clockedOutReason ? (
+                  <p className="mt-1 text-xs text-muted-foreground">{row.clockedOutReason}</p>
+                ) : null}
+              </TableCell>
+              <TableCell className="hidden text-muted-foreground sm:table-cell">
+                {row.location || "—"}
+              </TableCell>
+              <TableCell className="whitespace-nowrap text-muted-foreground">
+                {formatDateTime(new Date(row.clockedInAt))}
+              </TableCell>
+              <TableCell className="whitespace-nowrap text-muted-foreground">
+                {row.clockedOutAt
+                  ? formatDateTime(new Date(row.clockedOutAt))
+                  : "Still on the walk"}
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }

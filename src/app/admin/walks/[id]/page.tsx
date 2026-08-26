@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ClipboardList } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireAdmin, displayName } from "@/lib/auth";
-import { formatWalkDate, formatDateTime, formatTime } from "@/lib/dates";
+import { formatWalkDate } from "@/lib/dates";
 import { windowState } from "@/lib/walk-window";
 import { appUrl } from "@/lib/urls";
 import { ShareLink } from "@/components/share-link";
@@ -12,19 +12,11 @@ import { CancelWalkButton } from "./cancel-walk-button";
 import { ReopenWalkButton } from "./reopen-walk-button";
 import { DeleteWalkButton } from "./delete-walk-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { WalkAttendanceTable } from "./walk-attendance";
 
 export const dynamic = "force-dynamic";
 
@@ -141,6 +133,7 @@ export default async function WalkDetailPage({
           <span className="text-sm tabular-nums text-muted-foreground">
             {stillIn.length} on the walk
             {clockedOut.length > 0 ? ` · ${clockedOut.length} clocked out` : ""}
+            {" · Click a row for details"}
           </span>
         </div>
 
@@ -151,69 +144,21 @@ export default async function WalkDetailPage({
             title="Nobody has clocked in yet"
           />
         ) : (
-          <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Member</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-24 text-right">Time</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {walk.attendances.map((a) => {
-                  const name = displayName(a.user);
-                  return (
-                    <TableRow key={a.id}>
-                      <TableCell className="align-top">
-                        <div className="flex flex-col gap-1.5">
-                          <div className="flex items-center gap-2.5">
-                            <Avatar className="size-7">
-                              <AvatarFallback className="text-xs">{initials(name)}</AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-medium">{name}</p>
-                              <p className="truncate text-xs text-muted-foreground">{a.user.email}</p>
-                            </div>
-                          </div>
-                          {a.clockedOutAt && a.clockedOutReason ? (
-                            <p className="rounded-md bg-muted px-2.5 py-1.5 text-xs leading-relaxed">
-                              Clock-out: {a.clockedOutReason}
-                            </p>
-                          ) : null}
-                          {a.conditions ? (
-                            <p className="rounded-md bg-accent px-2.5 py-1.5 text-xs leading-relaxed">
-                              {a.conditions}
-                            </p>
-                          ) : (
-                            <p className="text-xs text-muted-foreground">No conditions reported</p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="align-top">
-                        {a.clockedOutAt ? (
-                          <Badge variant="secondary">Clocked out</Badge>
-                        ) : (
-                          <Badge variant="outline">On the walk</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right align-top">
-                        <span className="text-sm tabular-nums" title={formatDateTime(a.clockedInAt)}>
-                          {formatTime(a.clockedInAt)}
-                        </span>
-                        {a.clockedOutAt ? (
-                          <p
-                            className="text-xs tabular-nums text-muted-foreground"
-                            title={formatDateTime(a.clockedOutAt)}
-                          >
-                            Left {formatTime(a.clockedOutAt)}
-                          </p>
-                        ) : null}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+          <WalkAttendanceTable
+            rows={walk.attendances.map((attendance) => {
+              const name = displayName(attendance.user);
+              return {
+                id: attendance.id,
+                name,
+                email: attendance.user.email,
+                initials: initials(name),
+                clockedInAt: attendance.clockedInAt.toISOString(),
+                clockedOutAt: attendance.clockedOutAt?.toISOString() ?? null,
+                clockedOutReason: attendance.clockedOutReason,
+                conditions: attendance.conditions,
+              };
+            })}
+          />
         )}
       </section>
     </div>

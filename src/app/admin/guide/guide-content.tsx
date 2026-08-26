@@ -158,6 +158,10 @@ export function OrganiserGuide() {
                 <strong>{CANCELLED_WALK_RETENTION_DAYS} days</strong>.
               </p>
               <p>
+                Open the walk from the table. The roster is names, status, and clock-in time. Click
+                a row for email, clock-out time, any clock-out reason, and health notes.
+              </p>
+              <p>
                 Download roster (CSV) gives you names, emails, times, clock-out reasons, and any
                 health notes for that walk.
               </p>
@@ -217,9 +221,9 @@ export function OrganiserGuide() {
               </p>
               <p className="font-medium text-foreground">Walk history</p>
               <p>
-                Click a row to open a drawer with that person’s full walk history, grouped by year:
-                meeting point, length, clock-in time, clock-out time, and any clock-out reason.
-                Search if the list is long. Click a walk name to open that walk.
+                Click a row to open a drawer with that person’s full walk history, grouped by year.
+                Search if the list is long. Each walk shows the date, meeting point, and in/out
+                times. Click a walk name to open that walk.
               </p>
               <p className="font-medium text-foreground">Remove someone</p>
               <Steps>
