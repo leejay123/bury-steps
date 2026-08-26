@@ -1,7 +1,10 @@
+"use client";
+
 import { CalendarDays, Footprints, UserPlus } from "lucide-react";
 import type React from "react";
 import { DecorIcon } from "@/components/decor-icon";
 import { FullWidthDivider } from "@/components/full-width-divider";
+import { Stagger, StaggerItem } from "@/components/motion";
 import { cn } from "@/lib/utils";
 
 type FeatureType = {
@@ -33,11 +36,13 @@ export function FeatureSection() {
     <div className="relative w-full">
       <DecorIcon className="size-4" position="bottom-left" />
       <DecorIcon className="size-4" position="bottom-right" />
-      <div className="grid grid-cols-1 divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+      <Stagger className="grid grid-cols-1 divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
         {features.map((feature) => (
-          <FeatureCard feature={feature} key={feature.title} />
+          <StaggerItem className="h-full" key={feature.title}>
+            <FeatureCard className="h-full" feature={feature} />
+          </StaggerItem>
         ))}
-      </div>
+      </Stagger>
       <FullWidthDivider position="bottom" />
     </div>
   );

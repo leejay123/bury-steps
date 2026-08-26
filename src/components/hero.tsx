@@ -5,6 +5,7 @@ import { DecorIcon } from "@/components/decor-icon";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { HomeCarousel } from "@/components/home-carousel";
 import { HeroCopy } from "@/components/hero-copy";
+import { FadeIn } from "@/components/motion";
 import type { SlideView } from "@/lib/slides";
 
 export { HeroCopy };
@@ -57,9 +58,11 @@ export function HeroSection({
         <DecorIcon className="size-4" position="bottom-left" />
         <DecorIcon className="size-4" position="bottom-right" />
         <FullWidthDivider className="-top-px" />
-        <div className="overflow-hidden bg-muted">
-          <HomeCarousel framed slides={slides} />
-        </div>
+        <FadeIn>
+          <div className="overflow-hidden bg-muted">
+            <HomeCarousel framed slides={slides} />
+          </div>
+        </FadeIn>
         <FullWidthDivider className="-bottom-px" />
       </div>
     </section>

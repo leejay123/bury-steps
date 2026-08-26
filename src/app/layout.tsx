@@ -8,6 +8,7 @@ import { SiteMobileNav, SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteLogo } from "@/components/site-logo";
 import { FullWidthDivider } from "@/components/full-width-divider";
+import { MotionPage } from "@/components/motion";
 import Link from "next/link";
 import "./globals.css";
 
@@ -61,7 +62,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <FullWidthDivider position="bottom" />
               </div>
             </header>
-            <main className="flex-1 px-4 py-8 md:px-8">{children}</main>
+            <main className="flex-1 px-4 py-8 md:px-8">
+              <MotionPage>{children}</MotionPage>
+            </main>
             <SiteFooter />
           </div>
           <Toaster position="top-center" />

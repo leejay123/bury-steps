@@ -1,3 +1,5 @@
+"use client";
+
 import type { ComponentProps } from "react";
 import { cn } from "@/lib/utils";
 import { GridPattern } from "@/components/ui/grid-pattern";
@@ -5,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { GridFiller } from "@/components/grid-filler";
 import { HeroCopy } from "@/components/hero-copy";
+import { Stagger, StaggerItem } from "@/components/motion";
 import type { TestimonialView } from "@/lib/testimonials";
 
 export function TestimonialsSection({
@@ -19,10 +22,12 @@ export function TestimonialsSection({
       <HeroCopy eyebrow={null} title="From the group" titleAs="h2">
         <p>A few words from people who walk with us on Sundays.</p>
       </HeroCopy>
-      <div className="relative grid grid-cols-1 gap-px bg-border sm:grid-cols-2 lg:grid-cols-3">
+      <Stagger className="relative grid grid-cols-1 gap-px bg-border sm:grid-cols-2 lg:grid-cols-3">
         <FullWidthDivider position="top" />
         {testimonials.map((testimonial) => (
-          <TestimonialsCard key={testimonial.id} testimonial={testimonial} />
+          <StaggerItem className="h-full" key={testimonial.id}>
+            <TestimonialsCard className="h-full" testimonial={testimonial} />
+          </StaggerItem>
         ))}
         <GridFiller
           className="bg-background"
@@ -31,7 +36,7 @@ export function TestimonialsSection({
           totalItems={testimonials.length}
         />
         <FullWidthDivider position="bottom" />
-      </div>
+      </Stagger>
     </section>
   );
 }

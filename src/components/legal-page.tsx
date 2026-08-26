@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FadeIn } from "@/components/motion";
 
 export function LegalPage({
   title,
@@ -8,6 +9,7 @@ export function LegalPage({
   children: React.ReactNode;
 }) {
   return (
+    <FadeIn inView={false}>
     <article className="prose prose-neutral max-w-none space-y-4 text-sm leading-relaxed">
       <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
       <p className="text-muted-foreground">Last updated: 25 August 2026</p>
@@ -21,5 +23,6 @@ export function LegalPage({
         <Link href="/terms-of-service">Terms of Service</Link>
       </p>
     </article>
+    </FadeIn>
   );
 }

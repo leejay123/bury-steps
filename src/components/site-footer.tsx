@@ -1,10 +1,14 @@
+"use client";
+
 import Link from "next/link";
 import { Facebook } from "lucide-react";
 import { FullWidthDivider } from "@/components/full-width-divider";
+import { FadeIn } from "@/components/motion";
 import { FACEBOOK_GROUP_URL } from "@/lib/urls";
 
 export function SiteFooter() {
   return (
+    <FadeIn>
     <footer className="relative">
       <FullWidthDivider position="top" />
       <nav
@@ -29,5 +33,6 @@ export function SiteFooter() {
         </a>
       </nav>
     </footer>
+    </FadeIn>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Search, SearchX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -15,10 +16,12 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { FACEBOOK_GROUP_URL } from "@/lib/urls";
 import { FAQ_CATEGORIES, type FaqView } from "@/lib/faqs";
 import { HeroCopy } from "@/components/hero-copy";
+import { FadeIn } from "@/components/motion";
 
 export function FaqsSection({ faqs }: { faqs: FaqView[] }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
+  const reduce = useReducedMotion();
 
   const categories = [{ id: "all", label: "All" }, ...FAQ_CATEGORIES];
 
@@ -77,7 +80,15 @@ export function FaqsSection({ faqs }: { faqs: FaqView[] }) {
             >
               {category.label}
             </span>
-            {activeCategory === category.id ? <span className="h-0.5 w-full bg-primary" /> : null}
+            {activeCategory === category.id ? (
+              <motion.span
+                className="h-0.5 w-full bg-primary"
+                layoutId={reduce ? undefined : "faq-underline"}
+                transition={{ type: "spring", bounce: 0.18, duration: 0.4 }}
+              />
+            ) : (
+              <span className="h-0.5 w-full bg-transparent" />
+            )}
           </button>
         ))}
       </div>
@@ -92,7 +103,8 @@ export function FaqsSection({ faqs }: { faqs: FaqView[] }) {
       </Accordion>
 
       {filtered.length === 0 ? (
-        <Empty className="mx-4 mb-12 border md:mx-8">
+        <FadeIn>
+          <Empty className="mx-4 mb-12 border md:mx-8">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <Search />
@@ -105,7 +117,8 @@ export function FaqsSection({ faqs }: { faqs: FaqView[] }) {
               Clear search
             </Button>
           </EmptyContent>
-        </Empty>
+          </Empty>
+        </FadeIn>
       ) : null}
 
       <p className="px-4 pb-12 text-center text-sm text-muted-foreground md:px-8">

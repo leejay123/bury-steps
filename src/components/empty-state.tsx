@@ -7,6 +7,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { FadeIn } from "@/components/motion";
 
 export function EmptyState({
   description,
@@ -18,14 +19,16 @@ export function EmptyState({
   title: string;
 }) {
   return (
-    <Empty className="w-full min-h-64 border bg-muted/30">
-      <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <Icon />
-        </EmptyMedia>
-        <EmptyTitle>{title}</EmptyTitle>
-        <EmptyDescription>{description}</EmptyDescription>
-      </EmptyHeader>
-    </Empty>
+    <FadeIn>
+      <Empty className="w-full min-h-64 border bg-muted/30">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Icon />
+          </EmptyMedia>
+          <EmptyTitle>{title}</EmptyTitle>
+          <EmptyDescription>{description}</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    </FadeIn>
   );
 }

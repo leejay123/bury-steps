@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -31,8 +32,42 @@ export function isNavItemActive(pathname: string, href: string) {
 
 function navLinkClass(active: boolean) {
   return cn(
-    "rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-    active && "bg-muted font-medium text-foreground",
+    "relative rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground",
+    !active && "hover:bg-muted",
+    active && "font-medium text-foreground",
+  );
+}
+
+function NavLink({
+  active,
+  className,
+  href,
+  label,
+  layoutId,
+}: {
+  active: boolean;
+  className?: string;
+  href: string;
+  label: string;
+  layoutId: string;
+}) {
+  const reduce = useReducedMotion();
+
+  return (
+    <Link
+      aria-current={active ? "page" : undefined}
+      className={cn(navLinkClass(active), className)}
+      href={href}
+    >
+      {active ? (
+        <motion.span
+          className="absolute inset-0 rounded-md bg-muted"
+          layoutId={reduce ? undefined : layoutId}
+          transition={{ type: "spring", bounce: 0.16, duration: 0.45 }}
+        />
+      ) : null}
+      <span className="relative z-10">{label}</span>
+    </Link>
   );
 }
 
@@ -50,14 +85,13 @@ export function SiteNavLinks({
       {navItems(isAdmin, walksHref).map((item) => {
         const active = isNavItemActive(pathname, item.href);
         return (
-          <Link
-            aria-current={active ? "page" : undefined}
-            className={navLinkClass(active)}
+          <NavLink
+            active={active}
             href={item.href}
             key={item.href}
-          >
-            {item.label}
-          </Link>
+            label={item.label}
+            layoutId="nav-pill-desktop"
+          />
         );
       })}
     </nav>
@@ -88,14 +122,14 @@ export function SiteMobileNavBar({
         {navItems(isAdmin, walksHref).map((item) => {
           const active = isNavItemActive(pathname, item.href);
           return (
-            <Link
-              aria-current={active ? "page" : undefined}
-              className={cn("shrink-0", navLinkClass(active))}
+            <NavLink
+              active={active}
+              className="shrink-0"
               href={item.href}
               key={item.href}
-            >
-              {item.label}
-            </Link>
+              label={item.label}
+              layoutId="nav-pill-mobile"
+            />
           );
         })}
       </div>

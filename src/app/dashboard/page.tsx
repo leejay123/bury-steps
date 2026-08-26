@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { formatWalkDate, formatDateTime } from "@/lib/dates";
 import { windowState } from "@/lib/walk-window";
 import { EmptyState } from "@/components/empty-state";
+import { HoverLift, Stagger, StaggerItem, FadeIn } from "@/components/motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,20 +64,24 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Walks</h1>
       </div>
 
-      <section className="space-y-3">
+      <Stagger className="space-y-3" inView={false}>
         {upcoming.length === 0 && (
-          <EmptyState
-            description="Your organiser will post the next one here."
-            icon={Footprints}
-            title="No walks scheduled yet"
-          />
+          <StaggerItem>
+            <EmptyState
+              description="Your organiser will post the next one here."
+              icon={Footprints}
+              title="No walks scheduled yet"
+            />
+          </StaggerItem>
         )}
 
         {upcoming.map((walk) => {
           const clockedIn = walk.attendances[0];
           const state = windowState(walk.startsAt, walk.durationMins, now);
           return (
-            <Card key={walk.id}>
+            <StaggerItem key={walk.id}>
+              <HoverLift>
+            <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="space-y-1">
@@ -118,11 +123,14 @@ export default async function DashboardPage() {
                 )}
               </CardContent>
             </Card>
+              </HoverLift>
+            </StaggerItem>
           );
         })}
-      </section>
+      </Stagger>
 
       {history.length > 0 && (
+        <FadeIn>
         <section className="space-y-3">
           <h2 className="text-sm font-medium text-muted-foreground">Your recent walks</h2>
           <ul className="divide-y overflow-hidden rounded-xl border text-sm">
@@ -137,6 +145,7 @@ export default async function DashboardPage() {
             ))}
           </ul>
         </section>
+        </FadeIn>
       )}
     </div>
   );
