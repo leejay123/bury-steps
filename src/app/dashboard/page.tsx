@@ -123,7 +123,7 @@ export default async function DashboardPage() {
       {history.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-sm font-medium text-muted-foreground">Your recent walks</h2>
-          <ul className="divide-y rounded-lg border text-sm">
+          <ul className="divide-y overflow-hidden rounded-xl border text-sm">
             {history.map((a) => (
               <li key={a.walk.title + a.clockedInAt.toISOString()} className="flex items-center justify-between gap-3 px-4 py-2.5">
                 <span className="truncate">{a.walk.title}</span>

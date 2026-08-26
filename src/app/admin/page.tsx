@@ -34,46 +34,44 @@ function WalkTable({ walks, empty }: { walks: WalkRow[]; empty: string }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Walk</TableHead>
-            <TableHead>When</TableHead>
-            <TableHead className="hidden sm:table-cell">Meeting point</TableHead>
-            <TableHead className="text-right">Clock-ins</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="w-8">
-              <span className="sr-only">Open</span>
-            </TableHead>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Walk</TableHead>
+          <TableHead>When</TableHead>
+          <TableHead className="hidden sm:table-cell">Meeting point</TableHead>
+          <TableHead className="text-right">Clock-ins</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead className="w-8">
+            <span className="sr-only">Open</span>
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {walks.map((walk) => (
+          <TableRow key={walk.id} className="relative">
+            <TableCell className="font-medium">
+              <Link className="after:absolute after:inset-0" href={`/admin/walks/${walk.id}`}>
+                {walk.title}
+              </Link>
+            </TableCell>
+            <TableCell className="text-muted-foreground whitespace-nowrap">
+              {formatWalkDate(walk.startsAt)}
+            </TableCell>
+            <TableCell className="hidden text-muted-foreground sm:table-cell">
+              {walk.location || "—"}
+            </TableCell>
+            <TableCell className="text-right tabular-nums">{walk._count.attendances}</TableCell>
+            <TableCell>
+              {walk.cancelledAt ? <Badge variant="destructive">Cancelled</Badge> : "—"}
+            </TableCell>
+            <TableCell className="text-muted-foreground">
+              <ChevronRight className="size-4" />
+            </TableCell>
           </TableRow>
-        </TableHeader>
-        <TableBody>
-          {walks.map((walk) => (
-            <TableRow key={walk.id} className="relative">
-              <TableCell className="font-medium">
-                <Link className="after:absolute after:inset-0" href={`/admin/walks/${walk.id}`}>
-                  {walk.title}
-                </Link>
-              </TableCell>
-              <TableCell className="text-muted-foreground whitespace-nowrap">
-                {formatWalkDate(walk.startsAt)}
-              </TableCell>
-              <TableCell className="hidden text-muted-foreground sm:table-cell">
-                {walk.location || "—"}
-              </TableCell>
-              <TableCell className="text-right tabular-nums">{walk._count.attendances}</TableCell>
-              <TableCell>
-                {walk.cancelledAt ? <Badge variant="destructive">Cancelled</Badge> : "—"}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                <ChevronRight className="size-4" />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 

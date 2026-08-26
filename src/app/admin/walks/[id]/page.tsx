@@ -138,7 +138,6 @@ export default async function WalkDetailPage({
             Nobody has clocked in yet. Share the link above with the group.
           </p>
         ) : (
-          <div className="overflow-hidden rounded-xl border">
           <Table>
               <TableHeader>
                 <TableRow>
@@ -200,7 +199,6 @@ export default async function WalkDetailPage({
                 })}
               </TableBody>
             </Table>
-          </div>
         )}
       </section>
     </div>

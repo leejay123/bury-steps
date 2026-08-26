@@ -285,8 +285,7 @@ export function HomepageSlideManager({
           No slides yet. Add one to show it in the homepage carousel.
         </p>
       ) : (
-        <div className="overflow-hidden rounded-xl border">
-          <Table>
+        <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-16">Photo</TableHead>
@@ -321,7 +320,6 @@ export function HomepageSlideManager({
             ))}
           </TableBody>
         </Table>
-        </div>
       )}
 
       <Drawer
