@@ -162,9 +162,6 @@ function EditNoticeForm({ notice, onSaved }: { notice: NoticeView; onSaved: () =
           <PendingSubmit label="Save" pendingLabel="Saving…" />
         </DrawerFooter>
       </form>
-      <div className="px-4 pb-4">
-        <RemoveNoticeButton noticeId={notice.id} onRemoved={onSaved} title={notice.title} />
-      </div>
     </div>
   );
 }
@@ -265,6 +262,9 @@ export function SiteNoticeManager({
               <TableHead>Notice</TableHead>
               <TableHead>Title</TableHead>
               <TableHead className="hidden sm:table-cell">Added</TableHead>
+              <TableHead className="w-24 text-right">
+                <span className="sr-only">Remove</span>
+              </TableHead>
               <TableHead className="w-8">
                 <span className="sr-only">Edit</span>
               </TableHead>
@@ -281,6 +281,17 @@ export function SiteNoticeManager({
                 <TableCell className="text-muted-foreground">{notice.title}</TableCell>
                 <TableCell className="hidden text-muted-foreground sm:table-cell">
                   {formatDate(notice.createdAt)}
+                </TableCell>
+                <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
+                  <RemoveNoticeButton
+                    noticeId={notice.id}
+                    onRemoved={() =>
+                      setMode((current) =>
+                        current?.type === "edit" && current.notice.id === notice.id ? null : current,
+                      )
+                    }
+                    title={notice.title}
+                  />
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   <ChevronRight className="size-4" />

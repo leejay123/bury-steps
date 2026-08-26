@@ -248,7 +248,6 @@ function EditDrawerForm({
             Move down
           </Button>
         </form>
-        <RemoveTestimonialButton name={testimonial.name} onRemoved={onSaved} testimonialId={testimonial.id} />
       </div>
     </div>
   );
@@ -353,6 +352,9 @@ export function HomepageTestimonialManager({
             <TableRow>
               <TableHead>Testimonial</TableHead>
               <TableHead>Name</TableHead>
+              <TableHead className="w-24 text-right">
+                <span className="sr-only">Remove</span>
+              </TableHead>
               <TableHead className="w-8">
                 <span className="sr-only">Edit</span>
               </TableHead>
@@ -367,6 +369,19 @@ export function HomepageTestimonialManager({
               >
                 <TableCell className="font-medium">Testimonial {index + 1}</TableCell>
                 <TableCell className="text-muted-foreground">{testimonial.name}</TableCell>
+                <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
+                  <RemoveTestimonialButton
+                    name={testimonial.name}
+                    onRemoved={() =>
+                      setMode((current) =>
+                        current?.type === "edit" && current.testimonial.id === testimonial.id
+                          ? null
+                          : current,
+                      )
+                    }
+                    testimonialId={testimonial.id}
+                  />
+                </TableCell>
                 <TableCell className="text-muted-foreground">
                   <ChevronRight className="size-4" />
                 </TableCell>

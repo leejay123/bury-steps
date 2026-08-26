@@ -192,7 +192,6 @@ function EditDrawerForm({
             Move down
           </Button>
         </form>
-        <RemoveSlideButton onRemoved={onSaved} slideId={slide.id} title={`Slide ${index + 1}`} />
       </div>
     </div>
   );
@@ -294,6 +293,9 @@ export function HomepageSlideManager({
               <TableHead className="w-16">Photo</TableHead>
               <TableHead>Slide</TableHead>
               <TableHead>Description</TableHead>
+              <TableHead className="w-24 text-right">
+                <span className="sr-only">Remove</span>
+              </TableHead>
               <TableHead className="w-8">
                 <span className="sr-only">Edit</span>
               </TableHead>
@@ -316,6 +318,17 @@ export function HomepageSlideManager({
                 </TableCell>
                 <TableCell className="font-medium">Slide {index + 1}</TableCell>
                 <TableCell className="text-muted-foreground">{slide.alt}</TableCell>
+                <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
+                  <RemoveSlideButton
+                    onRemoved={() =>
+                      setMode((current) =>
+                        current?.type === "edit" && current.slide.id === slide.id ? null : current,
+                      )
+                    }
+                    slideId={slide.id}
+                    title={`Slide ${index + 1}`}
+                  />
+                </TableCell>
                 <TableCell className="text-muted-foreground">
                   <ChevronRight className="size-4" />
                 </TableCell>
