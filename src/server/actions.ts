@@ -345,19 +345,19 @@ export async function replaceHomepageSlideImage(
   const id = String(formData.get("slideId") ?? "");
   if (!id) return { ok: false, error: "No slide selected." };
 
-  const image = await readSlideImage(formData);
-  if ("error" in image) return { ok: false, error: image.error };
+  const image = await readOptionalImage(formData);
+  if (image && "error" in image) return { ok: false, error: image.error };
 
-  const alt = String(formData.get("alt") ?? "").trim();
+  const alt = String(formData.get("alt") ?? "").trim() || "Bury Steps Walking Group";
 
   try {
     await prisma.homepageSlide.update({
       where: { id },
       data: {
-        imagePath: null,
-        imageMime: image.mime,
-        imageData: image.data,
-        ...(alt ? { alt } : {}),
+        alt,
+        ...(image
+          ? { imagePath: null, imageMime: image.mime, imageData: image.data }
+          : {}),
       },
     });
   } catch {
@@ -365,7 +365,7 @@ export async function replaceHomepageSlideImage(
   }
 
   revalidateHomepage();
-  return { ok: true, message: "Slide image updated." };
+  return { ok: true, message: "Slide saved." };
 }
 
 export async function moveHomepageSlide(

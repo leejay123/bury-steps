@@ -1,7 +1,9 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useRouter } from "next/navigation";
+import { ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import {
   addHomepageSlide,
@@ -11,10 +13,38 @@ import {
   type ActionResult,
 } from "@/server/actions";
 import type { SlideView } from "@/lib/slides";
+import { ImageDropzone } from "@/components/image-dropzone";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
+type DrawerMode = { type: "add" } | { type: "edit"; slide: SlideView; index: number };
 
 function PendingSubmit({
   label,
@@ -27,155 +57,303 @@ function PendingSubmit({
 }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" size="sm" disabled={pending || disabled}>
+    <Button disabled={pending || disabled} type="submit">
       {pending ? pendingLabel : label}
     </Button>
   );
 }
 
-function useActionToast(state: ActionResult | null) {
+function useActionToast(state: ActionResult | null, onOk?: () => void) {
+  const router = useRouter();
+  const onOkRef = useRef(onOk);
+  onOkRef.current = onOk;
+
   useEffect(() => {
     if (!state) return;
-    if (state.ok) toast.success(state.message ?? "Saved.");
-    else toast.error(state.error);
-  }, [state]);
+    if (state.ok) {
+      toast.success(state.message ?? "Saved.");
+      onOkRef.current?.();
+      router.refresh();
+    } else {
+      toast.error(state.error);
+    }
+  }, [router, state]);
 }
 
-function AddSlideForm({ disabled }: { disabled: boolean }) {
-  const [state, action] = useActionState<ActionResult | null, FormData>(addHomepageSlide, null);
-  const formRef = useRef<HTMLFormElement>(null);
-  useActionToast(state);
-
-  useEffect(() => {
-    if (state?.ok) formRef.current?.reset();
-  }, [state]);
-
+function SlideFields({
+  disabled,
+  prefix,
+  slide,
+}: {
+  disabled?: boolean;
+  prefix: string;
+  slide?: SlideView;
+}) {
   return (
-    <section className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
+      {slide ? <input name="slideId" type="hidden" value={slide.id} /> : null}
       <div className="flex flex-col gap-1.5">
-        <h3 className="font-semibold">Add a slide</h3>
-        <p className="text-muted-foreground text-sm">
-          {disabled ? "You already have 3 slides. Remove one to add another." : "JPEG, PNG or WebP, under 4 MB."}
-        </p>
+        <Label htmlFor={`${prefix}-image`}>Photo</Label>
+        <ImageDropzone
+          disabled={disabled}
+          existingAlt={slide?.alt}
+          existingSrc={slide?.src}
+          id={`${prefix}-image`}
+          required={!slide}
+        />
       </div>
-      <form ref={formRef} action={action} className="space-y-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="new-image">Image</Label>
-            <Input id="new-image" name="image" type="file" accept="image/jpeg,image/png,image/webp" required disabled={disabled} />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="new-alt">Short description</Label>
-            <Input
-              id="new-alt"
-              name="alt"
-              placeholder="Walkers on a path near Bury"
-              disabled={disabled}
-            />
-          </div>
-          <PendingSubmit label="Add slide" pendingLabel="Adding…" disabled={disabled} />
-        </form>
-    </section>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={`${prefix}-alt`}>Short description</Label>
+        <Input
+          defaultValue={slide?.alt}
+          disabled={disabled}
+          id={`${prefix}-alt`}
+          name="alt"
+          placeholder="Walkers on a path near Bury"
+        />
+      </div>
+    </div>
   );
 }
 
-function SlideCard({
-  slide,
+function AddDrawerForm({
+  disabled,
+  onSaved,
+}: {
+  disabled: boolean;
+  onSaved: () => void;
+}) {
+  const [state, action] = useActionState<ActionResult | null, FormData>(addHomepageSlide, null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useActionToast(state, () => {
+    formRef.current?.reset();
+    onSaved();
+  });
+
+  return (
+    <form action={action} className="flex min-h-0 flex-1 flex-col" ref={formRef}>
+      <div className="flex-1 overflow-y-auto px-4">
+        <SlideFields disabled={disabled} prefix="new" />
+      </div>
+      <DrawerFooter>
+        <PendingSubmit disabled={disabled} label="Add slide" pendingLabel="Adding…" />
+      </DrawerFooter>
+    </form>
+  );
+}
+
+function EditDrawerForm({
   index,
+  onSaved,
+  slide,
   total,
 }: {
-  slide: SlideView;
   index: number;
+  onSaved: () => void;
+  slide: SlideView;
   total: number;
 }) {
-  const [replaceState, replaceAction] = useActionState<ActionResult | null, FormData>(
+  const [updateState, updateAction] = useActionState<ActionResult | null, FormData>(
     replaceHomepageSlideImage,
     null,
   );
-  const [moveState, moveAction] = useActionState<ActionResult | null, FormData>(moveHomepageSlide, null);
-  const [deleteState, deleteAction] = useActionState<ActionResult | null, FormData>(
-    deleteHomepageSlide,
+  const [moveState, moveAction] = useActionState<ActionResult | null, FormData>(
+    moveHomepageSlide,
     null,
   );
 
-  useActionToast(replaceState);
+  useActionToast(updateState, onSaved);
   useActionToast(moveState);
-  useActionToast(deleteState);
 
   return (
-    <li>
-      <div className="aspect-[16/9] bg-muted">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={slide.src} alt={slide.alt} className="size-full object-cover" />
-      </div>
-      <div className="space-y-3 p-4">
-        <p className="text-sm font-medium">Slide {index + 1}</p>
-        <form action={replaceAction} className="space-y-3">
-          <input type="hidden" name="slideId" value={slide.id} />
-          <div className="space-y-1.5">
-            <Label htmlFor={`image-${slide.id}`}>Change image</Label>
-            <Input
-              id={`image-${slide.id}`}
-              name="image"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              required
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor={`alt-${slide.id}`}>Short description</Label>
-            <Input id={`alt-${slide.id}`} name="alt" defaultValue={slide.alt} />
-          </div>
-          <PendingSubmit label="Save image" pendingLabel="Saving…" />
-        </form>
-        <div className="flex flex-wrap gap-2">
-          <form action={moveAction}>
-            <input type="hidden" name="slideId" value={slide.id} />
-            <input type="hidden" name="direction" value="up" />
-            <Button type="submit" size="sm" variant="outline" disabled={index === 0}>
-              Move up
-            </Button>
-          </form>
-          <form action={moveAction}>
-            <input type="hidden" name="slideId" value={slide.id} />
-            <input type="hidden" name="direction" value="down" />
-            <Button type="submit" size="sm" variant="outline" disabled={index === total - 1}>
-              Move down
-            </Button>
-          </form>
-          <form action={deleteAction}>
-            <input type="hidden" name="slideId" value={slide.id} />
-            <Button type="submit" size="sm" variant="destructive">
-              Remove
-            </Button>
-          </form>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <form action={updateAction} className="flex min-h-0 flex-1 flex-col" key={slide.id}>
+        <div className="flex-1 overflow-y-auto px-4">
+          <SlideFields prefix={`edit-${slide.id}`} slide={slide} />
         </div>
+        <DrawerFooter>
+          <PendingSubmit label="Save" pendingLabel="Saving…" />
+        </DrawerFooter>
+      </form>
+      <div className="flex flex-wrap gap-2 px-4 pb-4">
+        <form action={moveAction}>
+          <input name="slideId" type="hidden" value={slide.id} />
+          <input name="direction" type="hidden" value="up" />
+          <Button disabled={index === 0} size="sm" type="submit" variant="outline">
+            Move up
+          </Button>
+        </form>
+        <form action={moveAction}>
+          <input name="slideId" type="hidden" value={slide.id} />
+          <input name="direction" type="hidden" value="down" />
+          <Button disabled={index === total - 1} size="sm" type="submit" variant="outline">
+            Move down
+          </Button>
+        </form>
+        <RemoveSlideButton onRemoved={onSaved} slideId={slide.id} title={`Slide ${index + 1}`} />
       </div>
-    </li>
+    </div>
+  );
+}
+
+function RemoveSlideButton({
+  onRemoved,
+  slideId,
+  title,
+}: {
+  onRemoved: () => void;
+  slideId: string;
+  title: string;
+}) {
+  const [state, action] = useActionState<ActionResult | null, FormData>(deleteHomepageSlide, null);
+  const [open, setOpen] = useState(false);
+  useActionToast(state, () => {
+    setOpen(false);
+    onRemoved();
+  });
+
+  return (
+    <AlertDialog onOpenChange={setOpen} open={open}>
+      <AlertDialogTrigger asChild>
+        <Button size="sm" variant="destructive">
+          Remove
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <form action={action} className="flex flex-col gap-4">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove this slide?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {title} will come off the homepage carousel. You can add a new photo afterwards.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <input name="slideId" type="hidden" value={slideId} />
+          <AlertDialogFooter>
+            <AlertDialogCancel type="button">Keep it</AlertDialogCancel>
+            <RemoveConfirm />
+          </AlertDialogFooter>
+        </form>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+function RemoveConfirm() {
+  const { pending } = useFormStatus();
+  return (
+    <Button disabled={pending} type="submit" variant="destructive">
+      {pending ? "Removing…" : "Remove"}
+    </Button>
   );
 }
 
 export function HomepageSlideManager({
-  slides,
   maxSlides,
+  slides,
 }: {
-  slides: SlideView[];
   maxSlides: number;
+  slides: SlideView[];
 }) {
+  const [mode, setMode] = useState<DrawerMode | null>(null);
+  const atLimit = slides.length >= maxSlides;
+  const editingId = mode?.type === "edit" ? mode.slide.id : null;
+  const liveIndex = editingId ? slides.findIndex((item) => item.id === editingId) : -1;
+  const editing =
+    mode?.type === "edit"
+      ? {
+          slide: slides.find((item) => item.id === mode.slide.id) ?? mode.slide,
+          index: liveIndex < 0 ? mode.index : liveIndex,
+        }
+      : null;
+
   return (
-    <div className="flex flex-col gap-6">
-      {slides.length === 0 ? (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-end">
+        <Button disabled={atLimit} onClick={() => setMode({ type: "add" })}>
+          Add slide
+        </Button>
+      </div>
+      {atLimit ? (
         <p className="text-sm text-muted-foreground">
-          No slides yet. Add one below and it will show in the homepage hero carousel.
+          You already have {maxSlides} slides. Remove one to add another.
+        </p>
+      ) : null}
+
+      {slides.length === 0 ? (
+        <p className="py-8 text-sm text-muted-foreground">
+          No slides yet. Add one to show it in the homepage carousel.
         </p>
       ) : (
-        <ul className="divide-y overflow-hidden rounded-xl border">
-          {slides.map((slide, index) => (
-            <SlideCard key={slide.id} slide={slide} index={index} total={slides.length} />
-          ))}
-        </ul>
+        <div className="overflow-hidden rounded-xl border">
+          <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-16">Photo</TableHead>
+              <TableHead>Slide</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead className="w-8">
+                <span className="sr-only">Edit</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {slides.map((slide, index) => (
+              <TableRow
+                className="relative cursor-pointer"
+                key={slide.id}
+                onClick={() => setMode({ type: "edit", slide, index })}
+              >
+                <TableCell>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    alt=""
+                    className="size-10 rounded-md object-cover"
+                    src={slide.src}
+                  />
+                </TableCell>
+                <TableCell className="font-medium">Slide {index + 1}</TableCell>
+                <TableCell className="text-muted-foreground">{slide.alt}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  <ChevronRight className="size-4" />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        </div>
       )}
-      <Separator />
-      <AddSlideForm disabled={slides.length >= maxSlides} />
+
+      <Drawer
+        direction="right"
+        onOpenChange={(open) => {
+          if (!open) setMode(null);
+        }}
+        open={mode !== null}
+      >
+        <DrawerContent className="sm:max-w-md">
+          <DrawerHeader>
+            <DrawerTitle>{editing ? `Slide ${editing.index + 1}` : "Add a slide"}</DrawerTitle>
+            <DrawerDescription>
+              {editing
+                ? "Change the photo or the short description. Save when you are done."
+                : "Add a photo for the homepage carousel. JPEG, PNG or WebP, under 4 MB."}
+            </DrawerDescription>
+          </DrawerHeader>
+          {mode?.type === "add" ? (
+            <AddDrawerForm disabled={atLimit} onSaved={() => setMode(null)} />
+          ) : null}
+          {editing ? (
+            <EditDrawerForm
+              index={editing.index}
+              key={editing.slide.id}
+              onSaved={() => setMode(null)}
+              slide={editing.slide}
+              total={slides.length}
+            />
+          ) : null}
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }

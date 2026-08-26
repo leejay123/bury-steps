@@ -13,6 +13,7 @@ import {
   type ActionResult,
 } from "@/server/actions";
 import type { TestimonialView } from "@/lib/testimonials";
+import { ImageDropzone } from "@/components/image-dropzone";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -140,13 +141,13 @@ function TestimonialFields({
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${prefix}-photo`}>{testimonial ? "Change photo" : "Photo (optional)"}</Label>
-        <Input
-          accept="image/jpeg,image/png,image/webp"
+        <Label htmlFor={`${prefix}-photo`}>{testimonial ? "Photo" : "Photo (optional)"}</Label>
+        <ImageDropzone
+          aspect="square"
           disabled={disabled}
+          existingAlt={testimonial?.name}
+          existingSrc={testimonial?.image}
           id={`${prefix}-photo`}
-          name="image"
-          type="file"
         />
       </div>
       {!testimonial ? (
