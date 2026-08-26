@@ -209,8 +209,9 @@ export function OrganiserGuide() {
 
       <GuideSection id="homepage" title="Homepage content">
         <p>
-          All of this lives under <Link href="/admin/settings">Settings</Link>. Click a row to edit.
-          Remove is on the table, not in the drawer. Drawers are for adding and editing.
+          All of this lives under <Link href="/admin/settings">Settings</Link>. Hero photos,
+          testimonials, FAQs, and notices use a table: click a row to edit. Remove is on the table,
+          not in the drawer. Drawers are for adding and editing.
         </p>
         <p className="font-medium text-foreground">Hero photos</p>
         <p>
@@ -225,8 +226,9 @@ export function OrganiserGuide() {
         </p>
         <p className="font-medium text-foreground">FAQs</p>
         <p>
-          Up to {MAX_HOMEPAGE_FAQS} questions. Each has a category: Joining, Walks, On the day, or
-          Your account. Visitors can search and filter them. Hidden if you have none.
+          Up to {MAX_HOMEPAGE_FAQS} questions. Click a row to edit in the drawer. Each has a
+          category: Joining, Walks, On the day, or Your account. Move up and down in the edit drawer
+          to change the order. Visitors can search and filter them. Hidden if you have none.
         </p>
       </GuideSection>
 
