@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
+import { ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import {
   addHomepageTestimonial,
@@ -16,7 +17,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -35,6 +51,8 @@ const DEMO_TESTIMONIAL = {
     "I used to struggle to get out on a Sunday. These walks gave me a reason to leave the house, and I have made friends I would never have met otherwise.",
 };
 
+type DrawerMode = { type: "add" } | { type: "edit"; testimonial: TestimonialView; index: number };
+
 function PendingSubmit({
   label,
   pendingLabel,
@@ -46,7 +64,7 @@ function PendingSubmit({
 }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" size="sm" disabled={pending || disabled}>
+    <Button disabled={pending || disabled} type="submit">
       {pending ? pendingLabel : label}
     </Button>
   );
@@ -69,117 +87,192 @@ function useActionToast(state: ActionResult | null, onOk?: () => void) {
   }, [router, state]);
 }
 
-function AddTestimonialForm({ disabled }: { disabled: boolean }) {
+function TestimonialFields({
+  disabled,
+  prefix,
+  testimonial,
+}: {
+  disabled?: boolean;
+  prefix: string;
+  testimonial?: TestimonialView;
+}) {
+  const [name, setName] = useState(testimonial?.name ?? "");
+  const [role, setRole] = useState(testimonial?.role ?? "");
+  const [quote, setQuote] = useState(testimonial?.quote ?? "");
+
+  return (
+    <div className="flex flex-col gap-3">
+      {testimonial ? <input name="testimonialId" type="hidden" value={testimonial.id} /> : null}
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={`${prefix}-name`}>Name</Label>
+        <Input
+          disabled={disabled}
+          id={`${prefix}-name`}
+          name="name"
+          onChange={(event) => setName(event.target.value)}
+          placeholder={DEMO_TESTIMONIAL.name}
+          required
+          value={name}
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={`${prefix}-role`}>Line under the name</Label>
+        <Input
+          disabled={disabled}
+          id={`${prefix}-role`}
+          name="role"
+          onChange={(event) => setRole(event.target.value)}
+          placeholder={DEMO_TESTIMONIAL.role}
+          value={role}
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={`${prefix}-quote`}>Testimonial</Label>
+        <Textarea
+          disabled={disabled}
+          id={`${prefix}-quote`}
+          name="quote"
+          onChange={(event) => setQuote(event.target.value)}
+          placeholder={DEMO_TESTIMONIAL.quote}
+          required
+          rows={5}
+          value={quote}
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={`${prefix}-photo`}>{testimonial ? "Change photo" : "Photo (optional)"}</Label>
+        <Input
+          accept="image/jpeg,image/png,image/webp"
+          disabled={disabled}
+          id={`${prefix}-photo`}
+          name="image"
+          type="file"
+        />
+      </div>
+      {!testimonial ? (
+        <Button
+          disabled={disabled}
+          onClick={() => {
+            setName(DEMO_TESTIMONIAL.name);
+            setRole(DEMO_TESTIMONIAL.role);
+            setQuote(DEMO_TESTIMONIAL.quote);
+          }}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          Fill with example
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
+function AddDrawerForm({
+  disabled,
+  onSaved,
+}: {
+  disabled: boolean;
+  onSaved: () => void;
+}) {
   const [state, action] = useActionState<ActionResult | null, FormData>(
     addHomepageTestimonial,
     null,
   );
   const formRef = useRef<HTMLFormElement>(null);
-  const [name, setName] = useState("");
-  const [role, setRole] = useState("");
-  const [quote, setQuote] = useState("");
 
   useActionToast(state, () => {
     formRef.current?.reset();
-    setName("");
-    setRole("");
-    setQuote("");
+    onSaved();
   });
 
   return (
-    <section className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1.5">
-        <h3 className="font-semibold">Add a testimonial</h3>
-        <p className="text-muted-foreground text-sm">
-          {disabled
-            ? "You already have 12 testimonials. Remove one to add another."
-            : "Name, the line under the name, and the quote. Photo is optional. Use the example if you want a starting point."}
-        </p>
+    <form action={action} className="flex min-h-0 flex-1 flex-col" ref={formRef}>
+      <div className="flex-1 overflow-y-auto px-4">
+        <TestimonialFields disabled={disabled} prefix="new" />
       </div>
-      <form ref={formRef} action={action} className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="new-name">Name</Label>
-            <Input
-              id="new-name"
-              name="name"
-              required
-              disabled={disabled}
-              placeholder={DEMO_TESTIMONIAL.name}
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="new-role">Line under the name</Label>
-            <Input
-              id="new-role"
-              name="role"
-              disabled={disabled}
-              placeholder={DEMO_TESTIMONIAL.role}
-              value={role}
-              onChange={(event) => setRole(event.target.value)}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="new-quote">Testimonial</Label>
-            <Textarea
-              id="new-quote"
-              name="quote"
-              required
-              disabled={disabled}
-              rows={4}
-              placeholder={DEMO_TESTIMONIAL.quote}
-              value={quote}
-              onChange={(event) => setQuote(event.target.value)}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="new-photo">Photo (optional)</Label>
-            <Input
-              id="new-photo"
-              name="image"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              disabled={disabled}
-            />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={disabled}
-              onClick={() => {
-                setName(DEMO_TESTIMONIAL.name);
-                setRole(DEMO_TESTIMONIAL.role);
-                setQuote(DEMO_TESTIMONIAL.quote);
-              }}
-            >
-              Fill with example
-            </Button>
-            <PendingSubmit label="Add testimonial" pendingLabel="Adding…" disabled={disabled} />
-          </div>
+      <DrawerFooter>
+        <PendingSubmit disabled={disabled} label="Add testimonial" pendingLabel="Adding…" />
+      </DrawerFooter>
+    </form>
+  );
+}
+
+function EditDrawerForm({
+  index,
+  onSaved,
+  testimonial,
+  total,
+}: {
+  index: number;
+  onSaved: () => void;
+  testimonial: TestimonialView;
+  total: number;
+}) {
+  const [updateState, updateAction] = useActionState<ActionResult | null, FormData>(
+    updateHomepageTestimonial,
+    null,
+  );
+  const [moveState, moveAction] = useActionState<ActionResult | null, FormData>(
+    moveHomepageTestimonial,
+    null,
+  );
+
+  useActionToast(updateState, onSaved);
+  useActionToast(moveState);
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <form action={updateAction} className="flex min-h-0 flex-1 flex-col" key={testimonial.id}>
+        <div className="flex-1 overflow-y-auto px-4">
+          <TestimonialFields prefix={`edit-${testimonial.id}`} testimonial={testimonial} />
+        </div>
+        <DrawerFooter>
+          <PendingSubmit label="Save" pendingLabel="Saving…" />
+        </DrawerFooter>
+      </form>
+      <div className="flex flex-wrap gap-2 px-4 pb-4">
+        <form action={moveAction}>
+          <input name="testimonialId" type="hidden" value={testimonial.id} />
+          <input name="direction" type="hidden" value="up" />
+          <Button disabled={index === 0} size="sm" type="submit" variant="outline">
+            Move up
+          </Button>
         </form>
-    </section>
+        <form action={moveAction}>
+          <input name="testimonialId" type="hidden" value={testimonial.id} />
+          <input name="direction" type="hidden" value="down" />
+          <Button disabled={index === total - 1} size="sm" type="submit" variant="outline">
+            Move down
+          </Button>
+        </form>
+        <RemoveTestimonialButton name={testimonial.name} onRemoved={onSaved} testimonialId={testimonial.id} />
+      </div>
+    </div>
   );
 }
 
 function RemoveTestimonialButton({
-  testimonialId,
   name,
+  onRemoved,
+  testimonialId,
 }: {
-  testimonialId: string;
   name: string;
+  onRemoved: () => void;
+  testimonialId: string;
 }) {
   const [state, action] = useActionState<ActionResult | null, FormData>(
     deleteHomepageTestimonial,
     null,
   );
   const [open, setOpen] = useState(false);
-  useActionToast(state, () => setOpen(false));
+  useActionToast(state, () => {
+    setOpen(false);
+    onRemoved();
+  });
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog onOpenChange={setOpen} open={open}>
       <AlertDialogTrigger asChild>
         <Button size="sm" variant="destructive">
           Remove
@@ -193,7 +286,7 @@ function RemoveTestimonialButton({
               {name}’s quote will come off the public homepage. You can add a new one afterwards.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <input type="hidden" name="testimonialId" value={testimonialId} />
+          <input name="testimonialId" type="hidden" value={testimonialId} />
           <AlertDialogFooter>
             <AlertDialogCancel type="button">Keep it</AlertDialogCancel>
             <RemoveConfirm />
@@ -207,133 +300,110 @@ function RemoveTestimonialButton({
 function RemoveConfirm() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" variant="destructive" disabled={pending}>
+    <Button disabled={pending} type="submit" variant="destructive">
       {pending ? "Removing…" : "Remove"}
     </Button>
   );
 }
 
-function TestimonialCard({
-  testimonial,
-  index,
-  total,
-}: {
-  testimonial: TestimonialView;
-  index: number;
-  total: number;
-}) {
-  const [updateState, updateAction] = useActionState<ActionResult | null, FormData>(
-    updateHomepageTestimonial,
-    null,
-  );
-  const [moveState, moveAction] = useActionState<ActionResult | null, FormData>(
-    moveHomepageTestimonial,
-    null,
-  );
-
-  useActionToast(updateState);
-  useActionToast(moveState);
-
-  return (
-    <li>
-      <div className="flex items-center gap-3 bg-muted/40 p-4">
-        {testimonial.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={testimonial.image} alt="" className="size-10 rounded-full object-cover" />
-        ) : (
-          <div className="flex size-10 items-center justify-center rounded-full bg-muted text-sm font-medium">
-            {testimonial.name.charAt(0)}
-          </div>
-        )}
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium">{testimonial.name}</p>
-          <p className="truncate text-xs text-muted-foreground">
-            {testimonial.role || "No line under the name"}
-          </p>
-        </div>
-      </div>
-      <div className="flex flex-col gap-3 p-4">
-        <p className="text-sm font-medium">Testimonial {index + 1}</p>
-        <form action={updateAction} className="flex flex-col gap-3">
-          <input type="hidden" name="testimonialId" value={testimonial.id} />
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`name-${testimonial.id}`}>Name</Label>
-            <Input id={`name-${testimonial.id}`} name="name" defaultValue={testimonial.name} required />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`role-${testimonial.id}`}>Line under the name</Label>
-            <Input id={`role-${testimonial.id}`} name="role" defaultValue={testimonial.role} />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`quote-${testimonial.id}`}>Testimonial</Label>
-            <Textarea
-              id={`quote-${testimonial.id}`}
-              name="quote"
-              defaultValue={testimonial.quote}
-              required
-              rows={4}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`image-${testimonial.id}`}>Change photo</Label>
-            <Input
-              id={`image-${testimonial.id}`}
-              name="image"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-            />
-          </div>
-          <PendingSubmit label="Save" pendingLabel="Saving…" />
-        </form>
-        <div className="flex flex-wrap gap-2">
-          <form action={moveAction}>
-            <input type="hidden" name="testimonialId" value={testimonial.id} />
-            <input type="hidden" name="direction" value="up" />
-            <Button type="submit" size="sm" variant="outline" disabled={index === 0}>
-              Move up
-            </Button>
-          </form>
-          <form action={moveAction}>
-            <input type="hidden" name="testimonialId" value={testimonial.id} />
-            <input type="hidden" name="direction" value="down" />
-            <Button type="submit" size="sm" variant="outline" disabled={index === total - 1}>
-              Move down
-            </Button>
-          </form>
-          <RemoveTestimonialButton testimonialId={testimonial.id} name={testimonial.name} />
-        </div>
-      </div>
-    </li>
-  );
-}
-
 export function HomepageTestimonialManager({
-  testimonials,
   maxTestimonials,
+  testimonials,
 }: {
-  testimonials: TestimonialView[];
   maxTestimonials: number;
+  testimonials: TestimonialView[];
 }) {
+  const [mode, setMode] = useState<DrawerMode | null>(null);
+  const atLimit = testimonials.length >= maxTestimonials;
+  const editingId = mode?.type === "edit" ? mode.testimonial.id : null;
+  const liveIndex = editingId ? testimonials.findIndex((item) => item.id === editingId) : -1;
+  const editing =
+    mode?.type === "edit"
+      ? {
+          testimonial:
+            testimonials.find((item) => item.id === mode.testimonial.id) ?? mode.testimonial,
+          index: liveIndex < 0 ? mode.index : liveIndex,
+        }
+      : null;
+
   return (
-    <div className="flex flex-col gap-6">
-      <AddTestimonialForm disabled={testimonials.length >= maxTestimonials} />
-      <Separator />
-      {testimonials.length === 0 ? (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-end">
+        <Button disabled={atLimit} onClick={() => setMode({ type: "add" })}>
+          Add testimonial
+        </Button>
+      </div>
+      {atLimit ? (
         <p className="text-sm text-muted-foreground">
-          No testimonials on the homepage yet. Add one above, or fill the example and then add it.
+          You already have {maxTestimonials} testimonials. Remove one to add another.
+        </p>
+      ) : null}
+
+      {testimonials.length === 0 ? (
+        <p className="py-8 text-sm text-muted-foreground">
+          No testimonials on the homepage yet. Add one to show it on the homepage.
         </p>
       ) : (
-        <ul className="divide-y overflow-hidden rounded-xl border">
-          {testimonials.map((testimonial, index) => (
-            <TestimonialCard
-              key={testimonial.id}
-              testimonial={testimonial}
-              index={index}
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Testimonial</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead className="w-8">
+                <span className="sr-only">Edit</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {testimonials.map((testimonial, index) => (
+              <TableRow
+                className="relative cursor-pointer"
+                key={testimonial.id}
+                onClick={() => setMode({ type: "edit", testimonial, index })}
+              >
+                <TableCell className="font-medium">Testimonial {index + 1}</TableCell>
+                <TableCell className="text-muted-foreground">{testimonial.name}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  <ChevronRight className="size-4" />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+
+      <Drawer
+        direction="right"
+        onOpenChange={(open) => {
+          if (!open) setMode(null);
+        }}
+        open={mode !== null}
+      >
+        <DrawerContent className="sm:max-w-md">
+          <DrawerHeader>
+            <DrawerTitle>
+              {editing ? `Testimonial ${editing.index + 1}` : "Add a testimonial"}
+            </DrawerTitle>
+            <DrawerDescription>
+              {editing
+                ? "Change the name, quote, or photo. Save when you are done."
+                : "Name, the line under the name, and the quote. Photo is optional."}
+            </DrawerDescription>
+          </DrawerHeader>
+          {mode?.type === "add" ? (
+            <AddDrawerForm disabled={atLimit} onSaved={() => setMode(null)} />
+          ) : null}
+          {editing ? (
+            <EditDrawerForm
+              index={editing.index}
+              key={editing.testimonial.id}
+              onSaved={() => setMode(null)}
+              testimonial={editing.testimonial}
               total={testimonials.length}
             />
-          ))}
-        </ul>
-      )}
+          ) : null}
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }

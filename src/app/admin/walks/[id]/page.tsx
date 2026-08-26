@@ -125,12 +125,11 @@ export default async function WalkDetailPage({
         </div>
 
         {walk.attendances.length === 0 ? (
-          <p className="rounded-lg border py-10 text-center text-sm text-muted-foreground">
+          <p className="py-8 text-sm text-muted-foreground">
             Nobody has clocked in yet. Share the link above with the group.
           </p>
         ) : (
-          <div className="rounded-lg border">
-            <Table>
+          <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Member</TableHead>
@@ -170,7 +169,6 @@ export default async function WalkDetailPage({
                 })}
               </TableBody>
             </Table>
-          </div>
         )}
       </section>
     </div>
