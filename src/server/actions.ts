@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { customAlphabet } from "nanoid";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
@@ -14,6 +14,7 @@ import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { isFaqCategory, MAX_HOMEPAGE_FAQS } from "@/lib/faqs";
 import { MAX_SITE_NOTICES } from "@/lib/notices";
 import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR, normalizeHex } from "@/lib/theme";
+import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
 
 /** No look-alike characters — organisers read these out loud. */
 const makeToken = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 12);
@@ -401,6 +402,7 @@ async function readSlideImage(
 }
 
 function revalidateHomepage() {
+  revalidateTag(HOMEPAGE_CACHE_TAG);
   revalidatePath("/");
   revalidatePath("/admin/homepage");
   revalidatePath("/admin/settings");
@@ -929,6 +931,7 @@ export async function updateSiteTheme(
     update: { primaryColor: hex },
   });
 
+  revalidateTag(HOMEPAGE_CACHE_TAG);
   revalidatePath("/", "layout");
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/appearance");
@@ -952,6 +955,7 @@ export async function updateCarouselEnabled(
     update: { carouselEnabled: enabled },
   });
 
+  revalidateTag(HOMEPAGE_CACHE_TAG);
   revalidatePath("/", "layout");
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/hero-photos");

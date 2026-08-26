@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { headers } from "next/headers";
+import { Suspense } from "react";
 import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/themes";
 import { Toaster } from "@/components/ui/sonner";
 import { AFTER_AUTH_PATH, SIGN_IN_URL, SIGN_UP_URL } from "@/lib/urls";
 import { getSiteTheme } from "@/lib/site-theme";
-import { SiteMobileNav, SiteNav } from "@/components/site-nav";
+import { SiteMobileNav, SiteNav, SiteNavFallback } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteLogo } from "@/components/site-logo";
 import { FullWidthDivider } from "@/components/full-width-divider";
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   description: "Weekly walks around Bury. Sign up, join a walk, clock in.",
 };
 
+export const preferredRegion = ["lhr1"];
+
 export async function generateViewport(): Promise<Viewport> {
   const { primaryColor } = await getSiteTheme();
   return {
@@ -29,8 +31,7 @@ export async function generateViewport(): Promise<Viewport> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const host = (await headers()).get("host") ?? "";
-  const useVercelAppProxy = host.endsWith(".vercel.app");
+  const useVercelAppProxy = process.env.VERCEL_ENV === "preview";
   const theme = await getSiteTheme();
 
   return (
@@ -63,9 +64,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <Link href="/" className="flex h-8 min-w-0 items-center justify-self-start">
                     <SiteLogo />
                   </Link>
-                  <SiteNav />
+                  <Suspense fallback={<SiteNavFallback />}>
+                    <SiteNav />
+                  </Suspense>
                 </div>
-                <SiteMobileNav />
+                <Suspense fallback={null}>
+                  <SiteMobileNav />
+                </Suspense>
                 <FullWidthDivider position="bottom" />
               </div>
             </header>

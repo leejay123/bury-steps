@@ -1,6 +1,8 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import type { CSSProperties } from "react";
 import { prisma } from "@/lib/db";
+import { HOMEPAGE_CACHE_TAG, HOMEPAGE_REVALIDATE_SECONDS } from "@/lib/homepage-cache";
 import {
   DEFAULT_PRIMARY_COLOR,
   SITE_SETTING_ID,
@@ -8,27 +10,42 @@ import {
   themeStyle,
 } from "@/lib/theme";
 
-export const getSiteTheme = cache(async (): Promise<{
+type SiteTheme = {
   primaryColor: string;
   style: CSSProperties;
   carouselEnabled: boolean;
-}> => {
+};
+
+function defaultTheme(): SiteTheme {
+  return {
+    primaryColor: DEFAULT_PRIMARY_COLOR,
+    style: themeStyle(DEFAULT_PRIMARY_COLOR),
+    carouselEnabled: true,
+  };
+}
+
+async function loadSiteTheme(): Promise<SiteTheme> {
+  const row = await prisma.siteSetting.findUnique({
+    where: { id: SITE_SETTING_ID },
+    select: { primaryColor: true, carouselEnabled: true },
+  });
+  const primaryColor = normalizeHex(row?.primaryColor ?? "") ?? DEFAULT_PRIMARY_COLOR;
+  return {
+    primaryColor,
+    style: themeStyle(primaryColor),
+    carouselEnabled: row?.carouselEnabled ?? true,
+  };
+}
+
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme"], {
+  tags: [HOMEPAGE_CACHE_TAG],
+  revalidate: HOMEPAGE_REVALIDATE_SECONDS,
+});
+
+export const getSiteTheme = cache(async (): Promise<SiteTheme> => {
   try {
-    const row = await prisma.siteSetting.findUnique({
-      where: { id: SITE_SETTING_ID },
-      select: { primaryColor: true, carouselEnabled: true },
-    });
-    const primaryColor = normalizeHex(row?.primaryColor ?? "") ?? DEFAULT_PRIMARY_COLOR;
-    return {
-      primaryColor,
-      style: themeStyle(primaryColor),
-      carouselEnabled: row?.carouselEnabled ?? true,
-    };
+    return await getCachedSiteTheme();
   } catch {
-    return {
-      primaryColor: DEFAULT_PRIMARY_COLOR,
-      style: themeStyle(DEFAULT_PRIMARY_COLOR),
-      carouselEnabled: true,
-    };
+    return defaultTheme();
   }
 });

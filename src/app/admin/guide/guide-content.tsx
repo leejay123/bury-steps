@@ -348,9 +348,11 @@ export function OrganiserGuide() {
           <AccordionContent>
             <GuideBody>
               <p>
-                The homepage should feel instant: the photo slider is not created on every visit,
-                and the page does not fade in. A <strong>Back to top</strong> button appears after
-                you scroll down, on the public site and in Organiser tools.
+                The homepage is cached so visitors get it quickly, without waiting on a sign-in
+                check. Photos, quotes, FAQs, the carousel switch, and the site colour update on the
+                public site as soon as you save. The photo slider is not created on every visit, and
+                the page does not fade in. A <strong>Back to top</strong> button appears after you
+                scroll down, on the public site and in Organiser tools.
               </p>
               <p>
                 Organiser tools use the same edge-to-edge lines as the homepage. Settings is a

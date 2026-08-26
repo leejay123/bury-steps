@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
-export const dynamic = "force-dynamic";
+export const preferredRegion = ["lhr1"];
 
 export async function GET(
   _request: Request,
@@ -20,7 +20,7 @@ export async function GET(
   return new NextResponse(Buffer.from(slide.imageData), {
     headers: {
       "Content-Type": slide.imageMime ?? "image/jpeg",
-      "Cache-Control": "public, max-age=86400, immutable",
+      "Cache-Control": "public, max-age=86400, s-maxage=86400, immutable",
     },
   });
 }

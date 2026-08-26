@@ -1,17 +1,25 @@
-import { headers } from "next/headers";
 import { Show, UserButton } from "@clerk/nextjs";
 import { getOptionalUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { AFTER_AUTH_PATH, accountPortalHref } from "@/lib/urls";
+import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
 import { SiteNavLinks, SiteMobileNavBar } from "@/components/site-nav-menu";
 import { NotificationBell } from "@/components/notification-bell";
 import { getSiteNotices, getUnreadNoticeIds } from "@/lib/site-notices";
 
+export function SiteNavFallback() {
+  return (
+    <>
+      <div className="hidden min-w-0 items-center justify-center md:flex" />
+      <div className="flex min-w-0 items-center justify-end gap-2 justify-self-end sm:gap-3">
+        <div className="h-8 w-[4.5rem] rounded-md bg-muted" />
+        <div className="h-8 w-[7.5rem] rounded-md bg-muted" />
+      </div>
+    </>
+  );
+}
+
 export async function SiteNav() {
-  const headerList = await headers();
-  const host = headerList.get("x-forwarded-host") ?? headerList.get("host") ?? "";
-  const proto = headerList.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
-  const afterAuth = `${proto}://${host}${AFTER_AUTH_PATH}`;
+  const afterAuth = `${appUrl()}${AFTER_AUTH_PATH}`;
   const user = await getOptionalUser();
   const isAdmin = user?.role === "ADMIN";
 

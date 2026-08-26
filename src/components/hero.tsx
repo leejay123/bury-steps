@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Show } from "@clerk/nextjs";
 import { ArrowRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DecorIcon } from "@/components/decor-icon";
@@ -14,15 +15,11 @@ export function HeroSection({
   slides,
   signInHref,
   signUpHref,
-  signedIn = false,
-  walksHref = "/dashboard",
   carouselEnabled = true,
 }: {
   slides: SlideView[];
   signInHref: string;
   signUpHref: string;
-  signedIn?: boolean;
-  walksHref?: string;
   carouselEnabled?: boolean;
 }) {
   return (
@@ -40,12 +37,13 @@ export function HeroSection({
         ) : null}
         <HeroCopy
           actions={
-            signedIn ? (
-              <Button asChild variant="outline">
-                <Link href={walksHref}>Your walks</Link>
-              </Button>
-            ) : (
-              <>
+            <>
+              <Show when="signed-in">
+                <Button asChild variant="outline">
+                  <Link href="/dashboard">Your walks</Link>
+                </Button>
+              </Show>
+              <Show when="signed-out">
                 <Button asChild>
                   <a href={signUpHref}>
                     Join the group
@@ -55,8 +53,8 @@ export function HeroSection({
                 <Button asChild variant="outline">
                   <a href={signInHref}>Sign in</a>
                 </Button>
-              </>
-            )
+              </Show>
+            </>
           }
           title="Bury Steps Walking Group"
           titleAs="h1"
