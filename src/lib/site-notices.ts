@@ -12,12 +12,14 @@ export async function getSiteNotices(): Promise<NoticeView[]> {
   }
 }
 
-export async function getUnreadNoticeCount(userId: string): Promise<number> {
+export async function getUnreadNoticeIds(userId: string): Promise<string[]> {
   try {
-    return await prisma.siteNotice.count({
+    const unread = await prisma.siteNotice.findMany({
       where: { reads: { none: { userId } } },
+      select: { id: true },
     });
+    return unread.map((notice) => notice.id);
   } catch {
-    return 0;
+    return [];
   }
 }

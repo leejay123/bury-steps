@@ -292,7 +292,10 @@ export function OrganiserGuide() {
               </p>
               <Steps>
                 <li>Add a title and a message.</li>
-                <li>Members get a red dot on the bell until they open it.</li>
+                <li>
+                  Members get a red dot on the bell until they choose{" "}
+                  <strong>Mark all as read</strong>. Opening the bell does not clear it on its own.
+                </li>
               </Steps>
               <p>
                 If you edit a notice, it shows as new again for everyone — the “already read” marks

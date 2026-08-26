@@ -9,64 +9,92 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 export function NotificationBell({
   notices,
-  unreadCount,
+  unreadIds,
 }: {
   notices: NoticeView[];
-  unreadCount: number;
+  unreadIds: string[];
 }) {
-  const [unread, setUnread] = useState(unreadCount);
-  const [, startTransition] = useTransition();
+  const [unread, setUnread] = useState(unreadIds);
+  const [pending, startTransition] = useTransition();
 
   useEffect(() => {
-    setUnread(unreadCount);
-  }, [unreadCount]);
+    setUnread(unreadIds);
+  }, [unreadIds]);
+
+  const unreadCount = unread.length;
+  const unreadSet = new Set(unread);
+
+  function markAllRead() {
+    if (unreadCount === 0 || pending) return;
+    setUnread([]);
+    startTransition(() => {
+      void markSiteNoticesRead();
+    });
+  }
 
   return (
-    <DropdownMenu
-      onOpenChange={(open) => {
-        if (open && unread > 0) {
-          setUnread(0);
-          startTransition(() => {
-            void markSiteNoticesRead();
-          });
-        }
-      }}
-    >
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          aria-label={unread > 0 ? `${unread} unread notices` : "Notices"}
+          aria-label={unreadCount > 0 ? `${unreadCount} unread notices` : "Notices"}
           className="relative"
           size="icon"
           variant="ghost"
         >
           <Bell />
-          {unread > 0 ? (
+          {unreadCount > 0 ? (
             <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-destructive" />
           ) : null}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 p-0">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel className="px-3 py-2">Notices</DropdownMenuLabel>
-        </DropdownMenuGroup>
+        <div className="flex items-center justify-between gap-2 px-3 py-2">
+          <p className="text-sm font-medium">Notices</p>
+          {unreadCount > 0 ? (
+            <Button
+              disabled={pending}
+              onClick={markAllRead}
+              onPointerDown={(event) => event.preventDefault()}
+              size="xs"
+              variant="ghost"
+            >
+              Mark all as read
+            </Button>
+          ) : null}
+        </div>
         {notices.length === 0 ? (
           <p className="px-3 pb-3 text-sm text-muted-foreground">Nothing in the bell right now.</p>
         ) : (
           <div className="max-h-96 overflow-y-auto">
-            {notices.map((notice) => (
-              <div className="border-t px-3 py-3" key={notice.id}>
-                <p className="font-medium text-sm">{notice.title}</p>
-                <p className="text-muted-foreground text-xs">{formatDate(notice.createdAt)}</p>
-                <p className="mt-1 whitespace-pre-wrap text-muted-foreground text-sm">{notice.body}</p>
-              </div>
-            ))}
+            {notices.map((notice) => {
+              const isUnread = unreadSet.has(notice.id);
+              return (
+                <div className="border-t px-3 py-3" key={notice.id}>
+                  <div className="flex items-start gap-2">
+                    {isUnread ? (
+                      <span
+                        aria-hidden="true"
+                        className="mt-1.5 size-1.5 shrink-0 rounded-full bg-destructive"
+                      />
+                    ) : (
+                      <span aria-hidden="true" className="mt-1.5 size-1.5 shrink-0" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-sm">{notice.title}</p>
+                      <p className="text-muted-foreground text-xs">{formatDate(notice.createdAt)}</p>
+                      <p className="mt-1 whitespace-pre-wrap text-muted-foreground text-sm">
+                        {notice.body}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </DropdownMenuContent>

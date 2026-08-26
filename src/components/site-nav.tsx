@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { AFTER_AUTH_PATH, accountPortalHref } from "@/lib/urls";
 import { SiteNavLinks, SiteMobileNavBar } from "@/components/site-nav-menu";
 import { NotificationBell } from "@/components/notification-bell";
-import { getSiteNotices, getUnreadNoticeCount } from "@/lib/site-notices";
+import { getSiteNotices, getUnreadNoticeIds } from "@/lib/site-notices";
 
 export async function SiteNav() {
   const headerList = await headers();
@@ -16,9 +16,9 @@ export async function SiteNav() {
   const isAdmin = user?.role === "ADMIN";
 
   const walksHref = isAdmin ? "/admin" : "/dashboard";
-  const [notices, unreadCount] = user
-    ? await Promise.all([getSiteNotices(), getUnreadNoticeCount(user.id)])
-    : [[], 0];
+  const [notices, unreadIds] = user
+    ? await Promise.all([getSiteNotices(), getUnreadNoticeIds(user.id)])
+    : [[], [] as string[]];
 
   return (
     <>
@@ -37,7 +37,7 @@ export async function SiteNav() {
           </Button>
         </Show>
         <Show when="signed-in">
-          <NotificationBell notices={notices} unreadCount={unreadCount} />
+          <NotificationBell notices={notices} unreadIds={unreadIds} />
           <UserButton />
         </Show>
       </div>
