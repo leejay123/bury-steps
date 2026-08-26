@@ -72,7 +72,7 @@ export default async function WalkDetailPage({
   const withConditions = walk.attendances.filter((a) => a.conditions).length;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 px-4 py-6 md:px-8">
       <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">
         &larr; All walks
       </Link>

@@ -39,14 +39,8 @@ function GuideBody({ children }: { children: React.ReactNode }) {
 
 export function OrganiserGuide() {
   return (
-    <div className="flex w-full flex-col gap-6">
-      <p className="text-sm text-muted-foreground">
-        Open a section for the steps. This is the same place members use for walks, plus the
-        organiser tools for members, settings, and the homepage.
-      </p>
-
-      <Accordion className="w-full" defaultValue={["what"]} type="multiple">
-        <AccordionItem value="what">
+    <Accordion className="w-full" defaultValue={["what"]} type="multiple">
+      <AccordionItem className="border-b px-4 last:border-b md:px-8" value="what">
           <AccordionTrigger className="text-base">What this site is for</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -67,7 +61,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="who">
+        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="who">
           <AccordionTrigger className="text-base">Who can do what</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -94,7 +88,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="accounts">
+        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="accounts">
           <AccordionTrigger className="text-base">Accounts and signing in</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -114,7 +108,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="walks">
+        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="walks">
           <AccordionTrigger className="text-base">Walks</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -171,7 +165,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="clock-in">
+        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="clock-in">
           <AccordionTrigger className="text-base">Clock-in and clock-out</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -212,7 +206,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="members">
+        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="members">
           <AccordionTrigger className="text-base">Members</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -243,7 +237,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="homepage">
+        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="homepage">
           <AccordionTrigger className="text-base">Homepage content</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -283,7 +277,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="notices">
+        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="notices">
           <AccordionTrigger className="text-base">Notices</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -306,7 +300,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="colour">
+        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="colour">
           <AccordionTrigger className="text-base">Site colour</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -324,7 +318,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="privacy">
+        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="privacy">
           <AccordionTrigger className="text-base">Health notes and privacy</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -345,7 +339,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="site">
+        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="site">
           <AccordionTrigger className="text-base">The public site</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -353,6 +347,10 @@ export function OrganiserGuide() {
                 The homepage should feel instant: the photo slider is not created on every visit,
                 and the page does not fade in. A <strong>Back to top</strong> button appears after
                 you scroll down, on the public site and in Organiser tools.
+              </p>
+              <p>
+                Organiser tools use the same edge-to-edge lines as the homepage. Settings is a
+                connected grid. This Guide is full-width sections with a line between each.
               </p>
               <p>
                 Members open Walks from the menu. Each walk is a card with the date, length,
@@ -364,7 +362,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="limits">
+        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="limits">
           <AccordionTrigger className="text-base">Limits</AccordionTrigger>
           <AccordionContent>
             <Table>
@@ -415,6 +413,5 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
       </Accordion>
-    </div>
   );
 }
