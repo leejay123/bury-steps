@@ -30,11 +30,13 @@ export async function GET(
   if (!walk) return new NextResponse("Not found", { status: 404 });
 
   const rows = [
-    ["Name", "Email", "Clocked in (UK time)", "Medical acknowledgement", "Reported conditions"],
+    ["Name", "Email", "Clocked in (UK time)", "Clocked out (UK time)", "Clock-out reason", "Medical acknowledgement", "Reported conditions"],
     ...walk.attendances.map((a) => [
       displayName(a.user),
       a.user.email,
       formatDateTime(a.clockedInAt),
+      a.clockedOutAt ? formatDateTime(a.clockedOutAt) : "",
+      a.clockedOutReason ?? "",
       formatDateTime(a.medicalAckAt),
       a.conditions ?? "None reported",
     ]),

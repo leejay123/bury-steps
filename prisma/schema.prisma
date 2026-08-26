@@ -55,6 +55,10 @@ model Attendance {
 
   /// Set by the database, never by the client.
   clockedInAt  DateTime @default(now())
+  /// When the member left the walk. Null while they are still clocked in.
+  clockedOutAt DateTime?
+  /// Why they clocked out. Visible to organisers only.
+  clockedOutReason String?
   /// When the member gave explicit consent to store health information.
   medicalAckAt DateTime
 

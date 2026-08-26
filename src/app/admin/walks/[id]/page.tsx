@@ -7,6 +7,7 @@ import { windowState } from "@/lib/walk-window";
 import { appUrl } from "@/lib/urls";
 import { ShareLink } from "@/components/share-link";
 import { CancelWalkButton } from "./cancel-walk-button";
+import { ReopenWalkButton } from "./reopen-walk-button";
 import { DeleteWalkButton } from "./delete-walk-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -52,8 +53,9 @@ export default async function WalkDetailPage({
       startsAt: true,
       durationMins: true,
       cancelledAt: true,
+      cancelledReason: true,
       attendances: {
-        orderBy: { clockedInAt: "asc" },
+        orderBy: [{ clockedOutAt: "asc" }, { clockedInAt: "asc" }],
         include: { user: { select: { firstName: true, lastName: true, email: true } } },
       },
     },
@@ -62,6 +64,8 @@ export default async function WalkDetailPage({
   if (!walk) notFound();
 
   const state = windowState(walk.startsAt, walk.durationMins);
+  const stillIn = walk.attendances.filter((a) => !a.clockedOutAt);
+  const clockedOut = walk.attendances.filter((a) => a.clockedOutAt);
   const withConditions = walk.attendances.filter((a) => a.conditions).length;
 
   return (
@@ -88,6 +92,9 @@ export default async function WalkDetailPage({
           {walk.location ? ` \u00B7 ${walk.location}` : ""} &middot; {walk.durationMins} min
         </p>
         {walk.description && <p className="text-sm leading-relaxed">{walk.description}</p>}
+        {walk.cancelledAt && walk.cancelledReason ? (
+          <p className="text-sm text-destructive">Cancelled: {walk.cancelledReason}</p>
+        ) : null}
       </header>
 
       <ShareLink url={`${appUrl()}/w/${walk.token}`} />
@@ -97,8 +104,9 @@ export default async function WalkDetailPage({
           <a href={`/admin/walks/${walk.id}/export`}>Download roster (CSV)</a>
         </Button>
         {!walk.cancelledAt && (
-          <CancelWalkButton walkId={walk.id} attendanceCount={walk.attendances.length} />
+          <CancelWalkButton walkId={walk.id} attendanceCount={stillIn.length} />
         )}
+        {walk.cancelledAt ? <ReopenWalkButton walkId={walk.id} /> : null}
         <DeleteWalkButton walkId={walk.id} attendanceCount={walk.attendances.length} />
       </div>
 
@@ -120,7 +128,8 @@ export default async function WalkDetailPage({
         <div className="flex items-baseline justify-between">
           <h2 className="text-sm font-medium text-muted-foreground">Attendance</h2>
           <span className="text-sm tabular-nums text-muted-foreground">
-            {walk.attendances.length} clocked in
+            {stillIn.length} on the walk
+            {clockedOut.length > 0 ? ` · ${clockedOut.length} clocked out` : ""}
           </span>
         </div>
 
@@ -129,10 +138,12 @@ export default async function WalkDetailPage({
             Nobody has clocked in yet. Share the link above with the group.
           </p>
         ) : (
+          <div className="overflow-hidden rounded-xl border">
           <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Member</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead className="w-24 text-right">Time</TableHead>
                 </TableRow>
               </TableHeader>
@@ -151,6 +162,11 @@ export default async function WalkDetailPage({
                             <p className="truncate text-xs text-muted-foreground">{a.user.email}</p>
                           </div>
                         </div>
+                        {a.clockedOutAt && a.clockedOutReason ? (
+                          <p className="rounded-md bg-muted px-2.5 py-1.5 text-xs leading-relaxed">
+                            Clock-out: {a.clockedOutReason}
+                          </p>
+                        ) : null}
                         {a.conditions ? (
                           <p className="rounded-md bg-accent px-2.5 py-1.5 text-xs leading-relaxed">
                             {a.conditions}
@@ -159,16 +175,32 @@ export default async function WalkDetailPage({
                           <p className="text-xs text-muted-foreground">No conditions reported</p>
                         )}
                       </TableCell>
+                      <TableCell className="align-top">
+                        {a.clockedOutAt ? (
+                          <Badge variant="secondary">Clocked out</Badge>
+                        ) : (
+                          <Badge variant="outline">On the walk</Badge>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right align-top">
                         <span className="text-sm tabular-nums" title={formatDateTime(a.clockedInAt)}>
                           {formatTime(a.clockedInAt)}
                         </span>
+                        {a.clockedOutAt ? (
+                          <p
+                            className="text-xs tabular-nums text-muted-foreground"
+                            title={formatDateTime(a.clockedOutAt)}
+                          >
+                            Left {formatTime(a.clockedOutAt)}
+                          </p>
+                        ) : null}
                       </TableCell>
                     </TableRow>
                   );
                 })}
               </TableBody>
             </Table>
+          </div>
         )}
       </section>
     </div>

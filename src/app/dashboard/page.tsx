@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WalkMembers } from "@/components/walk-members";
+import { ClockOutButton } from "@/components/clock-out-button";
 import { getWalkMemberNamesByWalkIds } from "@/lib/walk-members";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +36,10 @@ export default async function DashboardPage() {
         startsAt: true,
         durationMins: true,
         cancelledAt: true,
-        attendances: { where: { userId: user.id }, select: { clockedInAt: true } },
+        attendances: {
+          where: { userId: user.id, clockedOutAt: null },
+          select: { clockedInAt: true },
+        },
       },
     }),
     prisma.attendance.findMany({
@@ -106,6 +110,7 @@ export default async function DashboardPage() {
                     <p className="text-xs text-muted-foreground">
                       Clocked in at {formatDateTime(clockedIn.clockedInAt)}
                     </p>
+                    <ClockOutButton token={walk.token} />
                     <WalkMembers names={memberNamesByWalk.get(walk.id) ?? []} />
                   </div>
                 )}
@@ -123,6 +128,7 @@ export default async function DashboardPage() {
               <li key={a.walk.title + a.clockedInAt.toISOString()} className="flex items-center justify-between gap-3 px-4 py-2.5">
                 <span className="truncate">{a.walk.title}</span>
                 <span className="shrink-0 tabular-nums text-muted-foreground">
+                  {a.clockedOutAt ? "Clocked out · " : ""}
                   {formatDateTime(a.clockedInAt)}
                 </span>
               </li>

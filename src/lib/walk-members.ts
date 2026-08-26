@@ -3,7 +3,7 @@ import { memberDisplayName } from "@/lib/auth";
 
 export async function getWalkMemberNames(walkId: string): Promise<string[]> {
   const rows = await prisma.attendance.findMany({
-    where: { walkId },
+    where: { walkId, clockedOutAt: null },
     orderBy: { clockedInAt: "asc" },
     select: {
       user: { select: { firstName: true, lastName: true } },
@@ -20,7 +20,7 @@ export async function getWalkMemberNamesByWalkIds(
   if (walkIds.length === 0) return namesByWalk;
 
   const rows = await prisma.attendance.findMany({
-    where: { walkId: { in: walkIds } },
+    where: { walkId: { in: walkIds }, clockedOutAt: null },
     orderBy: { clockedInAt: "asc" },
     select: {
       walkId: true,

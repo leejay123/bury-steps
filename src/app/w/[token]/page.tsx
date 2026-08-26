@@ -8,6 +8,7 @@ import { formatWalkDate, formatDateTime } from "@/lib/dates";
 import { windowState } from "@/lib/walk-window";
 import { accountPortalHref } from "@/lib/urls";
 import { ClockInForm } from "./clock-in-form";
+import { ClockOutButton } from "@/components/clock-out-button";
 import { WalkMembers } from "@/components/walk-members";
 import { getWalkMemberNames } from "@/lib/walk-members";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -47,7 +48,7 @@ export default async function WalkLinkPage({
 
   const alreadyIn = userId
     ? await prisma.attendance.findFirst({
-        where: { walkId: walk.id, user: { clerkId: userId } },
+        where: { walkId: walk.id, user: { clerkId: userId }, clockedOutAt: null },
         select: { clockedInAt: true },
       })
     : null;
@@ -111,9 +112,12 @@ export default async function WalkLinkPage({
                 Recorded at {formatDateTime(alreadyIn.clockedInAt)}
               </p>
             </div>
-            <Button asChild size="sm" variant="outline">
-              <Link href="/dashboard">Back to walks</Link>
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <ClockOutButton token={walk.token} />
+              <Button asChild size="sm" variant="outline">
+                <Link href="/dashboard">Back to walks</Link>
+              </Button>
+            </div>
           </div>
           <WalkMembers names={memberNames} />
         </div>

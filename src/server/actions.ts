@@ -124,6 +124,30 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
   return { ok: true, message: "Walk cancelled. Members will see it marked as cancelled." };
 }
 
+export async function reopenWalk(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("walkId") ?? "");
+  if (!id) return { ok: false, error: "No walk selected." };
+
+  const walk = await prisma.walk.findUnique({
+    where: { id },
+    select: { id: true, token: true, cancelledAt: true },
+  });
+  if (!walk) return { ok: false, error: "That walk is no longer there." };
+  if (!walk.cancelledAt) return { ok: false, error: "This walk is already open." };
+
+  await prisma.walk.update({
+    where: { id },
+    data: { cancelledAt: null, cancelledReason: null },
+  });
+
+  revalidatePath("/admin");
+  revalidatePath(`/admin/walks/${id}`);
+  revalidatePath("/dashboard");
+  revalidatePath(`/w/${walk.token}`);
+  return { ok: true, message: "Walk reopened. Members can clock in again if the window is still open." };
+}
+
 export async function deleteWalk(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   await requireAdmin();
   const id = String(formData.get("walkId") ?? "");
@@ -194,29 +218,102 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
     walk.startsAt.getTime() + CONDITIONS_RETENTION_DAYS * 24 * 60 * 60 * 1000,
   );
 
-  try {
-    await prisma.attendance.create({
+  const existing = await prisma.attendance.findUnique({
+    where: { walkId_userId: { walkId: walk.id, userId: user.id } },
+    select: { id: true, clockedOutAt: true },
+  });
+
+  if (existing && !existing.clockedOutAt) {
+    return { ok: false, error: "You are already clocked in for this walk." };
+  }
+
+  const attendanceData = {
+    medicalAckAt: new Date(),
+    conditions: parsed.data.hasConditions === "yes" ? parsed.data.conditions! : null,
+    conditionsPurgeAfter: purgeAfter,
+    clockedOutAt: null,
+    clockedOutReason: null,
+  };
+
+  if (existing) {
+    await prisma.attendance.update({
+      where: { id: existing.id },
       data: {
-        walkId: walk.id,
-        userId: user.id,
-        // clockedInAt is set by the database default — never by the browser.
-        medicalAckAt: new Date(),
-        conditions: parsed.data.hasConditions === "yes" ? parsed.data.conditions! : null,
-        conditionsPurgeAfter: purgeAfter,
+        ...attendanceData,
+        clockedInAt: new Date(),
       },
     });
-  } catch (err) {
-    // P2002 = unique constraint violation, i.e. they already clocked in.
-    if (isPrismaCode(err, "P2002")) {
-      return { ok: false, error: "You are already clocked in for this walk." };
+  } else {
+    try {
+      await prisma.attendance.create({
+        data: {
+          walkId: walk.id,
+          userId: user.id,
+          // clockedInAt is set by the database default — never by the browser.
+          ...attendanceData,
+        },
+      });
+    } catch (err) {
+      // P2002 = unique constraint violation, i.e. they already clocked in.
+      if (isPrismaCode(err, "P2002")) {
+        return { ok: false, error: "You are already clocked in for this walk." };
+      }
+      throw err;
     }
-    throw err;
   }
 
   revalidatePath(`/w/${walk.token}`);
   revalidatePath("/dashboard");
   revalidatePath(`/admin/walks/${walk.id}`);
   return { ok: true, message: "Clocked in. Enjoy the walk." };
+}
+
+const clockOutSchema = z.object({
+  token: z.string().min(1),
+  reason: z
+    .string()
+    .trim()
+    .min(3, "Say why you are clocking out.")
+    .max(500, "Keep the reason under 500 characters."),
+});
+
+export async function clockOut(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const user = await requireUser();
+
+  const parsed = clockOutSchema.safeParse({
+    token: formData.get("token"),
+    reason: formData.get("reason"),
+  });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0].message };
+  }
+
+  const walk = await prisma.walk.findUnique({
+    where: { token: parsed.data.token },
+    select: { id: true, token: true },
+  });
+  if (!walk) return { ok: false, error: "This walk link is not valid." };
+
+  const attendance = await prisma.attendance.findUnique({
+    where: { walkId_userId: { walkId: walk.id, userId: user.id } },
+    select: { id: true, clockedOutAt: true },
+  });
+  if (!attendance || attendance.clockedOutAt) {
+    return { ok: false, error: "You are not clocked in for this walk." };
+  }
+
+  await prisma.attendance.update({
+    where: { id: attendance.id },
+    data: {
+      clockedOutAt: new Date(),
+      clockedOutReason: parsed.data.reason,
+    },
+  });
+
+  revalidatePath(`/w/${walk.token}`);
+  revalidatePath("/dashboard");
+  revalidatePath(`/admin/walks/${walk.id}`);
+  return { ok: true, message: "You have clocked out. Your name is no longer on the walk for other members." };
 }
 
 // ---------------------------------------------------------------- delete member

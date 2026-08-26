@@ -87,7 +87,7 @@ export default async function AdminPage() {
     location: true,
     startsAt: true,
     cancelledAt: true,
-    _count: { select: { attendances: true } },
+    _count: { select: { attendances: { where: { clockedOutAt: null } } } },
   } as const;
 
   const [upcoming, past] = await Promise.all([
@@ -118,7 +118,7 @@ export default async function AdminPage() {
 
       <section className="flex flex-col gap-4">
         <AdminPageIntro
-          description="Upcoming walks and recent ones. Open a walk to share the link, cancel it, or remove it."
+          description="Upcoming walks and recent ones. Open a walk to share the link, cancel it, reopen it, or remove it."
           title="Walks"
         />
         <Tabs className="w-full" defaultValue="upcoming">

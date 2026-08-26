@@ -33,7 +33,7 @@ export default function PrivacyPolicyPage() {
           Sign-in data: if you sign in with Google or email, our login provider (Clerk)
           processes that request.
         </li>
-        <li>Walk records: which walks you are listed on, and when you clock in.</li>
+        <li>Walk records: which walks you are listed on, when you clock in, and if you clock out.</li>
         <li>
           Optional health notes at clock-in: only if you choose to provide them, so a walk
           leader can help if you need it. You must tick a consent box before this is saved.
@@ -45,7 +45,7 @@ export default function PrivacyPolicyPage() {
       <ul>
         <li>create and manage your member account;</li>
         <li>show you walks and let organisers run the group;</li>
-        <li>record attendance when you clock in;</li>
+        <li>record attendance when you clock in, and if you clock out;</li>
         <li>hold health notes you volunteer, for safety during that walk.</li>
       </ul>
       <p>We do not sell your information. We do not use it for advertising.</p>
@@ -67,7 +67,7 @@ export default function PrivacyPolicyPage() {
           <strong>Google</strong> if you choose “Sign in with Google”. Google’s terms and
           privacy policy then also apply to that sign-in.
         </li>
-        <li>Walk organisers can see attendance and any health notes you submit.</li>
+        <li>Walk organisers can see attendance, clock-out reasons, and any health notes you submit. Other members only see names of people still on the walk.</li>
       </ul>
 
       <h2>How long we keep it</h2>
