@@ -26,7 +26,7 @@ export default async function Home() {
   ]);
 
   return (
-    <div className="-mx-4 -mt-8 md:-mx-8">
+    <div className="relative -mx-4 -mt-8 md:-mx-8">
       <HeroSection
         carouselEnabled={theme.carouselEnabled}
         signInHref={accountPortalHref("sign-in", `${origin}/dashboard`)}
