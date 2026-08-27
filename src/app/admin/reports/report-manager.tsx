@@ -226,8 +226,8 @@ function RemoveButton({ reportId, title }: { reportId: string; title: string }) 
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button aria-label={`Remove report from ${title}`} size="xs" variant="destructive">
-          <Trash2 />
-          <span className="sr-only">Remove</span>
+          <Trash2 data-icon="inline-start" />
+          Remove
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
@@ -281,20 +281,25 @@ export function AccidentReportManager({
             const at = new Date(report.happenedAt);
             return (
               <DataListItem
-                className="items-start gap-2 sm:items-center sm:gap-3"
+                className="flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3"
                 key={report.id}
                 onClick={() => setMode({ type: "edit", report })}
               >
-                <DataListBody>
-                  <p className="font-medium">
-                    {formatWalkDay(at)} · {formatTime(at)}
-                  </p>
-                  <p className="text-sm text-muted-foreground">{report.walkTitle || "No walk"}</p>
-                  <p className="line-clamp-2 text-sm text-muted-foreground wrap-break-word">
-                    {report.whatHappened}
-                  </p>
-                </DataListBody>
-                <DataListActions className="flex-col gap-1 sm:flex-row sm:gap-1">
+                <div className="flex min-w-0 flex-1 items-start gap-2 sm:items-center">
+                  <DataListBody>
+                    <p className="font-medium">
+                      {formatWalkDay(at)} · {formatTime(at)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {report.walkTitle || "No walk"}
+                    </p>
+                    <p className="line-clamp-3 text-sm text-muted-foreground wrap-break-word">
+                      {report.whatHappened}
+                    </p>
+                  </DataListBody>
+                  <ChevronRight className="mt-1 size-4 shrink-0 text-muted-foreground sm:mt-0" />
+                </div>
+                <DataListActions className="justify-end border-t pt-2 sm:border-0 sm:pt-0">
                   <Button asChild size="xs" variant="outline">
                     <a
                       aria-label="Print report"
@@ -303,12 +308,11 @@ export function AccidentReportManager({
                       target="_blank"
                     >
                       <Printer />
-                      <span className="sr-only">Print</span>
+                      Print
                     </a>
                   </Button>
                   <RemoveButton reportId={report.id} title={formatWalkDay(at)} />
                 </DataListActions>
-                <ChevronRight className="mt-1.5 size-4 shrink-0 text-muted-foreground sm:mt-0" />
               </DataListItem>
             );
           })}

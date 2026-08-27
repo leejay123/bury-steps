@@ -336,17 +336,16 @@ export function OrganiserGuide() {
                 Open <Link href="/admin/reports">Reports</Link> in the menu, or from Settings.
                 Only organisers can see this. Add a report with the date, an optional walk, what
                 happened, who was involved, what you did, and extra notes if you need them. Each
-                row shows the date, walk, and a short preview of what happened; print and remove
-                are icon buttons so the text stays readable.
+                row shows the date, walk, and a short preview of what happened. On a phone, print
+                and remove sit on their own row under the text so the write-up is not squeezed.
               </p>
               <Steps>
                 <li>
                   Choose Add report (full width on a phone) and fill in the form. Save.
                 </li>
-                <li>Tap a row later to edit it. Remove is the bin icon on the list.</li>
+                <li>Tap a row later to edit it. Remove is on the list under the text on a phone.</li>
                 <li>
-                  Choose the print icon to open a printable page, then use the browser dialog to
-                  save a PDF.
+                  Choose Print to open a printable page, then use the browser dialog to save a PDF.
                 </li>
               </Steps>
             </GuideBody>
