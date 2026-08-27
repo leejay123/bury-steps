@@ -156,6 +156,69 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
   return { ok: true, message: "Walk reopened. Members can clock in again if the window is still open." };
 }
 
+export async function rescheduleWalk(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("walkId") ?? "");
+  if (!id) return { ok: false, error: "No walk selected." };
+
+  const parsed = z
+    .object({
+      startsAt: z.string().min(16, "Choose a date and time."),
+      durationMins: z.coerce.number().int().min(15).max(600),
+      location: z.string().trim().max(200).optional(),
+      reopen: z.string().optional(),
+    })
+    .safeParse({
+      startsAt: formData.get("startsAt"),
+      durationMins: formData.get("durationMins") ?? 90,
+      location: formData.get("location") || undefined,
+      reopen: formData.get("reopen") || undefined,
+    });
+
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0].message };
+  }
+
+  let startsAt: Date;
+  try {
+    startsAt = londonWallClockToUtc(parsed.data.startsAt);
+  } catch {
+    return { ok: false, error: "That date and time could not be read. Try again." };
+  }
+
+  const walk = await prisma.walk.findUnique({
+    where: { id },
+    select: { id: true, token: true, cancelledAt: true },
+  });
+  if (!walk) return { ok: false, error: "That walk is no longer there." };
+
+  await prisma.walk.update({
+    where: { id },
+    data: {
+      startsAt,
+      durationMins: parsed.data.durationMins,
+      location: parsed.data.location ?? null,
+      ...(parsed.data.reopen === "on" || walk.cancelledAt
+        ? { cancelledAt: null, cancelledReason: null }
+        : {}),
+    },
+  });
+
+  revalidatePath("/admin");
+  revalidatePath(`/admin/walks/${id}`);
+  revalidatePath("/dashboard");
+  revalidatePath(`/w/${walk.token}`);
+  return {
+    ok: true,
+    message: walk.cancelledAt
+      ? "Walk rescheduled and put back on the diary."
+      : "Walk rescheduled.",
+  };
+}
+
 export async function deleteWalk(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   await requireAdmin();
   const id = String(formData.get("walkId") ?? "");
@@ -994,7 +1057,32 @@ export async function updateCarouselEnabled(
   revalidatePath("/", "layout");
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/hero-photos");
-  return { ok: true, message: enabled ? "Carousel is on." : "Carousel is hidden on the homepage." };
+  return { ok: true, message: enabled ? "You have turned the carousel on." : "You have turned the carousel off." };
+}
+
+export async function updateScrollToTopEnabled(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const enabled = String(formData.get("scrollToTopEnabled") ?? "") === "on";
+
+  await prisma.siteSetting.upsert({
+    where: { id: SITE_SETTING_ID },
+    create: {
+      id: SITE_SETTING_ID,
+      primaryColor: DEFAULT_PRIMARY_COLOR,
+      carouselEnabled: true,
+      scrollToTopEnabled: enabled,
+    },
+    update: { scrollToTopEnabled: enabled },
+  });
+
+  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/display");
+  return { ok: true, message: enabled ? "Back to top is on." : "Back to top is off." };
 }
 
 export async function reorderHomepageSlides(ids: string[]): Promise<ActionResult> {
@@ -1181,4 +1269,115 @@ export async function getMemberHistory(userId: string): Promise<{
       clockedOutReason: attendance.clockedOutReason,
     })),
   };
+}
+
+const reportCopySchema = z.object({
+  happenedAt: z.string().min(16, "Choose a date and time."),
+  walkId: z.string().optional(),
+  whatHappened: z.string().trim().min(3, "Say what happened.").max(4000),
+  whoInvolved: z.string().trim().min(2, "Say who was involved.").max(1000),
+  whatWeDid: z.string().trim().min(3, "Say what you did.").max(4000),
+  organiserNotes: z.string().trim().max(4000).optional(),
+});
+
+function readReportCopy(formData: FormData) {
+  return reportCopySchema.safeParse({
+    happenedAt: formData.get("happenedAt"),
+    walkId: (() => {
+      const value = String(formData.get("walkId") ?? "").trim();
+      return !value || value === "none" ? undefined : value;
+    })(),
+    whatHappened: formData.get("whatHappened"),
+    whoInvolved: formData.get("whoInvolved"),
+    whatWeDid: formData.get("whatWeDid"),
+    organiserNotes: String(formData.get("organiserNotes") ?? "").trim() || undefined,
+  });
+}
+
+export async function addAccidentReport(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  const parsed = readReportCopy(formData);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+
+  let happenedAt: Date;
+  try {
+    happenedAt = londonWallClockToUtc(parsed.data.happenedAt);
+  } catch {
+    return { ok: false, error: "That date and time could not be read. Try again." };
+  }
+
+  await prisma.accidentReport.create({
+    data: {
+      happenedAt,
+      walkId: parsed.data.walkId ?? null,
+      whatHappened: parsed.data.whatHappened,
+      whoInvolved: parsed.data.whoInvolved,
+      whatWeDid: parsed.data.whatWeDid,
+      organiserNotes: parsed.data.organiserNotes ?? null,
+      createdById: admin.id,
+    },
+  });
+
+  revalidatePath("/admin/reports");
+  return { ok: true, message: "Accident report saved." };
+}
+
+export async function updateAccidentReport(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("reportId") ?? "");
+  if (!id) return { ok: false, error: "No report selected." };
+
+  const parsed = readReportCopy(formData);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+
+  let happenedAt: Date;
+  try {
+    happenedAt = londonWallClockToUtc(parsed.data.happenedAt);
+  } catch {
+    return { ok: false, error: "That date and time could not be read. Try again." };
+  }
+
+  try {
+    await prisma.accidentReport.update({
+      where: { id },
+      data: {
+        happenedAt,
+        walkId: parsed.data.walkId ?? null,
+        whatHappened: parsed.data.whatHappened,
+        whoInvolved: parsed.data.whoInvolved,
+        whatWeDid: parsed.data.whatWeDid,
+        organiserNotes: parsed.data.organiserNotes ?? null,
+      },
+    });
+  } catch {
+    return { ok: false, error: "That report is no longer there." };
+  }
+
+  revalidatePath("/admin/reports");
+  revalidatePath(`/admin/reports/${id}/print`);
+  return { ok: true, message: "Accident report saved." };
+}
+
+export async function deleteAccidentReport(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("reportId") ?? "");
+  if (!id) return { ok: false, error: "No report selected." };
+
+  try {
+    await prisma.accidentReport.delete({ where: { id } });
+  } catch {
+    return { ok: false, error: "That report is no longer there." };
+  }
+
+  revalidatePath("/admin/reports");
+  return { ok: true, message: "Accident report removed." };
 }

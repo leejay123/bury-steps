@@ -11,7 +11,7 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <motion.div
       animate={reduce ? undefined : { opacity: 1, y: 0 }}
-      className="relative w-full overflow-x-auto overflow-hidden rounded-xl border"
+      className="relative w-full overflow-x-auto rounded-xl border"
       data-slot="table-container"
       initial={reduce ? false : { opacity: 0, y: 12 }}
       transition={{ duration: 0.4, ease: motionEase }}
@@ -55,7 +55,9 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
 }
 
 function TableCell({ className, ...props }: React.ComponentProps<"td">) {
-  return <td data-slot="table-cell" className={cn("p-3 align-middle", className)} {...props} />;
+  return (
+    <td data-slot="table-cell" className={cn("whitespace-nowrap p-3 align-middle", className)} {...props} />
+  );
 }
 
 function TableCaption({ className, ...props }: React.ComponentProps<"caption">) {

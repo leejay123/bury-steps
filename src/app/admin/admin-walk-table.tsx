@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Footprints, Search } from "lucide-react";
-import { formatWalkDate } from "@/lib/dates";
+import { formatWalkDay, formatTime } from "@/lib/dates";
 import { EmptyState } from "@/components/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
@@ -80,7 +80,8 @@ export function AdminWalkTable({
             <TableRow>
               <TableHead>Walk</TableHead>
               <TableHead>When</TableHead>
-              <TableHead className="hidden sm:table-cell">Meeting point</TableHead>
+              <TableHead>Time</TableHead>
+              <TableHead>Meeting point</TableHead>
               <TableHead className="text-right">{attendanceLabel}</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-8">
@@ -96,10 +97,13 @@ export function AdminWalkTable({
                     {walk.title}
                   </Link>
                 </TableCell>
-                <TableCell className="whitespace-nowrap text-muted-foreground">
-                  {formatWalkDate(new Date(walk.startsAt))}
+                <TableCell className="text-muted-foreground">
+                  {formatWalkDay(new Date(walk.startsAt))}
                 </TableCell>
-                <TableCell className="hidden text-muted-foreground sm:table-cell">
+                <TableCell className="text-muted-foreground">
+                  {formatTime(new Date(walk.startsAt))}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
                   {walk.location || "—"}
                 </TableCell>
                 <TableCell className="text-right tabular-nums">{walk.attendanceCount}</TableCell>

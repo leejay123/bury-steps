@@ -1,7 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { usePathname } from "next/navigation";
+import { motion, useReducedMotion } from "framer-motion";
 import type { ComponentProps, ReactNode } from "react";
 
 export const motionEase = [0.22, 1, 0.36, 1] as const;
@@ -12,22 +11,7 @@ const fadeUp = {
 };
 
 export function MotionPage({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  const reduce = useReducedMotion();
-  const instant = reduce || pathname === "/";
-
-  return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        animate={{ opacity: 1, y: 0 }}
-        initial={instant ? false : { opacity: 0, y: 8 }}
-        key={pathname}
-        transition={{ duration: instant ? 0 : 0.18, ease: motionEase }}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
-  );
+  return <div>{children}</div>;
 }
 
 export function FadeIn({

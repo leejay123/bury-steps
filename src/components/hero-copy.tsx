@@ -33,7 +33,7 @@ export function HeroCopy({
   return (
     <motion.div
       animate="show"
-      className="relative flex flex-col items-center justify-center gap-5 px-4 py-12 md:px-8 md:py-20 lg:py-24"
+      className="relative flex flex-col items-center justify-center gap-5 px-4 py-12 md:px-6 md:py-20 lg:py-24"
       initial="hidden"
       variants={{
         hidden: {},

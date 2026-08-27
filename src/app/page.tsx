@@ -3,6 +3,7 @@ import { HomeWelcome } from "@/components/home-welcome";
 import { getHomepageSlides } from "@/lib/homepage-slides";
 import { getHomepageTestimonials } from "@/lib/homepage-testimonials";
 import { getHomepageFaqData } from "@/lib/homepage-faqs";
+import { PAGE_X_BLEED } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 import { accountPortalHref, appUrl } from "@/lib/urls";
 
@@ -17,7 +18,7 @@ export default async function Home() {
   const theme = await getSiteTheme();
 
   return (
-    <div className="relative -mx-4 -mt-8 md:-mx-8">
+    <div className={`relative -mt-8 ${PAGE_X_BLEED}`}>
       <HeroSection
         carouselEnabled={theme.carouselEnabled}
         signInHref={accountPortalHref("sign-in", `${origin}/dashboard`)}

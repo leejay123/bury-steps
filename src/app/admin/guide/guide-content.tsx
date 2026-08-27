@@ -4,7 +4,6 @@ import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { MAX_HOMEPAGE_FAQS, MAX_FAQ_CATEGORIES } from "@/lib/faqs";
 import { MAX_SITE_NOTICES } from "@/lib/notices";
 import { FACEBOOK_GROUP_URL, PRODUCTION_APP_URL } from "@/lib/urls";
-import { THEME_PRESETS } from "@/lib/theme";
 import { CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import {
   Accordion,
@@ -40,7 +39,7 @@ function GuideBody({ children }: { children: React.ReactNode }) {
 export function OrganiserGuide() {
   return (
     <Accordion className="w-full" collapsible defaultValue="what" type="single">
-      <AccordionItem className="px-4 md:px-8" value="what">
+      <AccordionItem className="px-4 md:px-6" value="what">
           <AccordionTrigger className="text-base">What this site is for</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -61,7 +60,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="px-4 md:px-8" value="who">
+        <AccordionItem className="px-4 md:px-6" value="who">
           <AccordionTrigger className="text-base">Who can do what</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -77,9 +76,9 @@ export function OrganiserGuide() {
                 in the bell, and look back over every walk they have clocked in to.
               </p>
               <p>
-                <Badge>Organisers</Badge> also get Members, Settings, and this Guide in the top
-                menu. You create walks, share the link, see the roster and any health notes, manage
-                who is in the group, and edit the homepage.
+                <Badge>Organisers</Badge> also get Members, Reports, Settings, and this Guide in
+                the top menu. You create walks, share the link, see the roster and any health notes,
+                record accident reports, manage who is in the group, and edit the homepage.
               </p>
               <p>
                 The first person to sign in becomes an organiser. Everyone after that is a member.
@@ -89,14 +88,14 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="px-4 md:px-8" value="accounts">
+        <AccordionItem className="px-4 md:px-6" value="accounts">
           <AccordionTrigger className="text-base">Accounts and signing in</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
               <p>
                 Sign in and join happen on the account pages at accounts.burysteps-walkinggroup.co.uk.
                 After signing in, members land on Walks. Organisers are sent to Walks in Organiser
-                tools. Walks, Members, Settings, and this Guide stay in the top menu — there is no
+                tools.                 Walks, Members, Reports, Settings, and this Guide stay in the top menu — there is no
                 second row of tabs.
               </p>
               <p>
@@ -111,7 +110,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="px-4 md:px-8" value="walks">
+        <AccordionItem className="px-4 md:px-6" value="walks">
           <AccordionTrigger className="text-base">Walks</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -140,12 +139,16 @@ export function OrganiserGuide() {
                 Live share links always use {PRODUCTION_APP_URL}, even if you are looking at a
                 preview of the site.
               </p>
-              <p className="font-medium text-foreground">Cancel, reopen, or remove</p>
+              <p className="font-medium text-foreground">Cancel, reschedule, reopen, or remove</p>
               <ul className="list-disc pl-5">
                 <li>
                   <strong>Cancel</strong> stops new clock-ins. People already on the list stay. You
                   can add a reason. Prefer this if you still want a record. Members still see
                   cancelled walks on their Walks page.
+                </li>
+                <li>
+                  <strong>Reschedule</strong> changes the date, time, length, or meeting point. If
+                  the walk was cancelled, rescheduling also puts it back on the diary.
                 </li>
                 <li>
                   <strong>Reopen</strong> undoes a cancel. Clock-in works again if the time window
@@ -173,7 +176,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="px-4 md:px-8" value="clock-in">
+        <AccordionItem className="px-4 md:px-6" value="clock-in">
           <AccordionTrigger className="text-base">Clock-in and clock-out</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -215,7 +218,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="px-4 md:px-8" value="members">
+        <AccordionItem className="px-4 md:px-6" value="members">
           <AccordionTrigger className="text-base">Members</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -246,7 +249,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="px-4 md:px-8" value="homepage">
+        <AccordionItem className="px-4 md:px-6" value="homepage">
           <AccordionTrigger className="text-base">Homepage content</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -256,8 +259,9 @@ export function OrganiserGuide() {
                 small button on the table, not in the drawer. Drawers are for adding and editing.
               </p>
               <p>
-                Drag the grip on the left of a row to change the order. There are no move up / move
-                down buttons.
+                Drag the grip on the left of a row to change the order of photos, quotes, FAQ
+                categories, and questions. Drop a photo onto the box in the drawer. Walks stay in
+                date order, so those tables are not dragged.
               </p>
               <p className="font-medium text-foreground">Hero photos</p>
               <p>
@@ -293,7 +297,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="px-4 md:px-8" value="notices">
+        <AccordionItem className="px-4 md:px-6" value="notices">
           <AccordionTrigger className="text-base">Notices</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -316,26 +320,44 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="px-4 md:px-8" value="colour">
-          <AccordionTrigger className="text-base">Site colour</AccordionTrigger>
+        <AccordionItem className="px-4 md:px-6" value="reports">
+          <AccordionTrigger className="text-base">Accident reports</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
               <p>
-                Open <Link href="/admin/settings/appearance">Site colour</Link>. This is the colour
-                used for buttons, links, and highlights. Forest green is the original.
+                Open <Link href="/admin/reports">Reports</Link> in the menu, or from Settings.
+                Only organisers can see this. Add a report with the date, an optional walk, what
+                happened, who was involved, what you did, and extra notes if you need them.
+              </p>
+              <Steps>
+                <li>Choose Add report and fill in the form. Save.</li>
+                <li>Click a row later to edit it. Remove is on the table.</li>
+                <li>
+                  Choose Print to open a printable page, then use the browser dialog to save a PDF.
+                </li>
+              </Steps>
+            </GuideBody>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem className="px-4 md:px-6" value="display">
+          <AccordionTrigger className="text-base">Display</AccordionTrigger>
+          <AccordionContent>
+            <GuideBody>
+              <p>
+                The site uses a fixed black and white look. Remove and Cancel stay red. Other
+                buttons stay white with a border. There is no colour picker.
               </p>
               <p>
-                Pick a preset (
-                {THEME_PRESETS.map((preset) => preset.name.toLowerCase()).join(", ")}) or click the
-                colour square for the picker, or type a hex. The rest of the palette (borders,
-                muted backgrounds, text) follows the colour you choose. Save to apply it for
-                everyone.
+                Open <Link href="/admin/settings/display">Display</Link> to turn the{" "}
+                <strong>Back to top</strong> button off. When it is on, it appears after you scroll
+                down, on the public site and in Organiser tools.
               </p>
             </GuideBody>
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="px-4 md:px-8" value="privacy">
+        <AccordionItem className="px-4 md:px-6" value="privacy">
           <AccordionTrigger className="text-base">Health notes and privacy</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -356,20 +378,25 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="px-4 md:px-8" value="site">
+        <AccordionItem className="px-4 md:px-6" value="site">
           <AccordionTrigger className="text-base">The public site</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
               <p>
                 The homepage is cached so visitors get it quickly, without waiting on a sign-in
-                check. Photos, quotes, FAQs, the carousel switch, and the site colour update on the
-                public site as soon as you save. The photo slider is not created on every visit, and
-                the page does not fade in. A <strong>Back to top</strong> button appears after you
-                scroll down, on the public site and in Organiser tools.
+                check. Photos, quotes, FAQs, and the carousel switch update on the public site as
+                soon as you save. The photo slider is not created on every visit. A{" "}
+                <strong>Back to top</strong> button can be turned off in Display.
               </p>
               <p>
-                Organiser tools use the same edge-to-edge lines as the homepage. Settings is a
-                connected grid. This Guide is full-width sections with a line between each.
+                Text, tables, and forms line up with the logo and nav. Photo and quote grids, and
+                the edge-to-edge lines, still reach the side borders. Settings is a list. This
+                Guide is full-width sections with a line between each.
+              </p>
+              <p>
+                Walk tables keep each column on one line and scroll sideways on a phone. Date and
+                time are separate columns. FAQ category chips on a phone scroll themselves so the
+                one you tap stays in view.
               </p>
               <p>
                 Members open Walks from the menu. Each walk is a card with the date, length,
@@ -382,7 +409,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="px-4 md:px-8" value="limits">
+        <AccordionItem className="px-4 md:px-6" value="limits">
           <AccordionTrigger className="text-base">Limits</AccordionTrigger>
           <AccordionContent>
             <Table>

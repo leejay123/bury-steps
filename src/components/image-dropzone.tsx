@@ -118,6 +118,7 @@ export function ImageDropzone({
           onDragLeave={() => setDragging(false)}
           onDragOver={(event) => {
             event.preventDefault();
+            event.dataTransfer.dropEffect = "copy";
             if (!disabled) setDragging(true);
           }}
           onDrop={(event) => {
@@ -153,6 +154,7 @@ export function ImageDropzone({
           onDragLeave={() => setDragging(false)}
           onDragOver={(event) => {
             event.preventDefault();
+            event.dataTransfer.dropEffect = "copy";
             if (!disabled) setDragging(true);
           }}
           onDrop={(event) => {

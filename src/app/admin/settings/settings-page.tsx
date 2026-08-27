@@ -12,7 +12,7 @@ export function SettingsPage({
 }) {
   return (
     <div className="flex flex-col">
-      <div className="relative flex flex-col gap-3 px-4 py-6 md:px-8">
+      <div className="relative flex flex-col gap-3 px-4 py-6 md:px-6">
         <SettingsBackLink />
         <div className="flex flex-col gap-1.5">
           <h2 className="font-semibold text-lg tracking-tight">{title}</h2>
@@ -20,7 +20,7 @@ export function SettingsPage({
         </div>
         <FullWidthDivider position="bottom" />
       </div>
-      <div className="px-4 py-6 md:px-8">{children}</div>
+      <div className="px-4 py-6 md:px-6">{children}</div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/themes";
 import { Toaster } from "@/components/ui/sonner";
 import { AFTER_AUTH_PATH, SIGN_IN_URL, SIGN_UP_URL } from "@/lib/urls";
+import { PAGE_X } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 import { SiteMobileNav, SiteNav, SiteNavFallback } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
@@ -22,9 +23,8 @@ export const metadata: Metadata = {
 export const preferredRegion = ["lhr1"];
 
 export async function generateViewport(): Promise<Viewport> {
-  const { primaryColor } = await getSiteTheme();
   return {
-    themeColor: primaryColor,
+    themeColor: "#111111",
     width: "device-width",
     initialScale: 1,
   };
@@ -35,15 +35,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const theme = await getSiteTheme();
 
   return (
-    <html lang="en-GB" style={theme.style} suppressHydrationWarning>
+    <html lang="en-GB" suppressHydrationWarning>
       <body className="min-h-dvh overflow-x-hidden bg-background text-foreground antialiased">
         <ClerkProvider
           {...(useVercelAppProxy ? { proxyUrl: "/__clerk" } : {})}
           appearance={{
             theme: shadcn,
             variables: {
-              colorPrimary: theme.primaryColor,
-              colorModalBackdrop: "rgba(18, 28, 22, 0.4)",
+              colorPrimary: "#111111",
+              colorModalBackdrop: "rgba(17, 17, 17, 0.4)",
               colorInput: "var(--background)",
             },
             elements: {
@@ -60,7 +60,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <div className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x">
             <header className="sticky top-0 z-40 touch-manipulation bg-white/70 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/55">
               <div className="relative">
-                <div className="flex h-14 items-center justify-between gap-3 px-4 md:grid md:grid-cols-[1fr_auto_1fr] md:px-6">
+                <div className={`flex h-14 items-center justify-between gap-3 ${PAGE_X} md:grid md:grid-cols-[1fr_auto_1fr]`}>
                   <Link href="/" className="flex h-8 min-w-0 items-center justify-self-start">
                     <SiteLogo />
                   </Link>
@@ -74,13 +74,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <FullWidthDivider position="bottom" />
               </div>
             </header>
-            <main className="flex-1 px-4 py-8 md:px-8">
+            <main className={`flex-1 py-8 ${PAGE_X}`}>
               <MotionPage>{children}</MotionPage>
             </main>
             <SiteFooter />
           </div>
-          <Toaster position="top-center" />
-          <BackToTop />
+          <Toaster duration={2800} position="top-center" />
+          {theme.scrollToTopEnabled ? <BackToTop /> : null}
         </ClerkProvider>
       </body>
     </html>

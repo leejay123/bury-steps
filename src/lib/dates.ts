@@ -46,6 +46,16 @@ export function utcToLondonWallClock(at: Date): string {
   return shifted.toISOString().slice(0, 16);
 }
 
+export function formatWalkDay(at: Date): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: LONDON,
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    ...(londonYear(at) === londonYear(new Date()) ? {} : { year: "numeric" }),
+  }).format(at);
+}
+
 export function formatWalkDate(at: Date): string {
   return new Intl.DateTimeFormat("en-GB", {
     timeZone: LONDON,

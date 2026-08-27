@@ -9,6 +9,7 @@ import { appUrl } from "@/lib/urls";
 import { ShareLink } from "@/components/share-link";
 import { EmptyState } from "@/components/empty-state";
 import { CancelWalkButton } from "./cancel-walk-button";
+import { RescheduleWalkButton } from "./reschedule-walk-button";
 import { ReopenWalkButton } from "./reopen-walk-button";
 import { DeleteWalkButton } from "./delete-walk-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -64,7 +65,7 @@ export default async function WalkDetailPage({
   const withConditions = walk.attendances.filter((a) => a.conditions).length;
 
   return (
-    <div className="flex flex-col gap-6 px-4 py-6 md:px-8">
+    <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
       <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">
         &larr; All walks
       </Link>
@@ -109,6 +110,13 @@ export default async function WalkDetailPage({
         {!walk.cancelledAt && (
           <CancelWalkButton walkId={walk.id} attendanceCount={stillIn.length} />
         )}
+        <RescheduleWalkButton
+          cancelled={Boolean(walk.cancelledAt)}
+          durationMins={walk.durationMins}
+          location={walk.location}
+          startsAt={walk.startsAt.toISOString()}
+          walkId={walk.id}
+        />
         {walk.cancelledAt ? <ReopenWalkButton walkId={walk.id} /> : null}
         <DeleteWalkButton walkId={walk.id} attendanceCount={walk.attendances.length} />
       </div>

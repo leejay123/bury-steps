@@ -21,9 +21,10 @@ model User {
   role      Role     @default(MEMBER)
   createdAt DateTime @default(now())
 
-  walksCreated Walk[]       @relation("WalkCreator")
-  attendances  Attendance[]
-  noticeReads  SiteNoticeRead[]
+  walksCreated     Walk[]           @relation("WalkCreator")
+  attendances      Attendance[]
+  noticeReads      SiteNoticeRead[]
+  accidentReports  AccidentReport[]
 }
 
 model Walk {
@@ -43,7 +44,8 @@ model Walk {
   createdById String
   createdBy   User   @relation("WalkCreator", fields: [createdById], references: [id])
 
-  attendances Attendance[]
+  attendances      Attendance[]
+  accidentReports  AccidentReport[]
 
   @@index([startsAt])
 }
@@ -160,12 +162,34 @@ model SiteNoticeRead {
   @@index([userId])
 }
 
-/// Singleton row (`id` is always `site`). Controls the public theme colour.
+/// Singleton row (`id` is always `site`).
 model SiteSetting {
-  id               String   @id
-  /// Hex like #1f3d2b. Used for buttons, links, and highlights.
-  primaryColor     String
+  id                  String   @id
+  /// Kept for existing rows. The public site is a fixed black-and-white theme.
+  primaryColor        String
   /// When false, the homepage carousel is hidden.
-  carouselEnabled  Boolean  @default(true)
-  updatedAt        DateTime @updatedAt
+  carouselEnabled     Boolean  @default(true)
+  /// When false, the floating back-to-top button is hidden.
+  scrollToTopEnabled  Boolean  @default(true)
+  updatedAt           DateTime @updatedAt
+}
+
+/// Organiser-only accident reports. Printed from the report page.
+model AccidentReport {
+  id             String   @id @default(cuid())
+  happenedAt     DateTime
+  walkId         String?
+  whatHappened   String
+  whoInvolved    String
+  whatWeDid      String
+  organiserNotes String?
+  createdById    String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  walk      Walk? @relation(fields: [walkId], references: [id], onDelete: SetNull)
+  createdBy User  @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([happenedAt])
+  @@index([walkId])
 }

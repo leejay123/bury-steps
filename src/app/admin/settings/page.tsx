@@ -42,9 +42,14 @@ export default async function AdminSettingsPage() {
       description: `Messages in the bell. ${noticeCount} of ${MAX_SITE_NOTICES}.`,
     },
     {
-      href: "/admin/settings/appearance",
-      title: "Site colour",
-      description: "Buttons, links, and highlights across the site.",
+      href: "/admin/settings/display",
+      title: "Display",
+      description: "Back to top button, and other site-wide display options.",
+    },
+    {
+      href: "/admin/reports",
+      title: "Accident reports",
+      description: "Record what happened on a walk, then print or save as PDF.",
     },
     {
       href: "/admin/guide",
@@ -55,9 +60,9 @@ export default async function AdminSettingsPage() {
 
   return (
     <div className="flex flex-col">
-      <div className="relative px-4 py-6 md:px-8">
+      <div className="relative px-4 py-6 md:px-6">
         <AdminPageIntro
-          description="Homepage photos, quotes, FAQs, notices, and the site colour."
+          description="Homepage photos, quotes, FAQs, notices, and display."
           title="Settings"
         />
         <FullWidthDivider position="bottom" />

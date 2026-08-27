@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 
 export const SITE_SETTING_ID = "site";
-export const DEFAULT_PRIMARY_COLOR = "#1f3d2b";
+export const DEFAULT_PRIMARY_COLOR = "#111111";
 
 export const THEME_PRESETS = [
   { name: "Forest green", hex: "#1f3d2b" },

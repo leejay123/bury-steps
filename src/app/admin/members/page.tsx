@@ -18,7 +18,7 @@ export default async function MembersPage() {
   });
 
   return (
-    <div className="flex flex-col gap-6 px-4 py-6 md:px-8">
+    <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
       <AdminPageIntro
         description="Everyone who has signed up. Click a row to see their walk history. Removing someone deletes their login and clock-in records. Walks they created stay with the group."
         title="Members"

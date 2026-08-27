@@ -10,7 +10,7 @@ export default async function OrganiserGuidePage() {
 
   return (
     <div className="flex flex-col">
-      <div className="relative px-4 py-6 md:px-8">
+      <div className="relative px-4 py-6 md:px-6">
         <AdminPageIntro
           description={`How this website works, and how to run walks, members, and the homepage. Last updated ${GUIDE_LAST_UPDATED}.`}
           title="Guide"

@@ -6,7 +6,7 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 /** Bump when models are added so a long-running `next dev` does not keep a stale client. */
-const PRISMA_CLIENT_REV = 2;
+const PRISMA_CLIENT_REV = 3;
 
 function datasourceUrl() {
   const url = process.env.DATABASE_URL;

@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +12,7 @@ export function navItems(isAdmin: boolean, walksHref: string) {
     ...(isAdmin
       ? [
           { href: "/admin/members", label: "Members" },
+          { href: "/admin/reports", label: "Reports" },
           { href: "/admin/settings", label: "Settings" },
           { href: "/admin/guide", label: "Guide" },
         ]
@@ -47,29 +47,19 @@ function NavLink({
   className,
   href,
   label,
-  layoutId,
 }: {
   active: boolean;
   className?: string;
   href: string;
   label: string;
-  layoutId: string;
 }) {
-  const reduce = useReducedMotion();
-
   return (
     <Link
       aria-current={active ? "page" : undefined}
       className={cn(navLinkClass(active), className)}
       href={href}
     >
-      {active ? (
-        <motion.span
-          className="absolute inset-0 rounded-md bg-muted"
-          layoutId={reduce ? undefined : layoutId}
-          transition={{ type: "spring", bounce: 0.16, duration: 0.45 }}
-        />
-      ) : null}
+      {active ? <span className="absolute inset-0 rounded-md bg-muted" /> : null}
       <span className="relative z-10">{label}</span>
     </Link>
   );
@@ -94,7 +84,6 @@ export function SiteNavLinks({
             href={item.href}
             key={item.href}
             label={item.label}
-            layoutId="nav-pill-desktop"
           />
         );
       })}
@@ -132,7 +121,6 @@ export function SiteMobileNavBar({
               href={item.href}
               key={item.href}
               label={item.label}
-              layoutId="nav-pill-mobile"
             />
           );
         })}

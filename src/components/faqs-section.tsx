@@ -86,6 +86,11 @@ function FaqBrowser({
 }) {
   const [activeCategory, setActiveCategory] = useState("all");
 
+  function selectCategory(id: string, button: HTMLButtonElement) {
+    setActiveCategory(id);
+    button.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }
+
   const filters = useMemo(() => {
     const used = categories.filter((category) =>
       faqs.some((faq) => faq.categoryId === category.id),
@@ -107,7 +112,9 @@ function FaqBrowser({
 
   return (
     <>
-      <div className="flex gap-2 overflow-x-auto overscroll-x-contain border-y px-3 [scrollbar-width:none] [-ms-overflow-style:none] sm:flex-wrap sm:overflow-visible md:px-8 [&::-webkit-scrollbar]:hidden">
+      <div
+        className="flex gap-2 overflow-x-auto overscroll-x-contain border-y px-4 [scrollbar-width:none] [-ms-overflow-style:none] sm:flex-wrap sm:overflow-visible md:px-6 [&::-webkit-scrollbar]:hidden"
+      >
         {filters.map((category) => {
           const active = activeCategory === category.id;
           return (
@@ -120,7 +127,7 @@ function FaqBrowser({
                   : "border-transparent text-muted-foreground hover:text-primary",
               )}
               key={category.id}
-              onClick={() => setActiveCategory(category.id)}
+              onClick={(event) => selectCategory(category.id, event.currentTarget)}
               type="button"
             >
               {category.label}
@@ -129,7 +136,7 @@ function FaqBrowser({
         })}
       </div>
 
-      <Accordion className="flex flex-col gap-2 border-0 px-4 py-12 lg:px-6" collapsible type="single">
+      <Accordion className="flex flex-col gap-2 border-0 px-4 py-6 md:px-6" collapsible type="single">
         {filtered.map((faq) => (
           <AccordionItem className="rounded-lg border last:border-b px-4 shadow-xs" key={faq.id} value={faq.id}>
             <AccordionTrigger>{faq.question}</AccordionTrigger>
@@ -139,7 +146,7 @@ function FaqBrowser({
       </Accordion>
 
       {filtered.length === 0 ? (
-        <Empty className="mx-4 mb-12 border md:mx-8">
+        <Empty className="mx-4 mb-6 border md:mx-6">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <Search />
@@ -155,7 +162,7 @@ function FaqBrowser({
         </Empty>
       ) : null}
 
-      <p className="px-4 pb-12 text-center text-sm text-muted-foreground md:px-8">
+      <p className="px-4 pb-6 text-center text-sm text-muted-foreground md:px-6">
         Can’t find what you’re looking for?{" "}
         <a
           className="font-medium text-foreground underline-offset-4 hover:underline"

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { PAGE_X_BLEED } from "@/lib/page-x";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
@@ -19,5 +20,5 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     );
   }
 
-  return <div className="-mx-4 -mt-8 -mb-8 flex flex-col md:-mx-8">{children}</div>;
+  return <div className={`-mt-8 -mb-8 flex flex-col ${PAGE_X_BLEED}`}>{children}</div>;
 }
