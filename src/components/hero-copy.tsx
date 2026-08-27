@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { motionEase } from "@/components/motion";
+import { DotPattern } from "@/components/ui/dot-pattern";
 
 export function HeroCopy({
   eyebrow = "Support · Together · Empathy · Pace · Steps",
@@ -12,6 +13,7 @@ export function HeroCopy({
   children,
   actions,
   after,
+  dotPattern = false,
 }: {
   eyebrow?: string | null;
   title: string;
@@ -19,6 +21,7 @@ export function HeroCopy({
   children: ReactNode;
   actions?: ReactNode;
   after?: ReactNode;
+  dotPattern?: boolean;
 }) {
   const reduce = useReducedMotion();
   const item = {
@@ -41,13 +44,17 @@ export function HeroCopy({
       }}
     >
       <div aria-hidden="true" className="absolute inset-0 -z-1 size-full overflow-hidden">
-        <div
-          className={cn(
-            "absolute -inset-x-20 inset-y-0 z-0 rounded-full",
-            "bg-[radial-gradient(ellipse_at_center,theme(--color-foreground/.08),transparent,transparent)]",
-            "blur-[50px]",
-          )}
-        />
+        {dotPattern ? (
+          <DotPattern className="[mask-image:radial-gradient(ellipse_at_center,white,transparent)]" />
+        ) : (
+          <div
+            className={cn(
+              "absolute -inset-x-20 inset-y-0 z-0 rounded-full",
+              "bg-[radial-gradient(ellipse_at_center,theme(--color-foreground/.08),transparent,transparent)]",
+              "blur-[50px]",
+            )}
+          />
+        )}
       </div>
 
       {eyebrow ? (

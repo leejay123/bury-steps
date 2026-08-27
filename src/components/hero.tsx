@@ -36,6 +36,7 @@ export function HeroSection({
           </>
         ) : null}
         <HeroCopy
+          dotPattern
           actions={
             <>
               <Show when="signed-in">
