@@ -4,10 +4,10 @@ import { getHomepageSlides } from "@/lib/homepage-slides";
 import { getHomepageTestimonials } from "@/lib/homepage-testimonials";
 import { getHomepageFaqData } from "@/lib/homepage-faqs";
 import { getSiteTheme } from "@/lib/site-theme";
-import { HOMEPAGE_REVALIDATE_SECONDS } from "@/lib/homepage-cache";
 import { accountPortalHref, appUrl } from "@/lib/urls";
 
-export const revalidate = HOMEPAGE_REVALIDATE_SECONDS;
+// Must be a numeric literal so Next can statically detect ISR.
+export const revalidate = 120;
 
 export default async function Home() {
   const origin = appUrl();
