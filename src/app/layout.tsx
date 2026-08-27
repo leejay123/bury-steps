@@ -27,6 +27,10 @@ export async function generateViewport(): Promise<Viewport> {
     themeColor: "#111111",
     width: "device-width",
     initialScale: 1,
+    // Stop pinch-zoom and the automatic zoom iOS/Android trigger when
+    // focusing a text field, so the layout never jumps around on a phone.
+    maximumScale: 1,
+    userScalable: false,
   };
 }
 
