@@ -6,14 +6,16 @@ import { FaqsSection } from "@/components/faqs-section";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { Button } from "@/components/ui/button";
 import type { TestimonialView } from "@/lib/testimonials";
-import type { FaqView } from "@/lib/faqs";
+import type { FaqCategoryView, FaqView } from "@/lib/faqs";
 
 export function HomeWelcome({
-  testimonials,
+  faqCategories,
   faqs,
+  testimonials,
 }: {
-  testimonials: TestimonialView[];
+  faqCategories: FaqCategoryView[];
   faqs: FaqView[];
+  testimonials: TestimonialView[];
 }) {
   return (
     <>
@@ -39,7 +41,7 @@ export function HomeWelcome({
         <FullWidthDivider position="bottom" />
       </section>
       <TestimonialsSection testimonials={testimonials} />
-      <FaqsSection faqs={faqs} />
+      <FaqsSection categories={faqCategories} faqs={faqs} />
     </>
   );
 }

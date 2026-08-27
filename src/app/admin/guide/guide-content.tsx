@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
-import { MAX_HOMEPAGE_FAQS } from "@/lib/faqs";
+import { MAX_HOMEPAGE_FAQS, MAX_FAQ_CATEGORIES } from "@/lib/faqs";
 import { MAX_SITE_NOTICES } from "@/lib/notices";
 import { FACEBOOK_GROUP_URL, PRODUCTION_APP_URL } from "@/lib/urls";
 import { THEME_PRESETS } from "@/lib/theme";
@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/table";
 
 /** Bump this whenever the guide is updated. */
-export const GUIDE_LAST_UPDATED = "26 August 2026";
+export const GUIDE_LAST_UPDATED = "27 August 2026";
 
 function Steps({ children }: { children: React.ReactNode }) {
   return <ol className="list-decimal pl-5 text-muted-foreground">{children}</ol>;
@@ -67,7 +67,8 @@ export function OrganiserGuide() {
             <GuideBody>
               <p>
                 <Badge variant="secondary">Visitors</Badge> can read the homepage, privacy and
-                terms, and open a walk share link. They cannot clock in until they have an account.
+                terms, and open a walk share link. They can search and filter FAQs by the
+                categories you set. They cannot clock in until they have an account.
               </p>
               <p>
                 <Badge variant="secondary">Members</Badge> see Walks and History in the menu. They
@@ -273,9 +274,16 @@ export function OrganiserGuide() {
               </p>
               <p className="font-medium text-foreground">FAQs</p>
               <p>
-                Up to {MAX_HOMEPAGE_FAQS} questions. Click a row to edit in the drawer. Each has a
-                category: Joining, Walks, On the day, or Your account. Visitors can search and
-                filter them. Hidden if you have none.
+                Up to {MAX_HOMEPAGE_FAQS} questions in up to {MAX_FAQ_CATEGORIES} categories. Open{" "}
+                <Link href="/admin/settings/faqs">FAQs</Link>. Categories have their own table:
+                click a row to rename it in a small popover, or choose Add category. Remove is on
+                the table. You cannot remove a category that still has questions, or the last
+                category.
+              </p>
+              <p>
+                Click a question row to edit it in the drawer. Each question needs a category so
+                visitors can filter on the homepage. Drag the grip to change the order of
+                categories or questions. Hidden if you have no questions.
               </p>
             </GuideBody>
           </AccordionContent>
@@ -314,9 +322,10 @@ export function OrganiserGuide() {
               </p>
               <p>
                 Pick a preset (
-                {THEME_PRESETS.map((preset) => preset.name.toLowerCase()).join(", ")}) or use the
-                picker / hex field. The rest of the palette (borders, muted backgrounds, text)
-                follows the colour you choose. Save to apply it for everyone.
+                {THEME_PRESETS.map((preset) => preset.name.toLowerCase()).join(", ")}) or click the
+                colour square for the picker, or type a hex. The rest of the palette (borders,
+                muted backgrounds, text) follows the colour you choose. Save to apply it for
+                everyone.
               </p>
             </GuideBody>
           </AccordionContent>
@@ -390,6 +399,10 @@ export function OrganiserGuide() {
                 <TableRow>
                   <TableCell>FAQs</TableCell>
                   <TableCell>{MAX_HOMEPAGE_FAQS}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>FAQ categories</TableCell>
+                  <TableCell>{MAX_FAQ_CATEGORIES}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>Notices</TableCell>

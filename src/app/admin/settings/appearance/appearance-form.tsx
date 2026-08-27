@@ -16,6 +16,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  Popover,
+  PopoverContent,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 function applyThemeVars(hex: string) {
   const root = document.documentElement;
@@ -102,13 +109,41 @@ export function AppearanceForm({ primaryColor }: { primaryColor: string }) {
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="site-colour">Colour</Label>
-            <input
-              className="size-10 cursor-pointer rounded-md border bg-transparent p-1"
-              id="site-colour"
-              onChange={(event) => choose(event.target.value)}
-              type="color"
-              value={hex}
-            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  aria-label="Pick a colour"
+                  className="size-10 rounded-md border"
+                  id="site-colour"
+                  style={{ backgroundColor: hex }}
+                  type="button"
+                />
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-64">
+                <PopoverHeader>
+                  <PopoverTitle>Custom colour</PopoverTitle>
+                </PopoverHeader>
+                <div className="flex flex-col gap-3">
+                  <input
+                    className="h-24 w-full cursor-pointer rounded-md border bg-transparent p-1"
+                    onChange={(event) => choose(event.target.value)}
+                    type="color"
+                    value={hex}
+                  />
+                  <Input
+                    aria-label="Hex colour"
+                    onBlur={() => {
+                      const normalized = normalizeHex(hexDraft);
+                      if (normalized) choose(normalized);
+                      else setHexDraft(hex);
+                    }}
+                    onChange={(event) => setHexDraft(event.target.value)}
+                    spellCheck={false}
+                    value={hexDraft}
+                  />
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
           <div className="flex min-w-40 flex-1 flex-col gap-1.5">
             <Label htmlFor="site-colour-hex">Hex</Label>

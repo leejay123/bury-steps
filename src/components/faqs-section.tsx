@@ -14,21 +14,30 @@ import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { FACEBOOK_GROUP_URL } from "@/lib/urls";
-import { FAQ_CATEGORIES, type FaqView } from "@/lib/faqs";
+import type { FaqCategoryView, FaqView } from "@/lib/faqs";
 import { HeroCopy } from "@/components/hero-copy";
 import { FadeIn } from "@/components/motion";
 
-export function FaqsSection({ faqs }: { faqs: FaqView[] }) {
+export function FaqsSection({
+  categories,
+  faqs,
+}: {
+  categories: FaqCategoryView[];
+  faqs: FaqView[];
+}) {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const reduce = useReducedMotion();
 
-  const categories = [{ id: "all", label: "All" }, ...FAQ_CATEGORIES];
+  const usedCategories = categories.filter((category) =>
+    faqs.some((faq) => faq.categoryId === category.id),
+  );
+  const filters = [{ id: "all", label: "All" }, ...usedCategories];
 
   const filtered = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
     return faqs.filter((faq) => {
-      const matchesCategory = activeCategory === "all" || faq.category === activeCategory;
+      const matchesCategory = activeCategory === "all" || faq.categoryId === activeCategory;
       const matchesSearch =
         query.length === 0 ||
         faq.question.toLowerCase().includes(query) ||
@@ -65,7 +74,7 @@ export function FaqsSection({ faqs }: { faqs: FaqView[] }) {
       </HeroCopy>
 
       <div className="flex gap-2 overflow-x-auto overscroll-x-contain border-y px-3 [scrollbar-width:none] [-ms-overflow-style:none] sm:flex-wrap sm:overflow-visible md:px-8 [&::-webkit-scrollbar]:hidden">
-        {categories.map((category) => (
+        {filters.map((category) => (
           <button
             className="flex shrink-0 flex-col"
             key={category.id}

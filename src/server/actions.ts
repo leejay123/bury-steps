@@ -11,7 +11,12 @@ import { londonWallClockToUtc } from "@/lib/dates";
 import { windowState } from "@/lib/walk-window";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
-import { isFaqCategory, MAX_HOMEPAGE_FAQS } from "@/lib/faqs";
+import {
+  MAX_FAQ_CATEGORIES,
+  MAX_FAQ_CATEGORY_LABEL,
+  MAX_HOMEPAGE_FAQS,
+  faqCategorySlug,
+} from "@/lib/faqs";
 import { MAX_SITE_NOTICES } from "@/lib/notices";
 import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR, normalizeHex } from "@/lib/theme";
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
@@ -691,18 +696,48 @@ export async function deleteHomepageTestimonial(
 
 // ------------------------------------------------------------------ homepage FAQs
 
-function readFaqCopy(
+async function readFaqCopy(
   formData: FormData,
-): { category: string; question: string; answer: string } | { error: string } {
-  const category = String(formData.get("category") ?? "").trim();
+): Promise<{ categoryId: string; question: string; answer: string } | { error: string }> {
+  const categoryId = String(formData.get("categoryId") ?? "").trim();
   const question = String(formData.get("question") ?? "").trim();
   const answer = String(formData.get("answer") ?? "").trim();
-  if (!isFaqCategory(category)) return { error: "Choose a category." };
+  if (!categoryId) return { error: "Choose a category." };
+  const category = await prisma.homepageFaqCategory.findUnique({
+    where: { id: categoryId },
+    select: { id: true },
+  });
+  if (!category) return { error: "Choose a category." };
   if (!question) return { error: "Add a question." };
   if (!answer) return { error: "Add an answer." };
   if (question.length > 160) return { error: "Keep the question under 160 characters." };
   if (answer.length > 1200) return { error: "Keep the answer under 1,200 characters." };
-  return { category, question, answer };
+  return { categoryId, question, answer };
+}
+
+function readCategoryLabel(formData: FormData): { label: string } | { error: string } {
+  const label = String(formData.get("label") ?? "").trim();
+  if (!label) return { error: "Add a category name." };
+  if (label.length > MAX_FAQ_CATEGORY_LABEL) {
+    return { error: `Keep the name under ${MAX_FAQ_CATEGORY_LABEL} characters.` };
+  }
+  return { label };
+}
+
+async function uniqueFaqCategorySlug(label: string): Promise<string> {
+  const base = faqCategorySlug(label);
+  let slug = base;
+  let n = 2;
+  while (
+    await prisma.homepageFaqCategory.findFirst({
+      where: { slug },
+      select: { id: true },
+    })
+  ) {
+    slug = `${base}-${n}`;
+    n += 1;
+  }
+  return slug;
 }
 
 export async function addHomepageFaq(
@@ -716,13 +751,13 @@ export async function addHomepageFaq(
     return { ok: false, error: "You can have up to 20 FAQs." };
   }
 
-  const copy = readFaqCopy(formData);
+  const copy = await readFaqCopy(formData);
   if ("error" in copy) return { ok: false, error: copy.error };
 
   await prisma.homepageFaq.create({
     data: {
       sortOrder: count,
-      category: copy.category,
+      categoryId: copy.categoryId,
       question: copy.question,
       answer: copy.answer,
     },
@@ -740,14 +775,14 @@ export async function updateHomepageFaq(
   const id = String(formData.get("faqId") ?? "");
   if (!id) return { ok: false, error: "No FAQ selected." };
 
-  const copy = readFaqCopy(formData);
+  const copy = await readFaqCopy(formData);
   if ("error" in copy) return { ok: false, error: copy.error };
 
   try {
     await prisma.homepageFaq.update({
       where: { id },
       data: {
-        category: copy.category,
+        categoryId: copy.categoryId,
         question: copy.question,
         answer: copy.answer,
       },
@@ -987,6 +1022,101 @@ export async function reorderHomepageFaqs(ids: string[]): Promise<ActionResult> 
   const existing = await prisma.homepageFaq.findMany({ select: { id: true } });
   await applySortOrder(ids, existing, (id, sortOrder) =>
     prisma.homepageFaq.update({ where: { id }, data: { sortOrder } }),
+  );
+  revalidateHomepage();
+  return { ok: true };
+}
+
+export async function addHomepageFaqCategory(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+
+  const count = await prisma.homepageFaqCategory.count();
+  if (count >= MAX_FAQ_CATEGORIES) {
+    return { ok: false, error: `You can have up to ${MAX_FAQ_CATEGORIES} categories.` };
+  }
+
+  const copy = readCategoryLabel(formData);
+  if ("error" in copy) return { ok: false, error: copy.error };
+
+  await prisma.homepageFaqCategory.create({
+    data: {
+      label: copy.label,
+      slug: await uniqueFaqCategorySlug(copy.label),
+      sortOrder: count,
+    },
+  });
+
+  revalidateHomepage();
+  return { ok: true, message: "Category added." };
+}
+
+export async function updateHomepageFaqCategory(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("categoryId") ?? "");
+  if (!id) return { ok: false, error: "No category selected." };
+
+  const copy = readCategoryLabel(formData);
+  if ("error" in copy) return { ok: false, error: copy.error };
+
+  try {
+    await prisma.homepageFaqCategory.update({
+      where: { id },
+      data: { label: copy.label },
+    });
+  } catch {
+    return { ok: false, error: "That category is no longer there." };
+  }
+
+  revalidateHomepage();
+  return { ok: true, message: "Category saved." };
+}
+
+export async function deleteHomepageFaqCategory(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("categoryId") ?? "");
+  if (!id) return { ok: false, error: "No category selected." };
+
+  const category = await prisma.homepageFaqCategory.findUnique({
+    where: { id },
+    select: { id: true, _count: { select: { faqs: true } } },
+  });
+  if (!category) return { ok: false, error: "That category is no longer there." };
+
+  const remaining = await prisma.homepageFaqCategory.count();
+  if (remaining <= 1) {
+    return { ok: false, error: "Keep at least one category." };
+  }
+  if (category._count.faqs > 0) {
+    return { ok: false, error: "Move or remove the FAQs in this category first." };
+  }
+
+  await prisma.homepageFaqCategory.delete({ where: { id } });
+
+  const leftover = await prisma.homepageFaqCategory.findMany({ orderBy: { sortOrder: "asc" } });
+  await prisma.$transaction(
+    leftover.map((row, index) =>
+      prisma.homepageFaqCategory.update({ where: { id: row.id }, data: { sortOrder: index } }),
+    ),
+  );
+
+  revalidateHomepage();
+  return { ok: true, message: "Category removed." };
+}
+
+export async function reorderHomepageFaqCategories(ids: string[]): Promise<ActionResult> {
+  await requireAdmin();
+  const existing = await prisma.homepageFaqCategory.findMany({ select: { id: true } });
+  await applySortOrder(ids, existing, (id, sortOrder) =>
+    prisma.homepageFaqCategory.update({ where: { id }, data: { sortOrder } }),
   );
   revalidateHomepage();
   return { ok: true };

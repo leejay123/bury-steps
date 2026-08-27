@@ -2,7 +2,7 @@ import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
-import { MAX_HOMEPAGE_FAQS } from "@/lib/faqs";
+import { MAX_FAQ_CATEGORIES, MAX_HOMEPAGE_FAQS } from "@/lib/faqs";
 import { MAX_SITE_NOTICES } from "@/lib/notices";
 import { SettingsGrid } from "./settings-grid";
 
@@ -32,7 +32,7 @@ export default async function AdminSettingsPage() {
     {
       href: "/admin/settings/faqs",
       title: "FAQs",
-      description: `Questions on the homepage. ${faqCount} of ${MAX_HOMEPAGE_FAQS}.`,
+      description: `Questions on the homepage. ${faqCount} of ${MAX_HOMEPAGE_FAQS}, in up to ${MAX_FAQ_CATEGORIES} categories.`,
     },
     {
       href: "/admin/settings/notices",

@@ -7,10 +7,12 @@ import { formatDate } from "@/lib/dates";
 import type { NoticeView } from "@/lib/notices";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Popover,
+  PopoverContent,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 export function NotificationBell({
   notices,
@@ -38,8 +40,8 @@ export function NotificationBell({
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+    <Popover>
+      <PopoverTrigger asChild>
         <Button
           aria-label={unreadCount > 0 ? `${unreadCount} unread notices` : "Notices"}
           className="relative"
@@ -51,22 +53,21 @@ export function NotificationBell({
             <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-destructive" />
           ) : null}
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 p-0">
-        <div className="flex items-center justify-between gap-2 px-3 py-2">
-          <p className="text-sm font-medium">Notices</p>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80 p-0">
+        <PopoverHeader className="flex flex-row items-center justify-between gap-2 px-3 py-2">
+          <PopoverTitle>Notices</PopoverTitle>
           {unreadCount > 0 ? (
             <Button
               disabled={pending}
               onClick={markAllRead}
-              onPointerDown={(event) => event.preventDefault()}
               size="xs"
               variant="ghost"
             >
               Mark all as read
             </Button>
           ) : null}
-        </div>
+        </PopoverHeader>
         {notices.length === 0 ? (
           <p className="px-3 pb-3 text-sm text-muted-foreground">Nothing in the bell right now.</p>
         ) : (
@@ -97,7 +98,7 @@ export function NotificationBell({
             })}
           </div>
         )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </PopoverContent>
+    </Popover>
   );
 }

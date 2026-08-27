@@ -108,18 +108,32 @@ model HomepageTestimonial {
   @@index([sortOrder])
 }
 
-/// Public homepage FAQs. Organisers can keep up to 20.
-model HomepageFaq {
+/// Filters on the public FAQ list. Organisers can keep up to 8.
+model HomepageFaqCategory {
   id        String   @id @default(cuid())
+  slug      String   @unique
+  label     String
   sortOrder Int
-  /// joining | walks | on-the-day | account
-  category  String
-  question  String
-  answer    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  faqs      HomepageFaq[]
 
   @@index([sortOrder])
+}
+
+/// Public homepage FAQs. Organisers can keep up to 20.
+model HomepageFaq {
+  id         String              @id @default(cuid())
+  sortOrder  Int
+  categoryId String
+  category   HomepageFaqCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  question   String
+  answer     String
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  @@index([sortOrder])
+  @@index([categoryId])
 }
 
 /// Messages in the nav bell for signed-in members. Organisers can keep up to 10.

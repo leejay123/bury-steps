@@ -3,20 +3,23 @@
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
-import { ChevronRight, CircleHelp } from "lucide-react";
+import { ChevronRight, CircleHelp, Folders } from "lucide-react";
 import { toast } from "sonner";
 import {
   addHomepageFaq,
+  addHomepageFaqCategory,
   deleteHomepageFaq,
+  deleteHomepageFaqCategory,
+  reorderHomepageFaqCategories,
   reorderHomepageFaqs,
   updateHomepageFaq,
+  updateHomepageFaqCategory,
   type ActionResult,
 } from "@/server/actions";
 import {
   DEMO_FAQ,
-  FAQ_CATEGORIES,
-  faqCategoryLabel,
-  type FaqCategoryId,
+  MAX_FAQ_CATEGORY_LABEL,
+  type FaqCategoryView,
   type FaqView,
 } from "@/lib/faqs";
 import { EmptyState } from "@/components/empty-state";
@@ -59,6 +62,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 type DrawerMode = { type: "add" } | { type: "edit"; faq: FaqView; index: number };
 
@@ -97,31 +108,29 @@ function useActionToast(state: ActionResult | null, onOk?: () => void) {
 }
 
 function CategorySelect({
+  categories,
   disabled,
   id,
   onValueChange,
   value,
 }: {
+  categories: FaqCategoryView[];
   disabled?: boolean;
   id: string;
-  onValueChange: (value: FaqCategoryId) => void;
-  value: FaqCategoryId;
+  onValueChange: (value: string) => void;
+  value: string;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
       <Label htmlFor={id}>Category</Label>
-      <input name="category" type="hidden" value={value} />
-      <Select
-        disabled={disabled}
-        onValueChange={(next) => onValueChange(next as FaqCategoryId)}
-        value={value}
-      >
+      <input name="categoryId" type="hidden" value={value} />
+      <Select disabled={disabled || !value} onValueChange={onValueChange} value={value}>
         <SelectTrigger id={id}>
-          <SelectValue />
+          <SelectValue placeholder="Choose a category" />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            {FAQ_CATEGORIES.map((category) => (
+            {categories.map((category) => (
               <SelectItem key={category.id} value={category.id}>
                 {category.label}
               </SelectItem>
@@ -134,15 +143,21 @@ function CategorySelect({
 }
 
 function FaqFields({
+  categories,
   disabled,
   faq,
   prefix,
 }: {
+  categories: FaqCategoryView[];
   disabled?: boolean;
   faq?: FaqView;
   prefix: string;
 }) {
-  const [category, setCategory] = useState<FaqCategoryId>(faq?.category ?? "joining");
+  const exampleCategoryId =
+    categories.find((category) => category.slug === DEMO_FAQ.categorySlug)?.id ??
+    categories[0]?.id ??
+    "";
+  const [categoryId, setCategoryId] = useState(faq?.categoryId ?? exampleCategoryId);
   const [question, setQuestion] = useState(faq?.question ?? "");
   const [answer, setAnswer] = useState(faq?.answer ?? "");
 
@@ -150,10 +165,11 @@ function FaqFields({
     <div className="flex flex-col gap-3">
       {faq ? <input name="faqId" type="hidden" value={faq.id} /> : null}
       <CategorySelect
+        categories={categories}
         disabled={disabled}
         id={`${prefix}-category`}
-        onValueChange={setCategory}
-        value={category}
+        onValueChange={setCategoryId}
+        value={categoryId}
       />
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={`${prefix}-question`}>Question</Label>
@@ -182,9 +198,9 @@ function FaqFields({
       </div>
       {!faq ? (
         <Button
-          disabled={disabled}
+          disabled={disabled || !exampleCategoryId}
           onClick={() => {
-            setCategory(DEMO_FAQ.category);
+            setCategoryId(exampleCategoryId);
             setQuestion(DEMO_FAQ.question);
             setAnswer(DEMO_FAQ.answer);
           }}
@@ -199,7 +215,15 @@ function FaqFields({
   );
 }
 
-function AddFaqForm({ disabled, onSaved }: { disabled: boolean; onSaved: () => void }) {
+function AddFaqForm({
+  categories,
+  disabled,
+  onSaved,
+}: {
+  categories: FaqCategoryView[];
+  disabled: boolean;
+  onSaved: () => void;
+}) {
   const [state, action] = useActionState<ActionResult | null, FormData>(addHomepageFaq, null);
   const formRef = useRef<HTMLFormElement>(null);
   useActionToast(state, () => {
@@ -210,7 +234,7 @@ function AddFaqForm({ disabled, onSaved }: { disabled: boolean; onSaved: () => v
   return (
     <form action={action} className="flex min-h-0 flex-1 flex-col" ref={formRef}>
       <div className="flex-1 overflow-y-auto px-4">
-        <FaqFields disabled={disabled} prefix="new" />
+        <FaqFields categories={categories} disabled={disabled} prefix="new" />
       </div>
       <DrawerFooter>
         <PendingSubmit disabled={disabled} label="Add FAQ" pendingLabel="Adding…" />
@@ -219,7 +243,15 @@ function AddFaqForm({ disabled, onSaved }: { disabled: boolean; onSaved: () => v
   );
 }
 
-function EditFaqForm({ faq, onSaved }: { faq: FaqView; onSaved: () => void }) {
+function EditFaqForm({
+  categories,
+  faq,
+  onSaved,
+}: {
+  categories: FaqCategoryView[];
+  faq: FaqView;
+  onSaved: () => void;
+}) {
   const [updateState, updateAction] = useActionState<ActionResult | null, FormData>(
     updateHomepageFaq,
     null,
@@ -231,13 +263,22 @@ function EditFaqForm({ faq, onSaved }: { faq: FaqView; onSaved: () => void }) {
     <div className="flex min-h-0 flex-1 flex-col">
       <form action={updateAction} className="flex min-h-0 flex-1 flex-col" key={faq.id}>
         <div className="flex-1 overflow-y-auto px-4">
-          <FaqFields faq={faq} prefix={`edit-${faq.id}`} />
+          <FaqFields categories={categories} faq={faq} prefix={`edit-${faq.id}`} />
         </div>
         <DrawerFooter>
           <PendingSubmit label="Save" pendingLabel="Saving…" />
         </DrawerFooter>
       </form>
     </div>
+  );
+}
+
+function RemoveConfirm({ label = "Remove" }: { label?: string }) {
+  const { pending } = useFormStatus();
+  return (
+    <Button disabled={pending} type="submit" variant="destructive">
+      {pending ? "Removing…" : label}
+    </Button>
   );
 }
 
@@ -283,20 +324,274 @@ function RemoveFaqButton({
   );
 }
 
-function RemoveConfirm() {
-  const { pending } = useFormStatus();
+function CategoryLabelForm({
+  action,
+  category,
+  onSaved,
+  submitLabel,
+  submitPendingLabel,
+}: {
+  action: (
+    prev: ActionResult | null,
+    formData: FormData,
+  ) => Promise<ActionResult>;
+  category?: FaqCategoryView;
+  onSaved: () => void;
+  submitLabel: string;
+  submitPendingLabel: string;
+}) {
+  const [state, formAction] = useActionState<ActionResult | null, FormData>(action, null);
+  const [label, setLabel] = useState(category?.label ?? "");
+  useActionToast(state, onSaved);
+
   return (
-    <Button disabled={pending} type="submit" variant="destructive">
-      {pending ? "Removing…" : "Remove"}
-    </Button>
+    <form action={formAction} className="flex flex-col gap-3">
+      {category ? <input name="categoryId" type="hidden" value={category.id} /> : null}
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={category ? `edit-category-${category.id}` : "new-category"}>Name</Label>
+        <Input
+          autoFocus
+          id={category ? `edit-category-${category.id}` : "new-category"}
+          maxLength={MAX_FAQ_CATEGORY_LABEL}
+          name="label"
+          onChange={(event) => setLabel(event.target.value)}
+          placeholder="On the day"
+          required
+          value={label}
+        />
+      </div>
+      <PendingSubmit label={submitLabel} pendingLabel={submitPendingLabel} />
+    </form>
+  );
+}
+
+function AddCategoryPopover({ disabled }: { disabled: boolean }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Popover onOpenChange={setOpen} open={open}>
+      <PopoverTrigger asChild>
+        <Button disabled={disabled} variant="outline">
+          Add category
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80">
+        <PopoverHeader>
+          <PopoverTitle>Add a category</PopoverTitle>
+          <PopoverDescription>
+            This name shows as a filter on the public FAQ.
+          </PopoverDescription>
+        </PopoverHeader>
+        <CategoryLabelForm
+          action={addHomepageFaqCategory}
+          onSaved={() => setOpen(false)}
+          submitLabel="Add category"
+          submitPendingLabel="Adding…"
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function EditCategoryPopover({
+  category,
+  onOpenChange,
+  open,
+}: {
+  category: FaqCategoryView;
+  onOpenChange: (open: boolean) => void;
+  open: boolean;
+}) {
+  return (
+    <Popover onOpenChange={onOpenChange} open={open}>
+      <PopoverTrigger asChild>
+        <button
+          aria-label={`Edit ${category.label}`}
+          className="inline-flex text-muted-foreground"
+          type="button"
+        >
+          <ChevronRight className="size-4" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80">
+        <PopoverHeader>
+          <PopoverTitle>Edit category</PopoverTitle>
+          <PopoverDescription>This name shows as a filter on the public FAQ.</PopoverDescription>
+        </PopoverHeader>
+        <CategoryLabelForm
+          action={updateHomepageFaqCategory}
+          category={category}
+          key={category.id}
+          onSaved={() => onOpenChange(false)}
+          submitLabel="Save"
+          submitPendingLabel="Saving…"
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function RemoveCategoryButton({
+  category,
+  onlyCategory,
+}: {
+  category: FaqCategoryView;
+  onlyCategory: boolean;
+}) {
+  const [state, action] = useActionState<ActionResult | null, FormData>(
+    deleteHomepageFaqCategory,
+    null,
+  );
+  const [open, setOpen] = useState(false);
+  useActionToast(state, () => setOpen(false));
+
+  const blockedReason = onlyCategory
+    ? "Keep at least one category."
+    : category.faqCount > 0
+      ? "Move or remove the FAQs in this category first."
+      : null;
+
+  if (blockedReason) {
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button size="xs" variant="destructive">
+            Remove
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-64">
+          <PopoverDescription>{blockedReason}</PopoverDescription>
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
+  return (
+    <AlertDialog onOpenChange={setOpen} open={open}>
+      <AlertDialogTrigger asChild>
+        <Button size="xs" variant="destructive">
+          Remove
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <form action={action} className="flex flex-col gap-4">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove this category?</AlertDialogTitle>
+            <AlertDialogDescription>
+              “{category.label}” will come off the FAQ filters. You can add it again later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <input name="categoryId" type="hidden" value={category.id} />
+          <AlertDialogFooter>
+            <AlertDialogCancel type="button">Keep it</AlertDialogCancel>
+            <RemoveConfirm />
+          </AlertDialogFooter>
+        </form>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+function FaqCategoryManager({
+  categories,
+  maxCategories,
+}: {
+  categories: FaqCategoryView[];
+  maxCategories: number;
+}) {
+  const [editId, setEditId] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+  const categoryIds = categories.map((item) => item.id);
+  const { order, rowProps } = useSortableIds(categoryIds, (ids) => {
+    if (ids.join() === categoryIds.join()) return;
+    startTransition(() => {
+      void reorderHomepageFaqCategories(ids);
+    });
+  });
+  const sorted = order
+    .map((id) => categories.find((item) => item.id === id))
+    .filter((item): item is FaqCategoryView => Boolean(item));
+  const atLimit = categories.length >= maxCategories;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-sm font-medium">Categories</h2>
+        <AddCategoryPopover disabled={atLimit} />
+      </div>
+      {atLimit ? (
+        <p className="text-sm text-muted-foreground">
+          You already have {maxCategories} categories. Remove one to add another.
+        </p>
+      ) : null}
+
+      {categories.length === 0 ? (
+        <EmptyState
+          description="Add a category so you can group questions on the homepage."
+          icon={Folders}
+          title="No categories yet"
+        />
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-8">
+                <span className="sr-only">Reorder</span>
+              </TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>FAQs</TableHead>
+              <TableHead className="w-20 text-right">
+                <span className="sr-only">Remove</span>
+              </TableHead>
+              <TableHead className="w-8">
+                <span className="sr-only">Edit</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sorted.map((category) => (
+              <TableRow
+                className="cursor-pointer"
+                key={category.id}
+                onClick={() => setEditId(category.id)}
+                {...rowProps(category.id)}
+              >
+                <TableCell onClick={(event) => event.stopPropagation()}>
+                  <DragHandle label={`Reorder category ${category.label}`} />
+                </TableCell>
+                <TableCell className="font-medium">{category.label}</TableCell>
+                <TableCell className="text-muted-foreground">{category.faqCount}</TableCell>
+                <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
+                  <RemoveCategoryButton
+                    category={category}
+                    onlyCategory={categories.length <= 1}
+                  />
+                </TableCell>
+                <TableCell onClick={(event) => event.stopPropagation()}>
+                  <EditCategoryPopover
+                    category={category}
+                    onOpenChange={(open) => setEditId(open ? category.id : null)}
+                    open={editId === category.id}
+                  />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+    </div>
   );
 }
 
 export function HomepageFaqManager({
+  categories,
   faqs,
+  maxCategories,
   maxFaqs,
 }: {
+  categories: FaqCategoryView[];
   faqs: FaqView[];
+  maxCategories: number;
   maxFaqs: number;
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
@@ -312,6 +607,7 @@ export function HomepageFaqManager({
     .map((id) => faqs.find((item) => item.id === id))
     .filter((item): item is FaqView => Boolean(item));
   const atLimit = faqs.length >= maxFaqs;
+  const noCategories = categories.length === 0;
   const editingId = mode?.type === "edit" ? mode.faq.id : null;
   const liveIndex = editingId ? faqs.findIndex((item) => item.id === editingId) : -1;
   const editing =
@@ -323,79 +619,90 @@ export function HomepageFaqManager({
       : null;
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-end">
-        <Button disabled={atLimit} onClick={() => setMode({ type: "add" })}>
-          Add FAQ
-        </Button>
-      </div>
-      {atLimit ? (
-        <p className="text-sm text-muted-foreground">
-          You already have {maxFaqs} FAQs. Remove one to add another.
-        </p>
-      ) : null}
+    <div className="flex flex-col gap-8">
+      <FaqCategoryManager categories={categories} maxCategories={maxCategories} />
 
-      {faqs.length === 0 ? (
-        <EmptyState
-          description="Add one and it will show in the homepage FAQ."
-          icon={CircleHelp}
-          title="No FAQs yet"
-        />
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-8">
-                <span className="sr-only">Reorder</span>
-              </TableHead>
-              <TableHead>FAQ</TableHead>
-              <TableHead>Question</TableHead>
-              <TableHead className="hidden sm:table-cell">Category</TableHead>
-              <TableHead className="w-20 text-right">
-                <span className="sr-only">Remove</span>
-              </TableHead>
-              <TableHead className="w-8">
-                <span className="sr-only">Edit</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sorted.map((faq, index) => (
-              <TableRow
-                className="cursor-pointer"
-                key={faq.id}
-                onClick={() => setMode({ type: "edit", faq, index })}
-                {...rowProps(faq.id)}
-              >
-                <TableCell onClick={(event) => event.stopPropagation()}>
-                  <DragHandle label={`Reorder FAQ ${index + 1}`} />
-                </TableCell>
-                <TableCell className="font-medium">FAQ {index + 1}</TableCell>
-                <TableCell className="max-w-56 truncate text-muted-foreground sm:max-w-xs">
-                  {faq.question}
-                </TableCell>
-                <TableCell className="hidden text-muted-foreground sm:table-cell">
-                  {faqCategoryLabel(faq.category)}
-                </TableCell>
-                <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
-                  <RemoveFaqButton
-                    faqId={faq.id}
-                    onRemoved={() =>
-                      setMode((current) =>
-                        current?.type === "edit" && current.faq.id === faq.id ? null : current,
-                      )
-                    }
-                    question={faq.question}
-                  />
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  <ChevronRight className="size-4" />
-                </TableCell>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-sm font-medium">Questions</h2>
+          <Button
+            disabled={atLimit || noCategories}
+            onClick={() => setMode({ type: "add" })}
+          >
+            Add FAQ
+          </Button>
+        </div>
+        {noCategories ? (
+          <p className="text-sm text-muted-foreground">Add a category before you add a question.</p>
+        ) : null}
+        {atLimit ? (
+          <p className="text-sm text-muted-foreground">
+            You already have {maxFaqs} FAQs. Remove one to add another.
+          </p>
+        ) : null}
+
+        {faqs.length === 0 ? (
+          <EmptyState
+            description="Add one and it will show in the homepage FAQ."
+            icon={CircleHelp}
+            title="No FAQs yet"
+          />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-8">
+                  <span className="sr-only">Reorder</span>
+                </TableHead>
+                <TableHead>FAQ</TableHead>
+                <TableHead>Question</TableHead>
+                <TableHead className="hidden sm:table-cell">Category</TableHead>
+                <TableHead className="w-20 text-right">
+                  <span className="sr-only">Remove</span>
+                </TableHead>
+                <TableHead className="w-8">
+                  <span className="sr-only">Edit</span>
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+            </TableHeader>
+            <TableBody>
+              {sorted.map((faq, index) => (
+                <TableRow
+                  className="cursor-pointer"
+                  key={faq.id}
+                  onClick={() => setMode({ type: "edit", faq, index })}
+                  {...rowProps(faq.id)}
+                >
+                  <TableCell onClick={(event) => event.stopPropagation()}>
+                    <DragHandle label={`Reorder FAQ ${index + 1}`} />
+                  </TableCell>
+                  <TableCell className="font-medium">FAQ {index + 1}</TableCell>
+                  <TableCell className="max-w-56 truncate text-muted-foreground sm:max-w-xs">
+                    {faq.question}
+                  </TableCell>
+                  <TableCell className="hidden text-muted-foreground sm:table-cell">
+                    {faq.categoryLabel}
+                  </TableCell>
+                  <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
+                    <RemoveFaqButton
+                      faqId={faq.id}
+                      onRemoved={() =>
+                        setMode((current) =>
+                          current?.type === "edit" && current.faq.id === faq.id ? null : current,
+                        )
+                      }
+                      question={faq.question}
+                    />
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    <ChevronRight className="size-4" />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
 
       <Drawer
         direction="right"
@@ -414,10 +721,15 @@ export function HomepageFaqManager({
             </DrawerDescription>
           </DrawerHeader>
           {mode?.type === "add" ? (
-            <AddFaqForm disabled={atLimit} onSaved={() => setMode(null)} />
+            <AddFaqForm
+              categories={categories}
+              disabled={atLimit}
+              onSaved={() => setMode(null)}
+            />
           ) : null}
           {editing ? (
             <EditFaqForm
+              categories={categories}
               faq={editing.faq}
               key={editing.faq.id}
               onSaved={() => setMode(null)}
