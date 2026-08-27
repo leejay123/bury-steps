@@ -2,6 +2,20 @@
 @import "tw-animate-css";
 @import "@clerk/themes/shadcn.css";
 
+/*
+ * iOS Safari paints its own translucent blue "tap highlight" over whatever
+ * you touch unless a page opts out. Our drawers/dialogs intercept
+ * touch/pointer events for the stuck-page fixes above, which stops that
+ * highlight from clearing the way it would on a plain tap, so it can be
+ * left visibly stuck over the overlay or the row that opened a drawer
+ * (seen as a solid blue bar in the gap next to a right-side drawer). We
+ * already draw our own hover/active states, so disable the native
+ * highlight everywhere instead of chasing every element that can trigger it.
+ */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
 .cl-modalBackdrop {
   backdrop-filter: blur(16px) saturate(1.15);
   -webkit-backdrop-filter: blur(16px) saturate(1.15);
