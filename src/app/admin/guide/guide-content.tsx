@@ -40,7 +40,7 @@ function GuideBody({ children }: { children: React.ReactNode }) {
 export function OrganiserGuide() {
   return (
     <Accordion className="w-full" defaultValue={["what"]} type="multiple">
-      <AccordionItem className="border-b px-4 last:border-b md:px-8" value="what">
+      <AccordionItem className="px-4 md:px-8" value="what">
           <AccordionTrigger className="text-base">What this site is for</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -61,7 +61,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="who">
+        <AccordionItem className="px-4 md:px-8" value="who">
           <AccordionTrigger className="text-base">Who can do what</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -89,7 +89,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="accounts">
+        <AccordionItem className="px-4 md:px-8" value="accounts">
           <AccordionTrigger className="text-base">Accounts and signing in</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -109,7 +109,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="walks">
+        <AccordionItem className="px-4 md:px-8" value="walks">
           <AccordionTrigger className="text-base">Walks</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -170,7 +170,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="clock-in">
+        <AccordionItem className="px-4 md:px-8" value="clock-in">
           <AccordionTrigger className="text-base">Clock-in and clock-out</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -211,7 +211,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="members">
+        <AccordionItem className="px-4 md:px-8" value="members">
           <AccordionTrigger className="text-base">Members</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -242,7 +242,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="homepage">
+        <AccordionItem className="px-4 md:px-8" value="homepage">
           <AccordionTrigger className="text-base">Homepage content</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -289,7 +289,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="notices">
+        <AccordionItem className="px-4 md:px-8" value="notices">
           <AccordionTrigger className="text-base">Notices</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -312,7 +312,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="colour">
+        <AccordionItem className="px-4 md:px-8" value="colour">
           <AccordionTrigger className="text-base">Site colour</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -331,7 +331,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="privacy">
+        <AccordionItem className="px-4 md:px-8" value="privacy">
           <AccordionTrigger className="text-base">Health notes and privacy</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -352,7 +352,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="site">
+        <AccordionItem className="px-4 md:px-8" value="site">
           <AccordionTrigger className="text-base">The public site</AccordionTrigger>
           <AccordionContent>
             <GuideBody>
@@ -377,7 +377,7 @@ export function OrganiserGuide() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem className="border-b px-4 last:border-b md:px-8" value="limits">
+        <AccordionItem className="px-4 md:px-8" value="limits">
           <AccordionTrigger className="text-base">Limits</AccordionTrigger>
           <AccordionContent>
             <Table>

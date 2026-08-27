@@ -22,7 +22,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className="-mx-4 -mt-8 flex flex-col md:-mx-8">
+    <div className="-mx-4 -mt-8 -mb-8 flex flex-col md:-mx-8">
       <div className="relative px-4 py-6 md:px-8">
         <h1 className="text-2xl font-semibold tracking-tight">Organiser tools</h1>
         <FullWidthDivider position="bottom" />
