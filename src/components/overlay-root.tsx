@@ -36,11 +36,24 @@ const OPEN_CONTENT_SELECTOR = [
   '[data-slot="alert-dialog-content"][data-state="open"]',
 ].join(", ");
 
-const OPEN_MODAL_SELECTOR = [
+/**
+ * Every Radix DismissableLayer (Popover, the Popover-based Select, dropdown
+ * menus, plus Dialog/AlertDialog/Drawer) temporarily sets
+ * `document.body.style.pointerEvents = "none"` while it is open and restores
+ * it itself on close. If we strip that style while one of these is still
+ * open, Radix's own per-layer restore gets out of sync and can leave the
+ * whole page permanently unclickable (scroll still works, since that is not
+ * gated by pointer-events). So anything that can open a DismissableLayer must
+ * be included here and treated as "do not touch body/html right now".
+ */
+const OPEN_LAYER_SELECTOR = [
   OPEN_CONTENT_SELECTOR,
   '[data-slot="drawer-overlay"][data-state="open"]',
   '[data-slot="dialog-overlay"][data-state="open"]',
   '[data-slot="alert-dialog-overlay"][data-state="open"]',
+  '[data-slot="popover-content"][data-state="open"]',
+  '[data-slot="dropdown-menu-content"][data-state="open"]',
+  '[data-slot="dropdown-menu-sub-content"][data-state="open"]',
 ].join(", ");
 
 const OVERLAY_SELECTOR = [
@@ -54,6 +67,10 @@ const OVERLAY_SELECTOR = [
 
 function anyModalContentOpen() {
   return Boolean(document.querySelector(OPEN_CONTENT_SELECTOR));
+}
+
+function anyOverlayLayerOpen() {
+  return Boolean(document.querySelector(OPEN_LAYER_SELECTOR));
 }
 
 /**
@@ -93,7 +110,9 @@ export function restorePagePointerEvents() {
 
 export function unlockIdleDocument() {
   neutralizeStaleOverlays();
-  if (anyModalContentOpen()) return;
+  // Popovers, the Popover-based Select, and dropdown menus manage the same
+  // body pointer-events lock themselves; touching it here would race them.
+  if (anyOverlayLayerOpen()) return;
   restorePagePointerEvents();
 }
 
@@ -145,7 +164,7 @@ export function UnlockPageOnNavigate() {
 
   useEffect(() => {
     neutralizeStaleOverlays();
-    if (!anyModalContentOpen()) restorePagePointerEvents();
+    if (!anyOverlayLayerOpen()) restorePagePointerEvents();
   }, [pathname]);
 
   useEffect(() => {
@@ -168,7 +187,7 @@ export function UnlockPageOnNavigate() {
 
     function shouldSkipUnlock(event: Event) {
       const target = event.target;
-      return target instanceof Element && Boolean(target.closest(OPEN_MODAL_SELECTOR));
+      return target instanceof Element && Boolean(target.closest(OPEN_LAYER_SELECTOR));
     }
 
     function onPointerDown(event: PointerEvent) {

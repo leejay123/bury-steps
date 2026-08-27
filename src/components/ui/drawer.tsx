@@ -36,7 +36,7 @@ function Drawer({
         modal
         onOpenChange={(next) => {
           if (!next) {
-            restorePagePointerEvents();
+            unlockIdleDocument();
             window.setTimeout(unlockIdleDocument, 0);
             window.setTimeout(unlockIdleDocument, 250);
           }
