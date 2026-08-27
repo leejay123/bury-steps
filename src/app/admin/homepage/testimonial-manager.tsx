@@ -366,7 +366,6 @@ export function HomepageTestimonialManager({
       )}
 
       <Drawer
-        direction="right"
         onOpenChange={(open) => {
           if (!open) setMode(null);
         }}

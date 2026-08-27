@@ -260,8 +260,9 @@ export function OrganiserGuide() {
                 All of this lives under <Link href="/admin/settings">Settings</Link>. Hero photos,
                 testimonials, FAQs, and notices use a list: tap a row to edit. Remove is the small
                 button on the row, not in the drawer. Drawers are for adding and editing. On a
-                phone the list stacks so you do not have to scroll sideways, and Add buttons stretch
-                full width.
+                phone the list stacks so you do not have to scroll sideways, Add buttons stretch
+                full width, and drawers slide up from the bottom of the screen; on a wider screen
+                they slide in from the side instead.
               </p>
               <p>
                 Use the up and down arrows on the left of a row to change the order of photos,
@@ -291,9 +292,9 @@ export function OrganiserGuide() {
               <p>
                 Up to {MAX_HOMEPAGE_FAQS} questions in up to {MAX_FAQ_CATEGORIES} categories. Open{" "}
                 <Link href="/admin/settings/faqs">FAQs</Link>. Categories have their own list:
-                tap a row to rename it in a small popover, or choose Add category. Remove is on
-                the list. You cannot remove a category that still has questions, or the last
-                category.
+                tap a row to rename it in a drawer, or choose Add category to open the same
+                drawer empty. Remove is on the list. You cannot remove a category that still has
+                questions, or the last category.
               </p>
               <p>
                 Click a question row to edit it in the drawer. Each question needs a category so
@@ -311,7 +312,8 @@ export function OrganiserGuide() {
               <p>
                 Open <Link href="/admin/settings/notices">Notices</Link>. Up to {MAX_SITE_NOTICES}{" "}
                 messages in the bell at the top of the site. Only signed-in people see them. The
-                bell opens a drawer on phone and desktop.
+                bell opens a drawer on phone and desktop — sliding up from the bottom on a phone,
+                and in from the side on a wider screen.
               </p>
               <Steps>
                 <li>Add a title and a message. On a phone, Add notice is full width.</li>

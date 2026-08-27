@@ -15,14 +15,42 @@ const overlayCloseClassName =
   "absolute top-3 right-3 z-20 flex size-10 cursor-pointer items-center justify-center rounded-md opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
 
 const DrawerOpenContext = React.createContext<boolean | undefined>(undefined);
+const DrawerShouldRenderContext = React.createContext(true);
+
+const DESKTOP_QUERY = "(min-width: 640px)";
+
+/** Bottom sheet on phones, side panel from the sm breakpoint up. */
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = React.useState(true);
+
+  React.useEffect(() => {
+    const media = window.matchMedia(DESKTOP_QUERY);
+    setIsDesktop(media.matches);
+    const onChange = (event: MediaQueryListEvent) => setIsDesktop(event.matches);
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  }, []);
+
+  return isDesktop;
+}
 
 function Drawer({
   children,
+  direction,
   onOpenChange,
   open,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
+  // Only DrawerContent needs to stay mounted through the close animation
+  // (see DrawerShouldRenderContext below). Gating `children` here as a whole
+  // would also hide DrawerTrigger while `open` starts false and has never
+  // been true, making the trigger permanently unclickable.
   const shouldRender = useOverlayPresence(open);
+  const isDesktop = useIsDesktop();
+  // Callers that need a specific direction (e.g. always-bottom pickers) can
+  // still pass one explicitly; side drawers left unspecified become a bottom
+  // sheet on phones and a side panel from the sm breakpoint up.
+  const resolvedDirection = direction ?? (isDesktop ? "right" : "bottom");
 
   React.useEffect(() => {
     return () => restorePagePointerEvents();
@@ -30,23 +58,26 @@ function Drawer({
 
   return (
     <DrawerOpenContext.Provider value={open}>
-      <DrawerPrimitive.Root
-        data-slot="drawer"
-        dismissible
-        modal
-        onOpenChange={(next) => {
-          if (!next) {
-            unlockIdleDocument();
-            window.setTimeout(unlockIdleDocument, 0);
-            window.setTimeout(unlockIdleDocument, 250);
-          }
-          onOpenChange?.(next);
-        }}
-        open={open}
-        {...props}
-      >
-        {shouldRender ? children : null}
-      </DrawerPrimitive.Root>
+      <DrawerShouldRenderContext.Provider value={shouldRender}>
+        <DrawerPrimitive.Root
+          data-slot="drawer"
+          direction={resolvedDirection}
+          dismissible
+          modal
+          onOpenChange={(next) => {
+            if (!next) {
+              unlockIdleDocument();
+              window.setTimeout(unlockIdleDocument, 0);
+              window.setTimeout(unlockIdleDocument, 250);
+            }
+            onOpenChange?.(next);
+          }}
+          open={open}
+          {...props}
+        >
+          {children}
+        </DrawerPrimitive.Root>
+      </DrawerShouldRenderContext.Provider>
     </DrawerOpenContext.Provider>
   );
 }
@@ -94,12 +125,15 @@ function DrawerContent({
 }: React.ComponentProps<typeof DrawerPrimitive.Content> & { showCloseButton?: boolean }) {
   const [root, setRoot] = React.useState<HTMLElement | null>(null);
   const open = React.useContext(DrawerOpenContext);
+  const shouldRender = React.useContext(DrawerShouldRenderContext);
   const dismissed = open === false;
 
   React.useEffect(() => {
     if (!root || open !== true) return;
     root.style.removeProperty("pointer-events");
   }, [open, root]);
+
+  if (!shouldRender) return null;
 
   return (
     <DrawerPortal>

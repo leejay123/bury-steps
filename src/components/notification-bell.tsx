@@ -41,7 +41,7 @@ export function NotificationBell({
   }
 
   return (
-    <Drawer direction="right" onOpenChange={setOpen} open={open}>
+    <Drawer onOpenChange={setOpen} open={open}>
       <DrawerTrigger asChild>
         <Button
           aria-label={unreadCount > 0 ? `${unreadCount} unread notices` : "Notices"}
