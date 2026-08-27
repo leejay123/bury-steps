@@ -162,7 +162,7 @@ function FaqBrowser({
         </Empty>
       ) : null}
 
-      <p className="px-4 text-center text-sm text-muted-foreground md:px-6">
+      <p className="px-4 py-8 text-center text-sm text-muted-foreground md:px-6">
         Can’t find what you’re looking for?{" "}
         <a
           className="font-medium text-foreground underline-offset-4 hover:underline"

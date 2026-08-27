@@ -4,7 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/themes";
 import { Toaster } from "@/components/ui/sonner";
 import { AFTER_AUTH_PATH, SIGN_IN_URL, SIGN_UP_URL } from "@/lib/urls";
-import { PAGE_X } from "@/lib/page-x";
+import { PAGE_X, PAGE_Y } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 import { SiteMobileNav, SiteNav, SiteNavFallback } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
@@ -74,7 +74,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <FullWidthDivider position="bottom" />
               </div>
             </header>
-            <main className={`flex flex-1 flex-col py-8 ${PAGE_X}`}>
+            <main className={`flex flex-1 flex-col ${PAGE_Y} ${PAGE_X}`}>
               <MotionPage>{children}</MotionPage>
             </main>
             <SiteFooter />
