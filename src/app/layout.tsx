@@ -74,7 +74,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <FullWidthDivider position="bottom" />
               </div>
             </header>
-            <main className={`flex-1 py-8 ${PAGE_X}`}>
+            <main className={`py-8 ${PAGE_X}`}>
               <MotionPage>{children}</MotionPage>
             </main>
             <SiteFooter />

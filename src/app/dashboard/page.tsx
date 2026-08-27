@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { CalendarDays, ChevronRight, Clock, Footprints, MapPin } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
-import { formatCompactDateTime, formatDateTime, formatWalkDate } from "@/lib/dates";
+import { formatCompactDateTime, formatDate, formatDateTime, formatMembershipAge, formatWalkDate } from "@/lib/dates";
 import { windowState } from "@/lib/walk-window";
 import { CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { EmptyState } from "@/components/empty-state";
@@ -78,8 +78,9 @@ export default async function DashboardPage() {
       <div className="flex flex-col gap-1.5">
         <h1 className="text-2xl font-semibold tracking-tight">Walks</h1>
         <p className="text-sm text-muted-foreground">
-          Upcoming walks, including any that have been cancelled. Clock in on the day from here.
-          Past walks are in History.
+          Member since {formatDate(user.createdAt)} · {formatMembershipAge(user.createdAt)}. Upcoming
+          walks, including any that have been cancelled. Clock in on the day from here. Past walks
+          are in History.
         </p>
       </div>
 

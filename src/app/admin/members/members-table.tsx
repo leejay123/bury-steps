@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { ChevronRight, Footprints } from "lucide-react";
 import { toast } from "sonner";
 import { getMemberHistory, type MemberHistoryItem } from "@/server/actions";
-import { formatDate } from "@/lib/dates";
+import { formatDate, formatMembershipAge } from "@/lib/dates";
 import { DeleteMemberButton } from "./delete-member-button";
 import { EmptyState } from "@/components/empty-state";
 import { AttendanceHistory } from "@/components/attendance-history";
@@ -43,6 +43,7 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
     name: string;
     email: string;
     role: "ADMIN" | "MEMBER";
+    createdAt: string;
     items: MemberHistoryItem[];
   } | null>(null);
   const [pending, startTransition] = useTransition();
@@ -67,6 +68,7 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
   }
 
   const selected = members.find((member) => member.id === openId);
+  const joinedAt = history?.createdAt ?? selected?.createdAt;
 
   return (
     <>
@@ -106,8 +108,13 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
                     {member.role === "ADMIN" ? "Organiser" : "Member"}
                   </Badge>
                 </TableCell>
-                <TableCell className="tabular-nums text-muted-foreground">
-                  {formatDate(new Date(member.createdAt))}
+                <TableCell className="whitespace-normal text-muted-foreground">
+                  <div className="flex flex-col">
+                    <span className="tabular-nums">{formatDate(new Date(member.createdAt))}</span>
+                    <span className="text-xs">
+                      {formatMembershipAge(new Date(member.createdAt))}
+                    </span>
+                  </div>
                 </TableCell>
                 <TableCell className="text-right tabular-nums">{member.attendanceCount}</TableCell>
                 <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
@@ -145,7 +152,9 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
           <DrawerHeader>
             <DrawerTitle>{history?.name ?? selected?.name ?? "Member"}</DrawerTitle>
             <DrawerDescription>
-              Every walk they have clocked in to, with clock-in and clock-out times.
+              {joinedAt
+                ? `Joined ${formatDate(new Date(joinedAt))} · member for ${formatMembershipAge(new Date(joinedAt))}.`
+                : "Walk history."}
             </DrawerDescription>
           </DrawerHeader>
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pb-6">

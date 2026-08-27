@@ -93,6 +93,56 @@ export function formatDate(at: Date): string {
   }).format(at);
 }
 
+function londonYmd(at: Date): { day: number; month: number; year: number } {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: LONDON,
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+    })
+      .formatToParts(at)
+      .map((part) => [part.type, part.value]),
+  );
+  return { day: Number(parts.day), month: Number(parts.month), year: Number(parts.year) };
+}
+
+function daysInMonth(year: number, month: number): number {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
+function plural(count: number, noun: string): string {
+  return count === 1 ? `1 ${noun}` : `${count} ${noun}s`;
+}
+
+/** How long someone has been a member, e.g. "today", "12 days", "2 months", "1 year 3 months". */
+export function formatMembershipAge(joined: Date, now = new Date()): string {
+  const from = londonYmd(joined);
+  const to = londonYmd(now);
+  let years = to.year - from.year;
+  let months = to.month - from.month;
+  let days = to.day - from.day;
+
+  if (days < 0) {
+    months -= 1;
+    const prevMonth = to.month === 1 ? 12 : to.month - 1;
+    const prevYear = to.month === 1 ? to.year - 1 : to.year;
+    days += daysInMonth(prevYear, prevMonth);
+  }
+  if (months < 0) {
+    years -= 1;
+    months += 12;
+  }
+  if (years < 0) return "today";
+
+  const parts: string[] = [];
+  if (years > 0) parts.push(plural(years, "year"));
+  if (months > 0) parts.push(plural(months, "month"));
+  if (parts.length > 0) return parts.join(" ");
+  if (days <= 0) return "today";
+  return plural(days, "day");
+}
+
 export function formatDateTime(at: Date): string {
   return new Intl.DateTimeFormat("en-GB", {
     timeZone: LONDON,

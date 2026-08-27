@@ -1227,6 +1227,7 @@ export async function getMemberHistory(userId: string): Promise<{
   name: string;
   email: string;
   role: "ADMIN" | "MEMBER";
+  createdAt: string;
   items: MemberHistoryItem[];
 } | null> {
   await requireAdmin();
@@ -1256,6 +1257,7 @@ export async function getMemberHistory(userId: string): Promise<{
     name: displayName(member),
     email: member.email,
     role: member.role,
+    createdAt: member.createdAt.toISOString(),
     items: member.attendances.map((attendance) => ({
       id: attendance.id,
       walkId: attendance.walk.id,

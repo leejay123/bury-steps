@@ -224,8 +224,9 @@ export function OrganiserGuide() {
             <GuideBody>
               <p>
                 Open <Link href="/admin/members">Members</Link> to see everyone who has signed up:
-                name, email, whether they are an organiser or a member, when they joined, and how
-                many clock-ins they have.
+                name, email, whether they are an organiser or a member, when they joined, how long
+                they have been a member, and how many clock-ins they have. The joined date is the day
+                they first signed in.
               </p>
               <p className="font-medium text-foreground">Walk history</p>
               <p>
