@@ -124,8 +124,9 @@ export function OrganiserGuide() {
               <Steps>
                 <li>Fill in a title (for example “Burrs Country Park loop”).</li>
                 <li>
-                  Set the date and start time in <strong>UK time</strong> with the calendar. Length
-                  defaults to 90 minutes.
+                  Set the date and start time in <strong>UK time</strong>. Choose date and time
+                  opens a compact calendar over the form: pick the day, then the hour and minute.
+                  Length defaults to 90 minutes.
                 </li>
                 <li>Add a meeting point and a short description if you want.</li>
                 <li>Choose Create walk. A share link is generated automatically.</li>

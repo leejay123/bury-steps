@@ -7,6 +7,11 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -28,6 +33,10 @@ function parseWallClock(value?: string): { date: Date; hour: string; minute: str
   } catch {
     return null;
   }
+}
+
+function isSelectLayer(target: EventTarget | null) {
+  return target instanceof Element && Boolean(target.closest("[data-slot='select-content']"));
 }
 
 export function DateTimePicker({
@@ -77,66 +86,76 @@ export function DateTimePicker({
         tabIndex={-1}
         value={value}
       />
-      <Button
-        aria-expanded={open}
-        className="w-full justify-start font-normal"
-        onClick={() => setOpen((current) => !current)}
-        type="button"
-        variant="outline"
-      >
-        <CalendarIcon data-icon="inline-start" />
-        {label}
-      </Button>
-      {open ? (
-        <div className="flex w-full flex-col gap-3 rounded-xl border p-3">
-          <Calendar
-            captionLayout="dropdown"
-            className="w-full p-0"
-            endMonth={new Date(2035, 11)}
-            locale={enGB}
-            mode="single"
-            onSelect={(next) => {
-              setDate(next);
-            }}
-            selected={date}
-            startMonth={new Date(2020, 0)}
-            timeZone={LONDON}
-          />
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor={`${id}-hour`}>Hour</Label>
-              <Select onValueChange={setHour} value={hour}>
-                <SelectTrigger id={`${id}-hour`}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {HOURS.map((item) => (
-                    <SelectItem key={item} value={item}>
-                      {item}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+      <Popover onOpenChange={setOpen} open={open}>
+        <PopoverTrigger asChild>
+          <Button
+            aria-expanded={open}
+            className="w-full justify-start font-normal"
+            type="button"
+            variant="outline"
+          >
+            <CalendarIcon data-icon="inline-start" />
+            {label}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
+          align="start"
+          className="w-auto p-3"
+          onFocusOutside={(event) => {
+            if (isSelectLayer(event.target)) event.preventDefault();
+          }}
+          onInteractOutside={(event) => {
+            if (isSelectLayer(event.target)) event.preventDefault();
+          }}
+        >
+          <div className="flex flex-col gap-3">
+            <Calendar
+              captionLayout="dropdown"
+              className="p-0"
+              endMonth={new Date(2035, 11)}
+              locale={enGB}
+              mode="single"
+              onSelect={setDate}
+              selected={date}
+              startMonth={new Date(2020, 0)}
+              timeZone={LONDON}
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor={`${id}-hour`}>Hour</Label>
+                <Select onValueChange={setHour} value={hour}>
+                  <SelectTrigger id={`${id}-hour`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {HOURS.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor={`${id}-minute`}>Minute</Label>
+                <Select onValueChange={setMinute} value={minute}>
+                  <SelectTrigger id={`${id}-minute`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {minutes.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor={`${id}-minute`}>Minute</Label>
-              <Select onValueChange={setMinute} value={minute}>
-                <SelectTrigger id={`${id}-minute`}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {minutes.map((item) => (
-                    <SelectItem key={item} value={item}>
-                      {item}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <p className="text-xs text-muted-foreground">UK time.</p>
           </div>
-          <p className="text-xs text-muted-foreground">UK time.</p>
-        </div>
-      ) : null}
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
