@@ -87,7 +87,7 @@ export async function getHomepageFaqData(): Promise<HomepageFaqData> {
   try {
     return await getCachedHomepageFaqData();
   } catch {
-    return loadHomepageFaqData();
+    return { faqs: [], categories: [] };
   }
 }
 
