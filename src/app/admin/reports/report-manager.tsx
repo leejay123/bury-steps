@@ -12,9 +12,9 @@ import {
   type ActionResult,
 } from "@/server/actions";
 import { formatWalkDay, formatTime, utcToLondonWallClock } from "@/lib/dates";
+import { DateTimePicker } from "@/components/date-time-picker";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -109,14 +109,12 @@ function ReportFields({
       <input name="walkId" type="hidden" value={walkId === "none" ? "" : walkId} />
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={`${prefix}-happened`}>When</Label>
-        <Input
-          defaultValue={report ? utcToLondonWallClock(new Date(report.happenedAt)) : ""}
+        <DateTimePicker
+          defaultValue={report ? utcToLondonWallClock(new Date(report.happenedAt)) : undefined}
           id={`${prefix}-happened`}
           name="happenedAt"
           required
-          type="datetime-local"
         />
-        <p className="text-xs text-muted-foreground">UK time.</p>
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={`${prefix}-walk`}>Walk (optional)</Label>

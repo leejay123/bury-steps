@@ -46,6 +46,16 @@ export function utcToLondonWallClock(at: Date): string {
   return shifted.toISOString().slice(0, 16);
 }
 
+function pad2(value: number): string {
+  return String(value).padStart(2, "0");
+}
+
+/** Build a UK wall-clock `datetime-local` string from a calendar day plus hours and minutes. */
+export function combineLondonDateAndTime(date: Date, hour: number, minute: number): string {
+  const { day, month, year } = londonYmd(date);
+  return `${year}-${pad2(month)}-${pad2(day)}T${pad2(hour)}:${pad2(minute)}`;
+}
+
 export function formatWalkDay(at: Date): string {
   return new Intl.DateTimeFormat("en-GB", {
     timeZone: LONDON,
@@ -93,7 +103,7 @@ export function formatDate(at: Date): string {
   }).format(at);
 }
 
-function londonYmd(at: Date): { day: number; month: number; year: number } {
+export function londonYmd(at: Date): { day: number; month: number; year: number } {
   const parts = Object.fromEntries(
     new Intl.DateTimeFormat("en-GB", {
       timeZone: LONDON,

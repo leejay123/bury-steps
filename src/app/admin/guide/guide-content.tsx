@@ -124,8 +124,8 @@ export function OrganiserGuide() {
               <Steps>
                 <li>Fill in a title (for example “Burrs Country Park loop”).</li>
                 <li>
-                  Set the date and start time in <strong>UK time</strong>. Length defaults to 90
-                  minutes.
+                  Set the date and start time in <strong>UK time</strong> with the calendar. Length
+                  defaults to 90 minutes.
                 </li>
                 <li>Add a meeting point and a short description if you want.</li>
                 <li>Choose Create walk. A share link is generated automatically.</li>
@@ -147,8 +147,9 @@ export function OrganiserGuide() {
                   cancelled walks on their Walks page.
                 </li>
                 <li>
-                  <strong>Reschedule</strong> changes the date, time, length, or meeting point. If
-                  the walk was cancelled, rescheduling also puts it back on the diary.
+                  <strong>Reschedule</strong> changes the date, time, length, or meeting point with
+                  the same calendar as Create walk. If the walk was cancelled, rescheduling also
+                  puts it back on the diary.
                 </li>
                 <li>
                   <strong>Reopen</strong> undoes a cancel. Clock-in works again if the time window

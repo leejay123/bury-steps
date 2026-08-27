@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { rescheduleWalk, type ActionResult } from "@/server/actions";
 import { utcToLondonWallClock } from "@/lib/dates";
+import { DateTimePicker } from "@/components/date-time-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -85,14 +86,12 @@ export function RescheduleWalkButton({
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor={`reschedule-starts-${walkId}`}>Date and start time</Label>
-              <Input
+              <DateTimePicker
                 defaultValue={utcToLondonWallClock(new Date(startsAt))}
                 id={`reschedule-starts-${walkId}`}
                 name="startsAt"
                 required
-                type="datetime-local"
               />
-              <p className="text-xs text-muted-foreground">UK time.</p>
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor={`reschedule-duration-${walkId}`}>Expected length</Label>

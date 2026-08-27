@@ -4,6 +4,7 @@ import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useOverlayRoot } from "@/components/overlay-root";
 
 function Select(props: React.ComponentProps<typeof SelectPrimitive.Root>) {
   return <SelectPrimitive.Root data-slot="select" {...props} />;
@@ -36,8 +37,10 @@ function SelectTrigger({ className, children, ...props }: React.ComponentProps<t
 }
 
 function SelectContent({ className, children, position = "popper", ...props }: React.ComponentProps<typeof SelectPrimitive.Content>) {
+  const overlayRoot = useOverlayRoot();
+
   return (
-    <SelectPrimitive.Portal>
+    <SelectPrimitive.Portal container={overlayRoot ?? undefined}>
       <SelectPrimitive.Content
         data-slot="select-content"
         className={cn(

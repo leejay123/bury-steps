@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 import { createWalk, type ActionResult } from "@/server/actions";
+import { DateTimePicker } from "@/components/date-time-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +27,7 @@ function Submit() {
 }
 
 export function CreateWalkForm() {
+  const [formKey, setFormKey] = useState(0);
   const [state, action] = useActionState<ActionResult | null, FormData>(createWalk, null);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -34,6 +36,7 @@ export function CreateWalkForm() {
     if (state.ok) {
       toast.success(state.message ?? "Walk created.");
       formRef.current?.reset();
+      setFormKey((key) => key + 1);
     } else {
       toast.error(state.error);
     }
@@ -47,10 +50,9 @@ export function CreateWalkForm() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="startsAt">Date and start time</Label>
-          <Input id="startsAt" name="startsAt" type="datetime-local" required />
-          <p className="text-xs text-muted-foreground">UK time.</p>
+          <DateTimePicker id="startsAt" key={formKey} name="startsAt" required />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="durationMins">Expected length</Label>
