@@ -1,0 +1,13 @@
+---
+description: Use shadcn/ui for all interactive UI
+alwaysApply: true
+---
+
+# shadcn/ui
+
+Use components from `src/components/ui` for interactive UI. Do not invent a parallel widget when one already exists there.
+
+- **Dropdowns and option lists:** `Select` (built on Popover). Not native `<select>`, and not a one-off menu.
+- **Overlays:** `Popover` for compact panels, `Dialog` / `AlertDialog` for modals, `Drawer` for side panels.
+- **Forms:** `Button`, `Input`, `Textarea`, `Checkbox`, `Label`, `Calendar`.
+- **Lists and empty states:** `Table`, `Empty`.

@@ -126,7 +126,7 @@ export function OrganiserGuide() {
                 <li>
                   Set the date and start time in <strong>UK time</strong>. Choose date and time
                   opens a compact calendar over the form: pick the day, then the hour and minute.
-                  Length defaults to 90 minutes.
+                  Length is the same kind of list, and defaults to 90 minutes.
                 </li>
                 <li>Add a meeting point and a short description if you want.</li>
                 <li>Choose Create walk. A share link is generated automatically.</li>
