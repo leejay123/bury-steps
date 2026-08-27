@@ -22,20 +22,22 @@ export function TestimonialsSection({
       <HeroCopy eyebrow={null} title="From the group" titleAs="h2">
         <p>A few words from people who walk with us on Sundays.</p>
       </HeroCopy>
-      <Stagger className="relative grid grid-cols-1 gap-px bg-border sm:grid-cols-2 lg:grid-cols-3">
-        <FullWidthDivider position="top" />
-        {testimonials.map((testimonial) => (
-          <StaggerItem className="h-full" key={testimonial.id}>
-            <TestimonialsCard className="h-full" testimonial={testimonial} />
-          </StaggerItem>
-        ))}
-        <GridFiller
-          className="bg-background"
-          lgColumns={3}
-          smColumns={2}
-          totalItems={testimonials.length}
-        />
-        <FullWidthDivider position="bottom" />
+      <Stagger className="relative">
+        <div className="grid grid-cols-1 gap-px bg-border sm:grid-cols-2 lg:grid-cols-3">
+          {testimonials.map((testimonial) => (
+            <StaggerItem className="h-full" key={testimonial.id}>
+              <TestimonialsCard className="h-full" testimonial={testimonial} />
+            </StaggerItem>
+          ))}
+          <GridFiller
+            className="bg-background"
+            lgColumns={3}
+            smColumns={2}
+            totalItems={testimonials.length}
+          />
+        </div>
+        <FullWidthDivider contained position="top" />
+        <FullWidthDivider contained position="bottom" />
       </Stagger>
     </section>
   );

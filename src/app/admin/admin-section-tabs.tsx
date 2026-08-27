@@ -33,27 +33,26 @@ export function AdminSectionTabs() {
   const pathname = usePathname();
 
   return (
-    <nav
-      aria-label="Organiser"
-      className="relative grid grid-cols-2 divide-x divide-y divide-border sm:grid-cols-4 sm:divide-y-0"
-    >
-      {ITEMS.map((item) => {
-        const active = item.active(pathname);
-        return (
-          <Link
-            aria-current={active ? "page" : undefined}
-            className={cn(
-              "px-4 py-3 text-center text-sm text-muted-foreground hover:bg-accent/40 hover:text-foreground",
-              active && "bg-muted font-medium text-foreground",
-            )}
-            href={item.href}
-            key={item.href}
-          >
-            {item.label}
-          </Link>
-        );
-      })}
-      <FullWidthDivider position="bottom" />
-    </nav>
+    <div className="relative">
+      <nav aria-label="Organiser" className="grid grid-cols-2 gap-px bg-border sm:grid-cols-4">
+        {ITEMS.map((item) => {
+          const active = item.active(pathname);
+          return (
+            <Link
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "px-4 py-3 text-center text-sm text-muted-foreground hover:bg-accent/40 hover:text-foreground",
+                active ? "bg-muted font-medium text-foreground" : "bg-background",
+              )}
+              href={item.href}
+              key={item.href}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
+      <FullWidthDivider contained position="bottom" />
+    </div>
   );
 }
