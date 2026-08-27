@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
-import { ChevronRight, ClipboardList, Printer } from "lucide-react";
+import { ChevronRight, ClipboardList, Printer, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   addAccidentReport,
@@ -225,8 +225,9 @@ function RemoveButton({ reportId, title }: { reportId: string; title: string }) 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button size="xs" variant="destructive">
-          Remove
+        <Button aria-label={`Remove report from ${title}`} size="xs" variant="destructive">
+          <Trash2 />
+          <span className="sr-only">Remove</span>
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
@@ -263,7 +264,7 @@ export function AccidentReportManager({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-end">
-        <Button onClick={() => setMode({ type: "add" })} size="sm">
+        <Button className="w-full sm:w-auto" onClick={() => setMode({ type: "add" })} size="sm">
           Add report
         </Button>
       </div>
@@ -280,6 +281,7 @@ export function AccidentReportManager({
             const at = new Date(report.happenedAt);
             return (
               <DataListItem
+                className="items-start gap-2 sm:items-center sm:gap-3"
                 key={report.id}
                 onClick={() => setMode({ type: "edit", report })}
               >
@@ -288,18 +290,25 @@ export function AccidentReportManager({
                     {formatWalkDay(at)} · {formatTime(at)}
                   </p>
                   <p className="text-sm text-muted-foreground">{report.walkTitle || "No walk"}</p>
-                  <p className="text-sm text-muted-foreground wrap-break-word">{report.whatHappened}</p>
+                  <p className="line-clamp-2 text-sm text-muted-foreground wrap-break-word">
+                    {report.whatHappened}
+                  </p>
                 </DataListBody>
-                <DataListActions>
+                <DataListActions className="flex-col gap-1 sm:flex-row sm:gap-1">
                   <Button asChild size="xs" variant="outline">
-                    <a href={`/admin/reports/${report.id}/print`} rel="noreferrer" target="_blank">
-                      <Printer data-icon="inline-start" />
-                      Print
+                    <a
+                      aria-label="Print report"
+                      href={`/admin/reports/${report.id}/print`}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      <Printer />
+                      <span className="sr-only">Print</span>
                     </a>
                   </Button>
                   <RemoveButton reportId={report.id} title={formatWalkDay(at)} />
                 </DataListActions>
-                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                <ChevronRight className="mt-1.5 size-4 shrink-0 text-muted-foreground sm:mt-0" />
               </DataListItem>
             );
           })}

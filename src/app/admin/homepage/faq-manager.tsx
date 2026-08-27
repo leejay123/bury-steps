@@ -23,7 +23,7 @@ import {
   type FaqView,
 } from "@/lib/faqs";
 import { EmptyState } from "@/components/empty-state";
-import { DragHandle, useSortableIds } from "@/components/sortable-rows";
+import { ReorderButtons, useReorderableIds } from "@/components/sortable-rows";
 import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -364,7 +364,7 @@ function AddCategoryPopover({ disabled }: { disabled: boolean }) {
   return (
     <Popover onOpenChange={setOpen} open={open}>
       <PopoverTrigger asChild>
-        <Button disabled={disabled} size="sm" variant="outline">
+        <Button disabled={disabled} className="w-full sm:w-auto" size="sm" variant="outline">
           Add category
         </Button>
       </PopoverTrigger>
@@ -494,7 +494,7 @@ function FaqCategoryManager({
 }) {
   const [editId, setEditId] = useState<string | null>(null);
   const categoryIds = categories.map((item) => item.id);
-  const { handleProps, order, rowProps } = useSortableIds("faq-categories", categoryIds, (ids) => {
+  const { moveDown, moveUp, order } = useReorderableIds(categoryIds, (ids) => {
     if (ids.join() === categoryIds.join()) return;
     void reorderHomepageFaqCategories(ids);
   });
@@ -505,7 +505,7 @@ function FaqCategoryManager({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-sm font-medium">Categories</h2>
         <AddCategoryPopover disabled={atLimit} />
       </div>
@@ -523,13 +523,18 @@ function FaqCategoryManager({
         />
       ) : (
         <DataList>
-          {sorted.map((category) => (
+          {sorted.map((category, index) => (
             <DataListItem
               key={category.id}
               onClick={() => setEditId(category.id)}
-              {...rowProps(category.id)}
             >
-              <DragHandle label={`Reorder category ${category.label}`} {...handleProps(category.id)} />
+              <ReorderButtons
+                canMoveDown={index < sorted.length - 1}
+                canMoveUp={index > 0}
+                label={`category ${category.label}`}
+                onMoveDown={() => moveDown(category.id)}
+                onMoveUp={() => moveUp(category.id)}
+              />
               <DataListBody>
                 <p className="font-medium">{category.label}</p>
                 <p className="text-sm text-muted-foreground">
@@ -568,7 +573,7 @@ export function HomepageFaqManager({
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
   const faqIds = faqs.map((item) => item.id);
-  const { handleProps, order, rowProps } = useSortableIds("faqs", faqIds, (ids) => {
+  const { moveDown, moveUp, order } = useReorderableIds(faqIds, (ids) => {
     if (ids.join() === faqIds.join()) return;
     void reorderHomepageFaqs(ids);
   });
@@ -592,9 +597,10 @@ export function HomepageFaqManager({
       <FaqCategoryManager categories={categories} maxCategories={maxCategories} />
 
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-sm font-medium">Questions</h2>
           <Button
+            className="w-full sm:w-auto"
             disabled={atLimit || noCategories}
             onClick={() => setMode({ type: "add" })}
             size="sm"
@@ -623,9 +629,14 @@ export function HomepageFaqManager({
               <DataListItem
                 key={faq.id}
                 onClick={() => setMode({ type: "edit", faq, index })}
-                {...rowProps(faq.id)}
               >
-                <DragHandle label={`Reorder FAQ ${index + 1}`} {...handleProps(faq.id)} />
+                <ReorderButtons
+                  canMoveDown={index < sorted.length - 1}
+                  canMoveUp={index > 0}
+                  label={`FAQ ${index + 1}`}
+                  onMoveDown={() => moveDown(faq.id)}
+                  onMoveUp={() => moveUp(faq.id)}
+                />
                 <DataListBody>
                   <p className="font-medium">FAQ {index + 1}</p>
                   <p className="text-sm text-muted-foreground wrap-break-word">{faq.question}</p>

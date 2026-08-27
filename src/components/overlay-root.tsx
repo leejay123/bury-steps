@@ -30,10 +30,17 @@ const LOCK_STYLE_PROPS = [
   "margin-right",
 ] as const;
 
-const OPEN_MODAL_SELECTOR = [
+const OPEN_CONTENT_SELECTOR = [
   '[data-slot="drawer-content"][data-state="open"]',
   '[data-slot="dialog-content"][data-state="open"]',
   '[data-slot="alert-dialog-content"][data-state="open"]',
+].join(", ");
+
+const OPEN_MODAL_SELECTOR = [
+  OPEN_CONTENT_SELECTOR,
+  '[data-slot="drawer-overlay"][data-state="open"]',
+  '[data-slot="dialog-overlay"][data-state="open"]',
+  '[data-slot="alert-dialog-overlay"][data-state="open"]',
 ].join(", ");
 
 const OVERLAY_SELECTOR = [
@@ -58,7 +65,7 @@ function overlayIsOffscreen(node: HTMLElement) {
 }
 
 function isVisibleModalOpen() {
-  return [...document.querySelectorAll<HTMLElement>(OPEN_MODAL_SELECTOR)].some(
+  return [...document.querySelectorAll<HTMLElement>(OPEN_CONTENT_SELECTOR)].some(
     (node) => !overlayIsOffscreen(node),
   );
 }

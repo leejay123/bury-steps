@@ -232,7 +232,12 @@ export function SiteNoticeManager({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-end">
-        <Button disabled={atLimit} onClick={() => setMode({ type: "add" })} size="sm">
+        <Button
+          className="w-full sm:w-auto"
+          disabled={atLimit}
+          onClick={() => setMode({ type: "add" })}
+          size="sm"
+        >
           Add notice
         </Button>
       </div>

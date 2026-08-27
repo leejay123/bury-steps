@@ -15,7 +15,7 @@ import {
 import type { SlideView } from "@/lib/slides";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { EmptyState } from "@/components/empty-state";
-import { DragHandle, useSortableIds } from "@/components/sortable-rows";
+import { ReorderButtons, useReorderableIds } from "@/components/sortable-rows";
 import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -227,7 +227,7 @@ export function HomepageSlideManager({
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
   const slideIds = slides.map((item) => item.id);
-  const { handleProps, order, rowProps } = useSortableIds("slides", slideIds, (ids) => {
+  const { moveDown, moveUp, order } = useReorderableIds(slideIds, (ids) => {
     if (ids.join() === slideIds.join()) return;
     void reorderHomepageSlides(ids);
   });
@@ -248,7 +248,12 @@ export function HomepageSlideManager({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-end">
-        <Button disabled={atLimit} onClick={() => setMode({ type: "add" })} size="sm">
+        <Button
+          className="w-full sm:w-auto"
+          disabled={atLimit}
+          onClick={() => setMode({ type: "add" })}
+          size="sm"
+        >
           Add slide
         </Button>
       </div>
@@ -270,9 +275,14 @@ export function HomepageSlideManager({
             <DataListItem
               key={slide.id}
               onClick={() => setMode({ type: "edit", slide, index })}
-              {...rowProps(slide.id)}
             >
-              <DragHandle label={`Reorder slide ${index + 1}`} {...handleProps(slide.id)} />
+              <ReorderButtons
+                canMoveDown={index < sorted.length - 1}
+                canMoveUp={index > 0}
+                label={`slide ${index + 1}`}
+                onMoveDown={() => moveDown(slide.id)}
+                onMoveUp={() => moveUp(slide.id)}
+              />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 alt=""
