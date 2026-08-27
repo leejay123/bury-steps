@@ -54,10 +54,15 @@ export function ReorderButtons({
 
 export function useReorderableIds(ids: string[], onReorder: (ids: string[]) => void) {
   const [order, setOrder] = useState(ids);
+  // `ids` is a fresh array on every render (callers build it with `.map`), so
+  // comparing by reference in the effect below would fire on every render
+  // and never settle — an infinite render loop. Compare by value instead.
+  const key = ids.join("\u0000");
 
   useEffect(() => {
     setOrder(ids);
-  }, [ids]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 
   function move(id: string, direction: -1 | 1) {
     const from = order.indexOf(id);
