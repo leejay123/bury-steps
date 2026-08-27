@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { restorePagePointerEvents, unlockIdleDocument } from "@/components/overlay-root";
+import { unlockIdleDocument } from "@/components/overlay-root";
 
 export function navItems(isAdmin: boolean, walksHref: string) {
   return [
@@ -60,11 +60,9 @@ function NavLink({
       className={cn(navLinkClass(active), className)}
       href={href}
       onClick={() => {
-        restorePagePointerEvents();
         unlockIdleDocument();
       }}
       onPointerDown={() => {
-        restorePagePointerEvents();
         unlockIdleDocument();
       }}
     >

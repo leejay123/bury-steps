@@ -15,7 +15,7 @@ import {
 import type { TestimonialView } from "@/lib/testimonials";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { EmptyState } from "@/components/empty-state";
-import { DragHandle, useSortableIds } from "@/components/sortable-rows";
+import { ReorderButtons, useReorderableIds } from "@/components/sortable-rows";
 import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -285,7 +285,7 @@ export function HomepageTestimonialManager({
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
   const testimonialIds = testimonials.map((item) => item.id);
-  const { handleProps, order, rowProps } = useSortableIds("testimonials", testimonialIds, (ids) => {
+  const { moveDown, moveUp, order } = useReorderableIds(testimonialIds, (ids) => {
     if (ids.join() === testimonialIds.join()) return;
     void reorderHomepageTestimonials(ids);
   });
@@ -307,7 +307,12 @@ export function HomepageTestimonialManager({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-end">
-        <Button disabled={atLimit} onClick={() => setMode({ type: "add" })} size="sm">
+        <Button
+          className="w-full sm:w-auto"
+          disabled={atLimit}
+          onClick={() => setMode({ type: "add" })}
+          size="sm"
+        >
           Add testimonial
         </Button>
       </div>
@@ -329,11 +334,13 @@ export function HomepageTestimonialManager({
             <DataListItem
               key={testimonial.id}
               onClick={() => setMode({ type: "edit", testimonial, index })}
-              {...rowProps(testimonial.id)}
             >
-              <DragHandle
-                label={`Reorder testimonial ${index + 1}`}
-                {...handleProps(testimonial.id)}
+              <ReorderButtons
+                canMoveDown={index < sorted.length - 1}
+                canMoveUp={index > 0}
+                label={`testimonial ${index + 1}`}
+                onMoveDown={() => moveDown(testimonial.id)}
+                onMoveUp={() => moveUp(testimonial.id)}
               />
               <DataListBody>
                 <p className="font-medium">Testimonial {index + 1}</p>

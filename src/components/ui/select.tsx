@@ -5,7 +5,7 @@ import { CheckIcon, ChevronDownIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { restorePagePointerEvents } from "@/components/overlay-root";
+import { unlockIdleDocument } from "@/components/overlay-root";
 
 type SelectOption = {
   disabled?: boolean;
@@ -99,7 +99,7 @@ function Select({
             const width = triggerRef.current?.getBoundingClientRect().width;
             if (width) setTriggerWidth(width);
           } else {
-            restorePagePointerEvents();
+            unlockIdleDocument();
           }
           setOpen(next);
         }}

@@ -260,13 +260,14 @@ export function OrganiserGuide() {
                 All of this lives under <Link href="/admin/settings">Settings</Link>. Hero photos,
                 testimonials, FAQs, and notices use a list: tap a row to edit. Remove is the small
                 button on the row, not in the drawer. Drawers are for adding and editing. On a
-                phone the list stacks so you do not have to scroll sideways.
+                phone the list stacks so you do not have to scroll sideways, and Add buttons stretch
+                full width.
               </p>
               <p>
-                Drag the grip on the left of a row to change the order of photos, quotes, FAQ
-                categories, and questions. The grip is large enough to use with a thumb. Drop a
-                photo onto the box in the drawer; it fills the width of the panel. Walks stay in
-                date order, so those lists are not dragged.
+                Use the up and down arrows on the left of a row to change the order of photos,
+                quotes, FAQ categories, and questions. Drop a photo onto the box in the drawer; it
+                fills the width of the panel. Walks stay in date order, so those lists are not
+                reordered.
               </p>
               <p className="font-medium text-foreground">Hero photos</p>
               <p>
@@ -296,8 +297,8 @@ export function OrganiserGuide() {
               </p>
               <p>
                 Click a question row to edit it in the drawer. Each question needs a category so
-                visitors can filter on the homepage. Drag the grip to change the order of
-                categories or questions. Hidden if you have no questions.
+                visitors can filter on the homepage. Use the up and down arrows to change the order
+                of categories or questions. Hidden if you have no questions.
               </p>
             </GuideBody>
           </AccordionContent>
@@ -309,10 +310,11 @@ export function OrganiserGuide() {
             <GuideBody>
               <p>
                 Open <Link href="/admin/settings/notices">Notices</Link>. Up to {MAX_SITE_NOTICES}{" "}
-                messages in the bell at the top of the site. Only signed-in people see them.
+                messages in the bell at the top of the site. Only signed-in people see them. The
+                bell opens a drawer on phone and desktop.
               </p>
               <Steps>
-                <li>Add a title and a message.</li>
+                <li>Add a title and a message. On a phone, Add notice is full width.</li>
                 <li>
                   Members get a red dot on the bell until they choose{" "}
                   <strong>Mark all as read</strong>. Opening the bell does not clear it on its own.
@@ -333,11 +335,15 @@ export function OrganiserGuide() {
               <p>
                 Open <Link href="/admin/reports">Reports</Link> in the menu, or from Settings.
                 Only organisers can see this. Add a report with the date, an optional walk, what
-                happened, who was involved, what you did, and extra notes if you need them.
+                happened, who was involved, what you did, and extra notes if you need them. Each
+                row shows the date, walk, and a short preview of what happened. On a phone, print
+                and remove sit on their own row under the text so the write-up is not squeezed.
               </p>
               <Steps>
-                <li>Choose Add report and fill in the form. Save.</li>
-                <li>Tap a row later to edit it. Remove is on the list.</li>
+                <li>
+                  Choose Add report (full width on a phone) and fill in the form. Save.
+                </li>
+                <li>Tap a row later to edit it. Remove is on the list under the text on a phone.</li>
                 <li>
                   Choose Print to open a printable page, then use the browser dialog to save a PDF.
                 </li>

@@ -30,10 +30,30 @@ const LOCK_STYLE_PROPS = [
   "margin-right",
 ] as const;
 
-const OPEN_MODAL_SELECTOR = [
+const OPEN_CONTENT_SELECTOR = [
   '[data-slot="drawer-content"][data-state="open"]',
   '[data-slot="dialog-content"][data-state="open"]',
   '[data-slot="alert-dialog-content"][data-state="open"]',
+].join(", ");
+
+/**
+ * Every Radix DismissableLayer (Popover, the Popover-based Select, dropdown
+ * menus, plus Dialog/AlertDialog/Drawer) temporarily sets
+ * `document.body.style.pointerEvents = "none"` while it is open and restores
+ * it itself on close. If we strip that style while one of these is still
+ * open, Radix's own per-layer restore gets out of sync and can leave the
+ * whole page permanently unclickable (scroll still works, since that is not
+ * gated by pointer-events). So anything that can open a DismissableLayer must
+ * be included here and treated as "do not touch body/html right now".
+ */
+const OPEN_LAYER_SELECTOR = [
+  OPEN_CONTENT_SELECTOR,
+  '[data-slot="drawer-overlay"][data-state="open"]',
+  '[data-slot="dialog-overlay"][data-state="open"]',
+  '[data-slot="alert-dialog-overlay"][data-state="open"]',
+  '[data-slot="popover-content"][data-state="open"]',
+  '[data-slot="dropdown-menu-content"][data-state="open"]',
+  '[data-slot="dropdown-menu-sub-content"][data-state="open"]',
 ].join(", ");
 
 const OVERLAY_SELECTOR = [
@@ -45,39 +65,25 @@ const OVERLAY_SELECTOR = [
   '[data-slot="alert-dialog-content"]',
 ].join(", ");
 
-function overlayIsOffscreen(node: HTMLElement) {
-  const rect = node.getBoundingClientRect();
-  return (
-    rect.width < 8 ||
-    rect.height < 8 ||
-    rect.right < 8 ||
-    rect.left > window.innerWidth - 8 ||
-    rect.bottom < 8 ||
-    rect.top > window.innerHeight - 8
-  );
+function anyModalContentOpen() {
+  return Boolean(document.querySelector(OPEN_CONTENT_SELECTOR));
 }
 
-function isVisibleModalOpen() {
-  return [...document.querySelectorAll<HTMLElement>(OPEN_MODAL_SELECTOR)].some(
-    (node) => !overlayIsOffscreen(node),
-  );
+function anyOverlayLayerOpen() {
+  return Boolean(document.querySelector(OPEN_LAYER_SELECTOR));
 }
 
+/**
+ * Open overlays must stay interactive. Earlier logic used geometry during Vaul's
+ * enter animation and permanently set pointer-events:none on live drawers.
+ */
 function neutralizeStaleOverlays() {
-  const visibleOpenContent = isVisibleModalOpen();
-
   document.querySelectorAll<HTMLElement>(OVERLAY_SELECTOR).forEach((node) => {
-    const slot = node.getAttribute("data-slot") ?? "";
-    const isContent = slot.endsWith("-content");
     const open = node.getAttribute("data-state") === "open";
-
-    if (isContent) {
-      if (open && !overlayIsOffscreen(node)) return;
-      node.style.pointerEvents = "none";
+    if (open) {
+      node.style.removeProperty("pointer-events");
       return;
     }
-
-    if (open && visibleOpenContent) return;
     node.style.pointerEvents = "none";
   });
 }
@@ -104,7 +110,9 @@ export function restorePagePointerEvents() {
 
 export function unlockIdleDocument() {
   neutralizeStaleOverlays();
-  if (isVisibleModalOpen()) return;
+  // Popovers, the Popover-based Select, and dropdown menus manage the same
+  // body pointer-events lock themselves; touching it here would race them.
+  if (anyOverlayLayerOpen()) return;
   restorePagePointerEvents();
 }
 
@@ -139,7 +147,8 @@ export function UnlockingLink({
   href: string;
 }) {
   function unlock() {
-    restorePagePointerEvents();
+    // Never strip Vaul's body lock while a drawer/dialog is open — only clean
+    // up after dismiss or navigation when nothing is open.
     unlockIdleDocument();
   }
 
@@ -154,8 +163,8 @@ export function UnlockPageOnNavigate() {
   const pathname = usePathname();
 
   useEffect(() => {
-    restorePagePointerEvents();
     neutralizeStaleOverlays();
+    if (!anyOverlayLayerOpen()) restorePagePointerEvents();
   }, [pathname]);
 
   useEffect(() => {
@@ -176,19 +185,29 @@ export function UnlockPageOnNavigate() {
       attributeFilter: ["style", "class"],
     });
 
-    function onPointerDown(event: PointerEvent) {
+    function shouldSkipUnlock(event: Event) {
       const target = event.target;
-      if (!(target instanceof Element)) {
-        unlockIdleDocument();
-        return;
-      }
-      if (target.closest(OPEN_MODAL_SELECTOR)) return;
+      return target instanceof Element && Boolean(target.closest(OPEN_LAYER_SELECTOR));
+    }
+
+    function onPointerDown(event: PointerEvent) {
+      if (shouldSkipUnlock(event)) return;
+      unlockIdleDocument();
+    }
+
+    function onPointerUp(event: PointerEvent) {
+      if (shouldSkipUnlock(event)) return;
+      unlockIdleDocument();
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (shouldSkipUnlock(event)) return;
       unlockIdleDocument();
     }
 
     window.addEventListener("pointerdown", onPointerDown, true);
-    window.addEventListener("pointerup", unlockIdleDocument, true);
-    window.addEventListener("keydown", unlockIdleDocument, true);
+    window.addEventListener("pointerup", onPointerUp, true);
+    window.addEventListener("keydown", onKeyDown, true);
     window.addEventListener("popstate", unlockIdleDocument);
     document.addEventListener("visibilitychange", unlockIdleDocument);
     const poll = window.setInterval(unlockIdleDocument, 750);
@@ -200,8 +219,8 @@ export function UnlockPageOnNavigate() {
       window.clearInterval(poll);
       observer.disconnect();
       window.removeEventListener("pointerdown", onPointerDown, true);
-      window.removeEventListener("pointerup", unlockIdleDocument, true);
-      window.removeEventListener("keydown", unlockIdleDocument, true);
+      window.removeEventListener("pointerup", onPointerUp, true);
+      window.removeEventListener("keydown", onKeyDown, true);
       window.removeEventListener("popstate", unlockIdleDocument);
       document.removeEventListener("visibilitychange", unlockIdleDocument);
     };

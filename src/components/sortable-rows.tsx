@@ -1,127 +1,82 @@
 "use client";
 
-import { useEffect, useRef, useState, type ButtonHTMLAttributes, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
-import { GripVertical } from "lucide-react";
-import { restorePagePointerEvents } from "@/components/overlay-root";
+import { useEffect, useState } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export function DragHandle({
+export function ReorderButtons({
+  canMoveDown,
+  canMoveUp,
+  className,
   label,
-  ...props
-}: { label: string } & ButtonHTMLAttributes<HTMLButtonElement>) {
+  onMoveDown,
+  onMoveUp,
+}: {
+  canMoveDown: boolean;
+  canMoveUp: boolean;
+  className?: string;
+  label: string;
+  onMoveDown: () => void;
+  onMoveUp: () => void;
+}) {
   return (
-    <button
-      aria-label={label}
-      className="inline-flex size-11 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-muted-foreground active:cursor-grabbing"
-      data-drag-handle
-      type="button"
-      {...props}
+    <div
+      className={cn("flex shrink-0 flex-col", className)}
+      onClick={(event) => event.stopPropagation()}
+      onPointerDown={(event) => event.stopPropagation()}
     >
-      <GripVertical />
-    </button>
+      <Button
+        aria-label={`Move ${label} up`}
+        className="size-7 rounded-b-none"
+        disabled={!canMoveUp}
+        onClick={onMoveUp}
+        size="icon"
+        type="button"
+        variant="ghost"
+      >
+        <ChevronUp className="size-4" />
+      </Button>
+      <Button
+        aria-label={`Move ${label} down`}
+        className="size-7 rounded-t-none"
+        disabled={!canMoveDown}
+        onClick={onMoveDown}
+        size="icon"
+        type="button"
+        variant="ghost"
+      >
+        <ChevronDown className="size-4" />
+      </Button>
+    </div>
   );
 }
 
-function hitSortableId(listId: string, clientY: number): string | null {
-  const nodes = document.querySelectorAll<HTMLElement>(
-    `[data-sortable-list="${CSS.escape(listId)}"][data-sortable-id]`,
-  );
-  for (const node of nodes) {
-    const rect = node.getBoundingClientRect();
-    if (clientY >= rect.top && clientY <= rect.bottom) {
-      return node.getAttribute("data-sortable-id");
-    }
-  }
-  return null;
-}
-
-export function useSortableIds(listId: string, ids: string[], onReorder: (ids: string[]) => void) {
+export function useReorderableIds(ids: string[], onReorder: (ids: string[]) => void) {
   const [order, setOrder] = useState(ids);
-  const orderRef = useRef(ids);
-  const dragId = useRef<string | null>(null);
-  const didDrag = useRef(false);
-  const startY = useRef(0);
-  const skipClick = useRef(false);
-  const onReorderRef = useRef(onReorder);
-  onReorderRef.current = onReorder;
 
   useEffect(() => {
     setOrder(ids);
-    orderRef.current = ids;
   }, [ids]);
 
-  useEffect(() => {
-    function move(overId: string) {
-      const fromId = dragId.current;
-      if (!fromId || fromId === overId) return;
-      const current = orderRef.current;
-      const from = current.indexOf(fromId);
-      const to = current.indexOf(overId);
-      if (from < 0 || to < 0) return;
-      const next = [...current];
-      next.splice(from, 1);
-      next.splice(to, 0, fromId);
-      orderRef.current = next;
-      setOrder(next);
-      didDrag.current = true;
-    }
-
-    function endDrag() {
-      if (!dragId.current) return;
-      const moved = didDrag.current;
-      dragId.current = null;
-      didDrag.current = false;
-      restorePagePointerEvents();
-      if (moved) {
-        skipClick.current = true;
-        onReorderRef.current(orderRef.current);
-      }
-    }
-
-    function onMove(event: PointerEvent) {
-      if (!dragId.current) return;
-      if (!didDrag.current && Math.abs(event.clientY - startY.current) < 8) return;
-      didDrag.current = true;
-      const overId = hitSortableId(listId, event.clientY);
-      if (overId) move(overId);
-    }
-
-    window.addEventListener("pointermove", onMove, { passive: true });
-    window.addEventListener("pointerup", endDrag);
-    window.addEventListener("pointercancel", endDrag);
-    return () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", endDrag);
-      window.removeEventListener("pointercancel", endDrag);
-      dragId.current = null;
-      restorePagePointerEvents();
-    };
-  }, [listId]);
+  function move(id: string, direction: -1 | 1) {
+    const from = order.indexOf(id);
+    const to = from + direction;
+    if (from < 0 || to < 0 || to >= order.length) return;
+    const next = [...order];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item);
+    setOrder(next);
+    onReorder(next);
+  }
 
   return {
     order,
-    rowProps(id: string) {
-      return {
-        "data-sortable-id": id,
-        "data-sortable-list": listId,
-        onClickCapture(event: MouseEvent) {
-          if (!skipClick.current) return;
-          event.preventDefault();
-          event.stopPropagation();
-          skipClick.current = false;
-        },
-      };
+    moveDown(id: string) {
+      move(id, 1);
     },
-    handleProps(id: string) {
-      return {
-        onPointerDown(event: ReactPointerEvent<HTMLButtonElement>) {
-          if (event.button !== 0) return;
-          event.stopPropagation();
-          event.currentTarget.setPointerCapture(event.pointerId);
-          dragId.current = id;
-          startY.current = event.clientY;
-          didDrag.current = false;
-        },
-      };
+    moveUp(id: string) {
+      move(id, -1);
     },
   };
 }

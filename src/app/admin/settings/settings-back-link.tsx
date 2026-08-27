@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { restorePagePointerEvents, unlockIdleDocument } from "@/components/overlay-root";
+import { unlockIdleDocument } from "@/components/overlay-root";
 
 export function SettingsBackLink() {
   return (
@@ -9,11 +9,9 @@ export function SettingsBackLink() {
       className="text-sm text-muted-foreground hover:text-foreground"
       href="/admin/settings"
       onClick={() => {
-        restorePagePointerEvents();
         unlockIdleDocument();
       }}
       onPointerDown={() => {
-        restorePagePointerEvents();
         unlockIdleDocument();
       }}
     >

@@ -7,12 +7,13 @@ import { formatDate } from "@/lib/dates";
 import type { NoticeView } from "@/lib/notices";
 import { Button } from "@/components/ui/button";
 import {
-  Popover,
-  PopoverContent,
-  PopoverHeader,
-  PopoverTitle,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 
 export function NotificationBell({
   notices,
@@ -21,6 +22,7 @@ export function NotificationBell({
   notices: NoticeView[];
   unreadIds: string[];
 }) {
+  const [open, setOpen] = useState(false);
   const [unread, setUnread] = useState(unreadIds);
   const [pending, setPending] = useState(false);
 
@@ -39,8 +41,8 @@ export function NotificationBell({
   }
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
+    <Drawer direction="right" onOpenChange={setOpen} open={open}>
+      <DrawerTrigger asChild>
         <Button
           aria-label={unreadCount > 0 ? `${unreadCount} unread notices` : "Notices"}
           className="relative"
@@ -52,37 +54,31 @@ export function NotificationBell({
             <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-destructive" />
           ) : null}
         </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        align="end"
-        className="w-80 p-0 text-base"
-        onOpenAutoFocus={(event) => {
-          if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) {
-            event.preventDefault();
-          }
-        }}
-      >
-        <PopoverHeader className="flex flex-row items-center justify-between gap-2 px-3 py-2">
-          <PopoverTitle>Notices</PopoverTitle>
-          {unreadCount > 0 ? (
-            <Button
-              disabled={pending}
-              onClick={markAllRead}
-              size="xs"
-              variant="ghost"
-            >
-              Mark all as read
-            </Button>
-          ) : null}
-        </PopoverHeader>
+      </DrawerTrigger>
+      <DrawerContent className="sm:max-w-md">
+        <DrawerHeader className="border-b">
+          <div className="flex items-center justify-between gap-2 pr-8">
+            <div className="min-w-0">
+              <DrawerTitle>Notices</DrawerTitle>
+              <DrawerDescription className="sr-only">
+                Site notices for signed-in members
+              </DrawerDescription>
+            </div>
+            {unreadCount > 0 ? (
+              <Button disabled={pending} onClick={markAllRead} size="xs" variant="ghost">
+                Mark all as read
+              </Button>
+            ) : null}
+          </div>
+        </DrawerHeader>
         {notices.length === 0 ? (
-          <p className="px-3 pb-3 text-sm text-muted-foreground">Nothing in the bell right now.</p>
+          <p className="px-4 py-6 text-sm text-muted-foreground">Nothing in the bell right now.</p>
         ) : (
-          <div className="max-h-96 overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             {notices.map((notice) => {
               const isUnread = unreadSet.has(notice.id);
               return (
-                <div className="border-t px-3 py-3" key={notice.id}>
+                <div className="border-b px-4 py-3 last:border-0" key={notice.id}>
                   <div className="flex items-start gap-2">
                     {isUnread ? (
                       <span
@@ -105,7 +101,7 @@ export function NotificationBell({
             })}
           </div>
         )}
-      </PopoverContent>
-    </Popover>
+      </DrawerContent>
+    </Drawer>
   );
 }

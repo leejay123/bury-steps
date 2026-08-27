@@ -5,7 +5,7 @@ import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { OverlayRootContext, restorePagePointerEvents, unlockIdleDocument } from "@/components/overlay-root";
+import { OverlayRootContext, unlockIdleDocument } from "@/components/overlay-root";
 
 function AlertDialog({
   onOpenChange,
@@ -16,7 +16,7 @@ function AlertDialog({
       data-slot="alert-dialog"
       onOpenChange={(open) => {
         if (!open) {
-          restorePagePointerEvents();
+          unlockIdleDocument();
           window.setTimeout(unlockIdleDocument, 0);
           window.setTimeout(unlockIdleDocument, 250);
         }

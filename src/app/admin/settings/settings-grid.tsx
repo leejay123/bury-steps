@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { restorePagePointerEvents, unlockIdleDocument } from "@/components/overlay-root";
+import { unlockIdleDocument } from "@/components/overlay-root";
 
 export function SettingsGrid({
   items,
@@ -17,11 +17,9 @@ export function SettingsGrid({
           href={item.href}
           key={item.href}
           onClick={() => {
-            restorePagePointerEvents();
             unlockIdleDocument();
           }}
           onPointerDown={() => {
-            restorePagePointerEvents();
             unlockIdleDocument();
           }}
         >

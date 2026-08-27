@@ -4,7 +4,7 @@ import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { OverlayRootContext, restorePagePointerEvents, unlockIdleDocument } from "@/components/overlay-root";
+import { OverlayRootContext, unlockIdleDocument } from "@/components/overlay-root";
 
 function Dialog({
   onOpenChange,
@@ -15,7 +15,7 @@ function Dialog({
       data-slot="dialog"
       onOpenChange={(open) => {
         if (!open) {
-          restorePagePointerEvents();
+          unlockIdleDocument();
           window.setTimeout(unlockIdleDocument, 0);
           window.setTimeout(unlockIdleDocument, 250);
         }
