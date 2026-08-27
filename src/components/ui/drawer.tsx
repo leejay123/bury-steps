@@ -39,6 +39,7 @@ function Drawer({
   direction,
   onOpenChange,
   open,
+  repositionInputs = false,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
   // Only DrawerContent needs to stay mounted through the close animation
@@ -73,6 +74,15 @@ function Drawer({
             onOpenChange?.(next);
           }}
           open={open}
+          // Vaul's built-in keyboard/input repositioning has long-standing bugs
+          // on iOS Safari (emilkowalski/vaul#619, #503, #514): the drawer can
+          // get stuck mid-reposition — its content and overlay rendered in the
+          // wrong place, or the overlay missing entirely — until the user taps
+          // the screen again and forces a repaint. Disabling it and letting the
+          // browser handle the on-screen keyboard natively (it still scrolls a
+          // focused input into view) trades a slightly less polished animation
+          // for a layout that never gets stuck.
+          repositionInputs={repositionInputs}
           {...props}
         >
           {children}
