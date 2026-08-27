@@ -141,7 +141,13 @@ function DrawerContent({
       <DrawerPrimitive.Content
         data-slot="drawer-content"
         className={cn(
-          "group/drawer-content fixed z-[60] flex h-auto flex-col overflow-visible bg-background data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
+          // Vaul focuses this panel itself when it opens (there's no natural
+          // first focusable element to land on otherwise), which makes
+          // Safari draw its default blue focus ring around the whole sheet —
+          // that's the "blue border" along the drawer's edge on iPhone.
+          // Nothing inside needs *this* element's own outline; close/inputs
+          // keep their own focus-visible rings.
+          "group/drawer-content fixed z-[60] flex h-auto flex-col overflow-visible bg-background outline-hidden data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
           dismissed && "invisible !pointer-events-none",
           "data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:max-h-[80vh] data-[vaul-drawer-direction=top]:rounded-b-lg data-[vaul-drawer-direction=top]:border-b",
           "data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:max-h-[80vh] data-[vaul-drawer-direction=bottom]:rounded-t-lg data-[vaul-drawer-direction=bottom]:border-t",
