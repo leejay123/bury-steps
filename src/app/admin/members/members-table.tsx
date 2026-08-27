@@ -76,7 +76,7 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
+            <TableHead className="hidden md:table-cell">Email</TableHead>
             <TableHead>Role</TableHead>
             <TableHead>Joined</TableHead>
             <TableHead className="text-right">Clock-ins</TableHead>
@@ -102,16 +102,20 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
                     <span className="ml-2 text-xs text-muted-foreground">You</span>
                   ) : null}
                 </TableCell>
-                <TableCell className="text-muted-foreground">{member.email || "—"}</TableCell>
+                <TableCell className="hidden text-muted-foreground md:table-cell">
+                  {member.email || "—"}
+                </TableCell>
                 <TableCell>
                   <Badge variant={member.role === "ADMIN" ? "default" : "secondary"}>
                     {member.role === "ADMIN" ? "Organiser" : "Member"}
                   </Badge>
                 </TableCell>
-                <TableCell className="whitespace-normal text-muted-foreground">
+                <TableCell className="text-muted-foreground">
                   <div className="flex flex-col">
-                    <span className="tabular-nums">{formatDate(new Date(member.createdAt))}</span>
-                    <span className="text-xs">
+                    <span className="whitespace-nowrap tabular-nums">
+                      {formatDate(new Date(member.createdAt))}
+                    </span>
+                    <span className="whitespace-nowrap text-xs">
                       {formatMembershipAge(new Date(member.createdAt))}
                     </span>
                   </div>
