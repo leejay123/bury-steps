@@ -39,7 +39,7 @@ function GuideBody({ children }: { children: React.ReactNode }) {
 
 export function OrganiserGuide() {
   return (
-    <Accordion className="w-full" defaultValue={["what"]} type="multiple">
+    <Accordion className="w-full" collapsible defaultValue="what" type="single">
       <AccordionItem className="px-4 md:px-8" value="what">
           <AccordionTrigger className="text-base">What this site is for</AccordionTrigger>
           <AccordionContent>
@@ -77,9 +77,9 @@ export function OrganiserGuide() {
                 in the bell, and look back over every walk they have clocked in to.
               </p>
               <p>
-                <Badge>Organisers</Badge> also get Members, Settings, and this Guide. You create
-                walks, share the link, see the roster and any health notes, manage who is in the
-                group, and edit the homepage.
+                <Badge>Organisers</Badge> also get Members, Settings, and this Guide in the top
+                menu. You create walks, share the link, see the roster and any health notes, manage
+                who is in the group, and edit the homepage.
               </p>
               <p>
                 The first person to sign in becomes an organiser. Everyone after that is a member.
@@ -95,7 +95,9 @@ export function OrganiserGuide() {
             <GuideBody>
               <p>
                 Sign in and join happen on the account pages at accounts.burysteps-walkinggroup.co.uk.
-                After signing in, members land on Walks. Organisers are sent to Organiser tools.
+                After signing in, members land on Walks. Organisers are sent to Walks in Organiser
+                tools. Walks, Members, Settings, and this Guide stay in the top menu — there is no
+                second row of tabs.
               </p>
               <p>
                 Signed-in people can open their profile from the round button in the top-right
@@ -114,9 +116,10 @@ export function OrganiserGuide() {
           <AccordionContent>
             <GuideBody>
               <p>
-                Open <Link href="/admin">Walks</Link>. Upcoming walks are on one tab. History is
-                every finished walk, with a search box. Click a row to open the walk. History shows
-                how many people clocked in, not how many are still on the walk.
+                Open <Link href="/admin">Walks</Link> from the menu. Upcoming and History are tabs
+                on that page. History is every finished walk, with a search box. Click a row to
+                open the walk. History shows how many people clocked in, not how many are still on
+                the walk.
               </p>
               <p className="font-medium text-foreground">Create a walk</p>
               <Steps>

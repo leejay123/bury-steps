@@ -4,6 +4,8 @@ import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { MAX_FAQ_CATEGORIES, MAX_HOMEPAGE_FAQS } from "@/lib/faqs";
 import { MAX_SITE_NOTICES } from "@/lib/notices";
+import { AdminPageIntro } from "../admin-page-intro";
+import { FullWidthDivider } from "@/components/full-width-divider";
 import { SettingsGrid } from "./settings-grid";
 
 export const dynamic = "force-dynamic";
@@ -51,5 +53,16 @@ export default async function AdminSettingsPage() {
     },
   ];
 
-  return <SettingsGrid items={items} />;
+  return (
+    <div className="flex flex-col">
+      <div className="relative px-4 py-6 md:px-8">
+        <AdminPageIntro
+          description="Homepage photos, quotes, FAQs, notices, and the site colour."
+          title="Settings"
+        />
+        <FullWidthDivider position="bottom" />
+      </div>
+      <SettingsGrid items={items} />
+    </div>
+  );
 }
