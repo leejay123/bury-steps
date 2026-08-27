@@ -55,7 +55,7 @@ export function HomeCarousel({
                 src={slide.src}
                 alt={slide.alt}
                 className={cn(
-                  "block w-full object-cover",
+                  "block w-full touch-manipulation object-cover",
                   framed ? "aspect-[2/1]" : "h-auto object-contain",
                 )}
               />

@@ -58,7 +58,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           signUpFallbackRedirectUrl={AFTER_AUTH_PATH}
         >
           <div className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x">
-            <header className="sticky top-0 z-40 bg-white/70 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/55">
+            <header className="sticky top-0 z-40 touch-manipulation bg-white/70 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/55">
               <div className="relative">
                 <div className="flex h-14 items-center justify-between gap-3 px-4 md:grid md:grid-cols-[1fr_auto_1fr] md:px-6">
                   <Link href="/" className="flex h-8 min-w-0 items-center justify-self-start">

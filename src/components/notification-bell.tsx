@@ -54,7 +54,15 @@ export function NotificationBell({
           ) : null}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0">
+      <PopoverContent
+        align="end"
+        className="w-80 p-0 text-base"
+        onOpenAutoFocus={(event) => {
+          if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) {
+            event.preventDefault();
+          }
+        }}
+      >
         <PopoverHeader className="flex flex-row items-center justify-between gap-2 px-3 py-2">
           <PopoverTitle>Notices</PopoverTitle>
           {unreadCount > 0 ? (

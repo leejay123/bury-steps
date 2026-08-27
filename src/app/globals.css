@@ -109,6 +109,7 @@
   input[type="radio"]:not(:disabled),
   input[type="file"]:not(:disabled) {
     cursor: pointer;
+    touch-action: manipulation;
   }
 }
 
