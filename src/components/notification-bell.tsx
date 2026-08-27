@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
 import { markSiteNoticesRead } from "@/server/actions";
 import { formatDate } from "@/lib/dates";
@@ -22,7 +22,7 @@ export function NotificationBell({
   unreadIds: string[];
 }) {
   const [unread, setUnread] = useState(unreadIds);
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
 
   useEffect(() => {
     setUnread(unreadIds);
@@ -34,9 +34,8 @@ export function NotificationBell({
   function markAllRead() {
     if (unreadCount === 0 || pending) return;
     setUnread([]);
-    startTransition(() => {
-      void markSiteNoticesRead();
-    });
+    setPending(true);
+    void markSiteNoticesRead().finally(() => setPending(false));
   }
 
   return (

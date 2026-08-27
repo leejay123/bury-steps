@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { formatDateTime, formatTime } from "@/lib/dates";
+import { DataList, DataListBody, DataListItem } from "@/components/data-list";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -12,14 +13,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 export type WalkAttendanceRow = {
   id: string;
@@ -47,48 +40,28 @@ export function WalkAttendanceTable({ rows }: { rows: WalkAttendanceRow[] }) {
 
   return (
     <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Member</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="w-24 text-right">Time</TableHead>
-            <TableHead className="w-8">
-              <span className="sr-only">Open</span>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.id} onClick={() => setOpenId(row.id)}>
-              <TableCell>
-                <div className="flex items-center gap-2.5">
-                  <Avatar className="size-7">
-                    <AvatarFallback className="text-xs">{row.initials}</AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">{row.name}</p>
-                    <p className="truncate text-xs text-muted-foreground">{row.email}</p>
-                  </div>
-                </div>
-              </TableCell>
-              <TableCell>
-                {row.clockedOutAt ? (
-                  <Badge variant="secondary">Clocked out</Badge>
-                ) : (
-                  <Badge variant="outline">On the walk</Badge>
-                )}
-              </TableCell>
-              <TableCell className="text-right tabular-nums">
+      <DataList>
+        {rows.map((row) => (
+          <DataListItem key={row.id} onClick={() => setOpenId(row.id)}>
+            <Avatar className="size-7 shrink-0">
+              <AvatarFallback className="text-xs">{row.initials}</AvatarFallback>
+            </Avatar>
+            <DataListBody>
+              <p className="font-medium">{row.name}</p>
+              <p className="text-sm text-muted-foreground wrap-break-word">{row.email}</p>
+              <p className="text-xs text-muted-foreground tabular-nums">
                 {formatTime(new Date(row.clockedInAt))}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                <ChevronRight className="size-4" />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+              </p>
+            </DataListBody>
+            {row.clockedOutAt ? (
+              <Badge variant="secondary">Clocked out</Badge>
+            ) : (
+              <Badge variant="outline">On the walk</Badge>
+            )}
+            <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+          </DataListItem>
+        ))}
+      </DataList>
 
       <Drawer
         direction="right"

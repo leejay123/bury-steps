@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, type ButtonHTMLAttributes, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useState, type ButtonHTMLAttributes, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { GripVertical } from "lucide-react";
+import { restorePagePointerEvents } from "@/components/overlay-root";
 
 export function DragHandle({
   label,
@@ -10,27 +11,36 @@ export function DragHandle({
   return (
     <button
       aria-label={label}
-      className="inline-flex cursor-grab touch-none text-muted-foreground active:cursor-grabbing"
+      className="inline-flex size-11 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-muted-foreground active:cursor-grabbing"
       data-drag-handle
       type="button"
       {...props}
     >
-      <GripVertical className="size-4" />
+      <GripVertical />
     </button>
   );
 }
 
-function clearDragStyles() {
-  document.body.style.removeProperty("cursor");
-  document.body.style.removeProperty("user-select");
-  document.body.style.removeProperty("touch-action");
+function hitSortableId(listId: string, clientY: number): string | null {
+  const nodes = document.querySelectorAll<HTMLElement>(
+    `[data-sortable-list="${CSS.escape(listId)}"][data-sortable-id]`,
+  );
+  for (const node of nodes) {
+    const rect = node.getBoundingClientRect();
+    if (clientY >= rect.top && clientY <= rect.bottom) {
+      return node.getAttribute("data-sortable-id");
+    }
+  }
+  return null;
 }
 
-export function useSortableIds(ids: string[], onReorder: (ids: string[]) => void) {
+export function useSortableIds(listId: string, ids: string[], onReorder: (ids: string[]) => void) {
   const [order, setOrder] = useState(ids);
   const orderRef = useRef(ids);
   const dragId = useRef<string | null>(null);
   const didDrag = useRef(false);
+  const startY = useRef(0);
+  const skipClick = useRef(false);
   const onReorderRef = useRef(onReorder);
   onReorderRef.current = onReorder;
 
@@ -55,62 +65,61 @@ export function useSortableIds(ids: string[], onReorder: (ids: string[]) => void
       didDrag.current = true;
     }
 
+    function endDrag() {
+      if (!dragId.current) return;
+      const moved = didDrag.current;
+      dragId.current = null;
+      didDrag.current = false;
+      restorePagePointerEvents();
+      if (moved) {
+        skipClick.current = true;
+        onReorderRef.current(orderRef.current);
+      }
+    }
+
     function onMove(event: PointerEvent) {
       if (!dragId.current) return;
-      event.preventDefault();
-      const under = document.elementFromPoint(event.clientX, event.clientY);
-      const overId = under?.closest("[data-sortable-id]")?.getAttribute("data-sortable-id");
+      if (!didDrag.current && Math.abs(event.clientY - startY.current) < 8) return;
+      didDrag.current = true;
+      const overId = hitSortableId(listId, event.clientY);
       if (overId) move(overId);
     }
 
-    function onUp() {
-      if (!dragId.current) return;
-      dragId.current = null;
-      clearDragStyles();
-      if (didDrag.current) {
-        onReorderRef.current(orderRef.current);
-        const swallow = (event: Event) => {
-          event.stopPropagation();
-          event.preventDefault();
-        };
-        window.addEventListener("click", swallow, { capture: true, once: true });
-        window.setTimeout(() => {
-          window.removeEventListener("click", swallow, true);
-        }, 400);
-      }
-      didDrag.current = false;
-    }
-
-    window.addEventListener("pointermove", onMove, { passive: false });
-    window.addEventListener("pointerup", onUp, true);
-    window.addEventListener("pointercancel", onUp, true);
-    window.addEventListener("blur", onUp);
+    window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerup", endDrag);
+    window.addEventListener("pointercancel", endDrag);
     return () => {
       window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp, true);
-      window.removeEventListener("pointercancel", onUp, true);
-      window.removeEventListener("blur", onUp);
-      clearDragStyles();
+      window.removeEventListener("pointerup", endDrag);
+      window.removeEventListener("pointercancel", endDrag);
       dragId.current = null;
+      restorePagePointerEvents();
     };
-  }, []);
+  }, [listId]);
 
   return {
     order,
     rowProps(id: string) {
-      return { "data-sortable-id": id };
+      return {
+        "data-sortable-id": id,
+        "data-sortable-list": listId,
+        onClickCapture(event: MouseEvent) {
+          if (!skipClick.current) return;
+          event.preventDefault();
+          event.stopPropagation();
+          skipClick.current = false;
+        },
+      };
     },
     handleProps(id: string) {
       return {
         onPointerDown(event: ReactPointerEvent<HTMLButtonElement>) {
           if (event.button !== 0) return;
-          event.preventDefault();
           event.stopPropagation();
+          event.currentTarget.setPointerCapture(event.pointerId);
           dragId.current = id;
+          startY.current = event.clientY;
           didDrag.current = false;
-          document.body.style.cursor = "grabbing";
-          document.body.style.userSelect = "none";
-          document.body.style.touchAction = "none";
         },
       };
     },

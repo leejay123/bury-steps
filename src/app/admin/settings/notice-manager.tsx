@@ -14,6 +14,7 @@ import {
 import type { NoticeView } from "@/lib/notices";
 import { formatDate } from "@/lib/dates";
 import { EmptyState } from "@/components/empty-state";
+import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,14 +27,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -256,50 +249,32 @@ export function SiteNoticeManager({
           title="No notices yet"
         />
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Notice</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead className="hidden sm:table-cell">Added</TableHead>
-              <TableHead className="w-24 text-right">
-                <span className="sr-only">Remove</span>
-              </TableHead>
-              <TableHead className="w-8">
-                <span className="sr-only">Edit</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {notices.map((notice, index) => (
-              <TableRow
-                className="cursor-pointer"
-                key={notice.id}
-                onClick={() => setMode({ type: "edit", notice, index })}
-              >
-                <TableCell className="font-medium">Notice {index + 1}</TableCell>
-                <TableCell className="text-muted-foreground">{notice.title}</TableCell>
-                <TableCell className="hidden text-muted-foreground sm:table-cell">
-                  {formatDate(notice.createdAt)}
-                </TableCell>
-                <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
-                  <RemoveNoticeButton
-                    noticeId={notice.id}
-                    onRemoved={() =>
-                      setMode((current) =>
-                        current?.type === "edit" && current.notice.id === notice.id ? null : current,
-                      )
-                    }
-                    title={notice.title}
-                  />
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  <ChevronRight className="size-4" />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <DataList>
+          {notices.map((notice, index) => (
+            <DataListItem
+              key={notice.id}
+              onClick={() => setMode({ type: "edit", notice, index })}
+            >
+              <DataListBody>
+                <p className="font-medium">Notice {index + 1}</p>
+                <p className="text-sm text-muted-foreground wrap-break-word">{notice.title}</p>
+                <p className="text-xs text-muted-foreground">{formatDate(notice.createdAt)}</p>
+              </DataListBody>
+              <DataListActions>
+                <RemoveNoticeButton
+                  noticeId={notice.id}
+                  onRemoved={() =>
+                    setMode((current) =>
+                      current?.type === "edit" && current.notice.id === notice.id ? null : current,
+                    )
+                  }
+                  title={notice.title}
+                />
+              </DataListActions>
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+            </DataListItem>
+          ))}
+        </DataList>
       )}
 
       <Drawer

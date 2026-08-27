@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState } from "react";
 import { ChevronRight, Footprints } from "lucide-react";
 import { toast } from "sonner";
 import { getMemberHistory, type MemberHistoryItem } from "@/server/actions";
@@ -8,6 +8,7 @@ import { formatDate, formatMembershipAge } from "@/lib/dates";
 import { DeleteMemberButton } from "./delete-member-button";
 import { EmptyState } from "@/components/empty-state";
 import { AttendanceHistory } from "@/components/attendance-history";
+import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
 import { Badge } from "@/components/ui/badge";
 import {
   Drawer,
@@ -17,14 +18,6 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 type MemberRow = {
   id: string;
@@ -46,25 +39,30 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
     createdAt: string;
     items: MemberHistoryItem[];
   } | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [loading, setLoading] = useState(false);
+  const requestRef = useRef(0);
 
-  function openMember(id: string) {
+  async function openMember(id: string) {
+    const request = ++requestRef.current;
     setOpenId(id);
     setHistory(null);
-    startTransition(async () => {
-      try {
-        const result = await getMemberHistory(id);
-        if (!result) {
-          toast.error("Could not find that member.");
-          setOpenId(null);
-          return;
-        }
-        setHistory(result);
-      } catch {
-        toast.error("Could not load that member’s walks.");
+    setLoading(true);
+    try {
+      const result = await getMemberHistory(id);
+      if (request !== requestRef.current) return;
+      if (!result) {
+        toast.error("Could not find that member.");
         setOpenId(null);
+        return;
       }
-    });
+      setHistory(result);
+    } catch {
+      if (request !== requestRef.current) return;
+      toast.error("Could not load that member’s walks.");
+      setOpenId(null);
+    } finally {
+      if (request === requestRef.current) setLoading(false);
+    }
   }
 
   const selected = members.find((member) => member.id === openId);
@@ -72,80 +70,51 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
 
   return (
     <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead className="hidden md:table-cell">Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Joined</TableHead>
-            <TableHead className="text-right">Clock-ins</TableHead>
-            <TableHead className="w-20 text-right">
-              <span className="sr-only">Remove</span>
-            </TableHead>
-            <TableHead className="w-8">
-              <span className="sr-only">Open</span>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {members.map((member) => {
-            return (
-              <TableRow
-                className="cursor-pointer"
-                key={member.id}
-                onClick={() => openMember(member.id)}
-              >
-                <TableCell className="font-medium">
-                  {member.name}
-                  {member.isYou ? (
-                    <span className="ml-2 text-xs text-muted-foreground">You</span>
-                  ) : null}
-                </TableCell>
-                <TableCell className="hidden text-muted-foreground md:table-cell">
-                  {member.email || "—"}
-                </TableCell>
-                <TableCell>
-                  <Badge variant={member.role === "ADMIN" ? "default" : "secondary"}>
-                    {member.role === "ADMIN" ? "Organiser" : "Member"}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  <div className="flex flex-col">
-                    <span className="whitespace-nowrap tabular-nums">
-                      {formatDate(new Date(member.createdAt))}
-                    </span>
-                    <span className="whitespace-nowrap text-xs">
-                      {formatMembershipAge(new Date(member.createdAt))}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-right tabular-nums">{member.attendanceCount}</TableCell>
-                <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
-                  {member.isYou ? (
-                    <span className="text-xs text-muted-foreground">—</span>
-                  ) : (
-                    <DeleteMemberButton
-                      attendanceCount={member.attendanceCount}
-                      name={member.name}
-                      userId={member.id}
-                      walkCount={member.walkCount}
-                    />
-                  )}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  <ChevronRight className="size-4" />
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+      <DataList>
+        {members.map((member) => (
+          <DataListItem key={member.id} onClick={() => openMember(member.id)}>
+            <DataListBody>
+              <p className="font-medium">
+                {member.name}
+                {member.isYou ? (
+                  <span className="ml-2 text-xs font-normal text-muted-foreground">You</span>
+                ) : null}
+              </p>
+              <p className="text-sm text-muted-foreground wrap-break-word">
+                {member.email || "No email"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {formatDate(new Date(member.createdAt))} ·{" "}
+                {formatMembershipAge(new Date(member.createdAt))} · {member.attendanceCount}{" "}
+                {member.attendanceCount === 1 ? "clock-in" : "clock-ins"}
+              </p>
+            </DataListBody>
+            <Badge variant={member.role === "ADMIN" ? "default" : "secondary"}>
+              {member.role === "ADMIN" ? "Organiser" : "Member"}
+            </Badge>
+            <DataListActions>
+              {member.isYou ? (
+                <span className="text-xs text-muted-foreground">—</span>
+              ) : (
+                <DeleteMemberButton
+                  attendanceCount={member.attendanceCount}
+                  name={member.name}
+                  userId={member.id}
+                  walkCount={member.walkCount}
+                />
+              )}
+            </DataListActions>
+            <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+          </DataListItem>
+        ))}
+      </DataList>
 
       <Drawer
         direction="right"
         onOpenChange={(open) => {
           if (!open) {
+            requestRef.current += 1;
+            setLoading(false);
             setOpenId(null);
             setHistory(null);
           }
@@ -162,7 +131,7 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
             </DrawerDescription>
           </DrawerHeader>
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pb-6">
-            {pending && !history ? (
+            {loading && !history ? (
               <div className="flex flex-col gap-3">
                 <Skeleton className="h-4 w-40" />
                 <Skeleton className="h-16 w-full" />
@@ -188,7 +157,6 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
                   {formatDate(new Date(history.items[history.items.length - 1].clockedInAt))}
                 </p>
                 <AttendanceHistory
-                  layout="list"
                   rows={history.items.map((item) => ({
                     id: item.id,
                     title: item.walkTitle,

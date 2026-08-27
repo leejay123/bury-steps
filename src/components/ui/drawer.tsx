@@ -4,10 +4,17 @@ import * as React from "react";
 import { X } from "lucide-react";
 import { Drawer as DrawerPrimitive } from "vaul";
 import { cn } from "@/lib/utils";
-import { OverlayRootContext, restorePagePointerEvents, useOverlayPresence } from "@/components/overlay-root";
+import {
+  OverlayRootContext,
+  restorePagePointerEvents,
+  unlockIdleDocument,
+  useOverlayPresence,
+} from "@/components/overlay-root";
 
 const overlayCloseClassName =
   "absolute top-3 right-3 z-10 flex size-8 cursor-pointer items-center justify-center rounded-md opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
+
+const DrawerOpenContext = React.createContext<boolean | undefined>(undefined);
 
 function Drawer({
   children,
@@ -22,17 +29,23 @@ function Drawer({
   }, []);
 
   return (
-    <DrawerPrimitive.Root
-      data-slot="drawer"
-      onOpenChange={(next) => {
-        if (!next) restorePagePointerEvents();
-        onOpenChange?.(next);
-      }}
-      open={open}
-      {...props}
-    >
-      {shouldRender ? children : null}
-    </DrawerPrimitive.Root>
+    <DrawerOpenContext.Provider value={open}>
+      <DrawerPrimitive.Root
+        data-slot="drawer"
+        onOpenChange={(next) => {
+          if (!next) {
+            restorePagePointerEvents();
+            window.setTimeout(unlockIdleDocument, 0);
+            window.setTimeout(unlockIdleDocument, 250);
+          }
+          onOpenChange?.(next);
+        }}
+        open={open}
+        {...props}
+      >
+        {shouldRender ? children : null}
+      </DrawerPrimitive.Root>
+    </DrawerOpenContext.Provider>
   );
 }
 
@@ -50,16 +63,22 @@ function DrawerClose({ ...props }: React.ComponentProps<typeof DrawerPrimitive.C
 
 function DrawerOverlay({
   className,
+  style,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Overlay>) {
+  const open = React.useContext(DrawerOpenContext);
+  const dismissed = open === false;
+
   return (
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-black/30 backdrop-blur-sm data-[state=closed]:!pointer-events-none data-[state=open]:animate-in data-[state=open]:fade-in-0",
+        "fixed inset-0 z-50 bg-black/30 backdrop-blur-sm data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:animate-in data-[state=open]:fade-in-0",
+        dismissed && "invisible !pointer-events-none",
         className,
       )}
       {...props}
+      style={dismissed ? { ...style, pointerEvents: "none" } : style}
     />
   );
 }
@@ -68,9 +87,12 @@ function DrawerContent({
   className,
   children,
   showCloseButton = true,
+  style,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content> & { showCloseButton?: boolean }) {
   const [root, setRoot] = React.useState<HTMLElement | null>(null);
+  const open = React.useContext(DrawerOpenContext);
+  const dismissed = open === false;
 
   return (
     <DrawerPortal>
@@ -78,7 +100,8 @@ function DrawerContent({
       <DrawerPrimitive.Content
         data-slot="drawer-content"
         className={cn(
-          "group/drawer-content fixed z-50 flex h-auto flex-col overflow-visible bg-background data-[state=closed]:!pointer-events-none",
+          "group/drawer-content fixed z-50 flex h-auto flex-col overflow-visible bg-background data-[state=closed]:invisible data-[state=closed]:!pointer-events-none",
+          dismissed && "invisible !pointer-events-none",
           "data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:max-h-[80vh] data-[vaul-drawer-direction=top]:rounded-b-lg data-[vaul-drawer-direction=top]:border-b",
           "data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:max-h-[80vh] data-[vaul-drawer-direction=bottom]:rounded-t-lg data-[vaul-drawer-direction=bottom]:border-t",
           "data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:h-full data-[vaul-drawer-direction=right]:w-full data-[vaul-drawer-direction=right]:border-l data-[vaul-drawer-direction=right]:sm:max-w-lg",
@@ -87,6 +110,7 @@ function DrawerContent({
         )}
         ref={setRoot}
         {...props}
+        style={dismissed ? { ...style, pointerEvents: "none" } : style}
       >
         <OverlayRootContext.Provider value={root}>
           <div className="mx-auto mt-4 hidden h-2 w-[100px] shrink-0 rounded-full bg-muted group-data-[vaul-drawer-direction=bottom]/drawer-content:block" />

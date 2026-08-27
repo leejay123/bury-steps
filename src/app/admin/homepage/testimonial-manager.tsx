@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Quote } from "lucide-react";
@@ -16,6 +16,7 @@ import type { TestimonialView } from "@/lib/testimonials";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { EmptyState } from "@/components/empty-state";
 import { DragHandle, useSortableIds } from "@/components/sortable-rows";
+import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,14 +29,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -291,13 +284,10 @@ export function HomepageTestimonialManager({
   testimonials: TestimonialView[];
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
-  const [, startTransition] = useTransition();
   const testimonialIds = testimonials.map((item) => item.id);
-  const { handleProps, order, rowProps } = useSortableIds(testimonialIds, (ids) => {
+  const { handleProps, order, rowProps } = useSortableIds("testimonials", testimonialIds, (ids) => {
     if (ids.join() === testimonialIds.join()) return;
-    startTransition(() => {
-      void reorderHomepageTestimonials(ids);
-    });
+    void reorderHomepageTestimonials(ids);
   });
   const sorted = order
     .map((id) => testimonials.find((item) => item.id === id))
@@ -334,55 +324,38 @@ export function HomepageTestimonialManager({
           title="No testimonials yet"
         />
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-8">
-                <span className="sr-only">Reorder</span>
-              </TableHead>
-              <TableHead>Testimonial</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead className="w-20 text-right">
-                <span className="sr-only">Remove</span>
-              </TableHead>
-              <TableHead className="w-8">
-                <span className="sr-only">Edit</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sorted.map((testimonial, index) => (
-              <TableRow
-                className="relative cursor-pointer"
-                key={testimonial.id}
-                onClick={() => setMode({ type: "edit", testimonial, index })}
-                {...rowProps(testimonial.id)}
-              >
-                <TableCell onClick={(event) => event.stopPropagation()}>
-                  <DragHandle label={`Reorder testimonial ${index + 1}`} {...handleProps(testimonial.id)} />
-                </TableCell>
-                <TableCell className="font-medium">Testimonial {index + 1}</TableCell>
-                <TableCell className="text-muted-foreground">{testimonial.name}</TableCell>
-                <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
-                  <RemoveTestimonialButton
-                    name={testimonial.name}
-                    onRemoved={() =>
-                      setMode((current) =>
-                        current?.type === "edit" && current.testimonial.id === testimonial.id
-                          ? null
-                          : current,
-                      )
-                    }
-                    testimonialId={testimonial.id}
-                  />
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  <ChevronRight className="size-4" />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <DataList>
+          {sorted.map((testimonial, index) => (
+            <DataListItem
+              key={testimonial.id}
+              onClick={() => setMode({ type: "edit", testimonial, index })}
+              {...rowProps(testimonial.id)}
+            >
+              <DragHandle
+                label={`Reorder testimonial ${index + 1}`}
+                {...handleProps(testimonial.id)}
+              />
+              <DataListBody>
+                <p className="font-medium">Testimonial {index + 1}</p>
+                <p className="text-sm text-muted-foreground">{testimonial.name}</p>
+              </DataListBody>
+              <DataListActions>
+                <RemoveTestimonialButton
+                  name={testimonial.name}
+                  onRemoved={() =>
+                    setMode((current) =>
+                      current?.type === "edit" && current.testimonial.id === testimonial.id
+                        ? null
+                        : current,
+                    )
+                  }
+                  testimonialId={testimonial.id}
+                />
+              </DataListActions>
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+            </DataListItem>
+          ))}
+        </DataList>
       )}
 
       <Drawer

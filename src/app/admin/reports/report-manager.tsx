@@ -14,6 +14,7 @@ import {
 import { formatWalkDay, formatTime, utcToLondonWallClock } from "@/lib/dates";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { EmptyState } from "@/components/empty-state";
+import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,14 +33,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -232,7 +225,7 @@ function RemoveButton({ reportId, title }: { reportId: string; title: string }) 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button size="sm" variant="destructive">
+        <Button size="xs" variant="destructive">
           Remove
         </Button>
       </AlertDialogTrigger>
@@ -282,56 +275,35 @@ export function AccidentReportManager({
           title="No accident reports yet"
         />
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>When</TableHead>
-              <TableHead>Time</TableHead>
-              <TableHead>Walk</TableHead>
-              <TableHead>What happened</TableHead>
-              <TableHead className="w-20 text-right">
-                <span className="sr-only">Remove</span>
-              </TableHead>
-              <TableHead className="w-8">
-                <span className="sr-only">Open</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {reports.map((report) => {
-              const at = new Date(report.happenedAt);
-              return (
-                <TableRow
-                  className="relative cursor-pointer"
-                  key={report.id}
-                  onClick={() => setMode({ type: "edit", report })}
-                >
-                  <TableCell>{formatWalkDay(at)}</TableCell>
-                  <TableCell>{formatTime(at)}</TableCell>
-                  <TableCell>{report.walkTitle || "—"}</TableCell>
-                  <TableCell className="max-w-[20rem] truncate">{report.whatHappened}</TableCell>
-                  <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
-                    <div className="flex justify-end gap-2">
-                      <Button asChild size="sm" variant="outline">
-                        <a href={`/admin/reports/${report.id}/print`} rel="noreferrer" target="_blank">
-                          <Printer data-icon="inline-start" />
-                          Print
-                        </a>
-                      </Button>
-                      <RemoveButton
-                        reportId={report.id}
-                        title={formatWalkDay(at)}
-                      />
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    <ChevronRight className="size-4" />
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+        <DataList>
+          {reports.map((report) => {
+            const at = new Date(report.happenedAt);
+            return (
+              <DataListItem
+                key={report.id}
+                onClick={() => setMode({ type: "edit", report })}
+              >
+                <DataListBody>
+                  <p className="font-medium">
+                    {formatWalkDay(at)} · {formatTime(at)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">{report.walkTitle || "No walk"}</p>
+                  <p className="text-sm text-muted-foreground wrap-break-word">{report.whatHappened}</p>
+                </DataListBody>
+                <DataListActions>
+                  <Button asChild size="xs" variant="outline">
+                    <a href={`/admin/reports/${report.id}/print`} rel="noreferrer" target="_blank">
+                      <Printer data-icon="inline-start" />
+                      Print
+                    </a>
+                  </Button>
+                  <RemoveButton reportId={report.id} title={formatWalkDay(at)} />
+                </DataListActions>
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+              </DataListItem>
+            );
+          })}
+        </DataList>
       )}
 
       <Drawer
@@ -346,7 +318,7 @@ export function AccidentReportManager({
             <DrawerTitle>{editing ? "Edit report" : "Add a report"}</DrawerTitle>
             <DrawerDescription>
               {editing
-                ? "Change the details, then save. Print from the table if you need a PDF."
+                ? "Change the details, then save. Print from the list if you need a PDF."
                 : "Fill in what happened. You can print the report after it is saved."}
             </DrawerDescription>
           </DrawerHeader>

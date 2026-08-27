@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { restorePagePointerEvents, unlockIdleDocument } from "@/components/overlay-root";
 
 export function SettingsGrid({
   items,
@@ -15,6 +16,14 @@ export function SettingsGrid({
           className="flex items-start justify-between gap-3 bg-background px-4 py-5 hover:bg-neutral-100 md:px-6"
           href={item.href}
           key={item.href}
+          onClick={() => {
+            restorePagePointerEvents();
+            unlockIdleDocument();
+          }}
+          onPointerDown={() => {
+            restorePagePointerEvents();
+            unlockIdleDocument();
+          }}
         >
           <div className="flex flex-col gap-1">
             <p className="font-semibold leading-none">{item.title}</p>

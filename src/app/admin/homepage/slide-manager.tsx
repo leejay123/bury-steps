@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { ChevronRight, ImageIcon } from "lucide-react";
@@ -16,6 +16,7 @@ import type { SlideView } from "@/lib/slides";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { EmptyState } from "@/components/empty-state";
 import { DragHandle, useSortableIds } from "@/components/sortable-rows";
+import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,14 +28,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -233,13 +226,10 @@ export function HomepageSlideManager({
   slides: SlideView[];
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
-  const [, startTransition] = useTransition();
   const slideIds = slides.map((item) => item.id);
-  const { handleProps, order, rowProps } = useSortableIds(slideIds, (ids) => {
+  const { handleProps, order, rowProps } = useSortableIds("slides", slideIds, (ids) => {
     if (ids.join() === slideIds.join()) return;
-    startTransition(() => {
-      void reorderHomepageSlides(ids);
-    });
+    void reorderHomepageSlides(ids);
   });
   const sorted = order
     .map((id) => slides.find((item) => item.id === id))
@@ -275,62 +265,39 @@ export function HomepageSlideManager({
           title="No slides yet"
         />
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-8">
-                <span className="sr-only">Reorder</span>
-              </TableHead>
-              <TableHead className="w-16">Photo</TableHead>
-              <TableHead>Slide</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead className="w-20 text-right">
-                <span className="sr-only">Remove</span>
-              </TableHead>
-              <TableHead className="w-8">
-                <span className="sr-only">Edit</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sorted.map((slide, index) => (
-              <TableRow
-                className="relative cursor-pointer"
-                key={slide.id}
-                onClick={() => setMode({ type: "edit", slide, index })}
-                {...rowProps(slide.id)}
-              >
-                <TableCell onClick={(event) => event.stopPropagation()}>
-                  <DragHandle label={`Reorder slide ${index + 1}`} {...handleProps(slide.id)} />
-                </TableCell>
-                <TableCell>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    alt=""
-                    className="size-10 rounded-md object-cover"
-                    src={slide.src}
-                  />
-                </TableCell>
-                <TableCell className="font-medium">Slide {index + 1}</TableCell>
-                <TableCell className="text-muted-foreground">{slide.alt}</TableCell>
-                <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
-                  <RemoveSlideButton
-                    onRemoved={() =>
-                      setMode((current) =>
-                        current?.type === "edit" && current.slide.id === slide.id ? null : current,
-                      )
-                    }
-                    slideId={slide.id}
-                    title={`Slide ${index + 1}`}
-                  />
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  <ChevronRight className="size-4" />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <DataList>
+          {sorted.map((slide, index) => (
+            <DataListItem
+              key={slide.id}
+              onClick={() => setMode({ type: "edit", slide, index })}
+              {...rowProps(slide.id)}
+            >
+              <DragHandle label={`Reorder slide ${index + 1}`} {...handleProps(slide.id)} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                alt=""
+                className="size-10 shrink-0 rounded-md object-cover"
+                src={slide.src}
+              />
+              <DataListBody>
+                <p className="font-medium">Slide {index + 1}</p>
+                <p className="text-sm text-muted-foreground wrap-break-word">{slide.alt}</p>
+              </DataListBody>
+              <DataListActions>
+                <RemoveSlideButton
+                  onRemoved={() =>
+                    setMode((current) =>
+                      current?.type === "edit" && current.slide.id === slide.id ? null : current,
+                    )
+                  }
+                  slideId={slide.id}
+                  title={`Slide ${index + 1}`}
+                />
+              </DataListActions>
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+            </DataListItem>
+          ))}
+        </DataList>
       )}
 
       <Drawer

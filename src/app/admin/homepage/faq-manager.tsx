@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { ChevronRight, CircleHelp, Folders } from "lucide-react";
@@ -24,6 +24,7 @@ import {
 } from "@/lib/faqs";
 import { EmptyState } from "@/components/empty-state";
 import { DragHandle, useSortableIds } from "@/components/sortable-rows";
+import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,14 +37,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -500,13 +493,10 @@ function FaqCategoryManager({
   maxCategories: number;
 }) {
   const [editId, setEditId] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
   const categoryIds = categories.map((item) => item.id);
-  const { handleProps, order, rowProps } = useSortableIds(categoryIds, (ids) => {
+  const { handleProps, order, rowProps } = useSortableIds("faq-categories", categoryIds, (ids) => {
     if (ids.join() === categoryIds.join()) return;
-    startTransition(() => {
-      void reorderHomepageFaqCategories(ids);
-    });
+    void reorderHomepageFaqCategories(ids);
   });
   const sorted = order
     .map((id) => categories.find((item) => item.id === id))
@@ -532,52 +522,34 @@ function FaqCategoryManager({
           title="No categories yet"
         />
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-8">
-                <span className="sr-only">Reorder</span>
-              </TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>FAQs</TableHead>
-              <TableHead className="w-20 text-right">
-                <span className="sr-only">Remove</span>
-              </TableHead>
-              <TableHead className="w-8">
-                <span className="sr-only">Edit</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sorted.map((category) => (
-              <TableRow
-                className="cursor-pointer"
-                key={category.id}
-                onClick={() => setEditId(category.id)}
-                {...rowProps(category.id)}
-              >
-                <TableCell onClick={(event) => event.stopPropagation()}>
-                  <DragHandle label={`Reorder category ${category.label}`} {...handleProps(category.id)} />
-                </TableCell>
-                <TableCell className="font-medium">{category.label}</TableCell>
-                <TableCell className="text-muted-foreground">{category.faqCount}</TableCell>
-                <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
-                  <RemoveCategoryButton
-                    category={category}
-                    onlyCategory={categories.length <= 1}
-                  />
-                </TableCell>
-                <TableCell onClick={(event) => event.stopPropagation()}>
-                  <EditCategoryPopover
-                    category={category}
-                    onOpenChange={(open) => setEditId(open ? category.id : null)}
-                    open={editId === category.id}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <DataList>
+          {sorted.map((category) => (
+            <DataListItem
+              key={category.id}
+              onClick={() => setEditId(category.id)}
+              {...rowProps(category.id)}
+            >
+              <DragHandle label={`Reorder category ${category.label}`} {...handleProps(category.id)} />
+              <DataListBody>
+                <p className="font-medium">{category.label}</p>
+                <p className="text-sm text-muted-foreground">
+                  {category.faqCount} {category.faqCount === 1 ? "question" : "questions"}
+                </p>
+              </DataListBody>
+              <DataListActions>
+                <RemoveCategoryButton
+                  category={category}
+                  onlyCategory={categories.length <= 1}
+                />
+                <EditCategoryPopover
+                  category={category}
+                  onOpenChange={(open) => setEditId(open ? category.id : null)}
+                  open={editId === category.id}
+                />
+              </DataListActions>
+            </DataListItem>
+          ))}
+        </DataList>
       )}
     </div>
   );
@@ -595,13 +567,10 @@ export function HomepageFaqManager({
   maxFaqs: number;
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
-  const [, startTransition] = useTransition();
   const faqIds = faqs.map((item) => item.id);
-  const { handleProps, order, rowProps } = useSortableIds(faqIds, (ids) => {
+  const { handleProps, order, rowProps } = useSortableIds("faqs", faqIds, (ids) => {
     if (ids.join() === faqIds.join()) return;
-    startTransition(() => {
-      void reorderHomepageFaqs(ids);
-    });
+    void reorderHomepageFaqs(ids);
   });
   const sorted = order
     .map((id) => faqs.find((item) => item.id === id))
@@ -649,59 +618,34 @@ export function HomepageFaqManager({
             title="No FAQs yet"
           />
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-8">
-                  <span className="sr-only">Reorder</span>
-                </TableHead>
-                <TableHead>FAQ</TableHead>
-                <TableHead>Question</TableHead>
-                <TableHead className="hidden sm:table-cell">Category</TableHead>
-                <TableHead className="w-20 text-right">
-                  <span className="sr-only">Remove</span>
-                </TableHead>
-                <TableHead className="w-8">
-                  <span className="sr-only">Edit</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sorted.map((faq, index) => (
-                <TableRow
-                  className="cursor-pointer"
-                  key={faq.id}
-                  onClick={() => setMode({ type: "edit", faq, index })}
-                  {...rowProps(faq.id)}
-                >
-                  <TableCell onClick={(event) => event.stopPropagation()}>
-                    <DragHandle label={`Reorder FAQ ${index + 1}`} {...handleProps(faq.id)} />
-                  </TableCell>
-                  <TableCell className="font-medium">FAQ {index + 1}</TableCell>
-                  <TableCell className="max-w-56 truncate text-muted-foreground sm:max-w-xs">
-                    {faq.question}
-                  </TableCell>
-                  <TableCell className="hidden text-muted-foreground sm:table-cell">
-                    {faq.categoryLabel}
-                  </TableCell>
-                  <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
-                    <RemoveFaqButton
-                      faqId={faq.id}
-                      onRemoved={() =>
-                        setMode((current) =>
-                          current?.type === "edit" && current.faq.id === faq.id ? null : current,
-                        )
-                      }
-                      question={faq.question}
-                    />
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    <ChevronRight className="size-4" />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataList>
+            {sorted.map((faq, index) => (
+              <DataListItem
+                key={faq.id}
+                onClick={() => setMode({ type: "edit", faq, index })}
+                {...rowProps(faq.id)}
+              >
+                <DragHandle label={`Reorder FAQ ${index + 1}`} {...handleProps(faq.id)} />
+                <DataListBody>
+                  <p className="font-medium">FAQ {index + 1}</p>
+                  <p className="text-sm text-muted-foreground wrap-break-word">{faq.question}</p>
+                  <p className="text-xs text-muted-foreground">{faq.categoryLabel}</p>
+                </DataListBody>
+                <DataListActions>
+                  <RemoveFaqButton
+                    faqId={faq.id}
+                    onRemoved={() =>
+                      setMode((current) =>
+                        current?.type === "edit" && current.faq.id === faq.id ? null : current,
+                      )
+                    }
+                    question={faq.question}
+                  />
+                </DataListActions>
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+              </DataListItem>
+            ))}
+          </DataList>
         )}
       </div>
 

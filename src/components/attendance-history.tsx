@@ -7,14 +7,6 @@ import { formatCompactDateTime, formatDate, formatTime, londonYear } from "@/lib
 import { EmptyState } from "@/components/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Footprints } from "lucide-react";
 
 export type AttendanceHistoryRow = {
@@ -31,10 +23,8 @@ export type AttendanceHistoryRow = {
 };
 
 export function AttendanceHistory({
-  layout = "table",
   rows,
 }: {
-  layout?: "table" | "list";
   rows: AttendanceHistoryRow[];
 }) {
   const [query, setQuery] = useState("");
@@ -94,11 +84,7 @@ export function AttendanceHistory({
             <h2 className="text-sm font-medium text-muted-foreground">
               {year} · {yearRows.length} {yearRows.length === 1 ? "walk" : "walks"}
             </h2>
-            {layout === "list" ? (
-              <HistoryList rows={yearRows} />
-            ) : (
-              <HistoryTable rows={yearRows} />
-            )}
+            <HistoryList rows={yearRows} />
           </section>
         ))
       )}
@@ -142,62 +128,5 @@ function HistoryList({ rows }: { rows: AttendanceHistoryRow[] }) {
         );
       })}
     </div>
-  );
-}
-
-function HistoryTable({ rows }: { rows: AttendanceHistoryRow[] }) {
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Walk</TableHead>
-          <TableHead className="hidden sm:table-cell">Meeting point</TableHead>
-          <TableHead>Clocked in</TableHead>
-          <TableHead>Clocked out</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {rows.map((row) => {
-          const startsAt = new Date(row.startsAt);
-          return (
-            <TableRow className={row.href ? "relative cursor-pointer" : undefined} key={row.id}>
-              <TableCell>
-                <p className="font-medium">
-                  {row.href ? (
-                    <Link className="after:absolute after:inset-0" href={row.href}>
-                      {row.title}
-                    </Link>
-                  ) : (
-                    row.title
-                  )}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {formatDate(startsAt)} · {formatTime(startsAt)} · {row.durationMins} min
-                </p>
-                {row.cancelledAt ? (
-                  <Badge className="mt-1.5" variant="destructive">
-                    Cancelled
-                  </Badge>
-                ) : null}
-                {row.clockedOutReason ? (
-                  <p className="mt-1 text-xs text-muted-foreground">{row.clockedOutReason}</p>
-                ) : null}
-              </TableCell>
-              <TableCell className="hidden text-muted-foreground sm:table-cell">
-                {row.location || "—"}
-              </TableCell>
-              <TableCell className="whitespace-nowrap text-muted-foreground">
-                {formatCompactDateTime(new Date(row.clockedInAt))}
-              </TableCell>
-              <TableCell className="whitespace-nowrap text-muted-foreground">
-                {row.clockedOutAt
-                  ? formatCompactDateTime(new Date(row.clockedOutAt))
-                  : "Still on the walk"}
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
   );
 }

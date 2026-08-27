@@ -7,20 +7,13 @@ import { formatCompactDateTime, formatDate, formatDateTime, formatMembershipAge,
 import { windowState } from "@/lib/walk-window";
 import { CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { EmptyState } from "@/components/empty-state";
+import { DataList, DataListBody, DataListItem } from "@/components/data-list";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { WalkMembers } from "@/components/walk-members";
 import { ClockOutButton } from "@/components/clock-out-button";
 import { getWalkMemberNamesByWalkIds } from "@/lib/walk-members";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 export const dynamic = "force-dynamic";
 
@@ -169,43 +162,29 @@ export default async function DashboardPage() {
               </Link>
             </Button>
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Walk</TableHead>
-                <TableHead>Clocked in</TableHead>
-                <TableHead>Clocked out</TableHead>
-                <TableHead className="w-8">
-                  <span className="sr-only">Open</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {history.map((attendance) => (
-                <TableRow className="relative cursor-pointer" key={attendance.id}>
-                  <TableCell>
+          <DataList>
+            {history.map((attendance) => (
+              <DataListItem className="relative" key={attendance.id}>
+                <DataListBody>
+                  <p className="font-medium">
                     <Link className="after:absolute after:inset-0" href={`/w/${attendance.walk.token}`}>
-                      <p className="font-medium">{attendance.walk.title}</p>
+                      {attendance.walk.title}
                     </Link>
-                    {attendance.walk.cancelledAt ? (
-                      <p className="text-xs text-destructive">Cancelled</p>
-                    ) : null}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap text-muted-foreground">
-                    {formatCompactDateTime(attendance.clockedInAt)}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap text-muted-foreground">
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    In {formatCompactDateTime(attendance.clockedInAt)}
                     {attendance.clockedOutAt
-                      ? formatCompactDateTime(attendance.clockedOutAt)
-                      : "—"}
-                  </TableCell>
-                  <TableCell className="w-8 text-muted-foreground">
-                    <ChevronRight className="size-4" />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                      ? ` · Out ${formatCompactDateTime(attendance.clockedOutAt)}`
+                      : ""}
+                  </p>
+                  {attendance.walk.cancelledAt ? (
+                    <p className="text-xs text-destructive">Cancelled</p>
+                  ) : null}
+                </DataListBody>
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+              </DataListItem>
+            ))}
+          </DataList>
         </section>
       ) : null}
     </div>

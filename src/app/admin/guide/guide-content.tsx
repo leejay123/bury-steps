@@ -133,7 +133,7 @@ export function OrganiserGuide() {
               </Steps>
               <p className="font-medium text-foreground">Share the walk</p>
               <Steps>
-                <li>Open the walk from the table.</li>
+                <li>Open the walk from the list.</li>
                 <li>Copy the share link and post it in Facebook, or read the short code aloud.</li>
               </Steps>
               <p>
@@ -167,8 +167,8 @@ export function OrganiserGuide() {
                 <strong>{CANCELLED_WALK_RETENTION_DAYS} days</strong>.
               </p>
               <p>
-                Open the walk from the table. The roster is names, status, and clock-in time. Click
-                a row for email, clock-out time, any clock-out reason, and health notes.
+                Open the walk from the list. The roster is names, status, and clock-in time. Tap a
+                row for email, clock-out time, any clock-out reason, and health notes.
               </p>
               <p>
                 Download roster (CSV) gives you names, emails, times, clock-out reasons, and any
@@ -239,7 +239,7 @@ export function OrganiserGuide() {
               <p className="font-medium text-foreground">Remove someone</p>
               <Steps>
                 <li>
-                  Find them in the table and choose the small Remove button. You cannot remove
+                  Find them in the list and choose the small Remove button. You cannot remove
                   yourself.
                 </li>
                 <li>
@@ -258,13 +258,15 @@ export function OrganiserGuide() {
             <GuideBody>
               <p>
                 All of this lives under <Link href="/admin/settings">Settings</Link>. Hero photos,
-                testimonials, FAQs, and notices use a table: click a row to edit. Remove is the
-                small button on the table, not in the drawer. Drawers are for adding and editing.
+                testimonials, FAQs, and notices use a list: tap a row to edit. Remove is the small
+                button on the row, not in the drawer. Drawers are for adding and editing. On a
+                phone the list stacks so you do not have to scroll sideways.
               </p>
               <p>
                 Drag the grip on the left of a row to change the order of photos, quotes, FAQ
-                categories, and questions. Drop a photo onto the box in the drawer; it fills the
-                width of the panel. Walks stay in date order, so those tables are not dragged.
+                categories, and questions. The grip is large enough to use with a thumb. Drop a
+                photo onto the box in the drawer; it fills the width of the panel. Walks stay in
+                date order, so those lists are not dragged.
               </p>
               <p className="font-medium text-foreground">Hero photos</p>
               <p>
@@ -287,9 +289,9 @@ export function OrganiserGuide() {
               <p className="font-medium text-foreground">FAQs</p>
               <p>
                 Up to {MAX_HOMEPAGE_FAQS} questions in up to {MAX_FAQ_CATEGORIES} categories. Open{" "}
-                <Link href="/admin/settings/faqs">FAQs</Link>. Categories have their own table:
-                click a row to rename it in a small popover, or choose Add category. Remove is on
-                the table. You cannot remove a category that still has questions, or the last
+                <Link href="/admin/settings/faqs">FAQs</Link>. Categories have their own list:
+                tap a row to rename it in a small popover, or choose Add category. Remove is on
+                the list. You cannot remove a category that still has questions, or the last
                 category.
               </p>
               <p>
@@ -335,7 +337,7 @@ export function OrganiserGuide() {
               </p>
               <Steps>
                 <li>Choose Add report and fill in the form. Save.</li>
-                <li>Click a row later to edit it. Remove is on the table.</li>
+                <li>Tap a row later to edit it. Remove is on the list.</li>
                 <li>
                   Choose Print to open a printable page, then use the browser dialog to save a PDF.
                 </li>
@@ -398,14 +400,14 @@ export function OrganiserGuide() {
                 Guide is full-width sections with a line between each.
               </p>
               <p>
-                Walk tables keep each column on one line and scroll sideways on a phone. Date and
-                time are separate columns. FAQ category chips on a phone scroll themselves so the
-                one you tap stays in view.
+                Walk lists keep the title, date, and meeting point on one card so they fit a phone.
+                Date and time sit on the same line. FAQ category chips on a phone scroll themselves
+                so the one you tap stays in view.
               </p>
               <p>
                 Members open Walks from the menu. Each walk is a card with the date, length,
                 meeting point, and a badge if clock-in is open, they are already in, or the walk is
-                cancelled. Recent clock-ins are in a table underneath, with a short date. Tap a row
+                cancelled. Recent clock-ins are in a list underneath, with a short date. Tap a row
                 to open that walk, then ← Walks to come back. History in the menu is every walk they
                 have clocked in to, grouped by year, with a search box.
               </p>

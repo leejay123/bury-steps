@@ -5,16 +5,9 @@ import Link from "next/link";
 import { ChevronRight, Footprints, Search } from "lucide-react";
 import { formatWalkDay, formatTime } from "@/lib/dates";
 import { EmptyState } from "@/components/empty-state";
+import { DataList, DataListBody, DataListItem } from "@/components/data-list";
 import { Badge } from "@/components/ui/badge";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 export type AdminWalkRow = {
   id: string;
@@ -75,48 +68,28 @@ export function AdminWalkTable({
           title="No matching walks"
         />
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Walk</TableHead>
-              <TableHead>When</TableHead>
-              <TableHead>Time</TableHead>
-              <TableHead>Meeting point</TableHead>
-              <TableHead className="text-right">{attendanceLabel}</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-8">
-                <span className="sr-only">Open</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.map((walk) => (
-              <TableRow className="relative" key={walk.id}>
-                <TableCell className="font-medium">
+        <DataList>
+          {filtered.map((walk) => (
+            <DataListItem className="relative" key={walk.id}>
+              <DataListBody>
+                <p className="font-medium">
                   <Link className="after:absolute after:inset-0" href={`/admin/walks/${walk.id}`}>
                     {walk.title}
                   </Link>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {formatWalkDay(new Date(walk.startsAt))}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {formatTime(new Date(walk.startsAt))}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {walk.location || "—"}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">{walk.attendanceCount}</TableCell>
-                <TableCell>
-                  {walk.cancelledAt ? <Badge variant="destructive">Cancelled</Badge> : "—"}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  <ChevronRight className="size-4" />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {formatWalkDay(new Date(walk.startsAt))} · {formatTime(new Date(walk.startsAt))}
+                  {walk.location ? ` · ${walk.location}` : ""}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {walk.attendanceCount} {attendanceLabel.toLowerCase()}
+                </p>
+              </DataListBody>
+              {walk.cancelledAt ? <Badge variant="destructive">Cancelled</Badge> : null}
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+            </DataListItem>
+          ))}
+        </DataList>
       )}
     </div>
   );

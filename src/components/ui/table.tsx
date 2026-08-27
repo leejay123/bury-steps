@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
-    <div className="relative w-full overflow-x-auto rounded-xl border" data-slot="table-container">
-      <table data-slot="table" className={cn("w-max min-w-full caption-bottom text-sm", className)} {...props} />
+    <div className="relative w-full overflow-hidden rounded-xl border" data-slot="table-container">
+      <table data-slot="table" className={cn("w-full caption-bottom text-sm", className)} {...props} />
     </div>
   );
 }
@@ -46,7 +46,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
 
 function TableCell({ className, ...props }: React.ComponentProps<"td">) {
   return (
-    <td data-slot="table-cell" className={cn("whitespace-nowrap p-3 align-middle", className)} {...props} />
+    <td data-slot="table-cell" className={cn("p-3 align-middle", className)} {...props} />
   );
 }
 
