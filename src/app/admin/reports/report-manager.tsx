@@ -272,7 +272,9 @@ export function AccidentReportManager({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-end">
-        <Button onClick={() => setMode({ type: "add" })}>Add report</Button>
+        <Button onClick={() => setMode({ type: "add" })} size="sm">
+          Add report
+        </Button>
       </div>
 
       {reports.length === 0 ? (

@@ -234,7 +234,7 @@ export function HomepageSlideManager({
   const [mode, setMode] = useState<DrawerMode | null>(null);
   const [, startTransition] = useTransition();
   const slideIds = slides.map((item) => item.id);
-  const { order, rowProps } = useSortableIds(slideIds, (ids) => {
+  const { handleProps, order, rowProps } = useSortableIds(slideIds, (ids) => {
     if (ids.join() === slideIds.join()) return;
     startTransition(() => {
       void reorderHomepageSlides(ids);
@@ -257,7 +257,7 @@ export function HomepageSlideManager({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-end">
-        <Button disabled={atLimit} onClick={() => setMode({ type: "add" })}>
+        <Button disabled={atLimit} onClick={() => setMode({ type: "add" })} size="sm">
           Add slide
         </Button>
       </div>
@@ -300,7 +300,7 @@ export function HomepageSlideManager({
                 {...rowProps(slide.id)}
               >
                 <TableCell onClick={(event) => event.stopPropagation()}>
-                  <DragHandle label={`Reorder slide ${index + 1}`} />
+                  <DragHandle label={`Reorder slide ${index + 1}`} {...handleProps(slide.id)} />
                 </TableCell>
                 <TableCell>
                   {/* eslint-disable-next-line @next/next/no-img-element */}

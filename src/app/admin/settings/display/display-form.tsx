@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { startTransition, useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { updateScrollToTopEnabled, type ActionResult } from "@/server/actions";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -12,7 +12,6 @@ export function DisplaySettings({ scrollToTopEnabled }: { scrollToTopEnabled: bo
     updateScrollToTopEnabled,
     null,
   );
-  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => setOn(scrollToTopEnabled), [scrollToTopEnabled]);
 
@@ -22,8 +21,7 @@ export function DisplaySettings({ scrollToTopEnabled }: { scrollToTopEnabled: bo
   }, [state]);
 
   return (
-    <form action={action} className="flex items-start gap-3" ref={formRef}>
-      <input name="scrollToTopEnabled" type="hidden" value={on ? "on" : ""} />
+    <div className="flex items-start gap-3 rounded-xl border p-4">
       <Checkbox
         checked={on}
         id="scroll-to-top"
@@ -31,9 +29,11 @@ export function DisplaySettings({ scrollToTopEnabled }: { scrollToTopEnabled: bo
           const next = value === true;
           setOn(next);
           toast.success(next ? "Back to top is on." : "Back to top is off.");
-          const input = formRef.current?.elements.namedItem("scrollToTopEnabled");
-          if (input instanceof HTMLInputElement) input.value = next ? "on" : "";
-          formRef.current?.requestSubmit();
+          const formData = new FormData();
+          formData.set("scrollToTopEnabled", next ? "on" : "");
+          startTransition(() => {
+            action(formData);
+          });
         }}
       />
       <div className="flex flex-col gap-1">
@@ -43,6 +43,6 @@ export function DisplaySettings({ scrollToTopEnabled }: { scrollToTopEnabled: bo
           off if you would rather not have it.
         </p>
       </div>
-    </form>
+    </div>
   );
 }

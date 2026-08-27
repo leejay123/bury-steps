@@ -18,7 +18,7 @@ export default async function Home() {
   const theme = await getSiteTheme();
 
   return (
-    <div className={`relative -mt-8 ${PAGE_X_BLEED}`}>
+    <div className={`relative -mt-8 -mb-8 ${PAGE_X_BLEED}`}>
       <HeroSection
         carouselEnabled={theme.carouselEnabled}
         signInHref={accountPortalHref("sign-in", `${origin}/dashboard`)}

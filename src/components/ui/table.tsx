@@ -1,23 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { motionEase } from "@/components/motion";
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
-  const reduce = useReducedMotion();
-
   return (
-    <motion.div
-      animate={reduce ? undefined : { opacity: 1, y: 0 }}
-      className="relative w-full overflow-x-auto rounded-xl border"
-      data-slot="table-container"
-      initial={reduce ? false : { opacity: 0, y: 12 }}
-      transition={{ duration: 0.4, ease: motionEase }}
-    >
+    <div className="relative w-full overflow-x-auto rounded-xl border" data-slot="table-container">
       <table data-slot="table" className={cn("w-full caption-bottom text-sm", className)} {...props} />
-    </motion.div>
+    </div>
   );
 }
 
@@ -38,8 +28,8 @@ function TableRow({ className, onClick, ...props }: React.ComponentProps<"tr">) 
         onClick && "cursor-pointer",
         className,
       )}
-      onClick={onClick}
       {...props}
+      onClick={onClick}
     />
   );
 }

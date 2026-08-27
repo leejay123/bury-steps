@@ -293,7 +293,7 @@ export function HomepageTestimonialManager({
   const [mode, setMode] = useState<DrawerMode | null>(null);
   const [, startTransition] = useTransition();
   const testimonialIds = testimonials.map((item) => item.id);
-  const { order, rowProps } = useSortableIds(testimonialIds, (ids) => {
+  const { handleProps, order, rowProps } = useSortableIds(testimonialIds, (ids) => {
     if (ids.join() === testimonialIds.join()) return;
     startTransition(() => {
       void reorderHomepageTestimonials(ids);
@@ -317,7 +317,7 @@ export function HomepageTestimonialManager({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-end">
-        <Button disabled={atLimit} onClick={() => setMode({ type: "add" })}>
+        <Button disabled={atLimit} onClick={() => setMode({ type: "add" })} size="sm">
           Add testimonial
         </Button>
       </div>
@@ -359,7 +359,7 @@ export function HomepageTestimonialManager({
                 {...rowProps(testimonial.id)}
               >
                 <TableCell onClick={(event) => event.stopPropagation()}>
-                  <DragHandle label={`Reorder testimonial ${index + 1}`} />
+                  <DragHandle label={`Reorder testimonial ${index + 1}`} {...handleProps(testimonial.id)} />
                 </TableCell>
                 <TableCell className="font-medium">Testimonial {index + 1}</TableCell>
                 <TableCell className="text-muted-foreground">{testimonial.name}</TableCell>

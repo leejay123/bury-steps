@@ -371,7 +371,7 @@ function AddCategoryPopover({ disabled }: { disabled: boolean }) {
   return (
     <Popover onOpenChange={setOpen} open={open}>
       <PopoverTrigger asChild>
-        <Button disabled={disabled} variant="outline">
+        <Button disabled={disabled} size="sm" variant="outline">
           Add category
         </Button>
       </PopoverTrigger>
@@ -502,7 +502,7 @@ function FaqCategoryManager({
   const [editId, setEditId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const categoryIds = categories.map((item) => item.id);
-  const { order, rowProps } = useSortableIds(categoryIds, (ids) => {
+  const { handleProps, order, rowProps } = useSortableIds(categoryIds, (ids) => {
     if (ids.join() === categoryIds.join()) return;
     startTransition(() => {
       void reorderHomepageFaqCategories(ids);
@@ -557,7 +557,7 @@ function FaqCategoryManager({
                 {...rowProps(category.id)}
               >
                 <TableCell onClick={(event) => event.stopPropagation()}>
-                  <DragHandle label={`Reorder category ${category.label}`} />
+                  <DragHandle label={`Reorder category ${category.label}`} {...handleProps(category.id)} />
                 </TableCell>
                 <TableCell className="font-medium">{category.label}</TableCell>
                 <TableCell className="text-muted-foreground">{category.faqCount}</TableCell>
@@ -597,7 +597,7 @@ export function HomepageFaqManager({
   const [mode, setMode] = useState<DrawerMode | null>(null);
   const [, startTransition] = useTransition();
   const faqIds = faqs.map((item) => item.id);
-  const { order, rowProps } = useSortableIds(faqIds, (ids) => {
+  const { handleProps, order, rowProps } = useSortableIds(faqIds, (ids) => {
     if (ids.join() === faqIds.join()) return;
     startTransition(() => {
       void reorderHomepageFaqs(ids);
@@ -628,6 +628,7 @@ export function HomepageFaqManager({
           <Button
             disabled={atLimit || noCategories}
             onClick={() => setMode({ type: "add" })}
+            size="sm"
           >
             Add FAQ
           </Button>
@@ -674,7 +675,7 @@ export function HomepageFaqManager({
                   {...rowProps(faq.id)}
                 >
                   <TableCell onClick={(event) => event.stopPropagation()}>
-                    <DragHandle label={`Reorder FAQ ${index + 1}`} />
+                    <DragHandle label={`Reorder FAQ ${index + 1}`} {...handleProps(faq.id)} />
                   </TableCell>
                   <TableCell className="font-medium">FAQ {index + 1}</TableCell>
                   <TableCell className="max-w-56 truncate text-muted-foreground sm:max-w-xs">

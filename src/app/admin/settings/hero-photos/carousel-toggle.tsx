@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { startTransition, useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { updateCarouselEnabled, type ActionResult } from "@/server/actions";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -12,7 +12,6 @@ export function CarouselToggle({ enabled }: { enabled: boolean }) {
     updateCarouselEnabled,
     null,
   );
-  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => setOn(enabled), [enabled]);
 
@@ -22,8 +21,7 @@ export function CarouselToggle({ enabled }: { enabled: boolean }) {
   }, [state]);
 
   return (
-    <form action={action} className="flex items-start gap-3" ref={formRef}>
-      <input name="carouselEnabled" type="hidden" value={on ? "on" : ""} />
+    <div className="flex items-start gap-3 rounded-xl border p-4">
       <Checkbox
         checked={on}
         id="carousel-enabled"
@@ -31,9 +29,11 @@ export function CarouselToggle({ enabled }: { enabled: boolean }) {
           const next = value === true;
           setOn(next);
           toast.success(next ? "You have turned the carousel on." : "You have turned the carousel off.");
-          const input = formRef.current?.elements.namedItem("carouselEnabled");
-          if (input instanceof HTMLInputElement) input.value = next ? "on" : "";
-          formRef.current?.requestSubmit();
+          const formData = new FormData();
+          formData.set("carouselEnabled", next ? "on" : "");
+          startTransition(() => {
+            action(formData);
+          });
         }}
       />
       <div className="flex flex-col gap-1">
@@ -42,6 +42,6 @@ export function CarouselToggle({ enabled }: { enabled: boolean }) {
           Turn this off to hide the photo slider completely. You can still keep photos here for later.
         </p>
       </div>
-    </form>
+    </div>
   );
 }
