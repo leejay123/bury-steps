@@ -320,7 +320,6 @@ export function AccidentReportManager({
       )}
 
       <Drawer
-        direction="right"
         onOpenChange={(open) => {
           if (!open) setMode(null);
         }}

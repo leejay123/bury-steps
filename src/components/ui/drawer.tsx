@@ -16,13 +16,36 @@ const overlayCloseClassName =
 
 const DrawerOpenContext = React.createContext<boolean | undefined>(undefined);
 
+const DESKTOP_QUERY = "(min-width: 640px)";
+
+/** Bottom sheet on phones, side panel from the sm breakpoint up. */
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = React.useState(true);
+
+  React.useEffect(() => {
+    const media = window.matchMedia(DESKTOP_QUERY);
+    setIsDesktop(media.matches);
+    const onChange = (event: MediaQueryListEvent) => setIsDesktop(event.matches);
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  }, []);
+
+  return isDesktop;
+}
+
 function Drawer({
   children,
+  direction,
   onOpenChange,
   open,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
   const shouldRender = useOverlayPresence(open);
+  const isDesktop = useIsDesktop();
+  // Callers that need a specific direction (e.g. always-bottom pickers) can
+  // still pass one explicitly; side drawers left unspecified become a bottom
+  // sheet on phones and a side panel from the sm breakpoint up.
+  const resolvedDirection = direction ?? (isDesktop ? "right" : "bottom");
 
   React.useEffect(() => {
     return () => restorePagePointerEvents();
@@ -32,6 +55,7 @@ function Drawer({
     <DrawerOpenContext.Provider value={open}>
       <DrawerPrimitive.Root
         data-slot="drawer"
+        direction={resolvedDirection}
         dismissible
         modal
         onOpenChange={(next) => {

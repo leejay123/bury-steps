@@ -110,7 +110,6 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
       </DataList>
 
       <Drawer
-        direction="right"
         onOpenChange={(open) => {
           if (!open) {
             requestRef.current += 1;

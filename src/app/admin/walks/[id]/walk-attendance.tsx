@@ -64,7 +64,6 @@ export function WalkAttendanceTable({ rows }: { rows: WalkAttendanceRow[] }) {
       </DataList>
 
       <Drawer
-        direction="right"
         onOpenChange={(open) => {
           if (!open) setOpenId(null);
         }}

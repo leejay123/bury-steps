@@ -311,7 +311,6 @@ export function HomepageSlideManager({
       )}
 
       <Drawer
-        direction="right"
         onOpenChange={(open) => {
           if (!open) setMode(null);
         }}
