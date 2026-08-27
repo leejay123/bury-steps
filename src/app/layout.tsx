@@ -12,6 +12,7 @@ import { SiteLogo } from "@/components/site-logo";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { MotionPage } from "@/components/motion";
 import { BackToTop } from "@/components/back-to-top";
+import { UnlockPageOnNavigate } from "@/components/overlay-root";
 import Link from "next/link";
 import "./globals.css";
 
@@ -58,6 +59,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           signUpFallbackRedirectUrl={AFTER_AUTH_PATH}
         >
           <div className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x">
+            <UnlockPageOnNavigate />
             <header className="sticky top-0 z-40 touch-manipulation bg-white/70 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/55">
               <div className="relative">
                 <div className={`flex h-14 items-center justify-between gap-3 ${PAGE_X} md:grid md:grid-cols-[1fr_auto_1fr]`}>

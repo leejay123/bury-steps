@@ -72,9 +72,11 @@ export function useSortableIds(ids: string[], onReorder: (ids: string[]) => void
         const swallow = (event: Event) => {
           event.stopPropagation();
           event.preventDefault();
-          window.removeEventListener("click", swallow, true);
         };
-        window.addEventListener("click", swallow, true);
+        window.addEventListener("click", swallow, { capture: true, once: true });
+        window.setTimeout(() => {
+          window.removeEventListener("click", swallow, true);
+        }, 400);
       }
       didDrag.current = false;
     }

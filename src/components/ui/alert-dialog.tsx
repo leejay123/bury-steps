@@ -5,10 +5,22 @@ import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { OverlayRootContext } from "@/components/overlay-root";
+import { OverlayRootContext, restorePagePointerEvents } from "@/components/overlay-root";
 
-function AlertDialog(props: React.ComponentProps<typeof AlertDialogPrimitive.Root>) {
-  return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />;
+function AlertDialog({
+  onOpenChange,
+  ...props
+}: React.ComponentProps<typeof AlertDialogPrimitive.Root>) {
+  return (
+    <AlertDialogPrimitive.Root
+      data-slot="alert-dialog"
+      onOpenChange={(open) => {
+        if (!open) restorePagePointerEvents();
+        onOpenChange?.(open);
+      }}
+      {...props}
+    />
+  );
 }
 
 function AlertDialogTrigger(props: React.ComponentProps<typeof AlertDialogPrimitive.Trigger>) {
@@ -24,7 +36,7 @@ function AlertDialogOverlay({ className, ...props }: React.ComponentProps<typeof
     <AlertDialogPrimitive.Overlay
       data-slot="alert-dialog-overlay"
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-[70] bg-black/50",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:!pointer-events-none data-[state=open]:fade-in-0 fixed inset-0 z-[70] bg-black/50",
         className,
       )}
       {...props}

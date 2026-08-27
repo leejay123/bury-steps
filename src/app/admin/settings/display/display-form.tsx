@@ -27,6 +27,7 @@ export function DisplaySettings({ scrollToTopEnabled }: { scrollToTopEnabled: bo
         id="scroll-to-top"
         onCheckedChange={(value) => {
           const next = value === true;
+          if (next === on) return;
           setOn(next);
           toast.success(next ? "Back to top is on." : "Back to top is off.");
           const formData = new FormData();

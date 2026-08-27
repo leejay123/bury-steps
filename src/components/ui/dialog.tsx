@@ -4,10 +4,22 @@ import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { OverlayRootContext } from "@/components/overlay-root";
+import { OverlayRootContext, restorePagePointerEvents } from "@/components/overlay-root";
 
-function Dialog(props: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />;
+function Dialog({
+  onOpenChange,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  return (
+    <DialogPrimitive.Root
+      data-slot="dialog"
+      onOpenChange={(open) => {
+        if (!open) restorePagePointerEvents();
+        onOpenChange?.(open);
+      }}
+      {...props}
+    />
+  );
 }
 
 function DialogTrigger(props: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
@@ -27,7 +39,7 @@ function DialogOverlay({ className, ...props }: React.ComponentProps<typeof Dial
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:!pointer-events-none data-[state=open]:fade-in-0 fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm",
         className,
       )}
       {...props}

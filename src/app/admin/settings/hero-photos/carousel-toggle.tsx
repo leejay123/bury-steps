@@ -27,6 +27,7 @@ export function CarouselToggle({ enabled }: { enabled: boolean }) {
         id="carousel-enabled"
         onCheckedChange={(value) => {
           const next = value === true;
+          if (next === on) return;
           setOn(next);
           toast.success(next ? "You have turned the carousel on." : "You have turned the carousel off.");
           const formData = new FormData();
