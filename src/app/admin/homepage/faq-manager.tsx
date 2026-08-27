@@ -55,14 +55,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverDescription,
-  PopoverHeader,
-  PopoverTitle,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverDescription, PopoverTrigger } from "@/components/ui/popover";
 
 type DrawerMode = { type: "add" } | { type: "edit"; faq: FaqView; index: number };
 
@@ -338,7 +331,7 @@ function CategoryLabelForm({
   useActionToast(state, onSaved);
 
   return (
-    <form action={formAction} className="flex flex-col gap-3">
+    <form action={formAction} className="flex flex-col gap-3 pb-4">
       {category ? <input name="categoryId" type="hidden" value={category.id} /> : null}
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={category ? `edit-category-${category.id}` : "new-category"}>Name</Label>
@@ -358,69 +351,43 @@ function CategoryLabelForm({
   );
 }
 
-function AddCategoryPopover({ disabled }: { disabled: boolean }) {
-  const [open, setOpen] = useState(false);
+type CategoryDrawerMode = { type: "add" } | { type: "edit"; category: FaqCategoryView };
 
-  return (
-    <Popover onOpenChange={setOpen} open={open}>
-      <PopoverTrigger asChild>
-        <Button disabled={disabled} className="w-full sm:w-auto" size="sm" variant="outline">
-          Add category
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-80">
-        <PopoverHeader>
-          <PopoverTitle>Add a category</PopoverTitle>
-          <PopoverDescription>
-            This name shows as a filter on the public FAQ.
-          </PopoverDescription>
-        </PopoverHeader>
-        <CategoryLabelForm
-          action={addHomepageFaqCategory}
-          onSaved={() => setOpen(false)}
-          submitLabel="Add category"
-          submitPendingLabel="Adding…"
-        />
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-function EditCategoryPopover({
-  category,
+function CategoryDrawer({
+  mode,
   onOpenChange,
-  open,
 }: {
-  category: FaqCategoryView;
+  mode: CategoryDrawerMode | null;
   onOpenChange: (open: boolean) => void;
-  open: boolean;
 }) {
   return (
-    <Popover onOpenChange={onOpenChange} open={open}>
-      <PopoverTrigger asChild>
-        <button
-          aria-label={`Edit ${category.label}`}
-          className="inline-flex text-muted-foreground"
-          type="button"
-        >
-          <ChevronRight className="size-4" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-80">
-        <PopoverHeader>
-          <PopoverTitle>Edit category</PopoverTitle>
-          <PopoverDescription>This name shows as a filter on the public FAQ.</PopoverDescription>
-        </PopoverHeader>
-        <CategoryLabelForm
-          action={updateHomepageFaqCategory}
-          category={category}
-          key={category.id}
-          onSaved={() => onOpenChange(false)}
-          submitLabel="Save"
-          submitPendingLabel="Saving…"
-        />
-      </PopoverContent>
-    </Popover>
+    <Drawer onOpenChange={onOpenChange} open={mode !== null}>
+      <DrawerContent className="sm:max-w-md">
+        <DrawerHeader>
+          <DrawerTitle>{mode?.type === "edit" ? "Edit category" : "Add a category"}</DrawerTitle>
+          <DrawerDescription>This name shows as a filter on the public FAQ.</DrawerDescription>
+        </DrawerHeader>
+        <div className="px-4">
+          {mode?.type === "edit" ? (
+            <CategoryLabelForm
+              action={updateHomepageFaqCategory}
+              category={mode.category}
+              key={mode.category.id}
+              onSaved={() => onOpenChange(false)}
+              submitLabel="Save"
+              submitPendingLabel="Saving…"
+            />
+          ) : mode?.type === "add" ? (
+            <CategoryLabelForm
+              action={addHomepageFaqCategory}
+              onSaved={() => onOpenChange(false)}
+              submitLabel="Add category"
+              submitPendingLabel="Adding…"
+            />
+          ) : null}
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }
 
@@ -492,7 +459,7 @@ function FaqCategoryManager({
   categories: FaqCategoryView[];
   maxCategories: number;
 }) {
-  const [editId, setEditId] = useState<string | null>(null);
+  const [mode, setMode] = useState<CategoryDrawerMode | null>(null);
   const categoryIds = categories.map((item) => item.id);
   const { moveDown, moveUp, order } = useReorderableIds(categoryIds, (ids) => {
     if (ids.join() === categoryIds.join()) return;
@@ -507,7 +474,15 @@ function FaqCategoryManager({
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-sm font-medium">Categories</h2>
-        <AddCategoryPopover disabled={atLimit} />
+        <Button
+          className="w-full sm:w-auto"
+          disabled={atLimit}
+          onClick={() => setMode({ type: "add" })}
+          size="sm"
+          variant="outline"
+        >
+          Add category
+        </Button>
       </div>
       {atLimit ? (
         <p className="text-sm text-muted-foreground">
@@ -526,7 +501,7 @@ function FaqCategoryManager({
           {sorted.map((category, index) => (
             <DataListItem
               key={category.id}
-              onClick={() => setEditId(category.id)}
+              onClick={() => setMode({ type: "edit", category })}
             >
               <ReorderButtons
                 canMoveDown={index < sorted.length - 1}
@@ -546,16 +521,19 @@ function FaqCategoryManager({
                   category={category}
                   onlyCategory={categories.length <= 1}
                 />
-                <EditCategoryPopover
-                  category={category}
-                  onOpenChange={(open) => setEditId(open ? category.id : null)}
-                  open={editId === category.id}
-                />
               </DataListActions>
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
             </DataListItem>
           ))}
         </DataList>
       )}
+
+      <CategoryDrawer
+        mode={mode}
+        onOpenChange={(open) => {
+          if (!open) setMode(null);
+        }}
+      />
     </div>
   );
 }
@@ -661,7 +639,6 @@ export function HomepageFaqManager({
       </div>
 
       <Drawer
-        direction="right"
         onOpenChange={(open) => {
           if (!open) setMode(null);
         }}
