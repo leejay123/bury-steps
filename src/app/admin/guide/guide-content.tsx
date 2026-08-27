@@ -188,7 +188,8 @@ export function OrganiserGuide() {
                 <li>Signs in if needed.</li>
                 <li>
                   Completes the pre-walk check: they confirm they are fit to take part, and either
-                  report no conditions or type a short note for organisers.
+                  report no conditions or type a short note for organisers. ← Walks at the top takes
+                  them back to their Walks page without clocking in.
                 </li>
                 <li>Clocks in. The time is recorded by the site, not their phone clock.</li>
               </Steps>
@@ -373,8 +374,9 @@ export function OrganiserGuide() {
               <p>
                 Members open Walks from the menu. Each walk is a card with the date, length,
                 meeting point, and a badge if clock-in is open, they are already in, or the walk is
-                cancelled. Recent clock-ins are in a table underneath. History in the menu is every
-                walk they have clocked in to, grouped by year, with a search box.
+                cancelled. Recent clock-ins are in a table underneath, with a short date. Tap a row
+                to open that walk, then ← Walks to come back. History in the menu is every walk they
+                have clocked in to, grouped by year, with a search box.
               </p>
             </GuideBody>
           </AccordionContent>

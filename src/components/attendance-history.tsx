@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
-import { formatDate, formatDateTime, formatTime, londonYear } from "@/lib/dates";
+import { formatCompactDateTime, formatDate, formatTime, londonYear } from "@/lib/dates";
 import { EmptyState } from "@/components/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
@@ -130,9 +130,9 @@ function HistoryList({ rows }: { rows: AttendanceHistoryRow[] }) {
               {row.location ? ` · ${row.location}` : ""}
             </p>
             <p className="text-sm text-muted-foreground">
-              In {formatDateTime(new Date(row.clockedInAt))}
+              In {formatCompactDateTime(new Date(row.clockedInAt))}
               {row.clockedOutAt
-                ? ` · Out ${formatDateTime(new Date(row.clockedOutAt))}`
+                ? ` · Out ${formatCompactDateTime(new Date(row.clockedOutAt))}`
                 : " · Still on the walk"}
             </p>
             {row.clockedOutReason ? (
@@ -160,11 +160,11 @@ function HistoryTable({ rows }: { rows: AttendanceHistoryRow[] }) {
         {rows.map((row) => {
           const startsAt = new Date(row.startsAt);
           return (
-            <TableRow key={row.id}>
+            <TableRow className={row.href ? "relative cursor-pointer" : undefined} key={row.id}>
               <TableCell>
                 <p className="font-medium">
                   {row.href ? (
-                    <Link className="hover:underline" href={row.href}>
+                    <Link className="after:absolute after:inset-0" href={row.href}>
                       {row.title}
                     </Link>
                   ) : (
@@ -187,11 +187,11 @@ function HistoryTable({ rows }: { rows: AttendanceHistoryRow[] }) {
                 {row.location || "—"}
               </TableCell>
               <TableCell className="whitespace-nowrap text-muted-foreground">
-                {formatDateTime(new Date(row.clockedInAt))}
+                {formatCompactDateTime(new Date(row.clockedInAt))}
               </TableCell>
               <TableCell className="whitespace-nowrap text-muted-foreground">
                 {row.clockedOutAt
-                  ? formatDateTime(new Date(row.clockedOutAt))
+                  ? formatCompactDateTime(new Date(row.clockedOutAt))
                   : "Still on the walk"}
               </TableCell>
             </TableRow>

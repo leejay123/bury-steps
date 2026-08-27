@@ -90,3 +90,15 @@ export function formatDateTime(at: Date): string {
     timeStyle: "short",
   }).format(at);
 }
+
+/** Short date and time for tables, e.g. "30 Aug, 13:00". Adds the year when it is not this year. */
+export function formatCompactDateTime(at: Date): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: LONDON,
+    day: "numeric",
+    month: "short",
+    ...(londonYear(at) === londonYear(new Date()) ? {} : { year: "numeric" }),
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(at);
+}

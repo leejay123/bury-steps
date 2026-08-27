@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { headers } from "next/headers";
-import { auth } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { requireUser } from "@/lib/auth";
+import { getOptionalUser, requireUser } from "@/lib/auth";
 import { formatWalkDate, formatDateTime } from "@/lib/dates";
 import { windowState } from "@/lib/walk-window";
 import { accountPortalHref } from "@/lib/urls";
@@ -24,31 +23,33 @@ export default async function WalkLinkPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-  const { userId } = await auth();
   const headerList = await headers();
   const host = headerList.get("x-forwarded-host") ?? headerList.get("host") ?? "";
   const proto = headerList.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
   const walkUrl = `${proto}://${host}/w/${token}`;
 
-  const walk = await prisma.walk.findUnique({
-    where: { token },
-    select: {
-      id: true,
-      token: true,
-      title: true,
-      description: true,
-      location: true,
-      startsAt: true,
-      durationMins: true,
-      cancelledAt: true,
-    },
-  });
+  const [walk, user] = await Promise.all([
+    prisma.walk.findUnique({
+      where: { token },
+      select: {
+        id: true,
+        token: true,
+        title: true,
+        description: true,
+        location: true,
+        startsAt: true,
+        durationMins: true,
+        cancelledAt: true,
+      },
+    }),
+    getOptionalUser(),
+  ]);
 
   if (!walk) notFound();
 
-  const alreadyIn = userId
+  const alreadyIn = user
     ? await prisma.attendance.findFirst({
-        where: { walkId: walk.id, user: { clerkId: userId }, clockedOutAt: null },
+        where: { walkId: walk.id, userId: user.id, clockedOutAt: null },
         select: { clockedInAt: true },
       })
     : null;
@@ -56,11 +57,19 @@ export default async function WalkLinkPage({
   const memberNames = alreadyIn ? await getWalkMemberNames(walk.id) : [];
 
   const state = windowState(walk.startsAt, walk.durationMins);
+  const walksHref = user?.role === "ADMIN" ? "/admin" : "/dashboard";
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="pb-3">
+    <div className="flex flex-col gap-6">
+      <Link
+        className="text-sm text-muted-foreground hover:text-foreground"
+        href={user ? walksHref : "/"}
+      >
+        ← {user ? "Walks" : "Home"}
+      </Link>
+
+      <Card className="gap-2">
+        <CardHeader>
           <div className="flex items-start justify-between gap-3">
             <CardTitle className="text-xl">{walk.title}</CardTitle>
             {walk.cancelledAt && <Badge variant="destructive">Cancelled</Badge>}
@@ -71,7 +80,7 @@ export default async function WalkLinkPage({
           </p>
         </CardHeader>
         {walk.description && (
-          <CardContent className="pt-0">
+          <CardContent>
             <p className="text-sm leading-relaxed">{walk.description}</p>
           </CardContent>
         )}
@@ -84,7 +93,7 @@ export default async function WalkLinkPage({
             Check the walks list for the next one.
           </AlertDescription>
         </Alert>
-      ) : !userId ? (
+      ) : !user ? (
         <div className="space-y-4 rounded-lg border bg-muted/40 p-5">
           <div className="space-y-1">
             <p className="font-medium">You need to sign in to join this walk</p>
@@ -115,7 +124,7 @@ export default async function WalkLinkPage({
             <div className="flex flex-wrap gap-2">
               <ClockOutButton token={walk.token} />
               <Button asChild size="sm" variant="outline">
-                <Link href="/dashboard">Back to walks</Link>
+                <Link href={walksHref}>Back to walks</Link>
               </Button>
             </div>
           </div>

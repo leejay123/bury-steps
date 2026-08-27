@@ -19,6 +19,7 @@ export default async function WalkHistoryPage() {
     include: {
       walk: {
         select: {
+          token: true,
           title: true,
           location: true,
           startsAt: true,
@@ -61,6 +62,7 @@ export default async function WalkHistoryPage() {
           cancelledAt: attendance.walk.cancelledAt?.toISOString() ?? null,
           clockedInAt: attendance.clockedInAt.toISOString(),
           clockedOutAt: attendance.clockedOutAt?.toISOString() ?? null,
+          href: `/w/${attendance.walk.token}`,
         }))}
       />
     </div>

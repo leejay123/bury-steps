@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CalendarDays, Clock, Footprints, MapPin } from "lucide-react";
+import { CalendarDays, ChevronRight, Clock, Footprints, MapPin } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
-import { formatDateTime, formatWalkDate } from "@/lib/dates";
+import { formatCompactDateTime, formatDateTime, formatWalkDate } from "@/lib/dates";
 import { windowState } from "@/lib/walk-window";
 import { CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { EmptyState } from "@/components/empty-state";
@@ -63,7 +63,7 @@ export default async function DashboardPage() {
       where: { userId: user.id },
       orderBy: { clockedInAt: "desc" },
       take: 5,
-      include: { walk: { select: { title: true, startsAt: true, cancelledAt: true } } },
+      include: { walk: { select: { title: true, token: true, startsAt: true, cancelledAt: true } } },
     }),
     prisma.attendance.count({ where: { userId: user.id } }),
   ]);
@@ -95,7 +95,7 @@ export default async function DashboardPage() {
             const clockedIn = walk.attendances[0];
             const state = windowState(walk.startsAt, walk.durationMins, now);
             return (
-              <Card key={walk.id}>
+              <Card className="gap-3" key={walk.id}>
                 <CardHeader className="flex flex-row items-start justify-between gap-3">
                   <div className="flex min-w-0 flex-col gap-1.5">
                     <CardTitle className="text-base">{walk.title}</CardTitle>
@@ -174,24 +174,32 @@ export default async function DashboardPage() {
                 <TableHead>Walk</TableHead>
                 <TableHead>Clocked in</TableHead>
                 <TableHead>Clocked out</TableHead>
+                <TableHead className="w-8">
+                  <span className="sr-only">Open</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {history.map((attendance) => (
-                <TableRow key={attendance.id}>
+                <TableRow className="relative cursor-pointer" key={attendance.id}>
                   <TableCell>
-                    <p className="font-medium">{attendance.walk.title}</p>
+                    <Link className="after:absolute after:inset-0" href={`/w/${attendance.walk.token}`}>
+                      <p className="font-medium">{attendance.walk.title}</p>
+                    </Link>
                     {attendance.walk.cancelledAt ? (
                       <p className="text-xs text-destructive">Cancelled</p>
                     ) : null}
                   </TableCell>
                   <TableCell className="whitespace-nowrap text-muted-foreground">
-                    {formatDateTime(attendance.clockedInAt)}
+                    {formatCompactDateTime(attendance.clockedInAt)}
                   </TableCell>
                   <TableCell className="whitespace-nowrap text-muted-foreground">
                     {attendance.clockedOutAt
-                      ? formatDateTime(attendance.clockedOutAt)
+                      ? formatCompactDateTime(attendance.clockedOutAt)
                       : "—"}
+                  </TableCell>
+                  <TableCell className="w-8 text-muted-foreground">
+                    <ChevronRight className="size-4" />
                   </TableCell>
                 </TableRow>
               ))}
