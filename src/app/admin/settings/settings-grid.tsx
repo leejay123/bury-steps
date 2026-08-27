@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { unlockIdleDocument } from "@/components/overlay-root";
+import { DataList, DataListBody, DataListItem } from "@/components/data-list";
 
 export function SettingsGrid({
   items,
@@ -10,26 +11,29 @@ export function SettingsGrid({
   items: { description: string; href: string; title: string }[];
 }) {
   return (
-    <div className="flex flex-col border-t [&>a:not(:last-child)]:border-b">
+    <DataList>
       {items.map((item) => (
-        <Link
-          className="flex items-start justify-between gap-3 bg-background px-4 py-5 hover:bg-neutral-100 md:px-6"
-          href={item.href}
-          key={item.href}
-          onClick={() => {
-            unlockIdleDocument();
-          }}
-          onPointerDown={() => {
-            unlockIdleDocument();
-          }}
-        >
-          <div className="flex flex-col gap-1">
-            <p className="font-semibold leading-none">{item.title}</p>
-            <p className="text-sm text-muted-foreground">{item.description}</p>
-          </div>
+        <DataListItem className="relative" key={item.href}>
+          <DataListBody>
+            <p className="font-semibold leading-none">
+              <Link
+                className="after:absolute after:inset-0"
+                href={item.href}
+                onClick={() => {
+                  unlockIdleDocument();
+                }}
+                onPointerDown={() => {
+                  unlockIdleDocument();
+                }}
+              >
+                {item.title}
+              </Link>
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+          </DataListBody>
           <ChevronRight className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-        </Link>
+        </DataListItem>
       ))}
-    </div>
+    </DataList>
   );
 }

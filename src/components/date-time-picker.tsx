@@ -35,13 +35,16 @@ function parseWallClock(value?: string): { date: Date; hour: string; minute: str
   }
 }
 
-function isSelectLayer(target: EventTarget | null) {
-  return (
-    target instanceof Element &&
-    Boolean(
-      target.closest("[data-slot='select-content'], [data-select-dropdown], [data-select-trigger]"),
-    )
-  );
+// The Hour/Minute selects below are rendered inside this popover, but their
+// dropdown content portals out to the document body — so, from Radix's point
+// of view, clicking an hour/minute option is an "outside" interaction with
+// this popover, and would otherwise close it. Only exempt *this component's
+// own* nested selects (marked with `data-date-time-picker-select` below), not
+// every select on the page: an unrelated field (e.g. a "linked walk" select
+// elsewhere in the same form) must still be able to close this popover when
+// opened, or the two floating panels end up open and overlapping at once.
+function isOwnNestedSelectLayer(target: EventTarget | null) {
+  return target instanceof Element && Boolean(target.closest("[data-date-time-picker-select]"));
 }
 
 export function DateTimePicker({
@@ -107,10 +110,10 @@ export function DateTimePicker({
           align="start"
           className="w-auto p-3"
           onFocusOutside={(event) => {
-            if (isSelectLayer(event.target)) event.preventDefault();
+            if (isOwnNestedSelectLayer(event.target)) event.preventDefault();
           }}
           onInteractOutside={(event) => {
-            if (isSelectLayer(event.target)) event.preventDefault();
+            if (isOwnNestedSelectLayer(event.target)) event.preventDefault();
           }}
         >
           <div className="flex flex-col gap-3">
@@ -132,7 +135,7 @@ export function DateTimePicker({
                   <SelectTrigger id={`${id}-hour`}>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent data-date-time-picker-select="">
                     {HOURS.map((item) => (
                       <SelectItem key={item} value={item}>
                         {item}
@@ -147,7 +150,7 @@ export function DateTimePicker({
                   <SelectTrigger id={`${id}-minute`}>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent data-date-time-picker-select="">
                     {minutes.map((item) => (
                       <SelectItem key={item} value={item}>
                         {item}
