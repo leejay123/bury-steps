@@ -45,11 +45,13 @@ function navLinkClass(active: boolean) {
 
 function NavLink({
   active,
+  centerOnTap,
   className,
   href,
   label,
 }: {
   active: boolean;
+  centerOnTap?: boolean;
   className?: string;
   href: string;
   label: string;
@@ -59,8 +61,18 @@ function NavLink({
       aria-current={active ? "page" : undefined}
       className={cn(navLinkClass(active), className)}
       href={href}
-      onClick={() => {
+      onClick={(event) => {
         unlockIdleDocument();
+        // Glide the tapped item to the centre of the scrollable nav bar right
+        // away, the same way the FAQ category filter does, instead of
+        // waiting for the page to finish navigating.
+        if (centerOnTap) {
+          event.currentTarget.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+            inline: "center",
+          });
+        }
       }}
       onPointerDown={() => {
         unlockIdleDocument();
@@ -109,8 +121,11 @@ export function SiteMobileNavBar({
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Covers landing on a route directly (page load, back/forward) where no
+    // click fires. Instant, not smooth — the tap-triggered scroll below
+    // handles the animated case.
     const active = scrollerRef.current?.querySelector("[aria-current='page']");
-    active?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    active?.scrollIntoView({ block: "nearest", inline: "center" });
   }, [pathname]);
 
   return (
@@ -124,6 +139,7 @@ export function SiteMobileNavBar({
           return (
             <NavLink
               active={active}
+              centerOnTap
               className="shrink-0"
               href={item.href}
               key={item.href}
