@@ -4,7 +4,6 @@ import { CalendarDays, Footprints, UserPlus } from "lucide-react";
 import type React from "react";
 import { DecorIcon } from "@/components/decor-icon";
 import { FullWidthDivider } from "@/components/full-width-divider";
-import { Stagger, StaggerItem } from "@/components/motion";
 import { cn } from "@/lib/utils";
 
 type FeatureType = {
@@ -36,13 +35,11 @@ export function FeatureSection() {
     <div className="relative w-full">
       <DecorIcon className="size-4" position="bottom-left" />
       <DecorIcon className="size-4" position="bottom-right" />
-      <Stagger className="grid grid-cols-1 divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+      <div className="grid w-full grid-cols-1 gap-px bg-border sm:grid-cols-3">
         {features.map((feature) => (
-          <StaggerItem className="h-full" key={feature.title}>
-            <FeatureCard className="h-full" feature={feature} />
-          </StaggerItem>
+          <FeatureCard className="h-full" feature={feature} key={feature.title} />
         ))}
-      </Stagger>
+      </div>
       <FullWidthDivider position="bottom" />
     </div>
   );
@@ -60,10 +57,10 @@ export function FeatureCard({
       className={cn("relative flex flex-col justify-between bg-background p-6 md:p-8", className)}
       {...props}
     >
-      <div className={cn("relative z-10 flex items-center pt-2 pb-5", "[&_svg]:size-5 [&_svg]:text-primary")}>
+      <div className={cn("flex items-center pt-2 pb-5", "[&_svg]:size-5 [&_svg]:text-primary")}>
         {feature.icon}
       </div>
-      <div className="relative z-10 space-y-2">
+      <div className="space-y-2">
         <h3 className="text-lg font-medium text-foreground">{feature.title}</h3>
         <p className="text-muted-foreground text-xs leading-relaxed">{feature.description}</p>
       </div>

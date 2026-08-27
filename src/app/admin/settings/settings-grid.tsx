@@ -12,7 +12,7 @@ export function SettingsGrid({
 }) {
   return (
     <div className="relative">
-      <div className="grid grid-cols-1 gap-px bg-border sm:grid-cols-2">
+      <div className="grid w-full grid-cols-1 gap-px bg-border sm:grid-cols-2">
         {items.map((item) => (
           <Link
             className="flex h-full items-start justify-between gap-3 bg-background p-6 hover:bg-accent/40 md:p-8"
@@ -28,7 +28,7 @@ export function SettingsGrid({
         ))}
         <GridFiller className="bg-background" smColumns={2} totalItems={items.length} />
       </div>
-      <FullWidthDivider contained position="bottom" />
+      <FullWidthDivider position="bottom" />
     </div>
   );
 }

@@ -72,13 +72,13 @@ export function HeroSection({
           <DecorIcon className="size-4" position="top-right" />
           <DecorIcon className="size-4" position="bottom-left" />
           <DecorIcon className="size-4" position="bottom-right" />
-          <FullWidthDivider className="-top-px" />
-          <FadeIn>
-            <div className="overflow-hidden bg-muted">
+          <FullWidthDivider position="top" />
+          <div className="overflow-hidden bg-muted">
+            <FadeIn>
               <HomeCarousel framed slides={slides} />
-            </div>
-          </FadeIn>
-          <FullWidthDivider className="-bottom-px" />
+            </FadeIn>
+          </div>
+          <FullWidthDivider position="bottom" />
         </div>
       ) : null}
     </section>

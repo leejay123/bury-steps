@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { FullWidthDivider } from "@/components/full-width-divider";
 
 const ITEMS = [
   {
@@ -33,26 +32,26 @@ export function AdminSectionTabs() {
   const pathname = usePathname();
 
   return (
-    <div className="relative">
-      <nav aria-label="Organiser" className="grid grid-cols-2 gap-px bg-border sm:grid-cols-4">
-        {ITEMS.map((item) => {
-          const active = item.active(pathname);
-          return (
-            <Link
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "px-4 py-3 text-center text-sm text-muted-foreground hover:bg-accent/40 hover:text-foreground",
-                active ? "bg-muted font-medium text-foreground" : "bg-background",
-              )}
-              href={item.href}
-              key={item.href}
-            >
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
-      <FullWidthDivider contained position="bottom" />
-    </div>
+    <nav
+      aria-label="Organiser"
+      className="grid w-full grid-cols-2 gap-px border-b border-border bg-border sm:grid-cols-4"
+    >
+      {ITEMS.map((item) => {
+        const active = item.active(pathname);
+        return (
+          <Link
+            aria-current={active ? "page" : undefined}
+            className={cn(
+              "px-4 py-3 text-center text-sm text-muted-foreground hover:bg-accent/40 hover:text-foreground",
+              active ? "bg-muted font-medium text-foreground" : "bg-background",
+            )}
+            href={item.href}
+            key={item.href}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }

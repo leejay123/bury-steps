@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { GridFiller } from "@/components/grid-filler";
 import { HeroCopy } from "@/components/hero-copy";
-import { Stagger, StaggerItem } from "@/components/motion";
 import type { TestimonialView } from "@/lib/testimonials";
 
 export function TestimonialsSection({
@@ -22,12 +21,10 @@ export function TestimonialsSection({
       <HeroCopy eyebrow={null} title="From the group" titleAs="h2">
         <p>A few words from people who walk with us on Sundays.</p>
       </HeroCopy>
-      <Stagger className="relative">
-        <div className="grid grid-cols-1 gap-px bg-border sm:grid-cols-2 lg:grid-cols-3">
+      <div className="relative">
+        <div className="grid w-full grid-cols-1 gap-px bg-border sm:grid-cols-2 lg:grid-cols-3">
           {testimonials.map((testimonial) => (
-            <StaggerItem className="h-full" key={testimonial.id}>
-              <TestimonialsCard className="h-full" testimonial={testimonial} />
-            </StaggerItem>
+            <TestimonialsCard className="h-full" key={testimonial.id} testimonial={testimonial} />
           ))}
           <GridFiller
             className="bg-background"
@@ -36,9 +33,9 @@ export function TestimonialsSection({
             totalItems={testimonials.length}
           />
         </div>
-        <FullWidthDivider contained position="top" />
-        <FullWidthDivider contained position="bottom" />
-      </Stagger>
+        <FullWidthDivider position="top" />
+        <FullWidthDivider position="bottom" />
+      </div>
     </section>
   );
 }
