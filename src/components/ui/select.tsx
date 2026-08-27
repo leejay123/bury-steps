@@ -162,11 +162,12 @@ function SelectContent({
   children,
   className,
   position: _position = "popper",
+  ...props
 }: {
   children: React.ReactNode;
   className?: string;
   position?: "item-aligned" | "popper";
-}) {
+} & React.ComponentProps<typeof PopoverContent>) {
   const { triggerWidth } = useSelect();
 
   return (
@@ -178,6 +179,7 @@ function SelectContent({
         minWidth: triggerWidth ? `${triggerWidth}px` : "8rem",
         width: triggerWidth ? `${triggerWidth}px` : undefined,
       }}
+      {...props}
     >
       <div role="listbox">{children}</div>
     </PopoverContent>

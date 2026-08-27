@@ -404,8 +404,9 @@ export function OrganiserGuide() {
               </p>
               <p>
                 Text, tables, and forms line up with the logo and nav. Photo and quote grids, and
-                the edge-to-edge lines, still reach the side borders. Settings is a list. This
-                Guide is full-width sections with a line between each.
+                the edge-to-edge lines, still reach the side borders. Settings is a bordered list of
+                rows, tap one to open that page — the same style as Walks, Members, and Accident
+                reports. This Guide is full-width sections with a line between each.
               </p>
               <p>
                 Walk lists keep the title, date, and meeting point on one card so they fit a phone.
