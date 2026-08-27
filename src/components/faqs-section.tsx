@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { memo, useMemo, useState } from "react";
 import { Search, SearchX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -16,7 +15,6 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { FACEBOOK_GROUP_URL } from "@/lib/urls";
 import type { FaqCategoryView, FaqView } from "@/lib/faqs";
 import { HeroCopy } from "@/components/hero-copy";
-import { FadeIn } from "@/components/motion";
 
 export function FaqsSection({
   categories,
@@ -26,13 +24,74 @@ export function FaqsSection({
   faqs: FaqView[];
 }) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeCategory, setActiveCategory] = useState("all");
-  const reduce = useReducedMotion();
 
-  const usedCategories = categories.filter((category) =>
-    faqs.some((faq) => faq.categoryId === category.id),
+  if (faqs.length === 0) return null;
+
+  return (
+    <section>
+      <FaqIntro onSearchChange={setSearchTerm} searchTerm={searchTerm} />
+      <FaqBrowser
+        categories={categories}
+        faqs={faqs}
+        onClearSearch={() => setSearchTerm("")}
+        searchTerm={searchTerm}
+      />
+    </section>
   );
-  const filters = [{ id: "all", label: "All" }, ...usedCategories];
+}
+
+const FaqIntro = memo(function FaqIntro({
+  searchTerm,
+  onSearchChange,
+}: {
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+}) {
+  return (
+    <HeroCopy
+      after={
+        <InputGroup className="w-full">
+          <InputGroupInput
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder="Search FAQs…"
+            value={searchTerm}
+          />
+          <InputGroupAddon>
+            <Search data-icon="inline-start" />
+          </InputGroupAddon>
+        </InputGroup>
+      }
+      eyebrow={null}
+      title="Frequently asked questions"
+      titleAs="h2"
+    >
+      <p>
+        How to join, what to bring, and how clock-in works. If you still have a question, ask in the
+        Facebook group.
+      </p>
+    </HeroCopy>
+  );
+});
+
+function FaqBrowser({
+  categories,
+  faqs,
+  searchTerm,
+  onClearSearch,
+}: {
+  categories: FaqCategoryView[];
+  faqs: FaqView[];
+  searchTerm: string;
+  onClearSearch: () => void;
+}) {
+  const [activeCategory, setActiveCategory] = useState("all");
+
+  const filters = useMemo(() => {
+    const used = categories.filter((category) =>
+      faqs.some((faq) => faq.categoryId === category.id),
+    );
+    return [{ id: "all", label: "All" }, ...used];
+  }, [categories, faqs]);
 
   const filtered = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -46,60 +105,28 @@ export function FaqsSection({
     });
   }, [activeCategory, faqs, searchTerm]);
 
-  if (faqs.length === 0) return null;
-
   return (
-    <section>
-      <HeroCopy
-        after={
-          <InputGroup className="w-full">
-            <InputGroupInput
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Search FAQs…"
-              value={searchTerm}
-            />
-            <InputGroupAddon>
-              <Search data-icon="inline-start" />
-            </InputGroupAddon>
-          </InputGroup>
-        }
-        eyebrow={null}
-        title="Frequently asked questions"
-        titleAs="h2"
-      >
-        <p>
-          How to join, what to bring, and how clock-in works. If you still have a question, ask in
-          the Facebook group.
-        </p>
-      </HeroCopy>
-
+    <>
       <div className="flex gap-2 overflow-x-auto overscroll-x-contain border-y px-3 [scrollbar-width:none] [-ms-overflow-style:none] sm:flex-wrap sm:overflow-visible md:px-8 [&::-webkit-scrollbar]:hidden">
-        {filters.map((category) => (
-          <button
-            className="flex shrink-0 flex-col"
-            key={category.id}
-            onClick={() => setActiveCategory(category.id)}
-            type="button"
-          >
-            <span
+        {filters.map((category) => {
+          const active = activeCategory === category.id;
+          return (
+            <button
+              aria-pressed={active}
               className={cn(
-                "px-3 py-3 text-base text-muted-foreground hover:text-primary md:px-4 md:py-3.5 md:text-lg",
-                activeCategory === category.id && "text-primary",
+                "shrink-0 border-b-2 px-3 py-3 text-base md:px-4 md:py-3.5 md:text-lg",
+                active
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-primary",
               )}
+              key={category.id}
+              onClick={() => setActiveCategory(category.id)}
+              type="button"
             >
               {category.label}
-            </span>
-            {activeCategory === category.id ? (
-              <motion.span
-                className="h-0.5 w-full bg-primary"
-                layoutId={reduce ? undefined : "faq-underline"}
-                transition={{ type: "spring", bounce: 0.18, duration: 0.4 }}
-              />
-            ) : (
-              <span className="h-0.5 w-full bg-transparent" />
-            )}
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </div>
 
       <Accordion className="flex flex-col gap-2 border-0 px-4 py-12 lg:px-6" collapsible type="single">
@@ -112,8 +139,7 @@ export function FaqsSection({
       </Accordion>
 
       {filtered.length === 0 ? (
-        <FadeIn>
-          <Empty className="mx-4 mb-12 border md:mx-8">
+        <Empty className="mx-4 mb-12 border md:mx-8">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <Search />
@@ -121,13 +147,12 @@ export function FaqsSection({
             <EmptyTitle>No FAQs found matching your search.</EmptyTitle>
           </EmptyHeader>
           <EmptyContent>
-            <Button onClick={() => setSearchTerm("")} variant="outline">
+            <Button onClick={onClearSearch} variant="outline">
               <SearchX data-icon="inline-start" />
               Clear search
             </Button>
           </EmptyContent>
-          </Empty>
-        </FadeIn>
+        </Empty>
       ) : null}
 
       <p className="px-4 pb-12 text-center text-sm text-muted-foreground md:px-8">
@@ -141,6 +166,6 @@ export function FaqsSection({
           Ask in the Facebook group
         </a>
       </p>
-    </section>
+    </>
   );
 }
