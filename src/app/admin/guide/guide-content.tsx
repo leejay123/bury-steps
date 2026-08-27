@@ -263,8 +263,8 @@ export function OrganiserGuide() {
               </p>
               <p>
                 Drag the grip on the left of a row to change the order of photos, quotes, FAQ
-                categories, and questions. Drop a photo onto the box in the drawer. Walks stay in
-                date order, so those tables are not dragged.
+                categories, and questions. Drop a photo onto the box in the drawer; it fills the
+                width of the panel. Walks stay in date order, so those tables are not dragged.
               </p>
               <p className="font-medium text-foreground">Hero photos</p>
               <p>
@@ -280,8 +280,9 @@ export function OrganiserGuide() {
               <p className="font-medium text-foreground">Testimonials</p>
               <p>
                 Up to {MAX_HOMEPAGE_TESTIMONIALS} quotes. Name, a line under the name (for example
-                “Member”), the quote, and an optional photo. Hidden on the homepage if you have
-                none.
+                “Member”), the quote, and an optional photo. The photo fills the drawer; use the
+                cross on it to take the photo off before you save. Hidden on the homepage if you
+                have none.
               </p>
               <p className="font-medium text-foreground">FAQs</p>
               <p>

@@ -689,7 +689,9 @@ export async function updateHomepageTestimonial(
         quote: copy.quote,
         ...(image
           ? { imagePath: null, imageMime: image.mime, imageData: image.data }
-          : {}),
+          : formData.get("removeImage") === "on"
+            ? { imagePath: null, imageMime: null, imageData: null }
+            : {}),
       },
     });
   } catch {

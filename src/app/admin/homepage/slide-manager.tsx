@@ -97,6 +97,7 @@ function SlideFields({
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={`${prefix}-image`}>Photo</Label>
         <ImageDropzone
+          clearable={false}
           disabled={disabled}
           existingAlt={slide?.alt}
           existingSrc={slide?.src}

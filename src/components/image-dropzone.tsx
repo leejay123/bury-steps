@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { ImageIcon, UploadIcon } from "lucide-react";
+import { ImageIcon, UploadIcon, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Empty,
   EmptyContent,
@@ -27,6 +27,7 @@ function assignFile(input: HTMLInputElement, file: File | null) {
 
 export function ImageDropzone({
   aspect = "video",
+  clearable = true,
   disabled,
   existingAlt,
   existingSrc,
@@ -36,6 +37,7 @@ export function ImageDropzone({
   required,
 }: {
   aspect?: "video" | "square";
+  clearable?: boolean;
   disabled?: boolean;
   existingAlt?: string;
   existingSrc?: string;
@@ -49,6 +51,7 @@ export function ImageDropzone({
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [removed, setRemoved] = useState(false);
   const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
@@ -70,6 +73,7 @@ export function ImageDropzone({
         toast.error("Keep the image under 4 MB.");
         return;
       }
+      setRemoved(false);
     }
 
     assignFile(input, next);
@@ -85,12 +89,28 @@ export function ImageDropzone({
     inputRef.current?.click();
   }
 
-  const preview = previewUrl ?? existingSrc;
-  const aspectClass =
-    aspect === "square" ? "aspect-square w-full max-w-56" : "aspect-video w-full";
+  function clearPhoto(event: React.MouseEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (disabled) return;
+
+    if (file) {
+      applyFile(null);
+      return;
+    }
+
+    if (existingSrc && clearable) {
+      applyFile(null);
+      setRemoved(true);
+    }
+  }
+
+  const preview = previewUrl ?? (removed ? null : existingSrc);
+  const showRemove = Boolean(preview) && !disabled && Boolean(file || clearable);
+  const aspectClass = aspect === "square" ? "aspect-square w-full" : "aspect-video w-full";
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex w-full flex-col gap-2">
       <input
         accept={ACCEPT}
         className="sr-only"
@@ -99,48 +119,67 @@ export function ImageDropzone({
         name={name}
         onChange={(event) => applyFile(event.target.files?.[0] ?? null)}
         ref={inputRef}
-        required={required && !existingSrc}
+        required={required && !preview}
         type="file"
       />
+      {removed && !file ? <input name="removeImage" type="hidden" value="on" /> : null}
 
       {preview ? (
-        <button
-          aria-label="Change photo"
+        <div
           className={cn(
-            "relative block overflow-hidden rounded-xl border text-left outline-none",
+            "relative overflow-hidden rounded-xl border",
             aspectClass,
-            disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
-            "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
             dragging && "ring-ring ring-[3px]",
           )}
-          disabled={disabled}
-          onClick={openPicker}
-          onDragLeave={() => setDragging(false)}
-          onDragOver={(event) => {
-            event.preventDefault();
-            event.dataTransfer.dropEffect = "copy";
-            if (!disabled) setDragging(true);
-          }}
-          onDrop={(event) => {
-            event.preventDefault();
-            setDragging(false);
-            applyFile(event.dataTransfer.files[0] ?? null);
-          }}
-          type="button"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            alt={existingAlt || "Selected photo"}
-            className="size-full object-cover"
-            src={preview}
-          />
-          <span className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-black/55 p-3 text-white">
+          <button
+            aria-label="Change photo"
+            className={cn(
+              "absolute inset-0 block text-left outline-none",
+              disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
+              "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+            )}
+            disabled={disabled}
+            onClick={openPicker}
+            onDragLeave={() => setDragging(false)}
+            onDragOver={(event) => {
+              event.preventDefault();
+              event.dataTransfer.dropEffect = "copy";
+              if (!disabled) setDragging(true);
+            }}
+            onDrop={(event) => {
+              event.preventDefault();
+              setDragging(false);
+              applyFile(event.dataTransfer.files[0] ?? null);
+            }}
+            type="button"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              alt={existingAlt || "Selected photo"}
+              className="size-full object-cover object-center"
+              src={preview}
+            />
+          </button>
+          {showRemove ? (
+            <Button
+              aria-label="Remove photo"
+              className="absolute top-2 right-2 z-10"
+              onClick={clearPhoto}
+              size="icon"
+              type="button"
+              variant="secondary"
+            >
+              <X />
+            </Button>
+          ) : null}
+          <span className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-black/55 p-3 text-white">
             <span className="truncate text-sm font-medium">
               {file ? file.name : "Change photo"}
             </span>
             <Badge variant="secondary">{file ? "New" : "Replace"}</Badge>
           </span>
-        </button>
+        </div>
       ) : (
         <Empty
           aria-label="Choose a photo"
