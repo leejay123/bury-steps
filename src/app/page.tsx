@@ -11,12 +11,10 @@ export const revalidate = HOMEPAGE_REVALIDATE_SECONDS;
 
 export default async function Home() {
   const origin = appUrl();
-  const [slides, testimonials, faqData, theme] = await Promise.all([
-    getHomepageSlides(),
-    getHomepageTestimonials(),
-    getHomepageFaqData(),
-    getSiteTheme(),
-  ]);
+  const slides = await getHomepageSlides();
+  const testimonials = await getHomepageTestimonials();
+  const faqData = await getHomepageFaqData();
+  const theme = await getSiteTheme();
 
   return (
     <div className="relative -mx-4 -mt-8 md:-mx-8">

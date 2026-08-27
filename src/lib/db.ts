@@ -1,6 +1,12 @@
 import { PrismaClient } from "@prisma/client";
 
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+const globalForPrisma = globalThis as unknown as {
+  prisma?: PrismaClient;
+  prismaRev?: number;
+};
+
+/** Bump when models are added so a long-running `next dev` does not keep a stale client. */
+const PRISMA_CLIENT_REV = 2;
 
 function datasourceUrl() {
   const url = process.env.DATABASE_URL;
@@ -9,11 +15,21 @@ function datasourceUrl() {
   return `${url}${url.includes("?") ? "&" : "?"}connection_limit=1`;
 }
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
+function createPrismaClient() {
+  return new PrismaClient({
     datasourceUrl: datasourceUrl(),
     log: process.env.NODE_ENV === "development" ? ["error"] : ["error"],
   });
+}
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+if (globalForPrisma.prismaRev !== PRISMA_CLIENT_REV) {
+  void globalForPrisma.prisma?.$disconnect();
+  globalForPrisma.prisma = undefined;
+}
+
+export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+  globalForPrisma.prismaRev = PRISMA_CLIENT_REV;
+}

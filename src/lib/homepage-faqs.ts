@@ -31,36 +31,40 @@ export async function ensureDefaultFaqCategories() {
 }
 
 export async function loadHomepageFaqData(): Promise<HomepageFaqData> {
-  const [faqRows, categoryRows] = await Promise.all([
-    prisma.homepageFaq.findMany({
-      orderBy: { sortOrder: "asc" },
-      select: {
-        id: true,
-        sortOrder: true,
-        question: true,
-        answer: true,
-        categoryId: true,
-        category: { select: { label: true } },
-      },
-    }),
-    prisma.homepageFaqCategory.findMany({
-      orderBy: { sortOrder: "asc" },
-      select: {
-        id: true,
-        slug: true,
-        label: true,
-        sortOrder: true,
-        _count: { select: { faqs: true } },
-      },
-    }),
-  ]);
+  // Sequential on purpose: serverless Prisma uses one connection, and a failed
+  // load used to be cached as "no FAQs", which hid the whole homepage block.
+  const categoryRows = await prisma.homepageFaqCategory.findMany({
+    orderBy: { sortOrder: "asc" },
+    select: {
+      id: true,
+      slug: true,
+      label: true,
+      sortOrder: true,
+    },
+  });
+  const faqRows = await prisma.homepageFaq.findMany({
+    orderBy: { sortOrder: "asc" },
+    select: {
+      id: true,
+      sortOrder: true,
+      question: true,
+      answer: true,
+      categoryId: true,
+    },
+  });
+
+  const labels = new Map(categoryRows.map((row) => [row.id, row.label]));
+  const counts = new Map<string, number>();
+  for (const row of faqRows) {
+    counts.set(row.categoryId, (counts.get(row.categoryId) ?? 0) + 1);
+  }
 
   return {
     faqs: faqRows.map((row) => ({
       id: row.id,
       sortOrder: row.sortOrder,
       categoryId: row.categoryId,
-      categoryLabel: row.category.label,
+      categoryLabel: labels.get(row.categoryId) ?? "FAQ",
       question: row.question,
       answer: row.answer,
     })),
@@ -69,12 +73,12 @@ export async function loadHomepageFaqData(): Promise<HomepageFaqData> {
       slug: row.slug,
       label: row.label,
       sortOrder: row.sortOrder,
-      faqCount: row._count.faqs,
+      faqCount: counts.get(row.id) ?? 0,
     })),
   };
 }
 
-const getCachedHomepageFaqData = unstable_cache(loadHomepageFaqData, ["homepage-faq-data"], {
+const getCachedHomepageFaqData = unstable_cache(loadHomepageFaqData, ["homepage-faq-data", "v2"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });
@@ -83,7 +87,7 @@ export async function getHomepageFaqData(): Promise<HomepageFaqData> {
   try {
     return await getCachedHomepageFaqData();
   } catch {
-    return { faqs: [], categories: [] };
+    return loadHomepageFaqData();
   }
 }
 
