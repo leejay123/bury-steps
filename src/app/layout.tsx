@@ -59,7 +59,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           <div className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x">
             <UnlockPageOnNavigate />
-            <header className="sticky top-0 z-[55] pointer-events-auto touch-manipulation bg-white/70 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/55">
+            <header className="sticky top-0 z-[55] touch-manipulation bg-white/70 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/55">
               <div className="relative">
                 <div className={`flex h-14 items-center justify-between gap-3 ${PAGE_X} md:grid md:grid-cols-[1fr_auto_1fr]`}>
                   <UnlockingLink className="flex h-8 min-w-0 items-center justify-self-start" href="/">

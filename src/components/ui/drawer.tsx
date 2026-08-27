@@ -12,7 +12,7 @@ import {
 } from "@/components/overlay-root";
 
 const overlayCloseClassName =
-  "absolute top-3 right-3 z-10 flex size-8 cursor-pointer items-center justify-center rounded-md opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
+  "absolute top-3 right-3 z-20 flex size-10 cursor-pointer items-center justify-center rounded-md opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
 
 const DrawerOpenContext = React.createContext<boolean | undefined>(undefined);
 
@@ -32,6 +32,8 @@ function Drawer({
     <DrawerOpenContext.Provider value={open}>
       <DrawerPrimitive.Root
         data-slot="drawer"
+        dismissible
+        modal
         onOpenChange={(next) => {
           if (!next) {
             restorePagePointerEvents();
@@ -73,12 +75,12 @@ function DrawerOverlay({
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"
       className={cn(
-        "fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:animate-in data-[state=open]:fade-in-0",
+        "fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:pointer-events-auto",
         dismissed && "invisible !pointer-events-none",
         className,
       )}
       {...props}
-      style={dismissed ? { ...style, pointerEvents: "none" } : style}
+      style={dismissed ? { ...style, pointerEvents: "none" } : { ...style, pointerEvents: "auto" }}
     />
   );
 }
@@ -94,13 +96,18 @@ function DrawerContent({
   const open = React.useContext(DrawerOpenContext);
   const dismissed = open === false;
 
+  React.useEffect(() => {
+    if (!root || open !== true) return;
+    root.style.removeProperty("pointer-events");
+  }, [open, root]);
+
   return (
     <DrawerPortal>
       <DrawerOverlay />
       <DrawerPrimitive.Content
         data-slot="drawer-content"
         className={cn(
-          "group/drawer-content fixed z-[60] flex h-auto flex-col overflow-visible bg-background data-[state=closed]:invisible data-[state=closed]:!pointer-events-none",
+          "group/drawer-content fixed z-[60] flex h-auto flex-col overflow-visible bg-background data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
           dismissed && "invisible !pointer-events-none",
           "data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:max-h-[80vh] data-[vaul-drawer-direction=top]:rounded-b-lg data-[vaul-drawer-direction=top]:border-b",
           "data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:max-h-[80vh] data-[vaul-drawer-direction=bottom]:rounded-t-lg data-[vaul-drawer-direction=bottom]:border-t",
@@ -110,7 +117,7 @@ function DrawerContent({
         )}
         ref={setRoot}
         {...props}
-        style={dismissed ? { ...style, pointerEvents: "none" } : style}
+        style={dismissed ? { ...style, pointerEvents: "none" } : { ...style, pointerEvents: "auto" }}
       >
         <OverlayRootContext.Provider value={root}>
           <div className="mx-auto mt-4 hidden h-2 w-[100px] shrink-0 rounded-full bg-muted group-data-[vaul-drawer-direction=bottom]/drawer-content:block" />

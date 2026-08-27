@@ -52,39 +52,21 @@ const OVERLAY_SELECTOR = [
   '[data-slot="alert-dialog-content"]',
 ].join(", ");
 
-function overlayIsOffscreen(node: HTMLElement) {
-  const rect = node.getBoundingClientRect();
-  return (
-    rect.width < 8 ||
-    rect.height < 8 ||
-    rect.right < 8 ||
-    rect.left > window.innerWidth - 8 ||
-    rect.bottom < 8 ||
-    rect.top > window.innerHeight - 8
-  );
+function anyModalContentOpen() {
+  return Boolean(document.querySelector(OPEN_CONTENT_SELECTOR));
 }
 
-function isVisibleModalOpen() {
-  return [...document.querySelectorAll<HTMLElement>(OPEN_CONTENT_SELECTOR)].some(
-    (node) => !overlayIsOffscreen(node),
-  );
-}
-
+/**
+ * Open overlays must stay interactive. Earlier logic used geometry during Vaul's
+ * enter animation and permanently set pointer-events:none on live drawers.
+ */
 function neutralizeStaleOverlays() {
-  const visibleOpenContent = isVisibleModalOpen();
-
   document.querySelectorAll<HTMLElement>(OVERLAY_SELECTOR).forEach((node) => {
-    const slot = node.getAttribute("data-slot") ?? "";
-    const isContent = slot.endsWith("-content");
     const open = node.getAttribute("data-state") === "open";
-
-    if (isContent) {
-      if (open && !overlayIsOffscreen(node)) return;
-      node.style.pointerEvents = "none";
+    if (open) {
+      node.style.removeProperty("pointer-events");
       return;
     }
-
-    if (open && visibleOpenContent) return;
     node.style.pointerEvents = "none";
   });
 }
@@ -111,7 +93,7 @@ export function restorePagePointerEvents() {
 
 export function unlockIdleDocument() {
   neutralizeStaleOverlays();
-  if (isVisibleModalOpen()) return;
+  if (anyModalContentOpen()) return;
   restorePagePointerEvents();
 }
 
@@ -146,7 +128,8 @@ export function UnlockingLink({
   href: string;
 }) {
   function unlock() {
-    restorePagePointerEvents();
+    // Never strip Vaul's body lock while a drawer/dialog is open — only clean
+    // up after dismiss or navigation when nothing is open.
     unlockIdleDocument();
   }
 
@@ -161,8 +144,8 @@ export function UnlockPageOnNavigate() {
   const pathname = usePathname();
 
   useEffect(() => {
-    restorePagePointerEvents();
     neutralizeStaleOverlays();
+    if (!anyModalContentOpen()) restorePagePointerEvents();
   }, [pathname]);
 
   useEffect(() => {
@@ -183,19 +166,29 @@ export function UnlockPageOnNavigate() {
       attributeFilter: ["style", "class"],
     });
 
-    function onPointerDown(event: PointerEvent) {
+    function shouldSkipUnlock(event: Event) {
       const target = event.target;
-      if (!(target instanceof Element)) {
-        unlockIdleDocument();
-        return;
-      }
-      if (target.closest(OPEN_MODAL_SELECTOR)) return;
+      return target instanceof Element && Boolean(target.closest(OPEN_MODAL_SELECTOR));
+    }
+
+    function onPointerDown(event: PointerEvent) {
+      if (shouldSkipUnlock(event)) return;
+      unlockIdleDocument();
+    }
+
+    function onPointerUp(event: PointerEvent) {
+      if (shouldSkipUnlock(event)) return;
+      unlockIdleDocument();
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (shouldSkipUnlock(event)) return;
       unlockIdleDocument();
     }
 
     window.addEventListener("pointerdown", onPointerDown, true);
-    window.addEventListener("pointerup", unlockIdleDocument, true);
-    window.addEventListener("keydown", unlockIdleDocument, true);
+    window.addEventListener("pointerup", onPointerUp, true);
+    window.addEventListener("keydown", onKeyDown, true);
     window.addEventListener("popstate", unlockIdleDocument);
     document.addEventListener("visibilitychange", unlockIdleDocument);
     const poll = window.setInterval(unlockIdleDocument, 750);
@@ -207,8 +200,8 @@ export function UnlockPageOnNavigate() {
       window.clearInterval(poll);
       observer.disconnect();
       window.removeEventListener("pointerdown", onPointerDown, true);
-      window.removeEventListener("pointerup", unlockIdleDocument, true);
-      window.removeEventListener("keydown", unlockIdleDocument, true);
+      window.removeEventListener("pointerup", onPointerUp, true);
+      window.removeEventListener("keydown", onKeyDown, true);
       window.removeEventListener("popstate", unlockIdleDocument);
       document.removeEventListener("visibilitychange", unlockIdleDocument);
     };
