@@ -128,6 +128,7 @@ function SelectTrigger({
       <Button
         aria-expanded={open}
         className={cn("w-full justify-between font-normal", className)}
+        data-select-trigger=""
         disabled={disabled}
         ref={triggerRef}
         role="combobox"

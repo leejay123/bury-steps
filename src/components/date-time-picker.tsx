@@ -38,7 +38,9 @@ function parseWallClock(value?: string): { date: Date; hour: string; minute: str
 function isSelectLayer(target: EventTarget | null) {
   return (
     target instanceof Element &&
-    Boolean(target.closest("[data-slot='select-content'], [data-select-dropdown]"))
+    Boolean(
+      target.closest("[data-slot='select-content'], [data-select-dropdown], [data-select-trigger]"),
+    )
   );
 }
 

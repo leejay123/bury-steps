@@ -23,7 +23,10 @@ function CalendarDropdown({ disabled, onChange, options, value }: DropdownProps)
       }}
       value={String(value ?? "")}
     >
-      <SelectTrigger className="h-8 w-fit min-w-[5.5rem] gap-1 px-2 text-sm">
+      <SelectTrigger
+        className="h-8 w-fit min-w-[5.5rem] gap-1 px-2 text-sm"
+        onPointerDown={(event) => event.stopPropagation()}
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -65,28 +68,28 @@ function Calendar({
         months: cn("relative flex flex-col gap-4 md:flex-row", defaultClassNames.months),
         month: cn("flex w-full flex-col gap-4", defaultClassNames.month),
         nav: cn(
-          "absolute inset-x-0 top-0 flex w-full items-center justify-between gap-1",
           defaultClassNames.nav,
+          "absolute inset-x-0 top-0 flex w-full items-center justify-between gap-1 pointer-events-none",
         ),
         button_previous: cn(
           buttonVariants({ variant: buttonVariant }),
-          "size-(--cell-size) p-0 select-none aria-disabled:opacity-50",
           defaultClassNames.button_previous,
+          "size-(--cell-size) p-0 select-none pointer-events-auto aria-disabled:opacity-50",
         ),
         button_next: cn(
           buttonVariants({ variant: buttonVariant }),
-          "size-(--cell-size) p-0 select-none aria-disabled:opacity-50",
           defaultClassNames.button_next,
+          "size-(--cell-size) p-0 select-none pointer-events-auto aria-disabled:opacity-50",
         ),
         month_caption: cn(
           "flex h-(--cell-size) w-full items-center justify-center px-(--cell-size)",
           defaultClassNames.month_caption,
         ),
         dropdowns: cn(
-          "flex h-(--cell-size) w-full items-center justify-center gap-1.5 text-sm font-medium",
+          "relative z-10 flex h-(--cell-size) w-full items-center justify-center gap-1.5 text-sm font-medium",
           defaultClassNames.dropdowns,
         ),
-        dropdown_root: cn("relative", defaultClassNames.dropdown_root),
+        dropdown_root: cn("relative z-10", defaultClassNames.dropdown_root),
         dropdown: cn(defaultClassNames.dropdown),
         caption_label: cn(
           "font-medium select-none",
