@@ -167,8 +167,16 @@ export function UnlockPageOnNavigate() {
   const pathname = usePathname();
 
   useEffect(() => {
+    // A route change means the previous page's tree is gone (or is about to
+    // be). Any overlay that still reports `data-state="open"` at this point
+    // belongs to a layout-level component (e.g. the notification bell) that
+    // was left open rather than dismissed, and its lock must not survive
+    // onto the new page. Restore unconditionally — do not gate this on
+    // `anyOverlayLayerOpen()` like the other call sites, since that check can
+    // itself be racing a same-tick "close on navigate" effect elsewhere and
+    // would otherwise leave the new page permanently unclickable.
     neutralizeStaleOverlays();
-    if (!anyOverlayLayerOpen()) restorePagePointerEvents();
+    restorePagePointerEvents();
   }, [pathname]);
 
   useEffect(() => {
@@ -209,23 +217,42 @@ export function UnlockPageOnNavigate() {
       unlockIdleDocument();
     }
 
+    // A scroll only happens when pointer-events are NOT blocked at the point
+    // the user touched (native scrolling on mobile Safari is unaffected by
+    // `pointer-events: none`, which is exactly the "scroll works, taps don't"
+    // symptom this whole module exists to prevent). So a scroll is itself
+    // evidence the page is at least partly interactive, and a good moment to
+    // sweep for any stale lock left over elsewhere on the page. Debounced
+    // separately (and more loosely) than the mutation observer so a scroll
+    // gesture cannot spam this on every frame.
+    let scrollTimer = 0;
+    function onScroll() {
+      window.clearTimeout(scrollTimer);
+      scrollTimer = window.setTimeout(unlockIdleDocument, 150);
+    }
+
     window.addEventListener("pointerdown", onPointerDown, true);
     window.addEventListener("pointerup", onPointerUp, true);
     window.addEventListener("keydown", onKeyDown, true);
     window.addEventListener("popstate", unlockIdleDocument);
+    window.addEventListener("pageshow", unlockIdleDocument);
+    window.addEventListener("scroll", onScroll, { capture: true, passive: true });
     document.addEventListener("visibilitychange", unlockIdleDocument);
-    const poll = window.setInterval(unlockIdleDocument, 750);
+    const poll = window.setInterval(unlockIdleDocument, 400);
 
     unlockIdleDocument();
 
     return () => {
       window.clearTimeout(idleTimer);
+      window.clearTimeout(scrollTimer);
       window.clearInterval(poll);
       observer.disconnect();
       window.removeEventListener("pointerdown", onPointerDown, true);
       window.removeEventListener("pointerup", onPointerUp, true);
       window.removeEventListener("keydown", onKeyDown, true);
       window.removeEventListener("popstate", unlockIdleDocument);
+      window.removeEventListener("pageshow", unlockIdleDocument);
+      window.removeEventListener("scroll", onScroll, true);
       document.removeEventListener("visibilitychange", unlockIdleDocument);
     };
   }, []);

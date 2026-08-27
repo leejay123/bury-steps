@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Bell } from "lucide-react";
 import { markSiteNoticesRead } from "@/server/actions";
 import { formatDate } from "@/lib/dates";
@@ -25,10 +26,24 @@ export function NotificationBell({
   const [open, setOpen] = useState(false);
   const [unread, setUnread] = useState(unreadIds);
   const [pending, setPending] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     setUnread(unreadIds);
   }, [unreadIds]);
+
+  // This bell lives in the layout, so it survives client-side navigation
+  // instead of unmounting like a normal page. Tapping a nav link while the
+  // drawer is open dismisses it via Vaul's own outside-pointer handling in
+  // the common case, but that is not guaranteed for every way a route can
+  // change (browser back/forward, a link inside the drawer itself, etc).
+  // Force it closed on every navigation so it can never sit open — with its
+  // modal pointer-events lock still applied — underneath a page the user has
+  // already moved on from.
+  useEffect(() => {
+    setOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   const unreadCount = unread.length;
   const unreadSet = new Set(unread);
