@@ -76,15 +76,19 @@ function anyOverlayLayerOpen() {
 /**
  * Open overlays must stay interactive. Earlier logic used geometry during Vaul's
  * enter animation and permanently set pointer-events:none on live drawers.
+ *
+ * Removing the inline override here is not enough: while a modal layer is
+ * open, Radix sets `body.style.pointerEvents = "none"`, and "none" is
+ * inherited by descendants. An open dialog/drawer with no override of its own
+ * then inherits "none" from body and becomes unclickable — exactly what
+ * happened opening a Select inside an AlertDialog. Force "auto" instead of
+ * merely clearing the property, so open overlays are interactive regardless
+ * of what body currently has set.
  */
 function neutralizeStaleOverlays() {
   document.querySelectorAll<HTMLElement>(OVERLAY_SELECTOR).forEach((node) => {
     const open = node.getAttribute("data-state") === "open";
-    if (open) {
-      node.style.removeProperty("pointer-events");
-      return;
-    }
-    node.style.pointerEvents = "none";
+    node.style.pointerEvents = open ? "auto" : "none";
   });
 }
 
