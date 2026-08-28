@@ -12,14 +12,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 /** Bump this whenever the guide is updated. */
 export const GUIDE_LAST_UPDATED = "28 August 2026";
@@ -262,7 +254,8 @@ export function OrganiserGuide() {
                 button on the row, not in the drawer. Drawers are for adding and editing. On a
                 phone the list stacks so you do not have to scroll sideways, Add buttons stretch
                 full width, and drawers slide up from the bottom of the screen; on a wider screen
-                they slide in from the side instead.
+                they slide in from the side instead. A breadcrumb at the top of each settings page
+                goes back to Settings — it greys when you hover it.
               </p>
               <p>
                 Use the up and down arrows on the left of a row to change the order of photos,
@@ -439,55 +432,39 @@ export function OrganiserGuide() {
         <AccordionItem className="px-4 md:px-6" value="limits">
           <AccordionTrigger className="text-base">Limits</AccordionTrigger>
           <AccordionContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>What</TableHead>
-                  <TableHead>Limit</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell>Hero photos</TableCell>
-                  <TableCell>{MAX_HOMEPAGE_SLIDES}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Testimonials</TableCell>
-                  <TableCell>{MAX_HOMEPAGE_TESTIMONIALS}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>FAQs</TableCell>
-                  <TableCell>{MAX_HOMEPAGE_FAQS}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>FAQ categories</TableCell>
-                  <TableCell>{MAX_FAQ_CATEGORIES}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Notices</TableCell>
-                  <TableCell>{MAX_SITE_NOTICES}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Photo uploads</TableCell>
-                  <TableCell>4 MB</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Clock-in window</TableCell>
-                  <TableCell>1 hour before start, until 1 hour after the walk should end</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Health notes</TableCell>
-                  <TableCell>Kept for 90 days after the walk</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Cancelled walks</TableCell>
-                  <TableCell>
-                    Shown to members, then deleted after {CANCELLED_WALK_RETENTION_DAYS} days if
-                    not reopened
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
+            <GuideBody>
+              <ul>
+                <li>
+                  <strong>Hero photos</strong> — {MAX_HOMEPAGE_SLIDES}
+                </li>
+                <li>
+                  <strong>Testimonials</strong> — {MAX_HOMEPAGE_TESTIMONIALS}
+                </li>
+                <li>
+                  <strong>FAQs</strong> — {MAX_HOMEPAGE_FAQS}
+                </li>
+                <li>
+                  <strong>FAQ categories</strong> — {MAX_FAQ_CATEGORIES}
+                </li>
+                <li>
+                  <strong>Notices</strong> — {MAX_SITE_NOTICES}
+                </li>
+                <li>
+                  <strong>Photo uploads</strong> — 4 MB
+                </li>
+                <li>
+                  <strong>Clock-in window</strong> — 1 hour before start, until 1 hour after the
+                  walk should end
+                </li>
+                <li>
+                  <strong>Health notes</strong> — kept for 90 days after the walk
+                </li>
+                <li>
+                  <strong>Cancelled walks</strong> — shown to members, then deleted after{" "}
+                  {CANCELLED_WALK_RETENTION_DAYS} days if not reopened
+                </li>
+              </ul>
+            </GuideBody>
           </AccordionContent>
         </AccordionItem>
       </Accordion>

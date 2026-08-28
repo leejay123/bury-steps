@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Facebook } from "lucide-react";
 import { FullWidthDivider } from "@/components/full-width-divider";
-import { PAGE_X, PAGE_Y } from "@/lib/page-x";
+import { PAGE_X } from "@/lib/page-x";
 import { FACEBOOK_GROUP_URL } from "@/lib/urls";
 
 export function SiteFooter() {
@@ -12,7 +12,7 @@ export function SiteFooter() {
       <FullWidthDivider position="top" />
       <nav
         aria-label="Footer"
-        className={`flex flex-wrap items-center justify-center gap-x-4 gap-y-2 ${PAGE_X} ${PAGE_Y} pb-[max(2rem,env(safe-area-inset-bottom))] text-xs text-muted-foreground md:justify-between`}
+        className={`flex flex-wrap items-center justify-center gap-x-4 gap-y-1 ${PAGE_X} py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-xs text-muted-foreground md:justify-between`}
       >
         <Link href="/privacy-policy" className="whitespace-nowrap hover:text-foreground">
           Privacy Policy

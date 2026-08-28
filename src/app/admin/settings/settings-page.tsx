@@ -13,7 +13,7 @@ export function SettingsPage({
   return (
     <div className="flex flex-col">
       <div className="relative flex flex-col gap-3 px-4 py-6 md:px-6">
-        <SettingsBackLink />
+        <SettingsBackLink page={title} />
         <div className="flex flex-col gap-1.5">
           <h2 className="font-semibold text-lg tracking-tight">{title}</h2>
           <p className="text-muted-foreground text-sm">{description}</p>
