@@ -4,16 +4,16 @@ import { ClipboardList } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireAdmin, displayName } from "@/lib/auth";
 import { formatWalkDate } from "@/lib/dates";
-import { windowState } from "@/lib/walk-window";
+import { walkStatus } from "@/lib/walk-window";
 import { appUrl } from "@/lib/urls";
 import { ShareLink } from "@/components/share-link";
 import { EmptyState } from "@/components/empty-state";
+import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { CancelWalkButton } from "./cancel-walk-button";
 import { RescheduleWalkButton } from "./reschedule-walk-button";
 import { ReopenWalkButton } from "./reopen-walk-button";
 import { DeleteWalkButton } from "./delete-walk-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -60,7 +60,6 @@ export default async function WalkDetailPage({
   if (!walk) notFound();
 
   const attendances = walk.attendances;
-  const state = windowState(walk.startsAt, walk.durationMins);
   const stillIn = attendances.filter((a) => !a.clockedOutAt);
   const clockedOut = attendances.filter((a) => a.clockedOutAt);
   const withConditions = attendances.filter((a) => a.conditions).length;
@@ -94,15 +93,7 @@ export default async function WalkDetailPage({
               {walk.location ? ` · ${walk.location}` : ""} · {walk.durationMins} min
             </CardDescription>
           </div>
-          {walk.cancelledAt ? (
-            <Badge variant="destructive">Cancelled</Badge>
-          ) : state === "open" ? (
-            <Badge>Clock-in open</Badge>
-          ) : state === "too-early" ? (
-            <Badge variant="secondary">Upcoming</Badge>
-          ) : (
-            <Badge variant="outline">Finished</Badge>
-          )}
+          <WalkStatusBadge status={walkStatus(walk)} />
         </CardHeader>
         {walk.description || (walk.cancelledAt && walk.cancelledReason) ? (
           <CardContent className="flex flex-col gap-2">

@@ -79,6 +79,8 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
                 <Badge variant="secondary">Clocked in</Badge>
               ) : walk.state === "open" ? (
                 <Badge>Clock-in open</Badge>
+              ) : walk.state === "closed" ? (
+                <Badge variant="outline">Completed</Badge>
               ) : null}
               <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" />
             </div>
