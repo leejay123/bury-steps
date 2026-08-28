@@ -2,8 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { getMemberHistory } from "@/server/actions";
-import { formatDate, formatMembershipAge } from "@/lib/dates";
+import { formatCompactDateTime, formatDate, formatMembershipAge, formatWalkDate } from "@/lib/dates";
 import { AttendanceHistory } from "@/components/attendance-history";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeleteMemberButton } from "../delete-member-button";
@@ -23,6 +24,11 @@ export default async function MemberDetailPage({
 
   const joinedAt = new Date(member.createdAt);
   const attendanceCount = member.items.length;
+  // Clocked in, not clocked out, and the walk itself was not cancelled out
+  // from under them — the walks they are on right now, at a glance, rather
+  // than the admin having to scan the whole table below to notice.
+  const stillOn = member.items.filter((item) => !item.clockedOutAt && !item.cancelledAt);
+  const cancelledCount = member.items.filter((item) => item.cancelledAt).length;
 
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
@@ -58,6 +64,44 @@ export default async function MemberDetailPage({
         </CardHeader>
       </Card>
 
+      {/*
+        A short, fixed-size summary of this person's activity that never grows
+        no matter how long their history is — the opposite of the old drawer,
+        which just kept getting taller as more rows were added. The full,
+        searchable, paginated table below is still there for the detail; this
+        is the "at a glance" answer to "what has this person been doing".
+      */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <StatCard label="Total walks" value={attendanceCount} />
+        <StatCard label="Walks created" value={member.walkCount} />
+        <StatCard label="Cancelled after clock-in" value={cancelledCount} />
+      </div>
+
+      {stillOn.length > 0 ? (
+        <Alert>
+          <AlertTitle>
+            {stillOn.length === 1
+              ? "Currently clocked in to a walk"
+              : `Currently clocked in to ${stillOn.length} walks`}
+          </AlertTitle>
+          <AlertDescription>
+            <ul className="flex flex-col gap-1">
+              {stillOn.map((item) => (
+                <li key={item.id}>
+                  <Link className="underline hover:no-underline" href={`/admin/walks/${item.walkId}`}>
+                    {item.walkTitle}
+                  </Link>
+                  {" · "}
+                  {formatWalkDate(new Date(item.startsAt))}
+                  {" · clocked in "}
+                  {formatCompactDateTime(new Date(item.clockedInAt))}
+                </li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-medium text-muted-foreground">
           {attendanceCount === 0
@@ -82,5 +126,16 @@ export default async function MemberDetailPage({
         />
       </section>
     </div>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: number }) {
+  return (
+    <Card className="gap-1 py-4">
+      <CardHeader className="gap-0 px-4">
+        <CardTitle className="text-2xl tabular-nums">{value}</CardTitle>
+        <CardDescription>{label}</CardDescription>
+      </CardHeader>
+    </Card>
   );
 }
