@@ -20,6 +20,18 @@ html {
      (or shrinks back under) the viewport height doesn't add/remove the
      scrollbar and shove all the content sideways by its width. */
   scrollbar-gutter: stable;
+  /*
+   * The viewport keeps pinch-zoom enabled (WCAG 1.4.4 needs it), but that
+   * also re-enables the browser's double-tap-to-zoom gesture everywhere.
+   * A quick double tap on the FAQ search box, a filter pill, or an
+   * accordion question reads as the whole page "zooming in" for no
+   * reason. `touch-action` isn't inherited in the CSS sense, but browsers
+   * intersect it across the ancestor chain when deciding what a touch can
+   * do, so setting `manipulation` here (pan + pinch-zoom, no double-tap)
+   * on the root turns off double-tap zoom everywhere without having to
+   * repeat it on every clickable element.
+   */
+  touch-action: manipulation;
 }
 
 /*
