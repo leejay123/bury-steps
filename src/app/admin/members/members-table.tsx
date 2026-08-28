@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useRef } from "react";
 import Link from "next/link";
 import { ChevronRight, Search } from "lucide-react";
 import { formatDate, formatMembershipAge } from "@/lib/dates";
@@ -8,7 +8,7 @@ import { DeleteMemberButton } from "./delete-member-button";
 import { EmptyState } from "@/components/empty-state";
 import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
-import { usePagedList } from "@/hooks/use-paged-list";
+import { useUrlListState } from "@/hooks/use-url-list-state";
 import { Badge } from "@/components/ui/badge";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 
@@ -23,20 +23,22 @@ type MemberRow = {
   isYou: boolean;
 };
 
-export function MembersTable({ members }: { members: MemberRow[] }) {
-  const [query, setQuery] = useState("");
+export function MembersTable({
+  members,
+  page,
+  pageCount,
+  pageSize,
+  total,
+}: {
+  /** Already the current page's rows, filtered and paginated on the server. */
+  members: MemberRow[];
+  page: number;
+  pageCount: number;
+  pageSize: number;
+  total: number;
+}) {
   const listRef = useRef<HTMLDivElement>(null);
-
-  const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    if (!needle) return members;
-    return members.filter((member) => {
-      const hay = `${member.name} ${member.email} ${member.role === "ADMIN" ? "organiser" : "member"}`.toLowerCase();
-      return hay.includes(needle);
-    });
-  }, [members, query]);
-
-  const paging = usePagedList(filtered, { resetKey: query });
+  const { query, setQuery, setPage, isPending } = useUrlListState();
 
   return (
     <div className="flex flex-col gap-4" ref={listRef}>
@@ -52,7 +54,7 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
         </InputGroupAddon>
       </InputGroup>
 
-      {filtered.length === 0 ? (
+      {members.length === 0 ? (
         <EmptyState
           description="Try a different name, email, or role."
           icon={Search}
@@ -60,8 +62,8 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
         />
       ) : (
         <>
-          <DataList>
-            {paging.paged.map((member) => (
+          <DataList aria-busy={isPending} className={isPending ? "opacity-60" : undefined}>
+            {members.map((member) => (
               <DataListItem className="relative" key={member.id}>
                 <DataListBody>
                   <p className="font-medium">
@@ -104,12 +106,12 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
           </DataList>
           <ListPagination
             noun="members"
-            onPageChange={paging.setPage}
-            page={paging.page}
-            pageCount={paging.pageCount}
-            pageSize={paging.pageSize}
+            onPageChange={setPage}
+            page={page}
+            pageCount={pageCount}
+            pageSize={pageSize}
             scrollToRef={listRef}
-            total={paging.total}
+            total={total}
           />
         </>
       )}
