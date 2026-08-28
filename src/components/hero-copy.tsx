@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { motionEase } from "@/components/motion";
@@ -24,24 +24,36 @@ export function HeroCopy({
   dotPattern?: boolean;
 }) {
   const reduce = useReducedMotion();
-  const item = {
-    hidden: reduce ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.45, ease: motionEase },
-    },
-  };
+  // Recreated (and thus new-by-reference) object literals here would make
+  // every motion.div below re-evaluate its animation on every render of this
+  // component — including every keystroke when the `after` slot is a
+  // controlled search input (see FaqsSection). Memoize on `reduce` alone so
+  // re-renders with unrelated prop changes (like a search term) are cheap.
+  const item = useMemo(
+    () => ({
+      hidden: reduce ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 },
+      show: {
+        opacity: 1,
+        y: 0,
+        transition: { duration: 0.45, ease: motionEase },
+      },
+    }),
+    [reduce],
+  );
+  const containerVariants = useMemo(
+    () => ({
+      hidden: {},
+      show: { transition: { staggerChildren: reduce ? 0 : 0.08 } },
+    }),
+    [reduce],
+  );
 
   return (
     <motion.div
       animate="show"
       className="relative flex flex-col items-center justify-center gap-5 px-4 py-12 md:px-6 md:py-20 lg:py-24"
       initial="hidden"
-      variants={{
-        hidden: {},
-        show: { transition: { staggerChildren: reduce ? 0 : 0.08 } },
-      }}
+      variants={containerVariants}
     >
       <div aria-hidden="true" className="absolute inset-0 -z-1 size-full overflow-hidden">
         {dotPattern ? (

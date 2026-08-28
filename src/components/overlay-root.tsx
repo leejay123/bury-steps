@@ -92,8 +92,36 @@ function neutralizeStaleOverlays() {
   });
 }
 
+/**
+ * Cheap pre-check for whether anything actually needs restoring, so the
+ * (unthrottled) call sites below — every pointerdown/keydown site-wide, a
+ * MutationObserver callback, and a poll timer — can skip the ~30 style and
+ * attribute writes in `restorePagePointerEvents` on the overwhelming
+ * majority of calls where nothing is locked. Those writes touch <html>/
+ * <body> directly, which is exactly the kind of main-thread work that can
+ * steal frames from an in-progress CSS animation (e.g. an Accordion opening)
+ * if it runs at the wrong moment, so it is worth skipping when there is
+ * nothing to do.
+ */
+function isPageInteractionLocked() {
+  const body = document.body;
+  const html = document.documentElement;
+  return (
+    body.style.pointerEvents === "none" ||
+    html.style.pointerEvents === "none" ||
+    body.style.position === "fixed" ||
+    body.style.top !== "" ||
+    body.hasAttribute("data-scroll-locked") ||
+    html.hasAttribute("data-scroll-locked") ||
+    body.hasAttribute("inert") ||
+    html.hasAttribute("inert") ||
+    [...body.classList].some((className) => className.startsWith("block-interactivity-"))
+  );
+}
+
 /** Radix/Vaul set this while a modal is open and sometimes leave it behind. */
 export function restorePagePointerEvents() {
+  if (!isPageInteractionLocked()) return;
   const lockedTop = document.body.style.top;
   for (const node of [document.body, document.documentElement]) {
     for (const prop of LOCK_STYLE_PROPS) {
@@ -177,6 +205,9 @@ export function UnlockPageOnNavigate() {
     if (!vv) return;
     const viewport = vv;
 
+    let lastKeyboard = -1;
+    let lastHeight = -1;
+
     function sync() {
       const style = viewportStyleRef.current;
       if (!style) return;
@@ -184,6 +215,14 @@ export function UnlockPageOnNavigate() {
       const inset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
       // Ignore the ~50–100px iOS URL-bar show/hide; a real keyboard is taller.
       const keyboard = inset > 120 ? Math.round(inset) : 0;
+      // iOS can fire visualViewport "scroll" repeatedly during momentum
+      // scrolling even when nothing actually changed. Rewriting a <style>
+      // tag's textContent forces the browser to reparse that CSS text, so
+      // skip it when the values are unchanged to avoid adding avoidable
+      // main-thread work in the middle of a scroll gesture.
+      if (keyboard === lastKeyboard && height === lastHeight) return;
+      lastKeyboard = keyboard;
+      lastHeight = height;
       style.textContent = `:root{--keyboard-inset:${keyboard}px;--vv-height:${height}px;}`;
     }
 

@@ -65,7 +65,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           <div className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x">
             <UnlockPageOnNavigate />
-            <header className="sticky top-0 z-[55] touch-manipulation bg-white/70 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/55">
+            {/*
+              This header is sticky and present on every page, so its
+              backdrop-filter is recomputed continuously while the whole page
+              scrolls behind it. blur-xl (24px) stacked with an extra
+              saturate pass was expensive enough to visibly judder/shake
+              scrolling, especially on lower-powered phones — a well-known
+              cost of backdrop-filter on sticky/fixed elements. Halving the
+              blur radius and dropping the saturate pass keeps the
+              frosted-glass look at a fraction of the per-frame cost.
+              [transform:translateZ(0)] promotes it to its own compositor
+              layer so the browser doesn't need to repaint page content to
+              reposition it on scroll.
+            */}
+            <header className="sticky top-0 z-[55] touch-manipulation bg-white/70 backdrop-blur-md supports-[backdrop-filter]:bg-white/55 [transform:translateZ(0)]">
               <div className="relative">
                 <div className={`flex h-14 items-center justify-between gap-3 ${PAGE_X} md:grid md:grid-cols-[1fr_auto_1fr]`}>
                   <UnlockingLink className="flex h-8 min-w-0 items-center justify-self-start" href="/">
