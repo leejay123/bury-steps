@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
 import { SiteNavLinks, SiteMobileNavBar } from "@/components/site-nav-menu";
 import { NotificationBell } from "@/components/notification-bell";
-import { getSiteNotices, getUnreadNoticeIds } from "@/lib/site-notices";
+import { getSiteNoticeState } from "@/lib/site-notices";
 
 export function SiteNavFallback() {
   return (
@@ -24,9 +24,9 @@ export async function SiteNav() {
   const isAdmin = user?.role === "ADMIN";
 
   const walksHref = isAdmin ? "/admin" : "/dashboard";
-  const [notices, unreadIds] = user
-    ? await Promise.all([getSiteNotices(), getUnreadNoticeIds(user.id)])
-    : [[], [] as string[]];
+  const { notices, unreadIds } = user
+    ? await getSiteNoticeState(user.id)
+    : { notices: [], unreadIds: [] as string[] };
 
   return (
     <>

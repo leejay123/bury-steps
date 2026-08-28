@@ -334,7 +334,8 @@ export function OrganiserGuide() {
                 Open <Link href="/admin/reports">Reports</Link> in the menu, or from Settings.
                 Only organisers can see this. Add a report with the date, an optional walk, what
                 happened, who was involved, what you did, and extra notes if you need them. Each
-                row shows the date, walk, and a short preview of what happened. On a phone, print
+                row shows the date, walk, and a short preview of what happened. Tap a row to read
+                the full write-up. From there you can edit it or print a PDF. On a phone, print
                 and remove sit on their own row under the text so the write-up is not squeezed. If
                 there are more than 20 reports, Previous and Next at the bottom of the list take you
                 through them.
@@ -343,9 +344,13 @@ export function OrganiserGuide() {
                 <li>
                   Choose Add report (full width on a phone) and fill in the form. Save.
                 </li>
-                <li>Tap a row later to edit it. Remove is on the list under the text on a phone.</li>
                 <li>
-                  Choose Print to open a printable page, then use the browser dialog to save a PDF.
+                  Tap a row later to read it. Choose Edit if something needs changing, or Cancel to
+                  go back to the write-up. Remove is on the list under the text on a phone.
+                </li>
+                <li>
+                  Choose Print from the list or from the report to open a printable page, then use
+                  the browser dialog to save a PDF.
                 </li>
               </Steps>
             </GuideBody>
@@ -428,7 +433,8 @@ export function OrganiserGuide() {
               <p>
                 Walk lists keep the title, date, and meeting point on one card so they fit a phone.
                 Date and time sit on the same line. FAQ category chips on a phone scroll themselves
-                so the one you tap stays in view.
+                so the one you tap stays in view. The menu under the logo does the same: tap a page
+                and it slides into the middle.
               </p>
               <p>
                 Members open Walks from the menu. Each walk is a card with the date, length,

@@ -25,6 +25,8 @@ model User {
   attendances      Attendance[]
   noticeReads      SiteNoticeRead[]
   accidentReports  AccidentReport[]
+
+  @@index([createdAt])
 }
 
 model Walk {
@@ -48,6 +50,7 @@ model Walk {
   accidentReports  AccidentReport[]
 
   @@index([startsAt])
+  @@index([createdById])
 }
 
 model Attendance {
@@ -72,9 +75,9 @@ model Attendance {
   walk Walk @relation(fields: [walkId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Makes double clock-ins impossible at the database level.
   @@unique([walkId, userId])
   @@index([walkId])
+  @@index([userId])
   @@index([conditionsPurgeAfter])
 }
 

@@ -25,7 +25,7 @@ export default async function AccidentReportsPage() {
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
       <AdminPageIntro
-        description="Record what happened, who was involved, and what you did. Open a report to edit it, or print it to PDF."
+        description="Record what happened, who was involved, and what you did. Open a report to read the full write-up, then edit it or print a PDF."
         title="Accident reports"
       />
       <AccidentReportManager

@@ -48,19 +48,22 @@ function NavLink({
   className,
   href,
   label,
+  onSelect,
 }: {
   active: boolean;
   className?: string;
   href: string;
   label: string;
+  onSelect?: (el: HTMLAnchorElement) => void;
 }) {
   return (
     <Link
       aria-current={active ? "page" : undefined}
       className={cn(navLinkClass(active), className)}
       href={href}
-      onClick={() => {
+      onClick={(event) => {
         unlockIdleDocument();
+        onSelect?.(event.currentTarget);
       }}
       onPointerDown={() => {
         unlockIdleDocument();
@@ -72,6 +75,16 @@ function NavLink({
   );
 }
 
+function scrollNavItemIntoView(scroller: HTMLElement, item: HTMLElement) {
+  const scrollerBox = scroller.getBoundingClientRect();
+  const itemBox = item.getBoundingClientRect();
+  const left =
+    scroller.scrollLeft +
+    (itemBox.left - scrollerBox.left) -
+    (scrollerBox.width - itemBox.width) / 2;
+  scroller.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+}
+
 export function SiteNavLinks({
   isAdmin,
   walksHref,
@@ -80,17 +93,32 @@ export function SiteNavLinks({
   walksHref: string;
 }) {
   const pathname = usePathname();
+  const scrollerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    const active = scroller?.querySelector<HTMLElement>("[aria-current='page']");
+    if (scroller && active) scrollNavItemIntoView(scroller, active);
+  }, [pathname]);
 
   return (
-    <nav className="hidden items-center justify-center gap-1 text-sm md:flex">
+    <nav
+      className="hidden max-w-full items-center justify-center gap-1 overflow-x-auto overscroll-x-contain text-sm [scrollbar-width:none] [-ms-overflow-style:none] md:flex [&::-webkit-scrollbar]:hidden"
+      ref={scrollerRef}
+    >
       {navItems(isAdmin, walksHref).map((item) => {
         const active = isNavItemActive(pathname, item.href);
         return (
           <NavLink
             active={active}
+            className="shrink-0"
             href={item.href}
             key={item.href}
             label={item.label}
+            onSelect={(el) => {
+              const scroller = scrollerRef.current;
+              if (scroller) scrollNavItemIntoView(scroller, el);
+            }}
           />
         );
       })}
@@ -109,8 +137,9 @@ export function SiteMobileNavBar({
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const active = scrollerRef.current?.querySelector("[aria-current='page']");
-    active?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    const scroller = scrollerRef.current;
+    const active = scroller?.querySelector<HTMLElement>("[aria-current='page']");
+    if (scroller && active) scrollNavItemIntoView(scroller, active);
   }, [pathname]);
 
   return (
@@ -128,6 +157,10 @@ export function SiteMobileNavBar({
               href={item.href}
               key={item.href}
               label={item.label}
+              onSelect={(el) => {
+                const scroller = scrollerRef.current;
+                if (scroller) scrollNavItemIntoView(scroller, el);
+              }}
             />
           );
         })}

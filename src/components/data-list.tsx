@@ -15,8 +15,7 @@ export function DataListItem({ className, ...props }: React.ComponentProps<"li">
   return (
     <li
       className={cn(
-        "flex items-center gap-3 border-b p-3 last:border-0",
-        props.onClick && "cursor-pointer hover:bg-muted/50",
+        "flex cursor-pointer items-center gap-3 border-b p-3 last:border-0 hover:bg-muted/50",
         className,
       )}
       {...props}

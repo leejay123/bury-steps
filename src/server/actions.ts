@@ -20,6 +20,7 @@ import {
 import { MAX_SITE_NOTICES } from "@/lib/notices";
 import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR, normalizeHex } from "@/lib/theme";
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
+import { NOTICES_CACHE_TAG } from "@/lib/site-notices";
 import { isAllowedImageMime, sniffImageMime } from "@/lib/image-bytes";
 
 /** No look-alike characters — organisers read these out loud. */
@@ -919,6 +920,7 @@ export async function deleteHomepageFaq(
 // ------------------------------------------------------------------ site notices
 
 function revalidateNotices() {
+  revalidateTag(NOTICES_CACHE_TAG);
   revalidatePath("/", "layout");
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/notices");
@@ -1363,7 +1365,6 @@ export async function updateAccidentReport(
   }
 
   revalidatePath("/admin/reports");
-  revalidatePath(`/admin/reports/${id}/print`);
   return { ok: true, message: "Accident report saved." };
 }
 

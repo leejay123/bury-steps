@@ -59,7 +59,55 @@ export type ReportView = {
 
 export type WalkOption = { id: string; title: string; startsAt: string };
 
-type DrawerMode = { type: "add" } | { type: "edit"; report: ReportView };
+type DrawerMode =
+  | { type: "add" }
+  | { type: "view"; report: ReportView }
+  | { type: "edit"; report: ReportView };
+
+function ReportReadView({ report }: { report: ReportView }) {
+  const at = new Date(report.happenedAt);
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4">
+      <div className="flex flex-col gap-1">
+        <p className="text-xs font-medium text-muted-foreground">When</p>
+        <p className="text-sm">
+          {formatWalkDay(at)} · {formatTime(at)}
+        </p>
+      </div>
+      <div className="flex flex-col gap-1">
+        <p className="text-xs font-medium text-muted-foreground">Walk</p>
+        <p className="text-sm">{report.walkTitle || "No linked walk"}</p>
+      </div>
+      <div className="flex flex-col gap-1">
+        <p className="text-xs font-medium text-muted-foreground">What happened</p>
+        <p className="whitespace-pre-wrap text-sm leading-relaxed wrap-break-word">
+          {report.whatHappened}
+        </p>
+      </div>
+      <div className="flex flex-col gap-1">
+        <p className="text-xs font-medium text-muted-foreground">Who was involved</p>
+        <p className="whitespace-pre-wrap text-sm leading-relaxed wrap-break-word">
+          {report.whoInvolved}
+        </p>
+      </div>
+      <div className="flex flex-col gap-1">
+        <p className="text-xs font-medium text-muted-foreground">What we did</p>
+        <p className="whitespace-pre-wrap text-sm leading-relaxed wrap-break-word">
+          {report.whatWeDid}
+        </p>
+      </div>
+      {report.organiserNotes ? (
+        <div className="flex flex-col gap-1">
+          <p className="text-xs font-medium text-muted-foreground">Organiser notes</p>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed wrap-break-word">
+            {report.organiserNotes}
+          </p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 function PendingSubmit({ label, pendingLabel }: { label: string; pendingLabel: string }) {
   const { pending } = useFormStatus();
@@ -71,7 +119,6 @@ function PendingSubmit({ label, pendingLabel }: { label: string; pendingLabel: s
 }
 
 function useActionToast(state: ActionResult | null, onOk?: () => void) {
-  const router = useRouter();
   const onOkRef = useRef(onOk);
   onOkRef.current = onOk;
 
@@ -80,11 +127,10 @@ function useActionToast(state: ActionResult | null, onOk?: () => void) {
     if (state.ok) {
       toast.success(state.message ?? "Saved.");
       onOkRef.current?.();
-      router.refresh();
     } else {
       toast.error(state.error);
     }
-  }, [router, state]);
+  }, [state]);
 }
 
 function ReportFields({
@@ -184,10 +230,12 @@ function AddForm({ onSaved, walks }: { onSaved: () => void; walks: WalkOption[] 
 }
 
 function EditForm({
+  onCancel,
   onSaved,
   report,
   walks,
 }: {
+  onCancel: () => void;
   onSaved: () => void;
   report: ReportView;
   walks: WalkOption[];
@@ -201,6 +249,9 @@ function EditForm({
     <form action={action} className="flex min-h-0 flex-1 flex-col">
       <ReportFields prefix="edit" report={report} walks={walks} />
       <DrawerFooter>
+        <Button onClick={onCancel} type="button" variant="outline">
+          Cancel
+        </Button>
         <PendingSubmit label="Save changes" pendingLabel="Saving…" />
       </DrawerFooter>
     </form>
@@ -261,6 +312,7 @@ export function AccidentReportManager({
   walks: WalkOption[];
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
+  const viewing = mode?.type === "view" ? mode.report : null;
   const editing = mode?.type === "edit" ? mode.report : null;
   const listRef = useRef<HTMLDivElement>(null);
   const paging = usePagedList(reports);
@@ -288,7 +340,7 @@ export function AccidentReportManager({
               <DataListItem
                 className="flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3"
                 key={report.id}
-                onClick={() => setMode({ type: "edit", report })}
+                onClick={() => setMode({ type: "view", report })}
               >
                 <div className="flex min-w-0 flex-1 items-start gap-2 sm:items-center">
                   <DataListBody>
@@ -340,21 +392,50 @@ export function AccidentReportManager({
         }}
         open={mode !== null}
       >
-        <DrawerContent className="sm:max-w-md">
+        <DrawerContent className="sm:max-w-lg">
           <DrawerHeader>
-            <DrawerTitle>{editing ? "Edit report" : "Add a report"}</DrawerTitle>
+            <DrawerTitle>
+              {mode?.type === "edit"
+                ? "Edit report"
+                : mode?.type === "view"
+                  ? "Accident report"
+                  : "Add a report"}
+            </DrawerTitle>
             <DrawerDescription>
-              {editing
-                ? "Change the details, then save. Print from the list if you need a PDF."
-                : "Fill in what happened. You can print the report after it is saved."}
+              {mode?.type === "edit"
+                ? "Change the details, then save."
+                : mode?.type === "view"
+                  ? "The full write-up. Edit if something needs changing, or print a PDF."
+                  : "Fill in what happened. You can print the report after it is saved."}
             </DrawerDescription>
           </DrawerHeader>
           {mode?.type === "add" ? (
             <AddForm onSaved={() => setMode(null)} walks={walks} />
           ) : null}
+          {viewing ? (
+            <div className="flex min-h-0 flex-1 flex-col">
+              <ReportReadView report={viewing} />
+              <DrawerFooter>
+                <Button asChild variant="outline">
+                  <a
+                    href={`/admin/reports/${viewing.id}/print`}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    <Printer />
+                    Print
+                  </a>
+                </Button>
+                <Button onClick={() => setMode({ type: "edit", report: viewing })} type="button">
+                  Edit
+                </Button>
+              </DrawerFooter>
+            </div>
+          ) : null}
           {editing ? (
             <EditForm
               key={editing.id}
+              onCancel={() => setMode({ type: "view", report: editing })}
               onSaved={() => setMode(null)}
               report={editing}
               walks={walks}

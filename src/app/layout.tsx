@@ -63,7 +63,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           signInFallbackRedirectUrl={AFTER_AUTH_PATH}
           signUpFallbackRedirectUrl={AFTER_AUTH_PATH}
         >
-          <div className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x">
+          <div className="mx-auto flex w-full max-w-[1200px] flex-col border-x">
             <UnlockPageOnNavigate />
             <header className="sticky top-0 z-[55] touch-manipulation bg-white/70 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/55">
               <div className="relative">
