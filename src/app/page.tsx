@@ -12,10 +12,12 @@ export const revalidate = 120;
 
 export default async function Home() {
   const origin = appUrl();
-  const slides = await getHomepageSlides();
-  const testimonials = await getHomepageTestimonials();
-  const faqData = await getHomepageFaqData();
-  const theme = await getSiteTheme();
+  const [slides, testimonials, faqData, theme] = await Promise.all([
+    getHomepageSlides(),
+    getHomepageTestimonials(),
+    getHomepageFaqData(),
+    getSiteTheme(),
+  ]);
 
   return (
     <div className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>

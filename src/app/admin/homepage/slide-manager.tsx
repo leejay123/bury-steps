@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ChevronRight, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -283,11 +284,12 @@ export function HomepageSlideManager({
                 onMoveDown={() => moveDown(slide.id)}
                 onMoveUp={() => moveUp(slide.id)}
               />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 alt=""
                 className="size-10 shrink-0 rounded-md object-cover"
+                height={40}
                 src={slide.src}
+                width={40}
               />
               <DataListBody>
                 <p className="font-medium">Slide {index + 1}</p>

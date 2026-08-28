@@ -12,7 +12,7 @@ export default async function AccidentReportsPage() {
     prisma.accidentReport.findMany({
       orderBy: { happenedAt: "desc" },
       include: {
-        walk: { select: { id: true, title: true } },
+        walk: { select: { id: true, title: true, location: true } },
       },
     }),
     prisma.walk.findMany({
@@ -34,6 +34,7 @@ export default async function AccidentReportsPage() {
           happenedAt: report.happenedAt.toISOString(),
           walkId: report.walkId,
           walkTitle: report.walk?.title ?? null,
+          walkLocation: report.walk?.location ?? null,
           whatHappened: report.whatHappened,
           whoInvolved: report.whoInvolved,
           whatWeDid: report.whatWeDid,

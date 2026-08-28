@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
-import { ChevronRight, ClipboardList, Printer, Trash2 } from "lucide-react";
+import { ChevronRight, ClipboardList, Printer, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   addAccidentReport,
@@ -20,6 +20,7 @@ import { usePagedList } from "@/hooks/use-paged-list";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import {
   Select,
   SelectContent,
@@ -51,6 +52,7 @@ export type ReportView = {
   happenedAt: string;
   walkId: string | null;
   walkTitle: string | null;
+  walkLocation: string | null;
   whatHappened: string;
   whoInvolved: string;
   whatWeDid: string;
@@ -315,11 +317,43 @@ export function AccidentReportManager({
   const viewing = mode?.type === "view" ? mode.report : null;
   const editing = mode?.type === "edit" ? mode.report : null;
   const listRef = useRef<HTMLDivElement>(null);
-  const paging = usePagedList(reports);
+  const [query, setQuery] = useState("");
+
+  const filtered = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return reports;
+    return reports.filter((report) => {
+      const hay = [
+        report.walkTitle ?? "",
+        report.walkLocation ?? "",
+        report.whatHappened,
+        report.whoInvolved,
+        report.whatWeDid,
+        report.organiserNotes ?? "",
+      ]
+        .join(" ")
+        .toLowerCase();
+      return hay.includes(needle);
+    });
+  }, [query, reports]);
+
+  const paging = usePagedList(filtered, { resetKey: query });
 
   return (
     <div className="flex flex-col gap-4" ref={listRef}>
-      <div className="flex items-center justify-end">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        {reports.length > 0 ? (
+          <InputGroup className="sm:max-w-md">
+            <InputGroupInput
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search by walk, people involved, or what happened…"
+              value={query}
+            />
+            <InputGroupAddon>
+              <Search data-icon="inline-start" />
+            </InputGroupAddon>
+          </InputGroup>
+        ) : null}
         <Button className="w-full sm:w-auto" onClick={() => setMode({ type: "add" })} size="sm">
           Add report
         </Button>
@@ -330,6 +364,12 @@ export function AccidentReportManager({
           description="Add a report if something happens on a walk. You can print it to PDF afterwards."
           icon={ClipboardList}
           title="No accident reports yet"
+        />
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          description="Try a different walk, name, or detail from the write-up."
+          icon={Search}
+          title="No matching reports"
         />
       ) : (
         <>

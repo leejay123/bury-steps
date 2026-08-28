@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import Image from "next/image";
 import { ImageIcon, UploadIcon, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -154,10 +155,15 @@ export function ImageDropzone({
             }}
             type="button"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               alt={existingAlt || "Selected photo"}
-              className="size-full object-cover object-center"
+              className="object-cover object-center"
+              fill
+              sizes="(min-width: 640px) 33vw, 100vw"
+              // Local previews are blob: URLs the image optimizer can't fetch,
+              // and this is a brief admin-only preview anyway — skip
+              // optimization entirely rather than special-case each source.
+              unoptimized
               src={preview}
             />
           </button>

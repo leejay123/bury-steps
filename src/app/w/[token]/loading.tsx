@@ -1,0 +1,24 @@
+import { Skeleton } from "@/components/ui/skeleton";
+
+export default function Loading() {
+  return (
+    <div className="flex flex-col gap-6">
+      <Skeleton className="h-4 w-16" />
+      <div className="flex flex-col gap-3 rounded-lg border p-5">
+        <div className="flex items-start justify-between gap-3">
+          <Skeleton className="h-6 w-2/3" />
+        </div>
+        <Skeleton className="h-4 w-1/2" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+      </div>
+      <div className="flex flex-col gap-3 rounded-lg border bg-muted/40 p-5">
+        <Skeleton className="h-4 w-40" />
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-28" />
+          <Skeleton className="h-9 w-28" />
+        </div>
+      </div>
+    </div>
+  );
+}
