@@ -8,7 +8,6 @@ import { formatDateTime, formatWalkDate } from "@/lib/dates";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ClockOutButton } from "@/components/clock-out-button";
 
 export type UpcomingWalkCard = {
   id: string;
@@ -95,15 +94,14 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
               </div>
             ) : null}
             {walk.clockedInAt && !walk.cancelledAt ? (
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
                 <p className="text-sm text-muted-foreground">
                   Clocked in at {formatDateTime(new Date(walk.clockedInAt))}
                 </p>
-                <div onClick={stopCardNavigation} onPointerDown={stopCardNavigation}>
-                  <ClockOutButton token={walk.token} />
-                </div>
-                {/* Just a headline count here — the full "Who's coming" list with
-                names lives on the walk page you get to by clicking the card. */}
+                {/* No clock-out button here on purpose — clocking out is a
+                deliberate action, so it only lives on the walk's own page
+                (opened by tapping the card), not as a one-tap action on the
+                card that also navigates elsewhere. */}
                 <p className="text-sm text-muted-foreground">{walkMemberCountLabel(walk.memberNames.length)}</p>
               </div>
             ) : null}
