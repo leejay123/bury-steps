@@ -84,10 +84,17 @@ export function DateTimePicker({
 
   return (
     <div className="flex flex-col gap-2">
+      {/*
+        A `<Label htmlFor>` pointing at this component's `id` needs to land
+        on something the user can actually focus and interact with. Give the
+        visible trigger button the id so the label announces and activates
+        it — this hidden input only exists to carry the value into the
+        surrounding <form>, and was never meant to be what a screen reader
+        lands on.
+      */}
       <input
         aria-hidden={open ? undefined : true}
         className="sr-only"
-        id={id}
         name={name}
         onChange={() => {}}
         required={required}
@@ -99,6 +106,7 @@ export function DateTimePicker({
           <Button
             aria-expanded={open}
             className="w-full justify-start font-normal"
+            id={id}
             type="button"
             variant="outline"
           >
