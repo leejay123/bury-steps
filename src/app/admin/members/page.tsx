@@ -12,6 +12,11 @@ export default async function MembersPage() {
 
   const members = await prisma.user.findMany({
     orderBy: { createdAt: "asc" },
+    // Backstop against an unbounded query — a local walking group is very
+    // unlikely to ever have anywhere near this many accounts, but a spam
+    // wave against open sign-up shouldn't be able to make this list
+    // unbounded.
+    take: 2000,
     include: {
       _count: { select: { attendances: true, walksCreated: true } },
     },

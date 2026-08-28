@@ -50,6 +50,11 @@ export default async function AdminPage() {
     prisma.walk.findMany({
       where: { startsAt: { lt: cutoff } },
       orderBy: { startsAt: "desc" },
+      // A weekly walk never missed would take ~19 years to reach this —
+      // comfortably past the lifetime of this app — so it never trims a
+      // realistic History tab. It exists purely as a backstop against an
+      // unbounded query if the group's data ever grows in an unexpected way.
+      take: 1000,
       select: {
         ...base,
         _count: { select: { attendances: true } },

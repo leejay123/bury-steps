@@ -21,6 +21,9 @@ export default async function WalkHistoryPage() {
   const attendances = await prisma.attendance.findMany({
     where: { userId: user.id },
     orderBy: { clockedInAt: "desc" },
+    // Backstop against an unbounded query — a weekly walk never missed
+    // would take ~19 years to reach this. Keeps the most recent walks.
+    take: 1000,
     include: {
       walk: {
         select: {

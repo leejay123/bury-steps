@@ -11,6 +11,11 @@ export default async function AccidentReportsPage() {
   const [reports, walks] = await Promise.all([
     prisma.accidentReport.findMany({
       orderBy: { happenedAt: "desc" },
+      // Backstop against an unbounded query. Accident reports should be
+      // rare in practice; this just stops the list (and its full-text
+      // search, which runs client-side over everything fetched here) from
+      // growing without limit.
+      take: 1000,
       include: {
         walk: { select: { id: true, title: true, location: true } },
       },
