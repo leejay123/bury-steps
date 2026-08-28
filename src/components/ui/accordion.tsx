@@ -19,7 +19,16 @@ function AccordionItem({
   return (
     <AccordionPrimitive.Item
       data-slot="accordion-item"
-      className={cn("border-b", className)}
+      // Opening/closing an item animates its `height`, which is a layout
+      // property — the browser must reflow every sibling below it each
+      // frame for the animation's duration, which is what "sluggish" open/
+      // close feels like with more than a couple of items. `contain-content`
+      // (CSS containment: layout + paint + style) scopes that recalculation
+      // to this item's own box, so the browser doesn't also have to walk
+      // back into every *other* item's internals on each frame — only
+      // reposition them, which is the one part of the cost that can't be
+      // avoided without changing the visual behaviour.
+      className={cn("contain-content border-b", className)}
       {...props}
     />
   )
@@ -35,7 +44,11 @@ function AccordionTrigger({
       <AccordionPrimitive.Trigger
         data-slot="accordion-trigger"
         className={cn(
-          "flex flex-1 cursor-pointer items-start justify-between gap-4 rounded-md py-4 text-left text-sm font-medium transition-all outline-none hover:underline focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>svg]:rotate-180",
+          // `transition-colors` rather than `transition-all`: this only
+          // ever visually changes a focus ring and opacity, so animating
+          // every other property too (most of all `height`, if a
+          // descendant's size ever shifts) just adds avoidable work.
+          "flex flex-1 cursor-pointer items-start justify-between gap-4 rounded-md py-4 text-left text-sm font-medium transition-colors outline-none hover:underline focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>svg]:rotate-180",
           className
         )}
         {...props}
@@ -55,7 +68,7 @@ function AccordionContent({
   return (
     <AccordionPrimitive.Content
       data-slot="accordion-content"
-      className="overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
+      className="overflow-hidden text-sm duration-150 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
       {...props}
     >
       <div className={cn("pt-0 pb-4", className)}>{children}</div>
