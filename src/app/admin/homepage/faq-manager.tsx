@@ -336,7 +336,6 @@ function CategoryLabelForm({
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={category ? `edit-category-${category.id}` : "new-category"}>Name</Label>
         <Input
-          autoFocus
           id={category ? `edit-category-${category.id}` : "new-category"}
           maxLength={MAX_FAQ_CATEGORY_LABEL}
           name="label"

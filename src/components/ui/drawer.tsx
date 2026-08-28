@@ -74,6 +74,8 @@ function Drawer({
             onOpenChange?.(next);
           }}
           open={open}
+          // Scaling the page behind the sheet looks like a zoom on iPhone.
+          shouldScaleBackground={false}
           // Vaul's built-in keyboard/input repositioning has long-standing bugs
           // on iOS Safari (emilkowalski/vaul#619, #503, #514): the drawer can
           // get stuck mid-reposition — its content and overlay rendered in the
@@ -131,6 +133,7 @@ function DrawerContent({
   children,
   showCloseButton = true,
   style,
+  onOpenAutoFocus,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content> & { showCloseButton?: boolean }) {
   const [root, setRoot] = React.useState<HTMLElement | null>(null);
@@ -159,12 +162,21 @@ function DrawerContent({
           // keep their own focus-visible rings.
           "group/drawer-content fixed z-[60] flex h-auto flex-col overflow-visible bg-background outline-hidden data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
           dismissed && "invisible !pointer-events-none",
-          "data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:max-h-[80vh] data-[vaul-drawer-direction=top]:rounded-b-lg data-[vaul-drawer-direction=top]:border-b",
-          "data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:max-h-[80vh] data-[vaul-drawer-direction=bottom]:rounded-t-lg data-[vaul-drawer-direction=bottom]:border-t",
+          "data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:rounded-b-lg data-[vaul-drawer-direction=top]:border-b",
+          "data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:rounded-t-lg data-[vaul-drawer-direction=bottom]:border-t",
           "data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:h-full data-[vaul-drawer-direction=right]:w-[calc(100%-1.25rem)] data-[vaul-drawer-direction=right]:border-l data-[vaul-drawer-direction=right]:sm:max-w-lg",
           "data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:h-full data-[vaul-drawer-direction=left]:w-[calc(100%-1.25rem)] data-[vaul-drawer-direction=left]:border-r data-[vaul-drawer-direction=left]:sm:max-w-lg",
           className,
         )}
+        onOpenAutoFocus={(event) => {
+          // Don't land focus on an input as the sheet opens: on iPhone that
+          // pops the keyboard during the enter animation and the drawer can
+          // paint in the wrong place until the next tap.
+          event.preventDefault();
+          const panel = event.currentTarget;
+          if (panel instanceof HTMLElement) panel.focus({ preventScroll: true });
+          onOpenAutoFocus?.(event);
+        }}
         ref={setRoot}
         {...props}
         style={dismissed ? { ...style, pointerEvents: "none" } : { ...style, pointerEvents: "auto" }}

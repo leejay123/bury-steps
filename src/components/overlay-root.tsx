@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 
@@ -165,11 +165,38 @@ export function UnlockingLink({
 
 export function UnlockPageOnNavigate() {
   const pathname = usePathname();
+  const viewportStyleRef = useRef<HTMLStyleElement>(null);
 
   useEffect(() => {
     neutralizeStaleOverlays();
     if (!anyOverlayLayerOpen()) restorePagePointerEvents();
   }, [pathname]);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const viewport = vv;
+
+    function sync() {
+      const style = viewportStyleRef.current;
+      if (!style) return;
+      const height = Math.round(viewport.height);
+      const inset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+      // Ignore the ~50–100px iOS URL-bar show/hide; a real keyboard is taller.
+      const keyboard = inset > 120 ? Math.round(inset) : 0;
+      style.textContent = `:root{--keyboard-inset:${keyboard}px;--vv-height:${height}px;}`;
+    }
+
+    viewport.addEventListener("resize", sync);
+    viewport.addEventListener("scroll", sync);
+    window.addEventListener("orientationchange", sync);
+    sync();
+    return () => {
+      viewport.removeEventListener("resize", sync);
+      viewport.removeEventListener("scroll", sync);
+      window.removeEventListener("orientationchange", sync);
+    };
+  }, []);
 
   useEffect(() => {
     let idleTimer = 0;
@@ -230,5 +257,5 @@ export function UnlockPageOnNavigate() {
     };
   }, []);
 
-  return null;
+  return <style ref={viewportStyleRef} />;
 }

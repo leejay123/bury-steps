@@ -77,6 +77,18 @@ export default function PrivacyPolicyPage() {
         <li>Walk attendance may be kept for the running of the group.</li>
       </ul>
 
+      <h2>Cookies</h2>
+      <p>
+        This site uses cookies that are needed for it to work. That includes cookies from our
+        sign-in provider (Clerk) so we can keep you signed in, and a cookie that remembers
+        whether you accepted or declined the cookie notice.
+      </p>
+      <p>
+        We do not use cookies for advertising or analytics. On a first visit you can Accept or
+        Decline the notice; either choice is remembered for a year. Cookies that are needed to
+        sign in are still used if you decline.
+      </p>
+
       <h2>Your rights</h2>
       <p>
         Under UK data protection law you can ask to see the information we hold about you,

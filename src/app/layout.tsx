@@ -13,6 +13,7 @@ import { FullWidthDivider } from "@/components/full-width-divider";
 import { MotionPage } from "@/components/motion";
 import { BackToTop } from "@/components/back-to-top";
 import { UnlockPageOnNavigate, UnlockingLink } from "@/components/overlay-root";
+import { SiteCookieConsent } from "@/components/site-cookie-consent";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -27,10 +28,11 @@ export async function generateViewport(): Promise<Viewport> {
     themeColor: "#111111",
     width: "device-width",
     initialScale: 1,
-    // Stop pinch-zoom and the automatic zoom iOS/Android trigger when
-    // focusing a text field, so the layout never jumps around on a phone.
-    maximumScale: 1,
-    userScalable: false,
+    viewportFit: "cover",
+    // Chrome/Android: resize the layout with the keyboard instead of
+    // overlaying it (that overlay is what feels like a zoom/jump).
+    // iOS ignores this; 16px fields + visual-viewport CSS handle Safari.
+    interactiveWidget: "resizes-content",
   };
 }
 
@@ -40,7 +42,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="en-GB" suppressHydrationWarning>
-      <body className="min-h-dvh overflow-x-hidden bg-background text-foreground antialiased">
+      <body className="min-h-dvh overflow-x-clip touch-manipulation bg-background text-foreground antialiased">
         <ClerkProvider
           {...(useVercelAppProxy ? { proxyUrl: "/__clerk" } : {})}
           appearance={{
@@ -52,8 +54,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             },
             elements: {
               modalBackdrop: "backdrop-blur-md",
-              input: "bg-background outline-none shadow-none ring-0 focus:ring-0 focus-visible:ring-0",
-              formFieldInput: "bg-background outline-none shadow-none ring-0 focus:ring-0 focus-visible:ring-0",
+              input: "bg-background text-base outline-none shadow-none ring-0 focus:ring-0 focus-visible:ring-0",
+              formFieldInput: "bg-background text-base outline-none shadow-none ring-0 focus:ring-0 focus-visible:ring-0",
             },
           }}
           signInUrl={SIGN_IN_URL}
@@ -85,6 +87,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <SiteFooter />
           </div>
           <Toaster duration={2800} position="top-center" />
+          <SiteCookieConsent />
           {theme.scrollToTopEnabled ? <BackToTop /> : null}
         </ClerkProvider>
       </body>

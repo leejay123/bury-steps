@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 
 /** Bump this whenever the guide is updated. */
-export const GUIDE_LAST_UPDATED = "27 August 2026";
+export const GUIDE_LAST_UPDATED = "28 August 2026";
 
 function Steps({ children }: { children: React.ReactNode }) {
   return <ol className="list-decimal pl-5 text-muted-foreground">{children}</ol>;
@@ -388,6 +388,11 @@ export function OrganiserGuide() {
                 Names of people still clocked in are visible to others on that walk. Emails are
                 not.
               </p>
+              <p>
+                First-time visitors also see a cookie notice. Accept or Decline is remembered for a
+                year. There are no advertising cookies. Details are on the{" "}
+                <Link href="/privacy-policy">Privacy Policy</Link>.
+              </p>
             </GuideBody>
           </AccordionContent>
         </AccordionItem>
@@ -401,6 +406,13 @@ export function OrganiserGuide() {
                 check. Photos, quotes, FAQs, and the carousel switch update on the public site as
                 soon as you save. The photo slider is not created on every visit. A{" "}
                 <strong>Back to top</strong> button can be turned off in Display.
+              </p>
+              <p>
+                First-time visitors see a cookie notice at the bottom of the screen, with Accept
+                and Decline. Either choice is remembered for a year. The site does not use
+                advertising cookies. Clerk still uses cookies that are needed to sign in. The
+                notice links to the{" "}
+                <Link href="/privacy-policy">Privacy Policy</Link>.
               </p>
               <p>
                 Text, tables, and forms line up with the logo and nav. Photo and quote grids, and
