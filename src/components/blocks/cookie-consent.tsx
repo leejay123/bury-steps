@@ -85,7 +85,11 @@ const CookieConsent = React.forwardRef<HTMLDivElement, CookieConsentProps>(
     if (hide) return null;
 
     const containerClasses = cn(
-      "fixed z-[56] transition-all duration-700",
+      // left-0/right-0 below pin this to the true viewport edges (it's fixed,
+      // outside the shell that handles the Dynamic Island's side inset in
+      // landscape), so add the same inset here on top of the card's own
+      // margin.
+      "fixed z-[56] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] transition-all duration-700",
       !isOpen ? "translate-y-full opacity-0" : "translate-y-0 opacity-100",
       className,
     );
