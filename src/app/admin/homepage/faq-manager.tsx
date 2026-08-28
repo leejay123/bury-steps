@@ -462,7 +462,7 @@ function FaqCategoryManager({
   const categoryIds = categories.map((item) => item.id);
   const { moveDown, moveUp, order } = useReorderableIds(categoryIds, (ids) => {
     if (ids.join() === categoryIds.join()) return;
-    void reorderHomepageFaqCategories(ids);
+    return reorderHomepageFaqCategories(ids);
   });
   const sorted = order
     .map((id) => categories.find((item) => item.id === id))
@@ -552,7 +552,7 @@ export function HomepageFaqManager({
   const faqIds = faqs.map((item) => item.id);
   const { moveDown, moveUp, order } = useReorderableIds(faqIds, (ids) => {
     if (ids.join() === faqIds.join()) return;
-    void reorderHomepageFaqs(ids);
+    return reorderHomepageFaqs(ids);
   });
   const sorted = order
     .map((id) => faqs.find((item) => item.id === id))

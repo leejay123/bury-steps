@@ -230,7 +230,7 @@ export function HomepageSlideManager({
   const slideIds = slides.map((item) => item.id);
   const { moveDown, moveUp, order } = useReorderableIds(slideIds, (ids) => {
     if (ids.join() === slideIds.join()) return;
-    void reorderHomepageSlides(ids);
+    return reorderHomepageSlides(ids);
   });
   const sorted = order
     .map((id) => slides.find((item) => item.id === id))
