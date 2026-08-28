@@ -4,13 +4,13 @@ import type { ReactNode } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { FACEBOOK_GROUP_URL } from "@/lib/urls";
 
 const GOALS = [
@@ -104,20 +104,20 @@ function BulletList({ items, columns = false }: { items: string[]; columns?: boo
   );
 }
 
-export function HomeAboutDialog({ trigger }: { trigger?: ReactNode }) {
+export function HomeAboutDrawer({ trigger }: { trigger?: ReactNode }) {
   return (
-    <Dialog>
-      <DialogTrigger asChild>
+    <Drawer>
+      <DrawerTrigger asChild>
         {trigger ?? <Button variant="outline">Read more</Button>}
-      </DialogTrigger>
-      <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
-        <DialogHeader className="shrink-0 border-b px-6 py-4 pr-12 text-left">
-          <DialogTitle>About Bury Steps</DialogTitle>
-          <DialogDescription>
+      </DrawerTrigger>
+      <DrawerContent className="sm:max-w-2xl">
+        <DrawerHeader className="shrink-0 border-b text-left">
+          <DrawerTitle>About Bury Steps</DrawerTitle>
+          <DrawerDescription>
             How the group started, what to expect, and a few simple rules.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="overflow-y-auto px-6 py-5">
+          </DrawerDescription>
+        </DrawerHeader>
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
           <article className="space-y-8 text-sm leading-relaxed text-muted-foreground">
             <section className="space-y-3">
               <h3 className="text-base font-semibold text-foreground">How this started</h3>
@@ -220,7 +220,7 @@ export function HomeAboutDialog({ trigger }: { trigger?: ReactNode }) {
             </section>
           </article>
         </div>
-      </DialogContent>
-    </Dialog>
+      </DrawerContent>
+    </Drawer>
   );
 }
