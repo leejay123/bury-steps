@@ -32,6 +32,18 @@ html {
    * repeat it on every clickable element.
    */
   touch-action: manipulation;
+  /*
+   * Nothing at the document level is meant to scroll sideways — inner
+   * strips (the FAQ filter row, the mobile nav) own their own
+   * `overflow-x-auto` container instead. `<body>` already carries
+   * `overflow-x-clip` as a Tailwind class, but per the CSS Overflow spec
+   * the *root* element's own overflow only propagates to the viewport
+   * when it isn't `visible`; without this the propagation quirk (and a
+   * one-off absolutely-positioned element that drifts a few px past the
+   * edge) can still leave a tiny sideways scroll/pan available. Setting
+   * it here too closes that gap.
+   */
+  overflow-x: clip;
 }
 
 /*
@@ -49,6 +61,15 @@ html {
 html,
 body {
   overscroll-behavior-y: contain;
+  /*
+   * Chrome/Edge tie their two-finger (trackpad) and edge-swipe (touch)
+   * back/forward navigation gesture to overscroll-behavior-x: dragging the
+   * page sideways at the scroll edges is exactly that gesture's visual
+   * feedback, and it reads as "the whole page scrolls left/right". There's
+   * no horizontal document scroll to preserve, so turn the gesture off
+   * outright instead of just containing it.
+   */
+  overscroll-behavior-x: none;
 }
 
 /*
