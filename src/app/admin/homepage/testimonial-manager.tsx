@@ -184,7 +184,7 @@ function AddDrawerForm({
 
   return (
     <form action={action} className="flex min-h-0 flex-1 flex-col" ref={formRef}>
-      <div className="flex-1 overflow-y-auto px-4">
+      <div className="flex-1 overflow-y-auto overscroll-y-contain px-4">
         <TestimonialFields disabled={disabled} prefix="new" />
       </div>
       <DrawerFooter>
@@ -211,7 +211,7 @@ function EditDrawerForm({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <form action={updateAction} className="flex min-h-0 flex-1 flex-col" key={testimonial.id}>
-        <div className="flex-1 overflow-y-auto px-4">
+        <div className="flex-1 overflow-y-auto overscroll-y-contain px-4">
           <TestimonialFields prefix={`edit-${testimonial.id}`} testimonial={testimonial} />
         </div>
         <DrawerFooter>

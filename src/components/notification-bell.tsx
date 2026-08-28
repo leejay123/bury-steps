@@ -89,7 +89,7 @@ export function NotificationBell({
         {notices.length === 0 ? (
           <p className="px-4 py-6 text-sm text-muted-foreground">Nothing in the bell right now.</p>
         ) : (
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
             {notices.map((notice) => {
               const isUnread = unreadSet.has(notice.id);
               return (

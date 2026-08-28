@@ -173,7 +173,7 @@ function SelectContent({
   return (
     <PopoverContent
       align="start"
-      className={cn("max-h-72 w-auto overflow-y-auto p-1", className)}
+      className={cn("max-h-72 w-auto overflow-y-auto overscroll-y-contain p-1", className)}
       data-select-dropdown=""
       style={{
         minWidth: triggerWidth ? `${triggerWidth}px` : "8rem",

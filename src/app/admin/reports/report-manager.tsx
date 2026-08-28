@@ -70,7 +70,7 @@ function ReportReadView({ report }: { report: ReportView }) {
   const at = new Date(report.happenedAt);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain px-4">
       <div className="flex flex-col gap-1">
         <p className="text-xs font-medium text-muted-foreground">When</p>
         <p className="text-sm">
@@ -147,7 +147,7 @@ function ReportFields({
   const [walkId, setWalkId] = useState(report?.walkId ?? "none");
 
   return (
-    <div className="flex flex-col gap-3 overflow-y-auto px-4">
+    <div className="flex flex-col gap-3 overflow-y-auto overscroll-y-contain px-4">
       {report ? <input name="reportId" type="hidden" value={report.id} /> : null}
       <input name="walkId" type="hidden" value={walkId === "none" ? "" : walkId} />
       <div className="flex flex-col gap-1.5">
