@@ -1,5 +1,16 @@
 export const LONDON = "Europe/London";
 
+export type DateInput = Date | string | number;
+
+/** Dates crossing `unstable_cache` or a Client Component arrive as ISO strings. */
+export function toDate(value: DateInput): Date {
+  return value instanceof Date ? value : new Date(value);
+}
+
+function isValidDate(value: Date): boolean {
+  return !Number.isNaN(value.getTime());
+}
+
 /** Milliseconds Europe/London is ahead of UTC at a given instant (handles BST). */
 function londonOffsetMs(at: Date): number {
   const parts = Object.fromEntries(
@@ -41,8 +52,10 @@ export function londonWallClockToUtc(value: string): Date {
 }
 
 /** Inverse — produces a `datetime-local` string for prefilling the form. */
-export function utcToLondonWallClock(at: Date): string {
-  const shifted = new Date(at.getTime() + londonOffsetMs(at));
+export function utcToLondonWallClock(at: DateInput): string {
+  const date = toDate(at);
+  if (!isValidDate(date)) throw new Error("Invalid date");
+  const shifted = new Date(date.getTime() + londonOffsetMs(date));
   return shifted.toISOString().slice(0, 16);
 }
 
@@ -56,17 +69,21 @@ export function combineLondonDateAndTime(date: Date, hour: number, minute: numbe
   return `${year}-${pad2(month)}-${pad2(day)}T${pad2(hour)}:${pad2(minute)}`;
 }
 
-export function formatWalkDay(at: Date): string {
+export function formatWalkDay(at: DateInput): string {
+  const date = toDate(at);
+  if (!isValidDate(date)) return "";
   return new Intl.DateTimeFormat("en-GB", {
     timeZone: LONDON,
     weekday: "short",
     day: "numeric",
     month: "short",
-    ...(londonYear(at) === londonYear(new Date()) ? {} : { year: "numeric" }),
-  }).format(at);
+    ...(londonYear(date) === londonYear(new Date()) ? {} : { year: "numeric" }),
+  }).format(date);
 }
 
-export function formatWalkDate(at: Date): string {
+export function formatWalkDate(at: DateInput): string {
+  const date = toDate(at);
+  if (!isValidDate(date)) return "";
   return new Intl.DateTimeFormat("en-GB", {
     timeZone: LONDON,
     weekday: "short",
@@ -74,36 +91,47 @@ export function formatWalkDate(at: Date): string {
     month: "short",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(at);
+  }).format(date);
 }
 
-export function formatTime(at: Date): string {
+export function formatTime(at: DateInput): string {
+  const date = toDate(at);
+  if (!isValidDate(date)) return "";
   return new Intl.DateTimeFormat("en-GB", {
     timeZone: LONDON,
     hour: "2-digit",
     minute: "2-digit",
-  }).format(at);
+  }).format(date);
 }
 
-export function londonYear(at: Date): number {
+export function londonYear(at: DateInput): number {
+  const date = toDate(at);
+  if (!isValidDate(date)) return new Date().getFullYear();
   return Number(
     new Intl.DateTimeFormat("en-GB", {
       timeZone: LONDON,
       year: "numeric",
-    }).format(at),
+    }).format(date),
   );
 }
 
-export function formatDate(at: Date): string {
+export function formatDate(at: DateInput): string {
+  const date = toDate(at);
+  if (!isValidDate(date)) return "";
   return new Intl.DateTimeFormat("en-GB", {
     timeZone: LONDON,
     day: "numeric",
     month: "short",
     year: "numeric",
-  }).format(at);
+  }).format(date);
 }
 
-export function londonYmd(at: Date): { day: number; month: number; year: number } {
+export function londonYmd(at: DateInput): { day: number; month: number; year: number } {
+  const date = toDate(at);
+  if (!isValidDate(date)) {
+    const now = new Date();
+    return { day: now.getUTCDate(), month: now.getUTCMonth() + 1, year: now.getUTCFullYear() };
+  }
   const parts = Object.fromEntries(
     new Intl.DateTimeFormat("en-GB", {
       timeZone: LONDON,
@@ -111,7 +139,7 @@ export function londonYmd(at: Date): { day: number; month: number; year: number 
       month: "numeric",
       day: "numeric",
     })
-      .formatToParts(at)
+      .formatToParts(date)
       .map((part) => [part.type, part.value]),
   );
   return { day: Number(parts.day), month: Number(parts.month), year: Number(parts.year) };
@@ -126,7 +154,7 @@ function plural(count: number, noun: string): string {
 }
 
 /** How long someone has been a member, e.g. "today", "12 days", "2 months", "1 year 3 months". */
-export function formatMembershipAge(joined: Date, now = new Date()): string {
+export function formatMembershipAge(joined: DateInput, now: DateInput = new Date()): string {
   const from = londonYmd(joined);
   const to = londonYmd(now);
   let years = to.year - from.year;
@@ -153,22 +181,26 @@ export function formatMembershipAge(joined: Date, now = new Date()): string {
   return plural(days, "day");
 }
 
-export function formatDateTime(at: Date): string {
+export function formatDateTime(at: DateInput): string {
+  const date = toDate(at);
+  if (!isValidDate(date)) return "";
   return new Intl.DateTimeFormat("en-GB", {
     timeZone: LONDON,
     dateStyle: "short",
     timeStyle: "short",
-  }).format(at);
+  }).format(date);
 }
 
 /** Short date and time for tables, e.g. "30 Aug, 13:00". Adds the year when it is not this year. */
-export function formatCompactDateTime(at: Date): string {
+export function formatCompactDateTime(at: DateInput): string {
+  const date = toDate(at);
+  if (!isValidDate(date)) return "";
   return new Intl.DateTimeFormat("en-GB", {
     timeZone: LONDON,
     day: "numeric",
     month: "short",
-    ...(londonYear(at) === londonYear(new Date()) ? {} : { year: "numeric" }),
+    ...(londonYear(date) === londonYear(new Date()) ? {} : { year: "numeric" }),
     hour: "2-digit",
     minute: "2-digit",
-  }).format(at);
+  }).format(date);
 }
