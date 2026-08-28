@@ -71,9 +71,11 @@ export default async function MemberDetailPage({
         searchable, paginated table below is still there for the detail; this
         is the "at a glance" answer to "what has this person been doing".
       */}
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className={`grid gap-3 ${member.role === "ADMIN" ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
         <StatCard label="Total walks" value={attendanceCount} />
-        <StatCard label="Walks created" value={member.walkCount} />
+        {/* Only organisers create walks — showing this for a member is
+            always a confusing "0" that looks like a broken stat. */}
+        {member.role === "ADMIN" ? <StatCard label="Walks created" value={member.walkCount} /> : null}
         <StatCard label="Cancelled after clock-in" value={cancelledCount} />
       </div>
 

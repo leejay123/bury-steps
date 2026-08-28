@@ -51,10 +51,16 @@ export default async function DashboardPage() {
       },
     }),
     prisma.attendance.findMany({
-      where: { userId: user.id },
+      // A cancelled walk already gets its own "Cancelled" callout in the
+      // Upcoming section above (retained for a few days so it isn't a
+      // surprise no-show) — once it's history, it shouldn't also linger
+      // here in the "recent walks" glance, crowding out walks that
+      // actually happened. Reopening a walk clears cancelledAt, so it
+      // reappears here on its own.
+      where: { userId: user.id, walk: { cancelledAt: null } },
       orderBy: { clockedInAt: "desc" },
       take: 5,
-      include: { walk: { select: { title: true, token: true, startsAt: true, cancelledAt: true } } },
+      include: { walk: { select: { title: true, token: true, startsAt: true } } },
     }),
     prisma.attendance.count({ where: { userId: user.id } }),
   ]);
@@ -103,7 +109,7 @@ export default async function DashboardPage() {
         />
       )}
 
-      {historyCount > 0 ? (
+      {history.length > 0 ? (
         <section className="flex flex-col gap-3">
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="text-sm font-medium text-muted-foreground">Your recent walks</h2>
@@ -128,9 +134,6 @@ export default async function DashboardPage() {
                       ? ` · Out ${formatCompactDateTime(attendance.clockedOutAt)}`
                       : ""}
                   </p>
-                  {attendance.walk.cancelledAt ? (
-                    <p className="text-xs text-destructive">Cancelled</p>
-                  ) : null}
                 </DataListBody>
                 <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
               </DataListItem>
