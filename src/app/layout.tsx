@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
+import { Analytics } from "@vercel/analytics/next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/themes";
 import { Toaster } from "@/components/ui/sonner";
@@ -120,6 +121,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <SiteCookieConsent />
           {theme.scrollToTopEnabled ? <BackToTop /> : null}
         </ClerkProvider>
+        {/*
+          Vercel Analytics is cookieless — it counts page views with a
+          request-time hash, not a client-side identifier — so it needs no
+          entry in the cookie notice and works the same whether someone
+          accepts or declines it. See the "Cookies" section of the privacy
+          policy for the full explanation.
+        */}
+        <Analytics />
       </body>
     </html>
   );
