@@ -22,10 +22,15 @@ export function HeroSection({
   signUpHref: string;
   carouselEnabled?: boolean;
 }) {
+  // Turned on in settings is necessary but not sufficient — with zero
+  // slides there's nothing for the carousel to show, so treat that the same
+  // as turned off rather than rendering an empty grey strip.
+  const showCarousel = carouselEnabled && slides.length > 0;
+
   return (
     <section>
       <div className="relative">
-        {!carouselEnabled ? (
+        {!showCarousel ? (
           <>
             <DecorIcon className="size-4" position="top-left" />
             <DecorIcon className="size-4" position="top-right" />
@@ -67,7 +72,7 @@ export function HeroSection({
         </HeroCopy>
       </div>
 
-      {carouselEnabled ? (
+      {showCarousel ? (
         <div className="relative">
           <DecorIcon className="size-4" position="top-left" />
           <DecorIcon className="size-4" position="top-right" />
