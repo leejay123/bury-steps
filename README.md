@@ -239,3 +239,5 @@ Paste these in **Vercel → Project → Settings → Environment Variables**.
 | `CRON_SECRET` | Make a long random string. Vercel Cron sends it as `Authorization: Bearer` when the nightly job runs. |
 
 Clerk, the database, and `CRON_SECRET` are required in Vercel. Without `CRON_SECRET` the nightly health-note purge will not run.
+
+The app checks these at boot: in a real production deploy, a missing Clerk key or `DATABASE_URL` fails the deploy immediately with a clear message instead of only breaking the first page that touches auth or the database. `CRON_SECRET` and `INITIAL_ADMIN_EMAIL` log a warning if missing rather than failing, since the app still runs without them — just without the nightly purge, or without the first-admin guardrail.

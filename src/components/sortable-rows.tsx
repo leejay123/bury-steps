@@ -30,7 +30,7 @@ export function ReorderButtons({
     >
       <Button
         aria-label={`Move ${label} up`}
-        className="size-7 rounded-b-none"
+        className="size-11 rounded-b-none"
         disabled={!canMoveUp}
         onClick={onMoveUp}
         size="icon"
@@ -41,7 +41,7 @@ export function ReorderButtons({
       </Button>
       <Button
         aria-label={`Move ${label} down`}
-        className="size-7 rounded-t-none"
+        className="size-11 rounded-t-none"
         disabled={!canMoveDown}
         onClick={onMoveDown}
         size="icon"

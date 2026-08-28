@@ -43,12 +43,61 @@ function londonOffsetMs(at: Date): number {
 /**
  * Convert a `datetime-local` value ("2026-09-03T18:30") that the organiser
  * typed as UK wall-clock time into a correct UTC instant.
- * Ambiguous times inside the autumn DST fold resolve to BST.
+ *
+ * The UK's clock changes create two edge cases, both handled explicitly
+ * here rather than by accident:
+ *  - Spring-forward gap (clocks jump 00:59 GMT -> 02:00 BST): a typed time
+ *    like 01:30 never actually happens on the wall clock. We resolve it by
+ *    shifting forward past the gap, landing at 02:30 BST — the same
+ *    "compatible" resolution most calendar/OS pickers use for a time that
+ *    doesn't exist.
+ *  - Autumn fold (clocks repeat 01:00-01:59, first as BST then as GMT): a
+ *    typed time like 01:30 happens twice. We deterministically resolve to
+ *    the first occurrence, i.e. BST.
+ *
+ * Naively looking up "the UTC offset at this wall-clock instant" (treating
+ * it as if it were already UTC) silently picks whichever offset happens to
+ * apply to that instant's neighbourhood, which is wrong on both counts: in
+ * the gap it can shift the result *backward* an hour instead of forward,
+ * and in the fold it can resolve to GMT instead of the documented BST. This
+ * samples the offset on both sides of the requested time and checks which
+ * candidate(s) round-trip correctly instead.
  */
 export function londonWallClockToUtc(value: string): Date {
   const naive = new Date(`${value.length === 16 ? `${value}:00` : value}Z`);
   if (Number.isNaN(naive.getTime())) throw new Error("Invalid date");
-  return new Date(naive.getTime() - londonOffsetMs(naive));
+
+  // UK transitions are exactly ±1h, so sampling 2h either side is always
+  // clear of the transition itself and gives the offset in effect just
+  // before and just after it (equal, away from any transition).
+  const TWO_HOURS = 2 * 60 * 60 * 1000;
+  const beforeOffset = londonOffsetMs(new Date(naive.getTime() - TWO_HOURS));
+  const afterOffset = londonOffsetMs(new Date(naive.getTime() + TWO_HOURS));
+
+  if (beforeOffset === afterOffset) {
+    // Nowhere near a transition — the ordinary, unambiguous case.
+    return new Date(naive.getTime() - beforeOffset);
+  }
+
+  // Near a transition: try both candidate offsets and keep whichever one(s)
+  // actually round-trip back to the same offset (i.e. are self-consistent).
+  const beforeCandidate = naive.getTime() - beforeOffset;
+  const afterCandidate = naive.getTime() - afterOffset;
+  const beforeValid = londonOffsetMs(new Date(beforeCandidate)) === beforeOffset;
+  const afterValid = londonOffsetMs(new Date(afterCandidate)) === afterOffset;
+
+  if (beforeValid && afterValid) {
+    // Autumn fold: both interpretations are valid. The earlier UTC instant
+    // is the one still in BST — resolve to that, as documented.
+    return new Date(Math.min(beforeCandidate, afterCandidate));
+  }
+  if (beforeValid) return new Date(beforeCandidate);
+  if (afterValid) return new Date(afterCandidate);
+
+  // Spring-forward gap: this wall-clock time never happens. Applying the
+  // pre-transition offset lands just past the transition instant, which is
+  // exactly "shifted forward by the gap" when read back as London time.
+  return new Date(beforeCandidate);
 }
 
 /** Inverse — produces a `datetime-local` string for prefilling the form. */

@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { deleteWalk, type ActionResult } from "@/server/actions";
+import { useActionToast } from "@/hooks/use-action-toast";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -40,17 +41,10 @@ export function DeleteWalkButton({
   );
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    if (!state) return;
-    if (state.ok) {
-      toast.success(state.message ?? "Walk removed.");
-      setOpen(false);
-      router.push("/admin");
-      router.refresh();
-    } else {
-      toast.error(state.error);
-    }
-  }, [router, state]);
+  useActionToast(state, () => {
+    setOpen(false);
+    router.push("/admin");
+  });
 
   return (
     <AlertDialog open={open} onOpenChange={(next) => setOpen(isPending ? true : next)}>
@@ -81,6 +75,7 @@ export function DeleteWalkButton({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <input type="hidden" name="walkId" value={walkId} />
+          <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending} type="button">
               Keep the walk

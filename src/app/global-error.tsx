@@ -38,6 +38,11 @@ export default function GlobalError({
           >
             Try again
           </button>
+          {/* A plain anchor, not next/link: this boundary only renders when
+              something broke badly enough to take the whole app router tree
+              down with it, so recovery should force a full page load rather
+              than hand control back to client-side routing. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a
             className="inline-flex h-9 items-center justify-center rounded-md border px-4 text-sm font-medium hover:bg-accent"
             href="/"

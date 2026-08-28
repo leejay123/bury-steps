@@ -2,9 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { useRouter } from "next/navigation";
 import { ChevronRight, CircleHelp, Folders } from "lucide-react";
-import { toast } from "sonner";
 import {
   addHomepageFaq,
   addHomepageFaqCategory,
@@ -22,6 +20,8 @@ import {
   type FaqCategoryView,
   type FaqView,
 } from "@/lib/faqs";
+import { useActionToast } from "@/hooks/use-action-toast";
+import { FormError } from "@/components/form-error";
 import { EmptyState } from "@/components/empty-state";
 import { ReorderButtons, useReorderableIds } from "@/components/sortable-rows";
 import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
@@ -74,23 +74,6 @@ function PendingSubmit({
       {pending ? pendingLabel : label}
     </Button>
   );
-}
-
-function useActionToast(state: ActionResult | null, onOk?: () => void) {
-  const router = useRouter();
-  const onOkRef = useRef(onOk);
-  onOkRef.current = onOk;
-
-  useEffect(() => {
-    if (!state) return;
-    if (state.ok) {
-      toast.success(state.message ?? "Saved.");
-      onOkRef.current?.();
-      router.refresh();
-    } else {
-      toast.error(state.error);
-    }
-  }, [router, state]);
 }
 
 function CategorySelect({
@@ -158,7 +141,9 @@ function FaqFields({
         value={categoryId}
       />
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${prefix}-question`}>Question</Label>
+        <Label htmlFor={`${prefix}-question`} required>
+          Question
+        </Label>
         <Input
           disabled={disabled}
           id={`${prefix}-question`}
@@ -170,7 +155,9 @@ function FaqFields({
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${prefix}-answer`}>Answer</Label>
+        <Label htmlFor={`${prefix}-answer`} required>
+          Answer
+        </Label>
         <Textarea
           disabled={disabled}
           id={`${prefix}-answer`}
@@ -227,6 +214,7 @@ function AddFaqForm({
     <form action={action} className="flex min-h-0 flex-1 flex-col" ref={formRef}>
       <div className="flex-1 overflow-y-auto overscroll-y-contain px-4">
         <FaqFields categories={categories} disabled={disabled} prefix="new" />
+        <FormError message={state && !state.ok ? state.error : null} />
       </div>
       <DrawerFooter>
         <PendingSubmit disabled={disabled} label="Add FAQ" pendingLabel="Adding…" />
@@ -259,6 +247,7 @@ function EditFaqForm({
       <form action={updateAction} className="flex min-h-0 flex-1 flex-col" key={faq.id}>
         <div className="flex-1 overflow-y-auto overscroll-y-contain px-4">
           <FaqFields categories={categories} faq={faq} prefix={`edit-${faq.id}`} />
+          <FormError message={updateState && !updateState.ok ? updateState.error : null} />
         </div>
         <DrawerFooter>
           <PendingSubmit label="Save" pendingLabel="Saving…" />
@@ -312,6 +301,7 @@ function RemoveFaqButton({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <input name="faqId" type="hidden" value={faqId} />
+          <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending} type="button">
               Keep it
@@ -354,7 +344,9 @@ function CategoryLabelForm({
     <form action={formAction} className="flex flex-col gap-3 pb-4">
       {category ? <input name="categoryId" type="hidden" value={category.id} /> : null}
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={category ? `edit-category-${category.id}` : "new-category"}>Name</Label>
+        <Label htmlFor={category ? `edit-category-${category.id}` : "new-category"} required>
+          Name
+        </Label>
         <Input
           id={category ? `edit-category-${category.id}` : "new-category"}
           maxLength={MAX_FAQ_CATEGORY_LABEL}
@@ -365,6 +357,7 @@ function CategoryLabelForm({
           value={label}
         />
       </div>
+      <FormError message={state && !state.ok ? state.error : null} />
       <PendingSubmit label={submitLabel} pendingLabel={submitPendingLabel} />
     </form>
   );
@@ -469,6 +462,7 @@ function RemoveCategoryButton({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <input name="categoryId" type="hidden" value={category.id} />
+          <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending} type="button">
               Keep it

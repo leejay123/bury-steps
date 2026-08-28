@@ -1,31 +1,59 @@
+import { Prisma } from "@prisma/client";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { AdminPageIntro } from "../admin-page-intro";
 import { AccidentReportManager } from "./report-manager";
 
+function buildWhere(query: string): Prisma.AccidentReportWhereInput | undefined {
+  if (!query) return undefined;
+  return {
+    OR: [
+      { whatHappened: { contains: query, mode: "insensitive" } },
+      { whoInvolved: { contains: query, mode: "insensitive" } },
+      { whatWeDid: { contains: query, mode: "insensitive" } },
+      { organiserNotes: { contains: query, mode: "insensitive" } },
+      { walk: { title: { contains: query, mode: "insensitive" } } },
+      { walk: { location: { contains: query, mode: "insensitive" } } },
+    ],
+  };
+}
+
 export const dynamic = "force-dynamic";
 
-export default async function AccidentReportsPage() {
+export default async function AccidentReportsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; page?: string }>;
+}) {
   await requireAdmin();
+  const params = await searchParams;
+  const query = (params.q ?? "").trim();
+  const requestedPage = Math.max(1, Number(params.page ?? "1") || 1);
+  const where = buildWhere(query);
 
-  const [reports, walks] = await Promise.all([
-    prisma.accidentReport.findMany({
-      orderBy: { happenedAt: "desc" },
-      // Backstop against an unbounded query. Accident reports should be
-      // rare in practice; this just stops the list (and its full-text
-      // search, which runs client-side over everything fetched here) from
-      // growing without limit.
-      take: 1000,
-      include: {
-        walk: { select: { id: true, title: true, location: true } },
-      },
-    }),
+  const [totalReports, matchedTotal, walks] = await Promise.all([
+    prisma.accidentReport.count(),
+    prisma.accidentReport.count({ where }),
     prisma.walk.findMany({
       orderBy: { startsAt: "desc" },
       take: 50,
       select: { id: true, title: true, startsAt: true },
     }),
   ]);
+
+  const pageCount = Math.max(1, Math.ceil(matchedTotal / LIST_PAGE_SIZE));
+  const page = Math.min(requestedPage, pageCount);
+
+  const reports = await prisma.accidentReport.findMany({
+    where,
+    orderBy: { happenedAt: "desc" },
+    skip: (page - 1) * LIST_PAGE_SIZE,
+    take: LIST_PAGE_SIZE,
+    include: {
+      walk: { select: { id: true, title: true, location: true } },
+    },
+  });
 
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
@@ -34,6 +62,10 @@ export default async function AccidentReportsPage() {
         title="Accident reports"
       />
       <AccidentReportManager
+        hasAnyReports={totalReports > 0}
+        page={page}
+        pageCount={pageCount}
+        pageSize={LIST_PAGE_SIZE}
         reports={reports.map((report) => ({
           id: report.id,
           happenedAt: report.happenedAt.toISOString(),
@@ -45,6 +77,7 @@ export default async function AccidentReportsPage() {
           whatWeDid: report.whatWeDid,
           organiserNotes: report.organiserNotes,
         }))}
+        total={matchedTotal}
         walks={walks.map((walk) => ({
           id: walk.id,
           title: walk.title,

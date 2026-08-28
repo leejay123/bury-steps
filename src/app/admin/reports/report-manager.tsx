@@ -1,10 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { useRouter } from "next/navigation";
 import { ChevronRight, ClipboardList, Printer, Search, Trash2 } from "lucide-react";
-import { toast } from "sonner";
 import {
   addAccidentReport,
   deleteAccidentReport,
@@ -16,7 +14,9 @@ import { DateTimePicker } from "@/components/date-time-picker";
 import { EmptyState } from "@/components/empty-state";
 import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
-import { usePagedList } from "@/hooks/use-paged-list";
+import { useUrlListState } from "@/hooks/use-url-list-state";
+import { useActionToast } from "@/hooks/use-action-toast";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -120,23 +120,6 @@ function PendingSubmit({ label, pendingLabel }: { label: string; pendingLabel: s
   );
 }
 
-function useActionToast(state: ActionResult | null, onOk?: () => void) {
-  const router = useRouter();
-  const onOkRef = useRef(onOk);
-  onOkRef.current = onOk;
-
-  useEffect(() => {
-    if (!state) return;
-    if (state.ok) {
-      toast.success(state.message ?? "Saved.");
-      onOkRef.current?.();
-      router.refresh();
-    } else {
-      toast.error(state.error);
-    }
-  }, [router, state]);
-}
-
 function ReportFields({
   prefix,
   report,
@@ -153,7 +136,9 @@ function ReportFields({
       {report ? <input name="reportId" type="hidden" value={report.id} /> : null}
       <input name="walkId" type="hidden" value={walkId === "none" ? "" : walkId} />
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${prefix}-happened`}>When</Label>
+        <Label htmlFor={`${prefix}-happened`} required>
+          When
+        </Label>
         <DateTimePicker
           defaultValue={report ? utcToLondonWallClock(new Date(report.happenedAt)) : undefined}
           id={`${prefix}-happened`}
@@ -178,7 +163,9 @@ function ReportFields({
         </Select>
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${prefix}-what`}>What happened</Label>
+        <Label htmlFor={`${prefix}-what`} required>
+          What happened
+        </Label>
         <Textarea
           defaultValue={report?.whatHappened}
           id={`${prefix}-what`}
@@ -188,7 +175,9 @@ function ReportFields({
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${prefix}-who`}>Who was involved</Label>
+        <Label htmlFor={`${prefix}-who`} required>
+          Who was involved
+        </Label>
         <Textarea
           defaultValue={report?.whoInvolved}
           id={`${prefix}-who`}
@@ -198,7 +187,9 @@ function ReportFields({
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${prefix}-did`}>What we did</Label>
+        <Label htmlFor={`${prefix}-did`} required>
+          What we did
+        </Label>
         <Textarea
           defaultValue={report?.whatWeDid}
           id={`${prefix}-did`}
@@ -238,6 +229,7 @@ function AddForm({
   return (
     <form action={action} className="flex min-h-0 flex-1 flex-col">
       <ReportFields prefix="add" walks={walks} />
+      <FormError message={state && !state.ok ? state.error : null} />
       <DrawerFooter>
         <PendingSubmit label="Save report" pendingLabel="Saving…" />
       </DrawerFooter>
@@ -267,6 +259,7 @@ function EditForm({
   return (
     <form action={action} className="flex min-h-0 flex-1 flex-col">
       <ReportFields prefix="edit" report={report} walks={walks} />
+      <FormError message={state && !state.ok ? state.error : null} />
       <DrawerFooter>
         <Button disabled={isPending} onClick={onCancel} type="button" variant="outline">
           Cancel
@@ -287,23 +280,12 @@ function RemoveReportConfirm() {
 }
 
 function RemoveButton({ reportId, title }: { reportId: string; title: string }) {
-  const router = useRouter();
   const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
     deleteAccidentReport,
     null,
   );
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (!state) return;
-    if (state.ok) {
-      toast.success(state.message ?? "Removed.");
-      setOpen(false);
-      router.refresh();
-    } else {
-      toast.error(state.error);
-    }
-  }, [router, state]);
+  useActionToast(state, () => setOpen(false));
 
   return (
     <AlertDialog onOpenChange={(next) => setOpen(isPending ? true : next)} open={open}>
@@ -322,6 +304,7 @@ function RemoveButton({ reportId, title }: { reportId: string; title: string }) 
             </AlertDialogDescription>
           </AlertDialogHeader>
           <input name="reportId" type="hidden" value={reportId} />
+          <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending} type="button">
               Keep it
@@ -337,41 +320,32 @@ function RemoveButton({ reportId, title }: { reportId: string; title: string }) 
 export function AccidentReportManager({
   reports,
   walks,
+  hasAnyReports,
+  page,
+  pageCount,
+  pageSize,
+  total,
 }: {
+  /** Already the current page's rows, filtered and paginated on the server. */
   reports: ReportView[];
   walks: WalkOption[];
+  hasAnyReports: boolean;
+  page: number;
+  pageCount: number;
+  pageSize: number;
+  total: number;
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
   const [isPending, setIsPending] = useState(false);
   const viewing = mode?.type === "view" ? mode.report : null;
   const editing = mode?.type === "edit" ? mode.report : null;
   const listRef = useRef<HTMLDivElement>(null);
-  const [query, setQuery] = useState("");
-
-  const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    if (!needle) return reports;
-    return reports.filter((report) => {
-      const hay = [
-        report.walkTitle ?? "",
-        report.walkLocation ?? "",
-        report.whatHappened,
-        report.whoInvolved,
-        report.whatWeDid,
-        report.organiserNotes ?? "",
-      ]
-        .join(" ")
-        .toLowerCase();
-      return hay.includes(needle);
-    });
-  }, [query, reports]);
-
-  const paging = usePagedList(filtered, { resetKey: query });
+  const { query, setQuery, setPage, isPending: searchPending } = useUrlListState();
 
   return (
     <div className="flex flex-col gap-4" ref={listRef}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        {reports.length > 0 ? (
+        {hasAnyReports ? (
           <InputGroup className="sm:max-w-md">
             <InputGroupInput
               aria-label="Search accident reports"
@@ -389,13 +363,13 @@ export function AccidentReportManager({
         </Button>
       </div>
 
-      {reports.length === 0 ? (
+      {!hasAnyReports ? (
         <EmptyState
           description="Add a report if something happens on a walk. You can print it to PDF afterwards."
           icon={ClipboardList}
           title="No accident reports yet"
         />
-      ) : filtered.length === 0 ? (
+      ) : reports.length === 0 ? (
         <EmptyState
           description="Try a different walk, name, or detail from the write-up."
           icon={Search}
@@ -403,8 +377,8 @@ export function AccidentReportManager({
         />
       ) : (
         <>
-          <DataList>
-            {paging.paged.map((report) => {
+          <DataList aria-busy={searchPending} className={searchPending ? "opacity-60" : undefined}>
+            {reports.map((report) => {
             const at = new Date(report.happenedAt);
             return (
               <DataListItem
@@ -446,12 +420,12 @@ export function AccidentReportManager({
           </DataList>
           <ListPagination
             noun="reports"
-            onPageChange={paging.setPage}
-            page={paging.page}
-            pageCount={paging.pageCount}
-            pageSize={paging.pageSize}
+            onPageChange={setPage}
+            page={page}
+            pageCount={pageCount}
+            pageSize={pageSize}
             scrollToRef={listRef}
-            total={paging.total}
+            total={total}
           />
         </>
       )}

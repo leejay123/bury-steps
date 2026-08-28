@@ -43,7 +43,6 @@ export function NotificationBell({
   // page the user has already moved on from.
   useEffect(() => {
     setOpen(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   const unreadCount = unread.length;

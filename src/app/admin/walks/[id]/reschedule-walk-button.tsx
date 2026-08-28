@@ -1,11 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { rescheduleWalk, type ActionResult } from "@/server/actions";
 import { utcToLondonWallClock } from "@/lib/dates";
+import { useActionToast } from "@/hooks/use-action-toast";
+import { FormError } from "@/components/form-error";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,23 +50,12 @@ export function RescheduleWalkButton({
   startsAt: string;
   walkId: string;
 }) {
-  const router = useRouter();
   const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
     rescheduleWalk,
     null,
   );
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (!state) return;
-    if (state.ok) {
-      toast.success(state.message ?? "Walk rescheduled.");
-      setOpen(false);
-      router.refresh();
-    } else {
-      toast.error(state.error);
-    }
-  }, [router, state]);
+  useActionToast(state, () => setOpen(false));
 
   return (
     <AlertDialog onOpenChange={(next) => setOpen(isPending ? true : next)} open={open}>
@@ -89,7 +78,9 @@ export function RescheduleWalkButton({
           <input name="wasCancelled" type="hidden" value={cancelled ? "on" : ""} />
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor={`reschedule-starts-${walkId}`}>Date and start time</Label>
+              <Label htmlFor={`reschedule-starts-${walkId}`} required>
+                Date and start time
+              </Label>
               <DateTimePicker
                 defaultValue={utcToLondonWallClock(new Date(startsAt))}
                 id={`reschedule-starts-${walkId}`}
@@ -122,6 +113,7 @@ export function RescheduleWalkButton({
               placeholder="Car park, Woodhill Road"
             />
           </div>
+          <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending} type="button">
               Keep this time

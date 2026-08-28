@@ -65,10 +65,6 @@ const OVERLAY_SELECTOR = [
   '[data-slot="alert-dialog-content"]',
 ].join(", ");
 
-function anyModalContentOpen() {
-  return Boolean(document.querySelector(OPEN_CONTENT_SELECTOR));
-}
-
 function anyOverlayLayerOpen() {
   return Boolean(document.querySelector(OPEN_LAYER_SELECTOR));
 }

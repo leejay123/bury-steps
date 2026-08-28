@@ -1,5 +1,3 @@
-"use client";
-
 import { CalendarDays, Footprints, UserPlus } from "lucide-react";
 import type React from "react";
 import { DecorIcon } from "@/components/decor-icon";

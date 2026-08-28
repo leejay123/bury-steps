@@ -3,9 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { ChevronRight, ImageIcon } from "lucide-react";
-import { toast } from "sonner";
 import {
   addHomepageSlide,
   deleteHomepageSlide,
@@ -14,6 +12,8 @@ import {
   type ActionResult,
 } from "@/server/actions";
 import type { SlideView } from "@/lib/slides";
+import { useActionToast } from "@/hooks/use-action-toast";
+import { FormError } from "@/components/form-error";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { EmptyState } from "@/components/empty-state";
 import { ReorderButtons, useReorderableIds } from "@/components/sortable-rows";
@@ -59,23 +59,6 @@ function PendingSubmit({
   );
 }
 
-function useActionToast(state: ActionResult | null, onOk?: () => void) {
-  const router = useRouter();
-  const onOkRef = useRef(onOk);
-  onOkRef.current = onOk;
-
-  useEffect(() => {
-    if (!state) return;
-    if (state.ok) {
-      toast.success(state.message ?? "Saved.");
-      onOkRef.current?.();
-      router.refresh();
-    } else {
-      toast.error(state.error);
-    }
-  }, [router, state]);
-}
-
 function SlideFields({
   disabled,
   prefix,
@@ -89,7 +72,9 @@ function SlideFields({
     <div className="flex flex-col gap-3">
       {slide ? <input name="slideId" type="hidden" value={slide.id} /> : null}
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${prefix}-image`}>Photo</Label>
+        <Label htmlFor={`${prefix}-image`} required={!slide}>
+          Photo
+        </Label>
         <ImageDropzone
           clearable={false}
           disabled={disabled}
@@ -138,6 +123,7 @@ function AddDrawerForm({
     <form action={action} className="flex min-h-0 flex-1 flex-col" ref={formRef}>
       <div className="flex-1 overflow-y-auto overscroll-y-contain px-4">
         <SlideFields disabled={disabled} prefix="new" />
+        <FormError message={state && !state.ok ? state.error : null} />
       </div>
       <DrawerFooter>
         <PendingSubmit disabled={disabled} label="Add slide" pendingLabel="Adding…" />
@@ -168,6 +154,7 @@ function EditDrawerForm({
       <form action={updateAction} className="flex min-h-0 flex-1 flex-col" key={slide.id}>
         <div className="flex-1 overflow-y-auto overscroll-y-contain px-4">
           <SlideFields prefix={`edit-${slide.id}`} slide={slide} />
+          <FormError message={updateState && !updateState.ok ? updateState.error : null} />
         </div>
         <DrawerFooter>
           <PendingSubmit label="Save" pendingLabel="Saving…" />
@@ -212,6 +199,7 @@ function RemoveSlideButton({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <input name="slideId" type="hidden" value={slideId} />
+          <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending} type="button">
               Keep it

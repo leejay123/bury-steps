@@ -51,6 +51,9 @@ model Walk {
 
   @@index([startsAt])
   @@index([createdById])
+  /// Used by the dashboard's "recently cancelled" window and the daily
+  /// purge cron's cutoff query.
+  @@index([cancelledAt])
 }
 
 model Attendance {
@@ -77,7 +80,11 @@ model Attendance {
 
   @@unique([walkId, userId])
   @@index([walkId])
-  @@index([userId])
+  /// Covers `WHERE userId = ? ORDER BY clockedInAt DESC` (member/admin walk
+  /// history lookups) — a leftmost-prefix match also serves plain
+  /// `WHERE userId = ?` queries, so this replaces the old userId-only index
+  /// rather than sitting alongside it.
+  @@index([userId, clockedInAt])
   @@index([conditionsPurgeAfter])
 }
 

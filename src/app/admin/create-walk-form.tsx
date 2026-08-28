@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 import { createWalk, type ActionResult } from "@/server/actions";
 import { DateTimePicker } from "@/components/date-time-picker";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,13 +46,17 @@ export function CreateWalkForm() {
   return (
     <form ref={formRef} action={action} className="space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="title">Title</Label>
+        <Label htmlFor="title" required>
+          Title
+        </Label>
         <Input id="title" name="title" required placeholder="Burrs Country Park loop" />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="startsAt">Date and start time</Label>
+          <Label htmlFor="startsAt" required>
+            Date and start time
+          </Label>
           <DateTimePicker id="startsAt" key={formKey} name="startsAt" required />
         </div>
         <div className="space-y-1.5">
@@ -85,6 +90,8 @@ export function CreateWalkForm() {
           placeholder="Roughly 4 miles, one steady climb. Boots recommended after rain."
         />
       </div>
+
+      <FormError message={state && !state.ok ? state.error : null} />
 
       <Submit />
     </form>

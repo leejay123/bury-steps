@@ -4,7 +4,15 @@ import * as React from "react";
 import * as LabelPrimitive from "@radix-ui/react-label";
 import { cn } from "@/lib/utils";
 
-function Label({ className, ...props }: React.ComponentProps<typeof LabelPrimitive.Root>) {
+type LabelProps = React.ComponentProps<typeof LabelPrimitive.Root> & {
+  /** Adds a visible "required" marker next to the label text. The field
+   * itself still needs its own `required`/`aria-required` attribute — this
+   * only makes that requirement visible, since sighted users scanning a
+   * form have no other way to tell a required field from an optional one. */
+  required?: boolean;
+};
+
+function Label({ className, children, required, ...props }: LabelProps) {
   return (
     <LabelPrimitive.Root
       data-slot="label"
@@ -13,7 +21,14 @@ function Label({ className, ...props }: React.ComponentProps<typeof LabelPrimiti
         className,
       )}
       {...props}
-    />
+    >
+      {children}
+      {required ? (
+        <span aria-hidden="true" className="text-destructive">
+          *
+        </span>
+      ) : null}
+    </LabelPrimitive.Root>
   );
 }
 

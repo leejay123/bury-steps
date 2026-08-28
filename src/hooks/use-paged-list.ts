@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 
-export const LIST_PAGE_SIZE = 20;
+export { LIST_PAGE_SIZE };
 
 export function usePagedList<T>(
   items: T[],

@@ -79,12 +79,20 @@ export function HomeCarousel({
                 key={slide.id}
                 type="button"
                 aria-label={`Show slide ${index + 1}`}
-                className={cn(
-                  "size-2 rounded-full transition-colors",
-                  current === index ? "bg-background" : "bg-background/50",
-                )}
+                // The visible dot stays small by design, but the tap target
+                // is padded out to the ~44px touch guideline via negative
+                // margins so it doesn't visually affect the dot row spacing.
+                className="-m-[18px] flex size-11 items-center justify-center"
                 onClick={() => api?.scrollTo(index)}
-              />
+              >
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "size-2 rounded-full transition-colors",
+                    current === index ? "bg-background" : "bg-background/50",
+                  )}
+                />
+              </button>
             ))}
           </div>
         </>
