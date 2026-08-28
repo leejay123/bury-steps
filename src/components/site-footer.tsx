@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { Facebook } from "lucide-react";
 import { FullWidthDivider } from "@/components/full-width-divider";
