@@ -118,13 +118,25 @@ function NoticeFields({
   );
 }
 
-function AddNoticeForm({ disabled, onSaved }: { disabled: boolean; onSaved: () => void }) {
-  const [state, action] = useActionState<ActionResult | null, FormData>(addSiteNotice, null);
+function AddNoticeForm({
+  disabled,
+  onPendingChange,
+  onSaved,
+}: {
+  disabled: boolean;
+  onPendingChange?: (pending: boolean) => void;
+  onSaved: () => void;
+}) {
+  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
+    addSiteNotice,
+    null,
+  );
   const formRef = useRef<HTMLFormElement>(null);
   useActionToast(state, () => {
     formRef.current?.reset();
     onSaved();
   });
+  useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
 
   return (
     <form action={action} className="flex min-h-0 flex-1 flex-col" ref={formRef}>
@@ -138,12 +150,21 @@ function AddNoticeForm({ disabled, onSaved }: { disabled: boolean; onSaved: () =
   );
 }
 
-function EditNoticeForm({ notice, onSaved }: { notice: NoticeView; onSaved: () => void }) {
-  const [updateState, updateAction] = useActionState<ActionResult | null, FormData>(
+function EditNoticeForm({
+  notice,
+  onPendingChange,
+  onSaved,
+}: {
+  notice: NoticeView;
+  onPendingChange?: (pending: boolean) => void;
+  onSaved: () => void;
+}) {
+  const [updateState, updateAction, isPending] = useActionState<ActionResult | null, FormData>(
     updateSiteNotice,
     null,
   );
   useActionToast(updateState, onSaved);
+  useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -168,7 +189,10 @@ function RemoveNoticeButton({
   onRemoved: () => void;
   title: string;
 }) {
-  const [state, action] = useActionState<ActionResult | null, FormData>(deleteSiteNotice, null);
+  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
+    deleteSiteNotice,
+    null,
+  );
   const [open, setOpen] = useState(false);
   useActionToast(state, () => {
     setOpen(false);
@@ -176,13 +200,13 @@ function RemoveNoticeButton({
   });
 
   return (
-    <AlertDialog onOpenChange={setOpen} open={open}>
+    <AlertDialog onOpenChange={(next) => setOpen(isPending ? true : next)} open={open}>
       <AlertDialogTrigger asChild>
         <Button size="xs" variant="destructive">
           Remove
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent closeDisabled={isPending}>
         <form action={action} className="flex flex-col gap-4">
           <AlertDialogHeader>
             <AlertDialogTitle>Remove this notice?</AlertDialogTitle>
@@ -192,7 +216,9 @@ function RemoveNoticeButton({
           </AlertDialogHeader>
           <input name="noticeId" type="hidden" value={noticeId} />
           <AlertDialogFooter>
-            <AlertDialogCancel type="button">Keep it</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending} type="button">
+              Keep it
+            </AlertDialogCancel>
             <RemoveConfirm />
           </AlertDialogFooter>
         </form>
@@ -218,6 +244,7 @@ export function SiteNoticeManager({
   notices: NoticeView[];
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
+  const [isPending, setIsPending] = useState(false);
   const atLimit = notices.length >= maxNotices;
   const editingId = mode?.type === "edit" ? mode.notice.id : null;
   const liveIndex = editingId ? notices.findIndex((item) => item.id === editingId) : -1;
@@ -283,6 +310,7 @@ export function SiteNoticeManager({
       )}
 
       <Drawer
+        closeDisabled={isPending}
         onOpenChange={(open) => {
           if (!open) setMode(null);
         }}
@@ -298,12 +326,17 @@ export function SiteNoticeManager({
             </DrawerDescription>
           </DrawerHeader>
           {mode?.type === "add" ? (
-            <AddNoticeForm disabled={atLimit} onSaved={() => setMode(null)} />
+            <AddNoticeForm
+              disabled={atLimit}
+              onPendingChange={setIsPending}
+              onSaved={() => setMode(null)}
+            />
           ) : null}
           {editing ? (
             <EditNoticeForm
               key={editing.notice.id}
               notice={editing.notice}
+              onPendingChange={setIsPending}
               onSaved={() => setMode(null)}
             />
           ) : null}

@@ -28,7 +28,10 @@ function Confirm() {
 
 export function ReopenWalkButton({ walkId }: { walkId: string }) {
   const router = useRouter();
-  const [state, action] = useActionState<ActionResult | null, FormData>(reopenWalk, null);
+  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
+    reopenWalk,
+    null,
+  );
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -43,11 +46,11 @@ export function ReopenWalkButton({ walkId }: { walkId: string }) {
   }, [router, state]);
 
   return (
-    <AlertDialog onOpenChange={setOpen} open={open}>
+    <AlertDialog onOpenChange={(next) => setOpen(isPending ? true : next)} open={open}>
       <AlertDialogTrigger asChild>
         <Button size="sm">Reopen walk</Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent closeDisabled={isPending}>
         <form action={action} className="flex flex-col gap-4">
           <AlertDialogHeader>
             <AlertDialogTitle>Reopen this walk?</AlertDialogTitle>
@@ -58,7 +61,9 @@ export function ReopenWalkButton({ walkId }: { walkId: string }) {
           </AlertDialogHeader>
           <input name="walkId" type="hidden" value={walkId} />
           <AlertDialogFooter>
-            <AlertDialogCancel type="button">Keep it cancelled</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending} type="button">
+              Keep it cancelled
+            </AlertDialogCancel>
             <Confirm />
           </AlertDialogFooter>
         </form>

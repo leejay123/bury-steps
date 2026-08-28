@@ -12,10 +12,11 @@ import {
 } from "@/components/overlay-root";
 
 const overlayCloseClassName =
-  "absolute top-3 right-3 z-20 flex size-10 cursor-pointer items-center justify-center rounded-md opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
+  "absolute top-3 right-3 z-20 flex size-10 cursor-pointer items-center justify-center rounded-md opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
 
 const DrawerOpenContext = React.createContext<boolean | undefined>(undefined);
 const DrawerShouldRenderContext = React.createContext(true);
+const DrawerCloseDisabledContext = React.createContext(false);
 
 const DESKTOP_QUERY = "(min-width: 640px)";
 
@@ -36,12 +37,21 @@ function useIsDesktop() {
 
 function Drawer({
   children,
+  closeDisabled = false,
   direction,
   onOpenChange,
   open,
   repositionInputs = false,
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Root>) {
+}: React.ComponentProps<typeof DrawerPrimitive.Root> & {
+  /**
+   * A form inside is mid-submit — a slow network shouldn't let someone
+   * swipe/escape the sheet away while it's still saving. Without this the
+   * save keeps running after the sheet is gone, and the success/error toast
+   * fires later with nothing on screen to explain it.
+   */
+  closeDisabled?: boolean;
+}) {
   // Only DrawerContent needs to stay mounted through the close animation
   // (see DrawerShouldRenderContext below). Gating `children` here as a whole
   // would also hide DrawerTrigger while `open` starts false and has never
@@ -60,35 +70,38 @@ function Drawer({
   return (
     <DrawerOpenContext.Provider value={open}>
       <DrawerShouldRenderContext.Provider value={shouldRender}>
-        <DrawerPrimitive.Root
-          data-slot="drawer"
-          direction={resolvedDirection}
-          dismissible
-          modal
-          onOpenChange={(next) => {
-            if (!next) {
-              unlockIdleDocument();
-              window.setTimeout(unlockIdleDocument, 0);
-              window.setTimeout(unlockIdleDocument, 250);
-            }
-            onOpenChange?.(next);
-          }}
-          open={open}
-          // Scaling the page behind the sheet looks like a zoom on iPhone.
-          shouldScaleBackground={false}
-          // Vaul's built-in keyboard/input repositioning has long-standing bugs
-          // on iOS Safari (emilkowalski/vaul#619, #503, #514): the drawer can
-          // get stuck mid-reposition — its content and overlay rendered in the
-          // wrong place, or the overlay missing entirely — until the user taps
-          // the screen again and forces a repaint. Disabling it and letting the
-          // browser handle the on-screen keyboard natively (it still scrolls a
-          // focused input into view) trades a slightly less polished animation
-          // for a layout that never gets stuck.
-          repositionInputs={repositionInputs}
-          {...props}
-        >
-          {children}
-        </DrawerPrimitive.Root>
+        <DrawerCloseDisabledContext.Provider value={closeDisabled}>
+          <DrawerPrimitive.Root
+            data-slot="drawer"
+            direction={resolvedDirection}
+            dismissible={!closeDisabled}
+            modal
+            onOpenChange={(next) => {
+              if (closeDisabled && !next) return;
+              if (!next) {
+                unlockIdleDocument();
+                window.setTimeout(unlockIdleDocument, 0);
+                window.setTimeout(unlockIdleDocument, 250);
+              }
+              onOpenChange?.(next);
+            }}
+            open={open}
+            // Scaling the page behind the sheet looks like a zoom on iPhone.
+            shouldScaleBackground={false}
+            // Vaul's built-in keyboard/input repositioning has long-standing bugs
+            // on iOS Safari (emilkowalski/vaul#619, #503, #514): the drawer can
+            // get stuck mid-reposition — its content and overlay rendered in the
+            // wrong place, or the overlay missing entirely — until the user taps
+            // the screen again and forces a repaint. Disabling it and letting the
+            // browser handle the on-screen keyboard natively (it still scrolls a
+            // focused input into view) trades a slightly less polished animation
+            // for a layout that never gets stuck.
+            repositionInputs={repositionInputs}
+            {...props}
+          >
+            {children}
+          </DrawerPrimitive.Root>
+        </DrawerCloseDisabledContext.Provider>
       </DrawerShouldRenderContext.Provider>
     </DrawerOpenContext.Provider>
   );
@@ -131,6 +144,8 @@ function DrawerOverlay({
 function DrawerContent({
   className,
   children,
+  onEscapeKeyDown,
+  onPointerDownOutside,
   showCloseButton = true,
   style,
   onOpenAutoFocus,
@@ -139,6 +154,7 @@ function DrawerContent({
   const [root, setRoot] = React.useState<HTMLElement | null>(null);
   const open = React.useContext(DrawerOpenContext);
   const shouldRender = React.useContext(DrawerShouldRenderContext);
+  const closeDisabled = React.useContext(DrawerCloseDisabledContext);
   const dismissed = open === false;
 
   React.useEffect(() => {
@@ -175,6 +191,10 @@ function DrawerContent({
           "data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:h-full data-[vaul-drawer-direction=left]:w-[calc(100%-1.25rem)] data-[vaul-drawer-direction=left]:border-r data-[vaul-drawer-direction=left]:pt-[env(safe-area-inset-top)] data-[vaul-drawer-direction=left]:pl-[env(safe-area-inset-left)] data-[vaul-drawer-direction=left]:sm:max-w-lg",
           className,
         )}
+        onEscapeKeyDown={(event) => {
+          if (closeDisabled) event.preventDefault();
+          onEscapeKeyDown?.(event);
+        }}
         onOpenAutoFocus={(event) => {
           // Don't land focus on an input as the sheet opens: on iPhone that
           // pops the keyboard during the enter animation and the drawer can
@@ -183,6 +203,10 @@ function DrawerContent({
           const panel = event.currentTarget;
           if (panel instanceof HTMLElement) panel.focus({ preventScroll: true });
           onOpenAutoFocus?.(event);
+        }}
+        onPointerDownOutside={(event) => {
+          if (closeDisabled) event.preventDefault();
+          onPointerDownOutside?.(event);
         }}
         ref={setRoot}
         {...props}
@@ -196,6 +220,7 @@ function DrawerContent({
               aria-label="Close"
               className={overlayCloseClassName}
               data-slot="drawer-close"
+              disabled={closeDisabled}
             >
               <X />
               <span className="sr-only">Close</span>

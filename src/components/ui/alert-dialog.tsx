@@ -51,9 +51,22 @@ function AlertDialogOverlay({ className, ...props }: React.ComponentProps<typeof
 function AlertDialogContent({
   className,
   children,
+  closeDisabled = false,
+  onEscapeKeyDown,
   showCloseButton = true,
   ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Content> & { showCloseButton?: boolean }) {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Content> & {
+  /**
+   * A form inside is mid-submit — a slow network shouldn't let someone
+   * dismiss the dialog (the X, or Escape) while it's still in flight.
+   * Without this the save keeps running after the dialog vanishes, and the
+   * success/error toast fires later with no dialog left to explain it,
+   * which reads as the whole thing being randomly stuck. Radix's
+   * AlertDialog already never treats clicking outside as a close.
+   */
+  closeDisabled?: boolean;
+  showCloseButton?: boolean;
+}) {
   const [root, setRoot] = React.useState<HTMLElement | null>(null);
 
   return (
@@ -68,6 +81,10 @@ function AlertDialogContent({
           "bg-background outline-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-[70] grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-visible rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg",
           className,
         )}
+        onEscapeKeyDown={(event) => {
+          if (closeDisabled) event.preventDefault();
+          onEscapeKeyDown?.(event);
+        }}
         ref={setRoot}
         {...props}
       >
@@ -76,7 +93,8 @@ function AlertDialogContent({
           {showCloseButton ? (
             <AlertDialogPrimitive.Cancel
               aria-label="Close"
-              className="absolute top-3 right-3 z-10 flex size-8 cursor-pointer items-center justify-center rounded-md opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+              className="absolute top-3 right-3 z-10 flex size-8 cursor-pointer items-center justify-center rounded-md opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+              disabled={closeDisabled}
             >
               <X />
               <span className="sr-only">Close</span>

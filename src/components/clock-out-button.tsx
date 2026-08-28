@@ -30,7 +30,10 @@ function Confirm({ disabled }: { disabled: boolean }) {
 
 export function ClockOutButton({ token }: { token: string }) {
   const router = useRouter();
-  const [state, action] = useActionState<ActionResult | null, FormData>(clockOut, null);
+  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
+    clockOut,
+    null,
+  );
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
 
@@ -49,6 +52,10 @@ export function ClockOutButton({ token }: { token: string }) {
   return (
     <AlertDialog
       onOpenChange={(next) => {
+        if (isPending) {
+          setOpen(true);
+          return;
+        }
         setOpen(next);
         if (!next) setReason("");
       }}
@@ -59,7 +66,7 @@ export function ClockOutButton({ token }: { token: string }) {
           Clock out
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent closeDisabled={isPending}>
         <form action={action} className="flex flex-col gap-4">
           <AlertDialogHeader>
             <AlertDialogTitle>Clock out of this walk?</AlertDialogTitle>
@@ -83,7 +90,9 @@ export function ClockOutButton({ token }: { token: string }) {
             />
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel type="button">Stay clocked in</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending} type="button">
+              Stay clocked in
+            </AlertDialogCancel>
             <Confirm disabled={reason.trim().length < 3} />
           </AlertDialogFooter>
         </form>
