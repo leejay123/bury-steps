@@ -198,8 +198,8 @@ export function OrganiserGuide() {
               </p>
               <p>
                 Clock-in and clock-out are stored as two separate times. The member’s History page
-                and the member history drawer both show the clock-out time when they have left, not
-                the clock-in time again.
+                and their walk history on their own member page in Members both show the clock-out
+                time when they have left, not the clock-in time again.
               </p>
               <p>
                 After clocking out, they can clock in again on the same walk if the window is still
@@ -226,16 +226,18 @@ export function OrganiserGuide() {
               </p>
               <p className="font-medium text-foreground">Walk history</p>
               <p>
-                Click a row to open a drawer with that person’s full walk history, grouped by year.
-                Search if the list is long. Previous and Next appear if they have more than 20
-                walks. Each walk shows the date, meeting point, and in/out times. Click a walk name
-                to open that walk.
+                Click a row to open that person’s own page: joined date, membership length, and
+                their full walk history, grouped by year. Search if the list is long. Previous and
+                Next appear if they have more than 20 walks. Each walk shows the date, meeting
+                point, and in/out times. Click a walk name to open that walk. This is a full page
+                rather than a drawer so it stays usable even for someone who has been on hundreds of
+                walks.
               </p>
               <p className="font-medium text-foreground">Remove someone</p>
               <Steps>
                 <li>
-                  Find them in the list and choose the small Remove button. You cannot remove
-                  yourself.
+                  Choose the small Remove button, either on the Members list or on the member’s own
+                  page. You cannot remove yourself.
                 </li>
                 <li>
                   Confirm. Their login is deleted, their clock-ins go, and any walks they created

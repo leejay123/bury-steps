@@ -1231,12 +1231,15 @@ export async function getMemberHistory(userId: string): Promise<{
   email: string;
   role: "ADMIN" | "MEMBER";
   createdAt: string;
+  walkCount: number;
+  isYou: boolean;
   items: MemberHistoryItem[];
 } | null> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const member = await prisma.user.findUnique({
     where: { id: userId },
     include: {
+      _count: { select: { walksCreated: true } },
       attendances: {
         orderBy: { clockedInAt: "desc" },
         include: {
@@ -1261,6 +1264,8 @@ export async function getMemberHistory(userId: string): Promise<{
     email: member.email,
     role: member.role,
     createdAt: member.createdAt.toISOString(),
+    walkCount: member._count.walksCreated,
+    isYou: member.id === admin.id,
     items: member.attendances.map((attendance) => ({
       id: attendance.id,
       walkId: attendance.walk.id,

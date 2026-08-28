@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { deleteMember, type ActionResult } from "@/server/actions";
 import { Button } from "@/components/ui/button";
@@ -31,12 +32,16 @@ export function DeleteMemberButton({
   name,
   walkCount,
   attendanceCount,
+  redirectTo,
 }: {
   userId: string;
   name: string;
   walkCount: number;
   attendanceCount: number;
+  /** Where to navigate after removal — used when this button lives on the member's own page, which no longer exists once they are removed. */
+  redirectTo?: string;
 }) {
+  const router = useRouter();
   const [state, action] = useActionState<ActionResult | null, FormData>(deleteMember, null);
   const [open, setOpen] = useState(false);
 
@@ -45,10 +50,14 @@ export function DeleteMemberButton({
     if (state.ok) {
       toast.success(state.message ?? "Member removed.");
       setOpen(false);
+      if (redirectTo) {
+        router.push(redirectTo);
+        router.refresh();
+      }
     } else {
       toast.error(state.error);
     }
-  }, [state]);
+  }, [redirectTo, router, state]);
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
