@@ -8,15 +8,16 @@ import { EmptyState } from "@/components/empty-state";
 import { DataList, DataListBody, DataListItem } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
 import { usePagedList } from "@/hooks/use-paged-list";
-import { Badge } from "@/components/ui/badge";
+import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import type { WalkStatus } from "@/lib/walk-window";
 
 export type AdminWalkRow = {
   id: string;
   title: string;
   location: string | null;
   startsAt: string;
-  cancelledAt: string | null;
+  status: WalkStatus;
   attendanceCount: number;
 };
 
@@ -92,7 +93,7 @@ export function AdminWalkTable({
                   {walk.attendanceCount} {attendanceLabel.toLowerCase()}
                 </p>
               </DataListBody>
-              {walk.cancelledAt ? <Badge variant="destructive">Cancelled</Badge> : null}
+              <WalkStatusBadge status={walk.status} />
               <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
             </DataListItem>
             ))}

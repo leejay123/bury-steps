@@ -14,7 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 /** Bump this whenever the guide is updated. */
-export const GUIDE_LAST_UPDATED = "28 August 2026";
+export const GUIDE_LAST_UPDATED = "29 August 2026";
 
 function Steps({ children }: { children: React.ReactNode }) {
   return <ol className="list-decimal pl-5 text-muted-foreground">{children}</ol>;
@@ -110,7 +110,12 @@ export function OrganiserGuide() {
                 Open <Link href="/admin">Walks</Link> from the menu. Upcoming and History are tabs
                 on that page. History is every finished walk, with a search box. Click a row to
                 open the walk. History shows how many people clocked in, not how many are still on
-                the walk. Long lists show 20 at a time, with Previous and Next at the bottom.
+                the walk. Long lists show 20 at a time, with Previous and Next at the bottom. Each
+                row carries a status: <strong>Upcoming</strong> (before clock-in opens),{" "}
+                <strong>Clock-in open</strong> (from an hour before start to an hour after it
+                ends), <strong>Completed</strong> (that window has fully closed), or{" "}
+                <strong>Cancelled</strong>. The walk’s own page shows the same status next to its
+                title.
               </p>
               <p className="font-medium text-foreground">Create a walk</p>
               <Steps>
@@ -461,8 +466,9 @@ export function OrganiserGuide() {
               </p>
               <p>
                 Members open Walks from the menu. Each walk is a card with the date, length,
-                meeting point, a truncated preview of the description, and a badge if clock-in is
-                open, they are already in, or the walk is cancelled. Tapping anywhere on the card
+                meeting point, a truncated preview of the description, and a badge for its status —
+                clock-in open, already clocked in, cancelled, or completed once the window has
+                closed. Tapping anywhere on the card
                 opens that walk’s full page with the rest of the description and the full “Who’s
                 coming” list; the card itself only shows a one-line headcount. The Clock in button
                 works right there on the card without leaving the list, but Clock out is a
