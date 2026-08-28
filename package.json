@@ -48,10 +48,13 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.6",
     "@tailwindcss/postcss": "^4.0.9",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^15.5.23",
     "prisma": "^6.4.0",
     "tailwindcss": "^4.0.9",
     "tw-animate-css": "^1.2.4",

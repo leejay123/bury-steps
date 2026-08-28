@@ -2,7 +2,6 @@ import path from "path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  eslint: { ignoreDuringBuilds: true },
   // Parent lockfiles made Next treat ~ as the app root and bundle the wrong Prisma client.
   outputFileTracingRoot: path.join(__dirname),
   experimental: {
