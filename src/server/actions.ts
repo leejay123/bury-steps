@@ -172,12 +172,17 @@ export async function rescheduleWalk(
       durationMins: z.coerce.number().int().min(15).max(600),
       location: z.string().trim().max(200).optional(),
       reopen: z.string().optional(),
+      // Sent by the dialog that already knows this from the page it rendered
+      // from — avoids a round trip to look the walk up just to re-read a
+      // value the caller already had.
+      wasCancelled: z.string().optional(),
     })
     .safeParse({
       startsAt: formData.get("startsAt"),
       durationMins: formData.get("durationMins") ?? 90,
       location: formData.get("location") || undefined,
       reopen: formData.get("reopen") || undefined,
+      wasCancelled: formData.get("wasCancelled") || undefined,
     });
 
   if (!parsed.success) {
@@ -191,23 +196,26 @@ export async function rescheduleWalk(
     return { ok: false, error: "That date and time could not be read. Try again." };
   }
 
-  const walk = await prisma.walk.findUnique({
-    where: { id },
-    select: { id: true, token: true, cancelledAt: true },
-  });
-  if (!walk) return { ok: false, error: "That walk is no longer there." };
+  const wasCancelled = parsed.data.wasCancelled === "on";
 
-  await prisma.walk.update({
-    where: { id },
-    data: {
-      startsAt,
-      durationMins: parsed.data.durationMins,
-      location: parsed.data.location ?? null,
-      ...(parsed.data.reopen === "on" || walk.cancelledAt
-        ? { cancelledAt: null, cancelledReason: null }
-        : {}),
-    },
-  });
+  let walk: { token: string };
+  try {
+    walk = await prisma.walk.update({
+      where: { id },
+      data: {
+        startsAt,
+        durationMins: parsed.data.durationMins,
+        location: parsed.data.location ?? null,
+        ...(parsed.data.reopen === "on" || wasCancelled
+          ? { cancelledAt: null, cancelledReason: null }
+          : {}),
+      },
+      select: { token: true },
+    });
+  } catch (err) {
+    if (isPrismaCode(err, "P2025")) return { ok: false, error: "That walk is no longer there." };
+    throw err;
+  }
 
   revalidatePath("/admin");
   revalidatePath(`/admin/walks/${id}`);
@@ -215,9 +223,7 @@ export async function rescheduleWalk(
   revalidatePath(`/w/${walk.token}`);
   return {
     ok: true,
-    message: walk.cancelledAt
-      ? "Walk rescheduled and put back on the diary."
-      : "Walk rescheduled.",
+    message: wasCancelled ? "Walk rescheduled and put back on the diary." : "Walk rescheduled.",
   };
 }
 
@@ -226,15 +232,14 @@ export async function deleteWalk(_prev: ActionResult | null, formData: FormData)
   const id = String(formData.get("walkId") ?? "");
   if (!id) return { ok: false, error: "No walk selected." };
 
-  const walk = await prisma.walk.findUnique({
-    where: { id },
-    select: { id: true, token: true, title: true },
-  });
-  if (!walk) return { ok: false, error: "That walk is no longer there." };
-
+  let walk: { token: string; title: string };
   try {
-    await prisma.walk.delete({ where: { id } });
-  } catch {
+    walk = await prisma.walk.delete({
+      where: { id },
+      select: { token: true, title: true },
+    });
+  } catch (err) {
+    if (isPrismaCode(err, "P2025")) return { ok: false, error: "That walk is no longer there." };
     return { ok: false, error: "Could not remove this walk. Try again." };
   }
 
@@ -291,15 +296,6 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
     walk.startsAt.getTime() + CONDITIONS_RETENTION_DAYS * 24 * 60 * 60 * 1000,
   );
 
-  const existing = await prisma.attendance.findUnique({
-    where: { walkId_userId: { walkId: walk.id, userId: user.id } },
-    select: { id: true, clockedOutAt: true },
-  });
-
-  if (existing && !existing.clockedOutAt) {
-    return { ok: false, error: "You are already clocked in for this walk." };
-  }
-
   const attendanceData = {
     medicalAckAt: new Date(),
     conditions: parsed.data.hasConditions === "yes" ? parsed.data.conditions! : null,
@@ -308,15 +304,17 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
     clockedOutReason: null,
   };
 
-  if (existing) {
-    await prisma.attendance.update({
-      where: { id: existing.id },
-      data: {
-        ...attendanceData,
-        clockedInAt: new Date(),
-      },
-    });
-  } else {
+  // Try "clocking back in after an earlier clock-out" as a single conditional
+  // write first — at most one row can match, since clocking out is the only
+  // way to leave `clockedOutAt` non-null. If nothing matched, fall through to
+  // create. Either way this replaces a separate read-then-write with a single
+  // round trip that also does the write.
+  const reclockedIn = await prisma.attendance.updateMany({
+    where: { walkId: walk.id, userId: user.id, clockedOutAt: { not: null } },
+    data: { ...attendanceData, clockedInAt: new Date() },
+  });
+
+  if (reclockedIn.count === 0) {
     try {
       await prisma.attendance.create({
         data: {
@@ -367,21 +365,16 @@ export async function clockOut(_prev: ActionResult | null, formData: FormData): 
   });
   if (!walk) return { ok: false, error: "This walk link is not valid." };
 
-  const attendance = await prisma.attendance.findUnique({
-    where: { walkId_userId: { walkId: walk.id, userId: user.id } },
-    select: { id: true, clockedOutAt: true },
-  });
-  if (!attendance || attendance.clockedOutAt) {
-    return { ok: false, error: "You are not clocked in for this walk." };
-  }
-
-  await prisma.attendance.update({
-    where: { id: attendance.id },
+  const clockedOut = await prisma.attendance.updateMany({
+    where: { walkId: walk.id, userId: user.id, clockedOutAt: null },
     data: {
       clockedOutAt: new Date(),
       clockedOutReason: parsed.data.reason,
     },
   });
+  if (clockedOut.count === 0) {
+    return { ok: false, error: "You are not clocked in for this walk." };
+  }
 
   revalidatePath(`/w/${walk.token}`);
   revalidatePath("/dashboard");
@@ -565,7 +558,13 @@ export async function moveHomepageSlide(
     return { ok: false, error: "Could not move that slide." };
   }
 
-  const slides = await prisma.homepageSlide.findMany({ orderBy: { sortOrder: "asc" } });
+  // Only the id/sortOrder pair is needed to compute the swap — selecting
+  // whole rows here would also pull every slide's image bytes (up to 4 MB
+  // each) just to reorder them.
+  const slides = await prisma.homepageSlide.findMany({
+    orderBy: { sortOrder: "asc" },
+    select: { id: true, sortOrder: true },
+  });
   const index = slides.findIndex((slide) => slide.id === id);
   if (index < 0) return { ok: false, error: "That slide is no longer there." };
 
@@ -600,7 +599,10 @@ export async function deleteHomepageSlide(
     return { ok: false, error: "That slide is no longer there." };
   }
 
-  const remaining = await prisma.homepageSlide.findMany({ orderBy: { sortOrder: "asc" } });
+  const remaining = await prisma.homepageSlide.findMany({
+    orderBy: { sortOrder: "asc" },
+    select: { id: true },
+  });
   await prisma.$transaction(
     remaining.map((slide, index) =>
       prisma.homepageSlide.update({ where: { id: slide.id }, data: { sortOrder: index } }),
@@ -713,7 +715,13 @@ export async function moveHomepageTestimonial(
     return { ok: false, error: "Could not move that testimonial." };
   }
 
-  const rows = await prisma.homepageTestimonial.findMany({ orderBy: { sortOrder: "asc" } });
+  // Only the id/sortOrder pair is needed to compute the swap — selecting
+  // whole rows here would also pull every testimonial's photo bytes (up to
+  // 4 MB each) just to reorder them.
+  const rows = await prisma.homepageTestimonial.findMany({
+    orderBy: { sortOrder: "asc" },
+    select: { id: true, sortOrder: true },
+  });
   const index = rows.findIndex((row) => row.id === id);
   if (index < 0) return { ok: false, error: "That testimonial is no longer there." };
 
@@ -748,7 +756,10 @@ export async function deleteHomepageTestimonial(
     return { ok: false, error: "That testimonial is no longer there." };
   }
 
-  const remaining = await prisma.homepageTestimonial.findMany({ orderBy: { sortOrder: "asc" } });
+  const remaining = await prisma.homepageTestimonial.findMany({
+    orderBy: { sortOrder: "asc" },
+    select: { id: true },
+  });
   await prisma.$transaction(
     remaining.map((row, index) =>
       prisma.homepageTestimonial.update({ where: { id: row.id }, data: { sortOrder: index } }),
@@ -871,7 +882,10 @@ export async function moveHomepageFaq(
     return { ok: false, error: "Could not move that FAQ." };
   }
 
-  const rows = await prisma.homepageFaq.findMany({ orderBy: { sortOrder: "asc" } });
+  const rows = await prisma.homepageFaq.findMany({
+    orderBy: { sortOrder: "asc" },
+    select: { id: true, sortOrder: true },
+  });
   const index = rows.findIndex((row) => row.id === id);
   if (index < 0) return { ok: false, error: "That FAQ is no longer there." };
 
@@ -906,7 +920,10 @@ export async function deleteHomepageFaq(
     return { ok: false, error: "That FAQ is no longer there." };
   }
 
-  const remaining = await prisma.homepageFaq.findMany({ orderBy: { sortOrder: "asc" } });
+  const remaining = await prisma.homepageFaq.findMany({
+    orderBy: { sortOrder: "asc" },
+    select: { id: true },
+  });
   await prisma.$transaction(
     remaining.map((row, index) =>
       prisma.homepageFaq.update({ where: { id: row.id }, data: { sortOrder: index } }),
@@ -1192,7 +1209,10 @@ export async function deleteHomepageFaqCategory(
 
   await prisma.homepageFaqCategory.delete({ where: { id } });
 
-  const leftover = await prisma.homepageFaqCategory.findMany({ orderBy: { sortOrder: "asc" } });
+  const leftover = await prisma.homepageFaqCategory.findMany({
+    orderBy: { sortOrder: "asc" },
+    select: { id: true },
+  });
   await prisma.$transaction(
     leftover.map((row, index) =>
       prisma.homepageFaqCategory.update({ where: { id: row.id }, data: { sortOrder: index } }),

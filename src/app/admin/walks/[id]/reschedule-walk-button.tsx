@@ -83,6 +83,7 @@ export function RescheduleWalkButton({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <input name="walkId" type="hidden" value={walkId} />
+          <input name="wasCancelled" type="hidden" value={cancelled ? "on" : ""} />
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor={`reschedule-starts-${walkId}`}>Date and start time</Label>
