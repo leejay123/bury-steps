@@ -21,6 +21,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className={`-mt-8 -mb-8 flex flex-col print:m-0 ${PAGE_X_BLEED}`}>{children}</div>
+    <div className={`-mt-6 -mb-6 flex flex-col print:m-0 ${PAGE_X_BLEED}`}>{children}</div>
   );
 }

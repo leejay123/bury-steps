@@ -20,7 +20,7 @@ export function SettingsPage({
         </div>
         <FullWidthDivider position="bottom" />
       </div>
-      <div className="px-4 pt-6 pb-0 md:px-6">{children}</div>
+      <div className="px-4 py-6 md:px-6">{children}</div>
     </div>
   );
 }

@@ -30,7 +30,7 @@ function GuideBody({ children }: { children: React.ReactNode }) {
 
 export function OrganiserGuide() {
   return (
-    <Accordion className="w-full" collapsible defaultValue="what" type="single">
+    <Accordion className="w-full pb-6" collapsible defaultValue="what" type="single">
       <AccordionItem className="px-4 md:px-6" value="what">
           <AccordionTrigger className="text-base">What this site is for</AccordionTrigger>
           <AccordionContent>
