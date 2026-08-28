@@ -9,6 +9,7 @@ import { CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { EmptyState } from "@/components/empty-state";
 import { DataList, DataListBody, DataListItem } from "@/components/data-list";
 import { Button } from "@/components/ui/button";
+import { MemberWelcomeDialog } from "@/components/member-welcome-dialog";
 import { getWalkMemberNamesByWalkIds } from "@/lib/walk-members";
 import { UpcomingWalkCards } from "./upcoming-walk-cards";
 
@@ -65,6 +66,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-8">
+      <MemberWelcomeDialog hasNoWalks={historyCount === 0} />
       <div className="flex flex-col gap-1.5">
         <h1 className="text-2xl font-semibold tracking-tight">Walks</h1>
         <p className="text-sm text-muted-foreground">
