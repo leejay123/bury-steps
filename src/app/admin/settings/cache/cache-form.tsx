@@ -26,7 +26,10 @@ function ConfirmClear() {
 }
 
 export function ClearCacheForm() {
-  const [state, action] = useActionState<ActionResult | null, FormData>(clearSiteCache, null);
+  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
+    clearSiteCache,
+    null,
+  );
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -49,13 +52,13 @@ export function ClearCacheForm() {
           members, or photos.
         </p>
       </div>
-      <AlertDialog onOpenChange={setOpen} open={open}>
+      <AlertDialog onOpenChange={(next) => setOpen(isPending ? true : next)} open={open}>
         <AlertDialogTrigger asChild>
           <Button className="w-full sm:w-auto" type="button">
             Clear cache
           </Button>
         </AlertDialogTrigger>
-        <AlertDialogContent>
+        <AlertDialogContent closeDisabled={isPending}>
           <form action={action}>
             <AlertDialogHeader>
               <AlertDialogTitle>Clear the site cache?</AlertDialogTitle>
@@ -64,7 +67,9 @@ export function ClearCacheForm() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel type="button">Keep it</AlertDialogCancel>
+              <AlertDialogCancel disabled={isPending} type="button">
+                Keep it
+              </AlertDialogCancel>
               <ConfirmClear />
             </AlertDialogFooter>
           </form>

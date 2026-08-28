@@ -51,7 +51,10 @@ export function RescheduleWalkButton({
   walkId: string;
 }) {
   const router = useRouter();
-  const [state, action] = useActionState<ActionResult | null, FormData>(rescheduleWalk, null);
+  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
+    rescheduleWalk,
+    null,
+  );
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -66,13 +69,13 @@ export function RescheduleWalkButton({
   }, [router, state]);
 
   return (
-    <AlertDialog onOpenChange={setOpen} open={open}>
+    <AlertDialog onOpenChange={(next) => setOpen(isPending ? true : next)} open={open}>
       <AlertDialogTrigger asChild>
         <Button size="sm" variant="outline">
           Reschedule
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent closeDisabled={isPending}>
         <form action={action} className="flex flex-col gap-4">
           <AlertDialogHeader>
             <AlertDialogTitle>Reschedule this walk?</AlertDialogTitle>
@@ -120,7 +123,9 @@ export function RescheduleWalkButton({
             />
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel type="button">Keep this time</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending} type="button">
+              Keep this time
+            </AlertDialogCancel>
             <Confirm cancelled={cancelled} />
           </AlertDialogFooter>
         </form>

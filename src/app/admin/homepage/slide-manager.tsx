@@ -115,18 +115,24 @@ function SlideFields({
 
 function AddDrawerForm({
   disabled,
+  onPendingChange,
   onSaved,
 }: {
   disabled: boolean;
+  onPendingChange?: (pending: boolean) => void;
   onSaved: () => void;
 }) {
-  const [state, action] = useActionState<ActionResult | null, FormData>(addHomepageSlide, null);
+  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
+    addHomepageSlide,
+    null,
+  );
   const formRef = useRef<HTMLFormElement>(null);
 
   useActionToast(state, () => {
     formRef.current?.reset();
     onSaved();
   });
+  useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
 
   return (
     <form action={action} className="flex min-h-0 flex-1 flex-col" ref={formRef}>
@@ -141,18 +147,21 @@ function AddDrawerForm({
 }
 
 function EditDrawerForm({
+  onPendingChange,
   onSaved,
   slide,
 }: {
+  onPendingChange?: (pending: boolean) => void;
   onSaved: () => void;
   slide: SlideView;
 }) {
-  const [updateState, updateAction] = useActionState<ActionResult | null, FormData>(
+  const [updateState, updateAction, isPending] = useActionState<ActionResult | null, FormData>(
     replaceHomepageSlideImage,
     null,
   );
 
   useActionToast(updateState, onSaved);
+  useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -177,7 +186,10 @@ function RemoveSlideButton({
   slideId: string;
   title: string;
 }) {
-  const [state, action] = useActionState<ActionResult | null, FormData>(deleteHomepageSlide, null);
+  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
+    deleteHomepageSlide,
+    null,
+  );
   const [open, setOpen] = useState(false);
   useActionToast(state, () => {
     setOpen(false);
@@ -185,13 +197,13 @@ function RemoveSlideButton({
   });
 
   return (
-    <AlertDialog onOpenChange={setOpen} open={open}>
+    <AlertDialog onOpenChange={(next) => setOpen(isPending ? true : next)} open={open}>
       <AlertDialogTrigger asChild>
         <Button size="xs" variant="destructive">
           Remove
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent closeDisabled={isPending}>
         <form action={action} className="flex flex-col gap-4">
           <AlertDialogHeader>
             <AlertDialogTitle>Remove this slide?</AlertDialogTitle>
@@ -201,7 +213,9 @@ function RemoveSlideButton({
           </AlertDialogHeader>
           <input name="slideId" type="hidden" value={slideId} />
           <AlertDialogFooter>
-            <AlertDialogCancel type="button">Keep it</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending} type="button">
+              Keep it
+            </AlertDialogCancel>
             <RemoveConfirm />
           </AlertDialogFooter>
         </form>
@@ -227,6 +241,7 @@ export function HomepageSlideManager({
   slides: SlideView[];
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
+  const [isPending, setIsPending] = useState(false);
   const slideIds = slides.map((item) => item.id);
   const { moveDown, moveUp, order } = useReorderableIds(slideIds, (ids) => {
     if (ids.join() === slideIds.join()) return;
@@ -313,6 +328,7 @@ export function HomepageSlideManager({
       )}
 
       <Drawer
+        closeDisabled={isPending}
         onOpenChange={(open) => {
           if (!open) setMode(null);
         }}
@@ -328,11 +344,16 @@ export function HomepageSlideManager({
             </DrawerDescription>
           </DrawerHeader>
           {mode?.type === "add" ? (
-            <AddDrawerForm disabled={atLimit} onSaved={() => setMode(null)} />
+            <AddDrawerForm
+              disabled={atLimit}
+              onPendingChange={setIsPending}
+              onSaved={() => setMode(null)}
+            />
           ) : null}
           {editing ? (
             <EditDrawerForm
               key={editing.slide.id}
+              onPendingChange={setIsPending}
               onSaved={() => setMode(null)}
               slide={editing.slide}
             />

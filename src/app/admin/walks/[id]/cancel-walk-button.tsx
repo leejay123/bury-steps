@@ -36,7 +36,10 @@ export function CancelWalkButton({
   attendanceCount: number;
 }) {
   const router = useRouter();
-  const [state, action] = useActionState<ActionResult | null, FormData>(cancelWalk, null);
+  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
+    cancelWalk,
+    null,
+  );
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -51,13 +54,13 @@ export function CancelWalkButton({
   }, [router, state]);
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog open={open} onOpenChange={(next) => setOpen(isPending ? true : next)}>
       <AlertDialogTrigger asChild>
         <Button size="sm" variant="outline">
           Cancel walk
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent closeDisabled={isPending}>
         <form action={action} className="space-y-4">
           <AlertDialogHeader>
             <AlertDialogTitle>Cancel this walk?</AlertDialogTitle>
@@ -79,7 +82,9 @@ export function CancelWalkButton({
             />
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel type="button">Keep the walk</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending} type="button">
+              Keep the walk
+            </AlertDialogCancel>
             <Confirm />
           </AlertDialogFooter>
         </form>

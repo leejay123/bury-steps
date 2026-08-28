@@ -34,7 +34,10 @@ export function DeleteWalkButton({
   attendanceCount: number;
 }) {
   const router = useRouter();
-  const [state, action] = useActionState<ActionResult | null, FormData>(deleteWalk, null);
+  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
+    deleteWalk,
+    null,
+  );
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -50,13 +53,13 @@ export function DeleteWalkButton({
   }, [router, state]);
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog open={open} onOpenChange={(next) => setOpen(isPending ? true : next)}>
       <AlertDialogTrigger asChild>
         <Button size="xs" variant="destructive">
           Remove walk
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent closeDisabled={isPending}>
         <form action={action} className="space-y-4">
           <AlertDialogHeader>
             <AlertDialogTitle>Remove this walk?</AlertDialogTitle>
@@ -79,7 +82,9 @@ export function DeleteWalkButton({
           </AlertDialogHeader>
           <input type="hidden" name="walkId" value={walkId} />
           <AlertDialogFooter>
-            <AlertDialogCancel type="button">Keep the walk</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending} type="button">
+              Keep the walk
+            </AlertDialogCancel>
             <Confirm />
           </AlertDialogFooter>
         </form>

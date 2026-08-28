@@ -42,7 +42,10 @@ export function DeleteMemberButton({
   redirectTo?: string;
 }) {
   const router = useRouter();
-  const [state, action] = useActionState<ActionResult | null, FormData>(deleteMember, null);
+  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
+    deleteMember,
+    null,
+  );
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -60,13 +63,13 @@ export function DeleteMemberButton({
   }, [redirectTo, router, state]);
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog open={open} onOpenChange={(next) => setOpen(isPending ? true : next)}>
       <AlertDialogTrigger asChild>
         <Button size="xs" variant="outline">
           Remove
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent closeDisabled={isPending}>
         <AlertDialogHeader>
           <AlertDialogTitle>Remove {name}?</AlertDialogTitle>
           <AlertDialogDescription asChild>
@@ -91,7 +94,9 @@ export function DeleteMemberButton({
         <form action={action}>
           <input type="hidden" name="userId" value={userId} />
           <AlertDialogFooter>
-            <AlertDialogCancel type="button">Keep member</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending} type="button">
+              Keep member
+            </AlertDialogCancel>
             <Confirm />
           </AlertDialogFooter>
         </form>

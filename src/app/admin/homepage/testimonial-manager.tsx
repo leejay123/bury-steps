@@ -166,12 +166,14 @@ function TestimonialFields({
 
 function AddDrawerForm({
   disabled,
+  onPendingChange,
   onSaved,
 }: {
   disabled: boolean;
+  onPendingChange?: (pending: boolean) => void;
   onSaved: () => void;
 }) {
-  const [state, action] = useActionState<ActionResult | null, FormData>(
+  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
     addHomepageTestimonial,
     null,
   );
@@ -181,6 +183,7 @@ function AddDrawerForm({
     formRef.current?.reset();
     onSaved();
   });
+  useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
 
   return (
     <form action={action} className="flex min-h-0 flex-1 flex-col" ref={formRef}>
@@ -195,18 +198,21 @@ function AddDrawerForm({
 }
 
 function EditDrawerForm({
+  onPendingChange,
   onSaved,
   testimonial,
 }: {
+  onPendingChange?: (pending: boolean) => void;
   onSaved: () => void;
   testimonial: TestimonialView;
 }) {
-  const [updateState, updateAction] = useActionState<ActionResult | null, FormData>(
+  const [updateState, updateAction, isPending] = useActionState<ActionResult | null, FormData>(
     updateHomepageTestimonial,
     null,
   );
 
   useActionToast(updateState, onSaved);
+  useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -231,7 +237,7 @@ function RemoveTestimonialButton({
   onRemoved: () => void;
   testimonialId: string;
 }) {
-  const [state, action] = useActionState<ActionResult | null, FormData>(
+  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
     deleteHomepageTestimonial,
     null,
   );
@@ -242,13 +248,13 @@ function RemoveTestimonialButton({
   });
 
   return (
-    <AlertDialog onOpenChange={setOpen} open={open}>
+    <AlertDialog onOpenChange={(next) => setOpen(isPending ? true : next)} open={open}>
       <AlertDialogTrigger asChild>
         <Button size="xs" variant="destructive">
           Remove
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent closeDisabled={isPending}>
         <form action={action} className="flex flex-col gap-4">
           <AlertDialogHeader>
             <AlertDialogTitle>Remove this testimonial?</AlertDialogTitle>
@@ -258,7 +264,9 @@ function RemoveTestimonialButton({
           </AlertDialogHeader>
           <input name="testimonialId" type="hidden" value={testimonialId} />
           <AlertDialogFooter>
-            <AlertDialogCancel type="button">Keep it</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending} type="button">
+              Keep it
+            </AlertDialogCancel>
             <RemoveConfirm />
           </AlertDialogFooter>
         </form>
@@ -284,6 +292,7 @@ export function HomepageTestimonialManager({
   testimonials: TestimonialView[];
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
+  const [isPending, setIsPending] = useState(false);
   const testimonialIds = testimonials.map((item) => item.id);
   const { moveDown, moveUp, order } = useReorderableIds(testimonialIds, (ids) => {
     if (ids.join() === testimonialIds.join()) return;
@@ -366,6 +375,7 @@ export function HomepageTestimonialManager({
       )}
 
       <Drawer
+        closeDisabled={isPending}
         onOpenChange={(open) => {
           if (!open) setMode(null);
         }}
@@ -383,11 +393,16 @@ export function HomepageTestimonialManager({
             </DrawerDescription>
           </DrawerHeader>
           {mode?.type === "add" ? (
-            <AddDrawerForm disabled={atLimit} onSaved={() => setMode(null)} />
+            <AddDrawerForm
+              disabled={atLimit}
+              onPendingChange={setIsPending}
+              onSaved={() => setMode(null)}
+            />
           ) : null}
           {editing ? (
             <EditDrawerForm
               key={editing.testimonial.id}
+              onPendingChange={setIsPending}
               onSaved={() => setMode(null)}
               testimonial={editing.testimonial}
             />

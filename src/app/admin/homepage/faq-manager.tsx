@@ -204,18 +204,24 @@ function FaqFields({
 function AddFaqForm({
   categories,
   disabled,
+  onPendingChange,
   onSaved,
 }: {
   categories: FaqCategoryView[];
   disabled: boolean;
+  onPendingChange?: (pending: boolean) => void;
   onSaved: () => void;
 }) {
-  const [state, action] = useActionState<ActionResult | null, FormData>(addHomepageFaq, null);
+  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
+    addHomepageFaq,
+    null,
+  );
   const formRef = useRef<HTMLFormElement>(null);
   useActionToast(state, () => {
     formRef.current?.reset();
     onSaved();
   });
+  useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
 
   return (
     <form action={action} className="flex min-h-0 flex-1 flex-col" ref={formRef}>
@@ -232,18 +238,21 @@ function AddFaqForm({
 function EditFaqForm({
   categories,
   faq,
+  onPendingChange,
   onSaved,
 }: {
   categories: FaqCategoryView[];
   faq: FaqView;
+  onPendingChange?: (pending: boolean) => void;
   onSaved: () => void;
 }) {
-  const [updateState, updateAction] = useActionState<ActionResult | null, FormData>(
+  const [updateState, updateAction, isPending] = useActionState<ActionResult | null, FormData>(
     updateHomepageFaq,
     null,
   );
 
   useActionToast(updateState, onSaved);
+  useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -277,7 +286,10 @@ function RemoveFaqButton({
   onRemoved: () => void;
   question: string;
 }) {
-  const [state, action] = useActionState<ActionResult | null, FormData>(deleteHomepageFaq, null);
+  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
+    deleteHomepageFaq,
+    null,
+  );
   const [open, setOpen] = useState(false);
   useActionToast(state, () => {
     setOpen(false);
@@ -285,13 +297,13 @@ function RemoveFaqButton({
   });
 
   return (
-    <AlertDialog onOpenChange={setOpen} open={open}>
+    <AlertDialog onOpenChange={(next) => setOpen(isPending ? true : next)} open={open}>
       <AlertDialogTrigger asChild>
         <Button size="xs" variant="destructive">
           Remove
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent closeDisabled={isPending}>
         <form action={action} className="flex flex-col gap-4">
           <AlertDialogHeader>
             <AlertDialogTitle>Remove this FAQ?</AlertDialogTitle>
@@ -301,7 +313,9 @@ function RemoveFaqButton({
           </AlertDialogHeader>
           <input name="faqId" type="hidden" value={faqId} />
           <AlertDialogFooter>
-            <AlertDialogCancel type="button">Keep it</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending} type="button">
+              Keep it
+            </AlertDialogCancel>
             <RemoveConfirm />
           </AlertDialogFooter>
         </form>
@@ -313,6 +327,7 @@ function RemoveFaqButton({
 function CategoryLabelForm({
   action,
   category,
+  onPendingChange,
   onSaved,
   submitLabel,
   submitPendingLabel,
@@ -322,13 +337,18 @@ function CategoryLabelForm({
     formData: FormData,
   ) => Promise<ActionResult>;
   category?: FaqCategoryView;
+  onPendingChange?: (pending: boolean) => void;
   onSaved: () => void;
   submitLabel: string;
   submitPendingLabel: string;
 }) {
-  const [state, formAction] = useActionState<ActionResult | null, FormData>(action, null);
+  const [state, formAction, isPending] = useActionState<ActionResult | null, FormData>(
+    action,
+    null,
+  );
   const [label, setLabel] = useState(category?.label ?? "");
   useActionToast(state, onSaved);
+  useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
 
   return (
     <form action={formAction} className="flex flex-col gap-3 pb-4">
@@ -359,8 +379,14 @@ function CategoryDrawer({
   mode: CategoryDrawerMode | null;
   onOpenChange: (open: boolean) => void;
 }) {
+  const [isPending, setIsPending] = useState(false);
+
   return (
-    <Drawer onOpenChange={onOpenChange} open={mode !== null}>
+    <Drawer
+      closeDisabled={isPending}
+      onOpenChange={onOpenChange}
+      open={mode !== null}
+    >
       <DrawerContent className="sm:max-w-md">
         <DrawerHeader>
           <DrawerTitle>{mode?.type === "edit" ? "Edit category" : "Add a category"}</DrawerTitle>
@@ -372,6 +398,7 @@ function CategoryDrawer({
               action={updateHomepageFaqCategory}
               category={mode.category}
               key={mode.category.id}
+              onPendingChange={setIsPending}
               onSaved={() => onOpenChange(false)}
               submitLabel="Save"
               submitPendingLabel="Saving…"
@@ -379,6 +406,7 @@ function CategoryDrawer({
           ) : mode?.type === "add" ? (
             <CategoryLabelForm
               action={addHomepageFaqCategory}
+              onPendingChange={setIsPending}
               onSaved={() => onOpenChange(false)}
               submitLabel="Add category"
               submitPendingLabel="Adding…"
@@ -397,7 +425,7 @@ function RemoveCategoryButton({
   category: FaqCategoryView;
   onlyCategory: boolean;
 }) {
-  const [state, action] = useActionState<ActionResult | null, FormData>(
+  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
     deleteHomepageFaqCategory,
     null,
   );
@@ -426,13 +454,13 @@ function RemoveCategoryButton({
   }
 
   return (
-    <AlertDialog onOpenChange={setOpen} open={open}>
+    <AlertDialog onOpenChange={(next) => setOpen(isPending ? true : next)} open={open}>
       <AlertDialogTrigger asChild>
         <Button size="xs" variant="destructive">
           Remove
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent closeDisabled={isPending}>
         <form action={action} className="flex flex-col gap-4">
           <AlertDialogHeader>
             <AlertDialogTitle>Remove this category?</AlertDialogTitle>
@@ -442,7 +470,9 @@ function RemoveCategoryButton({
           </AlertDialogHeader>
           <input name="categoryId" type="hidden" value={category.id} />
           <AlertDialogFooter>
-            <AlertDialogCancel type="button">Keep it</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending} type="button">
+              Keep it
+            </AlertDialogCancel>
             <RemoveConfirm />
           </AlertDialogFooter>
         </form>
@@ -549,6 +579,7 @@ export function HomepageFaqManager({
   maxFaqs: number;
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
+  const [isPending, setIsPending] = useState(false);
   const faqIds = faqs.map((item) => item.id);
   const { moveDown, moveUp, order } = useReorderableIds(faqIds, (ids) => {
     if (ids.join() === faqIds.join()) return;
@@ -638,6 +669,7 @@ export function HomepageFaqManager({
       </div>
 
       <Drawer
+        closeDisabled={isPending}
         onOpenChange={(open) => {
           if (!open) setMode(null);
         }}
@@ -656,6 +688,7 @@ export function HomepageFaqManager({
             <AddFaqForm
               categories={categories}
               disabled={atLimit}
+              onPendingChange={setIsPending}
               onSaved={() => setMode(null)}
             />
           ) : null}
@@ -664,6 +697,7 @@ export function HomepageFaqManager({
               categories={categories}
               faq={editing.faq}
               key={editing.faq.id}
+              onPendingChange={setIsPending}
               onSaved={() => setMode(null)}
             />
           ) : null}

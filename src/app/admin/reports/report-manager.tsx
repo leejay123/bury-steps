@@ -121,6 +121,7 @@ function PendingSubmit({ label, pendingLabel }: { label: string; pendingLabel: s
 }
 
 function useActionToast(state: ActionResult | null, onOk?: () => void) {
+  const router = useRouter();
   const onOkRef = useRef(onOk);
   onOkRef.current = onOk;
 
@@ -129,10 +130,11 @@ function useActionToast(state: ActionResult | null, onOk?: () => void) {
     if (state.ok) {
       toast.success(state.message ?? "Saved.");
       onOkRef.current?.();
+      router.refresh();
     } else {
       toast.error(state.error);
     }
-  }, [state]);
+  }, [router, state]);
 }
 
 function ReportFields({
@@ -218,9 +220,21 @@ function ReportFields({
   );
 }
 
-function AddForm({ onSaved, walks }: { onSaved: () => void; walks: WalkOption[] }) {
-  const [state, action] = useActionState<ActionResult | null, FormData>(addAccidentReport, null);
+function AddForm({
+  onPendingChange,
+  onSaved,
+  walks,
+}: {
+  onPendingChange?: (pending: boolean) => void;
+  onSaved: () => void;
+  walks: WalkOption[];
+}) {
+  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
+    addAccidentReport,
+    null,
+  );
   useActionToast(state, onSaved);
+  useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
   return (
     <form action={action} className="flex min-h-0 flex-1 flex-col">
       <ReportFields prefix="add" walks={walks} />
@@ -233,25 +247,28 @@ function AddForm({ onSaved, walks }: { onSaved: () => void; walks: WalkOption[] 
 
 function EditForm({
   onCancel,
+  onPendingChange,
   onSaved,
   report,
   walks,
 }: {
   onCancel: () => void;
+  onPendingChange?: (pending: boolean) => void;
   onSaved: () => void;
   report: ReportView;
   walks: WalkOption[];
 }) {
-  const [state, action] = useActionState<ActionResult | null, FormData>(
+  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
     updateAccidentReport,
     null,
   );
   useActionToast(state, onSaved);
+  useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
   return (
     <form action={action} className="flex min-h-0 flex-1 flex-col">
       <ReportFields prefix="edit" report={report} walks={walks} />
       <DrawerFooter>
-        <Button onClick={onCancel} type="button" variant="outline">
+        <Button disabled={isPending} onClick={onCancel} type="button" variant="outline">
           Cancel
         </Button>
         <PendingSubmit label="Save changes" pendingLabel="Saving…" />
@@ -260,17 +277,28 @@ function EditForm({
   );
 }
 
+function RemoveReportConfirm() {
+  const { pending } = useFormStatus();
+  return (
+    <Button disabled={pending} type="submit" variant="destructive">
+      {pending ? "Removing…" : "Remove"}
+    </Button>
+  );
+}
+
 function RemoveButton({ reportId, title }: { reportId: string; title: string }) {
   const router = useRouter();
-  const [state, action] = useActionState<ActionResult | null, FormData>(
+  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
     deleteAccidentReport,
     null,
   );
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (!state) return;
     if (state.ok) {
       toast.success(state.message ?? "Removed.");
+      setOpen(false);
       router.refresh();
     } else {
       toast.error(state.error);
@@ -278,14 +306,14 @@ function RemoveButton({ reportId, title }: { reportId: string; title: string }) 
   }, [router, state]);
 
   return (
-    <AlertDialog>
+    <AlertDialog onOpenChange={(next) => setOpen(isPending ? true : next)} open={open}>
       <AlertDialogTrigger asChild>
         <Button aria-label={`Remove report from ${title}`} size="xs" variant="destructive">
           <Trash2 data-icon="inline-start" />
           Remove
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent closeDisabled={isPending}>
         <form action={action}>
           <AlertDialogHeader>
             <AlertDialogTitle>Remove this report?</AlertDialogTitle>
@@ -295,10 +323,10 @@ function RemoveButton({ reportId, title }: { reportId: string; title: string }) 
           </AlertDialogHeader>
           <input name="reportId" type="hidden" value={reportId} />
           <AlertDialogFooter>
-            <AlertDialogCancel type="button">Keep it</AlertDialogCancel>
-            <Button type="submit" variant="destructive">
-              Remove
-            </Button>
+            <AlertDialogCancel disabled={isPending} type="button">
+              Keep it
+            </AlertDialogCancel>
+            <RemoveReportConfirm />
           </AlertDialogFooter>
         </form>
       </AlertDialogContent>
@@ -314,6 +342,7 @@ export function AccidentReportManager({
   walks: WalkOption[];
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
+  const [isPending, setIsPending] = useState(false);
   const viewing = mode?.type === "view" ? mode.report : null;
   const editing = mode?.type === "edit" ? mode.report : null;
   const listRef = useRef<HTMLDivElement>(null);
@@ -428,6 +457,7 @@ export function AccidentReportManager({
       )}
 
       <Drawer
+        closeDisabled={isPending}
         onOpenChange={(open) => {
           if (!open) setMode(null);
         }}
@@ -451,7 +481,7 @@ export function AccidentReportManager({
             </DrawerDescription>
           </DrawerHeader>
           {mode?.type === "add" ? (
-            <AddForm onSaved={() => setMode(null)} walks={walks} />
+            <AddForm onPendingChange={setIsPending} onSaved={() => setMode(null)} walks={walks} />
           ) : null}
           {viewing ? (
             <div className="flex min-h-0 flex-1 flex-col">
@@ -477,6 +507,7 @@ export function AccidentReportManager({
             <EditForm
               key={editing.id}
               onCancel={() => setMode({ type: "view", report: editing })}
+              onPendingChange={setIsPending}
               onSaved={() => setMode(null)}
               report={editing}
               walks={walks}
