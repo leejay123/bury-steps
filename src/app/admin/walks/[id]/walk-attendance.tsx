@@ -91,7 +91,7 @@ export function WalkAttendanceTable({ rows }: { rows: WalkAttendanceRow[] }) {
             </DrawerDescription>
           </DrawerHeader>
           {selected ? (
-            <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pb-6">
+            <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-y-contain px-4 pb-6">
               <Detail label="Email">{selected.email || "—"}</Detail>
               <Detail label="Status">
                 {selected.clockedOutAt ? (

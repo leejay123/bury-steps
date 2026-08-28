@@ -117,7 +117,7 @@ export function HomeAboutDrawer({ trigger }: { trigger?: ReactNode }) {
             How the group started, what to expect, and a few simple rules.
           </DrawerDescription>
         </DrawerHeader>
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-6 py-5">
           <article className="space-y-8 text-sm leading-relaxed text-muted-foreground">
             <section className="space-y-3">
               <h3 className="text-base font-semibold text-foreground">How this started</h3>

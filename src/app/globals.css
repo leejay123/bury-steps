@@ -16,6 +16,27 @@ html {
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* Reserve the scrollbar's width up front so a page that grows just past
+     (or shrinks back under) the viewport height doesn't add/remove the
+     scrollbar and shove all the content sideways by its width. */
+  scrollbar-gutter: stable;
+}
+
+/*
+ * Scrolling a nested panel (drawer content, the notification bell list,
+ * a Select/dropdown menu list) to its end and continuing to scroll lets
+ * that scroll "chain" through to the page behind it — on trackpads and
+ * fast touch swipes this reads as the whole page suddenly jumping. Vaul
+ * and Radix already stop the background page from scrolling while a
+ * drawer/dialog is open, but the momentum from an exhausted inner scroll
+ * can still bleed through. `overscroll-behavior` on each of those panels
+ * (see the components) contains it; this is the top-level fallback for
+ * the page itself so reaching the very top/bottom doesn't hand scroll
+ * input off to browser gestures like Chrome's pull-to-refresh.
+ */
+html,
+body {
+  overscroll-behavior-y: contain;
 }
 
 /*
