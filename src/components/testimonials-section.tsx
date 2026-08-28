@@ -1,9 +1,10 @@
 "use client";
 
 import type { ComponentProps } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { GridPattern } from "@/components/ui/grid-pattern";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { GridFiller } from "@/components/grid-filler";
 import { HeroCopy } from "@/components/hero-copy";
@@ -67,8 +68,19 @@ function TestimonialsCard({
       </div>
 
       <Avatar className="size-8 rounded-full">
-        {image ? <AvatarImage alt={`${name}'s profile picture`} src={image} /> : null}
         <AvatarFallback>{name.charAt(0)}</AvatarFallback>
+        {image ? (
+          // next/image (not Radix's AvatarImage, which is a plain <img>)
+          // so a full-size upload gets resized down to this 32px circle
+          // instead of being downloaded in full to show a thumbnail.
+          <Image
+            alt={`${name}'s profile picture`}
+            className="absolute inset-0 object-cover"
+            fill
+            sizes="32px"
+            src={image}
+          />
+        ) : null}
       </Avatar>
       <div>
         <figcaption className="-mt-0.5 -space-y-0.5">
