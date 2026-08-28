@@ -1,10 +1,9 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { reopenWalk, type ActionResult } from "@/server/actions";
+import { useActionToast } from "@/hooks/use-action-toast";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -27,23 +26,12 @@ function Confirm() {
 }
 
 export function ReopenWalkButton({ walkId }: { walkId: string }) {
-  const router = useRouter();
   const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
     reopenWalk,
     null,
   );
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (!state) return;
-    if (state.ok) {
-      toast.success(state.message ?? "Walk reopened.");
-      setOpen(false);
-      router.refresh();
-    } else {
-      toast.error(state.error);
-    }
-  }, [router, state]);
+  useActionToast(state, () => setOpen(false));
 
   return (
     <AlertDialog onOpenChange={(next) => setOpen(isPending ? true : next)} open={open}>

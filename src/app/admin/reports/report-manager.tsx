@@ -2,9 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { useRouter } from "next/navigation";
 import { ChevronRight, ClipboardList, Printer, Search, Trash2 } from "lucide-react";
-import { toast } from "sonner";
 import {
   addAccidentReport,
   deleteAccidentReport,
@@ -17,6 +15,7 @@ import { EmptyState } from "@/components/empty-state";
 import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
 import { useUrlListState } from "@/hooks/use-url-list-state";
+import { useActionToast } from "@/hooks/use-action-toast";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -118,23 +117,6 @@ function PendingSubmit({ label, pendingLabel }: { label: string; pendingLabel: s
       {pending ? pendingLabel : label}
     </Button>
   );
-}
-
-function useActionToast(state: ActionResult | null, onOk?: () => void) {
-  const router = useRouter();
-  const onOkRef = useRef(onOk);
-  onOkRef.current = onOk;
-
-  useEffect(() => {
-    if (!state) return;
-    if (state.ok) {
-      toast.success(state.message ?? "Saved.");
-      onOkRef.current?.();
-      router.refresh();
-    } else {
-      toast.error(state.error);
-    }
-  }, [router, state]);
 }
 
 function ReportFields({
@@ -287,23 +269,12 @@ function RemoveReportConfirm() {
 }
 
 function RemoveButton({ reportId, title }: { reportId: string; title: string }) {
-  const router = useRouter();
   const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
     deleteAccidentReport,
     null,
   );
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (!state) return;
-    if (state.ok) {
-      toast.success(state.message ?? "Removed.");
-      setOpen(false);
-      router.refresh();
-    } else {
-      toast.error(state.error);
-    }
-  }, [router, state]);
+  useActionToast(state, () => setOpen(false));
 
   return (
     <AlertDialog onOpenChange={(next) => setOpen(isPending ? true : next)} open={open}>

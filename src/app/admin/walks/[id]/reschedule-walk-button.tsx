@@ -1,11 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { rescheduleWalk, type ActionResult } from "@/server/actions";
 import { utcToLondonWallClock } from "@/lib/dates";
+import { useActionToast } from "@/hooks/use-action-toast";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,23 +49,12 @@ export function RescheduleWalkButton({
   startsAt: string;
   walkId: string;
 }) {
-  const router = useRouter();
   const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
     rescheduleWalk,
     null,
   );
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (!state) return;
-    if (state.ok) {
-      toast.success(state.message ?? "Walk rescheduled.");
-      setOpen(false);
-      router.refresh();
-    } else {
-      toast.error(state.error);
-    }
-  }, [router, state]);
+  useActionToast(state, () => setOpen(false));
 
   return (
     <AlertDialog onOpenChange={(next) => setOpen(isPending ? true : next)} open={open}>

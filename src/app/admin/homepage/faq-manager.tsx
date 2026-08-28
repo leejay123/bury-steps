@@ -2,9 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { useRouter } from "next/navigation";
 import { ChevronRight, CircleHelp, Folders } from "lucide-react";
-import { toast } from "sonner";
 import {
   addHomepageFaq,
   addHomepageFaqCategory,
@@ -22,6 +20,7 @@ import {
   type FaqCategoryView,
   type FaqView,
 } from "@/lib/faqs";
+import { useActionToast } from "@/hooks/use-action-toast";
 import { EmptyState } from "@/components/empty-state";
 import { ReorderButtons, useReorderableIds } from "@/components/sortable-rows";
 import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
@@ -74,23 +73,6 @@ function PendingSubmit({
       {pending ? pendingLabel : label}
     </Button>
   );
-}
-
-function useActionToast(state: ActionResult | null, onOk?: () => void) {
-  const router = useRouter();
-  const onOkRef = useRef(onOk);
-  onOkRef.current = onOk;
-
-  useEffect(() => {
-    if (!state) return;
-    if (state.ok) {
-      toast.success(state.message ?? "Saved.");
-      onOkRef.current?.();
-      router.refresh();
-    } else {
-      toast.error(state.error);
-    }
-  }, [router, state]);
 }
 
 function CategorySelect({

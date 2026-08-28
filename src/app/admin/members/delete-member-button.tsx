@@ -1,10 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { deleteMember, type ActionResult } from "@/server/actions";
+import { useActionToast } from "@/hooks/use-action-toast";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -47,20 +47,13 @@ export function DeleteMemberButton({
     null,
   );
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (!state) return;
-    if (state.ok) {
-      toast.success(state.message ?? "Member removed.");
-      setOpen(false);
-      if (redirectTo) {
-        router.push(redirectTo);
-        router.refresh();
-      }
-    } else {
-      toast.error(state.error);
-    }
-  }, [redirectTo, router, state]);
+  // The hook's own router.refresh() re-fetches whichever page this button
+  // lives on (the members list, or the member's own page before it
+  // redirects away) so it never shows a member who was just removed.
+  useActionToast(state, () => {
+    setOpen(false);
+    if (redirectTo) router.push(redirectTo);
+  });
 
   return (
     <AlertDialog open={open} onOpenChange={(next) => setOpen(isPending ? true : next)}>

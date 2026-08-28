@@ -3,9 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { ChevronRight, ImageIcon } from "lucide-react";
-import { toast } from "sonner";
 import {
   addHomepageSlide,
   deleteHomepageSlide,
@@ -14,6 +12,7 @@ import {
   type ActionResult,
 } from "@/server/actions";
 import type { SlideView } from "@/lib/slides";
+import { useActionToast } from "@/hooks/use-action-toast";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { EmptyState } from "@/components/empty-state";
 import { ReorderButtons, useReorderableIds } from "@/components/sortable-rows";
@@ -57,23 +56,6 @@ function PendingSubmit({
       {pending ? pendingLabel : label}
     </Button>
   );
-}
-
-function useActionToast(state: ActionResult | null, onOk?: () => void) {
-  const router = useRouter();
-  const onOkRef = useRef(onOk);
-  onOkRef.current = onOk;
-
-  useEffect(() => {
-    if (!state) return;
-    if (state.ok) {
-      toast.success(state.message ?? "Saved.");
-      onOkRef.current?.();
-      router.refresh();
-    } else {
-      toast.error(state.error);
-    }
-  }, [router, state]);
 }
 
 function SlideFields({

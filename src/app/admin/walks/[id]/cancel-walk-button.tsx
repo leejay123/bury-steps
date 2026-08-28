@@ -1,10 +1,9 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { cancelWalk, type ActionResult } from "@/server/actions";
+import { useActionToast } from "@/hooks/use-action-toast";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,23 +34,12 @@ export function CancelWalkButton({
   walkId: string;
   attendanceCount: number;
 }) {
-  const router = useRouter();
   const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
     cancelWalk,
     null,
   );
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (!state) return;
-    if (state.ok) {
-      toast.success(state.message ?? "Walk cancelled.");
-      setOpen(false);
-      router.refresh();
-    } else {
-      toast.error(state.error);
-    }
-  }, [router, state]);
+  useActionToast(state, () => setOpen(false));
 
   return (
     <AlertDialog open={open} onOpenChange={(next) => setOpen(isPending ? true : next)}>

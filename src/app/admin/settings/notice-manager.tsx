@@ -2,9 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { useRouter } from "next/navigation";
 import { ChevronRight, Bell } from "lucide-react";
-import { toast } from "sonner";
 import {
   addSiteNotice,
   deleteSiteNotice,
@@ -13,6 +11,7 @@ import {
 } from "@/server/actions";
 import type { NoticeView } from "@/lib/notices";
 import { formatDate } from "@/lib/dates";
+import { useActionToast } from "@/hooks/use-action-toast";
 import { EmptyState } from "@/components/empty-state";
 import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
 import { Button } from "@/components/ui/button";
@@ -55,23 +54,6 @@ function PendingSubmit({
       {pending ? pendingLabel : label}
     </Button>
   );
-}
-
-function useActionToast(state: ActionResult | null, onOk?: () => void) {
-  const router = useRouter();
-  const onOkRef = useRef(onOk);
-  onOkRef.current = onOk;
-
-  useEffect(() => {
-    if (!state) return;
-    if (state.ok) {
-      toast.success(state.message ?? "Saved.");
-      onOkRef.current?.();
-      router.refresh();
-    } else {
-      toast.error(state.error);
-    }
-  }, [router, state]);
 }
 
 function NoticeFields({
