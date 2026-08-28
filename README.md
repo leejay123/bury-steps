@@ -183,7 +183,8 @@ not finish creating tables — check that the Vercel deploy succeeded.
 
 | What you see | What it usually means | What to do |
 |---|---|---|
-| Vercel deploy fails and mentions the database or Prisma | `DATABASE_URL` is missing, or it is the wrong pooler | In Vercel → Settings → Environment Variables, check the name is exactly `DATABASE_URL`. In Supabase, copy **Session pooler** again (port **5432**, not 6543). Redeploy |
+| Vercel deploy fails and mentions the database or Prisma | `DATABASE_URL` is missing, or it is the wrong pooler | In Vercel → Settings → Environment Variables, check the name is exactly `DATABASE_URL`. In Supabase, copy **Session pooler** again (port **5432**). Redeploy |
+| Application error / “max clients reached” | Too many open database sessions | Keep `DATABASE_URL` on Session pooler (5432). Redeploy. The live site uses transaction pooling on its own |
 | Vercel deploy fails on a Clerk key | A key was not pasted, or there is an extra space | Re-copy both Clerk keys into Vercel. No quotes around the value in the Vercel form. Redeploy |
 | The site loads but sign-in does nothing | Production keys without the `/__clerk` proxy, or test keys on Production | Confirm Vercel Production has `pk_live_` / `sk_live_` keys, the app is on Clerk SDK 7+, and middleware matches `/__clerk/:path*`. Do not add DNS for `vercel.app` |
 | `/admin` sends you back to walks | Your account is a member, not an organiser | In Supabase → Table Editor → User, set `role` to `ADMIN` |

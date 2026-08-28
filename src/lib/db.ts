@@ -6,18 +6,32 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 /** Bump when models are added so a long-running `next dev` does not keep a stale client. */
-const PRISMA_CLIENT_REV = 3;
+const PRISMA_CLIENT_REV = 4;
 
-function datasourceUrl() {
-  const url = process.env.DATABASE_URL;
+function withQueryParam(url: string, key: string, value: string) {
+  if (new RegExp(`[?&]${key}=`).test(url)) return url;
+  return `${url}${url.includes("?") ? "&" : "?"}${key}=${value}`;
+}
+
+/**
+ * Serverless isolates each open their own Prisma client. Supabase session
+ * pooling (port 5432) caps that at ~15 connections and then 500s the site.
+ * Transaction pooling (6543) multiplexes those isolates. Migrations still use
+ * DATABASE_URL as stored in Vercel (session / 5432).
+ */
+export function runtimeDatasourceUrl(url = process.env.DATABASE_URL) {
   if (!url) return undefined;
-  if (/[?&]connection_limit=/.test(url)) return url;
-  return `${url}${url.includes("?") ? "&" : "?"}connection_limit=1`;
+
+  let next = url.replace(/pooler\.supabase\.com:5432/i, "pooler.supabase.com:6543");
+  if (/pooler\.supabase\.com:6543/i.test(next)) {
+    next = withQueryParam(next, "pgbouncer", "true");
+  }
+  return withQueryParam(next, "connection_limit", "1");
 }
 
 function createPrismaClient() {
   return new PrismaClient({
-    datasourceUrl: datasourceUrl(),
+    datasourceUrl: runtimeDatasourceUrl(),
     log: process.env.NODE_ENV === "development" ? ["error"] : ["error"],
   });
 }
@@ -29,7 +43,5 @@ if (globalForPrisma.prismaRev !== PRISMA_CLIENT_REV) {
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
-  globalForPrisma.prismaRev = PRISMA_CLIENT_REV;
-}
+globalForPrisma.prisma = prisma;
+globalForPrisma.prismaRev = PRISMA_CLIENT_REV;

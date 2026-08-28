@@ -136,7 +136,7 @@ function FaqBrowser({
         })}
       </div>
 
-      <Accordion className="flex flex-col gap-2 border-0 px-4 py-6 md:px-6" collapsible type="single">
+      <Accordion className="flex flex-col gap-2 border-0 px-4 pt-6 pb-0 md:px-6" collapsible type="single">
         {filtered.map((faq) => (
           <AccordionItem className="rounded-lg border last:border-b px-4 shadow-xs" key={faq.id} value={faq.id}>
             <AccordionTrigger>{faq.question}</AccordionTrigger>

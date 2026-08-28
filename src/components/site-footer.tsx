@@ -8,7 +8,7 @@ import { FACEBOOK_GROUP_URL } from "@/lib/urls";
 
 export function SiteFooter() {
   return (
-    <footer className="relative z-10 mt-auto shrink-0 bg-background">
+    <footer className="relative z-10 shrink-0 bg-background">
       <FullWidthDivider position="top" />
       <nav
         aria-label="Footer"

@@ -11,7 +11,7 @@ const fadeUp = {
 };
 
 export function MotionPage({ children }: { children: ReactNode }) {
-  return <div className="flex flex-1 flex-col">{children}</div>;
+  return <div>{children}</div>;
 }
 
 export function FadeIn({
