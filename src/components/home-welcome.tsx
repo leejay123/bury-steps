@@ -1,4 +1,4 @@
-import { HomeAboutDialog } from "@/components/home-about-dialog";
+import { HomeAboutDrawer } from "@/components/home-about-drawer";
 import { FeatureSection } from "@/components/feature-section";
 import { HeroCopy } from "@/components/hero-copy";
 import { TestimonialsSection } from "@/components/testimonials-section";
@@ -23,7 +23,7 @@ export function HomeWelcome({
       <section className="relative">
         <HeroCopy
           actions={
-            <HomeAboutDialog
+            <HomeAboutDrawer
               trigger={
                 <Button variant="outline">Read more</Button>
               }
