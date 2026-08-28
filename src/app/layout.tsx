@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/themes";
 import { Toaster } from "@/components/ui/sonner";
-import { AFTER_AUTH_PATH, SIGN_IN_URL, SIGN_UP_URL } from "@/lib/urls";
+import { AFTER_AUTH_PATH, appUrl, SIGN_IN_URL, SIGN_UP_URL } from "@/lib/urls";
 import { PAGE_X, PAGE_Y } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 import { SiteMobileNav, SiteNav, SiteNavFallback } from "@/components/site-nav";
@@ -16,9 +16,26 @@ import { UnlockPageOnNavigate, UnlockingLink } from "@/components/overlay-root";
 import { SiteCookieConsent } from "@/components/site-cookie-consent";
 import "./globals.css";
 
+const SITE_NAME = "Bury Steps Walking Group";
+const SITE_DESCRIPTION = "Weekly walks around Bury. Sign up, join a walk, clock in.";
+
 export const metadata: Metadata = {
-  title: "Bury Steps Walking Group",
-  description: "Weekly walks around Bury. Sign up, join a walk, clock in.",
+  metadataBase: new URL(appUrl()),
+  title: SITE_NAME,
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    url: "/",
+    siteName: SITE_NAME,
+    locale: "en_GB",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export const preferredRegion = ["lhr1"];

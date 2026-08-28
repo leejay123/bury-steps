@@ -1,5 +1,7 @@
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { getOptionalUser, requireUser } from "@/lib/auth";
 import { formatWalkDate, formatDateTime } from "@/lib/dates";
@@ -16,6 +18,48 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
 
+// Cached per request so generateMetadata and the page body share one lookup.
+const getWalkByToken = cache((token: string) =>
+  prisma.walk.findUnique({
+    where: { token },
+    select: {
+      id: true,
+      token: true,
+      title: true,
+      description: true,
+      location: true,
+      startsAt: true,
+      durationMins: true,
+      cancelledAt: true,
+    },
+  }),
+);
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}): Promise<Metadata> {
+  const { token } = await params;
+  const walk = await getWalkByToken(token);
+  if (!walk) return { title: "Walk not found — Bury Steps Walking Group" };
+
+  const when = formatWalkDate(walk.startsAt);
+  const title = `${walk.title} — Bury Steps Walking Group`;
+  const description = walk.cancelledAt
+    ? `Cancelled. Was ${when}${walk.location ? ` at ${walk.location}` : ""}.`
+    : `${when}${walk.location ? ` · ${walk.location}` : ""}. Tap to see details and clock in.`;
+
+  return {
+    title,
+    description,
+    // Unguessable, one-off share links — not meant to show up in search.
+    robots: { index: false, follow: false },
+    openGraph: { title, description, type: "website" },
+    twitter: { card: "summary", title, description },
+  };
+}
+
 export default async function WalkLinkPage({
   params,
 }: {
@@ -24,22 +68,7 @@ export default async function WalkLinkPage({
   const { token } = await params;
   const walkUrl = `${appUrl()}/w/${token}`;
 
-  const [walk, user] = await Promise.all([
-    prisma.walk.findUnique({
-      where: { token },
-      select: {
-        id: true,
-        token: true,
-        title: true,
-        description: true,
-        location: true,
-        startsAt: true,
-        durationMins: true,
-        cancelledAt: true,
-      },
-    }),
-    getOptionalUser(),
-  ]);
+  const [walk, user] = await Promise.all([getWalkByToken(token), getOptionalUser()]);
 
   if (!walk) notFound();
 

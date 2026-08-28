@@ -1,8 +1,13 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { AttendanceHistory } from "@/components/attendance-history";
+
+export const metadata: Metadata = {
+  title: "Walk history — Bury Steps Walking Group",
+};
 
 export const dynamic = "force-dynamic";
 
