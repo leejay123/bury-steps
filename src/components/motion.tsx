@@ -11,7 +11,7 @@ const fadeUp = {
 };
 
 export function MotionPage({ children }: { children: ReactNode }) {
-  return <div>{children}</div>;
+  return <div className="my-auto w-full">{children}</div>;
 }
 
 export function FadeIn({
