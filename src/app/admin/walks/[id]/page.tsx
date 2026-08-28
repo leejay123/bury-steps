@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { WalkAttendanceTable } from "./walk-attendance";
+import { WalkAttendanceTable, type WalkAttendanceRow } from "./walk-attendance";
 
 export const dynamic = "force-dynamic";
 
@@ -59,10 +59,25 @@ export default async function WalkDetailPage({
 
   if (!walk) notFound();
 
+  const attendances = walk.attendances;
   const state = windowState(walk.startsAt, walk.durationMins);
-  const stillIn = walk.attendances.filter((a) => !a.clockedOutAt);
-  const clockedOut = walk.attendances.filter((a) => a.clockedOutAt);
-  const withConditions = walk.attendances.filter((a) => a.conditions).length;
+  const stillIn = attendances.filter((a) => !a.clockedOutAt);
+  const clockedOut = attendances.filter((a) => a.clockedOutAt);
+  const withConditions = attendances.filter((a) => a.conditions).length;
+
+  function toAttendanceRow(attendance: (typeof attendances)[number]): WalkAttendanceRow {
+    const name = displayName(attendance.user);
+    return {
+      id: attendance.id,
+      name,
+      email: attendance.user.email,
+      initials: initials(name),
+      clockedInAt: attendance.clockedInAt.toISOString(),
+      clockedOutAt: attendance.clockedOutAt?.toISOString() ?? null,
+      clockedOutReason: attendance.clockedOutReason,
+      conditions: attendance.conditions,
+    };
+  }
 
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
@@ -135,40 +150,54 @@ export default async function WalkDetailPage({
         </Alert>
       )}
 
+      {/*
+        Split into two lists rather than one merged table: "Attendance" is
+        who is on the walk right now, full stop — someone who clocked out
+        has left, so they no longer belong there, even with a badge. Their
+        record isn't lost (it's still in Clocked out below, in their walk
+        history, and in the CSV export) but the live headcount and the rows
+        under it now always agree, instead of the header saying "1 on the
+        walk" while the table still lists 2 people.
+      */}
       <section className="flex flex-col gap-3">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
           <h2 className="text-sm font-medium text-muted-foreground">Attendance</h2>
           <span className="text-sm tabular-nums text-muted-foreground">
-            {stillIn.length} on the walk
-            {clockedOut.length > 0 ? ` · ${clockedOut.length} clocked out` : ""}
-            {" · Click a row for details"}
+            {stillIn.length} on the walk · Click a row for details
           </span>
         </div>
 
-        {walk.attendances.length === 0 ? (
+        {stillIn.length === 0 ? (
           <EmptyState
-            description="Share the link above with the group."
+            description={
+              walk.attendances.length === 0
+                ? "Share the link above with the group."
+                : "Everyone who clocked in has since clocked out."
+            }
             icon={ClipboardList}
-            title="Nobody has clocked in yet"
+            title={
+              walk.attendances.length === 0
+                ? "Nobody has clocked in yet"
+                : "Nobody is on the walk right now"
+            }
           />
         ) : (
-          <WalkAttendanceTable
-            rows={walk.attendances.map((attendance) => {
-              const name = displayName(attendance.user);
-              return {
-                id: attendance.id,
-                name,
-                email: attendance.user.email,
-                initials: initials(name),
-                clockedInAt: attendance.clockedInAt.toISOString(),
-                clockedOutAt: attendance.clockedOutAt?.toISOString() ?? null,
-                clockedOutReason: attendance.clockedOutReason,
-                conditions: attendance.conditions,
-              };
-            })}
-          />
+          <WalkAttendanceTable rows={stillIn.map(toAttendanceRow)} />
         )}
       </section>
+
+      {clockedOut.length > 0 ? (
+        <section className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
+            <h2 className="text-sm font-medium text-muted-foreground">Clocked out</h2>
+            <span className="text-sm tabular-nums text-muted-foreground">
+              {clockedOut.length} {clockedOut.length === 1 ? "person" : "people"} · left early or
+              after finishing · click a row for details
+            </span>
+          </div>
+          <WalkAttendanceTable rows={clockedOut.map(toAttendanceRow)} />
+        </section>
+      ) : null}
     </div>
   );
 }
