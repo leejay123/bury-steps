@@ -159,9 +159,12 @@ export function OrganiserGuide() {
                 <strong>{CANCELLED_WALK_RETENTION_DAYS} days</strong>.
               </p>
               <p>
-                Open the walk from the list. The roster is names, status, and clock-in time. Tap a
-                row for email, clock-out time, any clock-out reason, and health notes. If more than
-                20 people clocked in, Previous and Next sit under the list.
+                Open the walk from the list. Attendance is names and clock-in time for whoever is
+                on the walk right now. Anyone who has clocked out moves down into its own Clocked
+                out list below — so the count always matches the rows under it — with the same
+                details available. Tap a row for email, clock-out time, any clock-out reason, and
+                health notes. If more than 20 people clocked in, Previous and Next sit under
+                either list.
               </p>
               <p>
                 Download roster (CSV) gives you names, emails, times, clock-out reasons, and any
