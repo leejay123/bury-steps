@@ -136,7 +136,7 @@ export default async function WalkDetailPage({
       )}
 
       <section className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
           <h2 className="text-sm font-medium text-muted-foreground">Attendance</h2>
           <span className="text-sm tabular-nums text-muted-foreground">
             {stillIn.length} on the walk

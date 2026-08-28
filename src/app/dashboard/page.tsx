@@ -1,19 +1,16 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CalendarDays, ChevronRight, Clock, Footprints, MapPin } from "lucide-react";
+import { ChevronRight, Footprints } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
-import { formatCompactDateTime, formatDate, formatDateTime, formatMembershipAge, formatWalkDate } from "@/lib/dates";
+import { formatCompactDateTime, formatDate, formatMembershipAge } from "@/lib/dates";
 import { windowState } from "@/lib/walk-window";
 import { CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { EmptyState } from "@/components/empty-state";
 import { DataList, DataListBody, DataListItem } from "@/components/data-list";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { WalkMembers } from "@/components/walk-members";
-import { ClockOutButton } from "@/components/clock-out-button";
 import { getWalkMemberNamesByWalkIds } from "@/lib/walk-members";
+import { UpcomingWalkCards } from "./upcoming-walk-cards";
 
 export const dynamic = "force-dynamic";
 
@@ -84,72 +81,24 @@ export default async function DashboardPage() {
           title="No walks scheduled yet"
         />
       ) : (
-        <div className="flex flex-col gap-4">
-          {walks.map((walk) => {
+        <UpcomingWalkCards
+          walks={walks.map((walk) => {
             const clockedIn = walk.attendances[0];
-            const state = windowState(walk.startsAt, walk.durationMins, now);
-            return (
-              <Card className="gap-3" key={walk.id}>
-                <CardHeader className="flex flex-row items-start justify-between gap-3">
-                  <div className="flex min-w-0 flex-col gap-1.5">
-                    <CardTitle className="text-base">{walk.title}</CardTitle>
-                    <CardDescription className="flex flex-col gap-1">
-                      <span className="inline-flex items-center gap-1.5">
-                        <CalendarDays className="size-3.5" />
-                        {formatWalkDate(walk.startsAt)}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <Clock className="size-3.5" />
-                        {walk.durationMins} min
-                        {walk.location ? (
-                          <>
-                            <MapPin className="ml-1.5 size-3.5" />
-                            {walk.location}
-                          </>
-                        ) : null}
-                      </span>
-                    </CardDescription>
-                  </div>
-                  {walk.cancelledAt ? (
-                    <Badge variant="destructive">Cancelled</Badge>
-                  ) : clockedIn ? (
-                    <Badge variant="secondary">Clocked in</Badge>
-                  ) : state === "open" ? (
-                    <Badge>Clock-in open</Badge>
-                  ) : null}
-                </CardHeader>
-                <CardContent className="flex flex-col gap-4">
-                  {walk.description ? (
-                    <p className="text-sm leading-relaxed">{walk.description}</p>
-                  ) : null}
-                  {walk.cancelledAt ? (
-                    <p className="text-sm text-destructive">This walk has been cancelled.</p>
-                  ) : null}
-                  {!walk.cancelledAt && !clockedIn ? (
-                    <div>
-                      <Button asChild disabled={state === "closed"} size="sm">
-                        <Link href={`/w/${walk.token}`}>
-                          {state === "open" ? "Clock in" : "Open pre-walk check"}
-                        </Link>
-                      </Button>
-                    </div>
-                  ) : null}
-                  {clockedIn && !walk.cancelledAt ? (
-                    <div className="flex flex-col gap-4">
-                      <p className="text-sm text-muted-foreground">
-                        Clocked in at {formatDateTime(clockedIn.clockedInAt)}
-                      </p>
-                      <div>
-                        <ClockOutButton token={walk.token} />
-                      </div>
-                      <WalkMembers names={memberNamesByWalk.get(walk.id) ?? []} />
-                    </div>
-                  ) : null}
-                </CardContent>
-              </Card>
-            );
+            return {
+              id: walk.id,
+              token: walk.token,
+              title: walk.title,
+              description: walk.description,
+              location: walk.location,
+              startsAt: walk.startsAt.toISOString(),
+              durationMins: walk.durationMins,
+              cancelledAt: walk.cancelledAt?.toISOString() ?? null,
+              clockedInAt: clockedIn ? clockedIn.clockedInAt.toISOString() : null,
+              state: windowState(walk.startsAt, walk.durationMins, now),
+              memberNames: memberNamesByWalk.get(walk.id) ?? [],
+            };
           })}
-        </div>
+        />
       )}
 
       {historyCount > 0 ? (
