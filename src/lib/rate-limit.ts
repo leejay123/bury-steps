@@ -5,11 +5,20 @@
  * lives in memory instead.
  *
  * Known limitation: each serverless instance has its own map, and it
- * resets whenever an instance cold-starts. A determined attacker rotating
- * across instances (or just waiting for one) can get around it. It still
+ * resets whenever an instance cold-starts. On Vercel, a determined
+ * attacker rotating across instances (or just waiting for one) can get
+ * around it — this is abuse *deterrence*, not a hard guarantee. It still
  * meaningfully throttles the much more common case — someone spamming a
  * button, or a simple script hammering one action — on whichever warm
  * instance handles their requests.
+ *
+ * The actual hard guarantees for the actions that use this
+ * (clockIn/clockOut) come from elsewhere: the `@@unique([walkId, userId])`
+ * constraint on Attendance means no amount of rate-limit bypassing lets
+ * someone create two attendance rows for the same walk, and every action
+ * re-checks the caller's own auth/ownership before writing. Treat this
+ * limiter as a courtesy that keeps logs and DB load sane, not as the thing
+ * standing between the app and real abuse.
  */
 
 type Bucket = { count: number; resetAt: number };
