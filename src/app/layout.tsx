@@ -63,7 +63,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           signInFallbackRedirectUrl={AFTER_AUTH_PATH}
           signUpFallbackRedirectUrl={AFTER_AUTH_PATH}
         >
-          <div className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x">
+          {/*
+            iPhones with a Dynamic Island report it as a safe-area inset on
+            whichever side it lands on after a landscape rotation (left or
+            right depending on rotation direction), not just the top. This is
+            0px on every other device/orientation, so it only ever adds space
+            here when there is actually a notch/island to clear. Applied on
+            the outermost shell (rather than on individual pages) so it also
+            covers content that intentionally bleeds edge-to-edge.
+          */}
+          <div className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
             <UnlockPageOnNavigate />
             {/*
               This header is sticky and present on every page, so its
