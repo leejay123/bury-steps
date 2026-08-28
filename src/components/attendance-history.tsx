@@ -2,8 +2,9 @@
 
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { ChevronRight, Search } from "lucide-react";
 import { formatCompactDateTime, formatDate, formatTime, londonYear } from "@/lib/dates";
+import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/empty-state";
 import { ListPagination } from "@/components/list-pagination";
 import { usePagedList } from "@/hooks/use-paged-list";
@@ -114,18 +115,21 @@ function HistoryList({ rows }: { rows: AttendanceHistoryRow[] }) {
       {rows.map((row) => {
         const startsAt = new Date(row.startsAt);
         return (
-          <div className="flex flex-col gap-2 p-4" key={row.id}>
+          <div className={cn("relative flex flex-col gap-2 p-4", row.href && "hover:bg-muted/50")} key={row.id}>
             <div className="flex items-start justify-between gap-3">
               <p className="font-medium">
                 {row.href ? (
-                  <Link className="hover:underline" href={row.href}>
+                  <Link className="after:absolute after:inset-0" href={row.href}>
                     {row.title}
                   </Link>
                 ) : (
                   row.title
                 )}
               </p>
-              {row.cancelledAt ? <Badge variant="destructive">Cancelled</Badge> : null}
+              <div className="flex shrink-0 items-center gap-2">
+                {row.cancelledAt ? <Badge variant="destructive">Cancelled</Badge> : null}
+                {row.href ? <ChevronRight className="size-4 text-muted-foreground" /> : null}
+              </div>
             </div>
             <p className="text-sm text-muted-foreground">
               {formatDate(startsAt)} · {formatTime(startsAt)} · {row.durationMins} min

@@ -440,11 +440,14 @@ export function OrganiserGuide() {
               </p>
               <p>
                 Members open Walks from the menu. Each walk is a card with the date, length,
-                meeting point, and a badge if clock-in is open, they are already in, or the walk is
-                cancelled. Recent clock-ins are in a list underneath, with a short date. Tap a row
-                to open that walk, then ← Walks to come back. History in the menu is every walk they
-                have clocked in to, grouped by year, with a search box. Previous and Next appear if
-                they have more than 20 walks.
+                meeting point, a truncated preview of the description, and a badge if clock-in is
+                open, they are already in, or the walk is cancelled. Tapping anywhere on the card
+                opens that walk’s full page with the rest of the description; the Clock in and Clock
+                out buttons on the card work without leaving the list. Recent clock-ins are in a list
+                underneath, with a short date — tap a row to open that walk, then ← Walks to come
+                back. History in the menu is every walk they have clocked in to, grouped by year,
+                with a search box, and tapping anywhere on a row opens that walk too. Previous and
+                Next appear if they have more than 20 walks.
               </p>
             </GuideBody>
           </AccordionContent>
