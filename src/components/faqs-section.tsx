@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo, useState } from "react";
+import { memo, useDeferredValue, useMemo, useState } from "react";
 import { Search, SearchX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -85,6 +85,12 @@ function FaqBrowser({
   onClearSearch: () => void;
 }) {
   const [activeCategory, setActiveCategory] = useState("all");
+  // Filtering re-renders every AccordionItem (up to MAX_HOMEPAGE_FAQS of
+  // them). Deferring it keeps each keystroke in the search box itself
+  // (which FaqIntro renders immediately, above) responsive, letting React
+  // drop the list re-render to a lower priority instead of doing it
+  // synchronously on every keystroke.
+  const deferredSearchTerm = useDeferredValue(searchTerm);
 
   function selectCategory(id: string, button: HTMLButtonElement) {
     setActiveCategory(id);
@@ -99,7 +105,7 @@ function FaqBrowser({
   }, [categories, faqs]);
 
   const filtered = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase();
+    const query = deferredSearchTerm.trim().toLowerCase();
     return faqs.filter((faq) => {
       const matchesCategory = activeCategory === "all" || faq.categoryId === activeCategory;
       const matchesSearch =
@@ -108,7 +114,7 @@ function FaqBrowser({
         faq.answer.toLowerCase().includes(query);
       return matchesCategory && matchesSearch;
     });
-  }, [activeCategory, faqs, searchTerm]);
+  }, [activeCategory, faqs, deferredSearchTerm]);
 
   return (
     <>

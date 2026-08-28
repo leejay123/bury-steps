@@ -92,8 +92,36 @@ function neutralizeStaleOverlays() {
   });
 }
 
+/**
+ * Cheap pre-check for whether anything actually needs restoring, so the
+ * (unthrottled) call sites below — every pointerdown/keydown site-wide, a
+ * MutationObserver callback, and a poll timer — can skip the ~30 style and
+ * attribute writes in `restorePagePointerEvents` on the overwhelming
+ * majority of calls where nothing is locked. Those writes touch <html>/
+ * <body> directly, which is exactly the kind of main-thread work that can
+ * steal frames from an in-progress CSS animation (e.g. an Accordion opening)
+ * if it runs at the wrong moment, so it is worth skipping when there is
+ * nothing to do.
+ */
+function isPageInteractionLocked() {
+  const body = document.body;
+  const html = document.documentElement;
+  return (
+    body.style.pointerEvents === "none" ||
+    html.style.pointerEvents === "none" ||
+    body.style.position === "fixed" ||
+    body.style.top !== "" ||
+    body.hasAttribute("data-scroll-locked") ||
+    html.hasAttribute("data-scroll-locked") ||
+    body.hasAttribute("inert") ||
+    html.hasAttribute("inert") ||
+    [...body.classList].some((className) => className.startsWith("block-interactivity-"))
+  );
+}
+
 /** Radix/Vaul set this while a modal is open and sometimes leave it behind. */
 export function restorePagePointerEvents() {
+  if (!isPageInteractionLocked()) return;
   const lockedTop = document.body.style.top;
   for (const node of [document.body, document.documentElement]) {
     for (const prop of LOCK_STYLE_PROPS) {
