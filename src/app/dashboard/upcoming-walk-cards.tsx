@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClockOutButton } from "@/components/clock-out-button";
-import { WalkMembers } from "@/components/walk-members";
 
 export type UpcomingWalkCard = {
   id: string;
@@ -27,6 +26,12 @@ export type UpcomingWalkCard = {
 
 function stopCardNavigation(event: React.SyntheticEvent) {
   event.stopPropagation();
+}
+
+function walkMemberCountLabel(count: number) {
+  if (count === 0) return "No one else has clocked in yet.";
+  if (count === 1) return "1 person is on this walk.";
+  return `${count} people are on this walk.`;
 }
 
 export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
@@ -97,7 +102,9 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
                 <div onClick={stopCardNavigation} onPointerDown={stopCardNavigation}>
                   <ClockOutButton token={walk.token} />
                 </div>
-                <WalkMembers names={walk.memberNames} />
+                {/* Just a headline count here — the full "Who's coming" list with
+                names lives on the walk page you get to by clicking the card. */}
+                <p className="text-sm text-muted-foreground">{walkMemberCountLabel(walk.memberNames.length)}</p>
               </div>
             ) : null}
           </CardContent>
