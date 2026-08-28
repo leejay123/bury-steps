@@ -27,6 +27,34 @@ const nextConfig: NextConfig = {
     ];
   },
   async headers() {
+    // Clerk's hosted UI needs its own frontend API domain (the CNAME set up
+    // for the live site, or *.clerk.accounts.dev for local dev/anywhere the
+    // Vercel preview proxy at /__clerk isn't in play) plus Cloudflare
+    // Turnstile for its bot-protection challenge during sign-up. Script and
+    // style still allow 'unsafe-inline' — a nonce-based policy needs the
+    // whole app on dynamic rendering (see Next.js' and Clerk's own docs on
+    // this), which is a bigger, riskier change than this pass is making.
+    // Even so, restricting connect/frame/img/script *origins* to a known
+    // allowlist still blocks the most common CSP-relevant attacks: loading
+    // a remote payload or exfiltrating data to an attacker-controlled host.
+    const clerkOrigins = [
+      "https://clerk.burysteps-walkinggroup.co.uk",
+      "https://*.clerk.accounts.dev",
+    ];
+    const csp = [
+      "default-src 'self'",
+      `script-src 'self' 'unsafe-inline' ${clerkOrigins.join(" ")} https://challenges.cloudflare.com`,
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https:",
+      "font-src 'self' data:",
+      `connect-src 'self' ${clerkOrigins.join(" ")} https://challenges.cloudflare.com https://vitals.vercel-insights.com`,
+      `frame-src 'self' ${clerkOrigins.join(" ")} https://challenges.cloudflare.com`,
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+    ].join("; ");
+
     return [
       {
         source: "/:path*",
@@ -38,6 +66,7 @@ const nextConfig: NextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
           },
+          { key: "Content-Security-Policy", value: csp },
         ],
       },
     ];
