@@ -1,12 +1,9 @@
-"use client";
-
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { CalendarDays, ChevronRight, Clock, MapPin } from "lucide-react";
 import type { WindowState } from "@/lib/walk-window";
 import { formatDateTime, formatWalkDate } from "@/lib/dates";
+import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export type UpcomingWalkCard = {
@@ -23,53 +20,52 @@ export type UpcomingWalkCard = {
   memberNames: string[];
 };
 
-function stopCardNavigation(event: React.SyntheticEvent) {
-  event.stopPropagation();
-}
-
 function walkMemberCountLabel(count: number) {
   if (count === 0) return "No one else has clocked in yet.";
   if (count === 1) return "1 person is on this walk.";
   return `${count} people are on this walk.`;
 }
 
-export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
-  const router = useRouter();
+function walkLinkLabel(walk: UpcomingWalkCard) {
+  if (walk.cancelledAt) return `${walk.title} — view walk details`;
+  if (walk.clockedInAt) return `${walk.title} — view walk details`;
+  if (walk.state === "open") return `${walk.title} — clock in`;
+  return `${walk.title} — open pre-walk check`;
+}
 
+export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
   return (
     <div className="flex flex-col gap-4">
       {walks.map((walk) => (
-        <Card
-          aria-label={`${walk.title} — view walk details`}
-          className="cursor-pointer gap-3 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          key={walk.id}
-          onClick={() => router.push(`/w/${walk.token}`)}
-          onKeyDown={(event) => {
-            // Ignore keydowns bubbling up from the nested "Clock in" link —
-            // only activate the card itself when it's the focused element.
-            if (event.target !== event.currentTarget) return;
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              router.push(`/w/${walk.token}`);
-            }
-          }}
-          role="button"
-          tabIndex={0}
-        >
+        <Card className="relative gap-3 transition-colors hover:bg-muted/40" key={walk.id}>
+          {/*
+            A single real link stretched over the whole card (rather than a
+            clickable `role="button"` wrapper around a *second*, separately
+            focusable "Clock in" link) — nesting an interactive element
+            inside another interactive element confuses screen readers and
+            breaks keyboard focus order. Everything below is presentational;
+            this is the only focus stop and the only thing a screen reader
+            announces as interactive.
+          */}
+          <Link
+            aria-label={walkLinkLabel(walk)}
+            className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            href={`/w/${walk.token}`}
+          />
           <CardHeader className="flex flex-row items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1.5">
               <CardTitle className="text-base">{walk.title}</CardTitle>
               <CardDescription className="flex flex-col gap-1">
                 <span className="inline-flex items-center gap-1.5">
-                  <CalendarDays className="size-3.5" />
+                  <CalendarDays aria-hidden="true" className="size-3.5" />
                   {formatWalkDate(new Date(walk.startsAt))}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <Clock className="size-3.5" />
+                  <Clock aria-hidden="true" className="size-3.5" />
                   {walk.durationMins} min
                   {walk.location ? (
                     <>
-                      <MapPin className="ml-1.5 size-3.5" />
+                      <MapPin aria-hidden="true" className="ml-1.5 size-3.5" />
                       {walk.location}
                     </>
                   ) : null}
@@ -84,7 +80,7 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
               ) : walk.state === "open" ? (
                 <Badge>Clock-in open</Badge>
               ) : null}
-              <ChevronRight className="size-4 text-muted-foreground" />
+              <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" />
             </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
@@ -97,13 +93,17 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
               <p className="text-sm text-destructive">This walk has been cancelled.</p>
             ) : null}
             {!walk.cancelledAt && !walk.clockedInAt ? (
-              <div onClick={stopCardNavigation} onPointerDown={stopCardNavigation}>
-                <Button asChild disabled={walk.state === "closed"} size="sm">
-                  <Link href={`/w/${walk.token}`}>
-                    {walk.state === "open" ? "Clock in" : "Open pre-walk check"}
-                  </Link>
-                </Button>
-              </div>
+              // Purely visual — the stretched link above already goes to
+              // this same destination, so this isn't a second real button.
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "inline-flex h-9 w-fit items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-xs",
+                  walk.state === "closed" && "opacity-50",
+                )}
+              >
+                {walk.state === "open" ? "Clock in" : "Open pre-walk check"}
+              </span>
             ) : null}
             {walk.clockedInAt && !walk.cancelledAt ? (
               <div className="flex flex-col gap-1.5">
