@@ -42,6 +42,7 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
     <div className="flex flex-col gap-4" ref={listRef}>
       <InputGroup className="max-w-md">
         <InputGroupInput
+          aria-label="Search members"
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search by name, email, or role…"
           value={query}

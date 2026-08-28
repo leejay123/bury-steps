@@ -345,6 +345,7 @@ export function AccidentReportManager({
         {reports.length > 0 ? (
           <InputGroup className="sm:max-w-md">
             <InputGroupInput
+              aria-label="Search accident reports"
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search by walk, people involved, or what happened…"
               value={query}

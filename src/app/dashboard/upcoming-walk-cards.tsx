@@ -40,9 +40,21 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
     <div className="flex flex-col gap-4">
       {walks.map((walk) => (
         <Card
-          className="cursor-pointer gap-3 transition-colors hover:bg-muted/40"
+          aria-label={`${walk.title} — view walk details`}
+          className="cursor-pointer gap-3 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           key={walk.id}
           onClick={() => router.push(`/w/${walk.token}`)}
+          onKeyDown={(event) => {
+            // Ignore keydowns bubbling up from the nested "Clock in" link —
+            // only activate the card itself when it's the focused element.
+            if (event.target !== event.currentTarget) return;
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              router.push(`/w/${walk.token}`);
+            }
+          }}
+          role="button"
+          tabIndex={0}
         >
           <CardHeader className="flex flex-row items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1.5">

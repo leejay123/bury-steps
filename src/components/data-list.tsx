@@ -11,13 +11,40 @@ export function DataList({ className, ...props }: React.ComponentProps<"ul">) {
   );
 }
 
-export function DataListItem({ className, ...props }: React.ComponentProps<"li">) {
+export function DataListItem({
+  className,
+  onClick,
+  onKeyDown,
+  role,
+  tabIndex,
+  ...props
+}: React.ComponentProps<"li">) {
+  // Rows that open something on click (a drawer, a detail view) instead of
+  // wrapping their content in a real link need the same keyboard support a
+  // link would give for free: focusable, and Enter/Space activates it.
+  const clickable = typeof onClick === "function";
+
   return (
     <li
       className={cn(
         "flex cursor-pointer items-center gap-3 border-b p-3 last:border-0 hover:bg-muted/50",
+        clickable && "focus-visible:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         className,
       )}
+      onClick={onClick}
+      onKeyDown={(event) => {
+        onKeyDown?.(event);
+        // Ignore keydowns that bubbled up from a nested interactive element
+        // (e.g. the "Remove" button in DataListActions) — only the row
+        // itself being focused should trigger the row's own action.
+        if (!clickable || event.defaultPrevented || event.target !== event.currentTarget) return;
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClick?.(event as unknown as React.MouseEvent<HTMLLIElement>);
+        }
+      }}
+      role={clickable ? (role ?? "button") : role}
+      tabIndex={clickable ? (tabIndex ?? 0) : tabIndex}
       {...props}
     />
   );
