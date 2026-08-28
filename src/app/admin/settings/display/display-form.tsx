@@ -17,8 +17,15 @@ export function DisplaySettings({ scrollToTopEnabled }: { scrollToTopEnabled: bo
 
   useEffect(() => {
     if (!state) return;
-    if (!state.ok) toast.error(state.error);
-  }, [state]);
+    if (state.ok) {
+      if (state.message) toast.success(state.message);
+    } else {
+      // The checkbox already flipped optimistically when tapped — put it
+      // back so the UI doesn't keep claiming a state the save never reached.
+      setOn(scrollToTopEnabled);
+      toast.error(state.error);
+    }
+  }, [state, scrollToTopEnabled]);
 
   return (
     <div className="flex items-start gap-3 rounded-xl border p-4">
@@ -29,7 +36,6 @@ export function DisplaySettings({ scrollToTopEnabled }: { scrollToTopEnabled: bo
           const next = value === true;
           if (next === on) return;
           setOn(next);
-          toast.success(next ? "Back to top is on." : "Back to top is off.");
           const formData = new FormData();
           formData.set("scrollToTopEnabled", next ? "on" : "");
           startTransition(() => {
