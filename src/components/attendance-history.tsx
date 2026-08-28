@@ -69,6 +69,7 @@ export function AttendanceHistory({
     <div className="flex flex-col gap-6" ref={listRef}>
       <InputGroup className="max-w-md">
         <InputGroupInput
+          aria-label="Search your walk history"
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search by walk or meeting point…"
           value={query}

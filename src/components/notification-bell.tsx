@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Bell } from "lucide-react";
+import { toast } from "sonner";
 import { markSiteNoticesRead } from "@/server/actions";
 import { formatDate } from "@/lib/dates";
 import type { NoticeView } from "@/lib/notices";
@@ -50,9 +51,21 @@ export function NotificationBell({
 
   function markAllRead() {
     if (unreadCount === 0 || pending) return;
+    const previous = unread;
     setUnread([]);
     setPending(true);
-    void markSiteNoticesRead().finally(() => setPending(false));
+    markSiteNoticesRead()
+      .then((result) => {
+        if (!result.ok) {
+          setUnread(previous);
+          toast.error(result.error);
+        }
+      })
+      .catch(() => {
+        setUnread(previous);
+        toast.error("Could not mark notices as read. Try again.");
+      })
+      .finally(() => setPending(false));
   }
 
   return (

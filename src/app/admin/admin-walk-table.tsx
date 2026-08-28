@@ -55,11 +55,12 @@ export function AdminWalkTable({
     <div className="flex flex-col gap-4" ref={listRef}>
       {searchable ? (
         <InputGroup className="max-w-md">
-          <InputGroupInput
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search by walk or meeting point…"
-            value={query}
-          />
+        <InputGroupInput
+          aria-label="Search past walks"
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search by walk or meeting point…"
+          value={query}
+        />
           <InputGroupAddon>
             <Search data-icon="inline-start" />
           </InputGroupAddon>

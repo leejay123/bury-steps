@@ -17,8 +17,15 @@ export function CarouselToggle({ enabled }: { enabled: boolean }) {
 
   useEffect(() => {
     if (!state) return;
-    if (!state.ok) toast.error(state.error);
-  }, [state]);
+    if (state.ok) {
+      if (state.message) toast.success(state.message);
+    } else {
+      // The checkbox already flipped optimistically when tapped — put it
+      // back so the UI doesn't keep claiming a state the save never reached.
+      setOn(enabled);
+      toast.error(state.error);
+    }
+  }, [state, enabled]);
 
   return (
     <div className="flex items-start gap-3 rounded-xl border p-4">
@@ -29,7 +36,6 @@ export function CarouselToggle({ enabled }: { enabled: boolean }) {
           const next = value === true;
           if (next === on) return;
           setOn(next);
-          toast.success(next ? "You have turned the carousel on." : "You have turned the carousel off.");
           const formData = new FormData();
           formData.set("carouselEnabled", next ? "on" : "");
           startTransition(() => {

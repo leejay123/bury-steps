@@ -14,6 +14,7 @@ const isPublic = createRouteMatcher([
   "/api/cron(.*)",
   "/api/slides(.*)",
   "/api/testimonials(.*)",
+  "/api/health",
   "/__clerk(.*)",
   // Crawler/browser file-convention routes. Most static extensions are
   // already excluded from the matcher below, but these don't have one

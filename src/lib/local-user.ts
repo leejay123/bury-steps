@@ -28,6 +28,15 @@ export async function syncLocalUser(input: {
     }
 
     const isFirst = (await tx.user.count()) === 0;
+    if (isFirst) {
+      // Worth a clear log line — this is a security-relevant, one-time
+      // event (whoever signs up first on an empty database becomes the
+      // organiser) and it should be easy to spot in server logs if it ever
+      // happens unexpectedly (e.g. after the database is wiped or migrated).
+      console.warn(
+        `[local-user] Bootstrapping the first account as ADMIN (clerkId=${input.clerkId}, email=${input.email}).`,
+      );
+    }
     return tx.user.create({
       data: {
         clerkId: input.clerkId,

@@ -52,6 +52,7 @@ const FaqIntro = memo(function FaqIntro({
       after={
         <InputGroup className="w-full">
           <InputGroupInput
+            aria-label="Search FAQs"
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="Search FAQs…"
             value={searchTerm}

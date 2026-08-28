@@ -247,8 +247,8 @@ export function OrganiserGuide() {
                   page. You cannot remove yourself.
                 </li>
                 <li>
-                  Confirm. Their login is deleted, their clock-ins go, and any walks they created
-                  are moved to you.
+                  Confirm. Their login is deleted, their clock-ins go, and any walks or accident
+                  reports they created are moved to you.
                 </li>
               </Steps>
               <p>You cannot remove the last organiser, so the group is never left without one.</p>
@@ -383,8 +383,8 @@ export function OrganiserGuide() {
               </p>
               <p>
                 Open <Link href="/admin/settings/cache">Site cache</Link> if the public homepage
-                still shows old photos, quotes, or FAQs after you saved. Clear cache refreshes that
-                stored copy. It does not delete walks, members, or photos.
+                still shows old photos, quotes, FAQs, or notices after you saved. Clear cache
+                refreshes that stored copy. It does not delete walks, members, or photos.
               </p>
             </GuideBody>
           </AccordionContent>

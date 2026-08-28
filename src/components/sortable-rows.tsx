@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { ActionResult } from "@/server/actions";
 
 export function ReorderButtons({
   canMoveDown,
@@ -52,7 +54,10 @@ export function ReorderButtons({
   );
 }
 
-export function useReorderableIds(ids: string[], onReorder: (ids: string[]) => void) {
+export function useReorderableIds(
+  ids: string[],
+  onReorder: (ids: string[]) => Promise<ActionResult> | ActionResult | void,
+) {
   const [order, setOrder] = useState(ids);
   // `ids` is a fresh array on every render (callers build it with `.map`), so
   // comparing by reference in the effect below would fire on every render
@@ -68,11 +73,25 @@ export function useReorderableIds(ids: string[], onReorder: (ids: string[]) => v
     const from = order.indexOf(id);
     const to = from + direction;
     if (from < 0 || to < 0 || to >= order.length) return;
+    const previous = order;
     const next = [...order];
     const [item] = next.splice(from, 1);
     next.splice(to, 0, item);
+    // Optimistic — flips immediately so the arrows feel instant. If the
+    // save fails, put the list back the way it was and say so, rather than
+    // leave the screen showing an order the database never actually saved.
     setOrder(next);
-    onReorder(next);
+    Promise.resolve(onReorder(next))
+      .then((result) => {
+        if (result && !result.ok) {
+          setOrder(previous);
+          toast.error(result.error);
+        }
+      })
+      .catch(() => {
+        setOrder(previous);
+        toast.error("Could not save that order. Try again.");
+      });
   }
 
   return {

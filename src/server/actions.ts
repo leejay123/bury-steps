@@ -22,6 +22,7 @@ import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR, normalizeHex } from "@/lib/them
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
 import { NOTICES_CACHE_TAG } from "@/lib/site-notices";
 import { isAllowedImageMime, sniffImageMime } from "@/lib/image-bytes";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 /** No look-alike characters — organisers read these out loud. */
 const makeToken = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 12);
@@ -36,6 +37,18 @@ function isPrismaCode(err: unknown, code: string): boolean {
     "code" in err &&
     (err as { code?: unknown }).code === code
   );
+}
+
+/**
+ * Logs the real error server-side (Next.js otherwise only shows the caller a
+ * generic "something went wrong" for anything thrown out of a server
+ * action) and returns a friendly, generic failure for the UI. Never call
+ * this around `requireAdmin()`/`requireUser()` — they use `redirect()`,
+ * which works by throwing, and that throw must keep propagating.
+ */
+function logActionError(context: string, err: unknown, fallback = "Something went wrong. Try again."): ActionResult {
+  console.error(`[actions:${context}]`, err);
+  return { ok: false, error: fallback };
 }
 
 export type ActionResult = { ok: true; message?: string } | { ok: false; error: string };
@@ -72,17 +85,23 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
     return { ok: false, error: "That date and time could not be read. Try again." };
   }
 
-  const walk = await prisma.walk.create({
-    data: {
-      token: makeToken(),
-      title: parsed.data.title,
-      description: parsed.data.description ?? null,
-      location: parsed.data.location ?? null,
-      startsAt,
-      durationMins: parsed.data.durationMins,
-      createdById: admin.id,
-    },
-  });
+  let walk: { title: string };
+  try {
+    walk = await prisma.walk.create({
+      data: {
+        token: makeToken(),
+        title: parsed.data.title,
+        description: parsed.data.description ?? null,
+        location: parsed.data.location ?? null,
+        startsAt,
+        durationMins: parsed.data.durationMins,
+        createdById: admin.id,
+      },
+      select: { title: true },
+    });
+  } catch (err) {
+    return logActionError("createWalk", err, "Could not create the walk. Try again.");
+  }
 
   revalidatePath("/admin");
   revalidatePath("/dashboard");
@@ -116,14 +135,15 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
         cancelledReason: reason || null,
       },
     });
-  } catch {
+  } catch (err) {
+    logActionError("cancelWalk:withReason", err);
     try {
       await prisma.walk.update({
         where: { id },
         data: { cancelledAt: new Date() },
       });
-    } catch {
-      return { ok: false, error: "Could not cancel this walk. Try again." };
+    } catch (err2) {
+      return logActionError("cancelWalk", err2, "Could not cancel this walk. Try again.");
     }
   }
 
@@ -146,10 +166,15 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
   if (!walk) return { ok: false, error: "That walk is no longer there." };
   if (!walk.cancelledAt) return { ok: false, error: "This walk is already open." };
 
-  await prisma.walk.update({
-    where: { id },
-    data: { cancelledAt: null, cancelledReason: null },
-  });
+  try {
+    await prisma.walk.update({
+      where: { id },
+      data: { cancelledAt: null, cancelledReason: null },
+    });
+  } catch (err) {
+    if (isPrismaCode(err, "P2025")) return { ok: false, error: "That walk is no longer there." };
+    return logActionError("reopenWalk", err, "Could not reopen this walk. Try again.");
+  }
 
   revalidatePath("/admin");
   revalidatePath(`/admin/walks/${id}`);
@@ -214,7 +239,7 @@ export async function rescheduleWalk(
     });
   } catch (err) {
     if (isPrismaCode(err, "P2025")) return { ok: false, error: "That walk is no longer there." };
-    throw err;
+    return logActionError("rescheduleWalk", err, "Could not reschedule this walk. Try again.");
   }
 
   revalidatePath("/admin");
@@ -240,7 +265,7 @@ export async function deleteWalk(_prev: ActionResult | null, formData: FormData)
     });
   } catch (err) {
     if (isPrismaCode(err, "P2025")) return { ok: false, error: "That walk is no longer there." };
-    return { ok: false, error: "Could not remove this walk. Try again." };
+    return logActionError("deleteWalk", err, "Could not remove this walk. Try again.");
   }
 
   revalidatePath("/admin");
@@ -265,6 +290,11 @@ const clockInSchema = z.object({
 export async function clockIn(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const user = await requireUser();
 
+  const limited = checkRateLimit(`${user.id}:clockIn`, 8, 60_000);
+  if (!limited.ok) {
+    return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
+  }
+
   const parsed = clockInSchema.safeParse({
     token: formData.get("token"),
     medicalAck: formData.get("medicalAck"),
@@ -280,7 +310,15 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
     return { ok: false, error: "Add a short note about your conditions, or select “No conditions to report”." };
   }
 
-  const walk = await prisma.walk.findUnique({ where: { token: parsed.data.token } });
+  let walk: { id: string; token: string; startsAt: Date; durationMins: number; cancelledAt: Date | null } | null;
+  try {
+    walk = await prisma.walk.findUnique({
+      where: { token: parsed.data.token },
+      select: { id: true, token: true, startsAt: true, durationMins: true, cancelledAt: true },
+    });
+  } catch (err) {
+    return logActionError("clockIn:lookup", err, "Could not clock you in right now. Try again.");
+  }
   if (!walk) return { ok: false, error: "This walk link is not valid." };
   if (walk.cancelledAt) return { ok: false, error: "This walk has been cancelled." };
 
@@ -304,18 +342,18 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
     clockedOutReason: null,
   };
 
-  // Try "clocking back in after an earlier clock-out" as a single conditional
-  // write first — at most one row can match, since clocking out is the only
-  // way to leave `clockedOutAt` non-null. If nothing matched, fall through to
-  // create. Either way this replaces a separate read-then-write with a single
-  // round trip that also does the write.
-  const reclockedIn = await prisma.attendance.updateMany({
-    where: { walkId: walk.id, userId: user.id, clockedOutAt: { not: null } },
-    data: { ...attendanceData, clockedInAt: new Date() },
-  });
+  try {
+    // Try "clocking back in after an earlier clock-out" as a single
+    // conditional write first — at most one row can match, since clocking
+    // out is the only way to leave `clockedOutAt` non-null. If nothing
+    // matched, fall through to create. Either way this replaces a separate
+    // read-then-write with a single round trip that also does the write.
+    const reclockedIn = await prisma.attendance.updateMany({
+      where: { walkId: walk.id, userId: user.id, clockedOutAt: { not: null } },
+      data: { ...attendanceData, clockedInAt: new Date() },
+    });
 
-  if (reclockedIn.count === 0) {
-    try {
+    if (reclockedIn.count === 0) {
       await prisma.attendance.create({
         data: {
           walkId: walk.id,
@@ -324,13 +362,13 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
           ...attendanceData,
         },
       });
-    } catch (err) {
-      // P2002 = unique constraint violation, i.e. they already clocked in.
-      if (isPrismaCode(err, "P2002")) {
-        return { ok: false, error: "You are already clocked in for this walk." };
-      }
-      throw err;
     }
+  } catch (err) {
+    // P2002 = unique constraint violation, i.e. they already clocked in.
+    if (isPrismaCode(err, "P2002")) {
+      return { ok: false, error: "You are already clocked in for this walk." };
+    }
+    return logActionError("clockIn:write", err, "Could not clock you in right now. Try again.");
   }
 
   revalidatePath(`/w/${walk.token}`);
@@ -351,6 +389,11 @@ const clockOutSchema = z.object({
 export async function clockOut(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const user = await requireUser();
 
+  const limited = checkRateLimit(`${user.id}:clockOut`, 8, 60_000);
+  if (!limited.ok) {
+    return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
+  }
+
   const parsed = clockOutSchema.safeParse({
     token: formData.get("token"),
     reason: formData.get("reason"),
@@ -359,19 +402,29 @@ export async function clockOut(_prev: ActionResult | null, formData: FormData): 
     return { ok: false, error: parsed.error.issues[0].message };
   }
 
-  const walk = await prisma.walk.findUnique({
-    where: { token: parsed.data.token },
-    select: { id: true, token: true },
-  });
+  let walk: { id: string; token: string } | null;
+  try {
+    walk = await prisma.walk.findUnique({
+      where: { token: parsed.data.token },
+      select: { id: true, token: true },
+    });
+  } catch (err) {
+    return logActionError("clockOut:lookup", err, "Could not clock you out right now. Try again.");
+  }
   if (!walk) return { ok: false, error: "This walk link is not valid." };
 
-  const clockedOut = await prisma.attendance.updateMany({
-    where: { walkId: walk.id, userId: user.id, clockedOutAt: null },
-    data: {
-      clockedOutAt: new Date(),
-      clockedOutReason: parsed.data.reason,
-    },
-  });
+  let clockedOut: { count: number };
+  try {
+    clockedOut = await prisma.attendance.updateMany({
+      where: { walkId: walk.id, userId: user.id, clockedOutAt: null },
+      data: {
+        clockedOutAt: new Date(),
+        clockedOutReason: parsed.data.reason,
+      },
+    });
+  } catch (err) {
+    return logActionError("clockOut:write", err, "Could not clock you out right now. Try again.");
+  }
   if (clockedOut.count === 0) {
     return { ok: false, error: "You are not clocked in for this walk." };
   }
@@ -404,7 +457,9 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
 
   const target = await prisma.user.findUnique({
     where: { id },
-    include: { _count: { select: { walksCreated: true, attendances: true } } },
+    include: {
+      _count: { select: { walksCreated: true, attendances: true, accidentReports: true } },
+    },
   });
   if (!target) return { ok: false, error: "That member is no longer in the group." };
 
@@ -415,24 +470,52 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
     }
   }
 
+  // Do the database side first. It is transactional and fully reversible on
+  // failure, unlike removing their Clerk login below — if this fails, we
+  // want to bail out having changed nothing rather than leave someone with
+  // a dead login but a database row that still says they're a member.
+  try {
+    await prisma.$transaction(async (tx) => {
+      if (target._count.walksCreated > 0) {
+        await tx.walk.updateMany({
+          where: { createdById: target.id },
+          data: { createdById: admin.id },
+        });
+      }
+      // AccidentReport.createdBy is onDelete: Restrict, same as Walk.createdBy
+      // above — deleting someone who has ever filed a report would otherwise
+      // fail on that foreign key.
+      if (target._count.accidentReports > 0) {
+        await tx.accidentReport.updateMany({
+          where: { createdById: target.id },
+          data: { createdById: admin.id },
+        });
+      }
+      await tx.user.delete({ where: { id: target.id } });
+    });
+  } catch (err) {
+    console.error("deleteMember: database removal failed", err);
+    return { ok: false, error: "Could not remove this member. Try again." };
+  }
+
   const clerk = await clerkClient();
   try {
     await clerk.users.deleteUser(target.clerkId);
   } catch (err) {
     if (!isNotFoundStatus(err)) {
-      return { ok: false, error: "Could not remove their login. Try again in a moment." };
+      // The database side already succeeded — they're gone from the group
+      // either way. Say so, but flag that their login may still work until
+      // it's removed from Clerk directly.
+      console.error("deleteMember: Clerk login removal failed after database removal", err);
+      revalidatePath("/admin");
+      revalidatePath("/admin/members");
+      revalidatePath("/dashboard");
+      return {
+        ok: true,
+        message: `${displayName(target)} has been removed from the group, but their sign-in could not be revoked automatically — remove it from Clerk if needed.`,
+      };
     }
   }
-
-  await prisma.$transaction(async (tx) => {
-    if (target._count.walksCreated > 0) {
-      await tx.walk.updateMany({
-        where: { createdById: target.id },
-        data: { createdById: admin.id },
-      });
-    }
-    await tx.user.delete({ where: { id: target.id } });
-  });
 
   revalidatePath("/admin");
   revalidatePath("/admin/members");
@@ -502,15 +585,19 @@ export async function addHomepageSlide(
 
   const alt = String(formData.get("alt") ?? "").trim().slice(0, 200) || "Bury Steps Walking Group";
 
-  await prisma.homepageSlide.create({
-    data: {
-      sortOrder: count,
-      alt,
-      imagePath: null,
-      imageMime: image.mime,
-      imageData: image.data,
-    },
-  });
+  try {
+    await prisma.homepageSlide.create({
+      data: {
+        sortOrder: count,
+        alt,
+        imagePath: null,
+        imageMime: image.mime,
+        imageData: image.data,
+      },
+    });
+  } catch (err) {
+    return logActionError("addHomepageSlide", err, "Could not add that slide. Try again.");
+  }
 
   revalidateHomepage();
   return { ok: true, message: "Slide added." };
@@ -539,7 +626,8 @@ export async function replaceHomepageSlideImage(
           : {}),
       },
     });
-  } catch {
+  } catch (err) {
+    if (!isPrismaCode(err, "P2025")) logActionError("replaceHomepageSlideImage", err);
     return { ok: false, error: "That slide is no longer there." };
   }
 
@@ -576,10 +664,14 @@ export async function moveHomepageSlide(
   const a = slides[index]!;
   const b = slides[swapWith]!;
 
-  await prisma.$transaction([
-    prisma.homepageSlide.update({ where: { id: a.id }, data: { sortOrder: b.sortOrder } }),
-    prisma.homepageSlide.update({ where: { id: b.id }, data: { sortOrder: a.sortOrder } }),
-  ]);
+  try {
+    await prisma.$transaction([
+      prisma.homepageSlide.update({ where: { id: a.id }, data: { sortOrder: b.sortOrder } }),
+      prisma.homepageSlide.update({ where: { id: b.id }, data: { sortOrder: a.sortOrder } }),
+    ]);
+  } catch (err) {
+    return logActionError("moveHomepageSlide", err, "Could not reorder that slide. Try again.");
+  }
 
   revalidateHomepage();
   return { ok: true, message: "Slide order updated." };
@@ -595,19 +687,26 @@ export async function deleteHomepageSlide(
 
   try {
     await prisma.homepageSlide.delete({ where: { id } });
-  } catch {
+  } catch (err) {
+    if (!isPrismaCode(err, "P2025")) logActionError("deleteHomepageSlide", err);
     return { ok: false, error: "That slide is no longer there." };
   }
 
-  const remaining = await prisma.homepageSlide.findMany({
-    orderBy: { sortOrder: "asc" },
-    select: { id: true },
-  });
-  await prisma.$transaction(
-    remaining.map((slide, index) =>
-      prisma.homepageSlide.update({ where: { id: slide.id }, data: { sortOrder: index } }),
-    ),
-  );
+  try {
+    const remaining = await prisma.homepageSlide.findMany({
+      orderBy: { sortOrder: "asc" },
+      select: { id: true },
+    });
+    await prisma.$transaction(
+      remaining.map((slide, index) =>
+        prisma.homepageSlide.update({ where: { id: slide.id }, data: { sortOrder: index } }),
+      ),
+    );
+  } catch (err) {
+    // The slide itself is already gone at this point — only the resort
+    // failed, so log it but don't tell the admin the removal failed.
+    logActionError("deleteHomepageSlide:resort", err);
+  }
 
   revalidateHomepage();
   return { ok: true, message: "Slide removed." };
@@ -652,17 +751,21 @@ export async function addHomepageTestimonial(
   const image = await readOptionalImage(formData);
   if (image && "error" in image) return { ok: false, error: image.error };
 
-  await prisma.homepageTestimonial.create({
-    data: {
-      sortOrder: count,
-      name: copy.name,
-      role: copy.role,
-      quote: copy.quote,
-      imagePath: null,
-      imageMime: image?.mime ?? null,
-      imageData: image?.data ?? null,
-    },
-  });
+  try {
+    await prisma.homepageTestimonial.create({
+      data: {
+        sortOrder: count,
+        name: copy.name,
+        role: copy.role,
+        quote: copy.quote,
+        imagePath: null,
+        imageMime: image?.mime ?? null,
+        imageData: image?.data ?? null,
+      },
+    });
+  } catch (err) {
+    return logActionError("addHomepageTestimonial", err, "Could not add that testimonial. Try again.");
+  }
 
   revalidateHomepage();
   return { ok: true, message: "Testimonial added." };
@@ -696,7 +799,8 @@ export async function updateHomepageTestimonial(
             : {}),
       },
     });
-  } catch {
+  } catch (err) {
+    if (!isPrismaCode(err, "P2025")) logActionError("updateHomepageTestimonial", err);
     return { ok: false, error: "That testimonial is no longer there." };
   }
 
@@ -733,10 +837,14 @@ export async function moveHomepageTestimonial(
   const a = rows[index]!;
   const b = rows[swapWith]!;
 
-  await prisma.$transaction([
-    prisma.homepageTestimonial.update({ where: { id: a.id }, data: { sortOrder: b.sortOrder } }),
-    prisma.homepageTestimonial.update({ where: { id: b.id }, data: { sortOrder: a.sortOrder } }),
-  ]);
+  try {
+    await prisma.$transaction([
+      prisma.homepageTestimonial.update({ where: { id: a.id }, data: { sortOrder: b.sortOrder } }),
+      prisma.homepageTestimonial.update({ where: { id: b.id }, data: { sortOrder: a.sortOrder } }),
+    ]);
+  } catch (err) {
+    return logActionError("moveHomepageTestimonial", err, "Could not reorder that testimonial. Try again.");
+  }
 
   revalidateHomepage();
   return { ok: true, message: "Testimonial order updated." };
@@ -752,19 +860,24 @@ export async function deleteHomepageTestimonial(
 
   try {
     await prisma.homepageTestimonial.delete({ where: { id } });
-  } catch {
+  } catch (err) {
+    if (!isPrismaCode(err, "P2025")) logActionError("deleteHomepageTestimonial", err);
     return { ok: false, error: "That testimonial is no longer there." };
   }
 
-  const remaining = await prisma.homepageTestimonial.findMany({
-    orderBy: { sortOrder: "asc" },
-    select: { id: true },
-  });
-  await prisma.$transaction(
-    remaining.map((row, index) =>
-      prisma.homepageTestimonial.update({ where: { id: row.id }, data: { sortOrder: index } }),
-    ),
-  );
+  try {
+    const remaining = await prisma.homepageTestimonial.findMany({
+      orderBy: { sortOrder: "asc" },
+      select: { id: true },
+    });
+    await prisma.$transaction(
+      remaining.map((row, index) =>
+        prisma.homepageTestimonial.update({ where: { id: row.id }, data: { sortOrder: index } }),
+      ),
+    );
+  } catch (err) {
+    logActionError("deleteHomepageTestimonial:resort", err);
+  }
 
   revalidateHomepage();
   return { ok: true, message: "Testimonial removed." };
@@ -830,14 +943,18 @@ export async function addHomepageFaq(
   const copy = await readFaqCopy(formData);
   if ("error" in copy) return { ok: false, error: copy.error };
 
-  await prisma.homepageFaq.create({
-    data: {
-      sortOrder: count,
-      categoryId: copy.categoryId,
-      question: copy.question,
-      answer: copy.answer,
-    },
-  });
+  try {
+    await prisma.homepageFaq.create({
+      data: {
+        sortOrder: count,
+        categoryId: copy.categoryId,
+        question: copy.question,
+        answer: copy.answer,
+      },
+    });
+  } catch (err) {
+    return logActionError("addHomepageFaq", err, "Could not add that FAQ. Try again.");
+  }
 
   revalidateHomepage();
   return { ok: true, message: "FAQ added." };
@@ -863,7 +980,8 @@ export async function updateHomepageFaq(
         answer: copy.answer,
       },
     });
-  } catch {
+  } catch (err) {
+    if (!isPrismaCode(err, "P2025")) logActionError("updateHomepageFaq", err);
     return { ok: false, error: "That FAQ is no longer there." };
   }
 
@@ -897,10 +1015,14 @@ export async function moveHomepageFaq(
   const a = rows[index]!;
   const b = rows[swapWith]!;
 
-  await prisma.$transaction([
-    prisma.homepageFaq.update({ where: { id: a.id }, data: { sortOrder: b.sortOrder } }),
-    prisma.homepageFaq.update({ where: { id: b.id }, data: { sortOrder: a.sortOrder } }),
-  ]);
+  try {
+    await prisma.$transaction([
+      prisma.homepageFaq.update({ where: { id: a.id }, data: { sortOrder: b.sortOrder } }),
+      prisma.homepageFaq.update({ where: { id: b.id }, data: { sortOrder: a.sortOrder } }),
+    ]);
+  } catch (err) {
+    return logActionError("moveHomepageFaq", err, "Could not reorder that FAQ. Try again.");
+  }
 
   revalidateHomepage();
   return { ok: true, message: "FAQ order updated." };
@@ -916,19 +1038,24 @@ export async function deleteHomepageFaq(
 
   try {
     await prisma.homepageFaq.delete({ where: { id } });
-  } catch {
+  } catch (err) {
+    if (!isPrismaCode(err, "P2025")) logActionError("deleteHomepageFaq", err);
     return { ok: false, error: "That FAQ is no longer there." };
   }
 
-  const remaining = await prisma.homepageFaq.findMany({
-    orderBy: { sortOrder: "asc" },
-    select: { id: true },
-  });
-  await prisma.$transaction(
-    remaining.map((row, index) =>
-      prisma.homepageFaq.update({ where: { id: row.id }, data: { sortOrder: index } }),
-    ),
-  );
+  try {
+    const remaining = await prisma.homepageFaq.findMany({
+      orderBy: { sortOrder: "asc" },
+      select: { id: true },
+    });
+    await prisma.$transaction(
+      remaining.map((row, index) =>
+        prisma.homepageFaq.update({ where: { id: row.id }, data: { sortOrder: index } }),
+      ),
+    );
+  } catch (err) {
+    logActionError("deleteHomepageFaq:resort", err);
+  }
 
   revalidateHomepage();
   return { ok: true, message: "FAQ removed." };
@@ -967,9 +1094,13 @@ export async function addSiteNotice(
   const copy = readNoticeCopy(formData);
   if ("error" in copy) return { ok: false, error: copy.error };
 
-  await prisma.siteNotice.create({
-    data: { title: copy.title, body: copy.body },
-  });
+  try {
+    await prisma.siteNotice.create({
+      data: { title: copy.title, body: copy.body },
+    });
+  } catch (err) {
+    return logActionError("addSiteNotice", err, "Could not add that notice. Try again.");
+  }
 
   revalidateNotices();
   return { ok: true, message: "Notice added. Members will see it in the bell." };
@@ -994,7 +1125,8 @@ export async function updateSiteNotice(
       }),
       prisma.siteNoticeRead.deleteMany({ where: { noticeId: id } }),
     ]);
-  } catch {
+  } catch (err) {
+    if (!isPrismaCode(err, "P2025")) logActionError("updateSiteNotice", err);
     return { ok: false, error: "That notice is no longer there." };
   }
 
@@ -1012,7 +1144,8 @@ export async function deleteSiteNotice(
 
   try {
     await prisma.siteNotice.delete({ where: { id } });
-  } catch {
+  } catch (err) {
+    if (!isPrismaCode(err, "P2025")) logActionError("deleteSiteNotice", err);
     return { ok: false, error: "That notice is no longer there." };
   }
 
@@ -1023,13 +1156,20 @@ export async function deleteSiteNotice(
 export async function markSiteNoticesRead(): Promise<ActionResult> {
   const user = await requireUser();
 
-  const notices = await prisma.siteNotice.findMany({ select: { id: true } });
-  if (notices.length === 0) return { ok: true };
+  const limited = checkRateLimit(`${user.id}:markSiteNoticesRead`, 20, 60_000);
+  if (!limited.ok) return { ok: false, error: "Try again in a moment." };
 
-  await prisma.siteNoticeRead.createMany({
-    data: notices.map((notice) => ({ noticeId: notice.id, userId: user.id })),
-    skipDuplicates: true,
-  });
+  try {
+    const notices = await prisma.siteNotice.findMany({ select: { id: true } });
+    if (notices.length === 0) return { ok: true };
+
+    await prisma.siteNoticeRead.createMany({
+      data: notices.map((notice) => ({ noticeId: notice.id, userId: user.id })),
+      skipDuplicates: true,
+    });
+  } catch (err) {
+    return logActionError("markSiteNoticesRead", err, "Could not mark notices as read. Try again.");
+  }
 
   revalidatePath("/", "layout");
   return { ok: true };
@@ -1043,11 +1183,15 @@ export async function updateSiteTheme(
   const hex = normalizeHex(String(formData.get("primaryColor") ?? ""));
   if (!hex) return { ok: false, error: "Pick a colour, or type a hex code such as #1f3d2b." };
 
-  await prisma.siteSetting.upsert({
-    where: { id: SITE_SETTING_ID },
-    create: { id: SITE_SETTING_ID, primaryColor: hex },
-    update: { primaryColor: hex },
-  });
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: { id: SITE_SETTING_ID, primaryColor: hex },
+      update: { primaryColor: hex },
+    });
+  } catch (err) {
+    return logActionError("updateSiteTheme", err, "Could not save the site colour. Try again.");
+  }
 
   revalidateTag(HOMEPAGE_CACHE_TAG);
   revalidatePath("/", "layout");
@@ -1063,15 +1207,19 @@ export async function updateCarouselEnabled(
   await requireAdmin();
   const enabled = String(formData.get("carouselEnabled") ?? "") === "on";
 
-  await prisma.siteSetting.upsert({
-    where: { id: SITE_SETTING_ID },
-    create: {
-      id: SITE_SETTING_ID,
-      primaryColor: DEFAULT_PRIMARY_COLOR,
-      carouselEnabled: enabled,
-    },
-    update: { carouselEnabled: enabled },
-  });
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        carouselEnabled: enabled,
+      },
+      update: { carouselEnabled: enabled },
+    });
+  } catch (err) {
+    return logActionError("updateCarouselEnabled", err, "Could not save that setting. Try again.");
+  }
 
   revalidateTag(HOMEPAGE_CACHE_TAG);
   revalidatePath("/", "layout");
@@ -1087,16 +1235,20 @@ export async function updateScrollToTopEnabled(
   await requireAdmin();
   const enabled = String(formData.get("scrollToTopEnabled") ?? "") === "on";
 
-  await prisma.siteSetting.upsert({
-    where: { id: SITE_SETTING_ID },
-    create: {
-      id: SITE_SETTING_ID,
-      primaryColor: DEFAULT_PRIMARY_COLOR,
-      carouselEnabled: true,
-      scrollToTopEnabled: enabled,
-    },
-    update: { scrollToTopEnabled: enabled },
-  });
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        carouselEnabled: true,
+        scrollToTopEnabled: enabled,
+      },
+      update: { scrollToTopEnabled: enabled },
+    });
+  } catch (err) {
+    return logActionError("updateScrollToTopEnabled", err, "Could not save that setting. Try again.");
+  }
 
   revalidateTag(HOMEPAGE_CACHE_TAG);
   revalidatePath("/", "layout");
@@ -1107,30 +1259,42 @@ export async function updateScrollToTopEnabled(
 
 export async function reorderHomepageSlides(ids: string[]): Promise<ActionResult> {
   await requireAdmin();
-  const existing = await prisma.homepageSlide.findMany({ select: { id: true } });
-  await applySortOrder(ids, existing, (id, sortOrder) =>
-    prisma.homepageSlide.update({ where: { id }, data: { sortOrder } }),
-  );
+  try {
+    const existing = await prisma.homepageSlide.findMany({ select: { id: true } });
+    await applySortOrder(ids, existing, (id, sortOrder) =>
+      prisma.homepageSlide.update({ where: { id }, data: { sortOrder } }),
+    );
+  } catch (err) {
+    return logActionError("reorderHomepageSlides", err, "Could not save that order. Try again.");
+  }
   revalidateHomepage();
   return { ok: true };
 }
 
 export async function reorderHomepageTestimonials(ids: string[]): Promise<ActionResult> {
   await requireAdmin();
-  const existing = await prisma.homepageTestimonial.findMany({ select: { id: true } });
-  await applySortOrder(ids, existing, (id, sortOrder) =>
-    prisma.homepageTestimonial.update({ where: { id }, data: { sortOrder } }),
-  );
+  try {
+    const existing = await prisma.homepageTestimonial.findMany({ select: { id: true } });
+    await applySortOrder(ids, existing, (id, sortOrder) =>
+      prisma.homepageTestimonial.update({ where: { id }, data: { sortOrder } }),
+    );
+  } catch (err) {
+    return logActionError("reorderHomepageTestimonials", err, "Could not save that order. Try again.");
+  }
   revalidateHomepage();
   return { ok: true };
 }
 
 export async function reorderHomepageFaqs(ids: string[]): Promise<ActionResult> {
   await requireAdmin();
-  const existing = await prisma.homepageFaq.findMany({ select: { id: true } });
-  await applySortOrder(ids, existing, (id, sortOrder) =>
-    prisma.homepageFaq.update({ where: { id }, data: { sortOrder } }),
-  );
+  try {
+    const existing = await prisma.homepageFaq.findMany({ select: { id: true } });
+    await applySortOrder(ids, existing, (id, sortOrder) =>
+      prisma.homepageFaq.update({ where: { id }, data: { sortOrder } }),
+    );
+  } catch (err) {
+    return logActionError("reorderHomepageFaqs", err, "Could not save that order. Try again.");
+  }
   revalidateHomepage();
   return { ok: true };
 }
@@ -1149,13 +1313,22 @@ export async function addHomepageFaqCategory(
   const copy = readCategoryLabel(formData);
   if ("error" in copy) return { ok: false, error: copy.error };
 
-  await prisma.homepageFaqCategory.create({
-    data: {
-      label: copy.label,
-      slug: await uniqueFaqCategorySlug(copy.label),
-      sortOrder: count,
-    },
-  });
+  try {
+    await prisma.homepageFaqCategory.create({
+      data: {
+        label: copy.label,
+        slug: await uniqueFaqCategorySlug(copy.label),
+        sortOrder: count,
+      },
+    });
+  } catch (err) {
+    // Two categories with the same name created at the same moment can both
+    // pass the slug-uniqueness check above before either commits.
+    if (isPrismaCode(err, "P2002")) {
+      return { ok: false, error: "A category with that name was just added. Try a different name." };
+    }
+    return logActionError("addHomepageFaqCategory", err, "Could not add that category. Try again.");
+  }
 
   revalidateHomepage();
   return { ok: true, message: "Category added." };
@@ -1177,7 +1350,8 @@ export async function updateHomepageFaqCategory(
       where: { id },
       data: { label: copy.label },
     });
-  } catch {
+  } catch (err) {
+    if (!isPrismaCode(err, "P2025")) logActionError("updateHomepageFaqCategory", err);
     return { ok: false, error: "That category is no longer there." };
   }
 
@@ -1207,17 +1381,25 @@ export async function deleteHomepageFaqCategory(
     return { ok: false, error: "Move or remove the FAQs in this category first." };
   }
 
-  await prisma.homepageFaqCategory.delete({ where: { id } });
+  try {
+    await prisma.homepageFaqCategory.delete({ where: { id } });
+  } catch (err) {
+    return logActionError("deleteHomepageFaqCategory", err, "Could not remove that category. Try again.");
+  }
 
-  const leftover = await prisma.homepageFaqCategory.findMany({
-    orderBy: { sortOrder: "asc" },
-    select: { id: true },
-  });
-  await prisma.$transaction(
-    leftover.map((row, index) =>
-      prisma.homepageFaqCategory.update({ where: { id: row.id }, data: { sortOrder: index } }),
-    ),
-  );
+  try {
+    const leftover = await prisma.homepageFaqCategory.findMany({
+      orderBy: { sortOrder: "asc" },
+      select: { id: true },
+    });
+    await prisma.$transaction(
+      leftover.map((row, index) =>
+        prisma.homepageFaqCategory.update({ where: { id: row.id }, data: { sortOrder: index } }),
+      ),
+    );
+  } catch (err) {
+    logActionError("deleteHomepageFaqCategory:resort", err);
+  }
 
   revalidateHomepage();
   return { ok: true, message: "Category removed." };
@@ -1225,10 +1407,14 @@ export async function deleteHomepageFaqCategory(
 
 export async function reorderHomepageFaqCategories(ids: string[]): Promise<ActionResult> {
   await requireAdmin();
-  const existing = await prisma.homepageFaqCategory.findMany({ select: { id: true } });
-  await applySortOrder(ids, existing, (id, sortOrder) =>
-    prisma.homepageFaqCategory.update({ where: { id }, data: { sortOrder } }),
-  );
+  try {
+    const existing = await prisma.homepageFaqCategory.findMany({ select: { id: true } });
+    await applySortOrder(ids, existing, (id, sortOrder) =>
+      prisma.homepageFaqCategory.update({ where: { id }, data: { sortOrder } }),
+    );
+  } catch (err) {
+    return logActionError("reorderHomepageFaqCategories", err, "Could not save that order. Try again.");
+  }
   revalidateHomepage();
   return { ok: true };
 }
@@ -1262,6 +1448,11 @@ export async function getMemberHistory(userId: string): Promise<{
       _count: { select: { walksCreated: true } },
       attendances: {
         orderBy: { clockedInAt: "desc" },
+        // Backstop against an unbounded query — someone would need to have
+        // clocked in on a weekly walk every week for ~19 years to hit this,
+        // and it keeps the most recent walks, which is what an organiser
+        // actually wants to see first.
+        take: 1000,
         include: {
           walk: {
             select: {
@@ -1339,17 +1530,24 @@ export async function addAccidentReport(
     return { ok: false, error: "That date and time could not be read. Try again." };
   }
 
-  await prisma.accidentReport.create({
-    data: {
-      happenedAt,
-      walkId: parsed.data.walkId ?? null,
-      whatHappened: parsed.data.whatHappened,
-      whoInvolved: parsed.data.whoInvolved,
-      whatWeDid: parsed.data.whatWeDid,
-      organiserNotes: parsed.data.organiserNotes ?? null,
-      createdById: admin.id,
-    },
-  });
+  try {
+    await prisma.accidentReport.create({
+      data: {
+        happenedAt,
+        walkId: parsed.data.walkId ?? null,
+        whatHappened: parsed.data.whatHappened,
+        whoInvolved: parsed.data.whoInvolved,
+        whatWeDid: parsed.data.whatWeDid,
+        organiserNotes: parsed.data.organiserNotes ?? null,
+        createdById: admin.id,
+      },
+    });
+  } catch (err) {
+    // An invalid/stale walkId (e.g. the walk was deleted between loading
+    // the form and submitting it) fails the foreign key here rather than
+    // earlier, since it's optional and not re-checked above.
+    return logActionError("addAccidentReport", err, "Could not save that report. Try again.");
+  }
 
   revalidatePath("/admin/reports");
   return { ok: true, message: "Accident report saved." };
@@ -1385,7 +1583,8 @@ export async function updateAccidentReport(
         organiserNotes: parsed.data.organiserNotes ?? null,
       },
     });
-  } catch {
+  } catch (err) {
+    if (!isPrismaCode(err, "P2025")) logActionError("updateAccidentReport", err);
     return { ok: false, error: "That report is no longer there." };
   }
 
@@ -1403,7 +1602,8 @@ export async function deleteAccidentReport(
 
   try {
     await prisma.accidentReport.delete({ where: { id } });
-  } catch {
+  } catch (err) {
+    if (!isPrismaCode(err, "P2025")) logActionError("deleteAccidentReport", err);
     return { ok: false, error: "That report is no longer there." };
   }
 
@@ -1417,6 +1617,7 @@ export async function clearSiteCache(
 ): Promise<ActionResult> {
   await requireAdmin();
   revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidateTag(NOTICES_CACHE_TAG);
   revalidatePath("/", "layout");
   revalidatePath("/");
   revalidatePath("/home");

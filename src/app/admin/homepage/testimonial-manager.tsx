@@ -287,7 +287,7 @@ export function HomepageTestimonialManager({
   const testimonialIds = testimonials.map((item) => item.id);
   const { moveDown, moveUp, order } = useReorderableIds(testimonialIds, (ids) => {
     if (ids.join() === testimonialIds.join()) return;
-    void reorderHomepageTestimonials(ids);
+    return reorderHomepageTestimonials(ids);
   });
   const sorted = order
     .map((id) => testimonials.find((item) => item.id === id))
