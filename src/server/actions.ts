@@ -54,6 +54,45 @@ function logActionError(context: string, err: unknown, fallback = "Something wen
 
 export type ActionResult = { ok: true; message?: string } | { ok: false; error: string };
 
+/** Thrown by a locked count-check to signal "this would exceed the
+ * configured limit" — told apart from a genuine, unexpected DB error so it
+ * can be reported with its own message instead of the generic
+ * logActionError fallback. */
+class LimitReachedError extends Error {}
+
+/** Distinct advisory-lock keys, one per resource whose "count existing
+ * rows, reject at the limit, otherwise create one" needs to be atomic —
+ * arbitrary distinct bigints, meaningful only as lock identifiers, chosen
+ * to avoid colliding with syncLocalUser's bootstrap lock (847291). */
+const COUNT_LIMIT_LOCK_KEYS = {
+  homepageSlide: 900101,
+  homepageTestimonial: 900102,
+  homepageFaq: 900103,
+  homepageFaqCategory: 900104,
+} as const;
+
+/**
+ * Serializes a "count existing rows, reject if at the limit, otherwise
+ * create one" operation across concurrent admin requests. Under the
+ * default Read Committed isolation level, two admins hitting "Add" at the
+ * same instant can each see a count under the limit and both insert,
+ * exceeding it (and, for sortOrder-by-count callers, colliding on the same
+ * sortOrder value) — the same class of race `syncLocalUser`'s advisory
+ * lock solves for the admin-bootstrap check. `fn` must do all of its reads
+ * and writes through the given transaction client, not the top-level
+ * `prisma`, since the lock is scoped to (and released at the end of) this
+ * transaction.
+ */
+async function withCountLimitLock<T>(
+  lockKey: number,
+  fn: (tx: Prisma.TransactionClient) => Promise<T>,
+): Promise<T> {
+  return prisma.$transaction(async (tx) => {
+    await tx.$executeRawUnsafe(`SELECT pg_advisory_xact_lock(${lockKey})`);
+    return fn(tx);
+  });
+}
+
 // ---------------------------------------------------------------- create walk
 
 const createWalkSchema = z.object({
@@ -560,13 +599,30 @@ function revalidateHomepage() {
   revalidatePath("/admin/settings/faqs");
 }
 
+/**
+ * Reorder actions are called directly as server actions (not through a
+ * `<form>`/FormData submission), so — unlike everywhere else in this file —
+ * there is no schema parsing step forcing the payload's shape before it
+ * reaches here. `ids` is typed `string[]` for our own call sites, but a
+ * request hitting the action's endpoint directly can send anything; check
+ * it actually is a reasonably-sized array of strings before doing anything
+ * with it. `maxLength` should be comfortably above the resource's own
+ * configured limit so a legitimate reorder is never rejected.
+ */
+function validateReorderIds(ids: unknown, maxLength: number): string[] | { error: string } {
+  const invalid = { error: "Could not save that order. Try again." };
+  if (!Array.isArray(ids) || ids.length === 0 || ids.length > maxLength) return invalid;
+  if (!ids.every((id) => typeof id === "string" && id.length > 0 && id.length <= 100)) return invalid;
+  return ids;
+}
+
 async function applySortOrder(
   ids: string[],
   existing: { id: string }[],
   update: (id: string, sortOrder: number) => Prisma.PrismaPromise<unknown>,
 ) {
   const allowed = new Set(existing.map((row) => row.id));
-  const next = ids.filter((id) => allowed.has(id));
+  const next = [...new Set(ids.filter((id) => allowed.has(id)))];
   for (const row of existing) {
     if (!next.includes(row.id)) next.push(row.id);
   }
@@ -580,27 +636,29 @@ export async function addHomepageSlide(
 ): Promise<ActionResult> {
   await requireAdmin();
 
-  const count = await prisma.homepageSlide.count();
-  if (count >= MAX_HOMEPAGE_SLIDES) {
-    return { ok: false, error: "You can have up to 3 slides." };
-  }
-
   const image = await readSlideImage(formData);
   if ("error" in image) return { ok: false, error: image.error };
 
   const alt = String(formData.get("alt") ?? "").trim().slice(0, 200) || "Bury Steps Walking Group";
 
   try {
-    await prisma.homepageSlide.create({
-      data: {
-        sortOrder: count,
-        alt,
-        imagePath: null,
-        imageMime: image.mime,
-        imageData: image.data,
-      },
+    await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.homepageSlide, async (tx) => {
+      const count = await tx.homepageSlide.count();
+      if (count >= MAX_HOMEPAGE_SLIDES) {
+        throw new LimitReachedError("You can have up to 3 slides.");
+      }
+      await tx.homepageSlide.create({
+        data: {
+          sortOrder: count,
+          alt,
+          imagePath: null,
+          imageMime: image.mime,
+          imageData: image.data,
+        },
+      });
     });
   } catch (err) {
+    if (err instanceof LimitReachedError) return { ok: false, error: err.message };
     return logActionError("addHomepageSlide", err, "Could not add that slide. Try again.");
   }
 
@@ -745,11 +803,6 @@ export async function addHomepageTestimonial(
 ): Promise<ActionResult> {
   await requireAdmin();
 
-  const count = await prisma.homepageTestimonial.count();
-  if (count >= MAX_HOMEPAGE_TESTIMONIALS) {
-    return { ok: false, error: "You can have up to 12 testimonials." };
-  }
-
   const copy = readTestimonialCopy(formData);
   if ("error" in copy) return { ok: false, error: copy.error };
 
@@ -757,18 +810,25 @@ export async function addHomepageTestimonial(
   if (image && "error" in image) return { ok: false, error: image.error };
 
   try {
-    await prisma.homepageTestimonial.create({
-      data: {
-        sortOrder: count,
-        name: copy.name,
-        role: copy.role,
-        quote: copy.quote,
-        imagePath: null,
-        imageMime: image?.mime ?? null,
-        imageData: image?.data ?? null,
-      },
+    await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.homepageTestimonial, async (tx) => {
+      const count = await tx.homepageTestimonial.count();
+      if (count >= MAX_HOMEPAGE_TESTIMONIALS) {
+        throw new LimitReachedError("You can have up to 12 testimonials.");
+      }
+      await tx.homepageTestimonial.create({
+        data: {
+          sortOrder: count,
+          name: copy.name,
+          role: copy.role,
+          quote: copy.quote,
+          imagePath: null,
+          imageMime: image?.mime ?? null,
+          imageData: image?.data ?? null,
+        },
+      });
     });
   } catch (err) {
+    if (err instanceof LimitReachedError) return { ok: false, error: err.message };
     return logActionError("addHomepageTestimonial", err, "Could not add that testimonial. Try again.");
   }
 
@@ -918,12 +978,12 @@ function readCategoryLabel(formData: FormData): { label: string } | { error: str
   return { label };
 }
 
-async function uniqueFaqCategorySlug(label: string): Promise<string> {
+async function uniqueFaqCategorySlug(tx: Prisma.TransactionClient, label: string): Promise<string> {
   const base = faqCategorySlug(label);
   let slug = base;
   let n = 2;
   while (
-    await prisma.homepageFaqCategory.findFirst({
+    await tx.homepageFaqCategory.findFirst({
       where: { slug },
       select: { id: true },
     })
@@ -940,24 +1000,26 @@ export async function addHomepageFaq(
 ): Promise<ActionResult> {
   await requireAdmin();
 
-  const count = await prisma.homepageFaq.count();
-  if (count >= MAX_HOMEPAGE_FAQS) {
-    return { ok: false, error: "You can have up to 20 FAQs." };
-  }
-
   const copy = await readFaqCopy(formData);
   if ("error" in copy) return { ok: false, error: copy.error };
 
   try {
-    await prisma.homepageFaq.create({
-      data: {
-        sortOrder: count,
-        categoryId: copy.categoryId,
-        question: copy.question,
-        answer: copy.answer,
-      },
+    await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.homepageFaq, async (tx) => {
+      const count = await tx.homepageFaq.count();
+      if (count >= MAX_HOMEPAGE_FAQS) {
+        throw new LimitReachedError("You can have up to 20 FAQs.");
+      }
+      await tx.homepageFaq.create({
+        data: {
+          sortOrder: count,
+          categoryId: copy.categoryId,
+          question: copy.question,
+          answer: copy.answer,
+        },
+      });
     });
   } catch (err) {
+    if (err instanceof LimitReachedError) return { ok: false, error: err.message };
     return logActionError("addHomepageFaq", err, "Could not add that FAQ. Try again.");
   }
 
@@ -1264,9 +1326,11 @@ export async function updateScrollToTopEnabled(
 
 export async function reorderHomepageSlides(ids: string[]): Promise<ActionResult> {
   await requireAdmin();
+  const validated = validateReorderIds(ids, MAX_HOMEPAGE_SLIDES * 2);
+  if ("error" in validated) return { ok: false, error: validated.error };
   try {
     const existing = await prisma.homepageSlide.findMany({ select: { id: true } });
-    await applySortOrder(ids, existing, (id, sortOrder) =>
+    await applySortOrder(validated, existing, (id, sortOrder) =>
       prisma.homepageSlide.update({ where: { id }, data: { sortOrder } }),
     );
   } catch (err) {
@@ -1278,9 +1342,11 @@ export async function reorderHomepageSlides(ids: string[]): Promise<ActionResult
 
 export async function reorderHomepageTestimonials(ids: string[]): Promise<ActionResult> {
   await requireAdmin();
+  const validated = validateReorderIds(ids, MAX_HOMEPAGE_TESTIMONIALS * 2);
+  if ("error" in validated) return { ok: false, error: validated.error };
   try {
     const existing = await prisma.homepageTestimonial.findMany({ select: { id: true } });
-    await applySortOrder(ids, existing, (id, sortOrder) =>
+    await applySortOrder(validated, existing, (id, sortOrder) =>
       prisma.homepageTestimonial.update({ where: { id }, data: { sortOrder } }),
     );
   } catch (err) {
@@ -1292,9 +1358,11 @@ export async function reorderHomepageTestimonials(ids: string[]): Promise<Action
 
 export async function reorderHomepageFaqs(ids: string[]): Promise<ActionResult> {
   await requireAdmin();
+  const validated = validateReorderIds(ids, MAX_HOMEPAGE_FAQS * 2);
+  if ("error" in validated) return { ok: false, error: validated.error };
   try {
     const existing = await prisma.homepageFaq.findMany({ select: { id: true } });
-    await applySortOrder(ids, existing, (id, sortOrder) =>
+    await applySortOrder(validated, existing, (id, sortOrder) =>
       prisma.homepageFaq.update({ where: { id }, data: { sortOrder } }),
     );
   } catch (err) {
@@ -1310,23 +1378,25 @@ export async function addHomepageFaqCategory(
 ): Promise<ActionResult> {
   await requireAdmin();
 
-  const count = await prisma.homepageFaqCategory.count();
-  if (count >= MAX_FAQ_CATEGORIES) {
-    return { ok: false, error: `You can have up to ${MAX_FAQ_CATEGORIES} categories.` };
-  }
-
   const copy = readCategoryLabel(formData);
   if ("error" in copy) return { ok: false, error: copy.error };
 
   try {
-    await prisma.homepageFaqCategory.create({
-      data: {
-        label: copy.label,
-        slug: await uniqueFaqCategorySlug(copy.label),
-        sortOrder: count,
-      },
+    await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.homepageFaqCategory, async (tx) => {
+      const count = await tx.homepageFaqCategory.count();
+      if (count >= MAX_FAQ_CATEGORIES) {
+        throw new LimitReachedError(`You can have up to ${MAX_FAQ_CATEGORIES} categories.`);
+      }
+      await tx.homepageFaqCategory.create({
+        data: {
+          label: copy.label,
+          slug: await uniqueFaqCategorySlug(tx, copy.label),
+          sortOrder: count,
+        },
+      });
     });
   } catch (err) {
+    if (err instanceof LimitReachedError) return { ok: false, error: err.message };
     // Two categories with the same name created at the same moment can both
     // pass the slug-uniqueness check above before either commits.
     if (isPrismaCode(err, "P2002")) {
@@ -1412,9 +1482,11 @@ export async function deleteHomepageFaqCategory(
 
 export async function reorderHomepageFaqCategories(ids: string[]): Promise<ActionResult> {
   await requireAdmin();
+  const validated = validateReorderIds(ids, MAX_FAQ_CATEGORIES * 2);
+  if ("error" in validated) return { ok: false, error: validated.error };
   try {
     const existing = await prisma.homepageFaqCategory.findMany({ select: { id: true } });
-    await applySortOrder(ids, existing, (id, sortOrder) =>
+    await applySortOrder(validated, existing, (id, sortOrder) =>
       prisma.homepageFaqCategory.update({ where: { id }, data: { sortOrder } }),
     );
   } catch (err) {
