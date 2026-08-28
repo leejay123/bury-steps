@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { reopenWalk, type ActionResult } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -48,6 +49,7 @@ export function ReopenWalkButton({ walkId }: { walkId: string }) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <input name="walkId" type="hidden" value={walkId} />
+          <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending} type="button">
               Keep it cancelled

@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { deleteWalk, type ActionResult } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -74,6 +75,7 @@ export function DeleteWalkButton({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <input type="hidden" name="walkId" value={walkId} />
+          <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending} type="button">
               Keep the walk

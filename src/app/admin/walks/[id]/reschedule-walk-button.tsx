@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { rescheduleWalk, type ActionResult } from "@/server/actions";
 import { utcToLondonWallClock } from "@/lib/dates";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { FormError } from "@/components/form-error";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,7 +78,9 @@ export function RescheduleWalkButton({
           <input name="wasCancelled" type="hidden" value={cancelled ? "on" : ""} />
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor={`reschedule-starts-${walkId}`}>Date and start time</Label>
+              <Label htmlFor={`reschedule-starts-${walkId}`} required>
+                Date and start time
+              </Label>
               <DateTimePicker
                 defaultValue={utcToLondonWallClock(new Date(startsAt))}
                 id={`reschedule-starts-${walkId}`}
@@ -110,6 +113,7 @@ export function RescheduleWalkButton({
               placeholder="Car park, Woodhill Road"
             />
           </div>
+          <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending} type="button">
               Keep this time

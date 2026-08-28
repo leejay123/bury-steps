@@ -12,6 +12,7 @@ import {
 import type { NoticeView } from "@/lib/notices";
 import { formatDate } from "@/lib/dates";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { FormError } from "@/components/form-error";
 import { EmptyState } from "@/components/empty-state";
 import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
 import { Button } from "@/components/ui/button";
@@ -72,7 +73,9 @@ function NoticeFields({
     <div className="flex flex-col gap-3">
       {notice ? <input name="noticeId" type="hidden" value={notice.id} /> : null}
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${prefix}-title`}>Title</Label>
+        <Label htmlFor={`${prefix}-title`} required>
+          Title
+        </Label>
         <Input
           disabled={disabled}
           id={`${prefix}-title`}
@@ -84,7 +87,9 @@ function NoticeFields({
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${prefix}-body`}>Message</Label>
+        <Label htmlFor={`${prefix}-body`} required>
+          Message
+        </Label>
         <Textarea
           disabled={disabled}
           id={`${prefix}-body`}
@@ -124,6 +129,7 @@ function AddNoticeForm({
     <form action={action} className="flex min-h-0 flex-1 flex-col" ref={formRef}>
       <div className="flex-1 overflow-y-auto overscroll-y-contain px-4">
         <NoticeFields disabled={disabled} prefix="new" />
+        <FormError message={state && !state.ok ? state.error : null} />
       </div>
       <DrawerFooter>
         <PendingSubmit disabled={disabled} label="Add notice" pendingLabel="Adding…" />
@@ -153,6 +159,7 @@ function EditNoticeForm({
       <form action={updateAction} className="flex min-h-0 flex-1 flex-col" key={notice.id}>
         <div className="flex-1 overflow-y-auto overscroll-y-contain px-4">
           <NoticeFields notice={notice} prefix={`edit-${notice.id}`} />
+          <FormError message={updateState && !updateState.ok ? updateState.error : null} />
         </div>
         <DrawerFooter>
           <PendingSubmit label="Save" pendingLabel="Saving…" />
@@ -197,6 +204,7 @@ function RemoveNoticeButton({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <input name="noticeId" type="hidden" value={noticeId} />
+          <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending} type="button">
               Keep it

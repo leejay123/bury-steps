@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { clockIn, type ActionResult } from "@/server/actions";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -102,6 +103,8 @@ export function ClockInForm({ token }: { token: string }) {
           </div>
         )}
       </fieldset>
+
+      <FormError message={state && !state.ok ? state.error : null} />
 
       <Submit disabled={!ack || hasConditions === null} />
 

@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { toast } from "sonner";
 import { clearSiteCache, type ActionResult } from "@/server/actions";
+import { useActionToast } from "@/hooks/use-action-toast";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -31,16 +32,7 @@ export function ClearCacheForm() {
     null,
   );
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (!state) return;
-    if (state.ok) {
-      toast.success(state.message ?? "Site cache cleared.");
-      setOpen(false);
-    } else {
-      toast.error(state.error);
-    }
-  }, [state]);
+  useActionToast(state, () => setOpen(false));
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border p-4">
@@ -66,6 +58,7 @@ export function ClearCacheForm() {
                 The public homepage will reload fresh content on the next visit. Nothing is deleted.
               </AlertDialogDescription>
             </AlertDialogHeader>
+            <FormError message={state && !state.ok ? state.error : null} />
             <AlertDialogFooter>
               <AlertDialogCancel disabled={isPending} type="button">
                 Keep it

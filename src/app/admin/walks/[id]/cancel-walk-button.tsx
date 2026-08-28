@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { cancelWalk, type ActionResult } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -69,6 +70,7 @@ export function CancelWalkButton({
               placeholder="Weather, illness, not enough people…"
             />
           </div>
+          <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending} type="button">
               Keep the walk

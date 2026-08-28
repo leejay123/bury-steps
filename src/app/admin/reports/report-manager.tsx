@@ -16,6 +16,7 @@ import { DataList, DataListActions, DataListBody, DataListItem } from "@/compone
 import { ListPagination } from "@/components/list-pagination";
 import { useUrlListState } from "@/hooks/use-url-list-state";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -135,7 +136,9 @@ function ReportFields({
       {report ? <input name="reportId" type="hidden" value={report.id} /> : null}
       <input name="walkId" type="hidden" value={walkId === "none" ? "" : walkId} />
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${prefix}-happened`}>When</Label>
+        <Label htmlFor={`${prefix}-happened`} required>
+          When
+        </Label>
         <DateTimePicker
           defaultValue={report ? utcToLondonWallClock(new Date(report.happenedAt)) : undefined}
           id={`${prefix}-happened`}
@@ -160,7 +163,9 @@ function ReportFields({
         </Select>
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${prefix}-what`}>What happened</Label>
+        <Label htmlFor={`${prefix}-what`} required>
+          What happened
+        </Label>
         <Textarea
           defaultValue={report?.whatHappened}
           id={`${prefix}-what`}
@@ -170,7 +175,9 @@ function ReportFields({
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${prefix}-who`}>Who was involved</Label>
+        <Label htmlFor={`${prefix}-who`} required>
+          Who was involved
+        </Label>
         <Textarea
           defaultValue={report?.whoInvolved}
           id={`${prefix}-who`}
@@ -180,7 +187,9 @@ function ReportFields({
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${prefix}-did`}>What we did</Label>
+        <Label htmlFor={`${prefix}-did`} required>
+          What we did
+        </Label>
         <Textarea
           defaultValue={report?.whatWeDid}
           id={`${prefix}-did`}
@@ -220,6 +229,7 @@ function AddForm({
   return (
     <form action={action} className="flex min-h-0 flex-1 flex-col">
       <ReportFields prefix="add" walks={walks} />
+      <FormError message={state && !state.ok ? state.error : null} />
       <DrawerFooter>
         <PendingSubmit label="Save report" pendingLabel="Saving…" />
       </DrawerFooter>
@@ -249,6 +259,7 @@ function EditForm({
   return (
     <form action={action} className="flex min-h-0 flex-1 flex-col">
       <ReportFields prefix="edit" report={report} walks={walks} />
+      <FormError message={state && !state.ok ? state.error : null} />
       <DrawerFooter>
         <Button disabled={isPending} onClick={onCancel} type="button" variant="outline">
           Cancel
@@ -293,6 +304,7 @@ function RemoveButton({ reportId, title }: { reportId: string; title: string }) 
             </AlertDialogDescription>
           </AlertDialogHeader>
           <input name="reportId" type="hidden" value={reportId} />
+          <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending} type="button">
               Keep it

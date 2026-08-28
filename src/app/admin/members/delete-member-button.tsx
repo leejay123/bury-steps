@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { deleteMember, type ActionResult } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -86,6 +87,7 @@ export function DeleteMemberButton({
         </AlertDialogHeader>
         <form action={action}>
           <input type="hidden" name="userId" value={userId} />
+          <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending} type="button">
               Keep member

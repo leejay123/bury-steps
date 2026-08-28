@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { clockOut, type ActionResult } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -67,7 +68,9 @@ export function ClockOutButton({ token }: { token: string }) {
           </AlertDialogHeader>
           <input name="token" type="hidden" value={token} />
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`clock-out-reason-${token}`}>Why are you clocking out?</Label>
+            <Label htmlFor={`clock-out-reason-${token}`} required>
+              Why are you clocking out?
+            </Label>
             <Textarea
               id={`clock-out-reason-${token}`}
               maxLength={500}
@@ -79,6 +82,7 @@ export function ClockOutButton({ token }: { token: string }) {
               value={reason}
             />
           </div>
+          <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending} type="button">
               Stay clocked in

@@ -12,6 +12,7 @@ import {
 } from "@/server/actions";
 import type { TestimonialView } from "@/lib/testimonials";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { FormError } from "@/components/form-error";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { EmptyState } from "@/components/empty-state";
 import { ReorderButtons, useReorderableIds } from "@/components/sortable-rows";
@@ -82,7 +83,9 @@ function TestimonialFields({
     <div className="flex flex-col gap-3">
       {testimonial ? <input name="testimonialId" type="hidden" value={testimonial.id} /> : null}
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${prefix}-name`}>Name</Label>
+        <Label htmlFor={`${prefix}-name`} required>
+          Name
+        </Label>
         <Input
           disabled={disabled}
           id={`${prefix}-name`}
@@ -105,7 +108,9 @@ function TestimonialFields({
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${prefix}-quote`}>Testimonial</Label>
+        <Label htmlFor={`${prefix}-quote`} required>
+          Testimonial
+        </Label>
         <Textarea
           disabled={disabled}
           id={`${prefix}-quote`}
@@ -171,6 +176,7 @@ function AddDrawerForm({
     <form action={action} className="flex min-h-0 flex-1 flex-col" ref={formRef}>
       <div className="flex-1 overflow-y-auto overscroll-y-contain px-4">
         <TestimonialFields disabled={disabled} prefix="new" />
+        <FormError message={state && !state.ok ? state.error : null} />
       </div>
       <DrawerFooter>
         <PendingSubmit disabled={disabled} label="Add testimonial" pendingLabel="Adding…" />
@@ -201,6 +207,7 @@ function EditDrawerForm({
       <form action={updateAction} className="flex min-h-0 flex-1 flex-col" key={testimonial.id}>
         <div className="flex-1 overflow-y-auto overscroll-y-contain px-4">
           <TestimonialFields prefix={`edit-${testimonial.id}`} testimonial={testimonial} />
+          <FormError message={updateState && !updateState.ok ? updateState.error : null} />
         </div>
         <DrawerFooter>
           <PendingSubmit label="Save" pendingLabel="Saving…" />
@@ -245,6 +252,7 @@ function RemoveTestimonialButton({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <input name="testimonialId" type="hidden" value={testimonialId} />
+          <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending} type="button">
               Keep it
