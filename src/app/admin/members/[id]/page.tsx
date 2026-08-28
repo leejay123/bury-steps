@@ -23,7 +23,7 @@ export default async function MemberDetailPage({
   if (!member) notFound();
 
   const joinedAt = new Date(member.createdAt);
-  const attendanceCount = member.items.length;
+  const attendanceCount = member.attendanceCount;
   // Clocked in, not clocked out, and the walk itself was not cancelled out
   // from under them — the walks they are on right now, at a glance, rather
   // than the admin having to scan the whole table below to notice.
@@ -110,6 +110,11 @@ export default async function MemberDetailPage({
               ? "1 walk"
               : `${attendanceCount} walks`}
         </h2>
+        {member.items.length < attendanceCount ? (
+          <p className="text-xs text-muted-foreground">
+            Showing the {member.items.length.toLocaleString("en-GB")} most recent.
+          </p>
+        ) : null}
         <AttendanceHistory
           rows={member.items.map((item) => ({
             id: item.id,

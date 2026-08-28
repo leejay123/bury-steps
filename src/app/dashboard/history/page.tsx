@@ -18,27 +18,30 @@ export default async function WalkHistoryPage() {
     redirect("/admin");
   }
 
-  const attendances = await prisma.attendance.findMany({
-    where: { userId: user.id },
-    orderBy: { clockedInAt: "desc" },
-    // Backstop against an unbounded query — a weekly walk never missed
-    // would take ~19 years to reach this. Keeps the most recent walks.
-    take: 1000,
-    include: {
-      walk: {
-        select: {
-          token: true,
-          title: true,
-          location: true,
-          startsAt: true,
-          durationMins: true,
-          cancelledAt: true,
+  const [attendances, count] = await Promise.all([
+    prisma.attendance.findMany({
+      where: { userId: user.id },
+      orderBy: { clockedInAt: "desc" },
+      // Backstop against an unbounded query — a weekly walk never missed
+      // would take ~19 years to reach this. Keeps the most recent walks.
+      // `count` below is a separate, uncapped query, so the "X walks"
+      // heading stays accurate even for someone who has passed this cap.
+      take: 1000,
+      include: {
+        walk: {
+          select: {
+            token: true,
+            title: true,
+            location: true,
+            startsAt: true,
+            durationMins: true,
+            cancelledAt: true,
+          },
         },
       },
-    },
-  });
-
-  const count = attendances.length;
+    }),
+    prisma.attendance.count({ where: { userId: user.id } }),
+  ]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -58,6 +61,11 @@ export default async function WalkHistoryPage() {
               ? "You have clocked in to 1 walk."
               : `You have clocked in to ${count} walks.`}
         </p>
+        {attendances.length < count ? (
+          <p className="text-xs text-muted-foreground">
+            Showing the {attendances.length.toLocaleString("en-GB")} most recent.
+          </p>
+        ) : null}
       </div>
 
       <AttendanceHistory

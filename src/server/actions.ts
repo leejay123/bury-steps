@@ -1438,36 +1438,44 @@ export async function getMemberHistory(userId: string): Promise<{
   role: "ADMIN" | "MEMBER";
   createdAt: string;
   walkCount: number;
+  /** The real total, independent of how many `items` were actually fetched. */
+  attendanceCount: number;
   isYou: boolean;
   items: MemberHistoryItem[];
 } | null> {
   const admin = await requireAdmin();
-  const member = await prisma.user.findUnique({
-    where: { id: userId },
-    include: {
-      _count: { select: { walksCreated: true } },
-      attendances: {
-        orderBy: { clockedInAt: "desc" },
-        // Backstop against an unbounded query — someone would need to have
-        // clocked in on a weekly walk every week for ~19 years to hit this,
-        // and it keeps the most recent walks, which is what an organiser
-        // actually wants to see first.
-        take: 1000,
-        include: {
-          walk: {
-            select: {
-              id: true,
-              title: true,
-              location: true,
-              durationMins: true,
-              startsAt: true,
-              cancelledAt: true,
+  const [member, attendanceCount] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        _count: { select: { walksCreated: true } },
+        attendances: {
+          orderBy: { clockedInAt: "desc" },
+          // Backstop against an unbounded query — someone would need to have
+          // clocked in on a weekly walk every week for ~19 years to hit this,
+          // and it keeps the most recent walks, which is what an organiser
+          // actually wants to see first. `attendanceCount` below (a separate,
+          // uncapped count) is what's shown as the real total, so a
+          // long-standing member never gets stuck reading "1000 walks"
+          // forever once they pass this cap.
+          take: 1000,
+          include: {
+            walk: {
+              select: {
+                id: true,
+                title: true,
+                location: true,
+                durationMins: true,
+                startsAt: true,
+                cancelledAt: true,
+              },
             },
           },
         },
       },
-    },
-  });
+    }),
+    prisma.attendance.count({ where: { userId } }),
+  ]);
   if (!member) return null;
 
   return {
@@ -1476,6 +1484,7 @@ export async function getMemberHistory(userId: string): Promise<{
     role: member.role,
     createdAt: member.createdAt.toISOString(),
     walkCount: member._count.walksCreated,
+    attendanceCount,
     isYou: member.id === admin.id,
     items: member.attendances.map((attendance) => ({
       id: attendance.id,
