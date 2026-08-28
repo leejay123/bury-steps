@@ -90,7 +90,8 @@ export default function PrivacyPolicyPage() {
                 London region (United Kingdom).
               </li>
               <li>
-                <strong>Vercel</strong> hosts the website.
+                <strong>Vercel</strong> hosts the website and provides Vercel Analytics, which
+                counts page views without cookies or a per-person ID.
               </li>
               <li>
                 <strong>Google</strong> if you choose “Sign in with Google”. Google’s terms and
@@ -127,9 +128,14 @@ export default function PrivacyPolicyPage() {
                 remembers whether you accepted or declined the cookie notice.
               </p>
               <p>
-                We do not use cookies for advertising or analytics. On a first visit you can
-                Accept or Decline the notice; either choice is remembered for a year. Cookies that
-                are needed to sign in are still used if you decline.
+                We do not use cookies for advertising. We use Vercel Analytics to see how many
+                people visit and which pages are popular — it counts page views without setting a
+                cookie, without a persistent ID for your device, and without following you to
+                other sites, so it works the same whichever you choose below.
+              </p>
+              <p>
+                On a first visit you can Accept or Decline the notice; either choice is remembered
+                for a year. Cookies that are needed to sign in are still used if you decline.
               </p>
             </>
           ),

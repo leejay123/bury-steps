@@ -1,7 +1,13 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { PAGE_X_BLEED } from "@/lib/page-x";
+
+export const metadata: Metadata = {
+  title: "Admin — Bury Steps Walking Group",
+  robots: { index: false, follow: false },
+};
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();

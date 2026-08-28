@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import Autoplay from "embla-carousel-autoplay";
 import {
   Carousel,
@@ -47,17 +48,22 @@ export function HomeCarousel({
       className={cn("w-full", framed ? "overflow-hidden" : "overflow-hidden rounded-xl")}
     >
       <CarouselContent className="-ml-0">
-        {slides.map((slide) => (
+        {slides.map((slide, index) => (
           <CarouselItem key={slide.id} className="pl-0">
-            <div className="bg-muted">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={slide.src}
+            <div
+              className={cn(
+                "relative w-full touch-manipulation bg-muted",
+                framed ? "aspect-[2/1]" : "aspect-video",
+              )}
+            >
+              <Image
                 alt={slide.alt}
-                className={cn(
-                  "block w-full touch-manipulation object-cover",
-                  framed ? "aspect-[2/1]" : "h-auto object-contain",
-                )}
+                className={cn("object-cover", !framed && "object-contain")}
+                fill
+                // Only the first slide can be the LCP image; the rest can wait.
+                priority={index === 0}
+                sizes="100vw"
+                src={slide.src}
               />
             </div>
           </CarouselItem>

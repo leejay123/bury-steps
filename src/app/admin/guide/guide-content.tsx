@@ -209,6 +209,11 @@ export function OrganiserGuide() {
                 If they try too early, the page says clock-in is not open yet. If the window has
                 closed, they should speak to you.
               </p>
+              <p>
+                The first time a member reaches their Walks page before they have been on any
+                walk, they see a short pop-up walking through these steps. It only shows once —
+                after their first walk, or once they dismiss it, it does not come back.
+              </p>
             </GuideBody>
           </AccordionContent>
         </AccordionItem>
@@ -342,7 +347,8 @@ export function OrganiserGuide() {
                 the full write-up. From there you can edit it or print a PDF. On a phone, print
                 and remove sit on their own row under the text so the write-up is not squeezed. If
                 there are more than 20 reports, Previous and Next at the bottom of the list take you
-                through them.
+                through them. Once there is more than one report, a search box appears above the
+                list — it matches the linked walk, who was involved, and the write-up text.
               </p>
               <Steps>
                 <li>
@@ -425,9 +431,17 @@ export function OrganiserGuide() {
               <p>
                 First-time visitors see a cookie notice at the bottom of the screen, with Accept
                 and Decline. Either choice is remembered for a year. The site does not use
-                advertising cookies. Clerk still uses cookies that are needed to sign in. The
-                notice links to the{" "}
+                advertising cookies. Clerk still uses cookies that are needed to sign in. Vercel
+                Analytics counts page views to show which pages are popular, without a cookie or a
+                per-person ID, so it is not affected by Accept or Decline. The notice links to the{" "}
                 <Link href="/privacy-policy">Privacy Policy</Link>.
+              </p>
+              <p>
+                Pasting a link to the homepage or a walk (<code>/w/…</code>) into WhatsApp,
+                Messenger, or similar shows a preview card with the site name and, for a walk
+                link, that walk’s own title and date. The browser tab and bookmark icon use the
+                same walking-boot mark. On a phone, “Add to Home Screen” (Safari) or “Install app”
+                (Chrome) adds a Bury Steps icon that opens straight to Walks.
               </p>
               <p>
                 Text, tables, and forms line up with the logo and nav. Photo and quote grids, and

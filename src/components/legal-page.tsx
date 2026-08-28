@@ -9,7 +9,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-export const LEGAL_LAST_UPDATED = "25 August 2026";
+export const LEGAL_LAST_UPDATED = "28 August 2026";
 
 export type LegalSection = {
   id: string;
