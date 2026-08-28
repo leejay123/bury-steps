@@ -1,4 +1,5 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { DataList, DataListItem } from "@/components/data-list";
 
 function initials(name: string) {
   return name
@@ -19,16 +20,16 @@ export function WalkMembers({ names }: { names: string[] }) {
         <p className="text-sm font-medium">Who’s coming</p>
         <p className="text-sm text-muted-foreground">{countLabel}</p>
       </div>
-      <ul className="flex flex-col gap-2">
+      <DataList>
         {names.map((name, index) => (
-          <li className="flex items-center gap-2.5" key={`${name}-${index}`}>
-            <Avatar className="size-8">
+          <DataListItem key={`${name}-${index}`}>
+            <Avatar className="size-8 shrink-0">
               <AvatarFallback className="text-xs">{initials(name)}</AvatarFallback>
             </Avatar>
             <span className="text-sm">{name}</span>
-          </li>
+          </DataListItem>
         ))}
-      </ul>
+      </DataList>
     </div>
   );
 }
