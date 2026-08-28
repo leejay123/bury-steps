@@ -7,6 +7,11 @@ function resetEnv() {
   process.env = { ...ORIGINAL_ENV };
 }
 
+function setNodeEnv(value: string) {
+  // NODE_ENV is typed as a read-only property on process.env.
+  Object.assign(process.env, { NODE_ENV: value });
+}
+
 function clearAll() {
   delete process.env.DATABASE_URL;
   delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
@@ -14,7 +19,7 @@ function clearAll() {
   delete process.env.CRON_SECRET;
   delete process.env.INITIAL_ADMIN_EMAIL;
   delete process.env.VERCEL_ENV;
-  delete process.env.NODE_ENV;
+  setNodeEnv("test");
 }
 
 function setAllRequired() {
@@ -36,31 +41,31 @@ describe("validateEnv", () => {
   });
 
   it("throws in a real production boot when required vars are missing", () => {
-    process.env.NODE_ENV = "production";
+    setNodeEnv("production");
     expect(() => validateEnv()).toThrow(/DATABASE_URL/);
   });
 
   it("does not throw in production once all required vars are set", () => {
-    process.env.NODE_ENV = "production";
+    setNodeEnv("production");
     setAllRequired();
     expect(() => validateEnv()).not.toThrow();
   });
 
   it("only warns, never throws, in local dev", () => {
-    process.env.NODE_ENV = "development";
+    setNodeEnv("development");
     expect(() => validateEnv()).not.toThrow();
     expect(console.error).toHaveBeenCalled();
   });
 
   it("only warns on Vercel Preview even in a production NODE_ENV", () => {
-    process.env.NODE_ENV = "production";
+    setNodeEnv("production");
     process.env.VERCEL_ENV = "preview";
     expect(() => validateEnv()).not.toThrow();
     expect(console.error).toHaveBeenCalled();
   });
 
   it("warns (but does not throw) about missing recommended vars even when required ones are set", () => {
-    process.env.NODE_ENV = "production";
+    setNodeEnv("production");
     setAllRequired();
     expect(() => validateEnv()).not.toThrow();
     expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("CRON_SECRET"));
@@ -68,7 +73,7 @@ describe("validateEnv", () => {
   });
 
   it("stays silent about recommended vars once they're set", () => {
-    process.env.NODE_ENV = "production";
+    setNodeEnv("production");
     setAllRequired();
     process.env.CRON_SECRET = "some-secret";
     process.env.INITIAL_ADMIN_EMAIL = "admin@example.com";

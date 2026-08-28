@@ -18,7 +18,7 @@ import {
   faqCategorySlug,
 } from "@/lib/faqs";
 import { MAX_SITE_NOTICES } from "@/lib/notices";
-import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR, normalizeHex } from "@/lib/theme";
+import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR } from "@/lib/theme";
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
 import { NOTICES_CACHE_TAG } from "@/lib/site-notices";
 import { isAllowedImageMime, sniffImageMime } from "@/lib/image-bytes";
@@ -698,48 +698,6 @@ export async function replaceHomepageSlideImage(
   return { ok: true, message: "Slide saved." };
 }
 
-export async function moveHomepageSlide(
-  _prev: ActionResult | null,
-  formData: FormData,
-): Promise<ActionResult> {
-  await requireAdmin();
-  const id = String(formData.get("slideId") ?? "");
-  const direction = String(formData.get("direction") ?? "");
-  if (!id || (direction !== "up" && direction !== "down")) {
-    return { ok: false, error: "Could not move that slide." };
-  }
-
-  // Only the id/sortOrder pair is needed to compute the swap — selecting
-  // whole rows here would also pull every slide's image bytes (up to 4 MB
-  // each) just to reorder them.
-  const slides = await prisma.homepageSlide.findMany({
-    orderBy: { sortOrder: "asc" },
-    select: { id: true, sortOrder: true },
-  });
-  const index = slides.findIndex((slide) => slide.id === id);
-  if (index < 0) return { ok: false, error: "That slide is no longer there." };
-
-  const swapWith = direction === "up" ? index - 1 : index + 1;
-  if (swapWith < 0 || swapWith >= slides.length) {
-    return { ok: false, error: "Already at the end." };
-  }
-
-  const a = slides[index]!;
-  const b = slides[swapWith]!;
-
-  try {
-    await prisma.$transaction([
-      prisma.homepageSlide.update({ where: { id: a.id }, data: { sortOrder: b.sortOrder } }),
-      prisma.homepageSlide.update({ where: { id: b.id }, data: { sortOrder: a.sortOrder } }),
-    ]);
-  } catch (err) {
-    return logActionError("moveHomepageSlide", err, "Could not reorder that slide. Try again.");
-  }
-
-  revalidateHomepage();
-  return { ok: true, message: "Slide order updated." };
-}
-
 export async function deleteHomepageSlide(
   _prev: ActionResult | null,
   formData: FormData,
@@ -871,48 +829,6 @@ export async function updateHomepageTestimonial(
 
   revalidateHomepage();
   return { ok: true, message: "Testimonial saved." };
-}
-
-export async function moveHomepageTestimonial(
-  _prev: ActionResult | null,
-  formData: FormData,
-): Promise<ActionResult> {
-  await requireAdmin();
-  const id = String(formData.get("testimonialId") ?? "");
-  const direction = String(formData.get("direction") ?? "");
-  if (!id || (direction !== "up" && direction !== "down")) {
-    return { ok: false, error: "Could not move that testimonial." };
-  }
-
-  // Only the id/sortOrder pair is needed to compute the swap — selecting
-  // whole rows here would also pull every testimonial's photo bytes (up to
-  // 4 MB each) just to reorder them.
-  const rows = await prisma.homepageTestimonial.findMany({
-    orderBy: { sortOrder: "asc" },
-    select: { id: true, sortOrder: true },
-  });
-  const index = rows.findIndex((row) => row.id === id);
-  if (index < 0) return { ok: false, error: "That testimonial is no longer there." };
-
-  const swapWith = direction === "up" ? index - 1 : index + 1;
-  if (swapWith < 0 || swapWith >= rows.length) {
-    return { ok: false, error: "Already at the end." };
-  }
-
-  const a = rows[index]!;
-  const b = rows[swapWith]!;
-
-  try {
-    await prisma.$transaction([
-      prisma.homepageTestimonial.update({ where: { id: a.id }, data: { sortOrder: b.sortOrder } }),
-      prisma.homepageTestimonial.update({ where: { id: b.id }, data: { sortOrder: a.sortOrder } }),
-    ]);
-  } catch (err) {
-    return logActionError("moveHomepageTestimonial", err, "Could not reorder that testimonial. Try again.");
-  }
-
-  revalidateHomepage();
-  return { ok: true, message: "Testimonial order updated." };
 }
 
 export async function deleteHomepageTestimonial(
@@ -1054,45 +970,6 @@ export async function updateHomepageFaq(
 
   revalidateHomepage();
   return { ok: true, message: "FAQ saved." };
-}
-
-export async function moveHomepageFaq(
-  _prev: ActionResult | null,
-  formData: FormData,
-): Promise<ActionResult> {
-  await requireAdmin();
-  const id = String(formData.get("faqId") ?? "");
-  const direction = String(formData.get("direction") ?? "");
-  if (!id || (direction !== "up" && direction !== "down")) {
-    return { ok: false, error: "Could not move that FAQ." };
-  }
-
-  const rows = await prisma.homepageFaq.findMany({
-    orderBy: { sortOrder: "asc" },
-    select: { id: true, sortOrder: true },
-  });
-  const index = rows.findIndex((row) => row.id === id);
-  if (index < 0) return { ok: false, error: "That FAQ is no longer there." };
-
-  const swapWith = direction === "up" ? index - 1 : index + 1;
-  if (swapWith < 0 || swapWith >= rows.length) {
-    return { ok: false, error: "Already at the end." };
-  }
-
-  const a = rows[index]!;
-  const b = rows[swapWith]!;
-
-  try {
-    await prisma.$transaction([
-      prisma.homepageFaq.update({ where: { id: a.id }, data: { sortOrder: b.sortOrder } }),
-      prisma.homepageFaq.update({ where: { id: b.id }, data: { sortOrder: a.sortOrder } }),
-    ]);
-  } catch (err) {
-    return logActionError("moveHomepageFaq", err, "Could not reorder that FAQ. Try again.");
-  }
-
-  revalidateHomepage();
-  return { ok: true, message: "FAQ order updated." };
 }
 
 export async function deleteHomepageFaq(
@@ -1240,31 +1117,6 @@ export async function markSiteNoticesRead(): Promise<ActionResult> {
 
   revalidatePath("/", "layout");
   return { ok: true };
-}
-
-export async function updateSiteTheme(
-  _prev: ActionResult | null,
-  formData: FormData,
-): Promise<ActionResult> {
-  await requireAdmin();
-  const hex = normalizeHex(String(formData.get("primaryColor") ?? ""));
-  if (!hex) return { ok: false, error: "Pick a colour, or type a hex code such as #1f3d2b." };
-
-  try {
-    await prisma.siteSetting.upsert({
-      where: { id: SITE_SETTING_ID },
-      create: { id: SITE_SETTING_ID, primaryColor: hex },
-      update: { primaryColor: hex },
-    });
-  } catch (err) {
-    return logActionError("updateSiteTheme", err, "Could not save the site colour. Try again.");
-  }
-
-  revalidateTag(HOMEPAGE_CACHE_TAG);
-  revalidatePath("/", "layout");
-  revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/appearance");
-  return { ok: true, message: "Site colour saved." };
 }
 
 export async function updateCarouselEnabled(
