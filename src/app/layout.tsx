@@ -6,13 +6,12 @@ import { shadcn } from "@clerk/themes";
 import { Toaster } from "@/components/ui/sonner";
 import { AFTER_AUTH_PATH, appUrl, SIGN_IN_URL, SIGN_UP_URL } from "@/lib/urls";
 import { PAGE_X, PAGE_Y } from "@/lib/page-x";
-import { getSiteTheme } from "@/lib/site-theme";
 import { SiteMobileNav, SiteNav, SiteNavFallback } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteLogo } from "@/components/site-logo";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { MotionPage } from "@/components/motion";
-import { BackToTop } from "@/components/back-to-top";
+import { BackToTopGate } from "@/components/back-to-top-gate";
 import { UnlockPageOnNavigate, UnlockingLink } from "@/components/overlay-root";
 import { SiteCookieConsent } from "@/components/site-cookie-consent";
 import "./globals.css";
@@ -54,9 +53,8 @@ export async function generateViewport(): Promise<Viewport> {
   };
 }
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   const useVercelAppProxy = process.env.VERCEL_ENV === "preview";
-  const theme = await getSiteTheme();
 
   return (
     <html lang="en-GB" suppressHydrationWarning>
@@ -140,7 +138,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </div>
           <Toaster duration={2800} position="top-center" />
           <SiteCookieConsent />
-          {theme.scrollToTopEnabled ? <BackToTop /> : null}
+          <Suspense fallback={null}>
+            <BackToTopGate />
+          </Suspense>
         </ClerkProvider>
         {/*
           Vercel Analytics is cookieless — it counts page views with a
