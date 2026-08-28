@@ -15,6 +15,15 @@ const isPublic = createRouteMatcher([
   "/api/slides(.*)",
   "/api/testimonials(.*)",
   "/__clerk(.*)",
+  // Crawler/browser file-convention routes. Most static extensions are
+  // already excluded from the matcher below, but these don't have one
+  // (or have one the matcher doesn't exclude), so without this they'd hit
+  // auth.protect() and bounce crawlers and not-yet-signed-in installs to
+  // sign-in instead of serving the real file.
+  "/robots.txt",
+  "/sitemap.xml",
+  "/manifest.webmanifest",
+  "/opengraph-image",
 ]);
 
 export default clerkMiddleware(
