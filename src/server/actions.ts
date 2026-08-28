@@ -22,6 +22,7 @@ import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR, normalizeHex } from "@/lib/them
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
 import { NOTICES_CACHE_TAG } from "@/lib/site-notices";
 import { isAllowedImageMime, sniffImageMime } from "@/lib/image-bytes";
+import { stripImageMetadata } from "@/lib/strip-image-metadata";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 /** No look-alike characters — organisers read these out loud. */
@@ -537,11 +538,15 @@ async function readSlideImage(
   if (file.size > MAX_SLIDE_BYTES) {
     return { error: "Keep the image under 4 MB." };
   }
-  const data = new Uint8Array(await file.arrayBuffer()) as Uint8Array<ArrayBuffer>;
-  const mime = sniffImageMime(data);
+  const raw = new Uint8Array(await file.arrayBuffer()) as Uint8Array<ArrayBuffer>;
+  const mime = sniffImageMime(raw);
   if (!mime || !isAllowedImageMime(mime)) {
     return { error: "Use a JPEG, PNG or WebP image." };
   }
+  // These are public-facing photos — strip EXIF/XMP metadata (which on a
+  // phone photo usually includes exact GPS coordinates) before it's ever
+  // written to the database.
+  const data = stripImageMetadata(raw, mime) as Uint8Array<ArrayBuffer>;
   return { data, mime };
 }
 
