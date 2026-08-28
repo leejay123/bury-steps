@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Footprints, Search } from "lucide-react";
 import { formatWalkDay, formatTime } from "@/lib/dates";
 import { EmptyState } from "@/components/empty-state";
 import { DataList, DataListBody, DataListItem } from "@/components/data-list";
+import { ListPagination } from "@/components/list-pagination";
+import { usePagedList } from "@/hooks/use-paged-list";
 import { Badge } from "@/components/ui/badge";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 
@@ -32,6 +34,7 @@ export function AdminWalkTable({
   walks: AdminWalkRow[];
 }) {
   const [query, setQuery] = useState("");
+  const listRef = useRef<HTMLDivElement>(null);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -42,12 +45,14 @@ export function AdminWalkTable({
     });
   }, [query, walks]);
 
+  const paging = usePagedList(filtered, { resetKey: query });
+
   if (walks.length === 0) {
     return <EmptyState description={emptyDescription} icon={Footprints} title={emptyTitle} />;
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" ref={listRef}>
       {searchable ? (
         <InputGroup className="max-w-md">
           <InputGroupInput
@@ -68,8 +73,9 @@ export function AdminWalkTable({
           title="No matching walks"
         />
       ) : (
-        <DataList>
-          {filtered.map((walk) => (
+        <>
+          <DataList>
+            {paging.paged.map((walk) => (
             <DataListItem className="relative" key={walk.id}>
               <DataListBody>
                 <p className="font-medium">
@@ -88,8 +94,18 @@ export function AdminWalkTable({
               {walk.cancelledAt ? <Badge variant="destructive">Cancelled</Badge> : null}
               <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
             </DataListItem>
-          ))}
-        </DataList>
+            ))}
+          </DataList>
+          <ListPagination
+            noun="walks"
+            onPageChange={paging.setPage}
+            page={paging.page}
+            pageCount={paging.pageCount}
+            pageSize={paging.pageSize}
+            scrollToRef={listRef}
+            total={paging.total}
+          />
+        </>
       )}
     </div>
   );

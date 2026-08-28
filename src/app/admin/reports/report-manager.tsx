@@ -15,6 +15,8 @@ import { formatWalkDay, formatTime, utcToLondonWallClock } from "@/lib/dates";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { EmptyState } from "@/components/empty-state";
 import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
+import { ListPagination } from "@/components/list-pagination";
+import { usePagedList } from "@/hooks/use-paged-list";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -260,9 +262,11 @@ export function AccidentReportManager({
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
   const editing = mode?.type === "edit" ? mode.report : null;
+  const listRef = useRef<HTMLDivElement>(null);
+  const paging = usePagedList(reports);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" ref={listRef}>
       <div className="flex items-center justify-end">
         <Button className="w-full sm:w-auto" onClick={() => setMode({ type: "add" })} size="sm">
           Add report
@@ -276,8 +280,9 @@ export function AccidentReportManager({
           title="No accident reports yet"
         />
       ) : (
-        <DataList>
-          {reports.map((report) => {
+        <>
+          <DataList>
+            {paging.paged.map((report) => {
             const at = new Date(report.happenedAt);
             return (
               <DataListItem
@@ -315,8 +320,18 @@ export function AccidentReportManager({
                 </DataListActions>
               </DataListItem>
             );
-          })}
-        </DataList>
+            })}
+          </DataList>
+          <ListPagination
+            noun="reports"
+            onPageChange={paging.setPage}
+            page={paging.page}
+            pageCount={paging.pageCount}
+            pageSize={paging.pageSize}
+            scrollToRef={listRef}
+            total={paging.total}
+          />
+        </>
       )}
 
       <Drawer

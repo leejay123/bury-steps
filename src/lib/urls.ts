@@ -8,28 +8,6 @@ export const SIGN_IN_PATH = "/sign-in";
 export const SIGN_UP_PATH = "/sign-up";
 export const AFTER_AUTH_PATH = "/dashboard";
 
-export function accountPortalUrl(
-  which: "sign-in" | "sign-up",
-  searchParams?: Record<string, string | string[] | undefined>,
-): string {
-  const url = new URL(which === "sign-in" ? SIGN_IN_URL : SIGN_UP_URL);
-  if (!searchParams) return url.toString();
-  for (const [key, value] of Object.entries(searchParams)) {
-    if (typeof value === "string" && value.length > 0) {
-      url.searchParams.set(key, value);
-    } else if (Array.isArray(value)) {
-      for (const item of value) url.searchParams.append(key, item);
-    }
-  }
-  return url.toString();
-}
-
-export function accountPortalHref(which: "sign-in" | "sign-up", returnTo: string): string {
-  const url = new URL(which === "sign-in" ? SIGN_IN_URL : SIGN_UP_URL);
-  url.searchParams.set("redirect_url", returnTo);
-  return url.toString();
-}
-
 export const FACEBOOK_GROUP_URL = "https://www.facebook.com/groups/burysteps";
 
 /** Live site. Walk share links and emails should use this, not *.vercel.app. */
@@ -49,4 +27,56 @@ export function appUrl(): string {
   if (host) return `https://${host}`;
 
   return "http://localhost:3000";
+}
+
+function trustedOrigins(): Set<string> {
+  const origins = new Set<string>([
+    new URL(PRODUCTION_APP_URL).origin,
+    "https://www.burysteps-walkinggroup.co.uk",
+    new URL(appUrl()).origin,
+  ]);
+  if (process.env.VERCEL_URL) {
+    origins.add(`https://${process.env.VERCEL_URL}`);
+  }
+  return origins;
+}
+
+/** True when the URL is on this site, not an attacker-controlled host. */
+export function isTrustedAppUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return false;
+    if (url.username || url.password) return false;
+    if (!url.pathname.startsWith("/")) return false;
+    return trustedOrigins().has(url.origin);
+  } catch {
+    return false;
+  }
+}
+
+function firstString(value: string | string[] | undefined): string | undefined {
+  if (typeof value === "string" && value.length > 0) return value;
+  if (Array.isArray(value) && typeof value[0] === "string" && value[0].length > 0) {
+    return value[0];
+  }
+  return undefined;
+}
+
+export function accountPortalUrl(
+  which: "sign-in" | "sign-up",
+  searchParams?: Record<string, string | string[] | undefined>,
+): string {
+  const url = new URL(which === "sign-in" ? SIGN_IN_URL : SIGN_UP_URL);
+  const redirectTo = firstString(searchParams?.redirect_url);
+  if (redirectTo && isTrustedAppUrl(redirectTo)) {
+    url.searchParams.set("redirect_url", redirectTo);
+  }
+  return url.toString();
+}
+
+export function accountPortalHref(which: "sign-in" | "sign-up", returnTo: string): string {
+  const url = new URL(which === "sign-in" ? SIGN_IN_URL : SIGN_UP_URL);
+  const safeReturn = isTrustedAppUrl(returnTo) ? returnTo : `${appUrl()}${AFTER_AUTH_PATH}`;
+  url.searchParams.set("redirect_url", safeReturn);
+  return url.toString();
 }

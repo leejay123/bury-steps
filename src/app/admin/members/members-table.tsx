@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { ChevronRight, Footprints } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { ChevronRight, Footprints, Search } from "lucide-react";
 import { toast } from "sonner";
 import { getMemberHistory, type MemberHistoryItem } from "@/server/actions";
 import { formatDate, formatMembershipAge } from "@/lib/dates";
@@ -9,6 +9,8 @@ import { DeleteMemberButton } from "./delete-member-button";
 import { EmptyState } from "@/components/empty-state";
 import { AttendanceHistory } from "@/components/attendance-history";
 import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
+import { ListPagination } from "@/components/list-pagination";
+import { usePagedList } from "@/hooks/use-paged-list";
 import { Badge } from "@/components/ui/badge";
 import {
   Drawer,
@@ -17,6 +19,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type MemberRow = {
@@ -32,6 +35,7 @@ type MemberRow = {
 
 export function MembersTable({ members }: { members: MemberRow[] }) {
   const [openId, setOpenId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
   const [history, setHistory] = useState<{
     name: string;
     email: string;
@@ -67,11 +71,42 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
 
   const selected = members.find((member) => member.id === openId);
   const joinedAt = history?.createdAt ?? selected?.createdAt;
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const filtered = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return members;
+    return members.filter((member) => {
+      const hay = `${member.name} ${member.email} ${member.role === "ADMIN" ? "organiser" : "member"}`.toLowerCase();
+      return hay.includes(needle);
+    });
+  }, [members, query]);
+
+  const paging = usePagedList(filtered, { resetKey: query });
 
   return (
-    <>
-      <DataList>
-        {members.map((member) => (
+    <div className="flex flex-col gap-4" ref={listRef}>
+      <InputGroup className="max-w-md">
+        <InputGroupInput
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search by name, email, or role…"
+          value={query}
+        />
+        <InputGroupAddon>
+          <Search data-icon="inline-start" />
+        </InputGroupAddon>
+      </InputGroup>
+
+      {filtered.length === 0 ? (
+        <EmptyState
+          description="Try a different name, email, or role."
+          icon={Search}
+          title="No matching members"
+        />
+      ) : (
+        <>
+          <DataList>
+            {paging.paged.map((member) => (
           <DataListItem key={member.id} onClick={() => openMember(member.id)}>
             <DataListBody>
               <p className="font-medium">
@@ -106,8 +141,19 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
             </DataListActions>
             <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
           </DataListItem>
-        ))}
-      </DataList>
+            ))}
+          </DataList>
+          <ListPagination
+            noun="members"
+            onPageChange={paging.setPage}
+            page={paging.page}
+            pageCount={paging.pageCount}
+            pageSize={paging.pageSize}
+            scrollToRef={listRef}
+            total={paging.total}
+          />
+        </>
+      )}
 
       <Drawer
         onOpenChange={(open) => {
@@ -174,6 +220,6 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
           </div>
         </DrawerContent>
       </Drawer>
-    </>
+    </div>
   );
 }

@@ -108,13 +108,14 @@ Vercel builds the site from GitHub and hosts it.
 2. Click **Add New…** → **Project**.
 3. Import **bury-steps** (your fork, or `leejay123/bury-steps` if that is yours).
 4. **Before you click Deploy**, open **Environment Variables**.
-5. Add these three, one at a time. Names must match exactly.
+5. Add these four, one at a time. Names must match exactly.
 
 | Name | Value |
 |---|---|
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | the Clerk publishable key (`pk_test_…`) |
 | `CLERK_SECRET_KEY` | the Clerk secret key (`sk_test_…`) |
 | `DATABASE_URL` | the Supabase Session pooler URI (`postgresql://…5432…`) |
+| `CRON_SECRET` | a long random string (Vercel Cron sends this automatically) |
 
 For each one, tick **Production**, **Preview** and **Development**.
 
@@ -234,5 +235,6 @@ Paste these in **Vercel → Project → Settings → Environment Variables**.
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk → API Keys → Publishable key |
 | `CLERK_SECRET_KEY` | Clerk → API Keys → Secret key |
 | `DATABASE_URL` | Supabase → Connect → Session pooler (port 5432) |
+| `CRON_SECRET` | Make a long random string. Vercel Cron sends it as `Authorization: Bearer` when the nightly job runs. |
 
-That is everything. There is no fourth required value.
+Clerk, the database, and `CRON_SECRET` are required in Vercel. Without `CRON_SECRET` the nightly health-note purge will not run.

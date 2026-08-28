@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { formatDateTime, formatTime } from "@/lib/dates";
 import { DataList, DataListBody, DataListItem } from "@/components/data-list";
+import { ListPagination } from "@/components/list-pagination";
+import { usePagedList } from "@/hooks/use-paged-list";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -37,11 +39,13 @@ function Detail({ label, children }: { label: string; children: React.ReactNode 
 export function WalkAttendanceTable({ rows }: { rows: WalkAttendanceRow[] }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const selected = rows.find((row) => row.id === openId) ?? null;
+  const listRef = useRef<HTMLDivElement>(null);
+  const paging = usePagedList(rows);
 
   return (
-    <>
+    <div className="flex flex-col gap-4" ref={listRef}>
       <DataList>
-        {rows.map((row) => (
+        {paging.paged.map((row) => (
           <DataListItem key={row.id} onClick={() => setOpenId(row.id)}>
             <Avatar className="size-7 shrink-0">
               <AvatarFallback className="text-xs">{row.initials}</AvatarFallback>
@@ -62,6 +66,15 @@ export function WalkAttendanceTable({ rows }: { rows: WalkAttendanceRow[] }) {
           </DataListItem>
         ))}
       </DataList>
+      <ListPagination
+        noun="people"
+        onPageChange={paging.setPage}
+        page={paging.page}
+        pageCount={paging.pageCount}
+        pageSize={paging.pageSize}
+        scrollToRef={listRef}
+        total={paging.total}
+      />
 
       <Drawer
         onOpenChange={(open) => {
@@ -103,6 +116,6 @@ export function WalkAttendanceTable({ rows }: { rows: WalkAttendanceRow[] }) {
           ) : null}
         </DrawerContent>
       </Drawer>
-    </>
+    </div>
   );
 }

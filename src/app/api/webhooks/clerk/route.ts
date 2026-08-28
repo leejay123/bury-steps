@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import { prisma } from "@/lib/db";
+import { syncLocalUser } from "@/lib/local-user";
 
 /**
  * Keeps the local User table in sync with Clerk. Optional — `requireUser()`
@@ -24,10 +25,11 @@ export async function POST(req: NextRequest) {
       email_addresses[0]?.email_address ??
       "";
 
-    await prisma.user.upsert({
-      where: { clerkId: id },
-      create: { clerkId: id, email, firstName: first_name, lastName: last_name },
-      update: { email, firstName: first_name, lastName: last_name },
+    await syncLocalUser({
+      clerkId: id,
+      email,
+      firstName: first_name,
+      lastName: last_name,
     });
   }
 

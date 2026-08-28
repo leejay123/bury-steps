@@ -20,6 +20,7 @@ import {
 import { MAX_SITE_NOTICES } from "@/lib/notices";
 import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR, normalizeHex } from "@/lib/theme";
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
+import { isAllowedImageMime, sniffImageMime } from "@/lib/image-bytes";
 
 /** No look-alike characters — organisers read these out loud. */
 const makeToken = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 12);
@@ -447,7 +448,6 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
 
 // ----------------------------------------------------------- homepage slides
 
-const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 const MAX_SLIDE_BYTES = 4 * 1024 * 1024;
 
 async function readSlideImage(
@@ -460,13 +460,12 @@ async function readSlideImage(
   if (file.size > MAX_SLIDE_BYTES) {
     return { error: "Keep the image under 4 MB." };
   }
-  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+  const data = new Uint8Array(await file.arrayBuffer()) as Uint8Array<ArrayBuffer>;
+  const mime = sniffImageMime(data);
+  if (!mime || !isAllowedImageMime(mime)) {
     return { error: "Use a JPEG, PNG or WebP image." };
   }
-  return {
-    data: new Uint8Array(await file.arrayBuffer()) as Uint8Array<ArrayBuffer>,
-    mime: file.type,
-  };
+  return { data, mime };
 }
 
 function revalidateHomepage() {
@@ -507,7 +506,7 @@ export async function addHomepageSlide(
   const image = await readSlideImage(formData);
   if ("error" in image) return { ok: false, error: image.error };
 
-  const alt = String(formData.get("alt") ?? "").trim() || "Bury Steps Walking Group";
+  const alt = String(formData.get("alt") ?? "").trim().slice(0, 200) || "Bury Steps Walking Group";
 
   await prisma.homepageSlide.create({
     data: {
@@ -534,7 +533,7 @@ export async function replaceHomepageSlideImage(
   const image = await readOptionalImage(formData);
   if (image && "error" in image) return { ok: false, error: image.error };
 
-  const alt = String(formData.get("alt") ?? "").trim() || "Bury Steps Walking Group";
+  const alt = String(formData.get("alt") ?? "").trim().slice(0, 200) || "Bury Steps Walking Group";
 
   try {
     await prisma.homepageSlide.update({
@@ -1384,4 +1383,21 @@ export async function deleteAccidentReport(
 
   revalidatePath("/admin/reports");
   return { ok: true, message: "Accident report removed." };
+}
+
+export async function clearSiteCache(
+  _prev: ActionResult | null,
+  _formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidatePath("/", "layout");
+  revalidatePath("/");
+  revalidatePath("/home");
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+  return {
+    ok: true,
+    message: "Site cache cleared. The public homepage will refresh on the next visit.",
+  };
 }

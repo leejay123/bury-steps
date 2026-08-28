@@ -110,7 +110,7 @@ export function OrganiserGuide() {
                 Open <Link href="/admin">Walks</Link> from the menu. Upcoming and History are tabs
                 on that page. History is every finished walk, with a search box. Click a row to
                 open the walk. History shows how many people clocked in, not how many are still on
-                the walk.
+                the walk. Long lists show 20 at a time, with Previous and Next at the bottom.
               </p>
               <p className="font-medium text-foreground">Create a walk</p>
               <Steps>
@@ -160,7 +160,8 @@ export function OrganiserGuide() {
               </p>
               <p>
                 Open the walk from the list. The roster is names, status, and clock-in time. Tap a
-                row for email, clock-out time, any clock-out reason, and health notes.
+                row for email, clock-out time, any clock-out reason, and health notes. If more than
+                20 people clocked in, Previous and Next sit under the list.
               </p>
               <p>
                 Download roster (CSV) gives you names, emails, times, clock-out reasons, and any
@@ -220,13 +221,15 @@ export function OrganiserGuide() {
                 Open <Link href="/admin/members">Members</Link> to see everyone who has signed up:
                 name, email, whether they are an organiser or a member, when they joined, how long
                 they have been a member, and how many clock-ins they have. The joined date is the day
-                they first signed in.
+                they first signed in. Search by name, email, or role. If there are more than 20
+                people, Previous and Next at the bottom of the list take you through them.
               </p>
               <p className="font-medium text-foreground">Walk history</p>
               <p>
                 Click a row to open a drawer with that person’s full walk history, grouped by year.
-                Search if the list is long. Each walk shows the date, meeting point, and in/out
-                times. Click a walk name to open that walk.
+                Search if the list is long. Previous and Next appear if they have more than 20
+                walks. Each walk shows the date, meeting point, and in/out times. Click a walk name
+                to open that walk.
               </p>
               <p className="font-medium text-foreground">Remove someone</p>
               <Steps>
@@ -332,7 +335,9 @@ export function OrganiserGuide() {
                 Only organisers can see this. Add a report with the date, an optional walk, what
                 happened, who was involved, what you did, and extra notes if you need them. Each
                 row shows the date, walk, and a short preview of what happened. On a phone, print
-                and remove sit on their own row under the text so the write-up is not squeezed.
+                and remove sit on their own row under the text so the write-up is not squeezed. If
+                there are more than 20 reports, Previous and Next at the bottom of the list take you
+                through them.
               </p>
               <Steps>
                 <li>
@@ -359,6 +364,11 @@ export function OrganiserGuide() {
                 Open <Link href="/admin/settings/display">Display</Link> to turn the{" "}
                 <strong>Back to top</strong> button off. When it is on, it appears after you scroll
                 down, on the public site and in Organiser tools.
+              </p>
+              <p>
+                Open <Link href="/admin/settings/cache">Site cache</Link> if the public homepage
+                still shows old photos, quotes, or FAQs after you saved. Clear cache refreshes that
+                stored copy. It does not delete walks, members, or photos.
               </p>
             </GuideBody>
           </AccordionContent>
@@ -397,8 +407,10 @@ export function OrganiserGuide() {
               <p>
                 The homepage is cached so visitors get it quickly, without waiting on a sign-in
                 check. Photos, quotes, FAQs, and the carousel switch update on the public site as
-                soon as you save. The photo slider is not created on every visit. A{" "}
-                <strong>Back to top</strong> button can be turned off in Display.
+                soon as you save. If they do not, use{" "}
+                <Link href="/admin/settings/cache">Site cache</Link> in Settings. The photo slider
+                is not created on every visit. A <strong>Back to top</strong> button can be turned
+                off in Display.
               </p>
               <p>
                 First-time visitors see a cookie notice at the bottom of the screen, with Accept
@@ -423,7 +435,8 @@ export function OrganiserGuide() {
                 meeting point, and a badge if clock-in is open, they are already in, or the walk is
                 cancelled. Recent clock-ins are in a list underneath, with a short date. Tap a row
                 to open that walk, then ← Walks to come back. History in the menu is every walk they
-                have clocked in to, grouped by year, with a search box.
+                have clocked in to, grouped by year, with a search box. Previous and Next appear if
+                they have more than 20 walks.
               </p>
             </GuideBody>
           </AccordionContent>

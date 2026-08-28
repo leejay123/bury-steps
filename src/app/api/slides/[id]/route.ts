@@ -21,6 +21,7 @@ export async function GET(
     headers: {
       "Content-Type": slide.imageMime ?? "image/jpeg",
       "Cache-Control": "public, max-age=86400, s-maxage=86400, immutable",
+      "X-Content-Type-Options": "nosniff",
     },
   });
 }

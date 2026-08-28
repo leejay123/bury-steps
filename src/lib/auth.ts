@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "./db";
 import type { User } from "@prisma/client";
 import { SIGN_IN_URL } from "./urls";
+import { syncLocalUser } from "./local-user";
 
 /**
  * Returns the local User row for the signed-in Clerk user, creating it on
@@ -26,15 +27,11 @@ export const getOptionalUser = cache(async (): Promise<User | null> => {
     "";
 
   try {
-    return await prisma.user.create({
-      data: {
-        clerkId: userId,
-        email,
-        firstName: clerkUser?.firstName ?? null,
-        lastName: clerkUser?.lastName ?? null,
-        // First account to sign up becomes the organiser. Everyone else is a member.
-        role: (await prisma.user.count()) === 0 ? "ADMIN" : "MEMBER",
-      },
+    return await syncLocalUser({
+      clerkId: userId,
+      email,
+      firstName: clerkUser?.firstName ?? null,
+      lastName: clerkUser?.lastName ?? null,
     });
   } catch {
     return prisma.user.findUnique({ where: { clerkId: userId } });

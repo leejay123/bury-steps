@@ -10,7 +10,7 @@ import { CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
  */
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
-  if (secret && req.headers.get("authorization") !== `Bearer ${secret}`) {
+  if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
     return new NextResponse("Unauthorised", { status: 401 });
   }
 

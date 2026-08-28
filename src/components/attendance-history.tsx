@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { formatCompactDateTime, formatDate, formatTime, londonYear } from "@/lib/dates";
 import { EmptyState } from "@/components/empty-state";
+import { ListPagination } from "@/components/list-pagination";
+import { usePagedList } from "@/hooks/use-paged-list";
 import { Badge } from "@/components/ui/badge";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Footprints } from "lucide-react";
@@ -28,6 +30,7 @@ export function AttendanceHistory({
   rows: AttendanceHistoryRow[];
 }) {
   const [query, setQuery] = useState("");
+  const listRef = useRef<HTMLDivElement>(null);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -38,16 +41,18 @@ export function AttendanceHistory({
     });
   }, [query, rows]);
 
+  const paging = usePagedList(filtered, { resetKey: query });
+
   const years = useMemo(() => {
     const grouped = new Map<number, AttendanceHistoryRow[]>();
-    for (const row of filtered) {
+    for (const row of paging.paged) {
       const year = londonYear(new Date(row.startsAt));
       const list = grouped.get(year) ?? [];
       list.push(row);
       grouped.set(year, list);
     }
     return [...grouped.entries()].sort((a, b) => b[0] - a[0]);
-  }, [filtered]);
+  }, [paging.paged]);
 
   if (rows.length === 0) {
     return (
@@ -60,7 +65,7 @@ export function AttendanceHistory({
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6" ref={listRef}>
       <InputGroup className="max-w-md">
         <InputGroupInput
           onChange={(event) => setQuery(event.target.value)}
@@ -79,14 +84,25 @@ export function AttendanceHistory({
           title="No matching walks"
         />
       ) : (
-        years.map(([year, yearRows]) => (
-          <section className="flex flex-col gap-3" key={year}>
-            <h2 className="text-sm font-medium text-muted-foreground">
-              {year} · {yearRows.length} {yearRows.length === 1 ? "walk" : "walks"}
-            </h2>
-            <HistoryList rows={yearRows} />
-          </section>
-        ))
+        <>
+          {years.map(([year, yearRows]) => (
+            <section className="flex flex-col gap-3" key={year}>
+              <h2 className="text-sm font-medium text-muted-foreground">
+                {year} · {yearRows.length} {yearRows.length === 1 ? "walk" : "walks"}
+              </h2>
+              <HistoryList rows={yearRows} />
+            </section>
+          ))}
+          <ListPagination
+            noun="walks"
+            onPageChange={paging.setPage}
+            page={paging.page}
+            pageCount={paging.pageCount}
+            pageSize={paging.pageSize}
+            scrollToRef={listRef}
+            total={paging.total}
+          />
+        </>
       )}
     </div>
   );

@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getOptionalUser, requireUser } from "@/lib/auth";
 import { formatWalkDate, formatDateTime } from "@/lib/dates";
 import { windowState } from "@/lib/walk-window";
-import { accountPortalHref } from "@/lib/urls";
+import { accountPortalHref, appUrl } from "@/lib/urls";
 import { ClockInForm } from "./clock-in-form";
 import { ClockOutButton } from "@/components/clock-out-button";
 import { WalkMembers } from "@/components/walk-members";
@@ -23,10 +22,7 @@ export default async function WalkLinkPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-  const headerList = await headers();
-  const host = headerList.get("x-forwarded-host") ?? headerList.get("host") ?? "";
-  const proto = headerList.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
-  const walkUrl = `${proto}://${host}/w/${token}`;
+  const walkUrl = `${appUrl()}/w/${token}`;
 
   const [walk, user] = await Promise.all([
     prisma.walk.findUnique({

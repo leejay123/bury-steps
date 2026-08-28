@@ -47,6 +47,11 @@ export default async function AdminSettingsPage() {
       description: "Back to top button, and other site-wide display options.",
     },
     {
+      href: "/admin/settings/cache",
+      title: "Site cache",
+      description: "Refresh the public homepage if it still shows old content.",
+    },
+    {
       href: "/admin/reports",
       title: "Accident reports",
       description: "Record what happened on a walk, then print or save as PDF.",
@@ -62,7 +67,7 @@ export default async function AdminSettingsPage() {
     <div className="flex flex-col">
       <div className="relative px-4 py-6 md:px-6">
         <AdminPageIntro
-          description="Homepage photos, quotes, FAQs, notices, and display."
+          description="Homepage photos, quotes, FAQs, notices, display, and cache."
           title="Settings"
         />
         <FullWidthDivider position="bottom" />
