@@ -442,10 +442,12 @@ export function OrganiserGuide() {
                 Members open Walks from the menu. Each walk is a card with the date, length,
                 meeting point, a truncated preview of the description, and a badge if clock-in is
                 open, they are already in, or the walk is cancelled. Tapping anywhere on the card
-                opens that walk’s full page with the rest of the description; the Clock in and Clock
-                out buttons on the card work without leaving the list. Recent clock-ins are in a list
-                underneath, with a short date — tap a row to open that walk, then ← Walks to come
-                back. History in the menu is every walk they have clocked in to, grouped by year,
+                opens that walk’s full page with the rest of the description and the full “Who’s
+                coming” list; the card itself only shows a one-line headcount. The Clock in button
+                works right there on the card without leaving the list, but Clock out is a
+                deliberate step and only lives on the walk’s own page. Recent clock-ins are in a
+                list underneath, with a short date — tap a row to open that walk, then ← Walks to
+                come back. History in the menu is every walk they have clocked in to, grouped by year,
                 with a search box, and tapping anywhere on a row opens that walk too. Previous and
                 Next appear if they have more than 20 walks.
               </p>
