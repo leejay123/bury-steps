@@ -198,20 +198,41 @@ html:has([data-slot="alert-dialog-content"][data-state="open"]) header {
 }
 
 @media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+
   header,
   footer,
   [data-slot="toaster"],
-  [data-slot="cookie-consent"] {
+  [data-slot="cookie-consent"],
+  .cl-userButton-root,
+  .cl-userButtonTrigger {
     display: none !important;
   }
 
   main {
+    margin: 0 !important;
     padding: 0 !important;
   }
 
   body > div {
-    max-width: none !important;
     border: none !important;
+    display: block !important;
+    max-width: none !important;
+    min-height: 0 !important;
+  }
+
+  [data-print-document] img {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 }
 

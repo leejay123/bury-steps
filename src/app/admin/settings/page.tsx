@@ -72,7 +72,7 @@ export default async function AdminSettingsPage() {
         />
         <FullWidthDivider position="bottom" />
       </div>
-      <div className="px-4 py-6 md:px-6">
+      <div className="px-4 pt-6 pb-0 md:px-6">
         <SettingsGrid items={items} />
       </div>
     </div>

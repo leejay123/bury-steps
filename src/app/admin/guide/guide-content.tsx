@@ -349,8 +349,9 @@ export function OrganiserGuide() {
                   go back to the write-up. Remove is on the list under the text on a phone.
                 </li>
                 <li>
-                  Choose Print from the list or from the report to open a printable page, then use
-                  the browser dialog to save a PDF.
+                  Choose Print from the list or from the report. The PDF has the group logo, the
+                  date, the walk, who recorded it, and the full write-up. In the print dialog, turn
+                  off Headers and footers so the web address is not printed on the page.
                 </li>
               </Steps>
             </GuideBody>
@@ -428,7 +429,8 @@ export function OrganiserGuide() {
                 Text, tables, and forms line up with the logo and nav. Photo and quote grids, and
                 the edge-to-edge lines, still reach the side borders. Settings is a bordered list of
                 rows, tap one to open that page — the same style as Walks, Members, and Accident
-                reports. This Guide is full-width sections with a line between each.
+                reports. This Guide is full-width sections with a line between each. Privacy and
+                Terms of Service use the same layout.
               </p>
               <p>
                 Walk lists keep the title, date, and meeting point on one card so they fit a phone.
