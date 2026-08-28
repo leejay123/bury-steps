@@ -28,6 +28,36 @@ describe("londonWallClockToUtc", () => {
     const utc = londonWallClockToUtc(original);
     expect(utcToLondonWallClock(utc)).toBe(original);
   });
+
+  it("shifts a spring-forward gap time forward past the transition", () => {
+    // Clocks in the UK jump from 00:59 GMT straight to 02:00 BST on
+    // 2026-03-29, so 01:30 never happens on the wall clock. This should
+    // resolve to 02:30 BST (01:30 UTC), not silently lose an hour.
+    const result = londonWallClockToUtc("2026-03-29T01:30");
+    expect(result.toISOString()).toBe("2026-03-29T01:30:00.000Z");
+  });
+
+  it("resolves an unambiguous time just before the spring-forward gap", () => {
+    const result = londonWallClockToUtc("2026-03-29T00:30");
+    expect(result.toISOString()).toBe("2026-03-29T00:30:00.000Z");
+  });
+
+  it("resolves an unambiguous time just after the spring-forward gap", () => {
+    const result = londonWallClockToUtc("2026-03-29T03:00");
+    expect(result.toISOString()).toBe("2026-03-29T02:00:00.000Z");
+  });
+
+  it("resolves an ambiguous autumn-fold time to the first (BST) occurrence", () => {
+    // Clocks repeat 01:00-01:59 on 2026-10-25: first as BST (00:30 UTC),
+    // then again as GMT (01:30 UTC). The documented behaviour picks BST.
+    const result = londonWallClockToUtc("2026-10-25T01:30");
+    expect(result.toISOString()).toBe("2026-10-25T00:30:00.000Z");
+  });
+
+  it("resolves an unambiguous time after the autumn fold ends", () => {
+    const result = londonWallClockToUtc("2026-10-25T03:00");
+    expect(result.toISOString()).toBe("2026-10-25T03:00:00.000Z");
+  });
 });
 
 describe("londonYmd", () => {
