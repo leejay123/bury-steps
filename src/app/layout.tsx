@@ -93,6 +93,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <div className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
             <UnlockPageOnNavigate />
             {/*
+              Off-screen until focused, so a keyboard/screen-reader user's
+              very first tab stop jumps straight past the header and nav —
+              repeated on every page — instead of having to tab through it
+              every single time to reach the actual content.
+            */}
+            <a
+              className="sr-only rounded-md bg-background px-4 py-2 text-sm font-medium focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-ring"
+              href="#main-content"
+            >
+              Skip to content
+            </a>
+            {/*
               This header is sticky and present on every page, so its
               backdrop-filter is recomputed continuously while the whole page
               scrolls behind it. blur-xl (24px) stacked with an extra
@@ -121,7 +133,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <FullWidthDivider position="bottom" />
               </div>
             </header>
-            <main className={`flex-1 ${PAGE_Y} ${PAGE_X}`}>
+            <main className={`flex-1 ${PAGE_Y} ${PAGE_X}`} id="main-content">
               <MotionPage>{children}</MotionPage>
             </main>
             <SiteFooter />
