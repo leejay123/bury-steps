@@ -160,16 +160,25 @@ export function OrganiserGuide() {
                 </li>
               </ul>
               <p>
+                Once a walk reaches <strong>Completed</strong>, Cancel and Reschedule disappear
+                from its page — it already happened, so there is nothing left to cancel or move.
+                Remove and the CSV export are still there if the record itself needs correcting.
+              </p>
+              <p>
                 If a cancelled walk is not reopened, it is deleted automatically after{" "}
                 <strong>{CANCELLED_WALK_RETENTION_DAYS} days</strong>.
               </p>
               <p>
-                Open the walk from the list. Attendance is names and clock-in time for whoever is
-                on the walk right now. Anyone who has clocked out moves down into its own Clocked
-                out list below — so the count always matches the rows under it — with the same
-                details available. Tap a row for email, clock-out time, any clock-out reason, and
-                health notes. If more than 20 people clocked in, Previous and Next sit under
-                either list.
+                Open the walk from the list. <strong>Attendance</strong> is names and clock-in time
+                for whoever is on the walk right now. Anyone who has clocked out moves down into
+                its own <strong>Clocked out</strong> list below — so the count always matches the
+                rows under it — with the same details available. Once the walk reaches Completed,
+                the first list relabels itself to <strong>Attended</strong>: everyone still in it
+                stayed for the whole walk without clocking out, so “on the walk” would be wrong
+                once it’s over — and clocking out itself stops being offered to members from then
+                on, since there is nothing left to leave early from. Tap a row for email,
+                clock-out time, any clock-out reason, and health notes. If more than 20 people
+                clocked in, Previous and Next sit under either list.
               </p>
               <p>
                 Download roster (CSV) gives you names, emails, times, clock-out reasons, and any
@@ -202,19 +211,25 @@ export function OrganiserGuide() {
               <p>
                 Members who leave early tap <strong>Clock out</strong> and must give a reason. You
                 see that reason on the walk page. Other members only see that the person is no
-                longer on the list — not why they left.
+                longer on the list — not why they left. Clock out is only offered while the walk
+                is still open — once it reaches Completed there is nothing left to leave early
+                from, so a member who stayed clocked in the whole time just sees “You attended this
+                walk”, with no button.
               </p>
               <p>
                 Clock-in and clock-out are stored as two separate times. The member’s History page
                 and their walk history on their own member page in Members both show the clock-out
-                time when they have left, not the clock-in time again.
+                time when they have left, not the clock-in time again. A member who never clocked
+                out shows as “Still on the walk” while it’s open, and “Stayed for the whole walk”
+                once it’s Completed.
               </p>
               <p>
                 After clocking out, they can clock in again on the same walk if the window is still
                 open.
               </p>
               <p>
-                If they try too early, the page says clock-in is not open yet. If the window has
+                If they try too early, the page says when clock-in opens and shows a short “Before
+                you set off” checklist so the wait isn’t just a blank screen. If the window has
                 closed, they should speak to you.
               </p>
               <p>
@@ -472,11 +487,14 @@ export function OrganiserGuide() {
                 opens that walk’s full page with the rest of the description and the full “Who’s
                 coming” list; the card itself only shows a one-line headcount. The Clock in button
                 works right there on the card without leaving the list, but Clock out is a
-                deliberate step and only lives on the walk’s own page. Recent clock-ins are in a
-                list underneath, with a short date — tap a row to open that walk, then ← Walks to
-                come back. History in the menu is every walk they have clocked in to, grouped by year,
-                with a search box, and tapping anywhere on a row opens that walk too. Previous and
-                Next appear if they have more than 20 walks.
+                deliberate step and only lives on the walk’s own page. A “Your recent walks”
+                carousel underneath shows their last few — swipe or use the arrows to move between
+                them, and “View all” opens their full History. Only walks that have actually
+                finished (or been cancelled) show up there; a walk they’re still out on right now
+                doesn’t count as history yet. History in the menu is every finished or cancelled
+                walk they’ve clocked in to, grouped by year, with a search box, and tapping
+                anywhere on a row opens that walk too. Previous and Next appear if they have more
+                than 20 walks.
               </p>
             </GuideBody>
           </AccordionContent>
