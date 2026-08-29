@@ -8,7 +8,13 @@ import type { Prisma } from "@prisma/client";
 import { clerkClient } from "@clerk/nextjs/server";
 import { requireAdmin, requireUser, displayName } from "@/lib/auth";
 import { londonWallClockToUtc } from "@/lib/dates";
-import { geocodeFields } from "@/lib/geocode";
+import {
+  geocodeFields,
+  normalizeUkPostcode,
+  parseFormPoint,
+  searchPlaces,
+  type PlaceHit,
+} from "@/lib/geocode";
 import { windowState, walkStatus } from "@/lib/walk-window";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
@@ -100,9 +106,24 @@ const createWalkSchema = z.object({
   title: z.string().trim().min(3, "Give the walk a title of at least 3 characters.").max(120),
   description: z.string().trim().max(2000).optional(),
   location: z.string().trim().max(200).optional(),
+  postcode: z.string().trim().max(10).optional(),
   startsAt: z.string().min(16, "Choose a date and time."),
   durationMins: z.coerce.number().int().min(15).max(600),
 });
+
+async function walkPinFromForm(
+  formData: FormData,
+  location: string | null | undefined,
+  postcode: string | null | undefined,
+): Promise<{ latitude: number | null; longitude: number | null; postcode: string | null }> {
+  const storedPostcode = normalizeUkPostcode(postcode) ?? (postcode?.trim() ? postcode.trim().toUpperCase() : null);
+  const picked = parseFormPoint(formData.get("latitude"), formData.get("longitude"));
+  if (picked) {
+    return { latitude: picked.lat, longitude: picked.lng, postcode: storedPostcode };
+  }
+  const coords = await geocodeFields(location ?? null, postcode);
+  return { ...coords, postcode: storedPostcode };
+}
 
 export async function createWalk(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const admin = await requireAdmin();
@@ -111,6 +132,7 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
     title: formData.get("title"),
     description: formData.get("description") || undefined,
     location: formData.get("location") || undefined,
+    postcode: formData.get("postcode") || undefined,
     startsAt: formData.get("startsAt"),
     durationMins: formData.get("durationMins") ?? 90,
   });
@@ -126,7 +148,7 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
     return { ok: false, error: "That date and time could not be read. Try again." };
   }
 
-  const coords = await geocodeFields(parsed.data.location ?? null);
+  const pin = await walkPinFromForm(formData, parsed.data.location, parsed.data.postcode);
 
   let walk: { title: string };
   try {
@@ -136,8 +158,9 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
         title: parsed.data.title,
         description: parsed.data.description ?? null,
         location: parsed.data.location ?? null,
-        latitude: coords.latitude,
-        longitude: coords.longitude,
+        postcode: pin.postcode,
+        latitude: pin.latitude,
+        longitude: pin.longitude,
         startsAt,
         durationMins: parsed.data.durationMins,
         createdById: admin.id,
@@ -151,6 +174,29 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
   revalidatePath("/admin");
   revalidatePath("/dashboard");
   return { ok: true, message: `“${walk.title}” created. Share link is ready.` };
+}
+
+export async function searchWalkPlaces(
+  location: string,
+  postcode: string,
+): Promise<{ ok: true; places: PlaceHit[] } | { ok: false; error: string }> {
+  const admin = await requireAdmin();
+  const limited = checkRateLimit(`${admin.id}:searchWalkPlaces`, 10, 60_000);
+  if (!limited.ok) {
+    return { ok: false, error: `Too many searches. Try again in ${limited.retryAfterSeconds}s.` };
+  }
+
+  const loc = location.trim();
+  const pc = postcode.trim();
+  if (!loc && !pc) return { ok: false, error: "Type a meeting point or a postcode first." };
+  if (loc.length > 200) return { ok: false, error: "Keep the meeting point under 200 characters." };
+  if (pc.length > 10) return { ok: false, error: "That postcode is too long." };
+
+  const places = await searchPlaces(loc, pc);
+  if (places.length === 0) {
+    return { ok: false, error: "Nothing found. Try a postcode or a fuller name." };
+  }
+  return { ok: true, places };
 }
 
 // ---------------------------------------------------------------- cancel walk
@@ -244,6 +290,7 @@ export async function rescheduleWalk(
       startsAt: z.string().min(16, "Choose a date and time."),
       durationMins: z.coerce.number().int().min(15).max(600),
       location: z.string().trim().max(200).optional(),
+      postcode: z.string().trim().max(10).optional(),
       reopen: z.string().optional(),
       // Sent by the dialog that already knows this from the page it rendered
       // from — avoids a round trip to look the walk up just to re-read a
@@ -254,6 +301,7 @@ export async function rescheduleWalk(
       startsAt: formData.get("startsAt"),
       durationMins: formData.get("durationMins") ?? 90,
       location: formData.get("location") || undefined,
+      postcode: formData.get("postcode") || undefined,
       reopen: formData.get("reopen") || undefined,
       wasCancelled: formData.get("wasCancelled") || undefined,
     });
@@ -285,7 +333,7 @@ export async function rescheduleWalk(
     return { ok: false, error: "This walk has already finished, so it can't be rescheduled." };
   }
 
-  const coords = await geocodeFields(parsed.data.location ?? null);
+  const pin = await walkPinFromForm(formData, parsed.data.location, parsed.data.postcode);
 
   let walk: { token: string };
   try {
@@ -295,8 +343,9 @@ export async function rescheduleWalk(
         startsAt,
         durationMins: parsed.data.durationMins,
         location: parsed.data.location ?? null,
-        latitude: coords.latitude,
-        longitude: coords.longitude,
+        postcode: pin.postcode,
+        latitude: pin.latitude,
+        longitude: pin.longitude,
         ...(parsed.data.reopen === "on" || wasCancelled
           ? { cancelledAt: null, cancelledReason: null }
           : {}),

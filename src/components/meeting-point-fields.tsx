@@ -1,0 +1,172 @@
+"use client";
+
+import { useState, type KeyboardEvent } from "react";
+import { searchWalkPlaces } from "@/server/actions";
+import type { PlaceHit } from "@/lib/geocode";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
+export function MeetingPointFields({
+  defaultLatitude = null,
+  defaultLocation = "",
+  defaultLongitude = null,
+  defaultPostcode = "",
+  idPrefix,
+}: {
+  defaultLatitude?: number | null;
+  defaultLocation?: string;
+  defaultLongitude?: number | null;
+  defaultPostcode?: string;
+  idPrefix: string;
+}) {
+  const [location, setLocation] = useState(defaultLocation);
+  const [postcode, setPostcode] = useState(defaultPostcode);
+  const [places, setPlaces] = useState<PlaceHit[] | null>(null);
+  const [pickedId, setPickedId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [keepSavedPin, setKeepSavedPin] = useState(
+    defaultLatitude != null && defaultLongitude != null,
+  );
+
+  const picked = places?.find((place) => place.id === pickedId) ?? null;
+  const pinLat = picked?.lat ?? (keepSavedPin ? defaultLatitude : null);
+  const pinLng = picked?.lng ?? (keepSavedPin ? defaultLongitude : null);
+
+  function onLocationChange(value: string) {
+    setLocation(value);
+    setKeepSavedPin(false);
+    setPlaces(null);
+    setPickedId(null);
+    setError(null);
+  }
+
+  function onPostcodeChange(value: string) {
+    setPostcode(value);
+    setKeepSavedPin(false);
+    setPlaces(null);
+    setPickedId(null);
+    setError(null);
+  }
+
+  function onFindKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    void findPlace();
+  }
+
+  async function findPlace() {
+    if (searching || (!location.trim() && !postcode.trim())) return;
+    setSearching(true);
+    setError(null);
+    setPlaces(null);
+    setPickedId(null);
+    setKeepSavedPin(false);
+    try {
+      const result = await searchWalkPlaces(location, postcode);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setPlaces(result.places);
+      if (result.places.length === 1) setPickedId(result.places[0].id);
+    } catch {
+      setError("Could not search right now. Try again in a moment.");
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  const locationId = `${idPrefix}-location`;
+  const postcodeId = `${idPrefix}-postcode`;
+
+  return (
+    <div className="space-y-3">
+      <div className="space-y-1.5">
+        <Label htmlFor={locationId}>Meeting point</Label>
+        <Input
+          id={locationId}
+          name="location"
+          onChange={(event) => onLocationChange(event.target.value)}
+          onKeyDown={onFindKeyDown}
+          placeholder="Visitor centre, Burrs Country Park"
+          maxLength={200}
+          value={location}
+        />
+        <p className="text-xs text-muted-foreground">
+          What people see on the share link. Keep it short — the pin comes from Find this place.
+        </p>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor={postcodeId}>Postcode</Label>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Input
+            autoComplete="postal-code"
+            className="sm:max-w-40"
+            id={postcodeId}
+            name="postcode"
+            onChange={(event) => onPostcodeChange(event.target.value)}
+            onKeyDown={onFindKeyDown}
+            placeholder="BL8 1DA"
+            maxLength={10}
+            value={postcode}
+          />
+          <Button
+            disabled={searching || (!location.trim() && !postcode.trim())}
+            onClick={() => void findPlace()}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            {searching ? "Finding…" : "Find this place"}
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Optional, but a UK postcode is the most reliable way to drop the pin in the right car
+          park. Tap Find this place, then pick the match.
+        </p>
+      </div>
+
+      <input name="latitude" type="hidden" value={pinLat ?? ""} />
+      <input name="longitude" type="hidden" value={pinLng ?? ""} />
+
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+
+      {places && places.length > 0 ? (
+        <fieldset className="space-y-2">
+          <legend className="text-sm font-medium">Pick the right place</legend>
+          <RadioGroup className="grid gap-2" onValueChange={setPickedId} value={pickedId ?? ""}>
+            {places.map((place, index) => {
+              const inputId = `${idPrefix}-place-${index}`;
+              return (
+                <Label
+                  className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm font-normal has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-accent"
+                  htmlFor={inputId}
+                  key={`${place.id}-${index}`}
+                >
+                  <RadioGroupItem className="mt-0.5 size-5" id={inputId} value={place.id} />
+                  <span>{place.label}</span>
+                </Label>
+              );
+            })}
+          </RadioGroup>
+        </fieldset>
+      ) : null}
+
+      {pinLat != null && pinLng != null && !places ? (
+        <p className="text-xs text-muted-foreground">
+          A map pin is already set. Find this place again if you change the meeting point.
+        </p>
+      ) : null}
+
+      {picked ? (
+        <p className="text-xs text-muted-foreground">
+          Pin set. The meeting point wording above is unchanged — only the map uses this match.
+        </p>
+      ) : null}
+    </div>
+  );
+}

@@ -7,6 +7,7 @@ import { getOptionalUser, requireUser } from "@/lib/auth";
 import { formatWalkDate, formatDateTime, formatDate, formatTime } from "@/lib/dates";
 import { windowState, OPENS_BEFORE_MS } from "@/lib/walk-window";
 import { accountPortalHref, appUrl } from "@/lib/urls";
+import { meetingPointLabel } from "@/lib/geocode";
 import { ensureWalkPoint } from "@/lib/walk-coordinates";
 import { ClockInForm } from "./clock-in-form";
 import { ClockOutButton } from "@/components/clock-out-button";
@@ -33,6 +34,7 @@ const getWalkByToken = cache((token: string) =>
       title: true,
       description: true,
       location: true,
+      postcode: true,
       latitude: true,
       longitude: true,
       startsAt: true,
@@ -52,10 +54,11 @@ export async function generateMetadata({
   if (!walk) return { title: "Walk not found — Bury Steps Walking Group" };
 
   const when = formatWalkDate(walk.startsAt);
+  const meeting = meetingPointLabel(walk.location, walk.postcode);
   const title = `${walk.title} — Bury Steps Walking Group`;
   const description = walk.cancelledAt
-    ? `Cancelled. Was ${when}${walk.location ? ` at ${walk.location}` : ""}.`
-    : `${when}${walk.location ? ` · ${walk.location}` : ""}. Tap to see details and clock in.`;
+    ? `Cancelled. Was ${when}${meeting ? ` at ${meeting}` : ""}.`
+    : `${when}${meeting ? ` · ${meeting}` : ""}. Tap to see details and clock in.`;
 
   return {
     title,
@@ -87,7 +90,8 @@ export default async function WalkLinkPage({
     : null;
 
   const memberNames = alreadyIn ? await getWalkMemberNames(walk.id) : [];
-  const mapPoint = walk.location ? await ensureWalkPoint(walk) : null;
+  const meeting = meetingPointLabel(walk.location, walk.postcode);
+  const mapPoint = meeting ? await ensureWalkPoint(walk) : null;
 
   const state = windowState(walk.startsAt, walk.durationMins);
   const walksHref = user?.role === "ADMIN" ? "/admin" : "/dashboard";
@@ -102,6 +106,32 @@ export default async function WalkLinkPage({
         ← {user ? "Walks" : "Home"}
       </Link>
 
+      {walk.cancelledAt ? (
+        <Alert variant="destructive">
+          <AlertTitle>This walk has been cancelled</AlertTitle>
+          <AlertDescription>Check the walks list for the next one.</AlertDescription>
+        </Alert>
+      ) : !user ? (
+        <div className="space-y-4 rounded-lg border bg-muted/40 p-5">
+          <div className="space-y-1">
+            <p className="font-medium">You need to sign in to join this walk</p>
+            <p className="text-sm text-muted-foreground">
+              Clock-in is only for signed-in members. If you do not have an account yet, create one
+              first. If you already have an account, sign in. You will come back to this walk
+              afterwards.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild size="sm">
+              <a href={accountPortalHref("sign-up", walkUrl)}>Create an account</a>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <a href={accountPortalHref("sign-in", walkUrl)}>Sign in</a>
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
       <Card className="gap-4">
         <CardHeader>
           <div className="flex items-start justify-between gap-3">
@@ -113,6 +143,7 @@ export default async function WalkLinkPage({
           <WalkFacts
             durationMins={walk.durationMins}
             location={walk.location}
+            postcode={walk.postcode}
             startsAt={walk.startsAt}
           />
           {walk.description ? (
@@ -121,35 +152,10 @@ export default async function WalkLinkPage({
         </CardContent>
       </Card>
 
-      {walk.location ? <WalkMap location={walk.location} point={mapPoint} /> : null}
+      {meeting ? <WalkMap location={meeting} point={mapPoint} /> : null}
 
-      {walk.cancelledAt ? (
-        <Alert variant="destructive">
-          <AlertTitle>This walk has been cancelled</AlertTitle>
-          <AlertDescription>
-            Check the walks list for the next one.
-          </AlertDescription>
-        </Alert>
-      ) : !user ? (
+      {walk.cancelledAt ? null : !user ? (
         <>
-          <div className="space-y-4 rounded-lg border bg-muted/40 p-5">
-            <div className="space-y-1">
-              <p className="font-medium">You need to sign in to join this walk</p>
-              <p className="text-sm text-muted-foreground">
-                Clock-in is only for signed-in members. If you do not have an account yet, create one
-                first. If you already have an account, sign in. You will come back to this walk
-                afterwards.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button asChild size="sm">
-                <a href={accountPortalHref("sign-up", walkUrl)}>Create an account</a>
-              </Button>
-              <Button asChild size="sm" variant="outline">
-                <a href={accountPortalHref("sign-in", walkUrl)}>Sign in</a>
-              </Button>
-            </div>
-          </div>
           <BeforeYouSetOff />
           <HowWalksWork />
         </>

@@ -5,10 +5,10 @@ import { useFormStatus } from "react-dom";
 import { rescheduleWalk, type ActionResult } from "@/server/actions";
 import { utcToLondonWallClock } from "@/lib/dates";
 import { useActionToast } from "@/hooks/use-action-toast";
-import { FormError } from "@/components/form-error";
 import { DateTimePicker } from "@/components/date-time-picker";
+import { MeetingPointFields } from "@/components/meeting-point-fields";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -40,13 +40,19 @@ function Confirm({ cancelled }: { cancelled: boolean }) {
 export function RescheduleWalkButton({
   cancelled,
   durationMins,
+  latitude,
   location,
+  longitude,
+  postcode,
   startsAt,
   walkId,
 }: {
   cancelled: boolean;
   durationMins: number;
+  latitude: number | null;
   location: string | null;
+  longitude: number | null;
+  postcode: string | null;
   startsAt: string;
   walkId: string;
 }) {
@@ -64,7 +70,10 @@ export function RescheduleWalkButton({
           Reschedule
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent closeDisabled={isPending}>
+      <AlertDialogContent
+        className="max-h-[min(90dvh,42rem)] overflow-y-auto sm:max-w-xl"
+        closeDisabled={isPending}
+      >
         <form action={action} className="flex flex-col gap-4">
           <AlertDialogHeader>
             <AlertDialogTitle>Reschedule this walk?</AlertDialogTitle>
@@ -104,18 +113,13 @@ export function RescheduleWalkButton({
               </Select>
             </div>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`reschedule-location-${walkId}`}>Meeting point</Label>
-            <Input
-              defaultValue={location ?? ""}
-              id={`reschedule-location-${walkId}`}
-              name="location"
-              placeholder="Burrs Country Park visitor centre, Bury"
-            />
-            <p className="text-xs text-muted-foreground">
-              Include the park or street and the town so the map pin can be found.
-            </p>
-          </div>
+          <MeetingPointFields
+            defaultLatitude={latitude}
+            defaultLocation={location ?? ""}
+            defaultLongitude={longitude}
+            defaultPostcode={postcode ?? ""}
+            idPrefix={`reschedule-${walkId}`}
+          />
           <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending} type="button">

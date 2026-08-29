@@ -126,11 +126,13 @@ export function OrganiserGuide() {
                   Length is the same kind of list, and defaults to 90 minutes.
                 </li>
                 <li>
-                  Add a meeting point if you can — the park, street, or car park, plus the town
-                  (for example “Burrs Country Park visitor centre, Bury”). The share link shows a
-                  map of that place and Get directions, using free OpenStreetMap. No extra account
-                  is needed. If the wording is too vague to find, people still get directions from
-                  the text, just without a pin.
+                  Add a meeting point if you can — a short label people will recognise (for example
+                  “Visitor centre, Burrs”). Optionally add a UK postcode, then tap{" "}
+                  <strong>Find this place</strong>. Pick the right match from the list. That sets
+                  the map pin; the wording you typed is what members still see. A postcode is the
+                  most reliable pin. If you skip Find this place, the site looks the meeting point
+                  up when you save. If nothing matches, people still get directions from the text,
+                  just without a pin. The map uses free OpenStreetMap — no extra account is needed.
                 </li>
                 <li>Add a short description if you want.</li>
                 <li>Choose Create walk. A share link is generated automatically.</li>
@@ -140,9 +142,10 @@ export function OrganiserGuide() {
                 <li>Open the walk from the list.</li>
                 <li>Copy the share link and post it in Facebook, or read the short code aloud.</li>
                 <li>
-                  Someone who is not signed in sees the date, time, length, meeting point, a map
-                  with Get directions, what to bring, and how the group works, then a prompt to
-                  create an account or sign in. Names of who is on the walk stay private.
+                  Someone who is not signed in sees a prompt to create an account or sign in first,
+                  then the date, time, length, meeting point (and postcode if you added one), a map
+                  with Get directions, what to bring, and how the group works. Names of who is on
+                  the walk stay private.
                 </li>
               </Steps>
               <p>
@@ -158,8 +161,9 @@ export function OrganiserGuide() {
                 </li>
                 <li>
                   <strong>Reschedule</strong> changes the date, time, length, or meeting point with
-                  the same calendar as Create walk. If the walk was cancelled, rescheduling also
-                  puts it back on the diary.
+                  the same calendar and Find this place fields as Create walk. If the walk was
+                  cancelled, rescheduling also puts it back on the diary. The walk’s own organiser
+                  page shows the same map members see on the share link.
                 </li>
                 <li>
                   <strong>Reopen</strong> undoes a cancel. Clock-in works again if the time window
@@ -475,8 +479,9 @@ export function OrganiserGuide() {
                 Pasting a link to the homepage or a walk (<code>/w/…</code>) into WhatsApp,
                 Messenger, or similar shows a preview card with the site name and, for a walk
                 link, that walk’s own title and date. Opening the walk link without an account
-                shows the meeting point on a map, with Get directions into Google Maps or Apple
-                Maps. The browser tab and bookmark icon use the same walking-boot mark. On a phone,
+                shows the meeting point on a map (and the postcode if the organiser added one), with
+                Get directions into Google Maps or Apple Maps. The browser tab and bookmark icon
+                use the same walking-boot mark. On a phone,
                 “Add to Home Screen” (Safari) or “Install app”
                 (Chrome) adds a Bury Steps icon that opens straight to Walks.
               </p>

@@ -5,15 +5,16 @@ import { geocodeLocation, type GeoPoint } from "@/lib/geocode";
 export async function ensureWalkPoint(walk: {
   id: string;
   location: string | null;
+  postcode?: string | null;
   latitude: number | null;
   longitude: number | null;
 }): Promise<GeoPoint | null> {
   if (walk.latitude != null && walk.longitude != null) {
     return { lat: walk.latitude, lng: walk.longitude };
   }
-  if (!walk.location) return null;
+  if (!walk.location && !walk.postcode) return null;
 
-  const point = await geocodeLocation(walk.location);
+  const point = await geocodeLocation(walk.location ?? "", walk.postcode);
   if (!point) return null;
 
   try {

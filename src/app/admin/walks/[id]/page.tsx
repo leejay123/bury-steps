@@ -9,6 +9,9 @@ import { appUrl } from "@/lib/urls";
 import { ShareLink } from "@/components/share-link";
 import { EmptyState } from "@/components/empty-state";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
+import { WalkMap } from "@/components/walk-map";
+import { meetingPointLabel } from "@/lib/geocode";
+import { ensureWalkPoint } from "@/lib/walk-coordinates";
 import { CancelWalkButton } from "./cancel-walk-button";
 import { RescheduleWalkButton } from "./reschedule-walk-button";
 import { ReopenWalkButton } from "./reopen-walk-button";
@@ -46,6 +49,9 @@ export default async function WalkDetailPage({
       title: true,
       description: true,
       location: true,
+      postcode: true,
+      latitude: true,
+      longitude: true,
       startsAt: true,
       durationMins: true,
       cancelledAt: true,
@@ -59,6 +65,8 @@ export default async function WalkDetailPage({
 
   if (!walk) notFound();
 
+  const meeting = meetingPointLabel(walk.location, walk.postcode);
+  const mapPoint = meeting ? await ensureWalkPoint(walk) : null;
   const attendances = walk.attendances;
   const stillIn = attendances.filter((a) => !a.clockedOutAt);
   const clockedOut = attendances.filter((a) => a.clockedOutAt);
@@ -92,7 +100,7 @@ export default async function WalkDetailPage({
             <CardTitle className="text-2xl">{walk.title}</CardTitle>
             <CardDescription>
               {formatWalkDate(walk.startsAt)}
-              {walk.location ? ` · ${walk.location}` : ""} · {walk.durationMins} min
+              {meeting ? ` · ${meeting}` : ""} · {walk.durationMins} min
             </CardDescription>
           </div>
           <WalkStatusBadge status={status} />
@@ -110,6 +118,8 @@ export default async function WalkDetailPage({
       </Card>
 
       <ShareLink url={`${appUrl()}/w/${walk.token}`} />
+
+      {meeting ? <WalkMap location={meeting} point={mapPoint} /> : null}
 
       <div className="flex flex-wrap items-center gap-2">
         <Button asChild size="sm" variant="outline">
@@ -131,7 +141,10 @@ export default async function WalkDetailPage({
           <RescheduleWalkButton
             cancelled={Boolean(walk.cancelledAt)}
             durationMins={walk.durationMins}
+            latitude={walk.latitude}
             location={walk.location}
+            longitude={walk.longitude}
+            postcode={walk.postcode}
             startsAt={walk.startsAt.toISOString()}
             walkId={walk.id}
           />

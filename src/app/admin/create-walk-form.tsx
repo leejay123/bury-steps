@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 import { createWalk, type ActionResult } from "@/server/actions";
 import { DateTimePicker } from "@/components/date-time-picker";
+import { MeetingPointFields } from "@/components/meeting-point-fields";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,18 +77,7 @@ export function CreateWalkForm() {
         </div>
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="location">Meeting point</Label>
-        <Input
-          id="location"
-          name="location"
-          placeholder="Burrs Country Park visitor centre, Bury"
-        />
-        <p className="text-xs text-muted-foreground">
-          Used for the map and Get directions. Include the park or street and the town so the pin
-          can be found.
-        </p>
-      </div>
+      <MeetingPointFields idPrefix="create-walk" key={formKey} />
 
       <div className="space-y-1.5">
         <Label htmlFor="description">Description</Label>

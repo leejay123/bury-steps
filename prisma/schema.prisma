@@ -36,6 +36,8 @@ model Walk {
   title        String
   description  String?
   location     String?
+  /// Optional UK postcode used to place the map pin. Members still see `location`.
+  postcode     String?
   /// Set from the meeting point via OpenStreetMap Nominatim. Null if unknown.
   latitude     Float?
   longitude    Float?
