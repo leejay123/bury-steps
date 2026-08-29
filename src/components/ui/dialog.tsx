@@ -50,7 +50,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 z-[60] data-[state=closed]:invisible data-[state=closed]:!pointer-events-none",
+        "fixed top-[var(--site-header-height)] right-0 bottom-0 left-0 z-[60] data-[state=closed]:invisible data-[state=closed]:!pointer-events-none",
         className,
       )}
       {...props}

@@ -115,20 +115,36 @@ body {
   background-color: rgba(18, 28, 22, 0.42) !important;
 }
 
-/* Sticky header must not steal taps from drawers/dialogs while they are open.
-   When Safari locks scroll with position:fixed on <body>, a sticky header at
-   document top is shifted off-screen with the page — pin it to the viewport
-   so the bar stays visible (dimmed under the overlay) on every browser. */
+/* Site chrome height (h-14). Overlays sit below this so the bar never
+   disappears under the dim layer when a drawer/dialog opens. */
+:root {
+  --site-header-height: 3.5rem;
+}
+
+/* Sticky header must stay on screen while overlays lock scroll. overflow:hidden
+   on <html>/<body> disables position:sticky, so pin the bar to the viewport
+   above the overlay (z-65 > overlay z-60). Keep the same max width as the
+   page shell — left/right:0 would stretch it full-bleed across Safari. */
 html:has([data-slot="drawer-content"][data-state="open"]) header,
 html:has([data-slot="dialog-content"][data-state="open"]) header,
 html:has([data-slot="alert-dialog-content"][data-state="open"]) header {
-  pointer-events: none;
   position: fixed;
   top: 0;
-  right: 0;
-  left: 0;
-  z-index: 55;
-  width: 100%;
+  left: 50%;
+  z-index: 65;
+  box-sizing: border-box;
+  width: min(100%, 1200px);
+  max-width: 1200px;
+  height: auto;
+  flex: none;
+  align-self: flex-start;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  border-right-width: 1px;
+  border-left-width: 1px;
+  border-style: solid;
+  border-color: var(--border);
+  transform: translate3d(-50%, 0, 0);
 }
 
 /* Clerk's shadcn theme draws the field with box-shadow, then adds a 4px
