@@ -94,7 +94,7 @@ export function WalkJourneyManager({
         <div className="flex flex-col gap-1">
           <h2 className="font-medium">Journey</h2>
           <p className="text-sm text-muted-foreground">
-            Short moments from the walk — members see them on the walk link. Up to{" "}
+            Short moments from the walk — members open View journey on the walk link. Up to{" "}
             {MAX_JOURNEY_EVENTS}.
           </p>
         </div>

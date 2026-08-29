@@ -10,7 +10,7 @@ import { meetingPointLabel } from "@/lib/geocode";
 import { ensureWalkSlug, walkShareUrl } from "@/lib/walk-slug";
 import { WalkFacts } from "@/components/walk-facts";
 import { WalkMapSection } from "@/components/walk-map-section";
-import { WalkJourneyTimeline } from "@/components/walk-journey-timeline";
+import { WalkJourneyDrawer } from "@/components/walk-journey-drawer";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { HowWalksWork } from "@/components/how-walks-work";
 import { getWalkMemberNames } from "@/lib/walk-members";
@@ -103,15 +103,24 @@ export default async function WalkLinkPage({
   const memberNames = alreadyIn ? await getWalkMemberNames(walk.id) : [];
   const meeting = meetingPointLabel(walk.location, walk.postcode);
   const walksHref = user?.role === "ADMIN" ? "/admin" : "/dashboard";
+  const journeyEvents = walk.journeyEvents.map((event) => ({
+    id: event.id,
+    title: event.title,
+    body: event.body,
+    happenedAt: event.happenedAt.toISOString(),
+  }));
 
   return (
     <div className="flex flex-col gap-6">
-      <Link
-        className="text-sm text-muted-foreground hover:text-foreground"
-        href={user ? walksHref : "/"}
-      >
-        ← {user ? "Walks" : "Home"}
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link
+          className="text-sm text-muted-foreground hover:text-foreground"
+          href={user ? walksHref : "/"}
+        >
+          ← {user ? "Walks" : "Home"}
+        </Link>
+        <WalkJourneyDrawer events={journeyEvents} />
+      </div>
 
       {walk.cancelledAt ? (
         <Alert variant="destructive">
@@ -164,21 +173,6 @@ export default async function WalkLinkPage({
       </Card>
 
       {meeting ? <WalkMapSection location={meeting} walk={walk} /> : null}
-
-      {walk.journeyEvents.length > 0 ? (
-        <section className="flex flex-col gap-3">
-          <h2 className="font-medium">Journey</h2>
-          <p className="text-sm text-muted-foreground">What happened on this walk.</p>
-          <WalkJourneyTimeline
-            events={walk.journeyEvents.map((event) => ({
-              id: event.id,
-              title: event.title,
-              body: event.body,
-              happenedAt: event.happenedAt.toISOString(),
-            }))}
-          />
-        </section>
-      ) : null}
 
       {walk.cancelledAt ? null : !user ? (
         <>

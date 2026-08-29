@@ -199,15 +199,6 @@ export default async function WalkDetailPage({
         </Alert>
       )}
 
-      <WalkJourneyManager
-        canEdit={canEditJourney}
-        defaultHappenedAt={journeyDefaultAt}
-        events={journeyEvents}
-        walkId={walk.id}
-      />
-
-      <Separator />
-
       {/*
         Split into two lists rather than one merged table: "Attendance" is
         who is on the walk right now, full stop — someone who clocked out
@@ -276,6 +267,15 @@ export default async function WalkDetailPage({
           <WalkAttendanceTable rows={clockedOut.map(toAttendanceRow)} walkCompleted={isCompleted} />
         </section>
       ) : null}
+
+      <Separator />
+
+      <WalkJourneyManager
+        canEdit={canEditJourney}
+        defaultHappenedAt={journeyDefaultAt}
+        events={journeyEvents}
+        walkId={walk.id}
+      />
     </div>
   );
 }
