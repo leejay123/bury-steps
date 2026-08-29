@@ -37,3 +37,18 @@ export function walkStatus(
   if (state === "open") return "open";
   return "completed";
 }
+
+/**
+ * Whether a walk a member clocked in to belongs in their "history" yet. A
+ * walk that's still under way isn't history — it's happening right now —
+ * so this is only true once it's cancelled (kept as a record either way)
+ * or fully completed. There's no "upcoming" case here in practice: you can
+ * only have an attendance record for a walk you've clocked in to, which
+ * requires its window to already be open.
+ */
+export function isWalkHistoryReady(
+  walk: { cancelledAt: Date | null; startsAt: Date; durationMins: number },
+  now: Date = new Date(),
+): boolean {
+  return walkStatus(walk, now) !== "open";
+}

@@ -1,17 +1,17 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ChevronRight, Footprints } from "lucide-react";
+import { Footprints } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
-import { formatCompactDateTime, formatDate, formatMembershipAge } from "@/lib/dates";
-import { windowState } from "@/lib/walk-window";
+import { formatDate, formatMembershipAge } from "@/lib/dates";
+import { windowState, walkStatus } from "@/lib/walk-window";
 import { CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { EmptyState } from "@/components/empty-state";
-import { DataList, DataListBody, DataListItem } from "@/components/data-list";
 import { Button } from "@/components/ui/button";
 import { MemberWelcomeDialog } from "@/components/member-welcome-dialog";
 import { getWalkMemberNamesByWalkIds } from "@/lib/walk-members";
 import { UpcomingWalkCards } from "./upcoming-walk-cards";
+import { RecentWalksCarousel } from "./recent-walks-carousel";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +28,7 @@ export default async function DashboardPage() {
     now.getTime() - CANCELLED_WALK_RETENTION_DAYS * 24 * 60 * 60 * 1000,
   );
 
-  const [walks, history, historyCount] = await Promise.all([
+  const [walks, historyCandidates, totalAttendanceCount] = await Promise.all([
     prisma.walk.findMany({
       where: {
         OR: [{ startsAt: { gte: upcomingFrom } }, { cancelledAt: { gte: cancelledFrom } }],
@@ -57,13 +57,41 @@ export default async function DashboardPage() {
       // here in the "recent walks" glance, crowding out walks that
       // actually happened. Reopening a walk clears cancelledAt, so it
       // reappears here on its own.
+      //
+      // Capped generously rather than to the 3 actually shown: a walk
+      // still under way isn't "history" yet either — it hasn't finished —
+      // so the most recent clock-in isn't necessarily the most recent
+      // *completed* one, and this needs enough candidates to filter down
+      // from.
       where: { userId: user.id, walk: { cancelledAt: null } },
       orderBy: { clockedInAt: "desc" },
-      take: 5,
-      include: { walk: { select: { title: true, token: true, startsAt: true } } },
+      take: 30,
+      include: {
+        walk: {
+          select: {
+            id: true,
+            title: true,
+            token: true,
+            startsAt: true,
+            durationMins: true,
+            cancelledAt: true,
+          },
+        },
+      },
     }),
     prisma.attendance.count({ where: { userId: user.id } }),
   ]);
+
+  const completedHistory = historyCandidates.filter(
+    (attendance) => walkStatus(attendance.walk) === "completed",
+  );
+  const recentWalks = completedHistory.slice(0, 3);
+  // Any walk still in progress is necessarily among the most recent
+  // clock-ins, so it's guaranteed to be in `historyCandidates` — meaning
+  // this count of everything else (completed or cancelled) is exact, not
+  // an estimate, even though only 30 candidates were fetched.
+  const inProgressCount = historyCandidates.length - completedHistory.length;
+  const historyReadyCount = totalAttendanceCount - inProgressCount;
 
   const clockedWalkIds = walks
     .filter((walk) => walk.attendances.length > 0)
@@ -72,7 +100,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <MemberWelcomeDialog hasNoWalks={historyCount === 0} />
+      <MemberWelcomeDialog hasNoWalks={totalAttendanceCount === 0} />
       <div className="flex flex-col gap-1.5">
         <h1 className="text-2xl font-semibold tracking-tight">Walks</h1>
         <p className="text-sm text-muted-foreground">
@@ -109,36 +137,25 @@ export default async function DashboardPage() {
         />
       )}
 
-      {history.length > 0 ? (
+      {recentWalks.length > 0 ? (
         <section className="flex flex-col gap-3">
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="text-sm font-medium text-muted-foreground">Your recent walks</h2>
             <Button asChild size="sm" variant="ghost">
               <Link href="/dashboard/history">
-                {historyCount === 1 ? "View history" : `View all ${historyCount}`}
+                {historyReadyCount === 1 ? "View history" : `View all ${historyReadyCount}`}
               </Link>
             </Button>
           </div>
-          <DataList>
-            {history.map((attendance) => (
-              <DataListItem className="relative" key={attendance.id}>
-                <DataListBody>
-                  <p className="font-medium">
-                    <Link className="after:absolute after:inset-0" href={`/w/${attendance.walk.token}`}>
-                      {attendance.walk.title}
-                    </Link>
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    In {formatCompactDateTime(attendance.clockedInAt)}
-                    {attendance.clockedOutAt
-                      ? ` · Out ${formatCompactDateTime(attendance.clockedOutAt)}`
-                      : ""}
-                  </p>
-                </DataListBody>
-                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-              </DataListItem>
-            ))}
-          </DataList>
+          <RecentWalksCarousel
+            walks={recentWalks.map((attendance) => ({
+              id: attendance.id,
+              token: attendance.walk.token,
+              title: attendance.walk.title,
+              clockedInAt: attendance.clockedInAt.toISOString(),
+              clockedOutAt: attendance.clockedOutAt?.toISOString() ?? null,
+            }))}
+          />
         </section>
       ) : null}
     </div>
