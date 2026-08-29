@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Walk" ADD COLUMN "latitude" DOUBLE PRECISION;
+ALTER TABLE "Walk" ADD COLUMN "longitude" DOUBLE PRECISION;

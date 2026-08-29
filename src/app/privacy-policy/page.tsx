@@ -94,6 +94,11 @@ export default function PrivacyPolicyPage() {
                 counts page views without cookies or a per-person ID.
               </li>
               <li>
+                <strong>OpenStreetMap</strong> looks up the meeting point so the walk page can show
+                a map. That lookup is the place name only, not your account. If you tap Get
+                directions, Google Maps or Apple Maps opens with that place.
+              </li>
+              <li>
                 <strong>Google</strong> if you choose “Sign in with Google”. Google’s terms and
                 privacy policy then also apply to that sign-in.
               </li>

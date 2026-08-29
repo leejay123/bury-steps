@@ -110,8 +110,11 @@ export function RescheduleWalkButton({
               defaultValue={location ?? ""}
               id={`reschedule-location-${walkId}`}
               name="location"
-              placeholder="Car park, Woodhill Road"
+              placeholder="Burrs Country Park visitor centre, Bury"
             />
+            <p className="text-xs text-muted-foreground">
+              Include the park or street and the town so the map pin can be found.
+            </p>
           </div>
           <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>

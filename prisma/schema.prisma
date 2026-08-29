@@ -36,6 +36,9 @@ model Walk {
   title        String
   description  String?
   location     String?
+  /// Set from the meeting point via OpenStreetMap Nominatim. Null if unknown.
+  latitude     Float?
+  longitude    Float?
   /// Stored in UTC. Always render with timeZone: "Europe/London".
   startsAt     DateTime
   durationMins Int       @default(90)

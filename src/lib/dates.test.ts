@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatMembershipAge,
+  formatWalkLength,
   londonWallClockToUtc,
   londonYmd,
   utcToLondonWallClock,
@@ -102,5 +103,20 @@ describe("formatMembershipAge", () => {
     const joined = new Date("2026-01-01T12:00:00.000Z");
     const now = new Date("2026-02-01T12:00:00.000Z");
     expect(formatMembershipAge(joined, now)).toBe("1 month");
+  });
+});
+
+describe("formatWalkLength", () => {
+  it("uses minutes under an hour", () => {
+    expect(formatWalkLength(45)).toBe("45 minutes");
+  });
+
+  it("uses a whole hour when there are no leftover minutes", () => {
+    expect(formatWalkLength(60)).toBe("1 hour");
+    expect(formatWalkLength(120)).toBe("2 hours");
+  });
+
+  it("combines hours and minutes", () => {
+    expect(formatWalkLength(90)).toBe("1 hour 30 minutes");
   });
 });

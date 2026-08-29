@@ -7,9 +7,14 @@ import { getOptionalUser, requireUser } from "@/lib/auth";
 import { formatWalkDate, formatDateTime, formatDate, formatTime } from "@/lib/dates";
 import { windowState, OPENS_BEFORE_MS } from "@/lib/walk-window";
 import { accountPortalHref, appUrl } from "@/lib/urls";
+import { ensureWalkPoint } from "@/lib/walk-coordinates";
 import { ClockInForm } from "./clock-in-form";
 import { ClockOutButton } from "@/components/clock-out-button";
 import { WalkMembers } from "@/components/walk-members";
+import { WalkFacts } from "@/components/walk-facts";
+import { WalkMap } from "@/components/walk-map";
+import { BeforeYouSetOff } from "@/components/before-you-set-off";
+import { HowWalksWork } from "@/components/how-walks-work";
 import { getWalkMemberNames } from "@/lib/walk-members";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +33,8 @@ const getWalkByToken = cache((token: string) =>
       title: true,
       description: true,
       location: true,
+      latitude: true,
+      longitude: true,
       startsAt: true,
       durationMins: true,
       cancelledAt: true,
@@ -80,6 +87,7 @@ export default async function WalkLinkPage({
     : null;
 
   const memberNames = alreadyIn ? await getWalkMemberNames(walk.id) : [];
+  const mapPoint = walk.location ? await ensureWalkPoint(walk) : null;
 
   const state = windowState(walk.startsAt, walk.durationMins);
   const walksHref = user?.role === "ADMIN" ? "/admin" : "/dashboard";
@@ -94,23 +102,26 @@ export default async function WalkLinkPage({
         ← {user ? "Walks" : "Home"}
       </Link>
 
-      <Card className="gap-2">
+      <Card className="gap-4">
         <CardHeader>
           <div className="flex items-start justify-between gap-3">
             <CardTitle className="text-xl">{walk.title}</CardTitle>
             {walk.cancelledAt && <Badge variant="destructive">Cancelled</Badge>}
           </div>
-          <p className="text-sm text-muted-foreground">
-            {formatWalkDate(walk.startsAt)}
-            {walk.location ? ` \u00B7 ${walk.location}` : ""}
-          </p>
         </CardHeader>
-        {walk.description && (
-          <CardContent>
+        <CardContent className="flex flex-col gap-4">
+          <WalkFacts
+            durationMins={walk.durationMins}
+            location={walk.location}
+            startsAt={walk.startsAt}
+          />
+          {walk.description ? (
             <p className="text-sm leading-relaxed">{walk.description}</p>
-          </CardContent>
-        )}
+          ) : null}
+        </CardContent>
       </Card>
+
+      {walk.location ? <WalkMap location={walk.location} point={mapPoint} /> : null}
 
       {walk.cancelledAt ? (
         <Alert variant="destructive">
@@ -120,24 +131,28 @@ export default async function WalkLinkPage({
           </AlertDescription>
         </Alert>
       ) : !user ? (
-        <div className="space-y-4 rounded-lg border bg-muted/40 p-5">
-          <div className="space-y-1">
-            <p className="font-medium">You need to sign in to join this walk</p>
-            <p className="text-sm text-muted-foreground">
-              Clock-in is only for signed-in members. If you do not have an account yet, create one
-              first. If you already have an account, sign in. You will come back to this walk
-              afterwards.
-            </p>
+        <>
+          <div className="space-y-4 rounded-lg border bg-muted/40 p-5">
+            <div className="space-y-1">
+              <p className="font-medium">You need to sign in to join this walk</p>
+              <p className="text-sm text-muted-foreground">
+                Clock-in is only for signed-in members. If you do not have an account yet, create one
+                first. If you already have an account, sign in. You will come back to this walk
+                afterwards.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild size="sm">
+                <a href={accountPortalHref("sign-up", walkUrl)}>Create an account</a>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <a href={accountPortalHref("sign-in", walkUrl)}>Sign in</a>
+              </Button>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button asChild size="sm">
-              <a href={accountPortalHref("sign-up", walkUrl)}>Create an account</a>
-            </Button>
-            <Button asChild size="sm" variant="outline">
-              <a href={accountPortalHref("sign-in", walkUrl)}>Sign in</a>
-            </Button>
-          </div>
-        </div>
+          <BeforeYouSetOff />
+          <HowWalksWork />
+        </>
       ) : alreadyIn ? (
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-4 rounded-lg border bg-muted/40 p-5">
@@ -177,19 +192,7 @@ export default async function WalkLinkPage({
               {formatDate(opensAt)}. Come back on the day and this page will be ready.
             </AlertDescription>
           </Alert>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Before you set off</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-disc space-y-1.5 pl-5 text-sm text-muted-foreground">
-                <li>Wear comfortable shoes and dress for the weather.</li>
-                <li>Bring a bottle of water — snacks too, for longer walks.</li>
-                <li>Aim to arrive at the meeting point a few minutes early.</li>
-                <li>New to the group? Say hello when you arrive — everyone was new once.</li>
-              </ul>
-            </CardContent>
-          </Card>
+          <BeforeYouSetOff />
           <Button asChild className="self-start" size="sm" variant="outline">
             <Link href={walksHref}>Back to walks</Link>
           </Button>

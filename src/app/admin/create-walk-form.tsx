@@ -78,7 +78,15 @@ export function CreateWalkForm() {
 
       <div className="space-y-1.5">
         <Label htmlFor="location">Meeting point</Label>
-        <Input id="location" name="location" placeholder="Car park, Woodhill Road" />
+        <Input
+          id="location"
+          name="location"
+          placeholder="Burrs Country Park visitor centre, Bury"
+        />
+        <p className="text-xs text-muted-foreground">
+          Used for the map and Get directions. Include the park or street and the town so the pin
+          can be found.
+        </p>
       </div>
 
       <div className="space-y-1.5">

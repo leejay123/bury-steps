@@ -8,6 +8,7 @@ import type { Prisma } from "@prisma/client";
 import { clerkClient } from "@clerk/nextjs/server";
 import { requireAdmin, requireUser, displayName } from "@/lib/auth";
 import { londonWallClockToUtc } from "@/lib/dates";
+import { geocodeFields } from "@/lib/geocode";
 import { windowState, walkStatus } from "@/lib/walk-window";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
@@ -125,6 +126,8 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
     return { ok: false, error: "That date and time could not be read. Try again." };
   }
 
+  const coords = await geocodeFields(parsed.data.location ?? null);
+
   let walk: { title: string };
   try {
     walk = await prisma.walk.create({
@@ -133,6 +136,8 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
         title: parsed.data.title,
         description: parsed.data.description ?? null,
         location: parsed.data.location ?? null,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
         startsAt,
         durationMins: parsed.data.durationMins,
         createdById: admin.id,
@@ -280,6 +285,8 @@ export async function rescheduleWalk(
     return { ok: false, error: "This walk has already finished, so it can't be rescheduled." };
   }
 
+  const coords = await geocodeFields(parsed.data.location ?? null);
+
   let walk: { token: string };
   try {
     walk = await prisma.walk.update({
@@ -288,6 +295,8 @@ export async function rescheduleWalk(
         startsAt,
         durationMins: parsed.data.durationMins,
         location: parsed.data.location ?? null,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
         ...(parsed.data.reopen === "on" || wasCancelled
           ? { cancelledAt: null, cancelledReason: null }
           : {}),

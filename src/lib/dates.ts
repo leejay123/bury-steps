@@ -230,6 +230,17 @@ export function formatMembershipAge(joined: DateInput, now: DateInput = new Date
   return plural(days, "day");
 }
 
+/** Expected walk length for people, e.g. "45 minutes", "1 hour", "1 hour 30 minutes". */
+export function formatWalkLength(mins: number): string {
+  if (mins < 60) return mins === 1 ? "1 minute" : `${mins} minutes`;
+  const hours = Math.floor(mins / 60);
+  const rest = mins % 60;
+  const hourPart = hours === 1 ? "1 hour" : `${hours} hours`;
+  if (rest === 0) return hourPart;
+  const minPart = rest === 1 ? "1 minute" : `${rest} minutes`;
+  return `${hourPart} ${minPart}`;
+}
+
 export function formatDateTime(at: DateInput): string {
   const date = toDate(at);
   if (!isValidDate(date)) return "";
