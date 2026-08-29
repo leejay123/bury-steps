@@ -36,7 +36,25 @@ function Detail({ label, children }: { label: string; children: React.ReactNode 
   );
 }
 
-export function WalkAttendanceTable({ rows }: { rows: WalkAttendanceRow[] }) {
+/**
+ * Label for someone who never clocked out. While the walk is still open,
+ * that genuinely means they're out there right now. Once the walk itself
+ * has finished (its clock-in window has closed), it just means they walked
+ * the whole thing without bothering to clock out — "On the walk" would be
+ * actively wrong at that point, since the walk is over.
+ */
+function stillInLabel(walkCompleted: boolean) {
+  return walkCompleted ? "Attended" : "On the walk";
+}
+
+export function WalkAttendanceTable({
+  rows,
+  walkCompleted = false,
+}: {
+  rows: WalkAttendanceRow[];
+  /** Pass true once the walk's clock-in window has fully closed. */
+  walkCompleted?: boolean;
+}) {
   const [openId, setOpenId] = useState<string | null>(null);
   const selected = rows.find((row) => row.id === openId) ?? null;
   const listRef = useRef<HTMLDivElement>(null);
@@ -60,7 +78,7 @@ export function WalkAttendanceTable({ rows }: { rows: WalkAttendanceRow[] }) {
             {row.clockedOutAt ? (
               <Badge variant="secondary">Clocked out</Badge>
             ) : (
-              <Badge variant="outline">On the walk</Badge>
+              <Badge variant="outline">{stillInLabel(walkCompleted)}</Badge>
             )}
             <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
           </DataListItem>
@@ -97,14 +115,16 @@ export function WalkAttendanceTable({ rows }: { rows: WalkAttendanceRow[] }) {
                 {selected.clockedOutAt ? (
                   <Badge variant="secondary">Clocked out</Badge>
                 ) : (
-                  <Badge variant="outline">On the walk</Badge>
+                  <Badge variant="outline">{stillInLabel(walkCompleted)}</Badge>
                 )}
               </Detail>
               <Detail label="Clocked in">{formatDateTime(new Date(selected.clockedInAt))}</Detail>
               <Detail label="Clocked out">
                 {selected.clockedOutAt
                   ? formatDateTime(new Date(selected.clockedOutAt))
-                  : "Still on the walk"}
+                  : walkCompleted
+                    ? "Stayed for the whole walk"
+                    : "Still on the walk"}
               </Detail>
               {selected.clockedOutReason ? (
                 <Detail label="Clock-out reason">{selected.clockedOutReason}</Detail>
