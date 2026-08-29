@@ -5,6 +5,7 @@ import { MAX_HOMEPAGE_FAQS, MAX_FAQ_CATEGORIES } from "@/lib/faqs";
 import { MAX_SITE_NOTICES } from "@/lib/notices";
 import { FACEBOOK_GROUP_URL, PRODUCTION_APP_URL } from "@/lib/urls";
 import { CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
+import { MAX_MONTHLY_CLOCK_IN_GOAL } from "@/lib/walk-game";
 import {
   Accordion,
   AccordionContent,
@@ -62,15 +63,17 @@ export function OrganiserGuide() {
                 categories you set. They cannot clock in until they have an account.
               </p>
               <p>
-                <Badge variant="secondary">Members</Badge> see Walks and History in the menu. They
-                get upcoming walks and cancelled walks from the last {CANCELLED_WALK_RETENTION_DAYS}{" "}
+                <Badge variant="secondary">Members</Badge> see Walks, Progress, and History in the
+                menu. They get upcoming walks and cancelled walks from the last {CANCELLED_WALK_RETENTION_DAYS}{" "}
                 days, clock in and out, see who else is still on a walk (names only), read notices
-                in the bell, and look back over every walk they have clocked in to.
+                in the bell, look back over every walk they have clocked in to, and see Progress —
+                this month’s clock-ins together, not a race.
               </p>
               <p>
                 <Badge>Organisers</Badge> also get Members, Reports, Settings, and this Guide in
-                the top menu. You create walks, share the link, see the roster and any health notes,
-                record accident reports, manage who is in the group, and edit the homepage.
+                the top menu, plus the same Progress page members see. You create walks, share the
+                link, see the roster and any health notes, record accident reports, manage who is
+                in the group, edit the homepage, and optionally set a monthly together goal.
               </p>
               <p>
                 The first person to sign in becomes an organiser. Everyone after that is a member.
@@ -116,9 +119,11 @@ export function OrganiserGuide() {
                 on that page. History is every finished walk, with a search box. Click a row to
                 open the walk. History shows how many people clocked in, not how many are still on
                 the walk. Long lists show 20 at a time, with Previous and Next at the bottom. Each
-                row carries a status: <strong>Upcoming</strong> (before clock-in opens),{" "}
-                <strong>Clock-in open</strong> (from an hour before start to an hour after it
-                ends), <strong>Completed</strong> (that window has fully closed), or{" "}
+                row carries a status that updates as the day goes on:{" "}
+                <strong>Upcoming</strong> (before clock-in opens), <strong>Starting soon</strong>{" "}
+                (the hour before start), <strong>In progress</strong> (until the scheduled end),{" "}
+                <strong>Walk ended</strong> (until an hour after that — clock-in is still open),{" "}
+                <strong>Completed</strong> (that window has fully closed), or{" "}
                 <strong>Cancelled</strong>. The walk’s own page shows the same status next to its
                 title.
               </p>
@@ -237,6 +242,41 @@ export function OrganiserGuide() {
               <p>
                 Download roster (CSV) gives you names, emails, times, clock-out reasons, and any
                 health notes for that walk.
+              </p>
+            </GuideBody>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem className="px-4 md:px-6" value="progress">
+          <AccordionTrigger className="text-base">Progress</AccordionTrigger>
+          <AccordionContent>
+            <GuideBody>
+              <p>
+                Open <Link href="/dashboard/progress">Progress</Link> from the menu. Every signed-in
+                member and organiser can see it. Visitors cannot. It is not on the public homepage.
+              </p>
+              <p>
+                This is how the group walks together — clock-ins, not miles or speed. There are no
+                winners and no losers. People who have not clocked in this month are not listed, so
+                nobody is shown as a zero.
+              </p>
+              <p>
+                Each person sees their own month, year, and streak (consecutive UK weeks with at
+                least one finished walk). A week with no completed group walk does not break a
+                streak. Badges mark first walk, 5 / 10 / 25 walks, staying for a whole walk, every
+                walk in a month (when that month had at least two), a streak of two weeks or more,
+                and a comeback after missing three or more weeks that did have walks.
+              </p>
+              <p>
+                This month’s cup goes to whoever has the most finished clock-ins this UK month. It
+                resets next month. A tie is shared. First names only — if two people share a first
+                name, a last initial is added.
+              </p>
+              <p>
+                Optionally set a monthly together goal under{" "}
+                <Link href="/admin/settings/progress">Settings → Progress</Link>. That is a group
+                target, not a personal one. Leave it blank if you do not want one. Save to keep the
+                number; Discard goes back to what is stored.
               </p>
             </GuideBody>
           </AccordionContent>
@@ -540,7 +580,8 @@ export function OrganiserGuide() {
                 and it slides into the middle.
               </p>
               <p>
-                Members open Walks from the menu. Each walk is a card with the date, length,
+                Members open Walks from the menu. Progress is next to it: this month’s clock-ins
+                together, only for signed-in people. Each walk is a card with the date, length,
                 meeting point, a truncated preview of the description, and a badge for its status —
                 clock-in open, already clocked in, cancelled, or completed once the window has
                 closed. Tapping anywhere on the card
@@ -579,6 +620,10 @@ export function OrganiserGuide() {
                 </li>
                 <li>
                   <strong>Notices</strong> — {MAX_SITE_NOTICES}
+                </li>
+                <li>
+                  <strong>Together goal</strong> — optional, up to {MAX_MONTHLY_CLOCK_IN_GOAL}{" "}
+                  clock-ins this month
                 </li>
                 <li>
                   <strong>Photo uploads</strong> — 4 MB

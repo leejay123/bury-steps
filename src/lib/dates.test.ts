@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   formatMembershipAge,
   formatWalkLength,
+  londonMonthKey,
   londonWallClockToUtc,
+  londonWeekStartKey,
   londonYmd,
   utcToLondonWallClock,
 } from "./dates";
@@ -118,5 +120,30 @@ describe("formatWalkLength", () => {
 
   it("combines hours and minutes", () => {
     expect(formatWalkLength(90)).toBe("1 hour 30 minutes");
+  });
+});
+
+describe("londonWeekStartKey", () => {
+  it("uses the Monday of that UK week, including for a Sunday walk", () => {
+    // 30 August 2026 is a Sunday. ISO week starts Monday 24 August.
+    expect(londonWeekStartKey(londonWallClockToUtc("2026-08-30T14:00"))).toBe("2026-08-24");
+    expect(londonWeekStartKey(londonWallClockToUtc("2026-08-24T00:30"))).toBe("2026-08-24");
+  });
+
+  it("crosses a month boundary back to the previous Monday", () => {
+    // Tuesday 1 September 2026 sits in the week that started Monday 31 August.
+    expect(londonWeekStartKey(londonWallClockToUtc("2026-09-01T10:00"))).toBe("2026-08-31");
+  });
+
+  it("crosses a year boundary", () => {
+    // Sunday 4 January 2026 is in the week that started Monday 29 December 2025.
+    expect(londonWeekStartKey(londonWallClockToUtc("2026-01-04T14:00"))).toBe("2025-12-29");
+  });
+});
+
+describe("londonMonthKey", () => {
+  it("uses the UK calendar month of the instant", () => {
+    expect(londonMonthKey(londonWallClockToUtc("2026-08-30T14:00"))).toBe("2026-08");
+    expect(londonMonthKey(new Date("2026-07-31T23:30:00.000Z"))).toBe("2026-08");
   });
 });

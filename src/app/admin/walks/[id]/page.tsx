@@ -117,7 +117,11 @@ export default async function WalkDetailPage({
               {meeting ? ` · ${meeting}` : ""} · {walk.durationMins} min
             </CardDescription>
           </div>
-          <WalkStatusBadge status={status} />
+          <WalkStatusBadge
+            cancelledAt={walk.cancelledAt?.toISOString() ?? null}
+            durationMins={walk.durationMins}
+            startsAt={walk.startsAt.toISOString()}
+          />
         </CardHeader>
         {walk.description || (walk.cancelledAt && walk.cancelledReason) ? (
           <CardContent className="flex flex-col gap-2">

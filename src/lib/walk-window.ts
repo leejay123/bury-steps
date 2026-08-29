@@ -4,38 +4,70 @@ export const CLOSES_AFTER_MS = 60 * 60 * 1000;
 
 export type WindowState = "too-early" | "open" | "closed";
 
+export function walkOpensAt(startsAt: Date): Date {
+  return new Date(startsAt.getTime() - OPENS_BEFORE_MS);
+}
+
+export function walkEndsAt(startsAt: Date, durationMins: number): Date {
+  return new Date(startsAt.getTime() + durationMins * 60_000);
+}
+
+export function walkClosesAt(startsAt: Date, durationMins: number): Date {
+  return new Date(walkEndsAt(startsAt, durationMins).getTime() + CLOSES_AFTER_MS);
+}
+
 export function windowState(
   startsAt: Date,
   durationMins: number,
   now: Date = new Date(),
 ): WindowState {
-  const opens = startsAt.getTime() - OPENS_BEFORE_MS;
-  const closes = startsAt.getTime() + durationMins * 60_000 + CLOSES_AFTER_MS;
-  if (now.getTime() < opens) return "too-early";
-  if (now.getTime() > closes) return "closed";
+  if (now.getTime() < walkOpensAt(startsAt).getTime()) return "too-early";
+  if (now.getTime() > walkClosesAt(startsAt, durationMins).getTime()) return "closed";
   return "open";
 }
 
 /**
- * The overall lifecycle status of a walk, as shown to organisers: a walk is
- * either cancelled, still ahead of its clock-in window, currently open for
- * clock-in, or — once the window has fully closed — completed. "Completed"
- * is deliberately a user-facing rename of the `windowState` "closed" result:
- * the underlying clock-in window logic hasn't changed, but a walk that has
- * simply happened and finished should read as "Completed", not "Closed" or
- * silently show no status at all.
+ * The overall lifecycle status of a walk, as shown on organiser and member
+ * surfaces. Clock-in is available for starting-soon, in-progress, and
+ * walk-ended; Completed means that window has fully closed.
  */
-export type WalkStatus = "cancelled" | "upcoming" | "open" | "completed";
+export type WalkStatus =
+  | "cancelled"
+  | "upcoming"
+  | "starting-soon"
+  | "in-progress"
+  | "walk-ended"
+  | "completed";
 
 export function walkStatus(
   walk: { cancelledAt: Date | null; startsAt: Date; durationMins: number },
   now: Date = new Date(),
 ): WalkStatus {
   if (walk.cancelledAt) return "cancelled";
-  const state = windowState(walk.startsAt, walk.durationMins, now);
-  if (state === "too-early") return "upcoming";
-  if (state === "open") return "open";
+  if (now.getTime() < walkOpensAt(walk.startsAt).getTime()) return "upcoming";
+  if (now.getTime() < walk.startsAt.getTime()) return "starting-soon";
+  if (now.getTime() < walkEndsAt(walk.startsAt, walk.durationMins).getTime()) return "in-progress";
+  if (now.getTime() <= walkClosesAt(walk.startsAt, walk.durationMins).getTime()) return "walk-ended";
   return "completed";
+}
+
+/**
+ * Next instant the public status badge should change. Null once the walk
+ * is cancelled or completed — nothing left on a timer.
+ */
+export function nextWalkStatusChangeAt(
+  walk: { cancelledAt: Date | null; startsAt: Date; durationMins: number },
+  now: Date = new Date(),
+): Date | null {
+  if (walk.cancelledAt) return null;
+  const opensAt = walkOpensAt(walk.startsAt);
+  const endsAt = walkEndsAt(walk.startsAt, walk.durationMins);
+  const closesAt = walkClosesAt(walk.startsAt, walk.durationMins);
+  if (now.getTime() < opensAt.getTime()) return opensAt;
+  if (now.getTime() < walk.startsAt.getTime()) return walk.startsAt;
+  if (now.getTime() < endsAt.getTime()) return endsAt;
+  if (now.getTime() <= closesAt.getTime()) return new Date(closesAt.getTime() + 1);
+  return null;
 }
 
 /**
@@ -50,7 +82,8 @@ export function isWalkHistoryReady(
   walk: { cancelledAt: Date | null; startsAt: Date; durationMins: number },
   now: Date = new Date(),
 ): boolean {
-  return walkStatus(walk, now) !== "open";
+  if (walk.cancelledAt) return true;
+  return windowState(walk.startsAt, walk.durationMins, now) === "closed";
 }
 
 /**

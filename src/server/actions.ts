@@ -38,6 +38,7 @@ import { isAllowedImageMime, sniffImageMime } from "@/lib/image-bytes";
 import { stripImageMetadata } from "@/lib/strip-image-metadata";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { allocateWalkSlug } from "@/lib/walk-slug";
+import { MAX_MONTHLY_CLOCK_IN_GOAL } from "@/lib/walk-game";
 
 /** Stable unguessable id for clock-in forms. Old /w/<token> links still work. */
 const makeToken = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 12);
@@ -1412,6 +1413,55 @@ export async function updateScrollToTopEnabled(
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/display");
   return { ok: true, message: enabled ? "Back to top is on." : "Back to top is off." };
+}
+
+function parseMonthlyClockInGoal(raw: string): number | null | "invalid" {
+  const trimmed = raw.trim();
+  if (trimmed === "") return null;
+  if (!/^\d+$/.test(trimmed)) return "invalid";
+  const n = Number(trimmed);
+  if (n === 0) return null;
+  if (n > MAX_MONTHLY_CLOCK_IN_GOAL) return "invalid";
+  return n;
+}
+
+export async function updateMonthlyClockInGoal(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const parsed = parseMonthlyClockInGoal(String(formData.get("monthlyClockInGoal") ?? ""));
+  if (parsed === "invalid") {
+    return {
+      ok: false,
+      error: `Enter a whole number from 1 to ${MAX_MONTHLY_CLOCK_IN_GOAL.toLocaleString("en-GB")}, or leave it blank.`,
+    };
+  }
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        carouselEnabled: true,
+        monthlyClockInGoal: parsed,
+      },
+      update: { monthlyClockInGoal: parsed },
+    });
+  } catch (err) {
+    return logActionError("updateMonthlyClockInGoal", err, "Could not save that setting. Try again.");
+  }
+
+  revalidatePath("/dashboard/progress");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/progress");
+  return {
+    ok: true,
+    message: parsed
+      ? `Together goal is ${parsed.toLocaleString("en-GB")} clock-ins this month.`
+      : "Together goal is off.",
+  };
 }
 
 export async function reorderHomepageSlides(ids: string[]): Promise<ActionResult> {

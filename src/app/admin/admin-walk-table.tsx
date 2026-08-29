@@ -10,14 +10,13 @@ import { ListPagination } from "@/components/list-pagination";
 import { usePagedList } from "@/hooks/use-paged-list";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import type { WalkStatus } from "@/lib/walk-window";
-
 export type AdminWalkRow = {
   id: string;
   title: string;
   location: string | null;
   startsAt: string;
-  status: WalkStatus;
+  durationMins: number;
+  cancelledAt: string | null;
   attendanceCount: number;
 };
 
@@ -93,7 +92,11 @@ export function AdminWalkTable({
                   {walk.attendanceCount} {attendanceLabel.toLowerCase()}
                 </p>
               </DataListBody>
-              <WalkStatusBadge status={walk.status} />
+              <WalkStatusBadge
+                cancelledAt={walk.cancelledAt}
+                durationMins={walk.durationMins}
+                startsAt={walk.startsAt}
+              />
               <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
             </DataListItem>
             ))}

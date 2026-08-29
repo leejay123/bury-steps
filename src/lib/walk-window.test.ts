@@ -4,6 +4,7 @@ import {
   canOrganiserAddAttendance,
   isWalkHistoryReady,
   isWalkScheduleLocked,
+  nextWalkStatusChangeAt,
   OPENS_BEFORE_MS,
   organiserRecordedClockInAt,
   walkStatus,
@@ -56,9 +57,29 @@ describe("walkStatus", () => {
     expect(walkStatus({ cancelledAt: null, startsAt, durationMins }, now)).toBe("upcoming");
   });
 
-  it("is open while clock-in is available", () => {
+  it("is starting-soon from an hour before the start until the start", () => {
+    const now = new Date(startsAt.getTime() - OPENS_BEFORE_MS);
+    expect(walkStatus({ cancelledAt: null, startsAt, durationMins }, now)).toBe("starting-soon");
+  });
+
+  it("stays starting-soon a second before the start", () => {
+    const now = new Date(startsAt.getTime() - 1000);
+    expect(walkStatus({ cancelledAt: null, startsAt, durationMins }, now)).toBe("starting-soon");
+  });
+
+  it("is in-progress from the published start until the walk is due to finish", () => {
+    expect(walkStatus({ cancelledAt: null, startsAt, durationMins }, startsAt)).toBe("in-progress");
     const now = new Date(startsAt.getTime() + 30 * 60_000);
-    expect(walkStatus({ cancelledAt: null, startsAt, durationMins }, now)).toBe("open");
+    expect(walkStatus({ cancelledAt: null, startsAt, durationMins }, now)).toBe("in-progress");
+  });
+
+  it("is walk-ended after the scheduled end while clock-in is still open", () => {
+    const endsAt = startsAt.getTime() + durationMins * 60_000;
+    expect(
+      walkStatus({ cancelledAt: null, startsAt, durationMins }, new Date(endsAt)),
+    ).toBe("walk-ended");
+    const now = new Date(endsAt + CLOSES_AFTER_MS - 1000);
+    expect(walkStatus({ cancelledAt: null, startsAt, durationMins }, now)).toBe("walk-ended");
   });
 
   it("is completed once the clock-in window has fully closed", () => {
@@ -161,5 +182,46 @@ describe("organiserRecordedClockInAt", () => {
     const endsAt = startsAt.getTime() + durationMins * 60_000;
     const now = new Date(endsAt + CLOSES_AFTER_MS + 1000);
     expect(organiserRecordedClockInAt({ startsAt, durationMins }, now)).toEqual(startsAt);
+  });
+});
+
+describe("nextWalkStatusChangeAt", () => {
+  const startsAt = new Date("2026-06-01T10:00:00.000Z");
+  const durationMins = 90;
+  const walk = { cancelledAt: null, startsAt, durationMins };
+
+  it("is the clock-in open time while the walk is still upcoming", () => {
+    const now = new Date(startsAt.getTime() - OPENS_BEFORE_MS - 60_000);
+    expect(nextWalkStatusChangeAt(walk, now)).toEqual(
+      new Date(startsAt.getTime() - OPENS_BEFORE_MS),
+    );
+  });
+
+  it("is the start while gathering", () => {
+    const now = new Date(startsAt.getTime() - 10 * 60_000);
+    expect(nextWalkStatusChangeAt(walk, now)).toEqual(startsAt);
+  });
+
+  it("is the scheduled end while in progress", () => {
+    const now = new Date(startsAt.getTime() + 10 * 60_000);
+    expect(nextWalkStatusChangeAt(walk, now)).toEqual(
+      new Date(startsAt.getTime() + durationMins * 60_000),
+    );
+  });
+
+  it("is just after the clock-in close while the walk has ended", () => {
+    const endsAt = startsAt.getTime() + durationMins * 60_000;
+    const closesAt = endsAt + CLOSES_AFTER_MS;
+    const now = new Date(endsAt + 1000);
+    expect(nextWalkStatusChangeAt(walk, now)).toEqual(new Date(closesAt + 1));
+  });
+
+  it("is null once completed or cancelled", () => {
+    const endsAt = startsAt.getTime() + durationMins * 60_000;
+    const now = new Date(endsAt + CLOSES_AFTER_MS + 1000);
+    expect(nextWalkStatusChangeAt(walk, now)).toBeNull();
+    expect(
+      nextWalkStatusChangeAt({ cancelledAt: new Date(), startsAt, durationMins }, startsAt),
+    ).toBeNull();
   });
 });

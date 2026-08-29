@@ -5,35 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { unlockIdleDocument } from "@/components/overlay-root";
-
-export function navItems(isAdmin: boolean, walksHref: string) {
-  return [
-    { href: "/", label: "Home" },
-    { href: walksHref, label: "Walks" },
-    ...(isAdmin
-      ? [
-          { href: "/admin/members", label: "Members" },
-          { href: "/admin/reports", label: "Reports" },
-          { href: "/admin/settings", label: "Settings" },
-          { href: "/admin/guide", label: "Guide" },
-        ]
-      : [{ href: "/dashboard/history", label: "History" }]),
-  ];
-}
-
-export function isNavItemActive(pathname: string, href: string) {
-  if (href === "/") return pathname === "/";
-  if (href === "/dashboard") {
-    return pathname === "/dashboard";
-  }
-  if (href === "/admin") {
-    return pathname === "/admin" || pathname.startsWith("/admin/walks");
-  }
-  if (href === "/admin/settings") {
-    return pathname.startsWith("/admin/settings") || pathname.startsWith("/admin/homepage");
-  }
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
+import { isNavItemActive, navItems } from "@/components/site-nav-items";
 
 function navLinkClass(active: boolean) {
   return cn(

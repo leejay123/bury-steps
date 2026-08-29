@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
-import { walkStatus } from "@/lib/walk-window";
 import { CreateWalkForm } from "./create-walk-form";
 import { AdminPageIntro } from "./admin-page-intro";
 import { AdminWalkTable } from "./admin-walk-table";
@@ -23,7 +22,8 @@ function toRow(walk: {
     title: walk.title,
     location: walk.location,
     startsAt: walk.startsAt.toISOString(),
-    status: walkStatus(walk),
+    durationMins: walk.durationMins,
+    cancelledAt: walk.cancelledAt?.toISOString() ?? null,
     attendanceCount: walk._count.attendances,
   };
 }

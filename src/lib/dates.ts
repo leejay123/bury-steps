@@ -175,6 +175,21 @@ export function formatDate(at: DateInput): string {
   }).format(date);
 }
 
+/** Monday of the UK ISO week, as `YYYY-MM-DD`. Sunday walks sit in that week. */
+export function londonWeekStartKey(at: DateInput): string {
+  const { year, month, day } = londonYmd(at);
+  const utcNoon = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+  const daysFromMonday = (utcNoon.getUTCDay() + 6) % 7;
+  const monday = new Date(Date.UTC(year, month - 1, day - daysFromMonday, 12, 0, 0));
+  return `${monday.getUTCFullYear()}-${pad2(monday.getUTCMonth() + 1)}-${pad2(monday.getUTCDate())}`;
+}
+
+/** UK calendar month as `YYYY-MM`. */
+export function londonMonthKey(at: DateInput): string {
+  const { year, month } = londonYmd(at);
+  return `${year}-${pad2(month)}`;
+}
+
 export function londonYmd(at: DateInput): { day: number; month: number; year: number } {
   const date = toDate(at);
   if (!isValidDate(date)) {

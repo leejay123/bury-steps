@@ -42,6 +42,11 @@ export default async function AdminSettingsPage() {
       description: `Messages in the bell. ${noticeCount} of ${MAX_SITE_NOTICES}.`,
     },
     {
+      href: "/admin/settings/progress",
+      title: "Progress",
+      description: "Optional monthly together goal for signed-in members.",
+    },
+    {
       href: "/admin/settings/display",
       title: "Display",
       description: "Back to top button, and other site-wide display options.",
@@ -67,7 +72,7 @@ export default async function AdminSettingsPage() {
     <div className="flex flex-col">
       <div className="relative px-4 py-6 md:px-6">
         <AdminPageIntro
-          description="Homepage photos, quotes, FAQs, notices, display, and cache."
+          description="Homepage photos, quotes, FAQs, notices, Progress, display, and cache."
           title="Settings"
         />
         <FullWidthDivider position="bottom" />
