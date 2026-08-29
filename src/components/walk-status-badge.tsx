@@ -2,7 +2,11 @@
 
 import { Badge } from "@/components/ui/badge";
 import { useWalkClock } from "@/hooks/use-walk-clock";
-import { walkStatus, type WalkStatus } from "@/lib/walk-window";
+import {
+  formatStartingSoonCountdown,
+  walkStatus,
+  type WalkStatus,
+} from "@/lib/walk-window";
 
 const LABEL: Record<WalkStatus, string> = {
   cancelled: "Cancelled",
@@ -26,7 +30,8 @@ const VARIANT: Record<WalkStatus, "destructive" | "default" | "secondary" | "out
  * Shared status pill so the walk list, a walk's own page, and member cards
  * always agree. Recomputes when the published start/length says the phase
  * has changed, so a page left open ticks from Starting soon → In progress
- * → Walk ended → Completed on its own.
+ * → Walk ended → Completed on its own. Starting soon also shows a live
+ * mm:ss countdown to the published start.
  */
 export function WalkStatusBadge({
   cancelledAt,
@@ -38,14 +43,22 @@ export function WalkStatusBadge({
   startsAt: string;
 }) {
   const now = useWalkClock({ cancelledAt, durationMins, startsAt });
+  const start = new Date(startsAt);
   const status = walkStatus(
     {
       cancelledAt: cancelledAt ? new Date(cancelledAt) : null,
       durationMins,
-      startsAt: new Date(startsAt),
+      startsAt: start,
     },
     now,
   );
 
-  return <Badge variant={VARIANT[status]}>{LABEL[status]}</Badge>;
+  const countdown =
+    status === "starting-soon" ? formatStartingSoonCountdown(start, now) : null;
+  const label =
+    status === "starting-soon" && countdown
+      ? `Starting soon · ${countdown}`
+      : LABEL[status];
+
+  return <Badge variant={VARIANT[status]}>{label}</Badge>;
 }

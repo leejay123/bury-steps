@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { londonWallClockToUtc } from "./dates";
-import { buildWalkGame, type WalkGameAttendance, type WalkGameWalk } from "./walk-game";
+import {
+  buildWalkGame,
+  competitionPlaces,
+  formatPlaceOrdinal,
+  type WalkGameAttendance,
+  type WalkGameWalk,
+} from "./walk-game";
 
 function walk(id: string, day: string, extra?: Partial<WalkGameWalk>): WalkGameWalk {
   return {
@@ -254,5 +260,28 @@ describe("buildWalkGame", () => {
     });
 
     expect(game.viewer.badges.map((badge) => badge.id)).not.toContain("all-month");
+  });
+});
+
+describe("competitionPlaces", () => {
+  it("assigns 1, 2, 3 on a strict order", () => {
+    expect(competitionPlaces([5, 3, 1])).toEqual([1, 2, 3]);
+  });
+
+  it("shares a place on a tie and skips the next number", () => {
+    expect(competitionPlaces([3, 3, 1])).toEqual([1, 1, 3]);
+  });
+});
+
+describe("formatPlaceOrdinal", () => {
+  it("uses st, nd, rd, and th", () => {
+    expect(formatPlaceOrdinal(1)).toBe("1st");
+    expect(formatPlaceOrdinal(2)).toBe("2nd");
+    expect(formatPlaceOrdinal(3)).toBe("3rd");
+    expect(formatPlaceOrdinal(4)).toBe("4th");
+    expect(formatPlaceOrdinal(11)).toBe("11th");
+    expect(formatPlaceOrdinal(12)).toBe("12th");
+    expect(formatPlaceOrdinal(13)).toBe("13th");
+    expect(formatPlaceOrdinal(21)).toBe("21st");
   });
 });

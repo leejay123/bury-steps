@@ -37,7 +37,7 @@ export default async function AccidentReportsPage({
     prisma.accidentReport.count({ where }),
     prisma.walk.findMany({
       orderBy: { startsAt: "desc" },
-      take: 50,
+      take: 200,
       select: { id: true, title: true, startsAt: true },
     }),
   ]);

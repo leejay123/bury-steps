@@ -5,6 +5,7 @@ import { AdminPageIntro } from "./admin-page-intro";
 import { AdminWalkTable } from "./admin-walk-table";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { upcomingListLookbackFrom, walkStatus } from "@/lib/walk-window";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +32,7 @@ function toRow(walk: {
 export default async function AdminPage() {
   await requireAdmin();
 
-  const cutoff = new Date(Date.now() - 3 * 60 * 60 * 1000);
+  const lookback = upcomingListLookbackFrom();
   const base = {
     id: true,
     title: true,
@@ -41,17 +42,18 @@ export default async function AdminPage() {
     cancelledAt: true,
   } as const;
 
-  const [upcoming, past] = await Promise.all([
+  const [recent, older] = await Promise.all([
     prisma.walk.findMany({
-      where: { startsAt: { gte: cutoff } },
+      where: { startsAt: { gte: lookback } },
       orderBy: { startsAt: "asc" },
+      take: 200,
       select: {
         ...base,
         _count: { select: { attendances: { where: { clockedOutAt: null } } } },
       },
     }),
     prisma.walk.findMany({
-      where: { startsAt: { lt: cutoff } },
+      where: { startsAt: { lt: lookback } },
       orderBy: { startsAt: "desc" },
       // A weekly walk never missed would take ~19 years to reach this —
       // comfortably past the lifetime of this app — so it never trims a
@@ -64,6 +66,12 @@ export default async function AdminPage() {
       },
     }),
   ]);
+
+  const upcoming = recent.filter((walk) => walkStatus(walk) !== "completed");
+  const past = [
+    ...recent.filter((walk) => walkStatus(walk) === "completed"),
+    ...older,
+  ].sort((a, b) => b.startsAt.getTime() - a.startsAt.getTime());
 
   return (
     <div className="flex flex-col gap-8 px-4 py-6 md:px-6">
@@ -79,7 +87,7 @@ export default async function AdminPage() {
 
       <section className="flex flex-col gap-4">
         <AdminPageIntro
-          description="Upcoming walks, and every finished walk. Open a walk to share the link, cancel it, reopen it, or remove it."
+          description="Upcoming walks, and every finished walk. Open a walk to share the link, cancel it, reopen it, or remove it. Long walks stay under Upcoming until clock-in closes."
           title="Walks"
         />
         <Tabs className="w-full" defaultValue="upcoming">

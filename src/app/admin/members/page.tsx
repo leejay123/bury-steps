@@ -15,13 +15,17 @@ function buildWhere(query: string): Prisma.UserWhereInput | undefined {
     { email: { contains: query, mode: "insensitive" } },
   ];
   // The role column is shown as "Organiser"/"Member" text, not "ADMIN"/
-  // "MEMBER", so let a search for those words match it too.
+  // "MEMBER", so let a search for those words match it too. Require a
+  // prefix of at least 3 characters so short needles like "a" / "e" do
+  // not match every organiser or member.
   const needle = query.toLowerCase();
-  if ("organiser".includes(needle) || "admin".includes(needle)) {
-    or.push({ role: "ADMIN" });
-  }
-  if ("member".includes(needle)) {
-    or.push({ role: "MEMBER" });
+  if (needle.length >= 3) {
+    if ("organiser".startsWith(needle) || "admin".startsWith(needle)) {
+      or.push({ role: "ADMIN" });
+    }
+    if ("member".startsWith(needle)) {
+      or.push({ role: "MEMBER" });
+    }
   }
   return { OR: or };
 }

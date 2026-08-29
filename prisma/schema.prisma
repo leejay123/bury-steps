@@ -87,6 +87,9 @@ model Attendance {
 
   @@unique([walkId, userId])
   @@index([walkId])
+  /// Speeds `WHERE walkId = ? AND clockedOutAt IS NULL` (on-walk counts,
+  /// Add someone exclusions, share "who's coming").
+  @@index([walkId, clockedOutAt])
   /// Covers `WHERE userId = ? ORDER BY clockedInAt DESC` (member/admin walk
   /// history lookups) — a leftmost-prefix match also serves plain
   /// `WHERE userId = ?` queries, so this replaces the old userId-only index

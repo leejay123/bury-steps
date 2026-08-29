@@ -4,7 +4,7 @@ import { Footprints } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { formatDate, formatMembershipAge } from "@/lib/dates";
-import { windowState, walkStatus } from "@/lib/walk-window";
+import { windowState, walkStatus, upcomingListLookbackFrom } from "@/lib/walk-window";
 import { CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
@@ -23,18 +23,18 @@ export default async function DashboardPage() {
   }
 
   const now = new Date();
-  const upcomingFrom = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+  const upcomingFrom = upcomingListLookbackFrom(now);
   const cancelledFrom = new Date(
     now.getTime() - CANCELLED_WALK_RETENTION_DAYS * 24 * 60 * 60 * 1000,
   );
 
-  const [walks, historyCandidates, totalAttendanceCount] = await Promise.all([
+  const [walkCandidates, historyCandidates, totalAttendanceCount] = await Promise.all([
     prisma.walk.findMany({
       where: {
         OR: [{ startsAt: { gte: upcomingFrom } }, { cancelledAt: { gte: cancelledFrom } }],
       },
       orderBy: { startsAt: "asc" },
-      take: 50,
+      take: 100,
       select: {
         id: true,
         token: true,
@@ -83,6 +83,11 @@ export default async function DashboardPage() {
     }),
     prisma.attendance.count({ where: { userId: user.id } }),
   ]);
+
+  const walks = walkCandidates.filter((walk) => {
+    if (walk.cancelledAt) return true;
+    return windowState(walk.startsAt, walk.durationMins, now) !== "closed";
+  });
 
   const completedHistory = historyCandidates.filter(
     (attendance) => walkStatus(attendance.walk) === "completed",

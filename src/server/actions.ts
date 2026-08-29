@@ -570,15 +570,20 @@ export async function searchAddableMembers(
       startsAt: true,
       durationMins: true,
       cancelledAt: true,
-      attendances: { select: { userId: true } },
+      attendances: { select: { userId: true, clockedOutAt: true } },
     },
   });
   if (!walk || !canOrganiserAddAttendance(walk)) return [];
 
-  const attendingIds = walk.attendances.map((row) => row.userId);
+  // While the window is open, clocked-out members can be re-added. Once it
+  // has closed, anyone with any attendance row is already on the roster.
+  const excludeIds =
+    windowState(walk.startsAt, walk.durationMins) === "closed"
+      ? walk.attendances.map((row) => row.userId)
+      : walk.attendances.filter((row) => !row.clockedOutAt).map((row) => row.userId);
   const needle = query.trim();
   const where = {
-    ...(attendingIds.length ? { id: { notIn: attendingIds } } : {}),
+    ...(excludeIds.length ? { id: { notIn: excludeIds } } : {}),
     ...(needle
       ? {
           OR: [

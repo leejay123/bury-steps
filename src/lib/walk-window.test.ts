@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   CLOSES_AFTER_MS,
   canOrganiserAddAttendance,
+  formatStartingSoonCountdown,
   isWalkHistoryReady,
   isWalkScheduleLocked,
+  MAX_WALK_DURATION_MINS,
   nextWalkStatusChangeAt,
   OPENS_BEFORE_MS,
   organiserRecordedClockInAt,
+  upcomingListLookbackFrom,
   walkStatus,
   windowState,
 } from "./walk-window";
@@ -86,6 +89,42 @@ describe("walkStatus", () => {
     const endsAt = startsAt.getTime() + durationMins * 60_000;
     const now = new Date(endsAt + CLOSES_AFTER_MS + 1000);
     expect(walkStatus({ cancelledAt: null, startsAt, durationMins }, now)).toBe("completed");
+  });
+});
+
+describe("upcomingListLookbackFrom", () => {
+  it("keeps a max-length walk visible until its clock-in window has closed", () => {
+    const now = new Date("2026-06-01T18:00:00.000Z");
+    const lookback = upcomingListLookbackFrom(now);
+    const longestStart = new Date(
+      now.getTime() - MAX_WALK_DURATION_MINS * 60_000 - CLOSES_AFTER_MS + 1000,
+    );
+    expect(longestStart.getTime()).toBeGreaterThan(lookback.getTime());
+    expect(windowState(longestStart, MAX_WALK_DURATION_MINS, now)).toBe("open");
+  });
+
+  it("is later than the old fixed 3-hour cutoff", () => {
+    const now = new Date("2026-06-01T18:00:00.000Z");
+    const threeHours = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+    expect(upcomingListLookbackFrom(now).getTime()).toBeLessThan(threeHours.getTime());
+  });
+});
+
+describe("formatStartingSoonCountdown", () => {
+  const startsAt = new Date("2026-06-01T10:00:00.000Z");
+
+  it("formats mm:ss until start", () => {
+    const now = new Date(startsAt.getTime() - (23 * 60 + 4) * 1000);
+    expect(formatStartingSoonCountdown(startsAt, now)).toBe("23:04");
+  });
+
+  it("pads single-digit seconds", () => {
+    const now = new Date(startsAt.getTime() - 65 * 1000);
+    expect(formatStartingSoonCountdown(startsAt, now)).toBe("1:05");
+  });
+
+  it("returns null once start has passed", () => {
+    expect(formatStartingSoonCountdown(startsAt, startsAt)).toBeNull();
   });
 });
 

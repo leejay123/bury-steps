@@ -108,41 +108,49 @@ export function AddAttendanceButton({
               Everyone with an account is already on this walk’s list.
             </p>
           ) : (
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor={`add-member-search-${walkId}`}>Search members</Label>
-              <Input
-                aria-label="Search members"
-                id={`add-member-search-${walkId}`}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Type a name or email"
-                value={query}
-              />
-              <Label htmlFor={`add-member-${walkId}`} required>
-                Member
-              </Label>
-              {!loaded || searching ? (
-                <p className="text-sm text-muted-foreground">Looking up members…</p>
-              ) : noMatch ? (
-                <p className="text-sm text-muted-foreground">No matching members.</p>
-              ) : (
-                <Select key={`${query}-${members.map((m) => m.id).join(",")}`} name="userId" required>
-                  <SelectTrigger id={`add-member-${walkId}`}>
-                    <SelectValue placeholder="Choose who to add" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {members.map((member) => (
-                      <SelectItem key={member.id} value={member.id}>
-                        {member.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-              {loaded && members.length >= 40 ? (
-                <p className="text-xs text-muted-foreground">
-                  Showing the first 40 matches. Type more of the name to narrow it down.
-                </p>
-              ) : null}
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor={`add-member-search-${walkId}`}>Search members</Label>
+                <Input
+                  aria-label="Search members"
+                  id={`add-member-search-${walkId}`}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Type a name or email"
+                  value={query}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor={`add-member-${walkId}`} required>
+                  Member
+                </Label>
+                {!loaded || searching ? (
+                  <p className="text-sm text-muted-foreground">Looking up members…</p>
+                ) : noMatch ? (
+                  <p className="text-sm text-muted-foreground">No matching members.</p>
+                ) : (
+                  <Select
+                    key={`${query}-${members.map((m) => m.id).join(",")}`}
+                    name="userId"
+                    required
+                  >
+                    <SelectTrigger id={`add-member-${walkId}`}>
+                      <SelectValue placeholder="Choose who to add" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {members.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {loaded && members.length >= 40 ? (
+                  <p className="text-xs text-muted-foreground">
+                    Showing the first 40 matches. Type more of the name to narrow it down.
+                  </p>
+                ) : null}
+              </div>
             </div>
           )}
           <FormError message={state && !state.ok ? state.error : null} />

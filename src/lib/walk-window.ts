@@ -2,6 +2,19 @@
 export const OPENS_BEFORE_MS = 60 * 60 * 1000;
 export const CLOSES_AFTER_MS = 60 * 60 * 1000;
 
+/** Longest walk duration allowed by the schema (minutes). Used for list lookbacks. */
+export const MAX_WALK_DURATION_MINS = 600;
+
+/**
+ * Earliest `startsAt` that might still have an open clock-in window.
+ * Shorter than this and the walk is safely in History.
+ */
+export function upcomingListLookbackFrom(now: Date = new Date()): Date {
+  return new Date(
+    now.getTime() - MAX_WALK_DURATION_MINS * 60_000 - CLOSES_AFTER_MS,
+  );
+}
+
 export type WindowState = "too-early" | "open" | "closed";
 
 export function walkOpensAt(startsAt: Date): Date {
@@ -68,6 +81,22 @@ export function nextWalkStatusChangeAt(
   if (now.getTime() < endsAt.getTime()) return endsAt;
   if (now.getTime() <= closesAt.getTime()) return new Date(closesAt.getTime() + 1);
   return null;
+}
+
+/**
+ * Remaining time until start while Starting soon, e.g. "23:04".
+ * Returns null when start has already passed.
+ */
+export function formatStartingSoonCountdown(
+  startsAt: Date,
+  now: Date = new Date(),
+): string | null {
+  const ms = startsAt.getTime() - now.getTime();
+  if (ms <= 0) return null;
+  const totalSec = Math.ceil(ms / 1000);
+  const mins = Math.floor(totalSec / 60);
+  const secs = totalSec % 60;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
 /**

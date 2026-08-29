@@ -116,12 +116,15 @@ export function OrganiserGuide() {
             <GuideBody>
               <p>
                 Open <Link href="/admin">Walks</Link> from the menu. Upcoming and History are tabs
-                on that page. History is every finished walk, with a search box. Click a row to
-                open the walk. History shows how many people clocked in, not how many are still on
-                the walk. Long lists show 20 at a time, with Previous and Next at the bottom. Each
-                row carries a status that updates as the day goes on:{" "}
+                on that page. A walk stays under Upcoming until its clock-in window has fully
+                closed — including long walks that finish more than three hours after start —
+                then it moves to History. History is every finished walk, with a search box. Click
+                a row to open the walk. History shows how many people clocked in, not how many are
+                still on the walk. Long lists show 20 at a time, with Previous and Next at the
+                bottom. Each row carries a status that updates as the day goes on:{" "}
                 <strong>Upcoming</strong> (before clock-in opens), <strong>Starting soon</strong>{" "}
-                (the hour before start), <strong>In progress</strong> (until the scheduled end),{" "}
+                (the hour before start — the badge shows a live countdown to the published
+                start), <strong>In progress</strong> (until the scheduled end),{" "}
                 <strong>Walk ended</strong> (until an hour after that — clock-in is still open),{" "}
                 <strong>Completed</strong> (that window has fully closed), or{" "}
                 <strong>Cancelled</strong>. The walk’s own page shows the same status next to its
@@ -235,11 +238,11 @@ export function OrganiserGuide() {
                 there but did not clock in — phone died, they forgot, or the window had already
                 closed. They must already have an account; you cannot add someone who has never
                 signed up. While the walk is still open, they are clocked in at the time you add
-                them. After Completed, they show as attending from the start, with no health
-                notes. If they already clocked in or out, they are already on the list — do not
-                add them again. Reopen a cancelled walk first if you need to add someone to it.
-                Search by name or email — the list shows up to 40 matches so it stays quick even
-                with thousands of members.
+                them — including someone who already clocked out and came back. After Completed,
+                they show as attending from the start, with no health notes, and anyone already
+                on the roster cannot be added again. Reopen a cancelled walk first if you need
+                to add someone to it. Search by name or email — the list shows up to 40 matches
+                so it stays quick even with thousands of members.
               </p>
               <p>
                 Walks titled <strong>[Demo]</strong> are sample rows so you can check Previous and
@@ -279,7 +282,8 @@ export function OrganiserGuide() {
               <p>
                 This month’s cup goes to whoever has the most finished clock-ins this UK month. It
                 resets next month. A tie is shared. First names only — if two people share a first
-                name, a last initial is added.
+                name, a last initial is added. The month list shows place (1st, 2nd, 3rd…) with a
+                cup, medal, or award mark for the top three; tied clock-ins share a place.
               </p>
               <p>
                 Optionally set a monthly together goal under{" "}

@@ -33,6 +33,35 @@ export type WalkGamePerson = {
   monthCount: number;
 };
 
+/** Competition places for a board already sorted high→low (ties share; next skips). */
+export function competitionPlaces(monthCounts: number[]): number[] {
+  const places: number[] = [];
+  for (let i = 0; i < monthCounts.length; i += 1) {
+    if (i > 0 && monthCounts[i] === monthCounts[i - 1]) {
+      places.push(places[i - 1]);
+    } else {
+      places.push(i + 1);
+    }
+  }
+  return places;
+}
+
+/** en-GB ordinal for a place, e.g. 1 → "1st", 12 → "12th". */
+export function formatPlaceOrdinal(place: number): string {
+  const mod100 = place % 100;
+  if (mod100 >= 11 && mod100 <= 13) return `${place}th`;
+  switch (place % 10) {
+    case 1:
+      return `${place}st`;
+    case 2:
+      return `${place}nd`;
+    case 3:
+      return `${place}rd`;
+    default:
+      return `${place}th`;
+  }
+}
+
 export type WalkGameView = {
   viewer: {
     monthCount: number;
