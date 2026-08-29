@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { clerkAuthorizedParties, shouldProxyClerkFrontendApi } from "@/lib/urls";
 
 const isPublic = createRouteMatcher([
   "/",
@@ -38,19 +39,25 @@ export default clerkMiddleware(
       return NextResponse.redirect(url, 308);
     }
 
+    // Preview handles /__clerk via frontendApiProxy below. Production unique
+    // *.vercel.app URLs still auto-request it; don't fall through to the app
+    // (that would call auth() without a proxy handshake).
+    if (req.nextUrl.pathname.startsWith("/__clerk")) {
+      return new NextResponse(null, { status: 404 });
+    }
+
     // Walk links can be opened without an account. Clock-in still needs a
     // signed-in member; the walk page asks guests to join first.
     if (!isPublic(req)) await auth.protect();
   },
   {
-    authorizedParties: [
-      "https://burysteps-walkinggroup.co.uk",
-      "https://www.burysteps-walkinggroup.co.uk",
-    ],
-    // Proxy only on *.vercel.app. The live domain uses Clerk's CNAME
-    // (clerk.burysteps-walkinggroup.co.uk), not /__clerk.
+    authorizedParties: clerkAuthorizedParties(),
+    // Proxy only on Vercel Preview. The live domain uses Clerk's CNAME
+    // (clerk.burysteps-walkinggroup.co.uk), not /__clerk. Production unique
+    // *.vercel.app URLs (Vercel screenshots) must not proxy: this instance
+    // has no proxy URL registered, so Clerk's FAPI returns 400.
     frontendApiProxy: {
-      enabled: (url) => url.hostname.endsWith(".vercel.app"),
+      enabled: (url) => shouldProxyClerkFrontendApi(url.hostname),
       path: "/__clerk",
     },
   },

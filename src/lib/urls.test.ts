@@ -1,5 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { accountPortalHref, appUrl, isTrustedAppUrl, PRODUCTION_APP_URL } from "./urls";
+import {
+  accountPortalHref,
+  appUrl,
+  clerkAuthorizedParties,
+  isTrustedAppUrl,
+  PRODUCTION_APP_URL,
+  shouldProxyClerkFrontendApi,
+} from "./urls";
 
 const ORIGINAL_ENV = { ...process.env };
 
@@ -61,6 +68,37 @@ describe("appUrl", () => {
     delete process.env.VERCEL_ENV;
     delete process.env.VERCEL_URL;
     expect(appUrl()).toBe("http://localhost:3000");
+  });
+});
+
+describe("shouldProxyClerkFrontendApi", () => {
+  it("proxies only Vercel Preview hosts", () => {
+    expect(shouldProxyClerkFrontendApi("bury-steps-git-main.vercel.app", "preview")).toBe(true);
+    expect(shouldProxyClerkFrontendApi("bury-steps-abc123.vercel.app", "production")).toBe(false);
+    expect(shouldProxyClerkFrontendApi("burysteps-walkinggroup.co.uk", "preview")).toBe(false);
+    expect(shouldProxyClerkFrontendApi("burysteps-walkinggroup.co.uk", "production")).toBe(false);
+  });
+});
+
+describe("clerkAuthorizedParties", () => {
+  beforeEach(resetEnv);
+  afterEach(resetEnv);
+
+  it("always includes the live site", () => {
+    delete process.env.VERCEL_URL;
+    delete process.env.VERCEL_ENV;
+    delete process.env.NEXT_PUBLIC_APP_URL;
+    expect(clerkAuthorizedParties()).toEqual(
+      expect.arrayContaining([
+        PRODUCTION_APP_URL,
+        "https://www.burysteps-walkinggroup.co.uk",
+      ]),
+    );
+  });
+
+  it("includes this deploy's Vercel URL when present", () => {
+    process.env.VERCEL_URL = "bury-steps-abc123.vercel.app";
+    expect(clerkAuthorizedParties()).toContain("https://bury-steps-abc123.vercel.app");
   });
 });
 

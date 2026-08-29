@@ -54,6 +54,9 @@ export async function generateViewport(): Promise<Viewport> {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // Preview only. The live domain uses Clerk's CNAME. Production unique
+  // *.vercel.app URLs (Vercel screenshots) must not set this — there is no
+  // proxy URL registered on the Clerk instance, so /__clerk returns 400.
   const useVercelAppProxy = process.env.VERCEL_ENV === "preview";
 
   return (

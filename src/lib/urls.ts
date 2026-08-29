@@ -41,6 +41,23 @@ function trustedOrigins(): Set<string> {
   return origins;
 }
 
+/**
+ * Origins Clerk should accept on the session token's `azp` claim.
+ * Includes this deploy's Vercel URLs so preview and unique production
+ * hosts don't fail handshake after a valid sign-in.
+ */
+export function clerkAuthorizedParties(): string[] {
+  return [...trustedOrigins()];
+}
+
+/** Proxy Clerk's Frontend API through /__clerk on Vercel Preview only. */
+export function shouldProxyClerkFrontendApi(
+  hostname: string,
+  vercelEnv: string | undefined = process.env.VERCEL_ENV,
+): boolean {
+  return vercelEnv === "preview" && hostname.endsWith(".vercel.app");
+}
+
 /** True when the URL is on this site, not an attacker-controlled host. */
 export function isTrustedAppUrl(value: string): boolean {
   try {
