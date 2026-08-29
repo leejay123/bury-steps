@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CalendarDays, ChevronRight, Clock, MapPin } from "lucide-react";
 import type { WindowState } from "@/lib/walk-window";
 import { formatDateTime, formatWalkDate } from "@/lib/dates";
+import { walkSharePath } from "@/lib/walk-slug";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export type UpcomingWalkCard = {
   id: string;
   token: string;
+  slug: string | null;
   title: string;
   description: string | null;
   location: string | null;
@@ -50,7 +52,7 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
           <Link
             aria-label={walkLinkLabel(walk)}
             className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            href={`/w/${walk.token}`}
+            href={walkSharePath(walk)}
           />
           <CardHeader className="flex flex-row items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1.5">

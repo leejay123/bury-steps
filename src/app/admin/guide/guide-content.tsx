@@ -142,12 +142,19 @@ export function OrganiserGuide() {
                   a pin. The map uses free OpenStreetMap — no extra account is needed.
                 </li>
                 <li>Add a short description if you want.</li>
-                <li>Choose Create walk. A share link is generated automatically.</li>
+                <li>
+                  Choose Create walk. A short share link is generated from the first word of the
+                  title, for example <code>/w/burrs</code>. Two walks from the same place get{" "}
+                  <code>-2</code> on the end.
+                </li>
               </Steps>
               <p className="font-medium text-foreground">Share the walk</p>
               <Steps>
                 <li>Open the walk from the list.</li>
-                <li>Copy the share link and post it in Facebook, or read the short code aloud.</li>
+                <li>
+                  Copy the share link and post it in Facebook. It is meant to stay short and
+                  readable. Older links that look like a code still work — they open the same walk.
+                </li>
                 <li>
                   Someone who is not signed in sees a prompt to create an account or sign in first,
                   then the date, time, length, meeting point (and postcode if you added one), a map
@@ -174,7 +181,10 @@ export function OrganiserGuide() {
                   <strong>Edit</strong> changes the title, date, time, length, meeting point, or
                   description — the same fields as Create walk, including Find this place. Use this
                   when the meeting point moves, or when Sunday becomes Wednesday. People already
-                  clocked in stay on the walk. The share link does not change. If the walk was
+                  clocked in stay on the walk. If you change the title, copy the share
+                  link again — it uses the new name. Changing the date does not change the link.
+                  Links you already posted still work
+                  and send people to the updated page. If the walk was
                   cancelled, saving also puts it back on the diary. The walk’s own organiser page
                   shows the same map members see on the share link.
                 </li>
@@ -489,7 +499,7 @@ export function OrganiserGuide() {
                 <Link href="/privacy-policy">Privacy Policy</Link>.
               </p>
               <p>
-                Pasting a link to the homepage or a walk (<code>/w/…</code>) into WhatsApp,
+                Pasting a link to the homepage or a walk (<code>/w/burrs</code>) into WhatsApp,
                 Messenger, or similar shows a preview card with the site name and, for a walk
                 link, that walk’s own title and date. Opening the walk link without an account
                 shows the meeting point on a map (and the postcode if the organiser added one), with

@@ -31,9 +31,15 @@ import { NOTICES_CACHE_TAG } from "@/lib/site-notices";
 import { isAllowedImageMime, sniffImageMime } from "@/lib/image-bytes";
 import { stripImageMetadata } from "@/lib/strip-image-metadata";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { allocateWalkSlug } from "@/lib/walk-slug";
 
-/** No look-alike characters — organisers read these out loud. */
+/** Stable unguessable id for clock-in forms. Old /w/<token> links still work. */
 const makeToken = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 12);
+
+function revalidateWalkShare(walk: { token: string; slug?: string | null }) {
+  revalidatePath(`/w/${walk.token}`);
+  if (walk.slug) revalidatePath(`/w/${walk.slug}`);
+}
 
 /** How long health information is kept after the walk, in days. */
 const CONDITIONS_RETENTION_DAYS = 90;
@@ -149,12 +155,14 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
   }
 
   const pin = await walkPinFromForm(formData, parsed.data.location, parsed.data.postcode);
+  const slug = await allocateWalkSlug(parsed.data.title);
 
-  let walk: { title: string };
+  let walk: { title: string; token: string; slug: string | null };
   try {
     walk = await prisma.walk.create({
       data: {
         token: makeToken(),
+        slug,
         title: parsed.data.title,
         description: parsed.data.description ?? null,
         location: parsed.data.location ?? null,
@@ -165,7 +173,7 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
         durationMins: parsed.data.durationMins,
         createdById: admin.id,
       },
-      select: { title: true },
+      select: { title: true, token: true, slug: true },
     });
   } catch (err) {
     return logActionError("createWalk", err, "Could not create the walk. Try again.");
@@ -173,6 +181,7 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
 
   revalidatePath("/admin");
   revalidatePath("/dashboard");
+  revalidateWalkShare(walk);
   return { ok: true, message: `“${walk.title}” created. Share link is ready.` };
 }
 
@@ -213,7 +222,14 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
 
   const walk = await prisma.walk.findUnique({
     where: { id },
-    select: { id: true, token: true, cancelledAt: true, startsAt: true, durationMins: true },
+    select: {
+      id: true,
+      token: true,
+      slug: true,
+      cancelledAt: true,
+      startsAt: true,
+      durationMins: true,
+    },
   });
   if (!walk) return { ok: false, error: "That walk is no longer there." };
   if (walk.cancelledAt) return { ok: false, error: "This walk is already cancelled." };
@@ -244,7 +260,7 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
   revalidatePath("/admin");
   revalidatePath(`/admin/walks/${id}`);
   revalidatePath("/dashboard");
-  revalidatePath(`/w/${walk.token}`);
+  revalidateWalkShare(walk);
   return { ok: true, message: "Walk cancelled. Members will see it marked as cancelled." };
 }
 
@@ -255,7 +271,7 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
 
   const walk = await prisma.walk.findUnique({
     where: { id },
-    select: { id: true, token: true, cancelledAt: true },
+    select: { id: true, token: true, slug: true, cancelledAt: true },
   });
   if (!walk) return { ok: false, error: "That walk is no longer there." };
   if (!walk.cancelledAt) return { ok: false, error: "This walk is already open." };
@@ -273,7 +289,7 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
   revalidatePath("/admin");
   revalidatePath(`/admin/walks/${id}`);
   revalidatePath("/dashboard");
-  revalidatePath(`/w/${walk.token}`);
+  revalidateWalkShare(walk);
   return { ok: true, message: "Walk reopened. Members can clock in again if the window is still open." };
 }
 
@@ -324,7 +340,7 @@ export async function updateWalk(
   // unaffected by this check.
   const existing = await prisma.walk.findUnique({
     where: { id },
-    select: { cancelledAt: true, startsAt: true, durationMins: true },
+    select: { cancelledAt: true, startsAt: true, durationMins: true, token: true, slug: true },
   });
   if (!existing) return { ok: false, error: "That walk is no longer there." };
   if (walkStatus(existing) === "completed") {
@@ -332,8 +348,9 @@ export async function updateWalk(
   }
 
   const pin = await walkPinFromForm(formData, parsed.data.location, parsed.data.postcode);
+  const slug = await allocateWalkSlug(parsed.data.title, id);
 
-  let walk: { token: string };
+  let walk: { token: string; slug: string | null };
   try {
     walk = await prisma.walk.update({
       where: { id },
@@ -346,11 +363,12 @@ export async function updateWalk(
         postcode: pin.postcode,
         latitude: pin.latitude,
         longitude: pin.longitude,
+        slug,
         ...(parsed.data.reopen === "on" || wasCancelled
           ? { cancelledAt: null, cancelledReason: null }
           : {}),
       },
-      select: { token: true },
+      select: { token: true, slug: true },
     });
   } catch (err) {
     if (isPrismaCode(err, "P2025")) return { ok: false, error: "That walk is no longer there." };
@@ -360,7 +378,8 @@ export async function updateWalk(
   revalidatePath("/admin");
   revalidatePath(`/admin/walks/${id}`);
   revalidatePath("/dashboard");
-  revalidatePath(`/w/${walk.token}`);
+  revalidateWalkShare(existing);
+  revalidateWalkShare(walk);
   return {
     ok: true,
     message: wasCancelled ? "Walk updated and put back on the diary." : "Walk updated.",
@@ -372,11 +391,11 @@ export async function deleteWalk(_prev: ActionResult | null, formData: FormData)
   const id = String(formData.get("walkId") ?? "");
   if (!id) return { ok: false, error: "No walk selected." };
 
-  let walk: { token: string; title: string };
+  let walk: { token: string; slug: string | null; title: string };
   try {
     walk = await prisma.walk.delete({
       where: { id },
-      select: { token: true, title: true },
+      select: { token: true, slug: true, title: true },
     });
   } catch (err) {
     if (isPrismaCode(err, "P2025")) return { ok: false, error: "That walk is no longer there." };
@@ -385,7 +404,7 @@ export async function deleteWalk(_prev: ActionResult | null, formData: FormData)
 
   revalidatePath("/admin");
   revalidatePath("/dashboard");
-  revalidatePath(`/w/${walk.token}`);
+  revalidateWalkShare(walk);
   return { ok: true, message: `“${walk.title}” has been removed.` };
 }
 
@@ -425,11 +444,25 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
     return { ok: false, error: "Add a short note about your conditions, or select “No conditions to report”." };
   }
 
-  let walk: { id: string; token: string; startsAt: Date; durationMins: number; cancelledAt: Date | null } | null;
+  let walk: {
+    id: string;
+    token: string;
+    slug: string | null;
+    startsAt: Date;
+    durationMins: number;
+    cancelledAt: Date | null;
+  } | null;
   try {
     walk = await prisma.walk.findUnique({
       where: { token: parsed.data.token },
-      select: { id: true, token: true, startsAt: true, durationMins: true, cancelledAt: true },
+      select: {
+        id: true,
+        token: true,
+        slug: true,
+        startsAt: true,
+        durationMins: true,
+        cancelledAt: true,
+      },
     });
   } catch (err) {
     return logActionError("clockIn:lookup", err, "Could not clock you in right now. Try again.");
@@ -486,7 +519,7 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
     return logActionError("clockIn:write", err, "Could not clock you in right now. Try again.");
   }
 
-  revalidatePath(`/w/${walk.token}`);
+  revalidateWalkShare(walk);
   revalidatePath("/dashboard");
   revalidatePath(`/admin/walks/${walk.id}`);
   return { ok: true, message: "Clocked in. Enjoy the walk." };
@@ -517,11 +550,11 @@ export async function clockOut(_prev: ActionResult | null, formData: FormData): 
     return { ok: false, error: parsed.error.issues[0].message };
   }
 
-  let walk: { id: string; token: string; startsAt: Date; durationMins: number } | null;
+  let walk: { id: string; token: string; slug: string | null; startsAt: Date; durationMins: number } | null;
   try {
     walk = await prisma.walk.findUnique({
       where: { token: parsed.data.token },
-      select: { id: true, token: true, startsAt: true, durationMins: true },
+      select: { id: true, token: true, slug: true, startsAt: true, durationMins: true },
     });
   } catch (err) {
     return logActionError("clockOut:lookup", err, "Could not clock you out right now. Try again.");
@@ -552,7 +585,7 @@ export async function clockOut(_prev: ActionResult | null, formData: FormData): 
     return { ok: false, error: "You are not clocked in for this walk." };
   }
 
-  revalidatePath(`/w/${walk.token}`);
+  revalidateWalkShare(walk);
   revalidatePath("/dashboard");
   revalidatePath(`/admin/walks/${walk.id}`);
   return { ok: true, message: "You have clocked out. Your name is no longer on the walk for other members." };

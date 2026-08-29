@@ -1,6 +1,6 @@
 import { cache } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { getOptionalUser, requireUser } from "@/lib/auth";
@@ -9,6 +9,7 @@ import { windowState, OPENS_BEFORE_MS } from "@/lib/walk-window";
 import { accountPortalHref, appUrl } from "@/lib/urls";
 import { meetingPointLabel } from "@/lib/geocode";
 import { ensureWalkPoint } from "@/lib/walk-coordinates";
+import { ensureWalkSlug, walkShareUrl } from "@/lib/walk-slug";
 import { ClockInForm } from "./clock-in-form";
 import { ClockOutButton } from "@/components/clock-out-button";
 import { WalkMembers } from "@/components/walk-members";
@@ -25,12 +26,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export const dynamic = "force-dynamic";
 
 // Cached per request so generateMetadata and the page body share one lookup.
-const getWalkByToken = cache((token: string) =>
-  prisma.walk.findUnique({
-    where: { token },
+const getWalkByShareKey = cache((key: string) =>
+  prisma.walk.findFirst({
+    where: { OR: [{ token: key }, { slug: key }] },
     select: {
       id: true,
       token: true,
+      slug: true,
       title: true,
       description: true,
       location: true,
@@ -50,7 +52,7 @@ export async function generateMetadata({
   params: Promise<{ token: string }>;
 }): Promise<Metadata> {
   const { token } = await params;
-  const walk = await getWalkByToken(token);
+  const walk = await getWalkByShareKey(token);
   if (!walk) return { title: "Walk not found — Bury Steps Walking Group" };
 
   const when = formatWalkDate(walk.startsAt);
@@ -63,7 +65,7 @@ export async function generateMetadata({
   return {
     title,
     description,
-    // Unguessable, one-off share links — not meant to show up in search.
+    // One-off share links — not meant to show up in search.
     robots: { index: false, follow: false },
     openGraph: { title, description, type: "website" },
     twitter: { card: "summary", title, description },
@@ -76,11 +78,16 @@ export default async function WalkLinkPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-  const walkUrl = `${appUrl()}/w/${token}`;
-
-  const [walk, user] = await Promise.all([getWalkByToken(token), getOptionalUser()]);
-
+  const walk = await getWalkByShareKey(token);
   if (!walk) notFound();
+
+  const slug = await ensureWalkSlug(walk);
+  if (token === walk.token && slug !== walk.token) {
+    redirect(`/w/${slug}`);
+  }
+
+  const walkUrl = walkShareUrl(appUrl(), { token: walk.token, slug });
+  const user = await getOptionalUser();
 
   const alreadyIn = user
     ? await prisma.attendance.findFirst({

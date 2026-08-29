@@ -104,7 +104,6 @@ export function MeetingPointFields({
           <Button
             disabled={searching || (!location.trim() && !postcode.trim())}
             onClick={() => void findPlace()}
-            size="sm"
             type="button"
             variant="outline"
           >

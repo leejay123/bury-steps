@@ -19,11 +19,11 @@ export function ShareLink({ url }: { url: string }) {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <code className="flex h-8 min-w-0 flex-1 items-center truncate rounded-md bg-muted px-3 text-sm">
+    <div className="flex items-start gap-2">
+      <code className="min-h-8 min-w-0 flex-1 break-all rounded-md bg-muted px-3 py-1.5 text-sm leading-snug">
         {url}
       </code>
-      <Button type="button" size="sm" variant="outline" onClick={copy}>
+      <Button className="shrink-0" type="button" size="sm" variant="outline" onClick={copy}>
         {copied ? "Copied" : "Copy"}
       </Button>
     </div>

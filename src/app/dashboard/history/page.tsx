@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { isWalkHistoryReady, walkStatus } from "@/lib/walk-window";
 import { AttendanceHistory } from "@/components/attendance-history";
+import { walkSharePath } from "@/lib/walk-slug";
 
 export const metadata: Metadata = {
   title: "Walk history — Bury Steps Walking Group",
@@ -31,6 +32,7 @@ export default async function WalkHistoryPage() {
         walk: {
           select: {
             token: true,
+            slug: true,
             title: true,
             location: true,
             startsAt: true,
@@ -88,7 +90,7 @@ export default async function WalkHistoryPage() {
           clockedInAt: attendance.clockedInAt.toISOString(),
           clockedOutAt: attendance.clockedOutAt?.toISOString() ?? null,
           completed: walkStatus(attendance.walk) === "completed",
-          href: `/w/${attendance.walk.token}`,
+          href: walkSharePath(attendance.walk),
         }))}
       />
     </div>

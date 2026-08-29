@@ -6,7 +6,7 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 /** Bump when models are added so a long-running `next dev` does not keep a stale client. */
-const PRISMA_CLIENT_REV = 4;
+const PRISMA_CLIENT_REV = 5;
 
 function withQueryParam(url: string, key: string, value: string) {
   if (new RegExp(`[?&]${key}=`).test(url)) return url;

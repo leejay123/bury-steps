@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { formatCompactDateTime } from "@/lib/dates";
+import { walkSharePath } from "@/lib/walk-slug";
 import {
   Carousel,
   CarouselContent,
@@ -13,6 +14,7 @@ import {
 export type RecentWalkCard = {
   id: string;
   token: string;
+  slug: string | null;
   title: string;
   clockedInAt: string;
   clockedOutAt: string | null;
@@ -26,7 +28,7 @@ export function RecentWalksCarousel({ walks }: { walks: RecentWalkCard[] }) {
           <CarouselItem className="basis-full sm:basis-1/2 lg:basis-1/3" key={walk.id}>
             <Link
               className="block h-full rounded-xl border p-4 transition-colors hover:bg-muted/50"
-              href={`/w/${walk.token}`}
+              href={walkSharePath(walk)}
             >
               <p className="font-medium">{walk.title}</p>
               <p className="text-sm text-muted-foreground">

@@ -31,8 +31,10 @@ model User {
 
 model Walk {
   id           String    @id @default(cuid())
-  /// Unguessable slug used in the share link: /w/<token>
+  /// Stable id used in clock-in forms and as a fallback share path: /w/<token>
   token        String    @unique
+  /// Public share path: /w/<slug>. First place word, e.g. burrs. Same place again is burrs-2.
+  slug         String?   @unique
   title        String
   description  String?
   location     String?

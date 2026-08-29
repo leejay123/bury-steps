@@ -38,6 +38,7 @@ export default async function DashboardPage() {
       select: {
         id: true,
         token: true,
+        slug: true,
         title: true,
         description: true,
         location: true,
@@ -72,6 +73,7 @@ export default async function DashboardPage() {
             id: true,
             title: true,
             token: true,
+            slug: true,
             startsAt: true,
             durationMins: true,
             cancelledAt: true,
@@ -123,6 +125,7 @@ export default async function DashboardPage() {
             return {
               id: walk.id,
               token: walk.token,
+              slug: walk.slug,
               title: walk.title,
               description: walk.description,
               location: walk.location,
@@ -151,6 +154,7 @@ export default async function DashboardPage() {
             walks={recentWalks.map((attendance) => ({
               id: attendance.id,
               token: attendance.walk.token,
+              slug: attendance.walk.slug,
               title: attendance.walk.title,
               clockedInAt: attendance.clockedInAt.toISOString(),
               clockedOutAt: attendance.clockedOutAt?.toISOString() ?? null,

@@ -12,6 +12,7 @@ import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { WalkMap } from "@/components/walk-map";
 import { meetingPointLabel } from "@/lib/geocode";
 import { ensureWalkPoint } from "@/lib/walk-coordinates";
+import { ensureWalkSlug, walkShareUrl } from "@/lib/walk-slug";
 import { CancelWalkButton } from "./cancel-walk-button";
 import { EditWalkButton } from "./edit-walk-button";
 import { ReopenWalkButton } from "./reopen-walk-button";
@@ -46,6 +47,7 @@ export default async function WalkDetailPage({
     select: {
       id: true,
       token: true,
+      slug: true,
       title: true,
       description: true,
       location: true,
@@ -65,6 +67,7 @@ export default async function WalkDetailPage({
 
   if (!walk) notFound();
 
+  const slug = await ensureWalkSlug(walk);
   const meeting = meetingPointLabel(walk.location, walk.postcode);
   const mapPoint = meeting ? await ensureWalkPoint(walk) : null;
   const attendances = walk.attendances;
@@ -117,7 +120,7 @@ export default async function WalkDetailPage({
         ) : null}
       </Card>
 
-      <ShareLink url={`${appUrl()}/w/${walk.token}`} />
+      <ShareLink url={walkShareUrl(appUrl(), { token: walk.token, slug })} />
 
       {meeting ? <WalkMap location={meeting} point={mapPoint} /> : null}
 
