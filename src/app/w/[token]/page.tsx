@@ -4,8 +4,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { getOptionalUser, requireUser } from "@/lib/auth";
-import { formatWalkDate, formatDateTime } from "@/lib/dates";
-import { windowState } from "@/lib/walk-window";
+import { formatWalkDate, formatDateTime, formatDate, formatTime } from "@/lib/dates";
+import { windowState, OPENS_BEFORE_MS } from "@/lib/walk-window";
 import { accountPortalHref, appUrl } from "@/lib/urls";
 import { ClockInForm } from "./clock-in-form";
 import { ClockOutButton } from "@/components/clock-out-button";
@@ -83,6 +83,7 @@ export default async function WalkLinkPage({
 
   const state = windowState(walk.startsAt, walk.durationMins);
   const walksHref = user?.role === "ADMIN" ? "/admin" : "/dashboard";
+  const opensAt = new Date(walk.startsAt.getTime() - OPENS_BEFORE_MS);
 
   return (
     <div className="flex flex-col gap-6">
@@ -141,28 +142,58 @@ export default async function WalkLinkPage({
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-4 rounded-lg border bg-muted/40 p-5">
             <div className="flex flex-col gap-1">
-              <p className="font-medium">You are clocked in</p>
+              <p className="font-medium">
+                {state === "closed" ? "You attended this walk" : "You are clocked in"}
+              </p>
               <p className="text-sm tabular-nums text-muted-foreground">
                 Recorded at {formatDateTime(alreadyIn.clockedInAt)}
               </p>
             </div>
+            {state === "closed" ? (
+              // Clocking out is for leaving early (or right at the end) —
+              // once the walk itself has finished, staying clocked in the
+              // whole time just means you did the full walk. Nothing left
+              // to do, so no Clock out button here.
+              <p className="text-sm text-muted-foreground">
+                This walk has finished, and you stayed for the whole thing — there’s nothing left
+                to do here.
+              </p>
+            ) : null}
             <div className="flex flex-wrap gap-2">
-              <ClockOutButton token={walk.token} />
+              {state === "closed" ? null : <ClockOutButton token={walk.token} />}
               <Button asChild size="sm" variant="outline">
                 <Link href={walksHref}>Back to walks</Link>
               </Button>
             </div>
           </div>
-          <WalkMembers names={memberNames} />
+          <WalkMembers completed={state === "closed"} names={memberNames} />
         </div>
       ) : state === "too-early" ? (
-        <Alert>
-          <AlertTitle>Clock-in is not open yet</AlertTitle>
-          <AlertDescription>
-            It opens an hour before the walk starts. Come back on the day and this page will be
-            ready.
-          </AlertDescription>
-        </Alert>
+        <div className="flex flex-col gap-4">
+          <Alert>
+            <AlertTitle>Clock-in is not open yet</AlertTitle>
+            <AlertDescription>
+              It opens an hour before the walk starts, at {formatTime(opensAt)} on{" "}
+              {formatDate(opensAt)}. Come back on the day and this page will be ready.
+            </AlertDescription>
+          </Alert>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Before you set off</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="list-disc space-y-1.5 pl-5 text-sm text-muted-foreground">
+                <li>Wear comfortable shoes and dress for the weather.</li>
+                <li>Bring a bottle of water — snacks too, for longer walks.</li>
+                <li>Aim to arrive at the meeting point a few minutes early.</li>
+                <li>New to the group? Say hello when you arrive — everyone was new once.</li>
+              </ul>
+            </CardContent>
+          </Card>
+          <Button asChild className="self-start" size="sm" variant="outline">
+            <Link href={walksHref}>Back to walks</Link>
+          </Button>
+        </div>
       ) : state === "closed" ? (
         <Alert>
           <AlertTitle>Clock-in has closed</AlertTitle>
