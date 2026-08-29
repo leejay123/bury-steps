@@ -57,6 +57,11 @@ export default async function AdminSettingsPage() {
       description: "Refresh the public homepage if it still shows old content.",
     },
     {
+      href: "/admin/settings/reset",
+      title: "Reset the site",
+      description: "Delete all walks, members, and homepage edits. You stay the organiser.",
+    },
+    {
       href: "/admin/reports",
       title: "Accident reports",
       description: "Record what happened on a walk, then print or save as PDF.",
@@ -72,7 +77,7 @@ export default async function AdminSettingsPage() {
     <div className="flex flex-col">
       <div className="relative px-4 py-6 md:px-6">
         <AdminPageIntro
-          description="Homepage photos, quotes, FAQs, notices, Progress, display, and cache."
+          description="Homepage photos, quotes, FAQs, notices, Progress, display, cache, and reset."
           title="Settings"
         />
         <FullWidthDivider position="bottom" />

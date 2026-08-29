@@ -39,6 +39,13 @@ import { stripImageMetadata } from "@/lib/strip-image-metadata";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { allocateWalkSlug } from "@/lib/walk-slug";
 import { MAX_MONTHLY_CLOCK_IN_GOAL } from "@/lib/walk-game";
+import {
+  DEFAULT_FAQS,
+  DEFAULT_FAQ_CATEGORIES,
+  DEFAULT_HERO_SLIDE,
+  DEFAULT_TESTIMONIALS,
+} from "@/lib/site-defaults";
+import { isResetConfirmWord } from "@/lib/site-reset";
 
 /** Stable unguessable id for clock-in forms. Old /w/<token> links still work. */
 const makeToken = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 12);
@@ -1852,5 +1859,127 @@ export async function clearSiteCache(
   return {
     ok: true,
     message: "Site cache cleared. The public homepage will refresh on the next visit.",
+  };
+}
+
+export async function resetSiteToDefault(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!isResetConfirmWord(String(formData.get("confirm") ?? ""))) {
+    return { ok: false, error: "Type delete to confirm, then try again." };
+  }
+
+  const limited = checkRateLimit(`${admin.id}:resetSiteToDefault`, 3, 10 * 60_000);
+  if (!limited.ok) return { ok: false, error: "Try again in a few minutes." };
+
+  const otherMembers = await prisma.user.findMany({
+    where: { id: { not: admin.id } },
+    select: { clerkId: true },
+  });
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.accidentReport.deleteMany();
+      await tx.walk.deleteMany();
+      await tx.siteNotice.deleteMany();
+      await tx.homepageFaq.deleteMany();
+      await tx.homepageFaqCategory.deleteMany();
+      await tx.homepageSlide.deleteMany();
+      await tx.homepageTestimonial.deleteMany();
+      await tx.user.deleteMany({ where: { id: { not: admin.id } } });
+      await tx.siteSetting.upsert({
+        where: { id: SITE_SETTING_ID },
+        create: {
+          id: SITE_SETTING_ID,
+          primaryColor: DEFAULT_PRIMARY_COLOR,
+          carouselEnabled: true,
+          scrollToTopEnabled: true,
+          monthlyClockInGoal: null,
+        },
+        update: {
+          primaryColor: DEFAULT_PRIMARY_COLOR,
+          carouselEnabled: true,
+          scrollToTopEnabled: true,
+          monthlyClockInGoal: null,
+        },
+      });
+      await tx.homepageFaqCategory.createMany({
+        data: DEFAULT_FAQ_CATEGORIES.map((category) => ({
+          id: category.id,
+          slug: category.slug,
+          label: category.label,
+          sortOrder: category.sortOrder,
+        })),
+      });
+      await tx.homepageFaq.createMany({
+        data: DEFAULT_FAQS.map((faq) => ({
+          id: faq.id,
+          sortOrder: faq.sortOrder,
+          categoryId: faq.categoryId,
+          question: faq.question,
+          answer: faq.answer,
+        })),
+      });
+      await tx.homepageSlide.create({
+        data: {
+          id: DEFAULT_HERO_SLIDE.id,
+          sortOrder: DEFAULT_HERO_SLIDE.sortOrder,
+          alt: DEFAULT_HERO_SLIDE.alt,
+          imagePath: DEFAULT_HERO_SLIDE.imagePath,
+        },
+      });
+      await tx.homepageTestimonial.createMany({
+        data: DEFAULT_TESTIMONIALS.map((row) => ({
+          id: row.id,
+          sortOrder: row.sortOrder,
+          name: row.name,
+          role: row.role,
+          quote: row.quote,
+        })),
+      });
+    });
+  } catch (err) {
+    return logActionError("resetSiteToDefault", err, "Could not reset the site. Try again.");
+  }
+
+  const clerk = await clerkClient();
+  let clerkFailed = 0;
+  for (const member of otherMembers) {
+    try {
+      await clerk.users.deleteUser(member.clerkId);
+    } catch (err) {
+      if (!isNotFoundStatus(err)) {
+        clerkFailed += 1;
+        console.error("resetSiteToDefault: Clerk login removal failed", err);
+      }
+    }
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidateTag(NOTICES_CACHE_TAG);
+  revalidatePath("/", "layout");
+  revalidatePath("/");
+  revalidatePath("/home");
+  revalidatePath("/admin");
+  revalidatePath("/admin/members");
+  revalidatePath("/admin/reports");
+  revalidatePath("/admin/settings");
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/progress");
+  revalidatePath("/dashboard/history");
+
+  if (clerkFailed > 0) {
+    return {
+      ok: true,
+      message:
+        "The site is reset. You are still the organiser. Some old sign-ins could not be revoked automatically — remove them from Clerk if needed.",
+    };
+  }
+
+  return {
+    ok: true,
+    message: "The site is reset to the starter homepage. You are still the organiser. Everyone else will need to join again.",
   };
 }

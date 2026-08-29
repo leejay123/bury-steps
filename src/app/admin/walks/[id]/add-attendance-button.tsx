@@ -6,6 +6,7 @@ import { adminClockIn, type ActionResult } from "@/server/actions";
 import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -48,14 +49,22 @@ export function AddAttendanceButton({
     null,
   );
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
   useActionToast(state, () => setOpen(false));
 
   const empty = members.length === 0;
+  const needle = query.trim().toLowerCase();
+  const visible = needle
+    ? members.filter((member) => member.label.toLowerCase().includes(needle))
+    : members;
 
   return (
     <AlertDialog
       closeDisabled={isPending}
-      onOpenChange={preventDismissWhilePending(isPending, setOpen)}
+      onOpenChange={(next) => {
+        preventDismissWhilePending(isPending, setOpen)(next);
+        if (!next) setQuery("");
+      }}
       open={open}
     >
       <AlertDialogTrigger asChild>
@@ -83,18 +92,30 @@ export function AddAttendanceButton({
               <Label htmlFor={`add-member-${walkId}`} required>
                 Member
               </Label>
-              <Select name="userId" required>
-                <SelectTrigger id={`add-member-${walkId}`}>
-                  <SelectValue placeholder="Choose who to add" />
-                </SelectTrigger>
-                <SelectContent>
-                  {members.map((member) => (
-                    <SelectItem key={member.id} value={member.id}>
-                      {member.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {members.length > 8 ? (
+                <Input
+                  aria-label="Search members"
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search by name or email"
+                  value={query}
+                />
+              ) : null}
+              {visible.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No matching members.</p>
+              ) : (
+                <Select name="userId" required>
+                  <SelectTrigger id={`add-member-${walkId}`}>
+                    <SelectValue placeholder="Choose who to add" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {visible.map((member) => (
+                      <SelectItem key={member.id} value={member.id}>
+                        {member.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           )}
           <FormError message={state && !state.ok ? state.error : null} />
@@ -102,7 +123,7 @@ export function AddAttendanceButton({
             <AlertDialogCancel disabled={isPending} type="button">
               Don’t add
             </AlertDialogCancel>
-            {empty ? null : <Confirm walkCompleted={walkCompleted} />}
+            {empty || visible.length === 0 ? null : <Confirm walkCompleted={walkCompleted} />}
           </AlertDialogFooter>
         </form>
       </AlertDialogContent>

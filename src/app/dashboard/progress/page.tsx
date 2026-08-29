@@ -4,7 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { loadWalkGame } from "@/lib/walk-progress";
 import { EmptyState } from "@/components/empty-state";
 import { Badge } from "@/components/ui/badge";
-import { DataList, DataListBody, DataListItem } from "@/components/data-list";
+import { ProgressBoard } from "./progress-board";
 
 export const metadata: Metadata = {
   title: "Progress — Bury Steps Walking Group",
@@ -119,25 +119,7 @@ export default async function ProgressPage() {
             title="No clock-ins this month yet"
           />
         ) : (
-          <DataList>
-            {game.board.map((row) => (
-              <DataListItem className="cursor-default hover:bg-transparent" key={row.userId}>
-                <DataListBody>
-                  <p className="font-medium">
-                    {row.name}
-                    {row.isViewer ? (
-                      <Badge className="ml-2 align-middle" variant="outline">
-                        You
-                      </Badge>
-                    ) : null}
-                  </p>
-                </DataListBody>
-                <p className="text-sm text-muted-foreground">
-                  {row.monthCount === 1 ? "1 walk" : `${row.monthCount} walks`}
-                </p>
-              </DataListItem>
-            ))}
-          </DataList>
+          <ProgressBoard board={game.board} />
         )}
       </section>
     </div>

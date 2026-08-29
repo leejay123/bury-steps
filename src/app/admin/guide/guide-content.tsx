@@ -238,6 +238,14 @@ export function OrganiserGuide() {
                 them. After Completed, they show as attending from the start, with no health
                 notes. If they already clocked in or out, they are already on the list — do not
                 add them again. Reopen a cancelled walk first if you need to add someone to it.
+                If there are more than eight people to choose from, a search box filters the list.
+              </p>
+              <p>
+                Walks titled <strong>[Demo]</strong> are sample rows so you can check Previous and
+                Next on a long list. Search Demo on Walks → History. The same prefix is on sample
+                accident reports. Remove them with{" "}
+                <Link href="/admin/settings/reset">Settings → Reset the site</Link>, or delete
+                those rows one by one.
               </p>
               <p>
                 Download roster (CSV) gives you names, emails, times, clock-out reasons, and any
@@ -277,6 +285,9 @@ export function OrganiserGuide() {
                 <Link href="/admin/settings/progress">Settings → Progress</Link>. That is a group
                 target, not a personal one. Leave it blank if you do not want one. Save to keep the
                 number; Discard goes back to what is stored.
+              </p>
+              <p>
+                If more than 20 people clocked in this month, Previous and Next sit under the list.
               </p>
             </GuideBody>
           </AccordionContent>
@@ -506,6 +517,14 @@ export function OrganiserGuide() {
                 still shows old photos, quotes, FAQs, or notices after you saved. Clear cache
                 refreshes that stored copy. It does not delete walks, members, or photos.
               </p>
+              <p>
+                Open <Link href="/admin/settings/reset">Reset the site</Link> to wipe walks,
+                clock-ins, members, accident reports, notices, and homepage edits, and put the
+                starter photos, quotes, and FAQs back. A box asks you to type{" "}
+                <strong>delete</strong> before it runs. You stay signed in as the organiser, so a
+                member who joins afterwards cannot take that role. Everyone else has to create an
+                account again. This cannot be undone.
+              </p>
             </GuideBody>
           </AccordionContent>
         </AccordionItem>
@@ -586,7 +605,7 @@ export function OrganiserGuide() {
                 clock-in open, already clocked in, cancelled, or completed once the window has
                 closed. Tapping anywhere on the card
                 opens that walk’s full page with the rest of the description and the full “Who’s
-                coming” list; the card itself only shows a one-line headcount. The Clock in button
+                coming” list (20 at a time if the walk is busy); the card itself only shows a one-line headcount. The Clock in button
                 works right there on the card without leaving the list, but Clock out is a
                 deliberate step and only lives on the walk’s own page. A “Your recent walks”
                 carousel underneath shows their last few — swipe or use the arrows to move between
