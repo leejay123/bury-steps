@@ -111,7 +111,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               visible lag on MacBooks; an opaque bar stays crisp and cheap.
               [transform:translateZ(0)] keeps it on its own compositor layer.
             */}
-            <header className="sticky top-0 z-[55] touch-manipulation bg-background [transform:translateZ(0)]">
+            <header className="sticky top-0 z-[65] touch-manipulation bg-background [transform:translateZ(0)]">
               <div className="relative">
                 <div className={`flex h-14 items-center justify-between gap-3 ${PAGE_X} md:grid md:grid-cols-[1fr_auto_1fr]`}>
                   <UnlockingLink className="flex h-8 min-w-0 items-center justify-self-start" href="/">
