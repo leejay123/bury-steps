@@ -13,7 +13,6 @@ const LABEL: Record<WalkStatus, string> = {
   upcoming: "Upcoming",
   "starting-soon": "Starting soon",
   "in-progress": "In progress",
-  "walk-ended": "Walk ended",
   completed: "Completed",
 };
 
@@ -22,7 +21,6 @@ const VARIANT: Record<WalkStatus, "destructive" | "default" | "secondary" | "out
   upcoming: "secondary",
   "starting-soon": "default",
   "in-progress": "default",
-  "walk-ended": "secondary",
   completed: "outline",
 };
 
@@ -30,7 +28,7 @@ const VARIANT: Record<WalkStatus, "destructive" | "default" | "secondary" | "out
  * Shared status pill so the walk list, a walk's own page, and member cards
  * always agree. Recomputes when the published start/length says the phase
  * has changed, so a page left open ticks from Starting soon → In progress
- * → Walk ended → Completed on its own. Starting soon also shows a live
+ * → Completed on its own. Starting soon also shows a live
  * mm:ss countdown to the published start.
  */
 export function WalkStatusBadge({

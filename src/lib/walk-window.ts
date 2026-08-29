@@ -1,6 +1,5 @@
-/** Clock-in opens 60 min before the start and closes 60 min after the walk ends. */
+/** Clock-in opens 60 min before the start and closes when the walk is due to finish. */
 export const OPENS_BEFORE_MS = 60 * 60 * 1000;
-export const CLOSES_AFTER_MS = 60 * 60 * 1000;
 
 /** Longest walk duration allowed by the schema (minutes). Used for list lookbacks. */
 export const MAX_WALK_DURATION_MINS = 600;
@@ -10,9 +9,7 @@ export const MAX_WALK_DURATION_MINS = 600;
  * Shorter than this and the walk is safely in History.
  */
 export function upcomingListLookbackFrom(now: Date = new Date()): Date {
-  return new Date(
-    now.getTime() - MAX_WALK_DURATION_MINS * 60_000 - CLOSES_AFTER_MS,
-  );
+  return new Date(now.getTime() - MAX_WALK_DURATION_MINS * 60_000);
 }
 
 export type WindowState = "too-early" | "open" | "closed";
@@ -25,8 +22,9 @@ export function walkEndsAt(startsAt: Date, durationMins: number): Date {
   return new Date(startsAt.getTime() + durationMins * 60_000);
 }
 
+/** Same as the scheduled end — self clock-in stops when the walk is due to finish. */
 export function walkClosesAt(startsAt: Date, durationMins: number): Date {
-  return new Date(walkEndsAt(startsAt, durationMins).getTime() + CLOSES_AFTER_MS);
+  return walkEndsAt(startsAt, durationMins);
 }
 
 export function windowState(
@@ -35,21 +33,20 @@ export function windowState(
   now: Date = new Date(),
 ): WindowState {
   if (now.getTime() < walkOpensAt(startsAt).getTime()) return "too-early";
-  if (now.getTime() > walkClosesAt(startsAt, durationMins).getTime()) return "closed";
+  if (now.getTime() >= walkClosesAt(startsAt, durationMins).getTime()) return "closed";
   return "open";
 }
 
 /**
  * The overall lifecycle status of a walk, as shown on organiser and member
- * surfaces. Clock-in is available for starting-soon, in-progress, and
- * walk-ended; Completed means that window has fully closed.
+ * surfaces. Clock-in is available for starting-soon and in-progress only;
+ * Completed means the scheduled end has been reached.
  */
 export type WalkStatus =
   | "cancelled"
   | "upcoming"
   | "starting-soon"
   | "in-progress"
-  | "walk-ended"
   | "completed";
 
 export function walkStatus(
@@ -60,7 +57,6 @@ export function walkStatus(
   if (now.getTime() < walkOpensAt(walk.startsAt).getTime()) return "upcoming";
   if (now.getTime() < walk.startsAt.getTime()) return "starting-soon";
   if (now.getTime() < walkEndsAt(walk.startsAt, walk.durationMins).getTime()) return "in-progress";
-  if (now.getTime() <= walkClosesAt(walk.startsAt, walk.durationMins).getTime()) return "walk-ended";
   return "completed";
 }
 
@@ -71,7 +67,7 @@ export function canOrganiserEditJourney(
 ): boolean {
   if (walk.cancelledAt) return false;
   const status = walkStatus(walk, now);
-  return status === "in-progress" || status === "walk-ended" || status === "completed";
+  return status === "in-progress" || status === "completed";
 }
 
 /**
@@ -85,11 +81,9 @@ export function nextWalkStatusChangeAt(
   if (walk.cancelledAt) return null;
   const opensAt = walkOpensAt(walk.startsAt);
   const endsAt = walkEndsAt(walk.startsAt, walk.durationMins);
-  const closesAt = walkClosesAt(walk.startsAt, walk.durationMins);
   if (now.getTime() < opensAt.getTime()) return opensAt;
   if (now.getTime() < walk.startsAt.getTime()) return walk.startsAt;
   if (now.getTime() < endsAt.getTime()) return endsAt;
-  if (now.getTime() <= closesAt.getTime()) return new Date(closesAt.getTime() + 1);
   return null;
 }
 
@@ -130,8 +124,7 @@ export function isWalkHistoryReady(
  * passed. Last-minute "we're 15 minutes late leaving" is still allowed in
  * the hour before start, when clock-in is already open. Changing the
  * official start after people are walking would rewrite the record under
- * them; late arrivals can still clock in until an hour after the walk was
- * due to finish, and an organiser can add someone who forgot.
+ * them; late arrivals after the scheduled end need an organiser to add them.
  */
 export function isWalkScheduleLocked(startsAt: Date, now: Date = new Date()): boolean {
   return now.getTime() >= startsAt.getTime();

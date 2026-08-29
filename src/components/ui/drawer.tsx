@@ -20,9 +20,45 @@ const DrawerCloseDisabledContext = React.createContext(false);
 const DrawerTriggerRefContext = React.createContext<React.MutableRefObject<HTMLElement | null> | null>(
   null,
 );
-const DrawerScrollYContext = React.createContext<React.MutableRefObject<number> | null>(null);
 
 const DESKTOP_QUERY = "(min-width: 640px)";
+const SAFARI_UA = /^((?!chrome|android).)*safari/i;
+
+function isSafariBrowser() {
+  return typeof navigator !== "undefined" && SAFARI_UA.test(navigator.userAgent);
+}
+
+/** Body style props Vaul/Safari use for the position:fixed scroll lock. */
+const SAFARI_LOCK_PROPS = ["position", "top", "left", "right", "height", "width"] as const;
+
+/**
+ * Safari locks scroll with position:fixed + top:-y. Clearing that and then
+ * scrolling in a later frame paints one frame at y=0 (the flash/jump). Do both
+ * in the same turn before paint.
+ */
+function lockSafariBodyScroll(y: number) {
+  const { body } = document;
+  body.style.setProperty("position", "fixed", "important");
+  body.style.top = `${-y}px`;
+  body.style.left = "0px";
+  body.style.right = "0px";
+  body.style.width = "100%";
+  body.style.height = "auto";
+}
+
+function unlockSafariBodyScroll(y: number) {
+  const { body } = document;
+  const html = document.documentElement;
+  const previousBehavior = html.style.scrollBehavior;
+  html.style.scrollBehavior = "auto";
+
+  for (const prop of SAFARI_LOCK_PROPS) {
+    body.style.removeProperty(prop);
+  }
+  window.scrollTo(0, y);
+
+  html.style.scrollBehavior = previousBehavior;
+}
 
 /** Bottom sheet on phones, side panel from the sm breakpoint up. */
 function useIsDesktop() {
@@ -66,39 +102,52 @@ function Drawer({
   // still pass one explicitly; side drawers left unspecified become a bottom
   // sheet on phones and a side panel from the sm breakpoint up.
   const resolvedDirection = direction ?? (isDesktop ? "right" : "bottom");
-  // Safari (desktop + iOS) uses position:fixed on <body> while the drawer is
-  // open. Closing can briefly drop scroll to 0, then focus returns to the
-  // trigger and scrolls again — "jump to top, then a bit down". Keep the
-  // pre-open position and restore it ourselves after unlock.
+  // Safari (desktop + iOS) needs a body scroll lock. We own it (noBodyStyles)
+  // so close can unlock + scrollTo in one turn — Vaul's rAF restore is what
+  // flashed the page before settling.
   const scrollYRef = React.useRef(0);
   const triggerRef = React.useRef<HTMLElement | null>(null);
+  const safariLockRef = React.useRef(false);
+  const closeCleanupTimerRef = React.useRef(0);
 
   React.useEffect(() => {
-    return () => restorePagePointerEvents();
+    return () => {
+      window.clearTimeout(closeCleanupTimerRef.current);
+      if (safariLockRef.current) {
+        unlockSafariBodyScroll(scrollYRef.current);
+        safariLockRef.current = false;
+      }
+      restorePagePointerEvents();
+    };
   }, []);
-
-  function restoreScroll(y: number) {
-    window.scrollTo({ left: 0, top: y, behavior: "auto" });
-  }
 
   return (
     <DrawerOpenContext.Provider value={open}>
       <DrawerShouldRenderContext.Provider value={shouldRender}>
         <DrawerCloseDisabledContext.Provider value={closeDisabled}>
           <DrawerTriggerRefContext.Provider value={triggerRef}>
-            <DrawerScrollYContext.Provider value={scrollYRef}>
               <DrawerPrimitive.Root
                 data-slot="drawer"
+                {...props}
                 direction={resolvedDirection}
                 dismissible={!closeDisabled}
                 modal
+                // We apply Safari's position:fixed lock ourselves so restore is
+                // synchronous. Leaving Vaul's lock on causes a one-frame jump.
+                noBodyStyles
                 onOpenChange={(next) => {
                   if (closeDisabled && !next) return;
+                  window.clearTimeout(closeCleanupTimerRef.current);
+
                   if (next) {
                     scrollYRef.current = window.scrollY;
                     const active = document.activeElement;
                     triggerRef.current =
                       active instanceof HTMLElement ? active : triggerRef.current;
+                    if (isSafariBrowser()) {
+                      lockSafariBodyScroll(scrollYRef.current);
+                      safariLockRef.current = true;
+                    }
                   } else {
                     const lockedTop = document.body.style.top;
                     const fromLock = lockedTop
@@ -107,15 +156,16 @@ function Drawer({
                     const y = fromLock || scrollYRef.current;
                     scrollYRef.current = y;
 
-                    const finishClose = () => {
+                    if (safariLockRef.current || lockedTop) {
+                      unlockSafariBodyScroll(y);
+                      safariLockRef.current = false;
+                    }
+
+                    // Pointer-events / inert cleanup after the close animation —
+                    // not in the same turn as scroll restore (that race flashed).
+                    closeCleanupTimerRef.current = window.setTimeout(() => {
                       unlockIdleDocument();
-                      restoreScroll(y);
-                    };
-                    finishClose();
-                    window.requestAnimationFrame(finishClose);
-                    window.setTimeout(finishClose, 0);
-                    window.setTimeout(finishClose, 100);
-                    window.setTimeout(finishClose, 280);
+                    }, 320);
                   }
                   onOpenChange?.(next);
                 }}
@@ -131,11 +181,9 @@ function Drawer({
                 // focused input into view) trades a slightly less polished animation
                 // for a layout that never gets stuck.
                 repositionInputs={repositionInputs}
-                {...props}
               >
                 {children}
               </DrawerPrimitive.Root>
-            </DrawerScrollYContext.Provider>
           </DrawerTriggerRefContext.Provider>
         </DrawerCloseDisabledContext.Provider>
       </DrawerShouldRenderContext.Provider>
@@ -207,7 +255,6 @@ function DrawerContent({
   const shouldRender = React.useContext(DrawerShouldRenderContext);
   const closeDisabled = React.useContext(DrawerCloseDisabledContext);
   const triggerRef = React.useContext(DrawerTriggerRefContext);
-  const scrollYRef = React.useContext(DrawerScrollYContext);
   const dismissed = open === false;
 
   React.useEffect(() => {
@@ -258,14 +305,12 @@ function DrawerContent({
           onOpenAutoFocus?.(event);
         }}
         onCloseAutoFocus={(event) => {
-          // Safari's default focus restore scrolls the trigger into view,
-          // which (after a lost scroll lock) looks like: jump to top, then
-          // down to Read more. Keep focus without moving the page.
+          // Safari's default focus restore scrolls the trigger into view.
+          // Keep focus without moving the page; scroll was already restored
+          // synchronously when the drawer began closing.
           event.preventDefault();
           const trigger = triggerRef?.current;
           if (trigger?.isConnected) trigger.focus({ preventScroll: true });
-          const y = scrollYRef?.current ?? window.scrollY;
-          window.scrollTo({ left: 0, top: y, behavior: "auto" });
           onCloseAutoFocus?.(event);
         }}
         onPointerDownOutside={(event) => {

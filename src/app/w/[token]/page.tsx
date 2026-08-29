@@ -8,6 +8,7 @@ import { formatWalkDate } from "@/lib/dates";
 import { accountPortalHref, appUrl } from "@/lib/urls";
 import { meetingPointLabel } from "@/lib/geocode";
 import { ensureWalkSlug, walkShareUrl } from "@/lib/walk-slug";
+import { walkStatus } from "@/lib/walk-window";
 import { WalkFacts } from "@/components/walk-facts";
 import { WalkMapSection } from "@/components/walk-map-section";
 import { WalkJourneyDrawer } from "@/components/walk-journey-drawer";
@@ -59,9 +60,17 @@ export async function generateMetadata({
   const when = formatWalkDate(walk.startsAt);
   const meeting = meetingPointLabel(walk.location, walk.postcode);
   const title = `${walk.title} — Bury Steps Walking Group`;
-  const description = walk.cancelledAt
-    ? `Cancelled. Was ${when}${meeting ? ` at ${meeting}` : ""}.`
-    : `${when}${meeting ? ` · ${meeting}` : ""}. Tap to see details and clock in.`;
+  const status = walkStatus({
+    cancelledAt: walk.cancelledAt,
+    durationMins: walk.durationMins,
+    startsAt: walk.startsAt,
+  });
+  const description =
+    status === "cancelled"
+      ? `Cancelled. Was ${when}${meeting ? ` at ${meeting}` : ""}.`
+      : status === "completed"
+        ? `${when}${meeting ? ` · ${meeting}` : ""}. This walk has finished.`
+        : `${when}${meeting ? ` · ${meeting}` : ""}. Tap to see details and clock in.`;
 
   return {
     title,
@@ -89,6 +98,12 @@ export default async function WalkLinkPage({
 
   const walkUrl = walkShareUrl(appUrl(), { token: walk.token, slug });
   const user = await getOptionalUser();
+  const status = walkStatus({
+    cancelledAt: walk.cancelledAt,
+    durationMins: walk.durationMins,
+    startsAt: walk.startsAt,
+  });
+  const completed = status === "completed";
 
   const alreadyIn = user
     ? await prisma.attendance.findFirst({
@@ -122,10 +137,17 @@ export default async function WalkLinkPage({
         <WalkJourneyDrawer events={journeyEvents} />
       </div>
 
-      {walk.cancelledAt ? (
+      {status === "cancelled" ? (
         <Alert variant="destructive">
           <AlertTitle>This walk has been cancelled</AlertTitle>
           <AlertDescription>Check the walks list for the next one.</AlertDescription>
+        </Alert>
+      ) : completed && !user ? (
+        <Alert>
+          <AlertTitle>This walk has finished</AlertTitle>
+          <AlertDescription>
+            Clock-in is closed. Details and the journey below are still here to look back on.
+          </AlertDescription>
         </Alert>
       ) : !user ? (
         <div className="space-y-4 rounded-lg border bg-muted/40 p-5">
@@ -174,12 +196,7 @@ export default async function WalkLinkPage({
 
       {meeting ? <WalkMapSection location={meeting} walk={walk} /> : null}
 
-      {walk.cancelledAt ? null : !user ? (
-        <>
-          <BeforeYouSetOff />
-          <HowWalksWork />
-        </>
-      ) : (
+      {status === "cancelled" ? null : user ? (
         <WalkLivePanel
           alreadyClockedInAt={alreadyIn?.clockedInAt.toISOString() ?? null}
           durationMins={walk.durationMins}
@@ -188,6 +205,11 @@ export default async function WalkLinkPage({
           token={walk.token}
           walksHref={walksHref}
         />
+      ) : completed ? null : (
+        <>
+          <BeforeYouSetOff />
+          <HowWalksWork />
+        </>
       )}
     </div>
   );

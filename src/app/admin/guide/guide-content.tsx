@@ -125,8 +125,7 @@ export function OrganiserGuide() {
                 <strong>Upcoming</strong> (before clock-in opens), <strong>Starting soon</strong>{" "}
                 (the hour before start — the badge shows a live countdown to the published
                 start), <strong>In progress</strong> (until the scheduled end),{" "}
-                <strong>Walk ended</strong> (until an hour after that — clock-in is still open),{" "}
-                <strong>Completed</strong> (that window has fully closed), or{" "}
+                <strong>Completed</strong> (from the scheduled end — self clock-in is closed), or{" "}
                 <strong>Cancelled</strong>. The walk’s own page shows the same status next to its
                 title.
               </p>
@@ -164,10 +163,11 @@ export function OrganiserGuide() {
                   readable. Older links that look like a code still work — they open the same walk.
                 </li>
                 <li>
-                  Someone who is not signed in sees a prompt to create an account or sign in first,
-                  then the date, time, length, meeting point (and postcode if you added one), a map
-                  with Get directions, what to bring, and how the group works. Names of who is on
-                  the walk stay private.
+                  Someone who is not signed in sees a prompt to create an account or sign in first
+                  while the walk is still open, then the date, time, length, meeting point (and
+                  postcode if you added one), a map with Get directions, what to bring, and how the
+                  group works. Once the walk is Completed, guests see that it has finished instead —
+                  no join prompt. Names of who is on the walk stay private.
                 </li>
               </Steps>
               <p>
@@ -197,8 +197,8 @@ export function OrganiserGuide() {
                   shows the same map members see on the share link. Once the published start time
                   has passed, date, time, and length freeze — changing them would rewrite the
                   record under people already walking. Title, meeting point, and notes stay
-                  editable until the walk is Completed. Late arrivals can still clock in until an
-                  hour after the walk was due to finish; if they miss that, use Add someone.
+                  editable until the walk is Completed. Self clock-in stops at the scheduled end; if
+                  someone was there but missed it, use Add someone.
                 </li>
                 <li>
                   <strong>Reopen</strong> undoes a cancel without changing the details. Clock-in
@@ -315,9 +315,10 @@ export function OrganiserGuide() {
           <AccordionContent>
             <GuideBody>
               <p>
-                Clock-in opens <strong>one hour before</strong> the start and closes{" "}
-                <strong>one hour after</strong> the walk is due to finish. Example: a 2pm walk of 90
-                minutes opens at 1pm and closes at 4:30pm, UK time.
+                Clock-in opens <strong>one hour before</strong> the start and closes at the{" "}
+                <strong>scheduled end</strong> (start time plus the expected length). Example: a
+                2pm walk of 90 minutes opens at 1pm and closes at 3:30pm, UK time. After that, only
+                an organiser can add someone who was there.
               </p>
               <p>On the day, a member:</p>
               <Steps>
@@ -665,8 +666,8 @@ export function OrganiserGuide() {
                   <strong>Photo uploads</strong> — 4 MB
                 </li>
                 <li>
-                  <strong>Clock-in window</strong> — 1 hour before start, until 1 hour after the
-                  walk should end
+                  <strong>Clock-in window</strong> — 1 hour before start, until the walk’s
+                  scheduled end
                 </li>
                 <li>
                   <strong>Health notes</strong> — kept for 90 days after the walk

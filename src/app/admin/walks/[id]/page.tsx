@@ -84,7 +84,7 @@ export default async function WalkDetailPage({
   const canAddAttendance = canOrganiserAddAttendance(walk);
   const canEditJourney = canOrganiserEditJourney(walk);
   const journeyDefaultAt = utcToLondonWallClock(
-    status === "in-progress" || status === "walk-ended" ? new Date() : walk.startsAt,
+    status === "in-progress" ? new Date() : walk.startsAt,
   );
   const journeyEvents = walk.journeyEvents.map((event) => ({
     id: event.id,

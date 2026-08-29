@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  CLOSES_AFTER_MS,
   canOrganiserAddAttendance,
   canOrganiserEditJourney,
   formatStartingSoonCountdown,
@@ -34,16 +33,15 @@ describe("windowState", () => {
     expect(windowState(startsAt, durationMins, now)).toBe("open");
   });
 
-  it("stays open for the grace period after the walk ends", () => {
+  it("closes at the scheduled end", () => {
     const endsAt = startsAt.getTime() + durationMins * 60_000;
-    const now = new Date(endsAt + CLOSES_AFTER_MS - 1000);
-    expect(windowState(startsAt, durationMins, now)).toBe("open");
+    expect(windowState(startsAt, durationMins, new Date(endsAt))).toBe("closed");
+    expect(windowState(startsAt, durationMins, new Date(endsAt + 1000))).toBe("closed");
   });
 
-  it("closes once the grace period has passed", () => {
+  it("stays open a second before the scheduled end", () => {
     const endsAt = startsAt.getTime() + durationMins * 60_000;
-    const now = new Date(endsAt + CLOSES_AFTER_MS + 1000);
-    expect(windowState(startsAt, durationMins, now)).toBe("closed");
+    expect(windowState(startsAt, durationMins, new Date(endsAt - 1000))).toBe("open");
   });
 });
 
@@ -77,19 +75,14 @@ describe("walkStatus", () => {
     expect(walkStatus({ cancelledAt: null, startsAt, durationMins }, now)).toBe("in-progress");
   });
 
-  it("is walk-ended after the scheduled end while clock-in is still open", () => {
+  it("is completed once the scheduled end is reached", () => {
     const endsAt = startsAt.getTime() + durationMins * 60_000;
+    expect(walkStatus({ cancelledAt: null, startsAt, durationMins }, new Date(endsAt))).toBe(
+      "completed",
+    );
     expect(
-      walkStatus({ cancelledAt: null, startsAt, durationMins }, new Date(endsAt)),
-    ).toBe("walk-ended");
-    const now = new Date(endsAt + CLOSES_AFTER_MS - 1000);
-    expect(walkStatus({ cancelledAt: null, startsAt, durationMins }, now)).toBe("walk-ended");
-  });
-
-  it("is completed once the clock-in window has fully closed", () => {
-    const endsAt = startsAt.getTime() + durationMins * 60_000;
-    const now = new Date(endsAt + CLOSES_AFTER_MS + 1000);
-    expect(walkStatus({ cancelledAt: null, startsAt, durationMins }, now)).toBe("completed");
+      walkStatus({ cancelledAt: null, startsAt, durationMins }, new Date(endsAt + 1000)),
+    ).toBe("completed");
   });
 });
 
@@ -97,9 +90,7 @@ describe("upcomingListLookbackFrom", () => {
   it("keeps a max-length walk visible until its clock-in window has closed", () => {
     const now = new Date("2026-06-01T18:00:00.000Z");
     const lookback = upcomingListLookbackFrom(now);
-    const longestStart = new Date(
-      now.getTime() - MAX_WALK_DURATION_MINS * 60_000 - CLOSES_AFTER_MS + 1000,
-    );
+    const longestStart = new Date(now.getTime() - MAX_WALK_DURATION_MINS * 60_000 + 1000);
     expect(longestStart.getTime()).toBeGreaterThan(lookback.getTime());
     expect(windowState(longestStart, MAX_WALK_DURATION_MINS, now)).toBe("open");
   });
@@ -128,7 +119,7 @@ describe("canOrganiserEditJourney", () => {
   });
 
   it("is true after the walk has completed", () => {
-    const now = new Date(startsAt.getTime() + durationMins * 60_000 + CLOSES_AFTER_MS + 1000);
+    const now = new Date(startsAt.getTime() + durationMins * 60_000 + 1000);
     expect(canOrganiserEditJourney({ cancelledAt: null, startsAt, durationMins }, now)).toBe(true);
   });
 
@@ -169,7 +160,7 @@ describe("isWalkHistoryReady", () => {
 
   it("is true once the walk has completed", () => {
     const endsAt = startsAt.getTime() + durationMins * 60_000;
-    const now = new Date(endsAt + CLOSES_AFTER_MS + 1000);
+    const now = new Date(endsAt + 1000);
     expect(isWalkHistoryReady({ cancelledAt: null, startsAt, durationMins }, now)).toBe(true);
   });
 
@@ -224,7 +215,7 @@ describe("canOrganiserAddAttendance", () => {
 
   it("is true after the walk has completed", () => {
     const endsAt = startsAt.getTime() + durationMins * 60_000;
-    const now = new Date(endsAt + CLOSES_AFTER_MS + 1000);
+    const now = new Date(endsAt + 1000);
     expect(canOrganiserAddAttendance({ cancelledAt: null, startsAt, durationMins }, now)).toBe(
       true,
     );
@@ -249,7 +240,7 @@ describe("organiserRecordedClockInAt", () => {
 
   it("uses the start once the walk has completed, so they don't appear after it finished", () => {
     const endsAt = startsAt.getTime() + durationMins * 60_000;
-    const now = new Date(endsAt + CLOSES_AFTER_MS + 1000);
+    const now = new Date(endsAt + 1000);
     expect(organiserRecordedClockInAt({ startsAt, durationMins }, now)).toEqual(startsAt);
   });
 });
@@ -278,16 +269,9 @@ describe("nextWalkStatusChangeAt", () => {
     );
   });
 
-  it("is just after the clock-in close while the walk has ended", () => {
-    const endsAt = startsAt.getTime() + durationMins * 60_000;
-    const closesAt = endsAt + CLOSES_AFTER_MS;
-    const now = new Date(endsAt + 1000);
-    expect(nextWalkStatusChangeAt(walk, now)).toEqual(new Date(closesAt + 1));
-  });
-
   it("is null once completed or cancelled", () => {
     const endsAt = startsAt.getTime() + durationMins * 60_000;
-    const now = new Date(endsAt + CLOSES_AFTER_MS + 1000);
+    const now = new Date(endsAt + 1000);
     expect(nextWalkStatusChangeAt(walk, now)).toBeNull();
     expect(
       nextWalkStatusChangeAt({ cancelledAt: new Date(), startsAt, durationMins }, startsAt),

@@ -159,8 +159,9 @@ walks. Everyone after that is a normal member.
 3. Open `/admin` on your site (add `/admin` to the end of your Vercel address).
 4. Create a walk. Copy the share link to send to members.
 5. Clock-in on that link only works from **1 hour before** the start until
-   **1 hour after** the walk is due to finish. Members must be signed in —
-   having the link is not enough.
+   the walk’s **scheduled end** (start plus expected length). After that,
+   only an organiser can add someone. Members must be signed in — having
+   the link is not enough.
 
 ---
 

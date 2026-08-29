@@ -7,7 +7,7 @@ import { WalkMembers } from "@/components/walk-members";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { useWalkClock } from "@/hooks/use-walk-clock";
 import { formatDate, formatDateTime, formatTime } from "@/lib/dates";
-import { walkClosesAt, walkOpensAt, walkStatus, windowState } from "@/lib/walk-window";
+import { walkOpensAt, walkStatus, windowState } from "@/lib/walk-window";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
@@ -31,7 +31,6 @@ export function WalkLivePanel({
   const status = walkStatus({ cancelledAt: null, durationMins, startsAt: start }, now);
   const state = windowState(start, durationMins, now);
   const opensAt = walkOpensAt(start);
-  const closesAt = walkClosesAt(start, durationMins);
   const completed = status === "completed";
 
   if (alreadyClockedInAt) {
@@ -50,11 +49,6 @@ export function WalkLivePanel({
             <p className="text-sm text-muted-foreground">
               This walk has finished, and you stayed for the whole thing — there’s nothing left to
               do here.
-            </p>
-          ) : status === "walk-ended" ? (
-            <p className="text-sm text-muted-foreground">
-              This walk has finished. You can still clock out until {formatTime(closesAt)} if you
-              are leaving now.
             </p>
           ) : status === "in-progress" ? (
             <p className="text-sm text-muted-foreground">This walk is in progress.</p>
@@ -92,9 +86,10 @@ export function WalkLivePanel({
   if (state === "closed") {
     return (
       <Alert>
-        <AlertTitle>Clock-in has closed</AlertTitle>
+        <AlertTitle>This walk has finished</AlertTitle>
         <AlertDescription>
-          If you were there, speak to an organiser — they can add you to the list.
+          Clock-in is closed. If you were there, speak to an organiser — they can add you to the
+          list.
         </AlertDescription>
       </Alert>
     );
@@ -104,14 +99,6 @@ export function WalkLivePanel({
     <div className="flex flex-col gap-4">
       {status === "in-progress" ? (
         <p className="text-sm text-muted-foreground">This walk is in progress.</p>
-      ) : null}
-      {status === "walk-ended" ? (
-        <Alert>
-          <AlertTitle>This walk has finished</AlertTitle>
-          <AlertDescription>
-            You can still clock in until {formatTime(closesAt)}. After that, speak to an organiser.
-          </AlertDescription>
-        </Alert>
       ) : null}
       <ClockInForm token={token} />
     </div>
