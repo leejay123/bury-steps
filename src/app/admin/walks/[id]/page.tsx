@@ -79,14 +79,6 @@ export default async function WalkDetailPage({
   const isCompleted = status === "completed";
   const scheduleLocked = isWalkScheduleLocked(walk.startsAt);
   const canAddAttendance = canOrganiserAddAttendance(walk);
-  const attendingIds = attendances.map((attendance) => attendance.userId);
-  const addableMembers = canAddAttendance
-    ? await prisma.user.findMany({
-        where: attendingIds.length ? { id: { notIn: attendingIds } } : undefined,
-        select: { id: true, firstName: true, lastName: true, email: true },
-        orderBy: [{ firstName: "asc" }, { lastName: "asc" }, { email: "asc" }],
-      })
-    : [];
 
   function toAttendanceRow(attendance: (typeof attendances)[number]): WalkAttendanceRow {
     const name = displayName(attendance.user);
@@ -220,17 +212,7 @@ export default async function WalkDetailPage({
                 : `${stillIn.length} on the walk · Click a row for details`}
             </span>
             {canAddAttendance ? (
-              <AddAttendanceButton
-                members={addableMembers.map((member) => {
-                  const name = displayName(member);
-                  return {
-                    id: member.id,
-                    label: name === member.email ? member.email : `${name} · ${member.email}`,
-                  };
-                })}
-                walkCompleted={isCompleted}
-                walkId={walk.id}
-              />
+              <AddAttendanceButton walkCompleted={isCompleted} walkId={walk.id} />
             ) : null}
           </div>
         </div>

@@ -155,7 +155,7 @@ function monthLabel(monthKey: string): string {
   );
 }
 
-function viewerBadges(input: {
+export function viewerBadges(input: {
   totalCount: number;
   streakWeeks: number;
   stayed: boolean;

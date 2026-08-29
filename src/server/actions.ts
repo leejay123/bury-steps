@@ -553,6 +553,59 @@ const adminClockInSchema = z.object({
   userId: z.string().min(1, "Choose who to add."),
 });
 
+/** Cap for the Add someone picker so thousands of members never flood the dialog. */
+const ADDABLE_MEMBER_LIMIT = 40;
+
+export async function searchAddableMembers(
+  walkId: string,
+  query: string,
+): Promise<{ id: string; label: string }[]> {
+  await requireAdmin();
+  if (!walkId) return [];
+
+  const walk = await prisma.walk.findUnique({
+    where: { id: walkId },
+    select: {
+      id: true,
+      startsAt: true,
+      durationMins: true,
+      cancelledAt: true,
+      attendances: { select: { userId: true } },
+    },
+  });
+  if (!walk || !canOrganiserAddAttendance(walk)) return [];
+
+  const attendingIds = walk.attendances.map((row) => row.userId);
+  const needle = query.trim();
+  const where = {
+    ...(attendingIds.length ? { id: { notIn: attendingIds } } : {}),
+    ...(needle
+      ? {
+          OR: [
+            { firstName: { contains: needle, mode: "insensitive" as const } },
+            { lastName: { contains: needle, mode: "insensitive" as const } },
+            { email: { contains: needle, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
+
+  const members = await prisma.user.findMany({
+    where,
+    select: { id: true, firstName: true, lastName: true, email: true },
+    orderBy: [{ firstName: "asc" }, { lastName: "asc" }, { email: "asc" }],
+    take: ADDABLE_MEMBER_LIMIT,
+  });
+
+  return members.map((member) => {
+    const name = displayName(member);
+    return {
+      id: member.id,
+      label: name === member.email ? member.email : `${name} · ${member.email}`,
+    };
+  });
+}
+
 export async function adminClockIn(
   _prev: ActionResult | null,
   formData: FormData,

@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
-import { adminClockIn, type ActionResult } from "@/server/actions";
+import { adminClockIn, searchAddableMembers, type ActionResult } from "@/server/actions";
 import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
@@ -36,11 +36,9 @@ function Confirm({ walkCompleted }: { walkCompleted: boolean }) {
 }
 
 export function AddAttendanceButton({
-  members,
   walkCompleted,
   walkId,
 }: {
-  members: { id: string; label: string }[];
   walkCompleted: boolean;
   walkId: string;
 }) {
@@ -50,20 +48,42 @@ export function AddAttendanceButton({
   );
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [members, setMembers] = useState<{ id: string; label: string }[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [searching, startSearch] = useTransition();
   useActionToast(state, () => setOpen(false));
 
-  const empty = members.length === 0;
-  const needle = query.trim().toLowerCase();
-  const visible = needle
-    ? members.filter((member) => member.label.toLowerCase().includes(needle))
-    : members;
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    const handle = window.setTimeout(() => {
+      startSearch(async () => {
+        const next = await searchAddableMembers(walkId, query);
+        if (!cancelled) {
+          setMembers(next);
+          setLoaded(true);
+        }
+      });
+    }, query.trim() ? 200 : 0);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(handle);
+    };
+  }, [open, query, walkId]);
+
+  const empty = loaded && members.length === 0 && !query.trim();
+  const noMatch = loaded && members.length === 0 && Boolean(query.trim());
 
   return (
     <AlertDialog
       closeDisabled={isPending}
       onOpenChange={(next) => {
         preventDismissWhilePending(isPending, setOpen)(next);
-        if (!next) setQuery("");
+        if (!next) {
+          setQuery("");
+          setMembers([]);
+          setLoaded(false);
+        }
       }}
       open={open}
     >
@@ -89,26 +109,28 @@ export function AddAttendanceButton({
             </p>
           ) : (
             <div className="flex flex-col gap-1.5">
+              <Label htmlFor={`add-member-search-${walkId}`}>Search members</Label>
+              <Input
+                aria-label="Search members"
+                id={`add-member-search-${walkId}`}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Type a name or email"
+                value={query}
+              />
               <Label htmlFor={`add-member-${walkId}`} required>
                 Member
               </Label>
-              {members.length > 8 ? (
-                <Input
-                  aria-label="Search members"
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search by name or email"
-                  value={query}
-                />
-              ) : null}
-              {visible.length === 0 ? (
+              {!loaded || searching ? (
+                <p className="text-sm text-muted-foreground">Looking up members…</p>
+              ) : noMatch ? (
                 <p className="text-sm text-muted-foreground">No matching members.</p>
               ) : (
-                <Select name="userId" required>
+                <Select key={`${query}-${members.map((m) => m.id).join(",")}`} name="userId" required>
                   <SelectTrigger id={`add-member-${walkId}`}>
                     <SelectValue placeholder="Choose who to add" />
                   </SelectTrigger>
                   <SelectContent>
-                    {visible.map((member) => (
+                    {members.map((member) => (
                       <SelectItem key={member.id} value={member.id}>
                         {member.label}
                       </SelectItem>
@@ -116,6 +138,11 @@ export function AddAttendanceButton({
                   </SelectContent>
                 </Select>
               )}
+              {loaded && members.length >= 40 ? (
+                <p className="text-xs text-muted-foreground">
+                  Showing the first 40 matches. Type more of the name to narrow it down.
+                </p>
+              ) : null}
             </div>
           )}
           <FormError message={state && !state.ok ? state.error : null} />
@@ -123,7 +150,9 @@ export function AddAttendanceButton({
             <AlertDialogCancel disabled={isPending} type="button">
               Don’t add
             </AlertDialogCancel>
-            {empty || visible.length === 0 ? null : <Confirm walkCompleted={walkCompleted} />}
+            {empty || noMatch || !loaded || searching ? null : (
+              <Confirm walkCompleted={walkCompleted} />
+            )}
           </AlertDialogFooter>
         </form>
       </AlertDialogContent>

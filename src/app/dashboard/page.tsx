@@ -9,7 +9,7 @@ import { CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { MemberWelcomeDialog } from "@/components/member-welcome-dialog";
-import { getWalkMemberNamesByWalkIds } from "@/lib/walk-members";
+import { getWalkMemberCountsByWalkIds } from "@/lib/walk-members";
 import { UpcomingWalkCards } from "./upcoming-walk-cards";
 import { RecentWalksCarousel } from "./recent-walks-carousel";
 
@@ -34,7 +34,7 @@ export default async function DashboardPage() {
         OR: [{ startsAt: { gte: upcomingFrom } }, { cancelledAt: { gte: cancelledFrom } }],
       },
       orderBy: { startsAt: "asc" },
-      take: 20,
+      take: 50,
       select: {
         id: true,
         token: true,
@@ -98,7 +98,7 @@ export default async function DashboardPage() {
   const clockedWalkIds = walks
     .filter((walk) => walk.attendances.length > 0)
     .map((walk) => walk.id);
-  const memberNamesByWalk = await getWalkMemberNamesByWalkIds(clockedWalkIds);
+  const memberCountsByWalk = await getWalkMemberCountsByWalkIds(clockedWalkIds);
 
   return (
     <div className="flex flex-col gap-8">
@@ -134,7 +134,7 @@ export default async function DashboardPage() {
               cancelledAt: walk.cancelledAt?.toISOString() ?? null,
               clockedInAt: clockedIn ? clockedIn.clockedInAt.toISOString() : null,
               state: windowState(walk.startsAt, walk.durationMins, now),
-              memberNames: memberNamesByWalk.get(walk.id) ?? [],
+              memberCount: memberCountsByWalk.get(walk.id) ?? 0,
             };
           })}
         />

@@ -238,7 +238,8 @@ export function OrganiserGuide() {
                 them. After Completed, they show as attending from the start, with no health
                 notes. If they already clocked in or out, they are already on the list — do not
                 add them again. Reopen a cancelled walk first if you need to add someone to it.
-                If there are more than eight people to choose from, a search box filters the list.
+                Search by name or email — the list shows up to 40 matches so it stays quick even
+                with thousands of members.
               </p>
               <p>
                 Walks titled <strong>[Demo]</strong> are sample rows so you can check Previous and
@@ -288,6 +289,8 @@ export function OrganiserGuide() {
               </p>
               <p>
                 If more than 20 people clocked in this month, Previous and Next sit under the list.
+                The same 20-at-a-time paging is used on a walk’s “Who’s coming” list and on
+                organiser attendance — so a walk with a thousand clock-ins stays usable.
               </p>
             </GuideBody>
           </AccordionContent>

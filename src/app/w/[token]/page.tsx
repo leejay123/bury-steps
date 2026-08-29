@@ -3,23 +3,20 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
-import { getOptionalUser, requireUser } from "@/lib/auth";
-import { formatWalkDate, formatDateTime, formatDate, formatTime } from "@/lib/dates";
-import { windowState, OPENS_BEFORE_MS } from "@/lib/walk-window";
+import { getOptionalUser } from "@/lib/auth";
+import { formatWalkDate } from "@/lib/dates";
 import { accountPortalHref, appUrl } from "@/lib/urls";
 import { meetingPointLabel } from "@/lib/geocode";
 import { ensureWalkPoint } from "@/lib/walk-coordinates";
 import { ensureWalkSlug, walkShareUrl } from "@/lib/walk-slug";
-import { ClockInForm } from "./clock-in-form";
-import { ClockOutButton } from "@/components/clock-out-button";
-import { WalkMembers } from "@/components/walk-members";
 import { WalkFacts } from "@/components/walk-facts";
 import { WalkMap } from "@/components/walk-map";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { HowWalksWork } from "@/components/how-walks-work";
 import { getWalkMemberNames } from "@/lib/walk-members";
+import { WalkStatusBadge } from "@/components/walk-status-badge";
+import { WalkLivePanel } from "./walk-live-panel";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -96,13 +93,13 @@ export default async function WalkLinkPage({
       })
     : null;
 
+  // Names only once this member has clocked in — privacy for guests and
+  // people who have not joined yet. WalkMembers paginates at 20, so a
+  // thousand names on one walk stay usable.
   const memberNames = alreadyIn ? await getWalkMemberNames(walk.id) : [];
   const meeting = meetingPointLabel(walk.location, walk.postcode);
   const mapPoint = meeting ? await ensureWalkPoint(walk) : null;
-
-  const state = windowState(walk.startsAt, walk.durationMins);
   const walksHref = user?.role === "ADMIN" ? "/admin" : "/dashboard";
-  const opensAt = new Date(walk.startsAt.getTime() - OPENS_BEFORE_MS);
 
   return (
     <div className="flex flex-col gap-6">
@@ -143,7 +140,11 @@ export default async function WalkLinkPage({
         <CardHeader>
           <div className="flex items-start justify-between gap-3">
             <CardTitle className="text-xl">{walk.title}</CardTitle>
-            {walk.cancelledAt && <Badge variant="destructive">Cancelled</Badge>}
+            <WalkStatusBadge
+              cancelledAt={walk.cancelledAt?.toISOString() ?? null}
+              durationMins={walk.durationMins}
+              startsAt={walk.startsAt.toISOString()}
+            />
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -166,65 +167,16 @@ export default async function WalkLinkPage({
           <BeforeYouSetOff />
           <HowWalksWork />
         </>
-      ) : alreadyIn ? (
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-4 rounded-lg border bg-muted/40 p-5">
-            <div className="flex flex-col gap-1">
-              <p className="font-medium">
-                {state === "closed" ? "You attended this walk" : "You are clocked in"}
-              </p>
-              <p className="text-sm tabular-nums text-muted-foreground">
-                Recorded at {formatDateTime(alreadyIn.clockedInAt)}
-              </p>
-            </div>
-            {state === "closed" ? (
-              // Clocking out is for leaving early (or right at the end) —
-              // once the walk itself has finished, staying clocked in the
-              // whole time just means you did the full walk. Nothing left
-              // to do, so no Clock out button here.
-              <p className="text-sm text-muted-foreground">
-                This walk has finished, and you stayed for the whole thing — there’s nothing left
-                to do here.
-              </p>
-            ) : null}
-            <div className="flex flex-wrap gap-2">
-              {state === "closed" ? null : <ClockOutButton token={walk.token} />}
-              <Button asChild size="sm" variant="outline">
-                <Link href={walksHref}>Back to walks</Link>
-              </Button>
-            </div>
-          </div>
-          <WalkMembers completed={state === "closed"} names={memberNames} />
-        </div>
-      ) : state === "too-early" ? (
-        <div className="flex flex-col gap-4">
-          <Alert>
-            <AlertTitle>Clock-in is not open yet</AlertTitle>
-            <AlertDescription>
-              It opens an hour before the walk starts, at {formatTime(opensAt)} on{" "}
-              {formatDate(opensAt)}. Come back on the day and this page will be ready.
-            </AlertDescription>
-          </Alert>
-          <BeforeYouSetOff />
-          <Button asChild className="self-start" size="sm" variant="outline">
-            <Link href={walksHref}>Back to walks</Link>
-          </Button>
-        </div>
-      ) : state === "closed" ? (
-        <Alert>
-          <AlertTitle>Clock-in has closed</AlertTitle>
-          <AlertDescription>
-            If you were there, speak to an organiser — they can add you to the list.
-          </AlertDescription>
-        </Alert>
       ) : (
-        <SignedInClockIn token={walk.token} />
+        <WalkLivePanel
+          alreadyClockedInAt={alreadyIn?.clockedInAt.toISOString() ?? null}
+          durationMins={walk.durationMins}
+          memberNames={memberNames}
+          startsAt={walk.startsAt.toISOString()}
+          token={walk.token}
+          walksHref={walksHref}
+        />
       )}
     </div>
   );
-}
-
-async function SignedInClockIn({ token }: { token: string }) {
-  await requireUser();
-  return <ClockInForm token={token} />;
 }
