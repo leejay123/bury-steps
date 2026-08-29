@@ -151,7 +151,7 @@ export function EditWalkButton({
           <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending} type="button">
-              Don't save
+              Don’t save
             </AlertDialogCancel>
             <Confirm cancelled={cancelled} />
           </AlertDialogFooter>
