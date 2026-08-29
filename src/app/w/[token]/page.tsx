@@ -10,6 +10,7 @@ import { meetingPointLabel } from "@/lib/geocode";
 import { ensureWalkSlug, walkShareUrl } from "@/lib/walk-slug";
 import { WalkFacts } from "@/components/walk-facts";
 import { WalkMapSection } from "@/components/walk-map-section";
+import { WalkJourneyTimeline } from "@/components/walk-journey-timeline";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { HowWalksWork } from "@/components/how-walks-work";
 import { getWalkMemberNames } from "@/lib/walk-members";
@@ -38,6 +39,10 @@ const getWalkByShareKey = cache((key: string) =>
       startsAt: true,
       durationMins: true,
       cancelledAt: true,
+      journeyEvents: {
+        orderBy: { happenedAt: "asc" },
+        select: { id: true, title: true, body: true, happenedAt: true },
+      },
     },
   }),
 );
@@ -159,6 +164,21 @@ export default async function WalkLinkPage({
       </Card>
 
       {meeting ? <WalkMapSection location={meeting} walk={walk} /> : null}
+
+      {walk.journeyEvents.length > 0 ? (
+        <section className="flex flex-col gap-3">
+          <h2 className="font-medium">Journey</h2>
+          <p className="text-sm text-muted-foreground">What happened on this walk.</p>
+          <WalkJourneyTimeline
+            events={walk.journeyEvents.map((event) => ({
+              id: event.id,
+              title: event.title,
+              body: event.body,
+              happenedAt: event.happenedAt.toISOString(),
+            }))}
+          />
+        </section>
+      ) : null}
 
       {walk.cancelledAt ? null : !user ? (
         <>

@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { ClipboardList } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireAdmin, displayName } from "@/lib/auth";
-import { formatWalkDate } from "@/lib/dates";
-import { canOrganiserAddAttendance, isWalkScheduleLocked, walkStatus } from "@/lib/walk-window";
+import { formatWalkDate, utcToLondonWallClock } from "@/lib/dates";
+import { canOrganiserAddAttendance, canOrganiserEditJourney, isWalkScheduleLocked, walkStatus } from "@/lib/walk-window";
 import { appUrl } from "@/lib/urls";
 import { ShareLink } from "@/components/share-link";
 import { EmptyState } from "@/components/empty-state";
@@ -17,6 +17,7 @@ import { EditWalkButton } from "./edit-walk-button";
 import { AddAttendanceButton } from "./add-attendance-button";
 import { ReopenWalkButton } from "./reopen-walk-button";
 import { DeleteWalkButton } from "./delete-walk-button";
+import { WalkJourneyManager } from "./walk-journey";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,6 +63,10 @@ export default async function WalkDetailPage({
         orderBy: [{ clockedOutAt: "asc" }, { clockedInAt: "asc" }],
         include: { user: { select: { firstName: true, lastName: true, email: true } } },
       },
+      journeyEvents: {
+        orderBy: { happenedAt: "asc" },
+        select: { id: true, title: true, body: true, happenedAt: true },
+      },
     },
   });
 
@@ -77,6 +82,16 @@ export default async function WalkDetailPage({
   const isCompleted = status === "completed";
   const scheduleLocked = isWalkScheduleLocked(walk.startsAt);
   const canAddAttendance = canOrganiserAddAttendance(walk);
+  const canEditJourney = canOrganiserEditJourney(walk);
+  const journeyDefaultAt = utcToLondonWallClock(
+    status === "in-progress" || status === "walk-ended" ? new Date() : walk.startsAt,
+  );
+  const journeyEvents = walk.journeyEvents.map((event) => ({
+    id: event.id,
+    title: event.title,
+    body: event.body,
+    happenedAt: event.happenedAt.toISOString(),
+  }));
 
   function toAttendanceRow(attendance: (typeof attendances)[number]): WalkAttendanceRow {
     const name = displayName(attendance.user);
@@ -183,6 +198,15 @@ export default async function WalkDetailPage({
           </AlertDescription>
         </Alert>
       )}
+
+      <WalkJourneyManager
+        canEdit={canEditJourney}
+        defaultHappenedAt={journeyDefaultAt}
+        events={journeyEvents}
+        walkId={walk.id}
+      />
+
+      <Separator />
 
       {/*
         Split into two lists rather than one merged table: "Attendance" is

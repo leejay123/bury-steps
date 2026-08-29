@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   CLOSES_AFTER_MS,
   canOrganiserAddAttendance,
+  canOrganiserEditJourney,
   formatStartingSoonCountdown,
   isWalkHistoryReady,
   isWalkScheduleLocked,
@@ -107,6 +108,35 @@ describe("upcomingListLookbackFrom", () => {
     const now = new Date("2026-06-01T18:00:00.000Z");
     const threeHours = new Date(now.getTime() - 3 * 60 * 60 * 1000);
     expect(upcomingListLookbackFrom(now).getTime()).toBeLessThan(threeHours.getTime());
+  });
+});
+
+describe("canOrganiserEditJourney", () => {
+  const startsAt = new Date("2026-06-01T10:00:00.000Z");
+  const durationMins = 90;
+
+  it("is false before the walk starts", () => {
+    const now = new Date(startsAt.getTime() - 30 * 60_000);
+    expect(canOrganiserEditJourney({ cancelledAt: null, startsAt, durationMins }, now)).toBe(
+      false,
+    );
+  });
+
+  it("is true once the walk is in progress", () => {
+    const now = new Date(startsAt.getTime() + 10 * 60_000);
+    expect(canOrganiserEditJourney({ cancelledAt: null, startsAt, durationMins }, now)).toBe(true);
+  });
+
+  it("is true after the walk has completed", () => {
+    const now = new Date(startsAt.getTime() + durationMins * 60_000 + CLOSES_AFTER_MS + 1000);
+    expect(canOrganiserEditJourney({ cancelledAt: null, startsAt, durationMins }, now)).toBe(true);
+  });
+
+  it("is false when the walk is cancelled", () => {
+    const now = new Date(startsAt.getTime() + 10 * 60_000);
+    expect(
+      canOrganiserEditJourney({ cancelledAt: new Date(), startsAt, durationMins }, now),
+    ).toBe(false);
   });
 });
 

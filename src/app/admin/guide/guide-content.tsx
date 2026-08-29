@@ -234,6 +234,13 @@ export function OrganiserGuide() {
                 clocked in, Previous and Next sit under either list.
               </p>
               <p>
+                <strong>Journey</strong> is the story of the walk — short timed events (a cafe stop,
+                a viewpoint) with an optional note. Add them once the walk has started, including
+                after Completed. Members see the same timeline on the walk link when anything is
+                there. Up to 20 events. A cancelled walk keeps what you already wrote, but you
+                cannot add more.
+              </p>
+              <p>
                 <strong>Add someone</strong> on that attendance section is for a member who was
                 there but did not clock in — phone died, they forgot, or the window had already
                 closed. They must already have an account; you cannot add someone who has never
@@ -282,8 +289,9 @@ export function OrganiserGuide() {
               <p>
                 This month’s cup goes to whoever has the most finished clock-ins this UK month. It
                 resets next month. A tie is shared. First names only — if two people share a first
-                name, a last initial is added. The month list is numbered (1st, 2nd, 3rd…) so you
-                can see who is ahead; tied clock-ins share a place.
+                name, a last initial is added. The month list groups people by walk count (for
+                example “5 walks”, then “3 walks”) so a draw sits together — there are no 1st / 2nd
+                places.
               </p>
               <p>
                 Optionally set a monthly together goal under{" "}

@@ -21,10 +21,11 @@ model User {
   role      Role     @default(MEMBER)
   createdAt DateTime @default(now())
 
-  walksCreated     Walk[]           @relation("WalkCreator")
+  walksCreated     Walk[]              @relation("WalkCreator")
   attendances      Attendance[]
   noticeReads      SiteNoticeRead[]
   accidentReports  AccidentReport[]
+  journeyEvents    WalkJourneyEvent[]  @relation("JourneyCreator")
 
   @@index([createdAt])
 }
@@ -55,6 +56,7 @@ model Walk {
 
   attendances      Attendance[]
   accidentReports  AccidentReport[]
+  journeyEvents    WalkJourneyEvent[]
 
   @@index([startsAt])
   @@index([createdById])
@@ -214,4 +216,22 @@ model AccidentReport {
 
   @@index([happenedAt])
   @@index([walkId])
+}
+
+/// Story beats for a walk’s Journey timeline. Organisers add these during
+/// or after the walk; members see them on the share page.
+model WalkJourneyEvent {
+  id          String   @id @default(cuid())
+  walkId      String
+  title       String
+  body        String?
+  /// When this moment happened (UK wall clock stored as UTC).
+  happenedAt  DateTime
+  createdAt   DateTime @default(now())
+  createdById String
+
+  walk      Walk @relation(fields: [walkId], references: [id], onDelete: Cascade)
+  createdBy User @relation("JourneyCreator", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([walkId, happenedAt])
 }

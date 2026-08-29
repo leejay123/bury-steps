@@ -108,8 +108,8 @@ export default async function ProgressPage() {
         <div className="flex flex-col gap-1">
           <h2 className="font-medium">This month</h2>
           <p className="text-sm text-muted-foreground">
-            Everyone who has clocked in to a finished walk this month, ranked by clock-ins. People
-            with none are not listed.
+            Everyone who has clocked in to a finished walk this month, grouped by how many. People
+            with the same count sit together — a draw, not a place. People with none are not listed.
           </p>
         </div>
         {game.board.length === 0 ? (

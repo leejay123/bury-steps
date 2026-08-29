@@ -64,6 +64,16 @@ export function walkStatus(
   return "completed";
 }
 
+/** Organisers may add journey events once the walk has started (not cancelled). */
+export function canOrganiserEditJourney(
+  walk: { cancelledAt: Date | null; startsAt: Date; durationMins: number },
+  now: Date = new Date(),
+): boolean {
+  if (walk.cancelledAt) return false;
+  const status = walkStatus(walk, now);
+  return status === "in-progress" || status === "walk-ended" || status === "completed";
+}
+
 /**
  * Next instant the public status badge should change. Null once the walk
  * is cancelled or completed — nothing left on a timer.
