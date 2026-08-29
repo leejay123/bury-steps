@@ -205,6 +205,30 @@ export function UnlockPageOnNavigate() {
   }, [pathname]);
 
   useEffect(() => {
+    // Overlays sit below the sticky header. On phones the bar is taller than
+    // h-14 because of the mobile nav row — measure the real element.
+    const header = document.querySelector<HTMLElement>("[data-site-shell] > header");
+    if (!header || typeof ResizeObserver === "undefined") return;
+
+    const target = header;
+    let lastHeight = -1;
+    function sync() {
+      const height = Math.round(target.getBoundingClientRect().height);
+      if (height <= 0 || height === lastHeight) return;
+      lastHeight = height;
+      document.documentElement.style.setProperty("--site-header-height", `${height}px`);
+    }
+
+    const observer = new ResizeObserver(sync);
+    observer.observe(target);
+    sync();
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty("--site-header-height");
+    };
+  }, []);
+
+  useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
     const viewport = vv;

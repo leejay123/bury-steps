@@ -91,7 +91,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             the outermost shell (rather than on individual pages) so it also
             covers content that intentionally bleeds edge-to-edge.
           */}
-          <div className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
+          <div
+            className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"
+            data-site-shell
+          >
             <UnlockPageOnNavigate />
             {/*
               Off-screen until focused, so a keyboard/screen-reader user's
@@ -110,6 +113,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               scrolls under a sticky bar is expensive on Safari and caused
               visible lag on MacBooks; an opaque bar stays crisp and cheap.
               [transform:translateZ(0)] keeps it on its own compositor layer.
+              Overlays measure this bar into --site-header-height and pin it
+              while open so it stays visible above drawers/dialogs.
             */}
             <header className="sticky top-0 z-[65] touch-manipulation bg-background [transform:translateZ(0)]">
               <div className="relative">

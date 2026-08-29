@@ -238,7 +238,8 @@ export function OrganiserGuide() {
                 a viewpoint) with an optional note. It sits at the bottom of the organiser walk
                 page. Add events once the walk has started, including after Completed. Use{" "}
                 <strong>View journey</strong> to open the animated timeline in a drawer — members
-                get the same button at the top of the walk link. Up to 20 events. A cancelled walk
+                get the same button at the top of the walk link. The drawer stays below the site
+                header so the menu remains visible. Up to 20 events. A cancelled walk
                 keeps what you already wrote, but you cannot add more.
               </p>
               <p>
@@ -414,9 +415,10 @@ export function OrganiserGuide() {
                 testimonials, FAQs, and notices use a list: tap a row to edit. Remove is the small
                 button on the row, not in the drawer. Drawers are for adding and editing. On a
                 phone the list stacks so you do not have to scroll sideways, Add buttons stretch
-                full width, and drawers slide up from the bottom of the screen; on a wider screen
-                they slide in from the side instead. A breadcrumb at the top of each settings page
-                goes back to Settings — it greys when you hover it.
+                full width, and drawers slide up from the bottom of the screen (stopping below the
+                site header so the menu stays visible); on a wider screen they slide in from the
+                side instead. A breadcrumb at the top of each settings page goes back to Settings —
+                it greys when you hover it.
               </p>
               <p>
                 Use the up and down arrows on the left of a row to change the order of photos,
@@ -466,8 +468,8 @@ export function OrganiserGuide() {
               <p>
                 Open <Link href="/admin/settings/notices">Notices</Link>. Up to {MAX_SITE_NOTICES}{" "}
                 messages in the bell at the top of the site. Only signed-in people see them. The
-                bell opens a drawer on phone and desktop — sliding up from the bottom on a phone,
-                and in from the side on a wider screen.
+                bell opens a drawer on phone and desktop — sliding up from the bottom on a phone
+                (below the site header), and in from the side on a wider screen.
               </p>
               <Steps>
                 <li>Add a title and a message. On a phone, Add notice is full width.</li>

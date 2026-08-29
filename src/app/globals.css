@@ -97,16 +97,21 @@ body {
  * instead of behind it. --keyboard-inset / --vv-height are set from
  * window.visualViewport in overlay-root (ignored when the inset is just the
  * URL bar showing/hiding).
+ *
+ * Max height leaves the site header clear. Do not use
+ * min(80dvh, var(--vv-height)): when the URL bar shrinks the visual viewport
+ * below 80dvh, that expression becomes the full visible height and the sheet
+ * covers the header (About Bury Steps on iPhone).
  */
 [data-slot="drawer-content"][data-vaul-drawer-direction="bottom"] {
   bottom: 0;
   margin-bottom: var(--keyboard-inset, 0px);
-  max-height: min(80dvh, var(--vv-height, 80dvh));
+  max-height: calc(var(--vv-height, 100dvh) - var(--site-header-height) - 0.75rem);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
 [data-slot="drawer-content"][data-vaul-drawer-direction="top"] {
-  max-height: min(80dvh, var(--vv-height, 80dvh));
+  max-height: calc(var(--vv-height, 100dvh) - var(--site-header-height) - 0.75rem);
 }
 
 .cl-modalBackdrop {
@@ -115,10 +120,50 @@ body {
   background-color: rgba(18, 28, 22, 0.42) !important;
 }
 
-/* Site chrome height (h-14). Overlays start below this so the sticky header
-   stays visible in its normal page column — no position:fixed re-pinning. */
+/* Fallback until overlay-root measures the real sticky header (h-14 + mobile
+   nav on small screens). Overlays and side drawers start below this. */
 :root {
   --site-header-height: 3.5rem;
+}
+
+@media (max-width: 767px) {
+  :root {
+    /* h-14 + mobile nav row — replaced by the measured value after hydrate */
+    --site-header-height: 5.75rem;
+  }
+}
+
+/*
+ * iOS Safari locks scroll with position:fixed on <body>, which shifts a sticky
+ * header off-screen with the page. Pin the bar to the viewport while any
+ * overlay is open, matching the page shell (max 1200px, centered, side
+ * borders + safe-area). Use margin auto — not transform centering — so we do
+ * not override the header's translateZ(0) compositor layer (that warped nav).
+ */
+html:has([data-slot="drawer-content"][data-state="open"]) [data-site-shell],
+html:has([data-slot="dialog-content"][data-state="open"]) [data-site-shell],
+html:has([data-slot="alert-dialog-content"][data-state="open"]) [data-site-shell] {
+  padding-top: var(--site-header-height);
+}
+
+html:has([data-slot="drawer-content"][data-state="open"]) [data-site-shell] > header,
+html:has([data-slot="dialog-content"][data-state="open"]) [data-site-shell] > header,
+html:has([data-slot="alert-dialog-content"][data-state="open"]) [data-site-shell] > header {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 65;
+  box-sizing: border-box;
+  width: min(100%, 1200px);
+  max-width: 1200px;
+  margin-right: auto;
+  margin-left: auto;
+  padding-right: env(safe-area-inset-right);
+  padding-left: env(safe-area-inset-left);
+  border-right: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  background-color: var(--background);
 }
 
 /* Clerk's shadcn theme draws the field with box-shadow, then adds a 4px
