@@ -17,6 +17,10 @@ const overlayCloseClassName =
 const DrawerOpenContext = React.createContext<boolean | undefined>(undefined);
 const DrawerShouldRenderContext = React.createContext(true);
 const DrawerCloseDisabledContext = React.createContext(false);
+const DrawerTriggerRefContext = React.createContext<React.MutableRefObject<HTMLElement | null> | null>(
+  null,
+);
+const DrawerScrollYContext = React.createContext<React.MutableRefObject<number> | null>(null);
 
 const DESKTOP_QUERY = "(min-width: 640px)";
 
@@ -62,45 +66,77 @@ function Drawer({
   // still pass one explicitly; side drawers left unspecified become a bottom
   // sheet on phones and a side panel from the sm breakpoint up.
   const resolvedDirection = direction ?? (isDesktop ? "right" : "bottom");
+  // Safari (desktop + iOS) uses position:fixed on <body> while the drawer is
+  // open. Closing can briefly drop scroll to 0, then focus returns to the
+  // trigger and scrolls again — "jump to top, then a bit down". Keep the
+  // pre-open position and restore it ourselves after unlock.
+  const scrollYRef = React.useRef(0);
+  const triggerRef = React.useRef<HTMLElement | null>(null);
 
   React.useEffect(() => {
     return () => restorePagePointerEvents();
   }, []);
 
+  function restoreScroll(y: number) {
+    window.scrollTo({ left: 0, top: y, behavior: "auto" });
+  }
+
   return (
     <DrawerOpenContext.Provider value={open}>
       <DrawerShouldRenderContext.Provider value={shouldRender}>
         <DrawerCloseDisabledContext.Provider value={closeDisabled}>
-          <DrawerPrimitive.Root
-            data-slot="drawer"
-            direction={resolvedDirection}
-            dismissible={!closeDisabled}
-            modal
-            onOpenChange={(next) => {
-              if (closeDisabled && !next) return;
-              if (!next) {
-                unlockIdleDocument();
-                window.setTimeout(unlockIdleDocument, 0);
-                window.setTimeout(unlockIdleDocument, 250);
-              }
-              onOpenChange?.(next);
-            }}
-            open={open}
-            // Scaling the page behind the sheet looks like a zoom on iPhone.
-            shouldScaleBackground={false}
-            // Vaul's built-in keyboard/input repositioning has long-standing bugs
-            // on iOS Safari (emilkowalski/vaul#619, #503, #514): the drawer can
-            // get stuck mid-reposition — its content and overlay rendered in the
-            // wrong place, or the overlay missing entirely — until the user taps
-            // the screen again and forces a repaint. Disabling it and letting the
-            // browser handle the on-screen keyboard natively (it still scrolls a
-            // focused input into view) trades a slightly less polished animation
-            // for a layout that never gets stuck.
-            repositionInputs={repositionInputs}
-            {...props}
-          >
-            {children}
-          </DrawerPrimitive.Root>
+          <DrawerTriggerRefContext.Provider value={triggerRef}>
+            <DrawerScrollYContext.Provider value={scrollYRef}>
+              <DrawerPrimitive.Root
+                data-slot="drawer"
+                direction={resolvedDirection}
+                dismissible={!closeDisabled}
+                modal
+                onOpenChange={(next) => {
+                  if (closeDisabled && !next) return;
+                  if (next) {
+                    scrollYRef.current = window.scrollY;
+                    const active = document.activeElement;
+                    triggerRef.current =
+                      active instanceof HTMLElement ? active : triggerRef.current;
+                  } else {
+                    const lockedTop = document.body.style.top;
+                    const fromLock = lockedTop
+                      ? Math.abs(Number.parseInt(lockedTop, 10) || 0)
+                      : 0;
+                    const y = fromLock || scrollYRef.current;
+                    scrollYRef.current = y;
+
+                    const finishClose = () => {
+                      unlockIdleDocument();
+                      restoreScroll(y);
+                    };
+                    finishClose();
+                    window.requestAnimationFrame(finishClose);
+                    window.setTimeout(finishClose, 0);
+                    window.setTimeout(finishClose, 100);
+                    window.setTimeout(finishClose, 280);
+                  }
+                  onOpenChange?.(next);
+                }}
+                open={open}
+                // Scaling the page behind the sheet looks like a zoom on iPhone.
+                shouldScaleBackground={false}
+                // Vaul's built-in keyboard/input repositioning has long-standing bugs
+                // on iOS Safari (emilkowalski/vaul#619, #503, #514): the drawer can
+                // get stuck mid-reposition — its content and overlay rendered in the
+                // wrong place, or the overlay missing entirely — until the user taps
+                // the screen again and forces a repaint. Disabling it and letting the
+                // browser handle the on-screen keyboard natively (it still scrolls a
+                // focused input into view) trades a slightly less polished animation
+                // for a layout that never gets stuck.
+                repositionInputs={repositionInputs}
+                {...props}
+              >
+                {children}
+              </DrawerPrimitive.Root>
+            </DrawerScrollYContext.Provider>
+          </DrawerTriggerRefContext.Provider>
         </DrawerCloseDisabledContext.Provider>
       </DrawerShouldRenderContext.Provider>
     </DrawerOpenContext.Provider>
@@ -108,7 +144,21 @@ function Drawer({
 }
 
 function DrawerTrigger({ ...props }: React.ComponentProps<typeof DrawerPrimitive.Trigger>) {
-  return <DrawerPrimitive.Trigger data-slot="drawer-trigger" {...props} />;
+  const triggerRef = React.useContext(DrawerTriggerRefContext);
+  return (
+    <DrawerPrimitive.Trigger
+      data-slot="drawer-trigger"
+      {...props}
+      ref={(node) => {
+        if (triggerRef) triggerRef.current = node;
+        const { ref } = props as { ref?: React.Ref<HTMLButtonElement> };
+        if (typeof ref === "function") ref(node);
+        else if (ref && typeof ref === "object") {
+          (ref as React.MutableRefObject<HTMLElement | null>).current = node;
+        }
+      }}
+    />
+  );
 }
 
 function DrawerPortal({ ...props }: React.ComponentProps<typeof DrawerPrimitive.Portal>) {
@@ -149,12 +199,15 @@ function DrawerContent({
   showCloseButton = true,
   style,
   onOpenAutoFocus,
+  onCloseAutoFocus,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content> & { showCloseButton?: boolean }) {
   const [root, setRoot] = React.useState<HTMLElement | null>(null);
   const open = React.useContext(DrawerOpenContext);
   const shouldRender = React.useContext(DrawerShouldRenderContext);
   const closeDisabled = React.useContext(DrawerCloseDisabledContext);
+  const triggerRef = React.useContext(DrawerTriggerRefContext);
+  const scrollYRef = React.useContext(DrawerScrollYContext);
   const dismissed = open === false;
 
   React.useEffect(() => {
@@ -203,6 +256,17 @@ function DrawerContent({
           const panel = event.currentTarget;
           if (panel instanceof HTMLElement) panel.focus({ preventScroll: true });
           onOpenAutoFocus?.(event);
+        }}
+        onCloseAutoFocus={(event) => {
+          // Safari's default focus restore scrolls the trigger into view,
+          // which (after a lost scroll lock) looks like: jump to top, then
+          // down to Read more. Keep focus without moving the page.
+          event.preventDefault();
+          const trigger = triggerRef?.current;
+          if (trigger?.isConnected) trigger.focus({ preventScroll: true });
+          const y = scrollYRef?.current ?? window.scrollY;
+          window.scrollTo({ left: 0, top: y, behavior: "auto" });
+          onCloseAutoFocus?.(event);
         }}
         onPointerDownOutside={(event) => {
           if (closeDisabled) event.preventDefault();

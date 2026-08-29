@@ -4,6 +4,7 @@ import { updateScrollToTopEnabled } from "@/server/actions";
 import { useOptimisticSettingToggle } from "@/hooks/use-optimistic-setting-toggle";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { SettingsSection } from "../settings-page";
 
 export function DisplaySettings({ scrollToTopEnabled }: { scrollToTopEnabled: boolean }) {
   const { on, toggle, isPending } = useOptimisticSettingToggle({
@@ -13,23 +14,24 @@ export function DisplaySettings({ scrollToTopEnabled }: { scrollToTopEnabled: bo
   });
 
   return (
-    <div className="flex items-start gap-3 rounded-xl border p-4">
-      <Checkbox
-        checked={on}
-        disabled={isPending}
-        id="scroll-to-top"
-        onCheckedChange={(value) => toggle(value === true)}
-      />
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-2">
-          <Label htmlFor="scroll-to-top">Show the back to top button</Label>
+    <SettingsSection
+      description="A corner button appears after you scroll down, on the public site and in organiser tools."
+      title="Back to top"
+    >
+      <div className="flex items-center justify-between gap-4 rounded-lg border bg-muted/30 px-4 py-3">
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <Label className="font-medium" htmlFor="scroll-to-top">
+            Show the button
+          </Label>
           {isPending ? <span className="text-xs text-muted-foreground">Saving…</span> : null}
         </div>
-        <p className="text-sm text-muted-foreground">
-          After you scroll down, a button appears in the corner to jump back to the top. Turn this
-          off if you would rather not have it.
-        </p>
+        <Checkbox
+          checked={on}
+          disabled={isPending}
+          id="scroll-to-top"
+          onCheckedChange={(value) => toggle(value === true)}
+        />
       </div>
-    </div>
+    </SettingsSection>
   );
 }

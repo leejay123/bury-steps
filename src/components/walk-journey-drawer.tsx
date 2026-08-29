@@ -26,12 +26,12 @@ export function WalkJourneyDrawer({ events }: { events: JourneyEventView[] }) {
           View journey
         </Button>
       </DrawerTrigger>
-      <DrawerContent className="sm:max-w-lg">
+      <DrawerContent className="sm:max-w-2xl">
         <DrawerHeader className="shrink-0 border-b text-left">
           <DrawerTitle>Journey</DrawerTitle>
           <DrawerDescription>What happened on this walk.</DrawerDescription>
         </DrawerHeader>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-6 py-5">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-5 md:px-6">
           <WalkJourneyTimeline events={events} />
         </div>
       </DrawerContent>

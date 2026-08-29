@@ -19,7 +19,7 @@ import {
 import { useActionToast } from "@/hooks/use-action-toast";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { FormError } from "@/components/form-error";
-import { WalkJourneyTimeline } from "@/components/walk-journey-timeline";
+import { WalkJourneyDrawer } from "@/components/walk-journey-drawer";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,15 +94,18 @@ export function WalkJourneyManager({
         <div className="flex flex-col gap-1">
           <h2 className="font-medium">Journey</h2>
           <p className="text-sm text-muted-foreground">
-            Short moments from the walk — members open View journey on the walk link. Up to{" "}
-            {MAX_JOURNEY_EVENTS}.
+            Short moments from the walk. Preview opens the timeline in a drawer — same as members
+            see. Up to {MAX_JOURNEY_EVENTS}.
           </p>
         </div>
-        {canEdit && !atCap ? (
-          <Button onClick={() => setMode({ type: "add" })} size="sm" variant="outline">
-            Add event
-          </Button>
-        ) : null}
+        <div className="flex flex-wrap gap-2">
+          <WalkJourneyDrawer events={events} />
+          {canEdit && !atCap ? (
+            <Button onClick={() => setMode({ type: "add" })} size="sm" variant="outline">
+              Add event
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {events.length === 0 ? (
@@ -114,30 +117,25 @@ export function WalkJourneyManager({
           }
           title="No journey events yet"
         />
-      ) : (
-        <>
-          <WalkJourneyTimeline events={events} />
-          {canEdit ? (
-            <DataList>
-              {events.map((event) => (
-                <DataListItem key={event.id} onClick={() => setMode({ type: "edit", event })}>
-                  <DataListBody>
-                    <p className="font-medium">{event.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(event.happenedAt).toLocaleTimeString("en-GB", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        timeZone: "Europe/London",
-                      })}
-                    </p>
-                  </DataListBody>
-                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                </DataListItem>
-              ))}
-            </DataList>
-          ) : null}
-        </>
-      )}
+      ) : canEdit ? (
+        <DataList>
+          {events.map((event) => (
+            <DataListItem key={event.id} onClick={() => setMode({ type: "edit", event })}>
+              <DataListBody>
+                <p className="font-medium">{event.title}</p>
+                <p className="text-sm text-muted-foreground">
+                  {new Date(event.happenedAt).toLocaleTimeString("en-GB", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    timeZone: "Europe/London",
+                  })}
+                </p>
+              </DataListBody>
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+            </DataListItem>
+          ))}
+        </DataList>
+      ) : null}
 
       <Drawer
         closeDisabled={pending}

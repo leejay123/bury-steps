@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { SettingsSection } from "../settings-page";
 
 function ConfirmClear() {
   const { pending } = useFormStatus();
@@ -35,15 +36,10 @@ export function ClearCacheForm() {
   useActionToast(state, () => setOpen(false));
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border p-4">
-      <div className="flex flex-col gap-1">
-        <p className="font-medium">Public homepage cache</p>
-        <p className="text-sm text-muted-foreground">
-          The homepage is stored for a short time so visitors see it quickly. If photos, quotes, or
-          FAQs still look old after you saved them, clear the cache. This does not delete walks,
-          members, or photos.
-        </p>
-      </div>
+    <SettingsSection
+      description="The homepage is stored briefly so it loads quickly. Clear it if photos, quotes, or FAQs still look old after you saved. Walks and members are not deleted."
+      title="Public homepage cache"
+    >
       <AlertDialog
         closeDisabled={isPending}
         onOpenChange={preventDismissWhilePending(isPending, setOpen)}
@@ -72,6 +68,6 @@ export function ClearCacheForm() {
           </form>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </SettingsSection>
   );
 }

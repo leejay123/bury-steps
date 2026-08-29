@@ -236,10 +236,10 @@ export function OrganiserGuide() {
               <p>
                 <strong>Journey</strong> is the story of the walk — short timed events (a cafe stop,
                 a viewpoint) with an optional note. It sits at the bottom of the organiser walk
-                page. Add events once the walk has started, including after Completed. Members open{" "}
-                <strong>View journey</strong> at the top of the walk link to see the same timeline
-                in a drawer. Up to 20 events. A cancelled walk keeps what you already wrote, but you
-                cannot add more.
+                page. Add events once the walk has started, including after Completed. Use{" "}
+                <strong>View journey</strong> to open the animated timeline in a drawer — members
+                get the same button at the top of the walk link. Up to 20 events. A cancelled walk
+                keeps what you already wrote, but you cannot add more.
               </p>
               <p>
                 <strong>Add someone</strong> on that attendance section is for a member who was

@@ -19,6 +19,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { RESET_CONFIRM_WORD, isResetConfirmWord } from "@/lib/site-reset";
+import { SettingsSection } from "../settings-page";
 
 function ConfirmReset({ enabled }: { enabled: boolean }) {
   const { pending } = useFormStatus();
@@ -46,15 +47,11 @@ export function ResetSiteForm() {
   });
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-destructive/30 p-4">
-      <div className="flex flex-col gap-1">
-        <p className="font-medium">Reset to a blank group</p>
-        <p className="text-sm text-muted-foreground">
-          Deletes every walk, clock-in, member, accident report, notice, and homepage edit. Puts the
-          starter photos, quotes, and FAQs back. You stay signed in as the organiser, so nobody else
-          can take that role by joining first.
-        </p>
-      </div>
+    <SettingsSection
+      description="Deletes every walk, clock-in, member, report, notice, and homepage edit. Puts the starter photos, quotes, and FAQs back. You stay the organiser."
+      title="Reset to a blank group"
+      tone="danger"
+    >
       <AlertDialog
         closeDisabled={isPending}
         onOpenChange={(next) => {
@@ -99,6 +96,6 @@ export function ResetSiteForm() {
           </form>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </SettingsSection>
   );
 }
