@@ -10,14 +10,26 @@ function initials(name: string) {
     .join("");
 }
 
-export function WalkMembers({ names }: { names: string[] }) {
-  const countLabel =
-    names.length === 1 ? "1 person has clocked in." : `${names.length} people have clocked in.`;
+export function WalkMembers({
+  completed = false,
+  names,
+}: {
+  /** Pass true once the walk's clock-in window has fully closed. */
+  completed?: boolean;
+  names: string[];
+}) {
+  const countLabel = completed
+    ? names.length === 1
+      ? "1 person stayed for the whole walk."
+      : `${names.length} people stayed for the whole walk.`
+    : names.length === 1
+      ? "1 person has clocked in."
+      : `${names.length} people have clocked in.`;
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-medium">Who’s coming</p>
+        <p className="text-sm font-medium">{completed ? "Who attended" : "Who’s coming"}</p>
         <p className="text-sm text-muted-foreground">{countLabel}</p>
       </div>
       <DataList>

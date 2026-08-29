@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { getMemberHistory } from "@/server/actions";
 import { formatCompactDateTime, formatDate, formatMembershipAge, formatWalkDate } from "@/lib/dates";
+import { walkStatus } from "@/lib/walk-window";
 import { AttendanceHistory } from "@/components/attendance-history";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -128,6 +129,12 @@ export default async function MemberDetailPage({
             clockedInAt: item.clockedInAt,
             clockedOutAt: item.clockedOutAt,
             clockedOutReason: item.clockedOutReason,
+            completed:
+              walkStatus({
+                cancelledAt: item.cancelledAt ? new Date(item.cancelledAt) : null,
+                startsAt: new Date(item.startsAt),
+                durationMins: item.durationMins,
+              }) === "completed",
             href: `/admin/walks/${item.walkId}`,
           }))}
         />

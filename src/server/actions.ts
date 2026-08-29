@@ -8,7 +8,7 @@ import type { Prisma } from "@prisma/client";
 import { clerkClient } from "@clerk/nextjs/server";
 import { requireAdmin, requireUser, displayName } from "@/lib/auth";
 import { londonWallClockToUtc } from "@/lib/dates";
-import { windowState } from "@/lib/walk-window";
+import { windowState, walkStatus } from "@/lib/walk-window";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import {
@@ -162,10 +162,13 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
 
   const walk = await prisma.walk.findUnique({
     where: { id },
-    select: { id: true, token: true, cancelledAt: true },
+    select: { id: true, token: true, cancelledAt: true, startsAt: true, durationMins: true },
   });
   if (!walk) return { ok: false, error: "That walk is no longer there." };
   if (walk.cancelledAt) return { ok: false, error: "This walk is already cancelled." };
+  if (walkStatus(walk) === "completed") {
+    return { ok: false, error: "This walk has already finished, so it can't be cancelled." };
+  }
 
   try {
     await prisma.walk.update({
@@ -262,6 +265,20 @@ export async function rescheduleWalk(
   }
 
   const wasCancelled = parsed.data.wasCancelled === "on";
+
+  // A completed walk already happened — rescheduling it would silently
+  // rewrite history instead of changing a plan, so it's blocked the same
+  // way cancelling one is. A cancelled walk is never "completed" (it's its
+  // own status regardless of timing), so reopening a cancelled walk via
+  // reschedule is unaffected by this check.
+  const existing = await prisma.walk.findUnique({
+    where: { id },
+    select: { cancelledAt: true, startsAt: true, durationMins: true },
+  });
+  if (!existing) return { ok: false, error: "That walk is no longer there." };
+  if (walkStatus(existing) === "completed") {
+    return { ok: false, error: "This walk has already finished, so it can't be rescheduled." };
+  }
 
   let walk: { token: string };
   try {
@@ -442,16 +459,24 @@ export async function clockOut(_prev: ActionResult | null, formData: FormData): 
     return { ok: false, error: parsed.error.issues[0].message };
   }
 
-  let walk: { id: string; token: string } | null;
+  let walk: { id: string; token: string; startsAt: Date; durationMins: number } | null;
   try {
     walk = await prisma.walk.findUnique({
       where: { token: parsed.data.token },
-      select: { id: true, token: true },
+      select: { id: true, token: true, startsAt: true, durationMins: true },
     });
   } catch (err) {
     return logActionError("clockOut:lookup", err, "Could not clock you out right now. Try again.");
   }
   if (!walk) return { ok: false, error: "This walk link is not valid." };
+
+  // Clocking out is for leaving early (or right at the end) while the walk
+  // is still under way — once its window has fully closed there's nothing
+  // left to leave early from. Anyone who never clocked out by then simply
+  // stayed for the whole walk, which needs no action from them.
+  if (windowState(walk.startsAt, walk.durationMins) === "closed") {
+    return { ok: false, error: "This walk has finished — there's no need to clock out." };
+  }
 
   let clockedOut: { count: number };
   try {

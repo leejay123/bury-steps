@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+import { isWalkHistoryReady, walkStatus } from "@/lib/walk-window";
 import { AttendanceHistory } from "@/components/attendance-history";
 
 export const metadata: Metadata = {
@@ -18,14 +19,13 @@ export default async function WalkHistoryPage() {
     redirect("/admin");
   }
 
-  const [attendances, count] = await Promise.all([
+  const [attendances, totalCount] = await Promise.all([
     prisma.attendance.findMany({
       where: { userId: user.id },
       orderBy: { clockedInAt: "desc" },
       // Backstop against an unbounded query — a weekly walk never missed
       // would take ~19 years to reach this. Keeps the most recent walks.
-      // `count` below is a separate, uncapped query, so the "X walks"
-      // heading stays accurate even for someone who has passed this cap.
+      // `totalCount` below is a separate, uncapped query.
       take: 1000,
       include: {
         walk: {
@@ -43,6 +43,15 @@ export default async function WalkHistoryPage() {
     prisma.attendance.count({ where: { userId: user.id } }),
   ]);
 
+  // A walk still under way isn't history yet — it hasn't finished — so it
+  // doesn't belong in this list at all until it's either completed or
+  // cancelled. Whichever walk that is (if any) is necessarily among the
+  // most recent 1000 clock-ins, so subtracting it out of `totalCount` here
+  // stays exact rather than approximate.
+  const historyReady = attendances.filter((attendance) => isWalkHistoryReady(attendance.walk));
+  const inProgressCount = attendances.length - historyReady.length;
+  const count = totalCount - inProgressCount;
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1.5">
@@ -56,20 +65,20 @@ export default async function WalkHistoryPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Your walk history</h1>
         <p className="text-sm text-muted-foreground">
           {count === 0
-            ? "Every walk you clock in to will be kept here."
+            ? "Every walk you clock in to will be kept here, once it's finished."
             : count === 1
               ? "You have clocked in to 1 walk."
               : `You have clocked in to ${count} walks.`}
         </p>
-        {attendances.length < count ? (
+        {historyReady.length < count ? (
           <p className="text-xs text-muted-foreground">
-            Showing the {attendances.length.toLocaleString("en-GB")} most recent.
+            Showing the {historyReady.length.toLocaleString("en-GB")} most recent.
           </p>
         ) : null}
       </div>
 
       <AttendanceHistory
-        rows={attendances.map((attendance) => ({
+        rows={historyReady.map((attendance) => ({
           id: attendance.id,
           title: attendance.walk.title,
           location: attendance.walk.location,
@@ -78,6 +87,7 @@ export default async function WalkHistoryPage() {
           cancelledAt: attendance.walk.cancelledAt?.toISOString() ?? null,
           clockedInAt: attendance.clockedInAt.toISOString(),
           clockedOutAt: attendance.clockedOutAt?.toISOString() ?? null,
+          completed: walkStatus(attendance.walk) === "completed",
           href: `/w/${attendance.walk.token}`,
         }))}
       />

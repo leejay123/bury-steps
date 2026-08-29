@@ -63,6 +63,8 @@ export default async function WalkDetailPage({
   const stillIn = attendances.filter((a) => !a.clockedOutAt);
   const clockedOut = attendances.filter((a) => a.clockedOutAt);
   const withConditions = attendances.filter((a) => a.conditions).length;
+  const status = walkStatus(walk);
+  const isCompleted = status === "completed";
 
   function toAttendanceRow(attendance: (typeof attendances)[number]): WalkAttendanceRow {
     const name = displayName(attendance.user);
@@ -93,7 +95,7 @@ export default async function WalkDetailPage({
               {walk.location ? ` · ${walk.location}` : ""} · {walk.durationMins} min
             </CardDescription>
           </div>
-          <WalkStatusBadge status={walkStatus(walk)} />
+          <WalkStatusBadge status={status} />
         </CardHeader>
         {walk.description || (walk.cancelledAt && walk.cancelledReason) ? (
           <CardContent className="flex flex-col gap-2">
@@ -113,19 +115,35 @@ export default async function WalkDetailPage({
         <Button asChild size="sm" variant="outline">
           <a href={`/admin/walks/${walk.id}/export`}>Download roster (CSV)</a>
         </Button>
-        {!walk.cancelledAt && (
+        {/*
+          A completed walk already happened — there's nothing left to
+          cancel or reschedule. Cancel only ever applied to a walk that
+          hadn't happened yet, and Reschedule for a completed walk would
+          silently rewrite history rather than change a plan. Both actions
+          stay hidden the moment the clock-in window has fully closed;
+          Delete and the CSV export remain, since a completed walk is still
+          a real record that might need correcting or removing.
+        */}
+        {!walk.cancelledAt && !isCompleted && (
           <CancelWalkButton walkId={walk.id} attendanceCount={stillIn.length} />
         )}
-        <RescheduleWalkButton
-          cancelled={Boolean(walk.cancelledAt)}
-          durationMins={walk.durationMins}
-          location={walk.location}
-          startsAt={walk.startsAt.toISOString()}
-          walkId={walk.id}
-        />
+        {!isCompleted && (
+          <RescheduleWalkButton
+            cancelled={Boolean(walk.cancelledAt)}
+            durationMins={walk.durationMins}
+            location={walk.location}
+            startsAt={walk.startsAt.toISOString()}
+            walkId={walk.id}
+          />
+        )}
         {walk.cancelledAt ? <ReopenWalkButton walkId={walk.id} /> : null}
         <DeleteWalkButton walkId={walk.id} attendanceCount={walk.attendances.length} />
       </div>
+      {isCompleted ? (
+        <p className="text-xs text-muted-foreground">
+          This walk has finished, so it can no longer be cancelled or rescheduled.
+        </p>
+      ) : null}
 
       <Separator />
 
@@ -149,12 +167,21 @@ export default async function WalkDetailPage({
         history, and in the CSV export) but the live headcount and the rows
         under it now always agree, instead of the header saying "1 on the
         walk" while the table still lists 2 people.
+
+        Once the walk is completed, "on the walk" stops being true for
+        anyone — the walk is over — so this section relabels itself to
+        "Attended": these are the people who stayed for the whole thing
+        without clocking out, not people still out there.
       */}
       <section className="flex flex-col gap-3">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
-          <h2 className="text-sm font-medium text-muted-foreground">Attendance</h2>
+          <h2 className="text-sm font-medium text-muted-foreground">
+            {isCompleted ? "Attended" : "Attendance"}
+          </h2>
           <span className="text-sm tabular-nums text-muted-foreground">
-            {stillIn.length} on the walk · Click a row for details
+            {isCompleted
+              ? `${stillIn.length} stayed for the full walk · Click a row for details`
+              : `${stillIn.length} on the walk · Click a row for details`}
           </span>
         </div>
 
@@ -162,18 +189,24 @@ export default async function WalkDetailPage({
           <EmptyState
             description={
               walk.attendances.length === 0
-                ? "Share the link above with the group."
-                : "Everyone who clocked in has since clocked out."
+                ? isCompleted
+                  ? "Nobody clocked in for this walk."
+                  : "Share the link above with the group."
+                : isCompleted
+                  ? "Everyone who clocked in also clocked out before the walk finished."
+                  : "Everyone who clocked in has since clocked out."
             }
             icon={ClipboardList}
             title={
               walk.attendances.length === 0
                 ? "Nobody has clocked in yet"
-                : "Nobody is on the walk right now"
+                : isCompleted
+                  ? "Nobody stayed to the end"
+                  : "Nobody is on the walk right now"
             }
           />
         ) : (
-          <WalkAttendanceTable rows={stillIn.map(toAttendanceRow)} />
+          <WalkAttendanceTable rows={stillIn.map(toAttendanceRow)} walkCompleted={isCompleted} />
         )}
       </section>
 
@@ -186,7 +219,7 @@ export default async function WalkDetailPage({
               after finishing · click a row for details
             </span>
           </div>
-          <WalkAttendanceTable rows={clockedOut.map(toAttendanceRow)} />
+          <WalkAttendanceTable rows={clockedOut.map(toAttendanceRow)} walkCompleted={isCompleted} />
         </section>
       ) : null}
     </div>

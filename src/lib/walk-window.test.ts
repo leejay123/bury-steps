@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { CLOSES_AFTER_MS, OPENS_BEFORE_MS, walkStatus, windowState } from "./walk-window";
+import {
+  CLOSES_AFTER_MS,
+  isWalkHistoryReady,
+  OPENS_BEFORE_MS,
+  walkStatus,
+  windowState,
+} from "./walk-window";
 
 describe("windowState", () => {
   const startsAt = new Date("2026-06-01T10:00:00.000Z");
@@ -56,5 +62,28 @@ describe("walkStatus", () => {
     const endsAt = startsAt.getTime() + durationMins * 60_000;
     const now = new Date(endsAt + CLOSES_AFTER_MS + 1000);
     expect(walkStatus({ cancelledAt: null, startsAt, durationMins }, now)).toBe("completed");
+  });
+});
+
+describe("isWalkHistoryReady", () => {
+  const startsAt = new Date("2026-06-01T10:00:00.000Z");
+  const durationMins = 90;
+
+  it("is false while the walk is still open", () => {
+    const now = new Date(startsAt.getTime() + 30 * 60_000);
+    expect(isWalkHistoryReady({ cancelledAt: null, startsAt, durationMins }, now)).toBe(false);
+  });
+
+  it("is true once the walk has completed", () => {
+    const endsAt = startsAt.getTime() + durationMins * 60_000;
+    const now = new Date(endsAt + CLOSES_AFTER_MS + 1000);
+    expect(isWalkHistoryReady({ cancelledAt: null, startsAt, durationMins }, now)).toBe(true);
+  });
+
+  it("is true for a cancelled walk even if its window would still be open", () => {
+    const now = new Date(startsAt.getTime() + 30 * 60_000);
+    expect(isWalkHistoryReady({ cancelledAt: new Date(), startsAt, durationMins }, now)).toBe(
+      true,
+    );
   });
 });
