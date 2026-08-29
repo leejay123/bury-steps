@@ -253,8 +253,9 @@ export function OrganiserGuide() {
               </p>
               <p>
                 Walks titled <strong>[Demo]</strong> are sample rows so you can check Previous and
-                Next on a long list. Search Demo on Walks → History. The same prefix is on sample
-                accident reports. Remove them with{" "}
+                Next on a long list. Search Demo on Walks → History. A few also have sample{" "}
+                <strong>Journey</strong> events so you can see the timeline. The same Demo prefix is
+                on sample accident reports. Remove them with{" "}
                 <Link href="/admin/settings/reset">Settings → Reset the site</Link>, or delete
                 those rows one by one.
               </p>
