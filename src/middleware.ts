@@ -17,6 +17,10 @@ const isPublic = createRouteMatcher([
   "/api/testimonials(.*)",
   "/api/health",
   "/__clerk(.*)",
+  // Organiser URLs 404 for anyone who is not a signed-in organiser.
+  // auth.protect() would send members and guests to sign-in, which would
+  // reveal that something lives here.
+  "/admin(.*)",
   // Crawler/browser file-convention routes. Most static extensions are
   // already excluded from the matcher below, but these don't have one
   // (or have one the matcher doesn't exclude), so without this they'd hit

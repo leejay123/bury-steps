@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "./db";
 import type { User } from "@prisma/client";
 import { SIGN_IN_URL } from "./urls";
@@ -61,8 +61,8 @@ export async function requireUser(): Promise<User> {
 }
 
 export async function requireAdmin(): Promise<User> {
-  const user = await requireUser();
-  if (user.role !== "ADMIN") redirect("/dashboard");
+  const user = await getOptionalUser();
+  if (!user || user.role !== "ADMIN") notFound();
   return user;
 }
 

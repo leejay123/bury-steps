@@ -33,19 +33,27 @@ export function meetingPointLabel(
 }
 
 /**
- * Nominatim finds "Car park, Woodhill Road" more reliably if the town is on
- * the query. Organisers often type a local landmark without "Bury".
- * A postcode, when present, goes first — it is the strongest free pin.
+ * Nominatim finds a postcode on its own, and a street on its own. Gluing them
+ * into one string ("M24 4SN, 5 Fenwick Drive, Middleton") returns nothing.
+ * Postcode first when we have one — it is the strongest free pin.
  */
-export function geocodeQuery(location: string, postcode?: string | null): string {
+export function geocodeQueries(location: string, postcode?: string | null): string[] {
   const loc = location.trim();
-  const pc = normalizeUkPostcode(postcode) ?? postcode?.trim().toUpperCase() ?? "";
+  const pc = normalizeUkPostcode(postcode);
   const locWithTown =
     loc && !/\b(bury|manchester|lancashire|greater manchester|uk|united kingdom)\b/i.test(loc)
       ? `${loc}, Bury, UK`
       : loc;
 
-  return [pc, locWithTown].filter(Boolean).join(", ");
+  const queries: string[] = [];
+  if (pc) queries.push(pc);
+  if (locWithTown && locWithTown !== pc) queries.push(locWithTown);
+  return queries;
+}
+
+/** The first lookup we will try — a postcode if present, otherwise the place name. */
+export function geocodeQuery(location: string, postcode?: string | null): string {
+  return geocodeQueries(location, postcode)[0] ?? "";
 }
 
 function parsePoint(lat: unknown, lon: unknown): GeoPoint | null {
@@ -63,13 +71,21 @@ export function parseFormPoint(lat: unknown, lng: unknown): GeoPoint | null {
   return parsePoint(lat, lng);
 }
 
-async function nominatimSearch(q: string, limit: number): Promise<PlaceHit[]> {
+function looksLikePostcode(q: string): boolean {
+  return normalizeUkPostcode(q) != null;
+}
+
+async function nominatimSearch(
+  q: string,
+  limit: number,
+  biasBury: boolean,
+): Promise<PlaceHit[]> {
   const url = new URL(NOMINATIM_SEARCH);
   url.searchParams.set("q", q);
   url.searchParams.set("format", "jsonv2");
   url.searchParams.set("limit", String(limit));
   url.searchParams.set("countrycodes", "gb");
-  url.searchParams.set("viewbox", BURY_VIEWBOX);
+  if (biasBury) url.searchParams.set("viewbox", BURY_VIEWBOX);
   url.searchParams.set("addressdetails", "0");
 
   const res = await fetch(url, {
@@ -79,7 +95,7 @@ async function nominatimSearch(q: string, limit: number): Promise<PlaceHit[]> {
       "User-Agent": USER_AGENT,
     },
     cache: "no-store",
-    signal: AbortSignal.timeout(3500),
+    signal: AbortSignal.timeout(8000),
   });
   if (!res.ok) return [];
   const data: unknown = await res.json();
@@ -93,7 +109,7 @@ async function nominatimSearch(q: string, limit: number): Promise<PlaceHit[]> {
     const label = typeof hit.display_name === "string" ? hit.display_name : "";
     if (!point || !label) continue;
     hits.push({
-      id: `${point.lat},${point.lng}`,
+      id: `p${hits.length}`,
       label,
       lat: point.lat,
       lng: point.lng,
@@ -102,18 +118,44 @@ async function nominatimSearch(q: string, limit: number): Promise<PlaceHit[]> {
   return hits;
 }
 
-/** Up to five matches so an organiser can pick the right pin. One request per search. */
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Up to five matches so an organiser can pick the right pin. */
 export async function searchPlaces(
   location: string,
   postcode?: string | null,
 ): Promise<PlaceHit[]> {
-  const q = geocodeQuery(location, postcode);
-  if (!q) return [];
-  try {
-    return await nominatimSearch(q, 5);
-  } catch {
-    return [];
+  const queries = geocodeQueries(location, postcode);
+  const merged: PlaceHit[] = [];
+  const seen = new Set<string>();
+
+  for (let i = 0; i < queries.length; i++) {
+    if (merged.length >= 5) break;
+    if (i > 0) await wait(1100);
+    let hits: PlaceHit[] = [];
+    try {
+      hits = await nominatimSearch(queries[i], 5, !looksLikePostcode(queries[i]));
+    } catch {
+      hits = [];
+    }
+    for (const hit of hits) {
+      const key = `${hit.lat.toFixed(5)},${hit.lng.toFixed(5)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      merged.push({
+        id: `p${merged.length}`,
+        label: hit.label,
+        lat: hit.lat,
+        lng: hit.lng,
+      });
+      if (merged.length >= 5) return merged;
+    }
+    // A postcode hit is enough — don't wait a second to also search the street.
+    if (merged.length > 0) return merged;
   }
+  return merged;
 }
 
 /** Look up a meeting point. No API key. Returns null on miss or failure. */

@@ -76,6 +76,11 @@ export function OrganiserGuide() {
                 The first person to sign in becomes an organiser. Everyone after that is a member.
                 There is no button to promote someone — that would need a change in the database.
               </p>
+              <p>
+                Organiser pages look the same as a missing link to everyone else. A member or
+                visitor who opens <code>/admin</code> sees the 404 page, not a message that those
+                tools exist. Only a signed-in organiser can use them.
+              </p>
             </GuideBody>
           </AccordionContent>
         </AccordionItem>
@@ -129,10 +134,12 @@ export function OrganiserGuide() {
                   Add a meeting point if you can — a short label people will recognise (for example
                   “Visitor centre, Burrs”). Optionally add a UK postcode, then tap{" "}
                   <strong>Find this place</strong>. Pick the right match from the list. That sets
-                  the map pin; the wording you typed is what members still see. A postcode is the
-                  most reliable pin. If you skip Find this place, the site looks the meeting point
-                  up when you save. If nothing matches, people still get directions from the text,
-                  just without a pin. The map uses free OpenStreetMap — no extra account is needed.
+                  the map pin. The wording you typed is what members still see, and changing it
+                  afterwards does not move the pin. Find this place looks up the postcode on its
+                  own — putting the postcode and the street into one search finds nothing. If you
+                  skip Find this place, the site looks the postcode or meeting point up when you
+                  save. If nothing matches, people still get directions from the text, just without
+                  a pin. The map uses free OpenStreetMap — no extra account is needed.
                 </li>
                 <li>Add a short description if you want.</li>
                 <li>Choose Create walk. A share link is generated automatically.</li>
@@ -152,7 +159,11 @@ export function OrganiserGuide() {
                 Live share links always use {PRODUCTION_APP_URL}, even if you are looking at a
                 preview of the site.
               </p>
-              <p className="font-medium text-foreground">Cancel, reschedule, reopen, or remove</p>
+              <p>
+                You can publish more than one walk in a week. Each walk has its own day, time,
+                meeting point, and share link. Members see every upcoming walk on their Walks page.
+              </p>
+              <p className="font-medium text-foreground">Cancel, edit, reopen, or remove</p>
               <ul className="list-disc pl-5">
                 <li>
                   <strong>Cancel</strong> stops new clock-ins. People already on the list stay. You
@@ -160,25 +171,27 @@ export function OrganiserGuide() {
                   cancelled walks on their Walks page.
                 </li>
                 <li>
-                  <strong>Reschedule</strong> changes the date, time, length, or meeting point with
-                  the same calendar and Find this place fields as Create walk. If the walk was
-                  cancelled, rescheduling also puts it back on the diary. The walk’s own organiser
-                  page shows the same map members see on the share link.
+                  <strong>Edit</strong> changes the title, date, time, length, meeting point, or
+                  description — the same fields as Create walk, including Find this place. Use this
+                  when the meeting point moves, or when Sunday becomes Wednesday. People already
+                  clocked in stay on the walk. The share link does not change. If the walk was
+                  cancelled, saving also puts it back on the diary. The walk’s own organiser page
+                  shows the same map members see on the share link.
                 </li>
                 <li>
-                  <strong>Reopen</strong> undoes a cancel. Clock-in works again if the time window
-                  is still open.
+                  <strong>Reopen</strong> undoes a cancel without changing the details. Clock-in
+                  works again if the time window is still open.
                 </li>
                 <li>
                   <strong>Remove</strong> deletes the walk and every clock-in on it. The share link
-                  stops working. Use this only if you do not need the record. Remove is the small
-                  button on the walk page.
+                  stops working. Use this only if you do not need the record. Remove walk is the
+                  red button on the walk page.
                 </li>
               </ul>
               <p>
-                Once a walk reaches <strong>Completed</strong>, Cancel and Reschedule disappear
-                from its page — it already happened, so there is nothing left to cancel or move.
-                Remove and the CSV export are still there if the record itself needs correcting.
+                Once a walk reaches <strong>Completed</strong>, Cancel and Edit disappear from its
+                page — it already happened, so there is nothing left to cancel or change. Remove
+                and the CSV export are still there if the record itself needs correcting.
               </p>
               <p>
                 If a cancelled walk is not reopened, it is deleted automatically after{" "}

@@ -20,7 +20,7 @@ export function ShareLink({ url }: { url: string }) {
 
   return (
     <div className="flex items-center gap-2">
-      <code className="min-w-0 flex-1 truncate rounded-md bg-muted px-2.5 py-1.5 text-xs">
+      <code className="flex h-8 min-w-0 flex-1 items-center truncate rounded-md bg-muted px-3 text-sm">
         {url}
       </code>
       <Button type="button" size="sm" variant="outline" onClick={copy}>

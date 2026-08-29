@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   geocodeLocation,
+  geocodeQueries,
   geocodeQuery,
   meetingPointLabel,
   normalizeUkPostcode,
@@ -44,10 +45,12 @@ describe("geocodeQuery", () => {
     expect(geocodeQuery("Car park, Woodhill Road")).toBe("Car park, Woodhill Road, Bury, UK");
   });
 
-  it("puts a postcode first", () => {
-    expect(geocodeQuery("Visitor centre", "BL8 1DA")).toBe(
-      "BL8 1DA, Visitor centre, Bury, UK",
-    );
+  it("prefers a postcode on its own instead of gluing it to the street", () => {
+    expect(geocodeQuery("Visitor centre", "BL8 1DA")).toBe("BL8 1DA");
+    expect(geocodeQueries("5 fenwick drive, middleton, manchester", "M24 4SN")).toEqual([
+      "M24 4SN",
+      "5 fenwick drive, middleton, manchester",
+    ]);
   });
 
   it("can search from a postcode alone", () => {
@@ -86,9 +89,22 @@ describe("searchPlaces", () => {
       }),
     );
     await expect(searchPlaces("Burrs", "BL8 1DA")).resolves.toEqual([
-      { id: "53.61,-2.3", label: "Burrs Country Park, Bury", lat: 53.61, lng: -2.3 },
-      { id: "53.6,-2.31", label: "Burrs car park, Bury", lat: 53.6, lng: -2.31 },
+      { id: "p0", label: "Burrs Country Park, Bury", lat: 53.61, lng: -2.3 },
+      { id: "p1", label: "Burrs car park, Bury", lat: 53.6, lng: -2.31 },
     ]);
+  });
+
+  it("looks up a postcode without the street glued on", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [{ lat: "53.55412", lon: "-2.21383", display_name: "M24 4SN, Rochdale" }],
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    await searchPlaces("5 fenwick drive, middleton, manchester", "M24 4SN");
+    const url = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(url.searchParams.get("q")).toBe("M24 4SN");
+    expect(url.searchParams.has("viewbox")).toBe(false);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
 

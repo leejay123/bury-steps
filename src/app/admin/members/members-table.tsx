@@ -83,7 +83,10 @@ export function MembersTable({
                     {member.attendanceCount === 1 ? "clock-in" : "clock-ins"}
                   </p>
                 </DataListBody>
-                <Badge variant={member.role === "ADMIN" ? "default" : "secondary"}>
+                <Badge
+                  className="h-7 px-2"
+                  variant={member.role === "ADMIN" ? "default" : "secondary"}
+                >
                   {member.role === "ADMIN" ? "Organiser" : "Member"}
                 </Badge>
                 {/* relative z-10: sits above the row's full-cover Link overlay so

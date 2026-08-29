@@ -2,7 +2,7 @@
 
 import { useState, type KeyboardEvent } from "react";
 import { searchWalkPlaces } from "@/server/actions";
-import type { PlaceHit } from "@/lib/geocode";
+import type { GeoPoint, PlaceHit } from "@/lib/geocode";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,28 +27,15 @@ export function MeetingPointFields({
   const [pickedId, setPickedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
-  const [keepSavedPin, setKeepSavedPin] = useState(
-    defaultLatitude != null && defaultLongitude != null,
+  const [pin, setPin] = useState<GeoPoint | null>(
+    defaultLatitude != null && defaultLongitude != null
+      ? { lat: defaultLatitude, lng: defaultLongitude }
+      : null,
   );
 
-  const picked = places?.find((place) => place.id === pickedId) ?? null;
-  const pinLat = picked?.lat ?? (keepSavedPin ? defaultLatitude : null);
-  const pinLng = picked?.lng ?? (keepSavedPin ? defaultLongitude : null);
-
-  function onLocationChange(value: string) {
-    setLocation(value);
-    setKeepSavedPin(false);
-    setPlaces(null);
-    setPickedId(null);
-    setError(null);
-  }
-
-  function onPostcodeChange(value: string) {
-    setPostcode(value);
-    setKeepSavedPin(false);
-    setPlaces(null);
-    setPickedId(null);
-    setError(null);
+  function takePin(place: PlaceHit) {
+    setPickedId(place.id);
+    setPin({ lat: place.lat, lng: place.lng });
   }
 
   function onFindKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -63,7 +50,6 @@ export function MeetingPointFields({
     setError(null);
     setPlaces(null);
     setPickedId(null);
-    setKeepSavedPin(false);
     try {
       const result = await searchWalkPlaces(location, postcode);
       if (!result.ok) {
@@ -71,7 +57,7 @@ export function MeetingPointFields({
         return;
       }
       setPlaces(result.places);
-      if (result.places.length === 1) setPickedId(result.places[0].id);
+      if (result.places.length === 1) takePin(result.places[0]);
     } catch {
       setError("Could not search right now. Try again in a moment.");
     } finally {
@@ -88,15 +74,16 @@ export function MeetingPointFields({
         <Label htmlFor={locationId}>Meeting point</Label>
         <Input
           id={locationId}
+          maxLength={200}
           name="location"
-          onChange={(event) => onLocationChange(event.target.value)}
+          onChange={(event) => setLocation(event.target.value)}
           onKeyDown={onFindKeyDown}
           placeholder="Visitor centre, Burrs Country Park"
-          maxLength={200}
           value={location}
         />
         <p className="text-xs text-muted-foreground">
-          What people see on the share link. Keep it short — the pin comes from Find this place.
+          What people see on the share link. Changing this does not move the pin — Find this place
+          does.
         </p>
       </div>
 
@@ -107,11 +94,11 @@ export function MeetingPointFields({
             autoComplete="postal-code"
             className="sm:max-w-40"
             id={postcodeId}
+            maxLength={10}
             name="postcode"
-            onChange={(event) => onPostcodeChange(event.target.value)}
+            onChange={(event) => setPostcode(event.target.value)}
             onKeyDown={onFindKeyDown}
             placeholder="BL8 1DA"
-            maxLength={10}
             value={postcode}
           />
           <Button
@@ -125,27 +112,34 @@ export function MeetingPointFields({
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          Optional, but a UK postcode is the most reliable way to drop the pin in the right car
-          park. Tap Find this place, then pick the match.
+          Optional, but a UK postcode is the most reliable pin. Tap Find this place, then pick the
+          match.
         </p>
       </div>
 
-      <input name="latitude" type="hidden" value={pinLat ?? ""} />
-      <input name="longitude" type="hidden" value={pinLng ?? ""} />
+      <input name="latitude" type="hidden" value={pin ? String(pin.lat) : ""} />
+      <input name="longitude" type="hidden" value={pin ? String(pin.lng) : ""} />
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
       {places && places.length > 0 ? (
         <fieldset className="space-y-2">
           <legend className="text-sm font-medium">Pick the right place</legend>
-          <RadioGroup className="grid gap-2" onValueChange={setPickedId} value={pickedId ?? ""}>
+          <RadioGroup
+            className="grid gap-2"
+            onValueChange={(id) => {
+              const place = places.find((item) => item.id === id);
+              if (place) takePin(place);
+            }}
+            value={pickedId ?? ""}
+          >
             {places.map((place, index) => {
               const inputId = `${idPrefix}-place-${index}`;
               return (
                 <Label
                   className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm font-normal has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-accent"
                   htmlFor={inputId}
-                  key={`${place.id}-${index}`}
+                  key={place.id}
                 >
                   <RadioGroupItem className="mt-0.5 size-5" id={inputId} value={place.id} />
                   <span>{place.label}</span>
@@ -156,15 +150,10 @@ export function MeetingPointFields({
         </fieldset>
       ) : null}
 
-      {pinLat != null && pinLng != null && !places ? (
+      {pin ? (
         <p className="text-xs text-muted-foreground">
-          A map pin is already set. Find this place again if you change the meeting point.
-        </p>
-      ) : null}
-
-      {picked ? (
-        <p className="text-xs text-muted-foreground">
-          Pin set. The meeting point wording above is unchanged — only the map uses this match.
+          Pin set. The map on the walk page uses this match. Find this place again if you need a
+          different pin.
         </p>
       ) : null}
     </div>

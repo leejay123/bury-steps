@@ -13,7 +13,7 @@ import { WalkMap } from "@/components/walk-map";
 import { meetingPointLabel } from "@/lib/geocode";
 import { ensureWalkPoint } from "@/lib/walk-coordinates";
 import { CancelWalkButton } from "./cancel-walk-button";
-import { RescheduleWalkButton } from "./reschedule-walk-button";
+import { EditWalkButton } from "./edit-walk-button";
 import { ReopenWalkButton } from "./reopen-walk-button";
 import { DeleteWalkButton } from "./delete-walk-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -127,25 +127,27 @@ export default async function WalkDetailPage({
         </Button>
         {/*
           A completed walk already happened — there's nothing left to
-          cancel or reschedule. Cancel only ever applied to a walk that
-          hadn't happened yet, and Reschedule for a completed walk would
-          silently rewrite history rather than change a plan. Both actions
-          stay hidden the moment the clock-in window has fully closed;
-          Delete and the CSV export remain, since a completed walk is still
-          a real record that might need correcting or removing.
+          cancel or edit. Cancel only ever applied to a walk that hadn't
+          happened yet, and Edit for a completed walk would silently rewrite
+          history rather than change a plan. Both actions stay hidden the
+          moment the clock-in window has fully closed; Delete and the CSV
+          export remain, since a completed walk is still a real record that
+          might need correcting or removing.
         */}
         {!walk.cancelledAt && !isCompleted && (
           <CancelWalkButton walkId={walk.id} attendanceCount={stillIn.length} />
         )}
         {!isCompleted && (
-          <RescheduleWalkButton
+          <EditWalkButton
             cancelled={Boolean(walk.cancelledAt)}
+            description={walk.description}
             durationMins={walk.durationMins}
             latitude={walk.latitude}
             location={walk.location}
             longitude={walk.longitude}
             postcode={walk.postcode}
             startsAt={walk.startsAt.toISOString()}
+            title={walk.title}
             walkId={walk.id}
           />
         )}
@@ -154,7 +156,7 @@ export default async function WalkDetailPage({
       </div>
       {isCompleted ? (
         <p className="text-xs text-muted-foreground">
-          This walk has finished, so it can no longer be cancelled or rescheduled.
+          This walk has finished, so it can no longer be cancelled or edited.
         </p>
       ) : null}
 

@@ -51,8 +51,8 @@ function isPrismaCode(err: unknown, code: string): boolean {
  * Logs the real error server-side (Next.js otherwise only shows the caller a
  * generic "something went wrong" for anything thrown out of a server
  * action) and returns a friendly, generic failure for the UI. Never call
- * this around `requireAdmin()`/`requireUser()` — they use `redirect()`,
- * which works by throwing, and that throw must keep propagating.
+ * this around `requireAdmin()`/`requireUser()` — they use `notFound()` /
+ * `redirect()`, which work by throwing, and that throw must keep propagating.
  */
 function logActionError(context: string, err: unknown, fallback = "Something went wrong. Try again."): ActionResult {
   console.error(`[actions:${context}]`, err);
@@ -102,7 +102,7 @@ async function withCountLimitLock<T>(
 
 // ---------------------------------------------------------------- create walk
 
-const createWalkSchema = z.object({
+const walkDetailsSchema = z.object({
   title: z.string().trim().min(3, "Give the walk a title of at least 3 characters.").max(120),
   description: z.string().trim().max(2000).optional(),
   location: z.string().trim().max(200).optional(),
@@ -128,7 +128,7 @@ async function walkPinFromForm(
 export async function createWalk(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const admin = await requireAdmin();
 
-  const parsed = createWalkSchema.safeParse({
+  const parsed = walkDetailsSchema.safeParse({
     title: formData.get("title"),
     description: formData.get("description") || undefined,
     location: formData.get("location") || undefined,
@@ -277,7 +277,7 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
   return { ok: true, message: "Walk reopened. Members can clock in again if the window is still open." };
 }
 
-export async function rescheduleWalk(
+export async function updateWalk(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -285,12 +285,8 @@ export async function rescheduleWalk(
   const id = String(formData.get("walkId") ?? "");
   if (!id) return { ok: false, error: "No walk selected." };
 
-  const parsed = z
-    .object({
-      startsAt: z.string().min(16, "Choose a date and time."),
-      durationMins: z.coerce.number().int().min(15).max(600),
-      location: z.string().trim().max(200).optional(),
-      postcode: z.string().trim().max(10).optional(),
+  const parsed = walkDetailsSchema
+    .extend({
       reopen: z.string().optional(),
       // Sent by the dialog that already knows this from the page it rendered
       // from — avoids a round trip to look the walk up just to re-read a
@@ -298,10 +294,12 @@ export async function rescheduleWalk(
       wasCancelled: z.string().optional(),
     })
     .safeParse({
-      startsAt: formData.get("startsAt"),
-      durationMins: formData.get("durationMins") ?? 90,
+      title: formData.get("title"),
+      description: formData.get("description") || undefined,
       location: formData.get("location") || undefined,
       postcode: formData.get("postcode") || undefined,
+      startsAt: formData.get("startsAt"),
+      durationMins: formData.get("durationMins") ?? 90,
       reopen: formData.get("reopen") || undefined,
       wasCancelled: formData.get("wasCancelled") || undefined,
     });
@@ -319,18 +317,18 @@ export async function rescheduleWalk(
 
   const wasCancelled = parsed.data.wasCancelled === "on";
 
-  // A completed walk already happened — rescheduling it would silently
-  // rewrite history instead of changing a plan, so it's blocked the same
-  // way cancelling one is. A cancelled walk is never "completed" (it's its
-  // own status regardless of timing), so reopening a cancelled walk via
-  // reschedule is unaffected by this check.
+  // A completed walk already happened — editing it would silently rewrite
+  // history instead of changing a plan, so it's blocked the same way
+  // cancelling one is. A cancelled walk is never "completed" (it's its own
+  // status regardless of timing), so reopening a cancelled walk via Edit is
+  // unaffected by this check.
   const existing = await prisma.walk.findUnique({
     where: { id },
     select: { cancelledAt: true, startsAt: true, durationMins: true },
   });
   if (!existing) return { ok: false, error: "That walk is no longer there." };
   if (walkStatus(existing) === "completed") {
-    return { ok: false, error: "This walk has already finished, so it can't be rescheduled." };
+    return { ok: false, error: "This walk has already finished, so it can't be edited." };
   }
 
   const pin = await walkPinFromForm(formData, parsed.data.location, parsed.data.postcode);
@@ -340,6 +338,8 @@ export async function rescheduleWalk(
     walk = await prisma.walk.update({
       where: { id },
       data: {
+        title: parsed.data.title,
+        description: parsed.data.description ?? null,
         startsAt,
         durationMins: parsed.data.durationMins,
         location: parsed.data.location ?? null,
@@ -354,7 +354,7 @@ export async function rescheduleWalk(
     });
   } catch (err) {
     if (isPrismaCode(err, "P2025")) return { ok: false, error: "That walk is no longer there." };
-    return logActionError("rescheduleWalk", err, "Could not reschedule this walk. Try again.");
+    return logActionError("updateWalk", err, "Could not update this walk. Try again.");
   }
 
   revalidatePath("/admin");
@@ -363,7 +363,7 @@ export async function rescheduleWalk(
   revalidatePath(`/w/${walk.token}`);
   return {
     ok: true,
-    message: wasCancelled ? "Walk rescheduled and put back on the diary." : "Walk rescheduled.",
+    message: wasCancelled ? "Walk updated and put back on the diary." : "Walk updated.",
   };
 }
 
