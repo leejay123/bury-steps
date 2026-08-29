@@ -3,9 +3,7 @@
 import * as React from "react";
 import { X } from "lucide-react";
 import { Drawer as DrawerPrimitive } from "vaul";
-import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { overlayMotionTransition } from "@/components/motion";
 import {
   OverlayRootContext,
   restorePagePointerEvents,
@@ -30,24 +28,15 @@ function isSafariBrowser() {
   return typeof navigator !== "undefined" && SAFARI_UA.test(navigator.userAgent);
 }
 
-/** iPhone / iPad Safari — desktop Safari does not need position:fixed (it hides the sticky header). */
-function needsIosSafariBodyLock() {
-  if (!isSafariBrowser()) return false;
-  const ua = navigator.userAgent;
-  if (/iPhone|iPod|iPad/.test(ua)) return true;
-  // iPadOS 13+ can report as Mac with touch.
-  return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
-}
-
-/** Body style props for the iOS Safari position:fixed scroll lock. */
+/** Body style props Vaul/Safari use for the position:fixed scroll lock. */
 const SAFARI_LOCK_PROPS = ["position", "top", "left", "right", "height", "width"] as const;
 
 /**
- * iOS Safari locks scroll with position:fixed + top:-y. Clearing that and then
+ * Safari locks scroll with position:fixed + top:-y. Clearing that and then
  * scrolling in a later frame paints one frame at y=0 (the flash/jump). Do both
  * in the same turn before paint.
  */
-function lockIosSafariBodyScroll(y: number) {
+function lockSafariBodyScroll(y: number) {
   const { body } = document;
   body.style.setProperty("position", "fixed", "important");
   body.style.top = `${-y}px`;
@@ -57,7 +46,7 @@ function lockIosSafariBodyScroll(y: number) {
   body.style.height = "auto";
 }
 
-function unlockIosSafariBodyScroll(y: number) {
+function unlockSafariBodyScroll(y: number) {
   const { body } = document;
   const html = document.documentElement;
   const previousBehavior = html.style.scrollBehavior;
@@ -113,20 +102,20 @@ function Drawer({
   // still pass one explicitly; side drawers left unspecified become a bottom
   // sheet on phones and a side panel from the sm breakpoint up.
   const resolvedDirection = direction ?? (isDesktop ? "right" : "bottom");
-  // iOS Safari needs a body scroll lock. We own it (noBodyStyles) so close can
-  // unlock + scrollTo in one turn. Desktop skips overflow:hidden — that kills
-  // position:sticky and the fixed-header workaround warped the nav layout.
+  // Safari (desktop + iOS) needs a body scroll lock. We own it (noBodyStyles)
+  // so close can unlock + scrollTo in one turn — Vaul's rAF restore is what
+  // flashed the page before settling.
   const scrollYRef = React.useRef(0);
   const triggerRef = React.useRef<HTMLElement | null>(null);
-  const iosLockRef = React.useRef(false);
+  const safariLockRef = React.useRef(false);
   const closeCleanupTimerRef = React.useRef(0);
 
   React.useEffect(() => {
     return () => {
       window.clearTimeout(closeCleanupTimerRef.current);
-      if (iosLockRef.current) {
-        unlockIosSafariBodyScroll(scrollYRef.current);
-        iosLockRef.current = false;
+      if (safariLockRef.current) {
+        unlockSafariBodyScroll(scrollYRef.current);
+        safariLockRef.current = false;
       }
       restorePagePointerEvents();
     };
@@ -155,9 +144,9 @@ function Drawer({
                     const active = document.activeElement;
                     triggerRef.current =
                       active instanceof HTMLElement ? active : triggerRef.current;
-                    if (needsIosSafariBodyLock()) {
-                      lockIosSafariBodyScroll(scrollYRef.current);
-                      iosLockRef.current = true;
+                    if (isSafariBrowser()) {
+                      lockSafariBodyScroll(scrollYRef.current);
+                      safariLockRef.current = true;
                     }
                   } else {
                     const lockedTop = document.body.style.top;
@@ -167,9 +156,9 @@ function Drawer({
                     const y = fromLock || scrollYRef.current;
                     scrollYRef.current = y;
 
-                    if (iosLockRef.current || lockedTop) {
-                      unlockIosSafariBodyScroll(y);
-                      iosLockRef.current = false;
+                    if (safariLockRef.current || lockedTop) {
+                      unlockSafariBodyScroll(y);
+                      safariLockRef.current = false;
                     }
 
                     // Pointer-events / inert cleanup after the close animation —
@@ -240,10 +229,7 @@ function DrawerOverlay({
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"
       className={cn(
-        // Sit below the sticky site header so chrome stays visible and in-flow
-        // (no fixed re-pin). Blur is applied immediately — fading opacity on a
-        // backdrop-filter layer is what lagged on every browser.
-        "fixed top-[var(--site-header-height)] right-0 bottom-0 left-0 z-[60] bg-black/30 backdrop-blur-sm data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
+        "fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:pointer-events-auto",
         dismissed && "invisible !pointer-events-none",
         className,
       )}
@@ -270,7 +256,6 @@ function DrawerContent({
   const closeDisabled = React.useContext(DrawerCloseDisabledContext);
   const triggerRef = React.useContext(DrawerTriggerRefContext);
   const dismissed = open === false;
-  const reduce = useReducedMotion();
 
   React.useEffect(() => {
     if (!root || open !== true) return;
@@ -300,10 +285,10 @@ function DrawerContent({
           // overlayCloseClassName) inward for free, since an absolutely
           // positioned child's offsets are measured from its ancestor's
           // padding edge.
-          "data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-[var(--site-header-height)] data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:rounded-b-lg data-[vaul-drawer-direction=top]:border-b data-[vaul-drawer-direction=top]:pl-[env(safe-area-inset-left)] data-[vaul-drawer-direction=top]:pr-[env(safe-area-inset-right)]",
+          "data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:rounded-b-lg data-[vaul-drawer-direction=top]:border-b data-[vaul-drawer-direction=top]:pt-[env(safe-area-inset-top)] data-[vaul-drawer-direction=top]:pl-[env(safe-area-inset-left)] data-[vaul-drawer-direction=top]:pr-[env(safe-area-inset-right)]",
           "data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:rounded-t-lg data-[vaul-drawer-direction=bottom]:border-t data-[vaul-drawer-direction=bottom]:pl-[env(safe-area-inset-left)] data-[vaul-drawer-direction=bottom]:pr-[env(safe-area-inset-right)]",
-          "data-[vaul-drawer-direction=right]:top-[var(--site-header-height)] data-[vaul-drawer-direction=right]:bottom-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:h-auto data-[vaul-drawer-direction=right]:w-[calc(100%-1.25rem)] data-[vaul-drawer-direction=right]:border-l data-[vaul-drawer-direction=right]:pr-[env(safe-area-inset-right)] data-[vaul-drawer-direction=right]:sm:max-w-lg",
-          "data-[vaul-drawer-direction=left]:top-[var(--site-header-height)] data-[vaul-drawer-direction=left]:bottom-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:h-auto data-[vaul-drawer-direction=left]:w-[calc(100%-1.25rem)] data-[vaul-drawer-direction=left]:border-r data-[vaul-drawer-direction=left]:pl-[env(safe-area-inset-left)] data-[vaul-drawer-direction=left]:sm:max-w-lg",
+          "data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:h-full data-[vaul-drawer-direction=right]:w-[calc(100%-1.25rem)] data-[vaul-drawer-direction=right]:border-l data-[vaul-drawer-direction=right]:pt-[env(safe-area-inset-top)] data-[vaul-drawer-direction=right]:pr-[env(safe-area-inset-right)] data-[vaul-drawer-direction=right]:sm:max-w-lg",
+          "data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:h-full data-[vaul-drawer-direction=left]:w-[calc(100%-1.25rem)] data-[vaul-drawer-direction=left]:border-r data-[vaul-drawer-direction=left]:pt-[env(safe-area-inset-top)] data-[vaul-drawer-direction=left]:pl-[env(safe-area-inset-left)] data-[vaul-drawer-direction=left]:sm:max-w-lg",
           className,
         )}
         onEscapeKeyDown={(event) => {
@@ -337,30 +322,19 @@ function DrawerContent({
         style={dismissed ? { ...style, pointerEvents: "none" } : { ...style, pointerEvents: "auto" }}
       >
         <OverlayRootContext.Provider value={root}>
-          <motion.div
-            className="flex min-h-0 flex-1 flex-col"
-            {...(reduce
-              ? {}
-              : {
-                  initial: { opacity: 0 },
-                  animate: { opacity: 1 },
-                  transition: overlayMotionTransition,
-                })}
-          >
-            <div className="mx-auto mt-4 hidden h-2 w-[100px] shrink-0 rounded-full bg-muted group-data-[vaul-drawer-direction=bottom]/drawer-content:block" />
-            {children}
-            {showCloseButton ? (
-              <DrawerPrimitive.Close
-                aria-label="Close"
-                className={overlayCloseClassName}
-                data-slot="drawer-close"
-                disabled={closeDisabled}
-              >
-                <X />
-                <span className="sr-only">Close</span>
-              </DrawerPrimitive.Close>
-            ) : null}
-          </motion.div>
+          <div className="mx-auto mt-4 hidden h-2 w-[100px] shrink-0 rounded-full bg-muted group-data-[vaul-drawer-direction=bottom]/drawer-content:block" />
+          {children}
+          {showCloseButton ? (
+            <DrawerPrimitive.Close
+              aria-label="Close"
+              className={overlayCloseClassName}
+              data-slot="drawer-close"
+              disabled={closeDisabled}
+            >
+              <X />
+              <span className="sr-only">Close</span>
+            </DrawerPrimitive.Close>
+          ) : null}
         </OverlayRootContext.Provider>
       </DrawerPrimitive.Content>
     </DrawerPortal>

@@ -54,8 +54,6 @@ const nextConfig: NextConfig = {
       "base-uri 'self'",
       "form-action 'self'",
       "frame-ancestors 'none'",
-      // Framer Motion (and similar) spin animation work from blob: URLs.
-      "worker-src 'self' blob:",
     ].join("; ");
 
     return [

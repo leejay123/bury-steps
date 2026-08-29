@@ -5,12 +5,6 @@ import type { ComponentProps, ReactNode } from "react";
 
 export const motionEase = [0.22, 1, 0.36, 1] as const;
 
-/** Shared enter timing for overlay panel content when Framer is used. */
-export const overlayMotionTransition = {
-  duration: 0.28,
-  ease: motionEase,
-} as const;
-
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
   show: { opacity: 1, y: 0 },

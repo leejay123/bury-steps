@@ -115,10 +115,11 @@ body {
   background-color: rgba(18, 28, 22, 0.42) !important;
 }
 
-/* Site chrome height (h-14). Overlays start below this so the sticky header
-   stays visible in its normal page column — no position:fixed re-pinning. */
-:root {
-  --site-header-height: 3.5rem;
+/* Sticky header must not steal taps from drawers/dialogs while they are open. */
+html:has([data-slot="drawer-content"][data-state="open"]) header,
+html:has([data-slot="dialog-content"][data-state="open"]) header,
+html:has([data-slot="alert-dialog-content"][data-state="open"]) header {
+  pointer-events: none;
 }
 
 /* Clerk's shadcn theme draws the field with box-shadow, then adds a 4px

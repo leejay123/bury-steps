@@ -48,15 +48,12 @@ function AlertDialogPortal(props: React.ComponentProps<typeof AlertDialogPrimiti
   return <AlertDialogPrimitive.Portal data-slot="alert-dialog-portal" {...props} />;
 }
 
-function AlertDialogOverlay({
-  className,
-  ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Overlay>) {
+function AlertDialogOverlay({ className, ...props }: React.ComponentProps<typeof AlertDialogPrimitive.Overlay>) {
   return (
     <AlertDialogPrimitive.Overlay
       data-slot="alert-dialog-overlay"
       className={cn(
-        "fixed top-[var(--site-header-height)] right-0 bottom-0 left-0 z-[70] bg-black/30 backdrop-blur-sm data-[state=closed]:invisible data-[state=closed]:!pointer-events-none",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:fade-in-0 fixed inset-0 z-[70] bg-black/30 backdrop-blur-sm",
         className,
       )}
       {...props}
@@ -88,7 +85,7 @@ function AlertDialogContent({
           // Radix focuses this panel itself on open, which makes Safari draw
           // its default blue focus ring around it; nothing inside needs this
           // element's own outline (the close/cancel buttons keep their own).
-          "bg-background outline-hidden data-[state=closed]:invisible data-[state=closed]:!pointer-events-none fixed top-[50%] left-[50%] z-[70] grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-visible rounded-lg border p-6 shadow-lg sm:max-w-lg",
+          "bg-background outline-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-[70] grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-visible rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg",
           className,
         )}
         onEscapeKeyDown={(event) => {
