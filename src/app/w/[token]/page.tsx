@@ -7,10 +7,9 @@ import { getOptionalUser } from "@/lib/auth";
 import { formatWalkDate } from "@/lib/dates";
 import { accountPortalHref, appUrl } from "@/lib/urls";
 import { meetingPointLabel } from "@/lib/geocode";
-import { ensureWalkPoint } from "@/lib/walk-coordinates";
 import { ensureWalkSlug, walkShareUrl } from "@/lib/walk-slug";
 import { WalkFacts } from "@/components/walk-facts";
-import { WalkMap } from "@/components/walk-map";
+import { WalkMapSection } from "@/components/walk-map-section";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { HowWalksWork } from "@/components/how-walks-work";
 import { getWalkMemberNames } from "@/lib/walk-members";
@@ -98,7 +97,6 @@ export default async function WalkLinkPage({
   // thousand names on one walk stay usable.
   const memberNames = alreadyIn ? await getWalkMemberNames(walk.id) : [];
   const meeting = meetingPointLabel(walk.location, walk.postcode);
-  const mapPoint = meeting ? await ensureWalkPoint(walk) : null;
   const walksHref = user?.role === "ADMIN" ? "/admin" : "/dashboard";
 
   return (
@@ -160,7 +158,7 @@ export default async function WalkLinkPage({
         </CardContent>
       </Card>
 
-      {meeting ? <WalkMap location={meeting} point={mapPoint} /> : null}
+      {meeting ? <WalkMapSection location={meeting} walk={walk} /> : null}
 
       {walk.cancelledAt ? null : !user ? (
         <>

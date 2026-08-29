@@ -282,8 +282,8 @@ export function OrganiserGuide() {
               <p>
                 This month’s cup goes to whoever has the most finished clock-ins this UK month. It
                 resets next month. A tie is shared. First names only — if two people share a first
-                name, a last initial is added. The month list shows place (1st, 2nd, 3rd…) with a
-                cup, medal, or award mark for the top three; tied clock-ins share a place.
+                name, a last initial is added. The month list is numbered (1st, 2nd, 3rd…) so you
+                can see who is ahead; tied clock-ins share a place.
               </p>
               <p>
                 Optionally set a monthly together goal under{" "}

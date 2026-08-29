@@ -9,9 +9,8 @@ import { appUrl } from "@/lib/urls";
 import { ShareLink } from "@/components/share-link";
 import { EmptyState } from "@/components/empty-state";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
-import { WalkMap } from "@/components/walk-map";
+import { WalkMapSection } from "@/components/walk-map-section";
 import { meetingPointLabel } from "@/lib/geocode";
-import { ensureWalkPoint } from "@/lib/walk-coordinates";
 import { ensureWalkSlug, walkShareUrl } from "@/lib/walk-slug";
 import { CancelWalkButton } from "./cancel-walk-button";
 import { EditWalkButton } from "./edit-walk-button";
@@ -70,7 +69,6 @@ export default async function WalkDetailPage({
 
   const slug = await ensureWalkSlug(walk);
   const meeting = meetingPointLabel(walk.location, walk.postcode);
-  const mapPoint = meeting ? await ensureWalkPoint(walk) : null;
   const attendances = walk.attendances;
   const stillIn = attendances.filter((a) => !a.clockedOutAt);
   const clockedOut = attendances.filter((a) => a.clockedOutAt);
@@ -129,7 +127,7 @@ export default async function WalkDetailPage({
 
       <ShareLink url={walkShareUrl(appUrl(), { token: walk.token, slug })} />
 
-      {meeting ? <WalkMap location={meeting} point={mapPoint} /> : null}
+      {meeting ? <WalkMapSection location={meeting} walk={walk} /> : null}
 
       <div className="flex flex-wrap items-center gap-2">
         <Button asChild size="sm" variant="outline">

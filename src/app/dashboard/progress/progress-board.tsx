@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useRef } from "react";
-import { Award, Medal, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataList, DataListBody, DataListItem } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
@@ -11,28 +10,6 @@ import {
   formatPlaceOrdinal,
   type WalkGamePerson,
 } from "@/lib/walk-game";
-import { cn } from "@/lib/utils";
-
-function PlaceMark({ place }: { place: number }) {
-  const label = formatPlaceOrdinal(place);
-  const Icon = place === 1 ? Trophy : place === 2 ? Medal : place === 3 ? Award : null;
-
-  return (
-    <div
-      aria-label={label}
-      className={cn(
-        "flex w-12 shrink-0 flex-col items-center justify-center gap-0.5",
-        place <= 3 ? "text-foreground" : "text-muted-foreground",
-      )}
-      title={label}
-    >
-      {Icon ? <Icon aria-hidden className="size-4" strokeWidth={1.75} /> : null}
-      <span className={cn("text-xs font-medium tabular-nums", place > 3 && "text-sm")}>
-        {label}
-      </span>
-    </div>
-  );
-}
 
 export function ProgressBoard({ board }: { board: WalkGamePerson[] }) {
   const listRef = useRef<HTMLDivElement>(null);
@@ -45,24 +22,32 @@ export function ProgressBoard({ board }: { board: WalkGamePerson[] }) {
   return (
     <div className="flex flex-col gap-4" ref={listRef}>
       <DataList>
-        {paging.paged.map((row) => (
-          <DataListItem className="cursor-default hover:bg-transparent" key={row.userId}>
-            <PlaceMark place={row.place} />
-            <DataListBody>
-              <p className="font-medium">
-                {row.name}
-                {row.isViewer ? (
-                  <Badge className="ml-2 align-middle" variant="outline">
-                    You
-                  </Badge>
-                ) : null}
+        {paging.paged.map((row) => {
+          const placeLabel = formatPlaceOrdinal(row.place);
+          return (
+            <DataListItem className="cursor-default hover:bg-transparent" key={row.userId}>
+              <span
+                aria-label={placeLabel}
+                className="w-10 shrink-0 text-sm font-medium tabular-nums text-muted-foreground"
+              >
+                {placeLabel}
+              </span>
+              <DataListBody>
+                <p className="font-medium">
+                  {row.name}
+                  {row.isViewer ? (
+                    <Badge className="ml-2 align-middle" variant="outline">
+                      You
+                    </Badge>
+                  ) : null}
+                </p>
+              </DataListBody>
+              <p className="text-sm text-muted-foreground">
+                {row.monthCount === 1 ? "1 walk" : `${row.monthCount} walks`}
               </p>
-            </DataListBody>
-            <p className="text-sm text-muted-foreground">
-              {row.monthCount === 1 ? "1 walk" : `${row.monthCount} walks`}
-            </p>
-          </DataListItem>
-        ))}
+            </DataListItem>
+          );
+        })}
       </DataList>
       <ListPagination
         noun="people"

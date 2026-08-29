@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Footprints, Trophy } from "lucide-react";
+import { Footprints } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { loadWalkGame } from "@/lib/walk-progress";
 import { EmptyState } from "@/components/empty-state";
@@ -95,10 +95,7 @@ export default async function ProgressPage() {
 
       {game.cup ? (
         <section className="flex flex-col gap-1.5 rounded-xl border p-4">
-          <h2 className="flex items-center gap-2 font-medium">
-            <Trophy aria-hidden className="size-4" strokeWidth={1.75} />
-            {game.cup.monthLabel} cup
-          </h2>
+          <h2 className="font-medium">{game.cup.monthLabel} cup</h2>
           <p className="text-sm text-muted-foreground">
             {game.cup.names.length === 1
               ? `This month’s cup is with ${game.cup.names[0]}. It resets next month.`
