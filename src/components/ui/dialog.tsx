@@ -3,7 +3,9 @@
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { overlayBackdropMotion, overlayMotionTransition } from "@/components/motion";
 import { OverlayRootContext, unlockIdleDocument } from "@/components/overlay-root";
 
 function Dialog({
@@ -38,16 +40,27 @@ function DialogClose(props: React.ComponentProps<typeof DialogPrimitive.Close>) 
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />;
 }
 
-function DialogOverlay({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+function DialogOverlay({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+  const reduce = useReducedMotion();
+
   return (
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:fade-in-0 fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm",
+        "fixed inset-0 z-[60] data-[state=closed]:invisible data-[state=closed]:!pointer-events-none",
         className,
       )}
       {...props}
-    />
+    >
+      <motion.div
+        aria-hidden
+        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+        {...(reduce ? {} : overlayBackdropMotion)}
+      />
+    </DialogPrimitive.Overlay>
   );
 }
 
@@ -58,34 +71,43 @@ function DialogContent({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & { showCloseButton?: boolean }) {
   const [root, setRoot] = React.useState<HTMLElement | null>(null);
+  const reduce = useReducedMotion();
 
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
         data-slot="dialog-content"
-        className={cn(
-          // Radix focuses this panel itself on open, which makes Safari draw
-          // its default blue focus ring around it; nothing inside needs this
-          // element's own outline (the close button keeps its own).
-          "bg-background outline-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-[60] grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-visible rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg",
-          className,
-        )}
+        className="outline-hidden data-[state=closed]:invisible data-[state=closed]:!pointer-events-none fixed top-[50%] left-[50%] z-[60] w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] overflow-visible border-0 bg-transparent p-0 shadow-none"
         ref={setRoot}
         {...props}
       >
         <OverlayRootContext.Provider value={root}>
-          {children}
-          {showCloseButton ? (
-            <DialogPrimitive.Close
-              data-slot="dialog-close"
-              aria-label="Close"
-              className="absolute top-2 right-2 z-10 flex size-11 cursor-pointer items-center justify-center rounded-md opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
-            >
-              <X />
-              <span className="sr-only">Close</span>
-            </DialogPrimitive.Close>
-          ) : null}
+          <motion.div
+            className={cn(
+              "bg-background relative grid w-full gap-4 overflow-visible rounded-lg border p-6 shadow-lg sm:max-w-lg",
+              className,
+            )}
+            {...(reduce
+              ? {}
+              : {
+                  initial: { opacity: 0 },
+                  animate: { opacity: 1 },
+                  transition: overlayMotionTransition,
+                })}
+          >
+            {children}
+            {showCloseButton ? (
+              <DialogPrimitive.Close
+                data-slot="dialog-close"
+                aria-label="Close"
+                className="absolute top-2 right-2 z-10 flex size-11 cursor-pointer items-center justify-center rounded-md opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+              >
+                <X />
+                <span className="sr-only">Close</span>
+              </DialogPrimitive.Close>
+            ) : null}
+          </motion.div>
         </OverlayRootContext.Provider>
       </DialogPrimitive.Content>
     </DialogPortal>

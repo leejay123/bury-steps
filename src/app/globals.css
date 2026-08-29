@@ -115,11 +115,20 @@ body {
   background-color: rgba(18, 28, 22, 0.42) !important;
 }
 
-/* Sticky header must not steal taps from drawers/dialogs while they are open. */
+/* Sticky header must not steal taps from drawers/dialogs while they are open.
+   When Safari locks scroll with position:fixed on <body>, a sticky header at
+   document top is shifted off-screen with the page — pin it to the viewport
+   so the bar stays visible (dimmed under the overlay) on every browser. */
 html:has([data-slot="drawer-content"][data-state="open"]) header,
 html:has([data-slot="dialog-content"][data-state="open"]) header,
 html:has([data-slot="alert-dialog-content"][data-state="open"]) header {
   pointer-events: none;
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 55;
+  width: 100%;
 }
 
 /* Clerk's shadcn theme draws the field with box-shadow, then adds a 4px
