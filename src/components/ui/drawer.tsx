@@ -41,7 +41,6 @@ function needsIosSafariBodyLock() {
 
 /** Body style props for the iOS Safari position:fixed scroll lock. */
 const SAFARI_LOCK_PROPS = ["position", "top", "left", "right", "height", "width"] as const;
-const OVERFLOW_LOCK_PROPS = ["overflow", "overflow-x", "overflow-y"] as const;
 
 /**
  * iOS Safari locks scroll with position:fixed + top:-y. Clearing that and then
@@ -70,21 +69,6 @@ function unlockIosSafariBodyScroll(y: number) {
   window.scrollTo(0, y);
 
   html.style.scrollBehavior = previousBehavior;
-}
-
-/** Desktop (incl. Mac Safari): overflow lock keeps sticky header in place. */
-function lockOverflowScroll() {
-  for (const node of [document.documentElement, document.body]) {
-    node.style.overflow = "hidden";
-  }
-}
-
-function unlockOverflowScroll() {
-  for (const node of [document.documentElement, document.body]) {
-    for (const prop of OVERFLOW_LOCK_PROPS) {
-      node.style.removeProperty(prop);
-    }
-  }
 }
 
 /** Bottom sheet on phones, side panel from the sm breakpoint up. */
@@ -130,22 +114,20 @@ function Drawer({
   // sheet on phones and a side panel from the sm breakpoint up.
   const resolvedDirection = direction ?? (isDesktop ? "right" : "bottom");
   // iOS Safari needs a body scroll lock. We own it (noBodyStyles) so close can
-  // unlock + scrollTo in one turn. Desktop Safari uses overflow:hidden instead
-  // so the sticky header is not shifted off-screen.
+  // unlock + scrollTo in one turn. Desktop skips overflow:hidden — that kills
+  // position:sticky and the fixed-header workaround warped the nav layout.
   const scrollYRef = React.useRef(0);
   const triggerRef = React.useRef<HTMLElement | null>(null);
-  const bodyLockRef = React.useRef<"ios" | "overflow" | null>(null);
+  const iosLockRef = React.useRef(false);
   const closeCleanupTimerRef = React.useRef(0);
 
   React.useEffect(() => {
     return () => {
       window.clearTimeout(closeCleanupTimerRef.current);
-      if (bodyLockRef.current === "ios") {
+      if (iosLockRef.current) {
         unlockIosSafariBodyScroll(scrollYRef.current);
-      } else if (bodyLockRef.current === "overflow") {
-        unlockOverflowScroll();
+        iosLockRef.current = false;
       }
-      bodyLockRef.current = null;
       restorePagePointerEvents();
     };
   }, []);
@@ -175,10 +157,7 @@ function Drawer({
                       active instanceof HTMLElement ? active : triggerRef.current;
                     if (needsIosSafariBodyLock()) {
                       lockIosSafariBodyScroll(scrollYRef.current);
-                      bodyLockRef.current = "ios";
-                    } else {
-                      lockOverflowScroll();
-                      bodyLockRef.current = "overflow";
+                      iosLockRef.current = true;
                     }
                   } else {
                     const lockedTop = document.body.style.top;
@@ -188,12 +167,10 @@ function Drawer({
                     const y = fromLock || scrollYRef.current;
                     scrollYRef.current = y;
 
-                    if (bodyLockRef.current === "ios" || lockedTop) {
+                    if (iosLockRef.current || lockedTop) {
                       unlockIosSafariBodyScroll(y);
-                    } else if (bodyLockRef.current === "overflow") {
-                      unlockOverflowScroll();
+                      iosLockRef.current = false;
                     }
-                    bodyLockRef.current = null;
 
                     // Pointer-events / inert cleanup after the close animation —
                     // not in the same turn as scroll restore (that race flashed).
@@ -264,7 +241,7 @@ function DrawerOverlay({
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"
       className={cn(
-        "fixed top-[var(--site-header-height)] right-0 bottom-0 left-0 z-[60] data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
+        "fixed inset-0 z-[60] data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
         dismissed && "invisible !pointer-events-none",
         className,
       )}
@@ -327,10 +304,10 @@ function DrawerContent({
           // overlayCloseClassName) inward for free, since an absolutely
           // positioned child's offsets are measured from its ancestor's
           // padding edge.
-          "data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-[var(--site-header-height)] data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:rounded-b-lg data-[vaul-drawer-direction=top]:border-b data-[vaul-drawer-direction=top]:pl-[env(safe-area-inset-left)] data-[vaul-drawer-direction=top]:pr-[env(safe-area-inset-right)]",
+          "data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:rounded-b-lg data-[vaul-drawer-direction=top]:border-b data-[vaul-drawer-direction=top]:pt-[env(safe-area-inset-top)] data-[vaul-drawer-direction=top]:pl-[env(safe-area-inset-left)] data-[vaul-drawer-direction=top]:pr-[env(safe-area-inset-right)]",
           "data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:rounded-t-lg data-[vaul-drawer-direction=bottom]:border-t data-[vaul-drawer-direction=bottom]:pl-[env(safe-area-inset-left)] data-[vaul-drawer-direction=bottom]:pr-[env(safe-area-inset-right)]",
-          "data-[vaul-drawer-direction=right]:top-[var(--site-header-height)] data-[vaul-drawer-direction=right]:bottom-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:h-auto data-[vaul-drawer-direction=right]:w-[calc(100%-1.25rem)] data-[vaul-drawer-direction=right]:border-l data-[vaul-drawer-direction=right]:pr-[env(safe-area-inset-right)] data-[vaul-drawer-direction=right]:sm:max-w-lg",
-          "data-[vaul-drawer-direction=left]:top-[var(--site-header-height)] data-[vaul-drawer-direction=left]:bottom-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:h-auto data-[vaul-drawer-direction=left]:w-[calc(100%-1.25rem)] data-[vaul-drawer-direction=left]:border-r data-[vaul-drawer-direction=left]:pl-[env(safe-area-inset-left)] data-[vaul-drawer-direction=left]:sm:max-w-lg",
+          "data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:h-full data-[vaul-drawer-direction=right]:w-[calc(100%-1.25rem)] data-[vaul-drawer-direction=right]:border-l data-[vaul-drawer-direction=right]:pt-[env(safe-area-inset-top)] data-[vaul-drawer-direction=right]:pr-[env(safe-area-inset-right)] data-[vaul-drawer-direction=right]:sm:max-w-lg",
+          "data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:h-full data-[vaul-drawer-direction=left]:w-[calc(100%-1.25rem)] data-[vaul-drawer-direction=left]:border-r data-[vaul-drawer-direction=left]:pt-[env(safe-area-inset-top)] data-[vaul-drawer-direction=left]:pl-[env(safe-area-inset-left)] data-[vaul-drawer-direction=left]:sm:max-w-lg",
           className,
         )}
         onEscapeKeyDown={(event) => {

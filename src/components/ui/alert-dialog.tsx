@@ -60,7 +60,7 @@ function AlertDialogOverlay({
     <AlertDialogPrimitive.Overlay
       data-slot="alert-dialog-overlay"
       className={cn(
-        "fixed top-[var(--site-header-height)] right-0 bottom-0 left-0 z-[70] data-[state=closed]:invisible data-[state=closed]:!pointer-events-none",
+        "fixed inset-0 z-[70] data-[state=closed]:invisible data-[state=closed]:!pointer-events-none",
         className,
       )}
       {...props}
