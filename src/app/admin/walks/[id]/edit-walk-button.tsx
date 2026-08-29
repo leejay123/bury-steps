@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { updateWalk, type ActionResult } from "@/server/actions";
 import { utcToLondonWallClock } from "@/lib/dates";
-import { useActionToast } from "@/hooks/use-action-toast";
+import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { MeetingPointFields } from "@/components/meeting-point-fields";
 import { FormError } from "@/components/form-error";
@@ -70,7 +70,11 @@ export function EditWalkButton({
   useActionToast(state, () => setOpen(false));
 
   return (
-    <AlertDialog onOpenChange={(next) => setOpen(isPending ? true : next)} open={open}>
+    <AlertDialog
+      closeDisabled={isPending}
+      onOpenChange={preventDismissWhilePending(isPending, setOpen)}
+      open={open}
+    >
       <AlertDialogTrigger asChild>
         <Button size="sm" variant="outline">
           Edit
@@ -85,8 +89,8 @@ export function EditWalkButton({
             <AlertDialogTitle>Edit this walk?</AlertDialogTitle>
             <AlertDialogDescription>
               {cancelled
-                ? "Change the details and put it back on the diary. The cancelled mark will come off. The share link stays the same."
-                : "Change the title, date, time, length, meeting point, or notes. People already clocked in stay on the walk. The share link stays the same."}
+                ? "Change the details and put it back on the diary. The cancelled mark will come off. If you change the title, copy the share link again."
+                : "Change the title, date, time, length, meeting point, or notes. People already clocked in stay on the walk. If you change the title, copy the share link again."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <input name="walkId" type="hidden" value={walkId} />

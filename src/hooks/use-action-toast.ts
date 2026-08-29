@@ -11,6 +11,11 @@ import type { ActionResult } from "@/server/actions";
  * reports) after an add/edit `useActionState` action settles. Centralising
  * it means the `router.refresh()` call can't be silently dropped again when
  * a new manager is copied from an existing one.
+ *
+ * Close the dialog first, then toast, then refresh on the next tick. A
+ * refresh in the same turn as the success state can leave `useFormStatus`
+ * pending, and Radix then treats our `setOpen(false)` as a dismiss-during-
+ * save and opens the dialog again.
  */
 export function useActionToast(state: ActionResult | null, onOk?: () => void) {
   const router = useRouter();
@@ -20,11 +25,28 @@ export function useActionToast(state: ActionResult | null, onOk?: () => void) {
   useEffect(() => {
     if (!state) return;
     if (state.ok) {
-      toast.success(state.message ?? "Saved.");
       onOkRef.current?.();
-      router.refresh();
-    } else {
-      toast.error(state.error);
+      toast.success(state.message ?? "Saved.");
+      const id = window.setTimeout(() => router.refresh(), 0);
+      return () => window.clearTimeout(id);
     }
+    toast.error(state.error);
   }, [router, state]);
+}
+
+/**
+ * Block X / Escape / overlay dismiss while a save is in flight, without
+ * reopening the dialog after a successful close (`setOpen(false)` still
+ * fires Radix `onOpenChange(false)` while pending can be true).
+ */
+export function preventDismissWhilePending(
+  isPending: boolean,
+  setOpen: (open: boolean) => void,
+  onClose?: () => void,
+) {
+  return (next: boolean) => {
+    if (isPending && !next) return;
+    setOpen(next);
+    if (!next) onClose?.();
+  };
 }

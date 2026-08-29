@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { cancelWalk, type ActionResult } from "@/server/actions";
-import { useActionToast } from "@/hooks/use-action-toast";
+import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -43,7 +43,11 @@ export function CancelWalkButton({
   useActionToast(state, () => setOpen(false));
 
   return (
-    <AlertDialog open={open} onOpenChange={(next) => setOpen(isPending ? true : next)}>
+    <AlertDialog
+      closeDisabled={isPending}
+      onOpenChange={preventDismissWhilePending(isPending, setOpen)}
+      open={open}
+    >
       <AlertDialogTrigger asChild>
         <Button size="sm" variant="outline">
           Cancel walk

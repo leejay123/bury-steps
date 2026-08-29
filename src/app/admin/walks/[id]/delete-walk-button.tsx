@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { deleteWalk, type ActionResult } from "@/server/actions";
-import { useActionToast } from "@/hooks/use-action-toast";
+import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,7 +47,11 @@ export function DeleteWalkButton({
   });
 
   return (
-    <AlertDialog open={open} onOpenChange={(next) => setOpen(isPending ? true : next)}>
+    <AlertDialog
+      closeDisabled={isPending}
+      onOpenChange={preventDismissWhilePending(isPending, setOpen)}
+      open={open}
+    >
       <AlertDialogTrigger asChild>
         <Button size="sm" variant="destructive">
           Remove walk

@@ -20,7 +20,7 @@ import {
   type FaqCategoryView,
   type FaqView,
 } from "@/lib/faqs";
-import { useActionToast } from "@/hooks/use-action-toast";
+import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { EmptyState } from "@/components/empty-state";
 import { ReorderButtons, useReorderableIds } from "@/components/sortable-rows";
@@ -286,7 +286,11 @@ function RemoveFaqButton({
   });
 
   return (
-    <AlertDialog onOpenChange={(next) => setOpen(isPending ? true : next)} open={open}>
+    <AlertDialog
+      closeDisabled={isPending}
+      onOpenChange={preventDismissWhilePending(isPending, setOpen)}
+      open={open}
+    >
       <AlertDialogTrigger asChild>
         <Button size="xs" variant="destructive">
           Remove
@@ -447,7 +451,11 @@ function RemoveCategoryButton({
   }
 
   return (
-    <AlertDialog onOpenChange={(next) => setOpen(isPending ? true : next)} open={open}>
+    <AlertDialog
+      closeDisabled={isPending}
+      onOpenChange={preventDismissWhilePending(isPending, setOpen)}
+      open={open}
+    >
       <AlertDialogTrigger asChild>
         <Button size="xs" variant="destructive">
           Remove

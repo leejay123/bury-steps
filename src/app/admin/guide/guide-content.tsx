@@ -295,12 +295,12 @@ export function OrganiserGuide() {
               <p>
                 Click a row to open that person’s own page: joined date, membership length, quick
                 totals (total walks and walks cancelled after they clocked in — plus walks
-                created, but only for organisers, since members never create walks), a callout if
-                they are clocked in right now and haven’t clocked out, and their full walk history
-                below, grouped by year. Search if the list is long. Previous and Next appear if
-                they have more than 20 walks. Each walk shows the date, meeting point, and in/out
-                times. Click a walk name to open that walk. This is a full page rather than a
-                drawer, so it stays readable even for someone who has been on hundreds of walks.
+                created, but only for organisers, since members never create walks), and their full
+                walk history below, grouped by year. Search if the list is long. Previous and Next
+                appear if they have more than 20 walks. Each walk shows the date, meeting point, and
+                in/out times — including whether they stayed for the whole walk. Click a walk name
+                to open that walk. This is a full page rather than a drawer, so it stays readable
+                even for someone who has been on hundreds of walks.
               </p>
               <p className="font-medium text-foreground">Remove someone</p>
               <Steps>

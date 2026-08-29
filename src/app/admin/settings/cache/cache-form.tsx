@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { clearSiteCache, type ActionResult } from "@/server/actions";
-import { useActionToast } from "@/hooks/use-action-toast";
+import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,7 +44,11 @@ export function ClearCacheForm() {
           members, or photos.
         </p>
       </div>
-      <AlertDialog onOpenChange={(next) => setOpen(isPending ? true : next)} open={open}>
+      <AlertDialog
+        closeDisabled={isPending}
+        onOpenChange={preventDismissWhilePending(isPending, setOpen)}
+        open={open}
+      >
         <AlertDialogTrigger asChild>
           <Button className="w-full sm:w-auto" type="button">
             Clear cache

@@ -15,7 +15,7 @@ import { EmptyState } from "@/components/empty-state";
 import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
 import { useUrlListState } from "@/hooks/use-url-list-state";
-import { useActionToast } from "@/hooks/use-action-toast";
+import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -288,7 +288,11 @@ function RemoveButton({ reportId, title }: { reportId: string; title: string }) 
   useActionToast(state, () => setOpen(false));
 
   return (
-    <AlertDialog onOpenChange={(next) => setOpen(isPending ? true : next)} open={open}>
+    <AlertDialog
+      closeDisabled={isPending}
+      onOpenChange={preventDismissWhilePending(isPending, setOpen)}
+      open={open}
+    >
       <AlertDialogTrigger asChild>
         <Button aria-label={`Remove report from ${title}`} size="xs" variant="destructive">
           <Trash2 data-icon="inline-start" />

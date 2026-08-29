@@ -7,23 +7,36 @@ import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { OverlayRootContext, unlockIdleDocument } from "@/components/overlay-root";
 
+const AlertDialogCloseDisabledContext = React.createContext(false);
+
 function AlertDialog({
+  closeDisabled = false,
   onOpenChange,
   ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Root>) {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Root> & {
+  /**
+   * A form inside is mid-submit. Blocks X / Escape, and does not bounce a
+   * successful `setOpen(false)` back open if Radix fires onOpenChange(false)
+   * while pending is still true.
+   */
+  closeDisabled?: boolean;
+}) {
   return (
-    <AlertDialogPrimitive.Root
-      data-slot="alert-dialog"
-      onOpenChange={(open) => {
-        if (!open) {
-          unlockIdleDocument();
-          window.setTimeout(unlockIdleDocument, 0);
-          window.setTimeout(unlockIdleDocument, 250);
-        }
-        onOpenChange?.(open);
-      }}
-      {...props}
-    />
+    <AlertDialogCloseDisabledContext.Provider value={closeDisabled}>
+      <AlertDialogPrimitive.Root
+        data-slot="alert-dialog"
+        onOpenChange={(open) => {
+          if (closeDisabled && !open) return;
+          if (!open) {
+            unlockIdleDocument();
+            window.setTimeout(unlockIdleDocument, 0);
+            window.setTimeout(unlockIdleDocument, 250);
+          }
+          onOpenChange?.(open);
+        }}
+        {...props}
+      />
+    </AlertDialogCloseDisabledContext.Provider>
   );
 }
 
@@ -51,22 +64,16 @@ function AlertDialogOverlay({ className, ...props }: React.ComponentProps<typeof
 function AlertDialogContent({
   className,
   children,
-  closeDisabled = false,
+  closeDisabled,
   onEscapeKeyDown,
   showCloseButton = true,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Content> & {
-  /**
-   * A form inside is mid-submit — a slow network shouldn't let someone
-   * dismiss the dialog (the X, or Escape) while it's still in flight.
-   * Without this the save keeps running after the dialog vanishes, and the
-   * success/error toast fires later with no dialog left to explain it,
-   * which reads as the whole thing being randomly stuck. Radix's
-   * AlertDialog already never treats clicking outside as a close.
-   */
   closeDisabled?: boolean;
   showCloseButton?: boolean;
 }) {
+  const fromRoot = React.useContext(AlertDialogCloseDisabledContext);
+  const blocked = Boolean(closeDisabled || fromRoot);
   const [root, setRoot] = React.useState<HTMLElement | null>(null);
 
   return (
@@ -82,7 +89,7 @@ function AlertDialogContent({
           className,
         )}
         onEscapeKeyDown={(event) => {
-          if (closeDisabled) event.preventDefault();
+          if (blocked) event.preventDefault();
           onEscapeKeyDown?.(event);
         }}
         ref={setRoot}
@@ -94,7 +101,7 @@ function AlertDialogContent({
             <AlertDialogPrimitive.Cancel
               aria-label="Close"
               className="absolute top-2 right-2 z-10 flex size-11 cursor-pointer items-center justify-center rounded-md opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
-              disabled={closeDisabled}
+              disabled={blocked}
             >
               <X />
               <span className="sr-only">Close</span>

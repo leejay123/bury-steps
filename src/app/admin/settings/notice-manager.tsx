@@ -11,7 +11,7 @@ import {
 } from "@/server/actions";
 import type { NoticeView } from "@/lib/notices";
 import { formatDate } from "@/lib/dates";
-import { useActionToast } from "@/hooks/use-action-toast";
+import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { EmptyState } from "@/components/empty-state";
 import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
@@ -189,7 +189,11 @@ function RemoveNoticeButton({
   });
 
   return (
-    <AlertDialog onOpenChange={(next) => setOpen(isPending ? true : next)} open={open}>
+    <AlertDialog
+      closeDisabled={isPending}
+      onOpenChange={preventDismissWhilePending(isPending, setOpen)}
+      open={open}
+    >
       <AlertDialogTrigger asChild>
         <Button size="xs" variant="destructive">
           Remove

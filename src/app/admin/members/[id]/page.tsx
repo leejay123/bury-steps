@@ -2,10 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { getMemberHistory } from "@/server/actions";
-import { formatCompactDateTime, formatDate, formatMembershipAge, formatWalkDate } from "@/lib/dates";
+import { formatDate, formatMembershipAge } from "@/lib/dates";
 import { walkStatus } from "@/lib/walk-window";
 import { AttendanceHistory } from "@/components/attendance-history";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeleteMemberButton } from "../delete-member-button";
@@ -25,10 +24,6 @@ export default async function MemberDetailPage({
 
   const joinedAt = new Date(member.createdAt);
   const attendanceCount = member.attendanceCount;
-  // Clocked in, not clocked out, and the walk itself was not cancelled out
-  // from under them — the walks they are on right now, at a glance, rather
-  // than the admin having to scan the whole table below to notice.
-  const stillOn = member.items.filter((item) => !item.clockedOutAt && !item.cancelledAt);
   const cancelledCount = member.items.filter((item) => item.cancelledAt).length;
 
   return (
@@ -79,31 +74,6 @@ export default async function MemberDetailPage({
         {member.role === "ADMIN" ? <StatCard label="Walks created" value={member.walkCount} /> : null}
         <StatCard label="Cancelled after clock-in" value={cancelledCount} />
       </div>
-
-      {stillOn.length > 0 ? (
-        <Alert>
-          <AlertTitle>
-            {stillOn.length === 1
-              ? "Currently clocked in to a walk"
-              : `Currently clocked in to ${stillOn.length} walks`}
-          </AlertTitle>
-          <AlertDescription>
-            <ul className="flex flex-col gap-1">
-              {stillOn.map((item) => (
-                <li key={item.id}>
-                  <Link className="underline hover:no-underline" href={`/admin/walks/${item.walkId}`}>
-                    {item.walkTitle}
-                  </Link>
-                  {" · "}
-                  {formatWalkDate(new Date(item.startsAt))}
-                  {" · clocked in "}
-                  {formatCompactDateTime(new Date(item.clockedInAt))}
-                </li>
-              ))}
-            </ul>
-          </AlertDescription>
-        </Alert>
-      ) : null}
 
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-medium text-muted-foreground">

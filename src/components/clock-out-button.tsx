@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { clockOut, type ActionResult } from "@/server/actions";
-import { useActionToast } from "@/hooks/use-action-toast";
+import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -42,14 +42,8 @@ export function ClockOutButton({ token }: { token: string }) {
 
   return (
     <AlertDialog
-      onOpenChange={(next) => {
-        if (isPending) {
-          setOpen(true);
-          return;
-        }
-        setOpen(next);
-        if (!next) setReason("");
-      }}
+      closeDisabled={isPending}
+      onOpenChange={preventDismissWhilePending(isPending, setOpen, () => setReason(""))}
       open={open}
     >
       <AlertDialogTrigger asChild>

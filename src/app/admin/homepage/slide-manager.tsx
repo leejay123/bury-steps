@@ -12,7 +12,7 @@ import {
   type ActionResult,
 } from "@/server/actions";
 import type { SlideView } from "@/lib/slides";
-import { useActionToast } from "@/hooks/use-action-toast";
+import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { EmptyState } from "@/components/empty-state";
@@ -184,7 +184,11 @@ function RemoveSlideButton({
   });
 
   return (
-    <AlertDialog onOpenChange={(next) => setOpen(isPending ? true : next)} open={open}>
+    <AlertDialog
+      closeDisabled={isPending}
+      onOpenChange={preventDismissWhilePending(isPending, setOpen)}
+      open={open}
+    >
       <AlertDialogTrigger asChild>
         <Button size="xs" variant="destructive">
           Remove
