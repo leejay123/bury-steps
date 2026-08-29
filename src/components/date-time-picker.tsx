@@ -49,11 +49,13 @@ function isOwnNestedSelectLayer(target: EventTarget | null) {
 
 export function DateTimePicker({
   defaultValue,
+  disabled,
   id,
   name,
   required,
 }: {
   defaultValue?: string;
+  disabled?: boolean;
   id: string;
   name: string;
   required?: boolean;
@@ -101,11 +103,18 @@ export function DateTimePicker({
         tabIndex={-1}
         value={value}
       />
-      <Popover onOpenChange={setOpen} open={open}>
+      <Popover
+        onOpenChange={(next) => {
+          if (disabled) return;
+          setOpen(next);
+        }}
+        open={disabled ? false : open}
+      >
         <PopoverTrigger asChild>
           <Button
             aria-expanded={open}
             className="w-full justify-start font-normal"
+            disabled={disabled}
             id={id}
             type="button"
             variant="outline"

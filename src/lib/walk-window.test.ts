@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   CLOSES_AFTER_MS,
+  canOrganiserAddAttendance,
   isWalkHistoryReady,
+  isWalkScheduleLocked,
   OPENS_BEFORE_MS,
+  organiserRecordedClockInAt,
   walkStatus,
   windowState,
 } from "./walk-window";
@@ -85,5 +88,78 @@ describe("isWalkHistoryReady", () => {
     expect(isWalkHistoryReady({ cancelledAt: new Date(), startsAt, durationMins }, now)).toBe(
       true,
     );
+  });
+});
+
+describe("isWalkScheduleLocked", () => {
+  const startsAt = new Date("2026-06-01T10:00:00.000Z");
+
+  it("is unlocked an hour before start, when clock-in is already open", () => {
+    const now = new Date(startsAt.getTime() - OPENS_BEFORE_MS);
+    expect(isWalkScheduleLocked(startsAt, now)).toBe(false);
+  });
+
+  it("is unlocked a second before start", () => {
+    const now = new Date(startsAt.getTime() - 1000);
+    expect(isWalkScheduleLocked(startsAt, now)).toBe(false);
+  });
+
+  it("locks at the published start", () => {
+    expect(isWalkScheduleLocked(startsAt, startsAt)).toBe(true);
+  });
+
+  it("stays locked after start", () => {
+    const now = new Date(startsAt.getTime() + 30 * 60_000);
+    expect(isWalkScheduleLocked(startsAt, now)).toBe(true);
+  });
+});
+
+describe("canOrganiserAddAttendance", () => {
+  const startsAt = new Date("2026-06-01T10:00:00.000Z");
+  const durationMins = 90;
+
+  it("is false before clock-in opens", () => {
+    const now = new Date(startsAt.getTime() - OPENS_BEFORE_MS - 1000);
+    expect(canOrganiserAddAttendance({ cancelledAt: null, startsAt, durationMins }, now)).toBe(
+      false,
+    );
+  });
+
+  it("is true while clock-in is open", () => {
+    const now = new Date(startsAt.getTime() + 30 * 60_000);
+    expect(canOrganiserAddAttendance({ cancelledAt: null, startsAt, durationMins }, now)).toBe(
+      true,
+    );
+  });
+
+  it("is true after the walk has completed", () => {
+    const endsAt = startsAt.getTime() + durationMins * 60_000;
+    const now = new Date(endsAt + CLOSES_AFTER_MS + 1000);
+    expect(canOrganiserAddAttendance({ cancelledAt: null, startsAt, durationMins }, now)).toBe(
+      true,
+    );
+  });
+
+  it("is false when the walk is cancelled", () => {
+    const now = new Date(startsAt.getTime() + 30 * 60_000);
+    expect(
+      canOrganiserAddAttendance({ cancelledAt: new Date(), startsAt, durationMins }, now),
+    ).toBe(false);
+  });
+});
+
+describe("organiserRecordedClockInAt", () => {
+  const startsAt = new Date("2026-06-01T10:00:00.000Z");
+  const durationMins = 90;
+
+  it("uses now while the clock-in window is still open", () => {
+    const now = new Date(startsAt.getTime() + 20 * 60_000);
+    expect(organiserRecordedClockInAt({ startsAt, durationMins }, now)).toEqual(now);
+  });
+
+  it("uses the start once the walk has completed, so they don't appear after it finished", () => {
+    const endsAt = startsAt.getTime() + durationMins * 60_000;
+    const now = new Date(endsAt + CLOSES_AFTER_MS + 1000);
+    expect(organiserRecordedClockInAt({ startsAt, durationMins }, now)).toEqual(startsAt);
   });
 });

@@ -52,3 +52,42 @@ export function isWalkHistoryReady(
 ): boolean {
   return walkStatus(walk, now) !== "open";
 }
+
+/**
+ * Date, time, and expected length freeze once the published start has
+ * passed. Last-minute "we're 15 minutes late leaving" is still allowed in
+ * the hour before start, when clock-in is already open. Changing the
+ * official start after people are walking would rewrite the record under
+ * them; late arrivals can still clock in until an hour after the walk was
+ * due to finish, and an organiser can add someone who forgot.
+ */
+export function isWalkScheduleLocked(startsAt: Date, now: Date = new Date()): boolean {
+  return now.getTime() >= startsAt.getTime();
+}
+
+/**
+ * Organisers can add a member who was there but did not clock in — while
+ * the window is open (phone died) and after the walk is completed (they
+ * forgot until too late). Not before clock-in opens, and not on a
+ * cancelled walk (reopen it first).
+ */
+export function canOrganiserAddAttendance(
+  walk: { cancelledAt: Date | null; startsAt: Date; durationMins: number },
+  now: Date = new Date(),
+): boolean {
+  if (walk.cancelledAt) return false;
+  return windowState(walk.startsAt, walk.durationMins, now) !== "too-early";
+}
+
+/**
+ * Clock-in time when an organiser adds someone. While the window is still
+ * open, use now — they are being added as they arrive. Once the walk has
+ * completed, use the start so they count as having done the walk rather
+ * than appearing to clock in after it finished.
+ */
+export function organiserRecordedClockInAt(
+  walk: { startsAt: Date; durationMins: number },
+  now: Date = new Date(),
+): Date {
+  return windowState(walk.startsAt, walk.durationMins, now) === "closed" ? walk.startsAt : now;
+}

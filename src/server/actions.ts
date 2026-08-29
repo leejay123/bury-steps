@@ -15,7 +15,13 @@ import {
   searchPlaces,
   type PlaceHit,
 } from "@/lib/geocode";
-import { windowState, walkStatus } from "@/lib/walk-window";
+import {
+  canOrganiserAddAttendance,
+  isWalkScheduleLocked,
+  organiserRecordedClockInAt,
+  walkStatus,
+  windowState,
+} from "@/lib/walk-window";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import {
@@ -330,6 +336,7 @@ export async function updateWalk(
   } catch {
     return { ok: false, error: "That date and time could not be read. Try again." };
   }
+  let durationMins = parsed.data.durationMins;
 
   const wasCancelled = parsed.data.wasCancelled === "on";
 
@@ -347,6 +354,14 @@ export async function updateWalk(
     return { ok: false, error: "This walk has already finished, so it can't be edited." };
   }
 
+  // After the published start, keep the stored date, time, and length even
+  // if the form still posts those fields (disabled controls) or someone
+  // tampers with them. Title, meeting point, and notes can still change.
+  if (isWalkScheduleLocked(existing.startsAt)) {
+    startsAt = existing.startsAt;
+    durationMins = existing.durationMins;
+  }
+
   const pin = await walkPinFromForm(formData, parsed.data.location, parsed.data.postcode);
   const slug = await allocateWalkSlug(parsed.data.title, id);
 
@@ -358,7 +373,7 @@ export async function updateWalk(
         title: parsed.data.title,
         description: parsed.data.description ?? null,
         startsAt,
-        durationMins: parsed.data.durationMins,
+        durationMins,
         location: parsed.data.location ?? null,
         postcode: pin.postcode,
         latitude: pin.latitude,
@@ -523,6 +538,113 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
   revalidatePath("/dashboard");
   revalidatePath(`/admin/walks/${walk.id}`);
   return { ok: true, message: "Clocked in. Enjoy the walk." };
+}
+
+const adminClockInSchema = z.object({
+  walkId: z.string().min(1),
+  userId: z.string().min(1, "Choose who to add."),
+});
+
+export async function adminClockIn(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+
+  const parsed = adminClockInSchema.safeParse({
+    walkId: formData.get("walkId"),
+    userId: formData.get("userId"),
+  });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0].message };
+  }
+
+  const walk = await prisma.walk.findUnique({
+    where: { id: parsed.data.walkId },
+    select: {
+      id: true,
+      token: true,
+      slug: true,
+      startsAt: true,
+      durationMins: true,
+      cancelledAt: true,
+    },
+  });
+  if (!walk) return { ok: false, error: "That walk is no longer there." };
+  if (!canOrganiserAddAttendance(walk)) {
+    if (walk.cancelledAt) {
+      return { ok: false, error: "Reopen this walk before adding someone to it." };
+    }
+    return { ok: false, error: "You can add someone from an hour before the walk starts." };
+  }
+
+  const member = await prisma.user.findUnique({
+    where: { id: parsed.data.userId },
+    select: { id: true, firstName: true, lastName: true, email: true },
+  });
+  if (!member) return { ok: false, error: "That member is no longer there." };
+
+  const existingAttendance = await prisma.attendance.findUnique({
+    where: { walkId_userId: { walkId: walk.id, userId: member.id } },
+    select: { id: true, clockedOutAt: true },
+  });
+
+  const window = windowState(walk.startsAt, walk.durationMins);
+  if (existingAttendance) {
+    if (window === "closed" || !existingAttendance.clockedOutAt) {
+      return { ok: false, error: `${displayName(member)} is already on this walk’s list.` };
+    }
+  }
+
+  const now = new Date();
+  const clockedInAt = organiserRecordedClockInAt(walk, now);
+  const purgeAfter = new Date(
+    walk.startsAt.getTime() + CONDITIONS_RETENTION_DAYS * 24 * 60 * 60 * 1000,
+  );
+  const attendanceData = {
+    clockedInAt,
+    medicalAckAt: now,
+    conditions: null,
+    conditionsPurgeAfter: purgeAfter,
+    clockedOutAt: null,
+    clockedOutReason: null,
+  };
+
+  try {
+    if (existingAttendance) {
+      await prisma.attendance.update({
+        where: { id: existingAttendance.id },
+        data: attendanceData,
+      });
+    } else {
+      await prisma.attendance.create({
+        data: {
+          walkId: walk.id,
+          userId: member.id,
+          ...attendanceData,
+        },
+      });
+    }
+  } catch (err) {
+    if (isPrismaCode(err, "P2002")) {
+      return { ok: false, error: `${displayName(member)} is already on this walk’s list.` };
+    }
+    return logActionError("adminClockIn", err, "Could not add them to this walk. Try again.");
+  }
+
+  revalidateWalkShare(walk);
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/history");
+  revalidatePath(`/admin/walks/${walk.id}`);
+  revalidatePath(`/admin/members/${member.id}`);
+  revalidatePath("/admin/members");
+  return {
+    ok: true,
+    message:
+      window === "closed"
+        ? `${displayName(member)} has been added as attending this walk.`
+        : `${displayName(member)} has been clocked in.`,
+  };
 }
 
 const clockOutSchema = z.object({

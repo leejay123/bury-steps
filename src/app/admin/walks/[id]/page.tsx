@@ -4,7 +4,7 @@ import { ClipboardList } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireAdmin, displayName } from "@/lib/auth";
 import { formatWalkDate } from "@/lib/dates";
-import { walkStatus } from "@/lib/walk-window";
+import { canOrganiserAddAttendance, isWalkScheduleLocked, walkStatus } from "@/lib/walk-window";
 import { appUrl } from "@/lib/urls";
 import { ShareLink } from "@/components/share-link";
 import { EmptyState } from "@/components/empty-state";
@@ -15,6 +15,7 @@ import { ensureWalkPoint } from "@/lib/walk-coordinates";
 import { ensureWalkSlug, walkShareUrl } from "@/lib/walk-slug";
 import { CancelWalkButton } from "./cancel-walk-button";
 import { EditWalkButton } from "./edit-walk-button";
+import { AddAttendanceButton } from "./add-attendance-button";
 import { ReopenWalkButton } from "./reopen-walk-button";
 import { DeleteWalkButton } from "./delete-walk-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -76,6 +77,16 @@ export default async function WalkDetailPage({
   const withConditions = attendances.filter((a) => a.conditions).length;
   const status = walkStatus(walk);
   const isCompleted = status === "completed";
+  const scheduleLocked = isWalkScheduleLocked(walk.startsAt);
+  const canAddAttendance = canOrganiserAddAttendance(walk);
+  const attendingIds = attendances.map((attendance) => attendance.userId);
+  const addableMembers = canAddAttendance
+    ? await prisma.user.findMany({
+        where: attendingIds.length ? { id: { notIn: attendingIds } } : undefined,
+        select: { id: true, firstName: true, lastName: true, email: true },
+        orderBy: [{ firstName: "asc" }, { lastName: "asc" }, { email: "asc" }],
+      })
+    : [];
 
   function toAttendanceRow(attendance: (typeof attendances)[number]): WalkAttendanceRow {
     const name = displayName(attendance.user);
@@ -149,6 +160,7 @@ export default async function WalkDetailPage({
             location={walk.location}
             longitude={walk.longitude}
             postcode={walk.postcode}
+            scheduleLocked={scheduleLocked}
             startsAt={walk.startsAt.toISOString()}
             title={walk.title}
             walkId={walk.id}
@@ -159,7 +171,8 @@ export default async function WalkDetailPage({
       </div>
       {isCompleted ? (
         <p className="text-xs text-muted-foreground">
-          This walk has finished, so it can no longer be cancelled or edited.
+          This walk has finished, so it can no longer be cancelled or edited. If someone was there
+          but forgot to clock in, add them under Attendance.
         </p>
       ) : null}
 
@@ -192,15 +205,30 @@ export default async function WalkDetailPage({
         without clocking out, not people still out there.
       */}
       <section className="flex flex-col gap-3">
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
           <h2 className="text-sm font-medium text-muted-foreground">
             {isCompleted ? "Attended" : "Attendance"}
           </h2>
-          <span className="text-sm tabular-nums text-muted-foreground">
-            {isCompleted
-              ? `${stillIn.length} stayed for the full walk · Click a row for details`
-              : `${stillIn.length} on the walk · Click a row for details`}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm tabular-nums text-muted-foreground">
+              {isCompleted
+                ? `${stillIn.length} stayed for the full walk · Click a row for details`
+                : `${stillIn.length} on the walk · Click a row for details`}
+            </span>
+            {canAddAttendance ? (
+              <AddAttendanceButton
+                members={addableMembers.map((member) => {
+                  const name = displayName(member);
+                  return {
+                    id: member.id,
+                    label: name === member.email ? member.email : `${name} · ${member.email}`,
+                  };
+                })}
+                walkCompleted={isCompleted}
+                walkId={walk.id}
+              />
+            ) : null}
+          </div>
         </div>
 
         {stillIn.length === 0 ? (
@@ -208,7 +236,7 @@ export default async function WalkDetailPage({
             description={
               walk.attendances.length === 0
                 ? isCompleted
-                  ? "Nobody clocked in for this walk."
+                  ? "Nobody clocked in for this walk. If someone was there, use Add someone."
                   : "Share the link above with the group."
                 : isCompleted
                   ? "Everyone who clocked in also clocked out before the walk finished."

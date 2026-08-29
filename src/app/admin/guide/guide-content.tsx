@@ -186,7 +186,11 @@ export function OrganiserGuide() {
                   Links you already posted still work
                   and send people to the updated page. If the walk was
                   cancelled, saving also puts it back on the diary. The walk’s own organiser page
-                  shows the same map members see on the share link.
+                  shows the same map members see on the share link. Once the published start time
+                  has passed, date, time, and length freeze — changing them would rewrite the
+                  record under people already walking. Title, meeting point, and notes stay
+                  editable until the walk is Completed. Late arrivals can still clock in until an
+                  hour after the walk was due to finish; if they miss that, use Add someone.
                 </li>
                 <li>
                   <strong>Reopen</strong> undoes a cancel without changing the details. Clock-in
@@ -201,7 +205,9 @@ export function OrganiserGuide() {
               <p>
                 Once a walk reaches <strong>Completed</strong>, Cancel and Edit disappear from its
                 page — it already happened, so there is nothing left to cancel or change. Remove
-                and the CSV export are still there if the record itself needs correcting.
+                and the CSV export are still there if the record itself needs correcting.{" "}
+                <strong>Add someone</strong> stays, so you can still put a forgotten clock-in on
+                the list.
               </p>
               <p>
                 If a cancelled walk is not reopened, it is deleted automatically after{" "}
@@ -218,6 +224,15 @@ export function OrganiserGuide() {
                 on, since there is nothing left to leave early from. Tap a row for email,
                 clock-out time, any clock-out reason, and health notes. If more than 20 people
                 clocked in, Previous and Next sit under either list.
+              </p>
+              <p>
+                <strong>Add someone</strong> on that attendance section is for a member who was
+                there but did not clock in — phone died, they forgot, or the window had already
+                closed. They must already have an account; you cannot add someone who has never
+                signed up. While the walk is still open, they are clocked in at the time you add
+                them. After Completed, they show as attending from the start, with no health
+                notes. If they already clocked in or out, they are already on the list — do not
+                add them again. Reopen a cancelled walk first if you need to add someone to it.
               </p>
               <p>
                 Download roster (CSV) gives you names, emails, times, clock-out reasons, and any
@@ -269,7 +284,10 @@ export function OrganiserGuide() {
               <p>
                 If they try too early, the page says when clock-in opens and shows a short “Before
                 you set off” checklist so the wait isn’t just a blank screen. If the window has
-                closed, they should speak to you.
+                closed, they should speak to you. Open the walk and use <strong>Add someone</strong>{" "}
+                — you do not need to change the date or time. They must already have an account.
+                If they never signed up, they need to create one first; you cannot clock in a
+                person who is not on Members.
               </p>
               <p>
                 The first time a member reaches their Walks page before they have been on any

@@ -181,7 +181,9 @@ function SelectContent({
       }}
       {...props}
     >
-      <div role="listbox">{children}</div>
+      <div className="flex flex-col gap-1" role="listbox">
+        {children}
+      </div>
     </PopoverContent>
   );
 }
@@ -219,7 +221,7 @@ function SelectItem({
 SelectItem.displayName = "SelectItem";
 
 function SelectGroup({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("flex flex-col", className)} role="group" {...props} />;
+  return <div className={cn("flex flex-col gap-1", className)} role="group" {...props} />;
 }
 
 function SelectLabel({ className, ...props }: React.ComponentProps<"div">) {

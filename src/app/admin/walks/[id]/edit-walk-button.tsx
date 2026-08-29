@@ -47,6 +47,7 @@ export function EditWalkButton({
   location,
   longitude,
   postcode,
+  scheduleLocked,
   startsAt,
   title,
   walkId,
@@ -58,6 +59,7 @@ export function EditWalkButton({
   location: string | null;
   longitude: number | null;
   postcode: string | null;
+  scheduleLocked: boolean;
   startsAt: string;
   title: string;
   walkId: string;
@@ -89,8 +91,12 @@ export function EditWalkButton({
             <AlertDialogTitle>Edit this walk?</AlertDialogTitle>
             <AlertDialogDescription>
               {cancelled
-                ? "Change the details and put it back on the diary. The cancelled mark will come off. If you change the title, copy the share link again."
-                : "Change the title, date, time, length, meeting point, or notes. People already clocked in stay on the walk. If you change the title, copy the share link again."}
+                ? scheduleLocked
+                  ? "Change the title, meeting point, or notes and put it back on the diary. Date, time, and length stay as published now the walk has started. The cancelled mark will come off. If you change the title, copy the share link again."
+                  : "Change the details and put it back on the diary. The cancelled mark will come off. If you change the title, copy the share link again."
+                : scheduleLocked
+                  ? "The date, time, and length stay as published now the walk has started. You can still change the title, meeting point, or notes. People already clocked in stay on the walk. If you change the title, copy the share link again."
+                  : "Change the title, date, time, length, meeting point, or notes. People already clocked in stay on the walk. If you change the title, copy the share link again."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <input name="walkId" type="hidden" value={walkId} />
@@ -114,6 +120,7 @@ export function EditWalkButton({
               </Label>
               <DateTimePicker
                 defaultValue={utcToLondonWallClock(new Date(startsAt))}
+                disabled={scheduleLocked}
                 id={`edit-starts-${walkId}`}
                 name="startsAt"
                 required
@@ -121,7 +128,7 @@ export function EditWalkButton({
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor={`edit-duration-${walkId}`}>Expected length</Label>
-              <Select defaultValue={String(durationMins)} name="durationMins">
+              <Select defaultValue={String(durationMins)} disabled={scheduleLocked} name="durationMins">
                 <SelectTrigger id={`edit-duration-${walkId}`}>
                   <SelectValue />
                 </SelectTrigger>
@@ -134,6 +141,12 @@ export function EditWalkButton({
                 </SelectContent>
               </Select>
             </div>
+            {scheduleLocked ? (
+              <p className="text-xs text-muted-foreground sm:col-span-2">
+                Date, time, and length can’t be changed after the walk has started. If someone was
+                there but did not clock in, add them on this walk page instead.
+              </p>
+            ) : null}
           </div>
           <MeetingPointFields
             defaultLatitude={latitude}

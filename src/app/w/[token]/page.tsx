@@ -214,7 +214,7 @@ export default async function WalkLinkPage({
         <Alert>
           <AlertTitle>Clock-in has closed</AlertTitle>
           <AlertDescription>
-            If you were there, speak to an organiser and they can sort it out.
+            If you were there, speak to an organiser — they can add you to the list.
           </AlertDescription>
         </Alert>
       ) : (
