@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
-import { cancelWalk, type ActionResult } from "@/server/actions";
-import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
+import { cancelWalk } from "@/server/actions";
+import { useNotifyActionState } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -28,6 +28,51 @@ function Confirm() {
   );
 }
 
+function CancelWalkDialogForm({
+  attendanceCount,
+  onClose,
+  walkId,
+}: {
+  attendanceCount: number;
+  onClose: () => void;
+  walkId: string;
+}) {
+  const [state, action, isPending] = useNotifyActionState(cancelWalk, onClose);
+
+  return (
+    <AlertDialogContent closeDisabled={isPending}>
+      <form action={action} className="space-y-4">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Cancel this walk?</AlertDialogTitle>
+          <AlertDialogDescription>
+            {attendanceCount > 0
+              ? `${attendanceCount} ${attendanceCount === 1 ? "person has" : "people have"} already clocked in. Their records are kept, but the walk will show as cancelled and nobody else can clock in.`
+              : "The walk will show as cancelled and nobody will be able to clock in."}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <input type="hidden" name="walkId" value={walkId} />
+        <div className="space-y-1.5">
+          <Label htmlFor={`cancel-reason-${walkId}`}>Reason (optional)</Label>
+          <Textarea
+            id={`cancel-reason-${walkId}`}
+            name="reason"
+            rows={3}
+            maxLength={500}
+            placeholder="Weather, illness, not enough people…"
+          />
+        </div>
+        <FormError message={state && !state.ok ? state.error : null} />
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isPending} type="button">
+            Keep the walk
+          </AlertDialogCancel>
+          <Confirm />
+        </AlertDialogFooter>
+      </form>
+    </AlertDialogContent>
+  );
+}
+
 export function CancelWalkButton({
   walkId,
   attendanceCount,
@@ -35,17 +80,15 @@ export function CancelWalkButton({
   walkId: string;
   attendanceCount: number;
 }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    cancelWalk,
-    null,
-  );
   const [open, setOpen] = useState(false);
-  useActionToast(state, () => setOpen(false));
+  const [session, setSession] = useState(0);
 
   return (
     <AlertDialog
-      closeDisabled={isPending}
-      onOpenChange={preventDismissWhilePending(isPending, setOpen)}
+      onOpenChange={(next) => {
+        if (next) setSession((value) => value + 1);
+        setOpen(next);
+      }}
       open={open}
     >
       <AlertDialogTrigger asChild>
@@ -53,36 +96,14 @@ export function CancelWalkButton({
           Cancel walk
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent closeDisabled={isPending}>
-        <form action={action} className="space-y-4">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Cancel this walk?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {attendanceCount > 0
-                ? `${attendanceCount} ${attendanceCount === 1 ? "person has" : "people have"} already clocked in. Their records are kept, but the walk will show as cancelled and nobody else can clock in.`
-                : "The walk will show as cancelled and nobody will be able to clock in."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <input type="hidden" name="walkId" value={walkId} />
-          <div className="space-y-1.5">
-            <Label htmlFor={`cancel-reason-${walkId}`}>Reason (optional)</Label>
-            <Textarea
-              id={`cancel-reason-${walkId}`}
-              name="reason"
-              rows={3}
-              maxLength={500}
-              placeholder="Weather, illness, not enough people…"
-            />
-          </div>
-          <FormError message={state && !state.ok ? state.error : null} />
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending} type="button">
-              Keep the walk
-            </AlertDialogCancel>
-            <Confirm />
-          </AlertDialogFooter>
-        </form>
-      </AlertDialogContent>
+      {open ? (
+        <CancelWalkDialogForm
+          key={session}
+          attendanceCount={attendanceCount}
+          onClose={() => setOpen(false)}
+          walkId={walkId}
+        />
+      ) : null}
     </AlertDialog>
   );
 }

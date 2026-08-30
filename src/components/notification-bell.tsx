@@ -104,7 +104,7 @@ export function NotificationBell({
         </Button>
       </DrawerTrigger>
       <DrawerContent className="sm:max-w-md">
-        <DrawerHeader className="border-b pr-14">
+        <DrawerHeader className="border-b px-5 pb-4 pr-14 pt-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <DrawerTitle>Notices</DrawerTitle>
@@ -127,7 +127,7 @@ export function NotificationBell({
           </div>
         </DrawerHeader>
         {notices.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-muted-foreground">Nothing in the bell right now.</p>
+          <p className="px-5 py-8 text-sm text-muted-foreground">Nothing in the bell right now.</p>
         ) : (
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
             {notices.map((notice) => {
@@ -136,8 +136,8 @@ export function NotificationBell({
                 notice.kind === "PAGE" && notice.slug ? `/notices/${notice.slug}` : null;
 
               const content = (
-                <>
-                  <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-1.5">
                     {isUnread ? (
                       <Badge className="h-5 w-fit px-1.5 text-[10px]" variant="secondary">
                         New
@@ -148,22 +148,22 @@ export function NotificationBell({
                   <p className="text-muted-foreground text-xs">
                     Updated {formatDate(notice.updatedAt)}
                   </p>
-                  <p className="mt-1 whitespace-pre-wrap text-muted-foreground text-sm">
+                  <p className="whitespace-pre-wrap text-muted-foreground text-sm leading-relaxed">
                     {noticeBodyForBellDrawer(notice)}
                   </p>
                   {href ? (
-                    <p className="mt-2 flex items-center gap-1 text-xs font-medium text-foreground">
+                    <p className="flex items-center gap-1 pt-0.5 text-xs font-medium text-foreground">
                       Read full notice
                       <ChevronRight className="size-3.5" />
                     </p>
                   ) : null}
-                </>
+                </div>
               );
 
               if (href) {
                 return (
                   <Link
-                    className="block border-b px-4 py-3 last:border-0 hover:bg-muted/40"
+                    className="block border-b px-5 py-5 last:border-0 hover:bg-muted/40"
                     href={href}
                     key={notice.id}
                     onClick={() => markOneRead(notice.id)}
@@ -175,7 +175,7 @@ export function NotificationBell({
 
               return (
                 <button
-                  className="w-full border-b px-4 py-3 text-left last:border-0 hover:bg-muted/40"
+                  className="w-full border-b px-5 py-5 text-left last:border-0 hover:bg-muted/40"
                   key={notice.id}
                   onClick={() => markOneRead(notice.id)}
                   type="button"
@@ -186,7 +186,7 @@ export function NotificationBell({
             })}
           </div>
         )}
-        <DrawerFooter className="border-t">
+        <DrawerFooter className="border-t px-5 py-4">
           <Button asChild className="w-full" size="sm" variant="outline">
             <Link href="/notices" onClick={() => setOpen(false)}>
               Browse all notices

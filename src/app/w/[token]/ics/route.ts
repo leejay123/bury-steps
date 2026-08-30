@@ -13,6 +13,7 @@ export async function GET(
   const walk = await prisma.walk.findFirst({
     where: { OR: [{ token }, { slug: token }] },
     select: {
+      id: true,
       title: true,
       description: true,
       location: true,

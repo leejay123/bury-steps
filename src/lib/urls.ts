@@ -71,6 +71,25 @@ export function isTrustedAppUrl(value: string): boolean {
   }
 }
 
+/**
+ * Same-origin relative path for post-action redirects (e.g. after delete).
+ * Rejects protocol-relative `//evil.com` and other open-redirect shapes that
+ * pass a naive `startsWith("/")` check.
+ */
+export function safeAppPath(value: string): string | undefined {
+  const trimmed = value.trim();
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//") || trimmed.includes("\\")) {
+    return undefined;
+  }
+  try {
+    const url = new URL(trimmed, "https://bury-steps.invalid");
+    if (url.origin !== "https://bury-steps.invalid") return undefined;
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return undefined;
+  }
+}
+
 function firstString(value: string | string[] | undefined): string | undefined {
   if (typeof value === "string" && value.length > 0) return value;
   if (Array.isArray(value) && typeof value[0] === "string" && value[0].length > 0) {

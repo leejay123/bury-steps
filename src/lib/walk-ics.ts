@@ -2,6 +2,8 @@ import { appUrl } from "@/lib/urls";
 import { walkShareUrl } from "@/lib/walk-slug";
 
 type WalkIcsInput = {
+  /** Stable primary key — used in UID so calendars keep one event if the share token changes. */
+  id: string;
   title: string;
   description: string | null;
   location: string | null;
@@ -71,7 +73,7 @@ export function buildWalkIcs(walk: WalkIcsInput): string {
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     "BEGIN:VEVENT",
-    `UID:walk-${walk.token}@burysteps-walkinggroup.co.uk`,
+    `UID:walk-${walk.id}@burysteps-walkinggroup.co.uk`,
     `DTSTAMP:${icsUtc(new Date())}`,
     `DTSTART:${icsUtc(walk.startsAt)}`,
     `DTEND:${icsUtc(endsAt)}`,

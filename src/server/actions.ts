@@ -44,6 +44,7 @@ import {
   MAX_NOTICE_BELL_BODY,
   MAX_NOTICE_TEASER,
   MAX_NOTICE_PAGE_BODY,
+  WELCOME_NOTICE_SYSTEM_KEY,
   noticeCategorySlug,
   noticePageSlug,
   noticesForBell,
@@ -61,8 +62,10 @@ import {
   DEFAULT_FAQ_CATEGORIES,
   DEFAULT_HERO_SLIDE,
   DEFAULT_TESTIMONIALS,
+  DEFAULT_WELCOME_NOTICE,
 } from "@/lib/site-defaults";
 import { isResetConfirmWord } from "@/lib/site-reset";
+import { safeAppPath } from "@/lib/urls";
 
 /** Stable unguessable id for clock-in forms. Old /w/<token> links still work. */
 const makeToken = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 12);
@@ -117,6 +120,8 @@ const COUNT_LIMIT_LOCK_KEYS = {
   homepageFaqCategory: 900104,
   siteNotice: 900105,
   siteNoticeCategory: 900106,
+  lastAdmin: 900107,
+  journeyEvent: 900108,
 } as const;
 
 /**
@@ -562,48 +567,58 @@ export async function createJourneyEvent(
   }
 
   try {
+    await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.journeyEvent, async (tx) => {
+      const walk = await tx.walk.findUnique({
+        where: { id: parsed.data.walkId },
+        select: {
+          id: true,
+          token: true,
+          slug: true,
+          startsAt: true,
+          durationMins: true,
+          cancelledAt: true,
+          _count: { select: { journeyEvents: true } },
+        },
+      });
+      if (!walk) throw new Error("WALK_GONE");
+      if (!canOrganiserEditJourney(walk)) {
+        throw new LimitReachedError(
+          walk.cancelledAt
+            ? "Cancelled walks keep their journey, but you cannot add more."
+            : "Journey events can be added once the walk has started.",
+        );
+      }
+      if (walk._count.journeyEvents >= MAX_JOURNEY_EVENTS) {
+        throw new LimitReachedError(`You can keep up to ${MAX_JOURNEY_EVENTS} events on a walk.`);
+      }
+
+      await tx.walkJourneyEvent.create({
+        data: {
+          walkId: walk.id,
+          title: parsed.data.title,
+          body: parsed.data.body || null,
+          happenedAt: londonWallClockToUtc(parsed.data.happenedAt),
+          createdById: admin.id,
+        },
+      });
+
+      return walk;
+    });
+
     const walk = await prisma.walk.findUnique({
       where: { id: parsed.data.walkId },
-      select: {
-        id: true,
-        token: true,
-        slug: true,
-        startsAt: true,
-        durationMins: true,
-        cancelledAt: true,
-        _count: { select: { journeyEvents: true } },
-      },
+      select: { id: true, token: true, slug: true },
     });
-    if (!walk) return { ok: false, error: "That walk is no longer there." };
-    if (!canOrganiserEditJourney(walk)) {
-      return {
-        ok: false,
-        error: walk.cancelledAt
-          ? "Cancelled walks keep their journey, but you cannot add more."
-          : "Journey events can be added once the walk has started.",
-      };
+    if (walk) {
+      revalidatePath(`/admin/walks/${walk.id}`);
+      revalidateWalkShare(walk);
     }
-    if (walk._count.journeyEvents >= MAX_JOURNEY_EVENTS) {
-      return {
-        ok: false,
-        error: `You can keep up to ${MAX_JOURNEY_EVENTS} events on a walk.`,
-      };
-    }
-
-    await prisma.walkJourneyEvent.create({
-      data: {
-        walkId: walk.id,
-        title: parsed.data.title,
-        body: parsed.data.body || null,
-        happenedAt: londonWallClockToUtc(parsed.data.happenedAt),
-        createdById: admin.id,
-      },
-    });
-
-    revalidatePath(`/admin/walks/${walk.id}`);
-    revalidateWalkShare(walk);
     return { ok: true, message: "Event added to the journey." };
   } catch (err) {
+    if (err instanceof LimitReachedError) return { ok: false, error: err.message };
+    if (err instanceof Error && err.message === "WALK_GONE") {
+      return { ok: false, error: "That walk is no longer there." };
+    }
     return logActionError("createJourneyEvent", err);
   }
 }
@@ -756,69 +771,79 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
     slug: string | null;
     startsAt: Date;
     durationMins: number;
-    cancelledAt: Date | null;
-  } | null;
-  try {
-    walk = await prisma.walk.findUnique({
-      where: { token: parsed.data.token },
-      select: {
-        id: true,
-        token: true,
-        slug: true,
-        startsAt: true,
-        durationMins: true,
-        cancelledAt: true,
-      },
-    });
-  } catch (err) {
-    return logActionError("clockIn:lookup", err, "Could not clock you in right now. Try again.");
-  }
-  if (!walk) return { ok: false, error: "This walk link is not valid." };
-  if (walk.cancelledAt) return { ok: false, error: "This walk has been cancelled." };
-
-  const state = windowState(walk.startsAt, walk.durationMins);
-  if (state === "too-early") {
-    return { ok: false, error: "Clock-in opens an hour before the walk starts." };
-  }
-  if (state === "closed") {
-    return { ok: false, error: "Clock-in for this walk has closed. Speak to an organiser." };
-  }
-
-  const purgeAfter = new Date(
-    walk.startsAt.getTime() + CONDITIONS_RETENTION_DAYS * 24 * 60 * 60 * 1000,
-  );
-
-  const attendanceData = {
-    medicalAckAt: new Date(),
-    conditions: parsed.data.hasConditions === "yes" ? parsed.data.conditions! : null,
-    conditionsPurgeAfter: purgeAfter,
-    clockedOutAt: null,
-    clockedOutReason: null,
   };
 
   try {
-    // Try "clocking back in after an earlier clock-out" as a single
-    // conditional write first — at most one row can match, since clocking
-    // out is the only way to leave `clockedOutAt` non-null. If nothing
-    // matched, fall through to create. Either way this replaces a separate
-    // read-then-write with a single round trip that also does the write.
-    const reclockedIn = await prisma.attendance.updateMany({
-      where: { walkId: walk.id, userId: user.id, clockedOutAt: { not: null } },
-      data: { ...attendanceData, clockedInAt: new Date() },
+    const outcome = await prisma.$transaction(async (tx) => {
+      const rows = await tx.$queryRaw<
+        Array<{
+          id: string;
+          token: string;
+          slug: string | null;
+          startsAt: Date;
+          durationMins: number;
+          cancelledAt: Date | null;
+        }>
+      >`SELECT id, token, slug, "startsAt", "durationMins", "cancelledAt"
+        FROM "Walk" WHERE token = ${parsed.data.token} FOR UPDATE`;
+      const locked = rows[0];
+      if (!locked) return { ok: false as const, error: "This walk link is not valid." };
+      if (locked.cancelledAt) {
+        return { ok: false as const, error: "This walk has been cancelled." };
+      }
+
+      const state = windowState(locked.startsAt, locked.durationMins);
+      if (state === "too-early") {
+        return { ok: false as const, error: "Clock-in opens an hour before the walk starts." };
+      }
+      if (state === "closed") {
+        return {
+          ok: false as const,
+          error: "Clock-in for this walk has closed. Speak to an organiser.",
+        };
+      }
+
+      const purgeAfter = new Date(
+        locked.startsAt.getTime() + CONDITIONS_RETENTION_DAYS * 24 * 60 * 60 * 1000,
+      );
+      const attendanceData = {
+        medicalAckAt: new Date(),
+        conditions: parsed.data.hasConditions === "yes" ? parsed.data.conditions! : null,
+        conditionsPurgeAfter: purgeAfter,
+        clockedOutAt: null,
+        clockedOutReason: null,
+      };
+
+      const reclockedIn = await tx.attendance.updateMany({
+        where: { walkId: locked.id, userId: user.id, clockedOutAt: { not: null } },
+        data: { ...attendanceData, clockedInAt: new Date() },
+      });
+
+      if (reclockedIn.count === 0) {
+        await tx.attendance.create({
+          data: {
+            walkId: locked.id,
+            userId: user.id,
+            ...attendanceData,
+          },
+        });
+      }
+
+      return {
+        ok: true as const,
+        walk: {
+          id: locked.id,
+          token: locked.token,
+          slug: locked.slug,
+          startsAt: locked.startsAt,
+          durationMins: locked.durationMins,
+        },
+      };
     });
 
-    if (reclockedIn.count === 0) {
-      await prisma.attendance.create({
-        data: {
-          walkId: walk.id,
-          userId: user.id,
-          // clockedInAt is set by the database default — never by the browser.
-          ...attendanceData,
-        },
-      });
-    }
+    if (!outcome.ok) return { ok: false, error: outcome.error };
+    walk = outcome.walk;
   } catch (err) {
-    // P2002 = unique constraint violation, i.e. they already clocked in.
     if (isPrismaCode(err, "P2002")) {
       return { ok: false, error: "You are already clocked in for this walk." };
     }
@@ -1084,16 +1109,31 @@ export async function clockOut(_prev: ActionResult | null, formData: FormData): 
     return { ok: false, error: parsed.error.issues[0].message };
   }
 
-  let walk: { id: string; token: string; slug: string | null; startsAt: Date; durationMins: number } | null;
+  let walk: {
+    id: string;
+    token: string;
+    slug: string | null;
+    startsAt: Date;
+    durationMins: number;
+    cancelledAt: Date | null;
+  } | null;
   try {
     walk = await prisma.walk.findUnique({
       where: { token: parsed.data.token },
-      select: { id: true, token: true, slug: true, startsAt: true, durationMins: true },
+      select: {
+        id: true,
+        token: true,
+        slug: true,
+        startsAt: true,
+        durationMins: true,
+        cancelledAt: true,
+      },
     });
   } catch (err) {
     return logActionError("clockOut:lookup", err, "Could not clock you out right now. Try again.");
   }
   if (!walk) return { ok: false, error: "This walk link is not valid." };
+  if (walk.cancelledAt) return { ok: false, error: "This walk has been cancelled." };
 
   // Clocking out is for leaving early (or right at the end) while the walk
   // is still under way — once its window has fully closed there's nothing
@@ -1152,63 +1192,75 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
 
   const target = await prisma.user.findUnique({
     where: { id },
-    include: {
-      _count: {
-        select: {
-          walksCreated: true,
-          attendances: true,
-          accidentReports: true,
-          journeyEvents: true,
-        },
-      },
+    select: {
+      id: true,
+      clerkId: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      role: true,
     },
   });
   if (!target) return { ok: false, error: "That member is no longer in the group." };
-
-  if (target.role === "ADMIN") {
-    const adminCount = await prisma.user.count({ where: { role: "ADMIN" } });
-    if (adminCount <= 1) {
-      return { ok: false, error: "You cannot delete the last organiser." };
-    }
-  }
 
   // Do the database side first. It is transactional and fully reversible on
   // failure, unlike removing their Clerk login below — if this fails, we
   // want to bail out having changed nothing rather than leave someone with
   // a dead login but a database row that still says they're a member.
+  // Last-organiser check is inside the same advisory lock as demote so two
+  // concurrent deletes cannot leave the group with zero admins.
   try {
-    await prisma.$transaction(async (tx) => {
-      if (target._count.walksCreated > 0) {
+    await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.lastAdmin, async (tx) => {
+      const fresh = await tx.user.findUnique({
+        where: { id: target.id },
+        select: {
+          id: true,
+          role: true,
+          _count: {
+            select: {
+              walksCreated: true,
+              accidentReports: true,
+              journeyEvents: true,
+            },
+          },
+        },
+      });
+      if (!fresh) throw new Error("MEMBER_GONE");
+      if (fresh.role === "ADMIN") {
+        const adminCount = await tx.user.count({ where: { role: "ADMIN" } });
+        if (adminCount <= 1) throw new LimitReachedError("You cannot delete the last organiser.");
+      }
+      if (fresh._count.walksCreated > 0) {
         await tx.walk.updateMany({
-          where: { createdById: target.id },
+          where: { createdById: fresh.id },
           data: { createdById: admin.id },
         });
       }
-      // AccidentReport.createdBy is onDelete: Restrict, same as Walk.createdBy
-      // above — deleting someone who has ever filed a report would otherwise
-      // fail on that foreign key.
-      if (target._count.accidentReports > 0) {
+      if (fresh._count.accidentReports > 0) {
         await tx.accidentReport.updateMany({
-          where: { createdById: target.id },
+          where: { createdById: fresh.id },
           data: { createdById: admin.id },
         });
       }
-      // Journey beats are also Restrict — reassign before deleting the user.
-      if (target._count.journeyEvents > 0) {
+      if (fresh._count.journeyEvents > 0) {
         await tx.walkJourneyEvent.updateMany({
-          where: { createdById: target.id },
+          where: { createdById: fresh.id },
           data: { createdById: admin.id },
         });
       }
-      await tx.user.delete({ where: { id: target.id } });
+      await tx.user.delete({ where: { id: fresh.id } });
     });
   } catch (err) {
+    if (err instanceof LimitReachedError) return { ok: false, error: err.message };
+    if (err instanceof Error && err.message === "MEMBER_GONE") {
+      return { ok: false, error: "That member is no longer in the group." };
+    }
     console.error("deleteMember: database removal failed", err);
     return { ok: false, error: "Could not remove this member. Try again." };
   }
 
   const redirectTo = String(formData.get("redirectTo") ?? "").trim();
-  const href = redirectTo.startsWith("/") ? redirectTo : undefined;
+  const href = safeAppPath(redirectTo);
 
   const clerk = await clerkClient();
   try {
@@ -1279,16 +1331,24 @@ export async function setMemberRole(
     };
   }
 
-  if (role === "MEMBER" && target.role === "ADMIN") {
-    const adminCount = await prisma.user.count({ where: { role: "ADMIN" } });
-    if (adminCount <= 1) {
-      return { ok: false, error: "You cannot demote the last organiser." };
-    }
-  }
-
   try {
-    await prisma.user.update({ where: { id: target.id }, data: { role } });
+    await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.lastAdmin, async (tx) => {
+      const fresh = await tx.user.findUnique({ where: { id: target.id } });
+      if (!fresh) throw new Error("MEMBER_GONE");
+      if (fresh.role === role) return;
+      if (role === "MEMBER" && fresh.role === "ADMIN") {
+        const adminCount = await tx.user.count({ where: { role: "ADMIN" } });
+        if (adminCount <= 1) {
+          throw new LimitReachedError("You cannot demote the last organiser.");
+        }
+      }
+      await tx.user.update({ where: { id: fresh.id }, data: { role } });
+    });
   } catch (err) {
+    if (err instanceof LimitReachedError) return { ok: false, error: err.message };
+    if (err instanceof Error && err.message === "MEMBER_GONE") {
+      return { ok: false, error: "That member is no longer in the group." };
+    }
     return logActionError("setMemberRole", err, "Could not change their role. Try again.");
   }
 
@@ -2169,36 +2229,41 @@ export async function deleteSiteNoticeCategory(
   const id = String(formData.get("categoryId") ?? "");
   if (!id) return { ok: false, error: "No category selected." };
 
-  const category = await prisma.siteNoticeCategory.findUnique({
-    where: { id },
-    select: { id: true, _count: { select: { notices: true } } },
-  });
-  if (!category) return { ok: false, error: "That category is no longer there." };
-
-  const remaining = await prisma.siteNoticeCategory.count();
-  if (remaining <= 1) return { ok: false, error: "Keep at least one category." };
-  if (category._count.notices > 0) {
-    return { ok: false, error: "Move or remove the notices in this category first." };
-  }
-
   try {
-    await prisma.siteNoticeCategory.delete({ where: { id } });
-  } catch (err) {
-    return logActionError("deleteSiteNoticeCategory", err, "Could not remove that category. Try again.");
-  }
+    await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.siteNoticeCategory, async (tx) => {
+      const category = await tx.siteNoticeCategory.findUnique({
+        where: { id },
+        select: { id: true, _count: { select: { notices: true } } },
+      });
+      if (!category) throw new Error("CATEGORY_GONE");
 
-  try {
-    const leftover = await prisma.siteNoticeCategory.findMany({
-      orderBy: { sortOrder: "asc" },
-      select: { id: true },
+      const remaining = await tx.siteNoticeCategory.count();
+      if (remaining <= 1) {
+        throw new LimitReachedError("Keep at least one category.");
+      }
+      if (category._count.notices > 0) {
+        throw new LimitReachedError("Move or remove the notices in this category first.");
+      }
+
+      await tx.siteNoticeCategory.delete({ where: { id } });
+
+      const leftover = await tx.siteNoticeCategory.findMany({
+        orderBy: { sortOrder: "asc" },
+        select: { id: true },
+      });
+      for (const [index, row] of leftover.entries()) {
+        await tx.siteNoticeCategory.update({
+          where: { id: row.id },
+          data: { sortOrder: index },
+        });
+      }
     });
-    await Promise.all(
-      leftover.map((row, index) =>
-        prisma.siteNoticeCategory.update({ where: { id: row.id }, data: { sortOrder: index } }),
-      ),
-    );
   } catch (err) {
-    logActionError("deleteSiteNoticeCategory:resort", err);
+    if (err instanceof LimitReachedError) return { ok: false, error: err.message };
+    if (err instanceof Error && err.message === "CATEGORY_GONE") {
+      return { ok: false, error: "That category is no longer there." };
+    }
+    return logActionError("deleteSiteNoticeCategory", err, "Could not remove that category. Try again.");
   }
 
   revalidateNotices();
@@ -2460,38 +2525,41 @@ export async function deleteHomepageFaqCategory(
   const id = String(formData.get("categoryId") ?? "");
   if (!id) return { ok: false, error: "No category selected." };
 
-  const category = await prisma.homepageFaqCategory.findUnique({
-    where: { id },
-    select: { id: true, _count: { select: { faqs: true } } },
-  });
-  if (!category) return { ok: false, error: "That category is no longer there." };
-
-  const remaining = await prisma.homepageFaqCategory.count();
-  if (remaining <= 1) {
-    return { ok: false, error: "Keep at least one category." };
-  }
-  if (category._count.faqs > 0) {
-    return { ok: false, error: "Move or remove the FAQs in this category first." };
-  }
-
   try {
-    await prisma.homepageFaqCategory.delete({ where: { id } });
-  } catch (err) {
-    return logActionError("deleteHomepageFaqCategory", err, "Could not remove that category. Try again.");
-  }
+    await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.homepageFaqCategory, async (tx) => {
+      const category = await tx.homepageFaqCategory.findUnique({
+        where: { id },
+        select: { id: true, _count: { select: { faqs: true } } },
+      });
+      if (!category) throw new Error("CATEGORY_GONE");
 
-  try {
-    const leftover = await prisma.homepageFaqCategory.findMany({
-      orderBy: { sortOrder: "asc" },
-      select: { id: true },
+      const remaining = await tx.homepageFaqCategory.count();
+      if (remaining <= 1) {
+        throw new LimitReachedError("Keep at least one category.");
+      }
+      if (category._count.faqs > 0) {
+        throw new LimitReachedError("Move or remove the FAQs in this category first.");
+      }
+
+      await tx.homepageFaqCategory.delete({ where: { id } });
+
+      const leftover = await tx.homepageFaqCategory.findMany({
+        orderBy: { sortOrder: "asc" },
+        select: { id: true },
+      });
+      for (const [index, row] of leftover.entries()) {
+        await tx.homepageFaqCategory.update({
+          where: { id: row.id },
+          data: { sortOrder: index },
+        });
+      }
     });
-    await prisma.$transaction(
-      leftover.map((row, index) =>
-        prisma.homepageFaqCategory.update({ where: { id: row.id }, data: { sortOrder: index } }),
-      ),
-    );
   } catch (err) {
-    logActionError("deleteHomepageFaqCategory:resort", err);
+    if (err instanceof LimitReachedError) return { ok: false, error: err.message };
+    if (err instanceof Error && err.message === "CATEGORY_GONE") {
+      return { ok: false, error: "That category is no longer there." };
+    }
+    return logActionError("deleteHomepageFaqCategory", err, "Could not remove that category. Try again.");
   }
 
   revalidateHomepage();
@@ -2762,6 +2830,20 @@ export async function resetSiteToDefault(
           slug: "general",
           label: "General",
           sortOrder: 0,
+        },
+      });
+      await tx.siteNotice.create({
+        data: {
+          id: DEFAULT_WELCOME_NOTICE.id,
+          title: DEFAULT_WELCOME_NOTICE.title,
+          body: DEFAULT_WELCOME_NOTICE.body,
+          kind: "BELL",
+          audience: "MEMBERS",
+          slug: null,
+          pageBody: null,
+          categoryId: null,
+          systemKey: WELCOME_NOTICE_SYSTEM_KEY,
+          enabled: true,
         },
       });
       await tx.homepageFaq.deleteMany();

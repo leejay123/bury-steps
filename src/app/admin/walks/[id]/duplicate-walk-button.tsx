@@ -1,10 +1,10 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Copy } from "lucide-react";
-import { duplicateWalk, type ActionResult } from "@/server/actions";
-import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
+import { duplicateWalk } from "@/server/actions";
+import { preventDismissWhilePending, useNotifyActionState } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,12 +28,8 @@ function Confirm() {
 }
 
 export function DuplicateWalkButton({ walkId }: { walkId: string }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    duplicateWalk,
-    null,
-  );
   const [open, setOpen] = useState(false);
-  useActionToast(state, () => setOpen(false));
+  const [state, action, isPending] = useNotifyActionState(duplicateWalk, () => setOpen(false));
 
   // Once the action returns, stop blocking dismiss — otherwise a lagging
   // pending flag keeps the dialog on "Duplicating…" and can freeze the page

@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
-import { reopenWalk, type ActionResult } from "@/server/actions";
-import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
+import { reopenWalk } from "@/server/actions";
+import { preventDismissWhilePending, useNotifyActionState } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,12 +27,8 @@ function Confirm() {
 }
 
 export function ReopenWalkButton({ walkId }: { walkId: string }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    reopenWalk,
-    null,
-  );
   const [open, setOpen] = useState(false);
-  useActionToast(state, () => setOpen(false));
+  const [state, action, isPending] = useNotifyActionState(reopenWalk, () => setOpen(false));
 
   return (
     <AlertDialog

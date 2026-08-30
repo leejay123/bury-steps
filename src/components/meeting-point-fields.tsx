@@ -3,6 +3,7 @@
 import { useState, type KeyboardEvent } from "react";
 import { searchWalkPlaces } from "@/server/actions";
 import type { GeoPoint, PlaceHit } from "@/lib/geocode";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -119,7 +120,7 @@ export function MeetingPointFields({
       <input name="latitude" type="hidden" value={pin ? String(pin.lat) : ""} />
       <input name="longitude" type="hidden" value={pin ? String(pin.lng) : ""} />
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <FormError message={error} /> : null}
 
       {places && places.length > 0 ? (
         <fieldset className="space-y-2">

@@ -31,7 +31,7 @@ describe("walkSlugBase", () => {
 
 describe("walkSharePath", () => {
   it("prefers the readable slug", () => {
-    expect(walkSharePath({ token: "ykbh6b76v65d", slug: "burrs" })).toBe("/w/burrs");
+    expect(walkSharePath({ token: "ykbh6b76v65d", slug: "burrs-x7k2m9" })).toBe("/w/burrs-x7k2m9");
   });
 
   it("falls back to the token before a slug exists", () => {

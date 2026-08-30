@@ -20,7 +20,7 @@ import {
   type FaqCategoryView,
   type FaqView,
 } from "@/lib/faqs";
-import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
+import { useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { EmptyState } from "@/components/empty-state";
 import { ReorderButtons, useReorderableIds } from "@/components/sortable-rows";
@@ -275,20 +275,15 @@ function RemoveFaqButton({
   onRemoved: () => void;
   question: string;
 }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    deleteHomepageFaq,
-    null,
-  );
   const [open, setOpen] = useState(false);
-  useActionToast(state, () => {
-    setOpen(false);
-    onRemoved();
-  });
+  const [session, setSession] = useState(0);
 
   return (
     <AlertDialog
-      closeDisabled={isPending}
-      onOpenChange={preventDismissWhilePending(isPending, setOpen)}
+      onOpenChange={(next) => {
+        if (next) setSession((value) => value + 1);
+        setOpen(next);
+      }}
       open={open}
     >
       <AlertDialogTrigger asChild>
@@ -296,25 +291,51 @@ function RemoveFaqButton({
           Remove
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent closeDisabled={isPending}>
-        <form action={action} className="flex flex-col gap-4">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove this FAQ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              “{question}” will come off the public homepage.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <input name="faqId" type="hidden" value={faqId} />
-          <FormError message={state && !state.ok ? state.error : null} />
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending} type="button">
-              Keep it
-            </AlertDialogCancel>
-            <RemoveConfirm />
-          </AlertDialogFooter>
-        </form>
-      </AlertDialogContent>
+      {open ? (
+        <RemoveFaqDialogForm
+          key={session}
+          faqId={faqId}
+          onClose={() => {
+            setOpen(false);
+            onRemoved();
+          }}
+          question={question}
+        />
+      ) : null}
     </AlertDialog>
+  );
+}
+
+function RemoveFaqDialogForm({
+  faqId,
+  onClose,
+  question,
+}: {
+  faqId: string;
+  onClose: () => void;
+  question: string;
+}) {
+  const [state, action, isPending] = useNotifyActionState(deleteHomepageFaq, onClose);
+
+  return (
+    <AlertDialogContent closeDisabled={isPending}>
+      <form action={action} className="flex flex-col gap-4">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remove this FAQ?</AlertDialogTitle>
+          <AlertDialogDescription>
+            “{question}” will come off the public homepage.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <input name="faqId" type="hidden" value={faqId} />
+        <FormError message={state && !state.ok ? state.error : null} />
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isPending} type="button">
+            Keep it
+          </AlertDialogCancel>
+          <RemoveConfirm />
+        </AlertDialogFooter>
+      </form>
+    </AlertDialogContent>
   );
 }
 
@@ -423,12 +444,8 @@ function RemoveCategoryButton({
   category: FaqCategoryView;
   onlyCategory: boolean;
 }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    deleteHomepageFaqCategory,
-    null,
-  );
   const [open, setOpen] = useState(false);
-  useActionToast(state, () => setOpen(false));
+  const [session, setSession] = useState(0);
 
   const blockedReason = onlyCategory
     ? "Keep at least one category."
@@ -453,8 +470,10 @@ function RemoveCategoryButton({
 
   return (
     <AlertDialog
-      closeDisabled={isPending}
-      onOpenChange={preventDismissWhilePending(isPending, setOpen)}
+      onOpenChange={(next) => {
+        if (next) setSession((value) => value + 1);
+        setOpen(next);
+      }}
       open={open}
     >
       <AlertDialogTrigger asChild>
@@ -462,25 +481,48 @@ function RemoveCategoryButton({
           Remove
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent closeDisabled={isPending}>
-        <form action={action} className="flex flex-col gap-4">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove this category?</AlertDialogTitle>
-            <AlertDialogDescription>
-              “{category.label}” will come off the FAQ filters. You can add it again later.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <input name="categoryId" type="hidden" value={category.id} />
-          <FormError message={state && !state.ok ? state.error : null} />
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending} type="button">
-              Keep it
-            </AlertDialogCancel>
-            <RemoveConfirm />
-          </AlertDialogFooter>
-        </form>
-      </AlertDialogContent>
+      {open ? (
+        <RemoveFaqCategoryDialogForm
+          key={session}
+          categoryId={category.id}
+          label={category.label}
+          onClose={() => setOpen(false)}
+        />
+      ) : null}
     </AlertDialog>
+  );
+}
+
+function RemoveFaqCategoryDialogForm({
+  categoryId,
+  label,
+  onClose,
+}: {
+  categoryId: string;
+  label: string;
+  onClose: () => void;
+}) {
+  const [state, action, isPending] = useNotifyActionState(deleteHomepageFaqCategory, onClose);
+
+  return (
+    <AlertDialogContent closeDisabled={isPending}>
+      <form action={action} className="flex flex-col gap-4">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remove this category?</AlertDialogTitle>
+          <AlertDialogDescription>
+            “{label}” will come off the FAQ filters. You can add it again later.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <input name="categoryId" type="hidden" value={categoryId} />
+        <FormError message={state && !state.ok ? state.error : null} />
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isPending} type="button">
+            Keep it
+          </AlertDialogCancel>
+          <RemoveConfirm />
+        </AlertDialogFooter>
+      </form>
+    </AlertDialogContent>
   );
 }
 

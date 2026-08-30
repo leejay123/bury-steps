@@ -12,7 +12,7 @@ import {
   type ActionResult,
 } from "@/server/actions";
 import type { SlideView } from "@/lib/slides";
-import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
+import { preventDismissWhilePending, useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { EmptyState } from "@/components/empty-state";
@@ -173,12 +173,8 @@ function RemoveSlideButton({
   slideId: string;
   title: string;
 }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    deleteHomepageSlide,
-    null,
-  );
   const [open, setOpen] = useState(false);
-  useActionToast(state, () => {
+  const [state, action, isPending] = useNotifyActionState(deleteHomepageSlide, () => {
     setOpen(false);
     onRemoved();
   });

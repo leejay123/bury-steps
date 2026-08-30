@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Trash2 } from "lucide-react";
 import {
   createJourneyEvent,
   deleteJourneyEvent,
@@ -16,7 +16,7 @@ import {
   MAX_JOURNEY_TITLE,
   type JourneyEventView,
 } from "@/lib/walk-journey";
-import { useActionToast } from "@/hooks/use-action-toast";
+import { useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { FormError } from "@/components/form-error";
 import { WalkJourneyDrawer } from "@/components/walk-journey-drawer";
@@ -25,7 +25,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { DataList, DataListBody, DataListItem } from "@/components/data-list";
+import {
+  DataList,
+  DataListActions,
+  DataListBody,
+  DataListItem,
+  DataListItemMain,
+  dataListActionsStackClassName,
+  dataListItemStackClassName,
+} from "@/components/data-list";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   Drawer,
   DrawerContent,
@@ -44,12 +62,86 @@ function Submit({ label, pendingLabel }: { label: string; pendingLabel: string }
   );
 }
 
-function RemoveSubmit() {
+function RemoveConfirm() {
   const { pending } = useFormStatus();
   return (
     <Button disabled={pending} type="submit" variant="destructive">
       {pending ? "Removing…" : "Remove"}
     </Button>
+  );
+}
+
+function RemoveJourneyEventButton({
+  eventId,
+  onRemoved,
+  title,
+}: {
+  eventId: string;
+  onRemoved: () => void;
+  title: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [session, setSession] = useState(0);
+
+  return (
+    <AlertDialog
+      onOpenChange={(next) => {
+        if (next) setSession((value) => value + 1);
+        setOpen(next);
+      }}
+      open={open}
+    >
+      <AlertDialogTrigger asChild>
+        <Button aria-label={`Remove ${title}`} size="xs" variant="destructive">
+          <Trash2 data-icon="inline-start" />
+          Remove
+        </Button>
+      </AlertDialogTrigger>
+      {open ? (
+        <RemoveJourneyEventDialogForm
+          key={session}
+          eventId={eventId}
+          onClose={() => {
+            setOpen(false);
+            onRemoved();
+          }}
+          title={title}
+        />
+      ) : null}
+    </AlertDialog>
+  );
+}
+
+function RemoveJourneyEventDialogForm({
+  eventId,
+  onClose,
+  title,
+}: {
+  eventId: string;
+  onClose: () => void;
+  title: string;
+}) {
+  const [state, action, isPending] = useNotifyActionState(deleteJourneyEvent, onClose);
+
+  return (
+    <AlertDialogContent closeDisabled={isPending}>
+      <form action={action}>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remove this event?</AlertDialogTitle>
+          <AlertDialogDescription>
+            “{title}” will be deleted from the journey. This cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <input name="eventId" type="hidden" value={eventId} />
+        <FormError message={state && !state.ok ? state.error : null} />
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isPending} type="button">
+            Keep it
+          </AlertDialogCancel>
+          <RemoveConfirm />
+        </AlertDialogFooter>
+      </form>
+    </AlertDialogContent>
   );
 }
 
@@ -75,14 +167,9 @@ export function WalkJourneyManager({
     updateJourneyEvent,
     null,
   );
-  const [deleteState, deleteAction, deletePending] = useActionState<ActionResult | null, FormData>(
-    deleteJourneyEvent,
-    null,
-  );
-  const pending = createPending || updatePending || deletePending;
+  const pending = createPending || updatePending;
   useActionToast(createState, () => setMode(null));
   useActionToast(updateState, () => setMode(null));
-  useActionToast(deleteState, () => setMode(null));
 
   const editing = mode?.type === "edit" ? mode.event : null;
   const formState = editing ? updateState : createState;
@@ -120,18 +207,35 @@ export function WalkJourneyManager({
       ) : canEdit ? (
         <DataList>
           {events.map((event) => (
-            <DataListItem key={event.id} onClick={() => setMode({ type: "edit", event })}>
-              <DataListBody>
-                <p className="font-medium">{event.title}</p>
-                <p className="text-sm text-muted-foreground">
-                  {new Date(event.happenedAt).toLocaleTimeString("en-GB", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    timeZone: "Europe/London",
-                  })}
-                </p>
-              </DataListBody>
-              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+            <DataListItem
+              className={dataListItemStackClassName}
+              key={event.id}
+              onClick={() => setMode({ type: "edit", event })}
+            >
+              <DataListItemMain>
+                <DataListBody>
+                  <p className="font-medium">{event.title}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(event.happenedAt).toLocaleTimeString("en-GB", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      timeZone: "Europe/London",
+                    })}
+                  </p>
+                </DataListBody>
+                <ChevronRight className="mt-1 size-4 shrink-0 text-muted-foreground sm:mt-0" />
+              </DataListItemMain>
+              <DataListActions className={dataListActionsStackClassName}>
+                <RemoveJourneyEventButton
+                  eventId={event.id}
+                  onRemoved={() =>
+                    setMode((current) =>
+                      current?.type === "edit" && current.event.id === event.id ? null : current,
+                    )
+                  }
+                  title={event.title}
+                />
+              </DataListActions>
             </DataListItem>
           ))}
         </DataList>
@@ -152,7 +256,11 @@ export function WalkJourneyManager({
               Title and optional notes. Time is UK time on this walk’s day.
             </DrawerDescription>
           </DrawerHeader>
-          <form action={editing ? updateAction : createAction} className="flex flex-col gap-4 px-4">
+          <form
+            action={editing ? updateAction : createAction}
+            className="flex flex-col gap-4 px-4"
+            key={editing?.id ?? "add"}
+          >
             <input name="walkId" type="hidden" value={walkId} />
             {editing ? <input name="eventId" type="hidden" value={editing.id} /> : null}
             <div className="flex flex-col gap-1.5">
@@ -200,15 +308,6 @@ export function WalkJourneyManager({
               />
             </DrawerFooter>
           </form>
-          {editing ? (
-            <form action={deleteAction} className="border-t px-4 pt-4">
-              <input name="eventId" type="hidden" value={editing.id} />
-              <FormError message={deleteState && !deleteState.ok ? deleteState.error : null} />
-              <DrawerFooter className="px-0">
-                <RemoveSubmit />
-              </DrawerFooter>
-            </form>
-          ) : null}
         </DrawerContent>
       </Drawer>
     </section>

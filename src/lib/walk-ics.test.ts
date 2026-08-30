@@ -4,6 +4,7 @@ import { buildWalkIcs, walkIcsFilename } from "./walk-ics";
 describe("buildWalkIcs", () => {
   it("emits a VEVENT with UTC times and the share URL", () => {
     const ics = buildWalkIcs({
+      id: "cmwalkics01",
       title: "Burrs loop",
       description: "Easy pace.\nBring water.",
       location: "Visitor centre",
@@ -11,7 +12,7 @@ describe("buildWalkIcs", () => {
       startsAt: new Date("2026-08-30T10:00:00.000Z"),
       durationMins: 90,
       token: "abc123token",
-      slug: "burrs",
+      slug: "burrs-x7k2m9",
       cancelledAt: null,
     });
 
@@ -22,13 +23,14 @@ describe("buildWalkIcs", () => {
     expect(ics).toContain("SUMMARY:Burrs loop");
     expect(ics).toContain("LOCATION:Visitor centre\\, BL9 1AA");
     expect(ics).toContain("Easy pace.\\nBring water.");
-    expect(ics).toContain("UID:walk-abc123token@burysteps-walkinggroup.co.uk");
-    expect(ics).toMatch(/URL:https?:\/\/.+\/w\/burrs/);
+    expect(ics).toContain("UID:walk-cmwalkics01@burysteps-walkinggroup.co.uk");
+    expect(ics).toMatch(/URL:https?:\/\/.+\/w\/burrs-x7k2m9/);
     expect(ics.endsWith("\r\n")).toBe(true);
   });
 
   it("prefixes cancelled walks in the summary", () => {
     const ics = buildWalkIcs({
+      id: "cmwalkics02",
       title: "Rain check",
       description: null,
       location: null,

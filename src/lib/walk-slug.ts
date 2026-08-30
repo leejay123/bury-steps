@@ -1,8 +1,11 @@
+import { customAlphabet } from "nanoid";
 import { prisma } from "@/lib/db";
 
 const TITLE_SLUG_MAX = 48;
 const NAME_WORD_MAX = 12;
 const SKIP_WORDS = new Set(["the", "a", "an", "and", "of", "at", "to", "from"]);
+/** Unguessable suffix so public /w/{slug} links cannot be enumerated from place names. */
+const slugSuffix = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 6);
 
 /** Lowercase hyphenated title, letters and digits only. */
 export function slugifyWalkTitle(title: string): string {
@@ -23,7 +26,7 @@ function shortWalkName(title: string): string {
   return word ? word.slice(0, NAME_WORD_MAX) : "";
 }
 
-/** Short share slug: “burrs”. First place word only — no date. */
+/** Short share slug base: “burrs”. First place word only — no date. */
 export function walkSlugBase(title: string): string {
   return shortWalkName(title) || "walk";
 }
@@ -39,11 +42,14 @@ export function walkShareUrl(
   return `${origin}${walkSharePath(walk)}`;
 }
 
-/** First unused slug for this title. Same place again becomes burrs-2. */
+/**
+ * Readable-but-unguessable share slug: `burrs-x7k2m9`. Place word for humans;
+ * random suffix so guests cannot enumerate walks from common titles.
+ */
 export async function allocateWalkSlug(title: string, excludeId?: string): Promise<string> {
   const base = walkSlugBase(title);
   for (let n = 0; n < 25; n++) {
-    const slug = n === 0 ? base : `${base}-${n + 1}`;
+    const slug = `${base}-${slugSuffix()}`;
     const taken = await prisma.walk.findFirst({
       where: {
         slug,

@@ -1,29 +1,74 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useActionState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { ActionResult } from "@/server/actions";
 import { unlockIdleDocument } from "@/components/overlay-root";
 import { setFlashToast } from "@/lib/flash-toast";
+import { preventDismissWhilePending } from "@/hooks/prevent-dismiss";
+
+export { preventDismissWhilePending };
+
+type ServerAction = (
+  prev: ActionResult | null,
+  formData: FormData,
+) => Promise<ActionResult>;
 
 /**
- * Shared "toast the result, then refresh the page's server data" pattern
- * used by every admin manager (FAQs, slides, testimonials, notices,
- * reports) after an add/edit `useActionState` action settles. Centralising
- * it means the `router.refresh()` call can't be silently dropped again when
- * a new manager is copied from an existing one.
- *
- * Close the dialog first, then toast, then refresh on the next tick. A
- * refresh in the same turn as the success state can leave `useFormStatus`
- * pending, and Radix then treats our `setOpen(false)` as a dismiss-during-
- * save and opens the dialog again.
- *
- * Navigating away: never `router.push` / `router.replace` inside `onOk`.
- * Return `href` on the ActionResult instead. Soft navigation can race a
- * deleted page into not-found, so we hard-assign — and stash the success
- * message in sessionStorage so Sonner can replay it on the next page
- * (a live toast dies with the full reload).
+ * Apply toast / redirect as soon as the server action returns — before React
+ * re-renders from revalidation. If we wait for a useEffect, the form can
+ * already be unmounted (e.g. remove walk → not-found on the same URL, or
+ * cancel walk → Cancel button swapped for Reopen), and the toast/redirect
+ * never runs.
+ */
+export function notifyActionResult(result: ActionResult, onOk?: () => void) {
+  if (result.ok) {
+    onOk?.();
+    unlockIdleDocument();
+    if (result.href) {
+      setFlashToast({
+        type: "success",
+        message: result.message ?? "Saved.",
+      });
+      window.location.assign(result.href);
+      return;
+    }
+    toast.success(result.message ?? "Saved.");
+    return;
+  }
+  toast.error(result.error);
+}
+
+/**
+ * useActionState + immediate notify. Prefer this over useActionToast whenever
+ * success may remove this component from the tree (delete, cancel/reopen swap,
+ * redirect-away).
+ */
+export function useNotifyActionState(action: ServerAction, onOk?: () => void) {
+  const router = useRouter();
+  const onOkRef = useRef(onOk);
+  onOkRef.current = onOk;
+  const actionRef = useRef(action);
+  actionRef.current = action;
+
+  const wrapped = useCallback(async (prev: ActionResult | null, formData: FormData) => {
+    const result = await actionRef.current(prev, formData);
+    notifyActionResult(result, () => onOkRef.current?.());
+    if (result.ok && !result.href) {
+      // Server already revalidated; refresh so siblings that stayed mounted update.
+      queueMicrotask(() => router.refresh());
+    }
+    return result;
+  }, [router]);
+
+  return useActionState<ActionResult | null, FormData>(wrapped, null);
+}
+
+/**
+ * Shared "toast the result, then refresh" for forms that stay mounted after
+ * success. Do not use when success unmounts this component — use
+ * useNotifyActionState instead (effect never runs if we are gone).
  */
 export function useActionToast(state: ActionResult | null, onOk?: () => void) {
   const router = useRouter();
@@ -51,21 +96,4 @@ export function useActionToast(state: ActionResult | null, onOk?: () => void) {
     }
     toast.error(state.error);
   }, [router, state]);
-}
-
-/**
- * Block X / Escape / overlay dismiss while a save is in flight, without
- * reopening the dialog after a successful close (`setOpen(false)` still
- * fires Radix `onOpenChange(false)` while pending can be true).
- */
-export function preventDismissWhilePending(
-  isPending: boolean,
-  setOpen: (open: boolean) => void,
-  onClose?: () => void,
-) {
-  return (next: boolean) => {
-    if (isPending && !next) return;
-    setOpen(next);
-    if (!next) onClose?.();
-  };
 }

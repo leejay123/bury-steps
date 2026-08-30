@@ -157,8 +157,8 @@ export function OrganiserGuide() {
                 <li>
                   Choose Create walk. The start must still be in the future — you cannot create a
                   1pm walk at 7pm the same day. A short share link is generated from the first word
-                  of the title, for example <code>/w/burrs</code>. Two walks from the same place get{" "}
-                  <code>-2</code> on the end.
+                  of the title plus a random code, for example <code>/w/burrs-x7k2m9</code>. That
+                  keeps links readable without being guessable from the place name alone.
                 </li>
               </Steps>
               <p className="font-medium text-foreground">Share the walk</p>
@@ -258,10 +258,11 @@ export function OrganiserGuide() {
               <p>
                 <strong>Journey</strong> is the story of the walk — short timed events (a cafe stop,
                 a viewpoint) with an optional note. It sits at the bottom of the organiser walk
-                page. Add events once the walk has started, including after Completed. Use{" "}
-                <strong>View journey</strong> to open the animated timeline in a drawer — members
-                get the same button at the top of the walk link. Up to 20 events. A cancelled walk
-                keeps what you already wrote, but you cannot add more.
+                page. Add events once the walk has started, including after Completed. Tap a row to
+                edit; <strong>Remove</strong> on the list asks you to confirm, same as notices and
+                reports. Use <strong>View journey</strong> to open the animated timeline in a
+                drawer — members get the same button at the top of the walk link. Up to 20 events.
+                A cancelled walk keeps what you already wrote, but you cannot add more.
               </p>
               <p>
                 <strong>Add someone</strong> on that attendance section is for a member who was
@@ -692,7 +693,7 @@ export function OrganiserGuide() {
                 <Link href="/privacy-policy">Privacy Policy</Link>.
               </p>
               <p>
-                Pasting a link to the homepage or a walk (<code>/w/burrs</code>) into WhatsApp,
+                Pasting a link to the homepage or a walk (<code>/w/burrs-x7k2m9</code>) into WhatsApp,
                 Messenger, or similar shows a preview card with the site name and, for a walk
                 link, that walk’s own title and date. Opening the walk link without an account
                 shows the meeting point on a map (and the postcode if the organiser added one), with

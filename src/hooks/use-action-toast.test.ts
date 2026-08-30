@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { preventDismissWhilePending } from "./use-action-toast";
+import { preventDismissWhilePending } from "./prevent-dismiss";
 
 describe("preventDismissWhilePending", () => {
   it("ignores a close while the save is in flight", () => {

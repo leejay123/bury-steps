@@ -57,14 +57,30 @@ export async function generateMetadata({
   const walk = await getWalkByShareKey(token);
   if (!walk) return { title: "Walk not found — Bury Steps Walking Group" };
 
-  const when = formatWalkDate(walk.startsAt);
-  const meeting = meetingPointLabel(walk.location, walk.postcode);
-  const title = `${walk.title} — Bury Steps Walking Group`;
   const status = walkStatus({
     cancelledAt: walk.cancelledAt,
     durationMins: walk.durationMins,
     startsAt: walk.startsAt,
   });
+
+  // Match page visibility: non-organisers get a 404 for cancelled walks, so
+  // metadata must not leak the title or schedule into link previews.
+  if (status === "cancelled") {
+    const user = await getOptionalUser();
+    if (user?.role !== "ADMIN") {
+      return {
+        title: "Walk not found — Bury Steps Walking Group",
+        robots: { index: false, follow: false },
+      };
+    }
+  }
+
+  const when = formatWalkDate(walk.startsAt);
+  const meeting = meetingPointLabel(walk.location, walk.postcode);
+  const title =
+    status === "cancelled"
+      ? `Cancelled: ${walk.title} — Bury Steps Walking Group`
+      : `${walk.title} — Bury Steps Walking Group`;
   const description =
     status === "cancelled"
       ? `Cancelled. Was ${when}${meeting ? ` at ${meeting}` : ""}.`

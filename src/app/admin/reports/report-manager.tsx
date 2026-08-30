@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { ChevronRight, ClipboardList, Printer, Search, Trash2 } from "lucide-react";
 import {
@@ -14,8 +14,9 @@ import { DateTimePicker } from "@/components/date-time-picker";
 import { EmptyState } from "@/components/empty-state";
 import { DataList, DataListActions, DataListBody, DataListItem, DataListItemMain, dataListActionsStackClassName, dataListItemStackClassName } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
+import { usePagedList } from "@/hooks/use-paged-list";
 import { useUrlListState } from "@/hooks/use-url-list-state";
-import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
+import { useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -284,17 +285,15 @@ function RemoveReportConfirm() {
 }
 
 function RemoveButton({ reportId, title }: { reportId: string; title: string }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    deleteAccidentReport,
-    null,
-  );
   const [open, setOpen] = useState(false);
-  useActionToast(state, () => setOpen(false));
+  const [session, setSession] = useState(0);
 
   return (
     <AlertDialog
-      closeDisabled={isPending}
-      onOpenChange={preventDismissWhilePending(isPending, setOpen)}
+      onOpenChange={(next) => {
+        if (next) setSession((value) => value + 1);
+        setOpen(next);
+      }}
       open={open}
     >
       <AlertDialogTrigger asChild>
@@ -303,26 +302,65 @@ function RemoveButton({ reportId, title }: { reportId: string; title: string }) 
           Remove
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent closeDisabled={isPending}>
-        <form action={action}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove this report?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {title} will be deleted. This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <input name="reportId" type="hidden" value={reportId} />
-          <FormError message={state && !state.ok ? state.error : null} />
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending} type="button">
-              Keep it
-            </AlertDialogCancel>
-            <RemoveReportConfirm />
-          </AlertDialogFooter>
-        </form>
-      </AlertDialogContent>
+      {open ? (
+        <RemoveReportDialogForm
+          key={session}
+          onClose={() => setOpen(false)}
+          reportId={reportId}
+          title={title}
+        />
+      ) : null}
     </AlertDialog>
   );
+}
+
+function RemoveReportDialogForm({
+  onClose,
+  reportId,
+  title,
+}: {
+  onClose: () => void;
+  reportId: string;
+  title: string;
+}) {
+  const [state, action, isPending] = useNotifyActionState(deleteAccidentReport, onClose);
+
+  return (
+    <AlertDialogContent closeDisabled={isPending}>
+      <form action={action}>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remove this report?</AlertDialogTitle>
+          <AlertDialogDescription>
+            {title} will be deleted. This cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <input name="reportId" type="hidden" value={reportId} />
+        <FormError message={state && !state.ok ? state.error : null} />
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isPending} type="button">
+            Keep it
+          </AlertDialogCancel>
+          <RemoveReportConfirm />
+        </AlertDialogFooter>
+      </form>
+    </AlertDialogContent>
+  );
+}
+
+function matchesReportQuery(report: ReportView, query: string) {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return true;
+  const haystack = [
+    report.whatHappened,
+    report.whoInvolved,
+    report.whatWeDid,
+    report.organiserNotes ?? "",
+    report.walkTitle ?? "",
+    report.walkLocation ?? "",
+  ]
+    .join("\n")
+    .toLowerCase();
+  return haystack.includes(needle);
 }
 
 export function AccidentReportManager({
@@ -330,29 +368,27 @@ export function AccidentReportManager({
   walks,
   hasAnyReports,
   linkFilter,
-  page,
-  pageCount,
-  pageSize,
   sortOrder,
-  total,
 }: {
-  /** Already the current page's rows, filtered and paginated on the server. */
+  /** Rows for the current link/sort filters — search is client-only (no PII in the URL). */
   reports: ReportView[];
   walks: WalkOption[];
   hasAnyReports: boolean;
   linkFilter: "all" | "linked" | "unlinked";
-  page: number;
-  pageCount: number;
-  pageSize: number;
   sortOrder: "desc" | "asc";
-  total: number;
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
   const [isPending, setIsPending] = useState(false);
   const viewing = mode?.type === "view" ? mode.report : null;
   const editing = mode?.type === "edit" ? mode.report : null;
   const listRef = useRef<HTMLDivElement>(null);
-  const { query, setQuery, setPage, setFilter, isPending: searchPending } = useUrlListState();
+  // Keep link/sort in the URL; never sync the free-text search (who/what PII).
+  const { query, setQuery, setFilter } = useUrlListState({ syncQueryToUrl: false });
+  const filtered = useMemo(
+    () => reports.filter((report) => matchesReportQuery(report, query)),
+    [query, reports],
+  );
+  const paging = usePagedList(filtered, { resetKey: `${linkFilter}:${sortOrder}:${query}` });
 
   return (
     <div className="flex flex-col gap-4" ref={listRef}>
@@ -414,7 +450,7 @@ export function AccidentReportManager({
           icon={ClipboardList}
           title="No accident reports yet"
         />
-      ) : reports.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <EmptyState
           description="Try a different walk, name, or detail from the write-up."
           icon={Search}
@@ -422,8 +458,8 @@ export function AccidentReportManager({
         />
       ) : (
         <>
-          <DataList aria-busy={searchPending} className={searchPending ? "opacity-60" : undefined}>
-            {reports.map((report) => {
+          <DataList>
+            {paging.paged.map((report) => {
             const at = new Date(report.happenedAt);
             return (
               <DataListItem
@@ -465,12 +501,12 @@ export function AccidentReportManager({
           </DataList>
           <ListPagination
             noun="reports"
-            onPageChange={setPage}
-            page={page}
-            pageCount={pageCount}
-            pageSize={pageSize}
+            onPageChange={paging.setPage}
+            page={paging.page}
+            pageCount={paging.pageCount}
+            pageSize={paging.pageSize}
             scrollToRef={listRef}
-            total={total}
+            total={paging.total}
           />
         </>
       )}
@@ -501,7 +537,12 @@ export function AccidentReportManager({
             </DrawerDescription>
           </DrawerHeader>
           {mode?.type === "add" ? (
-            <AddForm onPendingChange={setIsPending} onSaved={() => setMode(null)} walks={walks} />
+            <AddForm
+              key="add"
+              onPendingChange={setIsPending}
+              onSaved={() => setMode(null)}
+              walks={walks}
+            />
           ) : null}
           {viewing ? (
             <div className="flex min-h-0 flex-1 flex-col">

@@ -121,6 +121,7 @@ export function EditWalkButton({
               <DateTimePicker
                 defaultValue={utcToLondonWallClock(new Date(startsAt))}
                 disabled={scheduleLocked}
+                disablePast={!scheduleLocked}
                 id={`edit-starts-${walkId}`}
                 name="startsAt"
                 required

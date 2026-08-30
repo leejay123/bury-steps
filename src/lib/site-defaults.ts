@@ -120,3 +120,11 @@ export const DEFAULT_FAQS = [
       "Only walk organisers. Members who clock in see names only. Health notes are deleted 90 days after the walk.",
   },
 ] as const;
+
+/** Pinned member-bell welcome — recreated on site reset (same as the migration seed). */
+export const DEFAULT_WELCOME_NOTICE = {
+  id: "notice_system_welcome",
+  title: "Welcome, {{firstName}}",
+  body:
+    "Welcome to Bury Steps Walking Group.\n\n• Walks — see upcoming Sundays and clock in on the day.\n• Progress — how the group is doing this month together.\n• History — every walk you have clocked in to.\n• The bell — short updates from the organisers (this message stays at the top).\n\nQuestions? Ask in the Facebook group or talk to an organiser on a walk.",
+} as const;

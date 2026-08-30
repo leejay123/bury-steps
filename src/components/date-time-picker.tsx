@@ -50,12 +50,15 @@ function isOwnNestedSelectLayer(target: EventTarget | null) {
 export function DateTimePicker({
   defaultValue,
   disabled,
+  disablePast = false,
   id,
   name,
   required,
 }: {
   defaultValue?: string;
   disabled?: boolean;
+  /** Block calendar days before today (UK). Server still validates walk starts. */
+  disablePast?: boolean;
   id: string;
   name: string;
   required?: boolean;
@@ -83,6 +86,19 @@ export function DateTimePicker({
         minute: "2-digit",
       }).format(londonWallClockToUtc(value))
     : "Choose date and time";
+
+  const todayLondon = useMemo(() => {
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: LONDON,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(new Date());
+    const year = Number(parts.find((part) => part.type === "year")?.value);
+    const month = Number(parts.find((part) => part.type === "month")?.value);
+    const day = Number(parts.find((part) => part.type === "day")?.value);
+    return new Date(year, month - 1, day);
+  }, []);
 
   return (
     <div className="flex flex-col gap-2">
@@ -137,12 +153,13 @@ export function DateTimePicker({
             <Calendar
               captionLayout="dropdown"
               className="p-0"
+              disabled={disablePast ? { before: todayLondon } : undefined}
               endMonth={new Date(2035, 11)}
               locale={enGB}
               mode="single"
               onSelect={setDate}
               selected={date}
-              startMonth={new Date(2020, 0)}
+              startMonth={disablePast ? todayLondon : new Date(2020, 0)}
               timeZone={LONDON}
             />
             <div className="grid grid-cols-2 gap-2">

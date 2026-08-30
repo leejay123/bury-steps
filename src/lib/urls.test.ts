@@ -5,6 +5,7 @@ import {
   clerkAuthorizedParties,
   isTrustedAppUrl,
   PRODUCTION_APP_URL,
+  safeAppPath,
   shouldProxyClerkFrontendApi,
 } from "./urls";
 
@@ -45,6 +46,19 @@ describe("isTrustedAppUrl", () => {
 
   it("rejects malformed input rather than throwing", () => {
     expect(isTrustedAppUrl("not a url at all")).toBe(false);
+  });
+});
+
+describe("safeAppPath", () => {
+  it("allows ordinary in-app paths", () => {
+    expect(safeAppPath("/admin/members")).toBe("/admin/members");
+    expect(safeAppPath("/admin?tab=1#x")).toBe("/admin?tab=1#x");
+  });
+
+  it("rejects protocol-relative and scheme-smuggling redirects", () => {
+    expect(safeAppPath("//evil.example")).toBeUndefined();
+    expect(safeAppPath("/\\evil.example")).toBeUndefined();
+    expect(safeAppPath("https://evil.example")).toBeUndefined();
   });
 });
 

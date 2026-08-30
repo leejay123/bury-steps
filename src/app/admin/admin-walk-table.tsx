@@ -5,8 +5,9 @@ import Link from "next/link";
 import { ChevronRight, Footprints, Search } from "lucide-react";
 import { formatWalkDay, formatTime } from "@/lib/dates";
 import { walkStatus, type WalkStatus } from "@/lib/walk-window";
+import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/empty-state";
-import { DataList, DataListBody, DataListItem } from "@/components/data-list";
+import { DataList, DataListBody, DataListItem, DataListItemMain, dataListItemStackClassName } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
 import { usePagedList } from "@/hooks/use-paged-list";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
@@ -154,27 +155,29 @@ export function AdminWalkTable({
         <>
           <DataList>
             {paging.paged.map((walk) => (
-              <DataListItem className="relative" key={walk.id}>
-                <DataListBody>
-                  <p className="font-medium">
-                    <Link className="after:absolute after:inset-0" href={`/admin/walks/${walk.id}`}>
-                      {walk.title}
-                    </Link>
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {formatWalkDay(new Date(walk.startsAt))} · {formatTime(new Date(walk.startsAt))}
-                    {walk.location ? ` · ${walk.location}` : ""}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {walk.attendanceCount} {attendanceLabel.toLowerCase()}
-                  </p>
-                </DataListBody>
-                <WalkStatusBadge
-                  cancelledAt={walk.cancelledAt}
-                  durationMins={walk.durationMins}
-                  startsAt={walk.startsAt}
-                />
-                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+              <DataListItem className={cn("relative", dataListItemStackClassName)} key={walk.id}>
+                <DataListItemMain>
+                  <DataListBody>
+                    <p className="font-medium">
+                      <Link className="after:absolute after:inset-0" href={`/admin/walks/${walk.id}`}>
+                        {walk.title}
+                      </Link>
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatWalkDay(new Date(walk.startsAt))} · {formatTime(new Date(walk.startsAt))}
+                      {walk.location ? ` · ${walk.location}` : ""}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {walk.attendanceCount} {attendanceLabel.toLowerCase()}
+                    </p>
+                  </DataListBody>
+                  <WalkStatusBadge
+                    cancelledAt={walk.cancelledAt}
+                    durationMins={walk.durationMins}
+                    startsAt={walk.startsAt}
+                  />
+                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                </DataListItemMain>
               </DataListItem>
             ))}
           </DataList>

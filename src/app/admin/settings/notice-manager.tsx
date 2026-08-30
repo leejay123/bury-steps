@@ -27,7 +27,7 @@ import {
   type NoticeView,
 } from "@/lib/notices";
 import { formatDate } from "@/lib/dates";
-import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
+import { useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
 import { useOptimisticSettingToggle } from "@/hooks/use-optimistic-setting-toggle";
 import { usePagedList } from "@/hooks/use-paged-list";
 import { FormError } from "@/components/form-error";
@@ -313,20 +313,15 @@ function RemoveNoticeButton({
   onRemoved: () => void;
   title: string;
 }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    deleteSiteNotice,
-    null,
-  );
   const [open, setOpen] = useState(false);
-  useActionToast(state, () => {
-    setOpen(false);
-    onRemoved();
-  });
+  const [session, setSession] = useState(0);
 
   return (
     <AlertDialog
-      closeDisabled={isPending}
-      onOpenChange={preventDismissWhilePending(isPending, setOpen)}
+      onOpenChange={(next) => {
+        if (next) setSession((value) => value + 1);
+        setOpen(next);
+      }}
       open={open}
     >
       <AlertDialogTrigger asChild>
@@ -334,26 +329,52 @@ function RemoveNoticeButton({
           Remove
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent closeDisabled={isPending}>
-        <form action={action} className="flex flex-col gap-4">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove this notice?</AlertDialogTitle>
-            <AlertDialogDescription>
-              “{title}” will come off the bell for everyone, and off the Notices page if it was a
-              full-page notice.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <input name="noticeId" type="hidden" value={noticeId} />
-          <FormError message={state && !state.ok ? state.error : null} />
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending} type="button">
-              Keep it
-            </AlertDialogCancel>
-            <RemoveConfirm />
-          </AlertDialogFooter>
-        </form>
-      </AlertDialogContent>
+      {open ? (
+        <RemoveNoticeDialogForm
+          key={session}
+          noticeId={noticeId}
+          onClose={() => {
+            setOpen(false);
+            onRemoved();
+          }}
+          title={title}
+        />
+      ) : null}
     </AlertDialog>
+  );
+}
+
+function RemoveNoticeDialogForm({
+  noticeId,
+  onClose,
+  title,
+}: {
+  noticeId: string;
+  onClose: () => void;
+  title: string;
+}) {
+  const [state, action, isPending] = useNotifyActionState(deleteSiteNotice, onClose);
+
+  return (
+    <AlertDialogContent closeDisabled={isPending}>
+      <form action={action} className="flex flex-col gap-4">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remove this notice?</AlertDialogTitle>
+          <AlertDialogDescription>
+            “{title}” will come off the bell for everyone, and off the Notices page if it was a
+            full-page notice.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <input name="noticeId" type="hidden" value={noticeId} />
+        <FormError message={state && !state.ok ? state.error : null} />
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isPending} type="button">
+            Keep it
+          </AlertDialogCancel>
+          <RemoveConfirm />
+        </AlertDialogFooter>
+      </form>
+    </AlertDialogContent>
   );
 }
 
@@ -472,12 +493,8 @@ function RemoveCategoryButton({
   category: NoticeCategoryView;
   onlyCategory: boolean;
 }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    deleteSiteNoticeCategory,
-    null,
-  );
   const [open, setOpen] = useState(false);
-  useActionToast(state, () => setOpen(false));
+  const [session, setSession] = useState(0);
 
   const blockedReason = onlyCategory
     ? "Keep at least one category."
@@ -502,8 +519,10 @@ function RemoveCategoryButton({
 
   return (
     <AlertDialog
-      closeDisabled={isPending}
-      onOpenChange={preventDismissWhilePending(isPending, setOpen)}
+      onOpenChange={(next) => {
+        if (next) setSession((value) => value + 1);
+        setOpen(next);
+      }}
       open={open}
     >
       <AlertDialogTrigger asChild>
@@ -511,25 +530,48 @@ function RemoveCategoryButton({
           Remove
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent closeDisabled={isPending}>
-        <form action={action} className="flex flex-col gap-4">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove this category?</AlertDialogTitle>
-            <AlertDialogDescription>
-              “{category.label}” will come off the Notices filters. You can add it again later.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <input name="categoryId" type="hidden" value={category.id} />
-          <FormError message={state && !state.ok ? state.error : null} />
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending} type="button">
-              Keep it
-            </AlertDialogCancel>
-            <RemoveConfirm />
-          </AlertDialogFooter>
-        </form>
-      </AlertDialogContent>
+      {open ? (
+        <RemoveNoticeCategoryDialogForm
+          key={session}
+          categoryId={category.id}
+          label={category.label}
+          onClose={() => setOpen(false)}
+        />
+      ) : null}
     </AlertDialog>
+  );
+}
+
+function RemoveNoticeCategoryDialogForm({
+  categoryId,
+  label,
+  onClose,
+}: {
+  categoryId: string;
+  label: string;
+  onClose: () => void;
+}) {
+  const [state, action, isPending] = useNotifyActionState(deleteSiteNoticeCategory, onClose);
+
+  return (
+    <AlertDialogContent closeDisabled={isPending}>
+      <form action={action} className="flex flex-col gap-4">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remove this category?</AlertDialogTitle>
+          <AlertDialogDescription>
+            “{label}” will come off the Notices filters. You can add it again later.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <input name="categoryId" type="hidden" value={categoryId} />
+        <FormError message={state && !state.ok ? state.error : null} />
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isPending} type="button">
+            Keep it
+          </AlertDialogCancel>
+          <RemoveConfirm />
+        </AlertDialogFooter>
+      </form>
+    </AlertDialogContent>
   );
 }
 

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { formatDateTime, formatTime } from "@/lib/dates";
-import { DataList, DataListBody, DataListItem } from "@/components/data-list";
+import { DataList, DataListBody, DataListItem, DataListItemMain, dataListItemStackClassName } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
 import { usePagedList } from "@/hooks/use-paged-list";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -74,23 +74,29 @@ export function WalkAttendanceTable({
     <div className="flex flex-col gap-4" ref={listRef}>
       <DataList>
         {paging.paged.map((row) => (
-          <DataListItem key={row.id} onClick={() => setOpenId(row.id)}>
-            <Avatar className="size-7 shrink-0">
-              <AvatarFallback className="text-xs">{row.initials}</AvatarFallback>
-            </Avatar>
-            <DataListBody>
-              <p className="font-medium">{row.name}</p>
-              <p className="text-sm text-muted-foreground wrap-break-word">{row.email}</p>
-              <p className="text-xs text-muted-foreground tabular-nums">
-                {formatTime(new Date(row.clockedInAt))}
-              </p>
-            </DataListBody>
-            {row.clockedOutAt ? (
-              <Badge variant="secondary">Clocked out</Badge>
-            ) : (
-              <Badge variant="outline">{stillInLabel(walkCompleted)}</Badge>
-            )}
-            <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+          <DataListItem
+            className={dataListItemStackClassName}
+            key={row.id}
+            onClick={() => setOpenId(row.id)}
+          >
+            <DataListItemMain className="items-center">
+              <Avatar className="size-7 shrink-0">
+                <AvatarFallback className="text-xs">{row.initials}</AvatarFallback>
+              </Avatar>
+              <DataListBody>
+                <p className="font-medium">{row.name}</p>
+                <p className="text-sm text-muted-foreground wrap-break-word">{row.email}</p>
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  {formatTime(new Date(row.clockedInAt))}
+                </p>
+              </DataListBody>
+              {row.clockedOutAt ? (
+                <Badge variant="secondary">Clocked out</Badge>
+              ) : (
+                <Badge variant="outline">{stillInLabel(walkCompleted)}</Badge>
+              )}
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+            </DataListItemMain>
           </DataListItem>
         ))}
       </DataList>

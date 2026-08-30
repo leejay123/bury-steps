@@ -13,19 +13,29 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
  * Other query keys already on the URL (e.g. report link/sort filters) are
  * preserved when search or page changes.
  */
-export function useUrlListState({ debounceMs = 300 }: { debounceMs?: number } = {}) {
+export function useUrlListState({
+  debounceMs = 300,
+  /** When false, search stays in React state only (e.g. accident reports PII). */
+  syncQueryToUrl = true,
+}: {
+  debounceMs?: number;
+  syncQueryToUrl?: boolean;
+} = {}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const appliedQuery = searchParams.get("q") ?? "";
+  const appliedQuery = syncQueryToUrl ? (searchParams.get("q") ?? "") : "";
   const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1);
 
   // The input shows what's being typed immediately; the URL (and the
-  // server query it drives) only catches up after the debounce.
+  // server query it drives) only catches up after the debounce — unless
+  // syncQueryToUrl is off, in which case only local state updates.
   const [query, setQueryState] = useState(appliedQuery);
-  useEffect(() => setQueryState(appliedQuery), [appliedQuery]);
+  useEffect(() => {
+    if (syncQueryToUrl) setQueryState(appliedQuery);
+  }, [appliedQuery, syncQueryToUrl]);
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
@@ -37,7 +47,8 @@ export function useUrlListState({ debounceMs = 300 }: { debounceMs?: number } = 
   const navigate = useCallback(
     (nextQuery: string, nextPage: number, patch?: Record<string, string | null>) => {
       const params = new URLSearchParams(searchParams.toString());
-      if (nextQuery) params.set("q", nextQuery);
+      // Drop any leftover ?q= even when we no longer sync search to the URL.
+      if (syncQueryToUrl && nextQuery) params.set("q", nextQuery);
       else params.delete("q");
       if (nextPage > 1) params.set("page", String(nextPage));
       else params.delete("page");
@@ -52,32 +63,33 @@ export function useUrlListState({ debounceMs = 300 }: { debounceMs?: number } = 
         router.replace(search ? `${pathname}?${search}` : pathname, { scroll: false });
       });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams, syncQueryToUrl],
   );
 
   const setQuery = useCallback(
     (next: string) => {
       setQueryState(next);
+      if (!syncQueryToUrl) return;
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => navigate(next, 1), debounceMs);
     },
-    [debounceMs, navigate],
+    [debounceMs, navigate, syncQueryToUrl],
   );
 
   const setPage = useCallback(
     (next: number) => {
-      navigate(appliedQuery, next);
+      navigate(syncQueryToUrl ? appliedQuery : "", next);
     },
-    [appliedQuery, navigate],
+    [appliedQuery, navigate, syncQueryToUrl],
   );
 
   const setFilter = useCallback(
     (key: string, value: string, defaultValue: string) => {
-      navigate(appliedQuery, 1, {
+      navigate(syncQueryToUrl ? appliedQuery : "", 1, {
         [key]: value === defaultValue ? null : value,
       });
     },
-    [appliedQuery, navigate],
+    [appliedQuery, navigate, syncQueryToUrl],
   );
 
   return { query, page, setQuery, setPage, setFilter, isPending, searchParams };
