@@ -59,8 +59,9 @@ export function OrganiserGuide() {
             <GuideBody>
               <p>
                 <Badge variant="secondary">Visitors</Badge> can read the homepage, privacy and
-                terms, and open a walk share link. They can search and filter FAQs by the
-                categories you set. They cannot clock in until they have an account.
+                terms, public notices on <Link href="/notices">Notices</Link>, and open a walk share
+                link. They can search and filter FAQs by the categories you set. They cannot clock
+                in until they have an account.
               </p>
               <p>
                 <Badge variant="secondary">Members</Badge> see Walks, Progress, and History in the
@@ -540,11 +541,12 @@ export function OrganiserGuide() {
                   bell does not clear them on its own.
                 </li>
               </Steps>
+              <p>
                 Guests open public notices from the <strong>Notices</strong> link in the header
                 (when signed out), from the footer on every page, or by going straight to{" "}
                 <Link href="/notices">/notices</Link>. They only see public full-page notices.
                 Member-only pages ask them to sign in. Signed-in members also use the bell footer{" "}
-                <strong>Browse all notices</strong>.
+                <strong>Browse all notices</strong>, and Notices in the main menu.
               </p>
               <p>
                 On <Link href="/notices">Notices</Link>, people can search and filter by category.
