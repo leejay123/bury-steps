@@ -415,8 +415,10 @@ export function OrganiserGuide() {
                 button on the row, not in the drawer. Drawers are for adding and editing. On a
                 phone the list stacks so you do not have to scroll sideways, Add buttons stretch
                 full width, and drawers slide up from the bottom of the screen; on a wider screen
-                they slide in from the side instead. A breadcrumb at the top of each settings page
-                goes back to Settings — it greys when you hover it.
+                they slide in from the side instead. While a drawer is open the page behind —
+                including the site header — stays where it is, dimmed under a full-screen blur. A
+                breadcrumb at the top of each settings page goes back to Settings — it greys when
+                you hover it.
               </p>
               <p>
                 Use the up and down arrows on the left of a row to change the order of photos,

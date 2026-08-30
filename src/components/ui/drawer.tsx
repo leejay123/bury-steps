@@ -42,6 +42,76 @@ function needsIosSafariBodyLock() {
 /** Body style props for the iOS Safari position:fixed scroll lock. */
 const SAFARI_LOCK_PROPS = ["position", "top", "left", "right", "height", "width"] as const;
 
+type HeaderPin = {
+  header: HTMLElement;
+  spacer: HTMLDivElement;
+  prev: {
+    position: string;
+    top: string;
+    left: string;
+    right: string;
+    width: string;
+    zIndex: string;
+    margin: string;
+  };
+};
+
+/**
+ * iOS `position:fixed; top:-y` on <body> pulls a sticky header off-screen with
+ * the page (About drawer showed "Create an account" in the header gap). Pin
+ * the bar to its current on-screen box first, with a spacer so document flow
+ * does not jump. Overlay sits above (z-60); header stays under the blur.
+ */
+function pinSiteHeaderInPlace(): HeaderPin | null {
+  const header = document.querySelector<HTMLElement>("header");
+  if (!header || header.dataset.scrollLockPinned === "1") return null;
+
+  const rect = header.getBoundingClientRect();
+  const prev = {
+    position: header.style.position,
+    top: header.style.top,
+    left: header.style.left,
+    right: header.style.right,
+    width: header.style.width,
+    zIndex: header.style.zIndex,
+    margin: header.style.margin,
+  };
+
+  const spacer = document.createElement("div");
+  spacer.dataset.headerScrollLockSpacer = "1";
+  spacer.setAttribute("aria-hidden", "true");
+  spacer.style.height = `${Math.max(0, rect.height)}px`;
+  spacer.style.width = "100%";
+  spacer.style.flexShrink = "0";
+  spacer.style.pointerEvents = "none";
+  header.parentElement?.insertBefore(spacer, header);
+
+  header.dataset.scrollLockPinned = "1";
+  header.style.position = "fixed";
+  header.style.top = `${Math.max(0, rect.top)}px`;
+  header.style.left = `${rect.left}px`;
+  header.style.width = `${rect.width}px`;
+  header.style.right = "auto";
+  header.style.zIndex = "55";
+  header.style.margin = "0";
+
+  return { header, spacer, prev };
+}
+
+function unpinSiteHeader(pin: HeaderPin | null) {
+  if (!pin) return;
+  const { header, spacer, prev } = pin;
+  if (spacer.isConnected) spacer.remove();
+  header.style.position = prev.position;
+  header.style.top = prev.top;
+  header.style.left = prev.left;
+  header.style.right = prev.right;
+  header.style.width = prev.width;
+  header.style.zIndex = prev.zIndex;
+  header.style.margin = prev.margin;
+  delete header.dataset.scrollLockPinned;
+}
+
 /**
  * iOS Safari locks scroll with position:fixed + top:-y. Clearing that and then
  * scrolling in a later frame paints one frame at y=0 (the flash/jump). Do both
@@ -114,11 +184,12 @@ function Drawer({
   // sheet on phones and a side panel from the sm breakpoint up.
   const resolvedDirection = direction ?? (isDesktop ? "right" : "bottom");
   // iOS Safari needs a body scroll lock. We own it (noBodyStyles) so close can
-  // unlock + scrollTo in one turn. Desktop skips overflow:hidden — that kills
-  // position:sticky and the fixed-header workaround warped the nav layout.
+  // unlock + scrollTo in one turn. Before locking, pin the sticky header so
+  // top:-y cannot drag it off-screen under the blur.
   const scrollYRef = React.useRef(0);
   const triggerRef = React.useRef<HTMLElement | null>(null);
   const iosLockRef = React.useRef(false);
+  const headerPinRef = React.useRef<HeaderPin | null>(null);
   const closeCleanupTimerRef = React.useRef(0);
 
   React.useEffect(() => {
@@ -128,6 +199,8 @@ function Drawer({
         unlockIosSafariBodyScroll(scrollYRef.current);
         iosLockRef.current = false;
       }
+      unpinSiteHeader(headerPinRef.current);
+      headerPinRef.current = null;
       restorePagePointerEvents();
     };
   }, []);
@@ -156,6 +229,8 @@ function Drawer({
                     triggerRef.current =
                       active instanceof HTMLElement ? active : triggerRef.current;
                     if (needsIosSafariBodyLock()) {
+                      // Pin first, then lock — reverse on close.
+                      headerPinRef.current = pinSiteHeaderInPlace();
                       lockIosSafariBodyScroll(scrollYRef.current);
                       iosLockRef.current = true;
                     }
@@ -171,6 +246,8 @@ function Drawer({
                       unlockIosSafariBodyScroll(y);
                       iosLockRef.current = false;
                     }
+                    unpinSiteHeader(headerPinRef.current);
+                    headerPinRef.current = null;
 
                     // Pointer-events / inert cleanup after the close animation —
                     // not in the same turn as scroll restore (that race flashed).
@@ -240,10 +317,10 @@ function DrawerOverlay({
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"
       className={cn(
-        // Sit below the sticky site header so chrome stays visible and in-flow
-        // (no fixed re-pin). Blur is applied immediately — fading opacity on a
-        // backdrop-filter layer is what lagged on every browser.
-        "fixed top-[var(--site-header-height)] right-0 bottom-0 left-0 z-[60] bg-black/30 backdrop-blur-sm data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
+        // Full-viewport blur: page and header stay put underneath; nothing
+        // peeks above the dim layer. Blur is applied immediately — fading
+        // opacity on a backdrop-filter layer is what lagged on every browser.
+        "fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
         dismissed && "invisible !pointer-events-none",
         className,
       )}
@@ -300,10 +377,10 @@ function DrawerContent({
           // overlayCloseClassName) inward for free, since an absolutely
           // positioned child's offsets are measured from its ancestor's
           // padding edge.
-          "data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-[var(--site-header-height)] data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:rounded-b-lg data-[vaul-drawer-direction=top]:border-b data-[vaul-drawer-direction=top]:pl-[env(safe-area-inset-left)] data-[vaul-drawer-direction=top]:pr-[env(safe-area-inset-right)]",
+          "data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:rounded-b-lg data-[vaul-drawer-direction=top]:border-b data-[vaul-drawer-direction=top]:pt-[env(safe-area-inset-top)] data-[vaul-drawer-direction=top]:pl-[env(safe-area-inset-left)] data-[vaul-drawer-direction=top]:pr-[env(safe-area-inset-right)]",
           "data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:rounded-t-lg data-[vaul-drawer-direction=bottom]:border-t data-[vaul-drawer-direction=bottom]:pl-[env(safe-area-inset-left)] data-[vaul-drawer-direction=bottom]:pr-[env(safe-area-inset-right)]",
-          "data-[vaul-drawer-direction=right]:top-[var(--site-header-height)] data-[vaul-drawer-direction=right]:bottom-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:h-auto data-[vaul-drawer-direction=right]:w-[calc(100%-1.25rem)] data-[vaul-drawer-direction=right]:border-l data-[vaul-drawer-direction=right]:pr-[env(safe-area-inset-right)] data-[vaul-drawer-direction=right]:sm:max-w-lg",
-          "data-[vaul-drawer-direction=left]:top-[var(--site-header-height)] data-[vaul-drawer-direction=left]:bottom-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:h-auto data-[vaul-drawer-direction=left]:w-[calc(100%-1.25rem)] data-[vaul-drawer-direction=left]:border-r data-[vaul-drawer-direction=left]:pl-[env(safe-area-inset-left)] data-[vaul-drawer-direction=left]:sm:max-w-lg",
+          "data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:h-full data-[vaul-drawer-direction=right]:w-[calc(100%-1.25rem)] data-[vaul-drawer-direction=right]:border-l data-[vaul-drawer-direction=right]:pt-[env(safe-area-inset-top)] data-[vaul-drawer-direction=right]:pr-[env(safe-area-inset-right)] data-[vaul-drawer-direction=right]:sm:max-w-lg",
+          "data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:h-full data-[vaul-drawer-direction=left]:w-[calc(100%-1.25rem)] data-[vaul-drawer-direction=left]:border-r data-[vaul-drawer-direction=left]:pt-[env(safe-area-inset-top)] data-[vaul-drawer-direction=left]:pl-[env(safe-area-inset-left)] data-[vaul-drawer-direction=left]:sm:max-w-lg",
           className,
         )}
         onEscapeKeyDown={(event) => {
