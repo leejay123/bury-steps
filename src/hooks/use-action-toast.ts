@@ -17,6 +17,11 @@ import { unlockIdleDocument } from "@/components/overlay-root";
  * refresh in the same turn as the success state can leave `useFormStatus`
  * pending, and Radix then treats our `setOpen(false)` as a dismiss-during-
  * save and opens the dialog again.
+ *
+ * Navigating away: never `router.push` / `router.replace` inside `onOk`.
+ * Return `href` on the ActionResult instead. Soft navigation in `onOk`
+ * races the success toast (and can freeze overlays). This hook toasts first,
+ * then hard-assigns after a short delay when `href` is set.
  */
 export function useActionToast(state: ActionResult | null, onOk?: () => void) {
   const router = useRouter();
@@ -33,7 +38,8 @@ export function useActionToast(state: ActionResult | null, onOk?: () => void) {
         const href = state.href;
         // Hard navigation after the overlay unlock timers (0 / 250ms) so a
         // stuck alert dialog cannot leave pointer-events locked on the next
-        // page. Soft router.push raced that teardown and froze Duplicate.
+        // page. Soft router.push raced that teardown and froze Duplicate /
+        // swallowed Remove-member / Remove-walk success toasts.
         const id = window.setTimeout(() => {
           unlockIdleDocument();
           window.location.assign(href);

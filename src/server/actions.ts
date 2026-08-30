@@ -507,7 +507,11 @@ export async function deleteWalk(_prev: ActionResult | null, formData: FormData)
   revalidatePath("/admin");
   revalidatePath("/dashboard");
   revalidateWalkShare(walk);
-  return { ok: true, message: `“${walk.title}” has been removed.` };
+  return {
+    ok: true,
+    message: `“${walk.title}” has been removed.`,
+    href: "/admin",
+  };
 }
 
 // -------------------------------------------------------------- journey
@@ -1129,6 +1133,9 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
     return { ok: false, error: "Could not remove this member. Try again." };
   }
 
+  const redirectTo = String(formData.get("redirectTo") ?? "").trim();
+  const href = redirectTo.startsWith("/") ? redirectTo : undefined;
+
   const clerk = await clerkClient();
   try {
     await clerk.users.deleteUser(target.clerkId);
@@ -1144,6 +1151,7 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
       return {
         ok: true,
         message: `${displayName(target)} has been removed from the group, but their sign-in could not be revoked automatically — remove it from Clerk if needed.`,
+        ...(href ? { href } : {}),
       };
     }
   }
@@ -1151,7 +1159,12 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
   revalidatePath("/admin");
   revalidatePath("/admin/members");
   revalidatePath("/dashboard");
-  return { ok: true, message: `${displayName(target)} has been removed from the group.` };
+
+  return {
+    ok: true,
+    message: `${displayName(target)} has been removed from the group.`,
+    ...(href ? { href } : {}),
+  };
 }
 
 /**

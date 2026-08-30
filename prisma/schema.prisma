@@ -173,8 +173,9 @@ model SiteNoticeCategory {
   @@index([sortOrder])
 }
 
-/// Messages in the nav bell. Organisers can keep up to 10.
+/// Messages for the member bell and /notices.
 /// BELL = short message in the drawer only. PAGE = teaser in the bell + full article at /notices/[slug].
+/// The bell shows the pinned welcome (if enabled) plus the 20 newest other notices.
 model SiteNotice {
   id         String              @id @default(cuid())
   title      String
@@ -191,6 +192,9 @@ model SiteNotice {
   category   SiteNoticeCategory? @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   /// Stable key for system notices (e.g. "welcome"). Not deletable; edit title/body only.
   systemKey  String?             @unique
+  /// When false, the notice is hidden from the bell (and /notices if it were a page).
+  /// Used to disable the pinned welcome without deleting it.
+  enabled    Boolean             @default(true)
   createdAt  DateTime            @default(now())
   updatedAt  DateTime            @updatedAt
   reads      SiteNoticeRead[]
@@ -199,6 +203,7 @@ model SiteNotice {
   @@index([kind])
   @@index([audience])
   @@index([categoryId])
+  @@index([enabled])
 }
 
 enum SiteNoticeKind {

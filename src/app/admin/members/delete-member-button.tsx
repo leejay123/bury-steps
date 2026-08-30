@@ -2,7 +2,6 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { useRouter } from "next/navigation";
 import { deleteMember, type ActionResult } from "@/server/actions";
 import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
@@ -50,20 +49,16 @@ export function DeleteMemberButton({
   /** Where to navigate after removal — used when this button lives on the member's own page, which no longer exists once they are removed. */
   redirectTo?: string;
 }) {
-  const router = useRouter();
   const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
     deleteMember,
     null,
   );
   const [open, setOpen] = useState(false);
   const [confirmValue, setConfirmValue] = useState("");
-  // The hook's own router.refresh() re-fetches whichever page this button
-  // lives on (the members list, or the member's own page before it
-  // redirects away) so it never shows a member who was just removed.
-  useActionToast(state, () => {
-    setOpen(false);
-    if (redirectTo) router.push(redirectTo);
-  });
+  // Close only — navigation (when redirectTo is set) goes through ActionResult.href
+  // so useActionToast can show the success sonner first, then hard-navigate after
+  // a short delay. Soft router.push in onOk used to leave before the toast painted.
+  useActionToast(state, () => setOpen(false));
 
   useEffect(() => {
     if (!open) setConfirmValue("");
@@ -108,6 +103,7 @@ export function DeleteMemberButton({
           </AlertDialogHeader>
           <input name="userId" type="hidden" value={userId} />
           <input name="confirm" type="hidden" value={confirmValue} />
+          {redirectTo ? <input name="redirectTo" type="hidden" value={redirectTo} /> : null}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor={`delete-confirm-${userId}`}>
               Type &ldquo;{ROLE_CONFIRM_WORD}&rdquo; to continue

@@ -2,7 +2,6 @@
 
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { useRouter } from "next/navigation";
 import { deleteWalk, type ActionResult } from "@/server/actions";
 import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
@@ -34,17 +33,15 @@ export function DeleteWalkButton({
   walkId: string;
   attendanceCount: number;
 }) {
-  const router = useRouter();
   const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
     deleteWalk,
     null,
   );
   const [open, setOpen] = useState(false);
 
-  useActionToast(state, () => {
-    setOpen(false);
-    router.push("/admin");
-  });
+  // Navigation is via ActionResult.href from deleteWalk so the success toast
+  // paints before a delayed hard navigate (same pattern as Duplicate / Remove member).
+  useActionToast(state, () => setOpen(false));
 
   return (
     <AlertDialog

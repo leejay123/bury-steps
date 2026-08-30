@@ -1,11 +1,16 @@
-export const MAX_SITE_NOTICES = 10;
 export const MAX_NOTICE_CATEGORIES = 8;
 export const MAX_NOTICE_CATEGORY_LABEL = 32;
 export const MAX_NOTICE_TITLE = 80;
 export const MAX_NOTICE_TEASER = 500;
 export const MAX_NOTICE_PAGE_BODY = 10_000;
 
-/** Pinned welcome notice — seeded, edit title/body only, never delete. */
+/** Newest non-welcome notices shown in the member bell (welcome sits outside this count). */
+export const BELL_NOTICE_LIMIT = 20;
+
+/** @deprecated Use BELL_NOTICE_LIMIT — notices are unlimited; only the bell is capped. */
+export const MAX_SITE_NOTICES = BELL_NOTICE_LIMIT;
+
+/** Pinned welcome notice — seeded, edit title/body only, never delete; can disable. */
 export const WELCOME_NOTICE_SYSTEM_KEY = "welcome";
 
 export type NoticeKind = "BELL" | "PAGE";
@@ -31,11 +36,16 @@ export type NoticeView = {
   categoryId: string | null;
   categoryLabel: string | null;
   systemKey: string | null;
+  enabled: boolean;
   createdAt: Date;
 };
 
 export function isPinnedNotice(notice: Pick<NoticeView, "systemKey">): boolean {
   return Boolean(notice.systemKey);
+}
+
+export function isWelcomeNotice(notice: Pick<NoticeView, "systemKey">): boolean {
+  return notice.systemKey === WELCOME_NOTICE_SYSTEM_KEY;
 }
 
 /** Replace {{firstName}} in notice copy for the viewing member. */
@@ -61,14 +71,24 @@ export function personalizeNotice(
   };
 }
 
-/** Welcome (pinned) first, then newest first. */
-export function sortNoticesForBell(notices: NoticeView[]): NoticeView[] {
-  return [...notices].sort((a, b) => {
-    const aPin = a.systemKey === WELCOME_NOTICE_SYSTEM_KEY ? 0 : 1;
-    const bPin = b.systemKey === WELCOME_NOTICE_SYSTEM_KEY ? 0 : 1;
-    if (aPin !== bPin) return aPin - bPin;
-    return b.createdAt.getTime() - a.createdAt.getTime();
-  });
+/** Newest first (admin lists, /notices). */
+export function sortNoticesNewestFirst(notices: NoticeView[]): NoticeView[] {
+  return [...notices].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+}
+
+/**
+ * Bell contents: enabled welcome first (if present), then the
+ * {@link BELL_NOTICE_LIMIT} newest non-system notices. Older notices stay in
+ * the DB and on /notices when they are full-page.
+ */
+export function noticesForBell(notices: NoticeView[]): NoticeView[] {
+  const welcome = notices.find(
+    (notice) => isWelcomeNotice(notice) && notice.enabled,
+  );
+  const rolling = sortNoticesNewestFirst(
+    notices.filter((notice) => !notice.systemKey && notice.enabled),
+  ).slice(0, BELL_NOTICE_LIMIT);
+  return welcome ? [welcome, ...rolling] : rolling;
 }
 
 export function noticeCategorySlug(label: string): string {
