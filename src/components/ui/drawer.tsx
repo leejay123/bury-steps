@@ -135,9 +135,41 @@ function eventTargetInsideOpenOverlay(target: EventTarget | null) {
   );
 }
 
+const SCROLL_KEYS = new Set(["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "]);
+
+/**
+ * Freeze the document without position:fixed on <body>. overflow:hidden alone
+ * still leaks on iOS/trackpads sometimes; pin scrollY and block touch/wheel/keys
+ * outside the open panel. Header is already position:fixed for the open lifetime,
+ * so overflow:hidden will not make it vanish.
+ */
 function lockBackgroundScroll() {
-  // Pin while sticky is still active (before overflow:hidden lands).
   const headerPin = pinSiteHeaderInPlace();
+  const lockedY = window.scrollY;
+  const lockedX = window.scrollX;
+  const html = document.documentElement;
+  const { body } = document;
+
+  const prev = {
+    htmlOverflow: html.style.overflow,
+    bodyOverflow: body.style.overflow,
+    htmlOverscroll: html.style.overscrollBehavior,
+    bodyOverscroll: body.style.overscrollBehavior,
+    bodyTouchAction: body.style.touchAction,
+  };
+
+  html.style.overflow = "hidden";
+  body.style.overflow = "hidden";
+  html.style.overscrollBehavior = "none";
+  body.style.overscrollBehavior = "none";
+  // Drawer panels set touch-action:pan-y so they can still scroll/drag.
+  body.style.touchAction = "none";
+
+  const freezeScroll = () => {
+    if (window.scrollX !== lockedX || window.scrollY !== lockedY) {
+      window.scrollTo(lockedX, lockedY);
+    }
+  };
 
   const onTouchMove = (event: TouchEvent) => {
     if (eventTargetInsideOpenOverlay(event.target)) return;
@@ -147,20 +179,36 @@ function lockBackgroundScroll() {
     if (eventTargetInsideOpenOverlay(event.target)) return;
     event.preventDefault();
   };
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (!SCROLL_KEYS.has(event.key)) return;
+    if (eventTargetInsideOpenOverlay(event.target)) return;
+    event.preventDefault();
+  };
 
+  window.addEventListener("scroll", freezeScroll, { capture: true, passive: true });
   document.addEventListener("touchmove", onTouchMove, { capture: true, passive: false });
   document.addEventListener("wheel", onWheel, { capture: true, passive: false });
+  document.addEventListener("keydown", onKeyDown, { capture: true });
   clearBodyPositionFixedLock();
   const observer = new MutationObserver(() => {
     clearBodyPositionFixedLock();
   });
   observer.observe(document.body, { attributes: true, attributeFilter: ["style"] });
+  freezeScroll();
 
   return () => {
+    window.removeEventListener("scroll", freezeScroll, true);
     document.removeEventListener("touchmove", onTouchMove, true);
     document.removeEventListener("wheel", onWheel, true);
+    document.removeEventListener("keydown", onKeyDown, true);
     observer.disconnect();
+    html.style.overflow = prev.htmlOverflow;
+    body.style.overflow = prev.bodyOverflow;
+    html.style.overscrollBehavior = prev.htmlOverscroll;
+    body.style.overscrollBehavior = prev.bodyOverscroll;
+    body.style.touchAction = prev.bodyTouchAction;
     clearBodyPositionFixedLock();
+    window.scrollTo(lockedX, lockedY);
     unpinSiteHeaderWhenScrollUnlocks(headerPin);
   };
 }
@@ -368,7 +416,7 @@ function DrawerContent({
           // that's the "blue border" along the drawer's edge on iPhone.
           // Nothing inside needs *this* element's own outline; close/inputs
           // keep their own focus-visible rings.
-          "group/drawer-content fixed z-[60] flex h-auto flex-col overflow-visible bg-background outline-hidden data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
+          "group/drawer-content fixed z-[60] flex h-auto flex-col overflow-visible bg-background outline-hidden touch-pan-y data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
           dismissed && "invisible !pointer-events-none",
           // Drawers portal straight to <body>, outside the shell that already
           // handles the Dynamic Island's left/right safe area, so each side
