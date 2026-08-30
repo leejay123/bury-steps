@@ -20,6 +20,7 @@ const overlayCloseClassName =
 const DrawerOpenContext = React.createContext<boolean | undefined>(undefined);
 const DrawerShouldRenderContext = React.createContext(true);
 const DrawerCloseDisabledContext = React.createContext(false);
+const DrawerVariantContext = React.createContext<"sheet" | "form">("sheet");
 const DrawerTriggerRefContext = React.createContext<React.MutableRefObject<HTMLElement | null> | null>(
   null,
 );
@@ -48,15 +49,16 @@ function Drawer({
   onOpenChange,
   open,
   repositionInputs = false,
+  /**
+   * `sheet` — bottom sheet on phones (lists, confirms, read-only).
+   * `form` — full-height panel on phones too, so the keyboard does not fight a
+   * short bottom sheet (notices, reports, homepage editors).
+   */
+  variant = "sheet",
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root> & {
-  /**
-   * A form inside is mid-submit — a slow network shouldn't let someone
-   * swipe/escape the sheet away while it's still saving. Without this the
-   * save keeps running after the sheet is gone, and the success/error toast
-   * fires later with nothing on screen to explain it.
-   */
   closeDisabled?: boolean;
+  variant?: "sheet" | "form";
 }) {
   // Only DrawerContent needs to stay mounted through the close animation
   // (see DrawerShouldRenderContext below). Gating `children` here as a whole
@@ -64,10 +66,10 @@ function Drawer({
   // been true, making the trigger permanently unclickable.
   const shouldRender = useOverlayPresence(open);
   const isDesktop = useIsDesktop();
-  // Callers that need a specific direction (e.g. always-bottom pickers) can
-  // still pass one explicitly; side drawers left unspecified become a bottom
-  // sheet on phones and a side panel from the sm breakpoint up.
-  const resolvedDirection = direction ?? (isDesktop ? "right" : "bottom");
+  // Form editors stay a side/full panel on every width. Short sheets still
+  // rise from the bottom on phones.
+  const resolvedDirection =
+    direction ?? (variant === "form" || isDesktop ? "right" : "bottom");
   const triggerRef = React.useRef<HTMLElement | null>(null);
   const unlockBackgroundScrollRef = React.useRef<(() => void) | null>(null);
   const closeCleanupTimerRef = React.useRef(0);
@@ -106,7 +108,8 @@ function Drawer({
     <DrawerOpenContext.Provider value={open}>
       <DrawerShouldRenderContext.Provider value={shouldRender}>
         <DrawerCloseDisabledContext.Provider value={closeDisabled}>
-          <DrawerTriggerRefContext.Provider value={triggerRef}>
+          <DrawerVariantContext.Provider value={variant}>
+            <DrawerTriggerRefContext.Provider value={triggerRef}>
               <DrawerPrimitive.Root
                 data-slot="drawer"
                 {...props}
@@ -151,7 +154,8 @@ function Drawer({
               >
                 {children}
               </DrawerPrimitive.Root>
-          </DrawerTriggerRefContext.Provider>
+            </DrawerTriggerRefContext.Provider>
+          </DrawerVariantContext.Provider>
         </DrawerCloseDisabledContext.Provider>
       </DrawerShouldRenderContext.Provider>
     </DrawerOpenContext.Provider>
@@ -224,6 +228,7 @@ function DrawerContent({
   const open = React.useContext(DrawerOpenContext);
   const shouldRender = React.useContext(DrawerShouldRenderContext);
   const closeDisabled = React.useContext(DrawerCloseDisabledContext);
+  const variant = React.useContext(DrawerVariantContext);
   const triggerRef = React.useContext(DrawerTriggerRefContext);
   const dismissed = open === false;
   const reduce = useReducedMotion();
@@ -253,6 +258,7 @@ function DrawerContent({
     <DrawerPortal>
       <DrawerOverlay />
       <DrawerPrimitive.Content
+        data-drawer-variant={variant}
         data-slot="drawer-content"
         className={cn(
           // Vaul focuses this panel itself when it opens (there's no natural

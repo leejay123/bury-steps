@@ -383,6 +383,7 @@ function CategoryDrawer({
       closeDisabled={isPending}
       onOpenChange={onOpenChange}
       open={mode !== null}
+      variant="form"
     >
       <DrawerContent className="sm:max-w-md">
         <DrawerHeader>
@@ -682,6 +683,7 @@ export function HomepageFaqManager({
           if (!open) setMode(null);
         }}
         open={mode !== null}
+        variant="form"
       >
         <DrawerContent className="sm:max-w-md">
           <DrawerHeader>

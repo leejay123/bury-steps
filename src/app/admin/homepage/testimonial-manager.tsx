@@ -377,6 +377,7 @@ export function HomepageTestimonialManager({
           if (!open) setMode(null);
         }}
         open={mode !== null}
+        variant="form"
       >
         <DrawerContent className="sm:max-w-md">
           <DrawerHeader>

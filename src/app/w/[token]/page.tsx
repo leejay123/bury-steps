@@ -8,7 +8,7 @@ import { formatWalkDate } from "@/lib/dates";
 import { accountPortalHref, appUrl } from "@/lib/urls";
 import { meetingPointLabel } from "@/lib/geocode";
 import { ensureWalkSlug, walkShareUrl } from "@/lib/walk-slug";
-import { walkStatus } from "@/lib/walk-window";
+import { canAddWalkToCalendar, walkStatus } from "@/lib/walk-window";
 import { WalkFacts } from "@/components/walk-facts";
 import { WalkMapSection } from "@/components/walk-map-section";
 import { WalkJourneyDrawer } from "@/components/walk-journey-drawer";
@@ -198,7 +198,7 @@ export default async function WalkLinkPage({
           {walk.description ? (
             <p className="text-sm leading-relaxed">{walk.description}</p>
           ) : null}
-          {status === "cancelled" ? null : (
+          {canAddWalkToCalendar(walk) ? (
             <div>
               <Button asChild size="sm" variant="outline">
                 <a download href={`/w/${slug}/ics`}>
@@ -206,7 +206,7 @@ export default async function WalkLinkPage({
                 </a>
               </Button>
             </div>
-          )}
+          ) : null}
         </CardContent>
       </Card>
 

@@ -130,6 +130,23 @@ export function isWalkScheduleLocked(startsAt: Date, now: Date = new Date()): bo
   return now.getTime() >= startsAt.getTime();
 }
 
+/** New / edited start times must still be in the future. */
+export function isWalkStartInThePast(startsAt: Date, now: Date = new Date()): boolean {
+  return startsAt.getTime() <= now.getTime();
+}
+
+/**
+ * Calendar downloads are only useful before the walk is over. Cancelled and
+ * completed walks stay off calendars.
+ */
+export function canAddWalkToCalendar(
+  walk: { cancelledAt: Date | null; startsAt: Date; durationMins: number },
+  now: Date = new Date(),
+): boolean {
+  if (walk.cancelledAt) return false;
+  return walkStatus(walk, now) !== "completed";
+}
+
 /**
  * Organisers can add a member who was there but did not clock in — while
  * the window is open (phone died) and after the walk is completed (they

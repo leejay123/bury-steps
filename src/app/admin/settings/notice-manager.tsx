@@ -431,6 +431,7 @@ function CategoryDrawer({
       closeDisabled={false}
       onOpenChange={onOpenChange}
       open={open}
+      variant="form"
     >
       <DrawerContent className="sm:max-w-md">
         <DrawerHeader>
@@ -786,6 +787,7 @@ export function SiteNoticeManager({
           if (!open) setMode(null);
         }}
         open={mode !== null}
+        variant="form"
       >
         <DrawerContent className="sm:max-w-md">
           <DrawerHeader>

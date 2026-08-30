@@ -111,6 +111,31 @@ body {
   max-height: min(80dvh, calc(var(--vv-height, 100dvh) * 0.8));
 }
 
+/*
+ * Form editors on phones: a near-full card instead of a short bottom sheet, so
+ * the keyboard does not race a slide-up lift. --keyboard-inset shrinks the
+ * bottom edge into the visible viewport; fields scroll inside the panel.
+ */
+@media (max-width: 639px) {
+  [data-slot="drawer-content"][data-drawer-variant="form"][data-vaul-drawer-direction="right"],
+  [data-slot="drawer-content"][data-drawer-variant="form"][data-vaul-drawer-direction="left"] {
+    top: max(0.5rem, env(safe-area-inset-top));
+    right: 0.75rem;
+    left: 0.75rem;
+    bottom: max(0.5rem, calc(0.5rem + var(--keyboard-inset, 0px)));
+    width: auto;
+    max-width: none;
+    height: auto;
+    border-radius: 0.75rem;
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--border);
+    padding-top: 0;
+    padding-right: 0;
+    padding-left: 0;
+  }
+}
+
 .cl-modalBackdrop {
   backdrop-filter: blur(16px) saturate(1.15);
   -webkit-backdrop-filter: blur(16px) saturate(1.15);

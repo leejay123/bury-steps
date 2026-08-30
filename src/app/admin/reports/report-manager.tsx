@@ -481,6 +481,7 @@ export function AccidentReportManager({
           if (!open) setMode(null);
         }}
         open={mode !== null}
+        variant="form"
       >
         <DrawerContent className="min-h-0 sm:max-w-lg">
           <DrawerHeader className="shrink-0">

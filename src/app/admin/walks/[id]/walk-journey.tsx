@@ -143,6 +143,7 @@ export function WalkJourneyManager({
           if (!open && !pending) setMode(null);
         }}
         open={mode !== null}
+        variant="form"
       >
         <DrawerContent className="sm:max-w-md">
           <DrawerHeader>

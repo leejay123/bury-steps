@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { buildWalkIcs, walkIcsFilename } from "@/lib/walk-ics";
+import { canAddWalkToCalendar } from "@/lib/walk-window";
 
 export const dynamic = "force-dynamic";
 
@@ -25,8 +26,8 @@ export async function GET(
   });
 
   if (!walk) return new NextResponse("Not found", { status: 404 });
-  if (walk.cancelledAt) {
-    return new NextResponse("This walk has been cancelled.", { status: 404 });
+  if (!canAddWalkToCalendar(walk)) {
+    return new NextResponse("This walk cannot be added to a calendar.", { status: 404 });
   }
 
   const ics = buildWalkIcs(walk);

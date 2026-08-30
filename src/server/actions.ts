@@ -19,6 +19,7 @@ import {
   canOrganiserAddAttendance,
   canOrganiserEditJourney,
   isWalkScheduleLocked,
+  isWalkStartInThePast,
   organiserRecordedClockInAt,
   walkStatus,
   windowState,
@@ -187,6 +188,9 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
   } catch {
     return { ok: false, error: "That date and time could not be read. Try again." };
   }
+  if (isWalkStartInThePast(startsAt)) {
+    return { ok: false, error: "Choose a start time that has not passed yet." };
+  }
 
   const pin = await walkPinFromForm(formData, parsed.data.location, parsed.data.postcode);
   const slug = await allocateWalkSlug(parsed.data.title);
@@ -243,7 +247,11 @@ export async function duplicateWalk(
   });
   if (!source) return { ok: false, error: "That walk is no longer there." };
 
-  const startsAt = new Date(source.startsAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+  let startsAt = new Date(source.startsAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+  // Keep bumping a week until the copy is still in the future (old History walks).
+  while (isWalkStartInThePast(startsAt)) {
+    startsAt = new Date(startsAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+  }
   const slug = await allocateWalkSlug(source.title);
 
   let walk: { id: string; title: string; token: string; slug: string | null };
@@ -448,6 +456,8 @@ export async function updateWalk(
   if (isWalkScheduleLocked(existing.startsAt)) {
     startsAt = existing.startsAt;
     durationMins = existing.durationMins;
+  } else if (isWalkStartInThePast(startsAt)) {
+    return { ok: false, error: "Choose a start time that has not passed yet." };
   }
 
   const pin = await walkPinFromForm(formData, parsed.data.location, parsed.data.postcode);

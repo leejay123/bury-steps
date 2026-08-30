@@ -4,7 +4,7 @@ import { ClipboardList } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireAdmin, displayName } from "@/lib/auth";
 import { formatWalkDate, utcToLondonWallClock } from "@/lib/dates";
-import { canOrganiserAddAttendance, canOrganiserEditJourney, isWalkScheduleLocked, walkStatus } from "@/lib/walk-window";
+import { canOrganiserAddAttendance, canOrganiserEditJourney, canAddWalkToCalendar, isWalkScheduleLocked, walkStatus } from "@/lib/walk-window";
 import { appUrl } from "@/lib/urls";
 import { ShareLink } from "@/components/share-link";
 import { EmptyState } from "@/components/empty-state";
@@ -84,6 +84,7 @@ export default async function WalkDetailPage({
   const scheduleLocked = isWalkScheduleLocked(walk.startsAt);
   const canAddAttendance = canOrganiserAddAttendance(walk);
   const canEditJourney = canOrganiserEditJourney(walk);
+  const showCalendar = canAddWalkToCalendar(walk);
   const journeyDefaultAt = utcToLondonWallClock(
     status === "in-progress" ? new Date() : walk.startsAt,
   );
@@ -149,7 +150,7 @@ export default async function WalkDetailPage({
         <Button asChild size="sm" variant="outline">
           <a href={`/admin/walks/${walk.id}/export`}>Download roster (CSV)</a>
         </Button>
-        {!walk.cancelledAt ? (
+        {showCalendar ? (
           <Button asChild size="sm" variant="outline">
             <a download href={`/w/${slug}/ics`}>
               Add to calendar

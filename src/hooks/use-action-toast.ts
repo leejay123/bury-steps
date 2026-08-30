@@ -36,15 +36,12 @@ export function useActionToast(state: ActionResult | null, onOk?: () => void) {
       unlockIdleDocument();
       if (state.href) {
         const href = state.href;
-        // Hard navigation after the overlay unlock timers (0 / 250ms) so a
-        // stuck alert dialog cannot leave pointer-events locked on the next
-        // page. Soft router.push raced that teardown and froze Duplicate /
-        // swallowed Remove-member / Remove-walk success toasts.
-        const id = window.setTimeout(() => {
-          unlockIdleDocument();
-          window.location.assign(href);
-        }, 300);
-        return () => window.clearTimeout(id);
+        // Leave the current page immediately when the action says so (e.g.
+        // Remove walk). Waiting even briefly lets Next refresh the deleted
+        // walk URL and flash the not-found page before we navigate.
+        unlockIdleDocument();
+        window.location.assign(href);
+        return;
       }
       const id = window.setTimeout(() => router.refresh(), 0);
       return () => window.clearTimeout(id);

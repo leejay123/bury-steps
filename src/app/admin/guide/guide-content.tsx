@@ -155,8 +155,9 @@ export function OrganiserGuide() {
                 </li>
                 <li>Add a short description if you want.</li>
                 <li>
-                  Choose Create walk. A short share link is generated from the first word of the
-                  title, for example <code>/w/burrs</code>. Two walks from the same place get{" "}
+                  Choose Create walk. The start must still be in the future — you cannot create a
+                  1pm walk at 7pm the same day. A short share link is generated from the first word
+                  of the title, for example <code>/w/burrs</code>. Two walks from the same place get{" "}
                   <code>-2</code> on the end.
                 </li>
               </Steps>
@@ -226,14 +227,14 @@ export function OrganiserGuide() {
               <p>
                 On the walk page and on the public share link, <strong>Add to calendar</strong>{" "}
                 downloads a small calendar file (.ics) so phones and calendar apps can save the
-                date, time, meeting point, and a link back to the walk. Cancelled walks do not
-                offer Add to calendar — for members or organisers — and the calendar file link
-                returns not found until the walk is reopened.
+                date, time, meeting point, and a link back to the walk. Cancelled and completed
+                walks do not offer Add to calendar — for members or organisers — and the calendar
+                file link returns not found.
               </p>
               <p>
                 Once a walk reaches <strong>Completed</strong>, Cancel and Edit disappear from its
                 page — it already happened, so there is nothing left to cancel or change. Remove,
-                Duplicate, Add to calendar, and the CSV export are still there if you need them.{" "}
+                Duplicate, and the CSV export are still there if you need them.{" "}
                 <strong>Add someone</strong> stays, so you can still put a forgotten clock-in on
                 the list.
               </p>
@@ -465,12 +466,12 @@ export function OrganiserGuide() {
                 All of this lives under <Link href="/admin/settings">Settings</Link>. Hero photos,
                 testimonials, FAQs, and notices use a list: tap a row to edit. Remove is the small
                 button on the row, not in the drawer. Drawers are for adding and editing. On a
-                phone the list stacks so you do not have to scroll sideways, Add buttons stretch
-                full width, and drawers slide up from the bottom of the screen; on a wider screen
-                they slide in from the side instead. While a drawer is open the page behind —
-                including the site header — stays where it is, dimmed under a full-screen blur. A
-                breadcrumb at the top of each settings page goes back to Settings — it greys when
-                you hover it.
+                phone, short lists (bell, About, Journey) still slide up from the bottom; long edit
+                forms open as a near-full panel so the keyboard does not shove the sheet. Add
+                buttons stretch full width. On a wider screen editors slide in from the side.
+                While a drawer is open the page behind — including the site header — stays where it
+                is, dimmed under a full-screen blur. A breadcrumb at the top of each settings page
+                goes back to Settings — it greys when you hover it.
               </p>
               <p>
                 Use the up and down arrows on the left of a row to change the order of photos,
