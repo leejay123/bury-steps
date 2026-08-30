@@ -24,121 +24,63 @@ const DrawerTriggerRefContext = React.createContext<React.MutableRefObject<HTMLE
 );
 
 const DESKTOP_QUERY = "(min-width: 640px)";
-const SAFARI_UA = /^((?!chrome|android).)*safari/i;
-
-function isSafariBrowser() {
-  return typeof navigator !== "undefined" && SAFARI_UA.test(navigator.userAgent);
-}
-
-/** iPhone / iPad Safari — desktop Safari does not need position:fixed (it hides the sticky header). */
-function needsIosSafariBodyLock() {
-  if (!isSafariBrowser()) return false;
-  const ua = navigator.userAgent;
-  if (/iPhone|iPod|iPad/.test(ua)) return true;
-  // iPadOS 13+ can report as Mac with touch.
-  return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
-}
-
-/** Body style props for the iOS Safari position:fixed scroll lock. */
-const SAFARI_LOCK_PROPS = ["position", "top", "left", "right", "height", "width"] as const;
-
-type HeaderPin = {
-  header: HTMLElement;
-  spacer: HTMLDivElement;
-  prev: {
-    position: string;
-    top: string;
-    left: string;
-    right: string;
-    width: string;
-    zIndex: string;
-    margin: string;
-  };
-};
 
 /**
- * iOS `position:fixed; top:-y` on <body> pulls a sticky header off-screen with
- * the page (About drawer showed "Create an account" in the header gap). Pin
- * the bar to its current on-screen box first, with a spacer so document flow
- * does not jump. Overlay sits above (z-60); header stays under the blur.
+ * Scroll locks that set `position:fixed; top:-y` on <body> (Vaul/Safari and our
+ * old iOS helper) shift the sticky header off-screen — the page under the blur
+ * jumps and shows the wrong content in the header. Never use that pattern.
+ * Radix RemoveScroll already applies overflow:hidden via data-scroll-locked;
+ * these listeners only block touch/wheel outside the open panel (iOS can still
+ * rubber-band through overflow:hidden alone).
  */
-function pinSiteHeaderInPlace(): HeaderPin | null {
-  const header = document.querySelector<HTMLElement>("header");
-  if (!header || header.dataset.scrollLockPinned === "1") return null;
+const BODY_LOCK_PROPS = ["position", "top", "left", "right", "height", "width"] as const;
 
-  const rect = header.getBoundingClientRect();
-  const prev = {
-    position: header.style.position,
-    top: header.style.top,
-    left: header.style.left,
-    right: header.style.right,
-    width: header.style.width,
-    zIndex: header.style.zIndex,
-    margin: header.style.margin,
-  };
-
-  const spacer = document.createElement("div");
-  spacer.dataset.headerScrollLockSpacer = "1";
-  spacer.setAttribute("aria-hidden", "true");
-  spacer.style.height = `${Math.max(0, rect.height)}px`;
-  spacer.style.width = "100%";
-  spacer.style.flexShrink = "0";
-  spacer.style.pointerEvents = "none";
-  header.parentElement?.insertBefore(spacer, header);
-
-  header.dataset.scrollLockPinned = "1";
-  header.style.position = "fixed";
-  header.style.top = `${Math.max(0, rect.top)}px`;
-  header.style.left = `${rect.left}px`;
-  header.style.width = `${rect.width}px`;
-  header.style.right = "auto";
-  header.style.zIndex = "55";
-  header.style.margin = "0";
-
-  return { header, spacer, prev };
-}
-
-function unpinSiteHeader(pin: HeaderPin | null) {
-  if (!pin) return;
-  const { header, spacer, prev } = pin;
-  if (spacer.isConnected) spacer.remove();
-  header.style.position = prev.position;
-  header.style.top = prev.top;
-  header.style.left = prev.left;
-  header.style.right = prev.right;
-  header.style.width = prev.width;
-  header.style.zIndex = prev.zIndex;
-  header.style.margin = prev.margin;
-  delete header.dataset.scrollLockPinned;
-}
-
-/**
- * iOS Safari locks scroll with position:fixed + top:-y. Clearing that and then
- * scrolling in a later frame paints one frame at y=0 (the flash/jump). Do both
- * in the same turn before paint.
- */
-function lockIosSafariBodyScroll(y: number) {
+function clearBodyPositionFixedLock() {
   const { body } = document;
-  body.style.setProperty("position", "fixed", "important");
-  body.style.top = `${-y}px`;
-  body.style.left = "0px";
-  body.style.right = "0px";
-  body.style.width = "100%";
-  body.style.height = "auto";
-}
-
-function unlockIosSafariBodyScroll(y: number) {
-  const { body } = document;
-  const html = document.documentElement;
-  const previousBehavior = html.style.scrollBehavior;
-  html.style.scrollBehavior = "auto";
-
-  for (const prop of SAFARI_LOCK_PROPS) {
+  if (body.style.position !== "fixed" && body.style.top === "") return;
+  const top = body.style.top;
+  const y = top ? Math.abs(Number.parseInt(top, 10) || 0) : window.scrollY;
+  for (const prop of BODY_LOCK_PROPS) {
     body.style.removeProperty(prop);
   }
-  window.scrollTo(0, y);
+  if (y) window.scrollTo(0, y);
+}
 
-  html.style.scrollBehavior = previousBehavior;
+function eventTargetInsideOpenOverlay(target: EventTarget | null) {
+  if (!(target instanceof Element)) return false;
+  return Boolean(
+    target.closest(
+      '[data-slot="drawer-content"], [data-slot="dialog-content"], [data-slot="alert-dialog-content"]',
+    ),
+  );
+}
+
+function lockBackgroundScroll() {
+  const onTouchMove = (event: TouchEvent) => {
+    if (eventTargetInsideOpenOverlay(event.target)) return;
+    event.preventDefault();
+  };
+  const onWheel = (event: WheelEvent) => {
+    if (eventTargetInsideOpenOverlay(event.target)) return;
+    event.preventDefault();
+  };
+
+  document.addEventListener("touchmove", onTouchMove, { capture: true, passive: false });
+  document.addEventListener("wheel", onWheel, { capture: true, passive: false });
+  // If anything still applies position:fixed (old Safari path), strip it so the
+  // sticky header cannot jump under the blur.
+  clearBodyPositionFixedLock();
+  const observer = new MutationObserver(() => {
+    clearBodyPositionFixedLock();
+  });
+  observer.observe(document.body, { attributes: true, attributeFilter: ["style"] });
+
+  return () => {
+    document.removeEventListener("touchmove", onTouchMove, true);
+    document.removeEventListener("wheel", onWheel, true);
+    observer.disconnect();
+    clearBodyPositionFixedLock();
+  };
 }
 
 /** Bottom sheet on phones, side panel from the sm breakpoint up. */
@@ -183,24 +125,15 @@ function Drawer({
   // still pass one explicitly; side drawers left unspecified become a bottom
   // sheet on phones and a side panel from the sm breakpoint up.
   const resolvedDirection = direction ?? (isDesktop ? "right" : "bottom");
-  // iOS Safari needs a body scroll lock. We own it (noBodyStyles) so close can
-  // unlock + scrollTo in one turn. Before locking, pin the sticky header so
-  // top:-y cannot drag it off-screen under the blur.
-  const scrollYRef = React.useRef(0);
   const triggerRef = React.useRef<HTMLElement | null>(null);
-  const iosLockRef = React.useRef(false);
-  const headerPinRef = React.useRef<HeaderPin | null>(null);
+  const unlockBackgroundScrollRef = React.useRef<(() => void) | null>(null);
   const closeCleanupTimerRef = React.useRef(0);
 
   React.useEffect(() => {
     return () => {
       window.clearTimeout(closeCleanupTimerRef.current);
-      if (iosLockRef.current) {
-        unlockIosSafariBodyScroll(scrollYRef.current);
-        iosLockRef.current = false;
-      }
-      unpinSiteHeader(headerPinRef.current);
-      headerPinRef.current = null;
+      unlockBackgroundScrollRef.current?.();
+      unlockBackgroundScrollRef.current = null;
       restorePagePointerEvents();
     };
   }, []);
@@ -216,41 +149,26 @@ function Drawer({
                 direction={resolvedDirection}
                 dismissible={!closeDisabled}
                 modal
-                // We apply Safari's position:fixed lock ourselves so restore is
-                // synchronous. Leaving Vaul's lock on causes a one-frame jump.
+                // Do not let Vaul apply position:fixed on <body> — that is what
+                // dragged the sticky header off-screen under the blur on every
+                // Safari/iOS path. RemoveScroll still locks overflow.
                 noBodyStyles
                 onOpenChange={(next) => {
                   if (closeDisabled && !next) return;
                   window.clearTimeout(closeCleanupTimerRef.current);
 
                   if (next) {
-                    scrollYRef.current = window.scrollY;
                     const active = document.activeElement;
                     triggerRef.current =
                       active instanceof HTMLElement ? active : triggerRef.current;
-                    if (needsIosSafariBodyLock()) {
-                      // Pin first, then lock — reverse on close.
-                      headerPinRef.current = pinSiteHeaderInPlace();
-                      lockIosSafariBodyScroll(scrollYRef.current);
-                      iosLockRef.current = true;
-                    }
+                    unlockBackgroundScrollRef.current?.();
+                    unlockBackgroundScrollRef.current = lockBackgroundScroll();
                   } else {
-                    const lockedTop = document.body.style.top;
-                    const fromLock = lockedTop
-                      ? Math.abs(Number.parseInt(lockedTop, 10) || 0)
-                      : 0;
-                    const y = fromLock || scrollYRef.current;
-                    scrollYRef.current = y;
-
-                    if (iosLockRef.current || lockedTop) {
-                      unlockIosSafariBodyScroll(y);
-                      iosLockRef.current = false;
-                    }
-                    unpinSiteHeader(headerPinRef.current);
-                    headerPinRef.current = null;
+                    unlockBackgroundScrollRef.current?.();
+                    unlockBackgroundScrollRef.current = null;
 
                     // Pointer-events / inert cleanup after the close animation —
-                    // not in the same turn as scroll restore (that race flashed).
+                    // not in the same turn as dismiss (that race flashed).
                     closeCleanupTimerRef.current = window.setTimeout(() => {
                       unlockIdleDocument();
                     }, 320);
