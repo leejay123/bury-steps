@@ -137,13 +137,13 @@ export function NotificationBell({
 
               const content = (
                 <>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium text-sm">{notice.title}</p>
+                  <div className="flex flex-col gap-1">
                     {isUnread ? (
-                      <Badge className="h-5 px-1.5 text-[10px]" variant="secondary">
+                      <Badge className="h-5 w-fit px-1.5 text-[10px]" variant="secondary">
                         New
                       </Badge>
                     ) : null}
+                    <p className="font-medium text-sm">{notice.title}</p>
                   </div>
                   <p className="text-muted-foreground text-xs">
                     Updated {formatDate(notice.updatedAt)}

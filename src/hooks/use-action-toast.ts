@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { ActionResult } from "@/server/actions";
 import { unlockIdleDocument } from "@/components/overlay-root";
+import { setFlashToast } from "@/lib/flash-toast";
 
 /**
  * Shared "toast the result, then refresh the page's server data" pattern
@@ -19,9 +20,10 @@ import { unlockIdleDocument } from "@/components/overlay-root";
  * save and opens the dialog again.
  *
  * Navigating away: never `router.push` / `router.replace` inside `onOk`.
- * Return `href` on the ActionResult instead. Soft navigation in `onOk`
- * races the success toast (and can freeze overlays). This hook toasts first,
- * then hard-assigns after a short delay when `href` is set.
+ * Return `href` on the ActionResult instead. Soft navigation can race a
+ * deleted page into not-found, so we hard-assign — and stash the success
+ * message in sessionStorage so Sonner can replay it on the next page
+ * (a live toast dies with the full reload).
  */
 export function useActionToast(state: ActionResult | null, onOk?: () => void) {
   const router = useRouter();
@@ -32,17 +34,18 @@ export function useActionToast(state: ActionResult | null, onOk?: () => void) {
     if (!state) return;
     if (state.ok) {
       onOkRef.current?.();
-      toast.success(state.message ?? "Saved.");
       unlockIdleDocument();
       if (state.href) {
         const href = state.href;
-        // Leave the current page immediately when the action says so (e.g.
-        // Remove walk). Waiting even briefly lets Next refresh the deleted
-        // walk URL and flash the not-found page before we navigate.
+        setFlashToast({
+          type: "success",
+          message: state.message ?? "Saved.",
+        });
         unlockIdleDocument();
         window.location.assign(href);
         return;
       }
+      toast.success(state.message ?? "Saved.");
       const id = window.setTimeout(() => router.refresh(), 0);
       return () => window.clearTimeout(id);
     }

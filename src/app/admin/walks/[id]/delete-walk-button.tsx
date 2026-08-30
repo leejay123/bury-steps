@@ -39,8 +39,7 @@ export function DeleteWalkButton({
   );
   const [open, setOpen] = useState(false);
 
-  // Navigation is via ActionResult.href from deleteWalk so the success toast
-  // paints before a delayed hard navigate (same pattern as Duplicate / Remove member).
+  // Navigation via ActionResult.href — toast is flashed across the hard assign.
   useActionToast(state, () => setOpen(false));
 
   return (

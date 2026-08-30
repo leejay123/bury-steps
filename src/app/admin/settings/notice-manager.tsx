@@ -722,27 +722,29 @@ export function SiteNoticeManager({
                 >
                   <DataListItemMain>
                     <DataListBody>
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {isWelcomeNotice(notice) ? (
+                            <Badge variant={notice.enabled ? "default" : "secondary"}>
+                              Welcome (pinned)
+                              {notice.enabled ? "" : " · off"}
+                            </Badge>
+                          ) : (
+                            <Badge variant={notice.kind === "PAGE" ? "default" : "secondary"}>
+                              {notice.kind === "PAGE" ? "Full page" : "Bell only"}
+                            </Badge>
+                          )}
+                          {notice.kind === "PAGE" && notice.categoryLabel ? (
+                            <Badge variant="outline">{notice.categoryLabel}</Badge>
+                          ) : null}
+                        </div>
                         <p className="font-medium">{notice.title}</p>
-                        {isWelcomeNotice(notice) ? (
-                          <Badge variant={notice.enabled ? "default" : "secondary"}>
-                            Welcome (pinned)
-                            {notice.enabled ? "" : " · off"}
-                          </Badge>
-                        ) : (
-                          <Badge variant={notice.kind === "PAGE" ? "default" : "secondary"}>
-                            {notice.kind === "PAGE" ? "Full page" : "Bell only"}
-                          </Badge>
-                        )}
                       </div>
                       <p className="line-clamp-3 text-sm text-muted-foreground wrap-break-word">
                         {notice.body}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         Updated {formatDate(notice.updatedAt)}
-                        {notice.kind === "PAGE" && notice.categoryLabel
-                          ? ` · ${notice.categoryLabel}`
-                          : ""}
                         {notice.kind === "PAGE" && notice.slug ? ` · /notices/${notice.slug}` : ""}
                       </p>
                     </DataListBody>

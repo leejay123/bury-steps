@@ -137,13 +137,16 @@ export function NoticesBlogSection({
                   href={`/notices/${notice.slug}`}
                   key={notice.id}
                 >
+                  <p className="text-xs font-medium text-muted-foreground">
+                    {notice.categoryLabel ?? "Notice"}
+                  </p>
                   <div className="flex items-start justify-between gap-3">
                     <p className="font-medium">{notice.title}</p>
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                   </div>
-                <p className="text-xs text-muted-foreground">
-                  {notice.categoryLabel ?? "Notice"} · Updated {formatDate(notice.updatedAt)}
-                </p>
+                  <p className="text-xs text-muted-foreground">
+                    Updated {formatDate(notice.updatedAt)}
+                  </p>
                   <p className="line-clamp-3 text-sm text-muted-foreground">{notice.body}</p>
                 </Link>
               ))}

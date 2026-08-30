@@ -1,3 +1,6 @@
+import { CircleAlert } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
 /**
  * Server action errors were toast-only: a message that appears for a couple
  * of seconds and then is gone, with no trace left in the form itself. That's
@@ -9,8 +12,9 @@
 export function FormError({ message }: { message?: string | null }) {
   if (!message) return null;
   return (
-    <p className="text-sm text-destructive" role="alert">
-      {message}
-    </p>
+    <Alert variant="destructive">
+      <CircleAlert />
+      <AlertDescription className="text-destructive">{message}</AlertDescription>
+    </Alert>
   );
 }

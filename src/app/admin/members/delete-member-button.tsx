@@ -55,9 +55,8 @@ export function DeleteMemberButton({
   );
   const [open, setOpen] = useState(false);
   const [confirmValue, setConfirmValue] = useState("");
-  // Close only — navigation (when redirectTo is set) goes through ActionResult.href
-  // so useActionToast can show the success sonner first, then hard-navigate after
-  // a short delay. Soft router.push in onOk used to leave before the toast painted.
+  // Close only — redirect (when set) goes through ActionResult.href; the success
+  // toast is flashed across the hard assign so it still shows on the next page.
   useActionToast(state, () => setOpen(false));
 
   useEffect(() => {
