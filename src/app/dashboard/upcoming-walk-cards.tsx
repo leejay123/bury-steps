@@ -1,14 +1,17 @@
 "use client";
 
+import { useDeferredValue, useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, ChevronRight, Clock, MapPin } from "lucide-react";
+import { CalendarDays, ChevronRight, Clock, MapPin, Search, SearchX } from "lucide-react";
 import { formatDateTime, formatWalkDate } from "@/lib/dates";
 import { walkSharePath } from "@/lib/walk-slug";
 import { cn } from "@/lib/utils";
 import { windowState, type WindowState } from "@/lib/walk-window";
-import { Badge } from "@/components/ui/badge";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { useWalkClock } from "@/hooks/use-walk-clock";
 
 export type UpcomingWalkCard = {
@@ -78,13 +81,13 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
             <span className="inline-flex items-center gap-1.5">
               <Clock aria-hidden="true" className="size-3.5" />
               {walk.durationMins} min
-              {walk.location ? (
-                <>
-                  <MapPin aria-hidden="true" className="ml-1.5 size-3.5" />
-                  {walk.location}
-                </>
-              ) : null}
             </span>
+            {walk.location ? (
+              <span className="inline-flex items-center gap-1.5">
+                <MapPin aria-hidden="true" className="size-3.5" />
+                {walk.location}
+              </span>
+            ) : null}
           </CardDescription>
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -93,10 +96,7 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
             durationMins={walk.durationMins}
             startsAt={walk.startsAt}
           />
-          {walk.clockedInAt && !walk.cancelledAt ? (
-            <Badge variant="secondary">Clocked in</Badge>
-          ) : null}
-          <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" />
+          <ChevronRight aria-hidden className="size-4 text-muted-foreground" />
         </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -141,11 +141,54 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
 }
 
 export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const deferredSearchTerm = useDeferredValue(searchTerm);
+
+  const filtered = useMemo(() => {
+    const query = deferredSearchTerm.trim().toLowerCase();
+    if (!query) return walks;
+    return walks.filter((walk) => {
+      const hay = `${walk.title} ${walk.location ?? ""} ${walk.description ?? ""}`.toLowerCase();
+      return hay.includes(query);
+    });
+  }, [deferredSearchTerm, walks]);
+
   return (
     <div className="flex flex-col gap-4">
-      {walks.map((walk) => (
-        <UpcomingWalkCardRow key={walk.id} walk={walk} />
-      ))}
+      <InputGroup className="w-full max-w-md">
+        <InputGroupInput
+          aria-label="Search walks"
+          onChange={(event) => setSearchTerm(event.target.value)}
+          placeholder="Search by walk or meeting point…"
+          value={searchTerm}
+        />
+        <InputGroupAddon>
+          <Search data-icon="inline-start" />
+        </InputGroupAddon>
+      </InputGroup>
+
+      {filtered.length === 0 ? (
+        <Empty className="border">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Search />
+            </EmptyMedia>
+            <EmptyTitle>No walks match your search</EmptyTitle>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button
+              onClick={() => setSearchTerm("")}
+              type="button"
+              variant="outline"
+            >
+              <SearchX data-icon="inline-start" />
+              Clear search
+            </Button>
+          </EmptyContent>
+        </Empty>
+      ) : (
+        filtered.map((walk) => <UpcomingWalkCardRow key={walk.id} walk={walk} />)
+      )}
     </div>
   );
 }

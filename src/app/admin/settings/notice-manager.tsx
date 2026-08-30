@@ -17,6 +17,7 @@ import {
   MAX_NOTICE_CATEGORY_LABEL,
   MAX_NOTICE_PAGE_BODY,
   MAX_NOTICE_TEASER,
+  isPinnedNotice,
   type NoticeCategoryView,
   type NoticeKind,
   type NoticeView,
@@ -92,6 +93,7 @@ function NoticeFields({
   notice?: NoticeView;
   prefix: string;
 }) {
+  const pinned = notice ? isPinnedNotice(notice) : false;
   const [title, setTitle] = useState(notice?.title ?? "");
   const [body, setBody] = useState(notice?.body ?? "");
   const [kind, setKind] = useState<NoticeKind>(notice?.kind ?? "BELL");
@@ -103,23 +105,34 @@ function NoticeFields({
   return (
     <div className="flex flex-col gap-3">
       {notice ? <input name="noticeId" type="hidden" value={notice.id} /> : null}
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${prefix}-kind`}>Type</Label>
-        <input name="kind" type="hidden" value={kind} />
-        <Select
-          disabled={disabled}
-          onValueChange={(value) => setKind(value as NoticeKind)}
-          value={kind}
-        >
-          <SelectTrigger id={`${prefix}-kind`}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="BELL">Bell only — short message in the drawer</SelectItem>
-            <SelectItem value="PAGE">Full page — teaser in the bell, article on Notices</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {pinned ? (
+        <p className="rounded-md border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+          This is the pinned welcome notice. Members see it first in the bell. Use{" "}
+          <code className="text-xs">{"{{firstName}}"}</code> in the title or message to insert
+          their name. You can edit the text, but not remove it or turn it into a full page.
+        </p>
+      ) : null}
+      {!pinned ? (
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={`${prefix}-kind`}>Type</Label>
+          <input name="kind" type="hidden" value={kind} />
+          <Select
+            disabled={disabled}
+            onValueChange={(value) => setKind(value as NoticeKind)}
+            value={kind}
+          >
+            <SelectTrigger id={`${prefix}-kind`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="BELL">Bell only — short message in the drawer</SelectItem>
+              <SelectItem value="PAGE">Full page — teaser in the bell, article on Notices</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      ) : (
+        <input name="kind" type="hidden" value="BELL" />
+      )}
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={`${prefix}-title`} required>
           Title
@@ -150,11 +163,11 @@ function NoticeFields({
           value={body}
         />
         <p className="text-xs text-muted-foreground">
-          Shown in the bell{kind === "PAGE" ? " and as the card excerpt on Notices" : ""}. Up to{" "}
-          {MAX_NOTICE_TEASER} characters.
+          Shown in the bell{kind === "PAGE" && !pinned ? " and as the card excerpt on Notices" : ""}
+          . Up to {MAX_NOTICE_TEASER} characters.
         </p>
       </div>
-      {kind === "PAGE" ? (
+      {kind === "PAGE" && !pinned ? (
         <>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor={`${prefix}-category`} required>
@@ -663,9 +676,13 @@ export function SiteNoticeManager({
                 <DataListBody>
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-medium">{notice.title}</p>
-                    <Badge variant={notice.kind === "PAGE" ? "default" : "secondary"}>
-                      {notice.kind === "PAGE" ? "Full page" : "Bell only"}
-                    </Badge>
+                    {isPinnedNotice(notice) ? (
+                      <Badge variant="default">Welcome (pinned)</Badge>
+                    ) : (
+                      <Badge variant={notice.kind === "PAGE" ? "default" : "secondary"}>
+                        {notice.kind === "PAGE" ? "Full page" : "Bell only"}
+                      </Badge>
+                    )}
                   </div>
                   <p className="text-sm text-muted-foreground wrap-break-word">{notice.body}</p>
                   <p className="text-xs text-muted-foreground">
@@ -677,17 +694,19 @@ export function SiteNoticeManager({
                   </p>
                 </DataListBody>
                 <DataListActions>
-                  <RemoveNoticeButton
-                    noticeId={notice.id}
-                    onRemoved={() =>
-                      setMode((current) =>
-                        current?.type === "edit" && current.notice.id === notice.id
-                          ? null
-                          : current,
-                      )
-                    }
-                    title={notice.title}
-                  />
+                  {isPinnedNotice(notice) ? null : (
+                    <RemoveNoticeButton
+                      noticeId={notice.id}
+                      onRemoved={() =>
+                        setMode((current) =>
+                          current?.type === "edit" && current.notice.id === notice.id
+                            ? null
+                            : current,
+                        )
+                      }
+                      title={notice.title}
+                    />
+                  )}
                 </DataListActions>
                 <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
               </DataListItem>
@@ -708,7 +727,9 @@ export function SiteNoticeManager({
             <DrawerTitle>{editing ? "Edit notice" : "Add a notice"}</DrawerTitle>
             <DrawerDescription>
               {editing
-                ? "Change the type, title, or message. Saving it will show as new in the bell."
+                ? isPinnedNotice(editing.notice)
+                  ? "Edit the welcome title and message. Saving shows it as new in the bell."
+                  : "Change the type, title, or message. Saving it will show as new in the bell."
                 : "Bell only stays in the drawer. Full page also appears on Notices. Notices are for signed-in members only."}
             </DrawerDescription>
           </DrawerHeader>

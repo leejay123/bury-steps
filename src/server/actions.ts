@@ -1063,6 +1063,11 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
   const id = String(formData.get("userId") ?? "");
   if (!id) return { ok: false, error: "No member selected." };
 
+  const confirm = String(formData.get("confirm") ?? "").trim().toLowerCase();
+  if (confirm !== "confirm") {
+    return { ok: false, error: "Type Confirm to remove this member." };
+  }
+
   if (id === admin.id) {
     return { ok: false, error: "You cannot delete your own account from here." };
   }
@@ -1070,7 +1075,14 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
   const target = await prisma.user.findUnique({
     where: { id },
     include: {
-      _count: { select: { walksCreated: true, attendances: true, accidentReports: true } },
+      _count: {
+        select: {
+          walksCreated: true,
+          attendances: true,
+          accidentReports: true,
+          journeyEvents: true,
+        },
+      },
     },
   });
   if (!target) return { ok: false, error: "That member is no longer in the group." };
@@ -1099,6 +1111,13 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
       // fail on that foreign key.
       if (target._count.accidentReports > 0) {
         await tx.accidentReport.updateMany({
+          where: { createdById: target.id },
+          data: { createdById: admin.id },
+        });
+      }
+      // Journey beats are also Restrict — reassign before deleting the user.
+      if (target._count.journeyEvents > 0) {
+        await tx.walkJourneyEvent.updateMany({
           where: { createdById: target.id },
           data: { createdById: admin.id },
         });
@@ -1800,20 +1819,25 @@ export async function updateSiteNotice(
     await prisma.$transaction(async (tx) => {
       const existing = await tx.siteNotice.findUnique({
         where: { id },
-        select: { id: true, slug: true },
+        select: { id: true, slug: true, systemKey: true },
       });
       if (!existing) throw new Error("MISSING");
 
-      if (copy.kind === "PAGE" && copy.categoryId) {
+      // Pinned system notices stay bell-only; organisers may edit title and body.
+      const kind = existing.systemKey ? "BELL" : copy.kind;
+      const pageBody = existing.systemKey ? null : copy.pageBody;
+      const categoryId = existing.systemKey ? null : copy.categoryId;
+
+      if (kind === "PAGE" && categoryId) {
         const category = await tx.siteNoticeCategory.findUnique({
-          where: { id: copy.categoryId },
+          where: { id: categoryId },
           select: { id: true },
         });
         if (!category) throw new Error("CATEGORY_MISSING");
       }
 
       const slug =
-        copy.kind === "PAGE"
+        kind === "PAGE"
           ? existing.slug ?? (await uniqueNoticePageSlug(tx, copy.title, id))
           : null;
       if (slug) slugPath = `/notices/${slug}`;
@@ -1826,11 +1850,11 @@ export async function updateSiteNotice(
         data: {
           title: copy.title,
           body: copy.body,
-          kind: copy.kind,
+          kind,
           audience: "MEMBERS",
           slug,
-          pageBody: copy.pageBody,
-          categoryId: copy.categoryId,
+          pageBody,
+          categoryId,
         },
       });
       await tx.siteNoticeRead.deleteMany({ where: { noticeId: id } });
@@ -1859,6 +1883,14 @@ export async function deleteSiteNotice(
   if (!id) return { ok: false, error: "No notice selected." };
 
   try {
+    const existing = await prisma.siteNotice.findUnique({
+      where: { id },
+      select: { systemKey: true },
+    });
+    if (!existing) return { ok: false, error: "That notice is no longer there." };
+    if (existing.systemKey) {
+      return { ok: false, error: "That notice is pinned and cannot be removed." };
+    }
     await prisma.siteNotice.delete({ where: { id } });
   } catch (err) {
     if (!isPrismaCode(err, "P2025")) logActionError("deleteSiteNotice", err);

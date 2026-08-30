@@ -33,6 +33,45 @@ const STEPS = [
   },
 ];
 
+export function MemberWelcomeDialogContent({
+  firstName,
+  onDismiss,
+}: {
+  firstName?: string | null;
+  onDismiss: () => void;
+}) {
+  const greeting = firstName?.trim()
+    ? `Welcome to Bury Steps, ${firstName.trim()}`
+    : "Welcome to Bury Steps";
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle>{greeting}</DialogTitle>
+        <DialogDescription>Here&apos;s how clocking in works.</DialogDescription>
+      </DialogHeader>
+      <div className="flex flex-col gap-4">
+        {STEPS.map((step) => (
+          <div className="flex items-start gap-3" key={step.title}>
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
+              <step.icon className="size-4" />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <p className="text-sm font-medium">{step.title}</p>
+              <p className="text-sm text-muted-foreground">{step.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <DialogFooter>
+        <Button onClick={onDismiss} type="button">
+          Got it
+        </Button>
+      </DialogFooter>
+    </>
+  );
+}
+
 /**
  * Shown once, the first time a member with no walks yet reaches the
  * dashboard. Gated on both "no attendances" (so returning members never see
@@ -40,7 +79,13 @@ const STEPS = [
  * first walk). No DB flag needed — once they clock in once, `hasNoWalks`
  * alone would already stop this from showing again.
  */
-export function MemberWelcomeDialog({ hasNoWalks }: { hasNoWalks: boolean }) {
+export function MemberWelcomeDialog({
+  firstName,
+  hasNoWalks,
+}: {
+  firstName?: string | null;
+  hasNoWalks: boolean;
+}) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -65,29 +110,26 @@ export function MemberWelcomeDialog({ hasNoWalks }: { hasNoWalks: boolean }) {
   return (
     <Dialog onOpenChange={(next) => (next ? setOpen(true) : dismiss())} open={open}>
       <DialogContent showCloseButton={false}>
-        <DialogHeader>
-          <DialogTitle>Welcome to Bury Steps</DialogTitle>
-          <DialogDescription>Here&apos;s how clocking in works.</DialogDescription>
-        </DialogHeader>
-        <div className="flex flex-col gap-4">
-          {STEPS.map((step) => (
-            <div className="flex items-start gap-3" key={step.title}>
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
-                <step.icon className="size-4" />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <p className="text-sm font-medium">{step.title}</p>
-                <p className="text-sm text-muted-foreground">{step.description}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        <DialogFooter>
-          <Button onClick={dismiss} type="button">
-            Got it
-          </Button>
-        </DialogFooter>
+        <MemberWelcomeDialogContent firstName={firstName} onDismiss={dismiss} />
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Organiser preview — same dialog content, does not set localStorage. */
+export function PreviewMemberWelcomeDialog({ firstName }: { firstName?: string | null }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button onClick={() => setOpen(true)} size="sm" type="button" variant="outline">
+        Preview welcome dialog
+      </Button>
+      <Dialog onOpenChange={setOpen} open={open}>
+        <DialogContent showCloseButton={false}>
+          <MemberWelcomeDialogContent firstName={firstName} onDismiss={() => setOpen(false)} />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

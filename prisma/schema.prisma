@@ -189,6 +189,8 @@ model SiteNotice {
   pageBody   String?
   categoryId String?
   category   SiteNoticeCategory? @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  /// Stable key for system notices (e.g. "welcome"). Not deletable; edit title/body only.
+  systemKey  String?             @unique
   createdAt  DateTime            @default(now())
   updatedAt  DateTime            @updatedAt
   reads      SiteNoticeRead[]

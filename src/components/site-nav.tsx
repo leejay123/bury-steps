@@ -25,7 +25,7 @@ export async function SiteNav() {
 
   const walksHref = isAdmin ? "/admin" : "/dashboard";
   const { notices, unreadIds } = user
-    ? await getSiteNoticeState(user.id)
+    ? await getSiteNoticeState(user.id, user.firstName)
     : { notices: [], unreadIds: [] as string[] };
 
   return (

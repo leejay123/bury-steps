@@ -1,6 +1,12 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
-import type { NoticeAudience, NoticeCategoryView, NoticeView } from "@/lib/notices";
+import {
+  personalizeNotice,
+  sortNoticesForBell,
+  type NoticeAudience,
+  type NoticeCategoryView,
+  type NoticeView,
+} from "@/lib/notices";
 import { HOMEPAGE_REVALIDATE_SECONDS } from "@/lib/homepage-cache";
 
 export const NOTICES_CACHE_TAG = "site-notices";
@@ -15,6 +21,7 @@ type CachedNotice = {
   pageBody: string | null;
   categoryId: string | null;
   categoryLabel: string | null;
+  systemKey: string | null;
   createdAt: string;
 };
 
@@ -39,6 +46,7 @@ async function loadSiteNotices(): Promise<CachedNotice[]> {
       pageBody: true,
       categoryId: true,
       category: { select: { label: true } },
+      systemKey: true,
       createdAt: true,
     },
   });
@@ -52,6 +60,7 @@ async function loadSiteNotices(): Promise<CachedNotice[]> {
     pageBody: row.pageBody,
     categoryId: row.categoryId,
     categoryLabel: row.category?.label ?? null,
+    systemKey: row.systemKey,
     createdAt: row.createdAt.toISOString(),
   }));
 }
@@ -76,7 +85,7 @@ async function loadSiteNoticeCategories(): Promise<CachedCategory[]> {
   }));
 }
 
-const getCachedSiteNotices = unstable_cache(loadSiteNotices, ["site-notices", "v6"], {
+const getCachedSiteNotices = unstable_cache(loadSiteNotices, ["site-notices", "v7"], {
   tags: [NOTICES_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });
@@ -91,10 +100,12 @@ const getCachedSiteNoticeCategories = unstable_cache(
 );
 
 function reviveNotices(rows: CachedNotice[]): NoticeView[] {
-  return rows.map((row) => ({
-    ...row,
-    createdAt: new Date(row.createdAt),
-  }));
+  return sortNoticesForBell(
+    rows.map((row) => ({
+      ...row,
+      createdAt: new Date(row.createdAt),
+    })),
+  );
 }
 
 export async function getSiteNotices(): Promise<NoticeView[]> {
@@ -119,7 +130,10 @@ export async function getPageNotices(): Promise<NoticeView[]> {
   return notices.filter((notice) => notice.kind === "PAGE" && notice.slug);
 }
 
-export async function getSiteNoticeState(userId: string): Promise<{
+export async function getSiteNoticeState(
+  userId: string,
+  firstName?: string | null,
+): Promise<{
   notices: NoticeView[];
   unreadIds: string[];
 }> {
@@ -131,7 +145,7 @@ export async function getSiteNoticeState(userId: string): Promise<{
         select: { noticeId: true },
       }),
     ]);
-    const notices = reviveNotices(rows);
+    const notices = reviveNotices(rows).map((notice) => personalizeNotice(notice, firstName));
     const read = new Set(reads.map((row) => row.noticeId));
     return {
       notices,
@@ -156,6 +170,7 @@ export async function getPageNoticeBySlug(slug: string): Promise<NoticeView | nu
         pageBody: true,
         categoryId: true,
         category: { select: { label: true } },
+        systemKey: true,
         createdAt: true,
       },
     });
@@ -170,6 +185,7 @@ export async function getPageNoticeBySlug(slug: string): Promise<NoticeView | nu
       pageBody: row.pageBody,
       categoryId: row.categoryId,
       categoryLabel: row.category?.label ?? null,
+      systemKey: row.systemKey,
       createdAt: row.createdAt,
     };
   } catch {

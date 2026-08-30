@@ -1,15 +1,16 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { deleteMember, type ActionResult } from "@/server/actions";
 import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -18,13 +19,20 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { ROLE_CONFIRM_WORD } from "./member-role-button";
 
-function Confirm() {
+function ConfirmSubmit({ confirmValue }: { confirmValue: string }) {
   const { pending } = useFormStatus();
+  const ready = confirmValue.trim().toLowerCase() === ROLE_CONFIRM_WORD.toLowerCase();
   return (
-    <AlertDialogAction type="submit" disabled={pending} className="bg-destructive text-white hover:bg-destructive/90">
+    <Button
+      className="bg-destructive text-white hover:bg-destructive/90"
+      disabled={pending || !ready}
+      type="submit"
+      variant="destructive"
+    >
       {pending ? "Removing…" : "Remove member"}
-    </AlertDialogAction>
+    </Button>
   );
 }
 
@@ -48,6 +56,7 @@ export function DeleteMemberButton({
     null,
   );
   const [open, setOpen] = useState(false);
+  const [confirmValue, setConfirmValue] = useState("");
   // The hook's own router.refresh() re-fetches whichever page this button
   // lives on (the members list, or the member's own page before it
   // redirects away) so it never shows a member who was just removed.
@@ -55,6 +64,10 @@ export function DeleteMemberButton({
     setOpen(false);
     if (redirectTo) router.push(redirectTo);
   });
+
+  useEffect(() => {
+    if (!open) setConfirmValue("");
+  }, [open]);
 
   return (
     <AlertDialog
@@ -68,35 +81,53 @@ export function DeleteMemberButton({
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent closeDisabled={isPending}>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Remove {name}?</AlertDialogTitle>
-          <AlertDialogDescription asChild>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <p>They will be signed out and will not be able to clock in unless they join again.</p>
-              {attendanceCount > 0 && (
-                <p>
-                  {attendanceCount === 1
-                    ? "Their one clock-in record will be deleted."
-                    : `Their ${attendanceCount} clock-in records will be deleted.`}
-                </p>
-              )}
-              {walkCount > 0 && (
-                <p>
-                  Walks they created will stay in the group and be listed under you.
-                </p>
-              )}
-              <p>This cannot be undone from the app.</p>
-            </div>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <form action={action}>
-          <input type="hidden" name="userId" value={userId} />
+        {/*
+          Use a normal submit Button — not AlertDialogAction. Radix Action
+          closes the dialog on click, which unmounts the form before the
+          server action can settle (same bug as role change).
+        */}
+        <form action={action} className="flex flex-col gap-4">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove {name}?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>They will be signed out and will not be able to clock in unless they join again.</p>
+                {attendanceCount > 0 && (
+                  <p>
+                    {attendanceCount === 1
+                      ? "Their one clock-in record will be deleted."
+                      : `Their ${attendanceCount} clock-in records will be deleted.`}
+                  </p>
+                )}
+                {walkCount > 0 && (
+                  <p>Walks they created will stay in the group and be listed under you.</p>
+                )}
+                <p>This cannot be undone from the app.</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <input name="userId" type="hidden" value={userId} />
+          <input name="confirm" type="hidden" value={confirmValue} />
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor={`delete-confirm-${userId}`}>
+              Type &ldquo;{ROLE_CONFIRM_WORD}&rdquo; to continue
+            </Label>
+            <Input
+              autoComplete="off"
+              disabled={isPending}
+              id={`delete-confirm-${userId}`}
+              onChange={(event) => setConfirmValue(event.target.value)}
+              placeholder={ROLE_CONFIRM_WORD}
+              spellCheck={false}
+              value={confirmValue}
+            />
+          </div>
           <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending} type="button">
               Keep member
             </AlertDialogCancel>
-            <Confirm />
+            <ConfirmSubmit confirmValue={confirmValue} />
           </AlertDialogFooter>
         </form>
       </AlertDialogContent>

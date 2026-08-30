@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, ChevronRight } from "lucide-react";
+import { Bell, CheckCheck, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { markSiteNoticeRead, markSiteNoticesRead } from "@/server/actions";
 import { formatDate } from "@/lib/dates";
@@ -103,8 +103,8 @@ export function NotificationBell({
         </Button>
       </DrawerTrigger>
       <DrawerContent className="sm:max-w-md">
-        <DrawerHeader className="border-b">
-          <div className="flex items-center justify-between gap-2 pr-8">
+        <DrawerHeader className="border-b pr-14">
+          <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <DrawerTitle>Notices</DrawerTitle>
               <DrawerDescription className="sr-only">
@@ -112,7 +112,14 @@ export function NotificationBell({
               </DrawerDescription>
             </div>
             {unreadCount > 0 ? (
-              <Button disabled={pending} onClick={markAllRead} size="xs" variant="ghost">
+              <Button
+                className="shrink-0"
+                disabled={pending}
+                onClick={markAllRead}
+                size="xs"
+                variant="ghost"
+              >
+                <CheckCheck data-icon="inline-start" />
                 Mark all as read
               </Button>
             ) : null}
@@ -132,13 +139,8 @@ export function NotificationBell({
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-medium text-sm">{notice.title}</p>
                     {isUnread ? (
-                      <Badge className="h-5 px-1.5 text-[10px]" variant="default">
-                        New
-                      </Badge>
-                    ) : null}
-                    {href ? (
                       <Badge className="h-5 px-1.5 text-[10px]" variant="secondary">
-                        Page
+                        New
                       </Badge>
                     ) : null}
                   </div>

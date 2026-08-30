@@ -65,9 +65,10 @@ export function OrganiserGuide() {
               <p>
                 <Badge variant="secondary">Members</Badge> see Walks, Progress, and History in the
                 menu. They get upcoming walks and cancelled walks from the last {CANCELLED_WALK_RETENTION_DAYS}{" "}
-                days, clock in and out, see who else is still on a walk (names only), read notices
-                in the bell, look back over every walk they have clocked in to, and see Progress —
-                this month’s clock-ins together, not a race.
+                days, can search Walks by title or meeting point, clock in and out, see who else is
+                still on a walk (names only), read notices in the bell (including a pinned welcome),
+                look back over every walk they have clocked in to, and see Progress — this month’s
+                clock-ins together, not a race.
               </p>
               <p>
                 <Badge>Organisers</Badge> also get Members, Reports, Settings, and this Guide in
@@ -432,8 +433,9 @@ export function OrganiserGuide() {
                   page. You cannot remove yourself.
                 </li>
                 <li>
-                  Confirm. Their login is deleted, their clock-ins go, and any walks or accident
-                  reports they created are moved to you.
+                  Type <strong>&ldquo;Confirm&rdquo;</strong> in the box, then choose{" "}
+                  <strong>Remove member</strong>. Their login is deleted, their clock-ins go, and
+                  any walks, accident reports, or Journey beats they created are moved to you.
                 </li>
               </Steps>
               <p>You cannot remove the last organiser, so the group is never left without one.</p>
@@ -508,6 +510,20 @@ export function OrganiserGuide() {
                 bell or the Notices page. The drawer footer has{" "}
                 <strong>Browse all notices</strong>.
               </p>
+              <p className="font-medium text-foreground">Welcome (pinned)</p>
+              <p>
+                A welcome notice sits at the top of the bell for every member. Edit its title and
+                message any time — use <code>{"{{firstName}}"}</code> to insert their name. You
+                cannot remove it or turn it into a full page. Saving it shows as new again for
+                everyone.
+              </p>
+              <p className="font-medium text-foreground">One-time Walks popup</p>
+              <p>
+                New members (no clock-ins yet) also see a one-time popup on Walks that explains find
+                a walk, clock in, and clock out. Organisers never land on that page, so use{" "}
+                <strong>Preview welcome dialog</strong> at the top of Notices settings to check it.
+                The preview does not change whether a real member has already dismissed theirs.
+              </p>
               <p className="font-medium text-foreground">Categories</p>
               <p>
                 Categories only apply to full-page notices. Add, rename, reorder, or remove them at
@@ -528,16 +544,16 @@ export function OrganiserGuide() {
                 </li>
                 <li>
                   Members see a count on the bell for unread notices and a <strong>New</strong>{" "}
-                  badge on each unread row. Tapping a row marks that notice read.{" "}
-                  <strong>Mark all as read</strong> clears everything. Opening the bell does not
-                  clear them on its own.
+                  badge on each unread row. Full-page rows say <strong>Read full notice</strong>.
+                  Tapping a row marks that notice read. <strong>Mark all as read</strong> clears
+                  everything. Opening the bell does not clear them on its own.
                 </li>
               </Steps>
               <p>
                 On <Link href="/notices">Notices</Link>, members can search and filter by category.
-                Each full-page notice is a simple list row (title, category, date, teaser). If you
-                edit a notice, it shows as new again for everyone — the “already read” marks are
-                cleared.
+                Each full-page notice is a simple list row (title, category, date, teaser). On Walks,
+                members can also search upcoming walks by title or meeting point. If you edit a
+                notice, it shows as new again for everyone — the “already read” marks are cleared.
               </p>
             </GuideBody>
           </AccordionContent>
