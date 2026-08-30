@@ -2024,7 +2024,7 @@ export async function updateSiteNotice(
     return { ok: false, error: "That notice is no longer there." };
   }
 
-  return { ok: true, message: "Notice updated. Members will see it as new." };
+  return { ok: true, message: "Notice updated. Members will see it as recently updated." };
 }
 
 export async function deleteSiteNotice(

@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { markSiteNoticeRead, markSiteNoticesRead } from "@/server/actions";
 import { formatDate } from "@/lib/dates";
 import type { NoticeView } from "@/lib/notices";
-import { noticeBodyForBellDrawer } from "@/lib/notices";
+import { noticeBodyForBellDrawer, noticeUnreadBadgeLabel } from "@/lib/notices";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -140,7 +140,7 @@ export function NotificationBell({
                   <div className="flex flex-col gap-1.5">
                     {isUnread ? (
                       <Badge className="h-5 w-fit px-1.5 text-[10px]" variant="secondary">
-                        New
+                        {noticeUnreadBadgeLabel(notice)}
                       </Badge>
                     ) : null}
                     <p className="font-medium text-sm">{notice.title}</p>

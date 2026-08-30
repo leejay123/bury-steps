@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   MAX_NOTICE_BELL_BODY,
   noticeBodyForBellDrawer,
+  noticeUnreadBadgeLabel,
   type NoticeView,
 } from "./notices";
 
@@ -49,5 +50,24 @@ describe("noticeBodyForBellDrawer", () => {
     expect(noticeBodyForBellDrawer(notice({ body: "Short teaser", kind: "PAGE" }))).toBe(
       "Short teaser…",
     );
+  });
+});
+
+describe("noticeUnreadBadgeLabel", () => {
+  it("labels a fresh notice as New", () => {
+    expect(noticeUnreadBadgeLabel(notice({ body: "Hi", kind: "BELL" }))).toBe("New");
+  });
+
+  it("labels an edited notice as Updated", () => {
+    expect(
+      noticeUnreadBadgeLabel(
+        notice({
+          body: "Hi",
+          kind: "BELL",
+          createdAt: new Date("2026-08-30T12:00:00.000Z"),
+          updatedAt: new Date("2026-08-31T09:00:00.000Z"),
+        }),
+      ),
+    ).toBe("Updated");
   });
 });

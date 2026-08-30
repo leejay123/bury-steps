@@ -534,7 +534,7 @@ export function OrganiserGuide() {
                 its title and message any time — use <code>{"{{firstName}}"}</code> to insert their
                 name. Turn it off with the checkbox on its row if you want it hidden without
                 deleting it. You cannot remove it or turn it into a full page. Saving it shows as
-                new again for everyone.
+                updated again for everyone (badge says <strong>Updated</strong>, not New).
               </p>
               <p className="font-medium text-foreground">One-time Walks popup</p>
               <p>
@@ -565,7 +565,8 @@ export function OrganiserGuide() {
                 </li>
                 <li>
                   Members see a count on the bell for unread notices and a <strong>New</strong>{" "}
-                  badge on each unread row. In the drawer, ordinary notices stay short; full-page
+                  or <strong>Updated</strong> badge on each unread row (Updated after you edit a
+                  notice they had already seen). In the drawer, ordinary notices stay short; full-page
                   teasers end with … and say <strong>Read full notice</strong>. Tapping a row marks
                   that notice read. <strong>Mark all as read</strong> clears everything. Opening
                   the bell does not clear them on its own.
@@ -576,7 +577,8 @@ export function OrganiserGuide() {
                 Each full-page notice is a simple list row (title, category, date, teaser),{" "}
                 {LIST_PAGE_SIZE} at a time with Previous and Next when the list is long. On Walks, members can
                 also search upcoming walks by title or meeting point. If you edit a notice, it shows
-                as new again for everyone — the “already read” marks are cleared.
+                as updated again for everyone — the “already read” marks are cleared, and the badge
+                says <strong>Updated</strong> instead of New.
               </p>
             </GuideBody>
           </AccordionContent>

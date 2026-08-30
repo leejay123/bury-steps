@@ -50,6 +50,17 @@ export function isWelcomeNotice(notice: Pick<NoticeView, "systemKey">): boolean 
 }
 
 /**
+ * Unread badge in the bell. Fresh notices are “New”; edits clear read marks
+ * so members see them again — label those “Updated” instead of pretending
+ * they are brand new.
+ */
+export function noticeUnreadBadgeLabel(
+  notice: Pick<NoticeView, "createdAt" | "updatedAt">,
+): "New" | "Updated" {
+  return notice.updatedAt.getTime() - notice.createdAt.getTime() >= 1000 ? "Updated" : "New";
+}
+
+/**
  * Body text for the member bell drawer. Welcome stays full length. Other
  * notices are capped at {@link MAX_NOTICE_BELL_BODY}; full-page rows always
  * end with an ellipsis so “Read full notice” is obvious.

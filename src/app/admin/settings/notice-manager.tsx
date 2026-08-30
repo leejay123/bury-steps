@@ -839,8 +839,8 @@ export function SiteNoticeManager({
             <DrawerDescription>
               {editing
                 ? isPinnedNotice(editing.notice)
-                  ? "Edit the welcome title and message. Saving shows it as new in the bell."
-                  : "Change the type, title, or message. Saving it will show as new in the bell."
+                  ? "Edit the welcome title and message. Saving shows it as updated in the bell."
+                  : "Change the type, title, or message. Saving it will show as updated in the bell."
                 : "Bell only stays in the drawer. Full page also appears on Notices. Notices are for signed-in members only."}
             </DrawerDescription>
           </DrawerHeader>
