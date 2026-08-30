@@ -87,7 +87,7 @@ export default async function AdminPage() {
 
       <section className="flex flex-col gap-4">
         <AdminPageIntro
-          description="Upcoming walks, and every finished walk. Open a walk to share the link, cancel it, reopen it, or remove it. Long walks stay under Upcoming until clock-in closes."
+          description="Upcoming walks, and every finished walk. Filter by status, sort by date, or search. Open a walk to share the link, cancel it, reopen it, or remove it. Long walks stay under Upcoming until clock-in closes."
           title="Walks"
         />
         <Tabs className="w-full" defaultValue="upcoming">
@@ -100,6 +100,7 @@ export default async function AdminPage() {
               attendanceLabel="On the walk"
               emptyDescription="Create one above and it will show here."
               emptyTitle="No walks scheduled"
+              scope="upcoming"
               walks={upcoming.map(toRow)}
             />
           </TabsContent>
@@ -107,7 +108,7 @@ export default async function AdminPage() {
             <AdminWalkTable
               emptyDescription="Finished walks will show here."
               emptyTitle="No past walks yet"
-              searchable
+              scope="past"
               walks={past.map(toRow)}
             />
           </TabsContent>

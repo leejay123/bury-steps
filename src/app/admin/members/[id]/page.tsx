@@ -8,6 +8,7 @@ import { AttendanceHistory } from "@/components/attendance-history";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeleteMemberButton } from "../delete-member-button";
+import { MemberRoleButton } from "../member-role-button";
 
 export const dynamic = "force-dynamic";
 
@@ -47,15 +48,18 @@ export default async function MemberDetailPage({
             <Badge variant={member.role === "ADMIN" ? "default" : "secondary"}>
               {member.role === "ADMIN" ? "Organiser" : "Member"}
             </Badge>
-            {!member.isYou ? (
-              <DeleteMemberButton
-                attendanceCount={attendanceCount}
-                name={member.name}
-                redirectTo="/admin/members"
-                userId={id}
-                walkCount={member.walkCount}
-              />
-            ) : null}
+            <div className="flex flex-wrap justify-end gap-2">
+              <MemberRoleButton name={member.name} role={member.role} userId={id} />
+              {!member.isYou ? (
+                <DeleteMemberButton
+                  attendanceCount={attendanceCount}
+                  name={member.name}
+                  redirectTo="/admin/members"
+                  userId={id}
+                  walkCount={member.walkCount}
+                />
+              ) : null}
+            </div>
           </div>
         </CardHeader>
       </Card>

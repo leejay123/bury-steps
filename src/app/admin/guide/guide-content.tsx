@@ -15,7 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 /** Bump this whenever the guide is updated. */
-export const GUIDE_LAST_UPDATED = "29 August 2026";
+export const GUIDE_LAST_UPDATED = "30 August 2026";
 
 function Steps({ children }: { children: React.ReactNode }) {
   return <ol className="list-decimal pl-5 text-muted-foreground">{children}</ol>;
@@ -77,7 +77,8 @@ export function OrganiserGuide() {
               </p>
               <p>
                 The first person to sign in becomes an organiser. Everyone after that is a member.
-                There is no button to promote someone — that would need a change in the database.
+                You can promote a member to organiser, or demote an organiser back to member, from{" "}
+                <Link href="/admin/members">Members</Link>.
               </p>
               <p>
                 Organiser pages look the same as a missing link to everyone else. A member or
@@ -118,16 +119,18 @@ export function OrganiserGuide() {
                 Open <Link href="/admin">Walks</Link> from the menu. Upcoming and History are tabs
                 on that page. A walk stays under Upcoming until its clock-in window has fully
                 closed — including long walks that finish more than three hours after start —
-                then it moves to History. History is every finished walk, with a search box. Click
-                a row to open the walk. History shows how many people clocked in, not how many are
-                still on the walk. Long lists show 20 at a time, with Previous and Next at the
-                bottom. Each row carries a status that updates as the day goes on:{" "}
-                <strong>Upcoming</strong> (before clock-in opens), <strong>Starting soon</strong>{" "}
-                (the hour before start — the badge shows a live countdown to the published
-                start), <strong>In progress</strong> (until the scheduled end),{" "}
-                <strong>Completed</strong> (from the scheduled end — self clock-in is closed), or{" "}
-                <strong>Cancelled</strong>. The walk’s own page shows the same status next to its
-                title.
+                then it moves to History. History is every finished walk. Both tabs have a search
+                box, a <strong>Status</strong> filter (for example Upcoming, In progress,
+                Cancelled, or Completed on History), and a <strong>Sort</strong> control (soonest
+                first or latest first). Click a row to open the walk. History shows how many people
+                clocked in, not how many are still on the walk. Long lists show 20 at a time, with
+                Previous and Next at the bottom. Each row carries a status that updates as the day
+                goes on: <strong>Upcoming</strong> (before clock-in opens),{" "}
+                <strong>Starting soon</strong> (the hour before start — the badge shows a live
+                countdown to the published start), <strong>In progress</strong> (until the
+                scheduled end), <strong>Completed</strong> (from the scheduled end — self clock-in
+                is closed), or <strong>Cancelled</strong>. The walk’s own page shows the same
+                status next to its title.
               </p>
               <p className="font-medium text-foreground">Create a walk</p>
               <Steps>
@@ -389,6 +392,23 @@ export function OrganiserGuide() {
                 to open that walk. This is a full page rather than a drawer, so it stays readable
                 even for someone who has been on hundreds of walks.
               </p>
+              <p className="font-medium text-foreground">Make organiser or member</p>
+              <Steps>
+                <li>
+                  Open the person on <Link href="/admin/members">Members</Link>, or use the button
+                  on their row in the list.
+                </li>
+                <li>
+                  Choose <strong>Make organiser</strong> to give them organiser tools (walks,
+                  Members, Reports, Settings, and this Guide), or <strong>Make member</strong> to
+                  take those tools away. Their account, clock-ins, and walk history stay.
+                </li>
+                <li>Confirm. You can change them again later.</li>
+              </Steps>
+              <p>
+                You cannot demote the last organiser, so the group is never left without one. You
+                can demote yourself if another organiser is still in the group.
+              </p>
               <p className="font-medium text-foreground">Remove someone</p>
               <Steps>
                 <li>
@@ -474,8 +494,10 @@ export function OrganiserGuide() {
               <Steps>
                 <li>Add a title and a message. On a phone, Add notice is full width.</li>
                 <li>
-                  Members get a red dot on the bell until they choose{" "}
-                  <strong>Mark all as read</strong>. Opening the bell does not clear it on its own.
+                  Members see a number on the bell for how many notices they have not read yet
+                  (up to 9+). Unread rows in the drawer show a <strong>New</strong> badge. They
+                  clear when someone chooses <strong>Mark all as read</strong>. Opening the bell
+                  does not clear them on its own.
                 </li>
               </Steps>
               <p>
