@@ -269,6 +269,7 @@ export async function duplicateWalk(
 
   revalidatePath("/admin");
   revalidatePath("/dashboard");
+  revalidatePath(`/admin/walks/${walk.id}`);
   revalidateWalkShare(walk);
   return {
     ok: true,

@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { ActionResult } from "@/server/actions";
+import { unlockIdleDocument } from "@/components/overlay-root";
 
 /**
  * Shared "toast the result, then refresh the page's server data" pattern
@@ -27,9 +28,16 @@ export function useActionToast(state: ActionResult | null, onOk?: () => void) {
     if (state.ok) {
       onOkRef.current?.();
       toast.success(state.message ?? "Saved.");
+      unlockIdleDocument();
       if (state.href) {
         const href = state.href;
-        const id = window.setTimeout(() => router.push(href), 0);
+        // Hard navigation after the overlay unlock timers (0 / 250ms) so a
+        // stuck alert dialog cannot leave pointer-events locked on the next
+        // page. Soft router.push raced that teardown and froze Duplicate.
+        const id = window.setTimeout(() => {
+          unlockIdleDocument();
+          window.location.assign(href);
+        }, 300);
         return () => window.clearTimeout(id);
       }
       const id = window.setTimeout(() => router.refresh(), 0);

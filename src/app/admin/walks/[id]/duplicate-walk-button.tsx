@@ -35,10 +35,15 @@ export function DuplicateWalkButton({ walkId }: { walkId: string }) {
   const [open, setOpen] = useState(false);
   useActionToast(state, () => setOpen(false));
 
+  // Once the action returns, stop blocking dismiss — otherwise a lagging
+  // pending flag keeps the dialog on "Duplicating…" and can freeze the page
+  // behind the overlay while navigation starts.
+  const blocking = isPending && !state;
+
   return (
     <AlertDialog
-      closeDisabled={isPending}
-      onOpenChange={preventDismissWhilePending(isPending, setOpen)}
+      closeDisabled={blocking}
+      onOpenChange={preventDismissWhilePending(blocking, setOpen)}
       open={open}
     >
       <AlertDialogTrigger asChild>
@@ -47,7 +52,7 @@ export function DuplicateWalkButton({ walkId }: { walkId: string }) {
           Duplicate
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent closeDisabled={isPending}>
+      <AlertDialogContent closeDisabled={blocking}>
         <form action={action} className="flex flex-col gap-4">
           <AlertDialogHeader>
             <AlertDialogTitle>Duplicate this walk?</AlertDialogTitle>
@@ -60,7 +65,7 @@ export function DuplicateWalkButton({ walkId }: { walkId: string }) {
           <input name="walkId" type="hidden" value={walkId} />
           <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending} type="button">
+            <AlertDialogCancel disabled={blocking} type="button">
               Keep only this one
             </AlertDialogCancel>
             <Confirm />
