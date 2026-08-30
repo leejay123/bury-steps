@@ -8,13 +8,15 @@ import { formatDate } from "@/lib/dates";
 import type { NoticeCategoryView, NoticeView } from "@/lib/notices";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { GridFiller } from "@/components/grid-filler";
+import { HeroCopy } from "@/components/hero-copy";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 
 /**
- * Notices index grid adapted from Efferd blogs-2: bordered card grid with
- * category, date, title, and teaser. No cover images — content only.
+ * Notices index — Efferd blogs-2 edge look: hairline grid (`gap-px bg-border`),
+ * full-width dividers, bordered cells with title / category · date / teaser.
+ * No cover images.
  */
 export function NoticesBlogSection({
   categories,
@@ -54,31 +56,36 @@ export function NoticesBlogSection({
 
   return (
     <section className="flex flex-col">
-      <div className="relative px-4 py-8 md:px-6">
-        <div className="mx-auto flex max-w-2xl flex-col gap-4 text-center">
-          <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Notices</h1>
-          <p className="text-muted-foreground">
+      <div className="relative">
+        <HeroCopy
+          after={
+            <InputGroup className="w-full max-w-md text-left">
+              <InputGroupInput
+                aria-label="Search notices"
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search notices…"
+                value={searchTerm}
+              />
+              <InputGroupAddon>
+                <Search data-icon="inline-start" />
+              </InputGroupAddon>
+            </InputGroup>
+          }
+          eyebrow={null}
+          title="Notices"
+          titleAs="h1"
+        >
+          <p>
             {signedIn
-              ? "Updates from the organisers. Short messages stay in the bell; open a card here for the full write-up. Public announcements are open to everyone."
+              ? "Updates from the organisers. Short messages stay in the bell; open a card for the full write-up. Public announcements are open to everyone."
               : "Public announcements from the group. Sign in to see member-only notices and the bell."}
           </p>
-          <InputGroup className="mx-auto w-full max-w-md text-left">
-            <InputGroupInput
-              aria-label="Search notices"
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Search notices…"
-              value={searchTerm}
-            />
-            <InputGroupAddon>
-              <Search data-icon="inline-start" />
-            </InputGroupAddon>
-          </InputGroup>
-        </div>
+        </HeroCopy>
         <FullWidthDivider position="bottom" />
       </div>
 
       {filters.length > 1 ? (
-        <div className="flex gap-2 overflow-x-auto overscroll-x-contain border-b px-4 [scrollbar-width:none] [-ms-overflow-style:none] sm:flex-wrap sm:overflow-visible md:px-6 [&::-webkit-scrollbar]:hidden">
+        <div className="relative flex gap-2 overflow-x-auto overscroll-x-contain px-4 [scrollbar-width:none] [-ms-overflow-style:none] sm:flex-wrap sm:overflow-visible md:px-6 [&::-webkit-scrollbar]:hidden">
           {filters.map((category) => {
             const active = activeCategory === category.id;
             return (
@@ -98,56 +105,63 @@ export function NoticesBlogSection({
               </button>
             );
           })}
+          <FullWidthDivider position="bottom" />
         </div>
       ) : null}
 
       {filtered.length === 0 ? (
-        <Empty className="m-4 border md:m-6">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Search />
-            </EmptyMedia>
-            <EmptyTitle>
-              {notices.length === 0
-                ? "No full-page notices yet"
-                : "No notices match your search"}
-            </EmptyTitle>
-          </EmptyHeader>
-          {notices.length > 0 ? (
-            <EmptyContent>
-              <Button
-                onClick={() => {
-                  setSearchTerm("");
-                  setActiveCategory("all");
-                }}
-                variant="outline"
-              >
-                <SearchX data-icon="inline-start" />
-                Clear filters
-              </Button>
-            </EmptyContent>
-          ) : null}
-        </Empty>
-      ) : (
-        <div className="relative grid border-b sm:grid-cols-2 lg:grid-cols-3">
+        <div className="relative">
+          <Empty className="border-0 py-16">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Search />
+              </EmptyMedia>
+              <EmptyTitle>
+                {notices.length === 0
+                  ? "No full-page notices yet"
+                  : "No notices match your search"}
+              </EmptyTitle>
+            </EmptyHeader>
+            {notices.length > 0 ? (
+              <EmptyContent>
+                <Button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setActiveCategory("all");
+                  }}
+                  variant="outline"
+                >
+                  <SearchX data-icon="inline-start" />
+                  Clear filters
+                </Button>
+              </EmptyContent>
+            ) : null}
+          </Empty>
           <FullWidthDivider position="top" />
-          {filtered.map((notice) => (
-            <NoticeBlogCard
-              category={notice.categoryLabel ?? "Notice"}
-              date={formatDate(notice.createdAt)}
-              description={notice.body}
-              href={`/notices/${notice.slug}`}
-              key={notice.id}
-              title={notice.title}
+          <FullWidthDivider position="bottom" />
+        </div>
+      ) : (
+        <div className="relative">
+          <div className="grid w-full grid-cols-1 gap-px bg-border sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((notice) => (
+              <NoticeBlogCard
+                category={notice.categoryLabel ?? "Notice"}
+                date={formatDate(notice.createdAt)}
+                description={notice.body}
+                href={`/notices/${notice.slug}`}
+                key={notice.id}
+                title={notice.title}
+              />
+            ))}
+            <GridFiller
+              className="bg-background"
+              lgColumns={3}
+              smColumns={2}
+              totalItems={filtered.length}
             />
-          ))}
-          <GridFiller
-            className="border-r border-b bg-background last:border-r-0 sm:border-r"
-            lgColumns={3}
-            mdColumns={2}
-            smColumns={2}
-            totalItems={filtered.length}
-          />
+          </div>
+          <FullWidthDivider position="top" />
+          <FullWidthDivider position="bottom" />
         </div>
       )}
     </section>
@@ -172,7 +186,7 @@ function NoticeBlogCard({
   return (
     <Link
       className={cn(
-        "group flex w-full flex-col gap-4 border-r border-b bg-background px-6 py-10 text-muted-foreground last:border-r-0 hover:cursor-pointer hover:text-foreground active:bg-accent sm:px-8",
+        "group flex h-full w-full flex-col gap-4 bg-background px-6 py-12 text-muted-foreground transition-colors hover:cursor-pointer hover:text-foreground active:bg-accent sm:px-8",
         className,
       )}
       href={href}
@@ -180,7 +194,7 @@ function NoticeBlogCard({
       <h2 className="text-xl font-semibold tracking-tight text-foreground group-hover:underline group-hover:underline-offset-4 md:text-2xl">
         {title}
       </h2>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs uppercase tracking-wide">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs tracking-wide">
         <span className="font-medium text-foreground">{category}</span>
         <span aria-hidden="true">·</span>
         <time>{date}</time>
