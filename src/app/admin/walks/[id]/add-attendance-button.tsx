@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import { adminClockIn, searchAddableMembers, type ActionResult } from "@/server/actions";
-import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
+import { useActionToast } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
