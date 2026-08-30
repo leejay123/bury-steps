@@ -1,18 +1,20 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Search, SearchX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/dates";
 import type { NoticeCategoryView, NoticeView } from "@/lib/notices";
+import { usePagedList } from "@/hooks/use-paged-list";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { ListPagination } from "@/components/list-pagination";
 
 /**
  * Member notices index: search + FAQ-style category chips (border-y), then a
- * simple list of full-page notices — no edge/hairline grid.
+ * paginated list of full-page notices — no edge/hairline grid.
  */
 export function NoticesBlogSection({
   categories,
@@ -21,6 +23,7 @@ export function NoticesBlogSection({
   categories: NoticeCategoryView[];
   notices: NoticeView[];
 }) {
+  const listRef = useRef<HTMLDivElement>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const deferredSearchTerm = useDeferredValue(searchTerm);
@@ -42,6 +45,10 @@ export function NoticesBlogSection({
       return matchesCategory && matchesSearch;
     });
   }, [activeCategory, deferredSearchTerm, notices]);
+
+  const paging = usePagedList(filtered, {
+    resetKey: `${activeCategory}:${deferredSearchTerm.trim().toLowerCase()}`,
+  });
 
   function selectCategory(id: string, button: HTMLButtonElement) {
     setActiveCategory(id);
@@ -93,7 +100,7 @@ export function NoticesBlogSection({
         </div>
       ) : null}
 
-      <div className="px-4 py-6 md:px-6">
+      <div className="flex flex-col gap-4 px-4 py-6 md:px-6" ref={listRef}>
         {filtered.length === 0 ? (
           <Empty className="border">
             <EmptyHeader>
@@ -122,24 +129,35 @@ export function NoticesBlogSection({
             ) : null}
           </Empty>
         ) : (
-          <div className="flex flex-col divide-y rounded-xl border">
-            {filtered.map((notice) => (
-              <Link
-                className="group relative flex flex-col gap-2 p-4 hover:bg-muted/50"
-                href={`/notices/${notice.slug}`}
-                key={notice.id}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <p className="font-medium">{notice.title}</p>
-                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {notice.categoryLabel ?? "Notice"} · {formatDate(notice.createdAt)}
-                </p>
-                <p className="line-clamp-3 text-sm text-muted-foreground">{notice.body}</p>
-              </Link>
-            ))}
-          </div>
+          <>
+            <div className="flex flex-col divide-y rounded-xl border">
+              {paging.paged.map((notice) => (
+                <Link
+                  className="group relative flex flex-col gap-2 p-4 hover:bg-muted/50"
+                  href={`/notices/${notice.slug}`}
+                  key={notice.id}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="font-medium">{notice.title}</p>
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {notice.categoryLabel ?? "Notice"} · {formatDate(notice.createdAt)}
+                  </p>
+                  <p className="line-clamp-3 text-sm text-muted-foreground">{notice.body}</p>
+                </Link>
+              ))}
+            </div>
+            <ListPagination
+              noun="notices"
+              onPageChange={paging.setPage}
+              page={paging.page}
+              pageCount={paging.pageCount}
+              pageSize={paging.pageSize}
+              scrollToRef={listRef}
+              total={paging.total}
+            />
+          </>
         )}
       </div>
     </section>

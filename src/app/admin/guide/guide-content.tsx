@@ -2,7 +2,8 @@ import Link from "next/link";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { MAX_HOMEPAGE_FAQS, MAX_FAQ_CATEGORIES } from "@/lib/faqs";
-import { MAX_SITE_NOTICES, MAX_NOTICE_CATEGORIES } from "@/lib/notices";
+import { BELL_NOTICE_LIMIT, MAX_NOTICE_CATEGORIES } from "@/lib/notices";
+import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { FACEBOOK_GROUP_URL, PRODUCTION_APP_URL } from "@/lib/urls";
 import { CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { MAX_MONTHLY_CLOCK_IN_GOAL } from "@/lib/walk-game";
@@ -504,18 +505,21 @@ export function OrganiserGuide() {
           <AccordionContent>
             <GuideBody>
               <p>
-                Open <Link href="/admin/settings/notices">Notices</Link>. Up to {MAX_SITE_NOTICES}{" "}
-                messages in the member bell, and up to {MAX_NOTICE_CATEGORIES} categories for
-                full-page notices. Notices are for signed-in members only — visitors do not see the
-                bell or the Notices page. The drawer footer has{" "}
-                <strong>Browse all notices</strong>.
+                Open <Link href="/admin/settings/notices">Notices</Link>. You can add as many
+                notices as you need. The member bell shows the pinned welcome (if it is on) plus the{" "}
+                {BELL_NOTICE_LIMIT} newest other notices — older ones drop out of the bell only.
+                Full-page notices stay on <Link href="/notices">Notices</Link> forever. Up to{" "}
+                {MAX_NOTICE_CATEGORIES} categories for full-page notices. Notices are for signed-in
+                members only — visitors do not see the bell or the Notices page. The drawer footer
+                has <strong>Browse all notices</strong>.
               </p>
               <p className="font-medium text-foreground">Welcome (pinned)</p>
               <p>
-                A welcome notice sits at the top of the bell for every member. Edit its title and
-                message any time — use <code>{"{{firstName}}"}</code> to insert their name. You
-                cannot remove it or turn it into a full page. Saving it shows as new again for
-                everyone.
+                A welcome notice sits at the top of the bell for every member when it is on. Edit
+                its title and message any time — use <code>{"{{firstName}}"}</code> to insert their
+                name. Turn it off with the checkbox on its row if you want it hidden without
+                deleting it. You cannot remove it or turn it into a full page. Saving it shows as
+                new again for everyone.
               </p>
               <p className="font-medium text-foreground">One-time Walks popup</p>
               <p>
@@ -551,9 +555,10 @@ export function OrganiserGuide() {
               </Steps>
               <p>
                 On <Link href="/notices">Notices</Link>, members can search and filter by category.
-                Each full-page notice is a simple list row (title, category, date, teaser). On Walks,
-                members can also search upcoming walks by title or meeting point. If you edit a
-                notice, it shows as new again for everyone — the “already read” marks are cleared.
+                Each full-page notice is a simple list row (title, category, date, teaser),{" "}
+                {LIST_PAGE_SIZE} at a time with Previous and Next when the list is long. On Walks, members can
+                also search upcoming walks by title or meeting point. If you edit a notice, it shows
+                as new again for everyone — the “already read” marks are cleared.
               </p>
             </GuideBody>
           </AccordionContent>
@@ -732,7 +737,8 @@ export function OrganiserGuide() {
                   <strong>FAQ categories</strong> — {MAX_FAQ_CATEGORIES}
                 </li>
                 <li>
-                  <strong>Notices</strong> — {MAX_SITE_NOTICES}
+                  <strong>Notices in the bell</strong> — welcome (optional) + {BELL_NOTICE_LIMIT}{" "}
+                  newest
                 </li>
                 <li>
                   <strong>Notice categories</strong> — {MAX_NOTICE_CATEGORIES}

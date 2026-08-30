@@ -37,7 +37,6 @@ import {
   faqCategorySlug,
 } from "@/lib/faqs";
 import {
-  MAX_SITE_NOTICES,
   MAX_NOTICE_CATEGORIES,
   MAX_NOTICE_CATEGORY_LABEL,
   MAX_NOTICE_TITLE,
@@ -45,6 +44,7 @@ import {
   MAX_NOTICE_PAGE_BODY,
   noticeCategorySlug,
   noticePageSlug,
+  noticesForBell,
 } from "@/lib/notices";
 import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR } from "@/lib/theme";
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
@@ -1771,11 +1771,7 @@ export async function addSiteNotice(
 
   try {
     let createdSlug: string | null = null;
-    await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.siteNotice, async (tx) => {
-      const count = await tx.siteNotice.count();
-      if (count >= MAX_SITE_NOTICES) {
-        throw new LimitReachedError(`You can have up to ${MAX_SITE_NOTICES} notices.`);
-      }
+    await prisma.$transaction(async (tx) => {
       if (copy.kind === "PAGE" && copy.categoryId) {
         const category = await tx.siteNoticeCategory.findUnique({
           where: { id: copy.categoryId },
@@ -1800,7 +1796,6 @@ export async function addSiteNotice(
     });
     revalidateNotices(createdSlug ? [`/notices/${createdSlug}`] : []);
   } catch (err) {
-    if (err instanceof LimitReachedError) return { ok: false, error: err.message };
     if (err instanceof Error && err.message === "CATEGORY_MISSING") {
       return { ok: false, error: "That category is no longer there." };
     }
@@ -1914,6 +1909,43 @@ export async function deleteSiteNotice(
   return { ok: true, message: "Notice removed." };
 }
 
+export async function setSiteNoticeEnabled(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("noticeId") ?? "");
+  if (!id) return { ok: false, error: "No notice selected." };
+
+  const enabled = formData.get("enabled") === "on";
+
+  try {
+    const existing = await prisma.siteNotice.findUnique({
+      where: { id },
+      select: { id: true, systemKey: true },
+    });
+    if (!existing) return { ok: false, error: "That notice is no longer there." };
+    if (!existing.systemKey) {
+      return { ok: false, error: "Only the pinned welcome notice can be turned off." };
+    }
+    await prisma.siteNotice.update({
+      where: { id },
+      data: { enabled },
+    });
+  } catch (err) {
+    if (!isPrismaCode(err, "P2025")) logActionError("setSiteNoticeEnabled", err);
+    return { ok: false, error: "That notice is no longer there." };
+  }
+
+  revalidateNotices();
+  return {
+    ok: true,
+    message: enabled
+      ? "Welcome notice is on in the bell."
+      : "Welcome notice is hidden from the bell.",
+  };
+}
+
 export async function markSiteNoticesRead(): Promise<ActionResult> {
   const user = await requireUser();
 
@@ -1921,11 +1953,31 @@ export async function markSiteNoticesRead(): Promise<ActionResult> {
   if (!limited.ok) return { ok: false, error: "Try again in a moment." };
 
   try {
-    const notices = await prisma.siteNotice.findMany({ select: { id: true } });
-    if (notices.length === 0) return { ok: true };
+    const rows = await prisma.siteNotice.findMany({
+      select: {
+        id: true,
+        title: true,
+        body: true,
+        kind: true,
+        audience: true,
+        slug: true,
+        pageBody: true,
+        categoryId: true,
+        systemKey: true,
+        enabled: true,
+        createdAt: true,
+      },
+    });
+    const bell = noticesForBell(
+      rows.map((row) => ({
+        ...row,
+        categoryLabel: null,
+      })),
+    );
+    if (bell.length === 0) return { ok: true };
 
     await prisma.siteNoticeRead.createMany({
-      data: notices.map((notice) => ({ noticeId: notice.id, userId: user.id })),
+      data: bell.map((notice) => ({ noticeId: notice.id, userId: user.id })),
       skipDuplicates: true,
     });
   } catch (err) {

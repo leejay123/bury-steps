@@ -9,27 +9,34 @@ import {
   deleteSiteNotice,
   deleteSiteNoticeCategory,
   reorderSiteNoticeCategories,
+  setSiteNoticeEnabled,
   updateSiteNotice,
   updateSiteNoticeCategory,
   type ActionResult,
 } from "@/server/actions";
 import {
+  BELL_NOTICE_LIMIT,
   MAX_NOTICE_CATEGORY_LABEL,
   MAX_NOTICE_PAGE_BODY,
   MAX_NOTICE_TEASER,
   isPinnedNotice,
+  isWelcomeNotice,
   type NoticeCategoryView,
   type NoticeKind,
   type NoticeView,
 } from "@/lib/notices";
 import { formatDate } from "@/lib/dates";
 import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
+import { useOptimisticSettingToggle } from "@/hooks/use-optimistic-setting-toggle";
+import { usePagedList } from "@/hooks/use-paged-list";
 import { FormError } from "@/components/form-error";
 import { EmptyState } from "@/components/empty-state";
 import { ReorderButtons, useReorderableIds } from "@/components/sortable-rows";
 import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
+import { ListPagination } from "@/components/list-pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -107,9 +114,10 @@ function NoticeFields({
       {notice ? <input name="noticeId" type="hidden" value={notice.id} /> : null}
       {pinned ? (
         <p className="rounded-md border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-          This is the pinned welcome notice. Members see it first in the bell. Use{" "}
+          This is the pinned welcome notice. Members see it first in the bell when it is on. Use{" "}
           <code className="text-xs">{"{{firstName}}"}</code> in the title or message to insert
-          their name. You can edit the text, but not remove it or turn it into a full page.
+          their name. You can edit the text or turn it off on the list — you cannot remove it or
+          turn it into a full page.
         </p>
       ) : null}
       {!pinned ? (
@@ -608,20 +616,46 @@ function NoticeCategoryManager({
   );
 }
 
+function WelcomeEnabledToggle({ notice }: { notice: NoticeView }) {
+  const { on, toggle, isPending } = useOptimisticSettingToggle({
+    action: async (prev, formData) => {
+      formData.set("noticeId", notice.id);
+      return setSiteNoticeEnabled(prev, formData);
+    },
+    enabled: notice.enabled,
+    formKey: "enabled",
+  });
+
+  return (
+    <label
+      className="relative z-10 flex cursor-pointer items-center gap-2 text-xs text-muted-foreground"
+      onClick={(event) => event.stopPropagation()}
+      onKeyDown={(event) => event.stopPropagation()}
+    >
+      <Checkbox
+        checked={on}
+        disabled={isPending}
+        onCheckedChange={(value) => toggle(value === true)}
+      />
+      <span>{on ? "On in bell" : "Hidden"}</span>
+      {isPending ? <span>Saving…</span> : null}
+    </label>
+  );
+}
+
 export function SiteNoticeManager({
   categories,
   maxCategories,
-  maxNotices,
   notices,
 }: {
   categories: NoticeCategoryView[];
   maxCategories: number;
-  maxNotices: number;
   notices: NoticeView[];
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
   const [isPending, setIsPending] = useState(false);
-  const atLimit = notices.length >= maxNotices;
+  const listRef = useRef<HTMLDivElement>(null);
+  const paging = usePagedList(notices, { resetKey: String(notices.length) });
   const noCategories = categories.length === 0;
   const editingId = mode?.type === "edit" ? mode.notice.id : null;
   const liveIndex = editingId ? notices.findIndex((item) => item.id === editingId) : -1;
@@ -637,23 +671,19 @@ export function SiteNoticeManager({
     <div className="flex flex-col gap-8">
       <NoticeCategoryManager categories={categories} maxCategories={maxCategories} />
       <Separator />
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4" ref={listRef}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-sm font-medium">Notices</h2>
-          <Button
-            className="w-full sm:w-auto"
-            disabled={atLimit}
-            onClick={() => setMode({ type: "add" })}
-            size="sm"
-          >
+          <div className="min-w-0">
+            <h2 className="text-sm font-medium">Notices</h2>
+            <p className="text-sm text-muted-foreground">
+              Unlimited notices. The member bell shows the welcome (if on) plus the{" "}
+              {BELL_NOTICE_LIMIT} newest others. Full-page notices stay on Notices forever.
+            </p>
+          </div>
+          <Button className="w-full sm:w-auto" onClick={() => setMode({ type: "add" })} size="sm">
             Add notice
           </Button>
         </div>
-        {atLimit ? (
-          <p className="text-sm text-muted-foreground">
-            You already have {maxNotices} notices. Remove one to add another.
-          </p>
-        ) : null}
         {noCategories ? (
           <p className="text-sm text-muted-foreground">
             Add a category above before you publish a full-page notice.
@@ -667,51 +697,73 @@ export function SiteNoticeManager({
             title="No notices yet"
           />
         ) : (
-          <DataList>
-            {notices.map((notice, index) => (
-              <DataListItem
-                key={notice.id}
-                onClick={() => setMode({ type: "edit", notice, index })}
-              >
-                <DataListBody>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium">{notice.title}</p>
-                    {isPinnedNotice(notice) ? (
-                      <Badge variant="default">Welcome (pinned)</Badge>
+          <>
+            <DataList>
+              {paging.paged.map((notice, index) => (
+                <DataListItem
+                  key={notice.id}
+                  onClick={() =>
+                    setMode({
+                      type: "edit",
+                      notice,
+                      index: (paging.page - 1) * paging.pageSize + index,
+                    })
+                  }
+                >
+                  <DataListBody>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium">{notice.title}</p>
+                      {isWelcomeNotice(notice) ? (
+                        <Badge variant={notice.enabled ? "default" : "secondary"}>
+                          Welcome (pinned)
+                          {notice.enabled ? "" : " · off"}
+                        </Badge>
+                      ) : (
+                        <Badge variant={notice.kind === "PAGE" ? "default" : "secondary"}>
+                          {notice.kind === "PAGE" ? "Full page" : "Bell only"}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground wrap-break-word">{notice.body}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDate(notice.createdAt)}
+                      {notice.kind === "PAGE" && notice.categoryLabel
+                        ? ` · ${notice.categoryLabel}`
+                        : ""}
+                      {notice.kind === "PAGE" && notice.slug ? ` · /notices/${notice.slug}` : ""}
+                    </p>
+                  </DataListBody>
+                  <DataListActions>
+                    {isWelcomeNotice(notice) ? (
+                      <WelcomeEnabledToggle notice={notice} />
                     ) : (
-                      <Badge variant={notice.kind === "PAGE" ? "default" : "secondary"}>
-                        {notice.kind === "PAGE" ? "Full page" : "Bell only"}
-                      </Badge>
+                      <RemoveNoticeButton
+                        noticeId={notice.id}
+                        onRemoved={() =>
+                          setMode((current) =>
+                            current?.type === "edit" && current.notice.id === notice.id
+                              ? null
+                              : current,
+                          )
+                        }
+                        title={notice.title}
+                      />
                     )}
-                  </div>
-                  <p className="text-sm text-muted-foreground wrap-break-word">{notice.body}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatDate(notice.createdAt)}
-                    {notice.kind === "PAGE" && notice.categoryLabel
-                      ? ` · ${notice.categoryLabel}`
-                      : ""}
-                    {notice.kind === "PAGE" && notice.slug ? ` · /notices/${notice.slug}` : ""}
-                  </p>
-                </DataListBody>
-                <DataListActions>
-                  {isPinnedNotice(notice) ? null : (
-                    <RemoveNoticeButton
-                      noticeId={notice.id}
-                      onRemoved={() =>
-                        setMode((current) =>
-                          current?.type === "edit" && current.notice.id === notice.id
-                            ? null
-                            : current,
-                        )
-                      }
-                      title={notice.title}
-                    />
-                  )}
-                </DataListActions>
-                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-              </DataListItem>
-            ))}
-          </DataList>
+                  </DataListActions>
+                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                </DataListItem>
+              ))}
+            </DataList>
+            <ListPagination
+              noun="notices"
+              onPageChange={paging.setPage}
+              page={paging.page}
+              pageCount={paging.pageCount}
+              pageSize={paging.pageSize}
+              scrollToRef={listRef}
+              total={paging.total}
+            />
+          </>
         )}
       </div>
 
@@ -736,7 +788,7 @@ export function SiteNoticeManager({
           {mode?.type === "add" ? (
             <AddNoticeForm
               categories={categories}
-              disabled={atLimit}
+              disabled={false}
               onPendingChange={setIsPending}
               onSaved={() => setMode(null)}
             />

@@ -7,9 +7,6 @@ export const MAX_NOTICE_PAGE_BODY = 10_000;
 /** Newest non-welcome notices shown in the member bell (welcome sits outside this count). */
 export const BELL_NOTICE_LIMIT = 20;
 
-/** @deprecated Use BELL_NOTICE_LIMIT — notices are unlimited; only the bell is capped. */
-export const MAX_SITE_NOTICES = BELL_NOTICE_LIMIT;
-
 /** Pinned welcome notice — seeded, edit title/body only, never delete; can disable. */
 export const WELCOME_NOTICE_SYSTEM_KEY = "welcome";
 
@@ -74,6 +71,16 @@ export function personalizeNotice(
 /** Newest first (admin lists, /notices). */
 export function sortNoticesNewestFirst(notices: NoticeView[]): NoticeView[] {
   return [...notices].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+}
+
+/** Welcome first, then newest — for organiser settings lists. */
+export function sortNoticesForAdmin(notices: NoticeView[]): NoticeView[] {
+  return [...notices].sort((a, b) => {
+    const aPin = isWelcomeNotice(a) ? 0 : 1;
+    const bPin = isWelcomeNotice(b) ? 0 : 1;
+    if (aPin !== bPin) return aPin - bPin;
+    return b.createdAt.getTime() - a.createdAt.getTime();
+  });
 }
 
 /**

@@ -1,8 +1,9 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import {
-  noticesForBell,
   personalizeNotice,
+  noticesForBell,
+  sortNoticesForAdmin,
   sortNoticesNewestFirst,
   type NoticeAudience,
   type NoticeCategoryView,
@@ -112,10 +113,10 @@ function reviveNotices(rows: CachedNotice[]): NoticeView[] {
   );
 }
 
-/** All notices for organiser settings (newest first). */
+/** All notices for organiser settings (welcome first, then newest). */
 export async function getSiteNotices(): Promise<NoticeView[]> {
   try {
-    return reviveNotices(await getCachedSiteNotices());
+    return sortNoticesForAdmin(reviveNotices(await getCachedSiteNotices()));
   } catch {
     return [];
   }

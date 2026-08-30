@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { MAX_FAQ_CATEGORIES, MAX_HOMEPAGE_FAQS } from "@/lib/faqs";
-import { MAX_SITE_NOTICES } from "@/lib/notices";
+import { BELL_NOTICE_LIMIT } from "@/lib/notices";
 import { AdminPageIntro } from "../admin-page-intro";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { SettingsGrid } from "./settings-grid";
@@ -39,7 +39,7 @@ export default async function AdminSettingsPage() {
     {
       href: "/admin/settings/notices",
       title: "Notices",
-      description: `Member bell and full-page notices. ${noticeCount} of ${MAX_SITE_NOTICES}.`,
+      description: `Member bell (welcome + ${BELL_NOTICE_LIMIT} newest) and full-page notices. ${noticeCount} total.`,
     },
     {
       href: "/admin/settings/progress",
