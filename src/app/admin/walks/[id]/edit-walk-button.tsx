@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { Pencil } from "lucide-react";
 import { updateWalk, type ActionResult } from "@/server/actions";
 import { utcToLondonWallClock } from "@/lib/dates";
 import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
@@ -79,6 +80,7 @@ export function EditWalkButton({
     >
       <AlertDialogTrigger asChild>
         <Button size="sm" variant="outline">
+          <Pencil data-icon="inline-start" />
           Edit
         </Button>
       </AlertDialogTrigger>

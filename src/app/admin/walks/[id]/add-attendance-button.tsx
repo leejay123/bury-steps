@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
+import { UserPlus } from "lucide-react";
 import { adminClockIn, searchAddableMembers, type ActionResult } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
@@ -177,6 +178,7 @@ export function AddAttendanceButton({
     >
       <AlertDialogTrigger asChild>
         <Button size="sm" variant="outline">
+          <UserPlus data-icon="inline-start" />
           Add someone
         </Button>
       </AlertDialogTrigger>

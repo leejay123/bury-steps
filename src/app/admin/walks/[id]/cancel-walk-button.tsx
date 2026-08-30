@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
+import { Ban } from "lucide-react";
 import { cancelWalk } from "@/server/actions";
 import { useNotifyActionState } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
@@ -93,6 +94,7 @@ export function CancelWalkButton({
     >
       <AlertDialogTrigger asChild>
         <Button size="sm" variant="outline">
+          <Ban data-icon="inline-start" />
           Cancel walk
         </Button>
       </AlertDialogTrigger>

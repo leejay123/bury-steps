@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
+import { RotateCcw } from "lucide-react";
 import { reopenWalk } from "@/server/actions";
 import { preventDismissWhilePending, useNotifyActionState } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
@@ -37,7 +38,10 @@ export function ReopenWalkButton({ walkId }: { walkId: string }) {
       open={open}
     >
       <AlertDialogTrigger asChild>
-        <Button size="sm">Reopen walk</Button>
+        <Button size="sm">
+          <RotateCcw data-icon="inline-start" />
+          Reopen walk
+        </Button>
       </AlertDialogTrigger>
       <AlertDialogContent closeDisabled={isPending}>
         <form action={action} className="flex flex-col gap-4">

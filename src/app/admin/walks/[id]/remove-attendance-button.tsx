@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
+import { Trash2 } from "lucide-react";
 import { adminRemoveAttendance } from "@/server/actions";
 import { useNotifyActionState } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
@@ -63,9 +64,11 @@ function RemoveAttendanceDialogForm({
 export function RemoveAttendanceButton({
   attendanceId,
   memberName,
+  onRemoved,
 }: {
   attendanceId: string;
   memberName: string;
+  onRemoved?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState(0);
@@ -79,8 +82,13 @@ export function RemoveAttendanceButton({
       open={open}
     >
       <AlertDialogTrigger asChild>
-        <Button size="sm" variant="destructive">
-          Remove from walk
+        <Button
+          aria-label={`Remove ${memberName} from this walk`}
+          size="xs"
+          variant="destructive"
+        >
+          <Trash2 data-icon="inline-start" />
+          Remove
         </Button>
       </AlertDialogTrigger>
       {open ? (
@@ -88,7 +96,10 @@ export function RemoveAttendanceButton({
           key={session}
           attendanceId={attendanceId}
           memberName={memberName}
-          onClose={() => setOpen(false)}
+          onClose={() => {
+            setOpen(false);
+            onRemoved?.();
+          }}
         />
       ) : null}
     </AlertDialog>

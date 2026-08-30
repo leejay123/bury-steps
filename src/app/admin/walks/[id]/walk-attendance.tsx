@@ -3,7 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { formatDateTime, formatTime } from "@/lib/dates";
-import { DataList, DataListBody, DataListItem, DataListItemMain, dataListItemStackClassName } from "@/components/data-list";
+import {
+  DataList,
+  DataListActions,
+  DataListBody,
+  DataListItem,
+  DataListItemMain,
+  dataListActionsStackClassName,
+  dataListItemStackClassName,
+} from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
 import { usePagedList } from "@/hooks/use-paged-list";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -97,6 +105,17 @@ export function WalkAttendanceTable({
               )}
               <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
             </DataListItemMain>
+            {canRemove ? (
+              <DataListActions className={dataListActionsStackClassName}>
+                <RemoveAttendanceButton
+                  attendanceId={row.id}
+                  memberName={row.name}
+                  onRemoved={() =>
+                    setOpenId((current) => (current === row.id ? null : current))
+                  }
+                />
+              </DataListActions>
+            ) : null}
           </DataListItem>
         ))}
       </DataList>
@@ -148,11 +167,6 @@ export function WalkAttendanceTable({
               <Detail label="Health notes">
                 {selected.conditions ? selected.conditions : "No conditions reported"}
               </Detail>
-              {canRemove ? (
-                <div className="pt-2">
-                  <RemoveAttendanceButton attendanceId={selected.id} memberName={selected.name} />
-                </div>
-              ) : null}
             </div>
           ) : null}
         </DrawerContent>

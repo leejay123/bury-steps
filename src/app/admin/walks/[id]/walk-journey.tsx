@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { ChevronRight, Trash2 } from "lucide-react";
+import { ChevronRight, Plus, Trash2 } from "lucide-react";
 import {
   createJourneyEvent,
   deleteJourneyEvent,
@@ -189,6 +189,7 @@ export function WalkJourneyManager({
           <WalkJourneyDrawer events={events} />
           {canEdit && !atCap ? (
             <Button onClick={() => setMode({ type: "add" })} size="sm" variant="outline">
+              <Plus data-icon="inline-start" />
               Add event
             </Button>
           ) : null}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
+import { Trash2 } from "lucide-react";
 import { deleteWalk } from "@/server/actions";
 import { useNotifyActionState } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
@@ -92,6 +93,7 @@ export function DeleteWalkButton({
     >
       <AlertDialogTrigger asChild>
         <Button size="sm" variant="destructive">
+          <Trash2 data-icon="inline-start" />
           Remove walk
         </Button>
       </AlertDialogTrigger>

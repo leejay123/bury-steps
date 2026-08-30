@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, CalendarPlus, Download } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireAdmin, displayName } from "@/lib/auth";
 import { formatWalkDate, utcToLondonWallClock } from "@/lib/dates";
@@ -148,11 +148,15 @@ export default async function WalkDetailPage({
 
       <div className="flex flex-wrap items-center gap-2">
         <Button asChild size="sm" variant="outline">
-          <a href={`/admin/walks/${walk.id}/export`}>Download roster (CSV)</a>
+          <a href={`/admin/walks/${walk.id}/export`}>
+            <Download data-icon="inline-start" />
+            Download roster (CSV)
+          </a>
         </Button>
         {showCalendar ? (
           <Button asChild size="sm" variant="outline">
             <a download href={`/w/${slug}/ics`}>
+              <CalendarPlus data-icon="inline-start" />
               Add to calendar
             </a>
           </Button>

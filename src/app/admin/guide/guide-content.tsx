@@ -251,8 +251,9 @@ export function OrganiserGuide() {
                 stayed for the whole walk without clocking out, so “on the walk” would be wrong
                 once it’s over — and clocking out itself stops being offered to members from then
                 on, since there is nothing left to leave early from. Tap a row for email,
-                clock-out time, any clock-out reason, and health notes — and{" "}
-                <strong>Remove from walk</strong> when the walk is not cancelled. If more than 20
+                clock-out time, any clock-out reason, and health notes.{" "}
+                <strong>Remove</strong> sits on each list row (same as Journey and reports) when
+                the walk is not cancelled — it asks you to confirm. If more than 20
                 people clocked in, Previous and Next sit under either list.
               </p>
               <p>
@@ -276,11 +277,10 @@ export function OrganiserGuide() {
                 so it stays quick even with thousands of members.
               </p>
               <p>
-                To take someone off the roster, open their row and use{" "}
-                <strong>Remove from walk</strong>. That deletes their clock-in for this walk (from
-                the roster and from their history for this walk). Use it for a mistaken add or if
-                they were never there. Reopen a cancelled walk first if you need to remove someone
-                from it.
+                To take someone off the roster, use <strong>Remove</strong> on their row. That
+                deletes their clock-in for this walk (from the roster and from their history for
+                this walk). Use it for a mistaken add or if they were never there. Reopen a
+                cancelled walk first if you need to remove someone from it.
               </p>
               <p>
                 Walks titled <strong>[Demo]</strong> are sample rows so you can check Previous and
