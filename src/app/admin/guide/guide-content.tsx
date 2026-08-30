@@ -540,6 +540,12 @@ export function OrganiserGuide() {
                   bell does not clear them on its own.
                 </li>
               </Steps>
+                Guests open public notices from the <strong>Notices</strong> link in the header
+                (when signed out), from the footer on every page, or by going straight to{" "}
+                <Link href="/notices">/notices</Link>. They only see public full-page notices.
+                Member-only pages ask them to sign in. Signed-in members also use the bell footer{" "}
+                <strong>Browse all notices</strong>.
+              </p>
               <p>
                 On <Link href="/notices">Notices</Link>, people can search and filter by category.
                 Guests only see public notices; signed-in members see public and members-only.

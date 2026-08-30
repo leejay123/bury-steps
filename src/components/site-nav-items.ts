@@ -2,6 +2,7 @@ export function navItems(isAdmin: boolean, walksHref: string) {
   return [
     { href: "/", label: "Home" },
     { href: walksHref, label: "Walks" },
+    { href: "/notices", label: "Notices" },
     { href: "/dashboard/progress", label: "Progress" },
     ...(isAdmin
       ? [

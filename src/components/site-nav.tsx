@@ -1,4 +1,5 @@
 import { Show, UserButton } from "@clerk/nextjs";
+import Link from "next/link";
 import { getOptionalUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
@@ -37,6 +38,9 @@ export async function SiteNav() {
       </div>
       <div className="flex min-w-0 items-center justify-end gap-2 justify-self-end sm:gap-3">
         <Show when="signed-out">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/notices">Notices</Link>
+          </Button>
           <Button variant="outline" size="sm" asChild>
             <a href={accountPortalHref("sign-in", afterAuth)}>Sign in</a>
           </Button>
