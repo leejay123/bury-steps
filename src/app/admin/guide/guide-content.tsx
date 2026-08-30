@@ -403,7 +403,10 @@ export function OrganiserGuide() {
                   Members, Reports, Settings, and this Guide), or <strong>Make member</strong> to
                   take those tools away. Their account, clock-ins, and walk history stay.
                 </li>
-                <li>Confirm. You can change them again later.</li>
+                <li>
+                  Type <strong>confirm</strong> in the box, then confirm again. That stops an
+                  accidental click from changing someone’s access.
+                </li>
               </Steps>
               <p>
                 You cannot demote the last organiser, so the group is never left without one. You
@@ -515,9 +518,10 @@ export function OrganiserGuide() {
               <p>
                 Open <Link href="/admin/reports">Reports</Link> in the menu, or from Settings.
                 Only organisers can see this. Add a report with the date, an optional walk, what
-                happened, who was involved, what you did, and extra notes if you need them. Each
-                row shows the date, walk, and a short preview of what happened. Tap a row to read
-                the full write-up. From there you can edit it or print a PDF. On a phone, print
+                happened, who was involved, what you did, and extra notes if you need them. Search
+                the list, filter by whether a walk is linked, and sort newest or oldest first.
+                Each row shows the date, walk, and a short preview of what happened. Tap a row to
+                read the full write-up. From there you can edit it or print a PDF. On a phone, print
                 and remove sit on their own row under the text so the write-up is not squeezed. If
                 there are more than 20 reports, Previous and Next at the bottom of the list take you
                 through them. Once there is more than one report, a search box appears above the

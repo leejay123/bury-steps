@@ -9,6 +9,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
  * paginated on the server — matching the whole dataset instead of shipping
  * every row to the browser and filtering there. The search box is
  * debounced so typing doesn't fire a server round trip on every keystroke.
+ *
+ * Other query keys already on the URL (e.g. report link/sort filters) are
+ * preserved when search or page changes.
  */
 export function useUrlListState({ debounceMs = 300 }: { debounceMs?: number } = {}) {
   const router = useRouter();
@@ -32,16 +35,24 @@ export function useUrlListState({ debounceMs = 300 }: { debounceMs?: number } = 
   }, []);
 
   const navigate = useCallback(
-    (nextQuery: string, nextPage: number) => {
-      const params = new URLSearchParams();
+    (nextQuery: string, nextPage: number, patch?: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
       if (nextQuery) params.set("q", nextQuery);
+      else params.delete("q");
       if (nextPage > 1) params.set("page", String(nextPage));
+      else params.delete("page");
+      if (patch) {
+        for (const [key, value] of Object.entries(patch)) {
+          if (value === null || value === "") params.delete(key);
+          else params.set(key, value);
+        }
+      }
       const search = params.toString();
       startTransition(() => {
         router.replace(search ? `${pathname}?${search}` : pathname, { scroll: false });
       });
     },
-    [pathname, router],
+    [pathname, router, searchParams],
   );
 
   const setQuery = useCallback(
@@ -60,5 +71,14 @@ export function useUrlListState({ debounceMs = 300 }: { debounceMs?: number } = 
     [appliedQuery, navigate],
   );
 
-  return { query, page, setQuery, setPage, isPending };
+  const setFilter = useCallback(
+    (key: string, value: string, defaultValue: string) => {
+      navigate(appliedQuery, 1, {
+        [key]: value === defaultValue ? null : value,
+      });
+    },
+    [appliedQuery, navigate],
+  );
+
+  return { query, page, setQuery, setPage, setFilter, isPending, searchParams };
 }
