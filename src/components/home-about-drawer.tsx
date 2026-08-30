@@ -37,7 +37,7 @@ const PLACES = [
 
 const EXPECT = [
   "Friendly and welcoming atmosphere",
-  "Open to both men and women",
+  "Open to all",
   "Particularly suited to middle-aged and older adults, although everyone is welcome",
   "Ideal for beginners and those returning to exercise",
   "No pressure and no judgement",
@@ -122,27 +122,98 @@ export function HomeAboutDrawer({ trigger }: { trigger?: ReactNode }) {
             <section className="space-y-3">
               <h3 className="text-base font-semibold text-foreground">How this started</h3>
               <p>
-                Just eight weeks ago, in June, I was struggling to find the motivation to get out
-                and start walking. Not because I did not want to improve my health, but because I
-                simply could not find the motivation to do it alone.
-              </p>
-              <p>What happened next completely changed my life.</p>
-              <p>
-                Within hours of taking that first step, I created this walking group with no
-                expectations and no idea what it would become.
+                What started out as a self-help mission to get myself fit after my diabetes
+                diagnosis began with a simple goal: walking four miles a day with the dogs after
+                work. I lost a fair bit of weight and was incredibly proud of myself.
               </p>
               <p>
-                Eight weeks later, I can honestly say it has been one of the best decisions I have
-                ever made. Not only has my health improved, but I have met some truly wonderful
-                people along the way. I have shared countless walks, conversations, laughs, stories
-                and moments of encouragement with people from all walks of life. What started as a
-                personal challenge has grown into a supportive community built on kindness,
-                friendship and mutual encouragement.
+                Then an unexpected death in the family knocked everyone sideways. I found myself
+                thinking, &ldquo;Why should I bother when someone as fit as my brother-in-law could
+                die without any warning, without any indication that he was ill?&rdquo;
+              </p>
+              <p>So I gave up the long walks.</p>
+              <p>The weight piled back on, and then some.</p>
+              <p>
+                Later, I had a routine appointment with my doctor, which led to blood tests, urine
+                tests, and stool tests. When the results came back, there seemed to be so many
+                things wrong with me.
+              </p>
+              <p>It was time to start working on my fitness again.</p>
+              <p>
+                I knew that if I wanted to get back into walking, I wouldn&apos;t have the
+                motivation to do it on my own. So I put a message out on Facebook asking if anyone
+                would be interested in walking as a group.
+              </p>
+              <p>I was inundated with messages.</p>
+              <p>
+                I set up a Facebook group and asked AI for a good name. Bury Steps Walking Group was
+                born.
               </p>
               <p>
-                For that, I will be forever grateful to every single member who has joined us so
-                far.
+                After just a couple of weeks, well over 100 people had joined the Facebook group.
+                Encouraged by the response, I decided to take the plunge and create our first
+                event: a nice, gentle, flat walk along Tottington Lines, an old railway track that
+                had been transformed into a countryside walking route.
               </p>
+              <p>
+                I first took out public liability insurance for the group, then discovered I also
+                needed a health and safety policy, a mission statement, a constitution, sign-in
+                sheets, incident report forms, and risk assessments. It was far more work than I had
+                anticipated.
+              </p>
+              <p>
+                But at the front of my mind was the reason I had started all of this in the first
+                place: I had to do something for myself.
+              </p>
+              <p>So I carried on and got everything organised.</p>
+              <p>Onwards to Walk Number One.</p>
+              <p>
+                Fourteen people joined me on that first walk. Fourteen people I had never met
+                before. Fourteen people who got on with each other like a house on fire.
+              </p>
+              <p>&ldquo;This could be big,&rdquo; I thought to myself.</p>
+              <p>So I arranged another walk.</p>
+              <p>
+                Now, just three months in, we have more than 200 members in our Facebook group, with
+                around 20 regular walkers joining us week after week.
+              </p>
+              <p>
+                Recently, I was contacted by Bury Council&apos;s Live Well Team and asked whether I
+                would be willing to affiliate the group with them. Absolutely. It was a complete
+                no-brainer.
+              </p>
+              <p>
+                I am incredibly proud that my efforts, combined with the cooperation and enthusiasm
+                of all our walkers, have paid off and are becoming something bigger and far more
+                effective than I ever imagined.
+              </p>
+              <p>
+                What started as a personal mission to improve my own health has grown into something
+                that could make a real difference to so many people.
+              </p>
+              <p>
+                To me, that is what Bury Steps is all about: ensuring that everyone feels welcome,
+                supported, and able to take those first steps towards improving their health and
+                wellbeing.
+              </p>
+              <p>
+                I would like to thank each and every one of our members for being part of this
+                journey. I know it can be a bit of a nuisance having to sign in at every walk, but
+                this is one of the requirements set by our insurers.
+              </p>
+              <p>
+                Please bear with me. I am currently working on ways to make the process as simple
+                and straightforward as possible for everyone.
+              </p>
+              <p>
+                What began as a walk for my own health has become a community. A place where
+                friendships are formed, confidence is built, and people support one another to
+                become healthier and happier versions of themselves.
+              </p>
+              <p>
+                Thank you all for helping make Bury Steps Walking Group what it is today.
+              </p>
+              <p>Onwards and upwards to bigger and better things.</p>
             </section>
 
             <section className="space-y-3">

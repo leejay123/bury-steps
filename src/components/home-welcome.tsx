@@ -34,8 +34,9 @@ export function HomeWelcome({
           titleAs="h2"
         >
           <p>
-            Just eight weeks ago, in June, I could not find the motivation to walk alone. Within
-            hours of taking that first step I started this group, with no idea what it would become.
+            What started out as a self-help mission to get myself fit after my diabetes diagnosis
+            began with a simple goal: walking four miles a day with the dogs after work. It has
+            grown into a community of walkers supporting one another week after week.
           </p>
         </HeroCopy>
         <FullWidthDivider position="bottom" />
