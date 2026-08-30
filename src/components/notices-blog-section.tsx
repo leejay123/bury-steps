@@ -141,9 +141,9 @@ export function NoticesBlogSection({
                     <p className="font-medium">{notice.title}</p>
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {notice.categoryLabel ?? "Notice"} · {formatDate(notice.createdAt)}
-                  </p>
+                <p className="text-xs text-muted-foreground">
+                  {notice.categoryLabel ?? "Notice"} · Updated {formatDate(notice.updatedAt)}
+                </p>
                   <p className="line-clamp-3 text-sm text-muted-foreground">{notice.body}</p>
                 </Link>
               ))}

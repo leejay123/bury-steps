@@ -231,6 +231,20 @@ function DrawerContent({
   React.useEffect(() => {
     if (!root || open !== true) return;
     root.style.removeProperty("pointer-events");
+
+    // When a field is focused, scroll it into the sheet's scrollport so it
+    // isn't hidden under the sticky footer or clipped by the keyboard.
+    function onFocusIn(event: FocusEvent) {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (target.tagName !== "INPUT" && target.tagName !== "TEXTAREA") return;
+      window.requestAnimationFrame(() => {
+        target.scrollIntoView({ block: "center", behavior: "smooth" });
+      });
+    }
+
+    root.addEventListener("focusin", onFocusIn);
+    return () => root.removeEventListener("focusin", onFocusIn);
   }, [open, root]);
 
   if (!shouldRender) return null;
@@ -247,7 +261,7 @@ function DrawerContent({
           // that's the "blue border" along the drawer's edge on iPhone.
           // Nothing inside needs *this* element's own outline; close/inputs
           // keep their own focus-visible rings.
-          "group/drawer-content fixed z-[60] flex h-auto flex-col overflow-visible bg-background outline-hidden data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
+          "group/drawer-content fixed z-[60] flex h-auto flex-col overflow-hidden bg-background outline-hidden data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
           dismissed && "invisible !pointer-events-none",
           // Drawers portal straight to <body>, outside the shell that already
           // handles the Dynamic Island's left/right safe area, so each side
@@ -340,7 +354,7 @@ function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="drawer-footer"
-      className={cn("mt-auto flex flex-col gap-2 p-4", className)}
+      className={cn("mt-auto flex shrink-0 flex-col gap-2 border-t bg-background p-4", className)}
       {...props}
     />
   );

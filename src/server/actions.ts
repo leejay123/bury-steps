@@ -40,6 +40,7 @@ import {
   MAX_NOTICE_CATEGORIES,
   MAX_NOTICE_CATEGORY_LABEL,
   MAX_NOTICE_TITLE,
+  MAX_NOTICE_BELL_BODY,
   MAX_NOTICE_TEASER,
   MAX_NOTICE_PAGE_BODY,
   noticeCategorySlug,
@@ -985,6 +986,69 @@ export async function adminClockIn(
   };
 }
 
+const adminRemoveAttendanceSchema = z.object({
+  attendanceId: z.string().min(1),
+});
+
+export async function adminRemoveAttendance(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+
+  const parsed = adminRemoveAttendanceSchema.safeParse({
+    attendanceId: formData.get("attendanceId"),
+  });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0].message };
+  }
+
+  const attendance = await prisma.attendance.findUnique({
+    where: { id: parsed.data.attendanceId },
+    select: {
+      id: true,
+      userId: true,
+      user: { select: { firstName: true, lastName: true, email: true } },
+      walk: {
+        select: {
+          id: true,
+          token: true,
+          slug: true,
+          cancelledAt: true,
+        },
+      },
+    },
+  });
+  if (!attendance) return { ok: false, error: "That person is no longer on this walk." };
+  if (attendance.walk.cancelledAt) {
+    return { ok: false, error: "Reopen this walk before removing someone from it." };
+  }
+
+  try {
+    await prisma.attendance.delete({ where: { id: attendance.id } });
+  } catch (err) {
+    if (isPrismaCode(err, "P2025")) {
+      return { ok: false, error: "That person is no longer on this walk." };
+    }
+    return logActionError(
+      "adminRemoveAttendance",
+      err,
+      "Could not remove them from this walk. Try again.",
+    );
+  }
+
+  revalidateWalkShare(attendance.walk);
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/history");
+  revalidatePath(`/admin/walks/${attendance.walk.id}`);
+  revalidatePath(`/admin/members/${attendance.userId}`);
+  revalidatePath("/admin/members");
+  return {
+    ok: true,
+    message: `${displayName(attendance.user)} has been removed from this walk.`,
+  };
+}
+
 const clockOutSchema = z.object({
   token: z.string().min(1),
   reason: z
@@ -1723,7 +1787,10 @@ async function uniqueNoticePageSlug(
   return `${base}-${Date.now().toString(36)}`;
 }
 
-function readNoticeCopy(formData: FormData):
+function readNoticeCopy(
+  formData: FormData,
+  options: { maxBody: number } = { maxBody: MAX_NOTICE_BELL_BODY },
+):
   | {
       title: string;
       body: string;
@@ -1744,8 +1811,8 @@ function readNoticeCopy(formData: FormData):
   if (title.length > MAX_NOTICE_TITLE) {
     return { error: `Keep the title under ${MAX_NOTICE_TITLE} characters.` };
   }
-  if (body.length > MAX_NOTICE_TEASER) {
-    return { error: `Keep the bell message under ${MAX_NOTICE_TEASER} characters.` };
+  if (body.length > options.maxBody) {
+    return { error: `Keep the bell message under ${options.maxBody} characters.` };
   }
 
   if (kind === "PAGE") {
@@ -1819,7 +1886,15 @@ export async function updateSiteNotice(
   const id = String(formData.get("noticeId") ?? "");
   if (!id) return { ok: false, error: "No notice selected." };
 
-  const copy = readNoticeCopy(formData);
+  const existingForLimit = await prisma.siteNotice.findUnique({
+    where: { id },
+    select: { systemKey: true },
+  });
+  if (!existingForLimit) return { ok: false, error: "That notice is no longer there." };
+
+  const copy = readNoticeCopy(formData, {
+    maxBody: existingForLimit.systemKey ? MAX_NOTICE_TEASER : MAX_NOTICE_BELL_BODY,
+  });
   if ("error" in copy) return { ok: false, error: copy.error };
 
   try {
@@ -1966,6 +2041,7 @@ export async function markSiteNoticesRead(): Promise<ActionResult> {
         systemKey: true,
         enabled: true,
         createdAt: true,
+        updatedAt: true,
       },
     });
     const bell = noticesForBell(

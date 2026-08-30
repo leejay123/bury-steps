@@ -149,11 +149,13 @@ export default async function WalkDetailPage({
         <Button asChild size="sm" variant="outline">
           <a href={`/admin/walks/${walk.id}/export`}>Download roster (CSV)</a>
         </Button>
-        <Button asChild size="sm" variant="outline">
-          <a download href={`/w/${slug}/ics`}>
-            Add to calendar
-          </a>
-        </Button>
+        {!walk.cancelledAt ? (
+          <Button asChild size="sm" variant="outline">
+            <a download href={`/w/${slug}/ics`}>
+              Add to calendar
+            </a>
+          </Button>
+        ) : null}
         <DuplicateWalkButton walkId={walk.id} />
         {/*
           A completed walk already happened — there's nothing left to
@@ -258,7 +260,11 @@ export default async function WalkDetailPage({
             }
           />
         ) : (
-          <WalkAttendanceTable rows={stillIn.map(toAttendanceRow)} walkCompleted={isCompleted} />
+          <WalkAttendanceTable
+            canRemove={!walk.cancelledAt}
+            rows={stillIn.map(toAttendanceRow)}
+            walkCompleted={isCompleted}
+          />
         )}
       </section>
 
@@ -271,7 +277,11 @@ export default async function WalkDetailPage({
               after finishing · click a row for details
             </span>
           </div>
-          <WalkAttendanceTable rows={clockedOut.map(toAttendanceRow)} walkCompleted={isCompleted} />
+          <WalkAttendanceTable
+            canRemove={!walk.cancelledAt}
+            rows={clockedOut.map(toAttendanceRow)}
+            walkCompleted={isCompleted}
+          />
         </section>
       ) : null}
 

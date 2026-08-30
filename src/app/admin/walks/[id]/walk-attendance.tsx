@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { formatDateTime, formatTime } from "@/lib/dates";
 import { DataList, DataListBody, DataListItem } from "@/components/data-list";
@@ -15,6 +15,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { RemoveAttendanceButton } from "./remove-attendance-button";
 
 export type WalkAttendanceRow = {
   id: string;
@@ -50,15 +51,24 @@ function stillInLabel(walkCompleted: boolean) {
 export function WalkAttendanceTable({
   rows,
   walkCompleted = false,
+  canRemove = false,
 }: {
   rows: WalkAttendanceRow[];
   /** Pass true once the walk's clock-in window has fully closed. */
   walkCompleted?: boolean;
+  /** Organiser can delete a mistaken clock-in (not on cancelled walks). */
+  canRemove?: boolean;
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const selected = rows.find((row) => row.id === openId) ?? null;
   const listRef = useRef<HTMLDivElement>(null);
   const paging = usePagedList(rows);
+
+  useEffect(() => {
+    if (openId && !rows.some((row) => row.id === openId)) {
+      setOpenId(null);
+    }
+  }, [openId, rows]);
 
   return (
     <div className="flex flex-col gap-4" ref={listRef}>
@@ -132,6 +142,11 @@ export function WalkAttendanceTable({
               <Detail label="Health notes">
                 {selected.conditions ? selected.conditions : "No conditions reported"}
               </Detail>
+              {canRemove ? (
+                <div className="pt-2">
+                  <RemoveAttendanceButton attendanceId={selected.id} memberName={selected.name} />
+                </div>
+              ) : null}
             </div>
           ) : null}
         </DrawerContent>

@@ -211,14 +211,30 @@ export function UnlockPageOnNavigate() {
 
     let lastKeyboard = -1;
     let lastHeight = -1;
+    // Largest visual-viewport height this session (approx. full screen). When
+    // the keyboard opens, recent iOS often shrinks *both* innerHeight and
+    // visualViewport.height, so innerHeight − vv.height ≈ 0 and the drawer
+    // never lifts. Measuring against this baseline still sees the keyboard.
+    let baselineHeight = Math.round(viewport.height);
 
     function sync() {
       const style = viewportStyleRef.current;
       if (!style) return;
       const height = Math.round(viewport.height);
-      const inset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
-      // Ignore the ~50–100px iOS URL-bar show/hide; a real keyboard is taller.
-      const keyboard = inset > 120 ? Math.round(inset) : 0;
+      if (height > baselineHeight) baselineHeight = height;
+
+      const fromInner = Math.max(0, window.innerHeight - height - viewport.offsetTop);
+      const fromBaseline = Math.max(0, baselineHeight - height - viewport.offsetTop);
+      // Classic iOS: layout viewport stays tall under the keyboard → lift the
+      // sheet with margin-bottom. Recent iOS: layout viewport already shrank
+      // with the keys (fromInner ≈ 0) so bottom:0 is clear — only nudge for
+      // the form-nav accessory bar that still covers Save/Cancel.
+      let keyboard = 0;
+      if (fromInner > 120) {
+        keyboard = Math.round(fromInner) + 12;
+      } else if (fromBaseline > 120) {
+        keyboard = 44;
+      }
       // iOS can fire visualViewport "scroll" repeatedly during momentum
       // scrolling even when nothing actually changed. Rewriting a <style>
       // tag's textContent forces the browser to reparse that CSS text, so
@@ -230,14 +246,22 @@ export function UnlockPageOnNavigate() {
       style.textContent = `:root{--keyboard-inset:${keyboard}px;--vv-height:${height}px;}`;
     }
 
+    function onOrientationChange() {
+      // After rotate, re-learn the full-screen baseline once the viewport settles.
+      window.setTimeout(() => {
+        baselineHeight = Math.round(viewport.height);
+        sync();
+      }, 300);
+    }
+
     viewport.addEventListener("resize", sync);
     viewport.addEventListener("scroll", sync);
-    window.addEventListener("orientationchange", sync);
+    window.addEventListener("orientationchange", onOrientationChange);
     sync();
     return () => {
       viewport.removeEventListener("resize", sync);
       viewport.removeEventListener("scroll", sync);
-      window.removeEventListener("orientationchange", sync);
+      window.removeEventListener("orientationchange", onOrientationChange);
     };
   }, []);
 

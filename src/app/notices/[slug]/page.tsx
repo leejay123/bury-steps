@@ -52,7 +52,9 @@ export default async function NoticeDetailPage({
       <header className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
           {notice.categoryLabel ? <Badge variant="secondary">{notice.categoryLabel}</Badge> : null}
-          <time className="text-sm text-muted-foreground">{formatDate(notice.createdAt)}</time>
+          <time className="text-sm text-muted-foreground" dateTime={notice.updatedAt.toISOString()}>
+            Updated {formatDate(notice.updatedAt)}
+          </time>
         </div>
         <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{notice.title}</h1>
         {notice.body ? (

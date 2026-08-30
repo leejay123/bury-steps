@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { markSiteNoticeRead, markSiteNoticesRead } from "@/server/actions";
 import { formatDate } from "@/lib/dates";
 import type { NoticeView } from "@/lib/notices";
+import { noticeBodyForBellDrawer } from "@/lib/notices";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -144,9 +145,11 @@ export function NotificationBell({
                       </Badge>
                     ) : null}
                   </div>
-                  <p className="text-muted-foreground text-xs">{formatDate(notice.createdAt)}</p>
+                  <p className="text-muted-foreground text-xs">
+                    Updated {formatDate(notice.updatedAt)}
+                  </p>
                   <p className="mt-1 whitespace-pre-wrap text-muted-foreground text-sm">
-                    {notice.body}
+                    {noticeBodyForBellDrawer(notice)}
                   </p>
                   {href ? (
                     <p className="mt-2 flex items-center gap-1 text-xs font-medium text-foreground">

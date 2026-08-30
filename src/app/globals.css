@@ -101,9 +101,9 @@ body {
 [data-slot="drawer-content"][data-vaul-drawer-direction="bottom"] {
   bottom: 0;
   margin-bottom: var(--keyboard-inset, 0px);
-  /* 80% of the live visual viewport — not min(80dvh, full vv-height), which
-     becomes ~100% of the screen when the iOS URL bar shrinks vv below 80dvh. */
-  max-height: min(80dvh, calc(var(--vv-height, 100dvh) * 0.8));
+  /* Prefer the live visual viewport when the keyboard is open; fall back to
+     80dvh so a tall form still leaves room to drag-dismiss above. */
+  max-height: min(90dvh, calc(var(--vv-height, 100dvh) * 0.92));
   padding-bottom: env(safe-area-inset-bottom);
 }
 

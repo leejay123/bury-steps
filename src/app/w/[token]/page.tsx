@@ -103,6 +103,13 @@ export default async function WalkLinkPage({
     durationMins: walk.durationMins,
     startsAt: walk.startsAt,
   });
+
+  // Members and visitors cannot open a cancelled walk. Organisers still can
+  // (from the share link or Admin → Walks) so they can check details and reopen.
+  if (status === "cancelled" && user?.role !== "ADMIN") {
+    notFound();
+  }
+
   const completed = status === "completed";
 
   const alreadyIn = user

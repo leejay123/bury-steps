@@ -25,6 +25,9 @@ export async function GET(
   });
 
   if (!walk) return new NextResponse("Not found", { status: 404 });
+  if (walk.cancelledAt) {
+    return new NextResponse("This walk has been cancelled.", { status: 404 });
+  }
 
   const ics = buildWalkIcs(walk);
   const filename = walkIcsFilename(walk.startsAt);

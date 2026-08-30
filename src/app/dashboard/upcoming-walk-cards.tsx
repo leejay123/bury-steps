@@ -55,7 +55,12 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
     : windowState(new Date(walk.startsAt), walk.durationMins, now);
 
   return (
-    <Card className="relative gap-3 transition-colors hover:bg-muted/40">
+    <Card
+      className={cn(
+        "relative gap-3",
+        walk.cancelledAt ? undefined : "transition-colors hover:bg-muted/40",
+      )}
+    >
       {/*
         A single real link stretched over the whole card (rather than a
         clickable `role="button"` wrapper around a *second*, separately
@@ -64,12 +69,17 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
         breaks keyboard focus order. Everything below is presentational;
         this is the only focus stop and the only thing a screen reader
         announces as interactive.
+
+        Cancelled walks stay on the list as a notice only — members cannot
+        open the walk page (organisers use Admin).
       */}
-      <Link
-        aria-label={walkLinkLabel(walk, state)}
-        className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        href={walkSharePath(walk)}
-      />
+      {walk.cancelledAt ? null : (
+        <Link
+          aria-label={walkLinkLabel(walk, state)}
+          className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          href={walkSharePath(walk)}
+        />
+      )}
       <CardHeader className="flex flex-row items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1.5">
           <CardTitle className="text-base">{walk.title}</CardTitle>
@@ -96,7 +106,9 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
             durationMins={walk.durationMins}
             startsAt={walk.startsAt}
           />
-          <ChevronRight aria-hidden className="size-4 text-muted-foreground" />
+          {walk.cancelledAt ? null : (
+            <ChevronRight aria-hidden className="size-4 text-muted-foreground" />
+          )}
         </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">

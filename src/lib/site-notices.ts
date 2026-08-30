@@ -26,6 +26,7 @@ type CachedNotice = {
   systemKey: string | null;
   enabled: boolean;
   createdAt: string;
+  updatedAt: string;
 };
 
 type CachedCategory = {
@@ -52,6 +53,7 @@ async function loadSiteNotices(): Promise<CachedNotice[]> {
       systemKey: true,
       enabled: true,
       createdAt: true,
+      updatedAt: true,
     },
   });
   return rows.map((row) => ({
@@ -67,6 +69,7 @@ async function loadSiteNotices(): Promise<CachedNotice[]> {
     systemKey: row.systemKey,
     enabled: row.enabled,
     createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
   }));
 }
 
@@ -90,7 +93,7 @@ async function loadSiteNoticeCategories(): Promise<CachedCategory[]> {
   }));
 }
 
-const getCachedSiteNotices = unstable_cache(loadSiteNotices, ["site-notices", "v8"], {
+const getCachedSiteNotices = unstable_cache(loadSiteNotices, ["site-notices", "v9"], {
   tags: [NOTICES_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });
@@ -109,6 +112,7 @@ function reviveNotices(rows: CachedNotice[]): NoticeView[] {
     rows.map((row) => ({
       ...row,
       createdAt: new Date(row.createdAt),
+      updatedAt: new Date(row.updatedAt),
     })),
   );
 }
@@ -184,6 +188,7 @@ export async function getPageNoticeBySlug(slug: string): Promise<NoticeView | nu
         systemKey: true,
         enabled: true,
         createdAt: true,
+        updatedAt: true,
       },
     });
     if (!row) return null;
@@ -200,6 +205,7 @@ export async function getPageNoticeBySlug(slug: string): Promise<NoticeView | nu
       systemKey: row.systemKey,
       enabled: row.enabled,
       createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
     };
   } catch {
     return null;

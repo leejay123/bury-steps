@@ -2,6 +2,14 @@
 
 import { cn } from "@/lib/utils";
 
+/** Mobile: stack body above actions. Desktop: one horizontal row. */
+export const dataListItemStackClassName =
+  "flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3";
+
+/** Mobile: actions on their own row under a hairline. Desktop: inline. */
+export const dataListActionsStackClassName =
+  "justify-end border-t pt-2 sm:border-0 sm:pt-0";
+
 export function DataList({ className, ...props }: React.ComponentProps<"ul">) {
   return (
     <ul
@@ -28,7 +36,8 @@ export function DataListItem({
     <li
       className={cn(
         "flex cursor-pointer items-center gap-3 border-b p-3 last:border-0 hover:bg-muted/50",
-        clickable && "focus-visible:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        clickable &&
+          "focus-visible:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         className,
       )}
       onClick={onClick}
@@ -45,6 +54,16 @@ export function DataListItem({
       }}
       role={clickable ? (role ?? "button") : role}
       tabIndex={clickable ? (tabIndex ?? 0) : tabIndex}
+      {...props}
+    />
+  );
+}
+
+/** Content + chevron row when the item uses {@link dataListItemStackClassName}. */
+export function DataListItemMain({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      className={cn("flex min-w-0 flex-1 items-start gap-2 sm:items-center", className)}
       {...props}
     />
   );

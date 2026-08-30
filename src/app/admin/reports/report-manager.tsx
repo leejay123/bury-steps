@@ -12,7 +12,7 @@ import {
 import { formatWalkDay, formatTime, utcToLondonWallClock } from "@/lib/dates";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { EmptyState } from "@/components/empty-state";
-import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
+import { DataList, DataListActions, DataListBody, DataListItem, DataListItemMain, dataListActionsStackClassName, dataListItemStackClassName } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
 import { useUrlListState } from "@/hooks/use-url-list-state";
 import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
@@ -132,7 +132,7 @@ function ReportFields({
   const [walkId, setWalkId] = useState(report?.walkId ?? "none");
 
   return (
-    <div className="flex flex-col gap-3 overflow-y-auto overscroll-y-contain px-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-y-contain px-4 pb-2">
       {report ? <input name="reportId" type="hidden" value={report.id} /> : null}
       <input name="walkId" type="hidden" value={walkId === "none" ? "" : walkId} />
       <div className="flex flex-col gap-1.5">
@@ -167,11 +167,12 @@ function ReportFields({
           What happened
         </Label>
         <Textarea
+          className="min-h-24"
           defaultValue={report?.whatHappened}
           id={`${prefix}-what`}
           name="whatHappened"
           required
-          rows={4}
+          rows={3}
         />
       </div>
       <div className="flex flex-col gap-1.5">
@@ -179,11 +180,12 @@ function ReportFields({
           Who was involved
         </Label>
         <Textarea
+          className="min-h-20"
           defaultValue={report?.whoInvolved}
           id={`${prefix}-who`}
           name="whoInvolved"
           required
-          rows={3}
+          rows={2}
         />
       </div>
       <div className="flex flex-col gap-1.5">
@@ -191,20 +193,22 @@ function ReportFields({
           What we did
         </Label>
         <Textarea
+          className="min-h-24"
           defaultValue={report?.whatWeDid}
           id={`${prefix}-did`}
           name="whatWeDid"
           required
-          rows={4}
+          rows={3}
         />
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={`${prefix}-notes`}>Organiser notes</Label>
         <Textarea
+          className="min-h-20"
           defaultValue={report?.organiserNotes ?? ""}
           id={`${prefix}-notes`}
           name="organiserNotes"
-          rows={3}
+          rows={2}
         />
       </div>
     </div>
@@ -423,11 +427,11 @@ export function AccidentReportManager({
             const at = new Date(report.happenedAt);
             return (
               <DataListItem
-                className="flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3"
+                className={dataListItemStackClassName}
                 key={report.id}
                 onClick={() => setMode({ type: "view", report })}
               >
-                <div className="flex min-w-0 flex-1 items-start gap-2 sm:items-center">
+                <DataListItemMain>
                   <DataListBody>
                     <p className="font-medium">
                       {formatWalkDay(at)} · {formatTime(at)}
@@ -440,8 +444,8 @@ export function AccidentReportManager({
                     </p>
                   </DataListBody>
                   <ChevronRight className="mt-1 size-4 shrink-0 text-muted-foreground sm:mt-0" />
-                </div>
-                <DataListActions className="justify-end border-t pt-2 sm:border-0 sm:pt-0">
+                </DataListItemMain>
+                <DataListActions className={dataListActionsStackClassName}>
                   <Button asChild size="xs" variant="outline">
                     <a
                       aria-label="Print report"
@@ -478,8 +482,8 @@ export function AccidentReportManager({
         }}
         open={mode !== null}
       >
-        <DrawerContent className="sm:max-w-lg">
-          <DrawerHeader>
+        <DrawerContent className="min-h-0 sm:max-w-lg">
+          <DrawerHeader className="shrink-0">
             <DrawerTitle>
               {mode?.type === "edit"
                 ? "Edit report"

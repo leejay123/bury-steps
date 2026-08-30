@@ -16,6 +16,7 @@ import {
 } from "@/server/actions";
 import {
   BELL_NOTICE_LIMIT,
+  MAX_NOTICE_BELL_BODY,
   MAX_NOTICE_CATEGORY_LABEL,
   MAX_NOTICE_PAGE_BODY,
   MAX_NOTICE_TEASER,
@@ -32,7 +33,7 @@ import { usePagedList } from "@/hooks/use-paged-list";
 import { FormError } from "@/components/form-error";
 import { EmptyState } from "@/components/empty-state";
 import { ReorderButtons, useReorderableIds } from "@/components/sortable-rows";
-import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
+import { DataList, DataListActions, DataListBody, DataListItem, DataListItemMain, dataListActionsStackClassName, dataListItemStackClassName } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -101,6 +102,7 @@ function NoticeFields({
   prefix: string;
 }) {
   const pinned = notice ? isPinnedNotice(notice) : false;
+  const bodyMax = pinned ? MAX_NOTICE_TEASER : MAX_NOTICE_BELL_BODY;
   const [title, setTitle] = useState(notice?.title ?? "");
   const [body, setBody] = useState(notice?.body ?? "");
   const [kind, setKind] = useState<NoticeKind>(notice?.kind ?? "BELL");
@@ -162,17 +164,20 @@ function NoticeFields({
         <Textarea
           disabled={disabled}
           id={`${prefix}-body`}
-          maxLength={MAX_NOTICE_TEASER}
+          maxLength={bodyMax}
           name="body"
           onChange={(event) => setBody(event.target.value)}
           placeholder="Meet at the usual car park. Bring water if it is warm."
           required
-          rows={4}
+          rows={pinned ? 4 : 3}
           value={body}
         />
         <p className="text-xs text-muted-foreground">
-          Shown in the bell{kind === "PAGE" && !pinned ? " and as the card excerpt on Notices" : ""}
-          . Up to {MAX_NOTICE_TEASER} characters.
+          {pinned
+            ? `Shown in the bell. Up to ${bodyMax} characters.`
+            : kind === "PAGE"
+              ? `Short teaser in the bell (with …) and on the Notices list. Full article below. Up to ${bodyMax} characters.`
+              : `Shown in the bell only. Up to ${bodyMax} characters.`}
         </p>
       </div>
       {kind === "PAGE" && !pinned ? (
@@ -576,30 +581,33 @@ function NoticeCategoryManager({
         <DataList>
           {sorted.map((category, index) => (
             <DataListItem
+              className={dataListItemStackClassName}
               key={category.id}
               onClick={() => setMode({ type: "edit", category })}
             >
-              <ReorderButtons
-                canMoveDown={index < sorted.length - 1}
-                canMoveUp={index > 0}
-                label={`category ${category.label}`}
-                onMoveDown={() => moveDown(category.id)}
-                onMoveUp={() => moveUp(category.id)}
-              />
-              <DataListBody>
-                <p className="font-medium">{category.label}</p>
-                <p className="text-sm text-muted-foreground">
-                  {category.noticeCount}{" "}
-                  {category.noticeCount === 1 ? "full-page notice" : "full-page notices"}
-                </p>
-              </DataListBody>
-              <DataListActions>
+              <DataListItemMain className="items-center">
+                <ReorderButtons
+                  canMoveDown={index < sorted.length - 1}
+                  canMoveUp={index > 0}
+                  label={`category ${category.label}`}
+                  onMoveDown={() => moveDown(category.id)}
+                  onMoveUp={() => moveUp(category.id)}
+                />
+                <DataListBody>
+                  <p className="font-medium">{category.label}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {category.noticeCount}{" "}
+                    {category.noticeCount === 1 ? "full-page notice" : "full-page notices"}
+                  </p>
+                </DataListBody>
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+              </DataListItemMain>
+              <DataListActions className={dataListActionsStackClassName}>
                 <RemoveCategoryButton
                   category={category}
                   onlyCategory={categories.length <= 1}
                 />
               </DataListActions>
-              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
             </DataListItem>
           ))}
         </DataList>
@@ -701,6 +709,7 @@ export function SiteNoticeManager({
             <DataList>
               {paging.paged.map((notice, index) => (
                 <DataListItem
+                  className={dataListItemStackClassName}
                   key={notice.id}
                   onClick={() =>
                     setMode({
@@ -710,30 +719,35 @@ export function SiteNoticeManager({
                     })
                   }
                 >
-                  <DataListBody>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium">{notice.title}</p>
-                      {isWelcomeNotice(notice) ? (
-                        <Badge variant={notice.enabled ? "default" : "secondary"}>
-                          Welcome (pinned)
-                          {notice.enabled ? "" : " · off"}
-                        </Badge>
-                      ) : (
-                        <Badge variant={notice.kind === "PAGE" ? "default" : "secondary"}>
-                          {notice.kind === "PAGE" ? "Full page" : "Bell only"}
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground wrap-break-word">{notice.body}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDate(notice.createdAt)}
-                      {notice.kind === "PAGE" && notice.categoryLabel
-                        ? ` · ${notice.categoryLabel}`
-                        : ""}
-                      {notice.kind === "PAGE" && notice.slug ? ` · /notices/${notice.slug}` : ""}
-                    </p>
-                  </DataListBody>
-                  <DataListActions>
+                  <DataListItemMain>
+                    <DataListBody>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-medium">{notice.title}</p>
+                        {isWelcomeNotice(notice) ? (
+                          <Badge variant={notice.enabled ? "default" : "secondary"}>
+                            Welcome (pinned)
+                            {notice.enabled ? "" : " · off"}
+                          </Badge>
+                        ) : (
+                          <Badge variant={notice.kind === "PAGE" ? "default" : "secondary"}>
+                            {notice.kind === "PAGE" ? "Full page" : "Bell only"}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="line-clamp-3 text-sm text-muted-foreground wrap-break-word">
+                        {notice.body}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Updated {formatDate(notice.updatedAt)}
+                        {notice.kind === "PAGE" && notice.categoryLabel
+                          ? ` · ${notice.categoryLabel}`
+                          : ""}
+                        {notice.kind === "PAGE" && notice.slug ? ` · /notices/${notice.slug}` : ""}
+                      </p>
+                    </DataListBody>
+                    <ChevronRight className="mt-1 size-4 shrink-0 text-muted-foreground sm:mt-0" />
+                  </DataListItemMain>
+                  <DataListActions className={dataListActionsStackClassName}>
                     {isWelcomeNotice(notice) ? (
                       <WelcomeEnabledToggle notice={notice} />
                     ) : (
@@ -750,7 +764,6 @@ export function SiteNoticeManager({
                       />
                     )}
                   </DataListActions>
-                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                 </DataListItem>
               ))}
             </DataList>

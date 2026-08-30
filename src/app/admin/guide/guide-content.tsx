@@ -2,7 +2,7 @@ import Link from "next/link";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { MAX_HOMEPAGE_FAQS, MAX_FAQ_CATEGORIES } from "@/lib/faqs";
-import { BELL_NOTICE_LIMIT, MAX_NOTICE_CATEGORIES } from "@/lib/notices";
+import { BELL_NOTICE_LIMIT, MAX_NOTICE_BELL_BODY, MAX_NOTICE_CATEGORIES, MAX_NOTICE_TEASER } from "@/lib/notices";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { FACEBOOK_GROUP_URL, PRODUCTION_APP_URL } from "@/lib/urls";
 import { CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
@@ -188,7 +188,9 @@ export function OrganiserGuide() {
                 <li>
                   <strong>Cancel</strong> stops new clock-ins. People already on the list stay. You
                   can add a reason. Prefer this if you still want a record. Members still see
-                  cancelled walks on their Walks page.
+                  cancelled walks on their Walks page as a notice, but they cannot open the walk
+                  page or add it to a calendar. Organisers open cancelled walks from Admin → Walks
+                  (or the share link while signed in as an organiser).
                 </li>
                 <li>
                   <strong>Edit</strong> changes the title, date, time, length, meeting point, or
@@ -224,7 +226,9 @@ export function OrganiserGuide() {
               <p>
                 On the walk page and on the public share link, <strong>Add to calendar</strong>{" "}
                 downloads a small calendar file (.ics) so phones and calendar apps can save the
-                date, time, meeting point, and a link back to the walk.
+                date, time, meeting point, and a link back to the walk. Cancelled walks do not
+                offer Add to calendar — for members or organisers — and the calendar file link
+                returns not found until the walk is reopened.
               </p>
               <p>
                 Once a walk reaches <strong>Completed</strong>, Cancel and Edit disappear from its
@@ -246,8 +250,9 @@ export function OrganiserGuide() {
                 stayed for the whole walk without clocking out, so “on the walk” would be wrong
                 once it’s over — and clocking out itself stops being offered to members from then
                 on, since there is nothing left to leave early from. Tap a row for email,
-                clock-out time, any clock-out reason, and health notes. If more than 20 people
-                clocked in, Previous and Next sit under either list.
+                clock-out time, any clock-out reason, and health notes — and{" "}
+                <strong>Remove from walk</strong> when the walk is not cancelled. If more than 20
+                people clocked in, Previous and Next sit under either list.
               </p>
               <p>
                 <strong>Journey</strong> is the story of the walk — short timed events (a cafe stop,
@@ -267,6 +272,13 @@ export function OrganiserGuide() {
                 on the roster cannot be added again. Reopen a cancelled walk first if you need
                 to add someone to it. Search by name or email — the list shows up to 40 matches
                 so it stays quick even with thousands of members.
+              </p>
+              <p>
+                To take someone off the roster, open their row and use{" "}
+                <strong>Remove from walk</strong>. That deletes their clock-in for this walk (from
+                the roster and from their history for this walk). Use it for a mistaken add or if
+                they were never there. Reopen a cancelled walk first if you need to remove someone
+                from it.
               </p>
               <p>
                 Walks titled <strong>[Demo]</strong> are sample rows so you can check Previous and
@@ -431,7 +443,8 @@ export function OrganiserGuide() {
               <Steps>
                 <li>
                   Choose the small Remove button, either on the Members list or on the member’s own
-                  page. You cannot remove yourself.
+                  page. On a phone, role and Remove sit under the name so the email is not squeezed.
+                  You cannot remove yourself.
                 </li>
                 <li>
                   Type <strong>&ldquo;Confirm&rdquo;</strong> in the box, then choose{" "}
@@ -543,14 +556,17 @@ export function OrganiserGuide() {
                   <Link href="/notices">Notices</Link>.
                 </li>
                 <li>
-                  Add a title and a short bell message (also used as the list excerpt for full-page
-                  notices). For a full page, pick a category and write the long text.
+                  Add a title and a short bell message (up to {MAX_NOTICE_BELL_BODY} characters —
+                  also the list excerpt for full-page notices). The welcome notice can be longer
+                  (up to {MAX_NOTICE_TEASER}). For a full page, pick a category and write the long
+                  text — that is what members see after <strong>Read full notice</strong>.
                 </li>
                 <li>
                   Members see a count on the bell for unread notices and a <strong>New</strong>{" "}
-                  badge on each unread row. Full-page rows say <strong>Read full notice</strong>.
-                  Tapping a row marks that notice read. <strong>Mark all as read</strong> clears
-                  everything. Opening the bell does not clear them on its own.
+                  badge on each unread row. In the drawer, ordinary notices stay short; full-page
+                  teasers end with … and say <strong>Read full notice</strong>. Tapping a row marks
+                  that notice read. <strong>Mark all as read</strong> clears everything. Opening
+                  the bell does not clear them on its own.
                 </li>
               </Steps>
               <p>
@@ -702,9 +718,10 @@ export function OrganiserGuide() {
                 together, only for signed-in people. Each walk is a card with the date, length,
                 meeting point, a truncated preview of the description, and a badge for its status —
                 clock-in open, already clocked in, cancelled, or completed once the window has
-                closed. Tapping anywhere on the card
+                closed. Tapping anywhere on an open walk card
                 opens that walk’s full page with the rest of the description and the full “Who’s
-                coming” list (20 at a time if the walk is busy); the card itself only shows a one-line headcount. The Clock in button
+                coming” list (20 at a time if the walk is busy); the card itself only shows a one-line headcount. Cancelled cards stay on the list as a notice only — they do not
+                open. The Clock in button
                 works right there on the card without leaving the list, but Clock out is a
                 deliberate step and only lives on the walk’s own page. A “Your recent walks”
                 carousel underneath shows their last few — swipe or use the arrows to move between
@@ -712,7 +729,8 @@ export function OrganiserGuide() {
                 finished (or been cancelled) show up there; a walk they’re still out on right now
                 doesn’t count as history yet. History in the menu is every finished or cancelled
                 walk they’ve clocked in to, grouped by year, with a search box plus filters for
-                status and year, and tapping anywhere on a row opens that walk too. Previous and Next
+                status and year. Tapping a finished walk opens it; a cancelled row in History is
+                not a link. Previous and Next
                 appear if they have more than 20 walks.
               </p>
             </GuideBody>
@@ -741,6 +759,10 @@ export function OrganiserGuide() {
                   newest
                 </li>
                 <li>
+                  <strong>Bell / teaser message</strong> — {MAX_NOTICE_BELL_BODY} characters
+                  (welcome up to {MAX_NOTICE_TEASER})
+                </li>
+                <li>
                   <strong>Notice categories</strong> — {MAX_NOTICE_CATEGORIES}
                 </li>
                 <li>
@@ -758,8 +780,8 @@ export function OrganiserGuide() {
                   <strong>Health notes</strong> — kept for 90 days after the walk
                 </li>
                 <li>
-                  <strong>Cancelled walks</strong> — shown to members, then deleted after{" "}
-                  {CANCELLED_WALK_RETENTION_DAYS} days if not reopened
+                  <strong>Cancelled walks</strong> — shown to members as a notice (not openable),
+                  then deleted after {CANCELLED_WALK_RETENTION_DAYS} days if not reopened
                 </li>
               </ul>
             </GuideBody>

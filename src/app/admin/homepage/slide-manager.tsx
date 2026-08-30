@@ -17,7 +17,7 @@ import { FormError } from "@/components/form-error";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { EmptyState } from "@/components/empty-state";
 import { ReorderButtons, useReorderableIds } from "@/components/sortable-rows";
-import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
+import { DataList, DataListActions, DataListBody, DataListItem, DataListItemMain, dataListActionsStackClassName, dataListItemStackClassName } from "@/components/data-list";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -281,28 +281,32 @@ export function HomepageSlideManager({
         <DataList>
           {sorted.map((slide, index) => (
             <DataListItem
+              className={dataListItemStackClassName}
               key={slide.id}
               onClick={() => setMode({ type: "edit", slide, index })}
             >
-              <ReorderButtons
-                canMoveDown={index < sorted.length - 1}
-                canMoveUp={index > 0}
-                label={`slide ${index + 1}`}
-                onMoveDown={() => moveDown(slide.id)}
-                onMoveUp={() => moveUp(slide.id)}
-              />
-              <Image
-                alt=""
-                className="size-10 shrink-0 rounded-md object-cover"
-                height={40}
-                src={slide.src}
-                width={40}
-              />
-              <DataListBody>
-                <p className="font-medium">Slide {index + 1}</p>
-                <p className="text-sm text-muted-foreground wrap-break-word">{slide.alt}</p>
-              </DataListBody>
-              <DataListActions>
+              <DataListItemMain className="items-center">
+                <ReorderButtons
+                  canMoveDown={index < sorted.length - 1}
+                  canMoveUp={index > 0}
+                  label={`slide ${index + 1}`}
+                  onMoveDown={() => moveDown(slide.id)}
+                  onMoveUp={() => moveUp(slide.id)}
+                />
+                <Image
+                  alt=""
+                  className="size-10 shrink-0 rounded-md object-cover"
+                  height={40}
+                  src={slide.src}
+                  width={40}
+                />
+                <DataListBody>
+                  <p className="font-medium">Slide {index + 1}</p>
+                  <p className="text-sm text-muted-foreground wrap-break-word">{slide.alt}</p>
+                </DataListBody>
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+              </DataListItemMain>
+              <DataListActions className={dataListActionsStackClassName}>
                 <RemoveSlideButton
                   onRemoved={() =>
                     setMode((current) =>
@@ -313,7 +317,6 @@ export function HomepageSlideManager({
                   title={`Slide ${index + 1}`}
                 />
               </DataListActions>
-              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
             </DataListItem>
           ))}
         </DataList>

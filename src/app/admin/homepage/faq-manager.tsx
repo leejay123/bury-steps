@@ -24,7 +24,7 @@ import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-t
 import { FormError } from "@/components/form-error";
 import { EmptyState } from "@/components/empty-state";
 import { ReorderButtons, useReorderableIds } from "@/components/sortable-rows";
-import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
+import { DataList, DataListActions, DataListBody, DataListItem, DataListItemMain, dataListActionsStackClassName, dataListItemStackClassName } from "@/components/data-list";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -531,29 +531,32 @@ function FaqCategoryManager({
         <DataList>
           {sorted.map((category, index) => (
             <DataListItem
+              className={dataListItemStackClassName}
               key={category.id}
               onClick={() => setMode({ type: "edit", category })}
             >
-              <ReorderButtons
-                canMoveDown={index < sorted.length - 1}
-                canMoveUp={index > 0}
-                label={`category ${category.label}`}
-                onMoveDown={() => moveDown(category.id)}
-                onMoveUp={() => moveUp(category.id)}
-              />
-              <DataListBody>
-                <p className="font-medium">{category.label}</p>
-                <p className="text-sm text-muted-foreground">
-                  {category.faqCount} {category.faqCount === 1 ? "question" : "questions"}
-                </p>
-              </DataListBody>
-              <DataListActions>
+              <DataListItemMain className="items-center">
+                <ReorderButtons
+                  canMoveDown={index < sorted.length - 1}
+                  canMoveUp={index > 0}
+                  label={`category ${category.label}`}
+                  onMoveDown={() => moveDown(category.id)}
+                  onMoveUp={() => moveUp(category.id)}
+                />
+                <DataListBody>
+                  <p className="font-medium">{category.label}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {category.faqCount} {category.faqCount === 1 ? "question" : "questions"}
+                  </p>
+                </DataListBody>
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+              </DataListItemMain>
+              <DataListActions className={dataListActionsStackClassName}>
                 <RemoveCategoryButton
                   category={category}
                   onlyCategory={categories.length <= 1}
                 />
               </DataListActions>
-              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
             </DataListItem>
           ))}
         </DataList>
@@ -637,22 +640,26 @@ export function HomepageFaqManager({
           <DataList>
             {sorted.map((faq, index) => (
               <DataListItem
+                className={dataListItemStackClassName}
                 key={faq.id}
                 onClick={() => setMode({ type: "edit", faq, index })}
               >
-                <ReorderButtons
-                  canMoveDown={index < sorted.length - 1}
-                  canMoveUp={index > 0}
-                  label={`FAQ ${index + 1}`}
-                  onMoveDown={() => moveDown(faq.id)}
-                  onMoveUp={() => moveUp(faq.id)}
-                />
-                <DataListBody>
-                  <p className="font-medium">FAQ {index + 1}</p>
-                  <p className="text-sm text-muted-foreground wrap-break-word">{faq.question}</p>
-                  <p className="text-xs text-muted-foreground">{faq.categoryLabel}</p>
-                </DataListBody>
-                <DataListActions>
+                <DataListItemMain className="items-center">
+                  <ReorderButtons
+                    canMoveDown={index < sorted.length - 1}
+                    canMoveUp={index > 0}
+                    label={`FAQ ${index + 1}`}
+                    onMoveDown={() => moveDown(faq.id)}
+                    onMoveUp={() => moveUp(faq.id)}
+                  />
+                  <DataListBody>
+                    <p className="font-medium">FAQ {index + 1}</p>
+                    <p className="text-sm text-muted-foreground wrap-break-word">{faq.question}</p>
+                    <p className="text-xs text-muted-foreground">{faq.categoryLabel}</p>
+                  </DataListBody>
+                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                </DataListItemMain>
+                <DataListActions className={dataListActionsStackClassName}>
                   <RemoveFaqButton
                     faqId={faq.id}
                     onRemoved={() =>
@@ -663,7 +670,6 @@ export function HomepageFaqManager({
                     question={faq.question}
                   />
                 </DataListActions>
-                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
               </DataListItem>
             ))}
           </DataList>

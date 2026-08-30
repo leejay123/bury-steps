@@ -90,7 +90,7 @@ export default async function WalkHistoryPage() {
           clockedInAt: attendance.clockedInAt.toISOString(),
           clockedOutAt: attendance.clockedOutAt?.toISOString() ?? null,
           completed: walkStatus(attendance.walk) === "completed",
-          href: walkSharePath(attendance.walk),
+          href: attendance.walk.cancelledAt ? undefined : walkSharePath(attendance.walk),
         }))}
       />
     </div>

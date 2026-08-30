@@ -4,10 +4,11 @@ import { useRef } from "react";
 import Link from "next/link";
 import { ChevronRight, Search } from "lucide-react";
 import { formatDate, formatMembershipAge } from "@/lib/dates";
+import { cn } from "@/lib/utils";
 import { DeleteMemberButton } from "./delete-member-button";
 import { MemberRoleButton } from "./member-role-button";
 import { EmptyState } from "@/components/empty-state";
-import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
+import { DataList, DataListActions, DataListBody, DataListItem, DataListItemMain, dataListActionsStackClassName, dataListItemStackClassName } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
 import { useUrlListState } from "@/hooks/use-url-list-state";
 import { Badge } from "@/components/ui/badge";
@@ -90,47 +91,55 @@ export function MembersTable({
         <>
           <DataList aria-busy={isPending} className={isPending ? "opacity-60" : undefined}>
             {members.map((member) => (
-              <DataListItem className="relative" key={member.id}>
-                <DataListBody>
-                  <p className="font-medium">
-                    <Link className="after:absolute after:inset-0" href={`/admin/members/${member.id}`}>
-                      {member.name}
-                    </Link>
-                    {member.isYou ? (
-                      <span className="ml-2 text-xs font-normal text-muted-foreground">You</span>
-                    ) : null}
-                  </p>
-                  <p className="text-sm text-muted-foreground wrap-break-word">
-                    {member.email || "No email"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatDate(new Date(member.createdAt))} ·{" "}
-                    {formatMembershipAge(new Date(member.createdAt))} · {member.attendanceCount}{" "}
-                    {member.attendanceCount === 1 ? "clock-in" : "clock-ins"}
-                  </p>
-                </DataListBody>
-                <Badge
-                  className="h-7 px-2"
-                  variant={member.role === "ADMIN" ? "default" : "secondary"}
-                >
-                  {member.role === "ADMIN" ? "Organiser" : "Member"}
-                </Badge>
+              <DataListItem
+                className={cn("relative", dataListItemStackClassName)}
+                key={member.id}
+              >
+                <DataListItemMain>
+                  <DataListBody>
+                    <p className="font-medium">
+                      <Link
+                        className="after:absolute after:inset-0"
+                        href={`/admin/members/${member.id}`}
+                      >
+                        {member.name}
+                      </Link>
+                      {member.isYou ? (
+                        <span className="ml-2 text-xs font-normal text-muted-foreground">You</span>
+                      ) : null}
+                    </p>
+                    <p className="text-sm text-muted-foreground wrap-break-word">
+                      {member.email || "No email"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDate(new Date(member.createdAt))} ·{" "}
+                      {formatMembershipAge(new Date(member.createdAt))} · {member.attendanceCount}{" "}
+                      {member.attendanceCount === 1 ? "clock-in" : "clock-ins"}
+                    </p>
+                  </DataListBody>
+                  <ChevronRight className="mt-1 size-4 shrink-0 text-muted-foreground sm:mt-0" />
+                </DataListItemMain>
                 {/* relative z-10: sits above the row's full-cover Link overlay so
                 Remove stays clickable instead of triggering navigation. */}
-                <DataListActions className="relative z-10">
-                  <div className="flex flex-wrap items-center justify-end gap-2">
-                    <MemberRoleButton name={member.name} role={member.role} userId={member.id} />
-                    {member.isYou ? null : (
-                      <DeleteMemberButton
-                        attendanceCount={member.attendanceCount}
-                        name={member.name}
-                        userId={member.id}
-                        walkCount={member.walkCount}
-                      />
-                    )}
-                  </div>
+                <DataListActions
+                  className={cn("relative z-10 flex-wrap gap-2", dataListActionsStackClassName)}
+                >
+                  <Badge
+                    className="h-7 px-2"
+                    variant={member.role === "ADMIN" ? "default" : "secondary"}
+                  >
+                    {member.role === "ADMIN" ? "Organiser" : "Member"}
+                  </Badge>
+                  <MemberRoleButton name={member.name} role={member.role} userId={member.id} />
+                  {member.isYou ? null : (
+                    <DeleteMemberButton
+                      attendanceCount={member.attendanceCount}
+                      name={member.name}
+                      userId={member.id}
+                      walkCount={member.walkCount}
+                    />
+                  )}
                 </DataListActions>
-                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
               </DataListItem>
             ))}
           </DataList>

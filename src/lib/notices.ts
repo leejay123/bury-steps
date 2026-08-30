@@ -1,6 +1,9 @@
 export const MAX_NOTICE_CATEGORIES = 8;
 export const MAX_NOTICE_CATEGORY_LABEL = 32;
 export const MAX_NOTICE_TITLE = 80;
+/** Bell-only message and full-page teaser (list + drawer). Welcome stays longer. */
+export const MAX_NOTICE_BELL_BODY = 160;
+/** Welcome notice body only — longer than ordinary bell notices. */
 export const MAX_NOTICE_TEASER = 500;
 export const MAX_NOTICE_PAGE_BODY = 10_000;
 
@@ -35,6 +38,7 @@ export type NoticeView = {
   systemKey: string | null;
   enabled: boolean;
   createdAt: Date;
+  updatedAt: Date;
 };
 
 export function isPinnedNotice(notice: Pick<NoticeView, "systemKey">): boolean {
@@ -43,6 +47,24 @@ export function isPinnedNotice(notice: Pick<NoticeView, "systemKey">): boolean {
 
 export function isWelcomeNotice(notice: Pick<NoticeView, "systemKey">): boolean {
   return notice.systemKey === WELCOME_NOTICE_SYSTEM_KEY;
+}
+
+/**
+ * Body text for the member bell drawer. Welcome stays full length. Other
+ * notices are capped at {@link MAX_NOTICE_BELL_BODY}; full-page rows always
+ * end with an ellipsis so “Read full notice” is obvious.
+ */
+export function noticeBodyForBellDrawer(notice: NoticeView): string {
+  if (isWelcomeNotice(notice)) return notice.body;
+
+  const max = MAX_NOTICE_BELL_BODY;
+  const overflow = notice.body.length > max;
+  const text = overflow ? notice.body.slice(0, max).trimEnd() : notice.body;
+
+  if (notice.kind === "PAGE" || overflow) {
+    return text.endsWith("…") ? text : `${text}…`;
+  }
+  return text;
 }
 
 /** Replace {{firstName}} in notice copy for the viewing member. */

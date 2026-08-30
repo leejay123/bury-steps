@@ -16,7 +16,7 @@ import { FormError } from "@/components/form-error";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { EmptyState } from "@/components/empty-state";
 import { ReorderButtons, useReorderableIds } from "@/components/sortable-rows";
-import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
+import { DataList, DataListActions, DataListBody, DataListItem, DataListItemMain, dataListActionsStackClassName, dataListItemStackClassName } from "@/components/data-list";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -335,21 +335,25 @@ export function HomepageTestimonialManager({
         <DataList>
           {sorted.map((testimonial, index) => (
             <DataListItem
+              className={dataListItemStackClassName}
               key={testimonial.id}
               onClick={() => setMode({ type: "edit", testimonial, index })}
             >
-              <ReorderButtons
-                canMoveDown={index < sorted.length - 1}
-                canMoveUp={index > 0}
-                label={`testimonial ${index + 1}`}
-                onMoveDown={() => moveDown(testimonial.id)}
-                onMoveUp={() => moveUp(testimonial.id)}
-              />
-              <DataListBody>
-                <p className="font-medium">Testimonial {index + 1}</p>
-                <p className="text-sm text-muted-foreground">{testimonial.name}</p>
-              </DataListBody>
-              <DataListActions>
+              <DataListItemMain className="items-center">
+                <ReorderButtons
+                  canMoveDown={index < sorted.length - 1}
+                  canMoveUp={index > 0}
+                  label={`testimonial ${index + 1}`}
+                  onMoveDown={() => moveDown(testimonial.id)}
+                  onMoveUp={() => moveUp(testimonial.id)}
+                />
+                <DataListBody>
+                  <p className="font-medium">Testimonial {index + 1}</p>
+                  <p className="text-sm text-muted-foreground">{testimonial.name}</p>
+                </DataListBody>
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+              </DataListItemMain>
+              <DataListActions className={dataListActionsStackClassName}>
                 <RemoveTestimonialButton
                   name={testimonial.name}
                   onRemoved={() =>
@@ -362,7 +366,6 @@ export function HomepageTestimonialManager({
                   testimonialId={testimonial.id}
                 />
               </DataListActions>
-              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
             </DataListItem>
           ))}
         </DataList>
