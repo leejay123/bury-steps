@@ -59,10 +59,8 @@ export function OrganiserGuide() {
             <GuideBody>
               <p>
                 <Badge variant="secondary">Visitors</Badge> can read the homepage, privacy and
-                terms, open the notices bell (Everyone and Visitors-only items), browse{" "}
-                <Link href="/notices">Notices</Link>, and open a walk share link. They can search
-                and filter FAQs by the categories you set. They cannot clock in until they have an
-                account.
+                terms, and open a walk share link. They can search and filter FAQs by the
+                categories you set. They cannot clock in or see notices until they have an account.
               </p>
               <p>
                 <Badge variant="secondary">Members</Badge> see Walks, Progress, and History in the
@@ -505,17 +503,17 @@ export function OrganiserGuide() {
             <GuideBody>
               <p>
                 Open <Link href="/admin/settings/notices">Notices</Link>. Up to {MAX_SITE_NOTICES}{" "}
-                messages in the bell, and up to {MAX_NOTICE_CATEGORIES} categories for full-page
-                notices. Both visitors and signed-in people get a bell in the header. For each
-                notice choose who can see it: <strong>Everyone</strong>,{" "}
-                <strong>Members only</strong>, or <strong>Visitors only</strong>. The drawer footer
-                has <strong>Browse all notices</strong>, which opens the Notices page.
+                messages in the member bell, and up to {MAX_NOTICE_CATEGORIES} categories for
+                full-page notices. Notices are for signed-in members only — visitors do not see the
+                bell or the Notices page. The drawer footer has{" "}
+                <strong>Browse all notices</strong>.
               </p>
               <p className="font-medium text-foreground">Categories</p>
               <p>
                 Categories only apply to full-page notices. Add, rename, reorder, or remove them at
                 the top of the Notices settings page. Keep at least one. You cannot remove a category
-                that still has notices — move or remove those first.
+                that still has notices — move or remove those first. On Notices, members filter with
+                the same style of category chips as the homepage FAQs.
               </p>
               <p className="font-medium text-foreground">Bell only or full page</p>
               <Steps>
@@ -525,33 +523,21 @@ export function OrganiserGuide() {
                   <Link href="/notices">Notices</Link>.
                 </li>
                 <li>
-                  Choose <strong>Who can see it</strong>: Everyone (visitors and members), Members
-                  only, or Visitors only. That controls the bell and, for full-page notices, the
-                  Notices list.
-                </li>
-                <li>
-                  Add a title and a short bell message (also used as the card excerpt for full-page
+                  Add a title and a short bell message (also used as the list excerpt for full-page
                   notices). For a full page, pick a category and write the long text.
                 </li>
                 <li>
-                  Unread notices show a count on the bell and a <strong>New</strong> badge. Tapping
-                  a row marks that notice read. Members store reads on their account; visitors store
-                  reads in the browser. <strong>Mark all as read</strong> clears the list. Opening
-                  the bell does not clear them on its own.
+                  Members see a count on the bell for unread notices and a <strong>New</strong>{" "}
+                  badge on each unread row. Tapping a row marks that notice read.{" "}
+                  <strong>Mark all as read</strong> clears everything. Opening the bell does not
+                  clear them on its own.
                 </li>
               </Steps>
               <p>
-                Guests use the header bell (or the footer Notices link, or{" "}
-                <Link href="/notices">/notices</Link>). They only see Everyone and Visitors-only
-                notices. Signed-in members see Everyone and Members-only. Member-only pages ask
-                guests to sign in.
-              </p>
-              <p>
-                On <Link href="/notices">Notices</Link>, people can search and filter by category.
-                Each full-page notice is a card in the edge grid (title, category, date, teaser).
-                There are no cover images — text only. If you edit a notice, it shows as new again
-                for everyone — the “already read” marks are cleared for members; visitors keep their
-                own browser marks unless the notice id changes.
+                On <Link href="/notices">Notices</Link>, members can search and filter by category.
+                Each full-page notice is a simple list row (title, category, date, teaser). If you
+                edit a notice, it shows as new again for everyone — the “already read” marks are
+                cleared.
               </p>
             </GuideBody>
           </AccordionContent>

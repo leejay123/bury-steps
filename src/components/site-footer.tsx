@@ -12,9 +12,6 @@ export function SiteFooter() {
         aria-label="Footer"
         className={`flex flex-wrap items-center justify-center gap-x-4 gap-y-1 ${PAGE_X} py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-xs text-muted-foreground md:justify-between`}
       >
-        <Link href="/notices" className="whitespace-nowrap hover:text-foreground">
-          Notices
-        </Link>
         <Link href="/privacy-policy" className="whitespace-nowrap hover:text-foreground">
           Privacy Policy
         </Link>

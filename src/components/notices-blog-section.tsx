@@ -2,30 +2,24 @@
 
 import { useDeferredValue, useMemo, useState } from "react";
 import Link from "next/link";
-import { Search, SearchX } from "lucide-react";
+import { ChevronRight, Search, SearchX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/dates";
 import type { NoticeCategoryView, NoticeView } from "@/lib/notices";
-import { FullWidthDivider } from "@/components/full-width-divider";
-import { GridFiller } from "@/components/grid-filler";
-import { HeroCopy } from "@/components/hero-copy";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 
 /**
- * Notices index — Efferd blogs-2 edge look: hairline grid (`gap-px bg-border`),
- * full-width dividers, bordered cells with title / category · date / teaser.
- * No cover images.
+ * Member notices index: search + FAQ-style category chips (border-y), then a
+ * simple list of full-page notices — no edge/hairline grid.
  */
 export function NoticesBlogSection({
   categories,
   notices,
-  signedIn,
 }: {
   categories: NoticeCategoryView[];
   notices: NoticeView[];
-  signedIn: boolean;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
@@ -55,37 +49,28 @@ export function NoticesBlogSection({
   }
 
   return (
-    <section className="flex flex-col">
-      <div className="relative">
-        <HeroCopy
-          after={
-            <InputGroup className="w-full max-w-md text-left">
-              <InputGroupInput
-                aria-label="Search notices"
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Search notices…"
-                value={searchTerm}
-              />
-              <InputGroupAddon>
-                <Search data-icon="inline-start" />
-              </InputGroupAddon>
-            </InputGroup>
-          }
-          eyebrow={null}
-          title="Notices"
-          titleAs="h1"
-        >
-          <p>
-            {signedIn
-              ? "Updates from the organisers. Short messages stay in the bell; open a card for the full write-up. Public announcements are open to everyone."
-              : "Public announcements from the group. Sign in to see member-only notices and the bell."}
-          </p>
-        </HeroCopy>
-        <FullWidthDivider position="bottom" />
+    <section className="flex flex-col gap-0">
+      <div className="flex flex-col gap-3 px-4 py-6 md:px-6">
+        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Notices</h1>
+        <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
+          Updates from the organisers for signed-in members. Short messages stay in the bell; open a
+          row here for the full write-up.
+        </p>
+        <InputGroup className="w-full max-w-md">
+          <InputGroupInput
+            aria-label="Search notices"
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Search notices…"
+            value={searchTerm}
+          />
+          <InputGroupAddon>
+            <Search data-icon="inline-start" />
+          </InputGroupAddon>
+        </InputGroup>
       </div>
 
       {filters.length > 1 ? (
-        <div className="relative flex gap-2 overflow-x-auto overscroll-x-contain px-4 [scrollbar-width:none] [-ms-overflow-style:none] sm:flex-wrap sm:overflow-visible md:px-6 [&::-webkit-scrollbar]:hidden">
+        <div className="flex gap-2 overflow-x-auto overscroll-x-contain border-y px-4 [scrollbar-width:none] [-ms-overflow-style:none] sm:flex-wrap sm:overflow-visible md:px-6 [&::-webkit-scrollbar]:hidden">
           {filters.map((category) => {
             const active = activeCategory === category.id;
             return (
@@ -105,13 +90,12 @@ export function NoticesBlogSection({
               </button>
             );
           })}
-          <FullWidthDivider position="bottom" />
         </div>
       ) : null}
 
-      {filtered.length === 0 ? (
-        <div className="relative">
-          <Empty className="border-0 py-16">
+      <div className="px-4 py-6 md:px-6">
+        {filtered.length === 0 ? (
+          <Empty className="border">
             <EmptyHeader>
               <EmptyMedia variant="icon">
                 <Search />
@@ -137,69 +121,27 @@ export function NoticesBlogSection({
               </EmptyContent>
             ) : null}
           </Empty>
-          <FullWidthDivider position="top" />
-          <FullWidthDivider position="bottom" />
-        </div>
-      ) : (
-        <div className="relative">
-          <div className="grid w-full grid-cols-1 gap-px bg-border sm:grid-cols-2 lg:grid-cols-3">
+        ) : (
+          <div className="flex flex-col divide-y rounded-xl border">
             {filtered.map((notice) => (
-              <NoticeBlogCard
-                category={notice.categoryLabel ?? "Notice"}
-                date={formatDate(notice.createdAt)}
-                description={notice.body}
+              <Link
+                className="group relative flex flex-col gap-2 p-4 hover:bg-muted/50"
                 href={`/notices/${notice.slug}`}
                 key={notice.id}
-                title={notice.title}
-              />
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <p className="font-medium">{notice.title}</p>
+                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {notice.categoryLabel ?? "Notice"} · {formatDate(notice.createdAt)}
+                </p>
+                <p className="line-clamp-3 text-sm text-muted-foreground">{notice.body}</p>
+              </Link>
             ))}
-            <GridFiller
-              className="bg-background"
-              lgColumns={3}
-              smColumns={2}
-              totalItems={filtered.length}
-            />
           </div>
-          <FullWidthDivider position="top" />
-          <FullWidthDivider position="bottom" />
-        </div>
-      )}
-    </section>
-  );
-}
-
-function NoticeBlogCard({
-  title,
-  date,
-  description,
-  category,
-  href,
-  className,
-}: {
-  title: string;
-  date: string;
-  description: string;
-  category: string;
-  href: string;
-  className?: string;
-}) {
-  return (
-    <Link
-      className={cn(
-        "group flex h-full w-full flex-col gap-4 bg-background px-6 py-12 text-muted-foreground transition-colors hover:cursor-pointer hover:text-foreground active:bg-accent sm:px-8",
-        className,
-      )}
-      href={href}
-    >
-      <h2 className="text-xl font-semibold tracking-tight text-foreground group-hover:underline group-hover:underline-offset-4 md:text-2xl">
-        {title}
-      </h2>
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs tracking-wide">
-        <span className="font-medium text-foreground">{category}</span>
-        <span aria-hidden="true">·</span>
-        <time>{date}</time>
+        )}
       </div>
-      <p className="line-clamp-4 text-sm leading-relaxed">{description}</p>
-    </Link>
+    </section>
   );
 }

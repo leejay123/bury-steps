@@ -8,11 +8,6 @@ import { toast } from "sonner";
 import { markSiteNoticeRead, markSiteNoticesRead } from "@/server/actions";
 import { formatDate } from "@/lib/dates";
 import type { NoticeView } from "@/lib/notices";
-import {
-  markVisitorNoticeRead,
-  markVisitorNoticesRead,
-  readVisitorNoticeReads,
-} from "@/lib/visitor-notice-reads";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,48 +22,33 @@ import {
 
 export function NotificationBell({
   notices,
-  unreadIds = [],
-  viewer,
+  unreadIds,
 }: {
   notices: NoticeView[];
-  /** Server-known unread ids for signed-in members. Ignored for visitors. */
-  unreadIds?: string[];
-  viewer: "member" | "visitor";
+  unreadIds: string[];
 }) {
   const [open, setOpen] = useState(false);
-  const [unread, setUnread] = useState<string[]>(viewer === "member" ? unreadIds : []);
+  const [unread, setUnread] = useState(unreadIds);
   const [pending, setPending] = useState(false);
-  const [hydrated, setHydrated] = useState(viewer === "member");
   const [, startTransition] = useTransition();
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    if (viewer === "member") {
-      setUnread(unreadIds);
-      return;
-    }
-    const read = new Set(readVisitorNoticeReads());
-    setUnread(notices.filter((notice) => !read.has(notice.id)).map((notice) => notice.id));
-    setHydrated(true);
-  }, [viewer, unreadIds, notices]);
+    setUnread(unreadIds);
+  }, [unreadIds]);
 
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
 
-  const unreadCount = hydrated ? unread.length : 0;
+  const unreadCount = unread.length;
   const unreadSet = new Set(unread);
 
   function markAllRead() {
     if (unreadCount === 0 || pending) return;
     const previous = unread;
-    const ids = notices.map((notice) => notice.id);
     setUnread([]);
-    if (viewer === "visitor") {
-      markVisitorNoticesRead(ids);
-      return;
-    }
     setPending(true);
     markSiteNoticesRead()
       .then((result) => {
@@ -90,10 +70,6 @@ export function NotificationBell({
     if (!unreadSet.has(noticeId)) return;
     const previous = unread;
     setUnread((current) => current.filter((id) => id !== noticeId));
-    if (viewer === "visitor") {
-      markVisitorNoticeRead(noticeId);
-      return;
-    }
     markSiteNoticeRead(noticeId)
       .then((result) => {
         if (!result.ok) {
@@ -132,9 +108,7 @@ export function NotificationBell({
             <div className="min-w-0">
               <DrawerTitle>Notices</DrawerTitle>
               <DrawerDescription className="sr-only">
-                {viewer === "visitor"
-                  ? "Public and visitor notices"
-                  : "Site notices for signed-in members"}
+                Site notices for signed-in members
               </DrawerDescription>
             </div>
             {unreadCount > 0 ? (

@@ -181,7 +181,7 @@ model SiteNotice {
   /// Short text shown in the bell (and as the card excerpt for PAGE notices).
   body       String
   kind       SiteNoticeKind      @default(BELL)
-  /// Who sees this in the bell (and who can open a PAGE on /notices).
+  /// Legacy field. New notices are always MEMBERS; bell and /notices require sign-in.
   audience   SiteNoticeAudience  @default(MEMBERS)
   /// Public path for PAGE notices: /notices/<slug>. Null for BELL.
   slug       String?             @unique
@@ -205,11 +205,11 @@ enum SiteNoticeKind {
 }
 
 enum SiteNoticeAudience {
-  /// Signed-in members (and organisers) only.
+  /// Signed-in members (and organisers) only. The only audience the app uses.
   MEMBERS
-  /// Everyone — visitors and signed-in members.
+  /// Legacy — no longer written or shown.
   PUBLIC
-  /// Signed-out visitors only (not in the member bell).
+  /// Legacy — no longer written or shown.
   VISITORS
 }
 

@@ -17,7 +17,6 @@ import {
   MAX_NOTICE_CATEGORY_LABEL,
   MAX_NOTICE_PAGE_BODY,
   MAX_NOTICE_TEASER,
-  type NoticeAudience,
   type NoticeCategoryView,
   type NoticeKind,
   type NoticeView,
@@ -96,7 +95,6 @@ function NoticeFields({
   const [title, setTitle] = useState(notice?.title ?? "");
   const [body, setBody] = useState(notice?.body ?? "");
   const [kind, setKind] = useState<NoticeKind>(notice?.kind ?? "BELL");
-  const [audience, setAudience] = useState<NoticeAudience>(notice?.audience ?? "MEMBERS");
   const [pageBody, setPageBody] = useState(notice?.pageBody ?? "");
   const [categoryId, setCategoryId] = useState(
     notice?.categoryId ?? categories[0]?.id ?? "",
@@ -121,27 +119,6 @@ function NoticeFields({
             <SelectItem value="PAGE">Full page — teaser in the bell, article on Notices</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${prefix}-audience`}>Who can see it</Label>
-        <input name="audience" type="hidden" value={audience} />
-        <Select
-          disabled={disabled}
-          onValueChange={(value) => setAudience(value as NoticeAudience)}
-          value={audience}
-        >
-          <SelectTrigger id={`${prefix}-audience`}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="PUBLIC">Everyone — visitors and members</SelectItem>
-            <SelectItem value="MEMBERS">Members only — signed-in people</SelectItem>
-            <SelectItem value="VISITORS">Visitors only — signed-out people</SelectItem>
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-muted-foreground">
-          Controls who sees it in the bell{kind === "PAGE" ? " and on the Notices page" : ""}.
-        </p>
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={`${prefix}-title`} required>
@@ -689,13 +666,6 @@ export function SiteNoticeManager({
                     <Badge variant={notice.kind === "PAGE" ? "default" : "secondary"}>
                       {notice.kind === "PAGE" ? "Full page" : "Bell only"}
                     </Badge>
-                    <Badge variant="outline">
-                      {notice.audience === "PUBLIC"
-                        ? "Everyone"
-                        : notice.audience === "VISITORS"
-                          ? "Visitors"
-                          : "Members"}
-                    </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground wrap-break-word">{notice.body}</p>
                   <p className="text-xs text-muted-foreground">
@@ -739,7 +709,7 @@ export function SiteNoticeManager({
             <DrawerDescription>
               {editing
                 ? "Change the type, title, or message. Saving it will show as new in the bell."
-                : "Bell only stays in the drawer. Full page also appears on Notices. Choose who can see it: everyone, members, or visitors."}
+                : "Bell only stays in the drawer. Full page also appears on Notices. Notices are for signed-in members only."}
             </DrawerDescription>
           </DrawerHeader>
           {mode?.type === "add" ? (

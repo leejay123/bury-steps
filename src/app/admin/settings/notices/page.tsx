@@ -15,7 +15,7 @@ export default async function NoticesSettingsPage() {
 
   return (
     <SettingsPage
-      description={`Up to ${MAX_SITE_NOTICES} notices in the bell, and up to ${MAX_NOTICE_CATEGORIES} categories for full-page notices. Full-page notices can be public or members only.`}
+      description={`Up to ${MAX_SITE_NOTICES} notices in the member bell, and up to ${MAX_NOTICE_CATEGORIES} categories for full-page notices. Signed-in members only.`}
       title="Notices"
     >
       <SiteNoticeManager
