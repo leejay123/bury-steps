@@ -173,7 +173,7 @@ model SiteNoticeCategory {
   @@index([sortOrder])
 }
 
-/// Messages in the nav bell for signed-in members. Organisers can keep up to 10.
+/// Messages in the nav bell. Organisers can keep up to 10.
 /// BELL = short message in the drawer only. PAGE = teaser in the bell + full article at /notices/[slug].
 model SiteNotice {
   id         String              @id @default(cuid())
@@ -181,7 +181,7 @@ model SiteNotice {
   /// Short text shown in the bell (and as the card excerpt for PAGE notices).
   body       String
   kind       SiteNoticeKind      @default(BELL)
-  /// Who can open a PAGE notice. BELL notices are always members-only (bell is signed-in).
+  /// Who sees this in the bell (and who can open a PAGE on /notices).
   audience   SiteNoticeAudience  @default(MEMBERS)
   /// Public path for PAGE notices: /notices/<slug>. Null for BELL.
   slug       String?             @unique
@@ -205,10 +205,12 @@ enum SiteNoticeKind {
 }
 
 enum SiteNoticeAudience {
-  /// Only signed-in members (and organisers).
+  /// Signed-in members (and organisers) only.
   MEMBERS
-  /// Anyone can open the page on /notices — no sign-in. Still appears in the bell for members.
+  /// Everyone — visitors and signed-in members.
   PUBLIC
+  /// Signed-out visitors only (not in the member bell).
+  VISITORS
 }
 
 model SiteNoticeRead {

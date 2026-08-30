@@ -1696,7 +1696,7 @@ function readNoticeCopy(formData: FormData):
       title: string;
       body: string;
       kind: "BELL" | "PAGE";
-      audience: "MEMBERS" | "PUBLIC";
+      audience: "MEMBERS" | "PUBLIC" | "VISITORS";
       pageBody: string | null;
       categoryId: string | null;
     }
@@ -1706,10 +1706,8 @@ function readNoticeCopy(formData: FormData):
   const kindRaw = String(formData.get("kind") ?? "BELL").trim().toUpperCase();
   const kind = kindRaw === "PAGE" ? "PAGE" : "BELL";
   const audienceRaw = String(formData.get("audience") ?? "MEMBERS").trim().toUpperCase();
-  // Bell-only notices only reach signed-in people (the bell itself). Public
-  // audience applies to full-page notices on /notices.
-  const audience =
-    kind === "PAGE" && audienceRaw === "PUBLIC" ? "PUBLIC" : "MEMBERS";
+  const audience: "MEMBERS" | "PUBLIC" | "VISITORS" =
+    audienceRaw === "PUBLIC" ? "PUBLIC" : audienceRaw === "VISITORS" ? "VISITORS" : "MEMBERS";
   const pageBody = String(formData.get("pageBody") ?? "").trim();
   const categoryId = String(formData.get("categoryId") ?? "").trim() || null;
 
@@ -1731,7 +1729,7 @@ function readNoticeCopy(formData: FormData):
     return { title, body, kind, audience, pageBody, categoryId };
   }
 
-  return { title, body, kind: "BELL", audience: "MEMBERS", pageBody: null, categoryId: null };
+  return { title, body, kind: "BELL", audience, pageBody: null, categoryId: null };
 }
 
 export async function addSiteNotice(
@@ -1786,9 +1784,15 @@ export async function addSiteNotice(
     message:
       copy.kind === "PAGE"
         ? copy.audience === "PUBLIC"
-          ? "Public notice added. Anyone can open it on Notices; members also see it in the bell."
-          : "Full-page notice added. Members will see it in the bell and on Notices."
-        : "Notice added. Members will see it in the bell.",
+          ? "Notice added for everyone. Visitors and members will see it."
+          : copy.audience === "VISITORS"
+            ? "Notice added for visitors. Signed-in members will not see it in the bell."
+            : "Full-page notice added for members."
+        : copy.audience === "PUBLIC"
+          ? "Bell notice added for everyone."
+          : copy.audience === "VISITORS"
+            ? "Bell notice added for visitors only."
+            : "Notice added. Members will see it in the bell.",
   };
 }
 
@@ -1884,7 +1888,10 @@ export async function markSiteNoticesRead(): Promise<ActionResult> {
   if (!limited.ok) return { ok: false, error: "Try again in a moment." };
 
   try {
-    const notices = await prisma.siteNotice.findMany({ select: { id: true } });
+    const notices = await prisma.siteNotice.findMany({
+      where: { audience: { in: ["PUBLIC", "MEMBERS"] } },
+      select: { id: true },
+    });
     if (notices.length === 0) return { ok: true };
 
     await prisma.siteNoticeRead.createMany({

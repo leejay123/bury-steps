@@ -110,11 +110,7 @@ function NoticeFields({
         <input name="kind" type="hidden" value={kind} />
         <Select
           disabled={disabled}
-          onValueChange={(value) => {
-            const next = value as NoticeKind;
-            setKind(next);
-            if (next === "BELL") setAudience("MEMBERS");
-          }}
+          onValueChange={(value) => setKind(value as NoticeKind)}
           value={kind}
         >
           <SelectTrigger id={`${prefix}-kind`}>
@@ -126,31 +122,27 @@ function NoticeFields({
           </SelectContent>
         </Select>
       </div>
-      {kind === "PAGE" ? (
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor={`${prefix}-audience`}>Who can open it</Label>
-          <input name="audience" type="hidden" value={audience} />
-          <Select
-            disabled={disabled}
-            onValueChange={(value) => setAudience(value as NoticeAudience)}
-            value={audience}
-          >
-            <SelectTrigger id={`${prefix}-audience`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="MEMBERS">Members only — signed-in people</SelectItem>
-              <SelectItem value="PUBLIC">Public — anyone, no sign-in</SelectItem>
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground">
-            Public notices still appear in the bell for signed-in members. Guests only see them on
-            Notices.
-          </p>
-        </div>
-      ) : (
-        <input name="audience" type="hidden" value="MEMBERS" />
-      )}
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={`${prefix}-audience`}>Who can see it</Label>
+        <input name="audience" type="hidden" value={audience} />
+        <Select
+          disabled={disabled}
+          onValueChange={(value) => setAudience(value as NoticeAudience)}
+          value={audience}
+        >
+          <SelectTrigger id={`${prefix}-audience`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="PUBLIC">Everyone — visitors and members</SelectItem>
+            <SelectItem value="MEMBERS">Members only — signed-in people</SelectItem>
+            <SelectItem value="VISITORS">Visitors only — signed-out people</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          Controls who sees it in the bell{kind === "PAGE" ? " and on the Notices page" : ""}.
+        </p>
+      </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={`${prefix}-title`} required>
           Title
@@ -697,11 +689,13 @@ export function SiteNoticeManager({
                     <Badge variant={notice.kind === "PAGE" ? "default" : "secondary"}>
                       {notice.kind === "PAGE" ? "Full page" : "Bell only"}
                     </Badge>
-                    {notice.kind === "PAGE" ? (
-                      <Badge variant="outline">
-                        {notice.audience === "PUBLIC" ? "Public" : "Members"}
-                      </Badge>
-                    ) : null}
+                    <Badge variant="outline">
+                      {notice.audience === "PUBLIC"
+                        ? "Everyone"
+                        : notice.audience === "VISITORS"
+                          ? "Visitors"
+                          : "Members"}
+                    </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground wrap-break-word">{notice.body}</p>
                   <p className="text-xs text-muted-foreground">
@@ -745,7 +739,7 @@ export function SiteNoticeManager({
             <DrawerDescription>
               {editing
                 ? "Change the type, title, or message. Saving it will show as new in the bell."
-                : "Bell only stays in the drawer. Full page also appears on Notices — choose members only or public."}
+                : "Bell only stays in the drawer. Full page also appears on Notices. Choose who can see it: everyone, members, or visitors."}
             </DrawerDescription>
           </DrawerHeader>
           {mode?.type === "add" ? (

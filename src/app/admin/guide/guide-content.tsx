@@ -59,9 +59,10 @@ export function OrganiserGuide() {
             <GuideBody>
               <p>
                 <Badge variant="secondary">Visitors</Badge> can read the homepage, privacy and
-                terms, public notices on <Link href="/notices">Notices</Link>, and open a walk share
-                link. They can search and filter FAQs by the categories you set. They cannot clock
-                in until they have an account.
+                terms, open the notices bell (Everyone and Visitors-only items), browse{" "}
+                <Link href="/notices">Notices</Link>, and open a walk share link. They can search
+                and filter FAQs by the categories you set. They cannot clock in until they have an
+                account.
               </p>
               <p>
                 <Badge variant="secondary">Members</Badge> see Walks, Progress, and History in the
@@ -504,13 +505,11 @@ export function OrganiserGuide() {
             <GuideBody>
               <p>
                 Open <Link href="/admin/settings/notices">Notices</Link>. Up to {MAX_SITE_NOTICES}{" "}
-                messages in the bell at the top of the site, and up to {MAX_NOTICE_CATEGORIES}{" "}
-                categories for full-page notices. The bell is for signed-in people. Full-page
-                notices can be <strong>members only</strong> or <strong>public</strong> (anyone can
-                open them on <Link href="/notices">Notices</Link> without signing in). The bell
-                opens a drawer on phone and desktop — sliding up from the bottom on a phone, and in
-                from the side on a wider screen. The drawer footer has{" "}
-                <strong>Browse all notices</strong>, which opens the Notices page.
+                messages in the bell, and up to {MAX_NOTICE_CATEGORIES} categories for full-page
+                notices. Both visitors and signed-in people get a bell in the header. For each
+                notice choose who can see it: <strong>Everyone</strong>,{" "}
+                <strong>Members only</strong>, or <strong>Visitors only</strong>. The drawer footer
+                has <strong>Browse all notices</strong>, which opens the Notices page.
               </p>
               <p className="font-medium text-foreground">Categories</p>
               <p>
@@ -526,34 +525,33 @@ export function OrganiserGuide() {
                   <Link href="/notices">Notices</Link>.
                 </li>
                 <li>
-                  For a full page, choose <strong>Who can open it</strong>: Members only, or Public
-                  (no sign-in). Public notices still show in the bell for signed-in members.
+                  Choose <strong>Who can see it</strong>: Everyone (visitors and members), Members
+                  only, or Visitors only. That controls the bell and, for full-page notices, the
+                  Notices list.
                 </li>
                 <li>
                   Add a title and a short bell message (also used as the card excerpt for full-page
                   notices). For a full page, pick a category and write the long text.
                 </li>
                 <li>
-                  Members see a number on the bell for how many notices they have not read yet
-                  (up to 9+). Unread rows show a <strong>New</strong> badge. Tapping a bell-only
-                  row marks that notice read. Tapping a full-page row opens the article and marks it
-                  read. <strong>Mark all as read</strong> clears everything at once. Opening the
-                  bell does not clear them on its own.
+                  Unread notices show a count on the bell and a <strong>New</strong> badge. Tapping
+                  a row marks that notice read. Members store reads on their account; visitors store
+                  reads in the browser. <strong>Mark all as read</strong> clears the list. Opening
+                  the bell does not clear them on its own.
                 </li>
               </Steps>
               <p>
-                Guests open public notices from the <strong>Notices</strong> link in the header
-                (when signed out), from the footer on every page, or by going straight to{" "}
-                <Link href="/notices">/notices</Link>. They only see public full-page notices.
-                Member-only pages ask them to sign in. Signed-in members also use the bell footer{" "}
-                <strong>Browse all notices</strong>, and Notices in the main menu.
+                Guests use the header bell (or the footer Notices link, or{" "}
+                <Link href="/notices">/notices</Link>). They only see Everyone and Visitors-only
+                notices. Signed-in members see Everyone and Members-only. Member-only pages ask
+                guests to sign in.
               </p>
               <p>
                 On <Link href="/notices">Notices</Link>, people can search and filter by category.
-                Guests only see public notices; signed-in members see public and members-only.
-                Each full-page notice is a card in a grid (title, category, date, teaser). There are
-                no cover images — text only. If you edit a notice, it shows as new again for everyone
-                — the “already read” marks are cleared.
+                Each full-page notice is a card in the edge grid (title, category, date, teaser).
+                There are no cover images — text only. If you edit a notice, it shows as new again
+                for everyone — the “already read” marks are cleared for members; visitors keep their
+                own browser marks unless the notice id changes.
               </p>
             </GuideBody>
           </AccordionContent>

@@ -24,7 +24,7 @@ export async function generateMetadata({
     title: `${notice.title} — Bury Steps Walking Group`,
     description: notice.body,
     robots:
-      notice.audience === "PUBLIC"
+      notice.audience === "PUBLIC" || notice.audience === "VISITORS"
         ? { index: true, follow: true }
         : { index: false, follow: false },
   };
@@ -87,7 +87,8 @@ export default async function NoticeDetailPage({
       <header className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
           {notice.categoryLabel ? <Badge variant="secondary">{notice.categoryLabel}</Badge> : null}
-          {notice.audience === "PUBLIC" ? <Badge variant="outline">Public</Badge> : null}
+          {notice.audience === "PUBLIC" ? <Badge variant="outline">Everyone</Badge> : null}
+          {notice.audience === "VISITORS" ? <Badge variant="outline">Visitors</Badge> : null}
           <time className="text-sm text-muted-foreground">{formatDate(notice.createdAt)}</time>
         </div>
         <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{notice.title}</h1>

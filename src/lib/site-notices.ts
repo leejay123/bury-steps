@@ -1,6 +1,12 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
-import type { NoticeAudience, NoticeCategoryView, NoticeView } from "@/lib/notices";
+import {
+  noticeVisibleInBell,
+  noticeVisibleOnNoticesPage,
+  type NoticeAudience,
+  type NoticeCategoryView,
+  type NoticeView,
+} from "@/lib/notices";
 import { HOMEPAGE_REVALIDATE_SECONDS } from "@/lib/homepage-cache";
 
 export const NOTICES_CACHE_TAG = "site-notices";
@@ -76,7 +82,7 @@ async function loadSiteNoticeCategories(): Promise<CachedCategory[]> {
   }));
 }
 
-const getCachedSiteNotices = unstable_cache(loadSiteNotices, ["site-notices", "v4"], {
+const getCachedSiteNotices = unstable_cache(loadSiteNotices, ["site-notices", "v5"], {
   tags: [NOTICES_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });
@@ -113,19 +119,18 @@ export async function getSiteNoticeCategories(): Promise<NoticeCategoryView[]> {
   }
 }
 
-/**
- * Full-page notices for /notices.
- * Guests only see PUBLIC; signed-in members see PUBLIC and MEMBERS.
- */
+/** Full-page notices for /notices, filtered by viewer. */
 export async function getPageNotices(options?: {
   includeMembers?: boolean;
 }): Promise<NoticeView[]> {
+  const viewer = options?.includeMembers ? "member" : "visitor";
   const notices = await getSiteNotices();
-  return notices.filter((notice) => {
-    if (notice.kind !== "PAGE" || !notice.slug) return false;
-    if (options?.includeMembers) return true;
-    return notice.audience === "PUBLIC";
-  });
+  return notices.filter(
+    (notice) =>
+      notice.kind === "PAGE" &&
+      notice.slug &&
+      noticeVisibleOnNoticesPage(notice.audience, viewer),
+  );
 }
 
 export async function getSiteNoticeState(userId: string): Promise<{
@@ -140,7 +145,9 @@ export async function getSiteNoticeState(userId: string): Promise<{
         select: { noticeId: true },
       }),
     ]);
-    const notices = reviveNotices(rows);
+    const notices = reviveNotices(rows).filter((notice) =>
+      noticeVisibleInBell(notice.audience, "member"),
+    );
     const read = new Set(reads.map((row) => row.noticeId));
     return {
       notices,
@@ -148,6 +155,20 @@ export async function getSiteNoticeState(userId: string): Promise<{
     };
   } catch {
     return { notices: [], unreadIds: [] };
+  }
+}
+
+/** Visitor bell — unread is tracked in the browser (no account). */
+export async function getVisitorNoticeState(): Promise<{
+  notices: NoticeView[];
+}> {
+  try {
+    const notices = reviveNotices(await getCachedSiteNotices()).filter((notice) =>
+      noticeVisibleInBell(notice.audience, "visitor"),
+    );
+    return { notices };
+  } catch {
+    return { notices: [] };
   }
 }
 

@@ -6,7 +6,8 @@ export const MAX_NOTICE_TEASER = 500;
 export const MAX_NOTICE_PAGE_BODY = 10_000;
 
 export type NoticeKind = "BELL" | "PAGE";
-export type NoticeAudience = "MEMBERS" | "PUBLIC";
+/** Who sees the notice in the bell / on /notices. */
+export type NoticeAudience = "MEMBERS" | "PUBLIC" | "VISITORS";
 
 export type NoticeCategoryView = {
   id: string;
@@ -28,6 +29,29 @@ export type NoticeView = {
   categoryLabel: string | null;
   createdAt: Date;
 };
+
+/** Notices shown in the bell for this viewer. */
+export function noticeVisibleInBell(
+  audience: NoticeAudience,
+  viewer: "member" | "visitor",
+): boolean {
+  if (audience === "PUBLIC") return true;
+  if (viewer === "member") return audience === "MEMBERS";
+  return audience === "VISITORS";
+}
+
+/** Full-page notices listed on /notices for this viewer. */
+export function noticeVisibleOnNoticesPage(
+  audience: NoticeAudience,
+  viewer: "member" | "visitor",
+): boolean {
+  return noticeVisibleInBell(audience, viewer);
+}
+
+/** Whether this viewer may open a PAGE notice without being blocked. */
+export function noticePageReadableWithoutSignIn(audience: NoticeAudience): boolean {
+  return audience === "PUBLIC" || audience === "VISITORS";
+}
 
 export function noticeCategorySlug(label: string): string {
   const base = label
