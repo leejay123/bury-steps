@@ -325,18 +325,22 @@ export function AccidentReportManager({
   reports,
   walks,
   hasAnyReports,
+  linkFilter,
   page,
   pageCount,
   pageSize,
+  sortOrder,
   total,
 }: {
   /** Already the current page's rows, filtered and paginated on the server. */
   reports: ReportView[];
   walks: WalkOption[];
   hasAnyReports: boolean;
+  linkFilter: "all" | "linked" | "unlinked";
   page: number;
   pageCount: number;
   pageSize: number;
+  sortOrder: "desc" | "asc";
   total: number;
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
@@ -344,25 +348,58 @@ export function AccidentReportManager({
   const viewing = mode?.type === "view" ? mode.report : null;
   const editing = mode?.type === "edit" ? mode.report : null;
   const listRef = useRef<HTMLDivElement>(null);
-  const { query, setQuery, setPage, isPending: searchPending } = useUrlListState();
+  const { query, setQuery, setPage, setFilter, isPending: searchPending } = useUrlListState();
 
   return (
     <div className="flex flex-col gap-4" ref={listRef}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         {hasAnyReports ? (
-          <InputGroup className="sm:max-w-md">
-            <InputGroupInput
-              aria-label="Search accident reports"
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search by walk, people involved, or what happened…"
-              value={query}
-            />
-            <InputGroupAddon>
-              <Search data-icon="inline-start" />
-            </InputGroupAddon>
-          </InputGroup>
+          <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-end">
+            <InputGroup className="w-full min-w-0 sm:flex-1">
+              <InputGroupInput
+                aria-label="Search accident reports"
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search by walk, people involved, or what happened…"
+                value={query}
+              />
+              <InputGroupAddon>
+                <Search data-icon="inline-start" />
+              </InputGroupAddon>
+            </InputGroup>
+            <div className="flex shrink-0 flex-col gap-1.5">
+              <Label htmlFor="report-link-filter">Walk link</Label>
+              <Select
+                onValueChange={(value) => setFilter("link", value, "all")}
+                value={linkFilter}
+              >
+                <SelectTrigger className="w-full sm:w-[11rem]" id="report-link-filter">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All reports</SelectItem>
+                  <SelectItem value="linked">Linked to a walk</SelectItem>
+                  <SelectItem value="unlinked">No linked walk</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex shrink-0 flex-col gap-1.5">
+              <Label htmlFor="report-sort">Sort</Label>
+              <Select
+                onValueChange={(value) => setFilter("sort", value, "desc")}
+                value={sortOrder}
+              >
+                <SelectTrigger className="w-full sm:w-[11rem]" id="report-sort">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="desc">Newest first</SelectItem>
+                  <SelectItem value="asc">Oldest first</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         ) : null}
-        <Button className="w-full sm:w-auto" onClick={() => setMode({ type: "add" })} size="sm">
+        <Button className="w-full shrink-0 sm:w-auto" onClick={() => setMode({ type: "add" })} size="sm">
           Add report
         </Button>
       </div>

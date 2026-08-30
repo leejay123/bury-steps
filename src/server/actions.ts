@@ -1078,7 +1078,11 @@ export async function setMemberRole(
 
   const id = String(formData.get("userId") ?? "");
   const roleRaw = String(formData.get("role") ?? "");
+  const confirm = String(formData.get("confirm") ?? "").trim().toLowerCase();
   if (!id) return { ok: false, error: "No member selected." };
+  if (confirm !== "confirm") {
+    return { ok: false, error: "Type confirm to change their role." };
+  }
   if (roleRaw !== "ADMIN" && roleRaw !== "MEMBER") {
     return { ok: false, error: "Choose organiser or member." };
   }

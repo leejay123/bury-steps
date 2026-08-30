@@ -100,8 +100,8 @@ export function AdminWalkTable({
 
   return (
     <div className="flex flex-col gap-4" ref={listRef}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-        <InputGroup className="w-full sm:max-w-md">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <InputGroup className="w-full min-w-0 sm:flex-1">
           <InputGroupInput
             aria-label={scope === "past" ? "Search past walks" : "Search upcoming walks"}
             onChange={(event) => setQuery(event.target.value)}
@@ -112,7 +112,7 @@ export function AdminWalkTable({
             <Search data-icon="inline-start" />
           </InputGroupAddon>
         </InputGroup>
-        <div className="flex flex-col gap-1.5">
+        <div className="flex shrink-0 flex-col gap-1.5">
           <Label htmlFor={`walk-status-${scope}`}>Status</Label>
           <Select
             onValueChange={(value) => setStatusFilter(value as StatusFilter)}
@@ -130,7 +130,7 @@ export function AdminWalkTable({
             </SelectContent>
           </Select>
         </div>
-        <div className="flex flex-col gap-1.5">
+        <div className="flex shrink-0 flex-col gap-1.5">
           <Label htmlFor={`walk-sort-${scope}`}>Sort</Label>
           <Select onValueChange={(value) => setSortOrder(value as SortOrder)} value={sortOrder}>
             <SelectTrigger className="w-full sm:w-[11rem]" id={`walk-sort-${scope}`}>
