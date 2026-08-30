@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronRight, Search } from "lucide-react";
 import { formatDate, formatMembershipAge } from "@/lib/dates";
 import { DeleteMemberButton } from "./delete-member-button";
+import { MemberRoleButton } from "./member-role-button";
 import { EmptyState } from "@/components/empty-state";
 import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
@@ -92,16 +93,17 @@ export function MembersTable({
                 {/* relative z-10: sits above the row's full-cover Link overlay so
                 Remove stays clickable instead of triggering navigation. */}
                 <DataListActions className="relative z-10">
-                  {member.isYou ? (
-                    <span className="text-xs text-muted-foreground">—</span>
-                  ) : (
-                    <DeleteMemberButton
-                      attendanceCount={member.attendanceCount}
-                      name={member.name}
-                      userId={member.id}
-                      walkCount={member.walkCount}
-                    />
-                  )}
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <MemberRoleButton name={member.name} role={member.role} userId={member.id} />
+                    {member.isYou ? null : (
+                      <DeleteMemberButton
+                        attendanceCount={member.attendanceCount}
+                        name={member.name}
+                        userId={member.id}
+                        walkCount={member.walkCount}
+                      />
+                    )}
+                  </div>
                 </DataListActions>
                 <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
               </DataListItem>

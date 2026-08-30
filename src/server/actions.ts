@@ -1062,6 +1062,69 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
   return { ok: true, message: `${displayName(target)} has been removed from the group.` };
 }
 
+/**
+ * Promote a member to organiser, or demote an organiser to member. The group
+ * must always keep at least one organiser — demoting the last one is blocked.
+ */
+export async function setMemberRole(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  const limited = checkRateLimit(`${admin.id}:setMemberRole`, 20, 60_000);
+  if (!limited.ok) {
+    return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
+  }
+
+  const id = String(formData.get("userId") ?? "");
+  const roleRaw = String(formData.get("role") ?? "");
+  if (!id) return { ok: false, error: "No member selected." };
+  if (roleRaw !== "ADMIN" && roleRaw !== "MEMBER") {
+    return { ok: false, error: "Choose organiser or member." };
+  }
+  const role = roleRaw as "ADMIN" | "MEMBER";
+
+  const target = await prisma.user.findUnique({ where: { id } });
+  if (!target) return { ok: false, error: "That member is no longer in the group." };
+  if (target.role === role) {
+    return {
+      ok: true,
+      message:
+        role === "ADMIN"
+          ? `${displayName(target)} is already an organiser.`
+          : `${displayName(target)} is already a member.`,
+    };
+  }
+
+  if (role === "MEMBER" && target.role === "ADMIN") {
+    const adminCount = await prisma.user.count({ where: { role: "ADMIN" } });
+    if (adminCount <= 1) {
+      return { ok: false, error: "You cannot demote the last organiser." };
+    }
+  }
+
+  try {
+    await prisma.user.update({ where: { id: target.id }, data: { role } });
+  } catch (err) {
+    return logActionError("setMemberRole", err, "Could not change their role. Try again.");
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/members");
+  revalidatePath(`/admin/members/${target.id}`);
+  revalidatePath("/dashboard");
+  // Layout nav (Members / Reports / Settings) depends on role for this person.
+  revalidatePath("/", "layout");
+
+  return {
+    ok: true,
+    message:
+      role === "ADMIN"
+        ? `${displayName(target)} is now an organiser.`
+        : `${displayName(target)} is now a member.`,
+  };
+}
+
 // ----------------------------------------------------------- homepage slides
 
 const MAX_SLIDE_BYTES = 4 * 1024 * 1024;

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { markSiteNoticesRead } from "@/server/actions";
 import { formatDate } from "@/lib/dates";
 import type { NoticeView } from "@/lib/notices";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -78,7 +79,9 @@ export function NotificationBell({
         >
           <Bell />
           {unreadCount > 0 ? (
-            <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-destructive" />
+            <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-destructive-foreground tabular-nums">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
           ) : null}
         </Button>
       </DrawerTrigger>
@@ -107,16 +110,15 @@ export function NotificationBell({
               return (
                 <div className="border-b px-4 py-3 last:border-0" key={notice.id}>
                   <div className="flex items-start gap-2">
-                    {isUnread ? (
-                      <span
-                        aria-hidden="true"
-                        className="mt-1.5 size-1.5 shrink-0 rounded-full bg-destructive"
-                      />
-                    ) : (
-                      <span aria-hidden="true" className="mt-1.5 size-1.5 shrink-0" />
-                    )}
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm">{notice.title}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-medium text-sm">{notice.title}</p>
+                        {isUnread ? (
+                          <Badge className="h-5 px-1.5 text-[10px]" variant="default">
+                            New
+                          </Badge>
+                        ) : null}
+                      </div>
                       <p className="text-muted-foreground text-xs">{formatDate(notice.createdAt)}</p>
                       <p className="mt-1 whitespace-pre-wrap text-muted-foreground text-sm">
                         {notice.body}
