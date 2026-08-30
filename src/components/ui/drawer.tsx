@@ -12,6 +12,7 @@ import {
   unlockIdleDocument,
   useOverlayPresence,
 } from "@/components/overlay-root";
+import { lockBackgroundScroll } from "@/components/overlay-scroll-lock";
 
 const overlayCloseClassName =
   "absolute top-2 right-2 z-20 flex size-11 cursor-pointer items-center justify-center rounded-md opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
@@ -24,146 +25,6 @@ const DrawerTriggerRefContext = React.createContext<React.MutableRefObject<HTMLE
 );
 
 const DESKTOP_QUERY = "(min-width: 640px)";
-
-/**
- * Scroll locks that set `position:fixed; top:-y` on <body> shift the sticky
- * header off-screen. Never use that pattern.
- *
- * Separately: RemoveScroll's `overflow:hidden` (data-scroll-locked) also breaks
- * `position:sticky`, so a stuck header drops back to its in-flow spot above the
- * viewport when you opened the drawer mid-scroll — it vanishes under the blur
- * and pops back on close. Pin it to its on-screen box for the open lifetime.
- */
-const BODY_LOCK_PROPS = ["position", "top", "left", "right", "height", "width"] as const;
-
-type HeaderPin = {
-  header: HTMLElement;
-  spacer: HTMLDivElement;
-  prev: {
-    position: string;
-    top: string;
-    left: string;
-    right: string;
-    width: string;
-    zIndex: string;
-    margin: string;
-  };
-};
-
-function clearBodyPositionFixedLock() {
-  const { body } = document;
-  if (body.style.position !== "fixed" && body.style.top === "") return;
-  const top = body.style.top;
-  const y = top ? Math.abs(Number.parseInt(top, 10) || 0) : window.scrollY;
-  for (const prop of BODY_LOCK_PROPS) {
-    body.style.removeProperty(prop);
-  }
-  if (y) window.scrollTo(0, y);
-}
-
-function pinSiteHeaderInPlace(): HeaderPin | null {
-  const header = document.querySelector<HTMLElement>("header");
-  if (!header || header.dataset.scrollLockPinned === "1") return null;
-
-  const rect = header.getBoundingClientRect();
-  const prev = {
-    position: header.style.position,
-    top: header.style.top,
-    left: header.style.left,
-    right: header.style.right,
-    width: header.style.width,
-    zIndex: header.style.zIndex,
-    margin: header.style.margin,
-  };
-
-  const spacer = document.createElement("div");
-  spacer.dataset.headerScrollLockSpacer = "1";
-  spacer.setAttribute("aria-hidden", "true");
-  spacer.style.height = `${Math.max(0, Math.round(rect.height))}px`;
-  spacer.style.width = "100%";
-  spacer.style.flexShrink = "0";
-  spacer.style.pointerEvents = "none";
-  header.parentElement?.insertBefore(spacer, header);
-
-  // Stay under the blur overlay (z-60). Round so sub-pixel left does not drift.
-  header.dataset.scrollLockPinned = "1";
-  header.style.position = "fixed";
-  header.style.top = `${Math.max(0, Math.round(rect.top))}px`;
-  header.style.left = `${Math.round(rect.left)}px`;
-  header.style.width = `${Math.round(rect.width)}px`;
-  header.style.right = "auto";
-  header.style.zIndex = "55";
-  header.style.margin = "0";
-
-  return { header, spacer, prev };
-}
-
-function unpinSiteHeader(pin: HeaderPin | null) {
-  if (!pin) return;
-  const { header, spacer, prev } = pin;
-  if (spacer.isConnected) spacer.remove();
-  header.style.position = prev.position;
-  header.style.top = prev.top;
-  header.style.left = prev.left;
-  header.style.right = prev.right;
-  header.style.width = prev.width;
-  header.style.zIndex = prev.zIndex;
-  header.style.margin = prev.margin;
-  delete header.dataset.scrollLockPinned;
-}
-
-/** Unpin only after RemoveScroll drops overflow:hidden — otherwise sticky breaks again. */
-function unpinSiteHeaderWhenScrollUnlocks(pin: HeaderPin | null) {
-  if (!pin) return;
-  let tries = 0;
-  const tick = () => {
-    if (!document.body.hasAttribute("data-scroll-locked") || tries++ > 60) {
-      unpinSiteHeader(pin);
-      return;
-    }
-    requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
-}
-
-function eventTargetInsideOpenOverlay(target: EventTarget | null) {
-  if (!(target instanceof Element)) return false;
-  return Boolean(
-    target.closest(
-      '[data-slot="drawer-content"], [data-slot="dialog-content"], [data-slot="alert-dialog-content"]',
-    ),
-  );
-}
-
-function lockBackgroundScroll() {
-  // Pin while sticky is still active (before overflow:hidden lands).
-  const headerPin = pinSiteHeaderInPlace();
-
-  const onTouchMove = (event: TouchEvent) => {
-    if (eventTargetInsideOpenOverlay(event.target)) return;
-    event.preventDefault();
-  };
-  const onWheel = (event: WheelEvent) => {
-    if (eventTargetInsideOpenOverlay(event.target)) return;
-    event.preventDefault();
-  };
-
-  document.addEventListener("touchmove", onTouchMove, { capture: true, passive: false });
-  document.addEventListener("wheel", onWheel, { capture: true, passive: false });
-  clearBodyPositionFixedLock();
-  const observer = new MutationObserver(() => {
-    clearBodyPositionFixedLock();
-  });
-  observer.observe(document.body, { attributes: true, attributeFilter: ["style"] });
-
-  return () => {
-    document.removeEventListener("touchmove", onTouchMove, true);
-    document.removeEventListener("wheel", onWheel, true);
-    observer.disconnect();
-    clearBodyPositionFixedLock();
-    unpinSiteHeaderWhenScrollUnlocks(headerPin);
-  };
-}
 
 /** Bottom sheet on phones, side panel from the sm breakpoint up. */
 function useIsDesktop() {
@@ -210,6 +71,27 @@ function Drawer({
   const triggerRef = React.useRef<HTMLElement | null>(null);
   const unlockBackgroundScrollRef = React.useRef<(() => void) | null>(null);
   const closeCleanupTimerRef = React.useRef(0);
+  // Uncontrolled drawers (e.g. homepage Read more) never pass `open`. Track
+  // Vaul's open state so the header pin still runs for them.
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
+  const resolvedOpen = open ?? uncontrolledOpen;
+
+  // Pin from the open flag itself — admin drawers often open with setState
+  // (setMode) and never fire onOpenChange(true), which used to skip the pin.
+  // useLayoutEffect so the pin lands before paint (less flash than useEffect).
+  React.useLayoutEffect(() => {
+    if (!resolvedOpen) {
+      unlockBackgroundScrollRef.current?.();
+      unlockBackgroundScrollRef.current = null;
+      return;
+    }
+    unlockBackgroundScrollRef.current?.();
+    unlockBackgroundScrollRef.current = lockBackgroundScroll();
+    return () => {
+      unlockBackgroundScrollRef.current?.();
+      unlockBackgroundScrollRef.current = null;
+    };
+  }, [resolvedOpen]);
 
   React.useEffect(() => {
     return () => {
@@ -239,16 +121,13 @@ function Drawer({
                   if (closeDisabled && !next) return;
                   window.clearTimeout(closeCleanupTimerRef.current);
 
+                  if (open === undefined) setUncontrolledOpen(next);
+
                   if (next) {
                     const active = document.activeElement;
                     triggerRef.current =
                       active instanceof HTMLElement ? active : triggerRef.current;
-                    unlockBackgroundScrollRef.current?.();
-                    unlockBackgroundScrollRef.current = lockBackgroundScroll();
                   } else {
-                    unlockBackgroundScrollRef.current?.();
-                    unlockBackgroundScrollRef.current = null;
-
                     // Pointer-events / inert cleanup after the close animation —
                     // not in the same turn as dismiss (that race flashed).
                     closeCleanupTimerRef.current = window.setTimeout(() => {

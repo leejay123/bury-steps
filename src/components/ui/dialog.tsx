@@ -5,22 +5,53 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OverlayRootContext, unlockIdleDocument } from "@/components/overlay-root";
+import { lockBackgroundScroll } from "@/components/overlay-scroll-lock";
 
 function Dialog({
   onOpenChange,
+  open,
+  defaultOpen,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(Boolean(defaultOpen));
+  const resolvedOpen = open ?? uncontrolledOpen;
+  const unlockBackgroundScrollRef = React.useRef<(() => void) | null>(null);
+
+  React.useLayoutEffect(() => {
+    if (!resolvedOpen) {
+      unlockBackgroundScrollRef.current?.();
+      unlockBackgroundScrollRef.current = null;
+      return;
+    }
+    unlockBackgroundScrollRef.current?.();
+    unlockBackgroundScrollRef.current = lockBackgroundScroll();
+    return () => {
+      unlockBackgroundScrollRef.current?.();
+      unlockBackgroundScrollRef.current = null;
+    };
+  }, [resolvedOpen]);
+
+  React.useEffect(() => {
+    return () => {
+      unlockBackgroundScrollRef.current?.();
+      unlockBackgroundScrollRef.current = null;
+    };
+  }, []);
+
   return (
     <DialogPrimitive.Root
       data-slot="dialog"
-      onOpenChange={(open) => {
-        if (!open) {
+      defaultOpen={defaultOpen}
+      onOpenChange={(next) => {
+        if (open === undefined) setUncontrolledOpen(next);
+        if (!next) {
           unlockIdleDocument();
           window.setTimeout(unlockIdleDocument, 0);
           window.setTimeout(unlockIdleDocument, 250);
         }
-        onOpenChange?.(open);
+        onOpenChange?.(next);
       }}
+      open={open}
       {...props}
     />
   );
