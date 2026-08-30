@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 /** Must type this word to confirm a role change — same idea as site reset. */
-export const ROLE_CONFIRM_WORD = "confirm";
+export const ROLE_CONFIRM_WORD = "Confirm";
 
 function ConfirmSubmit({
   confirmValue,
@@ -30,7 +30,7 @@ function ConfirmSubmit({
   promoting: boolean;
 }) {
   const { pending } = useFormStatus();
-  const ready = confirmValue.trim().toLowerCase() === ROLE_CONFIRM_WORD;
+  const ready = confirmValue.trim().toLowerCase() === ROLE_CONFIRM_WORD.toLowerCase();
   return (
     <Button disabled={pending || !ready} type="submit">
       {pending
@@ -116,8 +116,7 @@ export function MemberRoleButton({
           <input name="confirm" type="hidden" value={confirmValue} />
           <div className="flex flex-col gap-1.5">
             <Label htmlFor={`role-confirm-${userId}`}>
-              Type <span className="font-medium text-foreground">{ROLE_CONFIRM_WORD}</span> to
-              continue
+              Type &ldquo;{ROLE_CONFIRM_WORD}&rdquo; to continue
             </Label>
             <Input
               autoComplete="off"

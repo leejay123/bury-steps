@@ -404,8 +404,8 @@ export function OrganiserGuide() {
                   take those tools away. Their account, clock-ins, and walk history stay.
                 </li>
                 <li>
-                  Type <strong>confirm</strong> in the box, then confirm again. That stops an
-                  accidental click from changing someone’s access.
+                  Type <strong>&ldquo;Confirm&rdquo;</strong> in the box, then confirm again. That
+                  stops an accidental click from changing someone’s access.
                 </li>
               </Steps>
               <p>
