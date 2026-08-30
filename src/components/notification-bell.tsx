@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
-import { Bell } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState, useTransition } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { Bell, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-import { markSiteNoticesRead } from "@/server/actions";
+import { markSiteNoticeRead, markSiteNoticesRead } from "@/server/actions";
 import { formatDate } from "@/lib/dates";
 import type { NoticeView } from "@/lib/notices";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,7 @@ import {
   Drawer,
   DrawerContent,
   DrawerDescription,
+  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
@@ -28,20 +30,14 @@ export function NotificationBell({
   const [open, setOpen] = useState(false);
   const [unread, setUnread] = useState(unreadIds);
   const [pending, setPending] = useState(false);
+  const [, startTransition] = useTransition();
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     setUnread(unreadIds);
   }, [unreadIds]);
 
-  // This bell lives in the root layout, so it survives client-side
-  // navigation instead of unmounting like a normal page. Tapping a nav link
-  // while the drawer is open dismisses it via Vaul's own outside-pointer
-  // handling in the common case, but that isn't guaranteed for every way a
-  // route can change (browser back/forward, a link inside the drawer
-  // itself, etc). Force it closed on every navigation so it can never sit
-  // open — with its modal pointer-events lock still applied — underneath a
-  // page the user has already moved on from.
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
@@ -59,6 +55,8 @@ export function NotificationBell({
         if (!result.ok) {
           setUnread(previous);
           toast.error(result.error);
+        } else {
+          startTransition(() => router.refresh());
         }
       })
       .catch(() => {
@@ -66,6 +64,25 @@ export function NotificationBell({
         toast.error("Could not mark notices as read. Try again.");
       })
       .finally(() => setPending(false));
+  }
+
+  function markOneRead(noticeId: string) {
+    if (!unreadSet.has(noticeId)) return;
+    const previous = unread;
+    setUnread((current) => current.filter((id) => id !== noticeId));
+    markSiteNoticeRead(noticeId)
+      .then((result) => {
+        if (!result.ok) {
+          setUnread(previous);
+          toast.error(result.error);
+        } else {
+          startTransition(() => router.refresh());
+        }
+      })
+      .catch(() => {
+        setUnread(previous);
+        toast.error("Could not mark that notice as read. Try again.");
+      });
   }
 
   return (
@@ -107,29 +124,70 @@ export function NotificationBell({
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
             {notices.map((notice) => {
               const isUnread = unreadSet.has(notice.id);
-              return (
-                <div className="border-b px-4 py-3 last:border-0" key={notice.id}>
-                  <div className="flex items-start gap-2">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-medium text-sm">{notice.title}</p>
-                        {isUnread ? (
-                          <Badge className="h-5 px-1.5 text-[10px]" variant="default">
-                            New
-                          </Badge>
-                        ) : null}
-                      </div>
-                      <p className="text-muted-foreground text-xs">{formatDate(notice.createdAt)}</p>
-                      <p className="mt-1 whitespace-pre-wrap text-muted-foreground text-sm">
-                        {notice.body}
-                      </p>
-                    </div>
+              const href =
+                notice.kind === "PAGE" && notice.slug ? `/notices/${notice.slug}` : null;
+
+              const content = (
+                <>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-medium text-sm">{notice.title}</p>
+                    {isUnread ? (
+                      <Badge className="h-5 px-1.5 text-[10px]" variant="default">
+                        New
+                      </Badge>
+                    ) : null}
+                    {href ? (
+                      <Badge className="h-5 px-1.5 text-[10px]" variant="secondary">
+                        Page
+                      </Badge>
+                    ) : null}
                   </div>
-                </div>
+                  <p className="text-muted-foreground text-xs">{formatDate(notice.createdAt)}</p>
+                  <p className="mt-1 whitespace-pre-wrap text-muted-foreground text-sm">
+                    {notice.body}
+                  </p>
+                  {href ? (
+                    <p className="mt-2 flex items-center gap-1 text-xs font-medium text-foreground">
+                      Read full notice
+                      <ChevronRight className="size-3.5" />
+                    </p>
+                  ) : null}
+                </>
+              );
+
+              if (href) {
+                return (
+                  <Link
+                    className="block border-b px-4 py-3 last:border-0 hover:bg-muted/40"
+                    href={href}
+                    key={notice.id}
+                    onClick={() => markOneRead(notice.id)}
+                  >
+                    {content}
+                  </Link>
+                );
+              }
+
+              return (
+                <button
+                  className="w-full border-b px-4 py-3 text-left last:border-0 hover:bg-muted/40"
+                  key={notice.id}
+                  onClick={() => markOneRead(notice.id)}
+                  type="button"
+                >
+                  {content}
+                </button>
               );
             })}
           </div>
         )}
+        <DrawerFooter className="border-t">
+          <Button asChild className="w-full" size="sm" variant="outline">
+            <Link href="/notices" onClick={() => setOpen(false)}>
+              Browse all notices
+            </Link>
+          </Button>
+        </DrawerFooter>
       </DrawerContent>
     </Drawer>
   );

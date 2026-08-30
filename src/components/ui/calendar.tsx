@@ -82,7 +82,7 @@ function Calendar({
           "size-(--cell-size) p-0 select-none pointer-events-auto aria-disabled:opacity-50",
         ),
         month_caption: cn(
-          "flex h-(--cell-size) w-full items-center justify-center px-(--cell-size)",
+          "flex h-(--cell-size) w-full items-center justify-center px-[calc(var(--cell-size)+0.25rem)]",
           defaultClassNames.month_caption,
         ),
         dropdowns: cn(
@@ -99,12 +99,12 @@ function Calendar({
           defaultClassNames.caption_label,
         ),
         month_grid: cn("w-full border-collapse", defaultClassNames.month_grid),
-        weekdays: cn("flex", defaultClassNames.weekdays),
+        weekdays: cn("flex gap-1", defaultClassNames.weekdays),
         weekday: cn(
           "flex-1 rounded-md text-[0.8rem] font-normal text-muted-foreground select-none",
           defaultClassNames.weekday,
         ),
-        week: cn("mt-2 flex w-full", defaultClassNames.week),
+        week: cn("mt-2 flex w-full gap-1", defaultClassNames.week),
         week_number_header: cn("w-(--cell-size) select-none", defaultClassNames.week_number_header),
         week_number: cn(
           "text-[0.8rem] text-muted-foreground select-none",

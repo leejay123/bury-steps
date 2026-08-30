@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Search } from "lucide-react";
+import { ChevronRight, Footprints, Search } from "lucide-react";
 import { formatCompactDateTime, formatDate, formatTime, londonYear } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/empty-state";
@@ -10,7 +10,14 @@ import { ListPagination } from "@/components/list-pagination";
 import { usePagedList } from "@/hooks/use-paged-list";
 import { Badge } from "@/components/ui/badge";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import { Footprints } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export type AttendanceHistoryRow = {
   id: string;
@@ -27,24 +34,47 @@ export type AttendanceHistoryRow = {
   href?: string;
 };
 
+type StatusFilter = "all" | "full" | "left-early" | "cancelled";
+
+function matchesStatus(row: AttendanceHistoryRow, status: StatusFilter): boolean {
+  if (status === "all") return true;
+  if (status === "cancelled") return Boolean(row.cancelledAt);
+  if (status === "left-early") return Boolean(row.clockedOutAt) && !row.cancelledAt;
+  // full: finished (or still recorded as stayed) without leaving early, and not cancelled
+  return !row.cancelledAt && !row.clockedOutAt;
+}
+
 export function AttendanceHistory({
   rows,
 }: {
   rows: AttendanceHistoryRow[];
 }) {
   const [query, setQuery] = useState("");
+  const [status, setStatus] = useState<StatusFilter>("all");
+  const [yearFilter, setYearFilter] = useState<string>("all");
   const listRef = useRef<HTMLDivElement>(null);
+
+  const availableYears = useMemo(() => {
+    const years = new Set<number>();
+    for (const row of rows) years.add(londonYear(new Date(row.startsAt)));
+    return [...years].sort((a, b) => b - a);
+  }, [rows]);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    if (!needle) return rows;
     return rows.filter((row) => {
+      if (!matchesStatus(row, status)) return false;
+      if (yearFilter !== "all" && londonYear(new Date(row.startsAt)) !== Number(yearFilter)) {
+        return false;
+      }
+      if (!needle) return true;
       const hay = `${row.title} ${row.location ?? ""}`.toLowerCase();
       return hay.includes(needle);
     });
-  }, [query, rows]);
+  }, [query, rows, status, yearFilter]);
 
-  const paging = usePagedList(filtered, { resetKey: query });
+  const resetKey = `${query}|${status}|${yearFilter}`;
+  const paging = usePagedList(filtered, { resetKey });
 
   const years = useMemo(() => {
     const grouped = new Map<number, AttendanceHistoryRow[]>();
@@ -69,21 +99,55 @@ export function AttendanceHistory({
 
   return (
     <div className="flex flex-col gap-6" ref={listRef}>
-      <InputGroup className="max-w-md">
-        <InputGroupInput
-          aria-label="Search your walk history"
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by walk or meeting point…"
-          value={query}
-        />
-        <InputGroupAddon>
-          <Search data-icon="inline-start" />
-        </InputGroupAddon>
-      </InputGroup>
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+        <InputGroup className="w-full min-w-0 sm:min-w-[16rem] sm:flex-1">
+          <InputGroupInput
+            aria-label="Search your walk history"
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search by walk or meeting point…"
+            value={query}
+          />
+          <InputGroupAddon>
+            <Search data-icon="inline-start" />
+          </InputGroupAddon>
+        </InputGroup>
+        <div className="flex shrink-0 flex-col gap-1.5">
+          <Label htmlFor="history-status-filter">Status</Label>
+          <Select onValueChange={(value) => setStatus(value as StatusFilter)} value={status}>
+            <SelectTrigger className="w-full sm:w-[11rem]" id="history-status-filter">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="full">Stayed for walk</SelectItem>
+              <SelectItem value="left-early">Left early</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {availableYears.length > 1 ? (
+          <div className="flex shrink-0 flex-col gap-1.5">
+            <Label htmlFor="history-year-filter">Year</Label>
+            <Select onValueChange={setYearFilter} value={yearFilter}>
+              <SelectTrigger className="w-full sm:w-[8.5rem]" id="history-year-filter">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All years</SelectItem>
+                {availableYears.map((year) => (
+                  <SelectItem key={year} value={String(year)}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : null}
+      </div>
 
       {filtered.length === 0 ? (
         <EmptyState
-          description="Try a different name or meeting point."
+          description="Try a different search or filter."
           icon={Search}
           title="No matching walks"
         />

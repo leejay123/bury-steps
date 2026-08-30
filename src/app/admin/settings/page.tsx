@@ -39,7 +39,7 @@ export default async function AdminSettingsPage() {
     {
       href: "/admin/settings/notices",
       title: "Notices",
-      description: `Messages in the bell. ${noticeCount} of ${MAX_SITE_NOTICES}.`,
+      description: `Messages in the bell and full-page notices. ${noticeCount} of ${MAX_SITE_NOTICES}.`,
     },
     {
       href: "/admin/settings/progress",

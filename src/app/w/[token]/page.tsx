@@ -191,6 +191,15 @@ export default async function WalkLinkPage({
           {walk.description ? (
             <p className="text-sm leading-relaxed">{walk.description}</p>
           ) : null}
+          {status === "cancelled" ? null : (
+            <div>
+              <Button asChild size="sm" variant="outline">
+                <a download href={`/w/${slug}/ics`}>
+                  Add to calendar
+                </a>
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 

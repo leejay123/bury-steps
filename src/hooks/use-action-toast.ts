@@ -27,6 +27,11 @@ export function useActionToast(state: ActionResult | null, onOk?: () => void) {
     if (state.ok) {
       onOkRef.current?.();
       toast.success(state.message ?? "Saved.");
+      if (state.href) {
+        const href = state.href;
+        const id = window.setTimeout(() => router.push(href), 0);
+        return () => window.clearTimeout(id);
+      }
       const id = window.setTimeout(() => router.refresh(), 0);
       return () => window.clearTimeout(id);
     }

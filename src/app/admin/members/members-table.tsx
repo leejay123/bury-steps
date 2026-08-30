@@ -12,6 +12,14 @@ import { ListPagination } from "@/components/list-pagination";
 import { useUrlListState } from "@/hooks/use-url-list-state";
 import { Badge } from "@/components/ui/badge";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type MemberRow = {
   id: string;
@@ -29,6 +37,7 @@ export function MembersTable({
   page,
   pageCount,
   pageSize,
+  roleFilter,
   total,
 }: {
   /** Already the current page's rows, filtered and paginated on the server. */
@@ -36,24 +45,40 @@ export function MembersTable({
   page: number;
   pageCount: number;
   pageSize: number;
+  roleFilter: "all" | "ADMIN" | "MEMBER";
   total: number;
 }) {
   const listRef = useRef<HTMLDivElement>(null);
-  const { query, setQuery, setPage, isPending } = useUrlListState();
+  const { query, setQuery, setPage, setFilter, isPending } = useUrlListState();
 
   return (
     <div className="flex flex-col gap-4" ref={listRef}>
-      <InputGroup className="max-w-md">
-        <InputGroupInput
-          aria-label="Search members"
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by name, email, or role…"
-          value={query}
-        />
-        <InputGroupAddon>
-          <Search data-icon="inline-start" />
-        </InputGroupAddon>
-      </InputGroup>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <InputGroup className="w-full min-w-0 sm:flex-1">
+          <InputGroupInput
+            aria-label="Search members"
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search by name, email, or role…"
+            value={query}
+          />
+          <InputGroupAddon>
+            <Search data-icon="inline-start" />
+          </InputGroupAddon>
+        </InputGroup>
+        <div className="flex shrink-0 flex-col gap-1.5">
+          <Label htmlFor="member-role-filter">Role</Label>
+          <Select onValueChange={(value) => setFilter("role", value, "all")} value={roleFilter}>
+            <SelectTrigger className="w-full sm:w-[11rem]" id="member-role-filter">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All roles</SelectItem>
+              <SelectItem value="ADMIN">Organisers</SelectItem>
+              <SelectItem value="MEMBER">Members</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {members.length === 0 ? (
         <EmptyState

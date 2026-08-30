@@ -13,6 +13,7 @@ import { WalkMapSection } from "@/components/walk-map-section";
 import { meetingPointLabel } from "@/lib/geocode";
 import { ensureWalkSlug, walkShareUrl } from "@/lib/walk-slug";
 import { CancelWalkButton } from "./cancel-walk-button";
+import { DuplicateWalkButton } from "./duplicate-walk-button";
 import { EditWalkButton } from "./edit-walk-button";
 import { AddAttendanceButton } from "./add-attendance-button";
 import { ReopenWalkButton } from "./reopen-walk-button";
@@ -148,6 +149,12 @@ export default async function WalkDetailPage({
         <Button asChild size="sm" variant="outline">
           <a href={`/admin/walks/${walk.id}/export`}>Download roster (CSV)</a>
         </Button>
+        <Button asChild size="sm" variant="outline">
+          <a download href={`/w/${slug}/ics`}>
+            Add to calendar
+          </a>
+        </Button>
+        <DuplicateWalkButton walkId={walk.id} />
         {/*
           A completed walk already happened — there's nothing left to
           cancel or edit. Cancel only ever applied to a walk that hadn't

@@ -36,10 +36,19 @@ import {
   MAX_HOMEPAGE_FAQS,
   faqCategorySlug,
 } from "@/lib/faqs";
-import { MAX_SITE_NOTICES } from "@/lib/notices";
+import {
+  MAX_SITE_NOTICES,
+  MAX_NOTICE_CATEGORIES,
+  MAX_NOTICE_CATEGORY_LABEL,
+  MAX_NOTICE_TITLE,
+  MAX_NOTICE_TEASER,
+  MAX_NOTICE_PAGE_BODY,
+  noticeCategorySlug,
+  noticePageSlug,
+} from "@/lib/notices";
 import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR } from "@/lib/theme";
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
-import { NOTICES_CACHE_TAG } from "@/lib/site-notices";
+import { NOTICES_CACHE_TAG, recordSiteNoticeRead } from "@/lib/site-notices";
 import { isAllowedImageMime, sniffImageMime } from "@/lib/image-bytes";
 import { stripImageMetadata } from "@/lib/strip-image-metadata";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -85,7 +94,9 @@ function logActionError(context: string, err: unknown, fallback = "Something wen
   return { ok: false, error: fallback };
 }
 
-export type ActionResult = { ok: true; message?: string } | { ok: false; error: string };
+export type ActionResult =
+  | { ok: true; message?: string; href?: string }
+  | { ok: false; error: string };
 
 /** Thrown by a locked count-check to signal "this would exceed the
  * configured limit" — told apart from a genuine, unexpected DB error so it
@@ -102,6 +113,8 @@ const COUNT_LIMIT_LOCK_KEYS = {
   homepageTestimonial: 900102,
   homepageFaq: 900103,
   homepageFaqCategory: 900104,
+  siteNotice: 900105,
+  siteNoticeCategory: 900106,
 } as const;
 
 /**
@@ -203,6 +216,65 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
   revalidatePath("/dashboard");
   revalidateWalkShare(walk);
   return { ok: true, message: `“${walk.title}” created. Share link is ready.` };
+}
+
+/** Copy a walk’s details onto a new walk one week later (same weekday/time). */
+export async function duplicateWalk(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  const id = String(formData.get("walkId") ?? "");
+  if (!id) return { ok: false, error: "No walk selected." };
+
+  const source = await prisma.walk.findUnique({
+    where: { id },
+    select: {
+      title: true,
+      description: true,
+      location: true,
+      postcode: true,
+      latitude: true,
+      longitude: true,
+      startsAt: true,
+      durationMins: true,
+    },
+  });
+  if (!source) return { ok: false, error: "That walk is no longer there." };
+
+  const startsAt = new Date(source.startsAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const slug = await allocateWalkSlug(source.title);
+
+  let walk: { id: string; title: string; token: string; slug: string | null };
+  try {
+    walk = await prisma.walk.create({
+      data: {
+        token: makeToken(),
+        slug,
+        title: source.title,
+        description: source.description,
+        location: source.location,
+        postcode: source.postcode,
+        latitude: source.latitude,
+        longitude: source.longitude,
+        startsAt,
+        durationMins: source.durationMins,
+        createdById: admin.id,
+      },
+      select: { id: true, title: true, token: true, slug: true },
+    });
+  } catch (err) {
+    return logActionError("duplicateWalk", err, "Could not duplicate this walk. Try again.");
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+  revalidateWalkShare(walk);
+  return {
+    ok: true,
+    message: `“${walk.title}” duplicated for next week. Check the date before you share it.`,
+    href: `/admin/walks/${walk.id}`,
+  };
 }
 
 export async function searchWalkPlaces(
@@ -1573,21 +1645,92 @@ export async function deleteHomepageFaq(
 
 // ------------------------------------------------------------------ site notices
 
-function revalidateNotices() {
+function revalidateNotices(paths: string[] = []) {
   revalidateTag(NOTICES_CACHE_TAG);
   revalidatePath("/", "layout");
+  revalidatePath("/notices");
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/notices");
+  for (const path of paths) revalidatePath(path);
 }
 
-function readNoticeCopy(formData: FormData): { title: string; body: string } | { error: string } {
+async function uniqueNoticeCategorySlug(
+  tx: Prisma.TransactionClient,
+  label: string,
+): Promise<string> {
+  const base = noticeCategorySlug(label);
+  for (let n = 0; n < 25; n++) {
+    const slug = n === 0 ? base : `${base}-${n + 1}`;
+    const taken = await tx.siteNoticeCategory.findFirst({
+      where: { slug },
+      select: { id: true },
+    });
+    if (!taken) return slug;
+  }
+  return `${base}-${Date.now().toString(36)}`;
+}
+
+async function uniqueNoticePageSlug(
+  tx: Prisma.TransactionClient,
+  title: string,
+  excludeId?: string,
+): Promise<string> {
+  const base = noticePageSlug(title);
+  for (let n = 0; n < 25; n++) {
+    const slug = n === 0 ? base : `${base}-${n + 1}`;
+    const taken = await tx.siteNotice.findFirst({
+      where: {
+        slug,
+        ...(excludeId ? { id: { not: excludeId } } : {}),
+      },
+      select: { id: true },
+    });
+    if (!taken) return slug;
+  }
+  return `${base}-${Date.now().toString(36)}`;
+}
+
+function readNoticeCopy(formData: FormData):
+  | {
+      title: string;
+      body: string;
+      kind: "BELL" | "PAGE";
+      audience: "MEMBERS" | "PUBLIC";
+      pageBody: string | null;
+      categoryId: string | null;
+    }
+  | { error: string } {
   const title = String(formData.get("title") ?? "").trim();
   const body = String(formData.get("body") ?? "").trim();
+  const kindRaw = String(formData.get("kind") ?? "BELL").trim().toUpperCase();
+  const kind = kindRaw === "PAGE" ? "PAGE" : "BELL";
+  const audienceRaw = String(formData.get("audience") ?? "MEMBERS").trim().toUpperCase();
+  // Bell-only notices only reach signed-in people (the bell itself). Public
+  // audience applies to full-page notices on /notices.
+  const audience =
+    kind === "PAGE" && audienceRaw === "PUBLIC" ? "PUBLIC" : "MEMBERS";
+  const pageBody = String(formData.get("pageBody") ?? "").trim();
+  const categoryId = String(formData.get("categoryId") ?? "").trim() || null;
+
   if (!title) return { error: "Add a title." };
-  if (!body) return { error: "Add a message." };
-  if (title.length > 80) return { error: "Keep the title under 80 characters." };
-  if (body.length > 500) return { error: "Keep the message under 500 characters." };
-  return { title, body };
+  if (!body) return { error: "Add a short message for the bell." };
+  if (title.length > MAX_NOTICE_TITLE) {
+    return { error: `Keep the title under ${MAX_NOTICE_TITLE} characters.` };
+  }
+  if (body.length > MAX_NOTICE_TEASER) {
+    return { error: `Keep the bell message under ${MAX_NOTICE_TEASER} characters.` };
+  }
+
+  if (kind === "PAGE") {
+    if (!categoryId) return { error: "Choose a category for a full-page notice." };
+    if (!pageBody) return { error: "Add the full page text." };
+    if (pageBody.length > MAX_NOTICE_PAGE_BODY) {
+      return { error: `Keep the page under ${MAX_NOTICE_PAGE_BODY} characters.` };
+    }
+    return { title, body, kind, audience, pageBody, categoryId };
+  }
+
+  return { title, body, kind: "BELL", audience: "MEMBERS", pageBody: null, categoryId: null };
 }
 
 export async function addSiteNotice(
@@ -1596,24 +1739,56 @@ export async function addSiteNotice(
 ): Promise<ActionResult> {
   await requireAdmin();
 
-  const count = await prisma.siteNotice.count();
-  if (count >= MAX_SITE_NOTICES) {
-    return { ok: false, error: "You can have up to 10 notices." };
-  }
-
   const copy = readNoticeCopy(formData);
   if ("error" in copy) return { ok: false, error: copy.error };
 
   try {
-    await prisma.siteNotice.create({
-      data: { title: copy.title, body: copy.body },
+    let createdSlug: string | null = null;
+    await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.siteNotice, async (tx) => {
+      const count = await tx.siteNotice.count();
+      if (count >= MAX_SITE_NOTICES) {
+        throw new LimitReachedError(`You can have up to ${MAX_SITE_NOTICES} notices.`);
+      }
+      if (copy.kind === "PAGE" && copy.categoryId) {
+        const category = await tx.siteNoticeCategory.findUnique({
+          where: { id: copy.categoryId },
+          select: { id: true },
+        });
+        if (!category) throw new Error("CATEGORY_MISSING");
+      }
+      const slug =
+        copy.kind === "PAGE" ? await uniqueNoticePageSlug(tx, copy.title) : null;
+      createdSlug = slug;
+      await tx.siteNotice.create({
+        data: {
+          title: copy.title,
+          body: copy.body,
+          kind: copy.kind,
+          audience: copy.audience,
+          slug,
+          pageBody: copy.pageBody,
+          categoryId: copy.categoryId,
+        },
+      });
     });
+    revalidateNotices(createdSlug ? [`/notices/${createdSlug}`] : []);
   } catch (err) {
+    if (err instanceof LimitReachedError) return { ok: false, error: err.message };
+    if (err instanceof Error && err.message === "CATEGORY_MISSING") {
+      return { ok: false, error: "That category is no longer there." };
+    }
     return logActionError("addSiteNotice", err, "Could not add that notice. Try again.");
   }
 
-  revalidateNotices();
-  return { ok: true, message: "Notice added. Members will see it in the bell." };
+  return {
+    ok: true,
+    message:
+      copy.kind === "PAGE"
+        ? copy.audience === "PUBLIC"
+          ? "Public notice added. Anyone can open it on Notices; members also see it in the bell."
+          : "Full-page notice added. Members will see it in the bell and on Notices."
+        : "Notice added. Members will see it in the bell.",
+  };
 }
 
 export async function updateSiteNotice(
@@ -1628,19 +1803,57 @@ export async function updateSiteNotice(
   if ("error" in copy) return { ok: false, error: copy.error };
 
   try {
-    await prisma.$transaction([
-      prisma.siteNotice.update({
+    let slugPath: string | null = null;
+    await prisma.$transaction(async (tx) => {
+      const existing = await tx.siteNotice.findUnique({
         where: { id },
-        data: { title: copy.title, body: copy.body },
-      }),
-      prisma.siteNoticeRead.deleteMany({ where: { noticeId: id } }),
-    ]);
+        select: { id: true, slug: true },
+      });
+      if (!existing) throw new Error("MISSING");
+
+      if (copy.kind === "PAGE" && copy.categoryId) {
+        const category = await tx.siteNoticeCategory.findUnique({
+          where: { id: copy.categoryId },
+          select: { id: true },
+        });
+        if (!category) throw new Error("CATEGORY_MISSING");
+      }
+
+      const slug =
+        copy.kind === "PAGE"
+          ? existing.slug ?? (await uniqueNoticePageSlug(tx, copy.title, id))
+          : null;
+      if (slug) slugPath = `/notices/${slug}`;
+      if (existing.slug && existing.slug !== slug) {
+        slugPath = slugPath ?? `/notices/${existing.slug}`;
+      }
+
+      await tx.siteNotice.update({
+        where: { id },
+        data: {
+          title: copy.title,
+          body: copy.body,
+          kind: copy.kind,
+          audience: copy.audience,
+          slug,
+          pageBody: copy.pageBody,
+          categoryId: copy.categoryId,
+        },
+      });
+      await tx.siteNoticeRead.deleteMany({ where: { noticeId: id } });
+    });
+    revalidateNotices(slugPath ? [slugPath] : []);
   } catch (err) {
+    if (err instanceof Error && err.message === "CATEGORY_MISSING") {
+      return { ok: false, error: "That category is no longer there." };
+    }
+    if (err instanceof Error && err.message === "MISSING") {
+      return { ok: false, error: "That notice is no longer there." };
+    }
     if (!isPrismaCode(err, "P2025")) logActionError("updateSiteNotice", err);
     return { ok: false, error: "That notice is no longer there." };
   }
 
-  revalidateNotices();
   return { ok: true, message: "Notice updated. Members will see it as new." };
 }
 
@@ -1682,6 +1895,168 @@ export async function markSiteNoticesRead(): Promise<ActionResult> {
   }
 
   revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+export async function markSiteNoticeRead(noticeId: string): Promise<ActionResult> {
+  const user = await requireUser();
+  const id = noticeId.trim();
+  if (!id) return { ok: false, error: "No notice selected." };
+
+  const limited = checkRateLimit(`${user.id}:markSiteNoticeRead`, 40, 60_000);
+  if (!limited.ok) return { ok: false, error: "Try again in a moment." };
+
+  try {
+    const notice = await prisma.siteNotice.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+    if (!notice) return { ok: false, error: "That notice is no longer there." };
+    await recordSiteNoticeRead(user.id, id);
+  } catch (err) {
+    return logActionError("markSiteNoticeRead", err, "Could not mark that notice as read. Try again.");
+  }
+
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+function readNoticeCategoryLabel(formData: FormData): { label: string } | { error: string } {
+  const label = String(formData.get("label") ?? "").trim();
+  if (!label) return { error: "Add a category name." };
+  if (label.length > MAX_NOTICE_CATEGORY_LABEL) {
+    return { error: `Keep the name under ${MAX_NOTICE_CATEGORY_LABEL} characters.` };
+  }
+  return { label };
+}
+
+export async function addSiteNoticeCategory(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const copy = readNoticeCategoryLabel(formData);
+  if ("error" in copy) return { ok: false, error: copy.error };
+
+  try {
+    await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.siteNoticeCategory, async (tx) => {
+      const count = await tx.siteNoticeCategory.count();
+      if (count >= MAX_NOTICE_CATEGORIES) {
+        throw new LimitReachedError(`You can have up to ${MAX_NOTICE_CATEGORIES} categories.`);
+      }
+      await tx.siteNoticeCategory.create({
+        data: {
+          label: copy.label,
+          slug: await uniqueNoticeCategorySlug(tx, copy.label),
+          sortOrder: count,
+        },
+      });
+    });
+  } catch (err) {
+    if (err instanceof LimitReachedError) return { ok: false, error: err.message };
+    return logActionError("addSiteNoticeCategory", err, "Could not add that category. Try again.");
+  }
+
+  revalidateNotices();
+  return { ok: true, message: "Category added." };
+}
+
+export async function updateSiteNoticeCategory(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("categoryId") ?? "");
+  if (!id) return { ok: false, error: "No category selected." };
+  const copy = readNoticeCategoryLabel(formData);
+  if ("error" in copy) return { ok: false, error: copy.error };
+
+  try {
+    await prisma.siteNoticeCategory.update({
+      where: { id },
+      data: { label: copy.label },
+    });
+  } catch (err) {
+    if (!isPrismaCode(err, "P2025")) logActionError("updateSiteNoticeCategory", err);
+    return { ok: false, error: "That category is no longer there." };
+  }
+
+  revalidateNotices();
+  return { ok: true, message: "Category updated." };
+}
+
+export async function deleteSiteNoticeCategory(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("categoryId") ?? "");
+  if (!id) return { ok: false, error: "No category selected." };
+
+  const category = await prisma.siteNoticeCategory.findUnique({
+    where: { id },
+    select: { id: true, _count: { select: { notices: true } } },
+  });
+  if (!category) return { ok: false, error: "That category is no longer there." };
+
+  const remaining = await prisma.siteNoticeCategory.count();
+  if (remaining <= 1) return { ok: false, error: "Keep at least one category." };
+  if (category._count.notices > 0) {
+    return { ok: false, error: "Move or remove the notices in this category first." };
+  }
+
+  try {
+    await prisma.siteNoticeCategory.delete({ where: { id } });
+  } catch (err) {
+    return logActionError("deleteSiteNoticeCategory", err, "Could not remove that category. Try again.");
+  }
+
+  try {
+    const leftover = await prisma.siteNoticeCategory.findMany({
+      orderBy: { sortOrder: "asc" },
+      select: { id: true },
+    });
+    await Promise.all(
+      leftover.map((row, index) =>
+        prisma.siteNoticeCategory.update({ where: { id: row.id }, data: { sortOrder: index } }),
+      ),
+    );
+  } catch (err) {
+    logActionError("deleteSiteNoticeCategory:resort", err);
+  }
+
+  revalidateNotices();
+  return { ok: true, message: "Category removed." };
+}
+
+export async function reorderSiteNoticeCategories(ids: string[]): Promise<ActionResult> {
+  await requireAdmin();
+  const validated = validateReorderIds(ids, MAX_NOTICE_CATEGORIES * 2);
+  if ("error" in validated) return { ok: false, error: validated.error };
+
+  try {
+    const existing = await prisma.siteNoticeCategory.findMany({ select: { id: true } });
+    const existingIds = new Set(existing.map((row) => row.id));
+    if (
+      validated.length !== existingIds.size ||
+      validated.some((id) => !existingIds.has(id))
+    ) {
+      return { ok: false, error: "Categories changed. Refresh and try again." };
+    }
+    await Promise.all(
+      validated.map((id, sortOrder) =>
+        prisma.siteNoticeCategory.update({ where: { id }, data: { sortOrder } }),
+      ),
+    );
+  } catch (err) {
+    return logActionError(
+      "reorderSiteNoticeCategories",
+      err,
+      "Could not reorder categories. Try again.",
+    );
+  }
+
+  revalidateNotices();
   return { ok: true };
 }
 
@@ -2204,6 +2579,15 @@ export async function resetSiteToDefault(
       await tx.accidentReport.deleteMany();
       await tx.walk.deleteMany();
       await tx.siteNotice.deleteMany();
+      await tx.siteNoticeCategory.deleteMany();
+      await tx.siteNoticeCategory.create({
+        data: {
+          id: "noticecat_general",
+          slug: "general",
+          label: "General",
+          sortOrder: 0,
+        },
+      });
       await tx.homepageFaq.deleteMany();
       await tx.homepageFaqCategory.deleteMany();
       await tx.homepageSlide.deleteMany();

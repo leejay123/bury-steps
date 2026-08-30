@@ -2,7 +2,7 @@ import Link from "next/link";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { MAX_HOMEPAGE_FAQS, MAX_FAQ_CATEGORIES } from "@/lib/faqs";
-import { MAX_SITE_NOTICES } from "@/lib/notices";
+import { MAX_SITE_NOTICES, MAX_NOTICE_CATEGORIES } from "@/lib/notices";
 import { FACEBOOK_GROUP_URL, PRODUCTION_APP_URL } from "@/lib/urls";
 import { CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { MAX_MONTHLY_CLOCK_IN_GOAL } from "@/lib/walk-game";
@@ -181,7 +181,7 @@ export function OrganiserGuide() {
                 You can publish more than one walk in a week. Each walk has its own day, time,
                 meeting point, and share link. Members see every upcoming walk on their Walks page.
               </p>
-              <p className="font-medium text-foreground">Cancel, edit, reopen, or remove</p>
+              <p className="font-medium text-foreground">Cancel, edit, reopen, duplicate, or remove</p>
               <ul className="list-disc pl-5">
                 <li>
                   <strong>Cancel</strong> stops new clock-ins. People already on the list stay. You
@@ -208,15 +208,26 @@ export function OrganiserGuide() {
                   works again if the time window is still open.
                 </li>
                 <li>
+                  <strong>Duplicate</strong> makes a new walk with the same title, meeting point,
+                  length, and notes, starting one week later at the same time. Attendance and
+                  journey notes stay on the original. You land on the new walk so you can check the
+                  date before sharing.
+                </li>
+                <li>
                   <strong>Remove</strong> deletes the walk and every clock-in on it. The share link
                   stops working. Use this only if you do not need the record. Remove walk is the
                   red button on the walk page.
                 </li>
               </ul>
               <p>
+                On the walk page and on the public share link, <strong>Add to calendar</strong>{" "}
+                downloads a small calendar file (.ics) so phones and calendar apps can save the
+                date, time, meeting point, and a link back to the walk.
+              </p>
+              <p>
                 Once a walk reaches <strong>Completed</strong>, Cancel and Edit disappear from its
-                page — it already happened, so there is nothing left to cancel or change. Remove
-                and the CSV export are still there if the record itself needs correcting.{" "}
+                page — it already happened, so there is nothing left to cancel or change. Remove,
+                Duplicate, Add to calendar, and the CSV export are still there if you need them.{" "}
                 <strong>Add someone</strong> stays, so you can still put a forgotten clock-in on
                 the list.
               </p>
@@ -378,19 +389,21 @@ export function OrganiserGuide() {
                 Open <Link href="/admin/members">Members</Link> to see everyone who has signed up:
                 name, email, whether they are an organiser or a member, when they joined, how long
                 they have been a member, and how many clock-ins they have. The joined date is the day
-                they first signed in. Search by name, email, or role. If there are more than 20
-                people, Previous and Next at the bottom of the list take you through them.
+                they first signed in. Filter by role (All, Organisers, or Members), and search by
+                name, email, or role. If there are more than 20 people, Previous and Next at the
+                bottom of the list take you through them.
               </p>
               <p className="font-medium text-foreground">Walk history</p>
               <p>
                 Click a row to open that person’s own page: joined date, membership length, quick
                 totals (total walks and walks cancelled after they clocked in — plus walks
                 created, but only for organisers, since members never create walks), and their full
-                walk history below, grouped by year. Search if the list is long. Previous and Next
-                appear if they have more than 20 walks. Each walk shows the date, meeting point, and
-                in/out times — including whether they stayed for the whole walk. Click a walk name
-                to open that walk. This is a full page rather than a drawer, so it stays readable
-                even for someone who has been on hundreds of walks.
+                walk history below, grouped by year. Search by walk or meeting point, and filter by
+                status (stayed for the walk, left early, or cancelled) or year if the list is long.
+                Previous and Next appear if they have more than 20 walks. Each walk shows the date,
+                meeting point, and in/out times — including whether they stayed for the whole walk.
+                Click a walk name to open that walk. This is a full page rather than a drawer, so it
+                stays readable even for someone who has been on hundreds of walks.
               </p>
               <p className="font-medium text-foreground">Make organiser or member</p>
               <Steps>
@@ -490,22 +503,49 @@ export function OrganiserGuide() {
             <GuideBody>
               <p>
                 Open <Link href="/admin/settings/notices">Notices</Link>. Up to {MAX_SITE_NOTICES}{" "}
-                messages in the bell at the top of the site. Only signed-in people see them. The
-                bell opens a drawer on phone and desktop — sliding up from the bottom on a phone,
-                and in from the side on a wider screen.
+                messages in the bell at the top of the site, and up to {MAX_NOTICE_CATEGORIES}{" "}
+                categories for full-page notices. The bell is for signed-in people. Full-page
+                notices can be <strong>members only</strong> or <strong>public</strong> (anyone can
+                open them on <Link href="/notices">Notices</Link> without signing in). The bell
+                opens a drawer on phone and desktop — sliding up from the bottom on a phone, and in
+                from the side on a wider screen. The drawer footer has{" "}
+                <strong>Browse all notices</strong>, which opens the Notices page.
               </p>
+              <p className="font-medium text-foreground">Categories</p>
+              <p>
+                Categories only apply to full-page notices. Add, rename, reorder, or remove them at
+                the top of the Notices settings page. Keep at least one. You cannot remove a category
+                that still has notices — move or remove those first.
+              </p>
+              <p className="font-medium text-foreground">Bell only or full page</p>
               <Steps>
-                <li>Add a title and a message. On a phone, Add notice is full width.</li>
+                <li>
+                  Choose <strong>Bell only</strong> for a short message that stays in the drawer, or{" "}
+                  <strong>Full page</strong> for a teaser in the bell plus a longer article on{" "}
+                  <Link href="/notices">Notices</Link>.
+                </li>
+                <li>
+                  For a full page, choose <strong>Who can open it</strong>: Members only, or Public
+                  (no sign-in). Public notices still show in the bell for signed-in members.
+                </li>
+                <li>
+                  Add a title and a short bell message (also used as the card excerpt for full-page
+                  notices). For a full page, pick a category and write the long text.
+                </li>
                 <li>
                   Members see a number on the bell for how many notices they have not read yet
-                  (up to 9+). Unread rows in the drawer show a <strong>New</strong> badge. They
-                  clear when someone chooses <strong>Mark all as read</strong>. Opening the bell
-                  does not clear them on its own.
+                  (up to 9+). Unread rows show a <strong>New</strong> badge. Tapping a bell-only
+                  row marks that notice read. Tapping a full-page row opens the article and marks it
+                  read. <strong>Mark all as read</strong> clears everything at once. Opening the
+                  bell does not clear them on its own.
                 </li>
               </Steps>
               <p>
-                If you edit a notice, it shows as new again for everyone — the “already read” marks
-                are cleared.
+                On <Link href="/notices">Notices</Link>, people can search and filter by category.
+                Guests only see public notices; signed-in members see public and members-only.
+                Each full-page notice is a card in a grid (title, category, date, teaser). There are
+                no cover images — text only. If you edit a notice, it shows as new again for everyone
+                — the “already read” marks are cleared.
               </p>
             </GuideBody>
           </AccordionContent>
@@ -658,9 +698,9 @@ export function OrganiserGuide() {
                 them, and “View all” opens their full History. Only walks that have actually
                 finished (or been cancelled) show up there; a walk they’re still out on right now
                 doesn’t count as history yet. History in the menu is every finished or cancelled
-                walk they’ve clocked in to, grouped by year, with a search box, and tapping
-                anywhere on a row opens that walk too. Previous and Next appear if they have more
-                than 20 walks.
+                walk they’ve clocked in to, grouped by year, with a search box plus filters for
+                status and year, and tapping anywhere on a row opens that walk too. Previous and Next
+                appear if they have more than 20 walks.
               </p>
             </GuideBody>
           </AccordionContent>
@@ -685,6 +725,9 @@ export function OrganiserGuide() {
                 </li>
                 <li>
                   <strong>Notices</strong> — {MAX_SITE_NOTICES}
+                </li>
+                <li>
+                  <strong>Notice categories</strong> — {MAX_NOTICE_CATEGORIES}
                 </li>
                 <li>
                   <strong>Together goal</strong> — optional, up to {MAX_MONTHLY_CLOCK_IN_GOAL}{" "}
