@@ -25,6 +25,46 @@ function writeConsentCookie(value: "true" | "false") {
   document.cookie = `${CONSENT_COOKIE}=${value}; path=/; max-age=${CONSENT_MAX_AGE}; SameSite=Lax`;
 }
 
+/**
+ * Touches that start on a fixed bottom banner never reach the document, so
+ * the page feels “stuck” while the notice is open. Forward vertical pans to
+ * window scroll; leave taps/button presses alone.
+ */
+function useForwardPageScroll(
+  rootRef: React.RefObject<HTMLElement | null>,
+  enabled: boolean,
+) {
+  React.useEffect(() => {
+    if (!enabled) return;
+    const root = rootRef.current;
+    if (!root) return;
+
+    let lastY = 0;
+    const onTouchStart = (event: TouchEvent) => {
+      lastY = event.touches[0]?.clientY ?? 0;
+    };
+    const onTouchMove = (event: TouchEvent) => {
+      const y = event.touches[0]?.clientY ?? lastY;
+      const dy = lastY - y;
+      lastY = y;
+      if (dy !== 0) window.scrollBy(0, dy);
+    };
+    const onWheel = (event: WheelEvent) => {
+      if (event.deltaY === 0) return;
+      window.scrollBy(0, event.deltaY);
+    };
+
+    root.addEventListener("touchstart", onTouchStart, { passive: true });
+    root.addEventListener("touchmove", onTouchMove, { passive: true });
+    root.addEventListener("wheel", onWheel, { passive: true });
+    return () => {
+      root.removeEventListener("touchstart", onTouchStart);
+      root.removeEventListener("touchmove", onTouchMove);
+      root.removeEventListener("wheel", onWheel);
+    };
+  }, [enabled, rootRef]);
+}
+
 interface CookieConsentProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "small" | "mini";
   demo?: boolean;
@@ -49,8 +89,20 @@ const CookieConsent = React.forwardRef<HTMLDivElement, CookieConsentProps>(
     ref,
   ) => {
     const titleId = React.useId();
+    const localRef = React.useRef<HTMLDivElement | null>(null);
     const [isOpen, setIsOpen] = React.useState(false);
     const [hide, setHide] = React.useState(true);
+
+    const setRefs = React.useCallback(
+      (node: HTMLDivElement | null) => {
+        localRef.current = node;
+        if (typeof ref === "function") ref(node);
+        else if (ref) ref.current = node;
+      },
+      [ref],
+    );
+
+    useForwardPageScroll(localRef, isOpen && !hide);
 
     const dismiss = React.useCallback((next: "true" | "false") => {
       setIsOpen(false);
@@ -82,6 +134,26 @@ const CookieConsent = React.forwardRef<HTMLDivElement, CookieConsentProps>(
       }
     }, [demo]);
 
+    // Keep page content reachable above the fixed banner while it is visible.
+    React.useEffect(() => {
+      if (hide || !isOpen) return;
+      const root = localRef.current;
+      if (!root) return;
+      const syncPad = () => {
+        document.documentElement.style.setProperty(
+          "--cookie-consent-pad",
+          `${Math.ceil(root.getBoundingClientRect().height)}px`,
+        );
+      };
+      syncPad();
+      const observer = new ResizeObserver(syncPad);
+      observer.observe(root);
+      return () => {
+        observer.disconnect();
+        document.documentElement.style.removeProperty("--cookie-consent-pad");
+      };
+    }, [hide, isOpen]);
+
     if (hide) return null;
 
     const containerClasses = cn(
@@ -105,7 +177,7 @@ const CookieConsent = React.forwardRef<HTMLDivElement, CookieConsentProps>(
           : "bottom-0 left-0 right-0 w-full pb-[env(safe-area-inset-bottom)] sm:bottom-4 sm:left-4 sm:max-w-md sm:pb-0",
       ),
       "data-slot": "cookie-consent",
-      ref,
+      ref: setRefs,
       role: "region" as const,
     };
 

@@ -151,7 +151,9 @@ function AlertDialogHeader({ className, ...props }: React.ComponentProps<"div">)
   return (
     <div
       data-slot="alert-dialog-header"
-      className={cn("flex flex-col gap-2 pr-11 text-center sm:text-left", className)}
+      // Equal side padding on small screens so text-center is visually centred
+      // despite the absolute close button; desktop stays left-aligned.
+      className={cn("flex flex-col gap-2 px-8 text-center sm:px-0 sm:pr-11 sm:text-left", className)}
       {...props}
     />
   );

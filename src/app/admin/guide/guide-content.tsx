@@ -16,7 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 /** Bump this whenever the guide is updated. */
-export const GUIDE_LAST_UPDATED = "30 August 2026";
+export const GUIDE_LAST_UPDATED = "31 August 2026";
 
 function Steps({ children }: { children: React.ReactNode }) {
   return <ol className="list-decimal pl-5 text-muted-foreground">{children}</ol>;
@@ -292,7 +292,8 @@ export function OrganiserGuide() {
               </p>
               <p>
                 Download roster (CSV) gives you names, emails, times, clock-out reasons, and any
-                health notes for that walk.
+                health notes for that walk. On a phone, the action buttons under the map (roster,
+                calendar, Duplicate, Cancel, Edit, Remove) scroll sideways in one row.
               </p>
             </GuideBody>
           </AccordionContent>
