@@ -57,6 +57,10 @@ import { stripImageMetadata } from "@/lib/strip-image-metadata";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { allocateWalkSlug } from "@/lib/walk-slug";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
+import {
+  DEFAULT_COOKIE_CONSENT_VARIANT,
+  parseCookieConsentVariant,
+} from "@/lib/cookie-consent-variant";
 import { MAX_MONTHLY_CLOCK_IN_GOAL } from "@/lib/walk-game";
 import {
   DEFAULT_FAQS,
@@ -2441,6 +2445,47 @@ export async function updateScrollToTopEnabled(
   return { ok: true, message: enabled ? "Back to top is on." : "Back to top is off." };
 }
 
+export async function updateCookieConsentVariant(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const variant = parseCookieConsentVariant(String(formData.get("cookieConsentVariant") ?? ""));
+  if (!variant) {
+    return { ok: false, error: "Choose a cookie notice layout." };
+  }
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        carouselEnabled: true,
+        scrollToTopEnabled: true,
+        cookieConsentVariant: variant,
+      },
+      update: { cookieConsentVariant: variant },
+    });
+  } catch (err) {
+    return logActionError("updateCookieConsentVariant", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/display");
+  return {
+    ok: true,
+    message:
+      variant === "default"
+        ? "Cookie notice set to the full layout."
+        : variant === "mini"
+          ? "Cookie notice set to the mini layout."
+          : "Cookie notice set to the compact layout.",
+  };
+}
+
 function parseMonthlyClockInGoal(raw: string): number | null | "invalid" {
   const trimmed = raw.trim();
   if (trimmed === "") return null;
@@ -2936,12 +2981,14 @@ export async function resetSiteToDefault(
           primaryColor: DEFAULT_PRIMARY_COLOR,
           carouselEnabled: true,
           scrollToTopEnabled: true,
+          cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
           monthlyClockInGoal: null,
         },
         update: {
           primaryColor: DEFAULT_PRIMARY_COLOR,
           carouselEnabled: true,
           scrollToTopEnabled: true,
+          cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
           monthlyClockInGoal: null,
         },
       });

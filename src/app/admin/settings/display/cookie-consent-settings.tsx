@@ -1,0 +1,81 @@
+"use client";
+
+import { startTransition, useActionState, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { updateCookieConsentVariant, type ActionResult } from "@/server/actions";
+import {
+  COOKIE_CONSENT_VARIANTS,
+  cookieConsentVariantLabel,
+  type CookieConsentVariant,
+} from "@/lib/cookie-consent-variant";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { SettingsSection } from "../settings-page";
+
+export function CookieConsentSettings({ variant }: { variant: CookieConsentVariant }) {
+  const [selected, setSelected] = useState(variant);
+  const [state, dispatch, isPending] = useActionState<ActionResult | null, FormData>(
+    updateCookieConsentVariant,
+    null,
+  );
+
+  useEffect(() => setSelected(variant), [variant]);
+
+  useEffect(() => {
+    if (!state) return;
+    if (state.ok) {
+      if (state.message) toast.success(state.message);
+    } else {
+      setSelected(variant);
+      toast.error(state.error);
+    }
+  }, [state, variant]);
+
+  function onVariantChange(next: CookieConsentVariant) {
+    if (next === selected) return;
+    setSelected(next);
+    const formData = new FormData();
+    formData.set("cookieConsentVariant", next);
+    startTransition(() => {
+      dispatch(formData);
+    });
+  }
+
+  return (
+    <SettingsSection
+      description="First-time visitors see this at the bottom of the screen until they choose Accept or Decline. The choice is remembered for a year."
+      title="Cookie notice"
+    >
+      <div className="flex max-w-md flex-col gap-2">
+        <Label htmlFor="cookie-consent-variant">Layout</Label>
+        <Select
+          disabled={isPending}
+          onValueChange={(value) => onVariantChange(value as CookieConsentVariant)}
+          value={selected}
+        >
+          <SelectTrigger id="cookie-consent-variant">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {COOKIE_CONSENT_VARIANTS.map((item) => (
+              <SelectItem key={item} value={item}>
+                {cookieConsentVariantLabel(item)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {isPending ? <span className="text-xs text-muted-foreground">Saving…</span> : null}
+        <p className="text-xs text-muted-foreground">
+          To preview on the live site after saving, clear the <code>cookieConsent</code> cookie in
+          your browser, or use a private window.
+        </p>
+      </div>
+    </SettingsSection>
+  );
+}

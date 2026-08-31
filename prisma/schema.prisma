@@ -241,6 +241,8 @@ model SiteSetting {
   carouselEnabled     Boolean  @default(true)
   /// When false, the floating back-to-top button is hidden.
   scrollToTopEnabled  Boolean  @default(true)
+  /// Cookie banner layout: default, small, or mini.
+  cookieConsentVariant String  @default("small")
   /// Optional group clock-in target for the current UK month. Null hides Together.
   monthlyClockInGoal  Int?
   updatedAt           DateTime @updatedAt

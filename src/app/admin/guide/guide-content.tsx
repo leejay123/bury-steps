@@ -633,8 +633,10 @@ export function OrganiserGuide() {
               </p>
               <p>
                 Open <Link href="/admin/settings/display">Display</Link> to turn the{" "}
-                <strong>Back to top</strong> button off. When it is on, it appears after you scroll
-                down, on the public site and in Organiser tools.
+                <strong>Back to top</strong> button off, or to pick how the cookie notice looks —
+                <strong> Default</strong> (full card), <strong>Small</strong> (compact), or{" "}
+                <strong>Mini</strong> (slim strip). When Back to top is on, it appears after you
+                scroll down, on the public site and in Organiser tools.
               </p>
               <p>
                 Open <Link href="/admin/settings/cache">Site cache</Link> if the public homepage
@@ -692,9 +694,10 @@ export function OrganiserGuide() {
                 off in Display.
               </p>
               <p>
-                First-time visitors see a compact cookie notice at the bottom of the screen, with
-                Accept and Decline. Either choice is remembered for a year. The site does not use
-                advertising cookies. Clerk still uses cookies that are needed to sign in. Vercel
+                First-time visitors see a cookie notice at the bottom of the screen, with Accept
+                and Decline. Organisers choose the layout under{" "}
+                <Link href="/admin/settings/display">Display</Link> (Default, Small, or Mini).
+                Either choice is remembered for a year. The site does not use advertising cookies. Clerk still uses cookies that are needed to sign in. Vercel
                 Analytics counts page views to show which pages are popular, without a cookie or a
                 per-person ID, so it is not affected by Accept or Decline. The notice links to the{" "}
                 <Link href="/privacy-policy">Privacy Policy</Link>.

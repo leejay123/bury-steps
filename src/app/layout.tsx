@@ -14,7 +14,7 @@ import { FullWidthDivider } from "@/components/full-width-divider";
 import { MotionPage } from "@/components/motion";
 import { BackToTopGate } from "@/components/back-to-top-gate";
 import { UnlockPageOnNavigate, UnlockingLink } from "@/components/overlay-root";
-import { SiteCookieConsent } from "@/components/site-cookie-consent";
+import { SiteCookieConsentGate } from "@/components/site-cookie-consent-gate";
 import "./globals.css";
 
 const SITE_NAME = "Bury Steps Walking Group";
@@ -134,7 +134,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <SiteFooter />
           </div>
           <Toaster duration={2800} position="top-center" />
-          <SiteCookieConsent />
+          <Suspense fallback={null}>
+            <SiteCookieConsentGate />
+          </Suspense>
           <Suspense fallback={null}>
             <BackToTopGate />
           </Suspense>
