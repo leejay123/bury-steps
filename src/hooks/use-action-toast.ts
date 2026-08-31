@@ -54,11 +54,11 @@ export function useNotifyActionState(action: ServerAction, onOk?: () => void) {
 
   const wrapped = useCallback(async (prev: ActionResult | null, formData: FormData) => {
     const result = await actionRef.current(prev, formData);
-    notifyActionResult(result, () => onOkRef.current?.());
+    // Refresh before onOk so closing a drawer/form does not cancel the refresh.
     if (result.ok && !result.href) {
-      // Server already revalidated; refresh so siblings that stayed mounted update.
-      queueMicrotask(() => router.refresh());
+      router.refresh();
     }
+    notifyActionResult(result, () => onOkRef.current?.());
     return result;
   }, [router]);
 
@@ -78,7 +78,6 @@ export function useActionToast(state: ActionResult | null, onOk?: () => void) {
   useEffect(() => {
     if (!state) return;
     if (state.ok) {
-      onOkRef.current?.();
       unlockIdleDocument();
       if (state.href) {
         const href = state.href;
@@ -91,8 +90,11 @@ export function useActionToast(state: ActionResult | null, onOk?: () => void) {
         return;
       }
       toast.success(state.message ?? "Saved.");
-      const id = window.setTimeout(() => router.refresh(), 0);
-      return () => window.clearTimeout(id);
+      // Refresh before onOk — if onOk unmounts this form, a deferred refresh
+      // would be cleaned up and sibling lists would stay stale.
+      router.refresh();
+      onOkRef.current?.();
+      return;
     }
     toast.error(state.error);
   }, [router, state]);

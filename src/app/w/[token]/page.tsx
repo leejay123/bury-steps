@@ -107,12 +107,6 @@ export default async function WalkLinkPage({
   const walk = await getWalkByShareKey(token);
   if (!walk) notFound();
 
-  const slug = await ensureWalkSlug(walk);
-  if (token === walk.token && slug !== walk.token) {
-    redirect(`/w/${slug}`);
-  }
-
-  const walkUrl = walkShareUrl(appUrl(), { token: walk.token, slug });
   const user = await getOptionalUser();
   const status = walkStatus({
     cancelledAt: walk.cancelledAt,
@@ -120,12 +114,18 @@ export default async function WalkLinkPage({
     startsAt: walk.startsAt,
   });
 
-  // Members and visitors cannot open a cancelled walk. Organisers still can
-  // (from the share link or Admin → Walks) so they can check details and reopen.
+  // Members and visitors cannot open a cancelled walk. Check before the
+  // token→slug redirect so cancelled walks do not reveal their share slug.
   if (status === "cancelled" && user?.role !== "ADMIN") {
     notFound();
   }
 
+  const slug = await ensureWalkSlug(walk);
+  if (token === walk.token && slug !== walk.token) {
+    redirect(`/w/${slug}`);
+  }
+
+  const walkUrl = walkShareUrl(appUrl(), { token: walk.token, slug });
   const completed = status === "completed";
 
   const alreadyIn = user

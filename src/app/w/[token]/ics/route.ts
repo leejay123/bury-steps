@@ -26,9 +26,9 @@ export async function GET(
     },
   });
 
-  if (!walk) return new NextResponse("Not found", { status: 404 });
-  if (!canAddWalkToCalendar(walk)) {
-    return new NextResponse("This walk cannot be added to a calendar.", { status: 404 });
+  // Same 404 body for missing, cancelled, and completed — no calendar oracle.
+  if (!walk || !canAddWalkToCalendar(walk)) {
+    return new NextResponse("Not found", { status: 404 });
   }
 
   const ics = buildWalkIcs(walk);

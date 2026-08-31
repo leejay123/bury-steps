@@ -56,6 +56,7 @@ import { isAllowedImageMime, sniffImageMime } from "@/lib/image-bytes";
 import { stripImageMetadata } from "@/lib/strip-image-metadata";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { allocateWalkSlug } from "@/lib/walk-slug";
+import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
 import { MAX_MONTHLY_CLOCK_IN_GOAL } from "@/lib/walk-game";
 import {
   DEFAULT_FAQS,
@@ -69,6 +70,7 @@ import { safeAppPath } from "@/lib/urls";
 
 /** Stable unguessable id for clock-in forms. Old /w/<token> links still work. */
 const makeToken = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 12);
+const slugSuffix = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 6);
 
 function revalidateWalkShare(walk: { token: string; slug?: string | null }) {
   revalidatePath(`/w/${walk.token}`);
@@ -108,21 +110,6 @@ export type ActionResult =
  * can be reported with its own message instead of the generic
  * logActionError fallback. */
 class LimitReachedError extends Error {}
-
-/** Distinct advisory-lock keys, one per resource whose "count existing
- * rows, reject at the limit, otherwise create one" needs to be atomic —
- * arbitrary distinct bigints, meaningful only as lock identifiers, chosen
- * to avoid colliding with syncLocalUser's bootstrap lock (847291). */
-const COUNT_LIMIT_LOCK_KEYS = {
-  homepageSlide: 900101,
-  homepageTestimonial: 900102,
-  homepageFaq: 900103,
-  homepageFaqCategory: 900104,
-  siteNotice: 900105,
-  siteNoticeCategory: 900106,
-  lastAdmin: 900107,
-  journeyEvent: 900108,
-} as const;
 
 /**
  * Serializes a "count existing rows, reject if at the limit, otherwise
@@ -198,28 +185,35 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
   }
 
   const pin = await walkPinFromForm(formData, parsed.data.location, parsed.data.postcode);
-  const slug = await allocateWalkSlug(parsed.data.title);
 
-  let walk: { title: string; token: string; slug: string | null };
-  try {
-    walk = await prisma.walk.create({
-      data: {
-        token: makeToken(),
-        slug,
-        title: parsed.data.title,
-        description: parsed.data.description ?? null,
-        location: parsed.data.location ?? null,
-        postcode: pin.postcode,
-        latitude: pin.latitude,
-        longitude: pin.longitude,
-        startsAt,
-        durationMins: parsed.data.durationMins,
-        createdById: admin.id,
-      },
-      select: { title: true, token: true, slug: true },
-    });
-  } catch (err) {
-    return logActionError("createWalk", err, "Could not create the walk. Try again.");
+  let walk: { title: string; token: string; slug: string | null } | null = null;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const slug = await allocateWalkSlug(parsed.data.title);
+    try {
+      walk = await prisma.walk.create({
+        data: {
+          token: makeToken(),
+          slug,
+          title: parsed.data.title,
+          description: parsed.data.description ?? null,
+          location: parsed.data.location ?? null,
+          postcode: pin.postcode,
+          latitude: pin.latitude,
+          longitude: pin.longitude,
+          startsAt,
+          durationMins: parsed.data.durationMins,
+          createdById: admin.id,
+        },
+        select: { title: true, token: true, slug: true },
+      });
+      break;
+    } catch (err) {
+      if (isPrismaCode(err, "P2002") && attempt < 4) continue;
+      return logActionError("createWalk", err, "Could not create the walk. Try again.");
+    }
+  }
+  if (!walk) {
+    return { ok: false, error: "Could not create the walk. Try again." };
   }
 
   revalidatePath("/admin");
@@ -257,28 +251,35 @@ export async function duplicateWalk(
   while (isWalkStartInThePast(startsAt)) {
     startsAt = new Date(startsAt.getTime() + 7 * 24 * 60 * 60 * 1000);
   }
-  const slug = await allocateWalkSlug(source.title);
 
-  let walk: { id: string; title: string; token: string; slug: string | null };
-  try {
-    walk = await prisma.walk.create({
-      data: {
-        token: makeToken(),
-        slug,
-        title: source.title,
-        description: source.description,
-        location: source.location,
-        postcode: source.postcode,
-        latitude: source.latitude,
-        longitude: source.longitude,
-        startsAt,
-        durationMins: source.durationMins,
-        createdById: admin.id,
-      },
-      select: { id: true, title: true, token: true, slug: true },
-    });
-  } catch (err) {
-    return logActionError("duplicateWalk", err, "Could not duplicate this walk. Try again.");
+  let walk: { id: string; title: string; token: string; slug: string | null } | null = null;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const slug = await allocateWalkSlug(source.title);
+    try {
+      walk = await prisma.walk.create({
+        data: {
+          token: makeToken(),
+          slug,
+          title: source.title,
+          description: source.description,
+          location: source.location,
+          postcode: source.postcode,
+          latitude: source.latitude,
+          longitude: source.longitude,
+          startsAt,
+          durationMins: source.durationMins,
+          createdById: admin.id,
+        },
+        select: { id: true, title: true, token: true, slug: true },
+      });
+      break;
+    } catch (err) {
+      if (isPrismaCode(err, "P2002") && attempt < 4) continue;
+      return logActionError("duplicateWalk", err, "Could not duplicate this walk. Try again.");
+    }
+  }
+  if (!walk) {
+    return { ok: false, error: "Could not duplicate this walk. Try again." };
   }
 
   revalidatePath("/admin");
@@ -327,41 +328,54 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
     return { ok: false, error: "Keep the reason under 500 characters." };
   }
 
-  const walk = await prisma.walk.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      token: true,
-      slug: true,
-      cancelledAt: true,
-      startsAt: true,
-      durationMins: true,
-    },
-  });
-  if (!walk) return { ok: false, error: "That walk is no longer there." };
-  if (walk.cancelledAt) return { ok: false, error: "This walk is already cancelled." };
-  if (walkStatus(walk) === "completed") {
-    return { ok: false, error: "This walk has already finished, so it can't be cancelled." };
-  }
-
+  // Same journeyEvent lock as create/update/delete journey so cancel cannot
+  // race with a journey write that already passed its cancelledAt check.
+  let walk: { token: string; slug: string | null };
   try {
-    await prisma.walk.update({
-      where: { id },
-      data: {
-        cancelledAt: new Date(),
-        cancelledReason: reason || null,
-      },
+    walk = await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.journeyEvent, async (tx) => {
+      const current = await tx.walk.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          token: true,
+          slug: true,
+          cancelledAt: true,
+          startsAt: true,
+          durationMins: true,
+        },
+      });
+      if (!current) throw new Error("WALK_GONE");
+      if (current.cancelledAt) {
+        throw new LimitReachedError("This walk is already cancelled.");
+      }
+      if (walkStatus(current) === "completed") {
+        throw new LimitReachedError("This walk has already finished, so it can't be cancelled.");
+      }
+
+      try {
+        await tx.walk.update({
+          where: { id },
+          data: {
+            cancelledAt: new Date(),
+            cancelledReason: reason || null,
+          },
+        });
+      } catch (err) {
+        logActionError("cancelWalk:withReason", err);
+        await tx.walk.update({
+          where: { id },
+          data: { cancelledAt: new Date() },
+        });
+      }
+
+      return { token: current.token, slug: current.slug };
     });
   } catch (err) {
-    logActionError("cancelWalk:withReason", err);
-    try {
-      await prisma.walk.update({
-        where: { id },
-        data: { cancelledAt: new Date() },
-      });
-    } catch (err2) {
-      return logActionError("cancelWalk", err2, "Could not cancel this walk. Try again.");
+    if (err instanceof LimitReachedError) return { ok: false, error: err.message };
+    if (err instanceof Error && err.message === "WALK_GONE") {
+      return { ok: false, error: "That walk is no longer there." };
     }
+    return logActionError("cancelWalk", err, "Could not cancel this walk. Try again.");
   }
 
   revalidatePath("/admin");
@@ -466,31 +480,38 @@ export async function updateWalk(
   }
 
   const pin = await walkPinFromForm(formData, parsed.data.location, parsed.data.postcode);
-  const slug = await allocateWalkSlug(parsed.data.title, id);
 
-  let walk: { token: string; slug: string | null };
-  try {
-    walk = await prisma.walk.update({
-      where: { id },
-      data: {
-        title: parsed.data.title,
-        description: parsed.data.description ?? null,
-        startsAt,
-        durationMins,
-        location: parsed.data.location ?? null,
-        postcode: pin.postcode,
-        latitude: pin.latitude,
-        longitude: pin.longitude,
-        slug,
-        ...(parsed.data.reopen === "on" || wasCancelled
-          ? { cancelledAt: null, cancelledReason: null }
-          : {}),
-      },
-      select: { token: true, slug: true },
-    });
-  } catch (err) {
-    if (isPrismaCode(err, "P2025")) return { ok: false, error: "That walk is no longer there." };
-    return logActionError("updateWalk", err, "Could not update this walk. Try again.");
+  let walk: { token: string; slug: string | null } | null = null;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const slug = await allocateWalkSlug(parsed.data.title, id);
+    try {
+      walk = await prisma.walk.update({
+        where: { id },
+        data: {
+          title: parsed.data.title,
+          description: parsed.data.description ?? null,
+          startsAt,
+          durationMins,
+          location: parsed.data.location ?? null,
+          postcode: pin.postcode,
+          latitude: pin.latitude,
+          longitude: pin.longitude,
+          slug,
+          ...(parsed.data.reopen === "on" || wasCancelled
+            ? { cancelledAt: null, cancelledReason: null }
+            : {}),
+        },
+        select: { token: true, slug: true },
+      });
+      break;
+    } catch (err) {
+      if (isPrismaCode(err, "P2025")) return { ok: false, error: "That walk is no longer there." };
+      if (isPrismaCode(err, "P2002") && attempt < 4) continue;
+      return logActionError("updateWalk", err, "Could not update this walk. Try again.");
+    }
+  }
+  if (!walk) {
+    return { ok: false, error: "Could not update this walk. Try again." };
   }
 
   revalidatePath("/admin");
@@ -643,48 +664,55 @@ export async function updateJourneyEvent(
   }
 
   try {
-    const existing = await prisma.walkJourneyEvent.findUnique({
-      where: { id: parsed.data.eventId },
-      select: {
-        id: true,
-        walkId: true,
-        walk: {
-          select: {
-            id: true,
-            token: true,
-            slug: true,
-            startsAt: true,
-            durationMins: true,
-            cancelledAt: true,
+    const walk = await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.journeyEvent, async (tx) => {
+      const existing = await tx.walkJourneyEvent.findUnique({
+        where: { id: parsed.data.eventId },
+        select: {
+          id: true,
+          walkId: true,
+          walk: {
+            select: {
+              id: true,
+              token: true,
+              slug: true,
+              startsAt: true,
+              durationMins: true,
+              cancelledAt: true,
+            },
           },
         },
-      },
-    });
-    if (!existing || existing.walkId !== parsed.data.walkId) {
-      return { ok: false, error: "That event is no longer there." };
-    }
-    if (!canOrganiserEditJourney(existing.walk)) {
-      return {
-        ok: false,
-        error: existing.walk.cancelledAt
-          ? "Cancelled walks keep their journey, but you cannot edit it."
-          : "Journey events can be edited once the walk has started.",
-      };
-    }
+      });
+      if (!existing || existing.walkId !== parsed.data.walkId) {
+        throw new Error("EVENT_GONE");
+      }
+      if (!canOrganiserEditJourney(existing.walk)) {
+        throw new LimitReachedError(
+          existing.walk.cancelledAt
+            ? "Cancelled walks keep their journey, but you cannot edit it."
+            : "Journey events can be edited once the walk has started.",
+        );
+      }
 
-    await prisma.walkJourneyEvent.update({
-      where: { id: existing.id },
-      data: {
-        title: parsed.data.title,
-        body: parsed.data.body || null,
-        happenedAt: londonWallClockToUtc(parsed.data.happenedAt),
-      },
+      await tx.walkJourneyEvent.update({
+        where: { id: existing.id },
+        data: {
+          title: parsed.data.title,
+          body: parsed.data.body || null,
+          happenedAt: londonWallClockToUtc(parsed.data.happenedAt),
+        },
+      });
+
+      return existing.walk;
     });
 
-    revalidatePath(`/admin/walks/${existing.walk.id}`);
-    revalidateWalkShare(existing.walk);
+    revalidatePath(`/admin/walks/${walk.id}`);
+    revalidateWalkShare(walk);
     return { ok: true, message: "Event updated." };
   } catch (err) {
+    if (err instanceof LimitReachedError) return { ok: false, error: err.message };
+    if (err instanceof Error && err.message === "EVENT_GONE") {
+      return { ok: false, error: "That event is no longer there." };
+    }
     return logActionError("updateJourneyEvent", err);
   }
 }
@@ -699,32 +727,44 @@ export async function deleteJourneyEvent(
   if (!eventId) return { ok: false, error: "That event is no longer there." };
 
   try {
-    const existing = await prisma.walkJourneyEvent.findUnique({
-      where: { id: eventId },
-      select: {
-        id: true,
-        walk: {
-          select: {
-            id: true,
-            token: true,
-            slug: true,
-            startsAt: true,
-            durationMins: true,
-            cancelledAt: true,
+    const walk = await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.journeyEvent, async (tx) => {
+      const existing = await tx.walkJourneyEvent.findUnique({
+        where: { id: eventId },
+        select: {
+          id: true,
+          walk: {
+            select: {
+              id: true,
+              token: true,
+              slug: true,
+              startsAt: true,
+              durationMins: true,
+              cancelledAt: true,
+            },
           },
         },
-      },
-    });
-    if (!existing) return { ok: false, error: "That event is no longer there." };
-    if (existing.walk.cancelledAt) {
-      return { ok: false, error: "Cancelled walks keep their journey as it is." };
-    }
+      });
+      if (!existing) throw new Error("EVENT_GONE");
+      if (!canOrganiserEditJourney(existing.walk)) {
+        throw new LimitReachedError(
+          existing.walk.cancelledAt
+            ? "Cancelled walks keep their journey as it is."
+            : "Journey events can be removed once the walk has started.",
+        );
+      }
 
-    await prisma.walkJourneyEvent.delete({ where: { id: existing.id } });
-    revalidatePath(`/admin/walks/${existing.walk.id}`);
-    revalidateWalkShare(existing.walk);
+      await tx.walkJourneyEvent.delete({ where: { id: existing.id } });
+      return existing.walk;
+    });
+
+    revalidatePath(`/admin/walks/${walk.id}`);
+    revalidateWalkShare(walk);
     return { ok: true, message: "Event removed." };
   } catch (err) {
+    if (err instanceof LimitReachedError) return { ok: false, error: err.message };
+    if (err instanceof Error && err.message === "EVENT_GONE") {
+      return { ok: false, error: "That event is no longer there." };
+    }
     return logActionError("deleteJourneyEvent", err);
   }
 }
@@ -789,7 +829,8 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
       const locked = rows[0];
       if (!locked) return { ok: false as const, error: "This walk link is not valid." };
       if (locked.cancelledAt) {
-        return { ok: false as const, error: "This walk has been cancelled." };
+        // Same copy as a missing token so cancellation is not an oracle.
+        return { ok: false as const, error: "This walk link is not valid." };
       }
 
       const state = windowState(locked.startsAt, locked.durationMins);
@@ -933,72 +974,94 @@ export async function adminClockIn(
     return { ok: false, error: parsed.error.issues[0].message };
   }
 
-  const walk = await prisma.walk.findUnique({
-    where: { id: parsed.data.walkId },
-    select: {
-      id: true,
-      token: true,
-      slug: true,
-      startsAt: true,
-      durationMins: true,
-      cancelledAt: true,
-    },
-  });
-  if (!walk) return { ok: false, error: "That walk is no longer there." };
-  if (!canOrganiserAddAttendance(walk)) {
-    if (walk.cancelledAt) {
-      return { ok: false, error: "Reopen this walk before adding someone to it." };
-    }
-    return { ok: false, error: "You can add someone from an hour before the walk starts." };
-  }
-
   const member = await prisma.user.findUnique({
     where: { id: parsed.data.userId },
     select: { id: true, firstName: true, lastName: true, email: true },
   });
   if (!member) return { ok: false, error: "That member is no longer there." };
 
-  const existingAttendance = await prisma.attendance.findUnique({
-    where: { walkId_userId: { walkId: walk.id, userId: member.id } },
-    select: { id: true, clockedOutAt: true },
-  });
-
-  const window = windowState(walk.startsAt, walk.durationMins);
-  if (existingAttendance) {
-    if (window === "closed" || !existingAttendance.clockedOutAt) {
-      return { ok: false, error: `${displayName(member)} is already on this walk’s list.` };
-    }
-  }
-
-  const now = new Date();
-  const clockedInAt = organiserRecordedClockInAt(walk, now);
-  const purgeAfter = new Date(
-    walk.startsAt.getTime() + CONDITIONS_RETENTION_DAYS * 24 * 60 * 60 * 1000,
-  );
-  const attendanceData = {
-    clockedInAt,
-    medicalAckAt: now,
-    conditions: null,
-    conditionsPurgeAfter: purgeAfter,
-    clockedOutAt: null,
-    clockedOutReason: null,
-  };
+  let walk: { id: string; token: string; slug: string | null };
+  let window: ReturnType<typeof windowState>;
 
   try {
-    if (existingAttendance) {
-      await prisma.attendance.update({
-        where: { id: existingAttendance.id },
-        data: attendanceData,
+    const outcome = await prisma.$transaction(async (tx) => {
+      const rows = await tx.$queryRaw<
+        Array<{
+          id: string;
+          token: string;
+          slug: string | null;
+          startsAt: Date;
+          durationMins: number;
+          cancelledAt: Date | null;
+        }>
+      >`SELECT id, token, slug, "startsAt", "durationMins", "cancelledAt"
+        FROM "Walk" WHERE id = ${parsed.data.walkId} FOR UPDATE`;
+      const locked = rows[0];
+      if (!locked) return { ok: false as const, error: "That walk is no longer there." };
+      if (!canOrganiserAddAttendance(locked)) {
+        if (locked.cancelledAt) {
+          return { ok: false as const, error: "Reopen this walk before adding someone to it." };
+        }
+        return {
+          ok: false as const,
+          error: "You can add someone from an hour before the walk starts.",
+        };
+      }
+
+      const existingAttendance = await tx.attendance.findUnique({
+        where: { walkId_userId: { walkId: locked.id, userId: member.id } },
+        select: { id: true, clockedOutAt: true },
       });
-    } else {
-      await prisma.attendance.create({
-        data: {
-          walkId: walk.id,
-          userId: member.id,
-          ...attendanceData,
-        },
-      });
-    }
+
+      const win = windowState(locked.startsAt, locked.durationMins);
+      if (existingAttendance) {
+        if (win === "closed" || !existingAttendance.clockedOutAt) {
+          return {
+            ok: false as const,
+            error: `${displayName(member)} is already on this walk’s list.`,
+          };
+        }
+      }
+
+      const now = new Date();
+      const clockedInAt = organiserRecordedClockInAt(locked, now);
+      const purgeAfter = new Date(
+        locked.startsAt.getTime() + CONDITIONS_RETENTION_DAYS * 24 * 60 * 60 * 1000,
+      );
+      const attendanceData = {
+        clockedInAt,
+        medicalAckAt: now,
+        conditions: null,
+        conditionsPurgeAfter: purgeAfter,
+        clockedOutAt: null,
+        clockedOutReason: null,
+      };
+
+      if (existingAttendance) {
+        await tx.attendance.update({
+          where: { id: existingAttendance.id },
+          data: attendanceData,
+        });
+      } else {
+        await tx.attendance.create({
+          data: {
+            walkId: locked.id,
+            userId: member.id,
+            ...attendanceData,
+          },
+        });
+      }
+
+      return {
+        ok: true as const,
+        walk: { id: locked.id, token: locked.token, slug: locked.slug },
+        window: win,
+      };
+    });
+
+    if (!outcome.ok) return { ok: false, error: outcome.error };
+    walk = outcome.walk;
+    window = outcome.window;
   } catch (err) {
     if (isPrismaCode(err, "P2002")) {
       return { ok: false, error: `${displayName(member)} is already on this walk’s list.` };
@@ -1055,13 +1118,23 @@ export async function adminRemoveAttendance(
     },
   });
   if (!attendance) return { ok: false, error: "That person is no longer on this walk." };
-  if (attendance.walk.cancelledAt) {
-    return { ok: false, error: "Reopen this walk before removing someone from it." };
-  }
 
   try {
-    await prisma.attendance.delete({ where: { id: attendance.id } });
+    await prisma.$transaction(async (tx) => {
+      const rows = await tx.$queryRaw<Array<{ id: string; cancelledAt: Date | null }>>`
+        SELECT id, "cancelledAt" FROM "Walk" WHERE id = ${attendance.walk.id} FOR UPDATE`;
+      const locked = rows[0];
+      if (!locked) throw new Error("WALK_GONE");
+      if (locked.cancelledAt) {
+        throw new LimitReachedError("Reopen this walk before removing someone from it.");
+      }
+      await tx.attendance.delete({ where: { id: attendance.id } });
+    });
   } catch (err) {
+    if (err instanceof LimitReachedError) return { ok: false, error: err.message };
+    if (err instanceof Error && err.message === "WALK_GONE") {
+      return { ok: false, error: "That walk is no longer there." };
+    }
     if (isPrismaCode(err, "P2025")) {
       return { ok: false, error: "That person is no longer on this walk." };
     }
@@ -1113,50 +1186,58 @@ export async function clockOut(_prev: ActionResult | null, formData: FormData): 
     id: string;
     token: string;
     slug: string | null;
-    startsAt: Date;
-    durationMins: number;
-    cancelledAt: Date | null;
   } | null;
-  try {
-    walk = await prisma.walk.findUnique({
-      where: { token: parsed.data.token },
-      select: {
-        id: true,
-        token: true,
-        slug: true,
-        startsAt: true,
-        durationMins: true,
-        cancelledAt: true,
-      },
-    });
-  } catch (err) {
-    return logActionError("clockOut:lookup", err, "Could not clock you out right now. Try again.");
-  }
-  if (!walk) return { ok: false, error: "This walk link is not valid." };
-  if (walk.cancelledAt) return { ok: false, error: "This walk has been cancelled." };
 
-  // Clocking out is for leaving early (or right at the end) while the walk
-  // is still under way — once its window has fully closed there's nothing
-  // left to leave early from. Anyone who never clocked out by then simply
-  // stayed for the whole walk, which needs no action from them.
-  if (windowState(walk.startsAt, walk.durationMins) === "closed") {
-    return { ok: false, error: "This walk has finished — there's no need to clock out." };
-  }
-
-  let clockedOut: { count: number };
   try {
-    clockedOut = await prisma.attendance.updateMany({
-      where: { walkId: walk.id, userId: user.id, clockedOutAt: null },
-      data: {
-        clockedOutAt: new Date(),
-        clockedOutReason: parsed.data.reason,
-      },
+    const outcome = await prisma.$transaction(async (tx) => {
+      const rows = await tx.$queryRaw<
+        Array<{
+          id: string;
+          token: string;
+          slug: string | null;
+          startsAt: Date;
+          durationMins: number;
+          cancelledAt: Date | null;
+        }>
+      >`SELECT id, token, slug, "startsAt", "durationMins", "cancelledAt"
+        FROM "Walk" WHERE token = ${parsed.data.token} FOR UPDATE`;
+      const locked = rows[0];
+      if (!locked || locked.cancelledAt) {
+        return { ok: false as const, error: "This walk link is not valid." };
+      }
+
+      // Clocking out is for leaving early (or right at the end) while the walk
+      // is still under way — once its window has fully closed there's nothing
+      // left to leave early from. Anyone who never clocked out by then simply
+      // stayed for the whole walk, which needs no action from them.
+      if (windowState(locked.startsAt, locked.durationMins) === "closed") {
+        return {
+          ok: false as const,
+          error: "This walk has finished — there's no need to clock out.",
+        };
+      }
+
+      const clockedOut = await tx.attendance.updateMany({
+        where: { walkId: locked.id, userId: user.id, clockedOutAt: null },
+        data: {
+          clockedOutAt: new Date(),
+          clockedOutReason: parsed.data.reason,
+        },
+      });
+      if (clockedOut.count === 0) {
+        return { ok: false as const, error: "You are not clocked in for this walk." };
+      }
+
+      return {
+        ok: true as const,
+        walk: { id: locked.id, token: locked.token, slug: locked.slug },
+      };
     });
+
+    if (!outcome.ok) return { ok: false, error: outcome.error };
+    walk = outcome.walk;
   } catch (err) {
     return logActionError("clockOut:write", err, "Could not clock you out right now. Try again.");
-  }
-  if (clockedOut.count === 0) {
-    return { ok: false, error: "You are not clocked in for this walk." };
   }
 
   revalidateWalkShare(walk);
@@ -1843,8 +1924,10 @@ async function uniqueNoticePageSlug(
   excludeId?: string,
 ): Promise<string> {
   const base = noticePageSlug(title);
+  // Random suffix (like walk share slugs) so /notices/{slug} cannot be guessed
+  // from the title alone.
   for (let n = 0; n < 25; n++) {
-    const slug = n === 0 ? base : `${base}-${n + 1}`;
+    const slug = `${base}-${slugSuffix()}`;
     const taken = await tx.siteNotice.findFirst({
       where: {
         slug,
@@ -2813,11 +2896,6 @@ export async function resetSiteToDefault(
   const limited = checkRateLimit(`${admin.id}:resetSiteToDefault`, 3, 10 * 60_000);
   if (!limited.ok) return { ok: false, error: "Try again in a few minutes." };
 
-  const otherMembers = await prisma.user.findMany({
-    where: { id: { not: admin.id } },
-    select: { clerkId: true },
-  });
-
   try {
     await prisma.$transaction(async (tx) => {
       await tx.accidentReport.deleteMany();
@@ -2906,17 +2984,32 @@ export async function resetSiteToDefault(
     return logActionError("resetSiteToDefault", err, "Could not reset the site. Try again.");
   }
 
+  // List Clerk after the DB wipe so anyone who signed up during the wipe is
+  // still revoked — do not trust a pre-transaction snapshot (TOCTOU).
   const clerk = await clerkClient();
   let clerkFailed = 0;
-  for (const member of otherMembers) {
-    try {
-      await clerk.users.deleteUser(member.clerkId);
-    } catch (err) {
-      if (!isNotFoundStatus(err)) {
-        clerkFailed += 1;
-        console.error("resetSiteToDefault: Clerk login removal failed", err);
+  try {
+    let offset = 0;
+    for (;;) {
+      const page = await clerk.users.getUserList({ limit: 100, offset });
+      if (page.data.length === 0) break;
+      for (const clerkUser of page.data) {
+        if (clerkUser.id === admin.clerkId) continue;
+        try {
+          await clerk.users.deleteUser(clerkUser.id);
+        } catch (err) {
+          if (!isNotFoundStatus(err)) {
+            clerkFailed += 1;
+            console.error("resetSiteToDefault: Clerk login removal failed", err);
+          }
+        }
       }
+      if (page.data.length < 100) break;
+      offset += page.data.length;
     }
+  } catch (err) {
+    clerkFailed += 1;
+    console.error("resetSiteToDefault: Clerk user list failed", err);
   }
 
   revalidateTag(HOMEPAGE_CACHE_TAG);

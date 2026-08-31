@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import { prisma } from "@/lib/db";
+import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
 import { syncLocalUser } from "@/lib/local-user";
 
 /**
@@ -41,35 +42,81 @@ export async function POST(req: NextRequest) {
   }
 
   if (evt.type === "user.deleted" && evt.data.id) {
-    // Someone can be removed straight from Clerk's dashboard rather than
-    // through the admin's own "remove member" flow, which reassigns walks
-    // and accident reports first. Do the same reassignment here so this
-    // doesn't fail on the foreign key when the departing member organised
-    // walks or filed a report.
+    // Same reassignment + last-organiser guard as admin "remove member", under
+    // the same advisory lock so concurrent demote/delete cannot wipe the last
+    // organiser. Journey events Restrict on creator — must reassign too.
     try {
-      const target = await prisma.user.findUnique({
-        where: { clerkId: evt.data.id },
-        select: { id: true },
-      });
-      if (target) {
-        const fallbackAdmin = await prisma.user.findFirst({
+      await prisma.$transaction(async (tx) => {
+        await tx.$executeRawUnsafe(
+          `SELECT pg_advisory_xact_lock(${COUNT_LIMIT_LOCK_KEYS.lastAdmin})`,
+        );
+
+        const target = await tx.user.findUnique({
+          where: { clerkId: evt.data.id },
+          select: {
+            id: true,
+            role: true,
+            _count: {
+              select: {
+                walksCreated: true,
+                accidentReports: true,
+                journeyEvents: true,
+              },
+            },
+          },
+        });
+        if (!target) return;
+
+        if (target.role === "ADMIN") {
+          const adminCount = await tx.user.count({ where: { role: "ADMIN" } });
+          if (adminCount <= 1) {
+            console.error(
+              "clerk webhook: refused to delete last organiser after Clerk user.deleted",
+            );
+            return;
+          }
+        }
+
+        const fallbackAdmin = await tx.user.findFirst({
           where: { role: "ADMIN", id: { not: target.id } },
           select: { id: true },
         });
-        await prisma.$transaction(async (tx) => {
-          if (fallbackAdmin) {
+
+        if (
+          !fallbackAdmin &&
+          (target._count.walksCreated > 0 ||
+            target._count.accidentReports > 0 ||
+            target._count.journeyEvents > 0)
+        ) {
+          console.error(
+            "clerk webhook: no fallback organiser to reassign walks/reports/journey",
+          );
+          return;
+        }
+
+        if (fallbackAdmin) {
+          if (target._count.walksCreated > 0) {
             await tx.walk.updateMany({
               where: { createdById: target.id },
               data: { createdById: fallbackAdmin.id },
             });
+          }
+          if (target._count.accidentReports > 0) {
             await tx.accidentReport.updateMany({
               where: { createdById: target.id },
               data: { createdById: fallbackAdmin.id },
             });
           }
-          await tx.user.delete({ where: { id: target.id } });
-        });
-      }
+          if (target._count.journeyEvents > 0) {
+            await tx.walkJourneyEvent.updateMany({
+              where: { createdById: target.id },
+              data: { createdById: fallbackAdmin.id },
+            });
+          }
+        }
+
+        await tx.user.delete({ where: { id: target.id } });
+      });
     } catch (err) {
       console.error("clerk webhook: failed to remove local user after Clerk deletion", err);
     }

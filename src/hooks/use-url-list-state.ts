@@ -37,6 +37,18 @@ export function useUrlListState({
     if (syncQueryToUrl) setQueryState(appliedQuery);
   }, [appliedQuery, syncQueryToUrl]);
 
+  // Drop leftover ?q= when search is client-only (e.g. members / reports PII).
+  useEffect(() => {
+    if (syncQueryToUrl) return;
+    if (!searchParams.has("q")) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("q");
+    const search = params.toString();
+    startTransition(() => {
+      router.replace(search ? `${pathname}?${search}` : pathname, { scroll: false });
+    });
+  }, [pathname, router, searchParams, syncQueryToUrl, startTransition]);
+
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     return () => {

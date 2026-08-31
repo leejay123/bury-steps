@@ -406,7 +406,8 @@ export function OrganiserGuide() {
                 name, email, whether they are an organiser or a member, when they joined, how long
                 they have been a member, and how many clock-ins they have. The joined date is the day
                 they first signed in. Filter by role (All, Organisers, or Members), and search by
-                name, email, or role. If there are more than 20 people, Previous and Next at the
+                name, email, or role. Search stays on this page only — it is not put in the address
+                bar. If there are more than 20 people, Previous and Next at the
                 bottom of the list take you through them.
               </p>
               <p className="font-medium text-foreground">Walk history</p>
@@ -575,7 +576,9 @@ export function OrganiserGuide() {
               <p>
                 On <Link href="/notices">Notices</Link>, members can search and filter by category.
                 Each full-page notice is a simple list row (title, category, date, teaser),{" "}
-                {LIST_PAGE_SIZE} at a time with Previous and Next when the list is long. On Walks, members can
+                {LIST_PAGE_SIZE} at a time with Previous and Next when the list is long. Full-page
+                links use a short random suffix (like walk share links), so the address cannot be
+                guessed from the title alone. On Walks, members can
                 also search upcoming walks by title or meeting point. If you edit a notice, it shows
                 as updated again for everyone — the “already read” marks are cleared, and the badge
                 says <strong>Updated</strong> instead of New.
@@ -591,14 +594,15 @@ export function OrganiserGuide() {
               <p>
                 Open <Link href="/admin/reports">Reports</Link> in the menu, or from Settings.
                 Only organisers can see this. Add a report with the date, an optional walk, what
-                happened, who was involved, what you did, and extra notes if you need them. Search
-                the list, filter by whether a walk is linked, and sort newest or oldest first.
-                Each row shows the date, walk, and a short preview of what happened. Tap a row to
-                read the full write-up. From there you can edit it or print a PDF. On a phone, print
-                and remove sit on their own row under the text so the write-up is not squeezed. If
-                there are more than 20 reports, Previous and Next at the bottom of the list take you
-                through them. Once there is more than one report, a search box appears above the
-                list — it matches the linked walk, who was involved, and the write-up text.
+                happened, who was involved, what you did, and extra notes if you need them. Once
+                there is more than one report, a search box appears above the list — it matches the
+                linked walk, who was involved, and the write-up text, and stays on this page only
+                (it is not put in the address bar). You can also filter by whether a walk is linked,
+                and sort newest or oldest first. Each row shows the date, walk, and a short preview
+                of what happened. Tap a row to read the full write-up. From there you can edit it or
+                print a PDF. On a phone, print and remove sit on their own row under the text so the
+                write-up is not squeezed. If there are more than 20 reports, Previous and Next at
+                the bottom of the list take you through them.
               </p>
               <Steps>
                 <li>

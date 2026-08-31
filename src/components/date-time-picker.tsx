@@ -57,7 +57,7 @@ export function DateTimePicker({
 }: {
   defaultValue?: string;
   disabled?: boolean;
-  /** Block calendar days before today (UK). Server still validates walk starts. */
+                  /** Block calendar days before today (UK), and earlier times today. */
   disablePast?: boolean;
   id: string;
   name: string;
@@ -99,6 +99,36 @@ export function DateTimePicker({
     const day = Number(parts.find((part) => part.type === "day")?.value);
     return new Date(year, month - 1, day);
   }, []);
+
+  const nowLondon = useMemo(() => {
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: LONDON,
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    }).formatToParts(new Date());
+    return {
+      hour: Number(parts.find((part) => part.type === "hour")?.value ?? 0),
+      minute: Number(parts.find((part) => part.type === "minute")?.value ?? 0),
+    };
+  }, []);
+
+  const isSelectedToday =
+    Boolean(date) &&
+    date!.getFullYear() === todayLondon.getFullYear() &&
+    date!.getMonth() === todayLondon.getMonth() &&
+    date!.getDate() === todayLondon.getDate();
+
+  const hours = useMemo(() => {
+    if (!disablePast || !isSelectedToday) return HOURS;
+    return HOURS.filter((item) => Number(item) >= nowLondon.hour);
+  }, [disablePast, isSelectedToday, nowLondon.hour]);
+
+  const selectableMinutes = useMemo(() => {
+    const base = minutes;
+    if (!disablePast || !isSelectedToday || Number(hour) !== nowLondon.hour) return base;
+    return base.filter((item) => Number(item) > nowLondon.minute);
+  }, [disablePast, hour, isSelectedToday, minutes, nowLondon.hour, nowLondon.minute]);
 
   return (
     <div className="flex flex-col gap-2">
@@ -157,7 +187,33 @@ export function DateTimePicker({
               endMonth={new Date(2035, 11)}
               locale={enGB}
               mode="single"
-              onSelect={setDate}
+              onSelect={(next) => {
+                setDate(next);
+                if (!disablePast || !next) return;
+                const sameDay =
+                  next.getFullYear() === todayLondon.getFullYear() &&
+                  next.getMonth() === todayLondon.getMonth() &&
+                  next.getDate() === todayLondon.getDate();
+                if (!sameDay) return;
+                if (Number(hour) < nowLondon.hour) {
+                  setHour(String(nowLondon.hour).padStart(2, "0"));
+                  const nextMinute = MINUTES.find((item) => Number(item) > nowLondon.minute);
+                  if (nextMinute) setMinute(nextMinute);
+                } else if (
+                  Number(hour) === nowLondon.hour &&
+                  Number(minute) <= nowLondon.minute
+                ) {
+                  const nextMinute = MINUTES.find((item) => Number(item) > nowLondon.minute);
+                  if (nextMinute) setMinute(nextMinute);
+                  else {
+                    const nextHour = HOURS.find((item) => Number(item) > nowLondon.hour);
+                    if (nextHour) {
+                      setHour(nextHour);
+                      setMinute("00");
+                    }
+                  }
+                }
+              }}
               selected={date}
               startMonth={disablePast ? todayLondon : new Date(2020, 0)}
               timeZone={LONDON}
@@ -165,12 +221,26 @@ export function DateTimePicker({
             <div className="grid grid-cols-2 gap-2">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor={`${id}-hour`}>Hour</Label>
-                <Select onValueChange={setHour} value={hour}>
+                <Select
+                  onValueChange={(next) => {
+                    setHour(next);
+                    if (
+                      disablePast &&
+                      isSelectedToday &&
+                      Number(next) === nowLondon.hour &&
+                      Number(minute) <= nowLondon.minute
+                    ) {
+                      const nextMinute = MINUTES.find((item) => Number(item) > nowLondon.minute);
+                      if (nextMinute) setMinute(nextMinute);
+                    }
+                  }}
+                  value={hours.includes(hour) ? hour : (hours[0] ?? hour)}
+                >
                   <SelectTrigger id={`${id}-hour`}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent data-date-time-picker-select="">
-                    {HOURS.map((item) => (
+                    {hours.map((item) => (
                       <SelectItem key={item} value={item}>
                         {item}
                       </SelectItem>
@@ -180,12 +250,19 @@ export function DateTimePicker({
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor={`${id}-minute`}>Minute</Label>
-                <Select onValueChange={setMinute} value={minute}>
+                <Select
+                  onValueChange={setMinute}
+                  value={
+                    selectableMinutes.includes(minute)
+                      ? minute
+                      : (selectableMinutes[0] ?? minute)
+                  }
+                >
                   <SelectTrigger id={`${id}-minute`}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent data-date-time-picker-select="">
-                    {minutes.map((item) => (
+                    {selectableMinutes.map((item) => (
                       <SelectItem key={item} value={item}>
                         {item}
                       </SelectItem>

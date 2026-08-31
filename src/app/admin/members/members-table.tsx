@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import Link from "next/link";
 import { ChevronRight, Search } from "lucide-react";
 import { formatDate, formatMembershipAge } from "@/lib/dates";
@@ -8,8 +8,17 @@ import { cn } from "@/lib/utils";
 import { DeleteMemberButton } from "./delete-member-button";
 import { MemberRoleButton } from "./member-role-button";
 import { EmptyState } from "@/components/empty-state";
-import { DataList, DataListActions, DataListBody, DataListItem, DataListItemMain, dataListActionsStackClassName, dataListItemStackClassName } from "@/components/data-list";
+import {
+  DataList,
+  DataListActions,
+  DataListBody,
+  DataListItem,
+  DataListItemMain,
+  dataListActionsStackClassName,
+  dataListItemStackClassName,
+} from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
+import { usePagedList } from "@/hooks/use-paged-list";
 import { useUrlListState } from "@/hooks/use-url-list-state";
 import { Badge } from "@/components/ui/badge";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
@@ -33,24 +42,40 @@ type MemberRow = {
   isYou: boolean;
 };
 
+function matchesMemberQuery(member: MemberRow, query: string): boolean {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return true;
+  if (member.name.toLowerCase().includes(needle)) return true;
+  if (member.email.toLowerCase().includes(needle)) return true;
+  if (needle.length >= 3) {
+    if (
+      ("organiser".startsWith(needle) || "admin".startsWith(needle)) &&
+      member.role === "ADMIN"
+    ) {
+      return true;
+    }
+    if ("member".startsWith(needle) && member.role === "MEMBER") return true;
+  }
+  return false;
+}
+
 export function MembersTable({
   members,
-  page,
-  pageCount,
-  pageSize,
   roleFilter,
-  total,
+  totalMembers,
 }: {
-  /** Already the current page's rows, filtered and paginated on the server. */
+  /** Role-filtered rows — search is client-only (no PII in the URL). */
   members: MemberRow[];
-  page: number;
-  pageCount: number;
-  pageSize: number;
   roleFilter: "all" | "ADMIN" | "MEMBER";
-  total: number;
+  totalMembers: number;
 }) {
   const listRef = useRef<HTMLDivElement>(null);
-  const { query, setQuery, setPage, setFilter, isPending } = useUrlListState();
+  const { query, setQuery, setFilter } = useUrlListState({ syncQueryToUrl: false });
+  const filtered = useMemo(
+    () => members.filter((member) => matchesMemberQuery(member, query)),
+    [members, query],
+  );
+  const paging = usePagedList(filtered, { resetKey: `${roleFilter}:${query}` });
 
   return (
     <div className="flex flex-col gap-4" ref={listRef}>
@@ -81,16 +106,20 @@ export function MembersTable({
         </div>
       </div>
 
-      {members.length === 0 ? (
+      {filtered.length === 0 ? (
         <EmptyState
-          description="Try a different name, email, or role."
+          description={
+            totalMembers === 0
+              ? "When someone signs up, they will show here."
+              : "Try a different name, email, or role."
+          }
           icon={Search}
           title="No matching members"
         />
       ) : (
         <>
-          <DataList aria-busy={isPending} className={isPending ? "opacity-60" : undefined}>
-            {members.map((member) => (
+          <DataList>
+            {paging.paged.map((member) => (
               <DataListItem
                 className={cn("relative", dataListItemStackClassName)}
                 key={member.id}
@@ -145,12 +174,12 @@ export function MembersTable({
           </DataList>
           <ListPagination
             noun="members"
-            onPageChange={setPage}
-            page={page}
-            pageCount={pageCount}
-            pageSize={pageSize}
+            onPageChange={paging.setPage}
+            page={paging.page}
+            pageCount={paging.pageCount}
+            pageSize={paging.pageSize}
             scrollToRef={listRef}
-            total={total}
+            total={paging.total}
           />
         </>
       )}
