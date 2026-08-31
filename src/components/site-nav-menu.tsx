@@ -117,27 +117,25 @@ export function SiteMobileNavBar({
   return (
     <nav aria-label="Site" className="border-t md:hidden">
       <div
-        className="flex justify-center overflow-x-auto overscroll-x-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        className="flex gap-1 overflow-x-auto overscroll-x-contain px-3 py-1.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         ref={scrollerRef}
       >
-        <div className="flex min-w-max gap-1 px-3 py-1.5">
-          {navItems(isAdmin, walksHref).map((item) => {
-            const active = isNavItemActive(pathname, item.href);
-            return (
-              <NavLink
-                active={active}
-                className="shrink-0"
-                href={item.href}
-                key={item.href}
-                label={item.label}
-                onSelect={(el) => {
-                  const scroller = scrollerRef.current;
-                  if (scroller) scrollNavItemIntoView(scroller, el);
-                }}
-              />
-            );
-          })}
-        </div>
+        {navItems(isAdmin, walksHref).map((item) => {
+          const active = isNavItemActive(pathname, item.href);
+          return (
+            <NavLink
+              active={active}
+              className="shrink-0"
+              href={item.href}
+              key={item.href}
+              label={item.label}
+              onSelect={(el) => {
+                const scroller = scrollerRef.current;
+                if (scroller) scrollNavItemIntoView(scroller, el);
+              }}
+            />
+          );
+        })}
       </div>
     </nav>
   );

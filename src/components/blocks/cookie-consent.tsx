@@ -134,26 +134,6 @@ const CookieConsent = React.forwardRef<HTMLDivElement, CookieConsentProps>(
       }
     }, [demo]);
 
-    // Keep page content reachable above the fixed banner while it is visible.
-    React.useEffect(() => {
-      if (hide || !isOpen) return;
-      const root = localRef.current;
-      if (!root) return;
-      const syncPad = () => {
-        document.documentElement.style.setProperty(
-          "--cookie-consent-pad",
-          `${Math.ceil(root.getBoundingClientRect().height)}px`,
-        );
-      };
-      syncPad();
-      const observer = new ResizeObserver(syncPad);
-      observer.observe(root);
-      return () => {
-        observer.disconnect();
-        document.documentElement.style.removeProperty("--cookie-consent-pad");
-      };
-    }, [hide, isOpen]);
-
     if (hide) return null;
 
     const containerClasses = cn(

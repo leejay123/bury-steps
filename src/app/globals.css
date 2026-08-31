@@ -72,11 +72,6 @@ body {
   overscroll-behavior-x: none;
 }
 
-/* Room under the fixed cookie banner so the footer stays reachable. */
-body {
-  padding-bottom: var(--cookie-consent-pad, 0px);
-}
-
 /*
  * iOS Safari auto-zooms a focused field whose computed font-size is under
  * 16px. Keep pinch-zoom available (WCAG 1.4.4) and instead make every text
