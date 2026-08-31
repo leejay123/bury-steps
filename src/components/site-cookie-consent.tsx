@@ -7,7 +7,7 @@ export function SiteCookieConsent() {
     <CookieConsent
       description="We use cookies so the site can work — for example to keep you signed in. We do not use them for advertising."
       learnMoreHref="/privacy-policy"
-      variant="default"
+      variant="small"
     />
   );
 }

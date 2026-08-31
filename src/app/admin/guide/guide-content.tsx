@@ -692,8 +692,8 @@ export function OrganiserGuide() {
                 off in Display.
               </p>
               <p>
-                First-time visitors see a cookie notice at the bottom of the screen, with Accept
-                and Decline. Either choice is remembered for a year. The site does not use
+                First-time visitors see a compact cookie notice at the bottom of the screen, with
+                Accept and Decline. Either choice is remembered for a year. The site does not use
                 advertising cookies. Clerk still uses cookies that are needed to sign in. Vercel
                 Analytics counts page views to show which pages are popular, without a cookie or a
                 per-person ID, so it is not affected by Accept or Decline. The notice links to the{" "}
