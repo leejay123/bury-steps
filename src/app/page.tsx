@@ -30,13 +30,23 @@ export default async function Home() {
         slides={slides}
       />
       <HomeWelcome
+        aboutExpect={theme.aboutExpect}
+        aboutGoals={theme.aboutGoals}
+        aboutPlaces={theme.aboutPlaces}
+        aboutRules={theme.aboutRules}
         facebookGroupUrl={theme.facebookGroupUrl}
         faqCategories={faqData.categories}
         faqSectionIntro={theme.faqSectionIntro}
         faqSectionTitle={theme.faqSectionTitle}
         faqs={faqData.faqs}
         faqsEnabled={theme.faqsEnabled}
+        howThisStartedBody={theme.howThisStartedBody}
+        howThisStartedEnabled={theme.howThisStartedEnabled}
+        howThisStartedEyebrow={theme.howThisStartedEyebrow}
+        howThisStartedTeaser={theme.howThisStartedTeaser}
+        howThisStartedTitle={theme.howThisStartedTitle}
         howWalksWorkEnabled={theme.howWalksWorkEnabled}
+        memberNoticesEnabled={theme.memberNoticesEnabled}
         testimonials={testimonials}
         testimonialsEnabled={theme.testimonialsEnabled}
       />

@@ -503,11 +503,12 @@ export function OrganiserGuide() {
               <p className="font-medium text-foreground">FAQs</p>
               <p>
                 Up to {MAX_HOMEPAGE_FAQS} questions in up to {MAX_FAQ_CATEGORIES} categories. Open{" "}
-                <Link href="/admin/settings/faqs">FAQs</Link>. At the top of that page you can edit
-                the section <strong>heading</strong> and <strong>intro</strong> shown above the
-                list on the homepage. Categories have their own list: tap a row to rename it in a
-                drawer, or choose Add category to open the same drawer empty. Remove is on the
-                list. You cannot remove a category that still has questions, or the last category.
+                <Link href="/admin/settings/faqs">FAQs</Link> to manage categories and questions.
+                The section <strong>heading</strong> and <strong>intro</strong> are edited under{" "}
+                <Link href="/admin/settings/display">Display</Link>. Categories have their own
+                list: tap a row to rename it in a drawer, or choose Add category to open the same
+                drawer empty. Remove is on the list. You cannot remove a category that still has
+                questions, or the last category.
               </p>
               <p>
                 Click a question row to edit it in the drawer. Each question needs a category so
@@ -638,10 +639,14 @@ export function OrganiserGuide() {
                 <strong>site name</strong> and <strong>homepage tagline</strong> (also used in
                 browser tabs and share previews), the <strong>Facebook group</strong> link (leave
                 blank to hide it), which homepage blocks are shown (
-                <strong>Testimonials</strong>, <strong>FAQs</strong>,{" "}
-                <strong>How walks work</strong>), how the cookie notice looks (
+                <strong>How walks work</strong>, <strong>How this started</strong>,{" "}
+                <strong>Member notices</strong>, <strong>Testimonials</strong>,{" "}
+                <strong>FAQs</strong>), the <strong>How this started</strong> blurb and full story,
+                the About drawer <strong>goals / places / expect / rules</strong> lists, the{" "}
+                <strong>FAQ</strong> heading and intro, how the cookie notice looks (
                 <strong>Default</strong>, <strong>Small</strong>, or <strong>Mini</strong>), and
-                whether <strong>Back to top</strong> appears after you scroll.
+                whether <strong>Back to top</strong> appears after you scroll. Hiding a block does
+                not leave an empty ruled gap — hairlines only sit between sections that are on.
               </p>
               <p>
                 Open <Link href="/admin/settings/cache">Site cache</Link> if the public homepage

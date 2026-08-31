@@ -257,6 +257,21 @@ model SiteSetting {
   faqSectionTitle      String  @default("Frequently asked questions")
   /// Short intro under the FAQ heading.
   faqSectionIntro      String  @default("How to join, what to bring, and how clock-in works. If you still have a question, ask in the Facebook group.")
+  /// Homepage “How this started” block.
+  howThisStartedEnabled Boolean @default(true)
+  howThisStartedTitle   String  @default("How this started")
+  howThisStartedEyebrow String  @default("Kindness · Friendship · Welcome")
+  howThisStartedTeaser  String  @default("What started out as a self-help mission to get myself fit after my diabetes diagnosis began with a simple goal: walking four miles a day with the dogs after work. It has grown into a community of walkers supporting one another week after week.")
+  /// Full story in the About drawer (blank lines separate paragraphs). Empty uses the built-in default.
+  howThisStartedBody    String  @default("")
+  /// About drawer lists (one item per line). Empty uses built-in defaults.
+  aboutGoals            String  @default("")
+  aboutPlaces           String  @default("")
+  aboutExpect           String  @default("")
+  /// About drawer rules: one “Title | Body” per line. Empty uses built-in defaults.
+  aboutRules            String  @default("")
+  /// Signed-in members: latest notices carousel on the homepage.
+  memberNoticesEnabled  Boolean @default(true)
   /// Homepage “how it works” strip and walk-page “How this group works” card.
   howWalksWorkEnabled  Boolean @default(true)
   /// Optional group clock-in target for the current UK month. Null hides Together.

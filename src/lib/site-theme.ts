@@ -14,6 +14,24 @@ import {
   DEFAULT_SITE_TAGLINE,
 } from "@/lib/site-branding";
 import { DEFAULT_FAQ_SECTION_INTRO, DEFAULT_FAQ_SECTION_TITLE } from "@/lib/faqs";
+import {
+  DEFAULT_ABOUT_EXPECT,
+  DEFAULT_ABOUT_EXPECT_TEXT,
+  DEFAULT_ABOUT_GOALS,
+  DEFAULT_ABOUT_GOALS_TEXT,
+  DEFAULT_ABOUT_PLACES,
+  DEFAULT_ABOUT_PLACES_TEXT,
+  DEFAULT_ABOUT_RULES_TEXT,
+  DEFAULT_HOW_THIS_STARTED_BODY,
+  DEFAULT_HOW_THIS_STARTED_EYEBROW,
+  DEFAULT_HOW_THIS_STARTED_TEASER,
+  DEFAULT_HOW_THIS_STARTED_TITLE,
+  aboutListFromStored,
+  aboutRulesFromStored,
+  serializeAboutList,
+  serializeAboutRules,
+  type AboutRule,
+} from "@/lib/homepage-copy";
 
 export type SiteTheme = {
   carouselEnabled: boolean;
@@ -26,6 +44,21 @@ export type SiteTheme = {
   faqsEnabled: boolean;
   faqSectionTitle: string;
   faqSectionIntro: string;
+  howThisStartedEnabled: boolean;
+  howThisStartedTitle: string;
+  howThisStartedEyebrow: string;
+  howThisStartedTeaser: string;
+  howThisStartedBody: string;
+  aboutGoals: string[];
+  aboutPlaces: string[];
+  aboutExpect: string[];
+  aboutRules: AboutRule[];
+  /** Raw textarea values for Display forms. */
+  aboutGoalsText: string;
+  aboutPlacesText: string;
+  aboutExpectText: string;
+  aboutRulesText: string;
+  memberNoticesEnabled: boolean;
   howWalksWorkEnabled: boolean;
 };
 
@@ -41,6 +74,20 @@ function defaultTheme(): SiteTheme {
     faqsEnabled: true,
     faqSectionTitle: DEFAULT_FAQ_SECTION_TITLE,
     faqSectionIntro: DEFAULT_FAQ_SECTION_INTRO,
+    howThisStartedEnabled: true,
+    howThisStartedTitle: DEFAULT_HOW_THIS_STARTED_TITLE,
+    howThisStartedEyebrow: DEFAULT_HOW_THIS_STARTED_EYEBROW,
+    howThisStartedTeaser: DEFAULT_HOW_THIS_STARTED_TEASER,
+    howThisStartedBody: DEFAULT_HOW_THIS_STARTED_BODY,
+    aboutGoals: [...DEFAULT_ABOUT_GOALS],
+    aboutPlaces: [...DEFAULT_ABOUT_PLACES],
+    aboutExpect: [...DEFAULT_ABOUT_EXPECT],
+    aboutRules: aboutRulesFromStored(""),
+    aboutGoalsText: DEFAULT_ABOUT_GOALS_TEXT,
+    aboutPlacesText: DEFAULT_ABOUT_PLACES_TEXT,
+    aboutExpectText: DEFAULT_ABOUT_EXPECT_TEXT,
+    aboutRulesText: DEFAULT_ABOUT_RULES_TEXT,
+    memberNoticesEnabled: true,
     howWalksWorkEnabled: true,
   };
 }
@@ -59,9 +106,25 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       faqsEnabled: true,
       faqSectionTitle: true,
       faqSectionIntro: true,
+      howThisStartedEnabled: true,
+      howThisStartedTitle: true,
+      howThisStartedEyebrow: true,
+      howThisStartedTeaser: true,
+      howThisStartedBody: true,
+      aboutGoals: true,
+      aboutPlaces: true,
+      aboutExpect: true,
+      aboutRules: true,
+      memberNoticesEnabled: true,
       howWalksWorkEnabled: true,
     },
   });
+
+  const aboutGoals = aboutListFromStored(row?.aboutGoals, DEFAULT_ABOUT_GOALS);
+  const aboutPlaces = aboutListFromStored(row?.aboutPlaces, DEFAULT_ABOUT_PLACES);
+  const aboutExpect = aboutListFromStored(row?.aboutExpect, DEFAULT_ABOUT_EXPECT);
+  const aboutRules = aboutRulesFromStored(row?.aboutRules);
+
   return {
     carouselEnabled: row?.carouselEnabled ?? true,
     scrollToTopEnabled: row?.scrollToTopEnabled ?? true,
@@ -75,11 +138,35 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     faqsEnabled: row?.faqsEnabled ?? true,
     faqSectionTitle: row?.faqSectionTitle?.trim() || DEFAULT_FAQ_SECTION_TITLE,
     faqSectionIntro: row?.faqSectionIntro?.trim() || DEFAULT_FAQ_SECTION_INTRO,
+    howThisStartedEnabled: row?.howThisStartedEnabled ?? true,
+    howThisStartedTitle: row?.howThisStartedTitle?.trim() || DEFAULT_HOW_THIS_STARTED_TITLE,
+    howThisStartedEyebrow:
+      row?.howThisStartedEyebrow?.trim() || DEFAULT_HOW_THIS_STARTED_EYEBROW,
+    howThisStartedTeaser:
+      row?.howThisStartedTeaser?.trim() || DEFAULT_HOW_THIS_STARTED_TEASER,
+    howThisStartedBody: row?.howThisStartedBody?.trim() || DEFAULT_HOW_THIS_STARTED_BODY,
+    aboutGoals,
+    aboutPlaces,
+    aboutExpect,
+    aboutRules,
+    aboutGoalsText: row?.aboutGoals?.trim()
+      ? serializeAboutList(aboutGoals)
+      : DEFAULT_ABOUT_GOALS_TEXT,
+    aboutPlacesText: row?.aboutPlaces?.trim()
+      ? serializeAboutList(aboutPlaces)
+      : DEFAULT_ABOUT_PLACES_TEXT,
+    aboutExpectText: row?.aboutExpect?.trim()
+      ? serializeAboutList(aboutExpect)
+      : DEFAULT_ABOUT_EXPECT_TEXT,
+    aboutRulesText: row?.aboutRules?.trim()
+      ? serializeAboutRules(aboutRules)
+      : DEFAULT_ABOUT_RULES_TEXT,
+    memberNoticesEnabled: row?.memberNoticesEnabled ?? true,
     howWalksWorkEnabled: row?.howWalksWorkEnabled ?? true,
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v5"], {
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v7"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });

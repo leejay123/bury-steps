@@ -6,7 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import { clerkClient } from "@clerk/nextjs/server";
-import { requireAdmin, requireUser, displayName } from "@/lib/auth";
+import { requireAdmin, requireUser, displayName, getOptionalUser } from "@/lib/auth";
 import { londonWallClockToUtc } from "@/lib/dates";
 import {
   geocodeFields,
@@ -42,6 +42,28 @@ import {
   parseFaqSectionTitle,
 } from "@/lib/faqs";
 import {
+  DEFAULT_ABOUT_EXPECT_TEXT,
+  DEFAULT_ABOUT_GOALS_TEXT,
+  DEFAULT_ABOUT_PLACES_TEXT,
+  DEFAULT_ABOUT_RULES_TEXT,
+  DEFAULT_HOW_THIS_STARTED_BODY,
+  DEFAULT_HOW_THIS_STARTED_EYEBROW,
+  DEFAULT_HOW_THIS_STARTED_TEASER,
+  DEFAULT_HOW_THIS_STARTED_TITLE,
+  HOMEPAGE_MEMBER_NOTICES_LIMIT,
+  MAX_ABOUT_LIST_ITEM,
+  MAX_ABOUT_LIST_ITEMS,
+  MAX_ABOUT_RULES,
+  parseAboutList,
+  parseAboutRules,
+  parseHowThisStartedBody,
+  parseHowThisStartedEyebrow,
+  parseHowThisStartedTeaser,
+  parseHowThisStartedTitle,
+  serializeAboutList,
+  serializeAboutRules,
+} from "@/lib/homepage-copy";
+import {
   MAX_NOTICE_CATEGORIES,
   MAX_NOTICE_CATEGORY_LABEL,
   MAX_NOTICE_TITLE,
@@ -49,13 +71,14 @@ import {
   MAX_NOTICE_TEASER,
   MAX_NOTICE_PAGE_BODY,
   WELCOME_NOTICE_SYSTEM_KEY,
+  noticeBodyForBellDrawer,
   noticeCategorySlug,
   noticePageSlug,
   noticesForBell,
 } from "@/lib/notices";
 import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR } from "@/lib/theme";
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
-import { NOTICES_CACHE_TAG, recordSiteNoticeRead } from "@/lib/site-notices";
+import { NOTICES_CACHE_TAG, getSiteNoticeState, recordSiteNoticeRead } from "@/lib/site-notices";
 import { isAllowedImageMime, sniffImageMime } from "@/lib/image-bytes";
 import { stripImageMetadata } from "@/lib/strip-image-metadata";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -2585,6 +2608,8 @@ const HOMEPAGE_SECTION_KEYS = [
   "testimonialsEnabled",
   "faqsEnabled",
   "howWalksWorkEnabled",
+  "howThisStartedEnabled",
+  "memberNoticesEnabled",
 ] as const;
 
 type HomepageSectionKey = (typeof HOMEPAGE_SECTION_KEYS)[number];
@@ -2635,7 +2660,11 @@ export async function updateHomepageSectionEnabled(
       ? "Testimonials"
       : key === "faqsEnabled"
         ? "FAQs"
-        : "How walks work";
+        : key === "howWalksWorkEnabled"
+          ? "How walks work"
+          : key === "howThisStartedEnabled"
+            ? "How this started"
+            : "Member notices";
   return {
     ok: true,
     message: enabled ? `${label} are shown.` : `${label} are hidden.`,
@@ -2677,8 +2706,179 @@ export async function updateFaqSectionCopy(
   revalidateTag(HOMEPAGE_CACHE_TAG);
   revalidatePath("/");
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/faqs");
+  revalidatePath("/admin/settings/display");
   return { ok: true, message: "FAQ heading and intro saved." };
+}
+
+export async function updateHowThisStartedCopy(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const howThisStartedTitle = parseHowThisStartedTitle(
+    String(formData.get("howThisStartedTitle") ?? ""),
+  );
+  const howThisStartedEyebrow = parseHowThisStartedEyebrow(
+    String(formData.get("howThisStartedEyebrow") ?? ""),
+  );
+  const howThisStartedTeaser = parseHowThisStartedTeaser(
+    String(formData.get("howThisStartedTeaser") ?? ""),
+  );
+  const howThisStartedBody = parseHowThisStartedBody(
+    String(formData.get("howThisStartedBody") ?? ""),
+  );
+  if (howThisStartedTitle === "invalid") {
+    return { ok: false, error: "Give How this started a heading of 2–80 characters." };
+  }
+  if (howThisStartedEyebrow === "invalid") {
+    return { ok: false, error: "Keep the eyebrow under 80 characters, or leave it blank." };
+  }
+  if (howThisStartedTeaser === "invalid") {
+    return { ok: false, error: "Give a short homepage blurb of 8–400 characters." };
+  }
+  if (howThisStartedBody === "invalid") {
+    return { ok: false, error: "Give the full story at least 40 characters (up to 12,000)." };
+  }
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        carouselEnabled: true,
+        scrollToTopEnabled: true,
+        cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
+        howThisStartedTitle,
+        howThisStartedEyebrow,
+        howThisStartedTeaser,
+        howThisStartedBody,
+      },
+      update: {
+        howThisStartedTitle,
+        howThisStartedEyebrow,
+        howThisStartedTeaser,
+        howThisStartedBody,
+      },
+    });
+  } catch (err) {
+    return logActionError(
+      "updateHowThisStartedCopy",
+      err,
+      "Could not save that setting. Try again.",
+    );
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/display");
+  return { ok: true, message: "How this started copy saved." };
+}
+
+export async function updateAboutLists(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const aboutGoals = parseAboutList(String(formData.get("aboutGoals") ?? ""));
+  const aboutPlaces = parseAboutList(String(formData.get("aboutPlaces") ?? ""));
+  const aboutExpect = parseAboutList(String(formData.get("aboutExpect") ?? ""));
+  const aboutRules = parseAboutRules(String(formData.get("aboutRules") ?? ""));
+  if (aboutGoals === "invalid") {
+    return {
+      ok: false,
+      error: `Goals need 1–${MAX_ABOUT_LIST_ITEMS} lines, each up to ${MAX_ABOUT_LIST_ITEM} characters.`,
+    };
+  }
+  if (aboutPlaces === "invalid") {
+    return {
+      ok: false,
+      error: `Places need 1–${MAX_ABOUT_LIST_ITEMS} lines, each up to ${MAX_ABOUT_LIST_ITEM} characters.`,
+    };
+  }
+  if (aboutExpect === "invalid") {
+    return {
+      ok: false,
+      error: `“What you can expect” needs 1–${MAX_ABOUT_LIST_ITEMS} lines, each up to ${MAX_ABOUT_LIST_ITEM} characters.`,
+    };
+  }
+  if (aboutRules === "invalid") {
+    return {
+      ok: false,
+      error: `Rules need 1–${MAX_ABOUT_RULES} lines as “Title | Body”.`,
+    };
+  }
+
+  const aboutGoalsText = serializeAboutList(aboutGoals);
+  const aboutPlacesText = serializeAboutList(aboutPlaces);
+  const aboutExpectText = serializeAboutList(aboutExpect);
+  const aboutRulesText = serializeAboutRules(aboutRules);
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        carouselEnabled: true,
+        scrollToTopEnabled: true,
+        cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
+        aboutGoals: aboutGoalsText,
+        aboutPlaces: aboutPlacesText,
+        aboutExpect: aboutExpectText,
+        aboutRules: aboutRulesText,
+      },
+      update: {
+        aboutGoals: aboutGoalsText,
+        aboutPlaces: aboutPlacesText,
+        aboutExpect: aboutExpectText,
+        aboutRules: aboutRulesText,
+      },
+    });
+  } catch (err) {
+    return logActionError("updateAboutLists", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/display");
+  return { ok: true, message: "About lists saved." };
+}
+
+/** Latest notices for the signed-in homepage carousel (same set as the bell). */
+export async function getHomepageMemberNoticesAction(): Promise<
+  | {
+      ok: true;
+      notices: {
+        id: string;
+        title: string;
+        body: string;
+        kind: "BELL" | "PAGE";
+        slug: string | null;
+      }[];
+    }
+  | { ok: false }
+> {
+  const user = await getOptionalUser();
+  if (!user) return { ok: false };
+
+  try {
+    const { notices } = await getSiteNoticeState(user.id, user.firstName);
+    return {
+      ok: true,
+      notices: notices.slice(0, HOMEPAGE_MEMBER_NOTICES_LIMIT).map((notice) => ({
+        id: notice.id,
+        title: notice.title,
+        body: noticeBodyForBellDrawer(notice),
+        kind: notice.kind,
+        slug: notice.slug,
+      })),
+    };
+  } catch {
+    return { ok: false };
+  }
 }
 
 function parseMonthlyClockInGoal(raw: string): number | null | "invalid" {
@@ -3184,6 +3384,16 @@ export async function resetSiteToDefault(
           faqsEnabled: true,
           faqSectionTitle: DEFAULT_FAQ_SECTION_TITLE,
           faqSectionIntro: DEFAULT_FAQ_SECTION_INTRO,
+          howThisStartedEnabled: true,
+          howThisStartedTitle: DEFAULT_HOW_THIS_STARTED_TITLE,
+          howThisStartedEyebrow: DEFAULT_HOW_THIS_STARTED_EYEBROW,
+          howThisStartedTeaser: DEFAULT_HOW_THIS_STARTED_TEASER,
+          howThisStartedBody: DEFAULT_HOW_THIS_STARTED_BODY,
+          aboutGoals: DEFAULT_ABOUT_GOALS_TEXT,
+          aboutPlaces: DEFAULT_ABOUT_PLACES_TEXT,
+          aboutExpect: DEFAULT_ABOUT_EXPECT_TEXT,
+          aboutRules: DEFAULT_ABOUT_RULES_TEXT,
+          memberNoticesEnabled: true,
           howWalksWorkEnabled: true,
           monthlyClockInGoal: null,
         },
@@ -3199,6 +3409,16 @@ export async function resetSiteToDefault(
           faqsEnabled: true,
           faqSectionTitle: DEFAULT_FAQ_SECTION_TITLE,
           faqSectionIntro: DEFAULT_FAQ_SECTION_INTRO,
+          howThisStartedEnabled: true,
+          howThisStartedTitle: DEFAULT_HOW_THIS_STARTED_TITLE,
+          howThisStartedEyebrow: DEFAULT_HOW_THIS_STARTED_EYEBROW,
+          howThisStartedTeaser: DEFAULT_HOW_THIS_STARTED_TEASER,
+          howThisStartedBody: DEFAULT_HOW_THIS_STARTED_BODY,
+          aboutGoals: DEFAULT_ABOUT_GOALS_TEXT,
+          aboutPlaces: DEFAULT_ABOUT_PLACES_TEXT,
+          aboutExpect: DEFAULT_ABOUT_EXPECT_TEXT,
+          aboutRules: DEFAULT_ABOUT_RULES_TEXT,
+          memberNoticesEnabled: true,
           howWalksWorkEnabled: true,
           monthlyClockInGoal: null,
         },

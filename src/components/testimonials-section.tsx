@@ -34,7 +34,6 @@ export function TestimonialsSection({
             totalItems={testimonials.length}
           />
         </div>
-        <FullWidthDivider position="top" />
         <FullWidthDivider position="bottom" />
       </div>
     </section>

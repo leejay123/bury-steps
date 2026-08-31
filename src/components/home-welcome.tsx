@@ -3,57 +3,87 @@ import { FeatureSection } from "@/components/feature-section";
 import { HeroCopy } from "@/components/hero-copy";
 import { TestimonialsSection } from "@/components/testimonials-section";
 import { FaqsSection } from "@/components/faqs-section";
+import { HomeMemberNoticesSection } from "@/components/home-member-notices";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { Button } from "@/components/ui/button";
 import type { TestimonialView } from "@/lib/testimonials";
 import type { FaqCategoryView, FaqView } from "@/lib/faqs";
+import type { AboutRule } from "@/lib/homepage-copy";
 
 export function HomeWelcome({
+  aboutExpect,
+  aboutGoals,
+  aboutPlaces,
+  aboutRules,
   facebookGroupUrl,
   faqCategories,
   faqSectionIntro,
   faqSectionTitle,
   faqs,
   faqsEnabled,
+  howThisStartedBody,
+  howThisStartedEnabled,
+  howThisStartedEyebrow,
+  howThisStartedTeaser,
+  howThisStartedTitle,
   howWalksWorkEnabled,
+  memberNoticesEnabled,
   testimonials,
   testimonialsEnabled,
 }: {
+  aboutExpect: string[];
+  aboutGoals: string[];
+  aboutPlaces: string[];
+  aboutRules: AboutRule[];
   facebookGroupUrl: string;
   faqCategories: FaqCategoryView[];
   faqSectionIntro: string;
   faqSectionTitle: string;
   faqs: FaqView[];
   faqsEnabled: boolean;
+  howThisStartedBody: string;
+  howThisStartedEnabled: boolean;
+  howThisStartedEyebrow: string;
+  howThisStartedTeaser: string;
+  howThisStartedTitle: string;
   howWalksWorkEnabled: boolean;
+  memberNoticesEnabled: boolean;
   testimonials: TestimonialView[];
   testimonialsEnabled: boolean;
 }) {
+  const showTestimonials = testimonialsEnabled && testimonials.length > 0;
+  const showFaqs = faqsEnabled && faqs.length > 0;
+
   return (
     <>
       {howWalksWorkEnabled ? <FeatureSection /> : null}
-      <section className="relative">
-        <HeroCopy
-          actions={
-            <HomeAboutDrawer
-              facebookGroupUrl={facebookGroupUrl}
-              trigger={<Button variant="outline">Read more</Button>}
-            />
-          }
-          eyebrow="Kindness · Friendship · Welcome"
-          title="How this started"
-          titleAs="h2"
-        >
-          <p>
-            What started out as a self-help mission to get myself fit after my diabetes diagnosis
-            began with a simple goal: walking four miles a day with the dogs after work. It has
-            grown into a community of walkers supporting one another week after week.
-          </p>
-        </HeroCopy>
-        <FullWidthDivider position="bottom" />
-      </section>
-      {testimonialsEnabled ? <TestimonialsSection testimonials={testimonials} /> : null}
-      {faqsEnabled ? (
+      {howThisStartedEnabled ? (
+        <section className="relative">
+          <HeroCopy
+            actions={
+              <HomeAboutDrawer
+                aboutExpect={aboutExpect}
+                aboutGoals={aboutGoals}
+                aboutPlaces={aboutPlaces}
+                aboutRules={aboutRules}
+                facebookGroupUrl={facebookGroupUrl}
+                howThisStartedBody={howThisStartedBody}
+                howThisStartedTitle={howThisStartedTitle}
+                trigger={<Button variant="outline">Read more</Button>}
+              />
+            }
+            eyebrow={howThisStartedEyebrow || null}
+            title={howThisStartedTitle}
+            titleAs="h2"
+          >
+            <p>{howThisStartedTeaser}</p>
+          </HeroCopy>
+          <FullWidthDivider position="bottom" />
+        </section>
+      ) : null}
+      <HomeMemberNoticesSection enabled={memberNoticesEnabled} />
+      {showTestimonials ? <TestimonialsSection testimonials={testimonials} /> : null}
+      {showFaqs ? (
         <FaqsSection
           categories={faqCategories}
           facebookGroupUrl={facebookGroupUrl}

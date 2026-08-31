@@ -7,7 +7,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { SettingsSection } from "../settings-page";
 
-type SectionKey = "testimonialsEnabled" | "faqsEnabled" | "howWalksWorkEnabled";
+type SectionKey =
+  | "testimonialsEnabled"
+  | "faqsEnabled"
+  | "howWalksWorkEnabled"
+  | "howThisStartedEnabled"
+  | "memberNoticesEnabled";
 
 function SectionToggle({
   description,
@@ -70,19 +75,41 @@ function SectionToggle({
 
 export function HomepageSectionsSettings({
   faqsEnabled,
+  howThisStartedEnabled,
   howWalksWorkEnabled,
+  memberNoticesEnabled,
   testimonialsEnabled,
 }: {
   faqsEnabled: boolean;
+  howThisStartedEnabled: boolean;
   howWalksWorkEnabled: boolean;
+  memberNoticesEnabled: boolean;
   testimonialsEnabled: boolean;
 }) {
   return (
     <SettingsSection
-      description="Turn whole blocks on or off. Content for each block is still edited under Testimonials and FAQs."
+      description="Turn whole blocks on or off. Headings and blurbs are edited below; questions and quotes still live under FAQs and Testimonials."
       title="Homepage sections"
     >
       <div className="flex flex-col gap-3">
+        <SectionToggle
+          description="The three-step strip on the homepage, and “How this group works” on walk share links."
+          enabled={howWalksWorkEnabled}
+          formKey="howWalksWorkEnabled"
+          label="How walks work"
+        />
+        <SectionToggle
+          description="Homepage story blurb and Read more drawer."
+          enabled={howThisStartedEnabled}
+          formKey="howThisStartedEnabled"
+          label="How this started"
+        />
+        <SectionToggle
+          description="Latest notices carousel for signed-in members only."
+          enabled={memberNoticesEnabled}
+          formKey="memberNoticesEnabled"
+          label="Member notices"
+        />
         <SectionToggle
           description="Quotes on the public homepage."
           enabled={testimonialsEnabled}
@@ -94,12 +121,6 @@ export function HomepageSectionsSettings({
           enabled={faqsEnabled}
           formKey="faqsEnabled"
           label="FAQs"
-        />
-        <SectionToggle
-          description="The three-step strip on the homepage, and “How this group works” on walk share links."
-          enabled={howWalksWorkEnabled}
-          formKey="howWalksWorkEnabled"
-          label="How walks work"
         />
       </div>
     </SettingsSection>
