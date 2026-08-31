@@ -12,11 +12,11 @@ export default async function DisplaySettingsPage() {
 
   return (
     <SettingsPage
-      description="These options apply to the public site and organiser tools."
+      description="Back to top, and how the cookie notice looks for first-time visitors."
       title="Display"
     >
-      <DisplaySettings scrollToTopEnabled={theme.scrollToTopEnabled} />
       <CookieConsentSettings variant={theme.cookieConsentVariant} />
+      <DisplaySettings scrollToTopEnabled={theme.scrollToTopEnabled} />
     </SettingsPage>
   );
 }
