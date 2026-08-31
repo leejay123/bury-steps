@@ -17,9 +17,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const notice = await getPageNoticeBySlug(slug);
-  if (!notice) return { title: "Notice not found — Bury Steps Walking Group" };
+  if (!notice) return { title: "Notice not found" };
   return {
-    title: `${notice.title} — Bury Steps Walking Group`,
+    title: notice.title,
     description: notice.body,
     robots: { index: false, follow: false },
   };

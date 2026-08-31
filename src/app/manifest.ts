@@ -1,10 +1,18 @@
 import type { MetadataRoute } from "next";
+import { getSiteTheme } from "@/lib/site-theme";
+import { siteMetaDescription } from "@/lib/site-branding";
 
-export default function manifest(): MetadataRoute.Manifest {
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  const theme = await getSiteTheme();
+  const shortName =
+    theme.siteName.length > 12
+      ? theme.siteName.split(/\s+/).slice(0, 2).join(" ")
+      : theme.siteName;
+
   return {
-    name: "Bury Steps Walking Group",
-    short_name: "Bury Steps",
-    description: "Weekly walks around Bury. Sign up, join a walk, clock in.",
+    name: theme.siteName,
+    short_name: shortName.slice(0, 24),
+    description: siteMetaDescription(theme.siteTagline),
     start_url: "/dashboard",
     display: "standalone",
     background_color: "#ffffff",

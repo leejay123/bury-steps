@@ -9,6 +9,7 @@ import { accountPortalHref, appUrl } from "@/lib/urls";
 import { meetingPointLabel } from "@/lib/geocode";
 import { ensureWalkSlug, walkShareUrl } from "@/lib/walk-slug";
 import { canAddWalkToCalendar, walkStatus } from "@/lib/walk-window";
+import { getSiteTheme } from "@/lib/site-theme";
 import { WalkFacts } from "@/components/walk-facts";
 import { WalkMapSection } from "@/components/walk-map-section";
 import { WalkJourneyDrawer } from "@/components/walk-journey-drawer";
@@ -55,7 +56,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { token } = await params;
   const walk = await getWalkByShareKey(token);
-  if (!walk) return { title: "Walk not found — Bury Steps Walking Group" };
+  if (!walk) return { title: "Walk not found" };
 
   const status = walkStatus({
     cancelledAt: walk.cancelledAt,
@@ -69,7 +70,7 @@ export async function generateMetadata({
     const user = await getOptionalUser();
     if (user?.role !== "ADMIN") {
       return {
-        title: "Walk not found — Bury Steps Walking Group",
+        title: "Walk not found",
         robots: { index: false, follow: false },
       };
     }
@@ -77,10 +78,7 @@ export async function generateMetadata({
 
   const when = formatWalkDate(walk.startsAt);
   const meeting = meetingPointLabel(walk.location, walk.postcode);
-  const title =
-    status === "cancelled"
-      ? `Cancelled: ${walk.title} — Bury Steps Walking Group`
-      : `${walk.title} — Bury Steps Walking Group`;
+  const title = status === "cancelled" ? `Cancelled: ${walk.title}` : walk.title;
   const description =
     status === "cancelled"
       ? `Cancelled. Was ${when}${meeting ? ` at ${meeting}` : ""}.`
@@ -127,6 +125,7 @@ export default async function WalkLinkPage({
 
   const walkUrl = walkShareUrl(appUrl(), { token: walk.token, slug });
   const completed = status === "completed";
+  const theme = await getSiteTheme();
 
   const alreadyIn = user
     ? await prisma.attendance.findFirst({
@@ -240,7 +239,7 @@ export default async function WalkLinkPage({
       ) : completed ? null : (
         <>
           <BeforeYouSetOff />
-          <HowWalksWork />
+          {theme.howWalksWorkEnabled ? <HowWalksWork /> : null}
         </>
       )}
     </div>

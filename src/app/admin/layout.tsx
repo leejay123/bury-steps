@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/auth";
 import { PAGE_X_BLEED } from "@/lib/page-x";
 
 export const metadata: Metadata = {
-  title: "Admin — Bury Steps Walking Group",
+  title: "Admin",
   robots: { index: false, follow: false },
 };
 

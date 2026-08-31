@@ -25,12 +25,18 @@ export default async function Home() {
         carouselEnabled={theme.carouselEnabled}
         signInHref={accountPortalHref("sign-in", `${origin}/dashboard`)}
         signUpHref={accountPortalHref("sign-up", `${origin}/dashboard`)}
+        siteName={theme.siteName}
+        siteTagline={theme.siteTagline}
         slides={slides}
       />
       <HomeWelcome
+        facebookGroupUrl={theme.facebookGroupUrl}
         faqCategories={faqData.categories}
         faqs={faqData.faqs}
+        faqsEnabled={theme.faqsEnabled}
+        howWalksWorkEnabled={theme.howWalksWorkEnabled}
         testimonials={testimonials}
+        testimonialsEnabled={theme.testimonialsEnabled}
       />
     </div>
   );

@@ -9,24 +9,31 @@ import type { TestimonialView } from "@/lib/testimonials";
 import type { FaqCategoryView, FaqView } from "@/lib/faqs";
 
 export function HomeWelcome({
+  facebookGroupUrl,
   faqCategories,
   faqs,
+  faqsEnabled,
+  howWalksWorkEnabled,
   testimonials,
+  testimonialsEnabled,
 }: {
+  facebookGroupUrl: string;
   faqCategories: FaqCategoryView[];
   faqs: FaqView[];
+  faqsEnabled: boolean;
+  howWalksWorkEnabled: boolean;
   testimonials: TestimonialView[];
+  testimonialsEnabled: boolean;
 }) {
   return (
     <>
-      <FeatureSection />
+      {howWalksWorkEnabled ? <FeatureSection /> : null}
       <section className="relative">
         <HeroCopy
           actions={
             <HomeAboutDrawer
-              trigger={
-                <Button variant="outline">Read more</Button>
-              }
+              facebookGroupUrl={facebookGroupUrl}
+              trigger={<Button variant="outline">Read more</Button>}
             />
           }
           eyebrow="Kindness · Friendship · Welcome"
@@ -41,8 +48,14 @@ export function HomeWelcome({
         </HeroCopy>
         <FullWidthDivider position="bottom" />
       </section>
-      <TestimonialsSection testimonials={testimonials} />
-      <FaqsSection categories={faqCategories} faqs={faqs} />
+      {testimonialsEnabled ? <TestimonialsSection testimonials={testimonials} /> : null}
+      {faqsEnabled ? (
+        <FaqsSection
+          categories={faqCategories}
+          facebookGroupUrl={facebookGroupUrl}
+          faqs={faqs}
+        />
+      ) : null}
     </>
   );
 }

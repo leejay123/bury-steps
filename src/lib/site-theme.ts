@@ -8,11 +8,22 @@ import {
   parseCookieConsentVariant,
   type CookieConsentVariant,
 } from "@/lib/cookie-consent-variant";
+import {
+  DEFAULT_FACEBOOK_GROUP_URL,
+  DEFAULT_SITE_NAME,
+  DEFAULT_SITE_TAGLINE,
+} from "@/lib/site-branding";
 
 export type SiteTheme = {
   carouselEnabled: boolean;
   scrollToTopEnabled: boolean;
   cookieConsentVariant: CookieConsentVariant;
+  siteName: string;
+  siteTagline: string;
+  facebookGroupUrl: string;
+  testimonialsEnabled: boolean;
+  faqsEnabled: boolean;
+  howWalksWorkEnabled: boolean;
 };
 
 function defaultTheme(): SiteTheme {
@@ -20,13 +31,29 @@ function defaultTheme(): SiteTheme {
     carouselEnabled: true,
     scrollToTopEnabled: true,
     cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
+    siteName: DEFAULT_SITE_NAME,
+    siteTagline: DEFAULT_SITE_TAGLINE,
+    facebookGroupUrl: DEFAULT_FACEBOOK_GROUP_URL,
+    testimonialsEnabled: true,
+    faqsEnabled: true,
+    howWalksWorkEnabled: true,
   };
 }
 
 async function loadSiteTheme(): Promise<SiteTheme> {
   const row = await prisma.siteSetting.findUnique({
     where: { id: SITE_SETTING_ID },
-    select: { carouselEnabled: true, scrollToTopEnabled: true, cookieConsentVariant: true },
+    select: {
+      carouselEnabled: true,
+      scrollToTopEnabled: true,
+      cookieConsentVariant: true,
+      siteName: true,
+      siteTagline: true,
+      facebookGroupUrl: true,
+      testimonialsEnabled: true,
+      faqsEnabled: true,
+      howWalksWorkEnabled: true,
+    },
   });
   return {
     carouselEnabled: row?.carouselEnabled ?? true,
@@ -34,10 +61,16 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     cookieConsentVariant:
       parseCookieConsentVariant(row?.cookieConsentVariant ?? "") ??
       DEFAULT_COOKIE_CONSENT_VARIANT,
+    siteName: row?.siteName?.trim() || DEFAULT_SITE_NAME,
+    siteTagline: row?.siteTagline?.trim() || DEFAULT_SITE_TAGLINE,
+    facebookGroupUrl: row?.facebookGroupUrl ?? DEFAULT_FACEBOOK_GROUP_URL,
+    testimonialsEnabled: row?.testimonialsEnabled ?? true,
+    faqsEnabled: row?.faqsEnabled ?? true,
+    howWalksWorkEnabled: row?.howWalksWorkEnabled ?? true,
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v3"], {
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v4"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });

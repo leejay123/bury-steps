@@ -12,26 +12,31 @@ import {
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import { FACEBOOK_GROUP_URL } from "@/lib/urls";
+import { FACEBOOK_GROUP_URL as DEFAULT_FACEBOOK_GROUP_URL } from "@/lib/urls";
 import type { FaqCategoryView, FaqView } from "@/lib/faqs";
 import { HeroCopy } from "@/components/hero-copy";
 
 export function FaqsSection({
   categories,
+  facebookGroupUrl = DEFAULT_FACEBOOK_GROUP_URL,
   faqs,
 }: {
   categories: FaqCategoryView[];
+  facebookGroupUrl?: string;
   faqs: FaqView[];
 }) {
   const [searchTerm, setSearchTerm] = useState("");
 
   if (faqs.length === 0) return null;
 
+  const facebookUrl = facebookGroupUrl.trim();
+
   return (
     <section>
       <FaqIntro onSearchChange={setSearchTerm} searchTerm={searchTerm} />
       <FaqBrowser
         categories={categories}
+        facebookGroupUrl={facebookUrl}
         faqs={faqs}
         onClearSearch={() => setSearchTerm("")}
         searchTerm={searchTerm}
@@ -76,11 +81,13 @@ const FaqIntro = memo(function FaqIntro({
 
 function FaqBrowser({
   categories,
+  facebookGroupUrl,
   faqs,
   searchTerm,
   onClearSearch,
 }: {
   categories: FaqCategoryView[];
+  facebookGroupUrl: string;
   faqs: FaqView[];
   searchTerm: string;
   onClearSearch: () => void;
@@ -169,17 +176,19 @@ function FaqBrowser({
         </Empty>
       ) : null}
 
-      <p className="px-4 py-6 text-center text-sm text-muted-foreground md:px-6">
-        Can’t find what you’re looking for?{" "}
-        <a
-          className="font-medium text-foreground underline-offset-4 hover:underline"
-          href={FACEBOOK_GROUP_URL}
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          Ask in the Facebook group
-        </a>
-      </p>
+      {facebookGroupUrl ? (
+        <p className="px-4 py-6 text-center text-sm text-muted-foreground md:px-6">
+          Can’t find what you’re looking for?{" "}
+          <a
+            className="font-medium text-foreground underline-offset-4 hover:underline"
+            href={facebookGroupUrl}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Ask in the Facebook group
+          </a>
+        </p>
+      ) : null}
     </>
   );
 }

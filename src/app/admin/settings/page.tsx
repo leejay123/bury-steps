@@ -49,7 +49,8 @@ export default async function AdminSettingsPage() {
     {
       href: "/admin/settings/display",
       title: "Display",
-      description: "Back to top button, and cookie notice layout (Default, Small, or Mini).",
+      description:
+        "Site name, tagline, Facebook link, homepage sections, cookie notice, and back to top.",
     },
     {
       href: "/admin/settings/cache",

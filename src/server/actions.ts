@@ -61,6 +61,14 @@ import {
   DEFAULT_COOKIE_CONSENT_VARIANT,
   parseCookieConsentVariant,
 } from "@/lib/cookie-consent-variant";
+import {
+  DEFAULT_FACEBOOK_GROUP_URL,
+  DEFAULT_SITE_NAME,
+  DEFAULT_SITE_TAGLINE,
+  parseFacebookGroupUrl,
+  parseSiteName,
+  parseSiteTagline,
+} from "@/lib/site-branding";
 import { MAX_MONTHLY_CLOCK_IN_GOAL } from "@/lib/walk-game";
 import {
   DEFAULT_FAQS,
@@ -2486,6 +2494,150 @@ export async function updateCookieConsentVariant(
   };
 }
 
+export async function updateSiteBranding(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const siteName = parseSiteName(String(formData.get("siteName") ?? ""));
+  const siteTagline = parseSiteTagline(String(formData.get("siteTagline") ?? ""));
+  if (siteName === "invalid") {
+    return { ok: false, error: "Give the site a name of 2–80 characters." };
+  }
+  if (siteTagline === "invalid") {
+    return { ok: false, error: "Give a short tagline of 8–220 characters." };
+  }
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        carouselEnabled: true,
+        scrollToTopEnabled: true,
+        cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
+        siteName,
+        siteTagline,
+      },
+      update: { siteName, siteTagline },
+    });
+  } catch (err) {
+    return logActionError("updateSiteBranding", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidatePath("/", "layout");
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/display");
+  return { ok: true, message: "Site name and tagline saved." };
+}
+
+export async function updateFacebookGroupUrl(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const facebookGroupUrl = parseFacebookGroupUrl(String(formData.get("facebookGroupUrl") ?? ""));
+  if (facebookGroupUrl === "invalid") {
+    return {
+      ok: false,
+      error: "Enter a full https Facebook group link, or leave it blank to hide the link.",
+    };
+  }
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        carouselEnabled: true,
+        scrollToTopEnabled: true,
+        cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
+        facebookGroupUrl,
+      },
+      update: { facebookGroupUrl },
+    });
+  } catch (err) {
+    return logActionError("updateFacebookGroupUrl", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidatePath("/", "layout");
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/display");
+  return {
+    ok: true,
+    message: facebookGroupUrl
+      ? "Facebook group link saved."
+      : "Facebook group link hidden.",
+  };
+}
+
+const HOMEPAGE_SECTION_KEYS = [
+  "testimonialsEnabled",
+  "faqsEnabled",
+  "howWalksWorkEnabled",
+] as const;
+
+type HomepageSectionKey = (typeof HOMEPAGE_SECTION_KEYS)[number];
+
+function parseHomepageSectionKey(raw: string): HomepageSectionKey | null {
+  return HOMEPAGE_SECTION_KEYS.includes(raw as HomepageSectionKey)
+    ? (raw as HomepageSectionKey)
+    : null;
+}
+
+export async function updateHomepageSectionEnabled(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const key = parseHomepageSectionKey(String(formData.get("section") ?? ""));
+  if (!key) return { ok: false, error: "Choose a homepage section." };
+  const enabled = String(formData.get(key) ?? "") === "on";
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        carouselEnabled: true,
+        scrollToTopEnabled: true,
+        cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
+        [key]: enabled,
+      },
+      update: { [key]: enabled },
+    });
+  } catch (err) {
+    return logActionError(
+      "updateHomepageSectionEnabled",
+      err,
+      "Could not save that setting. Try again.",
+    );
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidatePath("/", "layout");
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/display");
+  const label =
+    key === "testimonialsEnabled"
+      ? "Testimonials"
+      : key === "faqsEnabled"
+        ? "FAQs"
+        : "How walks work";
+  return {
+    ok: true,
+    message: enabled ? `${label} are shown.` : `${label} are hidden.`,
+  };
+}
+
 function parseMonthlyClockInGoal(raw: string): number | null | "invalid" {
   const trimmed = raw.trim();
   if (trimmed === "") return null;
@@ -2982,6 +3134,12 @@ export async function resetSiteToDefault(
           carouselEnabled: true,
           scrollToTopEnabled: true,
           cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
+          siteName: DEFAULT_SITE_NAME,
+          siteTagline: DEFAULT_SITE_TAGLINE,
+          facebookGroupUrl: DEFAULT_FACEBOOK_GROUP_URL,
+          testimonialsEnabled: true,
+          faqsEnabled: true,
+          howWalksWorkEnabled: true,
           monthlyClockInGoal: null,
         },
         update: {
@@ -2989,6 +3147,12 @@ export async function resetSiteToDefault(
           carouselEnabled: true,
           scrollToTopEnabled: true,
           cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
+          siteName: DEFAULT_SITE_NAME,
+          siteTagline: DEFAULT_SITE_TAGLINE,
+          facebookGroupUrl: DEFAULT_FACEBOOK_GROUP_URL,
+          testimonialsEnabled: true,
+          faqsEnabled: true,
+          howWalksWorkEnabled: true,
           monthlyClockInGoal: null,
         },
       });

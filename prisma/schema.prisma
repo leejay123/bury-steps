@@ -243,6 +243,18 @@ model SiteSetting {
   scrollToTopEnabled  Boolean  @default(true)
   /// Cookie banner layout: default, small, or mini.
   cookieConsentVariant String  @default("small")
+  /// Public site name — header logo alt, homepage hero, tab titles, share cards.
+  siteName             String  @default("Bury Steps Walking Group")
+  /// Homepage hero subtitle (also used for share/meta description when short enough).
+  siteTagline          String  @default("Sunday afternoons, Bury and the surrounding countryside. No winners, no losers — just people walking together.")
+  /// Facebook group link. Empty string hides Facebook CTAs.
+  facebookGroupUrl     String  @default("https://www.facebook.com/groups/burysteps")
+  /// Homepage testimonials block.
+  testimonialsEnabled  Boolean @default(true)
+  /// Homepage FAQs block.
+  faqsEnabled          Boolean @default(true)
+  /// Homepage “how it works” strip and walk-page “How this group works” card.
+  howWalksWorkEnabled  Boolean @default(true)
   /// Optional group clock-in target for the current UK month. Null hides Together.
   monthlyClockInGoal  Int?
   updatedAt           DateTime @updatedAt

@@ -16,11 +16,15 @@ export function HeroSection({
   signInHref,
   signUpHref,
   carouselEnabled = true,
+  siteName,
+  siteTagline,
 }: {
   slides: SlideView[];
   signInHref: string;
   signUpHref: string;
   carouselEnabled?: boolean;
+  siteName: string;
+  siteTagline: string;
 }) {
   // Turned on in settings is necessary but not sufficient — with zero
   // slides there's nothing for the carousel to show, so treat that the same
@@ -62,13 +66,10 @@ export function HeroSection({
               </Show>
             </>
           }
-          title="Bury Steps Walking Group"
+          title={siteName}
           titleAs="h1"
         >
-          <p>
-            Sunday afternoons, Bury and the surrounding countryside. No winners, no losers — just
-            people walking together.
-          </p>
+          <p>{siteTagline}</p>
         </HeroCopy>
       </div>
 

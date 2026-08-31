@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ProgressBoard } from "./progress-board";
 
 export const metadata: Metadata = {
-  title: "Progress — Bury Steps Walking Group",
+  title: "Progress",
   robots: { index: false, follow: false },
 };
 

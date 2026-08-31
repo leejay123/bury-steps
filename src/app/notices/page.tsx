@@ -7,7 +7,7 @@ import { NoticesBlogSection } from "@/components/notices-blog-section";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Notices — Bury Steps Walking Group",
+  title: "Notices",
   robots: { index: false, follow: false },
 };
 

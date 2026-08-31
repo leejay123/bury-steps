@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LEGAL_LAST_UPDATED, LegalPage } from "@/components/legal-page";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — Bury Steps Walking Group",
+  title: "Terms of Service",
   description: "Terms for using the Bury Steps Walking Group website and taking part in walks.",
 };
 

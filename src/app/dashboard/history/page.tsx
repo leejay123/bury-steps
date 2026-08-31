@@ -8,7 +8,7 @@ import { AttendanceHistory } from "@/components/attendance-history";
 import { walkSharePath } from "@/lib/walk-slug";
 
 export const metadata: Metadata = {
-  title: "Walk history — Bury Steps Walking Group",
+  title: "Walk history",
 };
 
 export const dynamic = "force-dynamic";

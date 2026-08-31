@@ -11,7 +11,6 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { FACEBOOK_GROUP_URL } from "@/lib/urls";
 
 const GOALS = [
   "Lose weight",
@@ -104,7 +103,14 @@ function BulletList({ items, columns = false }: { items: string[]; columns?: boo
   );
 }
 
-export function HomeAboutDrawer({ trigger }: { trigger?: ReactNode }) {
+export function HomeAboutDrawer({
+  facebookGroupUrl = "",
+  trigger,
+}: {
+  facebookGroupUrl?: string;
+  trigger?: ReactNode;
+}) {
+  const facebookUrl = facebookGroupUrl.trim();
   return (
     <Drawer>
       <DrawerTrigger asChild>
@@ -261,15 +267,22 @@ export function HomeAboutDrawer({ trigger }: { trigger?: ReactNode }) {
               </p>
               <p>
                 You do not have to have it all figured out. Come as you are. Chat, photos and
-                last-minute updates also live in our{" "}
-                <a
-                  href={FACEBOOK_GROUP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium text-foreground underline-offset-4 hover:underline"
-                >
-                  Facebook group
-                </a>
+                last-minute updates also live in our
+                {facebookUrl ? (
+                  <>
+                    {" "}
+                    <a
+                      href={facebookUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-foreground underline-offset-4 hover:underline"
+                    >
+                      Facebook group
+                    </a>
+                  </>
+                ) : (
+                  " Facebook group"
+                )}
                 .
               </p>
             </section>

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LEGAL_LAST_UPDATED, LegalPage } from "@/components/legal-page";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — Bury Steps Walking Group",
+  title: "Privacy Policy",
   description: "How Bury Steps Walking Group uses personal information.",
 };
 

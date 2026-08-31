@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Your walks — Bury Steps Walking Group",
+  title: "Your walks",
   robots: { index: false, follow: false },
 };
 

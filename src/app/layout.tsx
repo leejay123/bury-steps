@@ -9,35 +9,42 @@ import { AFTER_AUTH_PATH, appUrl, SIGN_IN_URL, SIGN_UP_URL } from "@/lib/urls";
 import { PAGE_X, PAGE_Y } from "@/lib/page-x";
 import { SiteMobileNav, SiteNav, SiteNavFallback } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
+import { SiteBrandLink } from "@/components/site-brand-link";
 import { SiteLogo } from "@/components/site-logo";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { MotionPage } from "@/components/motion";
 import { BackToTopGate } from "@/components/back-to-top-gate";
-import { UnlockPageOnNavigate, UnlockingLink } from "@/components/overlay-root";
+import { UnlockPageOnNavigate } from "@/components/overlay-root";
 import { SiteCookieConsentGate } from "@/components/site-cookie-consent-gate";
+import { getSiteTheme } from "@/lib/site-theme";
+import { DEFAULT_SITE_NAME, siteMetaDescription } from "@/lib/site-branding";
 import "./globals.css";
 
-const SITE_NAME = "Bury Steps Walking Group";
-const SITE_DESCRIPTION = "Weekly walks around Bury. Sign up, join a walk, clock in.";
-
-export const metadata: Metadata = {
-  metadataBase: new URL(appUrl()),
-  title: SITE_NAME,
-  description: SITE_DESCRIPTION,
-  openGraph: {
-    title: SITE_NAME,
-    description: SITE_DESCRIPTION,
-    url: "/",
-    siteName: SITE_NAME,
-    locale: "en_GB",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: SITE_NAME,
-    description: SITE_DESCRIPTION,
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const theme = await getSiteTheme();
+  const description = siteMetaDescription(theme.siteTagline);
+  return {
+    metadataBase: new URL(appUrl()),
+    title: {
+      default: theme.siteName,
+      template: `%s — ${theme.siteName}`,
+    },
+    description,
+    openGraph: {
+      title: theme.siteName,
+      description,
+      url: "/",
+      siteName: theme.siteName,
+      locale: "en_GB",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: theme.siteName,
+      description,
+    },
+  };
+}
 
 export const preferredRegion = ["lhr1"];
 
@@ -115,9 +122,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <header className="sticky top-0 z-[55] touch-manipulation bg-background [transform:translateZ(0)]">
               <div className="relative">
                 <div className={`flex h-14 items-center justify-between gap-3 ${PAGE_X} md:grid md:grid-cols-[1fr_auto_1fr]`}>
-                  <UnlockingLink className="flex h-8 min-w-0 items-center justify-self-start" href="/">
-                    <SiteLogo />
-                  </UnlockingLink>
+                  <Suspense
+                    fallback={
+                      <div className="flex h-8 min-w-0 items-center justify-self-start">
+                        <SiteLogo alt={DEFAULT_SITE_NAME} />
+                      </div>
+                    }
+                  >
+                    <SiteBrandLink />
+                  </Suspense>
                   <Suspense fallback={<SiteNavFallback />}>
                     <SiteNav />
                   </Suspense>
@@ -131,7 +144,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <main className={`flex-1 ${PAGE_Y} ${PAGE_X}`} id="main-content">
               <MotionPage>{children}</MotionPage>
             </main>
-            <SiteFooter />
+            <Suspense fallback={null}>
+              <SiteFooter />
+            </Suspense>
           </div>
           <Toaster duration={2800} position="top-center" />
           <Suspense fallback={null}>
