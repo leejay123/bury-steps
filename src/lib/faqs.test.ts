@@ -1,5 +1,37 @@
 import { describe, expect, it } from "vitest";
-import { faqCategorySlug } from "./faqs";
+import {
+  DEFAULT_FAQ_SECTION_INTRO,
+  DEFAULT_FAQ_SECTION_TITLE,
+  faqCategorySlug,
+  parseFaqSectionIntro,
+  parseFaqSectionTitle,
+} from "./faqs";
+
+describe("parseFaqSectionTitle", () => {
+  it("accepts the default heading", () => {
+    expect(parseFaqSectionTitle(DEFAULT_FAQ_SECTION_TITLE)).toBe(DEFAULT_FAQ_SECTION_TITLE);
+  });
+
+  it("trims and collapses spaces", () => {
+    expect(parseFaqSectionTitle("  Common  questions  ")).toBe("Common questions");
+  });
+
+  it("rejects too-short or too-long headings", () => {
+    expect(parseFaqSectionTitle("A")).toBe("invalid");
+    expect(parseFaqSectionTitle("x".repeat(81))).toBe("invalid");
+  });
+});
+
+describe("parseFaqSectionIntro", () => {
+  it("accepts the default intro", () => {
+    expect(parseFaqSectionIntro(DEFAULT_FAQ_SECTION_INTRO)).toBe(DEFAULT_FAQ_SECTION_INTRO);
+  });
+
+  it("rejects too-short or too-long intros", () => {
+    expect(parseFaqSectionIntro("Short")).toBe("invalid");
+    expect(parseFaqSectionIntro("x".repeat(281))).toBe("invalid");
+  });
+});
 
 describe("faqCategorySlug", () => {
   it("lowercases and hyphenates spaces", () => {

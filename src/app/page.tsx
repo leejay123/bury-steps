@@ -32,6 +32,8 @@ export default async function Home() {
       <HomeWelcome
         facebookGroupUrl={theme.facebookGroupUrl}
         faqCategories={faqData.categories}
+        faqSectionIntro={theme.faqSectionIntro}
+        faqSectionTitle={theme.faqSectionTitle}
         faqs={faqData.faqs}
         faqsEnabled={theme.faqsEnabled}
         howWalksWorkEnabled={theme.howWalksWorkEnabled}

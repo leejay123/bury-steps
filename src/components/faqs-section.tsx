@@ -20,10 +20,14 @@ export function FaqsSection({
   categories,
   facebookGroupUrl = DEFAULT_FACEBOOK_GROUP_URL,
   faqs,
+  intro,
+  title,
 }: {
   categories: FaqCategoryView[];
   facebookGroupUrl?: string;
   faqs: FaqView[];
+  intro: string;
+  title: string;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -33,7 +37,12 @@ export function FaqsSection({
 
   return (
     <section>
-      <FaqIntro onSearchChange={setSearchTerm} searchTerm={searchTerm} />
+      <FaqIntro
+        intro={intro}
+        onSearchChange={setSearchTerm}
+        searchTerm={searchTerm}
+        title={title}
+      />
       <FaqBrowser
         categories={categories}
         facebookGroupUrl={facebookUrl}
@@ -46,11 +55,15 @@ export function FaqsSection({
 }
 
 const FaqIntro = memo(function FaqIntro({
+  intro,
   searchTerm,
   onSearchChange,
+  title,
 }: {
+  intro: string;
   searchTerm: string;
   onSearchChange: (value: string) => void;
+  title: string;
 }) {
   return (
     <HeroCopy
@@ -68,13 +81,10 @@ const FaqIntro = memo(function FaqIntro({
         </InputGroup>
       }
       eyebrow={null}
-      title="Frequently asked questions"
+      title={title}
       titleAs="h2"
     >
-      <p>
-        How to join, what to bring, and how clock-in works. If you still have a question, ask in the
-        Facebook group.
-      </p>
+      <p>{intro}</p>
     </HeroCopy>
   );
 });

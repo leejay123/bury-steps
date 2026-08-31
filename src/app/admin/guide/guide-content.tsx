@@ -503,15 +503,17 @@ export function OrganiserGuide() {
               <p className="font-medium text-foreground">FAQs</p>
               <p>
                 Up to {MAX_HOMEPAGE_FAQS} questions in up to {MAX_FAQ_CATEGORIES} categories. Open{" "}
-                <Link href="/admin/settings/faqs">FAQs</Link>. Categories have their own list:
-                tap a row to rename it in a drawer, or choose Add category to open the same
-                drawer empty. Remove is on the list. You cannot remove a category that still has
-                questions, or the last category.
+                <Link href="/admin/settings/faqs">FAQs</Link>. At the top of that page you can edit
+                the section <strong>heading</strong> and <strong>intro</strong> shown above the
+                list on the homepage. Categories have their own list: tap a row to rename it in a
+                drawer, or choose Add category to open the same drawer empty. Remove is on the
+                list. You cannot remove a category that still has questions, or the last category.
               </p>
               <p>
                 Click a question row to edit it in the drawer. Each question needs a category so
                 visitors can filter on the homepage. Use the up and down arrows to change the order
-                of categories or questions. Hidden if you have no questions.
+                of categories or questions. Hidden if you have no questions, or if FAQs are turned
+                off under Display.
               </p>
             </GuideBody>
           </AccordionContent>

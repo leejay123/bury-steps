@@ -32,10 +32,14 @@ import {
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import {
+  DEFAULT_FAQ_SECTION_INTRO,
+  DEFAULT_FAQ_SECTION_TITLE,
   MAX_FAQ_CATEGORIES,
   MAX_FAQ_CATEGORY_LABEL,
   MAX_HOMEPAGE_FAQS,
   faqCategorySlug,
+  parseFaqSectionIntro,
+  parseFaqSectionTitle,
 } from "@/lib/faqs";
 import {
   MAX_NOTICE_CATEGORIES,
@@ -2638,6 +2642,45 @@ export async function updateHomepageSectionEnabled(
   };
 }
 
+export async function updateFaqSectionCopy(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const faqSectionTitle = parseFaqSectionTitle(String(formData.get("faqSectionTitle") ?? ""));
+  const faqSectionIntro = parseFaqSectionIntro(String(formData.get("faqSectionIntro") ?? ""));
+  if (faqSectionTitle === "invalid") {
+    return { ok: false, error: "Give the FAQs a heading of 2–80 characters." };
+  }
+  if (faqSectionIntro === "invalid") {
+    return { ok: false, error: "Give a short intro of 8–280 characters." };
+  }
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        carouselEnabled: true,
+        scrollToTopEnabled: true,
+        cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
+        faqSectionTitle,
+        faqSectionIntro,
+      },
+      update: { faqSectionTitle, faqSectionIntro },
+    });
+  } catch (err) {
+    return logActionError("updateFaqSectionCopy", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/faqs");
+  return { ok: true, message: "FAQ heading and intro saved." };
+}
+
 function parseMonthlyClockInGoal(raw: string): number | null | "invalid" {
   const trimmed = raw.trim();
   if (trimmed === "") return null;
@@ -3139,6 +3182,8 @@ export async function resetSiteToDefault(
           facebookGroupUrl: DEFAULT_FACEBOOK_GROUP_URL,
           testimonialsEnabled: true,
           faqsEnabled: true,
+          faqSectionTitle: DEFAULT_FAQ_SECTION_TITLE,
+          faqSectionIntro: DEFAULT_FAQ_SECTION_INTRO,
           howWalksWorkEnabled: true,
           monthlyClockInGoal: null,
         },
@@ -3152,6 +3197,8 @@ export async function resetSiteToDefault(
           facebookGroupUrl: DEFAULT_FACEBOOK_GROUP_URL,
           testimonialsEnabled: true,
           faqsEnabled: true,
+          faqSectionTitle: DEFAULT_FAQ_SECTION_TITLE,
+          faqSectionIntro: DEFAULT_FAQ_SECTION_INTRO,
           howWalksWorkEnabled: true,
           monthlyClockInGoal: null,
         },

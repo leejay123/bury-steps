@@ -11,6 +11,8 @@ import type { FaqCategoryView, FaqView } from "@/lib/faqs";
 export function HomeWelcome({
   facebookGroupUrl,
   faqCategories,
+  faqSectionIntro,
+  faqSectionTitle,
   faqs,
   faqsEnabled,
   howWalksWorkEnabled,
@@ -19,6 +21,8 @@ export function HomeWelcome({
 }: {
   facebookGroupUrl: string;
   faqCategories: FaqCategoryView[];
+  faqSectionIntro: string;
+  faqSectionTitle: string;
   faqs: FaqView[];
   faqsEnabled: boolean;
   howWalksWorkEnabled: boolean;
@@ -54,6 +58,8 @@ export function HomeWelcome({
           categories={faqCategories}
           facebookGroupUrl={facebookGroupUrl}
           faqs={faqs}
+          intro={faqSectionIntro}
+          title={faqSectionTitle}
         />
       ) : null}
     </>

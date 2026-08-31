@@ -253,6 +253,10 @@ model SiteSetting {
   testimonialsEnabled  Boolean @default(true)
   /// Homepage FAQs block.
   faqsEnabled          Boolean @default(true)
+  /// Heading above the homepage FAQ list.
+  faqSectionTitle      String  @default("Frequently asked questions")
+  /// Short intro under the FAQ heading.
+  faqSectionIntro      String  @default("How to join, what to bring, and how clock-in works. If you still have a question, ask in the Facebook group.")
   /// Homepage “how it works” strip and walk-page “How this group works” card.
   howWalksWorkEnabled  Boolean @default(true)
   /// Optional group clock-in target for the current UK month. Null hides Together.

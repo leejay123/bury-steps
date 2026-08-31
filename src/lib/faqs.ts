@@ -1,6 +1,24 @@
 export const MAX_HOMEPAGE_FAQS = 20;
 export const MAX_FAQ_CATEGORIES = 8;
 export const MAX_FAQ_CATEGORY_LABEL = 32;
+export const MAX_FAQ_SECTION_TITLE = 80;
+export const MAX_FAQ_SECTION_INTRO = 280;
+
+export const DEFAULT_FAQ_SECTION_TITLE = "Frequently asked questions";
+export const DEFAULT_FAQ_SECTION_INTRO =
+  "How to join, what to bring, and how clock-in works. If you still have a question, ask in the Facebook group.";
+
+export function parseFaqSectionTitle(raw: string): string | "invalid" {
+  const title = raw.trim().replace(/\s+/g, " ");
+  if (title.length < 2 || title.length > MAX_FAQ_SECTION_TITLE) return "invalid";
+  return title;
+}
+
+export function parseFaqSectionIntro(raw: string): string | "invalid" {
+  const intro = raw.trim().replace(/\s+/g, " ");
+  if (intro.length < 8 || intro.length > MAX_FAQ_SECTION_INTRO) return "invalid";
+  return intro;
+}
 
 export const DEFAULT_FAQ_CATEGORIES = [
   { id: "faqcat_joining", slug: "joining", label: "Joining", sortOrder: 0 },
