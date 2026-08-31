@@ -50,7 +50,7 @@ export default async function AdminSettingsPage() {
       href: "/admin/settings/display",
       title: "Display",
       description:
-        "Site name, tagline, Facebook link, homepage copy and sections, cookie notice, and back to top.",
+        "Site name, tagline, Facebook link, homepage copy and section order, cookie notice, and back to top.",
     },
     {
       href: "/admin/settings/cache",

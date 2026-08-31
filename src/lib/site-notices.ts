@@ -5,11 +5,13 @@ import {
   noticesForBell,
   sortNoticesForAdmin,
   sortNoticesNewestFirst,
+  noticeBodyForBellDrawer,
   type NoticeAudience,
   type NoticeCategoryView,
   type NoticeView,
 } from "@/lib/notices";
 import { HOMEPAGE_REVALIDATE_SECONDS } from "@/lib/homepage-cache";
+import { HOMEPAGE_MEMBER_NOTICES_LIMIT } from "@/lib/homepage-copy";
 
 export const NOTICES_CACHE_TAG = "site-notices";
 
@@ -218,4 +220,21 @@ export async function recordSiteNoticeRead(userId: string, noticeId: string): Pr
     data: [{ noticeId, userId }],
     skipDuplicates: true,
   });
+}
+
+/** Latest notices for the signed-in homepage carousel (same set as the bell). */
+export async function getHomepageMemberNotices(
+  userId: string,
+  firstName?: string | null,
+): Promise<{ id: string; title: string; body: string }[]> {
+  try {
+    const { notices } = await getSiteNoticeState(userId, firstName);
+    return notices.slice(0, HOMEPAGE_MEMBER_NOTICES_LIMIT).map((notice) => ({
+      id: notice.id,
+      title: notice.title,
+      body: noticeBodyForBellDrawer(notice),
+    }));
+  } catch {
+    return [];
+  }
 }

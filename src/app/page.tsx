@@ -1,8 +1,10 @@
 import { HeroSection } from "@/components/hero";
 import { HomeWelcome } from "@/components/home-welcome";
+import { getOptionalUser } from "@/lib/auth";
 import { getHomepageSlides } from "@/lib/homepage-slides";
 import { getHomepageTestimonials } from "@/lib/homepage-testimonials";
 import { getHomepageFaqData } from "@/lib/homepage-faqs";
+import { getHomepageMemberNotices } from "@/lib/site-notices";
 import { PAGE_X_BLEED } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 import { accountPortalHref, appUrl } from "@/lib/urls";
@@ -12,11 +14,13 @@ export const revalidate = 120;
 
 export default async function Home() {
   const origin = appUrl();
-  const [slides, testimonials, faqData, theme] = await Promise.all([
+  const user = await getOptionalUser();
+  const [slides, testimonials, faqData, theme, memberNotices] = await Promise.all([
     getHomepageSlides(),
     getHomepageTestimonials(),
     getHomepageFaqData(),
     getSiteTheme(),
+    user ? getHomepageMemberNotices(user.id, user.firstName) : Promise.resolve([]),
   ]);
 
   return (
@@ -39,16 +43,13 @@ export default async function Home() {
         faqSectionIntro={theme.faqSectionIntro}
         faqSectionTitle={theme.faqSectionTitle}
         faqs={faqData.faqs}
-        faqsEnabled={theme.faqsEnabled}
+        homepageSectionOrder={theme.homepageSectionOrder}
         howThisStartedBody={theme.howThisStartedBody}
-        howThisStartedEnabled={theme.howThisStartedEnabled}
         howThisStartedEyebrow={theme.howThisStartedEyebrow}
         howThisStartedTeaser={theme.howThisStartedTeaser}
         howThisStartedTitle={theme.howThisStartedTitle}
-        howWalksWorkEnabled={theme.howWalksWorkEnabled}
-        memberNoticesEnabled={theme.memberNoticesEnabled}
+        memberNotices={memberNotices}
         testimonials={testimonials}
-        testimonialsEnabled={theme.testimonialsEnabled}
       />
     </div>
   );

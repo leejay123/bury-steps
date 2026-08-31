@@ -270,6 +270,8 @@ model SiteSetting {
   aboutExpect           String  @default("")
   /// About drawer rules: one “Title | Body” per line. Empty uses built-in defaults.
   aboutRules            String  @default("")
+  /// Comma-separated homepage block order (howWalksWork, howThisStarted, memberNotices, testimonials, faqs).
+  homepageSectionOrder  String  @default("howWalksWork,howThisStarted,memberNotices,testimonials,faqs")
   /// Signed-in members: latest notices carousel on the homepage.
   memberNoticesEnabled  Boolean @default(true)
   /// Homepage “how it works” strip and walk-page “How this group works” card.

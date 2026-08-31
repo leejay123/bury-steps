@@ -1,14 +1,34 @@
+import { Fragment, type ReactNode } from "react";
 import { HomeAboutDrawer } from "@/components/home-about-drawer";
 import { FeatureSection } from "@/components/feature-section";
 import { HeroCopy } from "@/components/hero-copy";
 import { TestimonialsSection } from "@/components/testimonials-section";
 import { FaqsSection } from "@/components/faqs-section";
-import { HomeMemberNoticesSection } from "@/components/home-member-notices";
+import {
+  HomeMemberNoticesSection,
+  type HomepageNoticeSlide,
+} from "@/components/home-member-notices";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { Button } from "@/components/ui/button";
 import type { TestimonialView } from "@/lib/testimonials";
 import type { FaqCategoryView, FaqView } from "@/lib/faqs";
 import type { AboutRule } from "@/lib/homepage-copy";
+import type { HomepageSectionId } from "@/lib/homepage-sections";
+
+function SectionShell({
+  children,
+  showDividerAfter,
+}: {
+  children: ReactNode;
+  showDividerAfter: boolean;
+}) {
+  return (
+    <div className="relative">
+      {children}
+      {showDividerAfter ? <FullWidthDivider position="bottom" /> : null}
+    </div>
+  );
+}
 
 export function HomeWelcome({
   aboutExpect,
@@ -20,16 +40,13 @@ export function HomeWelcome({
   faqSectionIntro,
   faqSectionTitle,
   faqs,
-  faqsEnabled,
+  homepageSectionOrder,
   howThisStartedBody,
-  howThisStartedEnabled,
   howThisStartedEyebrow,
   howThisStartedTeaser,
   howThisStartedTitle,
-  howWalksWorkEnabled,
-  memberNoticesEnabled,
+  memberNotices,
   testimonials,
-  testimonialsEnabled,
 }: {
   aboutExpect: string[];
   aboutGoals: string[];
@@ -40,50 +57,44 @@ export function HomeWelcome({
   faqSectionIntro: string;
   faqSectionTitle: string;
   faqs: FaqView[];
-  faqsEnabled: boolean;
+  homepageSectionOrder: HomepageSectionId[];
   howThisStartedBody: string;
-  howThisStartedEnabled: boolean;
   howThisStartedEyebrow: string;
   howThisStartedTeaser: string;
   howThisStartedTitle: string;
-  howWalksWorkEnabled: boolean;
-  memberNoticesEnabled: boolean;
+  memberNotices: HomepageNoticeSlide[];
   testimonials: TestimonialView[];
-  testimonialsEnabled: boolean;
 }) {
-  const showTestimonials = testimonialsEnabled && testimonials.length > 0;
-  const showFaqs = faqsEnabled && faqs.length > 0;
-
-  return (
-    <>
-      {howWalksWorkEnabled ? <FeatureSection /> : null}
-      {howThisStartedEnabled ? (
-        <section className="relative">
-          <HeroCopy
-            actions={
-              <HomeAboutDrawer
-                aboutExpect={aboutExpect}
-                aboutGoals={aboutGoals}
-                aboutPlaces={aboutPlaces}
-                aboutRules={aboutRules}
-                facebookGroupUrl={facebookGroupUrl}
-                howThisStartedBody={howThisStartedBody}
-                howThisStartedTitle={howThisStartedTitle}
-                trigger={<Button variant="outline">Read more</Button>}
-              />
-            }
-            eyebrow={howThisStartedEyebrow || null}
-            title={howThisStartedTitle}
-            titleAs="h2"
-          >
-            <p>{howThisStartedTeaser}</p>
-          </HeroCopy>
-          <FullWidthDivider position="bottom" />
-        </section>
-      ) : null}
-      <HomeMemberNoticesSection enabled={memberNoticesEnabled} />
-      {showTestimonials ? <TestimonialsSection testimonials={testimonials} /> : null}
-      {showFaqs ? (
+  const sections: Record<HomepageSectionId, ReactNode | null> = {
+    howWalksWork: <FeatureSection />,
+    howThisStarted: (
+      <section>
+        <HeroCopy
+          actions={
+            <HomeAboutDrawer
+              aboutExpect={aboutExpect}
+              aboutGoals={aboutGoals}
+              aboutPlaces={aboutPlaces}
+              aboutRules={aboutRules}
+              facebookGroupUrl={facebookGroupUrl}
+              howThisStartedBody={howThisStartedBody}
+              howThisStartedTitle={howThisStartedTitle}
+              trigger={<Button variant="outline">Read more</Button>}
+            />
+          }
+          eyebrow={howThisStartedEyebrow || null}
+          title={howThisStartedTitle}
+          titleAs="h2"
+        >
+          <p>{howThisStartedTeaser}</p>
+        </HeroCopy>
+      </section>
+    ),
+    memberNotices: <HomeMemberNoticesSection notices={memberNotices} />,
+    testimonials:
+      testimonials.length > 0 ? <TestimonialsSection testimonials={testimonials} /> : null,
+    faqs:
+      faqs.length > 0 ? (
         <FaqsSection
           categories={faqCategories}
           facebookGroupUrl={facebookGroupUrl}
@@ -91,7 +102,20 @@ export function HomeWelcome({
           intro={faqSectionIntro}
           title={faqSectionTitle}
         />
-      ) : null}
+      ) : null,
+  };
+
+  const visible = homepageSectionOrder.filter((id) => sections[id] != null);
+
+  return (
+    <>
+      {visible.map((id, index) => (
+        <Fragment key={id}>
+          <SectionShell showDividerAfter={index < visible.length - 1}>
+            {sections[id]}
+          </SectionShell>
+        </Fragment>
+      ))}
     </>
   );
 }

@@ -18,19 +18,13 @@ export default async function DisplaySettingsPage() {
 
   return (
     <SettingsPage
-      description="Name, tagline, Facebook link, homepage copy and sections, cookie notice, and back to top."
+      description="Name, tagline, Facebook link, homepage copy and section order, cookie notice, and back to top."
       previewHref="/"
       title="Display"
     >
       <SiteBrandingSettings siteName={theme.siteName} siteTagline={theme.siteTagline} />
       <FacebookGroupSettings facebookGroupUrl={theme.facebookGroupUrl} />
-      <HomepageSectionsSettings
-        faqsEnabled={theme.faqsEnabled}
-        howThisStartedEnabled={theme.howThisStartedEnabled}
-        howWalksWorkEnabled={theme.howWalksWorkEnabled}
-        memberNoticesEnabled={theme.memberNoticesEnabled}
-        testimonialsEnabled={theme.testimonialsEnabled}
-      />
+      <HomepageSectionsSettings sectionOrder={theme.homepageSectionOrder} />
       <HowThisStartedCopySettings
         howThisStartedBody={theme.howThisStartedBody}
         howThisStartedEyebrow={theme.howThisStartedEyebrow}

@@ -239,7 +239,7 @@ export default async function WalkLinkPage({
       ) : completed ? null : (
         <>
           <BeforeYouSetOff />
-          {theme.howWalksWorkEnabled ? <HowWalksWork /> : null}
+          <HowWalksWork />
         </>
       )}
     </div>

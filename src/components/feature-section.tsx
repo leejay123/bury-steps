@@ -1,7 +1,6 @@
 import { CalendarDays, Footprints, UserPlus } from "lucide-react";
 import type React from "react";
 import { DecorIcon } from "@/components/decor-icon";
-import { FullWidthDivider } from "@/components/full-width-divider";
 import { cn } from "@/lib/utils";
 
 type FeatureType = {
@@ -38,7 +37,6 @@ export function FeatureSection() {
           <FeatureCard className="h-full" feature={feature} key={feature.title} />
         ))}
       </div>
-      <FullWidthDivider position="bottom" />
     </div>
   );
 }

@@ -1,10 +1,7 @@
 "use client";
 
-import { Show } from "@clerk/nextjs";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState } from "react";
 import Autoplay from "embla-carousel-autoplay";
-import Link from "next/link";
-import { getHomepageMemberNoticesAction } from "@/server/actions";
 import {
   Carousel,
   CarouselContent,
@@ -15,32 +12,24 @@ import {
 } from "@/components/ui/carousel";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { HeroCopy } from "@/components/hero-copy";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type NoticeSlide = {
+export type HomepageNoticeSlide = {
   id: string;
   title: string;
   body: string;
-  kind: "BELL" | "PAGE";
-  slug: string | null;
 };
 
-function MemberNoticesCarouselInner() {
-  const [notices, setNotices] = useState<NoticeSlide[] | null>(null);
-  const [, startTransition] = useTransition();
+export function HomeMemberNoticesSection({
+  notices,
+}: {
+  notices: HomepageNoticeSlide[];
+}) {
   const plugin = useRef(
     Autoplay({ delay: 6000, stopOnInteraction: false, stopOnMouseEnter: true }),
   );
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
-
-  useEffect(() => {
-    startTransition(async () => {
-      const result = await getHomepageMemberNoticesAction();
-      setNotices(result.ok ? result.notices : []);
-    });
-  }, []);
 
   useEffect(() => {
     if (!api) return;
@@ -52,7 +41,7 @@ function MemberNoticesCarouselInner() {
     };
   }, [api]);
 
-  if (!notices || notices.length === 0) return null;
+  if (notices.length === 0) return null;
 
   const showControls = notices.length > 1;
 
@@ -62,6 +51,7 @@ function MemberNoticesCarouselInner() {
         <p>Updates for members — open the bell anytime for the full list.</p>
       </HeroCopy>
       <div className="relative">
+        <FullWidthDivider position="top" />
         <div className="grid w-full grid-cols-1 gap-px bg-border">
           <Carousel
             className="w-full bg-background"
@@ -71,19 +61,14 @@ function MemberNoticesCarouselInner() {
           >
             <CarouselContent className="-ml-0">
               {notices.map((notice) => (
-                <CarouselItem key={notice.id} className="pl-0 basis-full sm:basis-1/2 lg:basis-1/3">
-                  <article className="flex h-full flex-col gap-3 border-border bg-background p-6 md:p-8 sm:border-r">
-                    <h3 className="text-lg font-medium text-foreground text-balance">
+                <CarouselItem key={notice.id} className="basis-full pl-0 sm:basis-1/2 lg:basis-1/3">
+                  <article className="flex h-full flex-col gap-3 bg-background p-6 sm:border-r sm:border-border md:p-8">
+                    <h3 className="text-balance text-lg font-medium text-foreground">
                       {notice.title}
                     </h3>
                     <p className="flex-1 text-sm leading-relaxed text-muted-foreground">
                       {notice.body}
                     </p>
-                    {notice.kind === "PAGE" && notice.slug ? (
-                      <Button asChild className="self-start" size="sm" variant="outline">
-                        <Link href={`/notices/${notice.slug}`}>Read full notice</Link>
-                      </Button>
-                    ) : null}
                   </article>
                 </CarouselItem>
               ))}
@@ -110,18 +95,7 @@ function MemberNoticesCarouselInner() {
             ) : null}
           </Carousel>
         </div>
-        <FullWidthDivider position="bottom" />
       </div>
     </section>
-  );
-}
-
-/** Signed-in members only. Draws its own bottom hairline when content shows. */
-export function HomeMemberNoticesSection({ enabled }: { enabled: boolean }) {
-  if (!enabled) return null;
-  return (
-    <Show when="signed-in">
-      <MemberNoticesCarouselInner />
-    </Show>
   );
 }

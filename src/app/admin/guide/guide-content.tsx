@@ -513,8 +513,7 @@ export function OrganiserGuide() {
               <p>
                 Click a question row to edit it in the drawer. Each question needs a category so
                 visitors can filter on the homepage. Use the up and down arrows to change the order
-                of categories or questions. Hidden if you have no questions, or if FAQs are turned
-                off under Display.
+                of categories or questions. Hidden on the homepage if you have no questions yet.
               </p>
             </GuideBody>
           </AccordionContent>
@@ -638,15 +637,17 @@ export function OrganiserGuide() {
                 Open <Link href="/admin/settings/display">Display</Link> to set the public{" "}
                 <strong>site name</strong> and <strong>homepage tagline</strong> (also used in
                 browser tabs and share previews), the <strong>Facebook group</strong> link (leave
-                blank to hide it), which homepage blocks are shown (
+                blank to hide it), the <strong>homepage section order</strong> (
                 <strong>How walks work</strong>, <strong>How this started</strong>,{" "}
-                <strong>Member notices</strong>, <strong>Testimonials</strong>,{" "}
+                <strong>Latest notices</strong>, <strong>Testimonials</strong>,{" "}
                 <strong>FAQs</strong>), the <strong>How this started</strong> blurb and full story,
                 the About drawer <strong>goals / places / expect / rules</strong> lists, the{" "}
                 <strong>FAQ</strong> heading and intro, how the cookie notice looks (
                 <strong>Default</strong>, <strong>Small</strong>, or <strong>Mini</strong>), and
-                whether <strong>Back to top</strong> appears after you scroll. Hiding a block does
-                not leave an empty ruled gap — hairlines only sit between sections that are on.
+                whether <strong>Back to top</strong> appears after you scroll. Testimonials and FAQs
+                still hide on the homepage until you add at least one quote or question. Latest
+                notices only appear for signed-in members who have notices in the bell. Hairlines sit
+                between sections, not under the last block before the footer.
               </p>
               <p>
                 Open <Link href="/admin/settings/cache">Site cache</Link> if the public homepage

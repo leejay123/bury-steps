@@ -6,7 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import { clerkClient } from "@clerk/nextjs/server";
-import { requireAdmin, requireUser, displayName, getOptionalUser } from "@/lib/auth";
+import { requireAdmin, requireUser, displayName } from "@/lib/auth";
 import { londonWallClockToUtc } from "@/lib/dates";
 import {
   geocodeFields,
@@ -42,6 +42,12 @@ import {
   parseFaqSectionTitle,
 } from "@/lib/faqs";
 import {
+  DEFAULT_HOMEPAGE_SECTION_ORDER_TEXT,
+  parseHomepageSectionOrder,
+  serializeHomepageSectionOrder,
+  type HomepageSectionId,
+} from "@/lib/homepage-sections";
+import {
   DEFAULT_ABOUT_EXPECT_TEXT,
   DEFAULT_ABOUT_GOALS_TEXT,
   DEFAULT_ABOUT_PLACES_TEXT,
@@ -50,7 +56,6 @@ import {
   DEFAULT_HOW_THIS_STARTED_EYEBROW,
   DEFAULT_HOW_THIS_STARTED_TEASER,
   DEFAULT_HOW_THIS_STARTED_TITLE,
-  HOMEPAGE_MEMBER_NOTICES_LIMIT,
   MAX_ABOUT_LIST_ITEM,
   MAX_ABOUT_LIST_ITEMS,
   MAX_ABOUT_RULES,
@@ -2604,30 +2609,12 @@ export async function updateFacebookGroupUrl(
   };
 }
 
-const HOMEPAGE_SECTION_KEYS = [
-  "testimonialsEnabled",
-  "faqsEnabled",
-  "howWalksWorkEnabled",
-  "howThisStartedEnabled",
-  "memberNoticesEnabled",
-] as const;
-
-type HomepageSectionKey = (typeof HOMEPAGE_SECTION_KEYS)[number];
-
-function parseHomepageSectionKey(raw: string): HomepageSectionKey | null {
-  return HOMEPAGE_SECTION_KEYS.includes(raw as HomepageSectionKey)
-    ? (raw as HomepageSectionKey)
-    : null;
-}
-
-export async function updateHomepageSectionEnabled(
-  _prev: ActionResult | null,
-  formData: FormData,
-): Promise<ActionResult> {
+export async function reorderHomepageSections(ids: HomepageSectionId[]): Promise<ActionResult> {
   await requireAdmin();
-  const key = parseHomepageSectionKey(String(formData.get("section") ?? ""));
-  if (!key) return { ok: false, error: "Choose a homepage section." };
-  const enabled = String(formData.get(key) ?? "") === "on";
+  const order = parseHomepageSectionOrder(serializeHomepageSectionOrder(ids));
+  if (order === "invalid") {
+    return { ok: false, error: "Could not save that order. Try again." };
+  }
 
   try {
     await prisma.siteSetting.upsert({
@@ -2638,37 +2625,19 @@ export async function updateHomepageSectionEnabled(
         carouselEnabled: true,
         scrollToTopEnabled: true,
         cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
-        [key]: enabled,
+        homepageSectionOrder: serializeHomepageSectionOrder(order),
       },
-      update: { [key]: enabled },
+      update: { homepageSectionOrder: serializeHomepageSectionOrder(order) },
     });
   } catch (err) {
-    return logActionError(
-      "updateHomepageSectionEnabled",
-      err,
-      "Could not save that setting. Try again.",
-    );
+    return logActionError("reorderHomepageSections", err, "Could not save that order. Try again.");
   }
 
   revalidateTag(HOMEPAGE_CACHE_TAG);
-  revalidatePath("/", "layout");
   revalidatePath("/");
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/display");
-  const label =
-    key === "testimonialsEnabled"
-      ? "Testimonials"
-      : key === "faqsEnabled"
-        ? "FAQs"
-        : key === "howWalksWorkEnabled"
-          ? "How walks work"
-          : key === "howThisStartedEnabled"
-            ? "How this started"
-            : "Member notices";
-  return {
-    ok: true,
-    message: enabled ? `${label} are shown.` : `${label} are hidden.`,
-  };
+  return { ok: true, message: "Homepage section order saved." };
 }
 
 export async function updateFaqSectionCopy(
@@ -2848,38 +2817,6 @@ export async function updateAboutLists(
 }
 
 /** Latest notices for the signed-in homepage carousel (same set as the bell). */
-export async function getHomepageMemberNoticesAction(): Promise<
-  | {
-      ok: true;
-      notices: {
-        id: string;
-        title: string;
-        body: string;
-        kind: "BELL" | "PAGE";
-        slug: string | null;
-      }[];
-    }
-  | { ok: false }
-> {
-  const user = await getOptionalUser();
-  if (!user) return { ok: false };
-
-  try {
-    const { notices } = await getSiteNoticeState(user.id, user.firstName);
-    return {
-      ok: true,
-      notices: notices.slice(0, HOMEPAGE_MEMBER_NOTICES_LIMIT).map((notice) => ({
-        id: notice.id,
-        title: notice.title,
-        body: noticeBodyForBellDrawer(notice),
-        kind: notice.kind,
-        slug: notice.slug,
-      })),
-    };
-  } catch {
-    return { ok: false };
-  }
-}
 
 function parseMonthlyClockInGoal(raw: string): number | null | "invalid" {
   const trimmed = raw.trim();
@@ -3393,6 +3330,7 @@ export async function resetSiteToDefault(
           aboutPlaces: DEFAULT_ABOUT_PLACES_TEXT,
           aboutExpect: DEFAULT_ABOUT_EXPECT_TEXT,
           aboutRules: DEFAULT_ABOUT_RULES_TEXT,
+          homepageSectionOrder: DEFAULT_HOMEPAGE_SECTION_ORDER_TEXT,
           memberNoticesEnabled: true,
           howWalksWorkEnabled: true,
           monthlyClockInGoal: null,
@@ -3418,6 +3356,7 @@ export async function resetSiteToDefault(
           aboutPlaces: DEFAULT_ABOUT_PLACES_TEXT,
           aboutExpect: DEFAULT_ABOUT_EXPECT_TEXT,
           aboutRules: DEFAULT_ABOUT_RULES_TEXT,
+          homepageSectionOrder: DEFAULT_HOMEPAGE_SECTION_ORDER_TEXT,
           memberNoticesEnabled: true,
           howWalksWorkEnabled: true,
           monthlyClockInGoal: null,

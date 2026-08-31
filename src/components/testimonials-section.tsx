@@ -5,7 +5,6 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { GridPattern } from "@/components/ui/grid-pattern";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { FullWidthDivider } from "@/components/full-width-divider";
 import { GridFiller } from "@/components/grid-filler";
 import { HeroCopy } from "@/components/hero-copy";
 import type { TestimonialView } from "@/lib/testimonials";
@@ -34,7 +33,6 @@ export function TestimonialsSection({
             totalItems={testimonials.length}
           />
         </div>
-        <FullWidthDivider position="bottom" />
       </div>
     </section>
   );

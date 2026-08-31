@@ -15,6 +15,10 @@ import {
 } from "@/lib/site-branding";
 import { DEFAULT_FAQ_SECTION_INTRO, DEFAULT_FAQ_SECTION_TITLE } from "@/lib/faqs";
 import {
+  normalizeHomepageSectionOrder,
+  type HomepageSectionId,
+} from "@/lib/homepage-sections";
+import {
   DEFAULT_ABOUT_EXPECT,
   DEFAULT_ABOUT_EXPECT_TEXT,
   DEFAULT_ABOUT_GOALS,
@@ -40,11 +44,8 @@ export type SiteTheme = {
   siteName: string;
   siteTagline: string;
   facebookGroupUrl: string;
-  testimonialsEnabled: boolean;
-  faqsEnabled: boolean;
   faqSectionTitle: string;
   faqSectionIntro: string;
-  howThisStartedEnabled: boolean;
   howThisStartedTitle: string;
   howThisStartedEyebrow: string;
   howThisStartedTeaser: string;
@@ -58,8 +59,7 @@ export type SiteTheme = {
   aboutPlacesText: string;
   aboutExpectText: string;
   aboutRulesText: string;
-  memberNoticesEnabled: boolean;
-  howWalksWorkEnabled: boolean;
+  homepageSectionOrder: HomepageSectionId[];
 };
 
 function defaultTheme(): SiteTheme {
@@ -70,11 +70,8 @@ function defaultTheme(): SiteTheme {
     siteName: DEFAULT_SITE_NAME,
     siteTagline: DEFAULT_SITE_TAGLINE,
     facebookGroupUrl: DEFAULT_FACEBOOK_GROUP_URL,
-    testimonialsEnabled: true,
-    faqsEnabled: true,
     faqSectionTitle: DEFAULT_FAQ_SECTION_TITLE,
     faqSectionIntro: DEFAULT_FAQ_SECTION_INTRO,
-    howThisStartedEnabled: true,
     howThisStartedTitle: DEFAULT_HOW_THIS_STARTED_TITLE,
     howThisStartedEyebrow: DEFAULT_HOW_THIS_STARTED_EYEBROW,
     howThisStartedTeaser: DEFAULT_HOW_THIS_STARTED_TEASER,
@@ -87,8 +84,7 @@ function defaultTheme(): SiteTheme {
     aboutPlacesText: DEFAULT_ABOUT_PLACES_TEXT,
     aboutExpectText: DEFAULT_ABOUT_EXPECT_TEXT,
     aboutRulesText: DEFAULT_ABOUT_RULES_TEXT,
-    memberNoticesEnabled: true,
-    howWalksWorkEnabled: true,
+    homepageSectionOrder: normalizeHomepageSectionOrder(null),
   };
 }
 
@@ -102,11 +98,8 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       siteName: true,
       siteTagline: true,
       facebookGroupUrl: true,
-      testimonialsEnabled: true,
-      faqsEnabled: true,
       faqSectionTitle: true,
       faqSectionIntro: true,
-      howThisStartedEnabled: true,
       howThisStartedTitle: true,
       howThisStartedEyebrow: true,
       howThisStartedTeaser: true,
@@ -115,8 +108,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       aboutPlaces: true,
       aboutExpect: true,
       aboutRules: true,
-      memberNoticesEnabled: true,
-      howWalksWorkEnabled: true,
+      homepageSectionOrder: true,
     },
   });
 
@@ -134,11 +126,8 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     siteName: row?.siteName?.trim() || DEFAULT_SITE_NAME,
     siteTagline: row?.siteTagline?.trim() || DEFAULT_SITE_TAGLINE,
     facebookGroupUrl: row?.facebookGroupUrl ?? DEFAULT_FACEBOOK_GROUP_URL,
-    testimonialsEnabled: row?.testimonialsEnabled ?? true,
-    faqsEnabled: row?.faqsEnabled ?? true,
     faqSectionTitle: row?.faqSectionTitle?.trim() || DEFAULT_FAQ_SECTION_TITLE,
     faqSectionIntro: row?.faqSectionIntro?.trim() || DEFAULT_FAQ_SECTION_INTRO,
-    howThisStartedEnabled: row?.howThisStartedEnabled ?? true,
     howThisStartedTitle: row?.howThisStartedTitle?.trim() || DEFAULT_HOW_THIS_STARTED_TITLE,
     howThisStartedEyebrow:
       row?.howThisStartedEyebrow?.trim() || DEFAULT_HOW_THIS_STARTED_EYEBROW,
@@ -161,12 +150,11 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     aboutRulesText: row?.aboutRules?.trim()
       ? serializeAboutRules(aboutRules)
       : DEFAULT_ABOUT_RULES_TEXT,
-    memberNoticesEnabled: row?.memberNoticesEnabled ?? true,
-    howWalksWorkEnabled: row?.howWalksWorkEnabled ?? true,
+    homepageSectionOrder: normalizeHomepageSectionOrder(row?.homepageSectionOrder),
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v7"], {
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v8"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });
