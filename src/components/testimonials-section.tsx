@@ -5,6 +5,7 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { GridPattern } from "@/components/ui/grid-pattern";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { FullWidthDivider } from "@/components/full-width-divider";
 import { GridFiller } from "@/components/grid-filler";
 import { HeroCopy } from "@/components/hero-copy";
 import type { TestimonialView } from "@/lib/testimonials";
@@ -22,6 +23,7 @@ export function TestimonialsSection({
         <p>A few words from people who walk with us on Sundays.</p>
       </HeroCopy>
       <div className="relative">
+        <FullWidthDivider position="top" />
         <div className="grid w-full grid-cols-1 gap-px bg-border sm:grid-cols-2 lg:grid-cols-3">
           {testimonials.map((testimonial) => (
             <TestimonialsCard className="h-full" key={testimonial.id} testimonial={testimonial} />
