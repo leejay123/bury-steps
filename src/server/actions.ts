@@ -30,7 +30,13 @@ import {
   MAX_JOURNEY_TITLE,
 } from "@/lib/walk-journey";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
-import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
+import {
+  DEFAULT_TESTIMONIALS_SECTION_INTRO,
+  DEFAULT_TESTIMONIALS_SECTION_TITLE,
+  MAX_HOMEPAGE_TESTIMONIALS,
+  parseTestimonialsSectionIntro,
+  parseTestimonialsSectionTitle,
+} from "@/lib/testimonials";
 import {
   DEFAULT_FAQ_SECTION_INTRO,
   DEFAULT_FAQ_SECTION_TITLE,
@@ -2679,6 +2685,53 @@ export async function updateFaqSectionCopy(
   return { ok: true, message: "FAQ heading and intro saved." };
 }
 
+export async function updateTestimonialsSectionCopy(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const testimonialsSectionTitle = parseTestimonialsSectionTitle(
+    String(formData.get("testimonialsSectionTitle") ?? ""),
+  );
+  const testimonialsSectionIntro = parseTestimonialsSectionIntro(
+    String(formData.get("testimonialsSectionIntro") ?? ""),
+  );
+  if (testimonialsSectionTitle === "invalid") {
+    return { ok: false, error: "Give testimonials a heading of 2–80 characters." };
+  }
+  if (testimonialsSectionIntro === "invalid") {
+    return { ok: false, error: "Give a short intro of 8–280 characters." };
+  }
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        carouselEnabled: true,
+        scrollToTopEnabled: true,
+        cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
+        testimonialsSectionTitle,
+        testimonialsSectionIntro,
+      },
+      update: { testimonialsSectionTitle, testimonialsSectionIntro },
+    });
+  } catch (err) {
+    return logActionError(
+      "updateTestimonialsSectionCopy",
+      err,
+      "Could not save that setting. Try again.",
+    );
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/display");
+  return { ok: true, message: "Testimonials heading and intro saved." };
+}
+
 export async function updateHowThisStartedCopy(
   _prev: ActionResult | null,
   formData: FormData,
@@ -3318,6 +3371,8 @@ export async function resetSiteToDefault(
           siteTagline: DEFAULT_SITE_TAGLINE,
           facebookGroupUrl: DEFAULT_FACEBOOK_GROUP_URL,
           testimonialsEnabled: true,
+          testimonialsSectionTitle: DEFAULT_TESTIMONIALS_SECTION_TITLE,
+          testimonialsSectionIntro: DEFAULT_TESTIMONIALS_SECTION_INTRO,
           faqsEnabled: true,
           faqSectionTitle: DEFAULT_FAQ_SECTION_TITLE,
           faqSectionIntro: DEFAULT_FAQ_SECTION_INTRO,
@@ -3344,6 +3399,8 @@ export async function resetSiteToDefault(
           siteTagline: DEFAULT_SITE_TAGLINE,
           facebookGroupUrl: DEFAULT_FACEBOOK_GROUP_URL,
           testimonialsEnabled: true,
+          testimonialsSectionTitle: DEFAULT_TESTIMONIALS_SECTION_TITLE,
+          testimonialsSectionIntro: DEFAULT_TESTIMONIALS_SECTION_INTRO,
           faqsEnabled: true,
           faqSectionTitle: DEFAULT_FAQ_SECTION_TITLE,
           faqSectionIntro: DEFAULT_FAQ_SECTION_INTRO,

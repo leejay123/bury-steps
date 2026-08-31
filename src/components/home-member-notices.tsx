@@ -11,12 +11,14 @@ import {
 } from "@/components/ui/carousel";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { HeroCopy } from "@/components/hero-copy";
+import { formatDate } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 
 export type HomepageNoticeSlide = {
   id: string;
   title: string;
   body: string;
+  updatedAt: string;
 };
 
 const carouselControlClassName =
@@ -55,9 +57,17 @@ export function HomeMemberNoticesSection({
                   className="flex basis-full pl-0 sm:basis-1/2 lg:basis-1/3"
                 >
                   <article className="flex min-h-52 w-full flex-col gap-3 bg-background p-6 sm:min-h-56 sm:border-r sm:border-border md:p-8">
-                    <h3 className="line-clamp-2 text-balance text-lg font-medium text-foreground">
-                      {notice.title}
-                    </h3>
+                    <div className="flex flex-col gap-1">
+                      <h3 className="line-clamp-2 text-balance text-lg font-medium text-foreground">
+                        {notice.title}
+                      </h3>
+                      <time
+                        className="text-xs text-muted-foreground"
+                        dateTime={notice.updatedAt}
+                      >
+                        Updated {formatDate(notice.updatedAt)}
+                      </time>
+                    </div>
                     <p className="line-clamp-4 flex-1 text-sm leading-relaxed text-muted-foreground">
                       {notice.body}
                     </p>

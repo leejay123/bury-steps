@@ -226,13 +226,14 @@ export async function recordSiteNoticeRead(userId: string, noticeId: string): Pr
 export async function getHomepageMemberNotices(
   userId: string,
   firstName?: string | null,
-): Promise<{ id: string; title: string; body: string }[]> {
+): Promise<{ id: string; title: string; body: string; updatedAt: string }[]> {
   try {
     const { notices } = await getSiteNoticeState(userId, firstName);
     return notices.slice(0, HOMEPAGE_MEMBER_NOTICES_LIMIT).map((notice) => ({
       id: notice.id,
       title: notice.title,
       body: noticeBodyForBellDrawer(notice),
+      updatedAt: notice.updatedAt.toISOString(),
     }));
   } catch {
     return [];

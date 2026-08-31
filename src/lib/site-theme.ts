@@ -15,6 +15,10 @@ import {
 } from "@/lib/site-branding";
 import { DEFAULT_FAQ_SECTION_INTRO, DEFAULT_FAQ_SECTION_TITLE } from "@/lib/faqs";
 import {
+  DEFAULT_TESTIMONIALS_SECTION_INTRO,
+  DEFAULT_TESTIMONIALS_SECTION_TITLE,
+} from "@/lib/testimonials";
+import {
   normalizeHomepageSectionOrder,
   type HomepageSectionId,
 } from "@/lib/homepage-sections";
@@ -44,6 +48,8 @@ export type SiteTheme = {
   siteName: string;
   siteTagline: string;
   facebookGroupUrl: string;
+  testimonialsSectionTitle: string;
+  testimonialsSectionIntro: string;
   faqSectionTitle: string;
   faqSectionIntro: string;
   howThisStartedTitle: string;
@@ -70,6 +76,8 @@ function defaultTheme(): SiteTheme {
     siteName: DEFAULT_SITE_NAME,
     siteTagline: DEFAULT_SITE_TAGLINE,
     facebookGroupUrl: DEFAULT_FACEBOOK_GROUP_URL,
+    testimonialsSectionTitle: DEFAULT_TESTIMONIALS_SECTION_TITLE,
+    testimonialsSectionIntro: DEFAULT_TESTIMONIALS_SECTION_INTRO,
     faqSectionTitle: DEFAULT_FAQ_SECTION_TITLE,
     faqSectionIntro: DEFAULT_FAQ_SECTION_INTRO,
     howThisStartedTitle: DEFAULT_HOW_THIS_STARTED_TITLE,
@@ -98,6 +106,8 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       siteName: true,
       siteTagline: true,
       facebookGroupUrl: true,
+      testimonialsSectionTitle: true,
+      testimonialsSectionIntro: true,
       faqSectionTitle: true,
       faqSectionIntro: true,
       howThisStartedTitle: true,
@@ -126,6 +136,10 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     siteName: row?.siteName?.trim() || DEFAULT_SITE_NAME,
     siteTagline: row?.siteTagline?.trim() || DEFAULT_SITE_TAGLINE,
     facebookGroupUrl: row?.facebookGroupUrl ?? DEFAULT_FACEBOOK_GROUP_URL,
+    testimonialsSectionTitle:
+      row?.testimonialsSectionTitle?.trim() || DEFAULT_TESTIMONIALS_SECTION_TITLE,
+    testimonialsSectionIntro:
+      row?.testimonialsSectionIntro?.trim() || DEFAULT_TESTIMONIALS_SECTION_INTRO,
     faqSectionTitle: row?.faqSectionTitle?.trim() || DEFAULT_FAQ_SECTION_TITLE,
     faqSectionIntro: row?.faqSectionIntro?.trim() || DEFAULT_FAQ_SECTION_INTRO,
     howThisStartedTitle: row?.howThisStartedTitle?.trim() || DEFAULT_HOW_THIS_STARTED_TITLE,
@@ -154,7 +168,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v8"], {
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v9"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });

@@ -497,7 +497,9 @@ export function OrganiserGuide() {
               <p>
                 Up to {MAX_HOMEPAGE_TESTIMONIALS} quotes. Name, a line under the name (for example
                 “Member”), the quote, and an optional photo. The photo fills the drawer; use the
-                cross on it to take the photo off before you save. Hidden on the homepage if you
+                cross on it to take the photo off before you save. The section{" "}
+                <strong>heading</strong> and <strong>intro</strong> are edited under{" "}
+                <Link href="/admin/settings/display">Display</Link>. Hidden on the homepage if you
                 have none.
               </p>
               <p className="font-medium text-foreground">FAQs</p>
@@ -642,7 +644,8 @@ export function OrganiserGuide() {
                 <strong>Latest notices</strong>, <strong>Testimonials</strong>,{" "}
                 <strong>FAQs</strong>), the <strong>How this started</strong> blurb and full story,
                 the About drawer <strong>goals / places / expect / rules</strong> lists, the{" "}
-                <strong>FAQ</strong> heading and intro, how the cookie notice looks (
+                <strong>Testimonials</strong> heading and intro, the <strong>FAQ</strong> heading
+                and intro, how the cookie notice looks (
                 <strong>Default</strong>, <strong>Small</strong>, or <strong>Mini</strong>), and
                 whether <strong>Back to top</strong> appears after you scroll. Testimonials and FAQs
                 still hide on the homepage until you add at least one quote or question. Latest

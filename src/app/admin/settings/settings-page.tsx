@@ -15,12 +15,14 @@ export function SettingsPage({
   children,
   previewHref,
   previewLabel = "View homepage",
+  contentClassName,
 }: {
   title: string;
   description: string;
   children: React.ReactNode;
   previewHref?: string;
   previewLabel?: string;
+  contentClassName?: string;
 }) {
   return (
     <div className="flex flex-col">
@@ -42,7 +44,9 @@ export function SettingsPage({
         </div>
         <FullWidthDivider position="bottom" />
       </div>
-      <div className="flex flex-col gap-6 px-4 py-6 md:px-6">{children}</div>
+      <div className={cn("flex flex-col gap-6 px-4 py-6 md:px-6", contentClassName)}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -79,5 +83,49 @@ export function SettingsSection({
       ) : null}
       {children}
     </section>
+  );
+}
+
+const groupedSectionClassName =
+  "[&_section]:rounded-none [&_section]:border-0 [&_section]:bg-card";
+
+/** Cluster related settings under a label, with hairlines between panels. */
+export function SettingsSectionGroup({
+  children,
+  description,
+  id,
+  title,
+}: {
+  children: React.ReactNode;
+  description?: string;
+  id?: string;
+  title: string;
+}) {
+  return (
+    <section className="scroll-mt-28 flex flex-col gap-3" id={id}>
+      <div className="flex flex-col gap-1">
+        <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{title}</h2>
+        {description ? (
+          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">{description}</p>
+        ) : null}
+      </div>
+      <div
+        className={cn(
+          "flex flex-col gap-px overflow-hidden rounded-xl border bg-border",
+          groupedSectionClassName,
+        )}
+      >
+        {children}
+      </div>
+    </section>
+  );
+}
+
+/** Side-by-side settings panels inside a group on large screens. */
+export function SettingsSectionPair({ children }: { children: React.ReactNode }) {
+  return (
+    <div className={cn("grid gap-px bg-border lg:grid-cols-2", groupedSectionClassName)}>
+      {children}
+    </div>
   );
 }

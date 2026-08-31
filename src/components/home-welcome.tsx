@@ -47,6 +47,8 @@ export function HomeWelcome({
   howThisStartedTitle,
   memberNotices,
   testimonials,
+  testimonialsSectionIntro,
+  testimonialsSectionTitle,
 }: {
   aboutExpect: string[];
   aboutGoals: string[];
@@ -64,6 +66,8 @@ export function HomeWelcome({
   howThisStartedTitle: string;
   memberNotices: HomepageNoticeSlide[];
   testimonials: TestimonialView[];
+  testimonialsSectionIntro: string;
+  testimonialsSectionTitle: string;
 }) {
   const sections: Record<HomepageSectionId, ReactNode | null> = {
     howWalksWork: <FeatureSection />,
@@ -92,7 +96,13 @@ export function HomeWelcome({
     ),
     memberNotices: <HomeMemberNoticesSection notices={memberNotices} />,
     testimonials:
-      testimonials.length > 0 ? <TestimonialsSection testimonials={testimonials} /> : null,
+      testimonials.length > 0 ? (
+        <TestimonialsSection
+          intro={testimonialsSectionIntro}
+          testimonials={testimonials}
+          title={testimonialsSectionTitle}
+        />
+      ) : null,
     faqs:
       faqs.length > 0 ? (
         <FaqsSection

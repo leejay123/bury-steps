@@ -11,16 +11,20 @@ import { HeroCopy } from "@/components/hero-copy";
 import type { TestimonialView } from "@/lib/testimonials";
 
 export function TestimonialsSection({
+  intro,
   testimonials,
+  title,
 }: {
+  intro: string;
   testimonials: TestimonialView[];
+  title: string;
 }) {
   if (testimonials.length === 0) return null;
 
   return (
     <section>
-      <HeroCopy eyebrow={null} title="From the group" titleAs="h2">
-        <p>A few words from people who walk with us on Sundays.</p>
+      <HeroCopy eyebrow={null} title={title} titleAs="h2">
+        <p>{intro}</p>
       </HeroCopy>
       <div className="relative">
         <FullWidthDivider position="top" />
