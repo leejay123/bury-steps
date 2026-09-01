@@ -113,10 +113,42 @@ function eventTargetInsideOpenOverlay(target: EventTarget | null) {
   );
 }
 
-/** Pin the site header and block background scroll for the lifetime of an overlay. */
+const SCROLL_KEYS = new Set(["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "]);
+
+/**
+ * Pin the site header and block background scroll for the lifetime of an
+ * overlay. overflow:hidden alone still leaks on iOS/trackpads sometimes, so
+ * this also pins scrollY/scrollX directly and blocks the keyboard's own
+ * scroll keys outside the open panel — the panel itself sets touch-pan-y so
+ * it can still scroll/drag.
+ */
 export function lockBackgroundScroll() {
   // Pin while sticky is still active (before overflow:hidden lands).
   const headerPin = pinSiteHeaderInPlace();
+  const lockedX = window.scrollX;
+  const lockedY = window.scrollY;
+  const html = document.documentElement;
+  const { body } = document;
+
+  const prev = {
+    htmlOverflow: html.style.overflow,
+    bodyOverflow: body.style.overflow,
+    htmlOverscroll: html.style.overscrollBehavior,
+    bodyOverscroll: body.style.overscrollBehavior,
+    bodyTouchAction: body.style.touchAction,
+  };
+
+  html.style.overflow = "hidden";
+  body.style.overflow = "hidden";
+  html.style.overscrollBehavior = "none";
+  body.style.overscrollBehavior = "none";
+  body.style.touchAction = "none";
+
+  const freezeScroll = () => {
+    if (window.scrollX !== lockedX || window.scrollY !== lockedY) {
+      window.scrollTo(lockedX, lockedY);
+    }
+  };
 
   const onTouchMove = (event: TouchEvent) => {
     if (eventTargetInsideOpenOverlay(event.target)) return;
@@ -126,20 +158,36 @@ export function lockBackgroundScroll() {
     if (eventTargetInsideOpenOverlay(event.target)) return;
     event.preventDefault();
   };
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (!SCROLL_KEYS.has(event.key)) return;
+    if (eventTargetInsideOpenOverlay(event.target)) return;
+    event.preventDefault();
+  };
 
+  window.addEventListener("scroll", freezeScroll, { capture: true, passive: true });
   document.addEventListener("touchmove", onTouchMove, { capture: true, passive: false });
   document.addEventListener("wheel", onWheel, { capture: true, passive: false });
+  document.addEventListener("keydown", onKeyDown, { capture: true });
   clearBodyPositionFixedLock();
   const observer = new MutationObserver(() => {
     clearBodyPositionFixedLock();
   });
   observer.observe(document.body, { attributes: true, attributeFilter: ["style"] });
+  freezeScroll();
 
   return () => {
+    window.removeEventListener("scroll", freezeScroll, true);
     document.removeEventListener("touchmove", onTouchMove, true);
     document.removeEventListener("wheel", onWheel, true);
+    document.removeEventListener("keydown", onKeyDown, true);
     observer.disconnect();
+    html.style.overflow = prev.htmlOverflow;
+    body.style.overflow = prev.bodyOverflow;
+    html.style.overscrollBehavior = prev.htmlOverscroll;
+    body.style.overscrollBehavior = prev.bodyOverscroll;
+    body.style.touchAction = prev.bodyTouchAction;
     clearBodyPositionFixedLock();
+    window.scrollTo(lockedX, lockedY);
     unpinSiteHeaderWhenScrollUnlocks(headerPin);
   };
 }
