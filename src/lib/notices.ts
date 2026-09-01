@@ -96,7 +96,7 @@ export function noticeBodyForHomepageCarousel(notice: NoticeView): string {
 }
 
 /** Replace {{firstName}} in notice copy for the viewing member. */
-export function personalizeNoticeCopy(
+function personalizeNoticeCopy(
   text: string,
   firstName: string | null | undefined,
 ): string {

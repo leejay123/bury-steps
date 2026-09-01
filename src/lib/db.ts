@@ -19,7 +19,7 @@ function withQueryParam(url: string, key: string, value: string) {
  * Transaction pooling (6543) multiplexes those isolates. Migrations still use
  * DATABASE_URL as stored in Vercel (session / 5432).
  */
-export function runtimeDatasourceUrl(url = process.env.DATABASE_URL) {
+function runtimeDatasourceUrl(url = process.env.DATABASE_URL) {
   if (!url) return undefined;
 
   let next = url.replace(/pooler\.supabase\.com:5432/i, "pooler.supabase.com:6543");

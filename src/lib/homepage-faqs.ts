@@ -91,7 +91,3 @@ export async function getHomepageFaqData(): Promise<HomepageFaqData> {
   }
 }
 
-export async function getHomepageFaqs(): Promise<FaqView[]> {
-  const { faqs } = await getHomepageFaqData();
-  return faqs;
-}

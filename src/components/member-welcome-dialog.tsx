@@ -33,7 +33,7 @@ const STEPS = [
   },
 ];
 
-export function MemberWelcomeDialogContent({
+function MemberWelcomeDialogContent({
   firstName,
   onDismiss,
 }: {

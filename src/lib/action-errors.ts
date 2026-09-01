@@ -45,7 +45,7 @@ export function actionResultErrorMessage(
   return trimmed || fallback;
 }
 
-export type ServerActionResult = { ok: true; message?: string; href?: string } | { ok: false; error: string };
+type ServerActionResult = { ok: true; message?: string; href?: string } | { ok: false; error: string };
 
 type ServerAction = (
   prev: ServerActionResult | null,

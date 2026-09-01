@@ -4,7 +4,7 @@ export const DEFAULT_SITE_NAME = "Bury Steps Walking Group";
 export const DEFAULT_SITE_TAGLINE =
   "Sunday afternoons, Bury and the surrounding countryside. No winners, no losers — just people walking together.";
 /** Shorter line for browser tabs / share cards when a dedicated meta description is needed. */
-export const DEFAULT_SITE_META_DESCRIPTION =
+const DEFAULT_SITE_META_DESCRIPTION =
   "Weekly walks around Bury. Sign up, join a walk, clock in.";
 
 export { DEFAULT_FACEBOOK_GROUP_URL };

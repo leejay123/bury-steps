@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useActionState } from "react";
+import { useCallback, useEffect, useRef, useActionState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { ActionResult } from "@/server/actions";
@@ -26,7 +26,7 @@ type ServerAction = (
  * cancel walk → Cancel button swapped for Reopen), and the toast/redirect
  * never runs.
  */
-export function notifyActionResult(result: ActionResult, onOk?: () => void) {
+function notifyActionResult(result: ActionResult, onOk?: () => void) {
   if (result.ok) {
     onOk?.();
     unlockIdleDocument();
@@ -69,20 +69,6 @@ export function useNotifyActionState(action: ServerAction, onOk?: () => void) {
   }, [router]);
 
   return useActionState<ActionResult | null, FormData>(wrapped, null);
-}
-
-/**
- * useActionState wrapped with {@link safeServerAction} plus {@link useActionToast}.
- * Use for forms that stay mounted after success.
- */
-export function useFormActionState(action: ServerAction, onOk?: () => void) {
-  const safeAction = useMemo(() => safeServerAction(action), [action]);
-  const [state, formAction, isPending] = useActionState<ActionResult | null, FormData>(
-    safeAction,
-    null,
-  );
-  useActionToast(state, onOk);
-  return [state, formAction, isPending] as const;
 }
 
 /**

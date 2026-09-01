@@ -1,4 +1,4 @@
-export const HOMEPAGE_SECTION_IDS = [
+const HOMEPAGE_SECTION_IDS = [
   "howWalksWork",
   "howThisStarted",
   "memberNotices",
