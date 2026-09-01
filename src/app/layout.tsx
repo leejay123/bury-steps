@@ -12,7 +12,6 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteBrandLink } from "@/components/site-brand-link";
 import { SiteLogo } from "@/components/site-logo";
 import { FullWidthDivider } from "@/components/full-width-divider";
-import { MotionPage } from "@/components/motion";
 import { BackToTopGate } from "@/components/back-to-top-gate";
 import { UnlockPageOnNavigate } from "@/components/overlay-root";
 import { SiteCookieConsentGate } from "@/components/site-cookie-consent-gate";
@@ -142,7 +141,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
             </header>
             <main className={`flex-1 ${PAGE_Y} ${PAGE_X}`} id="main-content">
-              <MotionPage>{children}</MotionPage>
+              {children}
             </main>
             <Suspense fallback={null}>
               <SiteFooter />
