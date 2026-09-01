@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Check, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -24,7 +25,17 @@ export function ShareLink({ url }: { url: string }) {
         {url}
       </code>
       <Button className="shrink-0" type="button" size="sm" variant="outline" onClick={copy}>
-        {copied ? "Copied" : "Copy"}
+        {copied ? (
+          <>
+            <Check data-icon="inline-start" />
+            Copied
+          </>
+        ) : (
+          <>
+            <Copy data-icon="inline-start" />
+            Copy
+          </>
+        )}
       </Button>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Route } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -23,6 +24,7 @@ export function WalkJourneyDrawer({ events }: { events: JourneyEventView[] }) {
     <Drawer onOpenChange={setOpen} open={open}>
       <DrawerTrigger asChild>
         <Button size="sm" variant="outline">
+          <Route data-icon="inline-start" />
           View journey
         </Button>
       </DrawerTrigger>
