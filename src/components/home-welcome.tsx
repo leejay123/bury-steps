@@ -94,7 +94,10 @@ export function HomeWelcome({
         </HeroCopy>
       </section>
     ),
-    memberNotices: <HomeMemberNoticesSection notices={memberNotices} />,
+    memberNotices:
+      memberNotices.length > 0 ? (
+        <HomeMemberNoticesSection notices={memberNotices} />
+      ) : null,
     testimonials:
       testimonials.length > 0 ? (
         <TestimonialsSection
