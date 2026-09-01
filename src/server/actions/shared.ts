@@ -82,7 +82,7 @@ export function logActionError(
 }
 
 export function revalidateHomepage() {
-  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/admin/homepage");
   revalidatePath("/admin/settings");

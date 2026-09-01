@@ -176,7 +176,7 @@ describe("revalidateWalkShare", () => {
 describe("revalidateHomepage", () => {
   it("revalidates the homepage cache tag and every admin homepage-editing route", () => {
     revalidateHomepage();
-    expect(revalidateTag).toHaveBeenCalledWith("homepage");
+    expect(revalidateTag).toHaveBeenCalledWith("homepage", { expire: 0 });
     for (const path of [
       "/",
       "/admin/homepage",

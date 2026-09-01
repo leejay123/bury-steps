@@ -31,7 +31,7 @@ import {
 const slugSuffix = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 6);
 
 function revalidateNotices(paths: string[] = []) {
-  revalidateTag(NOTICES_CACHE_TAG);
+  revalidateTag(NOTICES_CACHE_TAG, { expire: 0 });
   revalidatePath("/", "layout");
   revalidatePath("/notices");
   revalidatePath("/admin/settings");

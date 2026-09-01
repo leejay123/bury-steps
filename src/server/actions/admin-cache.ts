@@ -46,8 +46,8 @@ export async function clearSiteCache(
   _formData: FormData,
 ): Promise<ActionResult> {
   await requireAdmin();
-  revalidateTag(HOMEPAGE_CACHE_TAG);
-  revalidateTag(NOTICES_CACHE_TAG);
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidateTag(NOTICES_CACHE_TAG, { expire: 0 });
   revalidatePath("/", "layout");
   revalidatePath("/");
   revalidatePath("/home");
@@ -231,8 +231,8 @@ export async function resetSiteToDefault(
     console.error("resetSiteToDefault: Clerk user list failed", err);
   }
 
-  revalidateTag(HOMEPAGE_CACHE_TAG);
-  revalidateTag(NOTICES_CACHE_TAG);
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidateTag(NOTICES_CACHE_TAG, { expire: 0 });
   revalidatePath("/", "layout");
   revalidatePath("/");
   revalidatePath("/home");
