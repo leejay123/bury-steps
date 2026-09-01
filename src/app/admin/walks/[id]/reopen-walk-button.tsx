@@ -30,11 +30,12 @@ function Confirm() {
 export function ReopenWalkButton({ walkId }: { walkId: string }) {
   const [open, setOpen] = useState(false);
   const [state, action, isPending] = useNotifyActionState(reopenWalk, () => setOpen(false));
+  const blocking = isPending && !state;
 
   return (
     <AlertDialog
-      closeDisabled={isPending}
-      onOpenChange={preventDismissWhilePending(isPending, setOpen)}
+      closeDisabled={blocking}
+      onOpenChange={preventDismissWhilePending(blocking, setOpen)}
       open={open}
     >
       <AlertDialogTrigger asChild>
@@ -43,7 +44,7 @@ export function ReopenWalkButton({ walkId }: { walkId: string }) {
           Reopen walk
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent closeDisabled={isPending}>
+      <AlertDialogContent closeDisabled={blocking}>
         <form action={action} className="flex flex-col gap-4">
           <AlertDialogHeader>
             <AlertDialogTitle>Reopen this walk?</AlertDialogTitle>
@@ -55,7 +56,7 @@ export function ReopenWalkButton({ walkId }: { walkId: string }) {
           <input name="walkId" type="hidden" value={walkId} />
           <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending} type="button">
+            <AlertDialogCancel disabled={blocking} type="button">
               Keep it cancelled
             </AlertDialogCancel>
             <Confirm />

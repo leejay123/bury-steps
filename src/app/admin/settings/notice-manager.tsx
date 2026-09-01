@@ -440,16 +440,15 @@ function CategoryLabelForm({
 function CategoryDrawer({
   mode,
   onOpenChange,
-  onPendingChange,
 }: {
   mode: CategoryDrawerMode | null;
   onOpenChange: (open: boolean) => void;
-  onPendingChange: (pending: boolean) => void;
 }) {
+  const [isPending, setIsPending] = useState(false);
   const open = mode !== null;
   return (
     <Drawer
-      closeDisabled={false}
+      closeDisabled={isPending}
       onOpenChange={onOpenChange}
       open={open}
       variant="form"
@@ -467,7 +466,7 @@ function CategoryDrawer({
               action={updateSiteNoticeCategory}
               category={mode.category}
               key={mode.category.id}
-              onPendingChange={onPendingChange}
+              onPendingChange={setIsPending}
               onSaved={() => onOpenChange(false)}
               submitLabel="Save"
               submitPendingLabel="Saving…"
@@ -475,7 +474,7 @@ function CategoryDrawer({
           ) : mode?.type === "add" ? (
             <CategoryLabelForm
               action={addSiteNoticeCategory}
-              onPendingChange={onPendingChange}
+              onPendingChange={setIsPending}
               onSaved={() => onOpenChange(false)}
               submitLabel="Add category"
               submitPendingLabel="Adding…"
@@ -584,7 +583,6 @@ function NoticeCategoryManager({
   maxCategories: number;
 }) {
   const [mode, setMode] = useState<CategoryDrawerMode | null>(null);
-  const [, setIsPending] = useState(false);
   const categoryIds = categories.map((item) => item.id);
   const { moveDown, moveUp, order } = useReorderableIds(categoryIds, (ids) => {
     if (ids.join() === categoryIds.join()) return;
@@ -662,7 +660,6 @@ function NoticeCategoryManager({
         onOpenChange={(open) => {
           if (!open) setMode(null);
         }}
-        onPendingChange={setIsPending}
       />
     </div>
   );

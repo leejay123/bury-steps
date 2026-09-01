@@ -178,11 +178,12 @@ function RemoveSlideButton({
     setOpen(false);
     onRemoved();
   });
+  const blocking = isPending && !state;
 
   return (
     <AlertDialog
-      closeDisabled={isPending}
-      onOpenChange={preventDismissWhilePending(isPending, setOpen)}
+      closeDisabled={blocking}
+      onOpenChange={preventDismissWhilePending(blocking, setOpen)}
       open={open}
     >
       <AlertDialogTrigger asChild>
@@ -190,7 +191,7 @@ function RemoveSlideButton({
           Remove
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent closeDisabled={isPending}>
+      <AlertDialogContent closeDisabled={blocking}>
         <form action={action} className="flex flex-col gap-4">
           <AlertDialogHeader>
             <AlertDialogTitle>Remove this slide?</AlertDialogTitle>
@@ -201,7 +202,7 @@ function RemoveSlideButton({
           <input name="slideId" type="hidden" value={slideId} />
           <FormError message={state && !state.ok ? state.error : null} />
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending} type="button">
+            <AlertDialogCancel disabled={blocking} type="button">
               Keep it
             </AlertDialogCancel>
             <RemoveConfirm />
