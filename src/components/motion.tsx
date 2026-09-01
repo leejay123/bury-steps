@@ -16,10 +16,6 @@ const fadeUp = {
   show: { opacity: 1, y: 0 },
 };
 
-export function MotionPage({ children }: { children: ReactNode }) {
-  return <div>{children}</div>;
-}
-
 export function FadeIn({
   children,
   className,
