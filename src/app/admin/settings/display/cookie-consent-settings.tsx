@@ -3,6 +3,7 @@
 import { startTransition, useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { updateCookieConsentVariant, type ActionResult } from "@/server/actions";
+import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import {
   COOKIE_CONSENT_VARIANTS,
   cookieConsentVariantLabel,
@@ -25,14 +26,19 @@ export function CookieConsentSettings({ variant }: { variant: CookieConsentVaria
     null,
   );
 
-  useEffect(() => setSelected(variant), [variant]);
+  useResetOnChange([variant], () => setSelected(variant));
+
+  // The select already flipped optimistically when tapped — put it back so
+  // the UI doesn't keep claiming a value the save never reached.
+  useResetOnChange([state, variant], () => {
+    if (state && !state.ok) setSelected(variant);
+  });
 
   useEffect(() => {
     if (!state) return;
     if (state.ok) {
       if (state.message) toast.success(state.message);
     } else {
-      setSelected(variant);
       toast.error(state.error);
     }
   }, [state, variant]);

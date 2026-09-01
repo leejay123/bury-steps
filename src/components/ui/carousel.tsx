@@ -90,6 +90,10 @@ function Carousel({
 
   React.useEffect(() => {
     if (!api) return;
+    // Sync the initial scroll-state right after subscribing, then update it
+    // via the same handler as embla fires "select" — the textbook shape for
+    // subscribing to an external system's current value.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     onSelect(api);
     api.on("reInit", onSelect);
     api.on("select", onSelect);

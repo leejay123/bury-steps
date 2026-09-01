@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { useResetOnChange } from "@/hooks/use-reset-on-change";
 
 /** Drawer, dialog, and alert dialog set this so dropdowns open inside them. */
 export const OverlayRootContext = createContext<HTMLElement | null>(null);
@@ -151,11 +152,11 @@ export function unlockIdleDocument() {
 export function useOverlayPresence(open: boolean | undefined) {
   const [held, setHeld] = useState(false);
 
+  useResetOnChange([open], () => {
+    if (open) setHeld(true);
+  });
+
   useEffect(() => {
-    if (open) {
-      setHeld(true);
-      return;
-    }
     if (open === false) {
       const timeout = window.setTimeout(() => setHeld(false), 200);
       return () => window.clearTimeout(timeout);

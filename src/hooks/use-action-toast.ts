@@ -52,9 +52,11 @@ export function notifyActionResult(result: ActionResult, onOk?: () => void) {
 export function useNotifyActionState(action: ServerAction, onOk?: () => void) {
   const router = useRouter();
   const onOkRef = useRef(onOk);
-  onOkRef.current = onOk;
   const actionRef = useRef(action);
-  actionRef.current = action;
+  useEffect(() => {
+    onOkRef.current = onOk;
+    actionRef.current = action;
+  });
 
   const wrapped = useCallback(async (prev: ActionResult | null, formData: FormData) => {
     const result = await safeServerAction((p, data) => actionRef.current(p, data))(prev, formData);
@@ -91,7 +93,10 @@ export function useFormActionState(action: ServerAction, onOk?: () => void) {
 export function useActionToast(state: ActionResult | null, onOk?: () => void) {
   const router = useRouter();
   const onOkRef = useRef(onOk);
-  onOkRef.current = onOk;
+
+  useEffect(() => {
+    onOkRef.current = onOk;
+  });
 
   useEffect(() => {
     if (!state) return;

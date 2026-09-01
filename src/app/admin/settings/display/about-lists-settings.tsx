@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { updateAboutLists } from "@/server/actions";
 import { useNotifyActionState } from "@/hooks/use-action-toast";
 import { useControlledDrawerDismissGuard } from "@/hooks/use-controlled-drawer";
+import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import {
@@ -121,13 +122,13 @@ function AboutListDrawer({
     onClose();
   });
 
-  useEffect(() => {
+  useResetOnChange([expect, goals, open, places, rules], () => {
     if (!open) return;
     setDraftGoals(goals);
     setDraftPlaces(places);
     setDraftExpect(expect);
     setDraftRules(rules);
-  }, [expect, goals, open, places, rules]);
+  });
 
   if (!active) return null;
 
@@ -228,12 +229,12 @@ export function AboutListsSettings({
   const [activeId, setActiveId] = useState<AboutListId | null>(null);
   const { openSoon, onPointerDownOutside } = useControlledDrawerDismissGuard();
 
-  useEffect(() => {
+  useResetOnChange([aboutGoalsText, aboutPlacesText, aboutExpectText, aboutRulesText], () => {
     setGoals(aboutGoalsText);
     setPlaces(aboutPlacesText);
     setExpect(aboutExpectText);
     setRules(aboutRulesText);
-  }, [aboutGoalsText, aboutPlacesText, aboutExpectText, aboutRulesText]);
+  });
 
   const values: Record<AboutListId, string> = {
     goals,

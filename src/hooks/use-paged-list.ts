@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
+import { useResetOnChange } from "@/hooks/use-reset-on-change";
 
 export { LIST_PAGE_SIZE };
 
@@ -13,13 +14,11 @@ export function usePagedList<T>(
   const pageCount = Math.max(1, Math.ceil(items.length / pageSize));
   const currentPage = Math.min(page, pageCount);
 
-  useEffect(() => {
-    setPage(1);
-  }, [resetKey]);
+  useResetOnChange([resetKey], () => setPage(1));
 
-  useEffect(() => {
+  useResetOnChange([currentPage, page], () => {
     if (page !== currentPage) setPage(currentPage);
-  }, [currentPage, page]);
+  });
 
   const paged = useMemo(() => {
     const start = (currentPage - 1) * pageSize;

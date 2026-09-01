@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useResetOnChange } from "@/hooks/use-reset-on-change";
 
 /**
  * Search + page state that lives in the URL (`?q=&page=`) instead of
@@ -33,9 +34,9 @@ export function useUrlListState({
   // server query it drives) only catches up after the debounce — unless
   // syncQueryToUrl is off, in which case only local state updates.
   const [query, setQueryState] = useState(appliedQuery);
-  useEffect(() => {
+  useResetOnChange([appliedQuery, syncQueryToUrl], () => {
     if (syncQueryToUrl) setQueryState(appliedQuery);
-  }, [appliedQuery, syncQueryToUrl]);
+  });
 
   // Drop leftover ?q= when search is client-only (e.g. members / reports PII).
   useEffect(() => {
