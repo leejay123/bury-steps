@@ -21,7 +21,7 @@ export function HomeCarousel({
   slides: SlideView[];
   framed?: boolean;
 }) {
-  const plugin = React.useRef(
+  const [plugin] = React.useState(() =>
     Autoplay({ delay: 5500, stopOnInteraction: false, stopOnMouseEnter: true }),
   );
   const [api, setApi] = React.useState<CarouselApi>();
@@ -44,7 +44,7 @@ export function HomeCarousel({
     <Carousel
       setApi={setApi}
       opts={{ loop: showControls, align: "start" }}
-      plugins={showControls ? [plugin.current] : []}
+      plugins={showControls ? [plugin] : []}
       className={cn("w-full", framed ? "overflow-hidden" : "overflow-hidden rounded-xl")}
     >
       <CarouselContent className="-ml-0">

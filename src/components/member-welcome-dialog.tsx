@@ -95,6 +95,9 @@ export function MemberWelcomeDialog({
     } catch {
       // Storage may be unavailable (private mode); just show it once per tab.
     }
+    // localStorage isn't available on the server, so this can only be
+    // checked client-side, after mount — not a plain prop/state sync.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOpen(true);
   }, [hasNoWalks]);
 

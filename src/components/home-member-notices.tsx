@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useState } from "react";
 import Autoplay from "embla-carousel-autoplay";
 import {
   Carousel,
@@ -72,7 +72,7 @@ export function HomeMemberNoticesSection({
 }: {
   notices: HomepageNoticeSlide[];
 }) {
-  const plugin = useRef(
+  const [plugin] = useState(() =>
     Autoplay({ delay: 6000, stopOnInteraction: false, stopOnMouseEnter: true }),
   );
 
@@ -93,7 +93,7 @@ export function HomeMemberNoticesSection({
           <Carousel
             className={cn("group/carousel w-full bg-background", showControls && "pb-px")}
             opts={{ loop: showControls, align: "start" }}
-            plugins={showControls ? [plugin.current] : []}
+            plugins={showControls ? [plugin] : []}
           >
             <CarouselContent className="-ml-0 items-stretch">
               {notices.map((notice) => (

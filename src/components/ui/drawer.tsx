@@ -13,6 +13,7 @@ import {
   useOverlayPresence,
 } from "@/components/overlay-root";
 import { lockBackgroundScroll } from "@/components/overlay-scroll-lock";
+import { mergeRefs } from "@/lib/merge-refs";
 
 const overlayCloseClassName =
   "absolute top-2 right-2 z-20 flex size-11 cursor-pointer items-center justify-center rounded-md opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
@@ -27,19 +28,20 @@ const DrawerTriggerRefContext = React.createContext<React.MutableRefObject<HTMLE
 
 const DESKTOP_QUERY = "(min-width: 640px)";
 
+function subscribeToDesktopQuery(onChange: () => void) {
+  const media = window.matchMedia(DESKTOP_QUERY);
+  media.addEventListener("change", onChange);
+  return () => media.removeEventListener("change", onChange);
+}
+
 /** Bottom sheet on phones, side panel from the sm breakpoint up. */
 function useIsDesktop() {
-  const [isDesktop, setIsDesktop] = React.useState(true);
-
-  React.useEffect(() => {
-    const media = window.matchMedia(DESKTOP_QUERY);
-    setIsDesktop(media.matches);
-    const onChange = (event: MediaQueryListEvent) => setIsDesktop(event.matches);
-    media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
-  }, []);
-
-  return isDesktop;
+  return React.useSyncExternalStore(
+    subscribeToDesktopQuery,
+    () => window.matchMedia(DESKTOP_QUERY).matches,
+    // No matchMedia on the server — match the old default so hydration agrees.
+    () => true,
+  );
 }
 
 function Drawer({
@@ -162,20 +164,16 @@ function Drawer({
   );
 }
 
-function DrawerTrigger({ ...props }: React.ComponentProps<typeof DrawerPrimitive.Trigger>) {
+function DrawerTrigger({
+  ref,
+  ...props
+}: React.ComponentProps<typeof DrawerPrimitive.Trigger>) {
   const triggerRef = React.useContext(DrawerTriggerRefContext);
   return (
     <DrawerPrimitive.Trigger
       data-slot="drawer-trigger"
       {...props}
-      ref={(node) => {
-        if (triggerRef) triggerRef.current = node;
-        const { ref } = props as { ref?: React.Ref<HTMLButtonElement> };
-        if (typeof ref === "function") ref(node);
-        else if (ref && typeof ref === "object") {
-          (ref as React.MutableRefObject<HTMLElement | null>).current = node;
-        }
-      }}
+      ref={mergeRefs(triggerRef, ref)}
     />
   );
 }

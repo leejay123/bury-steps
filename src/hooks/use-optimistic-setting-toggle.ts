@@ -4,6 +4,7 @@ import { startTransition, useActionState, useEffect, useMemo, useState } from "r
 import { toast } from "sonner";
 import type { ActionResult } from "@/server/actions";
 import { actionResultErrorMessage, safeServerAction } from "@/lib/action-errors";
+import { useResetOnChange } from "@/hooks/use-reset-on-change";
 
 /**
  * A single on/off admin setting backed by a server action: flips
@@ -27,16 +28,19 @@ export function useOptimisticSettingToggle({
     null,
   );
 
-  useEffect(() => setOn(enabled), [enabled]);
+  useResetOnChange([enabled], () => setOn(enabled));
+
+  // The checkbox already flipped optimistically when tapped — put it back
+  // so the UI doesn't keep claiming a state the save never reached.
+  useResetOnChange([state, enabled], () => {
+    if (state && !state.ok) setOn(enabled);
+  });
 
   useEffect(() => {
     if (!state) return;
     if (state.ok) {
       if (state.message) toast.success(state.message);
     } else {
-      // The checkbox already flipped optimistically when tapped — put it
-      // back so the UI doesn't keep claiming a state the save never reached.
-      setOn(enabled);
       toast.error(actionResultErrorMessage(state.error));
     }
   }, [state, enabled]);

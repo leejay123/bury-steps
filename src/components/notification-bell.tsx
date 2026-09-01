@@ -13,6 +13,7 @@ import {
   OPEN_MEMBER_NOTICE_BELL_EVENT,
   type OpenMemberNoticeBellDetail,
 } from "@/lib/member-notices-bridge";
+import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,13 +41,9 @@ export function NotificationBell({
   const pathname = usePathname();
   const router = useRouter();
 
-  useEffect(() => {
-    setUnread(unreadIds);
-  }, [unreadIds]);
+  useResetOnChange([unreadIds], () => setUnread(unreadIds));
 
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+  useResetOnChange([pathname], () => setOpen(false));
 
   useEffect(() => {
     function onOpenFromCarousel(event: Event) {

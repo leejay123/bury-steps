@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { updateSiteBranding, type ActionResult } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,10 +34,10 @@ export function SiteBrandingSettings({
   const [state, action] = useActionState<ActionResult | null, FormData>(updateSiteBranding, null);
   useActionToast(state);
 
-  useEffect(() => {
+  useResetOnChange([siteName, siteTagline], () => {
     setName(siteName);
     setTagline(siteTagline);
-  }, [siteName, siteTagline]);
+  });
 
   const dirty = name !== siteName || tagline !== siteTagline;
 

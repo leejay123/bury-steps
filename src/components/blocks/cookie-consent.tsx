@@ -121,6 +121,9 @@ const CookieConsent = React.forwardRef<HTMLDivElement, CookieConsentProps>(
     }, [dismiss, onDeclineCallback]);
 
     React.useEffect(() => {
+      // The consent cookie can only be read client-side, after mount — not a
+      // plain prop/state sync — so this can't move to render.
+      /* eslint-disable react-hooks/set-state-in-effect */
       try {
         if (readConsentCookie() && !demo) {
           setHide(true);
@@ -132,6 +135,7 @@ const CookieConsent = React.forwardRef<HTMLDivElement, CookieConsentProps>(
       } catch (error) {
         console.warn("Cookie consent error:", error);
       }
+      /* eslint-enable react-hooks/set-state-in-effect */
     }, [demo]);
 
     if (hide) return null;

@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { actionErrorMessage } from "@/lib/action-errors";
 import type { ActionResult } from "@/server/actions";
+import { useResetOnChange } from "@/hooks/use-reset-on-change";
 
 export function ReorderButtons({
   canMoveDown,
@@ -65,10 +66,7 @@ export function useReorderableIds(
   // and never settle — an infinite render loop. Compare by value instead.
   const key = ids.join("\u0000");
 
-  useEffect(() => {
-    setOrder(ids);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  useResetOnChange([key], () => setOrder(ids));
 
   function move(id: string, direction: -1 | 1) {
     const from = order.indexOf(id);

@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { ChevronRight } from "lucide-react";
 import { updateHowThisStartedCopy, type ActionResult } from "@/server/actions";
 import { useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
 import { useControlledDrawerDismissGuard } from "@/hooks/use-controlled-drawer";
+import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import {
@@ -76,9 +77,9 @@ function FullStoryDrawer({
     onSaved();
   });
 
-  useEffect(() => {
+  useResetOnChange([body, open], () => {
     if (open) setDraft(body);
-  }, [body, open]);
+  });
 
   const dirty = draft !== body;
 
@@ -153,12 +154,15 @@ export function HowThisStartedCopySettings({
   const [state, action] = useActionState<ActionResult | null, FormData>(updateHowThisStartedCopy, null);
   useActionToast(state);
 
-  useEffect(() => {
-    setTitle(howThisStartedTitle);
-    setEyebrow(howThisStartedEyebrow);
-    setTeaser(howThisStartedTeaser);
-    setBody(howThisStartedBody);
-  }, [howThisStartedTitle, howThisStartedEyebrow, howThisStartedTeaser, howThisStartedBody]);
+  useResetOnChange(
+    [howThisStartedTitle, howThisStartedEyebrow, howThisStartedTeaser, howThisStartedBody],
+    () => {
+      setTitle(howThisStartedTitle);
+      setEyebrow(howThisStartedEyebrow);
+      setTeaser(howThisStartedTeaser);
+      setBody(howThisStartedBody);
+    },
+  );
 
   const inlineDirty =
     title !== howThisStartedTitle ||

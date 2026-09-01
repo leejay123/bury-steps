@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { updateMonthlyClockInGoal, type ActionResult } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,9 +38,7 @@ export function ProgressSettingsForm({
   );
   useActionToast(state);
 
-  useEffect(() => {
-    setValue(saved);
-  }, [saved]);
+  useResetOnChange([saved], () => setValue(saved));
 
   const dirty = value !== saved;
 

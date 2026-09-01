@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { formatDateTime, formatTime } from "@/lib/dates";
+import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import {
   DataList,
   DataListActions,
@@ -72,11 +73,11 @@ export function WalkAttendanceTable({
   const listRef = useRef<HTMLDivElement>(null);
   const paging = usePagedList(rows);
 
-  useEffect(() => {
+  useResetOnChange([openId, rows], () => {
     if (openId && !rows.some((row) => row.id === openId)) {
       setOpenId(null);
     }
-  }, [openId, rows]);
+  });
 
   return (
     <div className="flex flex-col gap-4" ref={listRef}>
