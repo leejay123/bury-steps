@@ -9,8 +9,6 @@ import { HeroCopy } from "@/components/hero-copy";
 import { FadeIn } from "@/components/motion";
 import type { SlideView } from "@/lib/slides";
 
-export { HeroCopy };
-
 export function HeroSection({
   slides,
   signInHref,

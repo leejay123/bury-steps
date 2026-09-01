@@ -32,25 +32,3 @@ export async function getWalkMemberCountsByWalkIds(
 
   return counts;
 }
-
-export async function getWalkMemberNamesByWalkIds(
-  walkIds: string[],
-): Promise<Map<string, string[]>> {
-  const namesByWalk = new Map<string, string[]>(walkIds.map((id) => [id, []]));
-  if (walkIds.length === 0) return namesByWalk;
-
-  const rows = await prisma.attendance.findMany({
-    where: { walkId: { in: walkIds }, clockedOutAt: null },
-    orderBy: { clockedInAt: "asc" },
-    select: {
-      walkId: true,
-      user: { select: { firstName: true, lastName: true } },
-    },
-  });
-
-  for (const row of rows) {
-    namesByWalk.get(row.walkId)?.push(memberDisplayName(row.user));
-  }
-
-  return namesByWalk;
-}

@@ -41,7 +41,7 @@ export function FeatureSection() {
   );
 }
 
-export function FeatureCard({
+function FeatureCard({
   feature,
   className,
   ...props

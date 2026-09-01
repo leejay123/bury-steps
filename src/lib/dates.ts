@@ -3,7 +3,7 @@ export const LONDON = "Europe/London";
 export type DateInput = Date | string | number;
 
 /** Dates crossing `unstable_cache` or a Client Component arrive as ISO strings. */
-export function toDate(value: DateInput): Date {
+function toDate(value: DateInput): Date {
   return value instanceof Date ? value : new Date(value);
 }
 

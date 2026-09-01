@@ -1,9 +1,9 @@
 import { londonMonthKey, londonWeekStartKey, londonYear } from "./dates";
 import { walkStatus } from "./walk-window";
 
-export const COMEBACK_MISSED_WEEKS = 3;
-export const ALL_MONTH_MIN_WALKS = 2;
-export const STREAK_BADGE_WEEKS = 2;
+const COMEBACK_MISSED_WEEKS = 3;
+const ALL_MONTH_MIN_WALKS = 2;
+const STREAK_BADGE_WEEKS = 2;
 export const MAX_MONTHLY_CLOCK_IN_GOAL = 9999;
 
 export type WalkGameWalk = {

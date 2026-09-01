@@ -1,11 +1,7 @@
 /** Clerk Account Portal (custom domain). Sign-in and join happen here. */
-export const ACCOUNT_PORTAL_ORIGIN = "https://accounts.burysteps-walkinggroup.co.uk";
+const ACCOUNT_PORTAL_ORIGIN = "https://accounts.burysteps-walkinggroup.co.uk";
 export const SIGN_IN_URL = `${ACCOUNT_PORTAL_ORIGIN}/sign-in`;
 export const SIGN_UP_URL = `${ACCOUNT_PORTAL_ORIGIN}/sign-up`;
-
-/** On-site paths that bounce to the Account Portal, so old links still work. */
-export const SIGN_IN_PATH = "/sign-in";
-export const SIGN_UP_PATH = "/sign-up";
 export const AFTER_AUTH_PATH = "/dashboard";
 
 export const FACEBOOK_GROUP_URL = "https://www.facebook.com/groups/burysteps";

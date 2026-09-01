@@ -18,12 +18,12 @@ export function walkOpensAt(startsAt: Date): Date {
   return new Date(startsAt.getTime() - OPENS_BEFORE_MS);
 }
 
-export function walkEndsAt(startsAt: Date, durationMins: number): Date {
+function walkEndsAt(startsAt: Date, durationMins: number): Date {
   return new Date(startsAt.getTime() + durationMins * 60_000);
 }
 
 /** Same as the scheduled end — self clock-in stops when the walk is due to finish. */
-export function walkClosesAt(startsAt: Date, durationMins: number): Date {
+function walkClosesAt(startsAt: Date, durationMins: number): Date {
   return walkEndsAt(startsAt, durationMins);
 }
 

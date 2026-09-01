@@ -101,8 +101,8 @@ export function howThisStartedParagraphs(body: string): string[] {
 
 export const MAX_ABOUT_LIST_ITEMS = 24;
 export const MAX_ABOUT_LIST_ITEM = 160;
-export const MAX_ABOUT_RULE_TITLE = 80;
-export const MAX_ABOUT_RULE_BODY = 280;
+const MAX_ABOUT_RULE_TITLE = 80;
+const MAX_ABOUT_RULE_BODY = 280;
 export const MAX_ABOUT_RULES = 20;
 
 export type AboutRule = { title: string; body: string };
@@ -142,7 +142,7 @@ export const DEFAULT_ABOUT_EXPECT = [
   "A focus on wellbeing, enjoyment and community",
 ] as const;
 
-export const DEFAULT_ABOUT_RULES: AboutRule[] = [
+const DEFAULT_ABOUT_RULES: AboutRule[] = [
   {
     title: "Respect every walker",
     body: "Kindness first, always. Everyone’s pace, story and ability deserve equal respect.",
