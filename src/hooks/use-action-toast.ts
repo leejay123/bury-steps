@@ -1,9 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useActionState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useActionState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { ActionResult } from "@/server/actions";
+import {
+  actionResultErrorMessage,
+  safeServerAction,
+} from "@/lib/action-errors";
 import { unlockIdleDocument } from "@/components/overlay-root";
 import { setFlashToast } from "@/lib/flash-toast";
 import { preventDismissWhilePending } from "@/hooks/prevent-dismiss";
@@ -37,7 +41,7 @@ export function notifyActionResult(result: ActionResult, onOk?: () => void) {
     toast.success(result.message ?? "Saved.");
     return;
   }
-  toast.error(result.error);
+  toast.error(actionResultErrorMessage(result.error));
 }
 
 /**
@@ -53,7 +57,7 @@ export function useNotifyActionState(action: ServerAction, onOk?: () => void) {
   actionRef.current = action;
 
   const wrapped = useCallback(async (prev: ActionResult | null, formData: FormData) => {
-    const result = await actionRef.current(prev, formData);
+    const result = await safeServerAction((p, data) => actionRef.current(p, data))(prev, formData);
     // Refresh before onOk so closing a drawer/form does not cancel the refresh.
     if (result.ok && !result.href) {
       router.refresh();
@@ -63,6 +67,20 @@ export function useNotifyActionState(action: ServerAction, onOk?: () => void) {
   }, [router]);
 
   return useActionState<ActionResult | null, FormData>(wrapped, null);
+}
+
+/**
+ * useActionState wrapped with {@link safeServerAction} plus {@link useActionToast}.
+ * Use for forms that stay mounted after success.
+ */
+export function useFormActionState(action: ServerAction, onOk?: () => void) {
+  const safeAction = useMemo(() => safeServerAction(action), [action]);
+  const [state, formAction, isPending] = useActionState<ActionResult | null, FormData>(
+    safeAction,
+    null,
+  );
+  useActionToast(state, onOk);
+  return [state, formAction, isPending] as const;
 }
 
 /**
@@ -96,6 +114,6 @@ export function useActionToast(state: ActionResult | null, onOk?: () => void) {
       onOkRef.current?.();
       return;
     }
-    toast.error(state.error);
+    toast.error(actionResultErrorMessage(state.error));
   }, [router, state]);
 }

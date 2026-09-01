@@ -37,7 +37,7 @@ export function FacebookGroupSettings({ facebookGroupUrl }: { facebookGroupUrl: 
       description="Shown in the site footer, FAQ empty state, and About drawer. Leave blank to hide Facebook links everywhere."
       title="Facebook group"
     >
-      <form action={action} className="flex max-w-lg flex-col gap-4">
+      <form action={action} className="flex w-full flex-col gap-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="facebookGroupUrl">Group link</Label>
           <Input

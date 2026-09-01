@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { actionErrorMessage } from "@/lib/action-errors";
 import type { ActionResult } from "@/server/actions";
 
 export function ReorderButtons({
@@ -88,9 +89,9 @@ export function useReorderableIds(
           toast.error(result.error);
         }
       })
-      .catch(() => {
+      .catch((err) => {
         setOrder(previous);
-        toast.error("Could not save that order. Try again.");
+        toast.error(actionErrorMessage(err, "Could not save that order. Try again."));
       });
   }
 

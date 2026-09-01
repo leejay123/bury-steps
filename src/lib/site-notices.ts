@@ -5,7 +5,7 @@ import {
   noticesForBell,
   sortNoticesForAdmin,
   sortNoticesNewestFirst,
-  noticeBodyForBellDrawer,
+  noticeBodyForHomepageCarousel,
   type NoticeAudience,
   type NoticeCategoryView,
   type NoticeView,
@@ -232,7 +232,7 @@ export async function getHomepageMemberNotices(
     return notices.slice(0, HOMEPAGE_MEMBER_NOTICES_LIMIT).map((notice) => ({
       id: notice.id,
       title: notice.title,
-      body: noticeBodyForBellDrawer(notice),
+      body: noticeBodyForHomepageCarousel(notice),
       updatedAt: notice.updatedAt.toISOString(),
     }));
   } catch {

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { MAX_HOMEPAGE_FAQS, MAX_FAQ_CATEGORIES } from "@/lib/faqs";
+import { HOMEPAGE_MEMBER_NOTICES_LIMIT } from "@/lib/homepage-copy";
 import { BELL_NOTICE_LIMIT, MAX_NOTICE_BELL_BODY, MAX_NOTICE_CATEGORIES, MAX_NOTICE_TEASER } from "@/lib/notices";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { FACEBOOK_GROUP_URL, PRODUCTION_APP_URL } from "@/lib/urls";
@@ -645,15 +646,19 @@ export function OrganiserGuide() {
                 hero — <strong>How walks work</strong>, <strong>How this started</strong>,{" "}
                 <strong>Latest notices</strong>, <strong>Testimonials</strong>,{" "}
                 <strong>FAQs</strong>), whether the <strong>hero photo carousel</strong> shows, the{" "}
-                <strong>How this started</strong> blurb and full story,
-                the About drawer <strong>goals / places / expect / rules</strong> lists, the{" "}
+                <strong>How this started</strong> heading, blurb, and full story (the story opens
+                in a drawer), the About drawer <strong>goals / places / expect / rules</strong>{" "}
+                lists (each opens in a drawer), the{" "}
                 <strong>Testimonials</strong> heading and intro, the <strong>FAQ</strong> heading
                 and intro, how the cookie notice looks (
                 <strong>Default</strong>, <strong>Small</strong>, or <strong>Mini</strong>), and
                 whether <strong>Back to top</strong> appears after you scroll. Testimonials and FAQs
-                still hide on the homepage until you add at least one quote or question. Latest
-                notices only appear for signed-in members who have notices in the bell. Hairlines sit
-                between sections, not under the last block before the footer.
+                still hide on the homepage until you add at least one quote or question. Signed-in
+                members see up to {HOMEPAGE_MEMBER_NOTICES_LIMIT} notices in the{" "}
+                <strong>Latest notices</strong> carousel (welcome first if it is on, then the
+                newest — same order as the bell, with a short teaser on each card; open the bell for
+                the full message). Hairlines sit between sections, not under the last block before
+                the footer.
               </p>
               <p>
                 Open <Link href="/admin/settings/cache">Site cache</Link> if the public homepage

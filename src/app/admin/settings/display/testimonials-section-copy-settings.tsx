@@ -51,7 +51,7 @@ export function TestimonialsSectionCopySettings({
       description="Heading and short intro above the quote grid on the homepage."
       title="Testimonials"
     >
-      <form action={action} className="flex max-w-lg flex-col gap-4">
+      <form action={action} className="flex w-full flex-col gap-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="testimonialsSectionTitle">Heading</Label>
           <Input

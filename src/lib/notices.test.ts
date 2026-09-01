@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   MAX_NOTICE_BELL_BODY,
+  HOMEPAGE_NOTICE_CAROUSEL_BODY,
   noticeBodyForBellDrawer,
+  noticeBodyForHomepageCarousel,
   noticeUnreadBadgeLabel,
   type NoticeView,
 } from "./notices";
@@ -50,6 +52,30 @@ describe("noticeBodyForBellDrawer", () => {
     expect(noticeBodyForBellDrawer(notice({ body: "Short teaser", kind: "PAGE" }))).toBe(
       "Short teaser…",
     );
+  });
+});
+
+describe("noticeBodyForHomepageCarousel", () => {
+  it("leaves a short message in full", () => {
+    expect(noticeBodyForHomepageCarousel(notice({ body: "Meet at 2pm.", kind: "BELL" }))).toBe(
+      "Meet at 2pm.",
+    );
+  });
+
+  it("truncates the welcome notice to the same teaser length as other notices", () => {
+    const body = "a".repeat(HOMEPAGE_NOTICE_CAROUSEL_BODY + 40);
+    const shown = noticeBodyForHomepageCarousel(
+      notice({ body, kind: "BELL", systemKey: "welcome" }),
+    );
+    expect(shown.endsWith("…")).toBe(true);
+    expect(shown.length).toBeLessThanOrEqual(HOMEPAGE_NOTICE_CAROUSEL_BODY + 1);
+  });
+
+  it("collapses whitespace before truncating", () => {
+    const body = `${"word ".repeat(40)}tail`;
+    const shown = noticeBodyForHomepageCarousel(notice({ body, kind: "BELL" }));
+    expect(shown.endsWith("…")).toBe(true);
+    expect(shown).not.toMatch(/\s{2,}/);
   });
 });
 

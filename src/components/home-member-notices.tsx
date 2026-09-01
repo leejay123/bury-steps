@@ -56,9 +56,9 @@ export function HomeMemberNoticesSection({
                   key={notice.id}
                   className="flex basis-full pl-0 sm:basis-1/2 lg:basis-1/3"
                 >
-                  <article className="flex min-h-52 w-full flex-col gap-3 bg-background p-6 sm:min-h-56 sm:border-r sm:border-border md:p-8">
-                    <div className="flex flex-col gap-1">
-                      <h3 className="line-clamp-2 text-balance text-lg font-medium text-foreground">
+                  <article className="flex h-44 w-full flex-col gap-3 bg-background p-6 sm:h-48 sm:border-r sm:border-border md:p-8">
+                    <div className="flex shrink-0 flex-col gap-1">
+                      <h3 className="line-clamp-1 text-balance text-lg font-medium text-foreground">
                         {notice.title}
                       </h3>
                       <time
@@ -68,7 +68,7 @@ export function HomeMemberNoticesSection({
                         Updated {formatDate(notice.updatedAt)}
                       </time>
                     </div>
-                    <p className="line-clamp-4 flex-1 text-sm leading-relaxed text-muted-foreground">
+                    <p className="line-clamp-2 min-h-10 text-sm leading-relaxed text-muted-foreground">
                       {notice.body}
                     </p>
                   </article>

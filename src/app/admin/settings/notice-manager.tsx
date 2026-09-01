@@ -466,6 +466,7 @@ function CategoryDrawer({
             <CategoryLabelForm
               action={updateSiteNoticeCategory}
               category={mode.category}
+              key={mode.category.id}
               onPendingChange={onPendingChange}
               onSaved={() => onOpenChange(false)}
               submitLabel="Save"

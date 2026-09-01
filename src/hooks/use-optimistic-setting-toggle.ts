@@ -1,8 +1,9 @@
 "use client";
 
-import { startTransition, useActionState, useEffect, useState } from "react";
+import { startTransition, useActionState, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { ActionResult } from "@/server/actions";
+import { actionResultErrorMessage, safeServerAction } from "@/lib/action-errors";
 
 /**
  * A single on/off admin setting backed by a server action: flips
@@ -20,8 +21,9 @@ export function useOptimisticSettingToggle({
   formKey: string;
 }) {
   const [on, setOn] = useState(enabled);
+  const safeAction = useMemo(() => safeServerAction(action), [action]);
   const [state, dispatch, isPending] = useActionState<ActionResult | null, FormData>(
-    action,
+    safeAction,
     null,
   );
 
@@ -35,7 +37,7 @@ export function useOptimisticSettingToggle({
       // The checkbox already flipped optimistically when tapped — put it
       // back so the UI doesn't keep claiming a state the save never reached.
       setOn(enabled);
-      toast.error(state.error);
+      toast.error(actionResultErrorMessage(state.error));
     }
   }, [state, enabled]);
 

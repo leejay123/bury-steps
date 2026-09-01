@@ -10,6 +10,9 @@ export const MAX_NOTICE_PAGE_BODY = 10_000;
 /** Newest non-welcome notices shown in the member bell (welcome sits outside this count). */
 export const BELL_NOTICE_LIMIT = 20;
 
+/** Short teaser shown on the signed-in homepage carousel (all notices, including welcome). */
+export const HOMEPAGE_NOTICE_CAROUSEL_BODY = 120;
+
 /** Pinned welcome notice — seeded, edit title/body only, never delete; can disable. */
 export const WELCOME_NOTICE_SYSTEM_KEY = "welcome";
 
@@ -76,6 +79,20 @@ export function noticeBodyForBellDrawer(notice: NoticeView): string {
     return text.endsWith("…") ? text : `${text}…`;
   }
   return text;
+}
+
+/**
+ * Body text for the homepage Latest notices carousel. Every card uses the
+ * same short teaser length so cards stay equal height; open the bell for more.
+ */
+export function noticeBodyForHomepageCarousel(notice: NoticeView): string {
+  const text = notice.body.replace(/\s+/g, " ").trim();
+  const max = HOMEPAGE_NOTICE_CAROUSEL_BODY;
+  if (text.length <= max) return text;
+  let cut = text.slice(0, max).trimEnd();
+  const lastSpace = cut.lastIndexOf(" ");
+  if (lastSpace > max * 0.6) cut = cut.slice(0, lastSpace);
+  return `${cut}…`;
 }
 
 /** Replace {{firstName}} in notice copy for the viewing member. */

@@ -63,7 +63,7 @@ Thank you all for helping make Bury Steps Walking Group what it is today.
 
 Onwards and upwards to bigger and better things.`;
 
-export const HOMEPAGE_MEMBER_NOTICES_LIMIT = 8;
+export const HOMEPAGE_MEMBER_NOTICES_LIMIT = 5;
 
 export function parseHowThisStartedTitle(raw: string): string | "invalid" {
   const title = raw.trim().replace(/\s+/g, " ");

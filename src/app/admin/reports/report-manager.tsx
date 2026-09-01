@@ -379,7 +379,10 @@ export function AccidentReportManager({
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
   const [isPending, setIsPending] = useState(false);
-  const viewing = mode?.type === "view" ? mode.report : null;
+  const viewing =
+    mode?.type === "view"
+      ? (reports.find((report) => report.id === mode.report.id) ?? mode.report)
+      : null;
   const editing = mode?.type === "edit" ? mode.report : null;
   const listRef = useRef<HTMLDivElement>(null);
   // Keep link/sort in the URL; never sync the free-text search (who/what PII).
@@ -569,7 +572,7 @@ export function AccidentReportManager({
               key={editing.id}
               onCancel={() => setMode({ type: "view", report: editing })}
               onPendingChange={setIsPending}
-              onSaved={() => setMode(null)}
+              onSaved={() => setMode({ type: "view", report: editing })}
               report={editing}
               walks={walks}
             />

@@ -45,7 +45,7 @@ export function SiteBrandingSettings({
       description="Used on the homepage hero, the logo’s name for screen readers, browser tab titles, and link previews when someone shares the site."
       title="Site name and tagline"
     >
-      <form action={action} className="flex max-w-lg flex-col gap-4">
+      <form action={action} className="flex w-full flex-col gap-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="siteName">Site name</Label>
           <Input

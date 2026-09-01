@@ -52,14 +52,14 @@ export function CookieConsentSettings({ variant }: { variant: CookieConsentVaria
       description="First-time visitors see this at the bottom of the screen until they choose Accept or Decline. The choice is remembered for a year."
       title="Cookie notice"
     >
-      <div className="flex max-w-md flex-col gap-2">
+      <div className="flex w-full flex-col gap-2">
         <Label htmlFor="cookie-consent-variant">Layout</Label>
         <Select
           disabled={isPending}
           onValueChange={(value) => onVariantChange(value as CookieConsentVariant)}
           value={selected}
         >
-          <SelectTrigger id="cookie-consent-variant">
+          <SelectTrigger className="w-full" id="cookie-consent-variant">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
