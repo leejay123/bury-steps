@@ -29,7 +29,11 @@ const nextConfig: NextConfig = {
     // Clerk's hosted UI needs its own frontend API domain (the CNAME set up
     // for the live site, or *.clerk.accounts.dev for local dev/anywhere the
     // Vercel preview proxy at /__clerk isn't in play) plus Cloudflare
-    // Turnstile for its bot-protection challenge during sign-up. Walk share
+    // Turnstile for its bot-protection challenge during sign-up. The Account
+    // Portal (accounts.burysteps-walkinggroup.co.uk, see ACCOUNT_PORTAL_ORIGIN
+    // in lib/urls.ts) is where /sign-in and /sign-up actually redirect to —
+    // Clerk's client SDK also does a cross-domain session-sync request to it,
+    // which connect-src must allow or the redirect gets blocked. Walk share
     // pages embed OpenStreetMap for the meeting-point map (no API key).
     // Script and style still allow 'unsafe-inline' — a nonce-based policy
     // needs the whole app on dynamic rendering (see Next.js' and Clerk's own
@@ -41,6 +45,7 @@ const nextConfig: NextConfig = {
     const clerkOrigins = [
       "https://clerk.burysteps-walkinggroup.co.uk",
       "https://*.clerk.accounts.dev",
+      "https://accounts.burysteps-walkinggroup.co.uk",
     ];
     const csp = [
       "default-src 'self'",
