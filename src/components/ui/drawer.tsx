@@ -265,7 +265,7 @@ function DrawerContent({
           // that's the "blue border" along the drawer's edge on iPhone.
           // Nothing inside needs *this* element's own outline; close/inputs
           // keep their own focus-visible rings.
-          "group/drawer-content fixed z-[60] flex h-auto flex-col overflow-hidden bg-background outline-hidden data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
+          "group/drawer-content fixed z-[60] flex h-auto flex-col overflow-hidden bg-background outline-hidden touch-pan-y data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
           dismissed && "invisible !pointer-events-none",
           // Drawers portal straight to <body>, outside the shell that already
           // handles the Dynamic Island's left/right safe area, so each side
