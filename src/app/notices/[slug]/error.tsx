@@ -2,7 +2,7 @@
 
 import { RouteError } from "@/components/route-error";
 
-export default function Error({
+export default function NoticeError({
   error,
   reset,
 }: {
@@ -11,10 +11,12 @@ export default function Error({
 }) {
   return (
     <RouteError
-      description="Nothing was saved. Try again, or go back to the homepage. Tell an organiser if it keeps happening."
+      description="Try again, or head back to all notices."
       error={error}
+      homeHref="/notices"
+      homeLabel="All notices"
       reset={reset}
-      title="Something went wrong loading this page"
+      title="Something went wrong loading this notice"
     />
   );
 }
