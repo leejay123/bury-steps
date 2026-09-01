@@ -1,7 +1,8 @@
 import { requireAdmin } from "@/lib/auth";
 import { getSiteTheme } from "@/lib/site-theme";
-import { SettingsPage, SettingsSectionGroup, SettingsSectionPair } from "../settings-page";
+import { SettingsPage, SettingsSectionGroup } from "../settings-page";
 import { AboutListsSettings } from "./about-lists-settings";
+import { CarouselToggle } from "../hero-photos/carousel-toggle";
 import { CookieConsentSettings } from "./cookie-consent-settings";
 import { DisplaySettings } from "./display-form";
 import { DisplaySettingsLayout } from "./display-settings-layout";
@@ -36,11 +37,12 @@ export default async function DisplaySettingsPage() {
         </SettingsSectionGroup>
 
         <SettingsSectionGroup
-          description="What appears below the hero and in what order."
+          description="The hero (site name and tagline) always stays at the top. Reorder the blocks below it and choose whether the photo carousel shows."
           id="homepage-layout"
           title="Layout"
         >
           <HomepageSectionsSettings sectionOrder={theme.homepageSectionOrder} />
+          <CarouselToggle enabled={theme.carouselEnabled} />
         </SettingsSectionGroup>
 
         <SettingsSectionGroup
@@ -60,16 +62,14 @@ export default async function DisplaySettingsPage() {
             aboutPlacesText={theme.aboutPlacesText}
             aboutRulesText={theme.aboutRulesText}
           />
-          <SettingsSectionPair>
-            <TestimonialsSectionCopySettings
-              testimonialsSectionIntro={theme.testimonialsSectionIntro}
-              testimonialsSectionTitle={theme.testimonialsSectionTitle}
-            />
-            <FaqSectionCopySettings
-              faqSectionIntro={theme.faqSectionIntro}
-              faqSectionTitle={theme.faqSectionTitle}
-            />
-          </SettingsSectionPair>
+          <TestimonialsSectionCopySettings
+            testimonialsSectionIntro={theme.testimonialsSectionIntro}
+            testimonialsSectionTitle={theme.testimonialsSectionTitle}
+          />
+          <FaqSectionCopySettings
+            faqSectionIntro={theme.faqSectionIntro}
+            faqSectionTitle={theme.faqSectionTitle}
+          />
         </SettingsSectionGroup>
 
         <SettingsSectionGroup

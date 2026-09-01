@@ -46,7 +46,7 @@ export function FaqSectionCopySettings({
   return (
     <SettingsSection
       description="Heading and short intro above the question list on the homepage."
-      title="Section heading"
+      title="FAQs"
     >
       <form action={action} className="flex max-w-lg flex-col gap-4">
         <div className="flex flex-col gap-2">

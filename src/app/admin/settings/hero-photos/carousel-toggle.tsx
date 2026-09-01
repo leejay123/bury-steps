@@ -18,7 +18,7 @@ export function CarouselToggle({ enabled }: { enabled: boolean }) {
       description="Hide the slider on the homepage without deleting your photos."
       title="Carousel"
     >
-      <div className="flex items-center justify-between gap-4 rounded-lg border bg-muted/30 px-4 py-3">
+      <div className="flex items-center justify-between gap-4 rounded-lg border bg-background px-4 py-3">
         <div className="flex min-w-0 flex-col gap-0.5">
           <Label className="font-medium" htmlFor="carousel-enabled">
             Show on the homepage

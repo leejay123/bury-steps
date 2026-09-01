@@ -18,7 +18,7 @@ export function DisplaySettings({ scrollToTopEnabled }: { scrollToTopEnabled: bo
       description="A corner button appears after you scroll down, on the public site and in organiser tools."
       title="Back to top"
     >
-      <div className="flex items-center justify-between gap-4 rounded-lg border bg-muted/30 px-4 py-3">
+      <div className="flex items-center justify-between gap-4 rounded-lg border bg-background px-4 py-3">
         <div className="flex min-w-0 flex-col gap-0.5">
           <Label className="font-medium" htmlFor="scroll-to-top">
             Show the button

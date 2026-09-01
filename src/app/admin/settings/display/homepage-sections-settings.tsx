@@ -21,15 +21,24 @@ export function HomepageSectionsSettings({
 
   return (
     <SettingsSection
-      description="Change the order of blocks below the hero. Empty testimonials or FAQs still skip on the homepage until you add content."
+      description="Reorder the blocks below the hero. Empty testimonials or FAQs still skip until you add content."
       title="Homepage section order"
     >
       <ul className="flex flex-col gap-2">
+        <li className="flex items-center gap-3 rounded-lg border bg-background px-3 py-2">
+          <div className="min-w-0 flex-1">
+            <p className="font-medium">Hero</p>
+            <p className="text-xs text-muted-foreground">
+              Site name, tagline, and photo carousel when enabled. Always first — edit name and
+              tagline under Identity; photos under Hero photos.
+            </p>
+          </div>
+        </li>
         {order.map((id, index) => {
           const sectionId = id as HomepageSectionId;
           return (
             <li
-              className="flex items-center gap-3 rounded-lg border bg-muted/30 px-3 py-2"
+              className="flex items-center gap-3 rounded-lg border bg-background px-3 py-2"
               key={id}
             >
               <ReorderButtons

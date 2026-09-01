@@ -120,12 +120,3 @@ export function SettingsSectionGroup({
     </section>
   );
 }
-
-/** Side-by-side settings panels inside a group on large screens. */
-export function SettingsSectionPair({ children }: { children: React.ReactNode }) {
-  return (
-    <div className={cn("grid gap-px bg-border lg:grid-cols-2", groupedSectionClassName)}>
-      {children}
-    </div>
-  );
-}

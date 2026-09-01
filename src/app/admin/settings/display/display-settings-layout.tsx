@@ -34,9 +34,9 @@ export function DisplaySettingsLayout({ children }: { children: React.ReactNode 
       </nav>
       <nav
         aria-label="On this page"
-        className="hidden shrink-0 lg:block lg:w-36 xl:w-40"
+        className="hidden shrink-0 self-start lg:sticky lg:top-24 lg:block lg:w-36 xl:w-40"
       >
-        <ul className="sticky top-24 flex flex-col gap-0.5 text-sm">
+        <ul className="flex flex-col gap-0.5 text-sm">
           {GROUPS.map((group) => (
             <li key={group.id}>
               <a className={jumpLinkClassName} href={`#${group.id}`}>

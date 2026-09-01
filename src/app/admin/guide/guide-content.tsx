@@ -16,7 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 /** Bump this whenever the guide is updated. */
-export const GUIDE_LAST_UPDATED = "31 August 2026";
+export const GUIDE_LAST_UPDATED = "1 September 2026";
 
 function Steps({ children }: { children: React.ReactNode }) {
   return <ol className="list-decimal pl-5 text-muted-foreground">{children}</ol>;
@@ -489,9 +489,11 @@ export function OrganiserGuide() {
                 own.
               </p>
               <p>
-                On <Link href="/admin/settings/hero-photos">Hero photos</Link> you can turn the
-                carousel off completely. The homepage then skips the slider. Photos you have added
-                stay here so you can switch it back on later.
+                On <Link href="/admin/settings/hero-photos">Hero photos</Link> you add and reorder
+                slides. Turn the carousel on or off under{" "}
+                <Link href="/admin/settings/display">Display</Link> → Layout. When it is off, the
+                homepage skips the slider. Photos you have added stay here so you can switch it back
+                on later.
               </p>
               <p className="font-medium text-foreground">Testimonials</p>
               <p>
@@ -639,10 +641,11 @@ export function OrganiserGuide() {
                 Open <Link href="/admin/settings/display">Display</Link> to set the public{" "}
                 <strong>site name</strong> and <strong>homepage tagline</strong> (also used in
                 browser tabs and share previews), the <strong>Facebook group</strong> link (leave
-                blank to hide it), the <strong>homepage section order</strong> (
-                <strong>How walks work</strong>, <strong>How this started</strong>,{" "}
+                blank to hide it), the <strong>homepage section order</strong> (blocks below the
+                hero — <strong>How walks work</strong>, <strong>How this started</strong>,{" "}
                 <strong>Latest notices</strong>, <strong>Testimonials</strong>,{" "}
-                <strong>FAQs</strong>), the <strong>How this started</strong> blurb and full story,
+                <strong>FAQs</strong>), whether the <strong>hero photo carousel</strong> shows, the{" "}
+                <strong>How this started</strong> blurb and full story,
                 the About drawer <strong>goals / places / expect / rules</strong> lists, the{" "}
                 <strong>Testimonials</strong> heading and intro, the <strong>FAQ</strong> heading
                 and intro, how the cookie notice looks (
