@@ -2,7 +2,7 @@
 
 import { RouteError } from "@/components/route-error";
 
-export default function Error({
+export default function AdminWalkError({
   error,
   reset,
 }: {
@@ -11,10 +11,12 @@ export default function Error({
 }) {
   return (
     <RouteError
-      description="Nothing was saved. Try again, or go back to the homepage. Tell an organiser if it keeps happening."
+      description="Nothing was saved. Try again, or head back to the admin dashboard."
       error={error}
+      homeHref="/admin"
+      homeLabel="Admin home"
       reset={reset}
-      title="Something went wrong loading this page"
+      title="Something went wrong loading this walk"
     />
   );
 }
