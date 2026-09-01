@@ -9,7 +9,6 @@ import { accountPortalHref, appUrl } from "@/lib/urls";
 import { meetingPointLabel } from "@/lib/geocode";
 import { ensureWalkSlug, walkShareUrl } from "@/lib/walk-slug";
 import { canAddWalkToCalendar, walkStatus } from "@/lib/walk-window";
-import { getSiteTheme } from "@/lib/site-theme";
 import { WalkFacts } from "@/components/walk-facts";
 import { WalkMapSection } from "@/components/walk-map-section";
 import { WalkJourneyDrawer } from "@/components/walk-journey-drawer";
@@ -125,7 +124,6 @@ export default async function WalkLinkPage({
 
   const walkUrl = walkShareUrl(appUrl(), { token: walk.token, slug });
   const completed = status === "completed";
-  const theme = await getSiteTheme();
 
   const alreadyIn = user
     ? await prisma.attendance.findFirst({

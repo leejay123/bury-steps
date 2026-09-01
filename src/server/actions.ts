@@ -82,14 +82,13 @@ import {
   MAX_NOTICE_TEASER,
   MAX_NOTICE_PAGE_BODY,
   WELCOME_NOTICE_SYSTEM_KEY,
-  noticeBodyForBellDrawer,
   noticeCategorySlug,
   noticePageSlug,
   noticesForBell,
 } from "@/lib/notices";
 import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR } from "@/lib/theme";
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
-import { NOTICES_CACHE_TAG, getSiteNoticeState, recordSiteNoticeRead } from "@/lib/site-notices";
+import { NOTICES_CACHE_TAG, recordSiteNoticeRead } from "@/lib/site-notices";
 import { isAllowedImageMime, sniffImageMime } from "@/lib/image-bytes";
 import { stripImageMetadata } from "@/lib/strip-image-metadata";
 import { checkRateLimit } from "@/lib/rate-limit";
