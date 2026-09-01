@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import {
   personalizeNotice,
   noticesForBell,
+  noticesForHomepageCarousel,
   sortNoticesForAdmin,
   sortNoticesNewestFirst,
   noticeBodyForHomepageCarousel,
@@ -222,18 +223,33 @@ export async function recordSiteNoticeRead(userId: string, noticeId: string): Pr
   });
 }
 
-/** Latest notices for the signed-in homepage carousel (same set as the bell). */
+/** Latest notices for the signed-in homepage carousel (newest only; welcome stays in the bell). */
 export async function getHomepageMemberNotices(
-  userId: string,
+  _userId: string,
   firstName?: string | null,
-): Promise<{ id: string; title: string; body: string; updatedAt: string }[]> {
+): Promise<
+  {
+    id: string;
+    title: string;
+    body: string;
+    updatedAt: string;
+    kind: "BELL" | "PAGE";
+    slug: string | null;
+  }[]
+> {
   try {
-    const { notices } = await getSiteNoticeState(userId, firstName);
-    return notices.slice(0, HOMEPAGE_MEMBER_NOTICES_LIMIT).map((notice) => ({
+    const rows = await getCachedSiteNotices();
+    const notices = noticesForHomepageCarousel(
+      reviveNotices(rows),
+      HOMEPAGE_MEMBER_NOTICES_LIMIT,
+    ).map((notice) => personalizeNotice(notice, firstName));
+    return notices.map((notice) => ({
       id: notice.id,
       title: notice.title,
       body: noticeBodyForHomepageCarousel(notice),
       updatedAt: notice.updatedAt.toISOString(),
+      kind: notice.kind,
+      slug: notice.slug,
     }));
   } catch {
     return [];

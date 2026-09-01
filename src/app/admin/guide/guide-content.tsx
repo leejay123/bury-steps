@@ -654,10 +654,12 @@ export function OrganiserGuide() {
                 <strong>Default</strong>, <strong>Small</strong>, or <strong>Mini</strong>), and
                 whether <strong>Back to top</strong> appears after you scroll. Testimonials and FAQs
                 still hide on the homepage until you add at least one quote or question. Signed-in
-                members see up to {HOMEPAGE_MEMBER_NOTICES_LIMIT} notices in the{" "}
-                <strong>Latest notices</strong> carousel (welcome first if it is on, then the
-                newest — same order as the bell, with a short teaser on each card; open the bell for
-                the full message). Hairlines sit between sections, not under the last block before
+                members see up to {HOMEPAGE_MEMBER_NOTICES_LIMIT} of the newest notices in the{" "}
+                <strong>Latest notices</strong> carousel (not the pinned welcome — that stays in
+                the bell only; each card shows a short teaser). Tap a bell-only notice to open it
+                in the bell drawer; tap a full-page notice to go to its page on{" "}
+                <strong>Notices</strong>.
+                Hairlines sit between sections, not under the last block before
                 the footer.
               </p>
               <p>

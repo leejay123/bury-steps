@@ -10,7 +10,7 @@ export const MAX_NOTICE_PAGE_BODY = 10_000;
 /** Newest non-welcome notices shown in the member bell (welcome sits outside this count). */
 export const BELL_NOTICE_LIMIT = 20;
 
-/** Short teaser shown on the signed-in homepage carousel (all notices, including welcome). */
+/** Short teaser shown on the signed-in homepage Latest notices carousel. */
 export const HOMEPAGE_NOTICE_CAROUSEL_BODY = 120;
 
 /** Pinned welcome notice — seeded, edit title/body only, never delete; can disable. */
@@ -146,6 +146,16 @@ export function noticesForBell(notices: NoticeView[]): NoticeView[] {
     notices.filter((notice) => !notice.systemKey && notice.enabled),
   ).slice(0, BELL_NOTICE_LIMIT);
   return welcome ? [welcome, ...rolling] : rolling;
+}
+
+/** Homepage carousel: newest enabled notices only (no pinned welcome). */
+export function noticesForHomepageCarousel(
+  notices: NoticeView[],
+  limit: number,
+): NoticeView[] {
+  return sortNoticesNewestFirst(
+    notices.filter((notice) => !notice.systemKey && notice.enabled),
+  ).slice(0, limit);
 }
 
 export function noticeCategorySlug(label: string): string {

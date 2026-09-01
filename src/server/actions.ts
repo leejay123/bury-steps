@@ -2869,8 +2869,6 @@ export async function updateAboutLists(
   return { ok: true, message: "About lists saved." };
 }
 
-/** Latest notices for the signed-in homepage carousel (same set as the bell). */
-
 function parseMonthlyClockInGoal(raw: string): number | null | "invalid" {
   const trimmed = raw.trim();
   if (trimmed === "") return null;

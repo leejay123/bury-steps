@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef } from "react";
 import Autoplay from "embla-carousel-autoplay";
 import {
@@ -12,6 +13,7 @@ import {
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { HeroCopy } from "@/components/hero-copy";
 import { formatDate } from "@/lib/dates";
+import { openMemberNoticeBell } from "@/lib/member-notices-bridge";
 import { cn } from "@/lib/utils";
 
 export type HomepageNoticeSlide = {
@@ -19,10 +21,51 @@ export type HomepageNoticeSlide = {
   title: string;
   body: string;
   updatedAt: string;
+  kind: "BELL" | "PAGE";
+  slug: string | null;
 };
 
 const carouselControlClassName =
   "left-3 border-0 bg-background/80 text-foreground shadow-sm hover:bg-background opacity-100 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/carousel:opacity-100 [@media(hover:hover)]:group-focus-within/carousel:opacity-100 focus-visible:opacity-100";
+
+const noticeCardClassName =
+  "flex h-44 w-full flex-col gap-3 bg-background p-6 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:h-48 sm:border-r sm:border-border md:p-8";
+
+function NoticeCarouselCard({ notice }: { notice: HomepageNoticeSlide }) {
+  const content = (
+    <>
+      <div className="flex shrink-0 flex-col gap-1">
+        <h3 className="line-clamp-1 text-balance text-lg font-medium text-foreground">
+          {notice.title}
+        </h3>
+        <time className="text-xs text-muted-foreground" dateTime={notice.updatedAt}>
+          Updated {formatDate(notice.updatedAt)}
+        </time>
+      </div>
+      <p className="line-clamp-2 min-h-10 text-sm leading-relaxed text-muted-foreground">
+        {notice.body}
+      </p>
+    </>
+  );
+
+  if (notice.kind === "PAGE" && notice.slug) {
+    return (
+      <Link className={noticeCardClassName} href={`/notices/${notice.slug}`}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      className={noticeCardClassName}
+      onClick={() => openMemberNoticeBell(notice.id)}
+      type="button"
+    >
+      {content}
+    </button>
+  );
+}
 
 export function HomeMemberNoticesSection({
   notices,
@@ -40,7 +83,9 @@ export function HomeMemberNoticesSection({
   return (
     <section>
       <HeroCopy eyebrow={null} title="Latest notices" titleAs="h2">
-        <p>Updates for members — open the bell anytime for the full list.</p>
+        <p>
+          Updates for members — tap a card to read more, or open the bell for everything.
+        </p>
       </HeroCopy>
       <div className="relative">
         <FullWidthDivider position="top" />
@@ -56,22 +101,7 @@ export function HomeMemberNoticesSection({
                   key={notice.id}
                   className="flex basis-full pl-0 sm:basis-1/2 lg:basis-1/3"
                 >
-                  <article className="flex h-44 w-full flex-col gap-3 bg-background p-6 sm:h-48 sm:border-r sm:border-border md:p-8">
-                    <div className="flex shrink-0 flex-col gap-1">
-                      <h3 className="line-clamp-1 text-balance text-lg font-medium text-foreground">
-                        {notice.title}
-                      </h3>
-                      <time
-                        className="text-xs text-muted-foreground"
-                        dateTime={notice.updatedAt}
-                      >
-                        Updated {formatDate(notice.updatedAt)}
-                      </time>
-                    </div>
-                    <p className="line-clamp-2 min-h-10 text-sm leading-relaxed text-muted-foreground">
-                      {notice.body}
-                    </p>
-                  </article>
+                  <NoticeCarouselCard notice={notice} />
                 </CarouselItem>
               ))}
             </CarouselContent>

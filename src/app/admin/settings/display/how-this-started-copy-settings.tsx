@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { ChevronRight } from "lucide-react";
 import { updateHowThisStartedCopy, type ActionResult } from "@/server/actions";
 import { useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
+import { useControlledDrawerDismissGuard } from "@/hooks/use-controlled-drawer";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,6 +55,7 @@ function FullStoryDrawer({
   onBodyChange,
   onClose,
   onSaved,
+  onPointerDownOutside,
   open,
   teaser,
   title,
@@ -63,6 +65,7 @@ function FullStoryDrawer({
   onBodyChange: (value: string) => void;
   onClose: () => void;
   onSaved: () => void;
+  onPointerDownOutside: (event: Event) => void;
   open: boolean;
   teaser: string;
   title: string;
@@ -88,7 +91,10 @@ function FullStoryDrawer({
       open={open}
       variant="form"
     >
-      <DrawerContent className="sm:max-w-lg">
+      <DrawerContent
+        className="sm:max-w-lg"
+        onPointerDownOutside={onPointerDownOutside}
+      >
         <DrawerHeader>
           <DrawerTitle>Full story</DrawerTitle>
           <DrawerDescription>
@@ -143,6 +149,7 @@ export function HowThisStartedCopySettings({
   const [teaser, setTeaser] = useState(howThisStartedTeaser);
   const [body, setBody] = useState(howThisStartedBody);
   const [bodyDrawerOpen, setBodyDrawerOpen] = useState(false);
+  const { openSoon, onPointerDownOutside } = useControlledDrawerDismissGuard();
   const [state, action] = useActionState<ActionResult | null, FormData>(updateHowThisStartedCopy, null);
   useActionToast(state);
 
@@ -157,6 +164,11 @@ export function HowThisStartedCopySettings({
     title !== howThisStartedTitle ||
     eyebrow !== howThisStartedEyebrow ||
     teaser !== howThisStartedTeaser;
+
+  const closeBodyDrawer = () => {
+    setBodyDrawerOpen(false);
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+  };
 
   return (
     <SettingsSection
@@ -219,7 +231,7 @@ export function HowThisStartedCopySettings({
         </form>
 
         <DataList>
-          <DataListItem onClick={() => setBodyDrawerOpen(true)}>
+          <DataListItem onClick={() => openSoon(() => setBodyDrawerOpen(true))}>
             <DataListItemMain className="items-center">
               <DataListBody>
                 <p className="font-medium">Full story</p>
@@ -235,8 +247,9 @@ export function HowThisStartedCopySettings({
         body={body}
         eyebrow={eyebrow}
         onBodyChange={setBody}
-        onClose={() => setBodyDrawerOpen(false)}
-        onSaved={() => setBodyDrawerOpen(false)}
+        onClose={closeBodyDrawer}
+        onPointerDownOutside={onPointerDownOutside}
+        onSaved={closeBodyDrawer}
         open={bodyDrawerOpen}
         teaser={teaser}
         title={title}

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { updateAboutLists } from "@/server/actions";
 import { useNotifyActionState } from "@/hooks/use-action-toast";
+import { useControlledDrawerDismissGuard } from "@/hooks/use-controlled-drawer";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import {
@@ -82,6 +83,7 @@ function AboutListDrawer({
   expect,
   goals,
   onClose,
+  onPointerDownOutside,
   onSaved,
   open,
   places,
@@ -95,6 +97,7 @@ function AboutListDrawer({
   expect: string;
   goals: string;
   onClose: () => void;
+  onPointerDownOutside: (event: Event) => void;
   onSaved: (values: { expect: string; goals: string; places: string; rules: string }) => void;
   open: boolean;
   places: string;
@@ -163,7 +166,10 @@ function AboutListDrawer({
       open={open}
       variant="form"
     >
-      <DrawerContent className="sm:max-w-lg">
+      <DrawerContent
+        className="sm:max-w-lg"
+        onPointerDownOutside={onPointerDownOutside}
+      >
         <DrawerHeader>
           <DrawerTitle>{active.label}</DrawerTitle>
           <DrawerDescription>{active.description}</DrawerDescription>
@@ -220,6 +226,7 @@ export function AboutListsSettings({
   const [expect, setExpect] = useState(aboutExpectText);
   const [rules, setRules] = useState(aboutRulesText);
   const [activeId, setActiveId] = useState<AboutListId | null>(null);
+  const { openSoon, onPointerDownOutside } = useControlledDrawerDismissGuard();
 
   useEffect(() => {
     setGoals(aboutGoalsText);
@@ -237,6 +244,11 @@ export function AboutListsSettings({
 
   const active = ABOUT_LISTS.find((item) => item.id === activeId) ?? null;
 
+  const closeDrawer = () => {
+    setActiveId(null);
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+  };
+
   return (
     <SettingsSection
       description="Lists in the Read more About drawer. Tap a row to edit."
@@ -244,7 +256,7 @@ export function AboutListsSettings({
     >
       <DataList>
         {ABOUT_LISTS.map((item) => (
-          <DataListItem key={item.id} onClick={() => setActiveId(item.id)}>
+          <DataListItem key={item.id} onClick={() => openSoon(() => setActiveId(item.id))}>
             <DataListItemMain className="items-center">
               <DataListBody>
                 <p className="font-medium">{item.label}</p>
@@ -260,7 +272,8 @@ export function AboutListsSettings({
         active={active}
         expect={expect}
         goals={goals}
-        onClose={() => setActiveId(null)}
+        onClose={closeDrawer}
+        onPointerDownOutside={onPointerDownOutside}
         onSaved={(next) => {
           setGoals(next.goals);
           setPlaces(next.places);

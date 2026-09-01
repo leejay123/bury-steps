@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, CheckCheck, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
@@ -9,6 +9,10 @@ import { markSiteNoticeRead, markSiteNoticesRead } from "@/server/actions";
 import { formatDate } from "@/lib/dates";
 import type { NoticeView } from "@/lib/notices";
 import { noticeBodyForBellDrawer, noticeUnreadBadgeLabel } from "@/lib/notices";
+import {
+  OPEN_MEMBER_NOTICE_BELL_EVENT,
+  type OpenMemberNoticeBellDetail,
+} from "@/lib/member-notices-bridge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +35,7 @@ export function NotificationBell({
   const [open, setOpen] = useState(false);
   const [unread, setUnread] = useState(unreadIds);
   const [pending, setPending] = useState(false);
+  const scrollToNoticeIdRef = useRef<string | null>(null);
   const [, startTransition] = useTransition();
   const pathname = usePathname();
   const router = useRouter();
@@ -42,6 +47,38 @@ export function NotificationBell({
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    function onOpenFromCarousel(event: Event) {
+      const noticeId = (event as CustomEvent<OpenMemberNoticeBellDetail>).detail?.noticeId;
+      if (noticeId) {
+        scrollToNoticeIdRef.current = noticeId;
+        setUnread((current) => (current.includes(noticeId) ? current.filter((id) => id !== noticeId) : current));
+        markSiteNoticeRead(noticeId)
+          .then((result) => {
+            if (!result.ok) toast.error(result.error);
+            else startTransition(() => router.refresh());
+          })
+          .catch(() => toast.error("Could not mark that notice as read. Try again."));
+      }
+      setOpen(true);
+    }
+
+    window.addEventListener(OPEN_MEMBER_NOTICE_BELL_EVENT, onOpenFromCarousel);
+    return () => window.removeEventListener(OPEN_MEMBER_NOTICE_BELL_EVENT, onOpenFromCarousel);
+  }, [router, startTransition]);
+
+  useEffect(() => {
+    if (!open) return;
+    const noticeId = scrollToNoticeIdRef.current;
+    if (!noticeId) return;
+    scrollToNoticeIdRef.current = null;
+    window.requestAnimationFrame(() => {
+      document
+        .getElementById(`notice-bell-item-${noticeId}`)
+        ?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+  }, [open, notices]);
 
   const unreadCount = unread.length;
   const unreadSet = new Set(unread);
@@ -165,6 +202,7 @@ export function NotificationBell({
                   <Link
                     className="block border-b px-5 py-5 last:border-0 hover:bg-muted/40"
                     href={href}
+                    id={`notice-bell-item-${notice.id}`}
                     key={notice.id}
                     onClick={() => markOneRead(notice.id)}
                   >
@@ -176,6 +214,7 @@ export function NotificationBell({
               return (
                 <button
                   className="w-full border-b px-5 py-5 text-left last:border-0 hover:bg-muted/40"
+                  id={`notice-bell-item-${notice.id}`}
                   key={notice.id}
                   onClick={() => markOneRead(notice.id)}
                   type="button"

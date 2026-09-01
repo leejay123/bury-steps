@@ -14,8 +14,11 @@ const jumpLinkClassName =
 
 export function DisplaySettingsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10 xl:gap-12">
-      <nav aria-label="On this page" className="lg:hidden">
+    <div
+      className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10 xl:gap-12"
+      data-display-settings=""
+    >
+      <nav aria-label="On this page" className="lg:hidden" data-display-settings-jump-nav="">
         <ul className="-mx-1 flex gap-1 overflow-x-auto pb-1">
           {GROUPS.map((group) => (
             <li className="shrink-0" key={group.id}>
@@ -35,6 +38,7 @@ export function DisplaySettingsLayout({ children }: { children: React.ReactNode 
       <nav
         aria-label="On this page"
         className="hidden shrink-0 self-start lg:sticky lg:top-24 lg:block lg:w-36 xl:w-40"
+        data-display-settings-jump-nav=""
       >
         <ul className="flex flex-col gap-0.5 text-sm">
           {GROUPS.map((group) => (

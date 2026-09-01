@@ -150,6 +150,14 @@ html:has([data-slot="alert-dialog-content"][data-state="open"]) header {
   pointer-events: none;
 }
 
+/* Display settings jump nav sits under the drawer blur — hide it while editing. */
+html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"])
+  [data-display-settings-jump-nav] {
+  visibility: hidden;
+  pointer-events: none;
+  opacity: 0;
+}
+
 /* Clerk's shadcn theme draws the field with box-shadow, then adds a 4px
    --ring halo on focus. That is the thick green border. Keep a 1px edge. */
 .cl-input,

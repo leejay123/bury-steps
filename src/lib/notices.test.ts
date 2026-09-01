@@ -4,6 +4,7 @@ import {
   HOMEPAGE_NOTICE_CAROUSEL_BODY,
   noticeBodyForBellDrawer,
   noticeBodyForHomepageCarousel,
+  noticesForHomepageCarousel,
   noticeUnreadBadgeLabel,
   type NoticeView,
 } from "./notices";
@@ -76,6 +77,43 @@ describe("noticeBodyForHomepageCarousel", () => {
     const shown = noticeBodyForHomepageCarousel(notice({ body, kind: "BELL" }));
     expect(shown.endsWith("…")).toBe(true);
     expect(shown).not.toMatch(/\s{2,}/);
+  });
+});
+
+describe("noticesForHomepageCarousel", () => {
+  it("excludes the pinned welcome and returns newest enabled notices first", () => {
+    const welcome = notice({
+      body: "Welcome!",
+      kind: "BELL",
+      systemKey: "welcome",
+      createdAt: new Date("2026-08-31T12:00:00.000Z"),
+    });
+    const older = notice({
+      id: "2",
+      body: "Older",
+      kind: "BELL",
+      createdAt: new Date("2026-08-30T10:00:00.000Z"),
+    });
+    const newer = notice({
+      id: "3",
+      body: "Newer",
+      kind: "BELL",
+      createdAt: new Date("2026-08-31T09:00:00.000Z"),
+    });
+
+    expect(noticesForHomepageCarousel([welcome, older, newer], 5)).toEqual([newer, older]);
+  });
+
+  it("respects the limit", () => {
+    const notices = [1, 2, 3, 4, 5, 6].map((n) =>
+      notice({
+        id: String(n),
+        body: `Notice ${n}`,
+        kind: "BELL",
+        createdAt: new Date(`2026-08-${String(n).padStart(2, "0")}T12:00:00.000Z`),
+      }),
+    );
+    expect(noticesForHomepageCarousel(notices, 3)).toHaveLength(3);
   });
 });
 
