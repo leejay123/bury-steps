@@ -54,7 +54,7 @@ export async function updateCarouselEnabled(
     return logActionError("updateCarouselEnabled", err, "Could not save that setting. Try again.");
   }
 
-  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/", "layout");
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/hero-photos");
@@ -83,7 +83,7 @@ export async function updateScrollToTopEnabled(
     return logActionError("updateScrollToTopEnabled", err, "Could not save that setting. Try again.");
   }
 
-  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/", "layout");
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/display");
@@ -116,7 +116,7 @@ export async function updateCookieConsentVariant(
     return logActionError("updateCookieConsentVariant", err, "Could not save that setting. Try again.");
   }
 
-  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/", "layout");
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/display");
@@ -163,7 +163,7 @@ export async function updateSiteBranding(
     return logActionError("updateSiteBranding", err, "Could not save that setting. Try again.");
   }
 
-  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/", "layout");
   revalidatePath("/");
   revalidatePath("/admin/settings");
@@ -201,7 +201,7 @@ export async function updateFacebookGroupUrl(
     return logActionError("updateFacebookGroupUrl", err, "Could not save that setting. Try again.");
   }
 
-  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/", "layout");
   revalidatePath("/");
   revalidatePath("/admin/settings");
@@ -238,7 +238,7 @@ export async function reorderHomepageSections(ids: HomepageSectionId[]): Promise
     return logActionError("reorderHomepageSections", err, "Could not save that order. Try again.");
   }
 
-  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/display");
@@ -277,7 +277,7 @@ export async function updateFaqSectionCopy(
     return logActionError("updateFaqSectionCopy", err, "Could not save that setting. Try again.");
   }
 
-  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/display");
@@ -324,7 +324,7 @@ export async function updateTestimonialsSectionCopy(
     );
   }
 
-  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/display");
@@ -390,7 +390,7 @@ export async function updateHowThisStartedCopy(
     );
   }
 
-  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/display");
@@ -461,7 +461,7 @@ export async function updateAboutLists(
     return logActionError("updateAboutLists", err, "Could not save that setting. Try again.");
   }
 
-  revalidateTag(HOMEPAGE_CACHE_TAG);
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/display");

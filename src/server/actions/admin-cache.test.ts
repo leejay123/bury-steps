@@ -78,8 +78,8 @@ beforeEach(() => {
 describe("clearSiteCache", () => {
   it("revalidates both cache tags and the public/admin/dashboard routes", async () => {
     const result = await clearSiteCache(null, new FormData());
-    expect(revalidateTag).toHaveBeenCalledWith("homepage");
-    expect(revalidateTag).toHaveBeenCalledWith(expect.any(String));
+    expect(revalidateTag).toHaveBeenCalledWith("homepage", { expire: 0 });
+    expect(revalidateTag).toHaveBeenCalledWith(expect.any(String), { expire: 0 });
     expect(revalidateTag).toHaveBeenCalledTimes(2);
     for (const path of ["/", "/home", "/admin", "/dashboard"]) {
       expect(revalidatePath).toHaveBeenCalledWith(path);
