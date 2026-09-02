@@ -35,6 +35,7 @@ export function ImageDropzone({
   hint = "JPEG, PNG or WebP, under 4 MB.",
   id,
   name = "image",
+  onDirtyChange,
   required,
 }: {
   aspect?: "video" | "square";
@@ -45,6 +46,8 @@ export function ImageDropzone({
   hint?: string;
   id?: string;
   name?: string;
+  /** Fires whenever a new file is chosen or the existing photo is marked for removal — use it to gate a Save button so it isn't clickable with nothing to save. */
+  onDirtyChange?: (dirty: boolean) => void;
   required?: boolean;
 }) {
   const generatedId = useId();
@@ -60,6 +63,11 @@ export function ImageDropzone({
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
   }, [previewUrl]);
+
+  useEffect(() => {
+    onDirtyChange?.(Boolean(file) || removed);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fires on file/removed changes only, not on identity changes of the callback prop itself
+  }, [file, removed]);
 
   function applyFile(next: File | null) {
     const input = inputRef.current;

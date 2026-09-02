@@ -53,6 +53,8 @@ export async function generateViewport(): Promise<Viewport> {
     themeColor: "#111111",
     width: "device-width",
     initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
     viewportFit: "cover",
     // Chrome/Android: resize the layout with the keyboard instead of
     // overlaying it (that overlay is what feels like a zoom/jump).

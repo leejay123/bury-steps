@@ -1,6 +1,7 @@
 "use client";
 
 import { startTransition, useActionState, useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { updateCookieConsentVariant, type ActionResult } from "@/server/actions";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
@@ -59,7 +60,12 @@ export function CookieConsentSettings({ variant }: { variant: CookieConsentVaria
       title="Cookie notice"
     >
       <div className="flex w-full flex-col gap-2">
-        <Label htmlFor="cookie-consent-variant">Layout</Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="cookie-consent-variant">Layout</Label>
+          {isPending ? (
+            <Loader2 aria-label="Saving" className="size-3.5 animate-spin text-muted-foreground" role="status" />
+          ) : null}
+        </div>
         <Select
           disabled={isPending}
           onValueChange={(value) => onVariantChange(value as CookieConsentVariant)}
@@ -76,7 +82,6 @@ export function CookieConsentSettings({ variant }: { variant: CookieConsentVaria
             ))}
           </SelectContent>
         </Select>
-        {isPending ? <span className="text-xs text-muted-foreground">Saving…</span> : null}
         <p className="text-xs text-muted-foreground">
           To preview on the live site after saving, clear the <code>cookieConsent</code> cookie in
           your browser, or use a private window.

@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { updateScrollToTopEnabled } from "@/server/actions";
 import { useOptimisticSettingToggle } from "@/hooks/use-optimistic-setting-toggle";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -23,14 +24,16 @@ export function DisplaySettings({ scrollToTopEnabled }: { scrollToTopEnabled: bo
           <Label className="font-medium" htmlFor="scroll-to-top">
             Show the button
           </Label>
-          {isPending ? <span className="text-xs text-muted-foreground">Saving…</span> : null}
         </div>
-        <Checkbox
-          checked={on}
-          disabled={isPending}
-          id="scroll-to-top"
-          onCheckedChange={(value) => toggle(value === true)}
-        />
+        {isPending ? (
+          <Loader2 aria-label="Saving" className="size-4 shrink-0 animate-spin text-muted-foreground" role="status" />
+        ) : (
+          <Checkbox
+            checked={on}
+            id="scroll-to-top"
+            onCheckedChange={(value) => toggle(value === true)}
+          />
+        )}
       </div>
     </SettingsSection>
   );
