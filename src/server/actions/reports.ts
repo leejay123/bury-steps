@@ -99,8 +99,8 @@ export async function updateAccidentReport(
       },
     });
   } catch (err) {
-    if (!isPrismaCode(err, "P2025")) logActionError("updateAccidentReport", err);
-    return { ok: false, error: "That report is no longer there." };
+    if (isPrismaCode(err, "P2025")) return { ok: false, error: "That report is no longer there." };
+    return logActionError("updateAccidentReport", err, "Could not save that report. Try again.");
   }
 
   revalidatePath("/admin/reports");
@@ -118,8 +118,8 @@ export async function deleteAccidentReport(
   try {
     await prisma.accidentReport.delete({ where: { id } });
   } catch (err) {
-    if (!isPrismaCode(err, "P2025")) logActionError("deleteAccidentReport", err);
-    return { ok: false, error: "That report is no longer there." };
+    if (isPrismaCode(err, "P2025")) return { ok: false, error: "That report is no longer there." };
+    return logActionError("deleteAccidentReport", err, "Could not delete that report. Try again.");
   }
 
   revalidatePath("/admin/reports");

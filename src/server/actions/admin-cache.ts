@@ -208,9 +208,14 @@ export async function resetSiteToDefault(
   const clerk = await clerkClient();
   let clerkFailed = 0;
   try {
-    let offset = 0;
-    for (;;) {
-      const page = await clerk.users.getUserList({ limit: 100, offset });
+    // Always re-list at offset 0: each deletion shifts everyone after it
+    // down by one, so paging with an advancing offset would skip users.
+    // Bound the loop by the starting count so it can't spin forever if a
+    // user's deletion keeps failing.
+    const startingCount = await clerk.users.getCount();
+    const maxIterations = Math.max(1, Math.ceil(startingCount / 100));
+    for (let i = 0; i < maxIterations; i++) {
+      const page = await clerk.users.getUserList({ limit: 100, offset: 0 });
       if (page.data.length === 0) break;
       for (const clerkUser of page.data) {
         if (clerkUser.id === admin.clerkId) continue;
@@ -224,7 +229,6 @@ export async function resetSiteToDefault(
         }
       }
       if (page.data.length < 100) break;
-      offset += page.data.length;
     }
   } catch (err) {
     clerkFailed += 1;

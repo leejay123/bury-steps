@@ -7,6 +7,7 @@ const {
   requireAdmin,
   checkRateLimit,
   getUserList,
+  getCount,
   deleteUser,
   transaction,
 } = vi.hoisted(() => {
@@ -36,6 +37,7 @@ const {
     requireAdmin: vi.fn(),
     checkRateLimit: vi.fn((): RateLimitResult => ({ ok: true })),
     getUserList: vi.fn(),
+    getCount: vi.fn(),
     deleteUser: vi.fn(),
     transaction,
   };
@@ -51,7 +53,7 @@ vi.mock("next/cache", () => ({
 vi.mock("@/lib/db", () => ({ prisma: { $transaction: transaction } }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
 vi.mock("@clerk/nextjs/server", () => ({
-  clerkClient: vi.fn(async () => ({ users: { getUserList, deleteUser } })),
+  clerkClient: vi.fn(async () => ({ users: { getUserList, getCount, deleteUser } })),
 }));
 vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
@@ -73,6 +75,7 @@ beforeEach(() => {
   requireAdmin.mockResolvedValue(ADMIN);
   checkRateLimit.mockReturnValue({ ok: true });
   getUserList.mockResolvedValue({ data: [] });
+  getCount.mockResolvedValue(0);
 });
 
 describe("clearSiteCache", () => {
@@ -131,9 +134,13 @@ describe("resetSiteToDefault", () => {
     expect(deleteUser).not.toHaveBeenCalledWith(ADMIN.clerkId);
   });
 
-  it("paginates through every page of Clerk users, not just the first 100", async () => {
+  it("re-lists at offset 0 for every batch, since deletions shift later users down", async () => {
+    // Each deletion shifts everyone after it down by one, so re-listing at
+    // offset 0 (rather than advancing the offset) is what actually visits
+    // every user once the first page's worth has been removed.
     const page1 = { data: Array.from({ length: 100 }, (_, i) => ({ id: `clerk-${i}` })) };
     const page2 = { data: [{ id: "clerk-last" }] };
+    getCount.mockResolvedValue(101);
     getUserList.mockResolvedValueOnce(page1).mockResolvedValueOnce(page2);
     deleteUser.mockResolvedValue(undefined);
 
@@ -141,8 +148,21 @@ describe("resetSiteToDefault", () => {
 
     expect(getUserList).toHaveBeenCalledTimes(2);
     expect(getUserList).toHaveBeenNthCalledWith(1, { limit: 100, offset: 0 });
-    expect(getUserList).toHaveBeenNthCalledWith(2, { limit: 100, offset: 100 });
+    expect(getUserList).toHaveBeenNthCalledWith(2, { limit: 100, offset: 0 });
     expect(deleteUser).toHaveBeenCalledWith("clerk-last");
+  });
+
+  it("bounds the re-list loop by the starting user count, so a stuck deletion can't spin forever", async () => {
+    getCount.mockResolvedValue(50);
+    getUserList.mockResolvedValue({ data: [{ id: "clerk-stuck" }] });
+    deleteUser.mockRejectedValue(new Error("permanently broken"));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await resetSiteToDefault(null, resetForm("delete"));
+
+    // ceil(50 / 100) = 1 iteration, even though the same user keeps
+    // reappearing (its deletion keeps failing).
+    expect(getUserList).toHaveBeenCalledTimes(1);
   });
 
   it("treats an already-gone Clerk account (404) as fine, not a failure", async () => {
