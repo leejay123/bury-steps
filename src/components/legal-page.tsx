@@ -2,12 +2,6 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { PAGE_X_BLEED } from "@/lib/page-x";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 
 export const LEGAL_LAST_UPDATED = "28 August 2026";
 
@@ -43,21 +37,23 @@ export function LegalPage({
         </div>
         <FullWidthDivider position="bottom" />
       </div>
-      <Accordion className="w-full" collapsible defaultValue={sections[0]?.id} type="single">
+      {/*
+        Every section is always shown — no accordion. A short, plain-English
+        notice like this one is small enough that hiding most of it behind
+        click-to-expand rows just left the page looking empty on load;
+        showing it all keeps the exact same section styling (heading, the
+        border between rows) without the interactivity.
+      */}
+      <div className="flex flex-1 flex-col">
         {sections.map((section) => (
-          <AccordionItem className="px-4 md:px-6" key={section.id} value={section.id}>
-            <AccordionTrigger className="text-base">{section.title}</AccordionTrigger>
-            <AccordionContent>
+          <div className="border-b px-4 md:px-6" key={section.id}>
+            <h2 className="py-4 text-base font-medium">{section.title}</h2>
+            <div className="pb-4">
               <LegalBody>{section.content}</LegalBody>
-            </AccordionContent>
-          </AccordionItem>
+            </div>
+          </div>
         ))}
-      </Accordion>
-      {/* mt-auto pins this to the bottom of the page's available height (see
-          flex-1 above, matched by flex/flex-col on <main> in the root
-          layout) instead of leaving empty space below it whenever most
-          sections are collapsed and the accordion alone falls short of
-          filling the page. */}
+      </div>
       <p className="mt-auto px-4 py-4 md:px-6 text-xs text-muted-foreground">
         This page is a practical notice for Bury Steps members. It is not legal advice.{" "}
         <Link className="font-medium text-foreground underline-offset-4 hover:underline" href="/privacy-policy">
