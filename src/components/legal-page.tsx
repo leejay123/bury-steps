@@ -47,8 +47,8 @@ export function LegalPage({
       <div className="flex flex-1 flex-col">
         {sections.map((section) => (
           <div className="border-b px-4 md:px-6" key={section.id}>
-            <h2 className="py-4 text-base font-medium">{section.title}</h2>
-            <div className="pb-4">
+            <h2 className="pt-6 pb-2 text-base font-medium">{section.title}</h2>
+            <div className="pb-7">
               <LegalBody>{section.content}</LegalBody>
             </div>
           </div>
