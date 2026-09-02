@@ -154,7 +154,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <FullWidthDivider position="bottom" />
               </div>
             </header>
-            <main className={`flex-1 ${PAGE_Y} ${PAGE_X}`} id="main-content">
+            {/*
+              flex flex-col so a short page's own root can use flex-1 to
+              claim the rest of this space (e.g. pinning something to the
+              bottom instead of leaving empty room above the footer) —
+              min-height:100% can't do that here since this element's own
+              height comes from flex-grow, not an explicit value, and
+              percentage heights don't resolve against that.
+            */}
+            <main className={`flex flex-1 flex-col ${PAGE_Y} ${PAGE_X}`} id="main-content">
               {children}
             </main>
             <Suspense fallback={null}>
