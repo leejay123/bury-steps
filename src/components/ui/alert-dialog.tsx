@@ -122,7 +122,17 @@ function AlertDialogContent({
           // Radix focuses this panel itself on open, which makes Safari draw
           // its default blue focus ring around it; nothing inside needs this
           // element's own outline (the close/cancel buttons keep their own).
-          "bg-background outline-hidden data-[state=closed]:invisible data-[state=closed]:!pointer-events-none fixed top-[50%] left-[50%] z-[70] grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-visible rounded-lg border p-6 shadow-lg sm:max-w-lg",
+          //
+          // grid-cols-[minmax(0,1fr)] (not just plain grid): a grid track's
+          // implicit min width is "auto" (its content's own min-content
+          // width) unless told otherwise, so any long unbreakable text deep
+          // inside this dialog — a long selected value, a long email — could
+          // still force the whole card wider than max-w-lg and spill out of
+          // it (overflow-visible above is deliberate, so a Select's own
+          // dropdown can pop outside the card — that's not the same bug).
+          // minmax(0, 1fr) pins the track's minimum to 0 so children truncate
+          // inside the card instead.
+          "bg-background outline-hidden data-[state=closed]:invisible data-[state=closed]:!pointer-events-none fixed top-[50%] left-[50%] z-[70] grid grid-cols-[minmax(0,1fr)] w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-visible rounded-lg border p-6 shadow-lg sm:max-w-lg",
           className,
         )}
         onEscapeKeyDown={(event) => {
