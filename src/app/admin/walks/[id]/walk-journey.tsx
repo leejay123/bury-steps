@@ -174,6 +174,9 @@ export function WalkJourneyManager({
   const editing = mode?.type === "edit" ? mode.event : null;
   const formState = editing ? updateState : createState;
   const atCap = events.length >= MAX_JOURNEY_EVENTS;
+  const showJourneyDrawer = events.length > 0;
+  const showAddEvent = canEdit && !atCap;
+  const showBothButtons = showJourneyDrawer && showAddEvent;
 
   return (
     <section className="flex flex-col gap-4">
@@ -185,7 +188,13 @@ export function WalkJourneyManager({
             see. Up to {MAX_JOURNEY_EVENTS}.
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+        <div
+          className={
+            showBothButtons
+              ? "grid grid-cols-2 gap-2 sm:flex sm:flex-wrap"
+              : "flex flex-col gap-2 sm:flex-row sm:flex-wrap"
+          }
+        >
           <WalkJourneyDrawer className="w-full sm:w-auto" events={events} />
           {canEdit && !atCap ? (
             <Button

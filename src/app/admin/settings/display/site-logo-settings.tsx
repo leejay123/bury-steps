@@ -38,7 +38,7 @@ export function SiteLogoSettings({
       <form action={action} className="flex w-full flex-col gap-4" ref={formRef}>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="logo-image">Logo</Label>
-          <div className="max-w-xs">
+          <div className="max-w-32">
             <ImageDropzone
               aspect="video"
               clearable={hasCustomLogo}
