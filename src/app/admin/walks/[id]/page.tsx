@@ -146,7 +146,7 @@ export default async function WalkDetailPage({
 
       {meeting ? <WalkMapSection location={meeting} walk={walk} /> : null}
 
-      <div className="-mx-4 flex flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain px-4 [scrollbar-width:none] [-ms-overflow-style:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden [&>*]:shrink-0">
+      <div className="-mx-4 flex flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain px-4 [scrollbar-width:none] [-ms-overflow-style:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden [&>*]:shrink-0 md:[&>*]:grow">
         <Button asChild size="sm" variant="outline">
           <a href={`/admin/walks/${walk.id}/export`}>
             <Download data-icon="inline-start" />
@@ -193,10 +193,12 @@ export default async function WalkDetailPage({
         <DeleteWalkButton walkId={walk.id} attendanceCount={walk.attendances.length} />
       </div>
       {isCompleted ? (
-        <p className="text-xs text-muted-foreground">
-          This walk has finished, so it can no longer be cancelled or edited. If someone was there
-          but forgot to clock in, add them under Attendance.
-        </p>
+        <Alert>
+          <AlertDescription>
+            This walk has finished, so it can no longer be cancelled or edited. If someone was
+            there but forgot to clock in, add them under Attendance.
+          </AlertDescription>
+        </Alert>
       ) : null}
 
       <Separator />
