@@ -47,6 +47,7 @@ export function HomeWelcome({
   howThisStartedTitle,
   memberNotices,
   testimonials,
+  testimonialsSectionEyebrow,
   testimonialsSectionIntro,
   testimonialsSectionTitle,
 }: {
@@ -66,6 +67,7 @@ export function HomeWelcome({
   howThisStartedTitle: string;
   memberNotices: HomepageNoticeSlide[];
   testimonials: TestimonialView[];
+  testimonialsSectionEyebrow: string;
   testimonialsSectionIntro: string;
   testimonialsSectionTitle: string;
 }) {
@@ -101,6 +103,7 @@ export function HomeWelcome({
     testimonials:
       testimonials.length > 0 ? (
         <TestimonialsSection
+          eyebrow={testimonialsSectionEyebrow}
           intro={testimonialsSectionIntro}
           testimonials={testimonials}
           title={testimonialsSectionTitle}

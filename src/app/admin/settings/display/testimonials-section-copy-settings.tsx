@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  MAX_TESTIMONIALS_SECTION_EYEBROW,
   MAX_TESTIMONIALS_SECTION_INTRO,
   MAX_TESTIMONIALS_SECTION_TITLE,
 } from "@/lib/testimonials";
@@ -26,12 +27,15 @@ function Submit({ disabled }: { disabled: boolean }) {
 }
 
 export function TestimonialsSectionCopySettings({
+  testimonialsSectionEyebrow,
   testimonialsSectionIntro,
   testimonialsSectionTitle,
 }: {
+  testimonialsSectionEyebrow: string;
   testimonialsSectionIntro: string;
   testimonialsSectionTitle: string;
 }) {
+  const [eyebrow, setEyebrow] = useState(testimonialsSectionEyebrow);
   const [title, setTitle] = useState(testimonialsSectionTitle);
   const [intro, setIntro] = useState(testimonialsSectionIntro);
   const [state, action] = useActionState<ActionResult | null, FormData>(
@@ -40,12 +44,19 @@ export function TestimonialsSectionCopySettings({
   );
   useActionToast(state);
 
-  useResetOnChange([testimonialsSectionTitle, testimonialsSectionIntro], () => {
-    setTitle(testimonialsSectionTitle);
-    setIntro(testimonialsSectionIntro);
-  });
+  useResetOnChange(
+    [testimonialsSectionEyebrow, testimonialsSectionTitle, testimonialsSectionIntro],
+    () => {
+      setEyebrow(testimonialsSectionEyebrow);
+      setTitle(testimonialsSectionTitle);
+      setIntro(testimonialsSectionIntro);
+    },
+  );
 
-  const dirty = title !== testimonialsSectionTitle || intro !== testimonialsSectionIntro;
+  const dirty =
+    eyebrow !== testimonialsSectionEyebrow ||
+    title !== testimonialsSectionTitle ||
+    intro !== testimonialsSectionIntro;
 
   return (
     <SettingsSection
@@ -53,6 +64,16 @@ export function TestimonialsSectionCopySettings({
       title="Testimonials"
     >
       <form action={action} className="flex w-full flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="testimonialsSectionEyebrow">Eyebrow (optional)</Label>
+          <Input
+            id="testimonialsSectionEyebrow"
+            maxLength={MAX_TESTIMONIALS_SECTION_EYEBROW}
+            name="testimonialsSectionEyebrow"
+            onChange={(event) => setEyebrow(event.target.value)}
+            value={eyebrow}
+          />
+        </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="testimonialsSectionTitle">Heading</Label>
           <Input
@@ -82,6 +103,7 @@ export function TestimonialsSectionCopySettings({
           {dirty ? (
             <Button
               onClick={() => {
+                setEyebrow(testimonialsSectionEyebrow);
                 setTitle(testimonialsSectionTitle);
                 setIntro(testimonialsSectionIntro);
               }}

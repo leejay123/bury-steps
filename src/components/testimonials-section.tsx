@@ -11,10 +11,12 @@ import { HeroCopy } from "@/components/hero-copy";
 import type { TestimonialView } from "@/lib/testimonials";
 
 export function TestimonialsSection({
+  eyebrow,
   intro,
   testimonials,
   title,
 }: {
+  eyebrow: string;
   intro: string;
   testimonials: TestimonialView[];
   title: string;
@@ -23,7 +25,7 @@ export function TestimonialsSection({
 
   return (
     <section>
-      <HeroCopy eyebrow={null} title={title} titleAs="h2">
+      <HeroCopy eyebrow={eyebrow || null} title={title} titleAs="h2">
         <p>{intro}</p>
       </HeroCopy>
       <div className="relative">

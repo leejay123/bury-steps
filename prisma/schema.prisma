@@ -251,6 +251,8 @@ model SiteSetting {
   facebookGroupUrl     String  @default("https://www.facebook.com/groups/burysteps")
   /// Homepage testimonials block.
   testimonialsEnabled  Boolean @default(true)
+  /// Optional small label above the testimonials heading. Empty hides it.
+  testimonialsSectionEyebrow String @default("")
   /// Heading above the homepage testimonials grid.
   testimonialsSectionTitle String @default("From the group")
   /// Short intro under the testimonials heading.

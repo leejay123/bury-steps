@@ -1,10 +1,19 @@
 export const MAX_HOMEPAGE_TESTIMONIALS = 12;
+export const MAX_TESTIMONIALS_SECTION_EYEBROW = 80;
 export const MAX_TESTIMONIALS_SECTION_TITLE = 80;
 export const MAX_TESTIMONIALS_SECTION_INTRO = 280;
 
 export const DEFAULT_TESTIMONIALS_SECTION_TITLE = "From the group";
 export const DEFAULT_TESTIMONIALS_SECTION_INTRO =
   "A few words from people who walk with us on Sundays.";
+
+/** Optional small label above the section heading — empty hides it, same as How this started's eyebrow. */
+export function parseTestimonialsSectionEyebrow(raw: string): string | "invalid" {
+  const eyebrow = raw.trim().replace(/\s+/g, " ");
+  if (eyebrow.length === 0) return "";
+  if (eyebrow.length > MAX_TESTIMONIALS_SECTION_EYEBROW) return "invalid";
+  return eyebrow;
+}
 
 export function parseTestimonialsSectionTitle(raw: string): string | "invalid" {
   const title = raw.trim().replace(/\s+/g, " ");

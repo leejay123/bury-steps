@@ -48,6 +48,8 @@ export type SiteTheme = {
   siteName: string;
   siteTagline: string;
   facebookGroupUrl: string;
+  /** Empty hides the eyebrow — unlike the title/intro, blank is a valid value here, not "unset". */
+  testimonialsSectionEyebrow: string;
   testimonialsSectionTitle: string;
   testimonialsSectionIntro: string;
   faqSectionTitle: string;
@@ -85,6 +87,7 @@ function defaultTheme(): SiteTheme {
     siteName: DEFAULT_SITE_NAME,
     siteTagline: DEFAULT_SITE_TAGLINE,
     facebookGroupUrl: DEFAULT_FACEBOOK_GROUP_URL,
+    testimonialsSectionEyebrow: "",
     testimonialsSectionTitle: DEFAULT_TESTIMONIALS_SECTION_TITLE,
     testimonialsSectionIntro: DEFAULT_TESTIMONIALS_SECTION_INTRO,
     faqSectionTitle: DEFAULT_FAQ_SECTION_TITLE,
@@ -119,6 +122,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       siteName: true,
       siteTagline: true,
       facebookGroupUrl: true,
+      testimonialsSectionEyebrow: true,
       testimonialsSectionTitle: true,
       testimonialsSectionIntro: true,
       faqSectionTitle: true,
@@ -152,6 +156,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     siteName: row?.siteName?.trim() || DEFAULT_SITE_NAME,
     siteTagline: row?.siteTagline?.trim() || DEFAULT_SITE_TAGLINE,
     facebookGroupUrl: row?.facebookGroupUrl ?? DEFAULT_FACEBOOK_GROUP_URL,
+    testimonialsSectionEyebrow: row?.testimonialsSectionEyebrow?.trim() ?? "",
     testimonialsSectionTitle:
       row?.testimonialsSectionTitle?.trim() || DEFAULT_TESTIMONIALS_SECTION_TITLE,
     testimonialsSectionIntro:
@@ -192,7 +197,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v10"], {
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v11"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });

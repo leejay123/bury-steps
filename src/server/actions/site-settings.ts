@@ -3,7 +3,11 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { parseTestimonialsSectionIntro, parseTestimonialsSectionTitle } from "@/lib/testimonials";
+import {
+  parseTestimonialsSectionEyebrow,
+  parseTestimonialsSectionIntro,
+  parseTestimonialsSectionTitle,
+} from "@/lib/testimonials";
 import { parseFaqSectionIntro, parseFaqSectionTitle } from "@/lib/faqs";
 import {
   parseHomepageSectionOrder,
@@ -295,12 +299,18 @@ export async function updateTestimonialsSectionCopy(
   formData: FormData,
 ): Promise<ActionResult> {
   await requireAdmin();
+  const testimonialsSectionEyebrow = parseTestimonialsSectionEyebrow(
+    String(formData.get("testimonialsSectionEyebrow") ?? ""),
+  );
   const testimonialsSectionTitle = parseTestimonialsSectionTitle(
     String(formData.get("testimonialsSectionTitle") ?? ""),
   );
   const testimonialsSectionIntro = parseTestimonialsSectionIntro(
     String(formData.get("testimonialsSectionIntro") ?? ""),
   );
+  if (testimonialsSectionEyebrow === "invalid") {
+    return { ok: false, error: "Keep the eyebrow under 80 characters, or leave it blank." };
+  }
   if (testimonialsSectionTitle === "invalid") {
     return { ok: false, error: "Give testimonials a heading of 2–80 characters." };
   }
@@ -317,10 +327,11 @@ export async function updateTestimonialsSectionCopy(
         carouselEnabled: true,
         scrollToTopEnabled: true,
         cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
+        testimonialsSectionEyebrow,
         testimonialsSectionTitle,
         testimonialsSectionIntro,
       },
-      update: { testimonialsSectionTitle, testimonialsSectionIntro },
+      update: { testimonialsSectionEyebrow, testimonialsSectionTitle, testimonialsSectionIntro },
     });
   } catch (err) {
     return logActionError(

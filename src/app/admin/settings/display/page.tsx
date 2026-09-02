@@ -70,6 +70,7 @@ export default async function DisplaySettingsPage() {
             aboutRulesText={theme.aboutRulesText}
           />
           <TestimonialsSectionCopySettings
+            testimonialsSectionEyebrow={theme.testimonialsSectionEyebrow}
             testimonialsSectionIntro={theme.testimonialsSectionIntro}
             testimonialsSectionTitle={theme.testimonialsSectionTitle}
           />

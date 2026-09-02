@@ -50,6 +50,7 @@ export default async function Home() {
         howThisStartedTitle={theme.howThisStartedTitle}
         memberNotices={memberNotices}
         testimonials={testimonials}
+        testimonialsSectionEyebrow={theme.testimonialsSectionEyebrow}
         testimonialsSectionIntro={theme.testimonialsSectionIntro}
         testimonialsSectionTitle={theme.testimonialsSectionTitle}
       />
