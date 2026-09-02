@@ -32,9 +32,13 @@ function SectionShell({
 
 export function HomeWelcome({
   aboutExpect,
+  aboutExpectHeading,
   aboutGoals,
+  aboutGoalsHeading,
   aboutPlaces,
+  aboutPlacesHeading,
   aboutRules,
+  aboutRulesHeading,
   facebookGroupUrl,
   faqCategories,
   faqSectionIntro,
@@ -52,9 +56,13 @@ export function HomeWelcome({
   testimonialsSectionTitle,
 }: {
   aboutExpect: string[];
+  aboutExpectHeading: string;
   aboutGoals: string[];
+  aboutGoalsHeading: string;
   aboutPlaces: string[];
+  aboutPlacesHeading: string;
   aboutRules: AboutRule[];
+  aboutRulesHeading: string;
   facebookGroupUrl: string;
   faqCategories: FaqCategoryView[];
   faqSectionIntro: string;
@@ -79,9 +87,13 @@ export function HomeWelcome({
           actions={
             <HomeAboutDrawer
               aboutExpect={aboutExpect}
+              aboutExpectHeading={aboutExpectHeading}
               aboutGoals={aboutGoals}
+              aboutGoalsHeading={aboutGoalsHeading}
               aboutPlaces={aboutPlaces}
+              aboutPlacesHeading={aboutPlacesHeading}
               aboutRules={aboutRules}
+              aboutRulesHeading={aboutRulesHeading}
               facebookGroupUrl={facebookGroupUrl}
               howThisStartedBody={howThisStartedBody}
               howThisStartedTitle={howThisStartedTitle}

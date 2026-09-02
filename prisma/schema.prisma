@@ -276,6 +276,11 @@ model SiteSetting {
   aboutExpect           String  @default("")
   /// About drawer rules: one “Title | Body” per line. Empty uses built-in defaults.
   aboutRules            String  @default("")
+  /// About drawer section headings — the real visible text (distinct from the Goals/Places/etc. admin-only labels).
+  aboutGoalsHeading     String  @default("More than just a walking group")
+  aboutPlacesHeading    String  @default("What we do")
+  aboutExpectHeading    String  @default("What you can expect")
+  aboutRulesHeading     String  @default("Group rules")
   /// Comma-separated homepage block order (howWalksWork, howThisStarted, memberNotices, testimonials, faqs).
   homepageSectionOrder  String  @default("howWalksWork,howThisStarted,memberNotices,testimonials,faqs")
   /// Signed-in members: latest notices carousel on the homepage.

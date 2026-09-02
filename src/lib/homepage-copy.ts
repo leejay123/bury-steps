@@ -104,6 +104,14 @@ export const MAX_ABOUT_LIST_ITEM = 160;
 const MAX_ABOUT_RULE_TITLE = 80;
 const MAX_ABOUT_RULE_BODY = 280;
 export const MAX_ABOUT_RULES = 20;
+export const MAX_ABOUT_SECTION_HEADING = 80;
+
+/** Real, visible headings for each About-drawer section — distinct from the
+ * "Goals"/"Places"/etc. labels used only to organise the admin settings list. */
+export const DEFAULT_ABOUT_GOALS_HEADING = "More than just a walking group";
+export const DEFAULT_ABOUT_PLACES_HEADING = "What we do";
+export const DEFAULT_ABOUT_EXPECT_HEADING = "What you can expect";
+export const DEFAULT_ABOUT_RULES_HEADING = "Group rules";
 
 export type AboutRule = { title: string; body: string };
 
@@ -197,6 +205,12 @@ export const DEFAULT_ABOUT_GOALS_TEXT = serializeAboutList(DEFAULT_ABOUT_GOALS);
 export const DEFAULT_ABOUT_PLACES_TEXT = serializeAboutList(DEFAULT_ABOUT_PLACES);
 export const DEFAULT_ABOUT_EXPECT_TEXT = serializeAboutList(DEFAULT_ABOUT_EXPECT);
 export const DEFAULT_ABOUT_RULES_TEXT = serializeAboutRules(DEFAULT_ABOUT_RULES);
+
+export function parseAboutSectionHeading(raw: string): string | "invalid" {
+  const heading = raw.trim().replace(/\s+/g, " ");
+  if (heading.length < 2 || heading.length > MAX_ABOUT_SECTION_HEADING) return "invalid";
+  return heading;
+}
 
 export function parseAboutList(raw: string): string[] | "invalid" {
   const items = raw

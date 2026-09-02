@@ -35,9 +35,13 @@ export default async function Home() {
       />
       <HomeWelcome
         aboutExpect={theme.aboutExpect}
+        aboutExpectHeading={theme.aboutExpectHeading}
         aboutGoals={theme.aboutGoals}
+        aboutGoalsHeading={theme.aboutGoalsHeading}
         aboutPlaces={theme.aboutPlaces}
+        aboutPlacesHeading={theme.aboutPlacesHeading}
         aboutRules={theme.aboutRules}
+        aboutRulesHeading={theme.aboutRulesHeading}
         facebookGroupUrl={theme.facebookGroupUrl}
         faqCategories={faqData.categories}
         faqSectionIntro={theme.faqSectionIntro}

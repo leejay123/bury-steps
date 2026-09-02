@@ -15,6 +15,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -23,7 +24,11 @@ import {
   DataListItem,
   DataListItemMain,
 } from "@/components/data-list";
-import { MAX_ABOUT_LIST_ITEMS, MAX_ABOUT_RULES } from "@/lib/homepage-copy";
+import {
+  MAX_ABOUT_LIST_ITEMS,
+  MAX_ABOUT_RULES,
+  MAX_ABOUT_SECTION_HEADING,
+} from "@/lib/homepage-copy";
 import { SettingsSection } from "../settings-page";
 
 type AboutListId = "goals" | "places" | "expect" | "rules";
@@ -31,14 +36,17 @@ type AboutListId = "goals" | "places" | "expect" | "rules";
 const ABOUT_LISTS: Array<{
   description: string;
   field: "aboutGoals" | "aboutPlaces" | "aboutExpect" | "aboutRules";
+  headingField: "aboutGoalsHeading" | "aboutPlacesHeading" | "aboutExpectHeading" | "aboutRulesHeading";
   hint?: string;
   id: AboutListId;
+  /** Internal name only — organises this settings list. Not shown on the site; see the heading field for that. */
   label: string;
   rows: number;
 }> = [
   {
     id: "goals",
     field: "aboutGoals",
+    headingField: "aboutGoalsHeading",
     label: "Goals",
     description: `Up to ${MAX_ABOUT_LIST_ITEMS} lines, one goal per line.`,
     rows: 10,
@@ -46,6 +54,7 @@ const ABOUT_LISTS: Array<{
   {
     id: "places",
     field: "aboutPlaces",
+    headingField: "aboutPlacesHeading",
     label: "Places",
     description: `Up to ${MAX_ABOUT_LIST_ITEMS} lines, one place per line.`,
     rows: 8,
@@ -53,6 +62,7 @@ const ABOUT_LISTS: Array<{
   {
     id: "expect",
     field: "aboutExpect",
+    headingField: "aboutExpectHeading",
     label: "What you can expect",
     description: `Up to ${MAX_ABOUT_LIST_ITEMS} lines, one item per line.`,
     rows: 10,
@@ -60,6 +70,7 @@ const ABOUT_LISTS: Array<{
   {
     id: "rules",
     field: "aboutRules",
+    headingField: "aboutRulesHeading",
     label: "Group rules",
     description: `Up to ${MAX_ABOUT_RULES} lines as “Title | Body”.`,
     hint: 'Each line: Title | Body — for example Respect every walker | Kindness first, always.',
@@ -82,53 +93,103 @@ function listPreview(text: string) {
 function AboutListDrawer({
   active,
   expect,
+  expectHeading,
   goals,
+  goalsHeading,
   onClose,
   onPointerDownOutside,
   onSaved,
   open,
   places,
+  placesHeading,
   rules,
+  rulesHeading,
   savedExpect,
+  savedExpectHeading,
   savedGoals,
+  savedGoalsHeading,
   savedPlaces,
+  savedPlacesHeading,
   savedRules,
+  savedRulesHeading,
 }: {
   active: (typeof ABOUT_LISTS)[number] | null;
   expect: string;
+  expectHeading: string;
   goals: string;
+  goalsHeading: string;
   onClose: () => void;
   onPointerDownOutside: (event: Event) => void;
-  onSaved: (values: { expect: string; goals: string; places: string; rules: string }) => void;
+  onSaved: (values: {
+    expect: string;
+    expectHeading: string;
+    goals: string;
+    goalsHeading: string;
+    places: string;
+    placesHeading: string;
+    rules: string;
+    rulesHeading: string;
+  }) => void;
   open: boolean;
   places: string;
+  placesHeading: string;
   rules: string;
+  rulesHeading: string;
   savedExpect: string;
+  savedExpectHeading: string;
   savedGoals: string;
+  savedGoalsHeading: string;
   savedPlaces: string;
+  savedPlacesHeading: string;
   savedRules: string;
+  savedRulesHeading: string;
 }) {
   const [draftGoals, setDraftGoals] = useState(goals);
+  const [draftGoalsHeading, setDraftGoalsHeading] = useState(goalsHeading);
   const [draftPlaces, setDraftPlaces] = useState(places);
+  const [draftPlacesHeading, setDraftPlacesHeading] = useState(placesHeading);
   const [draftExpect, setDraftExpect] = useState(expect);
+  const [draftExpectHeading, setDraftExpectHeading] = useState(expectHeading);
   const [draftRules, setDraftRules] = useState(rules);
+  const [draftRulesHeading, setDraftRulesHeading] = useState(rulesHeading);
   const [state, action, isPending] = useNotifyActionState(updateAboutLists, () => {
     onSaved({
       goals: draftGoals,
+      goalsHeading: draftGoalsHeading,
       places: draftPlaces,
+      placesHeading: draftPlacesHeading,
       expect: draftExpect,
+      expectHeading: draftExpectHeading,
       rules: draftRules,
+      rulesHeading: draftRulesHeading,
     });
     onClose();
   });
 
-  useResetOnChange([expect, goals, open, places, rules], () => {
-    if (!open) return;
-    setDraftGoals(goals);
-    setDraftPlaces(places);
-    setDraftExpect(expect);
-    setDraftRules(rules);
-  });
+  useResetOnChange(
+    [
+      expect,
+      expectHeading,
+      goals,
+      goalsHeading,
+      open,
+      places,
+      placesHeading,
+      rules,
+      rulesHeading,
+    ],
+    () => {
+      if (!open) return;
+      setDraftGoals(goals);
+      setDraftGoalsHeading(goalsHeading);
+      setDraftPlaces(places);
+      setDraftPlacesHeading(placesHeading);
+      setDraftExpect(expect);
+      setDraftExpectHeading(expectHeading);
+      setDraftRules(rules);
+      setDraftRulesHeading(rulesHeading);
+    },
+  );
 
   if (!active) return null;
 
@@ -148,6 +209,22 @@ function AboutListDrawer({
         : active.id === "expect"
           ? savedExpect
           : savedRules;
+  const draftHeading =
+    active.id === "goals"
+      ? draftGoalsHeading
+      : active.id === "places"
+        ? draftPlacesHeading
+        : active.id === "expect"
+          ? draftExpectHeading
+          : draftRulesHeading;
+  const savedHeading =
+    active.id === "goals"
+      ? savedGoalsHeading
+      : active.id === "places"
+        ? savedPlacesHeading
+        : active.id === "expect"
+          ? savedExpectHeading
+          : savedRulesHeading;
 
   const setDraftValue = (value: string) => {
     if (active.id === "goals") setDraftGoals(value);
@@ -155,8 +232,14 @@ function AboutListDrawer({
     else if (active.id === "expect") setDraftExpect(value);
     else setDraftRules(value);
   };
+  const setDraftHeading = (value: string) => {
+    if (active.id === "goals") setDraftGoalsHeading(value);
+    else if (active.id === "places") setDraftPlacesHeading(value);
+    else if (active.id === "expect") setDraftExpectHeading(value);
+    else setDraftRulesHeading(value);
+  };
 
-  const dirty = draftValue !== savedValue;
+  const dirty = draftValue !== savedValue || draftHeading !== savedHeading;
 
   return (
     <Drawer
@@ -177,9 +260,23 @@ function AboutListDrawer({
         </DrawerHeader>
         <form action={action} className="flex min-h-0 flex-1 flex-col gap-4 px-4 pb-6">
           <input name="aboutGoals" type="hidden" value={draftGoals} />
+          <input name="aboutGoalsHeading" type="hidden" value={draftGoalsHeading} />
           <input name="aboutPlaces" type="hidden" value={draftPlaces} />
+          <input name="aboutPlacesHeading" type="hidden" value={draftPlacesHeading} />
           <input name="aboutExpect" type="hidden" value={draftExpect} />
+          <input name="aboutExpectHeading" type="hidden" value={draftExpectHeading} />
           <input name="aboutRules" type="hidden" value={draftRules} />
+          <input name="aboutRulesHeading" type="hidden" value={draftRulesHeading} />
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor={`about-${active.id}-heading`}>Heading shown on the site</Label>
+            <Input
+              id={`about-${active.id}-heading`}
+              maxLength={MAX_ABOUT_SECTION_HEADING}
+              onChange={(event) => setDraftHeading(event.target.value)}
+              required
+              value={draftHeading}
+            />
+          </div>
           <div className="flex min-h-0 flex-1 flex-col gap-2">
             <Label htmlFor={`about-${active.id}`}>{active.label}</Label>
             <Textarea
@@ -200,7 +297,14 @@ function AboutListDrawer({
               {isPending ? "Saving…" : "Save"}
             </Button>
             {dirty ? (
-              <Button onClick={() => setDraftValue(savedValue)} type="button" variant="outline">
+              <Button
+                onClick={() => {
+                  setDraftValue(savedValue);
+                  setDraftHeading(savedHeading);
+                }}
+                type="button"
+                variant="outline"
+              >
                 Discard
               </Button>
             ) : null}
@@ -212,35 +316,64 @@ function AboutListDrawer({
 }
 
 export function AboutListsSettings({
+  aboutExpectHeading,
   aboutExpectText,
+  aboutGoalsHeading,
   aboutGoalsText,
+  aboutPlacesHeading,
   aboutPlacesText,
+  aboutRulesHeading,
   aboutRulesText,
 }: {
+  aboutExpectHeading: string;
   aboutExpectText: string;
+  aboutGoalsHeading: string;
   aboutGoalsText: string;
+  aboutPlacesHeading: string;
   aboutPlacesText: string;
+  aboutRulesHeading: string;
   aboutRulesText: string;
 }) {
   const [goals, setGoals] = useState(aboutGoalsText);
+  const [goalsHeading, setGoalsHeading] = useState(aboutGoalsHeading);
   const [places, setPlaces] = useState(aboutPlacesText);
+  const [placesHeading, setPlacesHeading] = useState(aboutPlacesHeading);
   const [expect, setExpect] = useState(aboutExpectText);
+  const [expectHeading, setExpectHeading] = useState(aboutExpectHeading);
   const [rules, setRules] = useState(aboutRulesText);
+  const [rulesHeading, setRulesHeading] = useState(aboutRulesHeading);
   const [activeId, setActiveId] = useState<AboutListId | null>(null);
   const { openSoon, onPointerDownOutside } = useControlledDrawerDismissGuard();
 
-  useResetOnChange([aboutGoalsText, aboutPlacesText, aboutExpectText, aboutRulesText], () => {
-    setGoals(aboutGoalsText);
-    setPlaces(aboutPlacesText);
-    setExpect(aboutExpectText);
-    setRules(aboutRulesText);
-  });
+  useResetOnChange(
+    [
+      aboutGoalsText,
+      aboutGoalsHeading,
+      aboutPlacesText,
+      aboutPlacesHeading,
+      aboutExpectText,
+      aboutExpectHeading,
+      aboutRulesText,
+      aboutRulesHeading,
+    ],
+    () => {
+      setGoals(aboutGoalsText);
+      setGoalsHeading(aboutGoalsHeading);
+      setPlaces(aboutPlacesText);
+      setPlacesHeading(aboutPlacesHeading);
+      setExpect(aboutExpectText);
+      setExpectHeading(aboutExpectHeading);
+      setRules(aboutRulesText);
+      setRulesHeading(aboutRulesHeading);
+    },
+  );
 
-  const values: Record<AboutListId, string> = {
-    goals,
-    places,
-    expect,
-    rules,
+  const values: Record<AboutListId, string> = { goals, places, expect, rules };
+  const headings: Record<AboutListId, string> = {
+    goals: goalsHeading,
+    places: placesHeading,
+    expect: expectHeading,
+    rules: rulesHeading,
   };
 
   const active = ABOUT_LISTS.find((item) => item.id === activeId) ?? null;
@@ -252,7 +385,7 @@ export function AboutListsSettings({
 
   return (
     <SettingsSection
-      description="Lists in the Read more About drawer. Tap a row to edit."
+      description="Headings and lists in the Read more About drawer. Tap a row to edit."
       title="About lists"
     >
       <DataList>
@@ -260,8 +393,10 @@ export function AboutListsSettings({
           <DataListItem key={item.id} onClick={() => openSoon(() => setActiveId(item.id))}>
             <DataListItemMain className="items-center">
               <DataListBody>
-                <p className="font-medium">{item.label}</p>
-                <p className="text-sm text-muted-foreground">{listPreview(values[item.id])}</p>
+                <p className="font-medium">{headings[item.id]}</p>
+                <p className="text-xs text-muted-foreground">
+                  {item.label} · {listPreview(values[item.id])}
+                </p>
               </DataListBody>
               <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
             </DataListItemMain>
@@ -272,22 +407,34 @@ export function AboutListsSettings({
       <AboutListDrawer
         active={active}
         expect={expect}
+        expectHeading={expectHeading}
         goals={goals}
+        goalsHeading={goalsHeading}
         onClose={closeDrawer}
         onPointerDownOutside={onPointerDownOutside}
         onSaved={(next) => {
           setGoals(next.goals);
+          setGoalsHeading(next.goalsHeading);
           setPlaces(next.places);
+          setPlacesHeading(next.placesHeading);
           setExpect(next.expect);
+          setExpectHeading(next.expectHeading);
           setRules(next.rules);
+          setRulesHeading(next.rulesHeading);
         }}
         open={activeId !== null}
         places={places}
+        placesHeading={placesHeading}
         rules={rules}
+        rulesHeading={rulesHeading}
         savedExpect={aboutExpectText}
+        savedExpectHeading={aboutExpectHeading}
         savedGoals={aboutGoalsText}
+        savedGoalsHeading={aboutGoalsHeading}
         savedPlaces={aboutPlacesText}
+        savedPlacesHeading={aboutPlacesHeading}
         savedRules={aboutRulesText}
+        savedRulesHeading={aboutRulesHeading}
       />
     </SettingsSection>
   );

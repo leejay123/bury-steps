@@ -13,8 +13,12 @@ import {
 } from "@/components/ui/drawer";
 import {
   DEFAULT_ABOUT_EXPECT,
+  DEFAULT_ABOUT_EXPECT_HEADING,
   DEFAULT_ABOUT_GOALS,
+  DEFAULT_ABOUT_GOALS_HEADING,
   DEFAULT_ABOUT_PLACES,
+  DEFAULT_ABOUT_PLACES_HEADING,
+  DEFAULT_ABOUT_RULES_HEADING,
   DEFAULT_HOW_THIS_STARTED_BODY,
   DEFAULT_HOW_THIS_STARTED_TITLE,
   aboutRulesFromStored,
@@ -37,18 +41,26 @@ function BulletList({ items, columns = false }: { items: string[]; columns?: boo
 
 export function HomeAboutDrawer({
   aboutExpect = [...DEFAULT_ABOUT_EXPECT],
+  aboutExpectHeading = DEFAULT_ABOUT_EXPECT_HEADING,
   aboutGoals = [...DEFAULT_ABOUT_GOALS],
+  aboutGoalsHeading = DEFAULT_ABOUT_GOALS_HEADING,
   aboutPlaces = [...DEFAULT_ABOUT_PLACES],
+  aboutPlacesHeading = DEFAULT_ABOUT_PLACES_HEADING,
   aboutRules = aboutRulesFromStored(""),
+  aboutRulesHeading = DEFAULT_ABOUT_RULES_HEADING,
   facebookGroupUrl = "",
   howThisStartedBody = DEFAULT_HOW_THIS_STARTED_BODY,
   howThisStartedTitle = DEFAULT_HOW_THIS_STARTED_TITLE,
   trigger,
 }: {
   aboutExpect?: string[];
+  aboutExpectHeading?: string;
   aboutGoals?: string[];
+  aboutGoalsHeading?: string;
   aboutPlaces?: string[];
+  aboutPlacesHeading?: string;
   aboutRules?: AboutRule[];
+  aboutRulesHeading?: string;
   facebookGroupUrl?: string;
   howThisStartedBody?: string;
   howThisStartedTitle?: string;
@@ -78,7 +90,7 @@ export function HomeAboutDrawer({
             </section>
 
             <section className="space-y-3">
-              <h3 className="text-base font-semibold text-foreground">More than just a walking group</h3>
+              <h3 className="text-base font-semibold text-foreground">{aboutGoalsHeading}</h3>
               <p>
                 Bury Steps was never created as a fitness club or a competition. There are no
                 winners and losers here. Nobody cares how fast you walk, how far you walk, what
@@ -96,7 +108,7 @@ export function HomeAboutDrawer({
             </section>
 
             <section className="space-y-3">
-              <h3 className="text-base font-semibold text-foreground">What we do</h3>
+              <h3 className="text-base font-semibold text-foreground">{aboutPlacesHeading}</h3>
               <p>
                 The idea is simple. We meet on Sunday afternoons and explore different walks
                 suggested by members.
@@ -109,7 +121,7 @@ export function HomeAboutDrawer({
             </section>
 
             <section className="space-y-3">
-              <h3 className="text-base font-semibold text-foreground">What you can expect</h3>
+              <h3 className="text-base font-semibold text-foreground">{aboutExpectHeading}</h3>
               <BulletList items={aboutExpect} />
             </section>
 
@@ -143,7 +155,7 @@ export function HomeAboutDrawer({
             </section>
 
             <section className="space-y-3">
-              <h3 className="text-base font-semibold text-foreground">Group rules</h3>
+              <h3 className="text-base font-semibold text-foreground">{aboutRulesHeading}</h3>
               <div className="grid gap-3">
                 {aboutRules.map((rule) => (
                   <Card key={rule.title} className="gap-2 py-4 shadow-none">

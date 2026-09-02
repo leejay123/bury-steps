@@ -18,8 +18,10 @@ import {
   MAX_ABOUT_LIST_ITEM,
   MAX_ABOUT_LIST_ITEMS,
   MAX_ABOUT_RULES,
+  MAX_ABOUT_SECTION_HEADING,
   parseAboutList,
   parseAboutRules,
+  parseAboutSectionHeading,
   parseHowThisStartedBody,
   parseHowThisStartedEyebrow,
   parseHowThisStartedTeaser,
@@ -423,6 +425,16 @@ export async function updateAboutLists(
   const aboutPlaces = parseAboutList(String(formData.get("aboutPlaces") ?? ""));
   const aboutExpect = parseAboutList(String(formData.get("aboutExpect") ?? ""));
   const aboutRules = parseAboutRules(String(formData.get("aboutRules") ?? ""));
+  const aboutGoalsHeading = parseAboutSectionHeading(String(formData.get("aboutGoalsHeading") ?? ""));
+  const aboutPlacesHeading = parseAboutSectionHeading(
+    String(formData.get("aboutPlacesHeading") ?? ""),
+  );
+  const aboutExpectHeading = parseAboutSectionHeading(
+    String(formData.get("aboutExpectHeading") ?? ""),
+  );
+  const aboutRulesHeading = parseAboutSectionHeading(
+    String(formData.get("aboutRulesHeading") ?? ""),
+  );
   if (aboutGoals === "invalid") {
     return {
       ok: false,
@@ -447,6 +459,14 @@ export async function updateAboutLists(
       error: `Rules need 1–${MAX_ABOUT_RULES} lines as “Title | Body”.`,
     };
   }
+  if (
+    aboutGoalsHeading === "invalid" ||
+    aboutPlacesHeading === "invalid" ||
+    aboutExpectHeading === "invalid" ||
+    aboutRulesHeading === "invalid"
+  ) {
+    return { ok: false, error: `Give each heading 2–${MAX_ABOUT_SECTION_HEADING} characters.` };
+  }
 
   const aboutGoalsText = serializeAboutList(aboutGoals);
   const aboutPlacesText = serializeAboutList(aboutPlaces);
@@ -466,12 +486,20 @@ export async function updateAboutLists(
         aboutPlaces: aboutPlacesText,
         aboutExpect: aboutExpectText,
         aboutRules: aboutRulesText,
+        aboutGoalsHeading,
+        aboutPlacesHeading,
+        aboutExpectHeading,
+        aboutRulesHeading,
       },
       update: {
         aboutGoals: aboutGoalsText,
         aboutPlaces: aboutPlacesText,
         aboutExpect: aboutExpectText,
         aboutRules: aboutRulesText,
+        aboutGoalsHeading,
+        aboutPlacesHeading,
+        aboutExpectHeading,
+        aboutRulesHeading,
       },
     });
   } catch (err) {

@@ -24,11 +24,15 @@ import {
 } from "@/lib/homepage-sections";
 import {
   DEFAULT_ABOUT_EXPECT,
+  DEFAULT_ABOUT_EXPECT_HEADING,
   DEFAULT_ABOUT_EXPECT_TEXT,
   DEFAULT_ABOUT_GOALS,
+  DEFAULT_ABOUT_GOALS_HEADING,
   DEFAULT_ABOUT_GOALS_TEXT,
   DEFAULT_ABOUT_PLACES,
+  DEFAULT_ABOUT_PLACES_HEADING,
   DEFAULT_ABOUT_PLACES_TEXT,
+  DEFAULT_ABOUT_RULES_HEADING,
   DEFAULT_ABOUT_RULES_TEXT,
   DEFAULT_HOW_THIS_STARTED_BODY,
   DEFAULT_HOW_THIS_STARTED_EYEBROW,
@@ -67,6 +71,11 @@ export type SiteTheme = {
   aboutPlacesText: string;
   aboutExpectText: string;
   aboutRulesText: string;
+  /** Real, visible About-drawer section headings (distinct from the admin-only Goals/Places/etc. labels). */
+  aboutGoalsHeading: string;
+  aboutPlacesHeading: string;
+  aboutExpectHeading: string;
+  aboutRulesHeading: string;
   homepageSectionOrder: HomepageSectionId[];
   /** Bundled default, or `/api/site-logo?v=...` once an admin has uploaded one. */
   logoSrc: string;
@@ -104,6 +113,10 @@ function defaultTheme(): SiteTheme {
     aboutPlacesText: DEFAULT_ABOUT_PLACES_TEXT,
     aboutExpectText: DEFAULT_ABOUT_EXPECT_TEXT,
     aboutRulesText: DEFAULT_ABOUT_RULES_TEXT,
+    aboutGoalsHeading: DEFAULT_ABOUT_GOALS_HEADING,
+    aboutPlacesHeading: DEFAULT_ABOUT_PLACES_HEADING,
+    aboutExpectHeading: DEFAULT_ABOUT_EXPECT_HEADING,
+    aboutRulesHeading: DEFAULT_ABOUT_RULES_HEADING,
     homepageSectionOrder: normalizeHomepageSectionOrder(null),
     logoSrc: DEFAULT_LOGO_SRC,
     hasCustomLogo: false,
@@ -135,6 +148,10 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       aboutPlaces: true,
       aboutExpect: true,
       aboutRules: true,
+      aboutGoalsHeading: true,
+      aboutPlacesHeading: true,
+      aboutExpectHeading: true,
+      aboutRulesHeading: true,
       homepageSectionOrder: true,
       logoMime: true,
       faviconMime: true,
@@ -185,6 +202,10 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     aboutRulesText: row?.aboutRules?.trim()
       ? serializeAboutRules(aboutRules)
       : DEFAULT_ABOUT_RULES_TEXT,
+    aboutGoalsHeading: row?.aboutGoalsHeading?.trim() || DEFAULT_ABOUT_GOALS_HEADING,
+    aboutPlacesHeading: row?.aboutPlacesHeading?.trim() || DEFAULT_ABOUT_PLACES_HEADING,
+    aboutExpectHeading: row?.aboutExpectHeading?.trim() || DEFAULT_ABOUT_EXPECT_HEADING,
+    aboutRulesHeading: row?.aboutRulesHeading?.trim() || DEFAULT_ABOUT_RULES_HEADING,
     homepageSectionOrder: normalizeHomepageSectionOrder(row?.homepageSectionOrder),
     logoSrc: row?.logoMime
       ? `/api/site-logo?v=${row.updatedAt.getTime()}`
@@ -197,7 +218,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v11"], {
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v12"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });

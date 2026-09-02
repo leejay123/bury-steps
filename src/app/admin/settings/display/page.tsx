@@ -64,9 +64,13 @@ export default async function DisplaySettingsPage() {
             howThisStartedTitle={theme.howThisStartedTitle}
           />
           <AboutListsSettings
+            aboutExpectHeading={theme.aboutExpectHeading}
             aboutExpectText={theme.aboutExpectText}
+            aboutGoalsHeading={theme.aboutGoalsHeading}
             aboutGoalsText={theme.aboutGoalsText}
+            aboutPlacesHeading={theme.aboutPlacesHeading}
             aboutPlacesText={theme.aboutPlacesText}
+            aboutRulesHeading={theme.aboutRulesHeading}
             aboutRulesText={theme.aboutRulesText}
           />
           <TestimonialsSectionCopySettings

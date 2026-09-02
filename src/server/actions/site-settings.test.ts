@@ -125,12 +125,33 @@ describe("updateAboutLists", () => {
       null,
       form({
         aboutGoals: "Get fitter",
+        aboutGoalsHeading: "More than just a walking group",
         aboutPlaces: "Bury",
+        aboutPlacesHeading: "What we do",
         aboutExpect: "A friendly welcome",
+        aboutExpectHeading: "What you can expect",
         aboutRules: "Be kind | Look out for each other",
+        aboutRulesHeading: "Group rules",
       }),
     );
     expect(result).toEqual({ ok: true, message: "About lists saved." });
+  });
+
+  it("rejects a heading that's too short", async () => {
+    const result = await updateAboutLists(
+      null,
+      form({
+        aboutGoals: "Get fitter",
+        aboutGoalsHeading: "A",
+        aboutPlaces: "Bury",
+        aboutPlacesHeading: "What we do",
+        aboutExpect: "A friendly welcome",
+        aboutExpectHeading: "What you can expect",
+        aboutRules: "Be kind | Look out for each other",
+        aboutRulesHeading: "Group rules",
+      }),
+    );
+    expect(result).toEqual({ ok: false, error: "Give each heading 2–80 characters." });
   });
 });
 
