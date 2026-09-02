@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
+import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ClerkProvider } from "@clerk/nextjs";
@@ -69,6 +70,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en-GB" suppressHydrationWarning>
       <body className="min-h-dvh overflow-x-clip touch-manipulation bg-background text-foreground antialiased">
+        {/*
+          The browser's own scroll-restoration-on-refresh fights this app's
+          progressively-loading content (images, carousels, the FAQ
+          accordion): it tries to restore the old scroll position before
+          that content has re-rendered and pushed the page back to its full
+          height, so a refresh partway down the homepage lands stuck near
+          the top of the hero instead of where you actually were. Opting out
+          makes every refresh start at the top instead — predictable, if
+          less clever than a correct restore would be.
+        */}
+        <Script id="scroll-restoration" strategy="beforeInteractive">
+          {`try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch {}`}
+        </Script>
         <ClerkProvider
           {...(useVercelAppProxy ? { proxyUrl: "/__clerk" } : {})}
           appearance={{

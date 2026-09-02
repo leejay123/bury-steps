@@ -145,6 +145,12 @@ export function lockBackgroundScroll() {
   body.style.touchAction = "none";
 
   const freezeScroll = () => {
+    // iOS still needs to shift the page to lift a focused input above the
+    // keyboard, even with the background locked — fighting that (snapping
+    // back while the keyboard is up) is what left dialog content sitting
+    // half under the keyboard's own accessory bar. Only re-pin once focus
+    // isn't inside the overlay any more.
+    if (eventTargetInsideOpenOverlay(document.activeElement)) return;
     if (window.scrollX !== lockedX || window.scrollY !== lockedY) {
       window.scrollTo(lockedX, lockedY);
     }
