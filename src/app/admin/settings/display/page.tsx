@@ -11,6 +11,8 @@ import { FaqSectionCopySettings } from "./faq-section-copy-settings";
 import { HomepageSectionsSettings } from "./homepage-sections-settings";
 import { HowThisStartedCopySettings } from "./how-this-started-copy-settings";
 import { SiteBrandingSettings } from "./site-branding-settings";
+import { SiteFaviconSettings } from "./site-favicon-settings";
+import { SiteLogoSettings } from "./site-logo-settings";
 import { TestimonialsSectionCopySettings } from "./testimonials-section-copy-settings";
 
 export const dynamic = "force-dynamic";
@@ -33,6 +35,11 @@ export default async function DisplaySettingsPage() {
           title="Identity"
         >
           <SiteBrandingSettings siteName={theme.siteName} siteTagline={theme.siteTagline} />
+          <SiteLogoSettings hasCustomLogo={theme.hasCustomLogo} logoSrc={theme.logoSrc} />
+          <SiteFaviconSettings
+            faviconSrc={theme.faviconSrc}
+            hasCustomFavicon={theme.hasCustomFavicon}
+          />
           <FacebookGroupSettings facebookGroupUrl={theme.facebookGroupUrl} />
         </SettingsSectionGroup>
 

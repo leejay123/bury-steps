@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin, displayName } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/dates";
+import { getSiteTheme } from "@/lib/site-theme";
 import { PrintReport } from "./print-report";
 
 export const dynamic = "force-dynamic";
@@ -29,10 +30,13 @@ export default async function PrintAccidentReportPage({
 
   if (!report) notFound();
 
+  const theme = await getSiteTheme();
+
   return (
     <PrintReport
       createdBy={displayName(report.createdBy)}
       happenedAt={formatDateTime(report.happenedAt)}
+      logoSrc={theme.logoSrc}
       organiserNotes={report.organiserNotes}
       walkLabel={
         report.walk

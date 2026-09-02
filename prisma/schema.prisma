@@ -282,6 +282,12 @@ model SiteSetting {
   howWalksWorkEnabled  Boolean @default(true)
   /// Optional group clock-in target for the current UK month. Null hides Together.
   monthlyClockInGoal  Int?
+  /// Uploaded site logo (header, print reports). Null uses the bundled default.
+  logoMime            String?
+  logoData            Bytes?
+  /// Uploaded browser-tab favicon. Null uses the bundled default.
+  faviconMime         String?
+  faviconData         Bytes?
   updatedAt           DateTime @updatedAt
 }
 

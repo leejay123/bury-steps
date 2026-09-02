@@ -66,7 +66,16 @@ export type SiteTheme = {
   aboutExpectText: string;
   aboutRulesText: string;
   homepageSectionOrder: HomepageSectionId[];
+  /** Bundled default, or `/api/site-logo?v=...` once an admin has uploaded one. */
+  logoSrc: string;
+  hasCustomLogo: boolean;
+  /** Bundled default, or `/icon.png?v=...` once an admin has uploaded one — for the settings preview only; the actual `<link rel="icon">` always points at `/icon.png`. */
+  faviconSrc: string;
+  hasCustomFavicon: boolean;
 };
+
+const DEFAULT_LOGO_SRC = "/bury-steps-logo.png";
+const DEFAULT_FAVICON_SRC = "/default-favicon.png";
 
 function defaultTheme(): SiteTheme {
   return {
@@ -93,6 +102,10 @@ function defaultTheme(): SiteTheme {
     aboutExpectText: DEFAULT_ABOUT_EXPECT_TEXT,
     aboutRulesText: DEFAULT_ABOUT_RULES_TEXT,
     homepageSectionOrder: normalizeHomepageSectionOrder(null),
+    logoSrc: DEFAULT_LOGO_SRC,
+    hasCustomLogo: false,
+    faviconSrc: DEFAULT_FAVICON_SRC,
+    hasCustomFavicon: false,
   };
 }
 
@@ -119,6 +132,9 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       aboutExpect: true,
       aboutRules: true,
       homepageSectionOrder: true,
+      logoMime: true,
+      faviconMime: true,
+      updatedAt: true,
     },
   });
 
@@ -165,10 +181,18 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       ? serializeAboutRules(aboutRules)
       : DEFAULT_ABOUT_RULES_TEXT,
     homepageSectionOrder: normalizeHomepageSectionOrder(row?.homepageSectionOrder),
+    logoSrc: row?.logoMime
+      ? `/api/site-logo?v=${row.updatedAt.getTime()}`
+      : DEFAULT_LOGO_SRC,
+    hasCustomLogo: Boolean(row?.logoMime),
+    faviconSrc: row?.faviconMime
+      ? `/icon.png?v=${row.updatedAt.getTime()}`
+      : DEFAULT_FAVICON_SRC,
+    hasCustomFavicon: Boolean(row?.faviconMime),
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v9"], {
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v10"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });

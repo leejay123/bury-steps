@@ -6,7 +6,7 @@ export async function SiteBrandLink() {
   const theme = await getSiteTheme();
   return (
     <UnlockingLink className="flex h-8 min-w-0 items-center justify-self-start" href="/">
-      <SiteLogo alt={theme.siteName} />
+      <SiteLogo alt={theme.siteName} src={theme.logoSrc} />
     </UnlockingLink>
   );
 }

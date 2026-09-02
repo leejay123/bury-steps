@@ -31,7 +31,12 @@ import {
 } from "@/lib/cookie-consent-variant";
 import { parseFacebookGroupUrl, parseSiteName, parseSiteTagline } from "@/lib/site-branding";
 import { MAX_MONTHLY_CLOCK_IN_GOAL } from "@/lib/walk-game";
-import { type ActionResult, logActionError } from "./shared";
+import {
+  type ActionResult,
+  logActionError,
+  readOptionalImage,
+  revalidateHomepage,
+} from "./shared";
 
 export async function updateCarouselEnabled(
   _prev: ActionResult | null,
@@ -514,5 +519,71 @@ export async function updateMonthlyClockInGoal(
     message: parsed
       ? `Together goal is ${parsed.toLocaleString("en-GB")} clock-ins this month.`
       : "Together goal is off.",
+  };
+}
+
+export async function updateSiteLogo(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const image = await readOptionalImage(formData);
+  if (image && "error" in image) return { ok: false, error: image.error };
+  const removing = !image && formData.get("removeImage") === "on";
+  if (!image && !removing) return { ok: false, error: "Choose a logo to upload." };
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        carouselEnabled: true,
+        ...(image ? { logoMime: image.mime, logoData: image.data } : {}),
+      },
+      update: image ? { logoMime: image.mime, logoData: image.data } : { logoMime: null, logoData: null },
+    });
+  } catch (err) {
+    return logActionError("updateSiteLogo", err, "Could not save that logo. Try again.");
+  }
+
+  revalidateHomepage();
+  revalidatePath("/", "layout");
+  return { ok: true, message: removing ? "Back to the default logo." : "Logo updated." };
+}
+
+export async function updateSiteFavicon(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const image = await readOptionalImage(formData);
+  if (image && "error" in image) return { ok: false, error: image.error };
+  const removing = !image && formData.get("removeImage") === "on";
+  if (!image && !removing) return { ok: false, error: "Choose a favicon to upload." };
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        carouselEnabled: true,
+        ...(image ? { faviconMime: image.mime, faviconData: image.data } : {}),
+      },
+      update: image
+        ? { faviconMime: image.mime, faviconData: image.data }
+        : { faviconMime: null, faviconData: null },
+    });
+  } catch (err) {
+    return logActionError("updateSiteFavicon", err, "Could not save that favicon. Try again.");
+  }
+
+  revalidatePath("/", "layout");
+  return {
+    ok: true,
+    message: removing
+      ? "Back to the default favicon."
+      : "Favicon updated. Some browsers cache tab icons — a hard refresh may be needed to see it.",
   };
 }

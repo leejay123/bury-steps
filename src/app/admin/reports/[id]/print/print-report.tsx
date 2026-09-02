@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 export function PrintReport({
   createdBy,
   happenedAt,
+  logoSrc,
   organiserNotes,
   walkLabel,
   whatHappened,
@@ -15,6 +16,7 @@ export function PrintReport({
 }: {
   createdBy: string;
   happenedAt: string;
+  logoSrc: string;
   organiserNotes: string | null;
   walkLabel: string | null;
   whatHappened: string;
@@ -32,13 +34,13 @@ export function PrintReport({
     const logo = new Image();
     logo.onload = run;
     logo.onerror = run;
-    logo.src = "/bury-steps-logo.png";
+    logo.src = logoSrc;
     const fallback = window.setTimeout(run, 800);
     return () => {
       printed = true;
       window.clearTimeout(fallback);
     };
-  }, []);
+  }, [logoSrc]);
 
   return (
     <div
@@ -60,7 +62,7 @@ export function PrintReport({
           <p className="text-xs tracking-[0.18em] uppercase">Bury Steps Walking Group</p>
           <h1 className="text-2xl font-semibold">Accident report</h1>
         </div>
-        <SiteLogo className="h-12 w-auto shrink-0 print:h-14" />
+        <SiteLogo className="h-12 w-auto shrink-0 print:h-14" src={logoSrc} />
       </header>
 
       <dl className="grid grid-cols-[7.5rem_1fr] gap-x-4 gap-y-1.5 text-sm">

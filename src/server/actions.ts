@@ -84,6 +84,8 @@ export {
   updateHowThisStartedCopy,
   updateAboutLists,
   updateMonthlyClockInGoal,
+  updateSiteLogo,
+  updateSiteFavicon,
 } from "./actions/site-settings";
 
 export { addAccidentReport, updateAccidentReport, deleteAccidentReport } from "./actions/reports";
