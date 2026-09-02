@@ -23,6 +23,11 @@ const nextConfig: NextConfig = {
         destination: "https://burysteps-walkinggroup.co.uk/:path*",
         permanent: true,
       },
+      // /dashboard/progress and /dashboard/history moved to top-level
+      // /progress and /history (matching /notices) — keep old bookmarks and
+      // any links out in the wild working.
+      { source: "/dashboard/progress", destination: "/progress", permanent: true },
+      { source: "/dashboard/history", destination: "/history", permanent: true },
     ];
   },
   async headers() {

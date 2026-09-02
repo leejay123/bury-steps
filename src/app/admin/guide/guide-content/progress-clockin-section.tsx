@@ -11,7 +11,7 @@ export function ProgressClockInSection() {
         <AccordionContent>
           <GuideBody>
             <p>
-              Open <Link href="/dashboard/progress">Progress</Link> from the menu. Every signed-in
+              Open <Link href="/progress">Progress</Link> from the menu. Every signed-in
               member and organiser can see it. Visitors cannot. It is not on the public homepage.
             </p>
             <p>

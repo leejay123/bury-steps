@@ -7,14 +7,14 @@ describe("navItems", () => {
       "/",
       "/dashboard",
       "/notices",
-      "/dashboard/progress",
-      "/dashboard/history",
+      "/progress",
+      "/history",
     ]);
     expect(navItems(true, "/admin").map((item) => item.href)).toEqual([
       "/",
       "/admin",
       "/notices",
-      "/dashboard/progress",
+      "/progress",
       "/admin/members",
       "/admin/reports",
       "/admin/settings",
@@ -25,7 +25,7 @@ describe("navItems", () => {
 
 describe("isNavItemActive", () => {
   it("does not treat Progress as the member Walks page", () => {
-    expect(isNavItemActive("/dashboard/progress", "/dashboard")).toBe(false);
-    expect(isNavItemActive("/dashboard/progress", "/dashboard/progress")).toBe(true);
+    expect(isNavItemActive("/progress", "/dashboard")).toBe(false);
+    expect(isNavItemActive("/progress", "/progress")).toBe(true);
   });
 });

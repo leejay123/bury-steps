@@ -245,8 +245,8 @@ export async function resetSiteToDefault(
   revalidatePath("/admin/reports");
   revalidatePath("/admin/settings");
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/progress");
-  revalidatePath("/dashboard/history");
+  revalidatePath("/progress");
+  revalidatePath("/history");
 
   if (clerkFailed > 0) {
     return {

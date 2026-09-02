@@ -150,7 +150,7 @@ export default async function DashboardPage() {
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="text-sm font-medium text-muted-foreground">Your recent walks</h2>
             <Button asChild size="sm" variant="ghost">
-              <Link href="/dashboard/history">
+              <Link href="/history">
                 {historyReadyCount === 1 ? "View history" : `View all ${historyReadyCount}`}
               </Link>
             </Button>

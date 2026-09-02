@@ -321,7 +321,7 @@ export async function adminClockIn(
 
   revalidateWalkShare(walk);
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/history");
+  revalidatePath("/history");
   revalidatePath(`/admin/walks/${walk.id}`);
   revalidatePath(`/admin/members/${member.id}`);
   revalidatePath("/admin/members");
@@ -397,7 +397,7 @@ export async function adminRemoveAttendance(
 
   revalidateWalkShare(attendance.walk);
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/history");
+  revalidatePath("/history");
   revalidatePath(`/admin/walks/${attendance.walk.id}`);
   revalidatePath(`/admin/members/${attendance.userId}`);
   revalidatePath("/admin/members");

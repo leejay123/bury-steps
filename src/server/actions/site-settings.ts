@@ -512,7 +512,7 @@ export async function updateMonthlyClockInGoal(
     return logActionError("updateMonthlyClockInGoal", err, "Could not save that setting. Try again.");
   }
 
-  revalidatePath("/dashboard/progress");
+  revalidatePath("/progress");
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/progress");
   return {

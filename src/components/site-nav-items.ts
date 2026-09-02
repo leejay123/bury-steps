@@ -3,7 +3,7 @@ export function navItems(isAdmin: boolean, walksHref: string) {
     { href: "/", label: "Home" },
     { href: walksHref, label: "Walks" },
     { href: "/notices", label: "Notices" },
-    { href: "/dashboard/progress", label: "Progress" },
+    { href: "/progress", label: "Progress" },
     ...(isAdmin
       ? [
           { href: "/admin/members", label: "Members" },
@@ -11,7 +11,7 @@ export function navItems(isAdmin: boolean, walksHref: string) {
           { href: "/admin/settings", label: "Settings" },
           { href: "/admin/guide", label: "Guide" },
         ]
-      : [{ href: "/dashboard/history", label: "History" }]),
+      : [{ href: "/history", label: "History" }]),
   ];
 }
 
