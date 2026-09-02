@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Facebook } from "lucide-react";
 import { FullWidthDivider } from "@/components/full-width-divider";
+import { NewsletterSignup } from "@/components/newsletter-signup";
 import { PAGE_X } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 
@@ -11,6 +12,10 @@ export async function SiteFooter() {
   return (
     <footer className="relative z-10 shrink-0 bg-background">
       <FullWidthDivider position="top" />
+      <div className={PAGE_X}>
+        <NewsletterSignup />
+        <div aria-hidden className="h-px bg-border" />
+      </div>
       <nav
         aria-label="Footer"
         className={`flex flex-wrap items-center justify-center gap-x-4 gap-y-1 ${PAGE_X} py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-xs text-muted-foreground md:justify-between`}

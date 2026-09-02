@@ -92,6 +92,13 @@ export function PrintReport({
           <p className="whitespace-pre-wrap text-sm leading-relaxed">{organiserNotes}</p>
         </section>
       ) : null}
+
+      {/* Full-width letterhead-style banner at the foot of the page — same
+          uploaded logo as the header, just shown large across the width
+          instead of small in the corner. */}
+      <div className="mt-4 border-t border-black pt-4 break-inside-avoid">
+        <SiteLogo alt="" className="h-auto w-full object-contain" src={logoSrc} />
+      </div>
     </div>
   );
 }
