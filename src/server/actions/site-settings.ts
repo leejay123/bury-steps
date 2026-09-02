@@ -31,6 +31,7 @@ import {
 } from "@/lib/cookie-consent-variant";
 import { parseFacebookGroupUrl, parseSiteName, parseSiteTagline } from "@/lib/site-branding";
 import { MAX_MONTHLY_CLOCK_IN_GOAL } from "@/lib/walk-game";
+import { readImageDimensions } from "@/lib/image-dimensions";
 import {
   type ActionResult,
   logActionError,
@@ -561,6 +562,17 @@ export async function updateSiteFavicon(
   if (image && "error" in image) return { ok: false, error: image.error };
   const removing = !image && formData.get("removeImage") === "on";
   if (!image && !removing) return { ok: false, error: "Choose a favicon to upload." };
+
+  // A favicon that isn't square gets squashed or cropped unpredictably by
+  // different browsers — reject it here rather than letting a banner-shaped
+  // logo photo end up as the browser tab icon. Dimensions that can't be read
+  // are rejected too, rather than assumed to be fine.
+  if (image) {
+    const dims = readImageDimensions(image.data, image.mime);
+    if (!dims || dims.width !== dims.height) {
+      return { ok: false, error: "Favicon must be a square image — equal width and height." };
+    }
+  }
 
   try {
     await prisma.siteSetting.upsert({

@@ -189,16 +189,12 @@ export function WalkJourneyManager({
           </p>
         </div>
         <div
-          className={
-            showBothButtons
-              ? "grid grid-cols-2 gap-2 sm:flex sm:flex-wrap"
-              : "flex flex-col gap-2 sm:flex-row sm:flex-wrap"
-          }
+          className={showBothButtons ? "grid grid-cols-2 gap-2" : "flex flex-col gap-2"}
         >
-          <WalkJourneyDrawer className="w-full sm:w-auto" events={events} />
+          <WalkJourneyDrawer className="w-full" events={events} />
           {canEdit && !atCap ? (
             <Button
-              className="w-full sm:w-auto"
+              className="w-full"
               onClick={() => setMode({ type: "add" })}
               size="sm"
               variant="outline"

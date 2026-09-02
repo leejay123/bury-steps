@@ -39,7 +39,7 @@ export function SiteFaviconSettings({
 
   return (
     <SettingsSection
-      description="The browser tab icon. A simple square image works best — most browsers shrink it a lot. Some browsers cache tab icons, so it may take a hard refresh or a while to show up."
+      description="The browser tab icon. Most browsers shrink it a lot, so keep it simple. Some browsers cache tab icons, so it may take a hard refresh or a while to show up."
       title="Favicon"
     >
       <form action={action} className="flex w-full flex-col gap-4" ref={formRef}>
@@ -51,7 +51,7 @@ export function SiteFaviconSettings({
               clearable={hasCustomFavicon}
               existingAlt="Current favicon"
               existingSrc={faviconSrc}
-              hint="JPEG, PNG or WebP, under 4 MB."
+              hint="JPEG, PNG or WebP, under 4 MB. Must be square — equal width and height."
               id="favicon-image"
               key={faviconSrc}
               onDirtyChange={setDirty}
