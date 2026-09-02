@@ -152,10 +152,15 @@ function SelectValue({
 }) {
   const { items, selected } = useSelect();
   const item = items.find((entry) => entry.value === selected);
+  // min-w-0 is load-bearing: a flex child's default min-width:auto overrides
+  // truncate's overflow-hidden, letting long text (e.g. "Name · email")
+  // push past the trigger's edge instead of ellipsis-cutting inside it.
   if (!item) {
-    return <span className={cn("truncate text-muted-foreground", className)}>{placeholder}</span>;
+    return (
+      <span className={cn("min-w-0 truncate text-muted-foreground", className)}>{placeholder}</span>
+    );
   }
-  return <span className={cn("truncate", className)}>{item.label}</span>;
+  return <span className={cn("min-w-0 truncate", className)}>{item.label}</span>;
 }
 
 function SelectContent({
