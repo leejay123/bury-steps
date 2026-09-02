@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OverlayRootContext, unlockIdleDocument } from "@/components/overlay-root";
 import { lockBackgroundScroll } from "@/components/overlay-scroll-lock";
+import { useVisualViewportCenterY } from "@/hooks/use-visual-viewport-center";
 
 function Dialog({
   onOpenChange,
@@ -91,9 +92,11 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  style,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & { showCloseButton?: boolean }) {
   const [root, setRoot] = React.useState<HTMLElement | null>(null);
+  const centerY = useVisualViewportCenterY();
 
   return (
     <DialogPortal>
@@ -108,6 +111,11 @@ function DialogContent({
           className,
         )}
         ref={setRoot}
+        // Overrides the top-[50%] class once the visual viewport has been
+        // measured, so the keyboard opening (and the scroll that brings the
+        // focused input into view above it) can't drag this out of the area
+        // that's actually visible. See the hook's own doc comment.
+        style={centerY === null ? style : { ...style, top: `${centerY}px` }}
         {...props}
       >
         <OverlayRootContext.Provider value={root}>

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { OverlayRootContext, unlockIdleDocument } from "@/components/overlay-root";
 import { lockBackgroundScroll } from "@/components/overlay-scroll-lock";
+import { useVisualViewportCenterY } from "@/hooks/use-visual-viewport-center";
 
 const AlertDialogCloseDisabledContext = React.createContext(false);
 
@@ -101,6 +102,7 @@ function AlertDialogContent({
   closeDisabled,
   onEscapeKeyDown,
   showCloseButton = true,
+  style,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Content> & {
   closeDisabled?: boolean;
@@ -109,6 +111,7 @@ function AlertDialogContent({
   const fromRoot = React.useContext(AlertDialogCloseDisabledContext);
   const blocked = Boolean(closeDisabled || fromRoot);
   const [root, setRoot] = React.useState<HTMLElement | null>(null);
+  const centerY = useVisualViewportCenterY();
 
   return (
     <AlertDialogPortal>
@@ -127,6 +130,11 @@ function AlertDialogContent({
           onEscapeKeyDown?.(event);
         }}
         ref={setRoot}
+        // Overrides the top-[50%] class once the visual viewport has been
+        // measured, so the keyboard opening (and the scroll that brings the
+        // focused input into view above it) can't drag this out of the
+        // area that's actually visible. See the hook's own doc comment.
+        style={centerY === null ? style : { ...style, top: `${centerY}px` }}
         {...props}
       >
         <OverlayRootContext.Provider value={root}>
