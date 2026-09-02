@@ -125,9 +125,13 @@ function SelectTrigger({
 
   return (
     <PopoverTrigger asChild>
+      {/* min-w-0 lets this shrink to w-full instead of being forced wide by
+          its own unwrapped text content (a long selected label) — the fix
+          inside SelectValue's own truncate only handles that span, not this
+          button's own flex-item sizing one level up. */}
       <Button
         aria-expanded={open}
-        className={cn("w-full justify-between font-normal", className)}
+        className={cn("min-w-0 w-full justify-between font-normal", className)}
         data-select-trigger=""
         disabled={disabled}
         ref={triggerRef}
