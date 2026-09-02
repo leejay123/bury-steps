@@ -38,14 +38,16 @@ export function SiteLogoSettings({
       <form action={action} className="flex w-full flex-col gap-4" ref={formRef}>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="logo-image">Logo</Label>
-          <ImageDropzone
-            aspect="video"
-            clearable={hasCustomLogo}
-            existingAlt="Current site logo"
-            existingSrc={logoSrc}
-            hint="JPEG, PNG or WebP, under 4 MB."
-            id="logo-image"
-          />
+          <div className="max-w-xs">
+            <ImageDropzone
+              aspect="video"
+              clearable={hasCustomLogo}
+              existingAlt="Current site logo"
+              existingSrc={logoSrc}
+              hint="JPEG, PNG or WebP, under 4 MB."
+              id="logo-image"
+            />
+          </div>
         </div>
         <FormError message={state && !state.ok ? state.error : null} />
         <div className="flex flex-wrap gap-2">
