@@ -185,10 +185,15 @@ export function WalkJourneyManager({
             see. Up to {MAX_JOURNEY_EVENTS}.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <WalkJourneyDrawer events={events} />
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+          <WalkJourneyDrawer className="w-full sm:w-auto" events={events} />
           {canEdit && !atCap ? (
-            <Button onClick={() => setMode({ type: "add" })} size="sm" variant="outline">
+            <Button
+              className="w-full sm:w-auto"
+              onClick={() => setMode({ type: "add" })}
+              size="sm"
+              variant="outline"
+            >
               <Plus data-icon="inline-start" />
               Add event
             </Button>

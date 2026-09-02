@@ -15,7 +15,13 @@ import { WalkJourneyTimeline } from "@/components/walk-journey-timeline";
 import type { JourneyEventView } from "@/lib/walk-journey";
 
 /** Opens the walk Journey in a drawer so the main page stays light. */
-export function WalkJourneyDrawer({ events }: { events: JourneyEventView[] }) {
+export function WalkJourneyDrawer({
+  events,
+  className,
+}: {
+  events: JourneyEventView[];
+  className?: string;
+}) {
   const [open, setOpen] = useState(false);
 
   if (events.length === 0) return null;
@@ -23,7 +29,7 @@ export function WalkJourneyDrawer({ events }: { events: JourneyEventView[] }) {
   return (
     <Drawer onOpenChange={setOpen} open={open}>
       <DrawerTrigger asChild>
-        <Button size="sm" variant="outline">
+        <Button className={className} size="sm" variant="outline">
           <Route data-icon="inline-start" />
           View journey
         </Button>
