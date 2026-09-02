@@ -9,6 +9,7 @@ import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -114,7 +115,7 @@ function AddAttendanceDialogForm({
                 ) : null}
               </div>
               {!loaded ? (
-                <p className="text-sm text-muted-foreground">Looking up members…</p>
+                <Skeleton aria-label="Looking up members…" className="h-9 w-full" role="status" />
               ) : noMatch ? (
                 <p className="text-sm text-muted-foreground">No matching members.</p>
               ) : (
