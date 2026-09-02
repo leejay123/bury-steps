@@ -35,7 +35,7 @@ export function LegalPage({
   sections: LegalSection[];
 }) {
   return (
-    <div className={`-mt-6 -mb-6 flex flex-col ${PAGE_X_BLEED}`}>
+    <div className={`-mt-6 -mb-6 flex min-h-full flex-col ${PAGE_X_BLEED}`}>
       <div className="relative px-4 py-6 md:px-6">
         <div className="flex flex-col gap-1.5">
           <h1 className="font-semibold text-lg tracking-tight">{title}</h1>
@@ -53,7 +53,11 @@ export function LegalPage({
           </AccordionItem>
         ))}
       </Accordion>
-      <p className="px-4 py-4 md:px-6 text-xs text-muted-foreground">
+      {/* mt-auto pins this to the bottom of the page's available height (see
+          min-h-full above) instead of leaving empty space below it whenever
+          most sections are collapsed and the accordion alone falls short of
+          filling the page. */}
+      <p className="mt-auto px-4 py-4 md:px-6 text-xs text-muted-foreground">
         This page is a practical notice for Bury Steps members. It is not legal advice.{" "}
         <Link className="font-medium text-foreground underline-offset-4 hover:underline" href="/privacy-policy">
           Privacy Policy
