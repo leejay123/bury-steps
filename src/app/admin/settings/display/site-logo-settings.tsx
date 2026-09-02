@@ -40,7 +40,7 @@ export function SiteLogoSettings({
           <Label htmlFor="logo-image">Logo</Label>
           <div className="max-w-32">
             <ImageDropzone
-              aspect="video"
+              aspect="square"
               clearable={hasCustomLogo}
               existingAlt="Current site logo"
               existingSrc={logoSrc}
