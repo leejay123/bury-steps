@@ -8,7 +8,7 @@ import { getSiteTheme } from "@/lib/site-theme";
 
 function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <nav aria-label={title} className={`flex flex-1 flex-col gap-2 py-8 ${PAGE_X}`}>
+    <nav aria-label={title} className={`flex flex-col gap-1 py-8 ${PAGE_X}`}>
       <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{title}</p>
       {children}
     </nav>
@@ -18,7 +18,11 @@ function FooterColumn({ title, children }: { title: string; children: React.Reac
 export async function SiteFooter() {
   const theme = await getSiteTheme();
   const facebookUrl = theme.facebookGroupUrl.trim();
-  const linkClassName = "text-sm text-muted-foreground hover:text-foreground";
+  // Footer-4's tactile row treatment (bordered grid cells, a hover fill
+  // behind each row) minus its social-brand banner rows — links stay plain
+  // text, just the same hover affordance the block gives its rows.
+  const linkClassName =
+    "-mx-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted/50";
 
   return (
     <footer className="relative z-10 shrink-0 bg-background">
@@ -27,8 +31,8 @@ export async function SiteFooter() {
       {/* Edge-to-edge like the rest of the page's full-width dividers —
           deliberately not wrapped in PAGE_X; each cell puts PAGE_X back on
           its own content so text still lines up with the header/hero. */}
-      <div className="flex flex-col divide-y border-y sm:flex-row sm:divide-x sm:divide-y-0">
-        <div className={`flex flex-1 flex-col gap-3 py-8 ${PAGE_X}`}>
+      <div className="grid grid-cols-1 divide-y border-y sm:grid-cols-4 sm:divide-x sm:divide-y-0">
+        <div className={`flex flex-col gap-3 py-8 ${PAGE_X}`}>
           <SiteLogo alt={theme.siteName} src={theme.logoSrc} />
           <p className="max-w-xs text-sm text-muted-foreground">{theme.siteTagline}</p>
           {facebookUrl ? (
