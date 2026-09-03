@@ -7,10 +7,20 @@ import { getOptionalUser } from "@/lib/auth";
 import { PAGE_X } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 
+function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <nav aria-label={title} className="flex flex-col gap-2">
+      <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{title}</p>
+      {children}
+    </nav>
+  );
+}
+
 export async function SiteFooter() {
   const [theme, user] = await Promise.all([getSiteTheme(), getOptionalUser()]);
   const facebookUrl = theme.facebookGroupUrl.trim();
   const isAdmin = user?.role === "ADMIN";
+  const linkClassName = "text-sm text-muted-foreground hover:text-foreground";
 
   return (
     <footer className="relative z-10 shrink-0 bg-background">
@@ -35,32 +45,37 @@ export async function SiteFooter() {
           ) : null}
         </div>
 
-        <div className="grid grid-cols-2 gap-8 sm:gap-16">
-          <nav aria-label="Explore" className="flex flex-col gap-2">
-            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Explore
-            </p>
-            <Link className="text-sm hover:text-foreground" href="/">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-8 sm:grid-cols-3 sm:gap-x-12">
+          <FooterColumn title="Explore">
+            <Link className={linkClassName} href="/">
               Home
             </Link>
-            <Link className="text-sm hover:text-foreground" href="/notices">
+            <Link className={linkClassName} href="/notices">
               Notices
             </Link>
-            <Link className="text-sm hover:text-foreground" href="/progress">
+            <Link className={linkClassName} href="/progress">
               Progress
             </Link>
-          </nav>
-          <nav aria-label="Legal" className="flex flex-col gap-2">
-            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Legal
-            </p>
-            <Link className="text-sm hover:text-foreground" href="/privacy-policy">
+          </FooterColumn>
+          <FooterColumn title="About">
+            <Link className={linkClassName} href="/#howThisStarted">
+              How this started
+            </Link>
+            <Link className={linkClassName} href="/#testimonials">
+              Testimonials
+            </Link>
+            <Link className={linkClassName} href="/#faqs">
+              FAQs
+            </Link>
+          </FooterColumn>
+          <FooterColumn title="Legal">
+            <Link className={linkClassName} href="/privacy-policy">
               Privacy Policy
             </Link>
-            <Link className="text-sm hover:text-foreground" href="/terms-of-service">
+            <Link className={linkClassName} href="/terms-of-service">
               Terms of Service
             </Link>
-          </nav>
+          </FooterColumn>
         </div>
       </div>
       <div className="relative">

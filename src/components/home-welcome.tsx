@@ -17,13 +17,17 @@ import type { HomepageSectionId } from "@/lib/homepage-sections";
 
 function SectionShell({
   children,
+  id,
   showDividerAfter,
 }: {
   children: ReactNode;
+  id: HomepageSectionId;
   showDividerAfter: boolean;
 }) {
   return (
-    <div className="relative">
+    // scroll-mt clears the sticky header so a footer anchor link (e.g.
+    // /#faqs) doesn't land with the section's top edge hidden behind it.
+    <div className="relative scroll-mt-20" id={id}>
       {children}
       {showDividerAfter ? <FullWidthDivider position="bottom" /> : null}
     </div>
@@ -139,7 +143,7 @@ export function HomeWelcome({
     <>
       {visible.map((id, index) => (
         <Fragment key={id}>
-          <SectionShell showDividerAfter={index < visible.length - 1}>
+          <SectionShell id={id} showDividerAfter={index < visible.length - 1}>
             {sections[id]}
           </SectionShell>
         </Fragment>
