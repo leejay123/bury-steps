@@ -90,8 +90,14 @@ export async function SiteFooter() {
       <Link className={linkClassName} href="/privacy-policy">
         Privacy Policy
       </Link>
+      <Link className={linkClassName} href="/privacy-policy#cookies">
+        Cookie Policy
+      </Link>
       <Link className={linkClassName} href="/terms-of-service">
         Terms of Service
+      </Link>
+      <Link className={linkClassName} href="/terms-of-service#safety">
+        Walks &amp; Safety
       </Link>
     </>
   );
