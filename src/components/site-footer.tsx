@@ -59,17 +59,15 @@ export async function SiteFooter() {
           <SiteLogo alt={theme.siteName} src={theme.logoSrc} />
           <p className="max-w-xs text-sm text-muted-foreground">{theme.siteTagline}</p>
           {facebookUrl ? (
-            <div className="flex gap-2">
-              <a
-                aria-label="Facebook group"
-                className="flex size-9 items-center justify-center rounded-md border text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                href={facebookUrl}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                <Facebook aria-hidden className="size-4" />
-              </a>
-            </div>
+            <a
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+              href={facebookUrl}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <Facebook aria-hidden className="size-3.5 shrink-0" />
+              Facebook
+            </a>
           ) : null}
         </div>
 
