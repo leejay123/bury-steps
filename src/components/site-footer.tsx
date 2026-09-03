@@ -33,7 +33,7 @@ function FooterColumn({
           {title}
         </p>
       </div>
-      <div className={`flex flex-col gap-2 py-4 ${PAGE_X}`}>{children}</div>
+      <div className={`flex flex-col gap-4 py-4 ${PAGE_X}`}>{children}</div>
     </nav>
   );
 }
