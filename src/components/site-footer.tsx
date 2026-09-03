@@ -12,9 +12,15 @@ import { getSiteTheme } from "@/lib/site-theme";
 // social profile.
 function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <nav aria-label={title} className={`flex flex-col ${PAGE_X}`}>
-      <p className="border-b py-3 text-base font-semibold">{title}</p>
-      <div className="flex flex-col gap-1 py-2">{children}</div>
+    <nav aria-label={title} className="flex flex-col">
+      {/* Border on the full-width wrapper, PAGE_X only on the text inside —
+          same edge-to-edge-line/inset-content split as the rest of the
+          footer, so this rule spans the whole row instead of just the
+          padded content column. */}
+      <div className="border-b">
+        <p className={`py-3 text-base font-semibold ${PAGE_X}`}>{title}</p>
+      </div>
+      <div className={`flex flex-col gap-1 py-2 ${PAGE_X}`}>{children}</div>
     </nav>
   );
 }
