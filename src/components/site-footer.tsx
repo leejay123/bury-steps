@@ -3,7 +3,6 @@ import { Facebook } from "lucide-react";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { NewsletterFooterGate } from "@/components/newsletter-footer-gate";
 import { SiteLogo } from "@/components/site-logo";
-import { getOptionalUser } from "@/lib/auth";
 import { PAGE_X } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 
@@ -17,15 +16,14 @@ function FooterColumn({ title, children }: { title: string; children: React.Reac
 }
 
 export async function SiteFooter() {
-  const [theme, user] = await Promise.all([getSiteTheme(), getOptionalUser()]);
+  const theme = await getSiteTheme();
   const facebookUrl = theme.facebookGroupUrl.trim();
-  const isAdmin = user?.role === "ADMIN";
   const linkClassName = "text-sm text-muted-foreground hover:text-foreground";
 
   return (
     <footer className="relative z-10 shrink-0 bg-background">
       <FullWidthDivider position="top" />
-      <NewsletterFooterGate isAdmin={isAdmin} />
+      <NewsletterFooterGate />
       {/* Edge-to-edge like the rest of the page's full-width dividers —
           deliberately not wrapped in PAGE_X; each cell puts PAGE_X back on
           its own content so text still lines up with the header/hero. */}
