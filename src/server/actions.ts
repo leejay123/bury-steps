@@ -92,3 +92,9 @@ export {
 export { addAccidentReport, updateAccidentReport, deleteAccidentReport } from "./actions/reports";
 
 export { clearSiteCache, resetSiteToDefault } from "./actions/admin-cache";
+
+export {
+  submitContactMessage,
+  markContactMessageRead,
+  deleteContactMessage,
+} from "./actions/contact";

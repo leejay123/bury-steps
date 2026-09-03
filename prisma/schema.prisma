@@ -340,3 +340,17 @@ model WalkJourneyEvent {
 
   @@index([walkId, happenedAt])
 }
+
+/// Public "Contact Us" form submissions. No outbound email is sent (no
+/// provider chosen yet — see the newsletter signup) — admins read these
+/// from the admin panel instead.
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}

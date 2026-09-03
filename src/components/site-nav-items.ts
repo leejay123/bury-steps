@@ -7,6 +7,7 @@ export function navItems(isAdmin: boolean, walksHref: string) {
     ...(isAdmin
       ? [
           { href: "/admin/members", label: "Members" },
+          { href: "/admin/messages", label: "Messages" },
           { href: "/admin/reports", label: "Reports" },
           { href: "/admin/settings", label: "Settings" },
           { href: "/admin/guide", label: "Guide" },

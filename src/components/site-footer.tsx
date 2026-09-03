@@ -67,6 +67,9 @@ export async function SiteFooter() {
             <Link className={linkClassName} href="/#faqs">
               FAQs
             </Link>
+            <Link className={linkClassName} href="/contact">
+              Contact Us
+            </Link>
           </FooterColumn>
           <FooterColumn title="Legal">
             <Link className={linkClassName} href="/privacy-policy">
