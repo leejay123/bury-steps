@@ -18,7 +18,7 @@ type FooterAccordionSection = {
  */
 export function SiteFooterAccordion({ sections }: { sections: FooterAccordionSection[] }) {
   return (
-    <Accordion className="sm:hidden" collapsible type="single">
+    <Accordion className="sm:hidden" collapsible defaultValue={sections[0]?.title} type="single">
       {sections.map((section) => (
         <AccordionItem key={section.title} value={section.title}>
           <AccordionTrigger className={PAGE_X}>
