@@ -6,11 +6,15 @@ import { SiteLogo } from "@/components/site-logo";
 import { PAGE_X } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 
+// Footer-4's per-column banner (Facebook/Youtube/…) with just the brand
+// name swapped out — same bold, bordered title row, but "Explore" instead
+// of a social network, since these columns link to our own pages, not a
+// social profile.
 function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <nav aria-label={title} className={`flex flex-col gap-1 py-8 ${PAGE_X}`}>
-      <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{title}</p>
-      {children}
+    <nav aria-label={title} className={`flex flex-col py-8 ${PAGE_X}`}>
+      <p className="border-b pb-2 text-sm font-medium">{title}</p>
+      <div className="flex flex-col gap-1 pt-2">{children}</div>
     </nav>
   );
 }
