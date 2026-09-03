@@ -12,9 +12,9 @@ import { getSiteTheme } from "@/lib/site-theme";
 // social profile.
 function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <nav aria-label={title} className={`flex flex-col py-8 ${PAGE_X}`}>
+    <nav aria-label={title} className={`flex flex-col ${PAGE_X}`}>
       <p className="border-b py-3 text-base font-semibold">{title}</p>
-      <div className="flex flex-col gap-1 pt-3">{children}</div>
+      <div className="flex flex-col gap-1 py-2">{children}</div>
     </nav>
   );
 }
