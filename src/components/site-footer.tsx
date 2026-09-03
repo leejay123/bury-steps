@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Compass, Facebook, Info, Scale } from "lucide-react";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { NewsletterFooterGate } from "@/components/newsletter-footer-gate";
-import { SiteLogo } from "@/components/site-logo";
 import { PAGE_X } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 
@@ -34,7 +33,7 @@ function FooterColumn({
           {title}
         </p>
       </div>
-      <div className={`flex flex-col gap-1 py-2 ${PAGE_X}`}>{children}</div>
+      <div className={`flex flex-col gap-2 py-4 ${PAGE_X}`}>{children}</div>
     </nav>
   );
 }
@@ -55,9 +54,7 @@ export async function SiteFooter() {
           deliberately not wrapped in PAGE_X; each cell puts PAGE_X back on
           its own content so text still lines up with the header/hero. */}
       <div className="grid grid-cols-1 divide-y border-y sm:grid-cols-4 sm:divide-x sm:divide-y-0">
-        <div className={`flex flex-col gap-3 py-8 ${PAGE_X}`}>
-          <SiteLogo alt={theme.siteName} src={theme.logoSrc} />
-          <p className="max-w-xs text-sm text-muted-foreground">{theme.siteTagline}</p>
+        <div className={`flex flex-col justify-center gap-3 py-8 ${PAGE_X}`}>
           {facebookUrl ? (
             <a
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
