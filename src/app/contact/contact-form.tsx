@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { MAX_CONTACT_MESSAGE, MAX_CONTACT_NAME } from "@/lib/contact";
+import { MAX_CONTACT_MESSAGE, MAX_CONTACT_NAME, MAX_CONTACT_PHONE } from "@/lib/contact";
 
 function Submit() {
   const { pending } = useFormStatus();
@@ -43,6 +43,15 @@ export function ContactForm() {
       <div className="flex flex-col gap-2">
         <Label htmlFor="contact-email">Email</Label>
         <Input id="contact-email" name="email" required type="email" />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="contact-phone">Phone (optional)</Label>
+        <Input
+          id="contact-phone"
+          maxLength={MAX_CONTACT_PHONE}
+          name="phone"
+          type="tel"
+        />
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="contact-message">Message</Label>

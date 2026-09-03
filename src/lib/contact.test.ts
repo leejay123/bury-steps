@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { parseContactEmail, parseContactMessage, parseContactName } from "./contact";
+import {
+  parseContactEmail,
+  parseContactMessage,
+  parseContactName,
+  parseContactPhone,
+} from "./contact";
 
 describe("parseContactName", () => {
   it("rejects a name that's too short", () => {
@@ -30,6 +35,25 @@ describe("parseContactEmail", () => {
 
   it("rejects an empty string", () => {
     expect(parseContactEmail("   ")).toBe("invalid");
+  });
+});
+
+describe("parseContactPhone", () => {
+  it("treats a blank phone as valid — it's optional", () => {
+    expect(parseContactPhone("")).toBe("");
+    expect(parseContactPhone("   ")).toBe("");
+  });
+
+  it("accepts a UK-style number", () => {
+    expect(parseContactPhone("+44 7911 123456")).toBe("+44 7911 123456");
+  });
+
+  it("rejects letters", () => {
+    expect(parseContactPhone("call me maybe")).toBe("invalid");
+  });
+
+  it("rejects a phone over the max length", () => {
+    expect(parseContactPhone("1".repeat(31))).toBe("invalid");
   });
 });
 

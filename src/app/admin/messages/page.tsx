@@ -24,6 +24,7 @@ export default async function AdminMessagesPage() {
           id: message.id,
           name: message.name,
           email: message.email,
+          phone: message.phone,
           message: message.message,
           createdAt: message.createdAt.toISOString(),
           read: message.readAt !== null,

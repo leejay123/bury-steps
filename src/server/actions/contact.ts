@@ -5,7 +5,12 @@ import { headers } from "next/headers";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { parseContactEmail, parseContactMessage, parseContactName } from "@/lib/contact";
+import {
+  parseContactEmail,
+  parseContactMessage,
+  parseContactName,
+  parseContactPhone,
+} from "@/lib/contact";
 import { type ActionResult, isPrismaCode, logActionError } from "./shared";
 
 /** Best-effort caller identity for rate-limiting an unauthenticated public
@@ -34,15 +39,19 @@ export async function submitContactMessage(
 
   const name = parseContactName(String(formData.get("name") ?? ""));
   const email = parseContactEmail(String(formData.get("email") ?? ""));
+  const phone = parseContactPhone(String(formData.get("phone") ?? ""));
   const message = parseContactMessage(String(formData.get("message") ?? ""));
   if (name === "invalid") return { ok: false, error: "Enter your name." };
   if (email === "invalid") return { ok: false, error: "Enter a valid email address." };
+  if (phone === "invalid") return { ok: false, error: "Enter a valid phone number, or leave it blank." };
   if (message === "invalid") {
     return { ok: false, error: "Message needs to be at least 10 characters." };
   }
 
   try {
-    await prisma.contactMessage.create({ data: { name, email, message } });
+    await prisma.contactMessage.create({
+      data: { name, email, phone: phone || null, message },
+    });
   } catch (err) {
     return logActionError("submitContactMessage", err, "Could not send that. Try again.");
   }

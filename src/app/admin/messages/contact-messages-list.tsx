@@ -30,6 +30,7 @@ export type ContactMessageRow = {
   id: string;
   name: string;
   email: string;
+  phone: string | null;
   message: string;
   createdAt: string;
   read: boolean;
@@ -90,7 +91,8 @@ function MessageDrawer({
         <DrawerHeader className="text-left">
           <DrawerTitle>{message.name}</DrawerTitle>
           <DrawerDescription>
-            {message.email} · {formatDateTime(message.createdAt)}
+            {message.email}
+            {message.phone ? ` · ${message.phone}` : ""} · {formatDateTime(message.createdAt)}
           </DrawerDescription>
         </DrawerHeader>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4">
@@ -147,7 +149,8 @@ export function ContactMessagesList({ messages }: { messages: ContactMessageRow[
                   ) : null}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {message.email} · {formatDateTime(message.createdAt)}
+                  {message.email}
+                  {message.phone ? ` · ${message.phone}` : ""} · {formatDateTime(message.createdAt)}
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">{preview(message.message)}</p>
               </DataListBody>
