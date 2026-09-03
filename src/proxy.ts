@@ -15,6 +15,10 @@ const isPublic = createRouteMatcher([
   "/api/cron(.*)",
   "/api/slides(.*)",
   "/api/testimonials(.*)",
+  // Site logo shows in the header on public pages (home, walk share links)
+  // for signed-out visitors too — without this it 404s/redirects for them
+  // instead of serving the image once an admin uploads a custom logo.
+  "/api/site-logo(.*)",
   "/api/health",
   "/__clerk(.*)",
   // Organiser URLs 404 for anyone who is not a signed-in organiser.

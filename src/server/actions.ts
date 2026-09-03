@@ -86,6 +86,7 @@ export {
   updateMonthlyClockInGoal,
   updateSiteLogo,
   updateSiteFavicon,
+  updateReportBanner,
 } from "./actions/site-settings";
 
 export { addAccidentReport, updateAccidentReport, deleteAccidentReport } from "./actions/reports";

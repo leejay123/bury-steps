@@ -638,3 +638,37 @@ export async function updateSiteFavicon(
       : "Favicon updated. Some browsers cache tab icons — a hard refresh may be needed to see it.",
   };
 }
+
+export async function updateReportBanner(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const image = await readOptionalImage(formData);
+  if (image && "error" in image) return { ok: false, error: image.error };
+  const removing = !image && formData.get("removeImage") === "on";
+  if (!image && !removing) return { ok: false, error: "Choose a banner to upload." };
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        carouselEnabled: true,
+        ...(image ? { reportBannerMime: image.mime, reportBannerData: image.data } : {}),
+      },
+      update: image
+        ? { reportBannerMime: image.mime, reportBannerData: image.data }
+        : { reportBannerMime: null, reportBannerData: null },
+    });
+  } catch (err) {
+    return logActionError("updateReportBanner", err, "Could not save that banner. Try again.");
+  }
+
+  revalidatePath("/admin/reports");
+  return {
+    ok: true,
+    message: removing ? "Report banner removed." : "Report banner updated.",
+  };
+}

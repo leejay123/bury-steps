@@ -9,6 +9,7 @@ export function PrintReport({
   happenedAt,
   logoSrc,
   organiserNotes,
+  reportBannerSrc,
   walkLabel,
   whatHappened,
   whatWeDid,
@@ -18,6 +19,7 @@ export function PrintReport({
   happenedAt: string;
   logoSrc: string;
   organiserNotes: string | null;
+  reportBannerSrc: string | null;
   walkLabel: string | null;
   whatHappened: string;
   whatWeDid: string;
@@ -25,8 +27,10 @@ export function PrintReport({
 }) {
   useEffect(() => {
     let printed = false;
+    let remaining = reportBannerSrc ? 2 : 1;
     const run = () => {
-      if (printed) return;
+      remaining -= 1;
+      if (printed || remaining > 0) return;
       printed = true;
       window.print();
     };
@@ -35,12 +39,26 @@ export function PrintReport({
     logo.onload = run;
     logo.onerror = run;
     logo.src = logoSrc;
-    const fallback = window.setTimeout(run, 800);
+
+    let banner: HTMLImageElement | null = null;
+    if (reportBannerSrc) {
+      banner = new Image();
+      banner.onload = run;
+      banner.onerror = run;
+      banner.src = reportBannerSrc;
+    }
+
+    const fallback = window.setTimeout(() => {
+      if (!printed) {
+        printed = true;
+        window.print();
+      }
+    }, 800);
     return () => {
       printed = true;
       window.clearTimeout(fallback);
     };
-  }, [logoSrc]);
+  }, [logoSrc, reportBannerSrc]);
 
   return (
     <div
@@ -93,12 +111,17 @@ export function PrintReport({
         </section>
       ) : null}
 
-      {/* Full-width letterhead-style banner at the foot of the page — same
-          uploaded logo as the header, just shown large across the width
-          instead of small in the corner. */}
-      <div className="mt-4 border-t border-black pt-4 break-inside-avoid">
-        <SiteLogo alt="" className="h-auto w-full object-contain" src={logoSrc} />
-      </div>
+      {/* Full-width letterhead-style banner at the foot of the page — a
+          separate uploaded image from the header logo, shown only once an
+          admin has set one under Settings > Display > Report banner. */}
+      {reportBannerSrc ? (
+        <div className="mt-4 border-t border-black pt-4 break-inside-avoid">
+          {/* A plain <img>, not next/image: this is a printed page, not a
+              served-and-cached web view, so the optimizer buys nothing here. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img alt="" className="h-auto w-full object-contain" src={reportBannerSrc} />
+        </div>
+      ) : null}
     </div>
   );
 }

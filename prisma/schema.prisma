@@ -295,6 +295,11 @@ model SiteSetting {
   /// Uploaded browser-tab favicon. Null uses the bundled default.
   faviconMime         String?
   faviconData         Bytes?
+  /// Uploaded letterhead-style banner shown at the foot of printed accident
+  /// reports. Separate from the logo — null hides the banner entirely
+  /// (there is no bundled default for this one).
+  reportBannerMime    String?
+  reportBannerData    Bytes?
   updatedAt           DateTime @updatedAt
 }
 

@@ -83,6 +83,8 @@ export type SiteTheme = {
   /** Bundled default, or `/icon.png?v=...` once an admin has uploaded one — for the settings preview only; the actual `<link rel="icon">` always points at `/icon.png`. */
   faviconSrc: string;
   hasCustomFavicon: boolean;
+  /** Letterhead-style banner for printed accident reports. No bundled default — null hides it entirely. */
+  reportBannerSrc: string | null;
 };
 
 const DEFAULT_LOGO_SRC = "/bury-steps-logo.png";
@@ -122,6 +124,7 @@ function defaultTheme(): SiteTheme {
     hasCustomLogo: false,
     faviconSrc: DEFAULT_FAVICON_SRC,
     hasCustomFavicon: false,
+    reportBannerSrc: null,
   };
 }
 
@@ -155,6 +158,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       homepageSectionOrder: true,
       logoMime: true,
       faviconMime: true,
+      reportBannerMime: true,
       updatedAt: true,
     },
   });
@@ -215,10 +219,13 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       ? `/icon.png?v=${row.updatedAt.getTime()}`
       : DEFAULT_FAVICON_SRC,
     hasCustomFavicon: Boolean(row?.faviconMime),
+    reportBannerSrc: row?.reportBannerMime
+      ? `/api/report-banner?v=${row.updatedAt.getTime()}`
+      : null,
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v12"], {
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v13"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });

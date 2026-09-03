@@ -37,6 +37,7 @@ export default async function PrintAccidentReportPage({
       createdBy={displayName(report.createdBy)}
       happenedAt={formatDateTime(report.happenedAt)}
       logoSrc={theme.logoSrc}
+      reportBannerSrc={theme.reportBannerSrc}
       organiserNotes={report.organiserNotes}
       walkLabel={
         report.walk

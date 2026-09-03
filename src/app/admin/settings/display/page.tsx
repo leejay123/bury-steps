@@ -11,6 +11,7 @@ import { FaqSectionCopySettings } from "./faq-section-copy-settings";
 import { HomepageSectionsSettings } from "./homepage-sections-settings";
 import { HowThisStartedCopySettings } from "./how-this-started-copy-settings";
 import { SiteBrandingSettings } from "./site-branding-settings";
+import { ReportBannerSettings } from "./report-banner-settings";
 import { SiteFaviconSettings } from "./site-favicon-settings";
 import { SiteLogoSettings } from "./site-logo-settings";
 import { TestimonialsSectionCopySettings } from "./testimonials-section-copy-settings";
@@ -40,6 +41,7 @@ export default async function DisplaySettingsPage() {
             faviconSrc={theme.faviconSrc}
             hasCustomFavicon={theme.hasCustomFavicon}
           />
+          <ReportBannerSettings reportBannerSrc={theme.reportBannerSrc} />
           <FacebookGroupSettings facebookGroupUrl={theme.facebookGroupUrl} />
         </SettingsSectionGroup>
 
