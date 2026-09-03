@@ -189,7 +189,9 @@ export function WalkJourneyManager({
           </p>
         </div>
         <div
-          className={showBothButtons ? "grid grid-cols-2 gap-2" : "flex flex-col gap-2"}
+          className={
+            showBothButtons ? "grid w-full grid-cols-2 gap-2 sm:w-auto" : "flex w-full flex-col gap-2 sm:w-auto"
+          }
         >
           <WalkJourneyDrawer className="w-full" events={events} />
           {canEdit && !atCap ? (
