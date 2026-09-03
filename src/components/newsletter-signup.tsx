@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { FullWidthDivider } from "@/components/full-width-divider";
+import { PAGE_X } from "@/lib/page-x";
 
 /**
  * Footer newsletter signup. Not wired to an email service yet — submitting
@@ -31,7 +32,9 @@ export function NewsletterSignup() {
   }
 
   return (
-    <div className="relative mx-auto flex w-full max-w-3xl flex-col items-center gap-6 border-x bg-secondary/80 px-2 py-10 md:px-4 dark:bg-secondary/40">
+    <div
+      className={`relative flex w-full flex-col items-center gap-6 bg-secondary/80 py-10 dark:bg-secondary/40 ${PAGE_X}`}
+    >
       <FullWidthDivider position="top" />
       <div className="space-y-1">
         <h2 className="text-center text-2xl font-semibold tracking-tight md:text-4xl">
