@@ -46,7 +46,10 @@ export function LegalPage({
       */}
       <div className="flex flex-1 flex-col">
         {sections.map((section) => (
-          <div className="border-b px-4 md:px-6" key={section.id}>
+          // scroll-mt clears the sticky header so a footer anchor link
+          // (e.g. /privacy-policy#cookies) lands with the heading visible,
+          // not tucked underneath it — same convention as home-welcome.tsx.
+          <div className="scroll-mt-20 border-b px-4 md:px-6" id={section.id} key={section.id}>
             <h2 className="pt-6 pb-2 text-base font-medium">{section.title}</h2>
             <div className="pb-7">
               <LegalBody>{section.content}</LegalBody>
