@@ -62,7 +62,7 @@ export function PrintReport({
 
   return (
     <div
-      className="mx-auto flex max-w-3xl flex-col gap-6 bg-white px-4 py-8 text-black print:max-w-none print:px-0 print:py-0"
+      className="mx-auto flex flex-col gap-6 bg-white px-4 py-8 text-black md:px-6 print:max-w-none print:px-0 print:py-0"
       data-print-document=""
     >
       <div className="flex items-start justify-between gap-4 print:hidden">

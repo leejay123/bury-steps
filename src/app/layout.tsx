@@ -157,14 +157,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
             </header>
             {/*
-              flex flex-col so a short page's own root can use flex-1 to
-              claim the rest of this space (e.g. pinning something to the
-              bottom instead of leaving empty room above the footer) —
-              min-height:100% can't do that here since this element's own
-              height comes from flex-grow, not an explicit value, and
-              percentage heights don't resolve against that.
+              No flex-1 here on purpose: that used to stretch <main> to fill
+              the full remaining viewport height, so a short page (e.g.
+              Progress with little data) left a large empty gap between its
+              content and the footer, which then sat pinned to the bottom of
+              the screen. Sizing to content instead means the footer follows
+              directly after whatever's actually there — a short page just
+              leaves blank space below the footer instead, which reads as
+              normal rather than as a layout bug. No page currently opts
+              into the old growth behaviour (e.g. to pin something to the
+              bottom of a short page), so this is safe; if one needs to
+              later, add `flex flex-1 flex-col` on that page's own root.
             */}
-            <main className={`flex flex-1 flex-col ${PAGE_Y} ${PAGE_X}`} id="main-content">
+            <main className={`flex flex-col ${PAGE_Y} ${PAGE_X}`} id="main-content">
               {children}
             </main>
             <Suspense fallback={null}>

@@ -16,7 +16,7 @@ export default async function ContactPage() {
   const facebookUrl = theme.facebookGroupUrl.trim();
 
   return (
-    <div className={`mx-auto flex max-w-4xl flex-col gap-6 py-8 md:py-10 ${PAGE_X}`}>
+    <div className={`flex flex-col gap-6 py-8 md:py-10 ${PAGE_X}`}>
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold">Contact us</h1>
         <p className="text-muted-foreground">

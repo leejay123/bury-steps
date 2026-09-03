@@ -1,11 +1,12 @@
 "use client";
 
 import { useId, useState } from "react";
-import { Mail, ArrowRight } from "lucide-react";
+import { AtSign, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
+import { FullWidthDivider } from "@/components/full-width-divider";
 
 /**
  * Footer newsletter signup. Not wired to an email service yet — submitting
@@ -30,35 +31,39 @@ export function NewsletterSignup() {
   }
 
   return (
-    <div className="flex flex-col items-center gap-3 py-6 text-center">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-base font-semibold">Subscribe to our newsletter</h2>
-        <p className="text-sm text-muted-foreground">
+    <div className="relative mx-auto flex w-full max-w-3xl flex-col items-center gap-6 border-x bg-secondary/80 px-2 py-10 md:px-4 dark:bg-secondary/40">
+      <FullWidthDivider position="top" />
+      <div className="space-y-1">
+        <h2 className="text-center text-2xl font-semibold tracking-tight md:text-4xl">
+          Subscribe to our newsletter
+        </h2>
+        <p className="text-center text-sm text-balance text-muted-foreground md:text-base">
           Occasional updates on walks and group news, straight to your inbox.
         </p>
       </div>
-      <form className="flex w-full max-w-sm flex-col gap-2 sm:flex-row" onSubmit={onSubmit}>
+      <form className="flex items-center justify-center gap-2" onSubmit={onSubmit}>
         <Label className="sr-only" htmlFor={inputId}>
           Email address
         </Label>
-        <InputGroup>
+        <InputGroup className="max-w-[280px] bg-card">
           <InputGroupAddon>
-            <Mail aria-hidden className="size-4 text-muted-foreground" />
+            <AtSign aria-hidden data-icon="inline-start" />
           </InputGroupAddon>
           <InputGroupInput
             id={inputId}
             onChange={(event) => setEmail(event.target.value)}
-            placeholder="you@example.com"
+            placeholder="Enter your email"
             required
             type="email"
             value={email}
           />
         </InputGroup>
-        <Button className="shrink-0" disabled={pending} type="submit">
+        <Button disabled={pending} type="submit">
           {pending ? "Subscribing…" : "Subscribe"}
           <ArrowRight data-icon="inline-end" />
         </Button>
       </form>
+      <FullWidthDivider position="bottom" />
     </div>
   );
 }
