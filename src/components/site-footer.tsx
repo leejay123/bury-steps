@@ -9,7 +9,7 @@ import { getSiteTheme } from "@/lib/site-theme";
 
 function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <nav aria-label={title} className="flex flex-col gap-2">
+    <nav aria-label={title} className="flex flex-col gap-2 px-6 py-6">
       <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{title}</p>
       {children}
     </nav>
@@ -26,26 +26,26 @@ export async function SiteFooter() {
     <footer className="relative z-10 shrink-0 bg-background">
       <FullWidthDivider position="top" />
       <NewsletterFooterGate isAdmin={isAdmin} />
-      <div className={`flex flex-col gap-8 py-10 sm:flex-row sm:justify-between ${PAGE_X}`}>
-        <div className="flex max-w-xs flex-col gap-3">
-          <SiteLogo alt={theme.siteName} src={theme.logoSrc} />
-          <p className="text-sm text-muted-foreground">{theme.siteTagline}</p>
-          {facebookUrl ? (
-            <div className="flex gap-2">
-              <a
-                aria-label="Facebook group"
-                className="flex size-9 items-center justify-center rounded-md border text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                href={facebookUrl}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                <Facebook aria-hidden className="size-4" />
-              </a>
-            </div>
-          ) : null}
-        </div>
+      <div className={`py-10 ${PAGE_X}`}>
+        <div className="divide-y rounded-lg border sm:grid sm:grid-cols-[minmax(0,1fr)_repeat(3,minmax(0,auto))] sm:divide-x sm:divide-y-0">
+          <div className="flex max-w-xs flex-col gap-3 px-6 py-6">
+            <SiteLogo alt={theme.siteName} src={theme.logoSrc} />
+            <p className="text-sm text-muted-foreground">{theme.siteTagline}</p>
+            {facebookUrl ? (
+              <div className="flex gap-2">
+                <a
+                  aria-label="Facebook group"
+                  className="flex size-9 items-center justify-center rounded-md border text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  href={facebookUrl}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  <Facebook aria-hidden className="size-4" />
+                </a>
+              </div>
+            ) : null}
+          </div>
 
-        <div className="grid grid-cols-2 gap-x-8 gap-y-8 sm:grid-cols-3 sm:gap-x-12">
           <FooterColumn title="Explore">
             <Link className={linkClassName} href="/">
               Home
