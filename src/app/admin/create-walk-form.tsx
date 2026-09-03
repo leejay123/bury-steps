@@ -22,7 +22,7 @@ import {
 function Submit() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending}>
+    <Button className="w-full sm:w-auto" disabled={pending} type="submit">
       {pending ? "Creating…" : "Create walk"}
     </Button>
   );
