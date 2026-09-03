@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Facebook } from "lucide-react";
+import { Compass, Facebook, Info, Scale } from "lucide-react";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { NewsletterFooterGate } from "@/components/newsletter-footer-gate";
 import { SiteLogo } from "@/components/site-logo";
@@ -7,11 +7,19 @@ import { PAGE_X } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 
 // Footer-4's per-column banner (Facebook/Youtube/…) with just the brand
-// name swapped out — same text-sm/font-medium/p-2 the block's own
-// SocialCard row uses (see blocks/footer-4.tsx), just "Explore" instead
-// of a social network, and no icon/arrow since these link to our own
-// pages, not a social profile.
-function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
+// swapped out — same text-sm/font-medium/p-2 row and icon+label layout the
+// block's own SocialCard uses (see blocks/footer-4.tsx), just our own
+// section icon/name instead of a social network, and no arrow since these
+// aren't outbound links to somewhere else.
+function FooterColumn({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <nav aria-label={title} className="flex flex-col">
       {/* Border on the full-width wrapper, PAGE_X only on the text inside —
@@ -19,7 +27,12 @@ function FooterColumn({ title, children }: { title: string; children: React.Reac
           footer, so this rule spans the whole row instead of just the
           padded content column. */}
       <div className="border-b">
-        <p className={`p-2 text-sm font-medium ${PAGE_X}`}>{title}</p>
+        <p
+          className={`flex items-center gap-2 p-2 text-sm font-medium [&>svg]:size-3.5 [&>svg]:shrink-0 ${PAGE_X}`}
+        >
+          {icon}
+          {title}
+        </p>
       </div>
       <div className={`flex flex-col p-2 ${PAGE_X}`}>{children}</div>
     </nav>
@@ -60,7 +73,7 @@ export async function SiteFooter() {
           ) : null}
         </div>
 
-        <FooterColumn title="Explore">
+        <FooterColumn icon={<Compass aria-hidden />} title="Explore">
           <Link className={linkClassName} href="/">
             Home
           </Link>
@@ -71,7 +84,7 @@ export async function SiteFooter() {
             Progress
           </Link>
         </FooterColumn>
-        <FooterColumn title="About">
+        <FooterColumn icon={<Info aria-hidden />} title="About">
           <Link className={linkClassName} href="/#howThisStarted">
             How this started
           </Link>
@@ -85,7 +98,7 @@ export async function SiteFooter() {
             Contact Us
           </Link>
         </FooterColumn>
-        <FooterColumn title="Legal">
+        <FooterColumn icon={<Scale aria-hidden />} title="Legal">
           <Link className={linkClassName} href="/privacy-policy">
             Privacy Policy
           </Link>
