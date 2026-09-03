@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Compass, Info, Scale } from "lucide-react";
+import { Footprints, Info, Shield } from "lucide-react";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { NewsletterFooterGate } from "@/components/newsletter-footer-gate";
 import { SiteFooterAccordion } from "@/components/site-footer-accordion";
@@ -110,13 +110,13 @@ export async function SiteFooter() {
           deliberately not wrapped in PAGE_X; each cell puts PAGE_X back on
           its own content so text still lines up with the header/hero. */}
       <div className="hidden border-y sm:grid sm:grid-cols-3 sm:divide-x">
-        <FooterColumn icon={<Compass aria-hidden />} title="Explore">
+        <FooterColumn icon={<Footprints aria-hidden />} title="Explore">
           {exploreLinks}
         </FooterColumn>
         <FooterColumn icon={<Info aria-hidden />} title="About">
           {aboutLinks}
         </FooterColumn>
-        <FooterColumn icon={<Scale aria-hidden />} title="Legal">
+        <FooterColumn icon={<Shield aria-hidden />} title="Legal">
           {legalLinks}
         </FooterColumn>
       </div>
@@ -126,9 +126,9 @@ export async function SiteFooter() {
       <div className="border-t sm:hidden" />
       <SiteFooterAccordion
         sections={[
-          { icon: <Compass aria-hidden className="size-3.5 shrink-0" />, title: "Explore", links: exploreLinks },
+          { icon: <Footprints aria-hidden className="size-3.5 shrink-0" />, title: "Explore", links: exploreLinks },
           { icon: <Info aria-hidden className="size-3.5 shrink-0" />, title: "About", links: aboutLinks },
-          { icon: <Scale aria-hidden className="size-3.5 shrink-0" />, title: "Legal", links: legalLinks },
+          { icon: <Shield aria-hidden className="size-3.5 shrink-0" />, title: "Legal", links: legalLinks },
         ]}
       />
       <p

@@ -141,11 +141,14 @@ const CookieConsent = React.forwardRef<HTMLDivElement, CookieConsentProps>(
     if (hide) return null;
 
     const containerClasses = cn(
-      // left-0/right-0 below pin this to the true viewport edges (it's fixed,
-      // outside the shell that handles the Dynamic Island's side inset in
-      // landscape), so add the same inset here on top of the card's own
-      // margin.
-      "fixed z-[56] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] transition-all duration-700",
+      // inset-x-0/mx-auto/max-w-[1200px] below center this within the site's
+      // own content column (same width as the header/logo), rather than
+      // pinning it to the true browser viewport edges — otherwise it sits
+      // flush with the screen corner on a wide monitor while the logo above
+      // it is inset into the centered column, visibly out of line. The
+      // inner flex+px-4/md:px-6 then matches PAGE_X so the card's edge lines
+      // up with the logo exactly, not just the column's outer border.
+      "fixed z-[56] mx-auto flex w-full max-w-[1200px] justify-start pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] transition-all duration-700 md:pl-[calc(1.5rem+env(safe-area-inset-left))] md:pr-[calc(1.5rem+env(safe-area-inset-right))]",
       !isOpen ? "translate-y-full opacity-0" : "translate-y-0 opacity-100",
       className,
     );
@@ -156,9 +159,8 @@ const CookieConsent = React.forwardRef<HTMLDivElement, CookieConsentProps>(
       "aria-live": "polite" as const,
       className: cn(
         containerClasses,
-        variant === "mini"
-          ? "bottom-4 left-0 right-0 w-full sm:left-4 sm:max-w-3xl"
-          : "bottom-0 left-0 right-0 w-full pb-[env(safe-area-inset-bottom)] sm:bottom-4 sm:left-4 sm:max-w-md sm:pb-0",
+        "inset-x-0",
+        variant === "mini" ? "bottom-4" : "bottom-0 pb-[env(safe-area-inset-bottom)] sm:bottom-4 sm:pb-0",
       ),
       "data-slot": "cookie-consent",
       ref: setRefs,
@@ -177,7 +179,7 @@ const CookieConsent = React.forwardRef<HTMLDivElement, CookieConsentProps>(
     if (variant === "default") {
       return (
         <div {...commonWrapperProps}>
-          <Card className="m-3 shadow-lg">
+          <Card className="m-3 w-full shadow-lg sm:max-w-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-lg" id={titleId}>
                 We use cookies
@@ -208,7 +210,7 @@ const CookieConsent = React.forwardRef<HTMLDivElement, CookieConsentProps>(
     if (variant === "small") {
       return (
         <div {...commonWrapperProps}>
-          <Card className="m-3 shadow-lg">
+          <Card className="m-3 w-full shadow-lg sm:max-w-md">
             <CardHeader className="flex h-0 flex-row items-center justify-between space-y-0 px-4 pb-2">
               <CardTitle className="text-base" id={titleId}>
                 We use cookies
@@ -240,7 +242,7 @@ const CookieConsent = React.forwardRef<HTMLDivElement, CookieConsentProps>(
     if (variant === "mini") {
       return (
         <div {...commonWrapperProps}>
-          <Card className="mx-3 p-0 py-3 shadow-lg">
+          <Card className="mx-3 w-full p-0 py-3 shadow-lg sm:max-w-3xl">
             <CardContent className="grid gap-4 p-0 px-3.5 sm:flex">
               <CardDescription className="flex-1 text-xs sm:text-sm" id={titleId}>
                 {description}
