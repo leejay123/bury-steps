@@ -28,13 +28,13 @@ function FooterColumn({
           padded content column. */}
       <div className="border-b">
         <p
-          className={`flex items-center gap-2 p-2 text-sm font-medium [&>svg]:size-3.5 [&>svg]:shrink-0 ${PAGE_X}`}
+          className={`flex items-center gap-2 py-3 text-sm font-medium [&>svg]:size-3.5 [&>svg]:shrink-0 ${PAGE_X}`}
         >
           {icon}
           {title}
         </p>
       </div>
-      <div className={`flex flex-col p-2 ${PAGE_X}`}>{children}</div>
+      <div className={`flex flex-col gap-1 py-2 ${PAGE_X}`}>{children}</div>
     </nav>
   );
 }
