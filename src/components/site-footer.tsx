@@ -7,9 +7,10 @@ import { PAGE_X } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 
 // Footer-4's per-column banner (Facebook/Youtube/…) with just the brand
-// name swapped out — same bold, bordered title row, but "Explore" instead
-// of a social network, since these columns link to our own pages, not a
-// social profile.
+// name swapped out — same text-sm/font-medium/p-2 the block's own
+// SocialCard row uses (see blocks/footer-4.tsx), just "Explore" instead
+// of a social network, and no icon/arrow since these link to our own
+// pages, not a social profile.
 function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <nav aria-label={title} className="flex flex-col">
@@ -18,9 +19,9 @@ function FooterColumn({ title, children }: { title: string; children: React.Reac
           footer, so this rule spans the whole row instead of just the
           padded content column. */}
       <div className="border-b">
-        <p className={`py-3 text-base font-semibold ${PAGE_X}`}>{title}</p>
+        <p className={`p-2 text-sm font-medium ${PAGE_X}`}>{title}</p>
       </div>
-      <div className={`flex flex-col gap-1 py-2 ${PAGE_X}`}>{children}</div>
+      <div className={`flex flex-col p-2 ${PAGE_X}`}>{children}</div>
     </nav>
   );
 }
@@ -28,11 +29,10 @@ function FooterColumn({ title, children }: { title: string; children: React.Reac
 export async function SiteFooter() {
   const theme = await getSiteTheme();
   const facebookUrl = theme.facebookGroupUrl.trim();
-  // Footer-4's tactile row treatment (bordered grid cells, a hover fill
-  // behind each row) minus its social-brand banner rows — links stay plain
-  // text, just the same hover affordance the block gives its rows.
-  const linkClassName =
-    "-mx-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted/50";
+  // Exactly footer-4's LinksGroup link style (blocks/footer-4.tsx) — plain
+  // color change on hover, no background fill (that only belongs to the
+  // block's SocialCard banner, not its link list).
+  const linkClassName = "text-sm text-muted-foreground hover:text-foreground";
 
   return (
     <footer className="relative z-10 shrink-0 bg-background">
