@@ -62,6 +62,11 @@ export async function SiteFooter() {
       <Link className={linkClassName} href="/progress">
         Progress
       </Link>
+      {facebookUrl ? (
+        <a className={linkClassName} href={facebookUrl} rel="noopener noreferrer" target="_blank">
+          Facebook
+        </a>
+      ) : null}
     </>
   );
   const aboutLinks = (
@@ -78,11 +83,6 @@ export async function SiteFooter() {
       <Link className={linkClassName} href="/contact">
         Contact Us
       </Link>
-      {facebookUrl ? (
-        <a className={linkClassName} href={facebookUrl} rel="noopener noreferrer" target="_blank">
-          Facebook
-        </a>
-      ) : null}
     </>
   );
   const legalLinks = (
