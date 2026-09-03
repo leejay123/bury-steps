@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Compass, Facebook, Info, Scale } from "lucide-react";
+import { Compass, Info, Scale } from "lucide-react";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { NewsletterFooterGate } from "@/components/newsletter-footer-gate";
 import { PAGE_X } from "@/lib/page-x";
@@ -53,21 +53,7 @@ export async function SiteFooter() {
       {/* Edge-to-edge like the rest of the page's full-width dividers —
           deliberately not wrapped in PAGE_X; each cell puts PAGE_X back on
           its own content so text still lines up with the header/hero. */}
-      <div className="grid grid-cols-1 divide-y border-y sm:grid-cols-4 sm:divide-x sm:divide-y-0">
-        <div className={`flex flex-col justify-center gap-3 py-8 ${PAGE_X}`}>
-          {facebookUrl ? (
-            <a
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-              href={facebookUrl}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              <Facebook aria-hidden className="size-3.5 shrink-0" />
-              Facebook
-            </a>
-          ) : null}
-        </div>
-
+      <div className="grid grid-cols-1 divide-y border-y sm:grid-cols-3 sm:divide-x sm:divide-y-0">
         <FooterColumn icon={<Compass aria-hidden />} title="Explore">
           <Link className={linkClassName} href="/">
             Home
@@ -92,6 +78,11 @@ export async function SiteFooter() {
           <Link className={linkClassName} href="/contact">
             Contact Us
           </Link>
+          {facebookUrl ? (
+            <a className={linkClassName} href={facebookUrl} rel="noopener noreferrer" target="_blank">
+              Facebook
+            </a>
+          ) : null}
         </FooterColumn>
         <FooterColumn icon={<Scale aria-hidden />} title="Legal">
           <Link className={linkClassName} href="/privacy-policy">
