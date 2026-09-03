@@ -3,6 +3,7 @@ import { Footprints, Info, Shield } from "lucide-react";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { NewsletterFooterGate } from "@/components/newsletter-footer-gate";
 import { SiteFooterAccordion } from "@/components/site-footer-accordion";
+import { shouldPrefetchNavLink } from "@/components/site-nav-items";
 import { PAGE_X } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 
@@ -56,10 +57,10 @@ export async function SiteFooter() {
       <Link className={linkClassName} href="/">
         Home
       </Link>
-      <Link className={linkClassName} href="/notices">
+      <Link className={linkClassName} href="/notices" prefetch={shouldPrefetchNavLink("/notices")}>
         Notices
       </Link>
-      <Link className={linkClassName} href="/progress">
+      <Link className={linkClassName} href="/progress" prefetch={shouldPrefetchNavLink("/progress")}>
         Progress
       </Link>
       {facebookUrl ? (

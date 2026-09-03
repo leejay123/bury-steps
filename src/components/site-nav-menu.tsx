@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { unlockIdleDocument } from "@/components/overlay-root";
-import { isNavItemActive, navItems } from "@/components/site-nav-items";
+import { isNavItemActive, navItems, shouldPrefetchNavLink } from "@/components/site-nav-items";
 
 function navLinkClass(active: boolean) {
   return cn(
@@ -33,6 +33,7 @@ function NavLink({
       aria-current={active ? "page" : undefined}
       className={cn(navLinkClass(active), className)}
       href={href}
+      prefetch={shouldPrefetchNavLink(href)}
       onClick={(event) => {
         unlockIdleDocument();
         onSelect?.(event.currentTarget);
