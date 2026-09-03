@@ -241,7 +241,11 @@ export default async function WalkDetailPage({
                 : `${stillIn.length} on the walk · Click a row for details`}
             </span>
             {canAddAttendance ? (
-              <AddAttendanceButton walkCompleted={isCompleted} walkId={walk.id} />
+              <AddAttendanceButton
+                className="w-full sm:w-auto"
+                walkCompleted={isCompleted}
+                walkId={walk.id}
+              />
             ) : null}
           </div>
         </div>

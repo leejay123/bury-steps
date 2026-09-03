@@ -160,9 +160,11 @@ function AddAttendanceDialogForm({
 }
 
 export function AddAttendanceButton({
+  className,
   walkCompleted,
   walkId,
 }: {
+  className?: string;
   walkCompleted: boolean;
   walkId: string;
 }) {
@@ -178,7 +180,7 @@ export function AddAttendanceButton({
       open={open}
     >
       <AlertDialogTrigger asChild>
-        <Button size="sm" variant="outline">
+        <Button className={className} size="sm" variant="outline">
           <UserPlus data-icon="inline-start" />
           Add someone
         </Button>
