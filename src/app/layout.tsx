@@ -157,19 +157,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
             </header>
             {/*
-              No flex-1 here on purpose: that used to stretch <main> to fill
-              the full remaining viewport height, so a short page (e.g.
-              Progress with little data) left a large empty gap between its
-              content and the footer, which then sat pinned to the bottom of
-              the screen. Sizing to content instead means the footer follows
-              directly after whatever's actually there — a short page just
-              leaves blank space below the footer instead, which reads as
-              normal rather than as a layout bug. No page currently opts
-              into the old growth behaviour (e.g. to pin something to the
-              bottom of a short page), so this is safe; if one needs to
-              later, add `flex flex-1 flex-col` on that page's own root.
+              Standard flexbox "sticky footer": the outer shell above is
+              `min-h-dvh flex flex-col`, and this flex-1 is what makes <main>
+              claim all the leftover height so the footer always sits at the
+              very bottom of the viewport on a short page (e.g. Messages with
+              one row), instead of leaving blank space below the footer.
+
+              The trade-off is unavoidable, not a bug: on a short page the
+              empty space has to live somewhere, and this puts it between the
+              page's own content and the footer (inside <main>) rather than
+              below the footer. A page long enough to fill the viewport on
+              its own looks identical either way.
             */}
-            <main className={`flex flex-col ${PAGE_Y} ${PAGE_X}`} id="main-content">
+            <main className={`flex flex-1 flex-col ${PAGE_Y} ${PAGE_X}`} id="main-content">
               {children}
             </main>
             <Suspense fallback={null}>
