@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { unlockIdleDocument } from "@/components/overlay-root";
-import { isNavItemActive, navItems, shouldPrefetchNavLink } from "@/components/site-nav-items";
+import { isNavItemActive, navItems } from "@/components/site-nav-items";
 
 function navLinkClass(active: boolean) {
   return cn(
@@ -33,7 +33,12 @@ function NavLink({
       aria-current={active ? "page" : undefined}
       className={cn(navLinkClass(active), className)}
       href={href}
-      prefetch={shouldPrefetchNavLink(href)}
+      // No prefetch restriction needed here: SiteNavLinks/SiteMobileNavBar
+      // (this component's only callers, see site-nav.tsx) render exclusively
+      // for already-signed-in users, so a link to a sign-in-required route
+      // never hits the redirect-to-sign-in path that caused the Clerk CORS
+      // error for signed-out visitors — that only happens via the footer,
+      // which shows these links to everyone. See shouldPrefetchNavLink.
       onClick={(event) => {
         unlockIdleDocument();
         onSelect?.(event.currentTarget);

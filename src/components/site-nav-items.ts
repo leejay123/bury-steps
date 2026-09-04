@@ -22,9 +22,14 @@ export function navItems(isAdmin: boolean, walksHref: string) {
  * these is a background fetch() that follows the middleware's redirect to
  * Clerk's cross-origin sign-in page, which the browser then blocks as a
  * CORS violation (loudly, in the console, though the visible link click
- * still works fine via a normal top-level navigation). Prefetching gains a
- * guest nothing here anyway — skip it instead of chasing Clerk CORS config
- * for a background request nobody needs.
+ * still works fine via a normal top-level navigation).
+ *
+ * Only matters for links a signed-out guest can actually see — the header
+ * and mobile nav (site-nav-menu.tsx's NavLink) never need this: both only
+ * render once a user is already signed in (see SiteNavLinks/SiteMobileNavBar
+ * in site-nav.tsx), so those links never hit the sign-in redirect in the
+ * first place and get normal prefetching. The footer shows these links to
+ * everyone, guests included, so it's the one place this still applies.
  */
 const AUTH_ONLY_HREFS = new Set(["/dashboard", "/notices", "/progress", "/history"]);
 
