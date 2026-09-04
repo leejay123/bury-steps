@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import Script from "next/script";
+import NextTopLoader from "nextjs-toploader";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ClerkProvider } from "@clerk/nextjs";
@@ -72,6 +73,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en-GB" suppressHydrationWarning>
       <body className="min-h-dvh overflow-x-clip touch-manipulation bg-background text-foreground antialiased">
+        {/*
+          Fires on every internal navigation, prefetched-and-instant ones
+          included — a fast page just finishes the bar quickly, rather than
+          skipping visible feedback entirely the way a Suspense-driven
+          loading.tsx does when a route was already prefetched. No extra
+          network requests: this is a client-side visual layer over
+          navigations the app already makes.
+        */}
+        <NextTopLoader color="#111111" height={3} shadow={false} showSpinner={false} />
         {/*
           The browser's own scroll-restoration-on-refresh fights this app's
           progressively-loading content (images, carousels, the FAQ
