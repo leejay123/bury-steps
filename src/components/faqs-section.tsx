@@ -170,7 +170,7 @@ function FaqBrowser({
       </Accordion>
 
       {filtered.length === 0 ? (
-        <Empty className="mx-4 mb-6 border md:mx-6">
+        <Empty className={cn("mx-4 border md:mx-6", !facebookGroupUrl && "mb-6")}>
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <Search />
