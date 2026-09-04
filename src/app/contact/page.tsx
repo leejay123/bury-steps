@@ -25,7 +25,7 @@ export default async function ContactPage() {
       </div>
 
       <Card className="overflow-hidden p-0">
-        <CardContent className="grid gap-8 p-6 md:grid-cols-2 md:gap-10 md:p-10">
+        <CardContent className="flex flex-col gap-8 p-6 md:gap-10 md:p-10">
           <div className="flex flex-col gap-4">
             <div className="flex items-start gap-3">
               <div className="flex size-9 shrink-0 items-center justify-center rounded-md border">
