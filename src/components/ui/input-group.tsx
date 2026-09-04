@@ -10,8 +10,10 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="input-group"
       role="group"
       className={cn(
-        "border-input shadow-xs relative flex h-9 w-full items-center rounded-md border",
-        "has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot=input-group-control]:focus-visible]:ring-[3px] has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50",
+        "border-input shadow-xs relative flex h-9 w-full items-center rounded-md border transition-[box-shadow] duration-200 ease-out",
+        // Same border colour at rest and on focus — only the ring grows in,
+        // like Clerk's own fields, instead of the border changing colour.
+        "has-[[data-slot=input-group-control]:focus-visible]:ring-[3px] has-[[data-slot=input-group-control]:focus-visible]:ring-border",
         className,
       )}
       {...props}
