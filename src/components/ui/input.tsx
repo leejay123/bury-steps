@@ -14,7 +14,7 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
           type === "datetime-local" ||
           type === "month") &&
           "cursor-pointer file:cursor-pointer",
-        "focus-visible:border-foreground focus-visible:ring-0",
+        "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
         "aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
         className,
       )}
