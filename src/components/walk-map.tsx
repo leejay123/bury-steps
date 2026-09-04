@@ -28,7 +28,7 @@ export function WalkMap({
         </div>
       ) : null}
       <CardContent className="flex flex-col gap-3 px-6 pb-6">
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:flex">
           <Button asChild size="sm">
             <a href={googleDirectionsUrl(location, point)} rel="noopener noreferrer" target="_blank">
               Get directions
