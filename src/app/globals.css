@@ -202,7 +202,14 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
   --destructive: oklch(0.55 0.19 27);
   --border: oklch(0.9 0 0);
   --input: oklch(0.9 0 0);
-  --ring: oklch(0.15 0 0);
+  /*
+   * A grey, not --foreground/--primary's near-black — every focus ring and
+   * focus border site-wide (Input, Textarea, checkboxes, radios, buttons,
+   * the calendar, Clerk's embedded fields via .cl-input below) reads off
+   * this one token, so keeping it distinct from --foreground is what keeps
+   * every one of those a soft grey on focus instead of a black outline.
+   */
+  --ring: oklch(0.708 0 0);
 }
 
 @theme inline {

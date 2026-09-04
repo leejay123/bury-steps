@@ -32,7 +32,15 @@ export async function SiteFooter() {
             </a>
           ) : null}
         </div>
-        <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2">
+        {/*
+          Mobile: a horizontally-scrolling row (same pattern as the site's
+          own mobile nav bar and the admin walk-page button row) rather than
+          wrapping onto several lines. Desktop has room to just wrap.
+        */}
+        <nav
+          aria-label="Footer"
+          className="-mx-4 flex flex-nowrap gap-x-6 gap-y-2 overflow-x-auto overscroll-x-contain px-4 [scrollbar-width:none] [-ms-overflow-style:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden [&>*]:shrink-0"
+        >
           <Link className={linkClassName} href="/">
             Home
           </Link>
