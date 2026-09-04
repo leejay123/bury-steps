@@ -20,6 +20,11 @@ const isPublic = createRouteMatcher([
   // for signed-out visitors too — without this it 404s/redirects for them
   // instead of serving the image once an admin uploads a custom logo.
   "/api/site-logo(.*)",
+  // Browser-tab favicon (src/app/icon.tsx) — same reasoning as site-logo
+  // above. It's a dynamic route (no file extension for the matcher's
+  // static-file exclusion below to catch), so every signed-out visitor's
+  // browser hit auth.protect() fetching it and got a 404 instead of the icon.
+  "/icon",
   "/api/health",
   "/__clerk(.*)",
   // Organiser URLs 404 for anyone who is not a signed-in organiser.

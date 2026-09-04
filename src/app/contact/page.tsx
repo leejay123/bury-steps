@@ -25,9 +25,9 @@ export default async function ContactPage() {
       </div>
 
       <Card className="overflow-hidden p-0">
-        <CardContent className="flex flex-col gap-8 p-6 md:gap-10 md:p-10">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-start gap-3">
+        <CardContent className="flex flex-col gap-6 p-4 md:p-6">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-start gap-3 rounded-md p-2 -m-2">
               <div className="flex size-9 shrink-0 items-center justify-center rounded-md border">
                 <Mail aria-hidden className="size-4" />
               </div>
@@ -40,7 +40,7 @@ export default async function ContactPage() {
             </div>
             {facebookUrl ? (
               <a
-                className="flex items-start gap-3 rounded-md hover:bg-accent"
+                className="flex items-start gap-3 rounded-md p-2 -m-2 hover:bg-accent"
                 href={facebookUrl}
                 rel="noopener noreferrer"
                 target="_blank"

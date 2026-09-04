@@ -193,6 +193,18 @@ export function UnlockPageOnNavigate() {
   const viewportStyleRef = useRef<HTMLStyleElement>(null);
 
   useEffect(() => {
+    // Next's own "scroll to top on navigation" defers entirely to the
+    // browser's native history.scrollRestoration when it's "manual" — which
+    // the scroll-restoration script in layout.tsx deliberately sets, to stop
+    // the browser fighting this app's progressively-loading content on a
+    // refresh. That fix's side effect: nothing resets scroll on a normal
+    // Link click either, so clicking a nav link while scrolled down a long
+    // page (e.g. the homepage) lands on the new page still scrolled down —
+    // visually landing "at the bottom" of whatever's there. Do the reset
+    // ourselves instead. Skip it for a hash link (e.g. footer's /#faqs) —
+    // that's an intentional scroll to an anchor, not a fresh page.
+    if (!window.location.hash) window.scrollTo(0, 0);
+
     // A route change means the previous page's tree is gone (or is about to
     // be). Any overlay that still reports `data-state="open"` at this point
     // belongs to a layout-level component (e.g. the notification bell) that
