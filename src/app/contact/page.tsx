@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Facebook, Mail } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { PAGE_X } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 import { ContactForm } from "./contact-form";
 
@@ -16,7 +15,7 @@ export default async function ContactPage() {
   const facebookUrl = theme.facebookGroupUrl.trim();
 
   return (
-    <div className={`flex flex-col gap-6 py-8 md:py-10 ${PAGE_X}`}>
+    <div className="flex flex-col gap-6 py-8 md:py-10">
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold">Contact us</h1>
         <p className="text-muted-foreground">
@@ -25,7 +24,7 @@ export default async function ContactPage() {
       </div>
 
       <Card className="overflow-hidden p-0">
-        <CardContent className="flex flex-col gap-6 p-4 md:p-6">
+        <CardContent className="flex flex-col gap-6 p-6 md:p-8">
           <div className="flex flex-col gap-2">
             <div className="flex items-start gap-3 rounded-md p-2 -m-2">
               <div className="flex size-9 shrink-0 items-center justify-center rounded-md border">
