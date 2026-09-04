@@ -3,6 +3,19 @@
 @import "@clerk/themes/shadcn.css";
 
 /*
+ * Powers <DelayedReveal> (components/delayed-reveal.tsx): a loading.tsx
+ * fallback stays invisible for the animation-delay, then snaps to visible
+ * only if the Suspense boundary is still showing it by then. Pure CSS, no
+ * client JS — most navigations finish before the delay elapses and never
+ * render this at all, so only genuinely slow loads ever show a skeleton.
+ */
+@keyframes delayed-reveal {
+  to {
+    opacity: 1;
+  }
+}
+
+/*
  * iOS Safari paints its own translucent blue "tap highlight" over whatever
  * you touch unless a page opts out. Our drawers/dialogs intercept
  * touch/pointer events for the stuck-page fixes above, which stops that
