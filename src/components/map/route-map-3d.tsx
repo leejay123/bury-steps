@@ -4,25 +4,37 @@
  * A tilted, real-terrain view of a saved route — the "3D" ask, answered
  * without a new account or paid tile provider. Two free, keyless sources
  * make the whole thing work:
- *  - Colour: OpenStreetMap's plain raster tiles (same as the flat map).
+ *  - Colour and cartography: OpenFreeMap's hosted "Liberty" vector style —
+ *    proper roads, land use, and 3D-extruded buildings at closer zoom,
+ *    not just a flat street-map raster drape. Free, no key, no account;
+ *    OpenFreeMap is a public service funded to stay that way, unlike most
+ *    vector-tile hosts which meter usage behind a signup.
  *  - Shape: the "Terrarium" elevation tiles from Mapzen's old Elevation
  *    Tiles project, still mirrored by AWS's Open Data program and released
  *    into the public domain — the exact source MapLibre's own terrain
  *    demos use. No signup, no key, nothing that can expire or start
- *    billing later.
+ *    billing later. Layered on top of OpenFreeMap's style, which has no
+ *    elevation data of its own.
  *
  * This whole module only ever loads in the browser, behind a click (see
  * route-3d-toggle.tsx's React.lazy boundary) — WebGL and a ~200KB library
  * for something most page views won't open, so it should never be part of
  * the walk page's initial download.
+ *
+ * Both hosts need their own connect-src entry in next.config.ts's CSP —
+ * MapLibre fetches every source (including this raster-dem one) via
+ * fetch()/XHR into a WebGL texture, not <img> tags the way Leaflet's tiles
+ * do elsewhere on the site, so img-src's already-open https: doesn't cover
+ * it.
  */
 
 import { useEffect, useRef, useState } from "react";
 import { Map as MapLibreMap, Marker, NavigationControl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { OSM_ATTRIBUTION, OSM_TILE_URL } from "./use-leaflet";
 import { cn } from "@/lib/utils";
 import { routeBounds, type RoutePoint } from "@/lib/route-geometry";
+
+const OPENFREEMAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
 
 const TERRAIN_TILE_URL = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png";
 const TERRAIN_ATTRIBUTION = "Elevation: AWS Open Data / Mapzen Terrarium (public domain)";
@@ -60,27 +72,7 @@ export function RouteMap3D({ points, className }: { points: RoutePoint[]; classN
 
       map = new MapLibreMap({
         container,
-        style: {
-          version: 8,
-          sources: {
-            osm: {
-              type: "raster",
-              tiles: [OSM_TILE_URL],
-              tileSize: 256,
-              attribution: OSM_ATTRIBUTION,
-              maxzoom: 19,
-            },
-            terrain: {
-              type: "raster-dem",
-              tiles: [TERRAIN_TILE_URL],
-              tileSize: 256,
-              encoding: "terrarium",
-              maxzoom: TERRAIN_MAX_ZOOM,
-              attribution: TERRAIN_ATTRIBUTION,
-            },
-          },
-          layers: [{ id: "osm", type: "raster", source: "osm" }],
-        },
+        style: OPENFREEMAP_STYLE_URL,
         center: centre as [number, number],
         zoom: 13,
         pitch: 55,
@@ -91,6 +83,17 @@ export function RouteMap3D({ points, className }: { points: RoutePoint[]; classN
 
       map.on("load", () => {
         if (!map) return;
+        // Not part of OpenFreeMap's own style — it has no elevation data —
+        // so this is added ourselves once the base style has finished
+        // loading, same as the route line below.
+        map.addSource("terrain", {
+          type: "raster-dem",
+          tiles: [TERRAIN_TILE_URL],
+          tileSize: 256,
+          encoding: "terrarium",
+          maxzoom: TERRAIN_MAX_ZOOM,
+          attribution: TERRAIN_ATTRIBUTION,
+        });
         map.setTerrain({ source: "terrain", exaggeration: TERRAIN_EXAGGERATION });
 
         map.addSource("route", {

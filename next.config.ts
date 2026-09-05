@@ -61,6 +61,15 @@ const nextConfig: NextConfig = {
     // known allowlist still blocks the most common CSP-relevant attacks:
     // loading a remote payload or exfiltrating data to an attacker-controlled
     // host.
+    //
+    // The route page's 3D view (route-map-3d.tsx) fetches its map tiles via
+    // MapLibre GL, which uses fetch()/XHR for every source — including
+    // raster ones — rather than <img> tags the way Leaflet's flat maps do
+    // elsewhere on the site. img-src's already-open https: covers Leaflet;
+    // these two need their own connect-src entry or the browser blocks the
+    // request outright: tiles.openfreemap.org (the base map, its style,
+    // sprites and glyphs) and s3.amazonaws.com (the free public-domain
+    // Terrarium elevation tiles that give it terrain).
     const clerkOrigins = [
       "https://clerk.burysteps-walkinggroup.co.uk",
       "https://*.clerk.accounts.dev",
@@ -72,7 +81,7 @@ const nextConfig: NextConfig = {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      `connect-src 'self' ${clerkOrigins.join(" ")} https://challenges.cloudflare.com https://vitals.vercel-insights.com`,
+      `connect-src 'self' ${clerkOrigins.join(" ")} https://challenges.cloudflare.com https://vitals.vercel-insights.com https://tiles.openfreemap.org https://s3.amazonaws.com`,
       `frame-src 'self' ${clerkOrigins.join(" ")} https://challenges.cloudflare.com https://www.openstreetmap.org`,
       "object-src 'none'",
       "base-uri 'self'",
