@@ -9,6 +9,14 @@ const alertVariants = cva(
       variant: {
         default: "bg-card text-card-foreground",
         destructive: "text-destructive bg-destructive/5 border-destructive/30 [&>svg]:text-current",
+        // Neutral heads-up — a fact worth knowing, nothing to act on or worry about.
+        info: "text-blue-800 bg-blue-50 border-blue-200 [&>svg]:text-current dark:text-blue-200 dark:bg-blue-950 dark:border-blue-900",
+        // Worth reading before proceeding — something to attend to, not an error.
+        warning:
+          "text-amber-800 bg-amber-50 border-amber-200 [&>svg]:text-current dark:text-amber-200 dark:bg-amber-950 dark:border-amber-900",
+        // Confirms something completed as intended.
+        success:
+          "text-green-800 bg-green-50 border-green-200 [&>svg]:text-current dark:text-green-200 dark:bg-green-950 dark:border-green-900",
       },
     },
     defaultVariants: { variant: "default" },

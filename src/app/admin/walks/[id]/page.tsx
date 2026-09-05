@@ -213,7 +213,7 @@ export default async function WalkDetailPage({
         <DeleteWalkButton walkId={walk.id} attendanceCount={walk.attendances.length} />
       </div>
       {isCompleted ? (
-        <Alert>
+        <Alert variant="info">
           <AlertDescription>
             This walk has finished, so it can no longer be cancelled or edited. If someone was
             there but forgot to clock in, add them under Attendance.
@@ -224,7 +224,7 @@ export default async function WalkDetailPage({
       <Separator />
 
       {withConditions > 0 && (
-        <Alert>
+        <Alert variant="warning">
           <AlertTitle>
             {withConditions} {withConditions === 1 ? "member has" : "members have"} reported a
             condition

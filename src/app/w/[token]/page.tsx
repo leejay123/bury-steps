@@ -167,7 +167,7 @@ export default async function WalkLinkPage({
           <AlertDescription>Check the walks list for the next one.</AlertDescription>
         </Alert>
       ) : completed && !user ? (
-        <Alert>
+        <Alert variant="info">
           <AlertTitle>This walk has finished</AlertTitle>
           <AlertDescription>
             Clock-in is closed. Details and the journey below are still here to look back on.

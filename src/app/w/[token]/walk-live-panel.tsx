@@ -68,7 +68,7 @@ export function WalkLivePanel({
   if (state === "too-early") {
     return (
       <div className="flex flex-col gap-4">
-        <Alert>
+        <Alert variant="info">
           <AlertTitle>Clock-in is not open yet</AlertTitle>
           <AlertDescription>
             It opens an hour before the walk starts, at {formatTime(opensAt)} on{" "}
@@ -85,7 +85,7 @@ export function WalkLivePanel({
 
   if (state === "closed") {
     return (
-      <Alert>
+      <Alert variant="info">
         <AlertTitle>This walk has finished</AlertTitle>
         <AlertDescription>
           Clock-in is closed. If you were there, speak to an organiser — they can add you to the
