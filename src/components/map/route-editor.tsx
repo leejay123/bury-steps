@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
 import type * as LeafletNS from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Undo2, Trash2, MapPin, Search, LocateFixed } from "lucide-react";
+import { Undo2, Trash2, MapPin, Search, LocateFixed, Upload } from "lucide-react";
 import { searchRoutePlaces } from "@/server/actions";
 import type { PlaceHit } from "@/lib/geocode";
+import { parseGpxForRoute } from "@/lib/gpx";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,11 +53,16 @@ const SEARCH_ZOOM = 15;
 export function RouteEditor({
   value,
   onChange,
+  onImport,
   startNear,
   className,
 }: {
   value: RoutePoint[];
   onChange: (points: RoutePoint[]) => void;
+  /** Fires right after a successful GPX import — a real trace is already
+   * the true path, so callers should turn off any "snap to footpaths"
+   * option rather than let it reject the import's point count. */
+  onImport?: () => void;
   /** Meeting point of the walk, if known — where the map opens. */
   startNear?: { lat: number; lng: number } | null;
   className?: string;
@@ -80,6 +86,14 @@ export function RouteEditor({
 
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+
+  // Import a GPX file — an alternative to clicking. A real recorded trace
+  // already has far more points than anyone would click by hand, so this
+  // gets a genuinely accurate line and distance for free.
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importNotice, setImportNotice] = useState<string | null>(null);
 
   // The Leaflet click handler is bound once, but needs today's points and
   // today's onChange. A ref keeps it current without rebuilding the map on
@@ -197,13 +211,20 @@ export function RouteEditor({
     onChange([]);
   }, [onChange]);
 
+  const fitBoundsToPoints = useCallback(
+    (points: RoutePoint[]) => {
+      const map = mapRef.current;
+      if (!map || !leaflet || points.length === 0) return;
+      map.fitBounds(leaflet.polyline(points.map((p) => [p.lat, p.lng] as [number, number])).getBounds(), {
+        padding: [24, 24],
+      });
+    },
+    [leaflet],
+  );
+
   const recentre = useCallback(() => {
-    const map = mapRef.current;
-    if (!map || !leaflet || value.length === 0) return;
-    map.fitBounds(leaflet.polyline(value.map((p) => [p.lat, p.lng] as [number, number])).getBounds(), {
-      padding: [24, 24],
-    });
-  }, [leaflet, value]);
+    fitBoundsToPoints(value);
+  }, [fitBoundsToPoints, value]);
 
   // Recentres the map on any found point and drops (or moves) a temporary
   // marker there — search never adds a route point, this just shows where
@@ -336,6 +357,50 @@ export function RouteEditor({
     );
   }, [jumpTo]);
 
+  const importGpxFile = useCallback(
+    async (file: File) => {
+      setImporting(true);
+      setImportError(null);
+      setImportNotice(null);
+      // Cleared on import so an earlier search's marker doesn't linger next
+      // to a route that no longer starts anywhere near it.
+      searchMarkerRef.current?.remove();
+      searchMarkerRef.current = null;
+      try {
+        const text = await file.text();
+        const result = parseGpxForRoute(text);
+        if (!result.ok) {
+          setImportError(result.error);
+          return;
+        }
+        onChange(result.points);
+        fitBoundsToPoints(result.points);
+        onImport?.();
+        if ("simplifiedFrom" in result) {
+          setImportNotice(
+            `That trace had ${result.simplifiedFrom.toLocaleString()} points — simplified to ` +
+              `${result.points.length.toLocaleString()} to store it. The shape and distance barely change.`,
+          );
+        }
+      } catch {
+        setImportError("That file could not be read. Check it's a .gpx export.");
+      } finally {
+        setImporting(false);
+      }
+    },
+    [fitBoundsToPoints, onChange, onImport],
+  );
+
+  const onGpxFileChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      // Reset so choosing the same file again still fires a change event.
+      event.target.value = "";
+      if (file) void importGpxFile(file);
+    },
+    [importGpxFile],
+  );
+
   return (
     <div className={cn("flex flex-col gap-3", className)}>
       <div className="flex flex-col gap-2">
@@ -399,6 +464,31 @@ export function RouteEditor({
         {searchError ? <p className="text-xs text-destructive">{searchError}</p> : null}
         {locationError ? <p className="text-xs text-destructive">{locationError}</p> : null}
       </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs text-muted-foreground">
+          Already recorded this walk elsewhere (Strava, OS Maps, Komoot, a GPS watch)?
+        </span>
+        <input
+          accept=".gpx,application/gpx+xml"
+          className="hidden"
+          onChange={onGpxFileChange}
+          ref={fileInputRef}
+          type="file"
+        />
+        <Button
+          disabled={importing}
+          onClick={() => fileInputRef.current?.click()}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          <Upload className="size-4" />
+          {importing ? "Reading…" : "Import a GPX file"}
+        </Button>
+      </div>
+      {importError ? <p className="text-xs text-destructive">{importError}</p> : null}
+      {importNotice ? <p className="text-xs text-muted-foreground">{importNotice}</p> : null}
 
       <div className="overflow-hidden rounded-lg border">
         <div className="relative h-[22rem] w-full bg-muted sm:h-[28rem]" ref={containerRef}>

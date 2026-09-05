@@ -81,6 +81,16 @@ export function RoutesSection() {
             waypoints, and the finish. Untick it to save the line exactly as you drew it instead.
             No checkbox means it isn&apos;t set up yet; nothing about drawing changes either way.
           </p>
+          <p>
+            <strong>Already recorded the walk somewhere else?</strong> Choose{" "}
+            <strong>Import a GPX file</strong> instead of clicking — a file exported from Strava,
+            OS Maps, Komoot, a GPS watch, or a route planner like plotaroute.com or
+            openrouteservice&apos;s own map. A recorded trace already has far more points than
+            anyone would click by hand, so the line and distance come out accurate straight away —
+            no snapping needed. If the file is unusually detailed it gets thinned to fit, without
+            changing the shape or the distance in any way that matters. Importing replaces
+            whatever was already drawn or imported, so pick the file before you start clicking.
+          </p>
         </GuideBody>
       </AccordionContent>
     </AccordionItem>

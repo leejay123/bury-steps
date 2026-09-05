@@ -95,7 +95,12 @@ export function RouteForm({
         </div>
       ) : null}
 
-      <RouteEditor onChange={setPoints} startNear={startNear} value={points} />
+      <RouteEditor
+        onChange={setPoints}
+        onImport={() => setSnap(false)}
+        startNear={startNear}
+        value={points}
+      />
 
       <FormError message={state && !state.ok ? state.error : null} />
 
