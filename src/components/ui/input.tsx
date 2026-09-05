@@ -7,17 +7,20 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
       type={type}
       data-slot="input"
       className={cn(
-        "file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[box-shadow] duration-200 ease-out outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm touch-manipulation",
+        "file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[box-shadow,border-color] duration-200 ease-out outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm touch-manipulation",
         (type === "file" ||
           type === "date" ||
           type === "time" ||
           type === "datetime-local" ||
           type === "month") &&
           "cursor-pointer file:cursor-pointer",
-        // Same border colour at rest and on focus (border-input, never
-        // border-ring) — only the ring around it grows in, exactly like
-        // Clerk's own fields, instead of the border itself changing colour.
-        "focus-visible:ring-[3px] focus-visible:ring-border",
+        // Matches Clerk's own recipe: the border itself darkens (to --ring)
+        // on both hover and focus, and focus additionally grows a wide,
+        // pale ring in the lighter --border shade around it. Using a
+        // different, lighter colour for the ring than the border is what
+        // keeps the two visually distinct instead of blurring into one
+        // thick smear.
+        "hover:border-ring focus-visible:border-ring focus-visible:ring-4 focus-visible:ring-border",
         "aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
         className,
       )}
