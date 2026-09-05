@@ -7,6 +7,8 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { type RoutePoint, routeDistanceMetres, validateRoutePoints } from "@/lib/route-geometry";
 import { snapToFootpaths } from "@/lib/route-routing";
+import { type PlaceHit, searchPlaces, searchPlacesViaHeigit } from "@/lib/geocode";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { type ActionResult, isPrismaCode, logActionError, revalidateWalkShare } from "./shared";
 
 const routeDetailsSchema = z.object({
@@ -30,6 +32,37 @@ function readPoints(formData: FormData) {
     return { ok: false as const, error: "That route could not be read. Try drawing it again." };
   }
   return validateRoutePoints(parsed);
+}
+
+/**
+ * Live search for the route editor's "find a place" box — one free-text
+ * field, no separate postcode field to guess into. Prefers HeiGIT's Pelias
+ * geocoder (same free key as route snapping, a different service path
+ * under the same host) since it's built for type-ahead queries; falls back
+ * to the plain Nominatim lookup already used for the meeting-point field
+ * when no key is configured, or if the HeiGIT call itself fails.
+ */
+export async function searchRoutePlaces(
+  query: string,
+): Promise<{ ok: true; places: PlaceHit[] } | { ok: false; error: string }> {
+  const admin = await requireAdmin();
+  // Generous limit: this is called on every debounced keystroke, not once
+  // per submit like the meeting-point search.
+  const limited = checkRateLimit(`${admin.id}:searchRoutePlaces`, 60, 60_000);
+  if (!limited.ok) {
+    return { ok: false, error: `Too many searches. Try again in ${limited.retryAfterSeconds}s.` };
+  }
+
+  const q = query.trim();
+  if (!q) return { ok: false, error: "Type a place, postcode, or address first." };
+  if (q.length > 200) return { ok: false, error: "Keep the search under 200 characters." };
+
+  const viaHeigit = await searchPlacesViaHeigit(q);
+  const places = viaHeigit ?? (await searchPlaces(q, q));
+  if (places.length === 0) {
+    return { ok: false, error: "Nothing found. Try a fuller name or a postcode." };
+  }
+  return { ok: true, places };
 }
 
 /**

@@ -1,3 +1,5 @@
+import { orsApiKey, orsBaseUrl } from "./ors-config";
+
 export type GeoPoint = { lat: number; lng: number };
 
 export type PlaceHit = {
@@ -11,8 +13,9 @@ const NOMINATIM_SEARCH = "https://nominatim.openstreetmap.org/search";
 const USER_AGENT =
   "BuryStepsWalkingGroup/1.0 (https://burysteps-walkinggroup.co.uk; walking group website)";
 
-/** Bias toward Bury without locking results to the town. */
+/** Bias toward Bury without locking results to the town. Same town centre used elsewhere (use-leaflet.ts's DEFAULT_CENTRE). */
 const BURY_VIEWBOX = "-2.45,53.72,-2.15,53.48";
+const BURY_CENTRE = { lat: 53.5933, lng: -2.2966 };
 
 /**
  * Compact a typed UK postcode to the usual outward+inward form, e.g. "bl81da" → "BL8 1DA".
@@ -120,6 +123,62 @@ async function nominatimSearch(
 
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function parsePeliasFeatures(data: unknown): PlaceHit[] {
+  if (!data || typeof data !== "object") return [];
+  const features = (data as { features?: unknown }).features;
+  if (!Array.isArray(features)) return [];
+
+  const hits: PlaceHit[] = [];
+  for (const feature of features) {
+    if (!feature || typeof feature !== "object") continue;
+    const { geometry, properties } = feature as { geometry?: unknown; properties?: unknown };
+    const geom = geometry as { type?: unknown; coordinates?: unknown } | undefined;
+    if (!geom || geom.type !== "Point" || !Array.isArray(geom.coordinates)) continue;
+    const point = parsePoint(geom.coordinates[1], geom.coordinates[0]);
+    if (!point) continue;
+    const label = (properties as { label?: unknown } | undefined)?.label;
+    if (typeof label !== "string" || label.length === 0) continue;
+    hits.push({ id: `h${hits.length}`, label, lat: point.lat, lng: point.lng });
+  }
+  return hits;
+}
+
+/**
+ * Live, type-ahead-friendly place search: one free-text field, no guessing
+ * whether it's a postcode, a place name, or a full address — unlike
+ * searchPlaces below (built for the meeting-point form's two separate
+ * fields), this takes exactly what someone typed and lets HeiGIT's Pelias
+ * geocoder sort it out. Uses the same free OPENROUTESERVICE_API_KEY as
+ * route snapping (a different service path under the same host/key, see
+ * ors-config.ts) — no extra signup.
+ *
+ * Returns null rather than [] when no key is configured, so a caller can
+ * fall back to searchPlaces instead of reporting "nothing found".
+ */
+export async function searchPlacesViaHeigit(query: string): Promise<PlaceHit[] | null> {
+  const apiKey = orsApiKey();
+  if (!apiKey) return null;
+
+  const url = new URL(`${orsBaseUrl()}/pelias/v1/autocomplete`);
+  url.searchParams.set("text", query);
+  url.searchParams.set("boundary.country", "GB");
+  url.searchParams.set("size", "5");
+  // A soft bias, not a hard boundary — an exact match elsewhere still wins.
+  url.searchParams.set("focus.point.lat", String(BURY_CENTRE.lat));
+  url.searchParams.set("focus.point.lon", String(BURY_CENTRE.lng));
+
+  try {
+    const res = await fetch(url, {
+      headers: { Authorization: apiKey, Accept: "application/json" },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return null;
+    return parsePeliasFeatures(await res.json());
+  } catch {
+    return null;
+  }
 }
 
 /** Up to five matches so an organiser can pick the right pin. */

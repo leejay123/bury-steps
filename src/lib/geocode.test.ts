@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   geocodeLocation,
   geocodeQueries,
@@ -7,6 +7,7 @@ import {
   normalizeUkPostcode,
   parseFormPoint,
   searchPlaces,
+  searchPlacesViaHeigit,
 } from "./geocode";
 
 describe("meetingPointLabel", () => {
@@ -141,5 +142,64 @@ describe("geocodeLocation", () => {
   it("returns null when the request fails", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
     await expect(geocodeLocation("Burrs Country Park")).resolves.toBeNull();
+  });
+});
+
+describe("searchPlacesViaHeigit", () => {
+  beforeEach(() => {
+    delete process.env.OPENROUTESERVICE_API_KEY;
+  });
+  afterEach(() => {
+    delete process.env.OPENROUTESERVICE_API_KEY;
+    vi.unstubAllGlobals();
+  });
+
+  it("returns null without a key, without calling fetch", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(searchPlacesViaHeigit("5 Fenwick Drive")).resolves.toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("sends one free-text query, biased toward Bury, GB-only", async () => {
+    process.env.OPENROUTESERVICE_API_KEY = "test-key";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        features: [
+          {
+            geometry: { type: "Point", coordinates: [-2.3138, 53.6132] },
+            properties: { label: "5 Fenwick Drive, Middleton, Greater Manchester" },
+          },
+        ],
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(searchPlacesViaHeigit("5 Fenwick Drive, Middleton")).resolves.toEqual([
+      { id: "h0", label: "5 Fenwick Drive, Middleton, Greater Manchester", lat: 53.6132, lng: -2.3138 },
+    ]);
+
+    const [url, init] = fetchMock.mock.calls[0];
+    const parsed = new URL(String(url));
+    expect(parsed.pathname).toBe("/pelias/v1/autocomplete");
+    expect(parsed.searchParams.get("text")).toBe("5 Fenwick Drive, Middleton");
+    expect(parsed.searchParams.get("boundary.country")).toBe("GB");
+    expect(init.headers.Authorization).toBe("test-key");
+  });
+
+  it("returns null on a malformed response", async () => {
+    process.env.OPENROUTESERVICE_API_KEY = "test-key";
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
+    await expect(searchPlacesViaHeigit("anything")).resolves.toEqual([]);
+  });
+
+  it("returns null on a non-OK response or network failure", async () => {
+    process.env.OPENROUTESERVICE_API_KEY = "test-key";
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: async () => ({}) }));
+    await expect(searchPlacesViaHeigit("anything")).resolves.toBeNull();
+
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
+    await expect(searchPlacesViaHeigit("anything")).resolves.toBeNull();
   });
 });

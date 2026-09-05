@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import type * as LeafletNS from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Undo2, Trash2, MapPin, Search } from "lucide-react";
-import { searchWalkPlaces } from "@/server/actions";
-import { normalizeUkPostcode, type PlaceHit } from "@/lib/geocode";
+import { Undo2, Trash2, MapPin, Search, LocateFixed } from "lucide-react";
+import { searchRoutePlaces } from "@/server/actions";
+import type { PlaceHit } from "@/lib/geocode";
+import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -40,9 +41,13 @@ const SEARCH_ZOOM = 15;
  * properly.
  *
  * The "find a place" box above the map does not draw anything — it only
- * recentres the view, reusing the same free Nominatim lookup the meeting
- * point field already calls (searchWalkPlaces), so someone unfamiliar with
- * reading a map isn't stuck guessing where their usual route even is.
+ * recentres the view and drops a temporary marker there, so someone
+ * unfamiliar with reading a map isn't stuck guessing where their usual
+ * route even is. Live suggestions come from searchRoutePlaces (HeiGIT's
+ * Pelias geocoder when a route-snapping key is configured, the same free
+ * Nominatim lookup the meeting-point field uses otherwise). "Use my
+ * location" is a single one-off GPS read on tap — not tracking, nothing
+ * stored, nothing sent anywhere.
  */
 export function RouteEditor({
   value,
@@ -60,16 +65,21 @@ export function RouteEditor({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<LeafletNS.Map | null>(null);
   const layerRef = useRef<LeafletNS.LayerGroup | null>(null);
+  const searchMarkerRef = useRef<LeafletNS.CircleMarker | null>(null);
   const [ready, setReady] = useState(false);
 
-  // "Find a place" — jumps the map to a typed place or postcode before the
-  // organiser starts clicking. It never touches the route itself, so it
-  // reuses the same free, no-key Nominatim lookup the meeting point field
-  // already uses (searchWalkPlaces), just to recentre the view.
+  // "Find a place" — jumps the map to a typed place, postcode, or address
+  // before the organiser starts clicking. It never touches the route
+  // itself; it only recentres the view and drops a temporary marker.
   const [query, setQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [hits, setHits] = useState<PlaceHit[] | null>(null);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const skipNextSearchRef = useRef(false);
+
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   // The Leaflet click handler is bound once, but needs today's points and
   // today's onChange. A ref keeps it current without rebuilding the map on
@@ -99,6 +109,11 @@ export function RouteEditor({
     map.on("click", (event: LeafletNS.LeafletMouseEvent) => {
       const { value: points, onChange: emit } = stateRef.current;
       if (points.length >= MAX_ROUTE_POINTS) return;
+      // Once real drawing starts, the "you searched here" marker has done
+      // its job — clear it rather than leave it sitting alongside the
+      // route's own start/finish dots.
+      searchMarkerRef.current?.remove();
+      searchMarkerRef.current = null;
       emit([...points, { lat: event.latlng.lat, lng: event.latlng.lng }]);
     });
 
@@ -112,6 +127,7 @@ export function RouteEditor({
       map.remove();
       mapRef.current = null;
       layerRef.current = null;
+      searchMarkerRef.current = null;
       setReady(false);
     };
     // Built once. Later prop changes are handled by the redraw effect below,
@@ -189,91 +205,199 @@ export function RouteEditor({
     });
   }, [leaflet, value]);
 
-  const jumpTo = useCallback((place: PlaceHit) => {
-    mapRef.current?.flyTo([place.lat, place.lng], SEARCH_ZOOM);
-    setHits(null);
-    setSearchError(null);
-  }, []);
+  // Recentres the map on any found point and drops (or moves) a temporary
+  // marker there — search never adds a route point, this just shows where
+  // "here" actually is. Cleared the moment real drawing starts (the map's
+  // click handler above).
+  const jumpTo = useCallback(
+    (place: { lat: number; lng: number }) => {
+      const map = mapRef.current;
+      if (!leaflet || !map) return;
+      map.flyTo([place.lat, place.lng], SEARCH_ZOOM);
+      if (searchMarkerRef.current) {
+        searchMarkerRef.current.setLatLng([place.lat, place.lng]);
+      } else {
+        searchMarkerRef.current = leaflet
+          .circleMarker([place.lat, place.lng], {
+            radius: 8,
+            weight: 2,
+            color: "#fff",
+            fillColor: "#7c3aed",
+            fillOpacity: 0.9,
+          })
+          .bindTooltip("Searched location", { direction: "top" })
+          .addTo(map);
+      }
+    },
+    [leaflet],
+  );
 
-  const findPlace = useCallback(async () => {
-    const q = query.trim();
-    if (!q || searching) return;
+  const selectHit = useCallback(
+    (hit: PlaceHit) => {
+      skipNextSearchRef.current = true;
+      setQuery(hit.label);
+      setHits(null);
+      setActiveIndex(-1);
+      setSearchError(null);
+      jumpTo(hit);
+    },
+    [jumpTo],
+  );
+
+  const runSearch = useCallback(async (q: string) => {
+    if (!q) return;
     setSearching(true);
     setSearchError(null);
-    setHits(null);
     try {
-      // One free-text box has to feed searchWalkPlaces's two separate
-      // fields (it was built for the meeting-point form's location +
-      // postcode inputs). searchWalkPlaces itself rejects anything over 10
-      // characters in the postcode slot, so a full address must go in
-      // location instead — only route it to postcode when it actually
-      // looks like one.
-      const result = normalizeUkPostcode(q)
-        ? await searchWalkPlaces("", q)
-        : await searchWalkPlaces(q, "");
+      const result = await searchRoutePlaces(q);
       if (!result.ok) {
+        setHits(null);
         setSearchError(result.error);
         return;
       }
-      if (result.places.length === 1) {
-        jumpTo(result.places[0]);
-      } else {
-        setHits(result.places);
-      }
+      setHits(result.places);
+      setActiveIndex(-1);
     } catch {
+      setHits(null);
       setSearchError("Could not search right now. Try again in a moment.");
     } finally {
       setSearching(false);
     }
-  }, [jumpTo, query, searching]);
+  }, []);
+
+  // Below three characters there isn't enough to usefully match on — clear
+  // any stale list the instant that becomes true. A pure state adjustment
+  // reacting to a prop-like value (query) changing, so this runs during
+  // render via useResetOnChange rather than a useEffect (see its own doc
+  // comment on why: it lands in the same render pass instead of committing
+  // a stale frame first, and avoids react-hooks/set-state-in-effect).
+  const tooShortToSearch = query.trim().length < 3;
+  useResetOnChange([tooShortToSearch], () => {
+    if (tooShortToSearch) {
+      setHits(null);
+      setSearchError(null);
+    }
+  });
+
+  // Live suggestions as you type, debounced so it's a handful of requests
+  // per search rather than one per keystroke.
+  useEffect(() => {
+    if (skipNextSearchRef.current) {
+      skipNextSearchRef.current = false;
+      return;
+    }
+    const q = query.trim();
+    if (q.length < 3) return;
+    const timer = window.setTimeout(() => void runSearch(q), 350);
+    return () => window.clearTimeout(timer);
+  }, [query, runSearch]);
 
   const onSearchKeyDown = useCallback(
     (event: KeyboardEvent<HTMLInputElement>) => {
-      if (event.key !== "Enter") return;
-      event.preventDefault();
-      void findPlace();
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        if (hits && hits.length > 0) setActiveIndex((i) => (i + 1) % hits.length);
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        if (hits && hits.length > 0) setActiveIndex((i) => (i <= 0 ? hits.length - 1 : i - 1));
+      } else if (event.key === "Enter") {
+        event.preventDefault();
+        if (hits && hits.length > 0) selectHit(hits[activeIndex >= 0 ? activeIndex : 0]);
+        else void runSearch(query.trim());
+      } else if (event.key === "Escape") {
+        setHits(null);
+        setActiveIndex(-1);
+      }
     },
-    [findPlace],
+    [activeIndex, hits, query, runSearch, selectHit],
   );
+
+  const useMyLocation = useCallback(() => {
+    if (typeof navigator === "undefined" || !("geolocation" in navigator)) {
+      setLocationError("Your browser cannot share its location.");
+      return;
+    }
+    setLocating(true);
+    setLocationError(null);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocating(false);
+        jumpTo({ lat: position.coords.latitude, lng: position.coords.longitude });
+      },
+      (error) => {
+        setLocating(false);
+        setLocationError(
+          error.code === error.PERMISSION_DENIED
+            ? "Location access was blocked — check your browser's site settings."
+            : "Could not get your location. Try again in a moment.",
+        );
+      },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 10_000 },
+    );
+  }, [jumpTo]);
 
   return (
     <div className={cn("flex flex-col gap-3", className)}>
       <div className="flex flex-col gap-2">
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Input
-            aria-label="Find a place, postcode, or address on the map"
-            onChange={(event) => setQuery(event.target.value)}
-            onKeyDown={onSearchKeyDown}
-            placeholder="Not sure where you are? Search a place, postcode, or address"
-            value={query}
-          />
-          <Button
-            disabled={searching || !query.trim()}
-            onClick={() => void findPlace()}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            <Search className="size-4" />
-            {searching ? "Searching…" : "Find"}
-          </Button>
+          <div className="relative flex-1">
+            <Input
+              aria-activedescendant={activeIndex >= 0 ? `route-search-option-${activeIndex}` : undefined}
+              aria-autocomplete="list"
+              aria-controls="route-search-listbox"
+              aria-expanded={Boolean(hits && hits.length > 0)}
+              aria-label="Find a place, postcode, or address on the map"
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={onSearchKeyDown}
+              placeholder="Not sure where you are? Search a place, postcode, or address"
+              role="combobox"
+              value={query}
+            />
+            {hits && hits.length > 0 ? (
+              <div
+                className="absolute z-10 mt-1 flex w-full flex-col gap-0.5 rounded-lg border bg-popover p-1 text-sm shadow-md"
+                id="route-search-listbox"
+                role="listbox"
+              >
+                {hits.map((hit, index) => (
+                  <button
+                    aria-selected={index === activeIndex}
+                    className={cn(
+                      "truncate rounded px-2 py-1.5 text-left hover:bg-muted",
+                      index === activeIndex && "bg-muted",
+                    )}
+                    id={`route-search-option-${index}`}
+                    key={hit.id}
+                    onClick={() => selectHit(hit)}
+                    onMouseEnter={() => setActiveIndex(index)}
+                    role="option"
+                    type="button"
+                  >
+                    {hit.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              disabled={searching || !query.trim()}
+              onClick={() => void runSearch(query.trim())}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              <Search className="size-4" />
+              {searching ? "Searching…" : "Find"}
+            </Button>
+            <Button disabled={locating} onClick={useMyLocation} size="sm" type="button" variant="ghost">
+              <LocateFixed className="size-4" />
+              {locating ? "Locating…" : "Use my location"}
+            </Button>
+          </div>
         </div>
         {searchError ? <p className="text-xs text-destructive">{searchError}</p> : null}
-        {hits && hits.length > 0 ? (
-          <div className="flex flex-col gap-0.5 rounded-lg border bg-muted/40 p-1 text-sm">
-            <p className="px-2 pt-1 text-xs text-muted-foreground">Which one?</p>
-            {hits.map((hit) => (
-              <button
-                className="truncate rounded px-2 py-1.5 text-left hover:bg-muted"
-                key={hit.id}
-                onClick={() => jumpTo(hit)}
-                type="button"
-              >
-                {hit.label}
-              </button>
-            ))}
-          </div>
-        ) : null}
+        {locationError ? <p className="text-xs text-destructive">{locationError}</p> : null}
       </div>
 
       <div className="overflow-hidden rounded-lg border">

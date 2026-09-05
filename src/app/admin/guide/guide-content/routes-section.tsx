@@ -25,10 +25,13 @@ export function RoutesSection() {
               Add a note if there is something worth saying, like a steep bit or a gate.
             </li>
             <li>
-              Not sure where you are on the map? Type a place name, postcode, or full address
-              (e.g. &ldquo;12 Fenwick Drive, Bury&rdquo;) into the search box above it and choose{" "}
-              <strong>Find</strong> — the map jumps there. This only moves the view; it
-              doesn&apos;t draw anything.
+              Not sure where you are on the map? Start typing a place name, postcode, or full
+              address (e.g. &ldquo;12 Fenwick Drive, Bury&rdquo;) into the search box above it —
+              suggestions appear as you type, and picking one (or pressing <strong>Find</strong>)
+              jumps the map there and drops a marker so you know exactly where &ldquo;here&rdquo;
+              is. Standing on the actual path? <strong>Use my location</strong> jumps straight to
+              wherever you are right now instead. Neither one draws anything — they only move the
+              view.
             </li>
             <li>
               Click the map where the walk starts. A green dot appears.
