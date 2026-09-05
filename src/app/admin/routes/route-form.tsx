@@ -182,6 +182,7 @@ export function RouteForm({
       ) : null}
 
       <RouteEditor
+        elevation={elevation}
         onChange={(next) => {
           setPoints(next);
           if (next.length === 0) setElevation(null);

@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
 import type * as LeafletNS from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Undo2, Trash2, MapPin, Search, LocateFixed, Upload } from "lucide-react";
+import { Undo2, Trash2, MapPin, Search, LocateFixed, Upload, CheckCircle2, CircleAlert } from "lucide-react";
 import { searchRoutePlaces } from "@/server/actions";
 import type { PlaceHit } from "@/lib/geocode";
 import { parseGpxForRoute, type ElevationStats } from "@/lib/gpx";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -55,6 +56,7 @@ export function RouteEditor({
   value,
   onChange,
   onImport,
+  elevation: savedElevation = null,
   startNear,
   className,
 }: {
@@ -65,6 +67,11 @@ export function RouteEditor({
    * option rather than let it reject the import's point count. Carries
    * the file's own elevation gain/loss/max/min, if it had a full profile. */
   onImport?: (info: { elevation: ElevationStats | null }) => void;
+  /** Elevation already saved on this route from an earlier import, if any —
+   * shown from the start so reopening an existing route to edit it doesn't
+   * look like the gain/loss figures were never there. A fresh import
+   * within this session overwrites it the same way it overwrites points. */
+  elevation?: ElevationStats | null;
   /** Meeting point of the walk, if known — where the map opens. */
   startNear?: { lat: number; lng: number } | null;
   className?: string;
@@ -75,9 +82,6 @@ export function RouteEditor({
   const layerRef = useRef<LeafletNS.LayerGroup | null>(null);
   const searchMarkerRef = useRef<LeafletNS.CircleMarker | null>(null);
   const [ready, setReady] = useState(false);
-  // Just for wording ("clicked" vs "imported") and whether to show
-  // elevation stats — reset the instant real drawing starts.
-  const [tracedFromFile, setTracedFromFile] = useState(false);
 
   // "Find a place" — jumps the map to a typed place, postcode, or address
   // before the organiser starts clicking. It never touches the route
@@ -99,7 +103,7 @@ export function RouteEditor({
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const [importNotice, setImportNotice] = useState<string | null>(null);
-  const [importedElevation, setImportedElevation] = useState<ElevationStats | null>(null);
+  const [importedElevation, setImportedElevation] = useState<ElevationStats | null>(savedElevation);
 
   // The Leaflet click handler is bound once, but needs today's points and
   // today's onChange. A ref keeps it current without rebuilding the map on
@@ -213,8 +217,8 @@ export function RouteEditor({
 
   const clear = useCallback(() => {
     onChange([]);
-    setTracedFromFile(false);
     setImportedElevation(null);
+    setImportNotice(null);
   }, [onChange]);
 
   const fitBoundsToPoints = useCallback(
@@ -381,15 +385,22 @@ export function RouteEditor({
         }
         onChange(result.points);
         fitBoundsToPoints(result.points);
-        setTracedFromFile(true);
         setImportedElevation(result.elevation);
         onImport?.({ elevation: result.elevation });
-        if ("simplifiedFrom" in result) {
-          setImportNotice(
-            `That trace had ${result.simplifiedFrom.toLocaleString()} points — simplified to ` +
-              `${result.points.length.toLocaleString()} to store it. The shape and distance barely change.`,
-          );
-        }
+
+        // Always confirm the import happened — this is the only feedback an
+        // organiser gets that their file actually loaded, so it isn't
+        // conditional on anything (unlike the old "simplified" note, which
+        // only appeared when thinning kicked in).
+        const pointsLabel = `${result.points.length.toLocaleString()} ${result.points.length === 1 ? "point" : "points"}`;
+        const elevationLabel = result.elevation
+          ? `, ${Math.round(result.elevation.gainMetres)} m of ascent`
+          : "";
+        setImportNotice(
+          "simplifiedFrom" in result
+            ? `Imported “${file.name}” — that trace had ${result.simplifiedFrom.toLocaleString()} points, simplified to ${pointsLabel}${elevationLabel}. The shape and distance barely change.`
+            : `Imported “${file.name}” — ${pointsLabel}${elevationLabel}.`,
+        );
       } catch {
         setImportError("That file could not be read. Check it's a .gpx export.");
       } finally {
@@ -427,8 +438,18 @@ export function RouteEditor({
           <Upload className="size-4" />
           {importing ? "Reading…" : "Import a GPX file"}
         </Button>
-        {importError ? <p className="text-xs text-destructive">{importError}</p> : null}
-        {importNotice ? <p className="text-xs text-muted-foreground">{importNotice}</p> : null}
+        {importError ? (
+          <Alert className="py-2" variant="destructive">
+            <CircleAlert />
+            <AlertDescription>{importError}</AlertDescription>
+          </Alert>
+        ) : null}
+        {importNotice ? (
+          <Alert className="py-2" variant="success">
+            <CheckCircle2 />
+            <AlertDescription>{importNotice}</AlertDescription>
+          </Alert>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -533,7 +554,6 @@ export function RouteEditor({
             </p>
             <p className="text-xs text-muted-foreground">
               {value.length} {value.length === 1 ? "point" : "points"}
-              {tracedFromFile ? " — imported from file" : null}
               {atLimit ? ` — that's the maximum of ${MAX_ROUTE_POINTS}.` : null}
             </p>
             {importedElevation ? (
