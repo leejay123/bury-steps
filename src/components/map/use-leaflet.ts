@@ -40,6 +40,22 @@ export const OSM_TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 export const OSM_ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
+/**
+ * OpenTopoMap: the same free, no-key, no-account OSM data, rendered with
+ * hillshading and contour lines instead of a flat street map — the terrain
+ * actually shows up, which matters far more for a walking route than it
+ * does for the meeting-point map elsewhere on the site (that one stays on
+ * plain OSM_TILE_URL; a hillshaded background doesn't help someone find a
+ * car park). Their tiles are rendered up to z17 — asking Leaflet for more
+ * than that would just show blank squares past this point.
+ */
+export const OPENTOPOMAP_TILE_URL = "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png";
+export const OPENTOPOMAP_ATTRIBUTION =
+  'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
+  '<a href="https://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; ' +
+  '<a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)';
+export const OPENTOPOMAP_MAX_ZOOM = 17;
+
 /** Bury town centre — where the map opens when there's nothing to fit yet. */
 export const DEFAULT_CENTRE: [number, number] = [53.5933, -2.2966];
 export const DEFAULT_ZOOM = 14;

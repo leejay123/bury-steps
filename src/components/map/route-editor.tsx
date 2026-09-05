@@ -23,8 +23,9 @@ import {
 import {
   DEFAULT_CENTRE,
   DEFAULT_ZOOM,
-  OSM_ATTRIBUTION,
-  OSM_TILE_URL,
+  OPENTOPOMAP_ATTRIBUTION,
+  OPENTOPOMAP_MAX_ZOOM,
+  OPENTOPOMAP_TILE_URL,
   dotIcon,
   useLeaflet,
 } from "./use-leaflet";
@@ -129,7 +130,9 @@ export function RouteEditor({
         : DEFAULT_CENTRE;
 
     const map = leaflet.map(container, { scrollWheelZoom: true }).setView(centre, DEFAULT_ZOOM);
-    leaflet.tileLayer(OSM_TILE_URL, { attribution: OSM_ATTRIBUTION, maxZoom: 19 }).addTo(map);
+    leaflet
+      .tileLayer(OPENTOPOMAP_TILE_URL, { attribution: OPENTOPOMAP_ATTRIBUTION, maxZoom: OPENTOPOMAP_MAX_ZOOM })
+      .addTo(map);
 
     // Clicking the map no longer adds a point — a route has to come from an
     // imported file, never drawn from scratch (see the doc comment above).

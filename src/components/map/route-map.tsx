@@ -8,8 +8,9 @@ import type { RoutePoint } from "@/lib/route-geometry";
 import {
   DEFAULT_CENTRE,
   DEFAULT_ZOOM,
-  OSM_ATTRIBUTION,
-  OSM_TILE_URL,
+  OPENTOPOMAP_ATTRIBUTION,
+  OPENTOPOMAP_MAX_ZOOM,
+  OPENTOPOMAP_TILE_URL,
   dotIcon,
   useLeaflet,
 } from "./use-leaflet";
@@ -48,7 +49,9 @@ export function RouteMap({
     });
     mapRef.current = map;
 
-    leaflet.tileLayer(OSM_TILE_URL, { attribution: OSM_ATTRIBUTION, maxZoom: 19 }).addTo(map);
+    leaflet
+      .tileLayer(OPENTOPOMAP_TILE_URL, { attribution: OPENTOPOMAP_ATTRIBUTION, maxZoom: OPENTOPOMAP_MAX_ZOOM })
+      .addTo(map);
 
     const latLngs = points.map((p) => [p.lat, p.lng] as [number, number]);
     const line = leaflet.polyline(latLngs, { weight: 5, opacity: 0.9, color: "#2563eb" });
