@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { type RoutePoint, routeDistanceMetres, validateRoutePoints } from "@/lib/route-geometry";
@@ -74,6 +74,37 @@ function readElevation(formData: FormData): ElevationFields | { error: string } 
 }
 
 /**
+ * Reads the elevation-profile hidden field (one sample per stored point,
+ * for the elevation-profile chart — see route-editor.tsx's onImport and the
+ * comment on WalkRoute.elevationProfile in schema.prisma). Must line up
+ * 1:1 with the points just submitted; a mismatched length means the form
+ * sent something stale or malformed, so it's rejected rather than stored
+ * misaligned. Absent is fine — most routes have no elevation data at all.
+ */
+function readElevationProfile(
+  formData: FormData,
+  expectedLength: number,
+): number[] | null | { error: string } {
+  const raw = formData.get("elevationProfile");
+  if (typeof raw !== "string" || raw.length === 0) return null;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return { error: "That route's elevation profile could not be read. Try importing the file again." };
+  }
+  if (!Array.isArray(parsed) || parsed.length !== expectedLength) {
+    return { error: "That route's elevation profile could not be read. Try importing the file again." };
+  }
+  const values = parsed.map(Number);
+  if (values.some((v) => !Number.isFinite(v) || Math.abs(v) > MAX_PLAUSIBLE_ELEVATION_METRES)) {
+    return { error: "That route's elevation data looks wrong. Try importing the file again." };
+  }
+  return values;
+}
+
+/**
  * The drawn points arrive as a JSON string in a hidden field so the editor
  * can live inside the ordinary `<form>` the rest of admin uses.
  */
@@ -120,6 +151,20 @@ export async function searchRoutePlaces(
     return { ok: false, error: "Nothing found. Try a fuller name or a postcode." };
   }
   return { ok: true, places };
+}
+
+/**
+ * A snapped route's points no longer line up index-for-index with whatever
+ * profile the form submitted (they came from ORS, not the imported file),
+ * so storing it alongside would mislabel every sample on the chart — drop
+ * it there even though the aggregate gain/loss above is kept regardless.
+ */
+function elevationProfileForStorage(
+  profile: number[] | null,
+  snapped: boolean,
+): Prisma.InputJsonValue | typeof Prisma.DbNull {
+  const value = snapped ? null : profile;
+  return value === null ? Prisma.DbNull : (value as unknown as Prisma.InputJsonValue);
 }
 
 /**
@@ -179,6 +224,11 @@ export async function createRoute(
   const elevation = readElevation(formData);
   if ("error" in elevation) return { ok: false, error: elevation.error };
 
+  const elevationProfileRaw = readElevationProfile(formData, points.points.length);
+  if (elevationProfileRaw !== null && "error" in elevationProfileRaw) {
+    return { ok: false, error: elevationProfileRaw.error };
+  }
+
   try {
     // Distance (and, when configured, the geometry itself) is always
     // recalculated here rather than trusted from the browser — it feeds
@@ -192,6 +242,7 @@ export async function createRoute(
         points: geometry.points as unknown as Prisma.InputJsonValue,
         distanceMetres: geometry.distanceMetres,
         ...elevation,
+        elevationProfile: elevationProfileForStorage(elevationProfileRaw, geometry.snapped),
         createdById: admin.id,
       },
       select: { id: true },
@@ -231,6 +282,11 @@ export async function updateRoute(
   const elevation = readElevation(formData);
   if ("error" in elevation) return { ok: false, error: elevation.error };
 
+  const elevationProfileRaw = readElevationProfile(formData, points.points.length);
+  if (elevationProfileRaw !== null && "error" in elevationProfileRaw) {
+    return { ok: false, error: elevationProfileRaw.error };
+  }
+
   try {
     const geometry = await resolveRouteGeometry(formData, points.points);
     await prisma.walkRoute.update({
@@ -242,6 +298,7 @@ export async function updateRoute(
         points: geometry.points as unknown as Prisma.InputJsonValue,
         distanceMetres: geometry.distanceMetres,
         ...elevation,
+        elevationProfile: elevationProfileForStorage(elevationProfileRaw, geometry.snapped),
       },
     });
     revalidateRoutes(id);

@@ -108,6 +108,14 @@ model WalkRoute {
   elevationLossMetres Float?
   maxElevationMetres  Float?
   minElevationMetres  Float?
+  /// One elevation sample per entry in `points`, same order — for an
+  /// elevation-profile chart plotted against cumulative distance. Set
+  /// alongside the four fields above and null under the same conditions
+  /// (no elevation in the file), with one extra case: a route re-snapped
+  /// to real footpaths afterwards gets new `points` that no longer line up
+  /// index-for-index with this profile, so it is cleared then even though
+  /// the aggregate gain/loss above is kept (see resolveRouteGeometry).
+  elevationProfile    Json?
   /// Set by the organiser. Null until they choose one.
   difficulty          RouteDifficulty?
   createdAt      DateTime @default(now())

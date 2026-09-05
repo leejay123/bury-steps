@@ -52,6 +52,8 @@ export function RouteForm({
     elevationLossMetres: number | null;
     maxElevationMetres: number | null;
     minElevationMetres: number | null;
+    /** Already validated against `points.length` by the page loading it. */
+    elevationProfile: number[] | null;
     difficulty: string | null;
   };
   /** Whether a maintainer has configured OPENROUTESERVICE_API_KEY. */
@@ -79,6 +81,14 @@ export function RouteForm({
         }
       : null,
   );
+  // Aligned 1:1 with `points` — dropped whenever the point count changes
+  // for any reason other than a fresh import (which sets a matching one of
+  // its own right after), since a stale-length profile would mislabel the
+  // chart. Untouched by a plain drag, which only moves a point without
+  // changing how many there are.
+  const [elevationProfile, setElevationProfile] = useState<number[] | null>(
+    route?.elevationProfile ?? null,
+  );
   const [state, action] = useActionState<ActionResult | null, FormData>(
     route ? updateRoute : createRoute,
     null,
@@ -101,6 +111,11 @@ export function RouteForm({
           <input name="maxElevationMetres" type="hidden" value={elevation.maxMetres} />
           <input name="minElevationMetres" type="hidden" value={elevation.minMetres} />
         </>
+      ) : null}
+      {/* One sample per point in `points` above, for the elevation-profile
+          chart — see the comment on WalkRoute.elevationProfile. */}
+      {elevationProfile ? (
+        <input name="elevationProfile" type="hidden" value={JSON.stringify(elevationProfile)} />
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -184,12 +199,18 @@ export function RouteForm({
       <RouteEditor
         elevation={elevation}
         onChange={(next) => {
+          // A changed point count (dragging never changes it) means
+          // whatever profile is held no longer lines up index-for-index —
+          // drop it. A fresh import corrects this right after, in the same
+          // batch, since it calls onChange then onImport in one go.
+          if (next.length !== points.length) setElevationProfile(null);
           setPoints(next);
           if (next.length === 0) setElevation(null);
         }}
-        onImport={({ elevation: imported }) => {
+        onImport={({ elevation: imported, elevationProfile: importedProfile }) => {
           setSnap(false);
           setElevation(imported);
+          setElevationProfile(importedProfile);
         }}
         startNear={startNear}
         value={points}

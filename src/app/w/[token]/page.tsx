@@ -48,6 +48,7 @@ const getWalkByShareKey = cache((key: string) =>
           points: true,
           distanceMetres: true,
           elevationGainMetres: true,
+          elevationProfile: true,
           difficulty: true,
         },
       },

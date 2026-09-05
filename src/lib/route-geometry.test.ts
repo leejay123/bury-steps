@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   MAX_ROUTE_POINTS,
+  cumulativeDistancesMetres,
   formatMiles,
   formatWalkEstimate,
   haversineMetres,
@@ -52,6 +53,29 @@ describe("routeDistanceMetres", () => {
     const coarse = routeDistanceMetres([BURY, BURRS]);
     const detailed = routeDistanceMetres([BURY, bend, BURRS]);
     expect(detailed).toBeGreaterThan(coarse);
+  });
+});
+
+describe("cumulativeDistancesMetres", () => {
+  it("starts at zero and matches routeDistanceMetres at the end", () => {
+    const points = [BURY, { lat: 53.6, lng: -2.3 }, BURRS];
+    const distances = cumulativeDistancesMetres(points);
+    expect(distances).toHaveLength(3);
+    expect(distances[0]).toBe(0);
+    expect(distances[distances.length - 1]).toBeCloseTo(routeDistanceMetres(points), 6);
+  });
+
+  it("is non-decreasing (points are never revisited going backwards in distance)", () => {
+    const points = [BURY, { lat: 53.6, lng: -2.3 }, BURRS, BURY];
+    const distances = cumulativeDistancesMetres(points);
+    for (let i = 1; i < distances.length; i++) {
+      expect(distances[i]).toBeGreaterThanOrEqual(distances[i - 1]);
+    }
+  });
+
+  it("is empty for no points, zero for one", () => {
+    expect(cumulativeDistancesMetres([])).toEqual([]);
+    expect(cumulativeDistancesMetres([BURY])).toEqual([0]);
   });
 });
 

@@ -64,9 +64,10 @@ export function RouteEditor({
   onChange: (points: RoutePoint[]) => void;
   /** Fires right after a successful GPX import — a real trace is already
    * the true path, so callers should turn off any "snap to footpaths"
-   * option rather than let it reject the import's point count. Carries
-   * the file's own elevation gain/loss/max/min, if it had a full profile. */
-  onImport?: (info: { elevation: ElevationStats | null }) => void;
+   * option rather than let it reject the import's point count. Carries the
+   * file's own elevation gain/loss/max/min, plus a same-length-as-points
+   * elevationProfile for an elevation chart, if it had a full profile. */
+  onImport?: (info: { elevation: ElevationStats | null; elevationProfile: number[] | null }) => void;
   /** Elevation already saved on this route from an earlier import, if any —
    * shown from the start so reopening an existing route to edit it doesn't
    * look like the gain/loss figures were never there. A fresh import
@@ -386,7 +387,7 @@ export function RouteEditor({
         onChange(result.points);
         fitBoundsToPoints(result.points);
         setImportedElevation(result.elevation);
-        onImport?.({ elevation: result.elevation });
+        onImport?.({ elevation: result.elevation, elevationProfile: result.elevationProfile });
 
         // Always confirm the import happened — this is the only feedback an
         // organiser gets that their file actually loaded, so it isn't

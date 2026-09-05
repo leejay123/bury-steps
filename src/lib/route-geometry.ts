@@ -61,6 +61,22 @@ export function routeDistanceMetres(points: RoutePoint[]): number {
   return total;
 }
 
+/**
+ * Distance travelled by the time each point is reached, in metres — the
+ * same length as `points`, starting at 0. Used to plot elevation against
+ * real distance rather than point index, since points are not evenly
+ * spaced (a straight stretch keeps far fewer of them than a bendy one).
+ */
+export function cumulativeDistancesMetres(points: RoutePoint[]): number[] {
+  const out: number[] = [];
+  let total = 0;
+  for (let i = 0; i < points.length; i += 1) {
+    if (i > 0) total += haversineMetres(points[i - 1], points[i]);
+    out.push(total);
+  }
+  return out;
+}
+
 export function metresToMiles(metres: number): number {
   return metres / METRES_PER_MILE;
 }

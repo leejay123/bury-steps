@@ -1,12 +1,14 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RouteMap } from "@/components/map/route-map";
+import { RouteElevationChart } from "@/components/route-elevation-chart";
 import {
   formatMiles,
   formatWalkEstimate,
   isCircular,
   parseRoutePoints,
 } from "@/lib/route-geometry";
+import { parseElevationProfile } from "@/lib/gpx";
 
 /** "EASY" → "Easy". */
 function difficultyLabel(value: string): string {
@@ -28,12 +30,14 @@ export function WalkRouteCard({
     points: unknown;
     distanceMetres: number;
     elevationGainMetres: number | null;
+    elevationProfile?: unknown;
     difficulty: string | null;
   } | null;
 }) {
   if (!route) return null;
   const points = parseRoutePoints(route.points);
   if (points.length < 2) return null;
+  const elevationProfile = parseElevationProfile(route.elevationProfile, points.length);
 
   return (
     <Card className="gap-4 overflow-hidden py-0">
@@ -62,6 +66,9 @@ export function WalkRouteCard({
       <CardContent className="flex flex-col gap-2 px-6 pb-6">
         <p className="text-sm font-medium">{route.name}</p>
         {route.notes ? <p className="text-sm text-muted-foreground">{route.notes}</p> : null}
+        {elevationProfile ? (
+          <RouteElevationChart className="pt-2" elevations={elevationProfile} points={points} />
+        ) : null}
         <p className="text-xs text-muted-foreground">
           Treat the distance as a guide for deciding whether this walk suits you, not an exact
           measurement.

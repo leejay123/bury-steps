@@ -29,7 +29,17 @@ export type ElevationStats = {
 };
 
 export type GpxParseResult =
-  | { ok: true; points: RoutePoint[]; name: string | null; elevation: ElevationStats | null }
+  | {
+      ok: true;
+      points: RoutePoint[];
+      name: string | null;
+      elevation: ElevationStats | null;
+      /** One elevation sample per point in `points`, for an elevation-profile
+       * chart — same length and order, so plotting it against `points`'
+       * cumulative distance lines up. Null exactly when `elevation` is,
+       * since both come from the same full-or-nothing profile. */
+      elevationProfile: number[] | null;
+    }
   | { ok: false; error: string };
 
 // Captures the tag name, its attributes, and — for a paired (non
@@ -55,6 +65,19 @@ function attr(tagAttrs: string, name: string): number | null {
  * same file; nobody's does, since none publish their exact method.
  */
 const ELEVATION_NOISE_THRESHOLD_METRES = 2;
+
+/**
+ * Parses whatever came out of the database `Json` column for
+ * WalkRoute.elevationProfile. Returns null rather than throwing on
+ * anything malformed or the wrong length — a route whose profile somehow
+ * doesn't line up with its points should just show no elevation chart, not
+ * break the page.
+ */
+export function parseElevationProfile(value: unknown, expectedLength: number): number[] | null {
+  if (!Array.isArray(value) || value.length !== expectedLength) return null;
+  if (!value.every((v) => typeof v === "number" && Number.isFinite(v))) return null;
+  return value as number[];
+}
 
 export function computeElevationStats(elevations: number[]): ElevationStats | null {
   if (elevations.length < 2) return null;
@@ -105,13 +128,15 @@ export function parseGpx(xmlText: string): GpxParseResult {
   // Only trust the elevation profile when every point has one — a file
   // that mixes real samples with gaps doesn't give an honest gain/loss.
   const hasFullProfile = elevations.every((e) => e !== null);
-  const elevation = hasFullProfile ? computeElevationStats(elevations as number[]) : null;
+  const fullProfile = hasFullProfile ? (elevations as number[]) : null;
+  const elevation = fullProfile ? computeElevationStats(fullProfile) : null;
 
   return {
     ok: true,
     points,
     name: xmlText.match(NAME_TAG)?.[1].trim() || null,
     elevation,
+    elevationProfile: fullProfile,
   };
 }
 
@@ -142,16 +167,16 @@ function perpendicularDistance(
 }
 
 /**
- * Douglas-Peucker: drops points that sit within `toleranceMetres` of the
- * straight line between their neighbours, keeping every real bend. A small
- * tolerance barely touches total distance — it only removes points a
- * straight line already explains.
+ * Which points Douglas-Peucker would keep at this tolerance — the same
+ * length as `points`, true at every index worth keeping. Split out from
+ * simplifyRoute so a parallel array (the elevation profile) can be thinned
+ * by exactly the same decisions instead of recomputed independently.
  */
-export function simplifyRoute(points: RoutePoint[], toleranceMetres: number): RoutePoint[] {
-  if (points.length < 3) return points;
+function keepMask(points: RoutePoint[], toleranceMetres: number): boolean[] {
+  const keep = new Array(points.length).fill(false);
+  if (points.length === 0) return keep;
   const originLatRad = (points[0].lat * Math.PI) / 180;
   const xy = points.map((p) => toLocalMetres(p, originLatRad));
-  const keep = new Array(points.length).fill(false);
   keep[0] = true;
   keep[points.length - 1] = true;
 
@@ -172,8 +197,57 @@ export function simplifyRoute(points: RoutePoint[], toleranceMetres: number): Ro
       stack.push([start, maxIndex], [maxIndex, end]);
     }
   }
+  return keep;
+}
 
+/**
+ * Douglas-Peucker: drops points that sit within `toleranceMetres` of the
+ * straight line between their neighbours, keeping every real bend. A small
+ * tolerance barely touches total distance — it only removes points a
+ * straight line already explains.
+ */
+export function simplifyRoute(points: RoutePoint[], toleranceMetres: number): RoutePoint[] {
+  if (points.length < 3) return points;
+  const keep = keepMask(points, toleranceMetres);
   return points.filter((_, i) => keep[i]);
+}
+
+/**
+ * Which points survive simplifyToLimit's whole strategy (widening tolerance,
+ * then even-stride thinning as a last resort) — same length as `points`,
+ * true at every kept index. simplifyToLimit is just this filtered by; a
+ * parallel array (the elevation profile) is thinned identically by reusing
+ * this mask instead of guessing at the same decisions a second time.
+ */
+function keepMaskToLimit(points: RoutePoint[], limit: number): boolean[] {
+  if (points.length <= limit) return points.map(() => true);
+
+  let tolerance = 2;
+  let keep = keepMask(points, tolerance);
+  let keptCount = keep.filter(Boolean).length;
+  while (keptCount > limit && tolerance < 500) {
+    tolerance *= 1.6;
+    keep = keepMask(points, tolerance);
+    keptCount = keep.filter(Boolean).length;
+  }
+
+  if (keptCount <= limit) return keep;
+
+  // Falls back to even-stride thinning over what Douglas-Peucker kept, not
+  // over the original points — a trace so dense that no reasonable
+  // tolerance gets under the cap is rare, but this keeps the route storable
+  // rather than rejecting the import outright.
+  const keptIndices: number[] = [];
+  keep.forEach((k, i) => {
+    if (k) keptIndices.push(i);
+  });
+  const stride = Math.ceil(keptIndices.length / limit);
+  const finalKeep = new Array(points.length).fill(false);
+  keptIndices.forEach((index, position) => {
+    if (position % stride === 0) finalKeep[index] = true;
+  });
+  finalKeep[keptIndices[keptIndices.length - 1]] = true;
+  return finalKeep;
 }
 
 /**
@@ -183,23 +257,8 @@ export function simplifyRoute(points: RoutePoint[], toleranceMetres: number): Ro
  * route storable rather than rejecting the import outright.
  */
 export function simplifyToLimit(points: RoutePoint[], limit: number): RoutePoint[] {
-  if (points.length <= limit) return points;
-
-  let tolerance = 2;
-  let simplified = simplifyRoute(points, tolerance);
-  while (simplified.length > limit && tolerance < 500) {
-    tolerance *= 1.6;
-    simplified = simplifyRoute(points, tolerance);
-  }
-
-  if (simplified.length <= limit) return simplified;
-
-  const stride = Math.ceil(simplified.length / limit);
-  const thinned = simplified.filter((_, i) => i % stride === 0);
-  if (thinned[thinned.length - 1] !== simplified[simplified.length - 1]) {
-    thinned.push(simplified[simplified.length - 1]);
-  }
-  return thinned;
+  const keep = keepMaskToLimit(points, limit);
+  return points.filter((_, i) => keep[i]);
 }
 
 /** Import-time convenience: parse, then simplify only if the trace needs it. */
@@ -212,17 +271,23 @@ export function parseGpxForRoute(
       points: RoutePoint[];
       name: string | null;
       elevation: ElevationStats | null;
+      elevationProfile: number[] | null;
       simplifiedFrom: number;
     } {
   const result = parseGpx(xmlText);
   if (!result.ok) return result;
   if (result.points.length <= MAX_ROUTE_POINTS) return result;
+
   const simplifiedFrom = result.points.length;
+  const keep = keepMaskToLimit(result.points, MAX_ROUTE_POINTS);
   return {
     ok: true,
-    points: simplifyToLimit(result.points, MAX_ROUTE_POINTS),
+    points: result.points.filter((_, i) => keep[i]),
     name: result.name,
     elevation: result.elevation,
+    elevationProfile: result.elevationProfile
+      ? result.elevationProfile.filter((_, i) => keep[i])
+      : null,
     simplifiedFrom,
   };
 }

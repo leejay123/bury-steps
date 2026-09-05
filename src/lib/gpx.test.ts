@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   computeElevationStats,
+  parseElevationProfile,
   parseGpx,
   parseGpxForRoute,
   simplifyRoute,
@@ -120,6 +121,44 @@ describe("parseGpx", () => {
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.elevation).toBeNull();
   });
+
+  it("returns an elevation profile aligned with points when every point has one", () => {
+    const points = [BURY, { lat: 53.6, lng: -2.3 }, BURRS];
+    const xml = gpxTrack(points, { elevations: [150, 180, 160] });
+    const result = parseGpx(xml);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.elevationProfile).toEqual([150, 180, 160]);
+  });
+
+  it("gives no elevation profile when the file's profile is partial or absent", () => {
+    const points = [BURY, { lat: 53.6, lng: -2.3 }, BURRS];
+    const partial = parseGpx(gpxTrack(points, { elevations: [150, null, 160] }));
+    expect(partial.ok).toBe(true);
+    if (partial.ok) expect(partial.elevationProfile).toBeNull();
+
+    const none = parseGpx(
+      `<gpx><rte><rtept lat="${BURY.lat}" lon="${BURY.lng}"/><rtept lat="${BURRS.lat}" lon="${BURRS.lng}"/></rte></gpx>`,
+    );
+    expect(none.ok).toBe(true);
+    if (none.ok) expect(none.elevationProfile).toBeNull();
+  });
+});
+
+describe("parseElevationProfile", () => {
+  it("accepts an array of finite numbers matching the expected length", () => {
+    expect(parseElevationProfile([100, 120, 110], 3)).toEqual([100, 120, 110]);
+  });
+
+  it("rejects a length mismatch — a route whose profile no longer lines up with its points", () => {
+    expect(parseElevationProfile([100, 120, 110], 4)).toBeNull();
+  });
+
+  it("rejects anything that isn't an array of finite numbers", () => {
+    expect(parseElevationProfile(null, 3)).toBeNull();
+    expect(parseElevationProfile("not an array", 3)).toBeNull();
+    expect(parseElevationProfile([100, "120", 110], 3)).toBeNull();
+    expect(parseElevationProfile([100, Infinity, 110], 3)).toBeNull();
+  });
 });
 
 describe("computeElevationStats", () => {
@@ -231,13 +270,26 @@ describe("parseGpxForRoute", () => {
       lat: BURY.lat + (BURRS.lat - BURY.lat) * (i / 2099),
       lng: BURY.lng + (BURRS.lng - BURY.lng) * (i / 2099),
     }));
+    // gpxTrack's default <ele>120</ele> gives every point a (flat) profile,
+    // so this also exercises thinning it in lockstep with the points below.
     const result = parseGpxForRoute(gpxTrack(points));
     expect(result.ok).toBe(true);
     if (result.ok && "simplifiedFrom" in result) {
       expect(result.simplifiedFrom).toBe(2100);
       expect(result.points.length).toBeLessThanOrEqual(2000);
+      expect(result.elevationProfile).not.toBeNull();
+      expect(result.elevationProfile).toHaveLength(result.points.length);
+      expect(result.elevationProfile?.every((e) => e === 120)).toBe(true);
     } else {
       throw new Error("expected a simplifiedFrom result");
     }
+  });
+
+  it("keeps no elevation profile when the file had none", () => {
+    const result = parseGpxForRoute(
+      `<gpx><rte><rtept lat="${BURY.lat}" lon="${BURY.lng}"/><rtept lat="${BURRS.lat}" lon="${BURRS.lng}"/></rte></gpx>`,
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.elevationProfile).toBeNull();
   });
 });

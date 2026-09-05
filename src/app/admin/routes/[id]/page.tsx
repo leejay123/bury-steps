@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { parseRoutePoints } from "@/lib/route-geometry";
+import { parseElevationProfile } from "@/lib/gpx";
 import { AdminPageIntro } from "../../admin-page-intro";
 import { RouteForm } from "../route-form";
 import { DeleteRouteButton } from "./delete-route-button";
@@ -27,11 +28,14 @@ export default async function EditRoutePage({
       elevationLossMetres: true,
       maxElevationMetres: true,
       minElevationMetres: true,
+      elevationProfile: true,
       difficulty: true,
       _count: { select: { walks: true } },
     },
   });
   if (!route) notFound();
+
+  const points = parseRoutePoints(route.points);
 
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
@@ -52,11 +56,12 @@ export default async function EditRoutePage({
           id: route.id,
           name: route.name,
           notes: route.notes,
-          points: parseRoutePoints(route.points),
+          points,
           elevationGainMetres: route.elevationGainMetres,
           elevationLossMetres: route.elevationLossMetres,
           maxElevationMetres: route.maxElevationMetres,
           minElevationMetres: route.minElevationMetres,
+          elevationProfile: parseElevationProfile(route.elevationProfile, points.length),
           difficulty: route.difficulty,
         }}
         snappingAvailable={Boolean(process.env.OPENROUTESERVICE_API_KEY)}
