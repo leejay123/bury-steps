@@ -70,7 +70,7 @@ describe("snapToFootpaths", () => {
 
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     const [url, init] = fetchImpl.mock.calls[0];
-    expect(url).toBe("https://api.openrouteservice.org/v2/directions/foot-walking/geojson");
+    expect(url).toBe("https://api.heigit.org/openrouteservice/v2/directions/foot-walking/geojson");
     expect(init.headers.Authorization).toBe("test-key");
     expect(JSON.parse(init.body)).toEqual({
       coordinates: [

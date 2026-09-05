@@ -16,7 +16,20 @@
 
 import { type RoutePoint, routeDistanceMetres } from "./route-geometry";
 
-const ORS_DIRECTIONS_URL = "https://api.openrouteservice.org/v2/directions/foot-walking/geojson";
+/**
+ * ORS now issues keys through HeiGIT's unified developer portal, whose own
+ * docs show every service — directions, geocoding, elevation, etc. — under
+ * https://api.heigit.org/<service>/... (e.g. the elevation curl example
+ * there hits api.heigit.org directly). That's the host a key from that
+ * portal actually authenticates against, so it's the default here rather
+ * than the older, un-prefixed api.openrouteservice.org.
+ * OPENROUTESERVICE_BASE_URL is an escape hatch to override it without a
+ * code change, in case a given key turns out to need the older host.
+ */
+const ORS_BASE_URL =
+  process.env.OPENROUTESERVICE_BASE_URL?.replace(/\/+$/, "") ||
+  "https://api.heigit.org/openrouteservice";
+const ORS_DIRECTIONS_URL = `${ORS_BASE_URL}/v2/directions/foot-walking/geojson`;
 const ORS_TIMEOUT_MS = 12_000;
 
 /** Narrowed to what this module actually uses, so tests can pass a plain mock. */
