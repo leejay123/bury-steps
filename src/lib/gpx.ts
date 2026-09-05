@@ -2,7 +2,8 @@
  * Reads a GPX file (the standard export format from Strava, Garmin, OS
  * Maps, Komoot, Wikiloc, plotaroute.com, openrouteservice's own map
  * client, and pretty much anything else that records or plans a walk) and
- * turns it into the same RoutePoint[] shape a clicked route already uses.
+ * turns it into the same RoutePoint[] shape a clicked route already uses,
+ * plus elevation gain/loss/max/min when the file has elevation samples.
  *
  * A real recorded trace logs a point every few seconds, so it is already
  * far denser than anyone would click by hand — routeDistanceMetres's plain
@@ -20,11 +21,22 @@
 
 import { MAX_ROUTE_POINTS, type RoutePoint } from "./route-geometry";
 
+export type ElevationStats = {
+  gainMetres: number;
+  lossMetres: number;
+  maxMetres: number;
+  minMetres: number;
+};
+
 export type GpxParseResult =
-  | { ok: true; points: RoutePoint[]; name: string | null }
+  | { ok: true; points: RoutePoint[]; name: string | null; elevation: ElevationStats | null }
   | { ok: false; error: string };
 
-const POINT_TAG = /<(?:trkpt|rtept)\b([^>]*)>/gi;
+// Captures the tag name, its attributes, and — for a paired (non
+// self-closing) tag — everything up to its own matching close tag, so an
+// <ele> child can be read from the same point it belongs to.
+const POINT_TAG = /<(trkpt|rtept)\b([^>]*?)(?:\/>|>([\s\S]*?)<\/\1>)/gi;
+const ELE_TAG = /<ele>\s*(-?[\d.]+)\s*<\/ele>/i;
 const NAME_TAG = /<name>([^<]*)<\/name>/i;
 
 function attr(tagAttrs: string, name: string): number | null {
@@ -34,16 +46,53 @@ function attr(tagAttrs: string, name: string): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
+/**
+ * Hysteresis smoothing: a climb or descent only counts once it has moved
+ * at least `thresholdMetres` from the last direction change, so ordinary
+ * GPS/barometric jitter of a metre or two doesn't inflate gain and loss —
+ * a naive sum of every up/down between raw samples wildly overstates both.
+ * This is why our number won't match another site's to the metre for the
+ * same file; nobody's does, since none publish their exact method.
+ */
+const ELEVATION_NOISE_THRESHOLD_METRES = 2;
+
+export function computeElevationStats(elevations: number[]): ElevationStats | null {
+  if (elevations.length < 2) return null;
+  let gainMetres = 0;
+  let lossMetres = 0;
+  let maxMetres = elevations[0];
+  let minMetres = elevations[0];
+  let anchor = elevations[0];
+
+  for (let i = 1; i < elevations.length; i++) {
+    const ele = elevations[i];
+    if (ele > maxMetres) maxMetres = ele;
+    if (ele < minMetres) minMetres = ele;
+    const delta = ele - anchor;
+    if (Math.abs(delta) >= ELEVATION_NOISE_THRESHOLD_METRES) {
+      if (delta > 0) gainMetres += delta;
+      else lossMetres += -delta;
+      anchor = ele;
+    }
+  }
+  return { gainMetres, lossMetres, maxMetres, minMetres };
+}
+
 export function parseGpx(xmlText: string): GpxParseResult {
   const points: RoutePoint[] = [];
+  const elevations: (number | null)[] = [];
   POINT_TAG.lastIndex = 0;
   let match: RegExpExecArray | null;
   while ((match = POINT_TAG.exec(xmlText))) {
-    const lat = attr(match[1], "lat");
-    const lng = attr(match[1], "lon");
+    const lat = attr(match[2], "lat");
+    const lng = attr(match[2], "lon");
     if (lat === null || lng === null) continue;
     if (lat < -90 || lat > 90 || lng < -180 || lng > 180) continue;
     points.push({ lat, lng });
+
+    const eleMatch = match[3]?.match(ELE_TAG);
+    const ele = eleMatch ? Number(eleMatch[1]) : NaN;
+    elevations.push(Number.isFinite(ele) ? ele : null);
   }
 
   if (points.length < 2) {
@@ -53,7 +102,17 @@ export function parseGpx(xmlText: string): GpxParseResult {
     };
   }
 
-  return { ok: true, points, name: xmlText.match(NAME_TAG)?.[1].trim() || null };
+  // Only trust the elevation profile when every point has one — a file
+  // that mixes real samples with gaps doesn't give an honest gain/loss.
+  const hasFullProfile = elevations.every((e) => e !== null);
+  const elevation = hasFullProfile ? computeElevationStats(elevations as number[]) : null;
+
+  return {
+    ok: true,
+    points,
+    name: xmlText.match(NAME_TAG)?.[1].trim() || null,
+    elevation,
+  };
 }
 
 // --- simplification, for a trace denser than the stored-points cap ------
@@ -146,7 +205,15 @@ export function simplifyToLimit(points: RoutePoint[], limit: number): RoutePoint
 /** Import-time convenience: parse, then simplify only if the trace needs it. */
 export function parseGpxForRoute(
   xmlText: string,
-): GpxParseResult | { ok: true; points: RoutePoint[]; name: string | null; simplifiedFrom: number } {
+):
+  | GpxParseResult
+  | {
+      ok: true;
+      points: RoutePoint[];
+      name: string | null;
+      elevation: ElevationStats | null;
+      simplifiedFrom: number;
+    } {
   const result = parseGpx(xmlText);
   if (!result.ok) return result;
   if (result.points.length <= MAX_ROUTE_POINTS) return result;
@@ -155,6 +222,7 @@ export function parseGpxForRoute(
     ok: true,
     points: simplifyToLimit(result.points, MAX_ROUTE_POINTS),
     name: result.name,
+    elevation: result.elevation,
     simplifiedFrom,
   };
 }

@@ -1,21 +1,34 @@
 import { describe, expect, it } from "vitest";
-import { parseGpx, parseGpxForRoute, simplifyRoute, simplifyToLimit } from "./gpx";
+import {
+  computeElevationStats,
+  parseGpx,
+  parseGpxForRoute,
+  simplifyRoute,
+  simplifyToLimit,
+} from "./gpx";
 import { routeDistanceMetres, type RoutePoint } from "./route-geometry";
 
 const BURY = { lat: 53.5933, lng: -2.2966 };
 const BURRS = { lat: 53.6132, lng: -2.3138 };
 
-function gpxTrack(points: { lat: number; lng: number }[], name?: string): string {
+function gpxTrack(
+  points: { lat: number; lng: number }[],
+  options?: { name?: string; elevations?: (number | null)[] },
+): string {
   const trkpts = points
-    .map((p) => `<trkpt lat="${p.lat}" lon="${p.lng}"><ele>120</ele></trkpt>`)
+    .map((p, i) => {
+      const ele = options?.elevations?.[i];
+      const eleTag = ele === undefined ? "<ele>120</ele>" : ele === null ? "" : `<ele>${ele}</ele>`;
+      return `<trkpt lat="${p.lat}" lon="${p.lng}">${eleTag}</trkpt>`;
+    })
     .join("\n");
   return `<?xml version="1.0"?>
-<gpx version="1.1"><trk>${name ? `<name>${name}</name>` : ""}<trkseg>${trkpts}</trkseg></trk></gpx>`;
+<gpx version="1.1"><trk>${options?.name ? `<name>${options.name}</name>` : ""}<trkseg>${trkpts}</trkseg></trk></gpx>`;
 }
 
 describe("parseGpx", () => {
   it("reads trkpt points and the track name", () => {
-    const xml = gpxTrack([BURY, BURRS], "Burrs loop");
+    const xml = gpxTrack([BURY, BURRS], { name: "Burrs loop" });
     const result = parseGpx(xml);
     expect(result.ok).toBe(true);
     if (result.ok) {
@@ -76,6 +89,68 @@ describe("parseGpx", () => {
   it("rejects a file with no points at all", () => {
     expect(parseGpx("<gpx><metadata>not a track</metadata></gpx>").ok).toBe(false);
     expect(parseGpx("not even xml").ok).toBe(false);
+  });
+
+  it("computes elevation stats when every point has one", () => {
+    const points = [BURY, { lat: 53.6, lng: -2.3 }, BURRS];
+    const xml = gpxTrack(points, { elevations: [150, 180, 160] });
+    const result = parseGpx(xml);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.elevation).toEqual({
+        gainMetres: 30,
+        lossMetres: 20,
+        maxMetres: 180,
+        minMetres: 150,
+      });
+    }
+  });
+
+  it("gives no elevation stats when any point is missing one", () => {
+    const points = [BURY, { lat: 53.6, lng: -2.3 }, BURRS];
+    const xml = gpxTrack(points, { elevations: [150, null, 160] });
+    const result = parseGpx(xml);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.elevation).toBeNull();
+  });
+
+  it("gives no elevation stats for a file with none at all (e.g. a planned route)", () => {
+    const xml = `<gpx><rte><rtept lat="${BURY.lat}" lon="${BURY.lng}"/><rtept lat="${BURRS.lat}" lon="${BURRS.lng}"/></rte></gpx>`;
+    const result = parseGpx(xml);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.elevation).toBeNull();
+  });
+});
+
+describe("computeElevationStats", () => {
+  it("is null with fewer than two samples", () => {
+    expect(computeElevationStats([])).toBeNull();
+    expect(computeElevationStats([100])).toBeNull();
+  });
+
+  it("sums real climbs and descents", () => {
+    expect(computeElevationStats([100, 120, 110, 130])).toEqual({
+      gainMetres: 40,
+      lossMetres: 10,
+      maxMetres: 130,
+      minMetres: 100,
+    });
+  });
+
+  it("ignores jitter under the noise threshold", () => {
+    // Each step is under 2m — barometric/GPS noise, not a real climb.
+    expect(computeElevationStats([100, 101, 100.5, 101.5, 100])).toEqual({
+      gainMetres: 0,
+      lossMetres: 0,
+      maxMetres: 101.5,
+      minMetres: 100,
+    });
+  });
+
+  it("still tracks max/min through jitter that never counts as gain or loss", () => {
+    const stats = computeElevationStats([100, 101, 100.2]);
+    expect(stats?.maxMetres).toBe(101);
+    expect(stats?.minMetres).toBe(100);
   });
 });
 

@@ -6,7 +6,7 @@ import "leaflet/dist/leaflet.css";
 import { Undo2, Trash2, MapPin, Search, LocateFixed, Upload } from "lucide-react";
 import { searchRoutePlaces } from "@/server/actions";
 import type { PlaceHit } from "@/lib/geocode";
-import { parseGpxForRoute } from "@/lib/gpx";
+import { parseGpxForRoute, type ElevationStats } from "@/lib/gpx";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,8 +61,9 @@ export function RouteEditor({
   onChange: (points: RoutePoint[]) => void;
   /** Fires right after a successful GPX import — a real trace is already
    * the true path, so callers should turn off any "snap to footpaths"
-   * option rather than let it reject the import's point count. */
-  onImport?: () => void;
+   * option rather than let it reject the import's point count. Carries
+   * the file's own elevation gain/loss/max/min, if it had a full profile. */
+  onImport?: (info: { elevation: ElevationStats | null }) => void;
   /** Meeting point of the walk, if known — where the map opens. */
   startNear?: { lat: number; lng: number } | null;
   className?: string;
@@ -73,6 +74,9 @@ export function RouteEditor({
   const layerRef = useRef<LeafletNS.LayerGroup | null>(null);
   const searchMarkerRef = useRef<LeafletNS.CircleMarker | null>(null);
   const [ready, setReady] = useState(false);
+  // Just for wording ("clicked" vs "imported") and whether to show
+  // elevation stats — reset the instant real drawing starts.
+  const [tracedFromFile, setTracedFromFile] = useState(false);
 
   // "Find a place" — jumps the map to a typed place, postcode, or address
   // before the organiser starts clicking. It never touches the route
@@ -94,6 +98,7 @@ export function RouteEditor({
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const [importNotice, setImportNotice] = useState<string | null>(null);
+  const [importedElevation, setImportedElevation] = useState<ElevationStats | null>(null);
 
   // The Leaflet click handler is bound once, but needs today's points and
   // today's onChange. A ref keeps it current without rebuilding the map on
@@ -128,6 +133,7 @@ export function RouteEditor({
       // route's own start/finish dots.
       searchMarkerRef.current?.remove();
       searchMarkerRef.current = null;
+      setTracedFromFile(false);
       emit([...points, { lat: event.latlng.lat, lng: event.latlng.lng }]);
     });
 
@@ -209,6 +215,8 @@ export function RouteEditor({
 
   const clear = useCallback(() => {
     onChange([]);
+    setTracedFromFile(false);
+    setImportedElevation(null);
   }, [onChange]);
 
   const fitBoundsToPoints = useCallback(
@@ -375,7 +383,9 @@ export function RouteEditor({
         }
         onChange(result.points);
         fitBoundsToPoints(result.points);
-        onImport?.();
+        setTracedFromFile(true);
+        setImportedElevation(result.elevation);
+        onImport?.({ elevation: result.elevation });
         if ("simplifiedFrom" in result) {
           setImportNotice(
             `That trace had ${result.simplifiedFrom.toLocaleString()} points — simplified to ` +
@@ -529,12 +539,21 @@ export function RouteEditor({
               </span>
             </p>
             <p className="text-xs text-muted-foreground">
-              {value.length} {value.length === 1 ? "point" : "points"} clicked
-              {value.length < 8
+              {value.length} {value.length === 1 ? "point" : "points"}{" "}
+              {tracedFromFile ? "imported from file" : "clicked"}
+              {!tracedFromFile && value.length < 8
                 ? " — add more along the bends for an accurate distance."
                 : null}
               {atLimit ? ` — that's the maximum of ${MAX_ROUTE_POINTS}.` : null}
             </p>
+            {importedElevation ? (
+              <p className="text-xs text-muted-foreground">
+                Elevation: {Math.round(importedElevation.gainMetres)} m up,{" "}
+                {Math.round(importedElevation.lossMetres)} m down (from{" "}
+                {Math.round(importedElevation.minMetres)} m to{" "}
+                {Math.round(importedElevation.maxMetres)} m)
+              </p>
+            ) : null}
             <p className="text-xs text-muted-foreground">
               Drag the green or red dot to move the start or finish. Click any blue dot to remove it.
             </p>

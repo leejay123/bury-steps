@@ -12,6 +12,14 @@ enum Role {
   ADMIN
 }
 
+/// Set by the organiser on a WalkRoute — nothing in a GPX file or a
+/// hand-drawn line says how hard a walk actually is for this group.
+enum RouteDifficulty {
+  EASY
+  MODERATE
+  HARD
+}
+
 model User {
   id        String   @id @default(cuid())
   clerkId   String   @unique
@@ -90,6 +98,18 @@ model WalkRoute {
   points         Json
   /// Derived from `points` server-side. Metres; rendered as miles.
   distanceMetres Float
+  /// Set from a GPX file's own elevation samples at import time (noise-
+  /// smoothed) and stored as submitted, not recalculated from `points` —
+  /// unlike distance, gain/loss describes the terrain of the ORIGINAL
+  /// recording, which doesn't survive re-snapping or re-drawing the way
+  /// the plan-view line does. Null for a hand-drawn route, or a GPX with
+  /// no elevation data.
+  elevationGainMetres Float?
+  elevationLossMetres Float?
+  maxElevationMetres  Float?
+  minElevationMetres  Float?
+  /// Set by the organiser. Null until they choose one.
+  difficulty          RouteDifficulty?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

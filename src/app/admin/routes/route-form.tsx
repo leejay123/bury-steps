@@ -11,8 +11,23 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { RoutePoint } from "@/lib/route-geometry";
+import type { ElevationStats } from "@/lib/gpx";
+
+const NO_DIFFICULTY = "none";
+const DIFFICULTIES = [
+  { value: "EASY", label: "Easy" },
+  { value: "MODERATE", label: "Moderate" },
+  { value: "HARD", label: "Hard" },
+];
 
 function Submit({ label }: { label: string }) {
   const { pending } = useFormStatus();
@@ -28,7 +43,17 @@ export function RouteForm({
   snappingAvailable = false,
   startNear,
 }: {
-  route?: { id: string; name: string; notes: string | null; points: RoutePoint[] };
+  route?: {
+    id: string;
+    name: string;
+    notes: string | null;
+    points: RoutePoint[];
+    elevationGainMetres: number | null;
+    elevationLossMetres: number | null;
+    maxElevationMetres: number | null;
+    minElevationMetres: number | null;
+    difficulty: string | null;
+  };
   /** Whether a maintainer has configured OPENROUTESERVICE_API_KEY. */
   snappingAvailable?: boolean;
   /** Centre the map somewhere sensible for a brand-new route. */
@@ -36,6 +61,24 @@ export function RouteForm({
 }) {
   const [points, setPoints] = useState<RoutePoint[]>(route?.points ?? []);
   const [snap, setSnap] = useState(true);
+  const [difficulty, setDifficulty] = useState(route?.difficulty ?? NO_DIFFICULTY);
+  // Kept alongside points rather than recalculated: elevation gain/loss
+  // describes the ORIGINAL recorded trace, which doesn't survive
+  // re-drawing or re-snapping the way the plan-view line does — see the
+  // comment on WalkRoute.elevationGainMetres in schema.prisma.
+  const [elevation, setElevation] = useState<ElevationStats | null>(
+    route?.elevationGainMetres != null &&
+      route.elevationLossMetres != null &&
+      route.maxElevationMetres != null &&
+      route.minElevationMetres != null
+      ? {
+          gainMetres: route.elevationGainMetres,
+          lossMetres: route.elevationLossMetres,
+          maxMetres: route.maxElevationMetres,
+          minMetres: route.minElevationMetres,
+        }
+      : null,
+  );
   const [state, action] = useActionState<ActionResult | null, FormData>(
     route ? updateRoute : createRoute,
     null,
@@ -48,6 +91,17 @@ export function RouteForm({
       {/* The map is a canvas, not a field — the drawn points ride along in a
           hidden input so this stays an ordinary progressively-enhanced form. */}
       <input name="points" type="hidden" value={JSON.stringify(points)} />
+      {/* Set from a GPX import (see route-editor.tsx's onImport) and stored
+          as submitted — not recalculated server-side, since it describes
+          the original recording, not necessarily today's plan-view line. */}
+      {elevation ? (
+        <>
+          <input name="elevationGainMetres" type="hidden" value={elevation.gainMetres} />
+          <input name="elevationLossMetres" type="hidden" value={elevation.lossMetres} />
+          <input name="maxElevationMetres" type="hidden" value={elevation.maxMetres} />
+          <input name="minElevationMetres" type="hidden" value={elevation.minMetres} />
+        </>
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-2">
@@ -77,6 +131,36 @@ export function RouteForm({
         </div>
       </div>
 
+      <div className="flex max-w-xs flex-col gap-2">
+        <Label htmlFor="difficulty">
+          Difficulty <span className="text-muted-foreground font-normal">(optional)</span>
+        </Label>
+        {/* Radix Select, so its value needs carrying into the form data by
+            hand — same pattern as walk-route-picker.tsx's route dropdown. */}
+        <input
+          name="difficulty"
+          type="hidden"
+          value={difficulty === NO_DIFFICULTY ? "" : difficulty}
+        />
+        <Select onValueChange={setDifficulty} value={difficulty}>
+          <SelectTrigger id="difficulty">
+            <SelectValue placeholder="Not set" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={NO_DIFFICULTY}>Not set</SelectItem>
+            {DIFFICULTIES.map((d) => (
+              <SelectItem key={d.value} value={d.value}>
+                {d.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          Nothing in a drawn line or an imported file says how hard a walk actually is for this
+          group — set it from what you know.
+        </p>
+      </div>
+
       {snappingAvailable ? (
         <div className="flex items-start gap-2">
           <input name="snap" type="hidden" value={snap ? "on" : "off"} />
@@ -96,8 +180,14 @@ export function RouteForm({
       ) : null}
 
       <RouteEditor
-        onChange={setPoints}
-        onImport={() => setSnap(false)}
+        onChange={(next) => {
+          setPoints(next);
+          if (next.length === 0) setElevation(null);
+        }}
+        onImport={({ elevation: imported }) => {
+          setSnap(false);
+          setElevation(imported);
+        }}
         startNear={startNear}
         value={points}
       />

@@ -4,11 +4,17 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { formatMiles, parseRoutePoints } from "@/lib/route-geometry";
 import { AdminPageIntro } from "../admin-page-intro";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/empty-state";
 
 export const dynamic = "force-dynamic";
+
+/** "EASY" → "Easy". */
+function difficultyLabel(value: string): string {
+  return value.charAt(0) + value.slice(1).toLowerCase();
+}
 
 export default async function RoutesPage() {
   await requireAdmin();
@@ -21,6 +27,8 @@ export default async function RoutesPage() {
       notes: true,
       points: true,
       distanceMetres: true,
+      elevationGainMetres: true,
+      difficulty: true,
       _count: { select: { walks: true } },
     },
   });
@@ -53,15 +61,23 @@ export default async function RoutesPage() {
             return (
               <Card className="gap-3" key={route.id}>
                 <CardHeader className="gap-1">
-                  <CardTitle className="text-base">
-                    <Link className="hover:underline" href={`/admin/routes/${route.id}`}>
-                      {route.name}
-                    </Link>
-                  </CardTitle>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <CardTitle className="text-base">
+                      <Link className="hover:underline" href={`/admin/routes/${route.id}`}>
+                        {route.name}
+                      </Link>
+                    </CardTitle>
+                    {route.difficulty ? (
+                      <Badge variant="secondary">{difficultyLabel(route.difficulty)}</Badge>
+                    ) : null}
+                  </div>
                   <p className="text-sm text-muted-foreground">
                     {formatMiles(route.distanceMetres)}
                     {" · "}
                     {points.length} points
+                    {route.elevationGainMetres != null
+                      ? ` · ${Math.round(route.elevationGainMetres)} m ascent`
+                      : null}
                   </p>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3">

@@ -90,6 +90,14 @@ export function RoutesSection() {
             no snapping needed. If the file is unusually detailed it gets thinned to fit, without
             changing the shape or the distance in any way that matters. Importing replaces
             whatever was already drawn or imported, so pick the file before you start clicking.
+            If the file has elevation data, gain and loss show on the walk page too.
+          </p>
+          <p>
+            <strong>Difficulty.</strong> Set from the Difficulty dropdown when you save a route —
+            nothing in a drawn line or an imported file can tell you how hard a walk actually is
+            for this group, so it&apos;s always your call, not a computed rating. It shows as a
+            badge on the walk page alongside the distance. Leave it as &ldquo;Not set&rdquo; to
+            show nothing.
           </p>
         </GuideBody>
       </AccordionContent>

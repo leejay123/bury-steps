@@ -42,7 +42,14 @@ const getWalkByShareKey = cache((key: string) =>
       durationMins: true,
       cancelledAt: true,
       route: {
-        select: { name: true, notes: true, points: true, distanceMetres: true },
+        select: {
+          name: true,
+          notes: true,
+          points: true,
+          distanceMetres: true,
+          elevationGainMetres: true,
+          difficulty: true,
+        },
       },
       journeyEvents: {
         orderBy: { happenedAt: "asc" },

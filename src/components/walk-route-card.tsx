@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RouteMap } from "@/components/map/route-map";
 import {
@@ -6,6 +7,11 @@ import {
   isCircular,
   parseRoutePoints,
 } from "@/lib/route-geometry";
+
+/** "EASY" → "Easy". */
+function difficultyLabel(value: string): string {
+  return value.charAt(0) + value.slice(1).toLowerCase();
+}
 
 /**
  * The route as members see it: the line on a map, the distance, and a rough
@@ -16,7 +22,14 @@ import {
 export function WalkRouteCard({
   route,
 }: {
-  route: { name: string; notes: string | null; points: unknown; distanceMetres: number } | null;
+  route: {
+    name: string;
+    notes: string | null;
+    points: unknown;
+    distanceMetres: number;
+    elevationGainMetres: number | null;
+    difficulty: string | null;
+  } | null;
 }) {
   if (!route) return null;
   const points = parseRoutePoints(route.points);
@@ -25,12 +38,20 @@ export function WalkRouteCard({
   return (
     <Card className="gap-4 overflow-hidden py-0">
       <CardHeader className="px-6 pt-6">
-        <CardTitle className="text-base">The route</CardTitle>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle className="text-base">The route</CardTitle>
+          {route.difficulty ? (
+            <Badge variant="secondary">{difficultyLabel(route.difficulty)}</Badge>
+          ) : null}
+        </div>
         <CardDescription>
           {formatMiles(route.distanceMetres)}
           {" · "}
           {formatWalkEstimate(route.distanceMetres)}
           {isCircular(points) ? " · circular" : null}
+          {route.elevationGainMetres != null
+            ? ` · ${Math.round(route.elevationGainMetres)} m ascent`
+            : null}
         </CardDescription>
       </CardHeader>
 
@@ -42,8 +63,8 @@ export function WalkRouteCard({
         <p className="text-sm font-medium">{route.name}</p>
         {route.notes ? <p className="text-sm text-muted-foreground">{route.notes}</p> : null}
         <p className="text-xs text-muted-foreground">
-          The distance is a guide — the route is drawn by hand, so treat it as roughly right
-          rather than exact.
+          Treat the distance as a guide for deciding whether this walk suits you, not an exact
+          measurement.
         </p>
       </CardContent>
     </Card>

@@ -14,7 +14,64 @@ import { type ActionResult, isPrismaCode, logActionError, revalidateWalkShare } 
 const routeDetailsSchema = z.object({
   name: z.string().trim().min(3, "Give the route a name of at least 3 characters.").max(120),
   notes: z.string().trim().max(1000).optional(),
+  // Nothing in a drawn line or an imported file says how hard a walk is
+  // for this group — set by the organiser, never computed.
+  difficulty: z.enum(["EASY", "MODERATE", "HARD"]).nullable().optional(),
 });
+
+/** Taller than Everest — past this it's bad data, not a real walk. */
+const MAX_PLAUSIBLE_ELEVATION_METRES = 9000;
+
+type ElevationFields = {
+  elevationGainMetres: number | null;
+  elevationLossMetres: number | null;
+  maxElevationMetres: number | null;
+  minElevationMetres: number | null;
+};
+
+/**
+ * Reads the elevation hidden fields the route form submits when a GPX
+ * import had a full elevation profile (see route-editor.tsx's onImport).
+ * Stored as submitted rather than recalculated — see the comment on
+ * WalkRoute.elevationGainMetres in schema.prisma for why that's the right
+ * call here, unlike distance. Still sanity-checked: a route with no
+ * elevation data at all is fine (most hand-drawn ones), but four numbers
+ * that don't parse or land somewhere physically impossible are rejected
+ * rather than silently stored.
+ */
+function readElevation(formData: FormData): ElevationFields | { error: string } {
+  const raw = [
+    formData.get("elevationGainMetres"),
+    formData.get("elevationLossMetres"),
+    formData.get("maxElevationMetres"),
+    formData.get("minElevationMetres"),
+  ];
+  if (raw.every((v) => v === null)) {
+    return {
+      elevationGainMetres: null,
+      elevationLossMetres: null,
+      maxElevationMetres: null,
+      minElevationMetres: null,
+    };
+  }
+
+  const [gain, loss, max, min] = raw.map(Number);
+  const bad =
+    [gain, loss, max, min].some((v) => !Number.isFinite(v)) ||
+    gain < 0 ||
+    loss < 0 ||
+    min > max ||
+    [gain, loss, max, min].some((v) => Math.abs(v) > MAX_PLAUSIBLE_ELEVATION_METRES);
+  if (bad) {
+    return { error: "That route's elevation data looks wrong. Try importing the file again." };
+  }
+  return {
+    elevationGainMetres: gain,
+    elevationLossMetres: loss,
+    maxElevationMetres: max,
+    minElevationMetres: min,
+  };
+}
 
 /**
  * The drawn points arrive as a JSON string in a hidden field so the editor
@@ -112,11 +169,15 @@ export async function createRoute(
   const parsed = routeDetailsSchema.safeParse({
     name: formData.get("name"),
     notes: formData.get("notes") || undefined,
+    difficulty: formData.get("difficulty") || null,
   });
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
   const points = readPoints(formData);
   if (!points.ok) return { ok: false, error: points.error };
+
+  const elevation = readElevation(formData);
+  if ("error" in elevation) return { ok: false, error: elevation.error };
 
   try {
     // Distance (and, when configured, the geometry itself) is always
@@ -127,8 +188,10 @@ export async function createRoute(
       data: {
         name: parsed.data.name,
         notes: parsed.data.notes ?? null,
+        difficulty: parsed.data.difficulty ?? null,
         points: geometry.points as unknown as Prisma.InputJsonValue,
         distanceMetres: geometry.distanceMetres,
+        ...elevation,
         createdById: admin.id,
       },
       select: { id: true },
@@ -158,11 +221,15 @@ export async function updateRoute(
   const parsed = routeDetailsSchema.safeParse({
     name: formData.get("name"),
     notes: formData.get("notes") || undefined,
+    difficulty: formData.get("difficulty") || null,
   });
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
   const points = readPoints(formData);
   if (!points.ok) return { ok: false, error: points.error };
+
+  const elevation = readElevation(formData);
+  if ("error" in elevation) return { ok: false, error: elevation.error };
 
   try {
     const geometry = await resolveRouteGeometry(formData, points.points);
@@ -171,8 +238,10 @@ export async function updateRoute(
       data: {
         name: parsed.data.name,
         notes: parsed.data.notes ?? null,
+        difficulty: parsed.data.difficulty ?? null,
         points: geometry.points as unknown as Prisma.InputJsonValue,
         distanceMetres: geometry.distanceMetres,
+        ...elevation,
       },
     });
     revalidateRoutes(id);

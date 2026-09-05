@@ -23,6 +23,11 @@ export default async function EditRoutePage({
       name: true,
       notes: true,
       points: true,
+      elevationGainMetres: true,
+      elevationLossMetres: true,
+      maxElevationMetres: true,
+      minElevationMetres: true,
+      difficulty: true,
       _count: { select: { walks: true } },
     },
   });
@@ -48,6 +53,11 @@ export default async function EditRoutePage({
           name: route.name,
           notes: route.notes,
           points: parseRoutePoints(route.points),
+          elevationGainMetres: route.elevationGainMetres,
+          elevationLossMetres: route.elevationLossMetres,
+          maxElevationMetres: route.maxElevationMetres,
+          minElevationMetres: route.minElevationMetres,
+          difficulty: route.difficulty,
         }}
         snappingAvailable={Boolean(process.env.OPENROUTESERVICE_API_KEY)}
       />
