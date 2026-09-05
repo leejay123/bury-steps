@@ -1,0 +1,85 @@
+import Link from "next/link";
+import { Plus, Route as RouteIcon } from "lucide-react";
+import { prisma } from "@/lib/db";
+import { requireAdmin } from "@/lib/auth";
+import { formatMiles, parseRoutePoints } from "@/lib/route-geometry";
+import { AdminPageIntro } from "../admin-page-intro";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/empty-state";
+
+export const dynamic = "force-dynamic";
+
+export default async function RoutesPage() {
+  await requireAdmin();
+
+  const routes = await prisma.walkRoute.findMany({
+    orderBy: { name: "asc" },
+    select: {
+      id: true,
+      name: true,
+      notes: true,
+      points: true,
+      distanceMetres: true,
+      _count: { select: { walks: true } },
+    },
+  });
+
+  return (
+    <div className="flex flex-col gap-6 py-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <AdminPageIntro
+          description="Draw a route once and reuse it on any walk. Members see the map and the distance on the walk page."
+          title="Walking routes"
+        />
+        <Button asChild>
+          <Link href="/admin/routes/new">
+            <Plus className="size-4" />
+            New route
+          </Link>
+        </Button>
+      </div>
+
+      {routes.length === 0 ? (
+        <EmptyState
+          description="Draw your first route on the map. It takes a couple of minutes and you only do it once — every future walk on that path can reuse it."
+          icon={RouteIcon}
+          title="No routes yet"
+        />
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {routes.map((route) => {
+            const points = parseRoutePoints(route.points);
+            return (
+              <Card className="gap-3" key={route.id}>
+                <CardHeader className="gap-1">
+                  <CardTitle className="text-base">
+                    <Link className="hover:underline" href={`/admin/routes/${route.id}`}>
+                      {route.name}
+                    </Link>
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    {formatMiles(route.distanceMetres)}
+                    {" · "}
+                    {points.length} points
+                  </p>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-3">
+                  {route.notes ? <p className="text-sm">{route.notes}</p> : null}
+                  <p className="text-xs text-muted-foreground">
+                    {route._count.walks === 0
+                      ? "Not used on a walk yet"
+                      : `Used on ${route._count.walks} ${route._count.walks === 1 ? "walk" : "walks"}`}
+                  </p>
+                  <Button asChild size="sm" variant="outline">
+                    <Link href={`/admin/routes/${route.id}`}>Open</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}

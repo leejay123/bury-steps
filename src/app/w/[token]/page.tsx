@@ -11,6 +11,7 @@ import { ensureWalkSlug, walkShareUrl } from "@/lib/walk-slug";
 import { canAddWalkToCalendar, walkStatus } from "@/lib/walk-window";
 import { WalkFacts } from "@/components/walk-facts";
 import { WalkMapSection } from "@/components/walk-map-section";
+import { WalkRouteCard } from "@/components/walk-route-card";
 import { WalkJourneyDrawer } from "@/components/walk-journey-drawer";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { HowWalksWork } from "@/components/how-walks-work";
@@ -40,6 +41,9 @@ const getWalkByShareKey = cache((key: string) =>
       startsAt: true,
       durationMins: true,
       cancelledAt: true,
+      route: {
+        select: { name: true, notes: true, points: true, distanceMetres: true },
+      },
       journeyEvents: {
         orderBy: { happenedAt: "asc" },
         select: { id: true, title: true, body: true, happenedAt: true },
@@ -224,6 +228,8 @@ export default async function WalkLinkPage({
       </Card>
 
       {meeting ? <WalkMapSection location={meeting} walk={walk} /> : null}
+
+      <WalkRouteCard route={walk.route} />
 
       {status === "cancelled" ? null : user ? (
         <WalkLivePanel

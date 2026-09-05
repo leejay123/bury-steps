@@ -22,6 +22,7 @@ model User {
   createdAt DateTime @default(now())
 
   walksCreated     Walk[]              @relation("WalkCreator")
+  routesCreated    WalkRoute[]         @relation("RouteCreator")
   attendances      Attendance[]
   noticeReads      SiteNoticeRead[]
   accidentReports  AccidentReport[]
@@ -54,16 +55,53 @@ model Walk {
   createdById String
   createdBy   User   @relation("WalkCreator", fields: [createdById], references: [id])
 
+  /// Optional drawn walking route. Null on every walk created before routes
+  /// existed, and on any walk an organiser hasn't picked a route for.
+  /// SetNull on delete: removing a route must never remove walk history.
+  routeId String?
+  route   WalkRoute? @relation(fields: [routeId], references: [id], onDelete: SetNull)
+
   attendances      Attendance[]
   accidentReports  AccidentReport[]
   journeyEvents    WalkJourneyEvent[]
 
+  @@index([routeId])
   @@index([startsAt])
   @@index([createdById])
   /// Used by the dashboard's "recently cancelled" window and the daily
   /// purge cron's cutoff query.
   @@index([cancelledAt])
 }
+
+/// A walking route an organiser drew on the map, reusable across walks —
+/// the group walks the same handful of routes repeatedly, so this is a
+/// library, not a per-walk field.
+///
+/// `points` is an ordered JSON array of { lat, lng } exactly as clicked.
+/// Nothing here comes from a routing service or from tracking anybody's
+/// phone. `distanceMetres` is derived from `points` and cached so lists
+/// and badges don't recompute it per row; it is always recalculated on
+/// save rather than accepted from the client.
+model WalkRoute {
+  id             String   @id @default(cuid())
+  name           String
+  notes          String?
+  /// Ordered [{ lat, lng }, ...]. See src/lib/route-geometry.ts.
+  points         Json
+  /// Derived from `points` server-side. Metres; rendered as miles.
+  distanceMetres Float
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  createdById String
+  createdBy   User   @relation("RouteCreator", fields: [createdById], references: [id])
+
+  walks Walk[]
+
+  @@index([createdById])
+  @@index([name])
+}
+
 
 model Attendance {
   id     String @id @default(cuid())
