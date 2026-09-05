@@ -172,8 +172,10 @@ export function RouteForm({
           <Label className="flex flex-col items-start gap-0.5 font-normal" htmlFor="snap-to-paths">
             Snap to real footpaths <span className="text-muted-foreground">(recommended)</span>
             <span className="text-xs font-normal text-muted-foreground">
-              On save, matches your clicked points onto real paths and recalculates the distance
-              from that. Turn off to save the line exactly as clicked.
+              On save, matches these points onto real paths and recalculates the distance from
+              that — mainly useful after dragging the start or finish of an older, hand-drawn
+              route. Turn off to save the line exactly as it is. A GPX import always turns this
+              off itself, since a real trace is already the true path.
             </span>
           </Label>
         </div>

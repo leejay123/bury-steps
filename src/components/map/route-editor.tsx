@@ -28,27 +28,28 @@ import {
   useLeaflet,
 } from "./use-leaflet";
 
-/** Street-level enough to start clicking a route without more zooming. */
+/** Street-level enough to see an imported route without more zooming. */
 const SEARCH_ZOOM = 15;
 
 /**
- * Click-to-draw route editor.
+ * Route editor — import-only. A route always comes from a GPX file (an
+ * actual recorded walk, or one planned in a real route-planning tool);
+ * there is deliberately no drawing one from scratch by clicking a blank
+ * map. Once a file has loaded, the map stops being read-only: the start
+ * and finish dots can still be dragged to nudge them (a GPS trace often
+ * starts a few metres from the real meeting point), and clicking a middle
+ * dot still removes it (for a stray glitch point), matching how a
+ * click-drawn route always worked — it's only adding a brand new point
+ * from nothing that's gone.
  *
- * Deliberately has no routing service behind it: the line runs straight
- * between clicks, so an organiser clicks along the bends of a path rather
- * than just its ends. That keeps the whole feature free of API keys,
- * accounts and rate limits. The point count is shown next to the distance
- * so it is obvious when a route has been drawn too coarsely to measure
- * properly.
- *
- * The "find a place" box above the map does not draw anything — it only
- * recentres the view and drops a temporary marker there, so someone
- * unfamiliar with reading a map isn't stuck guessing where their usual
- * route even is. Live suggestions come from searchRoutePlaces (HeiGIT's
- * Pelias geocoder when a route-snapping key is configured, the same free
- * Nominatim lookup the meeting-point field uses otherwise). "Use my
- * location" is a single one-off GPS read on tap — not tracking, nothing
- * stored, nothing sent anywhere.
+ * The "find a place" box above the map does not touch the route at all —
+ * it only recentres the view and drops a temporary marker there, useful
+ * for getting your bearings before or after importing. Live suggestions
+ * come from searchRoutePlaces (HeiGIT's Pelias geocoder when a
+ * route-snapping key is configured, the same free Nominatim lookup the
+ * meeting-point field uses otherwise). "Use my location" is a single
+ * one-off GPS read on tap — not tracking, nothing stored, nothing sent
+ * anywhere.
  */
 export function RouteEditor({
   value,
@@ -125,16 +126,13 @@ export function RouteEditor({
     const map = leaflet.map(container, { scrollWheelZoom: true }).setView(centre, DEFAULT_ZOOM);
     leaflet.tileLayer(OSM_TILE_URL, { attribution: OSM_ATTRIBUTION, maxZoom: 19 }).addTo(map);
 
-    map.on("click", (event: LeafletNS.LeafletMouseEvent) => {
-      const { value: points, onChange: emit } = stateRef.current;
-      if (points.length >= MAX_ROUTE_POINTS) return;
-      // Once real drawing starts, the "you searched here" marker has done
-      // its job — clear it rather than leave it sitting alongside the
-      // route's own start/finish dots.
+    // Clicking the map no longer adds a point — a route has to come from an
+    // imported file, never drawn from scratch (see the doc comment above).
+    // A click still clears a stray "you searched here" marker, since it
+    // means the organiser has moved on to looking at the map itself.
+    map.on("click", () => {
       searchMarkerRef.current?.remove();
       searchMarkerRef.current = null;
-      setTracedFromFile(false);
-      emit([...points, { lat: event.latlng.lat, lng: event.latlng.lng }]);
     });
 
     mapRef.current = map;
@@ -413,6 +411,26 @@ export function RouteEditor({
 
   return (
     <div className={cn("flex flex-col gap-3", className)}>
+      <div className="flex flex-col items-start gap-2 rounded-lg border bg-muted/40 p-3">
+        <p className="text-sm">
+          Import a GPX file to add this route — a walk recorded in Strava, OS Maps, Komoot, a GPS
+          watch, or planned in a tool like plotaroute.com or openrouteservice&apos;s own map.
+        </p>
+        <input
+          accept=".gpx,application/gpx+xml"
+          className="hidden"
+          onChange={onGpxFileChange}
+          ref={fileInputRef}
+          type="file"
+        />
+        <Button disabled={importing} onClick={() => fileInputRef.current?.click()} type="button">
+          <Upload className="size-4" />
+          {importing ? "Reading…" : "Import a GPX file"}
+        </Button>
+        {importError ? <p className="text-xs text-destructive">{importError}</p> : null}
+        {importNotice ? <p className="text-xs text-muted-foreground">{importNotice}</p> : null}
+      </div>
+
       <div className="flex flex-col gap-2">
         <div className="flex flex-col gap-2 sm:flex-row">
           <div className="relative flex-1">
@@ -424,7 +442,7 @@ export function RouteEditor({
               aria-label="Find a place, postcode, or address on the map"
               onChange={(event) => setQuery(event.target.value)}
               onKeyDown={onSearchKeyDown}
-              placeholder="Not sure where you are? Search a place, postcode, or address"
+              placeholder="Get your bearings: search a place, postcode, or address"
               role="combobox"
               value={query}
             />
@@ -475,31 +493,6 @@ export function RouteEditor({
         {locationError ? <p className="text-xs text-destructive">{locationError}</p> : null}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs text-muted-foreground">
-          Already recorded this walk elsewhere (Strava, OS Maps, Komoot, a GPS watch)?
-        </span>
-        <input
-          accept=".gpx,application/gpx+xml"
-          className="hidden"
-          onChange={onGpxFileChange}
-          ref={fileInputRef}
-          type="file"
-        />
-        <Button
-          disabled={importing}
-          onClick={() => fileInputRef.current?.click()}
-          size="sm"
-          type="button"
-          variant="outline"
-        >
-          <Upload className="size-4" />
-          {importing ? "Reading…" : "Import a GPX file"}
-        </Button>
-      </div>
-      {importError ? <p className="text-xs text-destructive">{importError}</p> : null}
-      {importNotice ? <p className="text-xs text-muted-foreground">{importNotice}</p> : null}
-
       <div className="overflow-hidden rounded-lg border">
         <div className="relative h-[22rem] w-full bg-muted sm:h-[28rem]" ref={containerRef}>
           {!leaflet ? <div aria-hidden className="absolute inset-0 animate-pulse bg-muted" /> : null}
@@ -524,9 +517,9 @@ export function RouteEditor({
       <div className="rounded-lg border bg-muted/40 p-3 text-sm">
         {value.length === 0 ? (
           <p className="text-muted-foreground">
-            Click the map where the walk starts, then keep clicking along the path. Follow the
-            bends — the line runs straight between your clicks, so a curvy path clicked only at
-            both ends will measure shorter than it really is.
+            Import a GPX file above to add a route — there&apos;s no drawing one from scratch.
+            Once it&apos;s loaded you can drag the green or red dot to nudge the start or finish,
+            or click any blue dot to remove it.
           </p>
         ) : (
           <div className="flex flex-col gap-1">
@@ -539,11 +532,8 @@ export function RouteEditor({
               </span>
             </p>
             <p className="text-xs text-muted-foreground">
-              {value.length} {value.length === 1 ? "point" : "points"}{" "}
-              {tracedFromFile ? "imported from file" : "clicked"}
-              {!tracedFromFile && value.length < 8
-                ? " — add more along the bends for an accurate distance."
-                : null}
+              {value.length} {value.length === 1 ? "point" : "points"}
+              {tracedFromFile ? " — imported from file" : null}
               {atLimit ? ` — that's the maximum of ${MAX_ROUTE_POINTS}.` : null}
             </p>
             {importedElevation ? (

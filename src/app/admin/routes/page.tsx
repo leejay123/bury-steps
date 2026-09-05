@@ -37,7 +37,7 @@ export default async function RoutesPage() {
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <AdminPageIntro
-          description="Draw a route once and reuse it on any walk. Members see the map and the distance on the walk page."
+          description="Import a GPX file once and reuse the route on any walk. Members see the map and the distance on the walk page."
           title="Walking routes"
         />
         <Button asChild>
@@ -50,7 +50,7 @@ export default async function RoutesPage() {
 
       {routes.length === 0 ? (
         <EmptyState
-          description="Draw your first route on the map. It takes a couple of minutes and you only do it once — every future walk on that path can reuse it."
+          description="Import a GPX file to add your first route. It takes a couple of minutes and you only do it once — every future walk on that path can reuse it."
           icon={RouteIcon}
           title="No routes yet"
         />

@@ -47,7 +47,7 @@ function DeleteRouteDialogForm({
           <AlertDialogTitle>Delete {name}?</AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <p>The drawn route will be deleted and you would have to draw it again.</p>
+              <p>The route will be deleted and you would have to import the file again.</p>
               {walkCount > 0 ? (
                 <p>
                   {walkCount === 1 ? "One walk uses" : `${walkCount} walks use`} this route. Those

@@ -10,10 +10,10 @@ export function RoutesSection() {
       <AccordionContent>
         <GuideBody>
           <p>
-            A route is the path you walk, drawn on a map. You draw it once and can then use it on
-            as many walks as you like — most groups walk the same handful of paths over and over,
-            so this is a small job you only do a few times. Members see the route on the walk
-            page with roughly how far it is.
+            A route is the path you walk, shown on a map. You add it once from a GPX file and can
+            then use it on as many walks as you like — most groups walk the same handful of paths
+            over and over, so this is a small job you only do a few times. Members see the route
+            on the walk page with roughly how far it is.
           </p>
           <p>
             Open <Link href="/admin/routes">Routes</Link> in the menu, then choose{" "}
@@ -25,37 +25,45 @@ export function RoutesSection() {
               Add a note if there is something worth saying, like a steep bit or a gate.
             </li>
             <li>
-              Not sure where you are on the map? Start typing a place name, postcode, or full
-              address (e.g. &ldquo;12 Fenwick Drive, Bury&rdquo;) into the search box above it —
-              suggestions appear as you type, and picking one (or pressing <strong>Find</strong>)
-              jumps the map there and drops a marker so you know exactly where &ldquo;here&rdquo;
-              is. Standing on the actual path? <strong>Use my location</strong> jumps straight to
-              wherever you are right now instead. Neither one draws anything — they only move the
-              view.
+              Choose <strong>Import a GPX file</strong> — a file exported from Strava, OS Maps,
+              Komoot, a GPS watch, or a route planner like plotaroute.com or
+              openrouteservice&apos;s own map. There is no drawing a route by hand; every route
+              starts life as a file like this. See below for where to find one if you do not
+              already have it.
             </li>
             <li>
-              Click the map where the walk starts. A green dot appears.
+              The line, distance, and (if the file has it) elevation gain/loss appear
+              automatically. A recorded trace already has far more points than anyone would click
+              by hand, so it comes out accurate straight away. If the file is unusually detailed
+              it gets thinned to fit, without changing the shape or the distance in any way that
+              matters.
             </li>
             <li>
-              Keep clicking along the path. <strong>Follow the bends.</strong> The line runs
-              straight between your clicks, so if you only click at each end of a curvy path the
-              distance will come out shorter than the real walk. The more you click, the closer it
-              gets.
-            </li>
-            <li>
-              The distance updates as you go, along with a rough idea of how long the walk takes.
+              Not sure where you are on the map while checking it over? Start typing a place name,
+              postcode, or full address (e.g. &ldquo;12 Fenwick Drive, Bury&rdquo;) into the search
+              box — suggestions appear as you type, and picking one (or pressing{" "}
+              <strong>Find</strong>) jumps the map there and drops a marker. Standing on the actual
+              path? <strong>Use my location</strong> jumps straight to wherever you are right now
+              instead. Neither one changes the route — they only move the view.
             </li>
             <li>Save.</li>
           </Steps>
           <p>
-            <strong>Fixing mistakes.</strong> Undo last point removes the most recent click. Start
-            again clears the lot. You can drag the green start dot or the red finish dot to move
-            them. To remove a point in the middle without undoing everything after it, just click
-            that blue dot.
+            <strong>Where to find a GPX file for a walk around Bury.</strong> If you have already
+            walked the route with a phone or watch, export it from whatever recorded it (Strava,
+            OS Maps, Komoot, and most GPS watches all have a &ldquo;Export GPX&rdquo; option on the
+            recorded activity). Otherwise, sites like Wikiloc and plotaroute.com have GPX downloads
+            for existing local trails you can search by area — or plot a new one yourself in
+            openrouteservice&apos;s own map and export that. Either way, once one walk is saved as
+            a route here it is reusable forever, so it is worth saving the route the first time
+            your group actually walks it.
           </p>
           <p>
-            <strong>Doing this on a laptop is much easier than on a phone.</strong> The map is
-            bigger and clicking is far more accurate.
+            <strong>Fine-tuning after import.</strong> The start (green dot) and finish (red dot)
+            can be dragged to nudge them — handy since a GPS trace often starts a few metres from
+            the actual meeting point. Click any blue dot along the way to remove it, useful for a
+            stray glitch point. <strong>Start again</strong> clears the route so you can import a
+            different file instead.
           </p>
           <p>
             <strong>Putting a route on a walk.</strong> Open the walk from the walks list, find
@@ -69,28 +77,22 @@ export function RoutesSection() {
             many walks are affected before you go ahead.
           </p>
           <p>
-            The distance is worked out from where you clicked, so treat it as roughly right rather
-            than exact. It is a guide for members deciding whether a walk suits them, not a
-            measurement.
+            The distance comes from the imported file, so treat it as roughly right rather than
+            exact — different recordings of the same path can differ slightly. It is a guide for
+            members deciding whether a walk suits them, not a precise measurement.
           </p>
           <p>
             <strong>Snap to real footpaths.</strong> If a &ldquo;Snap to real footpaths&rdquo;
-            checkbox appears above the map, a maintainer has switched on path-matching: on save,
-            your clicked points are matched onto the real network of paths and the distance is
-            recalculated from that, so you need far fewer clicks — just the start, a couple of
-            waypoints, and the finish. Untick it to save the line exactly as you drew it instead.
-            No checkbox means it isn&apos;t set up yet; nothing about drawing changes either way.
+            checkbox appears above the map, a maintainer has switched on path-matching. A GPX
+            import always turns it off itself, since a real recorded trace is already the true
+            path and needs no correcting. It mainly matters if you drag the start or finish dot of
+            an older, hand-drawn route far from where it was — tick it to have that edit snap back
+            onto the real path network. No checkbox means it isn&apos;t set up yet.
           </p>
           <p>
-            <strong>Already recorded the walk somewhere else?</strong> Choose{" "}
-            <strong>Import a GPX file</strong> instead of clicking — a file exported from Strava,
-            OS Maps, Komoot, a GPS watch, or a route planner like plotaroute.com or
-            openrouteservice&apos;s own map. A recorded trace already has far more points than
-            anyone would click by hand, so the line and distance come out accurate straight away —
-            no snapping needed. If the file is unusually detailed it gets thinned to fit, without
-            changing the shape or the distance in any way that matters. Importing replaces
-            whatever was already drawn or imported, so pick the file before you start clicking.
-            If the file has elevation data, gain and loss show on the walk page too.
+            <strong>Elevation and distance.</strong> If the imported file has an elevation
+            profile, the up-hill and down-hill totals show on the walk page alongside the
+            distance. If it does not, no elevation shows — nothing is guessed.
           </p>
           <p>
             <strong>Difficulty.</strong> Set from the Difficulty dropdown when you save a route —
