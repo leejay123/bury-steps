@@ -236,10 +236,10 @@ export function RouteEditor({
       <div className="flex flex-col gap-2">
         <div className="flex flex-col gap-2 sm:flex-row">
           <Input
-            aria-label="Find a place or postcode on the map"
+            aria-label="Find a place, postcode, or address on the map"
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={onSearchKeyDown}
-            placeholder="Not sure where you are? Search a place or postcode"
+            placeholder="Not sure where you are? Search a place, postcode, or address"
             value={query}
           />
           <Button
