@@ -104,6 +104,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           signUpUrl={SIGN_UP_URL}
           signInFallbackRedirectUrl={AFTER_AUTH_PATH}
           signUpFallbackRedirectUrl={AFTER_AUTH_PATH}
+          afterSignOutUrl="/"
         >
           {/*
             iPhones with a Dynamic Island report it as a safe-area inset on

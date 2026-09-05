@@ -1,4 +1,5 @@
 import { Show, UserButton } from "@clerk/nextjs";
+import { FileText, History, LineChart, Mail, Shield } from "lucide-react";
 import { getOptionalUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
@@ -46,7 +47,24 @@ export async function SiteNav() {
         </Show>
         <Show when="signed-in">
           <NotificationBell notices={notices} unreadIds={unreadIds} />
-          <UserButton />
+          <UserButton>
+            {/*
+              Shortcuts into the same avatar menu Clerk already renders
+              ("Manage account", "Sign out") — reachable from any page
+              without hunting through the mobile nav's scrolling row.
+            */}
+            <UserButton.MenuItems>
+              <UserButton.Link href="/progress" label="Progress" labelIcon={<LineChart className="size-4" />} />
+              <UserButton.Link href="/history" label="History" labelIcon={<History className="size-4" />} />
+              <UserButton.Link href="/contact" label="Contact us" labelIcon={<Mail className="size-4" />} />
+              <UserButton.Link href="/privacy-policy" label="Privacy policy" labelIcon={<Shield className="size-4" />} />
+              <UserButton.Link
+                href="/terms-of-service"
+                label="Terms of service"
+                labelIcon={<FileText className="size-4" />}
+              />
+            </UserButton.MenuItems>
+          </UserButton>
         </Show>
       </div>
     </>
