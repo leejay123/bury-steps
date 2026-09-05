@@ -22,7 +22,7 @@ export default async function NewRoutePage() {
       : null;
 
   return (
-    <div className="flex flex-col gap-6 py-6">
+    <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
       <AdminPageIntro
         description="Click the map along the path you walk. The distance works itself out as you go."
         title="New route"

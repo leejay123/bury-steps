@@ -26,7 +26,7 @@ export default async function RoutesPage() {
   });
 
   return (
-    <div className="flex flex-col gap-6 py-6">
+    <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <AdminPageIntro
           description="Draw a route once and reuse it on any walk. Members see the map and the distance on the walk page."

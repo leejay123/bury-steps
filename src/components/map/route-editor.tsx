@@ -1,10 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import type * as LeafletNS from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Undo2, Trash2, MapPin } from "lucide-react";
+import { Undo2, Trash2, MapPin, Search } from "lucide-react";
+import { searchWalkPlaces } from "@/server/actions";
+import type { PlaceHit } from "@/lib/geocode";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import {
   MAX_ROUTE_POINTS,
@@ -23,6 +26,9 @@ import {
   useLeaflet,
 } from "./use-leaflet";
 
+/** Street-level enough to start clicking a route without more zooming. */
+const SEARCH_ZOOM = 15;
+
 /**
  * Click-to-draw route editor.
  *
@@ -32,6 +38,11 @@ import {
  * accounts and rate limits. The point count is shown next to the distance
  * so it is obvious when a route has been drawn too coarsely to measure
  * properly.
+ *
+ * The "find a place" box above the map does not draw anything — it only
+ * recentres the view, reusing the same free Nominatim lookup the meeting
+ * point field already calls (searchWalkPlaces), so someone unfamiliar with
+ * reading a map isn't stuck guessing where their usual route even is.
  */
 export function RouteEditor({
   value,
@@ -50,6 +61,15 @@ export function RouteEditor({
   const mapRef = useRef<LeafletNS.Map | null>(null);
   const layerRef = useRef<LeafletNS.LayerGroup | null>(null);
   const [ready, setReady] = useState(false);
+
+  // "Find a place" — jumps the map to a typed place or postcode before the
+  // organiser starts clicking. It never touches the route itself, so it
+  // reuses the same free, no-key Nominatim lookup the meeting point field
+  // already uses (searchWalkPlaces), just to recentre the view.
+  const [query, setQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [hits, setHits] = useState<PlaceHit[] | null>(null);
 
   // The Leaflet click handler is bound once, but needs today's points and
   // today's onChange. A ref keeps it current without rebuilding the map on
@@ -169,8 +189,88 @@ export function RouteEditor({
     });
   }, [leaflet, value]);
 
+  const jumpTo = useCallback((place: PlaceHit) => {
+    mapRef.current?.flyTo([place.lat, place.lng], SEARCH_ZOOM);
+    setHits(null);
+    setSearchError(null);
+  }, []);
+
+  const findPlace = useCallback(async () => {
+    const q = query.trim();
+    if (!q || searching) return;
+    setSearching(true);
+    setSearchError(null);
+    setHits(null);
+    try {
+      // Same free-text field for both params: a postcode is recognised and
+      // tried first, otherwise it's searched as a place name — see
+      // geocodeQueries in src/lib/geocode.ts.
+      const result = await searchWalkPlaces(q, q);
+      if (!result.ok) {
+        setSearchError(result.error);
+        return;
+      }
+      if (result.places.length === 1) {
+        jumpTo(result.places[0]);
+      } else {
+        setHits(result.places);
+      }
+    } catch {
+      setSearchError("Could not search right now. Try again in a moment.");
+    } finally {
+      setSearching(false);
+    }
+  }, [jumpTo, query, searching]);
+
+  const onSearchKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      void findPlace();
+    },
+    [findPlace],
+  );
+
   return (
     <div className={cn("flex flex-col gap-3", className)}>
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Input
+            aria-label="Find a place or postcode on the map"
+            onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={onSearchKeyDown}
+            placeholder="Not sure where you are? Search a place or postcode"
+            value={query}
+          />
+          <Button
+            disabled={searching || !query.trim()}
+            onClick={() => void findPlace()}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            <Search className="size-4" />
+            {searching ? "Searching…" : "Find"}
+          </Button>
+        </div>
+        {searchError ? <p className="text-xs text-destructive">{searchError}</p> : null}
+        {hits && hits.length > 0 ? (
+          <div className="flex flex-col gap-0.5 rounded-lg border bg-muted/40 p-1 text-sm">
+            <p className="px-2 pt-1 text-xs text-muted-foreground">Which one?</p>
+            {hits.map((hit) => (
+              <button
+                className="truncate rounded px-2 py-1.5 text-left hover:bg-muted"
+                key={hit.id}
+                onClick={() => jumpTo(hit)}
+                type="button"
+              >
+                {hit.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
       <div className="overflow-hidden rounded-lg border">
         <div className="relative h-[22rem] w-full bg-muted sm:h-[28rem]" ref={containerRef}>
           {!leaflet ? <div aria-hidden className="absolute inset-0 animate-pulse bg-muted" /> : null}
