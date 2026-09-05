@@ -5,7 +5,7 @@ import type * as LeafletNS from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Undo2, Trash2, MapPin, Search } from "lucide-react";
 import { searchWalkPlaces } from "@/server/actions";
-import type { PlaceHit } from "@/lib/geocode";
+import { normalizeUkPostcode, type PlaceHit } from "@/lib/geocode";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -202,10 +202,15 @@ export function RouteEditor({
     setSearchError(null);
     setHits(null);
     try {
-      // Same free-text field for both params: a postcode is recognised and
-      // tried first, otherwise it's searched as a place name — see
-      // geocodeQueries in src/lib/geocode.ts.
-      const result = await searchWalkPlaces(q, q);
+      // One free-text box has to feed searchWalkPlaces's two separate
+      // fields (it was built for the meeting-point form's location +
+      // postcode inputs). searchWalkPlaces itself rejects anything over 10
+      // characters in the postcode slot, so a full address must go in
+      // location instead — only route it to postcode when it actually
+      // looks like one.
+      const result = normalizeUkPostcode(q)
+        ? await searchWalkPlaces("", q)
+        : await searchWalkPlaces(q, "");
       if (!result.ok) {
         setSearchError(result.error);
         return;
