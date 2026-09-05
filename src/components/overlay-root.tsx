@@ -55,6 +55,13 @@ const OPEN_LAYER_SELECTOR = [
   '[data-slot="popover-content"][data-state="open"]',
   '[data-slot="dropdown-menu-content"][data-state="open"]',
   '[data-slot="dropdown-menu-sub-content"][data-state="open"]',
+  // Clerk's own "Manage account" modal (opened from UserButton) is Clerk's
+  // own React tree, not one of our Radix data-slot elements above — without
+  // this, clicking/typing inside it fires our global pointerdown/keydown
+  // listener, finds no *recognised* overlay open, and strips the
+  // scroll-lock Clerk applied to <body>, so the page behind it can scroll
+  // while the modal is still up.
+  ".cl-modalBackdrop",
 ].join(", ");
 
 const OVERLAY_SELECTOR = [
