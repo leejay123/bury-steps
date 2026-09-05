@@ -8,6 +8,7 @@ import { useActionToast } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { RouteEditor } from "@/components/map/route-editor";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,13 +25,17 @@ function Submit({ label }: { label: string }) {
 
 export function RouteForm({
   route,
+  snappingAvailable = false,
   startNear,
 }: {
   route?: { id: string; name: string; notes: string | null; points: RoutePoint[] };
+  /** Whether a maintainer has configured OPENROUTESERVICE_API_KEY. */
+  snappingAvailable?: boolean;
   /** Centre the map somewhere sensible for a brand-new route. */
   startNear?: { lat: number; lng: number } | null;
 }) {
   const [points, setPoints] = useState<RoutePoint[]>(route?.points ?? []);
+  const [snap, setSnap] = useState(true);
   const [state, action] = useActionState<ActionResult | null, FormData>(
     route ? updateRoute : createRoute,
     null,
@@ -71,6 +76,24 @@ export function RouteForm({
           />
         </div>
       </div>
+
+      {snappingAvailable ? (
+        <div className="flex items-start gap-2">
+          <input name="snap" type="hidden" value={snap ? "on" : "off"} />
+          <Checkbox
+            checked={snap}
+            id="snap-to-paths"
+            onCheckedChange={(value) => setSnap(value === true)}
+          />
+          <Label className="flex flex-col items-start gap-0.5 font-normal" htmlFor="snap-to-paths">
+            Snap to real footpaths <span className="text-muted-foreground">(recommended)</span>
+            <span className="text-xs font-normal text-muted-foreground">
+              On save, matches your clicked points onto real paths and recalculates the distance
+              from that. Turn off to save the line exactly as clicked.
+            </span>
+          </Label>
+        </div>
+      ) : null}
 
       <RouteEditor onChange={setPoints} startNear={startNear} value={points} />
 

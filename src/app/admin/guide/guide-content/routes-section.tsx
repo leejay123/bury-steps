@@ -69,6 +69,14 @@ export function RoutesSection() {
             than exact. It is a guide for members deciding whether a walk suits them, not a
             measurement.
           </p>
+          <p>
+            <strong>Snap to real footpaths.</strong> If a &ldquo;Snap to real footpaths&rdquo;
+            checkbox appears above the map, a maintainer has switched on path-matching: on save,
+            your clicked points are matched onto the real network of paths and the distance is
+            recalculated from that, so you need far fewer clicks — just the start, a couple of
+            waypoints, and the finish. Untick it to save the line exactly as you drew it instead.
+            No checkbox means it isn&apos;t set up yet; nothing about drawing changes either way.
+          </p>
         </GuideBody>
       </AccordionContent>
     </AccordionItem>

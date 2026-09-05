@@ -5,7 +5,8 @@ import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
-import { routeDistanceMetres, validateRoutePoints } from "@/lib/route-geometry";
+import { type RoutePoint, routeDistanceMetres, validateRoutePoints } from "@/lib/route-geometry";
+import { snapToFootpaths } from "@/lib/route-routing";
 import { type ActionResult, isPrismaCode, logActionError, revalidateWalkShare } from "./shared";
 
 const routeDetailsSchema = z.object({
@@ -29,6 +30,26 @@ function readPoints(formData: FormData) {
     return { ok: false as const, error: "That route could not be read. Try drawing it again." };
   }
   return validateRoutePoints(parsed);
+}
+
+/**
+ * Snaps the drawn waypoints onto real footpaths when a maintainer has
+ * configured OPENROUTESERVICE_API_KEY, unless the organiser opted out with
+ * the form's "snap to real footpaths" checkbox. Falls back to the plain
+ * clicked line (today's behaviour) in every other case — see
+ * src/lib/route-routing.ts for what "falls back" covers.
+ */
+async function resolveRouteGeometry(formData: FormData, waypoints: RoutePoint[]) {
+  if (formData.get("snap") === "off") {
+    return { points: waypoints, distanceMetres: routeDistanceMetres(waypoints), snapped: false };
+  }
+  return snapToFootpaths(waypoints);
+}
+
+function saveMessage(base: string, snapped: boolean, note?: string): string {
+  if (snapped) return `${base} Matched to real footpaths.`;
+  if (note) return `${base} ${note}`;
+  return base;
 }
 
 function revalidateRoutes(routeId?: string) {
@@ -65,20 +86,26 @@ export async function createRoute(
   if (!points.ok) return { ok: false, error: points.error };
 
   try {
-    // Distance is always recalculated here rather than trusted from the
-    // browser — it feeds the route list and anything built on it later.
+    // Distance (and, when configured, the geometry itself) is always
+    // recalculated here rather than trusted from the browser — it feeds
+    // the route list and anything built on it later.
+    const geometry = await resolveRouteGeometry(formData, points.points);
     const route = await prisma.walkRoute.create({
       data: {
         name: parsed.data.name,
         notes: parsed.data.notes ?? null,
-        points: points.points as unknown as Prisma.InputJsonValue,
-        distanceMetres: routeDistanceMetres(points.points),
+        points: geometry.points as unknown as Prisma.InputJsonValue,
+        distanceMetres: geometry.distanceMetres,
         createdById: admin.id,
       },
       select: { id: true },
     });
     revalidateRoutes(route.id);
-    return { ok: true, message: "Route saved.", href: "/admin/routes" };
+    return {
+      ok: true,
+      message: saveMessage("Route saved.", geometry.snapped, geometry.note),
+      href: "/admin/routes",
+    };
   } catch (err) {
     return logActionError("createRoute", err);
   }
@@ -105,18 +132,19 @@ export async function updateRoute(
   if (!points.ok) return { ok: false, error: points.error };
 
   try {
+    const geometry = await resolveRouteGeometry(formData, points.points);
     await prisma.walkRoute.update({
       where: { id },
       data: {
         name: parsed.data.name,
         notes: parsed.data.notes ?? null,
-        points: points.points as unknown as Prisma.InputJsonValue,
-        distanceMetres: routeDistanceMetres(points.points),
+        points: geometry.points as unknown as Prisma.InputJsonValue,
+        distanceMetres: geometry.distanceMetres,
       },
     });
     revalidateRoutes(id);
     await revalidateWalksUsingRoute(id);
-    return { ok: true, message: "Route updated." };
+    return { ok: true, message: saveMessage("Route updated.", geometry.snapped, geometry.note) };
   } catch (err) {
     if (isPrismaCode(err, "P2025")) return { ok: false, error: "That route could not be found." };
     return logActionError("updateRoute", err);

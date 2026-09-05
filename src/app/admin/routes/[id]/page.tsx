@@ -49,6 +49,7 @@ export default async function EditRoutePage({
           notes: route.notes,
           points: parseRoutePoints(route.points),
         }}
+        snappingAvailable={Boolean(process.env.OPENROUTESERVICE_API_KEY)}
       />
     </div>
   );

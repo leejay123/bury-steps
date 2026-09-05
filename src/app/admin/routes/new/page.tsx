@@ -27,7 +27,10 @@ export default async function NewRoutePage() {
         description="Click the map along the path you walk. The distance works itself out as you go."
         title="New route"
       />
-      <RouteForm startNear={startNear} />
+      <RouteForm
+        snappingAvailable={Boolean(process.env.OPENROUTESERVICE_API_KEY)}
+        startNear={startNear}
+      />
     </div>
   );
 }
