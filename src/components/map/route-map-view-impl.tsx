@@ -1,26 +1,29 @@
 "use client";
 
 /**
- * The one map members and admins see for a route — flat by default, with
- * a button that tilts the SAME map into a 3D terrain view instead of
- * swapping to a second map engine (which is what this replaced: a Leaflet
- * flat map plus a separate MapLibre 3D one, two tile providers and two
- * code paths for what is, to anyone looking at it, one feature).
+ * The optional 3D terrain view of a route — opened on demand from a button
+ * under the plain, reliable flat map (route-map.tsx), not the only way to
+ * see the route. It was the only map for a while, but MapLibre's tiles
+ * load via fetch()/XHR rather than the <img> tags Leaflet's flat map uses,
+ * and that turned out to be exactly the kind of request some networks
+ * silently hang instead of rejecting outright — so this stays a bonus a
+ * flaky connection can fail without taking the whole route view down with
+ * it, rather than the single thing everyone depends on.
  *
  * Runs on MapTiler Cloud (map style + terrain, one key covers both) rather
  * than a keyless combination this project tried first — that one (OSM
  * raster tiles or OpenFreeMap's hosted vector style, draped with public
  * Terrarium elevation tiles from a bare AWS S3 bucket) looked appealing
  * for needing no signup, but OpenFreeMap in particular is one person's two
- * Hetzner servers with no CDN and no uptime promise, and it showed exactly
- * that in practice — requests that neither succeeded nor failed, just
- * hung. MapTiler's free tier (100k map loads/month, no card) is backed by
- * real CDN infrastructure instead. See maptiler-config.ts for the key.
+ * Hetzner servers with no CDN and no uptime promise. MapTiler's free tier
+ * (100k map loads/month, no card) is backed by real CDN infrastructure
+ * instead — better odds, though not a guarantee, on a hostile network.
+ * See maptiler-config.ts for the key.
  *
  * MapTiler's own domain needs its own connect-src entry in next.config.ts's
  * CSP — MapLibre fetches every source via fetch()/XHR into a WebGL
- * texture, not <img> tags the way the old Leaflet maps did elsewhere on
- * the site, so img-src's already-open https: doesn't cover it.
+ * texture, not <img> tags the way route-map.tsx's Leaflet map does, so
+ * img-src's already-open https: doesn't cover it.
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -46,7 +49,18 @@ function makeDotElement(color: string, label: string): HTMLDivElement {
   return el;
 }
 
-export function RouteMapViewImpl({ points, className }: { points: RoutePoint[]; className?: string }) {
+export function RouteMapViewImpl({
+  points,
+  className,
+  startTilted = false,
+}: {
+  points: RoutePoint[];
+  className?: string;
+  /** Skip the extra click when this is only ever opened by a "View in 3D"
+   * button — the map still opens flat for a moment (fitting bounds, etc.)
+   * and eases into the tilt once it's actually ready. */
+  startTilted?: boolean;
+}) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const [ready, setReady] = useState(false);
@@ -173,6 +187,23 @@ export function RouteMapViewImpl({ points, className }: { points: RoutePoint[]; 
       setReady(false);
     };
   }, [points, apiKey]);
+
+  // Skips the extra click for a caller that only ever opens this in 3D
+  // mode (route-3d-toggle.tsx) — the map still fits its bounds flat first,
+  // then eases into the tilt the moment it's actually ready.
+  useEffect(() => {
+    if (!startTilted || !ready || tilted) return;
+    const map = mapRef.current;
+    if (!map) return;
+    try {
+      map.setTerrain({ source: "burysteps-terrain", exaggeration: TERRAIN_EXAGGERATION });
+      map.easeTo({ pitch: TILTED_PITCH, duration: 800 });
+      queueMicrotask(() => setTilted(true));
+    } catch (err) {
+      console.error("Route map failed to tilt:", err);
+      queueMicrotask(() => setError("Could not switch to 3D right now. Try again in a moment."));
+    }
+  }, [ready, startTilted, tilted]);
 
   const toggleTilt = () => {
     const map = mapRef.current;

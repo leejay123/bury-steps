@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { RouteMapView } from "@/components/map/route-map-view";
+import { RouteMap } from "@/components/map/route-map";
+import { Route3DToggle } from "@/components/map/route-3d-toggle";
 import { RouteElevationChart } from "@/components/route-elevation-chart";
 import {
   formatMiles,
@@ -60,12 +61,15 @@ export function WalkRouteCard({
       </CardHeader>
 
       <CardContent className="flex flex-col gap-3">
-        <RouteMapView points={points} />
+        <div className="overflow-hidden rounded-lg border">
+          <RouteMap points={points} />
+        </div>
         <p className="text-sm font-medium">{route.name}</p>
         {route.notes ? <p className="text-sm text-muted-foreground">{route.notes}</p> : null}
         {elevationProfile ? (
           <RouteElevationChart elevations={elevationProfile} points={points} />
         ) : null}
+        <Route3DToggle points={points} />
         <p className="text-xs text-muted-foreground">
           Treat the distance as a guide for deciding whether this walk suits you, not an exact
           measurement.
