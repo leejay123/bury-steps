@@ -65,6 +65,7 @@ export function RouteMapViewImpl({ points, className }: { points: RoutePoint[]; 
 
     let map: MapLibreMap | null = null;
     let loaded = false;
+    let loadTimeout: number | undefined;
     try {
       const bounds = routeBounds(points);
       const centre = bounds
@@ -98,53 +99,77 @@ export function RouteMapViewImpl({ points, className }: { points: RoutePoint[]; 
         }
       });
 
+      // Belt and braces: a request that hangs rather than fails outright
+      // (blocked silently by something between the browser and the tile
+      // host, rather than rejected) fires neither 'load' nor 'error' —
+      // without this, that leaves an empty map and a permanently-disabled
+      // button with no explanation at all.
+      loadTimeout = window.setTimeout(() => {
+        if (!loaded) setError("The map is taking too long to load. Try refreshing the page.");
+      }, 12_000);
+      map.once("load", () => window.clearTimeout(loadTimeout));
+
       map.on("load", () => {
         if (!map) return;
         loaded = true;
 
-        map.addSource("terrain", {
-          type: "raster-dem",
-          tiles: [TERRAIN_TILE_URL],
-          tileSize: 256,
-          encoding: "terrarium",
-          maxzoom: TERRAIN_MAX_ZOOM,
-          attribution: TERRAIN_ATTRIBUTION,
-        });
+        // Everything below runs after OpenFreeMap's own style has finished
+        // loading, so it can throw synchronously for reasons that have
+        // nothing to do with network failures — most notably, adding a
+        // source or layer under an id the loaded style already uses itself
+        // throws immediately rather than emitting an 'error' event. This
+        // was happening silently before: the map sat there fully loaded,
+        // minus the route line, minus the "ready" state the tilt button
+        // needs, with no visible sign anything had gone wrong. Prefixed
+        // ids and this try/catch fix both the likely cause and the silence.
+        try {
+          map.addSource("burysteps-terrain", {
+            type: "raster-dem",
+            tiles: [TERRAIN_TILE_URL],
+            tileSize: 256,
+            encoding: "terrarium",
+            maxzoom: TERRAIN_MAX_ZOOM,
+            attribution: TERRAIN_ATTRIBUTION,
+          });
 
-        map.addSource("route", {
-          type: "geojson",
-          data: {
-            type: "Feature",
-            properties: {},
-            geometry: { type: "LineString", coordinates: points.map((p) => [p.lng, p.lat]) },
-          },
-        });
-        map.addLayer({
-          id: "route-line",
-          type: "line",
-          source: "route",
-          layout: { "line-cap": "round", "line-join": "round" },
-          paint: { "line-color": "#2563eb", "line-width": 4 },
-        });
+          map.addSource("burysteps-route", {
+            type: "geojson",
+            data: {
+              type: "Feature",
+              properties: {},
+              geometry: { type: "LineString", coordinates: points.map((p) => [p.lng, p.lat]) },
+            },
+          });
+          map.addLayer({
+            id: "burysteps-route-line",
+            type: "line",
+            source: "burysteps-route",
+            layout: { "line-cap": "round", "line-join": "round" },
+            paint: { "line-color": "#2563eb", "line-width": 4 },
+          });
 
-        new Marker({ element: makeDotElement("#16a34a", "Start") })
-          .setLngLat([points[0].lng, points[0].lat])
-          .addTo(map);
-        if (points.length > 1) {
-          const last = points[points.length - 1];
-          new Marker({ element: makeDotElement("#dc2626", "Finish") }).setLngLat([last.lng, last.lat]).addTo(map);
+          new Marker({ element: makeDotElement("#16a34a", "Start") })
+            .setLngLat([points[0].lng, points[0].lat])
+            .addTo(map);
+          if (points.length > 1) {
+            const last = points[points.length - 1];
+            new Marker({ element: makeDotElement("#dc2626", "Finish") }).setLngLat([last.lng, last.lat]).addTo(map);
+          }
+
+          if (bounds) {
+            map.fitBounds(
+              [
+                [bounds.west, bounds.south],
+                [bounds.east, bounds.north],
+              ],
+              { padding: 48, duration: 0 },
+            );
+          }
+          setReady(true);
+        } catch (err) {
+          console.error("Route map failed to add the route to it:", err);
+          setError("Could not show the route on the map right now. Try again in a moment.");
         }
-
-        if (bounds) {
-          map.fitBounds(
-            [
-              [bounds.west, bounds.south],
-              [bounds.east, bounds.north],
-            ],
-            { padding: 48, duration: 0 },
-          );
-        }
-        setReady(true);
       });
     } catch (err) {
       // Most likely no WebGL (an old browser, or it's disabled). Deferred
@@ -154,6 +179,7 @@ export function RouteMapViewImpl({ points, className }: { points: RoutePoint[]; 
     }
 
     return () => {
+      window.clearTimeout(loadTimeout);
       map?.remove();
       mapRef.current = null;
       setReady(false);
@@ -164,13 +190,18 @@ export function RouteMapViewImpl({ points, className }: { points: RoutePoint[]; 
     const map = mapRef.current;
     if (!map || !ready) return;
     const next = !tilted;
-    setTilted(next);
-    if (next) {
-      map.setTerrain({ source: "terrain", exaggeration: TERRAIN_EXAGGERATION });
-      map.easeTo({ pitch: TILTED_PITCH, duration: 800 });
-    } else {
-      map.setTerrain(null);
-      map.easeTo({ pitch: FLAT_PITCH, duration: 800 });
+    try {
+      if (next) {
+        map.setTerrain({ source: "burysteps-terrain", exaggeration: TERRAIN_EXAGGERATION });
+        map.easeTo({ pitch: TILTED_PITCH, duration: 800 });
+      } else {
+        map.setTerrain(null);
+        map.easeTo({ pitch: FLAT_PITCH, duration: 800 });
+      }
+      setTilted(next);
+    } catch (err) {
+      console.error("Route map failed to tilt:", err);
+      setError("Could not switch to 3D right now. Try again in a moment.");
     }
   };
 
