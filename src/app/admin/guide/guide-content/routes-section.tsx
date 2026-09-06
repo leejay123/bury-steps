@@ -38,14 +38,6 @@ export function RoutesSection() {
               it gets thinned to fit, without changing the shape or the distance in any way that
               matters.
             </li>
-            <li>
-              Not sure where you are on the map while checking it over? Start typing a place name,
-              postcode, or full address (e.g. &ldquo;12 Fenwick Drive, Bury&rdquo;) into the search
-              box — suggestions appear as you type, and picking one (or pressing{" "}
-              <strong>Find</strong>) jumps the map there and drops a marker. Standing on the actual
-              path? <strong>Use my location</strong> jumps straight to wherever you are right now
-              instead. Neither one changes the route — they only move the view.
-            </li>
             <li>Save.</li>
           </Steps>
           <p>

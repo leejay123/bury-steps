@@ -1,7 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { RouteMap } from "@/components/map/route-map";
-import { Route3DToggle } from "@/components/map/route-3d-toggle";
+import { RouteMapView } from "@/components/map/route-map-view";
 import { RouteElevationChart } from "@/components/route-elevation-chart";
 import {
   formatMiles,
@@ -41,8 +40,8 @@ export function WalkRouteCard({
   const elevationProfile = parseElevationProfile(route.elevationProfile, points.length);
 
   return (
-    <Card className="gap-4 overflow-hidden py-0">
-      <CardHeader className="px-6 pt-6">
+    <Card className="gap-4">
+      <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-base">The route</CardTitle>
           {route.difficulty ? (
@@ -60,17 +59,13 @@ export function WalkRouteCard({
         </CardDescription>
       </CardHeader>
 
-      <div className="border-y">
-        <RouteMap points={points} />
-      </div>
-
-      <CardContent className="flex flex-col gap-2 px-6 pb-6">
+      <CardContent className="flex flex-col gap-3">
+        <RouteMapView points={points} />
         <p className="text-sm font-medium">{route.name}</p>
         {route.notes ? <p className="text-sm text-muted-foreground">{route.notes}</p> : null}
         {elevationProfile ? (
-          <RouteElevationChart className="pt-2" elevations={elevationProfile} points={points} />
+          <RouteElevationChart elevations={elevationProfile} points={points} />
         ) : null}
-        <Route3DToggle points={points} />
         <p className="text-xs text-muted-foreground">
           Treat the distance as a guide for deciding whether this walk suits you, not an exact
           measurement.

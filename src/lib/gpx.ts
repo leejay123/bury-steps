@@ -33,6 +33,13 @@ export type GpxParseResult =
       ok: true;
       points: RoutePoint[];
       name: string | null;
+      /** The file's own <desc>, or <cmt> when there's no <desc> — whoever
+       * recorded or planned the route sometimes leaves a note here (a
+       * warning about a stile, why the route loops the way it does). Not
+       * auto-saved: the route form only offers to fill it into Notes when
+       * that field is still empty, never overwriting what an organiser
+       * already typed. */
+      description: string | null;
       elevation: ElevationStats | null;
       /** One elevation sample per point in `points`, for an elevation-profile
        * chart — same length and order, so plotting it against `points`'
@@ -48,6 +55,8 @@ export type GpxParseResult =
 const POINT_TAG = /<(trkpt|rtept)\b([^>]*?)(?:\/>|>([\s\S]*?)<\/\1>)/gi;
 const ELE_TAG = /<ele>\s*(-?[\d.]+)\s*<\/ele>/i;
 const NAME_TAG = /<name>([^<]*)<\/name>/i;
+const DESC_TAG = /<desc>([^<]*)<\/desc>/i;
+const CMT_TAG = /<cmt>([^<]*)<\/cmt>/i;
 
 function attr(tagAttrs: string, name: string): number | null {
   const match = tagAttrs.match(new RegExp(`\\b${name}\\s*=\\s*"([^"]*)"`, "i"));
@@ -131,10 +140,14 @@ export function parseGpx(xmlText: string): GpxParseResult {
   const fullProfile = hasFullProfile ? (elevations as number[]) : null;
   const elevation = fullProfile ? computeElevationStats(fullProfile) : null;
 
+  const description =
+    xmlText.match(DESC_TAG)?.[1].trim() || xmlText.match(CMT_TAG)?.[1].trim() || null;
+
   return {
     ok: true,
     points,
     name: xmlText.match(NAME_TAG)?.[1].trim() || null,
+    description,
     elevation,
     elevationProfile: fullProfile,
   };
@@ -270,6 +283,7 @@ export function parseGpxForRoute(
       ok: true;
       points: RoutePoint[];
       name: string | null;
+      description: string | null;
       elevation: ElevationStats | null;
       elevationProfile: number[] | null;
       simplifiedFrom: number;
@@ -284,6 +298,7 @@ export function parseGpxForRoute(
     ok: true,
     points: result.points.filter((_, i) => keep[i]),
     name: result.name,
+    description: result.description,
     elevation: result.elevation,
     elevationProfile: result.elevationProfile
       ? result.elevationProfile.filter((_, i) => keep[i])

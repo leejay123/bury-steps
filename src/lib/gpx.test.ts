@@ -14,7 +14,7 @@ const BURRS = { lat: 53.6132, lng: -2.3138 };
 
 function gpxTrack(
   points: { lat: number; lng: number }[],
-  options?: { name?: string; elevations?: (number | null)[] },
+  options?: { name?: string; desc?: string; cmt?: string; elevations?: (number | null)[] },
 ): string {
   const trkpts = points
     .map((p, i) => {
@@ -23,8 +23,11 @@ function gpxTrack(
       return `<trkpt lat="${p.lat}" lon="${p.lng}">${eleTag}</trkpt>`;
     })
     .join("\n");
+  const nameTag = options?.name ? `<name>${options.name}</name>` : "";
+  const descTag = options?.desc ? `<desc>${options.desc}</desc>` : "";
+  const cmtTag = options?.cmt ? `<cmt>${options.cmt}</cmt>` : "";
   return `<?xml version="1.0"?>
-<gpx version="1.1"><trk>${options?.name ? `<name>${options.name}</name>` : ""}<trkseg>${trkpts}</trkseg></trk></gpx>`;
+<gpx version="1.1"><trk>${nameTag}${descTag}${cmtTag}<trkseg>${trkpts}</trkseg></trk></gpx>`;
 }
 
 describe("parseGpx", () => {
@@ -120,6 +123,26 @@ describe("parseGpx", () => {
     const result = parseGpx(xml);
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.elevation).toBeNull();
+  });
+
+  it("reads the track description", () => {
+    const xml = gpxTrack([BURY, BURRS], { desc: "Watch for the stile halfway round." });
+    const result = parseGpx(xml);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.description).toBe("Watch for the stile halfway round.");
+  });
+
+  it("falls back to the comment when there is no description", () => {
+    const xml = gpxTrack([BURY, BURRS], { cmt: "Recorded on a wet Tuesday." });
+    const result = parseGpx(xml);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.description).toBe("Recorded on a wet Tuesday.");
+  });
+
+  it("gives no description when the file has neither", () => {
+    const result = parseGpx(gpxTrack([BURY, BURRS]));
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.description).toBeNull();
   });
 
   it("returns an elevation profile aligned with points when every point has one", () => {

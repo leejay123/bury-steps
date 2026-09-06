@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { createRoute, updateRoute, type ActionResult } from "@/server/actions";
@@ -62,6 +62,10 @@ export function RouteForm({
   startNear?: { lat: number; lng: number } | null;
 }) {
   const [points, setPoints] = useState<RoutePoint[]>(route?.points ?? []);
+  // Notes is an uncontrolled field (defaultValue), so a GPX import's own
+  // <desc>/<cmt> is offered into it imperatively via this ref, and only
+  // when it's still empty — never overwriting what an organiser typed.
+  const notesRef = useRef<HTMLTextAreaElement | null>(null);
   const [snap, setSnap] = useState(true);
   const [difficulty, setDifficulty] = useState(route?.difficulty ?? NO_DIFFICULTY);
   // Kept alongside points rather than recalculated: elevation gain/loss
@@ -141,6 +145,7 @@ export function RouteForm({
             maxLength={1000}
             name="notes"
             placeholder="e.g. one steep bit, gate halfway"
+            ref={notesRef}
             rows={1}
           />
         </div>
@@ -207,10 +212,13 @@ export function RouteForm({
           setPoints(next);
           if (next.length === 0) setElevation(null);
         }}
-        onImport={({ elevation: imported, elevationProfile: importedProfile }) => {
+        onImport={({ elevation: imported, elevationProfile: importedProfile, description }) => {
           setSnap(false);
           setElevation(imported);
           setElevationProfile(importedProfile);
+          if (description && notesRef.current && !notesRef.current.value.trim()) {
+            notesRef.current.value = description;
+          }
         }}
         startNear={startNear}
         value={points}

@@ -19,13 +19,7 @@ export {
 
 export { createJourneyEvent, updateJourneyEvent, deleteJourneyEvent } from "./actions/journey";
 
-export {
-  createRoute,
-  updateRoute,
-  deleteRoute,
-  setWalkRoute,
-  searchRoutePlaces,
-} from "./actions/routes";
+export { createRoute, updateRoute, deleteRoute, setWalkRoute } from "./actions/routes";
 
 export {
   clockIn,
