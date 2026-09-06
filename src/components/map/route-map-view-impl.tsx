@@ -2,25 +2,25 @@
 
 /**
  * The one map members and admins see for a route — flat by default, with
- * a button that tilts the SAME map into the 3D terrain view instead of
+ * a button that tilts the SAME map into a 3D terrain view instead of
  * swapping to a second map engine (which is what this replaced: a Leaflet
  * flat map plus a separate MapLibre 3D one, two tile providers and two
  * code paths for what is, to anyone looking at it, one feature).
  *
- * Two free, keyless sources make it work:
- *  - Colour and cartography: OpenFreeMap's hosted "Liberty" vector style —
- *    proper roads, land use, and 3D-extruded buildings at closer zoom.
- *    OpenFreeMap is a public service funded to stay that way, unlike most
- *    vector-tile hosts which meter usage behind a signup.
- *  - Shape: the "Terrarium" elevation tiles from Mapzen's old Elevation
- *    Tiles project, still mirrored by AWS's Open Data program and released
- *    into the public domain — the exact source MapLibre's own terrain
- *    demos use. Only switched on when tilted; the flat view never needs it.
+ * Runs on MapTiler Cloud (map style + terrain, one key covers both) rather
+ * than a keyless combination this project tried first — that one (OSM
+ * raster tiles or OpenFreeMap's hosted vector style, draped with public
+ * Terrarium elevation tiles from a bare AWS S3 bucket) looked appealing
+ * for needing no signup, but OpenFreeMap in particular is one person's two
+ * Hetzner servers with no CDN and no uptime promise, and it showed exactly
+ * that in practice — requests that neither succeeded nor failed, just
+ * hung. MapTiler's free tier (100k map loads/month, no card) is backed by
+ * real CDN infrastructure instead. See maptiler-config.ts for the key.
  *
- * Both hosts need their own connect-src entry in next.config.ts's CSP —
- * MapLibre fetches every source via fetch()/XHR into a WebGL texture, not
- * <img> tags the way the old Leaflet maps did elsewhere on the site, so
- * img-src's already-open https: doesn't cover it.
+ * MapTiler's own domain needs its own connect-src entry in next.config.ts's
+ * CSP — MapLibre fetches every source via fetch()/XHR into a WebGL
+ * texture, not <img> tags the way the old Leaflet maps did elsewhere on
+ * the site, so img-src's already-open https: doesn't cover it.
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -29,15 +29,9 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { Box } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { maptilerApiKey, maptilerStyleUrl, maptilerTerrainUrl } from "@/lib/maptiler-config";
 import { routeBounds, type RoutePoint } from "@/lib/route-geometry";
 
-const OPENFREEMAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
-
-const TERRAIN_TILE_URL = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png";
-const TERRAIN_ATTRIBUTION = "Elevation: AWS Open Data / Mapzen Terrarium (public domain)";
-/** Native resolution of the public Terrarium tileset — asking past this
- * just reuses the closest tile, which MapLibre already does on its own. */
-const TERRAIN_MAX_ZOOM = 15;
 /** A gentle boost: Bury's hills are real but subtle at true 1:1 scale, and
  * without some exaggeration "3D" would barely look different from flat. */
 const TERRAIN_EXAGGERATION = 1.5;
@@ -59,9 +53,11 @@ export function RouteMapViewImpl({ points, className }: { points: RoutePoint[]; 
   const [tilted, setTilted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const apiKey = maptilerApiKey();
+
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || points.length < 2) return;
+    if (!container || points.length < 2 || !apiKey) return;
 
     let map: MapLibreMap | null = null;
     let loaded = false;
@@ -74,7 +70,7 @@ export function RouteMapViewImpl({ points, className }: { points: RoutePoint[]; 
 
       map = new MapLibreMap({
         container,
-        style: OPENFREEMAP_STYLE_URL,
+        style: maptilerStyleUrl(apiKey),
         center: centre as [number, number],
         zoom: 13,
         pitch: FLAT_PITCH,
@@ -100,12 +96,10 @@ export function RouteMapViewImpl({ points, className }: { points: RoutePoint[]; 
       });
 
       // Belt and braces: a request that hangs rather than fails outright
-      // (blocked silently by something between the browser and the tile
-      // host, rather than rejected) fires neither 'load' nor 'error' —
-      // without this, that leaves an empty map and a permanently-disabled
-      // button with no explanation at all.
+      // fires neither 'load' nor 'error' — without this, that leaves an
+      // empty map and a permanently-disabled button with no explanation.
       loadTimeout = window.setTimeout(() => {
-        if (!loaded) setError("The map is taking too long to load. Try refreshing the page.");
+        if (!loaded) setError("The map is taking too long to load. Try again in a moment.");
       }, 12_000);
       map.once("load", () => window.clearTimeout(loadTimeout));
 
@@ -113,23 +107,17 @@ export function RouteMapViewImpl({ points, className }: { points: RoutePoint[]; 
         if (!map) return;
         loaded = true;
 
-        // Everything below runs after OpenFreeMap's own style has finished
-        // loading, so it can throw synchronously for reasons that have
-        // nothing to do with network failures — most notably, adding a
-        // source or layer under an id the loaded style already uses itself
-        // throws immediately rather than emitting an 'error' event. This
-        // was happening silently before: the map sat there fully loaded,
-        // minus the route line, minus the "ready" state the tilt button
-        // needs, with no visible sign anything had gone wrong. Prefixed
-        // ids and this try/catch fix both the likely cause and the silence.
+        // Everything below runs after the base style has finished loading,
+        // so it can throw synchronously for reasons that have nothing to
+        // do with network failures (an id collision with a source/layer
+        // the loaded style already defines, most notably) — caught here so
+        // that fails loudly with a real message instead of leaving the map
+        // stuck looking "still loading" forever with nothing to explain it.
         try {
           map.addSource("burysteps-terrain", {
             type: "raster-dem",
-            tiles: [TERRAIN_TILE_URL],
-            tileSize: 256,
+            url: maptilerTerrainUrl(apiKey),
             encoding: "terrarium",
-            maxzoom: TERRAIN_MAX_ZOOM,
-            attribution: TERRAIN_ATTRIBUTION,
           });
 
           map.addSource("burysteps-route", {
@@ -184,11 +172,11 @@ export function RouteMapViewImpl({ points, className }: { points: RoutePoint[]; 
       mapRef.current = null;
       setReady(false);
     };
-  }, [points]);
+  }, [points, apiKey]);
 
   const toggleTilt = () => {
     const map = mapRef.current;
-    if (!map || !ready) return;
+    if (!map || !ready || !apiKey) return;
     const next = !tilted;
     try {
       if (next) {
@@ -206,6 +194,14 @@ export function RouteMapViewImpl({ points, className }: { points: RoutePoint[]; 
   };
 
   if (points.length < 2) return null;
+
+  if (!apiKey) {
+    return (
+      <div className={cn("rounded-lg border p-4 text-sm text-muted-foreground", className)}>
+        The map isn&apos;t set up yet — ask whoever runs the site to add a free MapTiler key.
+      </div>
+    );
+  }
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
