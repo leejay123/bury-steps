@@ -112,9 +112,14 @@ export function RouteMapViewImpl({
       // Belt and braces: a request that hangs rather than fails outright
       // fires neither 'load' nor 'error' — without this, that leaves an
       // empty map and a permanently-disabled button with no explanation.
+      // Loading needs the style, four tiles.json manifests, two sprite
+      // files, and the first terrain tiles all to land before 'load'
+      // fires — on an ordinary (not hanging) connection that can
+      // genuinely take longer than 12s, which was firing this timeout on
+      // loads that would have finished fine a few seconds later.
       loadTimeout = window.setTimeout(() => {
         if (!loaded) setError("The map is taking too long to load. Try again in a moment.");
-      }, 12_000);
+      }, 25_000);
       map.once("load", () => window.clearTimeout(loadTimeout));
 
       map.on("load", () => {
