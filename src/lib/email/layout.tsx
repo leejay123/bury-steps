@@ -13,7 +13,6 @@ const INK = "#0d0d0d";
 const BODY_TEXT = "#262626";
 const MUTED_TEXT = "#737373";
 const BORDER = "#e5e5e5";
-const PAGE_BG = "#f4f4f4";
 
 export type EmailLayoutProps = {
   /** Shown as the inbox preview line, before the email is opened. Keep it to one short sentence. */
@@ -50,18 +49,9 @@ export function EmailLayout({
     <Html>
       <Head />
       <Preview>{previewText}</Preview>
-      <Body style={{ backgroundColor: PAGE_BG, margin: 0, padding: "24px 0", fontFamily: FONT_STACK }}>
-        <Container
-          style={{
-            backgroundColor: "#ffffff",
-            maxWidth: "480px",
-            margin: "0 auto",
-            border: `1px solid ${BORDER}`,
-            borderRadius: "8px",
-            overflow: "hidden",
-          }}
-        >
-          <Section style={{ padding: "24px 32px", borderBottom: `1px solid ${BORDER}` }}>
+      <Body style={{ backgroundColor: "#ffffff", margin: 0, padding: "24px 0", fontFamily: FONT_STACK }}>
+        <Container style={{ maxWidth: "480px", margin: "0 auto" }}>
+          <Section style={{ padding: "0 32px 24px", borderBottom: `1px solid ${BORDER}` }}>
             <Img alt={siteName} height="32" src={logoUrl} style={{ height: "32px", width: "auto" }} />
           </Section>
 
