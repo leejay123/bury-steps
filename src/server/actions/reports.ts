@@ -2,9 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, displayName } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { londonWallClockToUtc } from "@/lib/dates";
+import { formatDateTime, londonWallClockToUtc } from "@/lib/dates";
+import { sendAccidentReportAlertEmail } from "@/lib/email/mailer";
 import { type ActionResult, isPrismaCode, logActionError } from "./shared";
 
 const reportCopySchema = z.object({
@@ -45,8 +46,9 @@ export async function addAccidentReport(
     return { ok: false, error: "That date and time could not be read. Try again." };
   }
 
+  let walkTitle: string | null;
   try {
-    await prisma.accidentReport.create({
+    const created = await prisma.accidentReport.create({
       data: {
         happenedAt,
         walkId: parsed.data.walkId ?? null,
@@ -56,7 +58,9 @@ export async function addAccidentReport(
         organiserNotes: parsed.data.organiserNotes ?? null,
         createdById: admin.id,
       },
+      select: { walk: { select: { title: true } } },
     });
+    walkTitle = created.walk?.title ?? null;
   } catch (err) {
     // An invalid/stale walkId (e.g. the walk was deleted between loading
     // the form and submitting it) fails the foreign key here rather than
@@ -65,7 +69,34 @@ export async function addAccidentReport(
   }
 
   revalidatePath("/admin/reports");
+
+  await notifyOtherAdminsOfAccidentReport({
+    whenText: formatDateTime(happenedAt),
+    walkTitle,
+    whoInvolved: parsed.data.whoInvolved,
+    createdByName: displayName(admin),
+    excludeAdminId: admin.id,
+  });
+
   return { ok: true, message: "Accident report saved." };
+}
+
+async function notifyOtherAdminsOfAccidentReport(report: {
+  whenText: string;
+  walkTitle: string | null;
+  whoInvolved: string;
+  createdByName: string;
+  excludeAdminId: string;
+}): Promise<void> {
+  try {
+    const otherAdmins = await prisma.user.findMany({
+      where: { role: "ADMIN", id: { not: report.excludeAdminId } },
+      select: { email: true },
+    });
+    await sendAccidentReportAlertEmail(report, otherAdmins.map((admin) => admin.email));
+  } catch (err) {
+    console.error("addAccidentReport: failed to notify other organisers", err);
+  }
 }
 
 export async function updateAccidentReport(

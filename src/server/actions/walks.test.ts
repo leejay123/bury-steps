@@ -14,9 +14,12 @@ const {
   walkStatus,
   prismaMock,
   transaction,
+  sendWalkAnnouncedEmail,
+  sendWalkCancelledEmail,
 } = vi.hoisted(() => {
   const prismaMock: Record<string, Record<string, ReturnType<typeof vi.fn>>> = {
     walk: { create: vi.fn(), update: vi.fn(), delete: vi.fn(), findUnique: vi.fn() },
+    user: { findMany: vi.fn(async () => []) },
   };
   const transaction = vi.fn(async (arg: unknown) => {
     if (Array.isArray(arg)) return Promise.all(arg);
@@ -36,13 +39,18 @@ const {
     walkStatus: vi.fn(() => "upcoming"),
     prismaMock,
     transaction,
+    sendWalkAnnouncedEmail: vi.fn(async () => {}),
+    sendWalkCancelledEmail: vi.fn(async () => {}),
   };
 });
 
 vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("@/lib/db", () => ({ prisma: { ...prismaMock, $transaction: transaction } }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
-vi.mock("@/lib/walk-slug", () => ({ allocateWalkSlug }));
+vi.mock("@/lib/walk-slug", () => ({ allocateWalkSlug, walkShareUrl: vi.fn(() => "https://example.com/w/test") }));
+// Real email sending pulls in site-theme.ts (next/cache's unstable_cache,
+// not mocked above) and hits the network — out of scope for these tests.
+vi.mock("@/lib/email/mailer", () => ({ sendWalkAnnouncedEmail, sendWalkCancelledEmail }));
 vi.mock("@/lib/walk-window", async () => {
   const actual = await vi.importActual<typeof import("@/lib/walk-window")>("@/lib/walk-window");
   return { ...actual, isWalkScheduleLocked, isWalkStartInThePast, walkStatus };
@@ -237,6 +245,32 @@ describe("cancelWalk", () => {
       ok: true,
       message: "Walk cancelled. Members will see it marked as cancelled.",
     });
+  });
+
+  it("notifies opted-in members once the walk is cancelled", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({
+      id: "walk-1",
+      token: "tok-1",
+      slug: "sunday-stroll",
+      title: "Sunday stroll",
+      cancelledAt: null,
+      startsAt: new Date("2026-09-13T13:30:00Z"),
+      durationMins: 60,
+    });
+    prismaMock.walk.update.mockResolvedValueOnce({});
+    prismaMock.user.findMany.mockResolvedValueOnce([
+      { id: "user-1", email: "jane@example.com", firstName: "Jane", unsubscribeToken: null },
+    ]);
+
+    await cancelWalk(null, form({ walkId: "walk-1", reason: "Bad weather" }));
+
+    expect(prismaMock.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { emailWalkAnnouncements: true } }),
+    );
+    expect(sendWalkCancelledEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "Sunday stroll", reason: "Bad weather" }),
+      expect.objectContaining({ id: "user-1" }),
+    );
   });
 });
 
