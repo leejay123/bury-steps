@@ -32,6 +32,16 @@ export async function subscribeToNewsletter(
   if (email === "invalid") return { ok: false, error: "Enter a valid email address." };
 
   try {
+    const existing = await prisma.newsletterSubscriber.findUnique({
+      where: { email },
+      select: { unsubscribedAt: true },
+    });
+    // Already an active subscriber — say so instead of quietly re-sending
+    // the same confirmation email every time they submit the form again.
+    if (existing && !existing.unsubscribedAt) {
+      return { ok: true, message: "You're already subscribed — thanks!" };
+    }
+
     // Upsert rather than create: resubscribing after a previous unsubscribe
     // should just clear unsubscribedAt, not fail on the unique email index.
     const subscriber = await prisma.newsletterSubscriber.upsert({
