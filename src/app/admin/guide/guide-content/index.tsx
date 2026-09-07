@@ -1,7 +1,6 @@
 import { Accordion } from "@/components/ui/accordion";
 import { OverviewSection } from "./overview-section";
 import { WalksSection } from "./walks-section";
-import { RoutesSection } from "./routes-section";
 import { ProgressClockInSection } from "./progress-clockin-section";
 import { MembersSection } from "./members-section";
 import { HomepageNoticesSection } from "./homepage-notices-section";
@@ -17,7 +16,6 @@ export function OrganiserGuide() {
     <Accordion className="w-full" collapsible defaultValue="what" type="single">
       <OverviewSection />
       <WalksSection />
-      <RoutesSection />
       <ProgressClockInSection />
       <MembersSection />
       <HomepageNoticesSection />

@@ -16,7 +16,6 @@ describe("navItems", () => {
       "/notices",
       "/progress",
       "/admin/members",
-      "/admin/routes",
       "/admin/messages",
       "/admin/reports",
       "/admin/settings",

@@ -10,7 +10,6 @@ import { ShareLink } from "@/components/share-link";
 import { EmptyState } from "@/components/empty-state";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { WalkMapSection } from "@/components/walk-map-section";
-import { WalkRouteCard } from "@/components/walk-route-card";
 import { meetingPointLabel } from "@/lib/geocode";
 import { ensureWalkSlug, walkShareUrl } from "@/lib/walk-slug";
 import { CancelWalkButton } from "./cancel-walk-button";
@@ -20,8 +19,6 @@ import { AddAttendanceButton } from "./add-attendance-button";
 import { ReopenWalkButton } from "./reopen-walk-button";
 import { DeleteWalkButton } from "./delete-walk-button";
 import { WalkJourneyManager } from "./walk-journey";
-import { WalkRoutePicker } from "./walk-route-picker";
-import { formatMiles } from "@/lib/route-geometry";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -67,18 +64,6 @@ export default async function WalkDetailPage({
         orderBy: [{ clockedOutAt: "asc" }, { clockedInAt: "asc" }],
         include: { user: { select: { firstName: true, lastName: true, email: true } } },
       },
-      routeId: true,
-      route: {
-        select: {
-          name: true,
-          notes: true,
-          points: true,
-          distanceMetres: true,
-          elevationGainMetres: true,
-          elevationProfile: true,
-          difficulty: true,
-        },
-      },
       journeyEvents: {
         orderBy: { happenedAt: "asc" },
         select: { id: true, title: true, body: true, happenedAt: true },
@@ -87,13 +72,6 @@ export default async function WalkDetailPage({
   });
 
   if (!walk) notFound();
-
-  // The whole route library, for the picker. There will only ever be a
-  // handful of these — the group walks the same paths repeatedly.
-  const routes = await prisma.walkRoute.findMany({
-    orderBy: { name: "asc" },
-    select: { id: true, name: true, distanceMetres: true },
-  });
 
   const slug = await ensureWalkSlug(walk);
   const meeting = meetingPointLabel(walk.location, walk.postcode);
@@ -176,18 +154,6 @@ export default async function WalkDetailPage({
       <ShareLink url={walkShareUrl(appUrl(), { token: walk.token, slug })} />
 
       {meeting ? <WalkMapSection location={meeting} walk={walk} /> : null}
-
-      <WalkRoutePicker
-        routes={routes.map((route) => ({
-          id: route.id,
-          name: route.name,
-          distanceLabel: formatMiles(route.distanceMetres),
-        }))}
-        selectedRouteId={walk.routeId}
-        walkId={walk.id}
-      />
-
-      <WalkRouteCard route={walk.route} />
 
       <div className="-mx-4 flex flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain px-4 [scrollbar-width:none] [-ms-overflow-style:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden [&>*]:shrink-0">
         <Button asChild size="sm" variant="outline">

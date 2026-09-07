@@ -3,9 +3,9 @@
 /**
  * A tab left open across a deploy still holds the previous build's chunk
  * filenames. The moment it tries to fetch one of those — a lazy import
- * (Route3DToggle's own chunk, most likely to be opened long after the tab
- * was first loaded), or a script tag pointed at a same-page navigation's
- * new build — the new deployment doesn't have that file any more, so the
+ * opened long after the tab was first loaded, or a script tag pointed at
+ * a same-page navigation's new build — the new deployment doesn't have
+ * that file any more, so the
  * server's catch-all sends its normal "page not found" HTML back instead.
  * The browser trying to run that HTML as a module script is exactly the
  * "non-JavaScript MIME type of text/html" error: real, and not something
@@ -66,8 +66,8 @@ export function StaleDeployReload() {
     }
 
     // A stale dynamic import() (React.lazy, next/dynamic) rejects instead —
-    // that's how Route3DToggle's own chunk would fail on a tab left open
-    // since before this exact code shipped.
+    // that's how a lazily-loaded chunk would fail on a tab left open since
+    // before this exact code shipped.
     function onUnhandledRejection(event: PromiseRejectionEvent) {
       if (isStaleChunkFailure(event.reason?.message)) reloadOnce();
     }
