@@ -7,6 +7,7 @@ import { getOptionalUser } from "@/lib/auth";
 import { formatWalkDate } from "@/lib/dates";
 import { accountPortalHref, appUrl } from "@/lib/urls";
 import { meetingPointLabel } from "@/lib/geocode";
+import { what3wordsUrl } from "@/lib/what3words";
 import { ensureWalkSlug, walkShareUrl } from "@/lib/walk-slug";
 import { canAddWalkToCalendar, walkStatus } from "@/lib/walk-window";
 import { WalkFacts } from "@/components/walk-facts";
@@ -37,6 +38,7 @@ const getWalkByShareKey = cache((key: string) =>
       postcode: true,
       latitude: true,
       longitude: true,
+      what3words: true,
       startsAt: true,
       durationMins: true,
       cancelledAt: true,
@@ -224,6 +226,14 @@ export default async function WalkLinkPage({
       </Card>
 
       {meeting ? <WalkMapSection location={meeting} walk={walk} /> : null}
+
+      {walk.what3words ? (
+        <Button asChild className="self-start" size="sm" variant="outline">
+          <a href={what3wordsUrl(walk.what3words)} rel="noopener noreferrer" target="_blank">
+            {"///"} {walk.what3words} — precise location
+          </a>
+        </Button>
+      ) : null}
 
       {status === "cancelled" ? null : user ? (
         <WalkLivePanel

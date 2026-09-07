@@ -14,12 +14,14 @@ export function MeetingPointFields({
   defaultLocation = "",
   defaultLongitude = null,
   defaultPostcode = "",
+  defaultWhat3words = "",
   idPrefix,
 }: {
   defaultLatitude?: number | null;
   defaultLocation?: string;
   defaultLongitude?: number | null;
   defaultPostcode?: string;
+  defaultWhat3words?: string;
   idPrefix: string;
 }) {
   const [location, setLocation] = useState(defaultLocation);
@@ -68,6 +70,7 @@ export function MeetingPointFields({
 
   const locationId = `${idPrefix}-location`;
   const postcodeId = `${idPrefix}-postcode`;
+  const what3wordsId = `${idPrefix}-what3words`;
 
   return (
     <div className="space-y-3">
@@ -114,6 +117,21 @@ export function MeetingPointFields({
         <p className="text-xs text-muted-foreground">
           Optional, but a UK postcode is the most reliable pin. Tap Find this place, then pick the
           match.
+        </p>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor={what3wordsId}>What3words (optional)</Label>
+        <Input
+          defaultValue={defaultWhat3words}
+          id={what3wordsId}
+          maxLength={120}
+          name="what3words"
+          placeholder="e.g. filled.count.soap"
+        />
+        <p className="text-xs text-muted-foreground">
+          For a pinpoint-exact spot (a car park entrance, a specific bench). Members get a link
+          to what3words&apos; own map with turn-by-turn directions — separate from the map above.
         </p>
       </div>
 

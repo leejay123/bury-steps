@@ -44,6 +44,11 @@ model Walk {
   /// Set from the meeting point via OpenStreetMap Nominatim. Null if unknown.
   latitude     Float?
   longitude    Float?
+  /// Optional what3words address (e.g. "filled.count.soap"), stored as
+  /// plain text and never resolved via their API — see src/lib/what3words.ts.
+  /// Members get a link to what3words.com's own free page for pinpoint
+  /// directions; the map above still comes from `location`/`postcode`.
+  what3words   String?
   /// Stored in UTC. Always render with timeZone: "Europe/London".
   startsAt     DateTime
   durationMins Int       @default(90)

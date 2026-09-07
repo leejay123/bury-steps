@@ -54,6 +54,7 @@ function EditWalkDialogForm({
   startsAt,
   title,
   walkId,
+  what3words,
 }: {
   cancelled: boolean;
   description: string | null;
@@ -68,6 +69,7 @@ function EditWalkDialogForm({
   startsAt: string;
   title: string;
   walkId: string;
+  what3words: string | null;
 }) {
   const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
     updateWalk,
@@ -152,6 +154,7 @@ function EditWalkDialogForm({
           defaultLocation={location ?? ""}
           defaultLongitude={longitude}
           defaultPostcode={postcode ?? ""}
+          defaultWhat3words={what3words ?? ""}
           idPrefix={`edit-${walkId}`}
         />
         <div className="flex flex-col gap-1.5">
@@ -188,6 +191,7 @@ export function EditWalkButton({
   startsAt,
   title,
   walkId,
+  what3words,
 }: {
   cancelled: boolean;
   description: string | null;
@@ -200,6 +204,7 @@ export function EditWalkButton({
   startsAt: string;
   title: string;
   walkId: string;
+  what3words: string | null;
 }) {
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState(0);
@@ -236,6 +241,7 @@ export function EditWalkButton({
           startsAt={startsAt}
           title={title}
           walkId={walkId}
+          what3words={what3words}
         />
       ) : null}
     </AlertDialog>
