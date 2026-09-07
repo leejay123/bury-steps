@@ -1,5 +1,4 @@
-import { Text } from "@react-email/components";
-import { EmailLayout, type EmailBrand } from "../shared";
+import { EmailLayout, EmailText, type EmailBrand } from "../shared";
 
 export type AccountDeletedEmailProps = EmailBrand & {
   firstName: string | null;
@@ -13,14 +12,14 @@ export function AccountDeletedEmail({ firstName, ...brand }: AccountDeletedEmail
       previewText={`Your ${brand.siteName} account and data have been deleted.`}
       {...brand}
     >
-      <Text style={{ margin: "0 0 16px" }}>
+      <EmailText>
         {firstName ? `Hi ${firstName},` : "Hi,"} this confirms your {brand.siteName} account —
         along with your walk and clock-in history — has been permanently deleted.
-      </Text>
-      <Text style={{ margin: 0 }}>
+      </EmailText>
+      <EmailText style={{ margin: 0 }}>
         If you didn&apos;t ask for this, or you&apos;d like to walk with us again, get in touch
         with an organiser and they can help.
-      </Text>
+      </EmailText>
     </EmailLayout>
   );
 }
