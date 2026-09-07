@@ -1,35 +1,35 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useActionState, useId, useRef } from "react";
+import { useFormStatus } from "react-dom";
 import { AtSign, ArrowRight } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { PAGE_X } from "@/lib/page-x";
+import { subscribeToNewsletter, type ActionResult } from "@/server/actions";
+import { useActionToast } from "@/hooks/use-action-toast";
 
-/**
- * Footer newsletter signup. Not wired to an email service yet — submitting
- * just confirms the address was "captured" with a toast, so the UI reads as
- * finished while the group decides which provider to use. Swap the
- * onSubmit body for a real server action once that's picked.
- */
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button disabled={pending} type="submit">
+      {pending ? "Subscribing…" : "Subscribe"}
+      <ArrowRight data-icon="inline-end" />
+    </Button>
+  );
+}
+
+/** Footer newsletter signup, backed by NewsletterSubscriber via Resend. */
 export function NewsletterSignup() {
   const inputId = useId();
-  const [email, setEmail] = useState("");
-  const [pending, setPending] = useState(false);
-
-  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setPending(true);
-    // Placeholder until an email service (Brevo/Mailjet/etc.) is wired up.
-    window.setTimeout(() => {
-      setPending(false);
-      setEmail("");
-      toast.success("Thanks — we'll be in touch once newsletters are switched on.");
-    }, 400);
-  }
+  const formRef = useRef<HTMLFormElement>(null);
+  const [state, action] = useActionState<ActionResult | null, FormData>(
+    subscribeToNewsletter,
+    null,
+  );
+  useActionToast(state, () => formRef.current?.reset());
 
   return (
     <div
@@ -44,7 +44,12 @@ export function NewsletterSignup() {
           Occasional updates on walks and group news, straight to your inbox.
         </p>
       </div>
-      <form className="flex items-center justify-center gap-2" onSubmit={onSubmit}>
+      <form action={action} className="flex items-center justify-center gap-2" ref={formRef}>
+        {/* Honeypot — same pattern as the contact form. */}
+        <div aria-hidden className="sr-only">
+          <Label htmlFor={`${inputId}-company`}>Company</Label>
+          <InputGroupInput autoComplete="off" id={`${inputId}-company`} name="company" tabIndex={-1} />
+        </div>
         <Label className="sr-only" htmlFor={inputId}>
           Email address
         </Label>
@@ -52,19 +57,9 @@ export function NewsletterSignup() {
           <InputGroupAddon>
             <AtSign aria-hidden data-icon="inline-start" />
           </InputGroupAddon>
-          <InputGroupInput
-            id={inputId}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="Enter your email"
-            required
-            type="email"
-            value={email}
-          />
+          <InputGroupInput id={inputId} name="email" placeholder="Enter your email" required type="email" />
         </InputGroup>
-        <Button disabled={pending} type="submit">
-          {pending ? "Subscribing…" : "Subscribe"}
-          <ArrowRight data-icon="inline-end" />
-        </Button>
+        <SubmitButton />
       </form>
       <FullWidthDivider position="bottom" />
     </div>

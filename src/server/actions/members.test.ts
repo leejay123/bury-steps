@@ -33,6 +33,13 @@ vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
 vi.mock("@clerk/nextjs/server", () => ({
   clerkClient: vi.fn(async () => ({ users: { deleteUser } })),
 }));
+// Real email sending pulls in site-theme.ts (next/cache's unstable_cache,
+// not mocked above) and hits the network — out of scope for these tests,
+// which only care that members.ts calls the right mailer function.
+vi.mock("@/lib/email/mailer", () => ({
+  sendAccountDeletedEmail: vi.fn(async () => {}),
+  sendAdminPromotedEmail: vi.fn(async () => {}),
+}));
 vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
   return { ...actual, requireAdmin };

@@ -21,6 +21,22 @@ model User {
   role      Role     @default(MEMBER)
   createdAt DateTime @default(now())
 
+  /// Walk created/updated/cancelled notices. Default on — organiser-run
+  /// content, not marketing.
+  emailWalkAnnouncements Boolean @default(true)
+  /// Digest of new /notices posts.
+  emailNotices           Boolean @default(true)
+  /// Personal/group progress summaries (monthly clock-in goal, streaks).
+  emailProgress          Boolean @default(true)
+  /// Newsletter campaigns. Off by default — needs explicit opt-in (PECR),
+  /// separate from the account-lifecycle toggles above.
+  emailNewsletter        Boolean @default(false)
+  /// Lets the public preferences/one-click-unsubscribe page identify a
+  /// member without requiring sign-in. Null for every row until first
+  /// needed — generated lazily by getOrCreateUnsubscribeToken() rather than
+  /// backfilled, so adding this column never touches existing rows.
+  unsubscribeToken       String? @unique
+
   walksCreated     Walk[]              @relation("WalkCreator")
   attendances      Attendance[]
   noticeReads      SiteNoticeRead[]
@@ -346,9 +362,9 @@ model WalkJourneyEvent {
   @@index([walkId, happenedAt])
 }
 
-/// Public "Contact Us" form submissions. No outbound email is sent (no
-/// provider chosen yet — see the newsletter signup) — admins read these
-/// from the admin panel instead.
+/// Public "Contact Us" form submissions. Sending an admin alert + a
+/// confirmation to the sender is handled by src/lib/email — see
+/// src/server/actions/contact.ts.
 model ContactMessage {
   id        String   @id @default(cuid())
   name      String
@@ -358,6 +374,21 @@ model ContactMessage {
   message   String
   readAt    DateTime?
   createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+/// Footer newsletter signups from visitors who aren't (or aren't yet)
+/// members — a separate list from User.emailNewsletter, which covers
+/// members who opted in from their own account.
+model NewsletterSubscriber {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  /// Powers the public unsubscribe link — always set at creation, unlike
+  /// User.unsubscribeToken, since this row only exists to be emailed.
+  unsubscribeToken String    @unique @default(cuid())
+  createdAt        DateTime  @default(now())
+  unsubscribedAt   DateTime?
 
   @@index([createdAt])
 }

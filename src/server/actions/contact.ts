@@ -11,6 +11,7 @@ import {
   parseContactName,
   parseContactPhone,
 } from "@/lib/contact";
+import { sendContactMessageAdminAlertEmail, sendContactMessageReceivedEmail } from "@/lib/email/mailer";
 import { type ActionResult, isPrismaCode, logActionError } from "./shared";
 
 /** Best-effort caller identity for rate-limiting an unauthenticated public
@@ -56,7 +57,36 @@ export async function submitContactMessage(
     return logActionError("submitContactMessage", err, "Could not send that. Try again.");
   }
 
+  // Best-effort — the message is already saved and visible in /admin/messages
+  // either way, so a failed send here shouldn't turn into a user-facing error.
+  await Promise.all([
+    sendContactMessageReceivedEmail({ name, email, message }).catch((err) => {
+      console.error("submitContactMessage: failed to send sender confirmation", err);
+    }),
+    notifyAdminsOfContactMessage({ name, email, phone: phone || null, message }),
+  ]);
+
   return { ok: true, message: "Thanks — we'll get back to you soon." };
+}
+
+async function notifyAdminsOfContactMessage(submission: {
+  name: string;
+  email: string;
+  phone: string | null;
+  message: string;
+}): Promise<void> {
+  try {
+    const admins = await prisma.user.findMany({
+      where: { role: "ADMIN" },
+      select: { email: true },
+    });
+    await sendContactMessageAdminAlertEmail(
+      submission,
+      admins.map((admin) => admin.email),
+    );
+  } catch (err) {
+    console.error("submitContactMessage: failed to notify admins", err);
+  }
 }
 
 export async function markContactMessageRead(

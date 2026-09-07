@@ -98,3 +98,7 @@ export {
   markContactMessageRead,
   deleteContactMessage,
 } from "./actions/contact";
+
+export { subscribeToNewsletter, unsubscribeFromNewsletter } from "./actions/newsletter";
+
+export { updateMemberEmailPreferences } from "./actions/email-preferences";

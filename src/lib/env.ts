@@ -31,6 +31,10 @@ const RECOMMENDED: EnvCheck[] = [
     name: "INITIAL_ADMIN_EMAIL",
     hint: "Without it, the first person to sign up against an empty database becomes admin.",
   },
+  {
+    name: "RESEND_API_KEY",
+    hint: "Resend dashboard → API Keys. Without it, every outgoing email (walk notices, deletion/promotion confirmations, contact form, newsletter) is skipped and only logged.",
+  },
 ];
 
 function isSet(name: string): boolean {
