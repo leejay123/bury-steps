@@ -137,6 +137,15 @@ export default async function WalkDetailPage({
         &larr; All walks
       </Link>
 
+      {isCompleted ? (
+        <Alert variant="info">
+          <AlertDescription>
+            This walk has finished, so it can no longer be cancelled or edited. If someone was
+            there but forgot to clock in, add them under Attendance.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-3">
           <div className="flex min-w-0 flex-col gap-1.5">
@@ -226,14 +235,6 @@ export default async function WalkDetailPage({
         {walk.cancelledAt ? <ReopenWalkButton walkId={walk.id} /> : null}
         <DeleteWalkButton walkId={walk.id} attendanceCount={walk.attendances.length} />
       </div>
-      {isCompleted ? (
-        <Alert variant="info">
-          <AlertDescription>
-            This walk has finished, so it can no longer be cancelled or edited. If someone was
-            there but forgot to clock in, add them under Attendance.
-          </AlertDescription>
-        </Alert>
-      ) : null}
 
       <Separator />
 
