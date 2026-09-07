@@ -10,6 +10,11 @@ import {
   windowState,
 } from "@/lib/walk-window";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { formatWalkDate } from "@/lib/dates";
+import { meetingPointLabel } from "@/lib/geocode";
+import { walkShareUrl } from "@/lib/walk-slug";
+import { appUrl } from "@/lib/urls";
+import { sendAddedToWalkEmail } from "@/lib/email/mailer";
 import {
   type ActionResult,
   LimitReachedError,
@@ -226,11 +231,19 @@ export async function adminClockIn(
 
   const member = await prisma.user.findUnique({
     where: { id: parsed.data.userId },
-    select: { id: true, firstName: true, lastName: true, email: true },
+    select: { id: true, firstName: true, lastName: true, email: true, unsubscribeToken: true },
   });
   if (!member) return { ok: false, error: "That member is no longer there." };
 
-  let walk: { id: string; token: string; slug: string | null };
+  let walk: {
+    id: string;
+    token: string;
+    slug: string | null;
+    title: string;
+    startsAt: Date;
+    location: string | null;
+    postcode: string | null;
+  };
   let window: ReturnType<typeof windowState>;
 
   try {
@@ -240,11 +253,14 @@ export async function adminClockIn(
           id: string;
           token: string;
           slug: string | null;
+          title: string;
+          location: string | null;
+          postcode: string | null;
           startsAt: Date;
           durationMins: number;
           cancelledAt: Date | null;
         }>
-      >`SELECT id, token, slug, "startsAt", "durationMins", "cancelledAt"
+      >`SELECT id, token, slug, title, location, postcode, "startsAt", "durationMins", "cancelledAt"
         FROM "Walk" WHERE id = ${parsed.data.walkId} FOR UPDATE`;
       const locked = rows[0];
       if (!locked) return { ok: false as const, error: "That walk is no longer there." };
@@ -304,7 +320,15 @@ export async function adminClockIn(
 
       return {
         ok: true as const,
-        walk: { id: locked.id, token: locked.token, slug: locked.slug },
+        walk: {
+          id: locked.id,
+          token: locked.token,
+          slug: locked.slug,
+          title: locked.title,
+          startsAt: locked.startsAt,
+          location: locked.location,
+          postcode: locked.postcode,
+        },
         window: win,
       };
     });
@@ -325,6 +349,19 @@ export async function adminClockIn(
   revalidatePath(`/admin/walks/${walk.id}`);
   revalidatePath(`/admin/members/${member.id}`);
   revalidatePath("/admin/members");
+
+  await sendAddedToWalkEmail(
+    {
+      title: walk.title,
+      whenText: formatWalkDate(walk.startsAt),
+      meetingPoint: meetingPointLabel(walk.location, walk.postcode) || null,
+      shareUrl: walkShareUrl(appUrl(), walk),
+    },
+    member,
+  ).catch((err) => {
+    console.error("adminClockIn: failed to send added-to-walk email", err);
+  });
+
   return {
     ok: true,
     message:

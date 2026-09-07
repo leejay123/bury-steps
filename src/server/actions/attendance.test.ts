@@ -12,6 +12,7 @@ const {
   prismaMock,
   transaction,
   queryRaw,
+  sendAddedToWalkEmail,
 } = vi.hoisted(() => {
   const queryRaw = vi.fn();
   const prismaMock: Record<string, Record<string, ReturnType<typeof vi.fn>>> = {
@@ -40,6 +41,7 @@ const {
     prismaMock,
     transaction,
     queryRaw,
+    sendAddedToWalkEmail: vi.fn(async () => {}),
   };
 });
 
@@ -55,6 +57,9 @@ vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
   return { ...actual, requireAdmin, requireUser };
 });
+// Real email sending pulls in site-theme.ts (next/cache's unstable_cache,
+// not mocked above) and hits the network — out of scope for these tests.
+vi.mock("@/lib/email/mailer", () => ({ sendAddedToWalkEmail }));
 
 import { adminClockIn, adminRemoveAttendance, clockIn, clockOut, searchAddableMembers } from "./attendance";
 
@@ -73,6 +78,9 @@ function lockedWalkRow(overrides: Partial<Record<string, unknown>> = {}) {
     id: "walk-1",
     token: "tok-1",
     slug: "sunday-stroll",
+    title: "Sunday stroll",
+    location: "Burrs Country Park",
+    postcode: null,
     startsAt: new Date("2026-01-05T14:00:00Z"),
     durationMins: 60,
     cancelledAt: null,
@@ -284,6 +292,21 @@ describe("adminClockIn", () => {
       }),
     );
     expect(result).toEqual({ ok: true, message: "Jo has been clocked in." });
+  });
+
+  it("emails the member that they were added", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce(member);
+    queryRaw.mockResolvedValueOnce([lockedWalkRow()]);
+    prismaMock.attendance.findUnique.mockResolvedValueOnce(null);
+    windowState.mockReturnValueOnce("open");
+    prismaMock.attendance.create.mockResolvedValueOnce({});
+
+    await adminClockIn(null, adminClockInForm());
+
+    expect(sendAddedToWalkEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "Sunday stroll", meetingPoint: "Burrs Country Park" }),
+      expect.objectContaining({ id: member.id }),
+    );
   });
 
   it("re-adds someone who'd clocked out while the window is still open, via update", async () => {

@@ -1,8 +1,12 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const { requireAdmin, prismaMock } = vi.hoisted(() => ({
+const { requireAdmin, prismaMock, sendAccidentReportAlertEmail } = vi.hoisted(() => ({
   requireAdmin: vi.fn(),
-  prismaMock: { accidentReport: { create: vi.fn(), update: vi.fn(), delete: vi.fn() } },
+  prismaMock: {
+    accidentReport: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    user: { findMany: vi.fn(async (): Promise<{ email: string }[]> => []) },
+  },
+  sendAccidentReportAlertEmail: vi.fn(async () => {}),
 }));
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
@@ -11,6 +15,9 @@ vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
   return { ...actual, requireAdmin };
 });
+// Real email sending pulls in site-theme.ts (next/cache's unstable_cache,
+// not mocked above) and hits the network — out of scope for these tests.
+vi.mock("@/lib/email/mailer", () => ({ sendAccidentReportAlertEmail }));
 
 import { addAccidentReport, deleteAccidentReport, updateAccidentReport } from "./reports";
 
@@ -54,6 +61,21 @@ describe("addAccidentReport", () => {
       expect.objectContaining({ data: expect.objectContaining({ createdById: ADMIN.id }) }),
     );
     expect(result).toEqual({ ok: true, message: "Accident report saved." });
+  });
+
+  it("alerts every other organiser, excluding whoever logged it", async () => {
+    prismaMock.accidentReport.create.mockResolvedValueOnce({});
+    prismaMock.user.findMany.mockResolvedValueOnce([{ email: "other-admin@example.com" }]);
+
+    await addAccidentReport(null, reportForm());
+
+    expect(prismaMock.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { role: "ADMIN", id: { not: ADMIN.id } } }),
+    );
+    expect(sendAccidentReportAlertEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ whoInvolved: "A member" }),
+      ["other-admin@example.com"],
+    );
   });
 });
 

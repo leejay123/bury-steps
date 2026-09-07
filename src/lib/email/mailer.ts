@@ -7,12 +7,25 @@ import { AdminPromotedEmail } from "./templates/admin-promoted";
 import { ContactMessageReceivedEmail } from "./templates/contact-message-received";
 import { ContactMessageAdminAlertEmail } from "./templates/contact-message-admin-alert";
 import { NewsletterSubscribedEmail } from "./templates/newsletter-subscribed";
+import { WalkAnnouncedEmail } from "./templates/walk-announced";
+import { WalkCancelledEmail } from "./templates/walk-cancelled";
+import { AddedToWalkEmail } from "./templates/added-to-walk";
+import { AccidentReportAlertEmail } from "./templates/accident-report-alert";
 
-type MemberLike = {
+export type MemberLike = {
   id: string;
   email: string;
   firstName: string | null;
   unsubscribeToken: string | null;
+};
+
+/** The bits of a Walk every walk-related email needs — callers pass in
+ * already-formatted date/time strings rather than this module reaching for
+ * the site's date-formatting helpers itself. */
+export type WalkLike = {
+  title: string;
+  whenText: string;
+  shareUrl: string;
 };
 
 async function memberPreferences(member: MemberLike): Promise<string> {
@@ -95,5 +108,88 @@ export async function sendNewsletterSubscribedEmail(subscriber: {
       ...brand,
       unsubscribeUrl: newsletterUnsubscribeUrl(subscriber.unsubscribeToken),
     }),
+  });
+}
+
+/**
+ * New walk posted — one call per opted-in member (src/server/actions/walks.ts
+ * loops over the recipient list). Never batch these into one `to:` array:
+ * that would put every member's address in every other member's inbox.
+ */
+export async function sendWalkAnnouncedEmail(
+  walk: WalkLike & { durationText: string; meetingPoint: string | null; what3words: string | null },
+  member: MemberLike,
+): Promise<void> {
+  const [brand, preferencesUrl] = await Promise.all([getEmailBrand(), memberPreferences(member)]);
+  await sendEmail({
+    to: member.email,
+    subject: `New walk: ${walk.title}`,
+    react: WalkAnnouncedEmail({
+      ...brand,
+      firstName: member.firstName,
+      title: walk.title,
+      whenText: walk.whenText,
+      durationText: walk.durationText,
+      meetingPoint: walk.meetingPoint,
+      what3words: walk.what3words,
+      shareUrl: walk.shareUrl,
+      preferencesUrl,
+    }),
+  });
+}
+
+/** Walk cancelled — same one-per-member rule as sendWalkAnnouncedEmail. */
+export async function sendWalkCancelledEmail(
+  walk: WalkLike & { reason: string | null },
+  member: MemberLike,
+): Promise<void> {
+  const [brand, preferencesUrl] = await Promise.all([getEmailBrand(), memberPreferences(member)]);
+  await sendEmail({
+    to: member.email,
+    subject: `Walk cancelled: ${walk.title}`,
+    react: WalkCancelledEmail({
+      ...brand,
+      firstName: member.firstName,
+      title: walk.title,
+      whenText: walk.whenText,
+      reason: walk.reason,
+      shareUrl: walk.shareUrl,
+      preferencesUrl,
+    }),
+  });
+}
+
+/** An organiser manually added this member to a walk (src/server/actions/attendance.ts). */
+export async function sendAddedToWalkEmail(
+  walk: WalkLike & { meetingPoint: string | null },
+  member: MemberLike,
+): Promise<void> {
+  const [brand, preferencesUrl] = await Promise.all([getEmailBrand(), memberPreferences(member)]);
+  await sendEmail({
+    to: member.email,
+    subject: `You've been added to ${walk.title}`,
+    react: AddedToWalkEmail({
+      ...brand,
+      firstName: member.firstName,
+      title: walk.title,
+      whenText: walk.whenText,
+      meetingPoint: walk.meetingPoint,
+      shareUrl: walk.shareUrl,
+      preferencesUrl,
+    }),
+  });
+}
+
+/** Alert every other organiser that a new accident report has been logged. */
+export async function sendAccidentReportAlertEmail(
+  report: { whenText: string; walkTitle: string | null; whoInvolved: string; createdByName: string },
+  adminEmails: string[],
+): Promise<void> {
+  if (adminEmails.length === 0) return;
+  const brand = await getEmailBrand();
+  await sendEmail({
+    to: adminEmails,
+    subject: "New accident report logged",
+    react: AccidentReportAlertEmail({ ...brand, ...report }),
   });
 }

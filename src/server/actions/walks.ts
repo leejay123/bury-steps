@@ -5,9 +5,10 @@ import { customAlphabet } from "nanoid";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
-import { londonWallClockToUtc } from "@/lib/dates";
+import { formatWalkDate, formatWalkLength, londonWallClockToUtc } from "@/lib/dates";
 import {
   geocodeFields,
+  meetingPointLabel,
   normalizeUkPostcode,
   parseFormPoint,
   searchPlaces,
@@ -16,8 +17,10 @@ import {
 import { normalizeWhat3Words } from "@/lib/what3words";
 import { isWalkScheduleLocked, isWalkStartInThePast, walkStatus } from "@/lib/walk-window";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { allocateWalkSlug } from "@/lib/walk-slug";
+import { allocateWalkSlug, walkShareUrl } from "@/lib/walk-slug";
+import { appUrl } from "@/lib/urls";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
+import { sendWalkAnnouncedEmail, sendWalkCancelledEmail, type MemberLike, type WalkLike } from "@/lib/email/mailer";
 import {
   type ActionResult,
   LimitReachedError,
@@ -52,6 +55,48 @@ async function walkPinFromForm(
   }
   const coords = await geocodeFields(location ?? null, postcode);
   return { ...coords, postcode: storedPostcode };
+}
+
+async function membersOptedIntoWalkAnnouncements(): Promise<MemberLike[]> {
+  return prisma.user.findMany({
+    where: { emailWalkAnnouncements: true },
+    select: { id: true, email: true, firstName: true, unsubscribeToken: true },
+  });
+}
+
+/** Best-effort fan-out to every opted-in member — one email each, never a
+ * single email with everyone in `to:` (that would leak every member's
+ * address to every other member). */
+async function notifyMembersOfNewWalk(
+  walk: WalkLike & { durationText: string; meetingPoint: string | null; what3words: string | null },
+): Promise<void> {
+  try {
+    const members = await membersOptedIntoWalkAnnouncements();
+    await Promise.all(
+      members.map((member) =>
+        sendWalkAnnouncedEmail(walk, member).catch((err) => {
+          console.error("notifyMembersOfNewWalk: failed to notify", member.id, err);
+        }),
+      ),
+    );
+  } catch (err) {
+    console.error("notifyMembersOfNewWalk: failed to load recipients", err);
+  }
+}
+
+async function notifyMembersOfCancelledWalk(walk: WalkLike & { reason: string | null }): Promise<void> {
+  try {
+    const members = await membersOptedIntoWalkAnnouncements();
+    await Promise.all(
+      members.map((member) =>
+        sendWalkCancelledEmail(walk, member).catch((err) => {
+          console.error("notifyMembersOfCancelledWalk: failed to notify", member.id, err);
+        }),
+      ),
+    );
+  } catch (err) {
+    console.error("notifyMembersOfCancelledWalk: failed to load recipients", err);
+  }
 }
 
 /** Blank clears it; anything else must actually look like an address. */
@@ -135,6 +180,16 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
   revalidatePath("/admin");
   revalidatePath("/dashboard");
   revalidateWalkShare(walk);
+
+  await notifyMembersOfNewWalk({
+    title: walk.title,
+    whenText: formatWalkDate(startsAt),
+    durationText: formatWalkLength(parsed.data.durationMins),
+    meetingPoint: meetingPointLabel(parsed.data.location, pin.postcode) || null,
+    what3words: what3words.value,
+    shareUrl: walkShareUrl(appUrl(), walk),
+  });
+
   return { ok: true, message: `“${walk.title}” created. Share link is ready.` };
 }
 
@@ -246,7 +301,7 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
 
   // Same journeyEvent lock as create/update/delete journey so cancel cannot
   // race with a journey write that already passed its cancelledAt check.
-  let walk: { token: string; slug: string | null };
+  let walk: { token: string; slug: string | null; title: string; startsAt: Date };
   try {
     walk = await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.journeyEvent, async (tx) => {
       const current = await tx.walk.findUnique({
@@ -255,6 +310,7 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
           id: true,
           token: true,
           slug: true,
+          title: true,
           cancelledAt: true,
           startsAt: true,
           durationMins: true,
@@ -284,7 +340,7 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
         });
       }
 
-      return { token: current.token, slug: current.slug };
+      return { token: current.token, slug: current.slug, title: current.title, startsAt: current.startsAt };
     });
   } catch (err) {
     if (err instanceof LimitReachedError) return { ok: false, error: err.message };
@@ -298,6 +354,14 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
   revalidatePath(`/admin/walks/${id}`);
   revalidatePath("/dashboard");
   revalidateWalkShare(walk);
+
+  await notifyMembersOfCancelledWalk({
+    title: walk.title,
+    whenText: formatWalkDate(walk.startsAt),
+    reason: reason || null,
+    shareUrl: walkShareUrl(appUrl(), walk),
+  });
+
   return { ok: true, message: "Walk cancelled. Members will see it marked as cancelled." };
 }
 
