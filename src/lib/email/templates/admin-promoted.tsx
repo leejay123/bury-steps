@@ -1,5 +1,4 @@
-import { Text } from "@react-email/components";
-import { EmailButton, EmailLayout, type EmailBrand } from "../shared";
+import { EmailButton, EmailLayout, EmailText, type EmailBrand } from "../shared";
 
 export type AdminPromotedEmailProps = EmailBrand & {
   firstName: string | null;
@@ -14,15 +13,15 @@ export function AdminPromotedEmail({ firstName, preferencesUrl, ...brand }: Admi
       previewText={`You've been made an organiser of ${brand.siteName}.`}
       {...brand}
     >
-      <Text style={{ margin: "0 0 16px" }}>
+      <EmailText>
         {firstName ? `Hi ${firstName},` : "Hi,"} another organiser has given you organiser
         access on {brand.siteName}. You can now create and edit walks, manage members, and see
         who&apos;s coming on each walk.
-      </Text>
+      </EmailText>
       <EmailButton href={`${brand.siteUrl}/admin`}>Open the admin area</EmailButton>
-      <Text style={{ margin: "16px 0 0", fontSize: "13px", color: "#737373" }}>
+      <EmailText style={{ margin: "16px 0 0", fontSize: "13px", color: "#737373" }}>
         Didn&apos;t expect this? Let another organiser know.
-      </Text>
+      </EmailText>
     </EmailLayout>
   );
 }

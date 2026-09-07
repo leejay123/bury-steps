@@ -1,5 +1,4 @@
-import { Text } from "@react-email/components";
-import { EmailButton, EmailLayout, type EmailBrand } from "../shared";
+import { EmailButton, EmailLayout, EmailText, type EmailBrand } from "../shared";
 
 export type WelcomeEmailProps = EmailBrand & {
   firstName: string | null;
@@ -15,18 +14,16 @@ export function WelcomeEmail({ firstName, preferencesUrl, ...brand }: WelcomeEma
       previewText={`You're in — here's what to expect from ${brand.siteName}.`}
       {...brand}
     >
-      <Text style={{ margin: "0 0 16px" }}>
+      <EmailText>
         Thanks for joining {brand.siteName}. Upcoming walks show up on your dashboard, and
         you&apos;ll get an email when a new one is posted — location, meeting point, start
         time, and a link to clock in on the day.
-      </Text>
-      <Text style={{ margin: "0 0 16px" }}>
-        Come as you are — no winners, no losers, just people walking together.
-      </Text>
+      </EmailText>
+      <EmailText>Come as you are — no winners, no losers, just people walking together.</EmailText>
       <EmailButton href={brand.siteUrl}>See upcoming walks</EmailButton>
-      <Text style={{ margin: "16px 0 0", fontSize: "13px", color: "#737373" }}>
+      <EmailText style={{ margin: "16px 0 0", fontSize: "13px", color: "#737373" }}>
         You can turn any of these emails off from your preferences link below.
-      </Text>
+      </EmailText>
     </EmailLayout>
   );
 }

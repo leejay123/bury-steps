@@ -1,5 +1,4 @@
-import { Text } from "@react-email/components";
-import { EmailButton, EmailFact, EmailLayout, type EmailBrand } from "../shared";
+import { EmailButton, EmailFact, EmailLayout, EmailText, type EmailBrand } from "../shared";
 
 export type ContactMessageAdminAlertEmailProps = EmailBrand & {
   name: string;
@@ -22,7 +21,7 @@ export function ContactMessageAdminAlertEmail({
       <EmailFact label="From" value={name} />
       <EmailFact label="Email" value={email} />
       {phone ? <EmailFact label="Phone" value={phone} /> : null}
-      <Text
+      <EmailText
         style={{
           margin: "12px 0 0",
           padding: "12px 16px",
@@ -30,12 +29,11 @@ export function ContactMessageAdminAlertEmail({
           borderRadius: "6px",
           fontSize: "14px",
           lineHeight: "22px",
-          color: "#262626",
           whiteSpace: "pre-wrap",
         }}
       >
         {message}
-      </Text>
+      </EmailText>
       <EmailButton href={`${brand.siteUrl}/admin/messages`}>Open in admin</EmailButton>
     </EmailLayout>
   );

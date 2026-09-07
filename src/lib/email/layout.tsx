@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Body, Container, Head, Heading, Hr, Html, Img, Link, Preview, Section, Text } from "@react-email/components";
 
 // Email clients don't reliably load web fonts, so this matches the system
@@ -75,7 +75,15 @@ export function EmailLayout({
           <Hr style={{ borderColor: BORDER, margin: 0 }} />
 
           <Section style={{ padding: "20px 32px" }}>
-            <Text style={{ margin: 0, fontSize: "12px", lineHeight: "18px", color: MUTED_TEXT }}>
+            <Text
+              style={{
+                margin: 0,
+                fontSize: "12px",
+                fontWeight: 400,
+                lineHeight: "18px",
+                color: MUTED_TEXT,
+              }}
+            >
               {siteName} ·{" "}
               <Link href={siteUrl} style={{ color: MUTED_TEXT, textDecoration: "underline" }}>
                 {siteUrl.replace(/^https?:\/\//, "")}
@@ -97,17 +105,55 @@ export function EmailLayout({
   );
 }
 
+/**
+ * The one body-text style every template uses instead of reaching for
+ * @react-email/components' Text directly — bold is reserved for the
+ * heading above, so this always renders at normal weight regardless of
+ * what a given email client would otherwise default a bare <p> to.
+ */
+export function EmailText({
+  children,
+  style,
+}: {
+  children: ReactNode;
+  style?: CSSProperties;
+}) {
+  return (
+    <Text
+      style={{
+        margin: "0 0 16px",
+        fontSize: "15px",
+        fontWeight: 400,
+        lineHeight: "24px",
+        color: BODY_TEXT,
+        ...style,
+      }}
+    >
+      {children}
+    </Text>
+  );
+}
+
 /** A labelled fact row, e.g. "Meeting point — Burrs Country Park". Used by
  * walk-related emails to lay out details without each template reinventing it. */
 export function EmailFact({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <Text style={{ margin: "0 0 8px", fontSize: "15px", lineHeight: "22px", color: BODY_TEXT }}>
+    <Text
+      style={{
+        margin: "0 0 8px",
+        fontSize: "15px",
+        fontWeight: 400,
+        lineHeight: "22px",
+        color: BODY_TEXT,
+      }}
+    >
       <span style={{ color: MUTED_TEXT }}>{label}</span> — {value}
     </Text>
   );
 }
 
-/** The one button style every email uses for its call to action. */
+/** The one button style every email uses for its call to action. Normal
+ * weight, like the body text — bold is reserved for the heading. */
 export function EmailButton({ href, children }: { href: string; children: ReactNode }) {
   return (
     <Section style={{ margin: "24px 0 8px" }}>
@@ -118,7 +164,7 @@ export function EmailButton({ href, children }: { href: string; children: ReactN
           backgroundColor: INK,
           color: "#ffffff",
           fontSize: "14px",
-          fontWeight: 600,
+          fontWeight: 400,
           padding: "12px 22px",
           borderRadius: "6px",
           textDecoration: "none",

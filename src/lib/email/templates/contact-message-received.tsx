@@ -1,5 +1,4 @@
-import { Text } from "@react-email/components";
-import { EmailLayout, type EmailBrand } from "../shared";
+import { EmailLayout, EmailText, type EmailBrand } from "../shared";
 
 export type ContactMessageReceivedEmailProps = EmailBrand & {
   name: string;
@@ -19,11 +18,11 @@ export function ContactMessageReceivedEmail({
       previewText={`Thanks for getting in touch with ${brand.siteName}.`}
       {...brand}
     >
-      <Text style={{ margin: "0 0 16px" }}>
+      <EmailText>
         Hi {name}, thanks for getting in touch with {brand.siteName}. An organiser will get back
         to you as soon as they can.
-      </Text>
-      <Text
+      </EmailText>
+      <EmailText
         style={{
           margin: 0,
           padding: "12px 16px",
@@ -31,12 +30,11 @@ export function ContactMessageReceivedEmail({
           borderRadius: "6px",
           fontSize: "14px",
           lineHeight: "22px",
-          color: "#262626",
           whiteSpace: "pre-wrap",
         }}
       >
         {message}
-      </Text>
+      </EmailText>
     </EmailLayout>
   );
 }
