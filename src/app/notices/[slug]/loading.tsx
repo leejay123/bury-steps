@@ -5,7 +5,7 @@ export default function Loading() {
     <article
       aria-busy="true"
       aria-label="Loading notice"
-      className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8 md:px-6"
+      className="flex w-full flex-col gap-6 px-4 py-8 md:px-6"
     >
       <Skeleton className="h-4 w-28" />
       <header className="flex flex-col gap-3">
