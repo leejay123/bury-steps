@@ -13,6 +13,7 @@ import {
   searchPlaces,
   type PlaceHit,
 } from "@/lib/geocode";
+import { normalizeWhat3Words } from "@/lib/what3words";
 import { isWalkScheduleLocked, isWalkStartInThePast, walkStatus } from "@/lib/walk-window";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { allocateWalkSlug } from "@/lib/walk-slug";
@@ -34,6 +35,7 @@ const walkDetailsSchema = z.object({
   description: z.string().trim().max(2000).optional(),
   location: z.string().trim().max(200).optional(),
   postcode: z.string().trim().max(10).optional(),
+  what3words: z.string().trim().max(120).optional(),
   startsAt: z.string().min(16, "Choose a date and time."),
   durationMins: z.coerce.number().int().min(15).max(600),
 });
@@ -52,6 +54,21 @@ async function walkPinFromForm(
   return { ...coords, postcode: storedPostcode };
 }
 
+/** Blank clears it; anything else must actually look like an address. */
+function parseWhat3Words(
+  raw: string | undefined,
+): { ok: true; value: string | null } | { ok: false; error: string } {
+  if (!raw?.trim()) return { ok: true, value: null };
+  const normalized = normalizeWhat3Words(raw);
+  if (!normalized) {
+    return {
+      ok: false,
+      error: "That doesn't look like a what3words address — three words separated by dots, e.g. filled.count.soap.",
+    };
+  }
+  return { ok: true, value: normalized };
+}
+
 export async function createWalk(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const admin = await requireAdmin();
 
@@ -60,6 +77,7 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
     description: formData.get("description") || undefined,
     location: formData.get("location") || undefined,
     postcode: formData.get("postcode") || undefined,
+    what3words: formData.get("what3words") || undefined,
     startsAt: formData.get("startsAt"),
     durationMins: formData.get("durationMins") ?? 90,
   });
@@ -67,6 +85,9 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0].message };
   }
+
+  const what3words = parseWhat3Words(parsed.data.what3words);
+  if (!what3words.ok) return { ok: false, error: what3words.error };
 
   let startsAt: Date;
   try {
@@ -94,6 +115,7 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
           postcode: pin.postcode,
           latitude: pin.latitude,
           longitude: pin.longitude,
+          what3words: what3words.value,
           startsAt,
           durationMins: parsed.data.durationMins,
           createdById: admin.id,
@@ -134,6 +156,7 @@ export async function duplicateWalk(
       postcode: true,
       latitude: true,
       longitude: true,
+      what3words: true,
       startsAt: true,
       durationMins: true,
     },
@@ -160,6 +183,7 @@ export async function duplicateWalk(
           postcode: source.postcode,
           latitude: source.latitude,
           longitude: source.longitude,
+          what3words: source.what3words,
           startsAt,
           durationMins: source.durationMins,
           createdById: admin.id,
@@ -327,6 +351,7 @@ export async function updateWalk(
       description: formData.get("description") || undefined,
       location: formData.get("location") || undefined,
       postcode: formData.get("postcode") || undefined,
+      what3words: formData.get("what3words") || undefined,
       startsAt: formData.get("startsAt"),
       durationMins: formData.get("durationMins") ?? 90,
       reopen: formData.get("reopen") || undefined,
@@ -336,6 +361,9 @@ export async function updateWalk(
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0].message };
   }
+
+  const what3words = parseWhat3Words(parsed.data.what3words);
+  if (!what3words.ok) return { ok: false, error: what3words.error };
 
   let startsAt: Date;
   try {
@@ -388,6 +416,7 @@ export async function updateWalk(
           postcode: pin.postcode,
           latitude: pin.latitude,
           longitude: pin.longitude,
+          what3words: what3words.value,
           slug,
           ...(parsed.data.reopen === "on" || wasCancelled
             ? { cancelledAt: null, cancelledReason: null }
