@@ -6,8 +6,8 @@ import { ClockOutButton } from "@/components/clock-out-button";
 import { WalkMembers } from "@/components/walk-members";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { useWalkClock } from "@/hooks/use-walk-clock";
-import { formatDate, formatDateTime, formatTime } from "@/lib/dates";
-import { walkOpensAt, walkStatus, windowState } from "@/lib/walk-window";
+import { formatDateTime } from "@/lib/dates";
+import { walkStatus, windowState } from "@/lib/walk-window";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
@@ -30,7 +30,6 @@ export function WalkLivePanel({
   const now = useWalkClock({ cancelledAt: null, durationMins, startsAt });
   const status = walkStatus({ cancelledAt: null, durationMins, startsAt: start }, now);
   const state = windowState(start, durationMins, now);
-  const opensAt = walkOpensAt(start);
   const completed = status === "completed";
 
   if (alreadyClockedInAt) {
@@ -65,22 +64,10 @@ export function WalkLivePanel({
     );
   }
 
+  // The "clock-in isn't open yet" notice itself is shown at the top of the
+  // page (page.tsx) — this just adds what to do while waiting.
   if (state === "too-early") {
-    return (
-      <div className="flex flex-col gap-4">
-        <Alert variant="info">
-          <AlertTitle>Clock-in is not open yet</AlertTitle>
-          <AlertDescription>
-            It opens an hour before the walk starts, at {formatTime(opensAt)} on{" "}
-            {formatDate(opensAt)}. Come back on the day and this page will be ready.
-          </AlertDescription>
-        </Alert>
-        <BeforeYouSetOff />
-        <Button asChild className="self-start" size="sm" variant="outline">
-          <Link href={walksHref}>Back to walks</Link>
-        </Button>
-      </div>
-    );
+    return <BeforeYouSetOff />;
   }
 
   if (state === "closed") {

@@ -4,12 +4,12 @@ import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { getOptionalUser } from "@/lib/auth";
-import { formatWalkDate } from "@/lib/dates";
+import { formatDate, formatTime, formatWalkDate } from "@/lib/dates";
 import { accountPortalHref, appUrl } from "@/lib/urls";
 import { meetingPointLabel } from "@/lib/geocode";
-import { what3wordsUrl } from "@/lib/what3words";
+import { What3wordsLink } from "@/components/what3words-link";
 import { ensureWalkSlug, walkShareUrl } from "@/lib/walk-slug";
-import { canAddWalkToCalendar, walkStatus } from "@/lib/walk-window";
+import { canAddWalkToCalendar, walkOpensAt, walkStatus, windowState } from "@/lib/walk-window";
 import { WalkFacts } from "@/components/walk-facts";
 import { WalkMapSection } from "@/components/walk-map-section";
 import { WalkJourneyDrawer } from "@/components/walk-journey-drawer";
@@ -138,6 +138,8 @@ export default async function WalkLinkPage({
   // people who have not joined yet. WalkMembers paginates at 20, so a
   // thousand names on one walk stay usable.
   const memberNames = alreadyIn ? await getWalkMemberNames(walk.id) : [];
+  const tooEarly = windowState(walk.startsAt, walk.durationMins) === "too-early";
+  const opensAt = walkOpensAt(walk.startsAt);
   const meeting = meetingPointLabel(walk.location, walk.postcode);
   const walksHref = user?.role === "ADMIN" ? "/admin" : "/dashboard";
   const journeyEvents = walk.journeyEvents.map((event) => ({
@@ -169,6 +171,14 @@ export default async function WalkLinkPage({
           <AlertTitle>This walk has finished</AlertTitle>
           <AlertDescription>
             Clock-in is closed. Details and the journey below are still here to look back on.
+          </AlertDescription>
+        </Alert>
+      ) : user && !alreadyIn && tooEarly ? (
+        <Alert variant="info">
+          <AlertTitle>Clock-in is not open yet</AlertTitle>
+          <AlertDescription>
+            It opens an hour before the walk starts, at {formatTime(opensAt)} on{" "}
+            {formatDate(opensAt)}. Come back on the day and this page will be ready.
           </AlertDescription>
         </Alert>
       ) : !user ? (
@@ -227,13 +237,7 @@ export default async function WalkLinkPage({
 
       {meeting ? <WalkMapSection location={meeting} walk={walk} /> : null}
 
-      {walk.what3words ? (
-        <Button asChild className="self-start" size="sm" variant="outline">
-          <a href={what3wordsUrl(walk.what3words)} rel="noopener noreferrer" target="_blank">
-            {"///"} {walk.what3words} — precise location
-          </a>
-        </Button>
-      ) : null}
+      {walk.what3words ? <What3wordsLink address={walk.what3words} /> : null}
 
       {status === "cancelled" ? null : user ? (
         <WalkLivePanel

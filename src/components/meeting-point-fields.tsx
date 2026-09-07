@@ -35,10 +35,41 @@ export function MeetingPointFields({
       ? { lat: defaultLatitude, lng: defaultLongitude }
       : null,
   );
+  const [coordsInput, setCoordsInput] = useState(
+    defaultLatitude != null && defaultLongitude != null
+      ? `${defaultLatitude}, ${defaultLongitude}`
+      : "",
+  );
+  const [coordsError, setCoordsError] = useState<string | null>(null);
 
   function takePin(place: PlaceHit) {
     setPickedId(place.id);
     setPin({ lat: place.lat, lng: place.lng });
+    setCoordsInput(`${place.lat}, ${place.lng}`);
+    setCoordsError(null);
+  }
+
+  /** What a long-press on Google Maps (or what3words' own page) copies:
+   * "53.610292, -2.306141", comma or space-separated, either order of
+   * sign. Kept permissive — this only ever runs on a paste someone made
+   * on purpose, so the cost of being strict is a false "not recognised"
+   * on a slightly odd format, not a wrong pin. */
+  function applyCoordsInput(raw: string) {
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      setCoordsError(null);
+      return;
+    }
+    const match = trimmed.match(/^(-?\d+(?:\.\d+)?)[,\s]+(-?\d+(?:\.\d+)?)$/);
+    const lat = match ? Number(match[1]) : NaN;
+    const lng = match ? Number(match[2]) : NaN;
+    if (!match || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+      setCoordsError("That doesn't look like a pair of coordinates — e.g. 53.610292, -2.306141.");
+      return;
+    }
+    setCoordsError(null);
+    setPickedId(null);
+    setPin({ lat, lng });
   }
 
   function onFindKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -71,6 +102,7 @@ export function MeetingPointFields({
   const locationId = `${idPrefix}-location`;
   const postcodeId = `${idPrefix}-postcode`;
   const what3wordsId = `${idPrefix}-what3words`;
+  const coordsId = `${idPrefix}-coords`;
 
   return (
     <div className="space-y-3">
@@ -87,7 +119,7 @@ export function MeetingPointFields({
         />
         <p className="text-xs text-muted-foreground">
           What people see on the share link. Changing this does not move the pin — Find this place
-          does.
+          or Exact coordinates below does.
         </p>
       </div>
 
@@ -135,6 +167,25 @@ export function MeetingPointFields({
         </p>
       </div>
 
+      <div className="space-y-1.5">
+        <Label htmlFor={coordsId}>Exact coordinates (optional)</Label>
+        <Input
+          id={coordsId}
+          onBlur={(event) => applyCoordsInput(event.target.value)}
+          onChange={(event) => setCoordsInput(event.target.value)}
+          placeholder="e.g. 53.610292, -2.306141"
+          value={coordsInput}
+        />
+        <p className="text-xs text-muted-foreground">
+          For a pin that&apos;s exactly right, not just close — the search above can land tens of
+          metres off for a car park or a spot with no proper address. Get exact coordinates for
+          free from Google Maps (long-press the spot → copy what pops up) or from a what3words
+          address&apos;s own page, then paste them here. This is what moves the pin on the map
+          above; What3words below is only for the separate directions link.
+        </p>
+        {coordsError ? <FormError message={coordsError} /> : null}
+      </div>
+
       <input name="latitude" type="hidden" value={pin ? String(pin.lat) : ""} />
       <input name="longitude" type="hidden" value={pin ? String(pin.lng) : ""} />
 
@@ -170,8 +221,7 @@ export function MeetingPointFields({
 
       {pin ? (
         <p className="text-xs text-muted-foreground">
-          Pin set. The map on the walk page uses this match. Find this place again if you need a
-          different pin.
+          Pin set. The map on the walk page uses this exact spot.
         </p>
       ) : null}
     </div>

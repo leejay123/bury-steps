@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/empty-state";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { WalkMapSection } from "@/components/walk-map-section";
 import { meetingPointLabel } from "@/lib/geocode";
-import { what3wordsUrl } from "@/lib/what3words";
+import { What3wordsLink } from "@/components/what3words-link";
 import { ensureWalkSlug, walkShareUrl } from "@/lib/walk-slug";
 import { CancelWalkButton } from "./cancel-walk-button";
 import { DuplicateWalkButton } from "./duplicate-walk-button";
@@ -157,13 +157,7 @@ export default async function WalkDetailPage({
 
       {meeting ? <WalkMapSection location={meeting} walk={walk} /> : null}
 
-      {walk.what3words ? (
-        <Button asChild className="self-start" size="sm" variant="outline">
-          <a href={what3wordsUrl(walk.what3words)} rel="noopener noreferrer" target="_blank">
-            {"///"} {walk.what3words} — precise location
-          </a>
-        </Button>
-      ) : null}
+      {walk.what3words ? <What3wordsLink address={walk.what3words} /> : null}
 
       <div className="-mx-4 flex flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain px-4 [scrollbar-width:none] [-ms-overflow-style:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden [&>*]:shrink-0">
         <Button asChild size="sm" variant="outline">
