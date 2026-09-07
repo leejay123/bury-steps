@@ -61,15 +61,6 @@ const nextConfig: NextConfig = {
     // known allowlist still blocks the most common CSP-relevant attacks:
     // loading a remote payload or exfiltrating data to an attacker-controlled
     // host.
-    //
-    // The route map (route-map-view-impl.tsx) fetches its tiles via
-    // MapLibre GL, which uses fetch()/XHR for every source — including
-    // raster ones — rather than <img> tags the way the meeting-point map
-    // does elsewhere on the site. img-src's already-open https: covers
-    // that; MapLibre needs its host in connect-src or the browser blocks
-    // the request outright: api.maptiler.com serves the map style, its
-    // tiles/sprites/glyphs, and the terrain elevation data, all under one
-    // key (see maptiler-config.ts).
     const clerkOrigins = [
       "https://clerk.burysteps-walkinggroup.co.uk",
       "https://*.clerk.accounts.dev",
@@ -81,7 +72,7 @@ const nextConfig: NextConfig = {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      `connect-src 'self' ${clerkOrigins.join(" ")} https://challenges.cloudflare.com https://vitals.vercel-insights.com https://api.maptiler.com`,
+      `connect-src 'self' ${clerkOrigins.join(" ")} https://challenges.cloudflare.com https://vitals.vercel-insights.com`,
       `frame-src 'self' ${clerkOrigins.join(" ")} https://challenges.cloudflare.com https://www.openstreetmap.org`,
       "object-src 'none'",
       "base-uri 'self'",

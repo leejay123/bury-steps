@@ -19,8 +19,6 @@ export {
 
 export { createJourneyEvent, updateJourneyEvent, deleteJourneyEvent } from "./actions/journey";
 
-export { createRoute, updateRoute, deleteRoute, setWalkRoute } from "./actions/routes";
-
 export {
   clockIn,
   searchAddableMembers,
