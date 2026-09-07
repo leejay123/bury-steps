@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
 import { safeAppPath } from "@/lib/urls";
+import { sendAccountDeletedEmail, sendAdminPromotedEmail } from "@/lib/email/mailer";
 import {
   type ActionResult,
   LimitReachedError,
@@ -97,6 +98,13 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
     console.error("deleteMember: database removal failed", err);
     return { ok: false, error: "Could not remove this member. Try again." };
   }
+
+  // Best-effort, and deliberately after the point of no return above — they
+  // are gone from the group either way, whether or not this email sends or
+  // the Clerk removal below succeeds.
+  await sendAccountDeletedEmail(target).catch((err) => {
+    console.error("deleteMember: failed to send deletion confirmation email", err);
+  });
 
   const redirectTo = String(formData.get("redirectTo") ?? "").trim();
   const href = safeAppPath(redirectTo);
@@ -189,6 +197,12 @@ export async function setMemberRole(
       return { ok: false, error: "That member is no longer in the group." };
     }
     return logActionError("setMemberRole", err, "Could not change their role. Try again.");
+  }
+
+  if (role === "ADMIN") {
+    await sendAdminPromotedEmail(target).catch((err) => {
+      console.error("setMemberRole: failed to send admin-promoted email", err);
+    });
   }
 
   revalidatePath("/admin");

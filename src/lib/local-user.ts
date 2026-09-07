@@ -27,7 +27,9 @@ export async function syncLocalUser(input: {
   firstName: string | null;
   lastName: string | null;
 }): Promise<User> {
-  return prisma.$transaction(async (tx) => {
+  let isNewUser = false;
+
+  const user = await prisma.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(847291)`;
 
     const existing = await tx.user.findUnique({ where: { clerkId: input.clerkId } });
@@ -69,6 +71,7 @@ export async function syncLocalUser(input: {
       }
     }
 
+    isNewUser = true;
     return tx.user.create({
       data: {
         clerkId: input.clerkId,
@@ -79,4 +82,23 @@ export async function syncLocalUser(input: {
       },
     });
   });
+
+  // Outside the transaction — this makes an external network call, which
+  // has no business holding the advisory lock (or the DB connection) open
+  // while it runs. Never blocks account creation on the email actually
+  // sending: sendWelcomeEmail already swallows its own failures.
+  //
+  // Imported dynamically rather than at module scope: this file is loaded
+  // as a real (unmocked) dependency of @/lib/auth in several server action
+  // test suites that only mock requireAdmin/requireUser, not the whole
+  // module — a static import would drag the email/site-theme chain in at
+  // module-evaluation time whether or not a new user is ever created.
+  if (isNewUser) {
+    const { sendWelcomeEmail } = await import("./email/mailer");
+    await sendWelcomeEmail(user).catch((err) => {
+      console.error("[local-user] Failed to send welcome email", err);
+    });
+  }
+
+  return user;
 }
