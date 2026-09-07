@@ -56,7 +56,7 @@ export function EmailLayout({
           </Section>
 
           <Section style={{ padding: "32px" }}>
-            <Heading style={{ margin: "0 0 16px", fontSize: "20px", fontWeight: 600, color: INK }}>
+            <Heading style={{ margin: "0 0 16px", fontSize: "20px", fontWeight: 400, color: INK }}>
               {heading}
             </Heading>
             <div style={{ fontSize: "15px", lineHeight: "24px", color: BODY_TEXT }}>{children}</div>
@@ -97,9 +97,9 @@ export function EmailLayout({
 
 /**
  * The one body-text style every template uses instead of reaching for
- * @react-email/components' Text directly — bold is reserved for the
- * heading above, so this always renders at normal weight regardless of
- * what a given email client would otherwise default a bare <p> to.
+ * @react-email/components' Text directly — explicit normal weight, so this
+ * never renders bold regardless of what a given email client would
+ * otherwise default a bare <p> to.
  */
 export function EmailText({
   children,
@@ -143,7 +143,7 @@ export function EmailFact({ label, value }: { label: string; value: ReactNode })
 }
 
 /** The one button style every email uses for its call to action. Normal
- * weight, like the body text — bold is reserved for the heading. */
+ * weight, same as everything else in these emails. */
 export function EmailButton({ href, children }: { href: string; children: ReactNode }) {
   return (
     <Section style={{ margin: "24px 0 8px" }}>
