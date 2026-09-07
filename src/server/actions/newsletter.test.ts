@@ -5,6 +5,7 @@ const { checkRateLimit, prismaMock, sendNewsletterSubscribedEmail } = vi.hoisted
   checkRateLimit: vi.fn((): RateLimitResult => ({ ok: true })),
   prismaMock: {
     newsletterSubscriber: {
+      findUnique: vi.fn(),
       upsert: vi.fn(),
       update: vi.fn(),
     },
@@ -30,6 +31,7 @@ function form(fields: Record<string, string>): FormData {
 beforeEach(() => {
   vi.clearAllMocks();
   checkRateLimit.mockReturnValue({ ok: true });
+  prismaMock.newsletterSubscriber.findUnique.mockResolvedValue(null);
   prismaMock.newsletterSubscriber.upsert.mockResolvedValue({
     email: "jane@example.com",
     unsubscribeToken: "tok123",
@@ -78,6 +80,30 @@ describe("subscribeToNewsletter", () => {
   it("still reports success if only the confirmation email fails", async () => {
     sendNewsletterSubscribedEmail.mockRejectedValueOnce(new Error("network down"));
     const result = await subscribeToNewsletter(null, form({ email: "jane@example.com" }));
+    expect(result.ok).toBe(true);
+  });
+
+  it("tells an already-active subscriber they're already on the list, without re-sending the email", async () => {
+    prismaMock.newsletterSubscriber.findUnique.mockResolvedValueOnce({ unsubscribedAt: null });
+
+    const result = await subscribeToNewsletter(null, form({ email: "jane@example.com" }));
+
+    expect(result).toEqual({ ok: true, message: "You're already subscribed — thanks!" });
+    expect(prismaMock.newsletterSubscriber.upsert).not.toHaveBeenCalled();
+    expect(sendNewsletterSubscribedEmail).not.toHaveBeenCalled();
+  });
+
+  it("resubscribes (and emails) someone who had previously unsubscribed", async () => {
+    prismaMock.newsletterSubscriber.findUnique.mockResolvedValueOnce({
+      unsubscribedAt: new Date("2026-01-01"),
+    });
+
+    const result = await subscribeToNewsletter(null, form({ email: "jane@example.com" }));
+
+    expect(prismaMock.newsletterSubscriber.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ update: { unsubscribedAt: null } }),
+    );
+    expect(sendNewsletterSubscribedEmail).toHaveBeenCalled();
     expect(result.ok).toBe(true);
   });
 });
