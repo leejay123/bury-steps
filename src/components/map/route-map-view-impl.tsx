@@ -41,6 +41,19 @@ const TERRAIN_EXAGGERATION = 1.5;
 const FLAT_PITCH = 0;
 const TILTED_PITCH = 55;
 
+/** Adds the terrain-rgb source the first time it's actually needed (the
+ * first tilt to 3D), not on initial load — see the comment in the 'load'
+ * handler below for why. Safe to call again on a later tilt: MapLibre
+ * throws if a source id is added twice, so this checks first. */
+function ensureTerrainSource(map: MapLibreMap, apiKey: string): void {
+  if (map.getSource("burysteps-terrain")) return;
+  map.addSource("burysteps-terrain", {
+    type: "raster-dem",
+    url: maptilerTerrainUrl(apiKey),
+    encoding: "terrarium",
+  });
+}
+
 function makeDotElement(color: string, label: string): HTMLDivElement {
   const el = document.createElement("div");
   el.setAttribute("role", "img");
@@ -122,6 +135,25 @@ export function RouteMapViewImpl({
       }, 25_000);
       map.once("load", () => window.clearTimeout(loadTimeout));
 
+      // A lost WebGL context (a mobile GPU under memory pressure is the
+      // usual cause — several tabs, several other apps, an older phone)
+      // fires neither 'load' nor 'error': the canvas just stops updating.
+      // Without this it looks identical to a slow network, timing out with
+      // the same unhelpful message 25 seconds later.
+      // map.remove() in this effect's cleanup tears the canvas down along
+      // with this listener — nothing extra to unregister.
+      map.getCanvas().addEventListener("webglcontextlost", (event) => {
+        event.preventDefault();
+        console.error("Route map WebGL context lost");
+        if (!loaded) {
+          queueMicrotask(() =>
+            setError(
+              "This device ran out of graphics memory showing the map. Closing other tabs or apps may help.",
+            ),
+          );
+        }
+      });
+
       map.on("load", () => {
         if (!map) return;
         loaded = true;
@@ -133,11 +165,14 @@ export function RouteMapViewImpl({
         // that fails loudly with a real message instead of leaving the map
         // stuck looking "still loading" forever with nothing to explain it.
         try {
-          map.addSource("burysteps-terrain", {
-            type: "raster-dem",
-            url: maptilerTerrainUrl(apiKey),
-            encoding: "terrarium",
-          });
+          // The terrain-rgb source is deliberately not added here. Adding
+          // it eagerly made every open of this view — flat or tilted —
+          // decode a set of raster-dem tiles into GPU textures before
+          // 'load' could fire, real work nobody asked for yet on a flat
+          // view and exactly the kind of extra decode that can tip a
+          // memory-constrained mobile GPU into losing its context. It's
+          // added lazily, right before the first actual tilt, by
+          // ensureTerrainSource below.
 
           map.addSource("burysteps-route", {
             type: "geojson",
@@ -197,10 +232,11 @@ export function RouteMapViewImpl({
   // mode (route-3d-toggle.tsx) — the map still fits its bounds flat first,
   // then eases into the tilt the moment it's actually ready.
   useEffect(() => {
-    if (!startTilted || !ready || tilted) return;
+    if (!startTilted || !ready || tilted || !apiKey) return;
     const map = mapRef.current;
     if (!map) return;
     try {
+      ensureTerrainSource(map, apiKey);
       map.setTerrain({ source: "burysteps-terrain", exaggeration: TERRAIN_EXAGGERATION });
       map.easeTo({ pitch: TILTED_PITCH, duration: 800 });
       queueMicrotask(() => setTilted(true));
@@ -208,7 +244,7 @@ export function RouteMapViewImpl({
       console.error("Route map failed to tilt:", err);
       queueMicrotask(() => setError("Could not switch to 3D right now. Try again in a moment."));
     }
-  }, [ready, startTilted, tilted]);
+  }, [apiKey, ready, startTilted, tilted]);
 
   const toggleTilt = () => {
     const map = mapRef.current;
@@ -216,6 +252,7 @@ export function RouteMapViewImpl({
     const next = !tilted;
     try {
       if (next) {
+        ensureTerrainSource(map, apiKey);
         map.setTerrain({ source: "burysteps-terrain", exaggeration: TERRAIN_EXAGGERATION });
         map.easeTo({ pitch: TILTED_PITCH, duration: 800 });
       } else {
