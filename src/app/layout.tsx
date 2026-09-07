@@ -16,6 +16,7 @@ import { FullWidthDivider } from "@/components/full-width-divider";
 import { BackToTopGate } from "@/components/back-to-top-gate";
 import { UnlockPageOnNavigate } from "@/components/overlay-root";
 import { SiteCookieConsentGate } from "@/components/site-cookie-consent-gate";
+import { StaleDeployReload } from "@/components/stale-deploy-reload";
 import { getSiteTheme } from "@/lib/site-theme";
 import { DEFAULT_SITE_NAME, siteMetaDescription } from "@/lib/site-branding";
 import "./globals.css";
@@ -85,6 +86,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Script id="scroll-restoration" strategy="beforeInteractive">
           {`try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch {}`}
         </Script>
+        <StaleDeployReload />
         <ClerkProvider
           {...(useVercelAppProxy ? { proxyUrl: "/__clerk" } : {})}
           appearance={{
