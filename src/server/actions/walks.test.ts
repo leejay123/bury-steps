@@ -16,6 +16,7 @@ const {
   transaction,
   sendWalkAnnouncedEmail,
   sendWalkCancelledEmail,
+  sendWalkReopenedEmail,
 } = vi.hoisted(() => {
   const prismaMock: Record<string, Record<string, ReturnType<typeof vi.fn>>> = {
     walk: { create: vi.fn(), update: vi.fn(), delete: vi.fn(), findUnique: vi.fn() },
@@ -41,6 +42,7 @@ const {
     transaction,
     sendWalkAnnouncedEmail: vi.fn(async () => {}),
     sendWalkCancelledEmail: vi.fn(async () => {}),
+    sendWalkReopenedEmail: vi.fn(async () => {}),
   };
 });
 
@@ -50,7 +52,7 @@ vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
 vi.mock("@/lib/walk-slug", () => ({ allocateWalkSlug, walkShareUrl: vi.fn(() => "https://example.com/w/test") }));
 // Real email sending pulls in site-theme.ts (next/cache's unstable_cache,
 // not mocked above) and hits the network — out of scope for these tests.
-vi.mock("@/lib/email/mailer", () => ({ sendWalkAnnouncedEmail, sendWalkCancelledEmail }));
+vi.mock("@/lib/email/mailer", () => ({ sendWalkAnnouncedEmail, sendWalkCancelledEmail, sendWalkReopenedEmail }));
 vi.mock("@/lib/walk-window", async () => {
   const actual = await vi.importActual<typeof import("@/lib/walk-window")>("@/lib/walk-window");
   return { ...actual, isWalkScheduleLocked, isWalkStartInThePast, walkStatus };
@@ -308,6 +310,35 @@ describe("reopenWalk", () => {
     );
     expect(result.ok).toBe(true);
   });
+
+  it("notifies opted-in members once the walk is reopened", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({
+      id: "walk-1",
+      token: "tok-1",
+      slug: "sunday-stroll",
+      cancelledAt: new Date(),
+      title: "Sunday stroll",
+      location: "The park",
+      postcode: "BL9 0AA",
+      what3words: null,
+      startsAt: new Date("2026-09-13T13:30:00Z"),
+      durationMins: 60,
+    });
+    prismaMock.walk.update.mockResolvedValueOnce({});
+    prismaMock.user.findMany.mockResolvedValueOnce([
+      { id: "user-1", email: "jane@example.com", firstName: "Jane", unsubscribeToken: null },
+    ]);
+
+    await reopenWalk(null, form({ walkId: "walk-1" }));
+
+    expect(prismaMock.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { emailWalkAnnouncements: true } }),
+    );
+    expect(sendWalkReopenedEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "Sunday stroll" }),
+      expect.objectContaining({ id: "user-1" }),
+    );
+  });
 });
 
 describe("updateWalk", () => {
@@ -388,6 +419,42 @@ describe("updateWalk", () => {
     const updateCall = prismaMock.walk.update.mock.calls[0][0];
     expect(updateCall.data.cancelledAt).toBeNull();
     expect(result).toEqual({ ok: true, message: "Walk updated and put back on the diary." });
+  });
+
+  it("notifies opted-in members when an edit brings a cancelled walk back", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({
+      cancelledAt: new Date(),
+      startsAt: new Date("2026-06-01T14:00:00Z"),
+      durationMins: 60,
+      token: "tok-1",
+      slug: "sunday-stroll",
+    });
+    prismaMock.walk.update.mockResolvedValueOnce({ token: "tok-1", slug: "sunday-stroll" });
+    prismaMock.user.findMany.mockResolvedValueOnce([
+      { id: "user-1", email: "jane@example.com", firstName: "Jane", unsubscribeToken: null },
+    ]);
+
+    await updateWalk(null, updateForm({ wasCancelled: "on" }));
+
+    expect(sendWalkReopenedEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "Sunday stroll" }),
+      expect.objectContaining({ id: "user-1" }),
+    );
+  });
+
+  it("does not notify members on an ordinary edit that isn't reopening anything", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({
+      cancelledAt: null,
+      startsAt: new Date("2026-06-01T14:00:00Z"),
+      durationMins: 60,
+      token: "tok-1",
+      slug: "sunday-stroll",
+    });
+    prismaMock.walk.update.mockResolvedValueOnce({ token: "tok-1", slug: "sunday-stroll" });
+
+    await updateWalk(null, updateForm());
+
+    expect(sendWalkReopenedEmail).not.toHaveBeenCalled();
   });
 });
 

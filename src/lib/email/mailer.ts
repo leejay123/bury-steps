@@ -10,6 +10,7 @@ import { ContactMessageAdminAlertEmail } from "./templates/contact-message-admin
 import { NewsletterSubscribedEmail } from "./templates/newsletter-subscribed";
 import { WalkAnnouncedEmail } from "./templates/walk-announced";
 import { WalkCancelledEmail } from "./templates/walk-cancelled";
+import { WalkReopenedEmail } from "./templates/walk-reopened";
 import { AddedToWalkEmail } from "./templates/added-to-walk";
 import { AccidentReportAlertEmail } from "./templates/accident-report-alert";
 
@@ -211,6 +212,37 @@ export async function sendWalkCancelledEmail(
       title: walk.title,
       whenText: walk.whenText,
       reason: walk.reason,
+      shareUrl: walk.shareUrl,
+      preferencesUrl,
+      bodyParagraphs: copy.bodyParagraphs,
+    }),
+  });
+}
+
+/** A cancelled walk was reopened — same one-per-member rule as sendWalkAnnouncedEmail. */
+export async function sendWalkReopenedEmail(
+  walk: WalkLike & { durationText: string; meetingPoint: string | null; what3words: string | null },
+  member: MemberLike,
+): Promise<void> {
+  const [brand, preferencesUrl] = await Promise.all([getEmailBrand(), memberPreferences(member)]);
+  const copy = await resolveEmailCopy("walkReopened", {
+    firstName: greetingName(member.firstName),
+    siteName: brand.siteName,
+    walkTitle: walk.title,
+    whenText: walk.whenText,
+    durationText: walk.durationText,
+    meetingPoint: walk.meetingPoint ?? "",
+  });
+  await sendEmail({
+    to: member.email,
+    subject: copy.subject,
+    react: WalkReopenedEmail({
+      ...brand,
+      title: walk.title,
+      whenText: walk.whenText,
+      durationText: walk.durationText,
+      meetingPoint: walk.meetingPoint,
+      what3words: walk.what3words,
       shareUrl: walk.shareUrl,
       preferencesUrl,
       bodyParagraphs: copy.bodyParagraphs,
