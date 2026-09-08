@@ -30,7 +30,7 @@ export function SettingsPage({
         <SettingsBackLink page={title} />
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
           <div className="flex max-w-2xl flex-col gap-1.5">
-            <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+            <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
             <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
           </div>
           {previewHref ? (

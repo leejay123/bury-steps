@@ -64,7 +64,7 @@ export default async function WalkHistoryPage() {
           <span aria-hidden="true"> · </span>
           History
         </p>
-        <h1 className="text-2xl font-semibold tracking-tight">Your walk history</h1>
+        <h1 className="text-lg font-semibold tracking-tight">Your walk history</h1>
         <p className="text-sm text-muted-foreground">
           {count === 0
             ? "Every walk you clock in to will be kept here, once it's finished."

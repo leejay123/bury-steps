@@ -113,7 +113,7 @@ export default async function DashboardPage() {
         userId={user.id}
       />
       <div className="flex flex-col gap-1.5">
-        <h1 className="text-2xl font-semibold tracking-tight">Walks</h1>
+        <h1 className="text-lg font-semibold tracking-tight">Walks</h1>
         <p className="text-sm text-muted-foreground">
           Member since {formatDate(user.createdAt)} · {formatMembershipAge(user.createdAt)}. Upcoming
           walks, including any that have been cancelled. Clock in on the day from here. Past walks
