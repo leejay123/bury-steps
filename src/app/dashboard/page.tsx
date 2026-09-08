@@ -107,7 +107,11 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <MemberWelcomeDialog firstName={user.firstName} hasNoWalks={totalAttendanceCount === 0} />
+      <MemberWelcomeDialog
+        firstName={user.firstName}
+        hasNoWalks={totalAttendanceCount === 0}
+        userId={user.id}
+      />
       <div className="flex flex-col gap-1.5">
         <h1 className="text-2xl font-semibold tracking-tight">Walks</h1>
         <p className="text-sm text-muted-foreground">
