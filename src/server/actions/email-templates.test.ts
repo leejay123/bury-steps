@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const { requireAdmin, prismaMock } = vi.hoisted(() => ({
+const { requireAdmin, prismaMock, sendTestEmail, checkRateLimit } = vi.hoisted(() => ({
   requireAdmin: vi.fn(),
   prismaMock: {
     emailTemplateOverride: {
@@ -9,6 +9,8 @@ const { requireAdmin, prismaMock } = vi.hoisted(() => ({
       deleteMany: vi.fn(),
     },
   },
+  sendTestEmail: vi.fn(async () => {}),
+  checkRateLimit: vi.fn(() => ({ ok: true }) as { ok: true } | { ok: false; retryAfterSeconds: number }),
 }));
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
@@ -17,8 +19,17 @@ vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
   return { ...actual, requireAdmin };
 });
+// Real sending pulls in site-theme.ts (next/cache's unstable_cache, not
+// mocked above) and hits the network — out of scope for these tests.
+vi.mock("@/lib/email/test-send", () => ({ sendTestEmail }));
+vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
 
-import { getEmailTemplateOverrides, resetEmailTemplate, updateEmailTemplate } from "./email-templates";
+import {
+  getEmailTemplateOverrides,
+  resetEmailTemplate,
+  sendTestEmailTemplate,
+  updateEmailTemplate,
+} from "./email-templates";
 
 function form(fields: Record<string, string>): FormData {
   const formData = new FormData();
@@ -28,8 +39,9 @@ function form(fields: Record<string, string>): FormData {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  requireAdmin.mockResolvedValue({ id: "admin-1" });
+  requireAdmin.mockResolvedValue({ id: "admin-1", email: "admin@example.com" });
   prismaMock.emailTemplateOverride.findMany.mockResolvedValue([]);
+  checkRateLimit.mockReturnValue({ ok: true });
 });
 
 describe("getEmailTemplateOverrides", () => {
@@ -80,6 +92,34 @@ describe("updateEmailTemplate", () => {
     );
     expect(result.ok).toBe(false);
     expect(prismaMock.emailTemplateOverride.upsert).not.toHaveBeenCalled();
+  });
+});
+
+describe("sendTestEmailTemplate", () => {
+  it("rejects an unknown key", async () => {
+    const result = await sendTestEmailTemplate(null, form({ key: "not-a-real-key" }));
+    expect(result).toEqual({ ok: false, error: "Unknown email." });
+    expect(sendTestEmail).not.toHaveBeenCalled();
+  });
+
+  it("sends a test to the requesting admin's own address", async () => {
+    const result = await sendTestEmailTemplate(null, form({ key: "welcome" }));
+
+    expect(sendTestEmail).toHaveBeenCalledWith("welcome", { id: "admin-1", email: "admin@example.com" });
+    expect(result).toEqual({ ok: true, message: "Test email sent to admin@example.com." });
+  });
+
+  it("rate-limits repeated test sends", async () => {
+    checkRateLimit.mockReturnValueOnce({ ok: false, retryAfterSeconds: 30 });
+    const result = await sendTestEmailTemplate(null, form({ key: "welcome" }));
+    expect(result).toEqual({ ok: false, error: "Too many test sends. Try again in 30s." });
+    expect(sendTestEmail).not.toHaveBeenCalled();
+  });
+
+  it("reports a generic failure if the send throws", async () => {
+    sendTestEmail.mockRejectedValueOnce(new Error("resend down"));
+    const result = await sendTestEmailTemplate(null, form({ key: "welcome" }));
+    expect(result).toEqual({ ok: false, error: "Could not send the test email. Try again." });
   });
 });
 
