@@ -19,6 +19,7 @@ function clearAll() {
   delete process.env.CRON_SECRET;
   delete process.env.INITIAL_ADMIN_EMAIL;
   delete process.env.RESEND_API_KEY;
+  delete process.env.RESEND_WEBHOOK_SECRET;
   delete process.env.VERCEL_ENV;
   setNodeEnv("test");
 }
@@ -72,6 +73,7 @@ describe("validateEnv", () => {
     expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("CRON_SECRET"));
     expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("INITIAL_ADMIN_EMAIL"));
     expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("RESEND_API_KEY"));
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("RESEND_WEBHOOK_SECRET"));
   });
 
   it("stays silent about recommended vars once they're set", () => {
@@ -80,6 +82,7 @@ describe("validateEnv", () => {
     process.env.CRON_SECRET = "some-secret";
     process.env.INITIAL_ADMIN_EMAIL = "admin@example.com";
     process.env.RESEND_API_KEY = "re_test";
+    process.env.RESEND_WEBHOOK_SECRET = "whsec_test";
     validateEnv();
     expect(console.warn).not.toHaveBeenCalled();
   });
