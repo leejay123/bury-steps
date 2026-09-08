@@ -1,6 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -11,7 +12,7 @@ import { sendNewsletterSubscribedEmail } from "@/lib/email/mailer";
 import { paragraphsFrom } from "@/lib/email/render-template";
 import { getOrCreateAudienceId, syncContactSubscribed, syncContactUnsubscribed } from "@/lib/email/resend-audience";
 import { NewsletterCampaignEmail } from "@/lib/email/templates/newsletter-campaign";
-import { type ActionResult, logActionError } from "./shared";
+import { type ActionResult, isPrismaCode, logActionError } from "./shared";
 
 async function requesterKey(): Promise<string> {
   const h = await headers();
@@ -113,11 +114,18 @@ export async function sendNewsletterCampaign(
       }),
     ]);
 
+    // Keyed by lowercased email so an old case-variant duplicate (e.g. from
+    // before parseContactEmail lowercased on the way in) is only synced
+    // once, not sent the campaign twice under two different-cased contacts.
+    const uniqueByEmail = new Map<string, string | null>();
     for (const subscriber of footerSubscribers) {
-      await syncContactSubscribed(subscriber.email);
+      uniqueByEmail.set(subscriber.email.toLowerCase(), null);
     }
     for (const member of newsletterMembers) {
-      await syncContactSubscribed(member.email, member.firstName);
+      uniqueByEmail.set(member.email.toLowerCase(), member.firstName);
+    }
+    for (const [email, firstName] of uniqueByEmail) {
+      await syncContactSubscribed(email, firstName);
     }
 
     const brand = await getEmailBrand();
@@ -138,6 +146,33 @@ export async function sendNewsletterCampaign(
   }
 
   return { ok: true, message: "Newsletter sent." };
+}
+
+/** Lets an admin remove a footer-form subscriber — e.g. a case-variant
+ * duplicate from before parseContactEmail lowercased addresses on the way
+ * in, or someone who asked to be removed some other way than the
+ * one-click unsubscribe link. Also removes them from the Resend audience. */
+export async function removeNewsletterSubscriber(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { ok: false, error: "No subscriber selected." };
+
+  try {
+    const subscriber = await prisma.newsletterSubscriber.delete({
+      where: { id },
+      select: { email: true },
+    });
+    await syncContactUnsubscribed(subscriber.email);
+  } catch (err) {
+    if (isPrismaCode(err, "P2025")) return { ok: true, message: "Already removed." };
+    return logActionError("removeNewsletterSubscriber", err, "Could not remove that subscriber. Try again.");
+  }
+
+  revalidatePath("/admin/settings/subscribers");
+  return { ok: true, message: "Subscriber removed." };
 }
 
 /** Powers the one-click unsubscribe link in every newsletter email's footer. */

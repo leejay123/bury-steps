@@ -15,8 +15,12 @@ export function parseContactName(raw: string): string | "invalid" {
   return name;
 }
 
+/** Lowercased so "Jane@x.com" and "jane@x.com" are treated as the same
+ * address everywhere this is used — without this, the newsletter's unique
+ * constraint on email let someone subscribe twice with different casing,
+ * creating two rows and getting every campaign twice. */
 export function parseContactEmail(raw: string): string | "invalid" {
-  const email = raw.trim();
+  const email = raw.trim().toLowerCase();
   if (email.length === 0 || email.length > MAX_CONTACT_EMAIL || !EMAIL_PATTERN.test(email)) {
     return "invalid";
   }

@@ -5,8 +5,9 @@ import { prisma } from "@/lib/db";
 import { displayName } from "@/lib/auth";
 import { formatDate } from "@/lib/dates";
 import { Button } from "@/components/ui/button";
-import { DataList, DataListBody, DataListItem } from "@/components/data-list";
+import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
 import { SettingsPage, SettingsSection } from "../settings-page";
+import { RemoveSubscriberButton } from "./remove-subscriber-button";
 import { SendNewsletterForm } from "./send-newsletter-form";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +34,7 @@ export default async function AdminSubscribersSettingsPage() {
   ] = await Promise.all([
     prisma.newsletterSubscriber.findMany({
       where: { unsubscribedAt: null },
-      select: { email: true, createdAt: true },
+      select: { id: true, email: true, createdAt: true },
       orderBy: { createdAt: "desc" },
       take: 200,
     }),
@@ -95,16 +96,16 @@ export default async function AdminSubscribersSettingsPage() {
             </DataListItem>
           ))}
           {activeFooterSubscribers.map((subscriber) => (
-            <DataListItem
-              className="cursor-default items-start hover:bg-transparent"
-              key={`footer-${subscriber.email}`}
-            >
+            <DataListItem className="items-start hover:bg-transparent" key={subscriber.id}>
               <DataListBody>
                 <p className="font-medium wrap-break-word">{subscriber.email}</p>
                 <p className="text-xs text-muted-foreground">
                   Newsletter signup · {formatDate(subscriber.createdAt)}
                 </p>
               </DataListBody>
+              <DataListActions>
+                <RemoveSubscriberButton email={subscriber.email} id={subscriber.id} />
+              </DataListActions>
             </DataListItem>
           ))}
           {newsletterMembers.length === 0 && activeFooterSubscribers.length === 0 ? (

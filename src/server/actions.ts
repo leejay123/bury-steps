@@ -103,6 +103,7 @@ export {
   subscribeToNewsletter,
   unsubscribeFromNewsletter,
   sendNewsletterCampaign,
+  removeNewsletterSubscriber,
 } from "./actions/newsletter";
 
 export {
