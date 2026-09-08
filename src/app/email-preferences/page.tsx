@@ -17,7 +17,7 @@ export default async function MyEmailPreferencesPage() {
   const user = await requireUser();
 
   return (
-    <div className="flex flex-col gap-6 py-8 md:py-10">
+    <div className="flex flex-col gap-6">
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Email preferences</h1>
         <p className="text-sm text-muted-foreground">{user.email}</p>

@@ -58,7 +58,7 @@ export function NoticesBlogSection({
   return (
     <section className="flex flex-col gap-0">
       <div className="flex flex-col gap-3 px-4 py-6 md:px-6">
-        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Notices</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Notices</h1>
         <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
           Updates from the organisers for signed-in members. Short messages stay in the bell; open a
           row here for the full write-up.

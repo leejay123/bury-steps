@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { after } from "next/server";
 import { notFound } from "next/navigation";
-import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth";
 import { formatDate } from "@/lib/dates";
-import { getPageNoticeBySlug, recordSiteNoticeRead } from "@/lib/site-notices";
+import { getPageNoticeBySlug } from "@/lib/site-notices";
 import { Badge } from "@/components/ui/badge";
+import { MarkNoticeReadOnView } from "./mark-notice-read-on-view";
 
 export const dynamic = "force-dynamic";
 
@@ -30,22 +29,14 @@ export default async function NoticeDetailPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const user = await requireUser();
+  await requireUser();
   const { slug } = await params;
   const notice = await getPageNoticeBySlug(slug);
   if (!notice || !notice.pageBody) notFound();
 
-  after(async () => {
-    try {
-      await recordSiteNoticeRead(user.id, notice.id);
-      revalidatePath("/", "layout");
-    } catch {
-      // Read receipts are best-effort; don't fail the page.
-    }
-  });
-
   return (
     <article className="flex w-full flex-col gap-6 px-4 py-8 md:px-6">
+      <MarkNoticeReadOnView noticeId={notice.id} />
       <Link className="text-sm text-muted-foreground hover:text-foreground" href="/notices">
         ← All notices
       </Link>

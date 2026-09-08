@@ -297,7 +297,10 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
 @media print {
   @page {
     size: A4;
-    margin: 14mm;
+    /* Kept small (not 0) so the content isn't clipped by printers/PDF
+       viewers that can't render truly edge-to-edge — but still noticeably
+       fuller-width than the old 14mm border on every side. */
+    margin: 8mm;
   }
 
   html,
