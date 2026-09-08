@@ -1,6 +1,7 @@
 "use server";
 
 import { clerkClient } from "@clerk/nextjs/server";
+import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { requireAdmin, displayName } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -70,7 +71,11 @@ export async function startImpersonation(
     // TEMPORARY diagnostic — surfaces the real Clerk/DB error to the
     // (admin-only) caller instead of a generic message, to find out why
     // this is failing in production. Revert before finishing this fix.
-    const detail = err instanceof Error ? err.message : JSON.stringify(err);
+    const detail = isClerkAPIResponseError(err)
+      ? err.errors.map((e) => `${e.code}: ${e.longMessage ?? e.message}`).join(" | ")
+      : err instanceof Error
+        ? err.message
+        : JSON.stringify(err);
     logActionError("startImpersonation", err, "Could not log in as that member. Try again.");
     return { ok: false, error: `DEBUG: ${detail}` };
   }
