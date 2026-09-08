@@ -103,6 +103,15 @@ export function accountPortalUrl(
   if (redirectTo && isTrustedAppUrl(redirectTo)) {
     url.searchParams.set("redirect_url", redirectTo);
   }
+  // Clerk's actor-token ("log in as this member") flow signs the admin out
+  // and redirects back to this app's own /sign-in with a __clerk_ticket
+  // param, which this app's Account Portal sign-in has to receive to
+  // actually complete the impersonated sign-in — without forwarding it
+  // here, the ticket was silently dropped and the browser just landed on
+  // a normal, ticket-less sign-in page. It's an opaque token Clerk itself
+  // issued, not a URL, so it needs no trust check the way redirect_url does.
+  const ticket = firstString(searchParams?.__clerk_ticket);
+  if (ticket) url.searchParams.set("__clerk_ticket", ticket);
   return url.toString();
 }
 

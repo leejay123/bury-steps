@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   accountPortalHref,
+  accountPortalUrl,
   appUrl,
   clerkAuthorizedParties,
   isTrustedAppUrl,
@@ -14,6 +15,34 @@ const ORIGINAL_ENV = { ...process.env };
 function resetEnv() {
   process.env = { ...ORIGINAL_ENV };
 }
+
+describe("accountPortalUrl", () => {
+  it("forwards a trusted redirect_url", () => {
+    const url = accountPortalUrl("sign-in", { redirect_url: `${PRODUCTION_APP_URL}/dashboard` });
+    expect(new URL(url).searchParams.get("redirect_url")).toBe(`${PRODUCTION_APP_URL}/dashboard`);
+  });
+
+  it("drops an untrusted redirect_url", () => {
+    const url = accountPortalUrl("sign-in", { redirect_url: "https://evil.example.com/" });
+    expect(new URL(url).searchParams.has("redirect_url")).toBe(false);
+  });
+
+  // Regression: Clerk's actor-token ("log in as this member") flow signs
+  // the admin out and redirects back to /sign-in with __clerk_ticket in
+  // the querystring — this app's /sign-in just forwards to the Account
+  // Portal via this function, and it used to only forward redirect_url,
+  // silently dropping the ticket. The Account Portal never saw it, so
+  // impersonation looked like it did nothing at all.
+  it("forwards __clerk_ticket so the actor-token sign-in flow can complete", () => {
+    const url = accountPortalUrl("sign-in", { __clerk_ticket: "abc123" });
+    expect(new URL(url).searchParams.get("__clerk_ticket")).toBe("abc123");
+  });
+
+  it("omits __clerk_ticket entirely when there isn't one", () => {
+    const url = accountPortalUrl("sign-in", {});
+    expect(new URL(url).searchParams.has("__clerk_ticket")).toBe(false);
+  });
+});
 
 describe("isTrustedAppUrl", () => {
   beforeEach(resetEnv);
