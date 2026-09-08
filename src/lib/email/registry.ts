@@ -15,6 +15,7 @@ export type EmailTemplateKey =
   | "welcome"
   | "accountDeleted"
   | "adminPromoted"
+  | "adminDemoted"
   | "contactReceived"
   | "contactAdminAlert"
   | "newsletterSubscribed"
@@ -82,6 +83,20 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
     defaultSubject: "You're now an organiser of {siteName}",
     defaultBody:
       "Hi {firstName}, another organiser has given you organiser access on {siteName}. You can now create and edit walks, manage members, and see who's coming on each walk.\n\nDidn't expect this? Let another organiser know.",
+  },
+  {
+    key: "adminDemoted",
+    label: "Demoted to member",
+    trigger: "Sent when an organiser is moved back to a regular member.",
+    category: "Member lifecycle",
+    placeholders: [
+      { token: "firstName", description: "Their first name (\"there\" if not set)" },
+      { token: "siteName", description: "Your site's name" },
+      { token: "siteUrl", description: "Your site's web address" },
+    ],
+    defaultSubject: "You're now a member of {siteName}",
+    defaultBody:
+      "Hi {firstName}, another organiser has moved you back to a regular member on {siteName}. You'll still see and clock in to walks as before, but you can no longer create walks or manage members.\n\nDidn't expect this? Let another organiser know.",
   },
   {
     key: "contactReceived",

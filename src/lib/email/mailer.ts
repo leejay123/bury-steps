@@ -5,6 +5,7 @@ import { getOrCreateUserUnsubscribeToken, memberPreferencesUrl, newsletterUnsubs
 import { WelcomeEmail } from "./templates/welcome";
 import { AccountDeletedEmail } from "./templates/account-deleted";
 import { AdminPromotedEmail } from "./templates/admin-promoted";
+import { AdminDemotedEmail } from "./templates/admin-demoted";
 import { ContactMessageReceivedEmail } from "./templates/contact-message-received";
 import { ContactMessageAdminAlertEmail } from "./templates/contact-message-admin-alert";
 import { NewsletterSubscribedEmail } from "./templates/newsletter-subscribed";
@@ -90,6 +91,21 @@ export async function sendAdminPromotedEmail(member: MemberLike): Promise<void> 
     to: member.email,
     subject: copy.subject,
     react: AdminPromotedEmail({ ...brand, preferencesUrl, bodyParagraphs: copy.bodyParagraphs }),
+  });
+}
+
+/** Demoted ADMIN -> MEMBER — see setMemberRole in src/server/actions/members.ts. */
+export async function sendAdminDemotedEmail(member: MemberLike): Promise<void> {
+  const [brand, preferencesUrl] = await Promise.all([getEmailBrand(), memberPreferences(member)]);
+  const copy = await resolveEmailCopy("adminDemoted", {
+    firstName: greetingName(member.firstName),
+    siteName: brand.siteName,
+    siteUrl: brand.siteUrl,
+  });
+  await sendEmail({
+    to: member.email,
+    subject: copy.subject,
+    react: AdminDemotedEmail({ ...brand, preferencesUrl, bodyParagraphs: copy.bodyParagraphs }),
   });
 }
 

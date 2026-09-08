@@ -7,7 +7,7 @@ import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
 import { safeAppPath } from "@/lib/urls";
-import { sendAccountDeletedEmail, sendAdminPromotedEmail } from "@/lib/email/mailer";
+import { sendAccountDeletedEmail, sendAdminPromotedEmail, sendAdminDemotedEmail } from "@/lib/email/mailer";
 import {
   type ActionResult,
   LimitReachedError,
@@ -202,6 +202,10 @@ export async function setMemberRole(
   if (role === "ADMIN") {
     await sendAdminPromotedEmail(target).catch((err) => {
       console.error("setMemberRole: failed to send admin-promoted email", err);
+    });
+  } else {
+    await sendAdminDemotedEmail(target).catch((err) => {
+      console.error("setMemberRole: failed to send admin-demoted email", err);
     });
   }
 

@@ -39,6 +39,7 @@ vi.mock("@clerk/nextjs/server", () => ({
 vi.mock("@/lib/email/mailer", () => ({
   sendAccountDeletedEmail: vi.fn(async () => {}),
   sendAdminPromotedEmail: vi.fn(async () => {}),
+  sendAdminDemotedEmail: vi.fn(async () => {}),
 }));
 vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
