@@ -16,8 +16,11 @@ function withQueryParam(url: string, key: string, value: string) {
 /**
  * Serverless isolates each open their own Prisma client. Supabase session
  * pooling (port 5432) caps that at ~15 connections and then 500s the site.
- * Transaction pooling (6543) multiplexes those isolates. Migrations still use
- * DATABASE_URL as stored in Vercel (session / 5432).
+ * Transaction pooling (6543) multiplexes those isolates, so a small
+ * per-client connection_limit (5) is safe and lets one isolate's parallel
+ * queries (e.g. the homepage's Promise.all) run without queuing behind a
+ * single connection. Migrations still use DATABASE_URL as stored in Vercel
+ * (session / 5432).
  */
 function runtimeDatasourceUrl(url = process.env.DATABASE_URL) {
   if (!url) return undefined;
@@ -26,7 +29,8 @@ function runtimeDatasourceUrl(url = process.env.DATABASE_URL) {
   if (/pooler\.supabase\.com:6543/i.test(next)) {
     next = withQueryParam(next, "pgbouncer", "true");
   }
-  return withQueryParam(next, "connection_limit", "1");
+  next = withQueryParam(next, "connection_limit", "5");
+  return withQueryParam(next, "pool_timeout", "20");
 }
 
 function createPrismaClient() {
