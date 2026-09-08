@@ -1,7 +1,13 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { RateLimitResult } from "@/lib/rate-limit";
 
-const { checkRateLimit, prismaMock, sendNewsletterSubscribedEmail } = vi.hoisted(() => ({
+const {
+  checkRateLimit,
+  prismaMock,
+  sendNewsletterSubscribedEmail,
+  syncContactSubscribed,
+  syncContactUnsubscribed,
+} = vi.hoisted(() => ({
   checkRateLimit: vi.fn((): RateLimitResult => ({ ok: true })),
   prismaMock: {
     newsletterSubscriber: {
@@ -11,11 +17,20 @@ const { checkRateLimit, prismaMock, sendNewsletterSubscribedEmail } = vi.hoisted
     },
   },
   sendNewsletterSubscribedEmail: vi.fn(async () => {}),
+  syncContactSubscribed: vi.fn(async () => {}),
+  syncContactUnsubscribed: vi.fn(async () => {}),
 }));
 
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
 vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
 vi.mock("@/lib/email/mailer", () => ({ sendNewsletterSubscribedEmail }));
+// Real syncing hits Resend and the DB-cached audience id — out of scope for
+// these tests, which only care that the subscriber row itself is saved.
+vi.mock("@/lib/email/resend-audience", () => ({
+  syncContactSubscribed,
+  syncContactUnsubscribed,
+  getOrCreateAudienceId: vi.fn(async () => null),
+}));
 vi.mock("next/headers", () => ({
   headers: vi.fn(async () => new Headers({ "x-forwarded-for": "203.0.113.1" })),
 }));
@@ -74,6 +89,7 @@ describe("subscribeToNewsletter", () => {
       email: "jane@example.com",
       unsubscribeToken: "tok123",
     });
+    expect(syncContactSubscribed).toHaveBeenCalledWith("jane@example.com");
     expect(result.ok).toBe(true);
   });
 
@@ -110,13 +126,15 @@ describe("subscribeToNewsletter", () => {
 
 describe("unsubscribeFromNewsletter", () => {
   it("returns true once the row is marked unsubscribed", async () => {
-    prismaMock.newsletterSubscriber.update.mockResolvedValueOnce({});
+    prismaMock.newsletterSubscriber.update.mockResolvedValueOnce({ email: "jane@example.com" });
     const ok = await unsubscribeFromNewsletter("tok123");
     expect(ok).toBe(true);
     expect(prismaMock.newsletterSubscriber.update).toHaveBeenCalledWith({
       where: { unsubscribeToken: "tok123" },
       data: { unsubscribedAt: expect.any(Date) },
+      select: { email: true },
     });
+    expect(syncContactUnsubscribed).toHaveBeenCalledWith("jane@example.com");
   });
 
   it("returns false for an unknown token instead of throwing", async () => {

@@ -3,7 +3,22 @@
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import type { EmailPreferences } from "@/lib/email-preferences";
+import { syncContactSubscribed, syncContactUnsubscribed } from "@/lib/email/resend-audience";
 import { type ActionResult, isPrismaCode, logActionError } from "./shared";
+
+/** Only fires the Resend sync when the newsletter toggle itself actually
+ * flipped — every other preference change on this form updates the same
+ * row without touching the newsletter audience. */
+async function syncNewsletterToggle(
+  wasSubscribed: boolean,
+  isSubscribed: boolean,
+  email: string,
+  firstName: string | null,
+): Promise<void> {
+  if (wasSubscribed === isSubscribed) return;
+  if (isSubscribed) await syncContactSubscribed(email, firstName);
+  else await syncContactUnsubscribed(email);
+}
 
 function readPreferences(formData: FormData): EmailPreferences {
   return {
@@ -29,11 +44,27 @@ export async function updateMemberEmailPreferences(
   const token = String(formData.get("token") ?? "");
   if (!token) return { ok: false, error: "This link is missing its token." };
 
+  const preferences = readPreferences(formData);
   try {
-    await prisma.user.update({
+    const before = await prisma.user.findUnique({
       where: { unsubscribeToken: token },
-      data: readPreferences(formData),
+      select: { emailNewsletter: true },
     });
+    if (!before) return { ok: false, error: "This link is invalid or has expired." };
+
+    const updated = await prisma.user.update({
+      where: { unsubscribeToken: token },
+      data: preferences,
+      select: { email: true, firstName: true },
+    });
+    // Best-effort — the toggle itself is already saved above regardless of
+    // whether this succeeds.
+    void syncNewsletterToggle(
+      before.emailNewsletter,
+      preferences.emailNewsletter,
+      updated.email,
+      updated.firstName,
+    );
   } catch (err) {
     if (isPrismaCode(err, "P2025")) {
       return { ok: false, error: "This link is invalid or has expired." };
@@ -51,12 +82,14 @@ export async function updateMyEmailPreferences(
   formData: FormData,
 ): Promise<ActionResult> {
   const user = await requireUser();
+  const preferences = readPreferences(formData);
 
   try {
     await prisma.user.update({
       where: { id: user.id },
-      data: readPreferences(formData),
+      data: preferences,
     });
+    void syncNewsletterToggle(user.emailNewsletter, preferences.emailNewsletter, user.email, user.firstName);
   } catch (err) {
     return logActionError("updateMyEmailPreferences", err, "Could not save your preferences. Try again.");
   }

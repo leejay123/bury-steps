@@ -331,6 +331,11 @@ model SiteSetting {
   /// (there is no bundled default for this one).
   reportBannerMime           String?
   reportBannerData           Bytes?
+  /// Resend audience (Segment) id that newsletter subscribers are synced
+  /// into. Created automatically on first use — see
+  /// src/lib/email/resend-audience.ts — so there's nothing to configure by
+  /// hand in the Resend dashboard.
+  resendAudienceId           String?
   updatedAt                  DateTime @updatedAt
 }
 

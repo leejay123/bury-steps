@@ -99,7 +99,11 @@ export {
   deleteContactMessage,
 } from "./actions/contact";
 
-export { subscribeToNewsletter, unsubscribeFromNewsletter } from "./actions/newsletter";
+export {
+  subscribeToNewsletter,
+  unsubscribeFromNewsletter,
+  sendNewsletterCampaign,
+} from "./actions/newsletter";
 
 export {
   updateMemberEmailPreferences,
