@@ -90,7 +90,7 @@ async function notifyOtherAdminsOfAccidentReport(report: {
 }): Promise<void> {
   try {
     const otherAdmins = await prisma.user.findMany({
-      where: { role: "ADMIN", id: { not: report.excludeAdminId } },
+      where: { role: "ADMIN", id: { not: report.excludeAdminId }, emailOrganiserAlerts: true },
       select: { email: true },
     });
     await sendAccidentReportAlertEmail(report, otherAdmins.map((admin) => admin.email));

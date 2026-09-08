@@ -100,7 +100,7 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
   {
     key: "contactAdminAlert",
     label: "Contact form — alert to organisers",
-    trigger: "Sent to every organiser when the contact form is submitted.",
+    trigger: "Sent to every organiser opted into organiser alerts when the contact form is submitted.",
     category: "Organiser alerts",
     placeholders: [
       { token: "name", description: "The sender's name" },
@@ -171,7 +171,7 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
   {
     key: "addedToWalk",
     label: "Added to a walk",
-    trigger: "Sent to a member when an organiser manually adds them to a walk.",
+    trigger: "Sent to a member opted into walk announcements when an organiser manually adds them to a walk.",
     category: "Walks",
     placeholders: [
       { token: "firstName", description: "Their first name (\"there\" if not set)" },
@@ -186,7 +186,7 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
   {
     key: "accidentReportAlert",
     label: "Accident report logged",
-    trigger: "Sent to every other organiser when one of them logs an accident report.",
+    trigger: "Sent to every other organiser opted into organiser alerts when one of them logs an accident report.",
     category: "Organiser alerts",
     placeholders: [
       { token: "createdByName", description: "The organiser who logged it" },

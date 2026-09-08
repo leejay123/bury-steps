@@ -8,7 +8,8 @@ export type AccidentReportAlertEmailProps = EmailBrand & {
   bodyParagraphs: string[];
 };
 
-/** No preferences link — organiser-operational, like the contact-form admin alert. */
+/** Same batched-send, signed-in-page preferences link as the contact-form
+ * admin alert — see that template's comment. */
 export function AccidentReportAlertEmail({
   whenText,
   walkTitle,
@@ -20,6 +21,7 @@ export function AccidentReportAlertEmail({
   return (
     <EmailLayout
       heading="New accident report"
+      preferencesUrl={`${brand.siteUrl}/email-preferences`}
       previewText={`${createdByName} logged an accident report.`}
       {...brand}
     >

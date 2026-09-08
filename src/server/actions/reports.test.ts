@@ -70,7 +70,9 @@ describe("addAccidentReport", () => {
     await addAccidentReport(null, reportForm());
 
     expect(prismaMock.user.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { role: "ADMIN", id: { not: ADMIN.id } } }),
+      expect.objectContaining({
+        where: { role: "ADMIN", id: { not: ADMIN.id }, emailOrganiserAlerts: true },
+      }),
     );
     expect(sendAccidentReportAlertEmail).toHaveBeenCalledWith(
       expect.objectContaining({ whoInvolved: "A member" }),

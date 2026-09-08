@@ -209,7 +209,13 @@ describe("clockIn", () => {
 });
 
 describe("adminClockIn", () => {
-  const member = { id: "member-1", firstName: "Jo", lastName: null, email: "jo@example.com" };
+  const member = {
+    id: "member-1",
+    firstName: "Jo",
+    lastName: null,
+    email: "jo@example.com",
+    emailWalkAnnouncements: true,
+  };
 
   function adminClockInForm(overrides: Partial<Record<string, string>> = {}) {
     return form({ walkId: "walk-1", userId: member.id, ...overrides });
@@ -307,6 +313,18 @@ describe("adminClockIn", () => {
       expect.objectContaining({ title: "Sunday stroll", meetingPoint: "Burrs Country Park" }),
       expect.objectContaining({ id: member.id }),
     );
+  });
+
+  it("skips the email for a member opted out of walk announcements", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({ ...member, emailWalkAnnouncements: false });
+    queryRaw.mockResolvedValueOnce([lockedWalkRow()]);
+    prismaMock.attendance.findUnique.mockResolvedValueOnce(null);
+    windowState.mockReturnValueOnce("open");
+    prismaMock.attendance.create.mockResolvedValueOnce({});
+
+    await adminClockIn(null, adminClockInForm());
+
+    expect(sendAddedToWalkEmail).not.toHaveBeenCalled();
   });
 
   it("re-adds someone who'd clocked out while the window is still open, via update", async () => {

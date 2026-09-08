@@ -20,10 +20,12 @@ export default async function EmailPreferencesPage({
     where: { unsubscribeToken: token },
     select: {
       email: true,
+      role: true,
       emailWalkAnnouncements: true,
       emailNotices: true,
       emailProgress: true,
       emailNewsletter: true,
+      emailOrganiserAlerts: true,
     },
   });
   if (!member) notFound();
@@ -37,8 +39,10 @@ export default async function EmailPreferencesPage({
       <EmailPreferencesForm
         emailNewsletter={member.emailNewsletter}
         emailNotices={member.emailNotices}
+        emailOrganiserAlerts={member.emailOrganiserAlerts}
         emailProgress={member.emailProgress}
         emailWalkAnnouncements={member.emailWalkAnnouncements}
+        isAdmin={member.role === "ADMIN"}
         token={token}
       />
     </div>
