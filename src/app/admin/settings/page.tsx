@@ -53,6 +53,16 @@ export default async function AdminSettingsPage() {
         "Site name, tagline, Facebook link, homepage copy and section order, cookie notice, and back to top.",
     },
     {
+      href: "/admin/settings/emails",
+      title: "Emails",
+      description: "Edit the subject and wording the site sends for each email — signup, walks, contact form, and more.",
+    },
+    {
+      href: "/admin/settings/subscribers",
+      title: "Subscribers",
+      description: "Who's opted into the newsletter and walk emails, and an export for Resend campaigns.",
+    },
+    {
       href: "/admin/settings/cache",
       title: "Site cache",
       description: "Refresh the public homepage if it still shows old content.",

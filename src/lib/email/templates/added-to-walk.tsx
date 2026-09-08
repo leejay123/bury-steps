@@ -1,21 +1,21 @@
-import { EmailButton, EmailFact, EmailLayout, EmailText, type EmailBrand } from "../shared";
+import { EmailButton, EmailFact, EmailLayout, EmailParagraphs, type EmailBrand } from "../shared";
 
 export type AddedToWalkEmailProps = EmailBrand & {
-  firstName: string | null;
   title: string;
   whenText: string;
   meetingPoint: string | null;
   shareUrl: string;
   preferencesUrl: string;
+  bodyParagraphs: string[];
 };
 
 export function AddedToWalkEmail({
-  firstName,
   title,
   whenText,
   meetingPoint,
   shareUrl,
   preferencesUrl,
+  bodyParagraphs,
   ...brand
 }: AddedToWalkEmailProps) {
   return (
@@ -25,9 +25,7 @@ export function AddedToWalkEmail({
       previewText={`An organiser added you to ${title}.`}
       {...brand}
     >
-      <EmailText>
-        {firstName ? `Hi ${firstName},` : "Hi,"} an organiser has added you as attending {title}.
-      </EmailText>
+      <EmailParagraphs paragraphs={bodyParagraphs} />
       <EmailFact label="When" value={whenText} />
       {meetingPoint ? <EmailFact label="Meeting point" value={meetingPoint} /> : null}
       <EmailButton href={shareUrl}>View the walk</EmailButton>
