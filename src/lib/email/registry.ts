@@ -20,6 +20,7 @@ export type EmailTemplateKey =
   | "newsletterSubscribed"
   | "walkAnnounced"
   | "walkCancelled"
+  | "walkReopened"
   | "addedToWalk"
   | "accidentReportAlert";
 
@@ -150,6 +151,22 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
     ],
     defaultSubject: "Walk cancelled: {walkTitle}",
     defaultBody: "Hi {firstName}, this walk has been cancelled — no need to turn up.",
+  },
+  {
+    key: "walkReopened",
+    label: "Walk reopened",
+    trigger: "Sent to every member opted into walk announcements when a cancelled walk is reopened.",
+    category: "Walks",
+    placeholders: [
+      { token: "firstName", description: "Their first name (\"there\" if not set)" },
+      { token: "siteName", description: "Your site's name" },
+      { token: "walkTitle", description: "The walk's title" },
+      { token: "whenText", description: "Date and time" },
+      { token: "durationText", description: "Length, e.g. \"1 hour 30 minutes\"" },
+      { token: "meetingPoint", description: "Meeting point, if one is set" },
+    ],
+    defaultSubject: "Walk back on: {walkTitle}",
+    defaultBody: "Hi {firstName}, good news — this walk is back on after being cancelled. Clock in from an hour before it starts.",
   },
   {
     key: "addedToWalk",

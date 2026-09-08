@@ -20,7 +20,13 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { allocateWalkSlug, walkShareUrl } from "@/lib/walk-slug";
 import { appUrl } from "@/lib/urls";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
-import { sendWalkAnnouncedEmail, sendWalkCancelledEmail, type MemberLike, type WalkLike } from "@/lib/email/mailer";
+import {
+  sendWalkAnnouncedEmail,
+  sendWalkCancelledEmail,
+  sendWalkReopenedEmail,
+  type MemberLike,
+  type WalkLike,
+} from "@/lib/email/mailer";
 import {
   type ActionResult,
   LimitReachedError,
@@ -96,6 +102,23 @@ async function notifyMembersOfCancelledWalk(walk: WalkLike & { reason: string | 
     );
   } catch (err) {
     console.error("notifyMembersOfCancelledWalk: failed to load recipients", err);
+  }
+}
+
+async function notifyMembersOfWalkReopened(
+  walk: WalkLike & { durationText: string; meetingPoint: string | null; what3words: string | null },
+): Promise<void> {
+  try {
+    const members = await membersOptedIntoWalkAnnouncements();
+    await Promise.all(
+      members.map((member) =>
+        sendWalkReopenedEmail(walk, member).catch((err) => {
+          console.error("notifyMembersOfWalkReopened: failed to notify", member.id, err);
+        }),
+      ),
+    );
+  } catch (err) {
+    console.error("notifyMembersOfWalkReopened: failed to load recipients", err);
   }
 }
 
@@ -372,7 +395,18 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
 
   const walk = await prisma.walk.findUnique({
     where: { id },
-    select: { id: true, token: true, slug: true, cancelledAt: true },
+    select: {
+      id: true,
+      token: true,
+      slug: true,
+      cancelledAt: true,
+      title: true,
+      location: true,
+      postcode: true,
+      what3words: true,
+      startsAt: true,
+      durationMins: true,
+    },
   });
   if (!walk) return { ok: false, error: "That walk is no longer there." };
   if (!walk.cancelledAt) return { ok: false, error: "This walk is already open." };
@@ -391,6 +425,16 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
   revalidatePath(`/admin/walks/${id}`);
   revalidatePath("/dashboard");
   revalidateWalkShare(walk);
+
+  await notifyMembersOfWalkReopened({
+    title: walk.title,
+    whenText: formatWalkDate(walk.startsAt),
+    durationText: formatWalkLength(walk.durationMins),
+    meetingPoint: meetingPointLabel(walk.location, walk.postcode) || null,
+    what3words: walk.what3words,
+    shareUrl: walkShareUrl(appUrl(), walk),
+  });
+
   return { ok: true, message: "Walk reopened. Members can clock in again if the window is still open." };
 }
 
@@ -504,6 +548,20 @@ export async function updateWalk(
   revalidatePath("/dashboard");
   revalidateWalkShare(existing);
   revalidateWalkShare(walk);
+
+  // Only notify when this edit actually brought a cancelled walk back — not
+  // on every ordinary edit, and not if it was already open.
+  if (existing.cancelledAt !== null && (parsed.data.reopen === "on" || wasCancelled)) {
+    await notifyMembersOfWalkReopened({
+      title: parsed.data.title,
+      whenText: formatWalkDate(startsAt),
+      durationText: formatWalkLength(durationMins),
+      meetingPoint: meetingPointLabel(parsed.data.location, pin.postcode) || null,
+      what3words: what3words.value,
+      shareUrl: walkShareUrl(appUrl(), walk),
+    });
+  }
+
   return {
     ok: true,
     message: wasCancelled ? "Walk updated and put back on the diary." : "Walk updated.",

@@ -34,6 +34,7 @@ import {
   sendNewsletterSubscribedEmail,
   sendWalkAnnouncedEmail,
   sendWalkCancelledEmail,
+  sendWalkReopenedEmail,
   sendWelcomeEmail,
 } from "./mailer";
 
@@ -188,6 +189,19 @@ describe("sendWalkCancelledEmail", () => {
 
     expect(sendEmail).toHaveBeenCalledWith(
       expect.objectContaining({ to: "jane@example.com", subject: "Walk cancelled: Sunday stroll" }),
+    );
+  });
+});
+
+describe("sendWalkReopenedEmail", () => {
+  it("emails the member that the walk is back on", async () => {
+    await sendWalkReopenedEmail(
+      { ...WALK, durationText: "1 hour 30 minutes", meetingPoint: "Burrs Country Park", what3words: null },
+      MEMBER,
+    );
+
+    expect(sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "jane@example.com", subject: "Walk back on: Sunday stroll" }),
     );
   });
 });
