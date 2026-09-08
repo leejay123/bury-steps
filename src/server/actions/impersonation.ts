@@ -67,6 +67,11 @@ export async function startImpersonation(
       href: actorToken.url,
     };
   } catch (err) {
-    return logActionError("startImpersonation", err, "Could not log in as that member. Try again.");
+    // TEMPORARY diagnostic — surfaces the real Clerk/DB error to the
+    // (admin-only) caller instead of a generic message, to find out why
+    // this is failing in production. Revert before finishing this fix.
+    const detail = err instanceof Error ? err.message : JSON.stringify(err);
+    logActionError("startImpersonation", err, "Could not log in as that member. Try again.");
+    return { ok: false, error: `DEBUG: ${detail}` };
   }
 }
