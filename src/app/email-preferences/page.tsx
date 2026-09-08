@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth";
-import { PAGE_X } from "@/lib/page-x";
 import { MyEmailPreferencesForm } from "./my-email-preferences-form";
 
 export const metadata: Metadata = {
@@ -18,15 +17,16 @@ export default async function MyEmailPreferencesPage() {
   const user = await requireUser();
 
   return (
-    <div className={`mx-auto flex w-full max-w-md flex-col gap-6 py-12 ${PAGE_X}`}>
+    <div className="flex flex-col gap-6 py-8 md:py-10">
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Email preferences</h1>
         <p className="text-sm text-muted-foreground">{user.email}</p>
       </div>
       <MyEmailPreferencesForm
+        emailAccidentAlerts={user.emailAccidentAlerts}
+        emailContactAlerts={user.emailContactAlerts}
         emailNewsletter={user.emailNewsletter}
         emailNotices={user.emailNotices}
-        emailOrganiserAlerts={user.emailOrganiserAlerts}
         emailProgress={user.emailProgress}
         emailWalkAnnouncements={user.emailWalkAnnouncements}
         isAdmin={user.role === "ADMIN"}

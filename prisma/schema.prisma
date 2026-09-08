@@ -31,11 +31,16 @@ model User {
   /// Newsletter campaigns. Off by default — needs explicit opt-in (PECR),
   /// separate from the account-lifecycle toggles above.
   emailNewsletter        Boolean @default(false)
-  /// Contact-form and accident-report alerts sent to organisers. Only
-  /// consulted for ADMIN rows (see notifyAdminsOfContactMessage /
-  /// notifyOtherAdminsOfAccidentReport) — meaningless, and harmless, on a
-  /// MEMBER row. Default on so nothing changes for existing organisers.
-  emailOrganiserAlerts   Boolean @default(true)
+  /// New contact-form message alerts, sent to organisers. Only consulted
+  /// for ADMIN rows (see notifyAdminsOfContactMessage) — meaningless, and
+  /// harmless, on a MEMBER row. Default on so nothing changes for existing
+  /// organisers. Kept separate from emailAccidentAlerts so one organiser
+  /// can follow accident reports without also getting every contact-form
+  /// message, or vice versa.
+  emailContactAlerts     Boolean @default(true)
+  /// New accident-report alerts, sent to organisers. Same ADMIN-only
+  /// semantics as emailContactAlerts (see notifyOtherAdminsOfAccidentReport).
+  emailAccidentAlerts    Boolean @default(true)
   /// Lets the public preferences/one-click-unsubscribe page identify a
   /// member without requiring sign-in. Null for every row until first
   /// needed — generated lazily by getOrCreateUnsubscribeToken() rather than
