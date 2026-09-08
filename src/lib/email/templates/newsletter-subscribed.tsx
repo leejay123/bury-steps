@@ -1,10 +1,15 @@
-import { EmailLayout, EmailText, type EmailBrand } from "../shared";
+import { EmailLayout, EmailParagraphs, type EmailBrand } from "../shared";
 
 export type NewsletterSubscribedEmailProps = EmailBrand & {
   unsubscribeUrl: string;
+  bodyParagraphs: string[];
 };
 
-export function NewsletterSubscribedEmail({ unsubscribeUrl, ...brand }: NewsletterSubscribedEmailProps) {
+export function NewsletterSubscribedEmail({
+  unsubscribeUrl,
+  bodyParagraphs,
+  ...brand
+}: NewsletterSubscribedEmailProps) {
   return (
     <EmailLayout
       heading="You're subscribed"
@@ -12,10 +17,7 @@ export function NewsletterSubscribedEmail({ unsubscribeUrl, ...brand }: Newslett
       previewText={`Occasional updates from ${brand.siteName}, straight to your inbox.`}
       {...brand}
     >
-      <EmailText style={{ margin: 0 }}>
-        Thanks for subscribing to the {brand.siteName} newsletter. Expect occasional updates on
-        walks and group news — nothing more often than that.
-      </EmailText>
+      <EmailParagraphs paragraphs={bodyParagraphs} />
     </EmailLayout>
   );
 }

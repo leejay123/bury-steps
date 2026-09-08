@@ -124,6 +124,21 @@ export function EmailText({
   );
 }
 
+/**
+ * Renders admin-editable body copy (src/lib/email/overrides.ts) as one
+ * <EmailText> per paragraph. Renders nothing for an empty list — the two
+ * organiser-alert templates default to no intro prose at all.
+ */
+export function EmailParagraphs({ paragraphs }: { paragraphs: string[] }) {
+  return (
+    <>
+      {paragraphs.map((paragraph, index) => (
+        <EmailText key={index}>{paragraph}</EmailText>
+      ))}
+    </>
+  );
+}
+
 /** A labelled fact row, e.g. "Meeting point — Burrs Country Park". Used by
  * walk-related emails to lay out details without each template reinventing it. */
 export function EmailFact({ label, value }: { label: string; value: ReactNode }) {

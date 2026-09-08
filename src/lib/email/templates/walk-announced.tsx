@@ -1,7 +1,6 @@
-import { EmailButton, EmailFact, EmailLayout, EmailText, type EmailBrand } from "../shared";
+import { EmailButton, EmailFact, EmailLayout, EmailParagraphs, type EmailBrand } from "../shared";
 
 export type WalkAnnouncedEmailProps = EmailBrand & {
-  firstName: string | null;
   title: string;
   whenText: string;
   durationText: string;
@@ -9,10 +8,10 @@ export type WalkAnnouncedEmailProps = EmailBrand & {
   what3words: string | null;
   shareUrl: string;
   preferencesUrl: string;
+  bodyParagraphs: string[];
 };
 
 export function WalkAnnouncedEmail({
-  firstName,
   title,
   whenText,
   durationText,
@@ -20,6 +19,7 @@ export function WalkAnnouncedEmail({
   what3words,
   shareUrl,
   preferencesUrl,
+  bodyParagraphs,
   ...brand
 }: WalkAnnouncedEmailProps) {
   return (
@@ -29,10 +29,7 @@ export function WalkAnnouncedEmail({
       previewText={`${whenText} — ${meetingPoint ?? "meeting point to follow"}.`}
       {...brand}
     >
-      <EmailText>
-        {firstName ? `Hi ${firstName},` : "Hi,"} a new walk has been posted. Clock in from an hour
-        before it starts.
-      </EmailText>
+      <EmailParagraphs paragraphs={bodyParagraphs} />
       <EmailFact label="When" value={`${whenText} · ${durationText}`} />
       {meetingPoint ? <EmailFact label="Meeting point" value={meetingPoint} /> : null}
       {what3words ? <EmailFact label="what3words" value={what3words} /> : null}

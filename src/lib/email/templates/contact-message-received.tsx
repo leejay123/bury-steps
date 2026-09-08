@@ -1,15 +1,15 @@
-import { EmailLayout, EmailText, type EmailBrand } from "../shared";
+import { EmailLayout, EmailParagraphs, EmailText, type EmailBrand } from "../shared";
 
 export type ContactMessageReceivedEmailProps = EmailBrand & {
-  name: string;
   message: string;
+  bodyParagraphs: string[];
 };
 
 /** Auto-reply to whoever submitted the public contact form. No preferences
  * link — they may not even have an account. */
 export function ContactMessageReceivedEmail({
-  name,
   message,
+  bodyParagraphs,
   ...brand
 }: ContactMessageReceivedEmailProps) {
   return (
@@ -18,10 +18,7 @@ export function ContactMessageReceivedEmail({
       previewText={`Thanks for getting in touch with ${brand.siteName}.`}
       {...brand}
     >
-      <EmailText>
-        Hi {name}, thanks for getting in touch with {brand.siteName}. An organiser will get back
-        to you as soon as they can.
-      </EmailText>
+      <EmailParagraphs paragraphs={bodyParagraphs} />
       <EmailText
         style={{
           margin: 0,

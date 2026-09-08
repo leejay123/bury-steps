@@ -392,3 +392,16 @@ model NewsletterSubscriber {
 
   @@index([createdAt])
 }
+
+/// Admin-edited subject/body text for one system email (keyed by
+/// EmailTemplateKey in src/lib/email/registry.ts). Null fields — and a
+/// missing row entirely — fall back to that registry's built-in default
+/// text. Only the subject line and the main prose paragraph(s) are
+/// editable; the shared layout (logo, button, footer, any data-driven
+/// facts like a walk's time/place) is not stored here at all.
+model EmailTemplateOverride {
+  key       String   @id
+  subject   String?
+  body      String?
+  updatedAt DateTime @updatedAt
+}

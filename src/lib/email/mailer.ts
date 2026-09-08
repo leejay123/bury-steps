@@ -1,5 +1,6 @@
 import { sendEmail } from "./client";
 import { getEmailBrand } from "./brand";
+import { resolveEmailCopy } from "./overrides";
 import { getOrCreateUserUnsubscribeToken, memberPreferencesUrl, newsletterUnsubscribeUrl } from "./unsubscribe";
 import { WelcomeEmail } from "./templates/welcome";
 import { AccountDeletedEmail } from "./templates/account-deleted";
@@ -33,13 +34,29 @@ async function memberPreferences(member: MemberLike): Promise<string> {
   return memberPreferencesUrl(token);
 }
 
+/** "there" reads naturally in a sentence ("Hi there,"); the heading (which
+ * has its own "Welcome!"-without-a-name fallback) uses the raw value instead. */
+function greetingName(firstName: string | null): string {
+  return firstName?.trim() || "there";
+}
+
 /** New member has just been created — see src/lib/local-user.ts. */
 export async function sendWelcomeEmail(member: MemberLike): Promise<void> {
   const [brand, preferencesUrl] = await Promise.all([getEmailBrand(), memberPreferences(member)]);
+  const copy = await resolveEmailCopy("welcome", {
+    firstName: greetingName(member.firstName),
+    siteName: brand.siteName,
+    siteUrl: brand.siteUrl,
+  });
   await sendEmail({
     to: member.email,
-    subject: `Welcome to ${brand.siteName}`,
-    react: WelcomeEmail({ ...brand, firstName: member.firstName, preferencesUrl }),
+    subject: copy.subject,
+    react: WelcomeEmail({
+      ...brand,
+      firstName: member.firstName,
+      preferencesUrl,
+      bodyParagraphs: copy.bodyParagraphs,
+    }),
   });
 }
 
@@ -49,20 +66,29 @@ export async function sendAccountDeletedEmail(member: {
   firstName: string | null;
 }): Promise<void> {
   const brand = await getEmailBrand();
+  const copy = await resolveEmailCopy("accountDeleted", {
+    firstName: greetingName(member.firstName),
+    siteName: brand.siteName,
+  });
   await sendEmail({
     to: member.email,
-    subject: `Your ${brand.siteName} account has been deleted`,
-    react: AccountDeletedEmail({ ...brand, firstName: member.firstName }),
+    subject: copy.subject,
+    react: AccountDeletedEmail({ ...brand, bodyParagraphs: copy.bodyParagraphs }),
   });
 }
 
 /** Promoted MEMBER -> ADMIN — see setMemberRole in src/server/actions/members.ts. */
 export async function sendAdminPromotedEmail(member: MemberLike): Promise<void> {
   const [brand, preferencesUrl] = await Promise.all([getEmailBrand(), memberPreferences(member)]);
+  const copy = await resolveEmailCopy("adminPromoted", {
+    firstName: greetingName(member.firstName),
+    siteName: brand.siteName,
+    siteUrl: brand.siteUrl,
+  });
   await sendEmail({
     to: member.email,
-    subject: `You're now an organiser of ${brand.siteName}`,
-    react: AdminPromotedEmail({ ...brand, firstName: member.firstName, preferencesUrl }),
+    subject: copy.subject,
+    react: AdminPromotedEmail({ ...brand, preferencesUrl, bodyParagraphs: copy.bodyParagraphs }),
   });
 }
 
@@ -73,10 +99,20 @@ export async function sendContactMessageReceivedEmail(submission: {
   message: string;
 }): Promise<void> {
   const brand = await getEmailBrand();
+  const copy = await resolveEmailCopy("contactReceived", {
+    name: submission.name,
+    email: submission.email,
+    message: submission.message,
+    siteName: brand.siteName,
+  });
   await sendEmail({
     to: submission.email,
-    subject: `We've got your message — ${brand.siteName}`,
-    react: ContactMessageReceivedEmail({ ...brand, name: submission.name, message: submission.message }),
+    subject: copy.subject,
+    react: ContactMessageReceivedEmail({
+      ...brand,
+      message: submission.message,
+      bodyParagraphs: copy.bodyParagraphs,
+    }),
   });
 }
 
@@ -87,10 +123,16 @@ export async function sendContactMessageAdminAlertEmail(
 ): Promise<void> {
   if (adminEmails.length === 0) return;
   const brand = await getEmailBrand();
+  const copy = await resolveEmailCopy("contactAdminAlert", {
+    name: submission.name,
+    email: submission.email,
+    message: submission.message,
+    siteName: brand.siteName,
+  });
   await sendEmail({
     to: adminEmails,
-    subject: `New contact form message from ${submission.name}`,
-    react: ContactMessageAdminAlertEmail({ ...brand, ...submission }),
+    subject: copy.subject,
+    react: ContactMessageAdminAlertEmail({ ...brand, ...submission, bodyParagraphs: copy.bodyParagraphs }),
     replyTo: submission.email,
   });
 }
@@ -101,12 +143,14 @@ export async function sendNewsletterSubscribedEmail(subscriber: {
   unsubscribeToken: string;
 }): Promise<void> {
   const brand = await getEmailBrand();
+  const copy = await resolveEmailCopy("newsletterSubscribed", { siteName: brand.siteName });
   await sendEmail({
     to: subscriber.email,
-    subject: `You're subscribed — ${brand.siteName}`,
+    subject: copy.subject,
     react: NewsletterSubscribedEmail({
       ...brand,
       unsubscribeUrl: newsletterUnsubscribeUrl(subscriber.unsubscribeToken),
+      bodyParagraphs: copy.bodyParagraphs,
     }),
   });
 }
@@ -121,12 +165,19 @@ export async function sendWalkAnnouncedEmail(
   member: MemberLike,
 ): Promise<void> {
   const [brand, preferencesUrl] = await Promise.all([getEmailBrand(), memberPreferences(member)]);
+  const copy = await resolveEmailCopy("walkAnnounced", {
+    firstName: greetingName(member.firstName),
+    siteName: brand.siteName,
+    walkTitle: walk.title,
+    whenText: walk.whenText,
+    durationText: walk.durationText,
+    meetingPoint: walk.meetingPoint ?? "",
+  });
   await sendEmail({
     to: member.email,
-    subject: `New walk: ${walk.title}`,
+    subject: copy.subject,
     react: WalkAnnouncedEmail({
       ...brand,
-      firstName: member.firstName,
       title: walk.title,
       whenText: walk.whenText,
       durationText: walk.durationText,
@@ -134,6 +185,7 @@ export async function sendWalkAnnouncedEmail(
       what3words: walk.what3words,
       shareUrl: walk.shareUrl,
       preferencesUrl,
+      bodyParagraphs: copy.bodyParagraphs,
     }),
   });
 }
@@ -144,17 +196,24 @@ export async function sendWalkCancelledEmail(
   member: MemberLike,
 ): Promise<void> {
   const [brand, preferencesUrl] = await Promise.all([getEmailBrand(), memberPreferences(member)]);
+  const copy = await resolveEmailCopy("walkCancelled", {
+    firstName: greetingName(member.firstName),
+    siteName: brand.siteName,
+    walkTitle: walk.title,
+    whenText: walk.whenText,
+    reason: walk.reason ?? "",
+  });
   await sendEmail({
     to: member.email,
-    subject: `Walk cancelled: ${walk.title}`,
+    subject: copy.subject,
     react: WalkCancelledEmail({
       ...brand,
-      firstName: member.firstName,
       title: walk.title,
       whenText: walk.whenText,
       reason: walk.reason,
       shareUrl: walk.shareUrl,
       preferencesUrl,
+      bodyParagraphs: copy.bodyParagraphs,
     }),
   });
 }
@@ -165,17 +224,24 @@ export async function sendAddedToWalkEmail(
   member: MemberLike,
 ): Promise<void> {
   const [brand, preferencesUrl] = await Promise.all([getEmailBrand(), memberPreferences(member)]);
+  const copy = await resolveEmailCopy("addedToWalk", {
+    firstName: greetingName(member.firstName),
+    siteName: brand.siteName,
+    walkTitle: walk.title,
+    whenText: walk.whenText,
+    meetingPoint: walk.meetingPoint ?? "",
+  });
   await sendEmail({
     to: member.email,
-    subject: `You've been added to ${walk.title}`,
+    subject: copy.subject,
     react: AddedToWalkEmail({
       ...brand,
-      firstName: member.firstName,
       title: walk.title,
       whenText: walk.whenText,
       meetingPoint: walk.meetingPoint,
       shareUrl: walk.shareUrl,
       preferencesUrl,
+      bodyParagraphs: copy.bodyParagraphs,
     }),
   });
 }
@@ -187,9 +253,16 @@ export async function sendAccidentReportAlertEmail(
 ): Promise<void> {
   if (adminEmails.length === 0) return;
   const brand = await getEmailBrand();
+  const copy = await resolveEmailCopy("accidentReportAlert", {
+    whenText: report.whenText,
+    walkTitle: report.walkTitle ?? "",
+    whoInvolved: report.whoInvolved,
+    createdByName: report.createdByName,
+    siteName: brand.siteName,
+  });
   await sendEmail({
     to: adminEmails,
-    subject: "New accident report logged",
-    react: AccidentReportAlertEmail({ ...brand, ...report }),
+    subject: copy.subject,
+    react: AccidentReportAlertEmail({ ...brand, ...report, bodyParagraphs: copy.bodyParagraphs }),
   });
 }

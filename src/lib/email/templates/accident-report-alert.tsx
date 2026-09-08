@@ -1,10 +1,11 @@
-import { EmailButton, EmailFact, EmailLayout, type EmailBrand } from "../shared";
+import { EmailButton, EmailFact, EmailLayout, EmailParagraphs, type EmailBrand } from "../shared";
 
 export type AccidentReportAlertEmailProps = EmailBrand & {
   whenText: string;
   walkTitle: string | null;
   whoInvolved: string;
   createdByName: string;
+  bodyParagraphs: string[];
 };
 
 /** No preferences link — organiser-operational, like the contact-form admin alert. */
@@ -13,6 +14,7 @@ export function AccidentReportAlertEmail({
   walkTitle,
   whoInvolved,
   createdByName,
+  bodyParagraphs,
   ...brand
 }: AccidentReportAlertEmailProps) {
   return (
@@ -21,6 +23,7 @@ export function AccidentReportAlertEmail({
       previewText={`${createdByName} logged an accident report.`}
       {...brand}
     >
+      <EmailParagraphs paragraphs={bodyParagraphs} />
       <EmailFact label="Logged by" value={createdByName} />
       <EmailFact label="When" value={whenText} />
       {walkTitle ? <EmailFact label="Walk" value={walkTitle} /> : null}

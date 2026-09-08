@@ -1,21 +1,21 @@
-import { EmailButton, EmailFact, EmailLayout, EmailText, type EmailBrand } from "../shared";
+import { EmailButton, EmailFact, EmailLayout, EmailParagraphs, type EmailBrand } from "../shared";
 
 export type WalkCancelledEmailProps = EmailBrand & {
-  firstName: string | null;
   title: string;
   whenText: string;
   reason: string | null;
   shareUrl: string;
   preferencesUrl: string;
+  bodyParagraphs: string[];
 };
 
 export function WalkCancelledEmail({
-  firstName,
   title,
   whenText,
   reason,
   shareUrl,
   preferencesUrl,
+  bodyParagraphs,
   ...brand
 }: WalkCancelledEmailProps) {
   return (
@@ -25,9 +25,7 @@ export function WalkCancelledEmail({
       previewText={`${title} (${whenText}) has been cancelled.`}
       {...brand}
     >
-      <EmailText>
-        {firstName ? `Hi ${firstName},` : "Hi,"} this walk has been cancelled — no need to turn up.
-      </EmailText>
+      <EmailParagraphs paragraphs={bodyParagraphs} />
       <EmailFact label="Was" value={whenText} />
       {reason ? <EmailFact label="Reason" value={reason} /> : null}
       <EmailButton href={shareUrl}>View the walk page</EmailButton>

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const { sendEmail, getEmailBrand, getOrCreateUserUnsubscribeToken } = vi.hoisted(() => ({
+const { sendEmail, getEmailBrand, getOrCreateUserUnsubscribeToken, prismaMock } = vi.hoisted(() => ({
   sendEmail: vi.fn(async () => {}),
   getEmailBrand: vi.fn(async () => ({
     siteName: "Bury Steps Walking Group",
@@ -8,10 +8,16 @@ const { sendEmail, getEmailBrand, getOrCreateUserUnsubscribeToken } = vi.hoisted
     siteUrl: "https://burysteps-walkinggroup.co.uk",
   })),
   getOrCreateUserUnsubscribeToken: vi.fn(async (_id: string, existing: string | null) => existing ?? "generated-token"),
+  prismaMock: {
+    emailTemplateOverride: {
+      findUnique: vi.fn(async (): Promise<{ subject: string | null; body: string | null } | null> => null),
+    },
+  },
 }));
 
 vi.mock("./client", () => ({ sendEmail }));
 vi.mock("./brand", () => ({ getEmailBrand }));
+vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
 vi.mock("./unsubscribe", () => ({
   getOrCreateUserUnsubscribeToken,
   memberPreferencesUrl: (token: string) => `https://burysteps-walkinggroup.co.uk/email-preferences/${token}`,
@@ -47,6 +53,7 @@ beforeEach(() => {
     siteUrl: "https://burysteps-walkinggroup.co.uk",
   });
   getOrCreateUserUnsubscribeToken.mockImplementation(async (_id: string, existing: string | null) => existing ?? "generated-token");
+  prismaMock.emailTemplateOverride.findUnique.mockResolvedValue(null);
 });
 
 describe("sendWelcomeEmail", () => {
@@ -59,6 +66,29 @@ describe("sendWelcomeEmail", () => {
         to: "jane@example.com",
         subject: "Welcome to Bury Steps Walking Group",
       }),
+    );
+  });
+
+  it("uses an admin-saved override for subject and body instead of the default", async () => {
+    prismaMock.emailTemplateOverride.findUnique.mockResolvedValueOnce({
+      subject: "Hiya {firstName}!",
+      body: "Custom welcome text for {siteName}.",
+    });
+
+    await sendWelcomeEmail(MEMBER);
+
+    expect(sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ subject: "Hiya Jane!" }),
+    );
+  });
+
+  it("falls back to the default copy if the override lookup fails", async () => {
+    prismaMock.emailTemplateOverride.findUnique.mockRejectedValueOnce(new Error("db down"));
+
+    await sendWelcomeEmail(MEMBER);
+
+    expect(sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ subject: "Welcome to Bury Steps Walking Group" }),
     );
   });
 });

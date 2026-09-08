@@ -105,3 +105,9 @@ export {
   updateMemberEmailPreferences,
   updateMyEmailPreferences,
 } from "./actions/email-preferences";
+
+export {
+  getEmailTemplateOverrides,
+  updateEmailTemplate,
+  resetEmailTemplate,
+} from "./actions/email-templates";
