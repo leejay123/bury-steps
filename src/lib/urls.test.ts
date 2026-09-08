@@ -17,14 +17,27 @@ function resetEnv() {
 }
 
 describe("accountPortalUrl", () => {
+  beforeEach(resetEnv);
+  afterEach(resetEnv);
+
   it("forwards a trusted redirect_url", () => {
     const url = accountPortalUrl("sign-in", { redirect_url: `${PRODUCTION_APP_URL}/dashboard` });
     expect(new URL(url).searchParams.get("redirect_url")).toBe(`${PRODUCTION_APP_URL}/dashboard`);
   });
 
-  it("drops an untrusted redirect_url", () => {
+  // Regression: an admin using "log in as this member" landed back on an
+  // admin-only page after the sign-in completed, because the Account
+  // Portal's own default (in practice, wherever the browser was before
+  // being signed out) isn't necessarily somewhere a member can use, and
+  // no redirect_url was ever supplied to override it.
+  it("falls back to the app's own default landing page when there's no trusted redirect_url", () => {
+    const url = accountPortalUrl("sign-in", {});
+    expect(new URL(url).searchParams.get("redirect_url")).toBe(`${appUrl()}/dashboard`);
+  });
+
+  it("falls back to the same default rather than forwarding an untrusted redirect_url", () => {
     const url = accountPortalUrl("sign-in", { redirect_url: "https://evil.example.com/" });
-    expect(new URL(url).searchParams.has("redirect_url")).toBe(false);
+    expect(new URL(url).searchParams.get("redirect_url")).toBe(`${appUrl()}/dashboard`);
   });
 
   // Regression: Clerk's actor-token ("log in as this member") flow signs
@@ -38,9 +51,10 @@ describe("accountPortalUrl", () => {
     expect(new URL(url).searchParams.get("__clerk_ticket")).toBe("abc123");
   });
 
-  it("omits __clerk_ticket entirely when there isn't one", () => {
+  it("omits __clerk_ticket entirely when there isn't one, while still defaulting redirect_url", () => {
     const url = accountPortalUrl("sign-in", {});
     expect(new URL(url).searchParams.has("__clerk_ticket")).toBe(false);
+    expect(new URL(url).searchParams.get("redirect_url")).toBe(`${appUrl()}/dashboard`);
   });
 });
 

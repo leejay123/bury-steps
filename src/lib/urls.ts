@@ -102,6 +102,15 @@ export function accountPortalUrl(
   const redirectTo = firstString(searchParams?.redirect_url);
   if (redirectTo && isTrustedAppUrl(redirectTo)) {
     url.searchParams.set("redirect_url", redirectTo);
+  } else {
+    // Without an explicit redirect_url, the Account Portal falls back to
+    // its own configured default (in practice, wherever the browser was
+    // before being signed out) — for the actor-token ("log in as this
+    // member") flow that's whatever admin-only page the organiser had
+    // open, which a member can't use. Default to the one landing page
+    // that works for both roles (dashboard/page.tsx itself redirects an
+    // admin on to /admin) rather than depending on that fallback.
+    url.searchParams.set("redirect_url", `${appUrl()}${AFTER_AUTH_PATH}`);
   }
   // Clerk's actor-token ("log in as this member") flow signs the admin out
   // and redirects back to this app's own /sign-in with a __clerk_ticket
