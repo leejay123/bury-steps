@@ -63,6 +63,7 @@ describe("sendEmail", () => {
         to: ["member@example.com"],
         subject: "Hi",
       }),
+      undefined,
     );
   });
 
@@ -74,6 +75,24 @@ describe("sendEmail", () => {
 
     expect(send).toHaveBeenCalledWith(
       expect.objectContaining({ from: expect.stringContaining("onboarding@resend.dev") }),
+      undefined,
+    );
+  });
+
+  it("passes idempotencyKey through as Resend's second argument when given", async () => {
+    process.env.RESEND_API_KEY = "re_test";
+    const { sendEmail } = await import("./client");
+
+    await sendEmail({
+      to: "member@example.com",
+      subject: "Hi",
+      react: null as never,
+      idempotencyKey: "welcome/user-1",
+    });
+
+    expect(send).toHaveBeenCalledWith(
+      expect.objectContaining({ subject: "Hi" }),
+      { idempotencyKey: "welcome/user-1" },
     );
   });
 

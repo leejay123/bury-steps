@@ -169,6 +169,9 @@ export async function sendNewsletterSubscribedEmail(subscriber: {
       unsubscribeUrl: newsletterUnsubscribeUrl(subscriber.unsubscribeToken),
       bodyParagraphs: copy.bodyParagraphs,
     }),
+    // A retried subscribeToNewsletter call (network hiccup, double form
+    // submit) reuses this key instead of sending a second confirmation.
+    idempotencyKey: `newsletter-subscribed/${subscriber.email}`,
   });
 }
 

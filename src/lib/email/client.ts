@@ -42,6 +42,15 @@ export type SendEmailInput = {
   react: ReactElement;
   /** Lets a recipient reply straight to an admin inbox instead of the no-reply sending address. */
   replyTo?: string;
+  /**
+   * Passed through as Resend's `Idempotency-Key` header — a retried call
+   * with the same key (e.g. a server action retry, or a double form
+   * submit) returns the original send instead of dispatching a second
+   * real email. Resend keeps keys for 24h. Format as `<event>/<entity-id>`
+   * per https://resend.com/docs/api-reference/idempotency-keys — omit for
+   * sends where a duplicate isn't a real risk.
+   */
+  idempotencyKey?: string;
 };
 
 /**
@@ -63,13 +72,16 @@ export async function sendEmail(input: SendEmailInput): Promise<void> {
   }
 
   try {
-    const { error } = await resend.emails.send({
-      from: fromAddress(),
-      to: recipients,
-      subject: input.subject,
-      react: input.react,
-      ...(input.replyTo ? { replyTo: input.replyTo } : {}),
-    });
+    const { error } = await resend.emails.send(
+      {
+        from: fromAddress(),
+        to: recipients,
+        subject: input.subject,
+        react: input.react,
+        ...(input.replyTo ? { replyTo: input.replyTo } : {}),
+      },
+      input.idempotencyKey ? { idempotencyKey: input.idempotencyKey } : undefined,
+    );
     if (error) {
       console.error(`[email] Resend rejected "${input.subject}" to ${recipients.join(", ")}:`, error);
     }
