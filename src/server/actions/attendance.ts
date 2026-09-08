@@ -231,7 +231,14 @@ export async function adminClockIn(
 
   const member = await prisma.user.findUnique({
     where: { id: parsed.data.userId },
-    select: { id: true, firstName: true, lastName: true, email: true, unsubscribeToken: true },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      unsubscribeToken: true,
+      emailWalkAnnouncements: true,
+    },
   });
   if (!member) return { ok: false, error: "That member is no longer there." };
 
@@ -350,17 +357,21 @@ export async function adminClockIn(
   revalidatePath(`/admin/members/${member.id}`);
   revalidatePath("/admin/members");
 
-  await sendAddedToWalkEmail(
-    {
-      title: walk.title,
-      whenText: formatWalkDate(walk.startsAt),
-      meetingPoint: meetingPointLabel(walk.location, walk.postcode) || null,
-      shareUrl: walkShareUrl(appUrl(), walk),
-    },
-    member,
-  ).catch((err) => {
-    console.error("adminClockIn: failed to send added-to-walk email", err);
-  });
+  // Same preference as the other walk emails (new/cancelled/reopened) — being
+  // manually added is still a walk notification, not its own category.
+  if (member.emailWalkAnnouncements) {
+    await sendAddedToWalkEmail(
+      {
+        title: walk.title,
+        whenText: formatWalkDate(walk.startsAt),
+        meetingPoint: meetingPointLabel(walk.location, walk.postcode) || null,
+        shareUrl: walkShareUrl(appUrl(), walk),
+      },
+      member,
+    ).catch((err) => {
+      console.error("adminClockIn: failed to send added-to-walk email", err);
+    });
+  }
 
   return {
     ok: true,

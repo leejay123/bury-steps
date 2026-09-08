@@ -171,7 +171,7 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
   {
     key: "addedToWalk",
     label: "Added to a walk",
-    trigger: "Sent to a member when an organiser manually adds them to a walk.",
+    trigger: "Sent to a member opted into walk announcements when an organiser manually adds them to a walk.",
     category: "Walks",
     placeholders: [
       { token: "firstName", description: "Their first name (\"there\" if not set)" },
