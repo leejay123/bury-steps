@@ -17,6 +17,7 @@ import { BackToTopGate } from "@/components/back-to-top-gate";
 import { UnlockPageOnNavigate } from "@/components/overlay-root";
 import { SiteCookieConsentGate } from "@/components/site-cookie-consent-gate";
 import { StaleDeployReload } from "@/components/stale-deploy-reload";
+import { ImpersonationBannerSlot } from "@/components/impersonation-banner-slot";
 import { getSiteTheme } from "@/lib/site-theme";
 import { DEFAULT_SITE_NAME, siteMetaDescription } from "@/lib/site-branding";
 import "./globals.css";
@@ -138,6 +139,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               [transform:translateZ(0)] keeps it on its own compositor layer.
             */}
             <header className="sticky top-0 z-[55] touch-manipulation bg-background [transform:translateZ(0)]">
+              <Suspense fallback={null}>
+                <ImpersonationBannerSlot />
+              </Suspense>
               <div className="relative">
                 <div className={`flex h-14 items-center justify-between gap-3 ${PAGE_X} md:grid md:grid-cols-[1fr_auto_1fr]`}>
                   <Suspense

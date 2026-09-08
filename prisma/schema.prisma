@@ -47,11 +47,13 @@ model User {
   /// backfilled, so adding this column never touches existing rows.
   unsubscribeToken       String? @unique
 
-  walksCreated    Walk[]             @relation("WalkCreator")
-  attendances     Attendance[]
-  noticeReads     SiteNoticeRead[]
-  accidentReports AccidentReport[]
-  journeyEvents   WalkJourneyEvent[] @relation("JourneyCreator")
+  walksCreated            Walk[]               @relation("WalkCreator")
+  attendances             Attendance[]
+  noticeReads             SiteNoticeRead[]
+  accidentReports         AccidentReport[]
+  journeyEvents           WalkJourneyEvent[]   @relation("JourneyCreator")
+  impersonationsPerformed ImpersonationEvent[] @relation("ImpersonationAdmin")
+  impersonationsReceived  ImpersonationEvent[] @relation("ImpersonationTarget")
 
   @@index([createdAt])
 }
@@ -436,5 +438,28 @@ model EmailEvent {
 
   @@index([resendId])
   @@index([recipient])
+  @@index([createdAt])
+}
+
+/// Audit trail for "log in as this member" (Clerk actor tokens) — see
+/// src/server/actions/impersonation.ts. Rows are never deleted, including
+/// when either User row is later removed (SetNull), so the log stays
+/// accurate even after someone's account is deleted.
+model ImpersonationEvent {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  adminId    String?
+  admin      User?   @relation("ImpersonationAdmin", fields: [adminId], references: [id], onDelete: SetNull)
+  /// Kept even if the admin row is later deleted/demoted — the log line
+  /// should still say who did this.
+  adminName  String
+  adminEmail String
+
+  targetId    String?
+  target      User?   @relation("ImpersonationTarget", fields: [targetId], references: [id], onDelete: SetNull)
+  targetName  String
+  targetEmail String
+
   @@index([createdAt])
 }

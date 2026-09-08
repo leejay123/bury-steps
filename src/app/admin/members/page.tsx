@@ -2,9 +2,11 @@ import { Prisma } from "@prisma/client";
 import { Users } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { displayName, requireAdmin } from "@/lib/auth";
+import { formatDateTime } from "@/lib/dates";
 import { MembersTable } from "./members-table";
 import { AdminPageIntro } from "../admin-page-intro";
 import { EmptyState } from "@/components/empty-state";
+import { DataList, DataListBody, DataListItem } from "@/components/data-list";
 
 type RoleFilter = "all" | "ADMIN" | "MEMBER";
 
@@ -33,7 +35,7 @@ export default async function MembersPage({
   const role = parseRoleFilter(params.role);
   const where = buildWhere(role);
 
-  const [totalMembers, members] = await Promise.all([
+  const [totalMembers, members, impersonations] = await Promise.all([
     prisma.user.count(),
     prisma.user.findMany({
       where,
@@ -42,6 +44,11 @@ export default async function MembersPage({
       include: {
         _count: { select: { attendances: true, walksCreated: true } },
       },
+    }),
+    prisma.impersonationEvent.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      select: { id: true, adminName: true, targetName: true, createdAt: true },
     }),
   ]);
 
@@ -73,6 +80,28 @@ export default async function MembersPage({
           totalMembers={totalMembers}
         />
       )}
+
+      {impersonations.length > 0 ? (
+        <section className="flex flex-col gap-3">
+          <AdminPageIntro
+            description="Every time an organiser has used “Log in as” on a member account. Most recent 20."
+            title="Sign-in log"
+          />
+          <DataList>
+            {impersonations.map((event) => (
+              <DataListItem className="cursor-default hover:bg-transparent" key={event.id}>
+                <DataListBody>
+                  <p className="text-sm">
+                    <span className="font-medium">{event.adminName}</span> logged in as{" "}
+                    <span className="font-medium">{event.targetName}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">{formatDateTime(event.createdAt)}</p>
+                </DataListBody>
+              </DataListItem>
+            ))}
+          </DataList>
+        </section>
+      ) : null}
     </div>
   );
 }

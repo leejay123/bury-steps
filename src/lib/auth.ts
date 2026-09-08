@@ -66,6 +66,36 @@ export async function requireAdmin(): Promise<User> {
   return user;
 }
 
+/**
+ * Non-null only when the current session was created via a Clerk actor
+ * token (see startImpersonation in src/server/actions/impersonation.ts) —
+ * i.e. an admin is signed in *as* this member. Powers the "Viewing as ..."
+ * banner; the "act" claim, and the User row it names, are both Clerk's own
+ * data, not something the admin/member can forge from the client.
+ */
+export const getImpersonationInfo = cache(async (): Promise<{
+  adminName: string;
+  targetName: string;
+} | null> => {
+  let actorClerkId: string | undefined;
+  try {
+    const { actor } = await auth();
+    actorClerkId = typeof actor?.sub === "string" ? actor.sub : undefined;
+  } catch (error) {
+    if (isClerkMiddlewareMissingError(error)) return null;
+    throw error;
+  }
+  if (!actorClerkId) return null;
+
+  const target = await getOptionalUser();
+  if (!target) return null;
+
+  const admin = await prisma.user.findUnique({ where: { clerkId: actorClerkId } });
+  if (!admin) return null;
+
+  return { adminName: displayName(admin), targetName: displayName(target) };
+});
+
 export function displayName(user: {
   firstName: string | null;
   lastName: string | null;

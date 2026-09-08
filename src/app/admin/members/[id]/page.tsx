@@ -8,6 +8,7 @@ import { AttendanceHistory } from "@/components/attendance-history";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeleteMemberButton } from "../delete-member-button";
+import { ImpersonateButton } from "../impersonate-button";
 import { MemberRoleButton } from "../member-role-button";
 
 export const dynamic = "force-dynamic";
@@ -49,6 +50,7 @@ export default async function MemberDetailPage({
               {member.role === "ADMIN" ? "Organiser" : "Member"}
             </Badge>
             <div className="flex flex-wrap justify-end gap-2">
+              {member.role === "MEMBER" ? <ImpersonateButton name={member.name} userId={id} /> : null}
               <MemberRoleButton name={member.name} role={member.role} userId={id} />
               {!member.isYou ? (
                 <DeleteMemberButton
