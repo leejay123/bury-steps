@@ -1,6 +1,23 @@
 import { prisma } from "@/lib/db";
 import { memberDisplayName } from "@/lib/auth";
 
+/** Everyone who clocked into a walk, whether or not they've since clocked
+ * out — used to tag "who was involved" on an accident report, which can be
+ * written up after the walk (and thus after everyone's clocked out). */
+export async function getWalkAttendeesForReport(
+  walkId: string,
+): Promise<{ id: string; name: string }[]> {
+  const rows = await prisma.attendance.findMany({
+    where: { walkId },
+    orderBy: { clockedInAt: "asc" },
+    select: {
+      user: { select: { id: true, firstName: true, lastName: true } },
+    },
+  });
+
+  return rows.map((row) => ({ id: row.user.id, name: memberDisplayName(row.user) }));
+}
+
 export async function getWalkMemberNames(walkId: string): Promise<string[]> {
   const rows = await prisma.attendance.findMany({
     where: { walkId, clockedOutAt: null },

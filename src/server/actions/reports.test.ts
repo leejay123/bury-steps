@@ -47,7 +47,7 @@ describe("addAccidentReport", () => {
   });
 
   it("treats walkId 'none' the same as not selecting a walk", async () => {
-    prismaMock.accidentReport.create.mockResolvedValueOnce({});
+    prismaMock.accidentReport.create.mockResolvedValueOnce({ involvedMembers: [] });
     await addAccidentReport(null, reportForm({ walkId: "none" }));
     expect(prismaMock.accidentReport.create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ walkId: null }) }),
@@ -55,7 +55,7 @@ describe("addAccidentReport", () => {
   });
 
   it("saves the report, attributed to the acting admin", async () => {
-    prismaMock.accidentReport.create.mockResolvedValueOnce({});
+    prismaMock.accidentReport.create.mockResolvedValueOnce({ involvedMembers: [] });
     const result = await addAccidentReport(null, reportForm());
     expect(prismaMock.accidentReport.create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ createdById: ADMIN.id }) }),
@@ -64,7 +64,7 @@ describe("addAccidentReport", () => {
   });
 
   it("alerts every other organiser, excluding whoever logged it", async () => {
-    prismaMock.accidentReport.create.mockResolvedValueOnce({});
+    prismaMock.accidentReport.create.mockResolvedValueOnce({ involvedMembers: [] });
     prismaMock.user.findMany.mockResolvedValueOnce([{ email: "other-admin@example.com" }]);
 
     await addAccidentReport(null, reportForm());
@@ -77,6 +77,51 @@ describe("addAccidentReport", () => {
     expect(sendAccidentReportAlertEmail).toHaveBeenCalledWith(
       expect.objectContaining({ whoInvolved: "A member" }),
       ["other-admin@example.com"],
+    );
+  });
+
+  it("rejects when neither free-text nor a tagged member says who was involved", async () => {
+    const formData = reportForm({ whoInvolved: "" });
+    const result = await addAccidentReport(null, formData);
+    expect(result).toEqual({
+      ok: false,
+      error: "Say who was involved, or tag at least one member.",
+    });
+    expect(prismaMock.accidentReport.create).not.toHaveBeenCalled();
+  });
+
+  it("accepts a tagged member alone, with no free text, and saves the link", async () => {
+    prismaMock.accidentReport.create.mockResolvedValueOnce({
+      involvedMembers: [{ user: { firstName: "Jane", lastName: "Doe" } }],
+    });
+    const formData = reportForm({ whoInvolved: "" });
+    formData.append("involvedMemberIds", "member-1");
+
+    const result = await addAccidentReport(null, formData);
+
+    expect(prismaMock.accidentReport.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          whoInvolved: "",
+          involvedMembers: { create: [{ userId: "member-1" }] },
+        }),
+      }),
+    );
+    expect(result.ok).toBe(true);
+  });
+
+  it("deduplicates repeated involvedMemberIds", async () => {
+    prismaMock.accidentReport.create.mockResolvedValueOnce({ involvedMembers: [] });
+    const formData = reportForm();
+    formData.append("involvedMemberIds", "member-1");
+    formData.append("involvedMemberIds", "member-1");
+
+    await addAccidentReport(null, formData);
+
+    expect(prismaMock.accidentReport.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ involvedMembers: { create: [{ userId: "member-1" }] } }),
+      }),
     );
   });
 });

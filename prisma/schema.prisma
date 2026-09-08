@@ -47,13 +47,14 @@ model User {
   /// backfilled, so adding this column never touches existing rows.
   unsubscribeToken       String? @unique
 
-  walksCreated            Walk[]               @relation("WalkCreator")
+  walksCreated            Walk[]                 @relation("WalkCreator")
   attendances             Attendance[]
   noticeReads             SiteNoticeRead[]
   accidentReports         AccidentReport[]
-  journeyEvents           WalkJourneyEvent[]   @relation("JourneyCreator")
-  impersonationsPerformed ImpersonationEvent[] @relation("ImpersonationAdmin")
-  impersonationsReceived  ImpersonationEvent[] @relation("ImpersonationTarget")
+  journeyEvents           WalkJourneyEvent[]     @relation("JourneyCreator")
+  impersonationsPerformed ImpersonationEvent[]   @relation("ImpersonationAdmin")
+  impersonationsReceived  ImpersonationEvent[]   @relation("ImpersonationTarget")
+  reportInvolvements      AccidentReportMember[]
 
   @@index([createdAt])
 }
@@ -347,6 +348,8 @@ model AccidentReport {
   happenedAt     DateTime
   walkId         String?
   whatHappened   String
+  /// Free-text fallback — anyone not tagged via involvedMembers below
+  /// (a passerby who isn't a member, or reports predating that feature).
   whoInvolved    String
   whatWeDid      String
   organiserNotes String?
@@ -357,8 +360,24 @@ model AccidentReport {
   walk      Walk? @relation(fields: [walkId], references: [id], onDelete: SetNull)
   createdBy User  @relation(fields: [createdById], references: [id], onDelete: Restrict)
 
+  /// Members explicitly tagged as involved — lets an organiser follow up
+  /// via the member's real profile instead of just a name in free text.
+  involvedMembers AccidentReportMember[]
+
   @@index([happenedAt])
   @@index([walkId])
+}
+
+/// Join row: one member tagged as involved in one accident report.
+model AccidentReportMember {
+  reportId String
+  userId   String
+
+  report AccidentReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([reportId, userId])
+  @@index([userId])
 }
 
 /// Story beats for a walk’s Journey timeline. Organisers add these during

@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { formatWalkDay, formatTime } from "@/lib/dates";
+import { Badge } from "@/components/ui/badge";
 import type { ReportView } from "./types";
 
 export function ReportReadView({ report }: { report: ReportView }) {
@@ -22,11 +24,22 @@ export function ReportReadView({ report }: { report: ReportView }) {
           {report.whatHappened}
         </p>
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <p className="text-xs font-medium text-muted-foreground">Who was involved</p>
-        <p className="whitespace-pre-wrap text-sm leading-relaxed wrap-break-word">
-          {report.whoInvolved}
-        </p>
+        {report.involvedMembers.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {report.involvedMembers.map((member) => (
+              <Badge asChild key={member.id} variant="secondary">
+                <Link href={`/admin/members/${member.id}`}>{member.name}</Link>
+              </Badge>
+            ))}
+          </div>
+        ) : null}
+        {report.whoInvolved ? (
+          <p className="whitespace-pre-wrap text-sm leading-relaxed wrap-break-word">
+            {report.whoInvolved}
+          </p>
+        ) : null}
       </div>
       <div className="flex flex-col gap-1">
         <p className="text-xs font-medium text-muted-foreground">What we did</p>

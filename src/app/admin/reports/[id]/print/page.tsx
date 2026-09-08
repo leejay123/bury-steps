@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin, displayName } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/dates";
+import { involvedSummaryText } from "@/lib/accident-reports";
 import { getSiteTheme } from "@/lib/site-theme";
 import { PrintReport } from "./print-report";
 
@@ -25,6 +26,7 @@ export default async function PrintAccidentReportPage({
     include: {
       walk: { select: { title: true, startsAt: true, location: true } },
       createdBy: { select: { firstName: true, lastName: true, email: true } },
+      involvedMembers: { select: { user: { select: { firstName: true, lastName: true } } } },
     },
   });
 
@@ -46,7 +48,7 @@ export default async function PrintAccidentReportPage({
       }
       whatHappened={report.whatHappened}
       whatWeDid={report.whatWeDid}
-      whoInvolved={report.whoInvolved}
+      whoInvolved={involvedSummaryText(report.whoInvolved, report.involvedMembers)}
     />
   );
 }

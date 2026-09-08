@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { requireAdmin } from "@/lib/auth";
+import { memberDisplayName, requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { AdminPageIntro } from "../admin-page-intro";
 import { AccidentReportManager } from "./report-manager";
@@ -46,6 +46,9 @@ export default async function AccidentReportsPage({
       take: REPORTS_FETCH_LIMIT,
       include: {
         walk: { select: { id: true, title: true, location: true } },
+        involvedMembers: {
+          select: { user: { select: { id: true, firstName: true, lastName: true } } },
+        },
       },
     }),
     prisma.walk.findMany({
@@ -72,6 +75,10 @@ export default async function AccidentReportsPage({
           walkLocation: report.walk?.location ?? null,
           whatHappened: report.whatHappened,
           whoInvolved: report.whoInvolved,
+          involvedMembers: report.involvedMembers.map((row) => ({
+            id: row.user.id,
+            name: memberDisplayName(row.user),
+          })),
           whatWeDid: report.whatWeDid,
           organiserNotes: report.organiserNotes,
         }))}

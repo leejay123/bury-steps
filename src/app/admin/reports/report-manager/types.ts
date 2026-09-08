@@ -1,3 +1,5 @@
+export type InvolvedMember = { id: string; name: string };
+
 export type ReportView = {
   id: string;
   happenedAt: string;
@@ -6,6 +8,7 @@ export type ReportView = {
   walkLocation: string | null;
   whatHappened: string;
   whoInvolved: string;
+  involvedMembers: InvolvedMember[];
   whatWeDid: string;
   organiserNotes: string | null;
 };
@@ -18,6 +21,7 @@ export function matchesReportQuery(report: ReportView, query: string) {
   const haystack = [
     report.whatHappened,
     report.whoInvolved,
+    ...report.involvedMembers.map((member) => member.name),
     report.whatWeDid,
     report.organiserNotes ?? "",
     report.walkTitle ?? "",

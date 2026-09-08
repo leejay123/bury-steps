@@ -6,13 +6,29 @@ import { requireAdmin, displayName } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatDateTime, londonWallClockToUtc } from "@/lib/dates";
 import { sendAccidentReportAlertEmail } from "@/lib/email/mailer";
+import { involvedSummaryText } from "@/lib/accident-reports";
+import { getWalkAttendeesForReport } from "@/lib/walk-members";
 import { type ActionResult, isPrismaCode, logActionError } from "./shared";
+
+/** Powers the member checklist on the report form once a walk is picked —
+ * a plain data fetch, not a mutation, but still gated on admin auth since
+ * it's called directly from the client as a server action. */
+export async function getWalkAttendeesForReportForm(
+  walkId: string,
+): Promise<{ id: string; name: string }[]> {
+  await requireAdmin();
+  if (!walkId) return [];
+  return getWalkAttendeesForReport(walkId);
+}
 
 const reportCopySchema = z.object({
   happenedAt: z.string().min(16, "Choose a date and time."),
   walkId: z.string().optional(),
   whatHappened: z.string().trim().min(3, "Say what happened.").max(4000),
-  whoInvolved: z.string().trim().min(2, "Say who was involved.").max(1000),
+  // No .min() here — someone can be fully identified via involvedMemberIds
+  // (the tagged-member checklist) with nothing left to type. Validated
+  // together with involvedMemberIds below instead.
+  whoInvolved: z.string().trim().max(1000).optional(),
   whatWeDid: z.string().trim().min(3, "Say what you did.").max(4000),
   organiserNotes: z.string().trim().max(4000).optional(),
 });
@@ -25,11 +41,18 @@ function readReportCopy(formData: FormData) {
       return !value || value === "none" ? undefined : value;
     })(),
     whatHappened: formData.get("whatHappened"),
-    whoInvolved: formData.get("whoInvolved"),
+    whoInvolved: String(formData.get("whoInvolved") ?? "").trim() || undefined,
     whatWeDid: formData.get("whatWeDid"),
     organiserNotes: String(formData.get("organiserNotes") ?? "").trim() || undefined,
   });
 }
+
+/** Tagged members plus free text must add up to *someone* — same rule the
+ * old whoInvolved-only field enforced with its own .min(2). */
+function readInvolvedMemberIds(formData: FormData): string[] {
+  return [...new Set(formData.getAll("involvedMemberIds").map(String).filter(Boolean))];
+}
+
 
 export async function addAccidentReport(
   _prev: ActionResult | null,
@@ -39,6 +62,11 @@ export async function addAccidentReport(
   const parsed = readReportCopy(formData);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
+  const involvedMemberIds = readInvolvedMemberIds(formData);
+  if (!parsed.data.whoInvolved && involvedMemberIds.length === 0) {
+    return { ok: false, error: "Say who was involved, or tag at least one member." };
+  }
+
   let happenedAt: Date;
   try {
     happenedAt = londonWallClockToUtc(parsed.data.happenedAt);
@@ -47,20 +75,26 @@ export async function addAccidentReport(
   }
 
   let walkTitle: string | null;
+  let involvedSummary: string;
   try {
     const created = await prisma.accidentReport.create({
       data: {
         happenedAt,
         walkId: parsed.data.walkId ?? null,
         whatHappened: parsed.data.whatHappened,
-        whoInvolved: parsed.data.whoInvolved,
+        whoInvolved: parsed.data.whoInvolved ?? "",
         whatWeDid: parsed.data.whatWeDid,
         organiserNotes: parsed.data.organiserNotes ?? null,
         createdById: admin.id,
+        involvedMembers: { create: involvedMemberIds.map((userId) => ({ userId })) },
       },
-      select: { walk: { select: { title: true } } },
+      select: {
+        walk: { select: { title: true } },
+        involvedMembers: { select: { user: { select: { firstName: true, lastName: true } } } },
+      },
     });
     walkTitle = created.walk?.title ?? null;
+    involvedSummary = involvedSummaryText(parsed.data.whoInvolved, created.involvedMembers);
   } catch (err) {
     // An invalid/stale walkId (e.g. the walk was deleted between loading
     // the form and submitting it) fails the foreign key here rather than
@@ -73,7 +107,7 @@ export async function addAccidentReport(
   await notifyOtherAdminsOfAccidentReport({
     whenText: formatDateTime(happenedAt),
     walkTitle,
-    whoInvolved: parsed.data.whoInvolved,
+    whoInvolved: involvedSummary,
     createdByName: displayName(admin),
     excludeAdminId: admin.id,
   });
@@ -110,6 +144,11 @@ export async function updateAccidentReport(
   const parsed = readReportCopy(formData);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
+  const involvedMemberIds = readInvolvedMemberIds(formData);
+  if (!parsed.data.whoInvolved && involvedMemberIds.length === 0) {
+    return { ok: false, error: "Say who was involved, or tag at least one member." };
+  }
+
   let happenedAt: Date;
   try {
     happenedAt = londonWallClockToUtc(parsed.data.happenedAt);
@@ -124,9 +163,15 @@ export async function updateAccidentReport(
         happenedAt,
         walkId: parsed.data.walkId ?? null,
         whatHappened: parsed.data.whatHappened,
-        whoInvolved: parsed.data.whoInvolved,
+        whoInvolved: parsed.data.whoInvolved ?? "",
         whatWeDid: parsed.data.whatWeDid,
         organiserNotes: parsed.data.organiserNotes ?? null,
+        // Replace wholesale rather than diff — simplest correct way to
+        // reconcile the checklist's current state with what's stored.
+        involvedMembers: {
+          deleteMany: {},
+          create: involvedMemberIds.map((userId) => ({ userId })),
+        },
       },
     });
   } catch (err) {

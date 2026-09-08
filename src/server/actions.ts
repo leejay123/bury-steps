@@ -89,7 +89,12 @@ export {
   updateReportBanner,
 } from "./actions/site-settings";
 
-export { addAccidentReport, updateAccidentReport, deleteAccidentReport } from "./actions/reports";
+export {
+  addAccidentReport,
+  updateAccidentReport,
+  deleteAccidentReport,
+  getWalkAttendeesForReportForm,
+} from "./actions/reports";
 
 export { clearSiteCache, resetSiteToDefault } from "./actions/admin-cache";
 
