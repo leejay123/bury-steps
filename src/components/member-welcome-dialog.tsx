@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-const SEEN_KEY = "bs_welcome_seen";
+const SEEN_KEY_PREFIX = "bs_welcome_seen:";
 
 const STEPS = [
   {
@@ -78,20 +78,29 @@ function MemberWelcomeDialogContent({
  * it) and a localStorage flag (so dismissing it sticks even before their
  * first walk). No DB flag needed — once they clock in once, `hasNoWalks`
  * alone would already stop this from showing again.
+ *
+ * The flag is keyed by `userId`, not a single fixed key — otherwise
+ * dismissing it once in a browser would hide it forever for every future
+ * account signed into that same browser, including a brand-new account
+ * created after the original one was deleted (a real case on a shared/test
+ * device, since a deleted-then-recreated account gets a fresh id here).
  */
 export function MemberWelcomeDialog({
   firstName,
   hasNoWalks,
+  userId,
 }: {
   firstName?: string | null;
   hasNoWalks: boolean;
+  userId: string;
 }) {
   const [open, setOpen] = useState(false);
+  const seenKey = `${SEEN_KEY_PREFIX}${userId}`;
 
   useEffect(() => {
     if (!hasNoWalks) return;
     try {
-      if (window.localStorage.getItem(SEEN_KEY)) return;
+      if (window.localStorage.getItem(seenKey)) return;
     } catch {
       // Storage may be unavailable (private mode); just show it once per tab.
     }
@@ -99,12 +108,12 @@ export function MemberWelcomeDialog({
     // checked client-side, after mount — not a plain prop/state sync.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setOpen(true);
-  }, [hasNoWalks]);
+  }, [hasNoWalks, seenKey]);
 
   function dismiss() {
     setOpen(false);
     try {
-      window.localStorage.setItem(SEEN_KEY, "1");
+      window.localStorage.setItem(seenKey, "1");
     } catch {
       // Ignore — worst case it shows again next visit.
     }
