@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { FormError } from "@/components/form-error";
-import { updateMemberEmailPreferences, type ActionResult } from "@/server/actions";
+import { updateMyEmailPreferences, type ActionResult } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { EMAIL_PREFERENCE_OPTIONS, type EmailPreferences } from "@/lib/email-preferences";
 
@@ -19,16 +19,17 @@ function SaveButton() {
   );
 }
 
-export function EmailPreferencesForm({ token, ...prefs }: EmailPreferences & { token: string }) {
+/** Same layout as the token-based form (email-preferences/[token]) but acts
+ * on the signed-in user directly — no token field needed. */
+export function MyEmailPreferencesForm(prefs: EmailPreferences) {
   const [state, action] = useActionState<ActionResult | null, FormData>(
-    updateMemberEmailPreferences,
+    updateMyEmailPreferences,
     null,
   );
   useActionToast(state);
 
   return (
     <form action={action} className="flex flex-col gap-5">
-      <input name="token" type="hidden" value={token} />
       <div className="flex flex-col gap-4">
         {EMAIL_PREFERENCE_OPTIONS.map((option) => (
           <div className="flex items-start gap-3" key={option.name}>

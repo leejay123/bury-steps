@@ -1,12 +1,17 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const { prismaMock } = vi.hoisted(() => ({
+const { prismaMock, requireUser } = vi.hoisted(() => ({
   prismaMock: { user: { update: vi.fn() } },
+  requireUser: vi.fn(),
 }));
 
 vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
+vi.mock("@/lib/auth", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
+  return { ...actual, requireUser };
+});
 
-import { updateMemberEmailPreferences } from "./email-preferences";
+import { updateMemberEmailPreferences, updateMyEmailPreferences } from "./email-preferences";
 
 function form(fields: Record<string, string>): FormData {
   const formData = new FormData();
@@ -54,5 +59,37 @@ describe("updateMemberEmailPreferences", () => {
     prismaMock.user.update.mockRejectedValueOnce({ code: "P2025" });
     const result = await updateMemberEmailPreferences(null, form({ token: "does-not-exist" }));
     expect(result).toEqual({ ok: false, error: "This link is invalid or has expired." });
+  });
+});
+
+describe("updateMyEmailPreferences", () => {
+  beforeEach(() => {
+    requireUser.mockResolvedValue({ id: "user-1" });
+  });
+
+  it("saves preferences for the signed-in user, no token needed", async () => {
+    prismaMock.user.update.mockResolvedValueOnce({});
+
+    const result = await updateMyEmailPreferences(
+      null,
+      form({ emailNewsletter: "on" }),
+    );
+
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      data: {
+        emailWalkAnnouncements: false,
+        emailNotices: false,
+        emailProgress: false,
+        emailNewsletter: true,
+      },
+    });
+    expect(result).toEqual({ ok: true, message: "Your email preferences have been saved." });
+  });
+
+  it("reports a generic failure on an unexpected database error", async () => {
+    prismaMock.user.update.mockRejectedValueOnce(new Error("db down"));
+    const result = await updateMyEmailPreferences(null, form({}));
+    expect(result).toEqual({ ok: false, error: "Could not save your preferences. Try again." });
   });
 });

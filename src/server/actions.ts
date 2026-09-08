@@ -101,4 +101,7 @@ export {
 
 export { subscribeToNewsletter, unsubscribeFromNewsletter } from "./actions/newsletter";
 
-export { updateMemberEmailPreferences } from "./actions/email-preferences";
+export {
+  updateMemberEmailPreferences,
+  updateMyEmailPreferences,
+} from "./actions/email-preferences";
