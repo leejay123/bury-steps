@@ -50,6 +50,7 @@ describe("updateMemberEmailPreferences", () => {
         emailNotices: true,
         emailProgress: false,
         emailNewsletter: false,
+        emailOrganiserAlerts: false,
       },
     });
     expect(result).toEqual({ ok: true, message: "Your email preferences have been saved." });
@@ -59,6 +60,19 @@ describe("updateMemberEmailPreferences", () => {
     prismaMock.user.update.mockRejectedValueOnce({ code: "P2025" });
     const result = await updateMemberEmailPreferences(null, form({ token: "does-not-exist" }));
     expect(result).toEqual({ ok: false, error: "This link is invalid or has expired." });
+  });
+
+  it("saves an organiser's alert preference too, harmless for a non-admin row", async () => {
+    prismaMock.user.update.mockResolvedValueOnce({});
+
+    await updateMemberEmailPreferences(
+      null,
+      form({ token: "tok123", emailOrganiserAlerts: "on" }),
+    );
+
+    expect(prismaMock.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ emailOrganiserAlerts: true }) }),
+    );
   });
 });
 
@@ -82,6 +96,7 @@ describe("updateMyEmailPreferences", () => {
         emailNotices: false,
         emailProgress: false,
         emailNewsletter: true,
+        emailOrganiserAlerts: false,
       },
     });
     expect(result).toEqual({ ok: true, message: "Your email preferences have been saved." });

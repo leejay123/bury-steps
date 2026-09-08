@@ -11,6 +11,9 @@ function readPreferences(formData: FormData): EmailPreferences {
     emailNotices: formData.get("emailNotices") === "on",
     emailProgress: formData.get("emailProgress") === "on",
     emailNewsletter: formData.get("emailNewsletter") === "on",
+    // Not rendered for a non-admin, so it's simply absent from their
+    // FormData — harmless, since this field is never read for a MEMBER row.
+    emailOrganiserAlerts: formData.get("emailOrganiserAlerts") === "on",
   };
 }
 

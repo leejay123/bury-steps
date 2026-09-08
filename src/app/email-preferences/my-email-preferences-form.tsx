@@ -21,17 +21,19 @@ function SaveButton() {
 
 /** Same layout as the token-based form (email-preferences/[token]) but acts
  * on the signed-in user directly — no token field needed. */
-export function MyEmailPreferencesForm(prefs: EmailPreferences) {
+export function MyEmailPreferencesForm(prefs: EmailPreferences & { isAdmin: boolean }) {
   const [state, action] = useActionState<ActionResult | null, FormData>(
     updateMyEmailPreferences,
     null,
   );
   useActionToast(state);
 
+  const options = EMAIL_PREFERENCE_OPTIONS.filter((option) => !option.adminOnly || prefs.isAdmin);
+
   return (
     <form action={action} className="flex flex-col gap-5">
       <div className="flex flex-col gap-4">
-        {EMAIL_PREFERENCE_OPTIONS.map((option) => (
+        {options.map((option) => (
           <div className="flex items-start gap-3" key={option.name}>
             <Checkbox
               defaultChecked={prefs[option.name]}

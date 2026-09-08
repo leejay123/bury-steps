@@ -19,18 +19,24 @@ function SaveButton() {
   );
 }
 
-export function EmailPreferencesForm({ token, ...prefs }: EmailPreferences & { token: string }) {
+export function EmailPreferencesForm({
+  token,
+  isAdmin,
+  ...prefs
+}: EmailPreferences & { token: string; isAdmin: boolean }) {
   const [state, action] = useActionState<ActionResult | null, FormData>(
     updateMemberEmailPreferences,
     null,
   );
   useActionToast(state);
 
+  const options = EMAIL_PREFERENCE_OPTIONS.filter((option) => !option.adminOnly || isAdmin);
+
   return (
     <form action={action} className="flex flex-col gap-5">
       <input name="token" type="hidden" value={token} />
       <div className="flex flex-col gap-4">
-        {EMAIL_PREFERENCE_OPTIONS.map((option) => (
+        {options.map((option) => (
           <div className="flex items-start gap-3" key={option.name}>
             <Checkbox
               defaultChecked={prefs[option.name]}

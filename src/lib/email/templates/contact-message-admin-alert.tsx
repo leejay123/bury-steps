@@ -8,8 +8,10 @@ export type ContactMessageAdminAlertEmailProps = EmailBrand & {
   bodyParagraphs: string[];
 };
 
-/** No preferences link — this goes to organisers about running the site,
- * not a personal notification an organiser would opt out of. */
+/** This is sent to every opted-in organiser at once (one `to:` with every
+ * address in it — organisers already know each other, unlike members), so
+ * the preferences link goes to the signed-in /email-preferences page rather
+ * than a per-recipient token link. */
 export function ContactMessageAdminAlertEmail({
   name,
   email,
@@ -19,7 +21,12 @@ export function ContactMessageAdminAlertEmail({
   ...brand
 }: ContactMessageAdminAlertEmailProps) {
   return (
-    <EmailLayout heading="New contact form message" previewText={`${name} sent a message through the site.`} {...brand}>
+    <EmailLayout
+      heading="New contact form message"
+      preferencesUrl={`${brand.siteUrl}/email-preferences`}
+      previewText={`${name} sent a message through the site.`}
+      {...brand}
+    >
       <EmailParagraphs paragraphs={bodyParagraphs} />
       <EmailFact label="From" value={name} />
       <EmailFact label="Email" value={email} />

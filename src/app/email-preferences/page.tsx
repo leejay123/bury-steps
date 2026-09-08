@@ -26,8 +26,10 @@ export default async function MyEmailPreferencesPage() {
       <MyEmailPreferencesForm
         emailNewsletter={user.emailNewsletter}
         emailNotices={user.emailNotices}
+        emailOrganiserAlerts={user.emailOrganiserAlerts}
         emailProgress={user.emailProgress}
         emailWalkAnnouncements={user.emailWalkAnnouncements}
+        isAdmin={user.role === "ADMIN"}
       />
     </div>
   );

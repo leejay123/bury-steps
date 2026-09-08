@@ -6,12 +6,18 @@ export type EmailPreferences = {
   emailNotices: boolean;
   emailProgress: boolean;
   emailNewsletter: boolean;
+  emailOrganiserAlerts: boolean;
 };
 
 export const EMAIL_PREFERENCE_OPTIONS: {
   name: keyof EmailPreferences;
   label: string;
   hint: string;
+  /** Only shown to organisers — this preference is never consulted for a
+   * plain member (see notifyAdminsOfContactMessage /
+   * notifyOtherAdminsOfAccidentReport), so there's nothing for them to opt
+   * out of. */
+  adminOnly?: boolean;
 }[] = [
   {
     name: "emailWalkAnnouncements",
@@ -21,4 +27,10 @@ export const EMAIL_PREFERENCE_OPTIONS: {
   { name: "emailNotices", label: "Notices", hint: "A digest when a new notice is posted." },
   { name: "emailProgress", label: "Progress", hint: "Your walk history and group goal updates." },
   { name: "emailNewsletter", label: "Newsletter", hint: "Occasional group news." },
+  {
+    name: "emailOrganiserAlerts",
+    label: "Organiser alerts",
+    hint: "New contact form messages and accident reports logged by other organisers.",
+    adminOnly: true,
+  },
 ];
