@@ -110,4 +110,5 @@ export {
   getEmailTemplateOverrides,
   updateEmailTemplate,
   resetEmailTemplate,
+  sendTestEmailTemplate,
 } from "./actions/email-templates";

@@ -7,7 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FormError } from "@/components/form-error";
-import { resetEmailTemplate, updateEmailTemplate, type ActionResult } from "@/server/actions";
+import {
+  resetEmailTemplate,
+  sendTestEmailTemplate,
+  updateEmailTemplate,
+  type ActionResult,
+} from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import type { EmailTemplateMeta } from "@/lib/email/registry";
@@ -28,6 +33,15 @@ function ResetButton() {
   return (
     <Button disabled={pending} size="sm" type="submit" variant="outline">
       {pending ? "Resetting…" : "Reset to default"}
+    </Button>
+  );
+}
+
+function SendTestButton({ disabled }: { disabled: boolean }) {
+  const { pending } = useFormStatus();
+  return (
+    <Button disabled={disabled || pending} size="sm" type="submit" variant="outline">
+      {pending ? "Sending…" : "Send test to me"}
     </Button>
   );
 }
@@ -54,6 +68,8 @@ export function EmailTemplateEditor({
   useActionToast(saveState);
   const [resetState, resetAction] = useActionState<ActionResult | null, FormData>(resetEmailTemplate, null);
   useActionToast(resetState);
+  const [testState, testAction] = useActionState<ActionResult | null, FormData>(sendTestEmailTemplate, null);
+  useActionToast(testState);
 
   const dirty = subject !== savedSubject || body !== savedBody;
 
@@ -109,6 +125,16 @@ export function EmailTemplateEditor({
               Discard
             </Button>
           ) : null}
+        </div>
+      </form>
+      <form action={testAction} className="flex flex-col gap-2 border-t pt-3">
+        <input name="key" type="hidden" value={meta.key} />
+        <FormError message={testState && !testState.ok ? testState.error : null} />
+        <div className="flex items-center gap-2">
+          <SendTestButton disabled={dirty} />
+          <span className="text-xs text-muted-foreground">
+            {dirty ? "Save your changes first to test them." : "Sends a live preview to your own email."}
+          </span>
         </div>
       </form>
       {isCustomized ? (

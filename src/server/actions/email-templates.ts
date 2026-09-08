@@ -10,6 +10,8 @@ import {
   type EmailTemplateOverrideValues,
 } from "@/lib/email/registry";
 import { MAX_EMAIL_TEMPLATE_BODY, MAX_EMAIL_TEMPLATE_SUBJECT } from "@/lib/email/template-limits";
+import { sendTestEmail } from "@/lib/email/test-send";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { type ActionResult, logActionError } from "./shared";
 
 /**
@@ -67,6 +69,35 @@ export async function updateEmailTemplate(
 
   revalidatePath("/admin/settings/emails");
   return { ok: true, message: "Email updated." };
+}
+
+/**
+ * Sends a live preview of a template — with its currently-saved copy — to
+ * the requesting admin's own address, using made-up placeholder data
+ * instead of a real walk/message/report. Lets an admin check how a
+ * template actually renders (fonts, spacing, dark mode, whatever their edit
+ * changed) without doing something for real to trigger it.
+ */
+export async function sendTestEmailTemplate(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  const key = String(formData.get("key") ?? "");
+  if (!isEmailTemplateKey(key)) return { ok: false, error: "Unknown email." };
+
+  const limited = checkRateLimit(`${admin.id}:sendTestEmailTemplate`, 5, 60_000);
+  if (!limited.ok) {
+    return { ok: false, error: `Too many test sends. Try again in ${limited.retryAfterSeconds}s.` };
+  }
+
+  try {
+    await sendTestEmail(key, admin);
+  } catch (err) {
+    return logActionError("sendTestEmailTemplate", err, "Could not send the test email. Try again.");
+  }
+
+  return { ok: true, message: `Test email sent to ${admin.email}.` };
 }
 
 export async function resetEmailTemplate(
