@@ -23,6 +23,9 @@ export type EmailTemplateKey =
   | "addedToWalk"
   | "accidentReportAlert";
 
+/** An admin's saved subject/body for one template — both null means "no row, use the default". */
+export type EmailTemplateOverrideValues = { subject: string | null; body: string | null };
+
 export type EmailTemplateMeta = {
   key: EmailTemplateKey;
   label: string;

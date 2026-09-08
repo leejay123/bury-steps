@@ -3,13 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { EMAIL_TEMPLATES, isEmailTemplateKey, type EmailTemplateKey } from "@/lib/email/registry";
+import {
+  EMAIL_TEMPLATES,
+  isEmailTemplateKey,
+  type EmailTemplateKey,
+  type EmailTemplateOverrideValues,
+} from "@/lib/email/registry";
+import { MAX_EMAIL_TEMPLATE_BODY, MAX_EMAIL_TEMPLATE_SUBJECT } from "@/lib/email/template-limits";
 import { type ActionResult, logActionError } from "./shared";
-
-export const MAX_EMAIL_TEMPLATE_SUBJECT = 200;
-export const MAX_EMAIL_TEMPLATE_BODY = 4000;
-
-export type EmailTemplateOverrideValues = { subject: string | null; body: string | null };
 
 /**
  * Every template's saved override, keyed for the admin page — a template

@@ -7,16 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FormError } from "@/components/form-error";
-import {
-  MAX_EMAIL_TEMPLATE_BODY,
-  MAX_EMAIL_TEMPLATE_SUBJECT,
-  resetEmailTemplate,
-  updateEmailTemplate,
-  type ActionResult,
-} from "@/server/actions";
+import { resetEmailTemplate, updateEmailTemplate, type ActionResult } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import type { EmailTemplateMeta } from "@/lib/email/registry";
+import { MAX_EMAIL_TEMPLATE_BODY, MAX_EMAIL_TEMPLATE_SUBJECT } from "@/lib/email/template-limits";
 import { SettingsSection } from "../settings-page";
 
 function SaveButton({ disabled }: { disabled: boolean }) {
