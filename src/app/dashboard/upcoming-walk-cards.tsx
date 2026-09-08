@@ -6,13 +6,29 @@ import { CalendarDays, ChevronRight, Clock, MapPin, Search, SearchX } from "luci
 import { formatDateTime, formatWalkDate } from "@/lib/dates";
 import { walkSharePath } from "@/lib/walk-slug";
 import { cn } from "@/lib/utils";
-import { windowState, type WindowState } from "@/lib/walk-window";
+import { walkStatus, windowState, type WalkStatus, type WindowState } from "@/lib/walk-window";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWalkClock } from "@/hooks/use-walk-clock";
+
+type StatusFilter = "all" | WalkStatus;
+type SortOrder = "asc" | "desc";
+
+// This list only ever holds upcoming walks (recently cancelled ones stay
+// visible too) — "completed" never appears here, so it's left out of the
+// filter, matching AdminWalkTable's own upcoming-scope options.
+const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
+  { value: "all", label: "All statuses" },
+  { value: "upcoming", label: "Upcoming" },
+  { value: "starting-soon", label: "Starting soon" },
+  { value: "in-progress", label: "In progress" },
+  { value: "cancelled", label: "Cancelled" },
+];
 
 export type UpcomingWalkCard = {
   id: string;
@@ -154,30 +170,80 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
 
 export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const deferredSearchTerm = useDeferredValue(searchTerm);
 
   const filtered = useMemo(() => {
     const query = deferredSearchTerm.trim().toLowerCase();
-    if (!query) return walks;
-    return walks.filter((walk) => {
+    const rows = walks.filter((walk) => {
+      if (statusFilter !== "all") {
+        const status = walkStatus({
+          cancelledAt: walk.cancelledAt ? new Date(walk.cancelledAt) : null,
+          startsAt: new Date(walk.startsAt),
+          durationMins: walk.durationMins,
+        });
+        if (status !== statusFilter) return false;
+      }
+      if (!query) return true;
       const hay = `${walk.title} ${walk.location ?? ""} ${walk.description ?? ""}`.toLowerCase();
       return hay.includes(query);
     });
-  }, [deferredSearchTerm, walks]);
+
+    rows.sort((a, b) => {
+      const delta = new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime();
+      return sortOrder === "asc" ? delta : -delta;
+    });
+    return rows;
+  }, [deferredSearchTerm, sortOrder, statusFilter, walks]);
+
+  function clearFilters() {
+    setSearchTerm("");
+    setStatusFilter("all");
+  }
 
   return (
     <div className="flex flex-col gap-4">
-      <InputGroup className="w-full max-w-md">
-        <InputGroupInput
-          aria-label="Search walks"
-          onChange={(event) => setSearchTerm(event.target.value)}
-          placeholder="Search by walk or meeting point…"
-          value={searchTerm}
-        />
-        <InputGroupAddon>
-          <Search data-icon="inline-start" />
-        </InputGroupAddon>
-      </InputGroup>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <InputGroup className="w-full min-w-0 sm:flex-1">
+          <InputGroupInput
+            aria-label="Search walks"
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Search by walk or meeting point…"
+            value={searchTerm}
+          />
+          <InputGroupAddon>
+            <Search data-icon="inline-start" />
+          </InputGroupAddon>
+        </InputGroup>
+        <div className="flex shrink-0 flex-col gap-1.5">
+          <Label htmlFor="walk-status">Status</Label>
+          <Select onValueChange={(value) => setStatusFilter(value as StatusFilter)} value={statusFilter}>
+            <SelectTrigger className="w-full sm:w-[11rem]" id="walk-status">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex shrink-0 flex-col gap-1.5">
+          <Label htmlFor="walk-sort">Sort</Label>
+          <Select onValueChange={(value) => setSortOrder(value as SortOrder)} value={sortOrder}>
+            <SelectTrigger className="w-full sm:w-[11rem]" id="walk-sort">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="asc">Soonest first</SelectItem>
+              <SelectItem value="desc">Latest first</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {filtered.length === 0 ? (
         <Empty className="border">
@@ -188,11 +254,7 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
             <EmptyTitle>No walks match your search</EmptyTitle>
           </EmptyHeader>
           <EmptyContent>
-            <Button
-              onClick={() => setSearchTerm("")}
-              type="button"
-              variant="outline"
-            >
+            <Button onClick={clearFilters} type="button" variant="outline">
               <SearchX data-icon="inline-start" />
               Clear search
             </Button>

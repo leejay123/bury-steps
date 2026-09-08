@@ -24,7 +24,6 @@ export default async function DisplaySettingsPage() {
 
   return (
     <SettingsPage
-      contentClassName="py-8 md:py-10"
       description="Name, tagline, Facebook link, homepage copy and section order, cookie notice, and back to top."
       previewHref="/"
       title="Display"

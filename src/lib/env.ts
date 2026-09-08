@@ -35,6 +35,10 @@ const RECOMMENDED: EnvCheck[] = [
     name: "RESEND_API_KEY",
     hint: "Resend dashboard → API Keys. Without it, every outgoing email (walk notices, deletion/promotion confirmations, contact form, newsletter) is skipped and only logged.",
   },
+  {
+    name: "RESEND_WEBHOOK_SECRET",
+    hint: "Resend dashboard → Webhooks → your endpoint → Signing Secret. Without it, bounce/complaint/delivery events aren't recorded.",
+  },
 ];
 
 function isSet(name: string): boolean {

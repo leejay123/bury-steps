@@ -44,6 +44,12 @@ export function WalkLivePanel({
               Recorded at {formatDateTime(new Date(alreadyClockedInAt))}
             </p>
           </div>
+          <div className="flex flex-wrap gap-2">
+            {completed ? null : <ClockOutButton token={token} />}
+            <Button asChild size="sm" variant="outline">
+              <Link href={walksHref}>Back to walks</Link>
+            </Button>
+          </div>
           {completed ? (
             <p className="text-sm text-muted-foreground">
               This walk has finished, and you stayed for the whole thing — there’s nothing left to
@@ -52,12 +58,6 @@ export function WalkLivePanel({
           ) : status === "in-progress" ? (
             <p className="text-sm text-muted-foreground">This walk is in progress.</p>
           ) : null}
-          <div className="flex flex-wrap gap-2">
-            {completed ? null : <ClockOutButton token={token} />}
-            <Button asChild size="sm" variant="outline">
-              <Link href={walksHref}>Back to walks</Link>
-            </Button>
-          </div>
         </div>
         <WalkMembers completed={completed} names={memberNames} />
       </div>

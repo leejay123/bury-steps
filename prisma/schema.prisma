@@ -47,47 +47,47 @@ model User {
   /// backfilled, so adding this column never touches existing rows.
   unsubscribeToken       String? @unique
 
-  walksCreated     Walk[]              @relation("WalkCreator")
-  attendances      Attendance[]
-  noticeReads      SiteNoticeRead[]
-  accidentReports  AccidentReport[]
-  journeyEvents    WalkJourneyEvent[]  @relation("JourneyCreator")
+  walksCreated    Walk[]             @relation("WalkCreator")
+  attendances     Attendance[]
+  noticeReads     SiteNoticeRead[]
+  accidentReports AccidentReport[]
+  journeyEvents   WalkJourneyEvent[] @relation("JourneyCreator")
 
   @@index([createdAt])
 }
 
 model Walk {
-  id           String    @id @default(cuid())
+  id              String    @id @default(cuid())
   /// Stable id used in clock-in forms and as a fallback share path: /w/<token>
-  token        String    @unique
+  token           String    @unique
   /// Public share path: /w/<slug>. First place word, e.g. burrs. Same place again is burrs-2.
-  slug         String?   @unique
-  title        String
-  description  String?
-  location     String?
+  slug            String?   @unique
+  title           String
+  description     String?
+  location        String?
   /// Optional UK postcode used to place the map pin. Members still see `location`.
-  postcode     String?
+  postcode        String?
   /// Set from the meeting point via OpenStreetMap Nominatim. Null if unknown.
-  latitude     Float?
-  longitude    Float?
+  latitude        Float?
+  longitude       Float?
   /// Optional what3words address (e.g. "filled.count.soap"), stored as
   /// plain text and never resolved via their API — see src/lib/what3words.ts.
   /// Members get a link to what3words.com's own free page for pinpoint
   /// directions; the map above still comes from `location`/`postcode`.
-  what3words   String?
+  what3words      String?
   /// Stored in UTC. Always render with timeZone: "Europe/London".
-  startsAt     DateTime
-  durationMins Int       @default(90)
-  cancelledAt  DateTime?
+  startsAt        DateTime
+  durationMins    Int       @default(90)
+  cancelledAt     DateTime?
   cancelledReason String?
-  createdAt    DateTime  @default(now())
+  createdAt       DateTime  @default(now())
 
   createdById String
   createdBy   User   @relation("WalkCreator", fields: [createdById], references: [id])
 
-  attendances      Attendance[]
-  accidentReports  AccidentReport[]
-  journeyEvents    WalkJourneyEvent[]
+  attendances     Attendance[]
+  accidentReports AccidentReport[]
+  journeyEvents   WalkJourneyEvent[]
 
   @@index([startsAt])
   @@index([createdById])
@@ -102,13 +102,13 @@ model Attendance {
   userId String
 
   /// Set by the database, never by the client.
-  clockedInAt  DateTime @default(now())
+  clockedInAt      DateTime  @default(now())
   /// When the member left the walk. Null while they are still clocked in.
-  clockedOutAt DateTime?
+  clockedOutAt     DateTime?
   /// Why they clocked out. Visible to organisers only.
   clockedOutReason String?
   /// When the member gave explicit consent to store health information.
-  medicalAckAt DateTime
+  medicalAckAt     DateTime
 
   /// UK GDPR Art. 9 special category data. Nullable — members may leave it blank.
   conditions           String?
@@ -165,12 +165,12 @@ model HomepageTestimonial {
 
 /// Filters on the public FAQ list. Organisers can keep up to 8.
 model HomepageFaqCategory {
-  id        String   @id @default(cuid())
-  slug      String   @unique
+  id        String        @id @default(cuid())
+  slug      String        @unique
   label     String
   sortOrder Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
   faqs      HomepageFaq[]
 
   @@index([sortOrder])
@@ -193,12 +193,12 @@ model HomepageFaq {
 
 /// Filters for full-page notices on /notices. Organisers can keep up to 8.
 model SiteNoticeCategory {
-  id        String   @id @default(cuid())
-  slug      String   @unique
+  id        String       @id @default(cuid())
+  slug      String       @unique
   label     String
   sortOrder Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
   notices   SiteNotice[]
 
   @@index([sortOrder])
@@ -265,73 +265,78 @@ model SiteNoticeRead {
 
 /// Singleton row (`id` is always `site`).
 model SiteSetting {
-  id                  String   @id
+  id                         String   @id
   /// Kept for existing rows. The public site is a fixed black-and-white theme.
-  primaryColor        String
+  primaryColor               String
   /// When false, the homepage carousel is hidden.
-  carouselEnabled     Boolean  @default(true)
+  carouselEnabled            Boolean  @default(true)
   /// When false, the floating back-to-top button is hidden.
-  scrollToTopEnabled  Boolean  @default(true)
+  scrollToTopEnabled         Boolean  @default(true)
   /// Cookie banner layout: default, small, or mini.
-  cookieConsentVariant String  @default("small")
+  cookieConsentVariant       String   @default("small")
   /// Public site name — header logo alt, homepage hero, tab titles, share cards.
-  siteName             String  @default("Bury Steps Walking Group")
+  siteName                   String   @default("Bury Steps Walking Group")
   /// Homepage hero subtitle (also used for share/meta description when short enough).
-  siteTagline          String  @default("Sunday afternoons, Bury and the surrounding countryside. No winners, no losers — just people walking together.")
+  siteTagline                String   @default("Sunday afternoons, Bury and the surrounding countryside. No winners, no losers — just people walking together.")
   /// Facebook group link. Empty string hides Facebook CTAs.
-  facebookGroupUrl     String  @default("https://www.facebook.com/groups/burysteps")
+  facebookGroupUrl           String   @default("https://www.facebook.com/groups/burysteps")
   /// Homepage testimonials block.
-  testimonialsEnabled  Boolean @default(true)
+  testimonialsEnabled        Boolean  @default(true)
   /// Optional small label above the testimonials heading. Empty hides it.
-  testimonialsSectionEyebrow String @default("")
+  testimonialsSectionEyebrow String   @default("")
   /// Heading above the homepage testimonials grid.
-  testimonialsSectionTitle String @default("From the group")
+  testimonialsSectionTitle   String   @default("From the group")
   /// Short intro under the testimonials heading.
-  testimonialsSectionIntro String @default("A few words from people who walk with us on Sundays.")
+  testimonialsSectionIntro   String   @default("A few words from people who walk with us on Sundays.")
   /// Homepage FAQs block.
-  faqsEnabled          Boolean @default(true)
+  faqsEnabled                Boolean  @default(true)
   /// Heading above the homepage FAQ list.
-  faqSectionTitle      String  @default("Frequently asked questions")
+  faqSectionTitle            String   @default("Frequently asked questions")
   /// Short intro under the FAQ heading.
-  faqSectionIntro      String  @default("How to join, what to bring, and how clock-in works. If you still have a question, ask in the Facebook group.")
+  faqSectionIntro            String   @default("How to join, what to bring, and how clock-in works. If you still have a question, ask in the Facebook group.")
   /// Homepage “How this started” block.
-  howThisStartedEnabled Boolean @default(true)
-  howThisStartedTitle   String  @default("How this started")
-  howThisStartedEyebrow String  @default("Kindness · Friendship · Welcome")
-  howThisStartedTeaser  String  @default("What started out as a self-help mission to get myself fit after my diabetes diagnosis began with a simple goal: walking four miles a day with the dogs after work. It has grown into a community of walkers supporting one another week after week.")
+  howThisStartedEnabled      Boolean  @default(true)
+  howThisStartedTitle        String   @default("How this started")
+  howThisStartedEyebrow      String   @default("Kindness · Friendship · Welcome")
+  howThisStartedTeaser       String   @default("What started out as a self-help mission to get myself fit after my diabetes diagnosis began with a simple goal: walking four miles a day with the dogs after work. It has grown into a community of walkers supporting one another week after week.")
   /// Full story in the About drawer (blank lines separate paragraphs). Empty uses the built-in default.
-  howThisStartedBody    String  @default("")
+  howThisStartedBody         String   @default("")
   /// About drawer lists (one item per line). Empty uses built-in defaults.
-  aboutGoals            String  @default("")
-  aboutPlaces           String  @default("")
-  aboutExpect           String  @default("")
+  aboutGoals                 String   @default("")
+  aboutPlaces                String   @default("")
+  aboutExpect                String   @default("")
   /// About drawer rules: one “Title | Body” per line. Empty uses built-in defaults.
-  aboutRules            String  @default("")
+  aboutRules                 String   @default("")
   /// About drawer section headings — the real visible text (distinct from the Goals/Places/etc. admin-only labels).
-  aboutGoalsHeading     String  @default("More than just a walking group")
-  aboutPlacesHeading    String  @default("What we do")
-  aboutExpectHeading    String  @default("What you can expect")
-  aboutRulesHeading     String  @default("Group rules")
+  aboutGoalsHeading          String   @default("More than just a walking group")
+  aboutPlacesHeading         String   @default("What we do")
+  aboutExpectHeading         String   @default("What you can expect")
+  aboutRulesHeading          String   @default("Group rules")
   /// Comma-separated homepage block order (howWalksWork, howThisStarted, memberNotices, testimonials, faqs).
-  homepageSectionOrder  String  @default("howWalksWork,howThisStarted,memberNotices,testimonials,faqs")
+  homepageSectionOrder       String   @default("howWalksWork,howThisStarted,memberNotices,testimonials,faqs")
   /// Signed-in members: latest notices carousel on the homepage.
-  memberNoticesEnabled  Boolean @default(true)
+  memberNoticesEnabled       Boolean  @default(true)
   /// Homepage “how it works” strip and walk-page “How this group works” card.
-  howWalksWorkEnabled  Boolean @default(true)
+  howWalksWorkEnabled        Boolean  @default(true)
   /// Optional group clock-in target for the current UK month. Null hides Together.
-  monthlyClockInGoal  Int?
+  monthlyClockInGoal         Int?
   /// Uploaded site logo (header, print reports). Null uses the bundled default.
-  logoMime            String?
-  logoData            Bytes?
+  logoMime                   String?
+  logoData                   Bytes?
   /// Uploaded browser-tab favicon. Null uses the bundled default.
-  faviconMime         String?
-  faviconData         Bytes?
+  faviconMime                String?
+  faviconData                Bytes?
   /// Uploaded letterhead-style banner shown at the foot of printed accident
   /// reports. Separate from the logo — null hides the banner entirely
   /// (there is no bundled default for this one).
-  reportBannerMime    String?
-  reportBannerData    Bytes?
-  updatedAt           DateTime @updatedAt
+  reportBannerMime           String?
+  reportBannerData           Bytes?
+  /// Resend audience (Segment) id that newsletter subscribers are synced
+  /// into. Created automatically on first use — see
+  /// src/lib/email/resend-audience.ts — so there's nothing to configure by
+  /// hand in the Resend dashboard.
+  resendAudienceId           String?
+  updatedAt                  DateTime @updatedAt
 }
 
 /// Organiser-only accident reports. Printed from the report page.
@@ -376,14 +381,14 @@ model WalkJourneyEvent {
 /// confirmation to the sender is handled by src/lib/email — see
 /// src/server/actions/contact.ts.
 model ContactMessage {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
   email     String
   /// Optional — the form doesn't require it.
   phone     String?
   message   String
   readAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   @@index([createdAt])
 }
@@ -414,4 +419,22 @@ model EmailTemplateOverride {
   subject   String?
   body      String?
   updatedAt DateTime @updatedAt
+}
+
+/// One row per Resend webhook event received (email.sent/delivered/bounced/
+/// complained/opened/clicked/...). Populated by
+/// src/app/api/webhooks/resend/route.ts so bounces and spam complaints are
+/// visible after the fact instead of just failing silently. `resendId` is
+/// Resend's own email id, present on every event type it sends.
+model EmailEvent {
+  id        String   @id @default(cuid())
+  resendId  String
+  type      String
+  recipient String
+  createdAt DateTime @default(now())
+  data      Json
+
+  @@index([resendId])
+  @@index([recipient])
+  @@index([createdAt])
 }

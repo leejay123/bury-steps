@@ -15,6 +15,12 @@ function getClient(): Resend | null {
   return cachedClient;
 }
 
+/** Shared with resend-audience.ts and the newsletter campaign sender — same
+ * lazy client, same "not configured" semantics as sendEmail() below. */
+export function getResendClient(): Resend | null {
+  return getClient();
+}
+
 export function isEmailConfigured(): boolean {
   return getClient() !== null;
 }
@@ -26,7 +32,7 @@ export function isEmailConfigured(): boolean {
  * owner's own inbox, so production deploys should always set EMAIL_FROM to
  * a verified address on the group's own domain.
  */
-function fromAddress(): string {
+export function fromAddress(): string {
   return process.env.EMAIL_FROM?.trim() || "Bury Steps Walking Group <onboarding@resend.dev>";
 }
 

@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/dates";
 import { Button } from "@/components/ui/button";
 import { DataList, DataListBody, DataListItem } from "@/components/data-list";
 import { SettingsPage, SettingsSection } from "../settings-page";
+import { SendNewsletterForm } from "./send-newsletter-form";
 
 export const dynamic = "force-dynamic";
 
@@ -48,9 +49,11 @@ export default async function AdminSubscribersSettingsPage() {
     prisma.user.count({ where: { emailProgress: true } }),
   ]);
 
+  const newsletterRecipientCount = activeFooterSubscribers.length + newsletterMembers.length;
+
   return (
     <SettingsPage
-      description="Who's opted into which emails. Export the newsletter list below to run an actual campaign through Resend's own Audiences/Broadcasts — this site only sends the one-off subscribe confirmation, not campaigns."
+      description="Who's opted into which emails. Every newsletter subscriber below is kept in sync with a Resend audience automatically — send a real campaign to all of them without leaving this page."
       title="Subscribers"
     >
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
@@ -61,14 +64,16 @@ export default async function AdminSubscribersSettingsPage() {
         <StatTile label="Progress on" value={progressCount} />
       </div>
 
+      <SendNewsletterForm recipientCount={newsletterRecipientCount} />
+
       <SettingsSection
-        description={`${activeFooterSubscribers.length + newsletterMembers.length} people currently opted in (${unsubscribedFooterCount} have unsubscribed via the footer form over time). Includes a name where the subscriber is also a member — everyone's own account emails also stays counted under "Notices"/"Walk announcements"/"Progress" above regardless of their newsletter choice.`}
+        description={`${newsletterRecipientCount} people currently opted in (${unsubscribedFooterCount} have unsubscribed via the footer form over time). Includes a name where the subscriber is also a member — everyone's own account emails also stays counted under "Notices"/"Walk announcements"/"Progress" above regardless of their newsletter choice.`}
         title="Newsletter list"
       >
         <Button asChild size="sm" variant="outline">
           <Link href="/admin/settings/subscribers/export">
             <Download aria-hidden className="size-4" />
-            Export as CSV (for Resend)
+            Export as CSV
           </Link>
         </Button>
 
