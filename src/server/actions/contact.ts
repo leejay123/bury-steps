@@ -77,7 +77,7 @@ async function notifyAdminsOfContactMessage(submission: {
 }): Promise<void> {
   try {
     const admins = await prisma.user.findMany({
-      where: { role: "ADMIN", emailOrganiserAlerts: true },
+      where: { role: "ADMIN", emailContactAlerts: true },
       select: { email: true },
     });
     await sendContactMessageAdminAlertEmail(

@@ -71,7 +71,7 @@ describe("addAccidentReport", () => {
 
     expect(prismaMock.user.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { role: "ADMIN", id: { not: ADMIN.id }, emailOrganiserAlerts: true },
+        where: { role: "ADMIN", id: { not: ADMIN.id }, emailAccidentAlerts: true },
       }),
     );
     expect(sendAccidentReportAlertEmail).toHaveBeenCalledWith(

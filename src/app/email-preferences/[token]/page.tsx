@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
-import { PAGE_X } from "@/lib/page-x";
 import { EmailPreferencesForm } from "./email-preferences-form";
 
 export const dynamic = "force-dynamic";
@@ -25,21 +24,23 @@ export default async function EmailPreferencesPage({
       emailNotices: true,
       emailProgress: true,
       emailNewsletter: true,
-      emailOrganiserAlerts: true,
+      emailContactAlerts: true,
+      emailAccidentAlerts: true,
     },
   });
   if (!member) notFound();
 
   return (
-    <div className={`mx-auto flex w-full max-w-md flex-col gap-6 py-12 ${PAGE_X}`}>
+    <div className="flex flex-col gap-6 py-8 md:py-10">
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Email preferences</h1>
         <p className="text-sm text-muted-foreground">{member.email}</p>
       </div>
       <EmailPreferencesForm
+        emailAccidentAlerts={member.emailAccidentAlerts}
+        emailContactAlerts={member.emailContactAlerts}
         emailNewsletter={member.emailNewsletter}
         emailNotices={member.emailNotices}
-        emailOrganiserAlerts={member.emailOrganiserAlerts}
         emailProgress={member.emailProgress}
         emailWalkAnnouncements={member.emailWalkAnnouncements}
         isAdmin={member.role === "ADMIN"}

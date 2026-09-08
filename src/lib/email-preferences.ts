@@ -6,7 +6,8 @@ export type EmailPreferences = {
   emailNotices: boolean;
   emailProgress: boolean;
   emailNewsletter: boolean;
-  emailOrganiserAlerts: boolean;
+  emailContactAlerts: boolean;
+  emailAccidentAlerts: boolean;
 };
 
 export const EMAIL_PREFERENCE_OPTIONS: {
@@ -28,9 +29,15 @@ export const EMAIL_PREFERENCE_OPTIONS: {
   { name: "emailProgress", label: "Progress", hint: "Your walk history and group goal updates." },
   { name: "emailNewsletter", label: "Newsletter", hint: "Occasional group news." },
   {
-    name: "emailOrganiserAlerts",
-    label: "Organiser alerts",
-    hint: "New contact form messages and accident reports logged by other organisers.",
+    name: "emailContactAlerts",
+    label: "Contact form messages",
+    hint: "New messages submitted through the contact form.",
+    adminOnly: true,
+  },
+  {
+    name: "emailAccidentAlerts",
+    label: "Accident reports",
+    hint: "New accident reports logged by other organisers.",
     adminOnly: true,
   },
 ];
