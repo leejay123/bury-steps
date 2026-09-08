@@ -155,8 +155,12 @@ export function unlockIdleDocument() {
 /**
  * Keep portal contents mounted through the close animation, then drop them so a
  * stuck overlay cannot sit on top of the page and swallow every click.
+ * `closeDelayMs` must be at least as long as the caller's own close
+ * animation — unmounting any sooner cuts that animation off mid-flight
+ * instead of letting it finish, which reads as "closes instantly, no
+ * animation" even though the CSS/JS transition is still running.
  */
-export function useOverlayPresence(open: boolean | undefined) {
+export function useOverlayPresence(open: boolean | undefined, closeDelayMs = 200) {
   const [held, setHeld] = useState(false);
 
   useResetOnChange([open], () => {
@@ -165,10 +169,10 @@ export function useOverlayPresence(open: boolean | undefined) {
 
   useEffect(() => {
     if (open === false) {
-      const timeout = window.setTimeout(() => setHeld(false), 200);
+      const timeout = window.setTimeout(() => setHeld(false), closeDelayMs);
       return () => window.clearTimeout(timeout);
     }
-  }, [open]);
+  }, [open, closeDelayMs]);
 
   return open === undefined || Boolean(open) || held;
 }

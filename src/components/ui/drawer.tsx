@@ -28,6 +28,14 @@ const DrawerTriggerRefContext = React.createContext<React.MutableRefObject<HTMLE
 
 const DESKTOP_QUERY = "(min-width: 640px)";
 
+// Vaul's own stylesheet (node_modules/vaul) animates [data-vaul-drawer] with
+// `transition: transform .5s ...` / `animation-duration: .5s` for the close
+// keyframes (slideToBottom/Top/Left/Right) — unmounting any sooner than that
+// cuts the slide-out off mid-flight, which looked like "closes instantly,
+// no animation" even though vaul was still mid-transition. A little past
+// 500ms so a slow frame doesn't clip the last few pixels.
+const DRAWER_CLOSE_ANIMATION_MS = 520;
+
 function subscribeToDesktopQuery(onChange: () => void) {
   const media = window.matchMedia(DESKTOP_QUERY);
   media.addEventListener("change", onChange);
@@ -66,7 +74,7 @@ function Drawer({
   // (see DrawerShouldRenderContext below). Gating `children` here as a whole
   // would also hide DrawerTrigger while `open` starts false and has never
   // been true, making the trigger permanently unclickable.
-  const shouldRender = useOverlayPresence(open);
+  const shouldRender = useOverlayPresence(open, DRAWER_CLOSE_ANIMATION_MS);
   const isDesktop = useIsDesktop();
   // Form editors stay a side/full panel on every width. Short sheets still
   // rise from the bottom on phones.
@@ -134,10 +142,12 @@ function Drawer({
                       active instanceof HTMLElement ? active : triggerRef.current;
                   } else {
                     // Pointer-events / inert cleanup after the close animation —
-                    // not in the same turn as dismiss (that race flashed).
+                    // not in the same turn as dismiss (that race flashed). Same
+                    // duration as useOverlayPresence above, for the same reason:
+                    // vaul's own close transition is .5s.
                     closeCleanupTimerRef.current = window.setTimeout(() => {
                       unlockIdleDocument();
-                    }, 320);
+                    }, DRAWER_CLOSE_ANIMATION_MS);
                   }
                   onOpenChange?.(next);
                 }}
