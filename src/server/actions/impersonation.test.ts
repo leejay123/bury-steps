@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { ClerkAPIResponseError } from "@clerk/nextjs/errors";
 import type { RateLimitResult } from "@/lib/rate-limit";
 
 const { requireAdmin, checkRateLimit, actorTokensCreate, prismaMock } = vi.hoisted(() => ({
@@ -126,5 +127,34 @@ describe("startImpersonation", () => {
     const result = await startImpersonation(null, form({ targetId: MEMBER.id }));
 
     expect(result).toEqual({ ok: false, error: "Could not log in as that member. Try again." });
+  });
+
+  // Clerk plans cap actor-token sign-ins per billing period — surfacing
+  // Clerk's own explanation (which names the limit and reset timing)
+  // instead of the generic fallback is the whole point, since "try again"
+  // would be actively misleading for a quota that resets monthly.
+  it("surfaces Clerk's own message when the impersonation plan limit is hit", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce(MEMBER);
+    actorTokensCreate.mockRejectedValueOnce(
+      new ClerkAPIResponseError("Unprocessable Entity", {
+        status: 422,
+        data: [
+          {
+            code: "impersonation_limit_exceeded",
+            message: "limit exceeded",
+            long_message:
+              "Your application has reached the impersonation limit for your plan (5/5). The limit will reset at the beginning of the next billing period.",
+          },
+        ],
+      }),
+    );
+
+    const result = await startImpersonation(null, form({ targetId: MEMBER.id }));
+
+    expect(result).toEqual({
+      ok: false,
+      error:
+        "Your application has reached the impersonation limit for your plan (5/5). The limit will reset at the beginning of the next billing period.",
+    });
   });
 });

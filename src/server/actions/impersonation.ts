@@ -68,15 +68,14 @@ export async function startImpersonation(
       href: actorToken.url,
     };
   } catch (err) {
-    // TEMPORARY diagnostic — surfaces the real Clerk/DB error to the
-    // (admin-only) caller instead of a generic message, to find out why
-    // this is failing in production. Revert before finishing this fix.
-    const detail = isClerkAPIResponseError(err)
-      ? err.errors.map((e) => `${e.code}: ${e.longMessage ?? e.message}`).join(" | ")
-      : err instanceof Error
-        ? err.message
-        : JSON.stringify(err);
-    logActionError("startImpersonation", err, "Could not log in as that member. Try again.");
-    return { ok: false, error: `DEBUG: ${detail}` };
+    // Clerk plans cap how many actor-token sign-ins can be created per
+    // billing period (their own error already explains the reset timing
+    // and current usage) — surface that directly rather than the generic
+    // fallback, since "try again" would be actively misleading here.
+    if (isClerkAPIResponseError(err)) {
+      const limitError = err.errors.find((e) => e.code === "impersonation_limit_exceeded");
+      if (limitError) return { ok: false, error: limitError.longMessage ?? limitError.message };
+    }
+    return logActionError("startImpersonation", err, "Could not log in as that member. Try again.");
   }
 }
