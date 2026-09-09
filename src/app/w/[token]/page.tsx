@@ -138,7 +138,12 @@ export default async function WalkLinkPage({
   // people who have not joined yet. WalkMembers paginates at 20, so a
   // thousand names on one walk stay usable.
   const memberNames = alreadyIn ? await getWalkMemberNames(walk.id) : [];
-  const tooEarly = windowState(walk.startsAt, walk.durationMins) === "too-early";
+  const windowStateNow = windowState(walk.startsAt, walk.durationMins);
+  const tooEarly = windowStateNow === "too-early";
+  // A signed-in member who never clocked in and the window has now closed —
+  // this used to only show at the very bottom of the page (inside
+  // WalkLivePanel), easy to miss under the walk details and map above it.
+  const closedNoClockIn = Boolean(user) && !alreadyIn && windowStateNow === "closed";
   const opensAt = walkOpensAt(walk.startsAt);
   const meeting = meetingPointLabel(walk.location, walk.postcode);
   const walksHref = user?.role === "ADMIN" ? "/admin" : "/dashboard";
@@ -179,6 +184,14 @@ export default async function WalkLinkPage({
           <AlertDescription>
             It opens an hour before the walk starts, at {formatTime(opensAt)} on{" "}
             {formatDate(opensAt)}. Come back on the day and this page will be ready.
+          </AlertDescription>
+        </Alert>
+      ) : closedNoClockIn ? (
+        <Alert variant="info">
+          <AlertTitle>This walk has finished</AlertTitle>
+          <AlertDescription>
+            Clock-in is closed. If you were there, speak to an organiser — they can add you to the
+            list.
           </AlertDescription>
         </Alert>
       ) : !user ? (

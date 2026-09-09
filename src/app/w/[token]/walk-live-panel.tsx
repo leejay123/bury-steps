@@ -8,7 +8,6 @@ import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { useWalkClock } from "@/hooks/use-walk-clock";
 import { formatDateTime } from "@/lib/dates";
 import { walkStatus, windowState } from "@/lib/walk-window";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
 export function WalkLivePanel({
@@ -70,16 +69,10 @@ export function WalkLivePanel({
     return <BeforeYouSetOff />;
   }
 
+  // The "this walk has finished, clock-in is closed" notice itself is also
+  // shown at the top of the page (page.tsx) — nothing else to add here.
   if (state === "closed") {
-    return (
-      <Alert variant="info">
-        <AlertTitle>This walk has finished</AlertTitle>
-        <AlertDescription>
-          Clock-in is closed. If you were there, speak to an organiser — they can add you to the
-          list.
-        </AlertDescription>
-      </Alert>
-    );
+    return null;
   }
 
   return (
