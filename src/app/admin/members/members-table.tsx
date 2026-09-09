@@ -1,10 +1,14 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronRight, Search } from "lucide-react";
 import { formatDate, formatMembershipAge } from "@/lib/dates";
 import { cn } from "@/lib/utils";
+import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
+import { searchMembers, type MemberRoleFilter, type MemberRow } from "@/server/actions";
+import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { DeleteMemberButton } from "./delete-member-button";
 import { MemberRoleButton } from "./member-role-button";
 import { EmptyState } from "@/components/empty-state";
@@ -18,8 +22,6 @@ import {
   dataListItemStackClassName,
 } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
-import { usePagedList } from "@/hooks/use-paged-list";
-import { useUrlListState } from "@/hooks/use-url-list-state";
 import { Badge } from "@/components/ui/badge";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
@@ -31,51 +33,63 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-type MemberRow = {
-  id: string;
-  name: string;
-  email: string;
-  role: "ADMIN" | "MEMBER";
-  createdAt: string;
-  attendanceCount: number;
-  walkCount: number;
-  isYou: boolean;
-};
+type ViewMember = MemberRow & { isYou: boolean };
 
-function matchesMemberQuery(member: MemberRow, query: string): boolean {
-  const needle = query.trim().toLowerCase();
-  if (!needle) return true;
-  if (member.name.toLowerCase().includes(needle)) return true;
-  if (member.email.toLowerCase().includes(needle)) return true;
-  if (needle.length >= 3) {
-    if (
-      ("organiser".startsWith(needle) || "admin".startsWith(needle)) &&
-      member.role === "ADMIN"
-    ) {
-      return true;
-    }
-    if ("member".startsWith(needle) && member.role === "MEMBER") return true;
-  }
-  return false;
-}
-
+/**
+ * Search and paging both run server-side via `searchMembers`, so this stays
+ * correct — and, once the trigram search index is in, fast — no matter how
+ * many members the group has, rather than only up to some fetch cap.
+ * Search text is deliberately kept off the URL (it can be a name or email)
+ * — it's only ever sent as a server action argument.
+ */
 export function MembersTable({
-  members,
+  initialRows,
+  initialTotal,
   roleFilter,
-  totalMembers,
+  viewerId,
 }: {
-  /** Role-filtered rows — search is client-only (no PII in the URL). */
-  members: MemberRow[];
-  roleFilter: "all" | "ADMIN" | "MEMBER";
-  totalMembers: number;
+  initialRows: ViewMember[];
+  initialTotal: number;
+  roleFilter: MemberRoleFilter;
+  viewerId: string;
 }) {
+  const router = useRouter();
   const listRef = useRef<HTMLDivElement>(null);
-  const { query, setQuery, setFilter } = useUrlListState({ syncQueryToUrl: false });
-  const filtered = useMemo(
-    () => members.filter((member) => matchesMemberQuery(member, query)),
-    [members, query],
-  );
-  const paging = usePagedList(filtered, { resetKey: `${roleFilter}:${query}` });
+  const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [rows, setRows] = useState(initialRows);
+  const [total, setTotal] = useState(initialTotal);
+  const [isPending, startTransition] = useTransition();
+
+  // A full navigation changes roleFilter/initialRows — drop back to page 1,
+  // no search, and the fresh server-rendered rows for that role.
+  useResetOnChange([roleFilter], () => {
+    setQuery("");
+    setPage(1);
+    setRows(initialRows);
+    setTotal(initialTotal);
+  });
+
+  useEffect(() => {
+    const handle = setTimeout(
+      () => {
+        startTransition(async () => {
+          const result = await searchMembers({ page, query, role: roleFilter });
+          setRows(result.rows.map((row) => ({ ...row, isYou: row.id === viewerId })));
+          setTotal(result.total);
+        });
+      },
+      query === "" && page === 1 ? 0 : 300,
+    );
+    return () => clearTimeout(handle);
+  }, [query, page, roleFilter, viewerId]);
+
+  function handleQueryChange(next: string) {
+    setQuery(next);
+    setPage(1);
+  }
+
+  const pageCount = Math.max(1, Math.ceil(total / LIST_PAGE_SIZE));
 
   return (
     <div className="flex flex-col gap-4" ref={listRef}>
@@ -83,7 +97,7 @@ export function MembersTable({
         <InputGroup className="w-full min-w-0 sm:flex-1">
           <InputGroupInput
             aria-label="Search members"
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => handleQueryChange(event.target.value)}
             placeholder="Search by name, email, or role…"
             value={query}
           />
@@ -93,7 +107,15 @@ export function MembersTable({
         </InputGroup>
         <div className="flex shrink-0 flex-col gap-1.5">
           <Label htmlFor="member-role-filter">Role</Label>
-          <Select onValueChange={(value) => setFilter("role", value, "all")} value={roleFilter}>
+          <Select
+            onValueChange={(value) => {
+              const params = new URLSearchParams();
+              if (value !== "all") params.set("role", value);
+              const qs = params.toString();
+              router.push(`/admin/members${qs ? `?${qs}` : ""}`);
+            }}
+            value={roleFilter}
+          >
             <SelectTrigger className="w-full sm:w-[11rem]" id="member-role-filter">
               <SelectValue />
             </SelectTrigger>
@@ -106,10 +128,10 @@ export function MembersTable({
         </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {rows.length === 0 && !isPending ? (
         <EmptyState
           description={
-            totalMembers === 0
+            total === 0 && !query
               ? "When someone signs up, they will show here."
               : "Try a different name, email, or role."
           }
@@ -118,19 +140,13 @@ export function MembersTable({
         />
       ) : (
         <>
-          <DataList>
-            {paging.paged.map((member) => (
-              <DataListItem
-                className={cn("relative", dataListItemStackClassName)}
-                key={member.id}
-              >
+          <DataList className={cn(isPending && "opacity-60")}>
+            {rows.map((member) => (
+              <DataListItem className={cn("relative", dataListItemStackClassName)} key={member.id}>
                 <DataListItemMain>
                   <DataListBody>
                     <p className="font-medium">
-                      <Link
-                        className="after:absolute after:inset-0"
-                        href={`/admin/members/${member.id}`}
-                      >
+                      <Link className="after:absolute after:inset-0" href={`/admin/members/${member.id}`}>
                         {member.name}
                       </Link>
                       {member.isYou ? (
@@ -148,15 +164,10 @@ export function MembersTable({
                   </DataListBody>
                   <ChevronRight className="mt-1 size-4 shrink-0 text-muted-foreground sm:mt-0" />
                 </DataListItemMain>
-                {/* relative z-10: sits above the row's full-cover Link overlay so
-                Remove stays clickable instead of triggering navigation. */}
                 <DataListActions
                   className={cn("relative z-10 flex-wrap gap-2", dataListActionsStackClassName)}
                 >
-                  <Badge
-                    className="h-7 px-2"
-                    variant={member.role === "ADMIN" ? "default" : "secondary"}
-                  >
+                  <Badge className="h-7 px-2" variant={member.role === "ADMIN" ? "default" : "secondary"}>
                     {member.role === "ADMIN" ? "Organiser" : "Member"}
                   </Badge>
                   <MemberRoleButton name={member.name} role={member.role} userId={member.id} />
@@ -174,12 +185,12 @@ export function MembersTable({
           </DataList>
           <ListPagination
             noun="members"
-            onPageChange={paging.setPage}
-            page={paging.page}
-            pageCount={paging.pageCount}
-            pageSize={paging.pageSize}
+            onPageChange={setPage}
+            page={page}
+            pageCount={pageCount}
+            pageSize={LIST_PAGE_SIZE}
             scrollToRef={listRef}
-            total={paging.total}
+            total={total}
           />
         </>
       )}

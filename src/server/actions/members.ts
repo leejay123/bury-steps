@@ -2,10 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { clerkClient } from "@clerk/nextjs/server";
+import type { Prisma } from "@prisma/client";
 import { requireAdmin, displayName } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
+import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { safeAppPath } from "@/lib/urls";
 import { sendAccountDeletedEmail, sendAdminPromotedEmail, sendAdminDemotedEmail } from "@/lib/email/mailer";
 import {
@@ -15,6 +17,103 @@ import {
   logActionError,
   withCountLimitLock,
 } from "./shared";
+
+export type MemberRow = {
+  id: string;
+  name: string;
+  email: string;
+  role: "ADMIN" | "MEMBER";
+  createdAt: string;
+  attendanceCount: number;
+  walkCount: number;
+};
+
+export type MemberRoleFilter = "all" | "ADMIN" | "MEMBER";
+
+/**
+ * Server-side search + pagination for the admin Members page. Matching and
+ * paging both happen in Postgres (not on a fixed-size fetch filtered in the
+ * browser), so the page stays correct — and fast, once the trigram index
+ * from the 20260909140000_member_search_trgm migration is in place — at any
+ * membership size, not just up to some fetch cap. Search text never reaches
+ * the URL: the client calls this action directly instead of navigating.
+ */
+export async function searchMembers({
+  page = 1,
+  query = "",
+  role = "all",
+}: {
+  page?: number;
+  query?: string;
+  role?: MemberRoleFilter;
+}): Promise<{ rows: MemberRow[]; total: number }> {
+  await requireAdmin();
+
+  const needle = query.trim();
+  let searchWhere: Prisma.UserWhereInput | undefined;
+  if (needle) {
+    const textMatch: Prisma.UserWhereInput = {
+      OR: [
+        { email: { contains: needle, mode: "insensitive" } },
+        { firstName: { contains: needle, mode: "insensitive" } },
+        { lastName: { contains: needle, mode: "insensitive" } },
+      ],
+    };
+    // Same "type a role name to filter by it" shortcut the old client-side
+    // search had — typing "adm"/"organiser"/"member" also matches by role.
+    const lower = needle.toLowerCase();
+    const roleMatches: Prisma.UserWhereInput["role"][] = [];
+    if (lower.length >= 3) {
+      if ("organiser".startsWith(lower) || "admin".startsWith(lower)) roleMatches.push("ADMIN");
+      if ("member".startsWith(lower)) roleMatches.push("MEMBER");
+    }
+    searchWhere =
+      roleMatches.length > 0
+        ? { OR: [textMatch, ...roleMatches.map((r) => ({ role: r }))] }
+        : textMatch;
+  }
+
+  const where: Prisma.UserWhereInput = {
+    ...(role !== "all" ? { role } : {}),
+    ...(searchWhere ? { AND: [searchWhere] } : {}),
+  };
+
+  const skip = (Math.max(1, page) - 1) * LIST_PAGE_SIZE;
+
+  const [total, members] = await Promise.all([
+    prisma.user.count({ where }),
+    prisma.user.findMany({
+      where,
+      // id as a tiebreaker keeps pages stable even when rows share a
+      // createdAt millisecond.
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      skip,
+      take: LIST_PAGE_SIZE,
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        _count: { select: { attendances: true, walksCreated: true } },
+      },
+    }),
+  ]);
+
+  return {
+    total,
+    rows: members.map((member) => ({
+      id: member.id,
+      name: displayName(member),
+      email: member.email,
+      role: member.role,
+      createdAt: member.createdAt.toISOString(),
+      attendanceCount: member._count.attendances,
+      walkCount: member._count.walksCreated,
+    })),
+  };
+}
 
 export async function deleteMember(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const admin = await requireAdmin();

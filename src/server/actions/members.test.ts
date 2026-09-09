@@ -4,7 +4,7 @@ import type { RateLimitResult } from "@/lib/rate-limit";
 const { revalidatePath, requireAdmin, checkRateLimit, deleteUser, prismaMock, transaction } =
   vi.hoisted(() => {
     const prismaMock: Record<string, Record<string, ReturnType<typeof vi.fn>>> = {
-      user: { findUnique: vi.fn(), count: vi.fn(), update: vi.fn(), delete: vi.fn() },
+      user: { findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn(), update: vi.fn(), delete: vi.fn() },
       walk: { updateMany: vi.fn() },
       accidentReport: { updateMany: vi.fn() },
       walkJourneyEvent: { updateMany: vi.fn() },
@@ -46,7 +46,7 @@ vi.mock("@/lib/auth", async () => {
   return { ...actual, requireAdmin };
 });
 
-import { deleteMember, getMemberHistory, setMemberRole } from "./members";
+import { deleteMember, getMemberHistory, searchMembers, setMemberRole } from "./members";
 
 const ADMIN = { id: "admin-1", clerkId: "clerk-admin-1" };
 
@@ -466,5 +466,111 @@ describe("getMemberHistory", () => {
         },
       ],
     });
+  });
+});
+
+describe("searchMembers", () => {
+  function member(overrides: Partial<Record<string, unknown>> = {}) {
+    return {
+      id: "member-1",
+      firstName: "Jo",
+      lastName: "Bloggs",
+      email: "jo@example.com",
+      role: "MEMBER",
+      createdAt: new Date("2026-01-05T00:00:00Z"),
+      _count: { attendances: 2, walksCreated: 0 },
+      ...overrides,
+    };
+  }
+
+  it("requires an admin", async () => {
+    prismaMock.user.findMany.mockResolvedValueOnce([]);
+    prismaMock.user.count.mockResolvedValueOnce(0);
+    await searchMembers({});
+    expect(requireAdmin).toHaveBeenCalled();
+  });
+
+  it("paginates using LIST_PAGE_SIZE and a stable createdAt/id order, with no filter when unfiltered", async () => {
+    prismaMock.user.findMany.mockResolvedValueOnce([member()]);
+    prismaMock.user.count.mockResolvedValueOnce(1);
+
+    const result = await searchMembers({ page: 2 });
+
+    expect(prismaMock.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {},
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+        skip: 20,
+        take: 20,
+      }),
+    );
+    expect(result.total).toBe(1);
+    expect(result.rows).toEqual([
+      {
+        id: "member-1",
+        name: "Jo Bloggs",
+        email: "jo@example.com",
+        role: "MEMBER",
+        createdAt: "2026-01-05T00:00:00.000Z",
+        attendanceCount: 2,
+        walkCount: 0,
+      },
+    ]);
+  });
+
+  it("filters by role alone when there's no search text", async () => {
+    prismaMock.user.findMany.mockResolvedValueOnce([]);
+    prismaMock.user.count.mockResolvedValueOnce(0);
+
+    await searchMembers({ role: "ADMIN" });
+
+    expect(prismaMock.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { role: "ADMIN" } }),
+    );
+  });
+
+  it("matches name or email substrings, case-insensitively", async () => {
+    prismaMock.user.findMany.mockResolvedValueOnce([]);
+    prismaMock.user.count.mockResolvedValueOnce(0);
+
+    await searchMembers({ query: "jo" });
+
+    expect(prismaMock.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          AND: [
+            {
+              OR: [
+                { email: { contains: "jo", mode: "insensitive" } },
+                { firstName: { contains: "jo", mode: "insensitive" } },
+                { lastName: { contains: "jo", mode: "insensitive" } },
+              ],
+            },
+          ],
+        },
+      }),
+    );
+  });
+
+  it("also matches by role when typing a role name (3+ letters)", async () => {
+    prismaMock.user.findMany.mockResolvedValueOnce([]);
+    prismaMock.user.count.mockResolvedValueOnce(0);
+
+    await searchMembers({ query: "adm" });
+
+    const call = prismaMock.user.findMany.mock.calls[0][0];
+    expect(call.where.AND[0].OR).toEqual(
+      expect.arrayContaining([{ role: "ADMIN" }]),
+    );
+  });
+
+  it("does not apply the role-keyword shortcut for short queries", async () => {
+    prismaMock.user.findMany.mockResolvedValueOnce([]);
+    prismaMock.user.count.mockResolvedValueOnce(0);
+
+    await searchMembers({ query: "ad" });
+
+    const call = prismaMock.user.findMany.mock.calls[0][0];
+    expect(call.where.AND[0].OR).not.toEqual(expect.arrayContaining([{ role: "ADMIN" }]));
   });
 });

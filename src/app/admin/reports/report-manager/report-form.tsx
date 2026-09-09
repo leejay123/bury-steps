@@ -113,7 +113,7 @@ function InvolvedMembersField({
       ) : attendees.length === 0 ? (
         <p className="text-xs text-muted-foreground">No one clocked in on this walk yet.</p>
       ) : (
-        <div className="flex flex-col gap-1.5">
+        <div className="flex max-h-48 flex-col gap-1.5 overflow-y-auto overscroll-y-contain rounded-md border p-2">
           {attendees.map((member) => (
             <label
               className="flex cursor-pointer items-center gap-2 text-sm"

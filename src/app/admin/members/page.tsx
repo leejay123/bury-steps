@@ -1,26 +1,16 @@
-import { Prisma } from "@prisma/client";
 import { Users } from "lucide-react";
 import { prisma } from "@/lib/db";
-import { displayName, requireAdmin } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { formatDateTime } from "@/lib/dates";
+import { searchMembers, type MemberRoleFilter } from "@/server/actions";
 import { MembersTable } from "./members-table";
 import { AdminPageIntro } from "../admin-page-intro";
 import { EmptyState } from "@/components/empty-state";
 import { DataList, DataListBody, DataListItem } from "@/components/data-list";
 
-type RoleFilter = "all" | "ADMIN" | "MEMBER";
-
-/** Cap for client-side search — enough for a small group without putting PII in ?q=. */
-const MEMBERS_FETCH_LIMIT = 500;
-
-function parseRoleFilter(raw: string | undefined): RoleFilter {
+function parseRoleFilter(raw: string | undefined): MemberRoleFilter {
   if (raw === "ADMIN" || raw === "MEMBER") return raw;
   return "all";
-}
-
-function buildWhere(role: RoleFilter): Prisma.UserWhereInput | undefined {
-  if (role === "all") return undefined;
-  return { role };
 }
 
 export const dynamic = "force-dynamic";
@@ -28,23 +18,18 @@ export const dynamic = "force-dynamic";
 export default async function MembersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; role?: string }>;
+  searchParams: Promise<{ role?: string }>;
 }) {
   const admin = await requireAdmin();
   const params = await searchParams;
   const role = parseRoleFilter(params.role);
-  const where = buildWhere(role);
 
-  const [totalMembers, members, impersonations] = await Promise.all([
+  // Only the first page loads here — search and later pages are fetched
+  // live from searchMembers, so this stays fast and correct no matter how
+  // many members the group has.
+  const [{ rows, total }, totalMembers, impersonations] = await Promise.all([
+    searchMembers({ role }),
     prisma.user.count(),
-    prisma.user.findMany({
-      where,
-      orderBy: { createdAt: "asc" },
-      take: MEMBERS_FETCH_LIMIT,
-      include: {
-        _count: { select: { attendances: true, walksCreated: true } },
-      },
-    }),
     prisma.impersonationEvent.findMany({
       orderBy: { createdAt: "desc" },
       take: 20,
@@ -66,18 +51,10 @@ export default async function MembersPage({
         />
       ) : (
         <MembersTable
-          members={members.map((member) => ({
-            id: member.id,
-            name: displayName(member),
-            email: member.email,
-            role: member.role,
-            createdAt: member.createdAt.toISOString(),
-            attendanceCount: member._count.attendances,
-            walkCount: member._count.walksCreated,
-            isYou: member.id === admin.id,
-          }))}
+          initialRows={rows.map((member) => ({ ...member, isYou: member.id === admin.id }))}
+          initialTotal={total}
           roleFilter={role}
-          totalMembers={totalMembers}
+          viewerId={admin.id}
         />
       )}
 

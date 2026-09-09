@@ -31,7 +31,10 @@ export {
   deleteMember,
   setMemberRole,
   getMemberHistory,
+  searchMembers,
   type MemberHistoryItem,
+  type MemberRow,
+  type MemberRoleFilter,
 } from "./actions/members";
 
 export {
