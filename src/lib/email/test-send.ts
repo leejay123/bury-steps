@@ -15,6 +15,7 @@ import { WalkCancelledEmail } from "./templates/walk-cancelled";
 import { WalkReopenedEmail } from "./templates/walk-reopened";
 import { AddedToWalkEmail } from "./templates/added-to-walk";
 import { NoticePostedEmail } from "./templates/notice-posted";
+import { ProgressSummaryEmail } from "./templates/progress-summary";
 import { AccidentReportAlertEmail } from "./templates/accident-report-alert";
 import type { ReactElement } from "react";
 
@@ -259,6 +260,28 @@ export async function sendTestEmail(key: EmailTemplateKey, admin: TestRecipient)
           title: noticeTitle,
           noticeBody: "The usual car park is closed for resurfacing — park on the verge by the gate instead.",
           noticeUrl: `${brand.siteUrl}/notices`,
+          preferencesUrl,
+          bodyParagraphs: copy.bodyParagraphs,
+        }),
+      );
+      return;
+    }
+    case "progressSummary": {
+      const monthLabel = "August";
+      const copy = await resolveEmailCopy("progressSummary", {
+        firstName,
+        siteName: brand.siteName,
+        monthLabel,
+      });
+      await send(
+        copy.subject,
+        ProgressSummaryEmail({
+          ...brand,
+          monthLabel,
+          monthCount: 4,
+          streakWeeks: 3,
+          yearCount: 22,
+          together: { goal: 30, count: 18 },
           preferencesUrl,
           bodyParagraphs: copy.bodyParagraphs,
         }),

@@ -25,7 +25,7 @@ const REQUIRED: EnvCheck[] = [
 const RECOMMENDED: EnvCheck[] = [
   {
     name: "CRON_SECRET",
-    hint: "Without it the nightly health-note purge cron is unauthenticated and never runs.",
+    hint: "Without it, the nightly health-note purge and the monthly progress email are both unauthenticated and never run.",
   },
   {
     name: "INITIAL_ADMIN_EMAIL",

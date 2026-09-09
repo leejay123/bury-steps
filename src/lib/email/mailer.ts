@@ -14,6 +14,7 @@ import { WalkCancelledEmail } from "./templates/walk-cancelled";
 import { WalkReopenedEmail } from "./templates/walk-reopened";
 import { AddedToWalkEmail } from "./templates/added-to-walk";
 import { NoticePostedEmail } from "./templates/notice-posted";
+import { ProgressSummaryEmail } from "./templates/progress-summary";
 import { AccidentReportAlertEmail } from "./templates/accident-report-alert";
 
 export type MemberLike = {
@@ -321,6 +322,47 @@ export async function sendNoticePostedEmail(
       preferencesUrl,
       bodyParagraphs: copy.bodyParagraphs,
     }),
+  });
+}
+
+/** Monthly progress recap — one call per opted-in member (the monthly-progress
+ * cron loops over the recipient list), same one-per-member rule as
+ * sendWalkAnnouncedEmail. Idempotency key so a cron retry (Vercel retries a
+ * failed invocation) can't send the same month's recap twice. */
+export async function sendProgressSummaryEmail(
+  summary: {
+    /** Human-readable, e.g. "August" — shown in the email. */
+    monthLabel: string;
+    /** Stable, e.g. "2026-08" — monthLabel alone repeats every year, so this
+     * is what actually keys the idempotency check below. */
+    monthKey: string;
+    monthCount: number;
+    streakWeeks: number;
+    yearCount: number;
+    together: { goal: number; count: number } | null;
+  },
+  member: MemberLike,
+): Promise<void> {
+  const [brand, preferencesUrl] = await Promise.all([getEmailBrand(), memberPreferences(member)]);
+  const copy = await resolveEmailCopy("progressSummary", {
+    firstName: greetingName(member.firstName),
+    siteName: brand.siteName,
+    monthLabel: summary.monthLabel,
+  });
+  await sendEmail({
+    to: member.email,
+    subject: copy.subject,
+    react: ProgressSummaryEmail({
+      ...brand,
+      monthLabel: summary.monthLabel,
+      monthCount: summary.monthCount,
+      streakWeeks: summary.streakWeeks,
+      yearCount: summary.yearCount,
+      together: summary.together,
+      preferencesUrl,
+      bodyParagraphs: copy.bodyParagraphs,
+    }),
+    idempotencyKey: `progress-summary/${member.id}/${summary.monthKey}`,
   });
 }
 

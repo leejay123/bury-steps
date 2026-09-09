@@ -24,6 +24,7 @@ export type EmailTemplateKey =
   | "walkReopened"
   | "addedToWalk"
   | "noticePosted"
+  | "progressSummary"
   | "accidentReportAlert";
 
 /** An admin's saved subject/body for one template — both null means "no row, use the default". */
@@ -35,7 +36,7 @@ export type EmailTemplateMeta = {
   /** One line: when this email goes out. */
   trigger: string;
   /** Section heading the admin UI groups this under. */
-  category: "Member lifecycle" | "Walks" | "Notices" | "Contact & newsletter" | "Organiser alerts";
+  category: "Member lifecycle" | "Walks" | "Notices" | "Progress" | "Contact & newsletter" | "Organiser alerts";
   /** `{token}` names usable in this email's subject/body, with a plain-English description. */
   placeholders: { token: string; description: string }[];
   defaultSubject: string;
@@ -211,6 +212,19 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
     ],
     defaultSubject: "New notice: {noticeTitle}",
     defaultBody: "Hi {firstName}, an organiser has posted a new notice.",
+  },
+  {
+    key: "progressSummary",
+    label: "Monthly progress summary",
+    trigger: "Sent on the 1st of each month to every member opted into progress emails, summarising the month just finished.",
+    category: "Progress",
+    placeholders: [
+      { token: "firstName", description: "Their first name (\"there\" if not set)" },
+      { token: "siteName", description: "Your site's name" },
+      { token: "monthLabel", description: "The month just finished, e.g. \"August\"" },
+    ],
+    defaultSubject: "Your {monthLabel} in walks",
+    defaultBody: "Hi {firstName}, here's how {monthLabel} went.",
   },
   {
     key: "accidentReportAlert",

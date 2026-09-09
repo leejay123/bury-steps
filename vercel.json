@@ -5,6 +5,10 @@
     {
       "path": "/api/cron/purge-conditions",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/monthly-progress",
+      "schedule": "0 6 1 * *"
     }
   ]
 }
