@@ -18,6 +18,9 @@ import {
 } from "@/lib/notices";
 import { NOTICES_CACHE_TAG, recordSiteNoticeRead } from "@/lib/site-notices";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { appUrl } from "@/lib/urls";
+import { sendNoticePostedEmail } from "@/lib/email/mailer";
+import type { MemberLike } from "@/lib/email/mailer";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
 import {
   type ActionResult,
@@ -117,6 +120,31 @@ function readNoticeCopy(
   return { title, body, kind: "BELL", pageBody: null, categoryId: null };
 }
 
+/** Best-effort fan-out to every member opted into notices — one email
+ * each, never a single email with everyone in `to:`. Same pattern as
+ * notifyMembersOfNewWalk in src/server/actions/walks.ts. */
+async function notifyMembersOfNewNotice(notice: {
+  title: string;
+  body: string;
+  noticeUrl: string;
+}): Promise<void> {
+  try {
+    const members: MemberLike[] = await prisma.user.findMany({
+      where: { emailNotices: true },
+      select: { id: true, email: true, firstName: true, unsubscribeToken: true },
+    });
+    await Promise.all(
+      members.map((member) =>
+        sendNoticePostedEmail(notice, member).catch((err) => {
+          console.error("notifyMembersOfNewNotice: failed to notify", member.id, err);
+        }),
+      ),
+    );
+  } catch (err) {
+    console.error("notifyMembersOfNewNotice: failed to load recipients", err);
+  }
+}
+
 export async function addSiteNotice(
   _prev: ActionResult | null,
   formData: FormData,
@@ -152,6 +180,12 @@ export async function addSiteNotice(
       });
     });
     revalidateNotices(createdSlug ? [`/notices/${createdSlug}`] : []);
+
+    await notifyMembersOfNewNotice({
+      title: copy.title,
+      body: copy.body,
+      noticeUrl: createdSlug ? `${appUrl()}/notices/${createdSlug}` : `${appUrl()}/notices`,
+    });
   } catch (err) {
     if (err instanceof Error && err.message === "CATEGORY_MISSING") {
       return { ok: false, error: "That category is no longer there." };

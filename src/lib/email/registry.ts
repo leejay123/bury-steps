@@ -23,6 +23,7 @@ export type EmailTemplateKey =
   | "walkCancelled"
   | "walkReopened"
   | "addedToWalk"
+  | "noticePosted"
   | "accidentReportAlert";
 
 /** An admin's saved subject/body for one template — both null means "no row, use the default". */
@@ -34,7 +35,7 @@ export type EmailTemplateMeta = {
   /** One line: when this email goes out. */
   trigger: string;
   /** Section heading the admin UI groups this under. */
-  category: "Member lifecycle" | "Walks" | "Contact & newsletter" | "Organiser alerts";
+  category: "Member lifecycle" | "Walks" | "Notices" | "Contact & newsletter" | "Organiser alerts";
   /** `{token}` names usable in this email's subject/body, with a plain-English description. */
   placeholders: { token: string; description: string }[];
   defaultSubject: string;
@@ -197,6 +198,19 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
     ],
     defaultSubject: "You've been added to {walkTitle}",
     defaultBody: "Hi {firstName}, an organiser has added you as attending {walkTitle}.",
+  },
+  {
+    key: "noticePosted",
+    label: "New notice posted",
+    trigger: "Sent to every member opted into notices when an organiser posts a new one.",
+    category: "Notices",
+    placeholders: [
+      { token: "firstName", description: "Their first name (\"there\" if not set)" },
+      { token: "siteName", description: "Your site's name" },
+      { token: "noticeTitle", description: "The notice's title" },
+    ],
+    defaultSubject: "New notice: {noticeTitle}",
+    defaultBody: "Hi {firstName}, an organiser has posted a new notice.",
   },
   {
     key: "accidentReportAlert",

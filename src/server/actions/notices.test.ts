@@ -1,8 +1,16 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { RateLimitResult } from "@/lib/rate-limit";
 
-const { revalidatePath, requireAdmin, requireUser, checkRateLimit, recordSiteNoticeRead, prismaMock, transaction } =
-  vi.hoisted(() => {
+const {
+  revalidatePath,
+  requireAdmin,
+  requireUser,
+  checkRateLimit,
+  recordSiteNoticeRead,
+  sendNoticePostedEmail,
+  prismaMock,
+  transaction,
+} = vi.hoisted(() => {
     const prismaMock: Record<string, Record<string, ReturnType<typeof vi.fn>>> = {
       siteNotice: {
         create: vi.fn(),
@@ -22,6 +30,7 @@ const { revalidatePath, requireAdmin, requireUser, checkRateLimit, recordSiteNot
         findMany: vi.fn(),
         findFirst: vi.fn(),
       },
+      user: { findMany: vi.fn(async (): Promise<unknown[]> => []) },
     };
     const transaction = vi.fn(async (arg: unknown) => {
       if (Array.isArray(arg)) return Promise.all(arg);
@@ -33,6 +42,7 @@ const { revalidatePath, requireAdmin, requireUser, checkRateLimit, recordSiteNot
       requireUser: vi.fn(),
       checkRateLimit: vi.fn((): RateLimitResult => ({ ok: true })),
       recordSiteNoticeRead: vi.fn(),
+      sendNoticePostedEmail: vi.fn(async () => {}),
       prismaMock,
       transaction,
     };
@@ -45,6 +55,11 @@ vi.mock("next/cache", () => ({
 }));
 vi.mock("@/lib/db", () => ({ prisma: { ...prismaMock, $transaction: transaction } }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
+vi.mock("@/lib/urls", () => ({ appUrl: () => "https://example.test" }));
+// Real notice-posted emails pull in site-theme.ts (next/cache's unstable_cache,
+// not mocked above) and hit the network — out of scope for these tests,
+// which only care that addSiteNotice calls the right mailer function.
+vi.mock("@/lib/email/mailer", () => ({ sendNoticePostedEmail }));
 vi.mock("@/lib/site-notices", async () => {
   const actual = await vi.importActual<typeof import("@/lib/site-notices")>("@/lib/site-notices");
   return { ...actual, recordSiteNoticeRead };
@@ -105,6 +120,46 @@ describe("addSiteNotice", () => {
       ok: true,
       message: "Notice added. Members will see it in the bell.",
     });
+  });
+
+  it("emails every member opted into notices, linking to /notices for a bell notice", async () => {
+    prismaMock.siteNotice.create.mockResolvedValueOnce({});
+    prismaMock.user.findMany.mockResolvedValueOnce([
+      { id: "user-1", email: "jane@example.com", firstName: "Jane", unsubscribeToken: null },
+    ]);
+
+    await addSiteNotice(null, bellForm());
+
+    expect(prismaMock.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { emailNotices: true } }),
+    );
+    expect(sendNoticePostedEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Path closed",
+        body: "The riverside path is closed this week.",
+        noticeUrl: "https://example.test/notices",
+      }),
+      expect.objectContaining({ id: "user-1" }),
+    );
+  });
+
+  it("links to the notice's own page for a full-page notice", async () => {
+    prismaMock.siteNoticeCategory.findUnique.mockResolvedValueOnce({ id: "cat-1" });
+    prismaMock.siteNotice.findFirst.mockResolvedValueOnce(null);
+    prismaMock.siteNotice.create.mockResolvedValueOnce({});
+    prismaMock.user.findMany.mockResolvedValueOnce([
+      { id: "user-1", email: "jane@example.com", firstName: "Jane", unsubscribeToken: null },
+    ]);
+
+    await addSiteNotice(
+      null,
+      bellForm({ kind: "PAGE", categoryId: "cat-1", pageBody: "Full text here." }),
+    );
+
+    expect(sendNoticePostedEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ noticeUrl: expect.stringContaining("https://example.test/notices/") }),
+      expect.objectContaining({ id: "user-1" }),
+    );
   });
 
   it("rejects a full-page notice pointing at a category that doesn't exist", async () => {

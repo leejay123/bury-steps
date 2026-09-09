@@ -14,6 +14,7 @@ import { WalkAnnouncedEmail } from "./templates/walk-announced";
 import { WalkCancelledEmail } from "./templates/walk-cancelled";
 import { WalkReopenedEmail } from "./templates/walk-reopened";
 import { AddedToWalkEmail } from "./templates/added-to-walk";
+import { NoticePostedEmail } from "./templates/notice-posted";
 import { AccidentReportAlertEmail } from "./templates/accident-report-alert";
 import type { ReactElement } from "react";
 
@@ -238,6 +239,26 @@ export async function sendTestEmail(key: EmailTemplateKey, admin: TestRecipient)
           whenText: SAMPLE_WALK.whenText,
           meetingPoint: SAMPLE_WALK.meetingPoint,
           shareUrl: `${brand.siteUrl}/w/sample`,
+          preferencesUrl,
+          bodyParagraphs: copy.bodyParagraphs,
+        }),
+      );
+      return;
+    }
+    case "noticePosted": {
+      const noticeTitle = "Car park closed this Sunday";
+      const copy = await resolveEmailCopy("noticePosted", {
+        firstName,
+        siteName: brand.siteName,
+        noticeTitle,
+      });
+      await send(
+        copy.subject,
+        NoticePostedEmail({
+          ...brand,
+          title: noticeTitle,
+          noticeBody: "The usual car park is closed for resurfacing — park on the verge by the gate instead.",
+          noticeUrl: `${brand.siteUrl}/notices`,
           preferencesUrl,
           bodyParagraphs: copy.bodyParagraphs,
         }),

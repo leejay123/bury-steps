@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 const CATEGORY_ORDER: EmailTemplateMeta["category"][] = [
   "Member lifecycle",
   "Walks",
+  "Notices",
   "Contact & newsletter",
   "Organiser alerts",
 ];

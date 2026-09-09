@@ -52,6 +52,7 @@ export default async function Home() {
         howThisStartedEyebrow={theme.howThisStartedEyebrow}
         howThisStartedTeaser={theme.howThisStartedTeaser}
         howThisStartedTitle={theme.howThisStartedTitle}
+        isSignedIn={user !== null}
         memberNotices={memberNotices}
         testimonials={testimonials}
         testimonialsSectionEyebrow={theme.testimonialsSectionEyebrow}

@@ -1,6 +1,7 @@
 import { Fragment, type ReactNode } from "react";
 import { HomeAboutDrawer } from "@/components/home-about-drawer";
 import { FeatureSection } from "@/components/feature-section";
+import { MemberFeatureSection } from "@/components/member-feature-section";
 import { HeroCopy } from "@/components/hero-copy";
 import { TestimonialsSection } from "@/components/testimonials-section";
 import { FaqsSection } from "@/components/faqs-section";
@@ -53,6 +54,7 @@ export function HomeWelcome({
   howThisStartedEyebrow,
   howThisStartedTeaser,
   howThisStartedTitle,
+  isSignedIn,
   memberNotices,
   testimonials,
   testimonialsSectionEyebrow,
@@ -77,6 +79,10 @@ export function HomeWelcome({
   howThisStartedEyebrow: string;
   howThisStartedTeaser: string;
   howThisStartedTitle: string;
+  /** Swaps the "how this group works" explainer for a bento grid of what a
+   * member can already do — the sign-up/clock-in walkthrough stops being
+   * useful once someone's actually joined. */
+  isSignedIn: boolean;
   memberNotices: HomepageNoticeSlide[];
   testimonials: TestimonialView[];
   testimonialsSectionEyebrow: string;
@@ -84,7 +90,7 @@ export function HomeWelcome({
   testimonialsSectionTitle: string;
 }) {
   const sections: Record<HomepageSectionId, ReactNode | null> = {
-    howWalksWork: <FeatureSection />,
+    howWalksWork: isSignedIn ? <MemberFeatureSection /> : <FeatureSection />,
     howThisStarted: (
       <section>
         <HeroCopy

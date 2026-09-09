@@ -13,6 +13,7 @@ import { WalkAnnouncedEmail } from "./templates/walk-announced";
 import { WalkCancelledEmail } from "./templates/walk-cancelled";
 import { WalkReopenedEmail } from "./templates/walk-reopened";
 import { AddedToWalkEmail } from "./templates/added-to-walk";
+import { NoticePostedEmail } from "./templates/notice-posted";
 import { AccidentReportAlertEmail } from "./templates/accident-report-alert";
 
 export type MemberLike = {
@@ -291,6 +292,32 @@ export async function sendAddedToWalkEmail(
       whenText: walk.whenText,
       meetingPoint: walk.meetingPoint,
       shareUrl: walk.shareUrl,
+      preferencesUrl,
+      bodyParagraphs: copy.bodyParagraphs,
+    }),
+  });
+}
+
+/** New notice posted — one call per opted-in member (src/server/actions/notices.ts
+ * loops over the recipient list), same one-per-member rule as sendWalkAnnouncedEmail. */
+export async function sendNoticePostedEmail(
+  notice: { title: string; body: string; noticeUrl: string },
+  member: MemberLike,
+): Promise<void> {
+  const [brand, preferencesUrl] = await Promise.all([getEmailBrand(), memberPreferences(member)]);
+  const copy = await resolveEmailCopy("noticePosted", {
+    firstName: greetingName(member.firstName),
+    siteName: brand.siteName,
+    noticeTitle: notice.title,
+  });
+  await sendEmail({
+    to: member.email,
+    subject: copy.subject,
+    react: NoticePostedEmail({
+      ...brand,
+      title: notice.title,
+      noticeBody: notice.body,
+      noticeUrl: notice.noticeUrl,
       preferencesUrl,
       bodyParagraphs: copy.bodyParagraphs,
     }),
