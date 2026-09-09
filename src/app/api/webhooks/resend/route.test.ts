@@ -2,7 +2,11 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { NextRequest } from "next/server";
 
 const { prismaMock } = vi.hoisted(() => ({
-  prismaMock: { emailEvent: { create: vi.fn(async () => ({})) } },
+  prismaMock: {
+    emailEvent: { create: vi.fn(async () => ({})) },
+    newsletterSubscriber: { updateMany: vi.fn(async () => ({ count: 0 })) },
+    user: { updateMany: vi.fn(async () => ({ count: 0 })) },
+  },
 }));
 
 vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
@@ -91,5 +95,40 @@ describe("POST /api/webhooks/resend", () => {
     const res = await POST(request(body));
 
     expect(res.status).toBe(200);
+  });
+
+  // A newsletter broadcast's one-click unsubscribe link is Resend-hosted,
+  // not our own /email-preferences page — without this, someone who
+  // unsubscribes that way would still show as subscribed in our own
+  // subscriber list and on their own preferences page.
+  it("mirrors a contact.updated unsubscribe into NewsletterSubscriber and User", async () => {
+    const body = JSON.stringify({
+      type: "contact.updated",
+      data: { email: "jo@example.com", unsubscribed: true },
+    });
+
+    const res = await POST(request(body));
+
+    expect(res.status).toBe(200);
+    expect(prismaMock.newsletterSubscriber.updateMany).toHaveBeenCalledWith({
+      where: { email: "jo@example.com", unsubscribedAt: null },
+      data: { unsubscribedAt: expect.any(Date) },
+    });
+    expect(prismaMock.user.updateMany).toHaveBeenCalledWith({
+      where: { email: "jo@example.com", emailNewsletter: true },
+      data: { emailNewsletter: false },
+    });
+  });
+
+  it("ignores a contact.updated event where the contact is not unsubscribed", async () => {
+    const body = JSON.stringify({
+      type: "contact.updated",
+      data: { email: "jo@example.com", unsubscribed: false },
+    });
+
+    await POST(request(body));
+
+    expect(prismaMock.newsletterSubscriber.updateMany).not.toHaveBeenCalled();
+    expect(prismaMock.user.updateMany).not.toHaveBeenCalled();
   });
 });

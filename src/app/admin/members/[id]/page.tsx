@@ -35,9 +35,14 @@ export default async function MemberDetailPage({
       </Link>
 
       <Card>
-        <CardHeader className="flex flex-row items-start justify-between gap-3">
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 flex-col gap-1.5">
-            <CardTitle className="text-2xl">{member.name}</CardTitle>
+            <div className="flex flex-wrap items-center gap-2">
+              <CardTitle className="text-2xl">{member.name}</CardTitle>
+              <Badge variant={member.role === "ADMIN" ? "default" : "secondary"}>
+                {member.role === "ADMIN" ? "Organiser" : "Member"}
+              </Badge>
+            </div>
             <CardDescription className="flex flex-col gap-1">
               <span className="wrap-break-word">{member.email || "No email"}</span>
               <span>
@@ -45,23 +50,18 @@ export default async function MemberDetailPage({
               </span>
             </CardDescription>
           </div>
-          <div className="flex shrink-0 flex-col items-end gap-2">
-            <Badge variant={member.role === "ADMIN" ? "default" : "secondary"}>
-              {member.role === "ADMIN" ? "Organiser" : "Member"}
-            </Badge>
-            <div className="flex flex-wrap justify-end gap-2">
-              {member.role === "MEMBER" ? <ImpersonateButton name={member.name} userId={id} /> : null}
-              <MemberRoleButton name={member.name} role={member.role} userId={id} />
-              {!member.isYou ? (
-                <DeleteMemberButton
-                  attendanceCount={attendanceCount}
-                  name={member.name}
-                  redirectTo="/admin/members"
-                  userId={id}
-                  walkCount={member.walkCount}
-                />
-              ) : null}
-            </div>
+          <div className="flex flex-wrap gap-2 sm:shrink-0 sm:justify-end">
+            {member.role === "MEMBER" ? <ImpersonateButton name={member.name} userId={id} /> : null}
+            <MemberRoleButton name={member.name} role={member.role} userId={id} />
+            {!member.isYou ? (
+              <DeleteMemberButton
+                attendanceCount={attendanceCount}
+                name={member.name}
+                redirectTo="/admin/members"
+                userId={id}
+                walkCount={member.walkCount}
+              />
+            ) : null}
           </div>
         </CardHeader>
       </Card>
