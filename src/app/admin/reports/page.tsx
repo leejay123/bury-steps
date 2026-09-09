@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { memberDisplayName, requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { walkStatus } from "@/lib/walk-window";
 import { AdminPageIntro } from "../admin-page-intro";
 import { AccidentReportManager } from "./report-manager";
 
@@ -54,9 +55,13 @@ export default async function AccidentReportsPage({
     prisma.walk.findMany({
       orderBy: { startsAt: "desc" },
       take: 200,
-      select: { id: true, title: true, startsAt: true },
+      select: { id: true, title: true, startsAt: true, durationMins: true, cancelledAt: true },
     }),
   ]);
+
+  // An accident report is about something that happened on a walk — a walk
+  // that hasn't started yet (or was cancelled) can't be linked to one.
+  const completedWalks = walks.filter((walk) => walkStatus(walk) === "completed");
 
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
@@ -83,7 +88,7 @@ export default async function AccidentReportsPage({
           organiserNotes: report.organiserNotes,
         }))}
         sortOrder={sort}
-        walks={walks.map((walk) => ({
+        walks={completedWalks.map((walk) => ({
           id: walk.id,
           title: walk.title,
           startsAt: walk.startsAt.toISOString(),

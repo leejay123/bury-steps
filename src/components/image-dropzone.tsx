@@ -38,7 +38,11 @@ export function ImageDropzone({
   onDirtyChange,
   required,
 }: {
-  aspect?: "video" | "square";
+  /** "banner" is a wide, thin strip (a printed report's letterhead) shown
+   * with object-contain so the whole image is always visible — "video"/
+   * "square" crop with object-cover, which suits a photo but cuts off a
+   * banner shaped nothing like their fixed box. */
+  aspect?: "video" | "square" | "banner";
   clearable?: boolean;
   disabled?: boolean;
   existingAlt?: string;
@@ -116,7 +120,9 @@ export function ImageDropzone({
 
   const preview = previewUrl ?? (removed ? null : existingSrc);
   const showRemove = Boolean(preview) && !disabled && Boolean(file || clearable);
-  const aspectClass = aspect === "square" ? "aspect-square w-full" : "aspect-video w-full";
+  const aspectClass =
+    aspect === "square" ? "aspect-square w-full" : aspect === "banner" ? "aspect-[6/1] w-full" : "aspect-video w-full";
+  const objectFitClass = aspect === "banner" ? "object-contain" : "object-cover object-center";
 
   return (
     <div className="flex w-full flex-col gap-2">
@@ -165,7 +171,7 @@ export function ImageDropzone({
           >
             <Image
               alt={existingAlt || "Selected photo"}
-              className="object-cover object-center"
+              className={objectFitClass}
               fill
               sizes="(min-width: 640px) 33vw, 100vw"
               // Local previews are blob: URLs the image optimizer can't fetch,

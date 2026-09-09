@@ -4,10 +4,36 @@ import {
   HOMEPAGE_NOTICE_CAROUSEL_BODY,
   noticeBodyForBellDrawer,
   noticeBodyForHomepageCarousel,
+  noticeDateLabel,
   noticesForHomepageCarousel,
   noticeUnreadBadgeLabel,
   type NoticeView,
 } from "./notices";
+
+describe("noticeDateLabel", () => {
+  it("shows only Posted for a never-edited notice", () => {
+    const date = new Date("2026-01-05T10:00:00Z");
+    expect(noticeDateLabel({ createdAt: date, updatedAt: date })).toBe("Posted 5 Jan 2026");
+  });
+
+  it("shows both Posted and Updated once a notice has actually been edited", () => {
+    expect(
+      noticeDateLabel({
+        createdAt: new Date("2026-01-05T10:00:00Z"),
+        updatedAt: new Date("2026-02-10T10:00:00Z"),
+      }),
+    ).toBe("Posted 5 Jan 2026 · Updated 10 Feb 2026");
+  });
+
+  it("treats same-day edits as not-updated (formatDate has day precision, not a timestamp)", () => {
+    expect(
+      noticeDateLabel({
+        createdAt: new Date("2026-01-05T09:00:00Z"),
+        updatedAt: new Date("2026-01-05T15:00:00Z"),
+      }),
+    ).toBe("Posted 5 Jan 2026");
+  });
+});
 
 function notice(partial: Partial<NoticeView> & Pick<NoticeView, "body" | "kind">): NoticeView {
   return {

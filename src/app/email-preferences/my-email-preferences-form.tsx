@@ -39,6 +39,13 @@ export function MyEmailPreferencesForm(prefs: EmailPreferences & { isAdmin: bool
               className="mt-0.5"
               defaultChecked={prefs[option.name]}
               id={option.name}
+              // Forces a remount when the saved value actually changes —
+              // without this, the box stayed uncontrolled after a
+              // successful save (router.refresh() passes a new
+              // defaultChecked to the same mounted element, which React
+              // never re-applies), so it kept showing whatever it looked
+              // like right before Save until a full page reload.
+              key={`${option.name}:${prefs[option.name]}`}
               name={option.name}
             />
             <Label className="flex flex-col items-start gap-0.5 font-normal" htmlFor={option.name}>

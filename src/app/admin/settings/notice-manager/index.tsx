@@ -2,8 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Bell, ChevronRight } from "lucide-react";
-import { BELL_NOTICE_LIMIT, isPinnedNotice, isWelcomeNotice, type NoticeCategoryView, type NoticeView } from "@/lib/notices";
-import { formatDate } from "@/lib/dates";
+import { BELL_NOTICE_LIMIT, isPinnedNotice, isWelcomeNotice, noticeDateLabel, type NoticeCategoryView, type NoticeView } from "@/lib/notices";
 import { usePagedList } from "@/hooks/use-paged-list";
 import { EmptyState } from "@/components/empty-state";
 import { DataList, DataListActions, DataListBody, DataListItem, DataListItemMain, dataListActionsStackClassName, dataListItemStackClassName } from "@/components/data-list";
@@ -117,7 +116,7 @@ export function SiteNoticeManager({
                         {notice.body}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Updated {formatDate(notice.updatedAt)}
+                        {noticeDateLabel(notice)}
                         {notice.kind === "PAGE" && notice.slug ? ` · /notices/${notice.slug}` : ""}
                       </p>
                     </DataListBody>

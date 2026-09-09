@@ -6,9 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Bell, CheckCheck, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { markSiteNoticeRead, markSiteNoticesRead } from "@/server/actions";
-import { formatDate } from "@/lib/dates";
-import type { NoticeView } from "@/lib/notices";
-import { noticeBodyForBellDrawer, noticeUnreadBadgeLabel } from "@/lib/notices";
+import { noticeBodyForBellDrawer, noticeDateLabel, noticeUnreadBadgeLabel, type NoticeView } from "@/lib/notices";
 import {
   OPEN_MEMBER_NOTICE_BELL_EVENT,
   type OpenMemberNoticeBellDetail,
@@ -180,7 +178,7 @@ export function NotificationBell({
                     <p className="font-medium text-sm">{notice.title}</p>
                   </div>
                   <p className="text-muted-foreground text-xs">
-                    Updated {formatDate(notice.updatedAt)}
+                    {noticeDateLabel(notice)}
                   </p>
                   <p className="whitespace-pre-wrap text-muted-foreground text-sm leading-relaxed">
                     {noticeBodyForBellDrawer(notice)}

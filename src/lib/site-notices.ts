@@ -232,6 +232,7 @@ export async function getHomepageMemberNotices(
     id: string;
     title: string;
     body: string;
+    createdAt: string;
     updatedAt: string;
     kind: "BELL" | "PAGE";
     slug: string | null;
@@ -247,6 +248,7 @@ export async function getHomepageMemberNotices(
       id: notice.id,
       title: notice.title,
       body: noticeBodyForHomepageCarousel(notice),
+      createdAt: notice.createdAt.toISOString(),
       updatedAt: notice.updatedAt.toISOString(),
       kind: notice.kind,
       slug: notice.slug,

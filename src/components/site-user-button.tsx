@@ -1,7 +1,7 @@
 "use client";
 
 import { UserButton } from "@clerk/nextjs";
-import { Bell, FileText, History, LineChart, Mail, Shield } from "lucide-react";
+import { Bell, History, LineChart, Mail } from "lucide-react";
 
 /**
  * Shortcuts into the same avatar menu Clerk already renders ("Manage
@@ -27,12 +27,6 @@ export function SiteUserButton() {
           labelIcon={<Bell className="size-4" />}
         />
         <UserButton.Link href="/contact" label="Contact us" labelIcon={<Mail className="size-4" />} />
-        <UserButton.Link href="/privacy-policy" label="Privacy policy" labelIcon={<Shield className="size-4" />} />
-        <UserButton.Link
-          href="/terms-of-service"
-          label="Terms of service"
-          labelIcon={<FileText className="size-4" />}
-        />
       </UserButton.MenuItems>
     </UserButton>
   );

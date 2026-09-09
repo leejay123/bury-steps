@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
-import { formatDate } from "@/lib/dates";
+import { noticeDateLabel } from "@/lib/notices";
 import { getPageNoticeBySlug } from "@/lib/site-notices";
 import { Badge } from "@/components/ui/badge";
 import { MarkNoticeReadOnView } from "./mark-notice-read-on-view";
@@ -44,7 +44,7 @@ export default async function NoticeDetailPage({
         <div className="flex flex-wrap items-center gap-2">
           {notice.categoryLabel ? <Badge variant="secondary">{notice.categoryLabel}</Badge> : null}
           <time className="text-sm text-muted-foreground" dateTime={notice.updatedAt.toISOString()}>
-            Updated {formatDate(notice.updatedAt)}
+            {noticeDateLabel(notice)}
           </time>
         </div>
         <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{notice.title}</h1>

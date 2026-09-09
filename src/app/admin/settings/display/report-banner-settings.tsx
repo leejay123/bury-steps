@@ -32,19 +32,19 @@ export function ReportBannerSettings({ reportBannerSrc }: { reportBannerSrc: str
 
   return (
     <SettingsSection
-      description="A wide letterhead-style image shown across the foot of every printed accident report. Separate from the site logo — leave it unset to print with no banner. JPEG, PNG or WebP, under 4 MB."
+      description="A wide letterhead-style image shown across the foot of every printed accident report. Separate from the site logo — leave it unset to print with no banner. Recommended around 1500×250px (roughly 6:1) so it prints full-width without being cropped."
       title="Report banner"
     >
       <form action={action} className="flex w-full flex-col gap-4" ref={formRef}>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="report-banner-image">Banner</Label>
-          <div className="max-w-xs">
+          <div className="max-w-sm">
             <ImageDropzone
-              aspect="video"
+              aspect="banner"
               clearable={Boolean(reportBannerSrc)}
               existingAlt="Current report banner"
               existingSrc={reportBannerSrc ?? undefined}
-              hint="JPEG, PNG or WebP, under 4 MB. Wide banner shape works best."
+              hint="JPEG, PNG or WebP, under 4 MB. Wide and thin — around 1500×250px (roughly 6:1) prints best."
               id="report-banner-image"
               key={reportBannerSrc}
               onDirtyChange={setDirty}

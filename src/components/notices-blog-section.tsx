@@ -4,8 +4,7 @@ import { useDeferredValue, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Search, SearchX } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatDate } from "@/lib/dates";
-import type { NoticeCategoryView, NoticeView } from "@/lib/notices";
+import { noticeDateLabel, type NoticeCategoryView, type NoticeView } from "@/lib/notices";
 import { usePagedList } from "@/hooks/use-paged-list";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
@@ -145,7 +144,7 @@ export function NoticesBlogSection({
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Updated {formatDate(notice.updatedAt)}
+                    {noticeDateLabel(notice)}
                   </p>
                   <p className="line-clamp-3 text-sm text-muted-foreground">{notice.body}</p>
                 </Link>

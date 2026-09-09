@@ -42,6 +42,8 @@ export function EmailPreferencesForm({
               className="mt-0.5"
               defaultChecked={prefs[option.name]}
               id={option.name}
+              // See my-email-preferences-form.tsx for why this key is here.
+              key={`${option.name}:${prefs[option.name]}`}
               name={option.name}
             />
             <Label className="flex flex-col items-start gap-0.5 font-normal" htmlFor={option.name}>

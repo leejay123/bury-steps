@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/carousel";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { HeroCopy } from "@/components/hero-copy";
-import { formatDate } from "@/lib/dates";
+import { noticeDateLabel } from "@/lib/notices";
 import { openMemberNoticeBell } from "@/lib/member-notices-bridge";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,7 @@ export type HomepageNoticeSlide = {
   id: string;
   title: string;
   body: string;
+  createdAt: string;
   updatedAt: string;
   kind: "BELL" | "PAGE";
   slug: string | null;
@@ -39,7 +40,7 @@ function NoticeCarouselCard({ notice }: { notice: HomepageNoticeSlide }) {
           {notice.title}
         </h3>
         <time className="text-xs text-muted-foreground" dateTime={notice.updatedAt}>
-          Updated {formatDate(notice.updatedAt)}
+          {noticeDateLabel(notice)}
         </time>
       </div>
       <p className="line-clamp-2 min-h-10 text-sm leading-relaxed text-muted-foreground">

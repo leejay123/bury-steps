@@ -1,3 +1,5 @@
+import { formatDate, type DateInput } from "./dates";
+
 export const MAX_NOTICE_CATEGORIES = 8;
 export const MAX_NOTICE_CATEGORY_LABEL = 32;
 export const MAX_NOTICE_TITLE = 80;
@@ -43,6 +45,18 @@ export type NoticeView = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+/**
+ * "Posted {date}" always, plus "Updated {date}" only once a notice has
+ * actually been edited after it was created — every notice used to show
+ * "Updated {date}" using updatedAt alone, which is misleading for a
+ * brand-new, never-edited notice (updatedAt equals createdAt at creation).
+ */
+export function noticeDateLabel(notice: { createdAt: DateInput; updatedAt: DateInput }): string {
+  const created = formatDate(notice.createdAt);
+  const updated = formatDate(notice.updatedAt);
+  return created === updated ? `Posted ${created}` : `Posted ${created} · Updated ${updated}`;
+}
 
 export function isPinnedNotice(notice: Pick<NoticeView, "systemKey">): boolean {
   return Boolean(notice.systemKey);
