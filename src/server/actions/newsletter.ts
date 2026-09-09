@@ -77,9 +77,10 @@ export async function subscribeToNewsletter(
  * Broadcast. Re-syncs every subscriber into the Resend audience first —
  * best-effort and idempotent — so anyone who subscribed before this
  * feature existed, or whose earlier sync attempt failed, is still covered.
- * Sequential, not parallel: this only runs when an admin deliberately
- * clicks Send, and staying under Resend's per-second rate limit matters
- * more than shaving a few seconds off a list this size.
+ * Run in parallel: a walking group's list is realistically dozens of
+ * people at most, well under Resend's rate limit even all at once, and
+ * doing them one-by-one made sending to even a handful of people feel
+ * slow for no real benefit.
  */
 export async function sendNewsletterCampaign(
   _prev: ActionResult | null,
@@ -124,9 +125,9 @@ export async function sendNewsletterCampaign(
     for (const member of newsletterMembers) {
       uniqueByEmail.set(member.email.toLowerCase(), member.firstName);
     }
-    for (const [email, firstName] of uniqueByEmail) {
-      await syncContactSubscribed(email, firstName);
-    }
+    await Promise.all(
+      [...uniqueByEmail].map(([email, firstName]) => syncContactSubscribed(email, firstName)),
+    );
 
     const brand = await getEmailBrand();
     const { error } = await resend.broadcasts.create({

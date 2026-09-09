@@ -11,15 +11,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { SettingsSection } from "../settings-page";
 
 function SendButton({ recipientCount }: { recipientCount: number }) {
@@ -50,59 +49,64 @@ export function SendNewsletterForm({ recipientCount }: { recipientCount: number 
       description="Sends one email, right now, to everyone currently opted into the newsletter — both footer signups and members. There's no draft or schedule; double-check the wording before sending."
       title="Send a newsletter"
     >
-      <AlertDialog closeDisabled={isPending} onOpenChange={preventDismissWhilePending(isPending, setOpen)} open={open}>
-        <AlertDialogTrigger asChild>
+      <Drawer
+        closeDisabled={isPending}
+        onOpenChange={preventDismissWhilePending(isPending, setOpen)}
+        open={open}
+        variant="form"
+      >
+        <DrawerTrigger asChild>
           <Button disabled={recipientCount === 0} type="button">
             <Send data-icon="inline-start" />
             Send a newsletter
           </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent closeDisabled={isPending}>
-          <form action={action} className="flex flex-col gap-4" id="send-newsletter-form">
-            <AlertDialogHeader>
-              <AlertDialogTitle>Send a newsletter</AlertDialogTitle>
-              <AlertDialogDescription>
+        </DrawerTrigger>
+        <DrawerContent className="min-h-0 sm:max-w-lg">
+          <form action={action} className="flex min-h-0 flex-1 flex-col">
+            <DrawerHeader className="shrink-0">
+              <DrawerTitle>Send a newsletter</DrawerTitle>
+              <DrawerDescription>
                 Goes out immediately to {recipientCount} subscriber{recipientCount === 1 ? "" : "s"}{" "}
                 through Resend. This cannot be recalled once sent.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="newsletter-subject" required>
-                Subject
-              </Label>
-              <Input
-                id="newsletter-subject"
-                maxLength={200}
-                name="subject"
-                onChange={(event) => setSubject(event.target.value)}
-                required
-                value={subject}
-              />
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-y-contain px-4 pb-2">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="newsletter-subject" required>
+                  Subject
+                </Label>
+                <Input
+                  id="newsletter-subject"
+                  maxLength={200}
+                  name="subject"
+                  onChange={(event) => setSubject(event.target.value)}
+                  required
+                  value={subject}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="newsletter-body" required>
+                  Message
+                </Label>
+                <Textarea
+                  className="min-h-40"
+                  id="newsletter-body"
+                  name="body"
+                  onChange={(event) => setBody(event.target.value)}
+                  placeholder="Leave a blank line between paragraphs."
+                  required
+                  rows={8}
+                  value={body}
+                />
+              </div>
+              <FormError message={state && !state.ok ? state.error : null} />
             </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="newsletter-body" required>
-                Message
-              </Label>
-              <Textarea
-                id="newsletter-body"
-                name="body"
-                onChange={(event) => setBody(event.target.value)}
-                placeholder="Leave a blank line between paragraphs."
-                required
-                rows={8}
-                value={body}
-              />
-            </div>
-            <FormError message={state && !state.ok ? state.error : null} />
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={isPending} type="button">
-                Cancel
-              </AlertDialogCancel>
+            <DrawerFooter>
               <SendButton recipientCount={recipientCount} />
-            </AlertDialogFooter>
+            </DrawerFooter>
           </form>
-        </AlertDialogContent>
-      </AlertDialog>
+        </DrawerContent>
+      </Drawer>
     </SettingsSection>
   );
 }
