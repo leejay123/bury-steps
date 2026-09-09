@@ -24,7 +24,6 @@ export default async function EmailPreferencesPage({
       emailNotices: true,
       emailProgress: true,
       emailNewsletter: true,
-      emailContactAlerts: true,
       emailAccidentAlerts: true,
     },
   });
@@ -38,7 +37,6 @@ export default async function EmailPreferencesPage({
       </div>
       <EmailPreferencesForm
         emailAccidentAlerts={member.emailAccidentAlerts}
-        emailContactAlerts={member.emailContactAlerts}
         emailNewsletter={member.emailNewsletter}
         emailNotices={member.emailNotices}
         emailProgress={member.emailProgress}

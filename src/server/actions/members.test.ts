@@ -9,6 +9,7 @@ const { revalidatePath, requireAdmin, checkRateLimit, deleteUser, prismaMock, tr
       accidentReport: { updateMany: vi.fn() },
       walkJourneyEvent: { updateMany: vi.fn() },
       attendance: { count: vi.fn() },
+      siteSetting: { updateMany: vi.fn() },
     };
     const transaction = vi.fn(async (arg: unknown) => {
       if (Array.isArray(arg)) return Promise.all(arg);
@@ -370,6 +371,42 @@ describe("setMemberRole", () => {
       data: { role: "MEMBER" },
     });
     expect(result).toEqual({ ok: true, message: "Sam Lee is now a member." });
+  });
+
+  it("clears them as the contact-messages owner when demoted", async () => {
+    const target = {
+      id: "admin-2",
+      role: "ADMIN",
+      firstName: "Sam",
+      lastName: "Lee",
+      email: "sam@example.com",
+    };
+    prismaMock.user.findUnique.mockResolvedValueOnce(target).mockResolvedValueOnce(target);
+    prismaMock.user.count.mockResolvedValueOnce(2);
+    prismaMock.user.update.mockResolvedValueOnce({ ...target, role: "MEMBER" });
+
+    await setMemberRole(null, roleForm({ userId: target.id, role: "MEMBER", confirm: "confirm" }));
+
+    expect(prismaMock.siteSetting.updateMany).toHaveBeenCalledWith({
+      where: { id: "site", contactMessagesOwnerId: target.id },
+      data: { contactMessagesOwnerId: null },
+    });
+  });
+
+  it("does not touch the contact-messages owner when promoting", async () => {
+    const target = {
+      id: "member-1",
+      role: "MEMBER",
+      firstName: "Jo",
+      lastName: null,
+      email: "jo@example.com",
+    };
+    prismaMock.user.findUnique.mockResolvedValueOnce(target).mockResolvedValueOnce(target);
+    prismaMock.user.update.mockResolvedValueOnce({ ...target, role: "ADMIN" });
+
+    await setMemberRole(null, roleForm({ userId: target.id, role: "ADMIN", confirm: "confirm" }));
+
+    expect(prismaMock.siteSetting.updateMany).not.toHaveBeenCalled();
   });
 
   it("allows promoting a member to organiser without touching the last-organiser check", async () => {

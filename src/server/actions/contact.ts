@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { SITE_SETTING_ID } from "@/lib/theme";
 import { checkRateLimit } from "@/lib/rate-limit";
 import {
   parseContactEmail,
@@ -69,6 +70,11 @@ export async function submitContactMessage(
   return { ok: true, message: "Thanks — we'll get back to you soon." };
 }
 
+/** Alerts the single organiser designated in Settings → Display → "Contact
+ * messages" (SiteSetting.contactMessagesOwnerId) — not every organiser, so
+ * exactly one person is expected to reply, via the alert email's reply-to.
+ * Silently does nothing if no one has been designated yet, or the
+ * designated organiser is no longer an organiser. */
 async function notifyAdminsOfContactMessage(submission: {
   name: string;
   email: string;
@@ -76,16 +82,15 @@ async function notifyAdminsOfContactMessage(submission: {
   message: string;
 }): Promise<void> {
   try {
-    const admins = await prisma.user.findMany({
-      where: { role: "ADMIN", emailContactAlerts: true },
-      select: { email: true },
+    const setting = await prisma.siteSetting.findUnique({
+      where: { id: SITE_SETTING_ID },
+      select: { contactMessagesOwner: { select: { email: true, role: true } } },
     });
-    await sendContactMessageAdminAlertEmail(
-      submission,
-      admins.map((admin) => admin.email),
-    );
+    const owner = setting?.contactMessagesOwner;
+    if (!owner || owner.role !== "ADMIN") return;
+    await sendContactMessageAdminAlertEmail(submission, [owner.email]);
   } catch (err) {
-    console.error("submitContactMessage: failed to notify admins", err);
+    console.error("submitContactMessage: failed to notify the contact messages owner", err);
   }
 }
 

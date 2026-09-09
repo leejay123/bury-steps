@@ -104,6 +104,57 @@ export async function updateAllWalksTabEnabled(
   };
 }
 
+/** Sets the single organiser who gets contact-form alert emails and is
+ * expected to reply (via the alert email's reply-to). Pass an empty string
+ * to designate no one. */
+export async function updateContactMessagesOwner(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const userId = String(formData.get("contactMessagesOwnerId") ?? "").trim();
+
+  let owner: { firstName: string | null; lastName: string | null; email: string; role: string } | null =
+    null;
+  if (userId) {
+    owner = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { firstName: true, lastName: true, email: true, role: true },
+    });
+    if (!owner || owner.role !== "ADMIN") {
+      return { ok: false, error: "Choose a current organiser." };
+    }
+  }
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        contactMessagesOwnerId: userId || null,
+      },
+      update: { contactMessagesOwnerId: userId || null },
+    });
+  } catch (err) {
+    return logActionError(
+      "updateContactMessagesOwner",
+      err,
+      "Could not save that setting. Try again.",
+    );
+  }
+
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/display");
+  revalidatePath("/admin/messages");
+  return {
+    ok: true,
+    message: owner
+      ? `Contact form alerts now go to ${[owner.firstName, owner.lastName].filter(Boolean).join(" ").trim() || owner.email}.`
+      : "No one will be alerted about new contact form messages.",
+  };
+}
+
 export async function updateScrollToTopEnabled(
   _prev: ActionResult | null,
   formData: FormData,

@@ -8,6 +8,7 @@ import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
+import { SITE_SETTING_ID } from "@/lib/theme";
 import { safeAppPath } from "@/lib/urls";
 import { sendAccountDeletedEmail, sendAdminPromotedEmail, sendAdminDemotedEmail } from "@/lib/email/mailer";
 import {
@@ -289,6 +290,16 @@ export async function setMemberRole(
         }
       }
       await tx.user.update({ where: { id: fresh.id }, data: { role } });
+      // Demoting the designated contact-messages owner would otherwise
+      // leave that setting silently pointing at a plain member — the FK's
+      // onDelete: SetNull only helps if they're removed outright, not
+      // demoted.
+      if (role === "MEMBER") {
+        await tx.siteSetting.updateMany({
+          where: { id: SITE_SETTING_ID, contactMessagesOwnerId: fresh.id },
+          data: { contactMessagesOwnerId: null },
+        });
+      }
     });
   } catch (err) {
     if (err instanceof LimitReachedError) return { ok: false, error: err.message };

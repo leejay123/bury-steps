@@ -1,10 +1,13 @@
-import { requireAdmin } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { requireAdmin, displayName } from "@/lib/auth";
 import { getSiteTheme } from "@/lib/site-theme";
 import { getAllWalksTabEnabled } from "@/lib/walk-progress";
+import { SITE_SETTING_ID } from "@/lib/theme";
 import { SettingsPage, SettingsSectionGroup } from "../settings-page";
 import { AboutListsSettings } from "./about-lists-settings";
 import { AllWalksTabToggle } from "./all-walks-tab-toggle";
 import { CarouselToggle } from "../hero-photos/carousel-toggle";
+import { ContactMessagesOwnerSettings } from "./contact-messages-owner-settings";
 import { CookieConsentSettings } from "./cookie-consent-settings";
 import { DisplaySettings } from "./display-form";
 import { DisplaySettingsLayout } from "./display-settings-layout";
@@ -22,7 +25,19 @@ export const dynamic = "force-dynamic";
 
 export default async function DisplaySettingsPage() {
   await requireAdmin();
-  const [theme, allWalksTabEnabled] = await Promise.all([getSiteTheme(), getAllWalksTabEnabled()]);
+  const [theme, allWalksTabEnabled, organisers, contactSetting] = await Promise.all([
+    getSiteTheme(),
+    getAllWalksTabEnabled(),
+    prisma.user.findMany({
+      where: { role: "ADMIN" },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, firstName: true, lastName: true, email: true },
+    }),
+    prisma.siteSetting.findUnique({
+      where: { id: SITE_SETTING_ID },
+      select: { contactMessagesOwnerId: true },
+    }),
+  ]);
 
   return (
     <SettingsPage
@@ -61,6 +76,17 @@ export default async function DisplaySettingsPage() {
           title="Member walks"
         >
           <AllWalksTabToggle enabled={allWalksTabEnabled} />
+        </SettingsSectionGroup>
+
+        <SettingsSectionGroup
+          description="Who's responsible for the public contact form."
+          id="contact-messages"
+          title="Contact messages"
+        >
+          <ContactMessagesOwnerSettings
+            currentOwnerId={contactSetting?.contactMessagesOwnerId ?? null}
+            organisers={organisers.map((organiser) => ({ id: organiser.id, name: displayName(organiser) }))}
+          />
         </SettingsSectionGroup>
 
         <SettingsSectionGroup

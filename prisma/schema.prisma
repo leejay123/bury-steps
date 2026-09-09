@@ -31,15 +31,9 @@ model User {
   /// Newsletter campaigns. Off by default — needs explicit opt-in (PECR),
   /// separate from the account-lifecycle toggles above.
   emailNewsletter        Boolean @default(false)
-  /// New contact-form message alerts, sent to organisers. Only consulted
-  /// for ADMIN rows (see notifyAdminsOfContactMessage) — meaningless, and
-  /// harmless, on a MEMBER row. Default on so nothing changes for existing
-  /// organisers. Kept separate from emailAccidentAlerts so one organiser
-  /// can follow accident reports without also getting every contact-form
-  /// message, or vice versa.
-  emailContactAlerts     Boolean @default(true)
-  /// New accident-report alerts, sent to organisers. Same ADMIN-only
-  /// semantics as emailContactAlerts (see notifyOtherAdminsOfAccidentReport).
+  /// New accident-report alerts, sent to organisers. Only consulted for
+  /// ADMIN rows (see notifyOtherAdminsOfAccidentReport) — meaningless, and
+  /// harmless, on a MEMBER row.
   emailAccidentAlerts    Boolean @default(true)
   /// Lets the public preferences/one-click-unsubscribe page identify a
   /// member without requiring sign-in. Null for every row until first
@@ -55,6 +49,9 @@ model User {
   impersonationsPerformed ImpersonationEvent[]   @relation("ImpersonationAdmin")
   impersonationsReceived  ImpersonationEvent[]   @relation("ImpersonationTarget")
   reportInvolvements      AccidentReportMember[]
+  /// At most one SiteSetting row ever exists, so this is really 0-or-1 —
+  /// Prisma still requires the relation's other side to be declared.
+  contactMessagesOwnerFor SiteSetting[]          @relation("ContactMessagesOwner")
 
   @@index([createdAt])
 }
@@ -344,7 +341,14 @@ model SiteSetting {
   /// src/lib/email/resend-audience.ts — so there's nothing to configure by
   /// hand in the Resend dashboard.
   resendAudienceId           String?
+  /// The single organiser who gets contact-form alert emails and is
+  /// expected to reply (via the alert email's reply-to). Null means no one
+  /// is notified. Cleared automatically if that organiser is removed
+  /// (onDelete: SetNull) or demoted (see setMemberRole).
+  contactMessagesOwnerId     String?
   updatedAt                  DateTime @updatedAt
+
+  contactMessagesOwner User? @relation("ContactMessagesOwner", fields: [contactMessagesOwnerId], references: [id], onDelete: SetNull)
 }
 
 /// Organiser-only accident reports. Printed from the report page.

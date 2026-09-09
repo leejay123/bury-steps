@@ -78,6 +78,7 @@ export {
 export {
   updateCarouselEnabled,
   updateAllWalksTabEnabled,
+  updateContactMessagesOwner,
   updateScrollToTopEnabled,
   updateCookieConsentVariant,
   updateSiteBranding,

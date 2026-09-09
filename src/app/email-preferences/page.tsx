@@ -24,7 +24,6 @@ export default async function MyEmailPreferencesPage() {
       </div>
       <MyEmailPreferencesForm
         emailAccidentAlerts={user.emailAccidentAlerts}
-        emailContactAlerts={user.emailContactAlerts}
         emailNewsletter={user.emailNewsletter}
         emailNotices={user.emailNotices}
         emailProgress={user.emailProgress}
