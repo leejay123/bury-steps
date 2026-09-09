@@ -19,6 +19,18 @@ type ServerAction = (
   formData: FormData,
 ) => Promise<ActionResult>;
 
+type NotifyOptions = {
+  /**
+   * Almost every caller already renders its own inline `<FormError>` right
+   * next to the field that failed — toasting the same message on top of
+   * that showed the identical error twice (a sonner toast in the corner
+   * *and* the inline red box). Off by default for that reason; the rare
+   * caller with no inline error display of its own (the footer newsletter
+   * signup, the admin Messages mark-read/remove buttons) opts back in.
+   */
+  toastErrors?: boolean;
+};
+
 /**
  * Apply toast / redirect as soon as the server action returns — before React
  * re-renders from revalidation. If we wait for a useEffect, the form can
@@ -26,7 +38,7 @@ type ServerAction = (
  * cancel walk → Cancel button swapped for Reopen), and the toast/redirect
  * never runs.
  */
-function notifyActionResult(result: ActionResult, onOk?: () => void) {
+function notifyActionResult(result: ActionResult, onOk?: () => void, toastErrors = false) {
   if (result.ok) {
     onOk?.();
     unlockIdleDocument();
@@ -41,7 +53,7 @@ function notifyActionResult(result: ActionResult, onOk?: () => void) {
     toast.success(result.message ?? "Saved.");
     return;
   }
-  toast.error(actionResultErrorMessage(result.error));
+  if (toastErrors) toast.error(actionResultErrorMessage(result.error));
 }
 
 /**
@@ -49,10 +61,11 @@ function notifyActionResult(result: ActionResult, onOk?: () => void) {
  * success may remove this component from the tree (delete, cancel/reopen swap,
  * redirect-away).
  */
-export function useNotifyActionState(action: ServerAction, onOk?: () => void) {
+export function useNotifyActionState(action: ServerAction, onOk?: () => void, options?: NotifyOptions) {
   const router = useRouter();
   const onOkRef = useRef(onOk);
   const actionRef = useRef(action);
+  const toastErrors = options?.toastErrors ?? false;
   useEffect(() => {
     onOkRef.current = onOk;
     actionRef.current = action;
@@ -64,9 +77,9 @@ export function useNotifyActionState(action: ServerAction, onOk?: () => void) {
     if (result.ok && !result.href) {
       router.refresh();
     }
-    notifyActionResult(result, () => onOkRef.current?.());
+    notifyActionResult(result, () => onOkRef.current?.(), toastErrors);
     return result;
-  }, [router]);
+  }, [router, toastErrors]);
 
   return useActionState<ActionResult | null, FormData>(wrapped, null);
 }
@@ -76,9 +89,10 @@ export function useNotifyActionState(action: ServerAction, onOk?: () => void) {
  * success. Do not use when success unmounts this component — use
  * useNotifyActionState instead (effect never runs if we are gone).
  */
-export function useActionToast(state: ActionResult | null, onOk?: () => void) {
+export function useActionToast(state: ActionResult | null, onOk?: () => void, options?: NotifyOptions) {
   const router = useRouter();
   const onOkRef = useRef(onOk);
+  const toastErrors = options?.toastErrors ?? false;
 
   useEffect(() => {
     onOkRef.current = onOk;
@@ -105,6 +119,6 @@ export function useActionToast(state: ActionResult | null, onOk?: () => void) {
       onOkRef.current?.();
       return;
     }
-    toast.error(actionResultErrorMessage(state.error));
-  }, [router, state]);
+    if (toastErrors) toast.error(actionResultErrorMessage(state.error));
+  }, [router, state, toastErrors]);
 }

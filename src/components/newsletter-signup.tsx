@@ -29,7 +29,9 @@ export function NewsletterSignup() {
     subscribeToNewsletter,
     null,
   );
-  useActionToast(state, () => formRef.current?.reset());
+  // No inline error box on this compact footer form — the toast is the
+  // only place an error shows, so it opts back into toasting errors.
+  useActionToast(state, () => formRef.current?.reset(), { toastErrors: true });
 
   return (
     <div

@@ -42,7 +42,11 @@ function preview(text: string) {
 }
 
 function MarkReadButton({ messageId, onDone }: { messageId: string; onDone?: () => void }) {
-  const [, action, isPending] = useNotifyActionState(markContactMessageRead, onDone);
+  // No inline error box next to this button — the toast is the only place
+  // an error shows, so it opts back into toasting errors.
+  const [, action, isPending] = useNotifyActionState(markContactMessageRead, onDone, {
+    toastErrors: true,
+  });
   return (
     <form action={action}>
       <input name="messageId" type="hidden" value={messageId} />
@@ -55,7 +59,11 @@ function MarkReadButton({ messageId, onDone }: { messageId: string; onDone?: () 
 }
 
 function RemoveButton({ messageId, onDone }: { messageId: string; onDone?: () => void }) {
-  const [, action, isPending] = useNotifyActionState(deleteContactMessage, onDone);
+  // No inline error box next to this button — the toast is the only place
+  // an error shows, so it opts back into toasting errors.
+  const [, action, isPending] = useNotifyActionState(deleteContactMessage, onDone, {
+    toastErrors: true,
+  });
   return (
     <form action={action}>
       <input name="messageId" type="hidden" value={messageId} />
