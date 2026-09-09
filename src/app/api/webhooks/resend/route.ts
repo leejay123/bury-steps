@@ -26,9 +26,16 @@ export async function POST(req: NextRequest) {
     "svix-signature": req.headers.get("svix-signature") ?? "",
   };
 
+  // svix's Webhook.verify() only checks the signature (throwing if it's
+  // invalid) — it does NOT return the parsed payload, despite its type
+  // signature suggesting otherwise. Every call here was silently getting
+  // back `undefined` and crashing on the next line, failing every single
+  // webhook delivery since this route was added. Parse the payload
+  // ourselves once the signature's confirmed valid.
   let event: { type: string; data: { email_id?: string; to?: string[] } };
   try {
-    event = new Webhook(secret).verify(payload, headers) as unknown as typeof event;
+    new Webhook(secret).verify(payload, headers);
+    event = JSON.parse(payload);
   } catch {
     return new NextResponse("Invalid signature", { status: 400 });
   }
