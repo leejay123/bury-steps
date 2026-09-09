@@ -1,5 +1,57 @@
 import { prisma } from "@/lib/db";
 import { memberDisplayName } from "@/lib/auth";
+import { walkStatus } from "@/lib/walk-window";
+
+/** Cap for the member-facing "All walks" tab — a weekly walk for a decade
+ * is ~520, so this comfortably covers any realistic history. */
+const ALL_COMPLETED_WALKS_LIMIT = 500;
+
+export type AllWalksRow = {
+  id: string;
+  token: string;
+  slug: string | null;
+  title: string;
+  location: string | null;
+  startsAt: Date;
+  durationMins: number;
+  attendanceCount: number;
+};
+
+/** Every completed walk site-wide, newest first — title/date/location only.
+ * Attendee names are deliberately not included here: WalkLivePanel already
+ * only reveals who attended to someone who was on that walk themselves,
+ * and this list must not bypass that by exposing names some other way. */
+export async function getAllCompletedWalks(): Promise<AllWalksRow[]> {
+  const candidates = await prisma.walk.findMany({
+    where: { cancelledAt: null },
+    orderBy: { startsAt: "desc" },
+    take: ALL_COMPLETED_WALKS_LIMIT,
+    select: {
+      id: true,
+      token: true,
+      slug: true,
+      title: true,
+      location: true,
+      startsAt: true,
+      durationMins: true,
+      cancelledAt: true,
+      _count: { select: { attendances: true } },
+    },
+  });
+
+  return candidates
+    .filter((walk) => walkStatus(walk) === "completed")
+    .map((walk) => ({
+      id: walk.id,
+      token: walk.token,
+      slug: walk.slug,
+      title: walk.title,
+      location: walk.location,
+      startsAt: walk.startsAt,
+      durationMins: walk.durationMins,
+      attendanceCount: walk._count.attendances,
+    }));
+}
 
 /** Everyone who clocked into a walk, whether or not they've since clocked
  * out — used to tag "who was involved" on an accident report, which can be

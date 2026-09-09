@@ -73,6 +73,37 @@ export async function updateCarouselEnabled(
   return { ok: true, message: enabled ? "You have turned the carousel on." : "You have turned the carousel off." };
 }
 
+export async function updateAllWalksTabEnabled(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const enabled = String(formData.get("allWalksTabEnabled") ?? "") === "on";
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        allWalksTabEnabled: enabled,
+      },
+      update: { allWalksTabEnabled: enabled },
+    });
+  } catch (err) {
+    return logActionError("updateAllWalksTabEnabled", err, "Could not save that setting. Try again.");
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/admin/settings");
+  return {
+    ok: true,
+    message: enabled
+      ? "Members can now see every completed walk."
+      : "Members will only see their own walks again.",
+  };
+}
+
 export async function updateScrollToTopEnabled(
   _prev: ActionResult | null,
   formData: FormData,

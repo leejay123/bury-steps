@@ -6,11 +6,15 @@ import { requireUser } from "@/lib/auth";
 import { formatDate, formatMembershipAge } from "@/lib/dates";
 import { windowState, walkStatus, upcomingListLookbackFrom } from "@/lib/walk-window";
 import { CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
+import { getAllWalksTabEnabled } from "@/lib/walk-progress";
+import { walkSharePath } from "@/lib/walk-slug";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MemberWelcomeDialog } from "@/components/member-welcome-dialog";
-import { getWalkMemberCountsByWalkIds } from "@/lib/walk-members";
+import { getAllCompletedWalks, getWalkMemberCountsByWalkIds } from "@/lib/walk-members";
 import { UpcomingWalkCards } from "./upcoming-walk-cards";
+import { AllWalksList } from "./all-walks-list";
 import { RecentWalksCarousel } from "./recent-walks-carousel";
 
 export const dynamic = "force-dynamic";
@@ -103,7 +107,11 @@ export default async function DashboardPage() {
   const clockedWalkIds = walks
     .filter((walk) => walk.attendances.length > 0)
     .map((walk) => walk.id);
-  const memberCountsByWalk = await getWalkMemberCountsByWalkIds(clockedWalkIds);
+  const [memberCountsByWalk, allWalksTabEnabled] = await Promise.all([
+    getWalkMemberCountsByWalkIds(clockedWalkIds),
+    getAllWalksTabEnabled(),
+  ]);
+  const allCompletedWalks = allWalksTabEnabled ? await getAllCompletedWalks() : [];
 
   return (
     <div className="flex flex-col gap-8">
@@ -121,33 +129,63 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      {walks.length === 0 ? (
-        <EmptyState
-          description="Your organiser will post the next one here."
-          icon={Footprints}
-          title="No walks scheduled yet"
-        />
-      ) : (
-        <UpcomingWalkCards
-          walks={walks.map((walk) => {
-            const clockedIn = walk.attendances[0];
-            return {
-              id: walk.id,
-              token: walk.token,
-              slug: walk.slug,
-              title: walk.title,
-              description: walk.description,
-              location: walk.location,
-              startsAt: walk.startsAt.toISOString(),
-              durationMins: walk.durationMins,
-              cancelledAt: walk.cancelledAt?.toISOString() ?? null,
-              clockedInAt: clockedIn ? clockedIn.clockedInAt.toISOString() : null,
-              state: windowState(walk.startsAt, walk.durationMins, now),
-              memberCount: memberCountsByWalk.get(walk.id) ?? 0,
-            };
-          })}
-        />
-      )}
+      {(() => {
+        const upcoming =
+          walks.length === 0 ? (
+            <EmptyState
+              description="Your organiser will post the next one here."
+              icon={Footprints}
+              title="No walks scheduled yet"
+            />
+          ) : (
+            <UpcomingWalkCards
+              walks={walks.map((walk) => {
+                const clockedIn = walk.attendances[0];
+                return {
+                  id: walk.id,
+                  token: walk.token,
+                  slug: walk.slug,
+                  title: walk.title,
+                  description: walk.description,
+                  location: walk.location,
+                  startsAt: walk.startsAt.toISOString(),
+                  durationMins: walk.durationMins,
+                  cancelledAt: walk.cancelledAt?.toISOString() ?? null,
+                  clockedInAt: clockedIn ? clockedIn.clockedInAt.toISOString() : null,
+                  state: windowState(walk.startsAt, walk.durationMins, now),
+                  memberCount: memberCountsByWalk.get(walk.id) ?? 0,
+                };
+              })}
+            />
+          );
+
+        if (!allWalksTabEnabled) return upcoming;
+
+        return (
+          <Tabs defaultValue="upcoming">
+            <TabsList>
+              <TabsTrigger value="upcoming">Upcoming ({walks.length})</TabsTrigger>
+              <TabsTrigger value="all-walks">All walks ({allCompletedWalks.length})</TabsTrigger>
+            </TabsList>
+            <TabsContent className="mt-4" value="upcoming">
+              {upcoming}
+            </TabsContent>
+            <TabsContent className="mt-4" value="all-walks">
+              <AllWalksList
+                rows={allCompletedWalks.map((walk) => ({
+                  id: walk.id,
+                  href: walkSharePath(walk),
+                  title: walk.title,
+                  location: walk.location,
+                  startsAt: walk.startsAt.toISOString(),
+                  durationMins: walk.durationMins,
+                  attendanceCount: walk.attendanceCount,
+                }))}
+              />
+            </TabsContent>
+          </Tabs>
+        );
+      })()}
 
       {recentWalks.length > 0 ? (
         <section className="flex flex-col gap-3">
