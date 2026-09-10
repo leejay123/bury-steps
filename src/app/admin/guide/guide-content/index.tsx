@@ -11,17 +11,26 @@ import { LimitsSection } from "./limits-section";
 /** Bump this whenever the guide is updated. */
 export const GUIDE_LAST_UPDATED = "5 September 2026";
 
-export function OrganiserGuide() {
+export function OrganiserGuide({
+  accidentReportRetentionDays,
+  cancelledWalkRetentionDays,
+}: {
+  accidentReportRetentionDays: number | null;
+  cancelledWalkRetentionDays: number | null;
+}) {
   return (
     <Accordion className="w-full" collapsible defaultValue="what" type="single">
-      <OverviewSection />
-      <WalksSection />
+      <OverviewSection cancelledWalkRetentionDays={cancelledWalkRetentionDays} />
+      <WalksSection cancelledWalkRetentionDays={cancelledWalkRetentionDays} />
       <ProgressClockInSection />
       <MembersSection />
       <HomepageNoticesSection />
       <ReportsDisplaySection />
       <PrivacySiteSection />
-      <LimitsSection />
+      <LimitsSection
+        accidentReportRetentionDays={accidentReportRetentionDays}
+        cancelledWalkRetentionDays={cancelledWalkRetentionDays}
+      />
     </Accordion>
   );
 }

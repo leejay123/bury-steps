@@ -5,7 +5,10 @@ import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { formatDate, formatMembershipAge } from "@/lib/dates";
 import { windowState, walkStatus, upcomingListLookbackFrom } from "@/lib/walk-window";
-import { CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
+import {
+  DEFAULT_CANCELLED_WALK_RETENTION_DAYS,
+  getCancelledWalkRetentionDays,
+} from "@/lib/walk-retention";
 import { getAllWalksTabEnabled } from "@/lib/walk-progress";
 import { walkSharePath } from "@/lib/walk-slug";
 import { EmptyState } from "@/components/empty-state";
@@ -28,8 +31,13 @@ export default async function DashboardPage() {
 
   const now = new Date();
   const upcomingFrom = upcomingListLookbackFrom(now);
+  // Auto-delete off (null) still needs *some* display window here, rather
+  // than showing every cancelled walk ever — falls back to the same
+  // default the auto-delete cron would otherwise use.
+  const cancelledWalkRetentionDays =
+    (await getCancelledWalkRetentionDays()) ?? DEFAULT_CANCELLED_WALK_RETENTION_DAYS;
   const cancelledFrom = new Date(
-    now.getTime() - CANCELLED_WALK_RETENTION_DAYS * 24 * 60 * 60 * 1000,
+    now.getTime() - cancelledWalkRetentionDays * 24 * 60 * 60 * 1000,
   );
 
   const [walkCandidates, historyCandidates, totalAttendanceCount] = await Promise.all([

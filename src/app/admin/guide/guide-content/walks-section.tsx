@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { PRODUCTION_APP_URL } from "@/lib/urls";
-import { CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { GuideBody, Steps } from "./shared";
 
 /** "Walks" — creating, sharing, editing, attendance, and Journey. */
-export function WalksSection() {
+export function WalksSection({
+  cancelledWalkRetentionDays,
+}: {
+  cancelledWalkRetentionDays: number | null;
+}) {
   return (
     <AccordionItem className="px-4 md:px-6" value="walks">
       <AccordionTrigger className="text-base">Walks</AccordionTrigger>
@@ -133,8 +136,15 @@ export function WalksSection() {
             the list.
           </p>
           <p>
-            If a cancelled walk is not reopened, it is deleted automatically after{" "}
-            <strong>{CANCELLED_WALK_RETENTION_DAYS} days</strong>.
+            {cancelledWalkRetentionDays !== null ? (
+              <>
+                If a cancelled walk is not reopened, it is deleted automatically after{" "}
+                <strong>{cancelledWalkRetentionDays} days</strong>.
+              </>
+            ) : (
+              "Auto-delete for cancelled walks is currently off, so a cancelled walk is kept until it's reopened or removed by hand."
+            )}{" "}
+            Set the number of days, or turn auto-delete off, in Settings → Display → Retention.
           </p>
           <p>
             Open the walk from the list. <strong>Attendance</strong> is names and clock-in time

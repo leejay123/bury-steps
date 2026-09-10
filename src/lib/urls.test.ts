@@ -32,12 +32,12 @@ describe("accountPortalUrl", () => {
   // no redirect_url was ever supplied to override it.
   it("falls back to the app's own default landing page when there's no trusted redirect_url", () => {
     const url = accountPortalUrl("sign-in", {});
-    expect(new URL(url).searchParams.get("redirect_url")).toBe(`${appUrl()}/dashboard`);
+    expect(new URL(url).searchParams.get("redirect_url")).toBe(`${appUrl()}/walks`);
   });
 
   it("falls back to the same default rather than forwarding an untrusted redirect_url", () => {
     const url = accountPortalUrl("sign-in", { redirect_url: "https://evil.example.com/" });
-    expect(new URL(url).searchParams.get("redirect_url")).toBe(`${appUrl()}/dashboard`);
+    expect(new URL(url).searchParams.get("redirect_url")).toBe(`${appUrl()}/walks`);
   });
 
   // Regression: Clerk's actor-token ("log in as this member") flow signs
@@ -54,7 +54,7 @@ describe("accountPortalUrl", () => {
   it("omits __clerk_ticket entirely when there isn't one, while still defaulting redirect_url", () => {
     const url = accountPortalUrl("sign-in", {});
     expect(new URL(url).searchParams.has("__clerk_ticket")).toBe(false);
-    expect(new URL(url).searchParams.get("redirect_url")).toBe(`${appUrl()}/dashboard`);
+    expect(new URL(url).searchParams.get("redirect_url")).toBe(`${appUrl()}/walks`);
   });
 });
 
@@ -173,6 +173,6 @@ describe("accountPortalHref", () => {
     const href = accountPortalHref("sign-in", "https://evil.example.com/steal-session");
     const redirect = new URL(href).searchParams.get("redirect_url");
     expect(redirect).not.toContain("evil.example.com");
-    expect(redirect).toContain("/dashboard");
+    expect(redirect).toContain("/walks");
   });
 });

@@ -58,7 +58,7 @@ export default async function WalkHistoryPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1.5">
         <p className="text-sm text-muted-foreground">
-          <Link className="hover:underline" href="/dashboard">
+          <Link className="hover:underline" href="/walks">
             Walks
           </Link>
           <span aria-hidden="true"> · </span>

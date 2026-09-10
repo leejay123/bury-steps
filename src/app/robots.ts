@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       // Private, auth-only, or not meant for search results: signed-in
       // areas, one-off walk share links, and internal API routes.
-      disallow: ["/dashboard", "/admin", "/onboarding", "/w/", "/api/"],
+      disallow: ["/walks", "/admin", "/onboarding", "/w/", "/api/"],
     },
     sitemap: `${appUrl()}/sitemap.xml`,
   };

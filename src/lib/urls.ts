@@ -2,7 +2,7 @@
 const ACCOUNT_PORTAL_ORIGIN = "https://accounts.burysteps-walkinggroup.co.uk";
 export const SIGN_IN_URL = `${ACCOUNT_PORTAL_ORIGIN}/sign-in`;
 export const SIGN_UP_URL = `${ACCOUNT_PORTAL_ORIGIN}/sign-up`;
-export const AFTER_AUTH_PATH = "/dashboard";
+export const AFTER_AUTH_PATH = "/walks";
 
 export const FACEBOOK_GROUP_URL = "https://www.facebook.com/groups/burysteps";
 
@@ -108,7 +108,7 @@ export function accountPortalUrl(
     // before being signed out) — for the actor-token ("log in as this
     // member") flow that's whatever admin-only page the organiser had
     // open, which a member can't use. Default to the one landing page
-    // that works for both roles (dashboard/page.tsx itself redirects an
+    // that works for both roles (walks/page.tsx itself redirects an
     // admin on to /admin) rather than depending on that fallback.
     url.searchParams.set("redirect_url", `${appUrl()}${AFTER_AUTH_PATH}`);
   }

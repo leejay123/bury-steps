@@ -24,7 +24,7 @@ export async function SiteNav() {
   const user = await getOptionalUser();
   const isAdmin = user?.role === "ADMIN";
 
-  const walksHref = isAdmin ? "/admin" : "/dashboard";
+  const walksHref = isAdmin ? "/admin" : "/walks";
   const { notices, unreadIds } = user
     ? await getSiteNoticeState(user.id, user.firstName)
     : { notices: [], unreadIds: [] as string[] };
@@ -60,5 +60,5 @@ export async function SiteMobileNav() {
 
   const isAdmin = user.role === "ADMIN";
 
-  return <SiteMobileNavBar isAdmin={isAdmin} walksHref={isAdmin ? "/admin" : "/dashboard"} />;
+  return <SiteMobileNavBar isAdmin={isAdmin} walksHref={isAdmin ? "/admin" : "/walks"} />;
 }

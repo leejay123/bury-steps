@@ -1,4 +1,5 @@
 import { requireAdmin } from "@/lib/auth";
+import { getAccidentReportRetentionDays, getCancelledWalkRetentionDays } from "@/lib/walk-retention";
 import { AdminPageIntro } from "../admin-page-intro";
 import { GUIDE_LAST_UPDATED, OrganiserGuide } from "./guide-content";
 import { FullWidthDivider } from "@/components/full-width-divider";
@@ -7,6 +8,10 @@ export const dynamic = "force-dynamic";
 
 export default async function OrganiserGuidePage() {
   await requireAdmin();
+  const [cancelledWalkRetentionDays, accidentReportRetentionDays] = await Promise.all([
+    getCancelledWalkRetentionDays(),
+    getAccidentReportRetentionDays(),
+  ]);
 
   return (
     <div className="flex flex-col">
@@ -17,7 +22,10 @@ export default async function OrganiserGuidePage() {
         />
         <FullWidthDivider position="bottom" />
       </div>
-      <OrganiserGuide />
+      <OrganiserGuide
+        accidentReportRetentionDays={accidentReportRetentionDays}
+        cancelledWalkRetentionDays={cancelledWalkRetentionDays}
+      />
     </div>
   );
 }

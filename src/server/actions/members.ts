@@ -242,7 +242,7 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
       console.error("deleteMember: Clerk login removal failed after database removal", err);
       revalidatePath("/admin");
       revalidatePath("/admin/members");
-      revalidatePath("/dashboard");
+      revalidatePath("/walks");
       return {
         ok: true,
         message: `${displayName(target)} has been removed from the group, but their sign-in could not be revoked automatically — remove it from Clerk if needed.`,
@@ -253,7 +253,7 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
 
   revalidatePath("/admin");
   revalidatePath("/admin/members");
-  revalidatePath("/dashboard");
+  revalidatePath("/walks");
 
   return {
     ok: true,
@@ -357,7 +357,7 @@ export async function setMemberRole(
   revalidatePath("/admin");
   revalidatePath("/admin/members");
   revalidatePath(`/admin/members/${target.id}`);
-  revalidatePath("/dashboard");
+  revalidatePath("/walks");
   // Layout nav (Members / Reports / Settings) depends on role for this person.
   revalidatePath("/", "layout");
 
@@ -500,7 +500,7 @@ export async function acceptOrganiserInvite(
   revalidatePath("/admin");
   revalidatePath("/admin/members");
   revalidatePath(`/admin/members/${target.id}`);
-  revalidatePath("/dashboard");
+  revalidatePath("/walks");
   // Layout nav (Members / Reports / Settings) depends on role for this person.
   revalidatePath("/", "layout");
 

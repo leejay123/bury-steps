@@ -147,7 +147,7 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
   }
 
   revalidateWalkShare(walk);
-  revalidatePath("/dashboard");
+  revalidatePath("/walks");
   revalidatePath(`/admin/walks/${walk.id}`);
   return { ok: true, message: "Clocked in. Enjoy the walk." };
 }
@@ -351,7 +351,7 @@ export async function adminClockIn(
   }
 
   revalidateWalkShare(walk);
-  revalidatePath("/dashboard");
+  revalidatePath("/walks");
   revalidatePath("/history");
   revalidatePath(`/admin/walks/${walk.id}`);
   revalidatePath(`/admin/members/${member.id}`);
@@ -444,7 +444,7 @@ export async function adminRemoveAttendance(
   }
 
   revalidateWalkShare(attendance.walk);
-  revalidatePath("/dashboard");
+  revalidatePath("/walks");
   revalidatePath("/history");
   revalidatePath(`/admin/walks/${attendance.walk.id}`);
   revalidatePath(`/admin/members/${attendance.userId}`);
@@ -539,7 +539,7 @@ export async function clockOut(_prev: ActionResult | null, formData: FormData): 
   }
 
   revalidateWalkShare(walk);
-  revalidatePath("/dashboard");
+  revalidatePath("/walks");
   revalidatePath(`/admin/walks/${walk.id}`);
   return { ok: true, message: "You have clocked out. Your name is no longer on the walk for other members." };
 }

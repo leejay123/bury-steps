@@ -91,6 +91,10 @@ model Walk {
   cancelledAt     DateTime?
   cancelledReason String?
   createdAt       DateTime  @default(now())
+  /// Flagged by an organiser to exempt this walk from the cancelled-walk
+  /// auto-delete cron, regardless of SiteSetting.cancelledWalkRetentionDays.
+  /// Meaningless (and harmless) for a walk that was never cancelled.
+  retentionLocked Boolean   @default(false)
 
   createdById String
   createdBy   User   @relation("WalkCreator", fields: [createdById], references: [id])
@@ -275,110 +279,127 @@ model SiteNoticeRead {
 
 /// Singleton row (`id` is always `site`).
 model SiteSetting {
-  id                         String   @id
+  id                          String   @id
   /// Kept for existing rows. The public site is a fixed black-and-white theme.
-  primaryColor               String
+  primaryColor                String
   /// When false, the homepage carousel is hidden.
-  carouselEnabled            Boolean  @default(true)
+  carouselEnabled             Boolean  @default(true)
   /// When false, the floating back-to-top button is hidden.
-  scrollToTopEnabled         Boolean  @default(true)
+  scrollToTopEnabled          Boolean  @default(true)
   /// Cookie banner layout: default, small, or mini.
-  cookieConsentVariant       String   @default("small")
+  cookieConsentVariant        String   @default("small")
   /// Public site name — header logo alt, homepage hero, tab titles, share cards.
-  siteName                   String   @default("Bury Steps Walking Group")
+  siteName                    String   @default("Bury Steps Walking Group")
   /// Homepage hero subtitle (also used for share/meta description when short enough).
-  siteTagline                String   @default("Sunday afternoons, Bury and the surrounding countryside. No winners, no losers — just people walking together.")
+  siteTagline                 String   @default("Sunday afternoons, Bury and the surrounding countryside. No winners, no losers — just people walking together.")
   /// Facebook group link. Empty string hides Facebook CTAs.
-  facebookGroupUrl           String   @default("https://www.facebook.com/groups/burysteps")
+  facebookGroupUrl            String   @default("https://www.facebook.com/groups/burysteps")
   /// Homepage testimonials block.
-  testimonialsEnabled        Boolean  @default(true)
+  testimonialsEnabled         Boolean  @default(true)
   /// Optional small label above the testimonials heading. Empty hides it.
-  testimonialsSectionEyebrow String   @default("")
+  testimonialsSectionEyebrow  String   @default("")
   /// Heading above the homepage testimonials grid.
-  testimonialsSectionTitle   String   @default("From the group")
+  testimonialsSectionTitle    String   @default("From the group")
   /// Short intro under the testimonials heading.
-  testimonialsSectionIntro   String   @default("A few words from people who walk with us on Sundays.")
+  testimonialsSectionIntro    String   @default("A few words from people who walk with us on Sundays.")
   /// Homepage FAQs block.
-  faqsEnabled                Boolean  @default(true)
+  faqsEnabled                 Boolean  @default(true)
   /// Heading above the homepage FAQ list.
-  faqSectionTitle            String   @default("Frequently asked questions")
+  faqSectionTitle             String   @default("Frequently asked questions")
   /// Short intro under the FAQ heading.
-  faqSectionIntro            String   @default("How to join, what to bring, and how clock-in works. If you still have a question, ask in the Facebook group.")
+  faqSectionIntro             String   @default("How to join, what to bring, and how clock-in works. If you still have a question, ask in the Facebook group.")
   /// Homepage “How this started” block.
-  howThisStartedEnabled      Boolean  @default(true)
-  howThisStartedTitle        String   @default("How this started")
-  howThisStartedEyebrow      String   @default("Kindness · Friendship · Welcome")
-  howThisStartedTeaser       String   @default("What started out as a self-help mission to get myself fit after my diabetes diagnosis began with a simple goal: walking four miles a day with the dogs after work. It has grown into a community of walkers supporting one another week after week.")
+  howThisStartedEnabled       Boolean  @default(true)
+  howThisStartedTitle         String   @default("How this started")
+  howThisStartedEyebrow       String   @default("Kindness · Friendship · Welcome")
+  howThisStartedTeaser        String   @default("What started out as a self-help mission to get myself fit after my diabetes diagnosis began with a simple goal: walking four miles a day with the dogs after work. It has grown into a community of walkers supporting one another week after week.")
   /// Full story in the About drawer (blank lines separate paragraphs). Empty uses the built-in default.
-  howThisStartedBody         String   @default("")
+  howThisStartedBody          String   @default("")
   /// About drawer lists (one item per line). Empty uses built-in defaults.
-  aboutGoals                 String   @default("")
-  aboutPlaces                String   @default("")
-  aboutExpect                String   @default("")
+  aboutGoals                  String   @default("")
+  aboutPlaces                 String   @default("")
+  aboutExpect                 String   @default("")
   /// About drawer rules: one “Title | Body” per line. Empty uses built-in defaults.
-  aboutRules                 String   @default("")
+  aboutRules                  String   @default("")
   /// About drawer section headings — the real visible text (distinct from the Goals/Places/etc. admin-only labels).
-  aboutGoalsHeading          String   @default("More than just a walking group")
-  aboutPlacesHeading         String   @default("What we do")
-  aboutExpectHeading         String   @default("What you can expect")
-  aboutRulesHeading          String   @default("Group rules")
+  aboutGoalsHeading           String   @default("More than just a walking group")
+  aboutPlacesHeading          String   @default("What we do")
+  aboutExpectHeading          String   @default("What you can expect")
+  aboutRulesHeading           String   @default("Group rules")
   /// Comma-separated homepage block order (howWalksWork, howThisStarted, memberNotices, testimonials, faqs).
-  homepageSectionOrder       String   @default("howWalksWork,howThisStarted,memberNotices,testimonials,faqs")
+  homepageSectionOrder        String   @default("howWalksWork,howThisStarted,memberNotices,testimonials,faqs")
   /// Signed-in members: latest notices carousel on the homepage.
-  memberNoticesEnabled       Boolean  @default(true)
+  memberNoticesEnabled        Boolean  @default(true)
   /// Homepage “how it works” strip and walk-page “How this group works” card.
-  howWalksWorkEnabled        Boolean  @default(true)
+  howWalksWorkEnabled         Boolean  @default(true)
   /// Member Walks page: an "All walks" tab listing every completed walk
   /// site-wide (title/date/location only — attendee names still only show
   /// to members who were on that walk themselves, same privacy rule as
   /// everywhere else). Off by default; an organiser opts in.
-  allWalksTabEnabled         Boolean  @default(false)
+  allWalksTabEnabled          Boolean  @default(false)
   /// Optional group clock-in target for the current UK month. Null hides Together.
-  monthlyClockInGoal         Int?
+  monthlyClockInGoal          Int?
   /// Uploaded site logo (header, print reports). Null uses the bundled default.
-  logoMime                   String?
-  logoData                   Bytes?
+  logoMime                    String?
+  logoData                    Bytes?
   /// Uploaded browser-tab favicon. Null uses the bundled default.
-  faviconMime                String?
-  faviconData                Bytes?
+  faviconMime                 String?
+  faviconData                 Bytes?
   /// Uploaded letterhead-style banner shown at the foot of printed accident
   /// reports. Separate from the logo — null hides the banner entirely
   /// (there is no bundled default for this one).
-  reportBannerMime           String?
-  reportBannerData           Bytes?
+  reportBannerMime            String?
+  reportBannerData            Bytes?
   /// Resend audience (Segment) id that newsletter subscribers are synced
   /// into. Created automatically on first use — see
   /// src/lib/email/resend-audience.ts — so there's nothing to configure by
   /// hand in the Resend dashboard.
-  resendAudienceId           String?
+  resendAudienceId            String?
   /// The single organiser who gets contact-form alert emails and is
   /// expected to reply (via the alert email's reply-to). Null means no one
   /// is notified. Cleared automatically if that organiser is removed
   /// (onDelete: SetNull) or demoted (see setMemberRole).
-  contactMessagesOwnerId     String?
+  contactMessagesOwnerId      String?
   /// When on, promoting a member to organiser sends an email invite
   /// instead of taking effect immediately — they only become an organiser
   /// once they accept it. Off by default (instant promotion, as before).
-  organiserInviteRequired    Boolean  @default(false)
-  updatedAt                  DateTime @updatedAt
+  organiserInviteRequired     Boolean  @default(false)
+  /// Days a cancelled walk is kept before the daily cron deletes it (and
+  /// its attendances) automatically, if it was never reopened. A linked
+  /// accident report is unlinked, not deleted, along with it — reports
+  /// have their own separate retention setting below. Null turns
+  /// auto-delete off entirely. Defaulted to 30 on this column (matching
+  /// this behaviour's original hardcoded value) so existing installs see
+  /// no change unless an admin adjusts it.
+  cancelledWalkRetentionDays  Int?     @default(30)
+  /// Days an accident report is kept (counted from when it was logged,
+  /// not the incident date, and not reset by later edits) before the
+  /// daily cron deletes it automatically. Null (the default) turns
+  /// auto-delete off — this is a new feature, not an existing behaviour
+  /// being made configurable.
+  accidentReportRetentionDays Int?
+  updatedAt                   DateTime @updatedAt
 
   contactMessagesOwner User? @relation("ContactMessagesOwner", fields: [contactMessagesOwnerId], references: [id], onDelete: SetNull)
 }
 
 /// Organiser-only accident reports. Printed from the report page.
 model AccidentReport {
-  id             String   @id @default(cuid())
-  happenedAt     DateTime
-  walkId         String?
-  whatHappened   String
+  id              String   @id @default(cuid())
+  happenedAt      DateTime
+  walkId          String?
+  whatHappened    String
   /// Free-text fallback — anyone not tagged via involvedMembers below
   /// (a passerby who isn't a member, or reports predating that feature).
-  whoInvolved    String
-  whatWeDid      String
-  organiserNotes String?
-  createdById    String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  whoInvolved     String
+  whatWeDid       String
+  organiserNotes  String?
+  createdById     String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  /// Flagged by an organiser to exempt this report from the accident-report
+  /// auto-delete cron, regardless of SiteSetting.accidentReportRetentionDays.
+  retentionLocked Boolean  @default(false)
 
   walk      Walk? @relation(fields: [walkId], references: [id], onDelete: SetNull)
   createdBy User  @relation(fields: [createdById], references: [id], onDelete: Restrict)

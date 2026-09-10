@@ -2,13 +2,18 @@ import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { MAX_HOMEPAGE_FAQS, MAX_FAQ_CATEGORIES } from "@/lib/faqs";
 import { BELL_NOTICE_LIMIT, MAX_NOTICE_BELL_BODY, MAX_NOTICE_CATEGORIES, MAX_NOTICE_TEASER } from "@/lib/notices";
-import { CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { MAX_MONTHLY_CLOCK_IN_GOAL } from "@/lib/walk-game";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { GuideBody } from "./shared";
 
 /** "Limits" — a quick-reference list of every numeric cap in the app. */
-export function LimitsSection() {
+export function LimitsSection({
+  accidentReportRetentionDays,
+  cancelledWalkRetentionDays,
+}: {
+  accidentReportRetentionDays: number | null;
+  cancelledWalkRetentionDays: number | null;
+}) {
   return (
     <AccordionItem className="px-4 md:px-6" value="limits">
       <AccordionTrigger className="text-base">Limits</AccordionTrigger>
@@ -54,7 +59,20 @@ export function LimitsSection() {
             </li>
             <li>
               <strong>Cancelled walks</strong> — shown to members as a notice (not openable),
-              then deleted after {CANCELLED_WALK_RETENTION_DAYS} days if not reopened
+              {cancelledWalkRetentionDays !== null ? (
+                <> then deleted automatically after {cancelledWalkRetentionDays} days if not reopened</>
+              ) : (
+                " kept forever unless reopened (auto-delete is off)"
+              )}
+              . Flag a walk to keep it regardless. Set the number of days in Settings → Display →
+              Retention.
+            </li>
+            <li>
+              <strong>Accident reports</strong> —{" "}
+              {accidentReportRetentionDays !== null
+                ? `deleted automatically ${accidentReportRetentionDays} days after they're logged`
+                : "kept forever (auto-delete is off by default)"}
+              . Flag a report to keep it regardless.
             </li>
           </ul>
         </GuideBody>

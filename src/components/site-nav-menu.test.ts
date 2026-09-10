@@ -3,9 +3,9 @@ import { isNavItemActive, navItems, shouldPrefetchNavLink } from "./site-nav-ite
 
 describe("navItems", () => {
   it("includes Notices and Progress for members and organisers", () => {
-    expect(navItems(false, "/dashboard").map((item) => item.href)).toEqual([
+    expect(navItems(false, "/walks").map((item) => item.href)).toEqual([
       "/",
-      "/dashboard",
+      "/walks",
       "/notices",
       "/progress",
       "/history",
@@ -26,7 +26,7 @@ describe("navItems", () => {
 
 describe("isNavItemActive", () => {
   it("does not treat Progress as the member Walks page", () => {
-    expect(isNavItemActive("/progress", "/dashboard")).toBe(false);
+    expect(isNavItemActive("/progress", "/walks")).toBe(false);
     expect(isNavItemActive("/progress", "/progress")).toBe(true);
   });
 });
@@ -36,7 +36,7 @@ describe("shouldPrefetchNavLink", () => {
     // A guest's prefetch fetch() for one of these follows the middleware's
     // redirect to Clerk's cross-origin sign-in page, which the browser
     // blocks as a CORS violation — skip prefetching them entirely.
-    expect(shouldPrefetchNavLink("/dashboard")).toBe(false);
+    expect(shouldPrefetchNavLink("/walks")).toBe(false);
     expect(shouldPrefetchNavLink("/notices")).toBe(false);
     expect(shouldPrefetchNavLink("/progress")).toBe(false);
     expect(shouldPrefetchNavLink("/history")).toBe(false);

@@ -13,7 +13,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     name: theme.siteName,
     short_name: shortName.slice(0, 24),
     description: siteMetaDescription(theme.siteTagline),
-    start_url: "/dashboard",
+    start_url: "/walks",
     display: "standalone",
     background_color: "#ffffff",
     theme_color: "#111111",

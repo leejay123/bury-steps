@@ -31,7 +31,7 @@ export function navItems(isAdmin: boolean, walksHref: string) {
  * first place and get normal prefetching. The footer shows these links to
  * everyone, guests included, so it's the one place this still applies.
  */
-const AUTH_ONLY_HREFS = new Set(["/dashboard", "/notices", "/progress", "/history"]);
+const AUTH_ONLY_HREFS = new Set(["/walks", "/notices", "/progress", "/history"]);
 
 export function shouldPrefetchNavLink(href: string): boolean {
   return !AUTH_ONLY_HREFS.has(href);
@@ -39,8 +39,8 @@ export function shouldPrefetchNavLink(href: string): boolean {
 
 export function isNavItemActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
-  if (href === "/dashboard") {
-    return pathname === "/dashboard";
+  if (href === "/walks") {
+    return pathname === "/walks";
   }
   if (href === "/admin") {
     return pathname === "/admin" || pathname.startsWith("/admin/walks");

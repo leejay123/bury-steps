@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { FACEBOOK_GROUP_URL } from "@/lib/urls";
-import { CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { GuideBody } from "./shared";
 
 /** "What this site is for", "Who can do what", "Accounts and signing in". */
-export function OverviewSection() {
+export function OverviewSection({
+  cancelledWalkRetentionDays,
+}: {
+  cancelledWalkRetentionDays: number | null;
+}) {
   return (
     <>
       <AccordionItem className="px-4 md:px-6" value="what">
@@ -41,8 +44,11 @@ export function OverviewSection() {
             </p>
             <p>
               <Badge variant="secondary">Members</Badge> see Walks, Progress, and History in the
-              menu. They get upcoming walks and cancelled walks from the last {CANCELLED_WALK_RETENTION_DAYS}{" "}
-              days, can search Walks by title or meeting point, clock in and out, see who else is
+              menu. They get upcoming walks and cancelled walks
+              {cancelledWalkRetentionDays !== null
+                ? ` from the last ${cancelledWalkRetentionDays} days`
+                : " for as long as they stay cancelled (auto-delete is currently off)"}
+              , can search Walks by title or meeting point, clock in and out, see who else is
               still on a walk (names only), read notices in the bell (including a pinned welcome),
               look back over every walk they have clocked in to, and see Progress — this month’s
               clock-ins together, not a race.
@@ -74,7 +80,7 @@ export function OverviewSection() {
             <p>
               Sign in and join happen on the account pages at accounts.burysteps-walkinggroup.co.uk.
               After signing in, members land on Walks. Organisers are sent to Walks in Organiser
-              tools.                 Walks, Members, Reports, Settings, and this Guide stay in the top menu — there is no
+              tools. Walks, Members, Reports, Settings, and this Guide stay in the top menu — there is no
               second row of tabs.
             </p>
             <p>

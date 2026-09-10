@@ -94,7 +94,7 @@ export async function updateAllWalksTabEnabled(
     return logActionError("updateAllWalksTabEnabled", err, "Could not save that setting. Try again.");
   }
 
-  revalidatePath("/dashboard");
+  revalidatePath("/walks");
   revalidatePath("/admin/settings");
   return {
     ok: true,

@@ -201,7 +201,7 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
   }
 
   revalidatePath("/admin");
-  revalidatePath("/dashboard");
+  revalidatePath("/walks");
   revalidateWalkShare(walk);
 
   await notifyMembersOfNewWalk({
@@ -279,7 +279,7 @@ export async function duplicateWalk(
   }
 
   revalidatePath("/admin");
-  revalidatePath("/dashboard");
+  revalidatePath("/walks");
   revalidatePath(`/admin/walks/${walk.id}`);
   revalidateWalkShare(walk);
   return {
@@ -375,7 +375,7 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
 
   revalidatePath("/admin");
   revalidatePath(`/admin/walks/${id}`);
-  revalidatePath("/dashboard");
+  revalidatePath("/walks");
   revalidateWalkShare(walk);
 
   await notifyMembersOfCancelledWalk({
@@ -423,7 +423,7 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
 
   revalidatePath("/admin");
   revalidatePath(`/admin/walks/${id}`);
-  revalidatePath("/dashboard");
+  revalidatePath("/walks");
   revalidateWalkShare(walk);
 
   await notifyMembersOfWalkReopened({
@@ -545,7 +545,7 @@ export async function updateWalk(
 
   revalidatePath("/admin");
   revalidatePath(`/admin/walks/${id}`);
-  revalidatePath("/dashboard");
+  revalidatePath("/walks");
   revalidateWalkShare(existing);
   revalidateWalkShare(walk);
 
@@ -585,7 +585,7 @@ export async function deleteWalk(_prev: ActionResult | null, formData: FormData)
   }
 
   revalidatePath("/admin");
-  revalidatePath("/dashboard");
+  revalidatePath("/walks");
   revalidateWalkShare(walk);
   return {
     ok: true,

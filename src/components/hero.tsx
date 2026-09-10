@@ -48,7 +48,7 @@ export function HeroSection({
             <>
               <Show when="signed-in">
                 <Button asChild variant="outline">
-                  <Link href="/dashboard">Your walks</Link>
+                  <Link href="/walks">Your walks</Link>
                 </Button>
               </Show>
               <Show when="signed-out">

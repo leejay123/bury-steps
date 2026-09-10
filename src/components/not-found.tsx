@@ -36,7 +36,7 @@ export function NotFoundPage() {
                     </Link>
                   </Button>
                   <Button asChild variant="outline">
-                    <Link href="/dashboard">
+                    <Link href="/walks">
                       <CompassIcon data-icon="inline-start" />
                       Explore
                     </Link>

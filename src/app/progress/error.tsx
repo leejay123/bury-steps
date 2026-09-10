@@ -13,7 +13,7 @@ export default function DashboardProgressError({
     <RouteError
       description="Try again, or head back to your walks."
       error={error}
-      homeHref="/dashboard"
+      homeHref="/walks"
       homeLabel="Your walks"
       reset={reset}
       title="Something went wrong loading your progress"

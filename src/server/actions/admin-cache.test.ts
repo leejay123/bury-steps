@@ -79,12 +79,12 @@ beforeEach(() => {
 });
 
 describe("clearSiteCache", () => {
-  it("revalidates both cache tags and the public/admin/dashboard routes", async () => {
+  it("revalidates both cache tags and the public/admin/walks routes", async () => {
     const result = await clearSiteCache(null, new FormData());
     expect(revalidateTag).toHaveBeenCalledWith("homepage", { expire: 0 });
     expect(revalidateTag).toHaveBeenCalledWith(expect.any(String), { expire: 0 });
     expect(revalidateTag).toHaveBeenCalledTimes(2);
-    for (const path of ["/", "/home", "/admin", "/dashboard"]) {
+    for (const path of ["/", "/home", "/admin", "/walks"]) {
       expect(revalidatePath).toHaveBeenCalledWith(path);
     }
     expect(result.ok).toBe(true);
@@ -203,7 +203,7 @@ describe("resetSiteToDefault", () => {
 
   it("revalidates the public and admin routes on a clean reset", async () => {
     await resetSiteToDefault(null, resetForm("delete"));
-    for (const path of ["/", "/home", "/admin", "/admin/members", "/dashboard"]) {
+    for (const path of ["/", "/home", "/admin", "/admin/members", "/walks"]) {
       expect(revalidatePath).toHaveBeenCalledWith(path);
     }
   });

@@ -18,7 +18,7 @@ const TILES: BentoTile[] = [
     title: "See what's on",
     description: "Upcoming walks, meeting points, and a one-tap clock-in on the day.",
     icon: <Footprints />,
-    href: "/dashboard",
+    href: "/walks",
     wide: true,
   },
   {

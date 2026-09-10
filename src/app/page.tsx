@@ -7,7 +7,7 @@ import { getHomepageFaqData } from "@/lib/homepage-faqs";
 import { getHomepageMemberNotices } from "@/lib/site-notices";
 import { PAGE_X_BLEED } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
-import { accountPortalHref, appUrl } from "@/lib/urls";
+import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
 
 // Must be a numeric literal so Next can statically detect ISR.
 export const revalidate = 120;
@@ -27,8 +27,8 @@ export default async function Home() {
     <div className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
       <HeroSection
         carouselEnabled={theme.carouselEnabled}
-        signInHref={accountPortalHref("sign-in", `${origin}/dashboard`)}
-        signUpHref={accountPortalHref("sign-up", `${origin}/dashboard`)}
+        signInHref={accountPortalHref("sign-in", `${origin}${AFTER_AUTH_PATH}`)}
+        signUpHref={accountPortalHref("sign-up", `${origin}${AFTER_AUTH_PATH}`)}
         siteName={theme.siteName}
         siteTagline={theme.siteTagline}
         slides={slides}

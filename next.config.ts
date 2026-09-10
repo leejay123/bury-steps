@@ -42,6 +42,11 @@ const nextConfig: NextConfig = {
       // any links out in the wild working.
       { source: "/dashboard/progress", destination: "/progress", permanent: true },
       { source: "/dashboard/history", destination: "/history", permanent: true },
+      // /dashboard itself renamed to /walks (the page was always the walks
+      // list — "dashboard" was a leftover from an earlier, more general
+      // version of the page). Keep old bookmarks/emails/sign-in redirects
+      // working.
+      { source: "/dashboard", destination: "/walks", permanent: true },
     ];
   },
   async headers() {

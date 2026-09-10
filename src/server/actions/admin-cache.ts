@@ -52,7 +52,7 @@ export async function clearSiteCache(
   revalidatePath("/");
   revalidatePath("/home");
   revalidatePath("/admin");
-  revalidatePath("/dashboard");
+  revalidatePath("/walks");
   return {
     ok: true,
     message: "Site cache cleared. The public homepage will refresh on the next visit.",
@@ -244,7 +244,7 @@ export async function resetSiteToDefault(
   revalidatePath("/admin/members");
   revalidatePath("/admin/reports");
   revalidatePath("/admin/settings");
-  revalidatePath("/dashboard");
+  revalidatePath("/walks");
   revalidatePath("/progress");
   revalidatePath("/history");
 
