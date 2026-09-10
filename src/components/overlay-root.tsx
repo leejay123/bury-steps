@@ -226,6 +226,30 @@ export function UnlockPageOnNavigate() {
     // would otherwise leave the new page permanently unclickable.
     neutralizeStaleOverlays();
     restorePagePointerEvents();
+
+    // Mobile Safari shrinks its address bar as you scroll and doesn't
+    // finish expanding it back until a beat after a new page has already
+    // landed here — the usable viewport is still growing while Safari
+    // settles that animation, and it can nudge the page's actual scroll
+    // offset to compensate, undoing part of the scrollTo(0, 0) above a
+    // moment after it ran. `resize` fires once that settles (same event
+    // as an on-screen keyboard closing, so this also re-covers that
+    // case), so reassert 0 there instead of guessing a fixed delay; the
+    // fallback timer is only for a browser that never fires resize at all.
+    if (!window.location.hash) {
+      let reasserted = false;
+      const reassertTop = () => {
+        if (reasserted || window.location.hash) return;
+        reasserted = true;
+        window.scrollTo(0, 0);
+      };
+      window.addEventListener("resize", reassertTop);
+      const fallback = window.setTimeout(reassertTop, 400);
+      return () => {
+        window.removeEventListener("resize", reassertTop);
+        window.clearTimeout(fallback);
+      };
+    }
   }, [pathname]);
 
   useEffect(() => {
