@@ -58,15 +58,19 @@ html {
  * the page itself so reaching the very top/bottom doesn't hand scroll
  * input off to browser gestures like Chrome's pull-to-refresh.
  *
- * `none` rather than `contain` on the y-axis: `contain` would still stop
- * scroll from chaining past the page, but it leaves iOS's own elastic
- * "rubber-band" bounce past the top/bottom in place, which read as a
- * jump/glitch on a fast phone scroll. `none` also suppresses that local
- * bounce — the page just stops firmly at each end instead.
+ * Tried `none` instead of `contain` on the y-axis to also kill iOS's
+ * elastic "rubber-band" bounce past the top/bottom (which read as a
+ * jump/glitch on a fast phone scroll) — reverted: on iOS Safari, `none`
+ * here doesn't just remove the bounce, it also kills momentum/inertial
+ * scrolling itself, so every scroll stopped dead the instant a finger
+ * lifted instead of gliding to a stop. That's a worse trade than the
+ * bounce it was meant to fix, so back to `contain` (bounce back, but
+ * scrolling feels normal again) unless a JS-based fix is worth the
+ * added complexity later.
  */
 html,
 body {
-  overscroll-behavior-y: none;
+  overscroll-behavior-y: contain;
   /*
    * Chrome/Edge tie their two-finger (trackpad) and edge-swipe (touch)
    * back/forward navigation gesture to overscroll-behavior-x: dragging the
