@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatWalkDay, formatTime } from "@/lib/dates";
 import { Badge } from "@/components/ui/badge";
+import { ReportRetentionToggle } from "./report-retention-toggle";
 import type { ReportView } from "./types";
 
 export function ReportReadView({ report }: { report: ReportView }) {
@@ -8,6 +9,7 @@ export function ReportReadView({ report }: { report: ReportView }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain px-4">
+      <ReportRetentionToggle locked={report.retentionLocked} reportId={report.id} />
       <div className="flex flex-col gap-1">
         <p className="text-xs font-medium text-muted-foreground">When</p>
         <p className="text-sm">

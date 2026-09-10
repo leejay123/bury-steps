@@ -18,6 +18,7 @@ import { DuplicateWalkButton } from "./duplicate-walk-button";
 import { EditWalkButton } from "./edit-walk-button";
 import { AddAttendanceButton } from "./add-attendance-button";
 import { ReopenWalkButton } from "./reopen-walk-button";
+import { RetentionLockToggle } from "./retention-lock-toggle";
 import { DeleteWalkButton } from "./delete-walk-button";
 import { WalkJourneyManager } from "./walk-journey";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -62,6 +63,7 @@ export default async function WalkDetailPage({
       durationMins: true,
       cancelledAt: true,
       cancelledReason: true,
+      retentionLocked: true,
       attendances: {
         orderBy: [{ clockedOutAt: "asc" }, { clockedInAt: "asc" }],
         include: { user: { select: { firstName: true, lastName: true, email: true } } },
@@ -206,6 +208,10 @@ export default async function WalkDetailPage({
         {walk.cancelledAt ? <ReopenWalkButton walkId={walk.id} /> : null}
         <DeleteWalkButton walkId={walk.id} attendanceCount={walk.attendances.length} />
       </div>
+
+      {walk.cancelledAt ? (
+        <RetentionLockToggle locked={walk.retentionLocked} walkId={walk.id} />
+      ) : null}
 
       <Separator />
 

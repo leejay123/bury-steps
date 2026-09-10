@@ -201,3 +201,30 @@ export async function deleteAccidentReport(
   revalidatePath("/admin/reports");
   return { ok: true, message: "Accident report removed." };
 }
+
+/** Flags/unflags a report to exempt it from the accident-report auto-delete
+ * cron (Settings → Display → Retention), regardless of the configured days. */
+export async function setAccidentReportRetentionLocked(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("reportId") ?? "");
+  const locked = String(formData.get("retentionLocked") ?? "") === "on";
+  if (!id) return { ok: false, error: "No report selected." };
+
+  try {
+    await prisma.accidentReport.update({ where: { id }, data: { retentionLocked: locked } });
+  } catch (err) {
+    if (isPrismaCode(err, "P2025")) return { ok: false, error: "That report is no longer there." };
+    return logActionError("setAccidentReportRetentionLocked", err, "Could not save that. Try again.");
+  }
+
+  revalidatePath("/admin/reports");
+  return {
+    ok: true,
+    message: locked
+      ? "This report is flagged — it won't be deleted automatically."
+      : "This report is no longer flagged — it will be deleted automatically like any other, once old enough.",
+  };
+}

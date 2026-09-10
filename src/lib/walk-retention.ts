@@ -43,3 +43,19 @@ export async function getAccidentReportRetentionDays(): Promise<number | null> {
   });
   return row ? row.accidentReportRetentionDays : null;
 }
+
+/** Sanity cap on either retention setting — 10 years. Not a meaningful
+ * real-world limit, just a guard against a fat-fingered huge number. */
+export const MAX_RETENTION_DAYS = 3650;
+
+/** Shared parser for both retention-days settings forms — blank (or 0)
+ * means "never auto-delete" (null), matching the settings' own semantics. */
+export function parseRetentionDays(raw: string): number | null | "invalid" {
+  const trimmed = raw.trim();
+  if (trimmed === "") return null;
+  if (!/^\d+$/.test(trimmed)) return "invalid";
+  const n = Number(trimmed);
+  if (n === 0) return null;
+  if (n > MAX_RETENTION_DAYS) return "invalid";
+  return n;
+}

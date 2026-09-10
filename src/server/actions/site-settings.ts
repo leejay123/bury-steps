@@ -37,6 +37,7 @@ import {
 } from "@/lib/cookie-consent-variant";
 import { parseFacebookGroupUrl, parseSiteName, parseSiteTagline } from "@/lib/site-branding";
 import { MAX_MONTHLY_CLOCK_IN_GOAL } from "@/lib/walk-game";
+import { MAX_RETENTION_DAYS, parseRetentionDays } from "@/lib/walk-retention";
 import { readImageDimensions } from "@/lib/image-dimensions";
 import {
   type ActionResult,
@@ -141,6 +142,99 @@ export async function updateOrganiserInviteRequired(
     message: enabled
       ? "Promoting a member now sends them an invite to accept first."
       : "Promoting a member now takes effect immediately again.",
+  };
+}
+
+/** Days a cancelled, unreopened walk is kept before the daily cron deletes
+ * it — blank turns auto-delete off. A flagged (retentionLocked) walk is
+ * kept regardless of this setting; see the walk's own page. */
+export async function updateCancelledWalkRetentionDays(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const parsed = parseRetentionDays(String(formData.get("cancelledWalkRetentionDays") ?? ""));
+  if (parsed === "invalid") {
+    return {
+      ok: false,
+      error: `Enter a whole number of days from 1 to ${MAX_RETENTION_DAYS.toLocaleString("en-GB")}, or leave it blank to turn auto-delete off.`,
+    };
+  }
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        cancelledWalkRetentionDays: parsed,
+      },
+      update: { cancelledWalkRetentionDays: parsed },
+    });
+  } catch (err) {
+    return logActionError(
+      "updateCancelledWalkRetentionDays",
+      err,
+      "Could not save that setting. Try again.",
+    );
+  }
+
+  revalidatePath("/walks");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/display");
+  revalidatePath("/admin/guide");
+  return {
+    ok: true,
+    message: parsed
+      ? `Cancelled walks are deleted automatically after ${parsed.toLocaleString("en-GB")} days.`
+      : "Cancelled walks are no longer deleted automatically.",
+  };
+}
+
+/** Days an accident report is kept (from when it was logged) before the
+ * daily cron deletes it — blank (the default) turns auto-delete off. A
+ * flagged (retentionLocked) report is kept regardless; see the report
+ * itself in Reports. */
+export async function updateAccidentReportRetentionDays(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const parsed = parseRetentionDays(String(formData.get("accidentReportRetentionDays") ?? ""));
+  if (parsed === "invalid") {
+    return {
+      ok: false,
+      error: `Enter a whole number of days from 1 to ${MAX_RETENTION_DAYS.toLocaleString("en-GB")}, or leave it blank to turn auto-delete off.`,
+    };
+  }
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        accidentReportRetentionDays: parsed,
+      },
+      update: { accidentReportRetentionDays: parsed },
+    });
+  } catch (err) {
+    return logActionError(
+      "updateAccidentReportRetentionDays",
+      err,
+      "Could not save that setting. Try again.",
+    );
+  }
+
+  revalidatePath("/admin/reports");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/display");
+  revalidatePath("/admin/guide");
+  return {
+    ok: true,
+    message: parsed
+      ? `Accident reports are deleted automatically ${parsed.toLocaleString("en-GB")} days after they're logged.`
+      : "Accident reports are no longer deleted automatically.",
   };
 }
 

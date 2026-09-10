@@ -19,6 +19,8 @@ vi.mock("@/lib/auth", async () => {
 import {
   reorderHomepageSections,
   updateAboutLists,
+  updateAccidentReportRetentionDays,
+  updateCancelledWalkRetentionDays,
   updateContactMessagesOwner,
   updateCookieConsentVariant,
   updateFacebookGroupUrl,
@@ -277,6 +279,68 @@ describe("updateOrganiserInviteRequired", () => {
     expect(result).toEqual({
       ok: true,
       message: "Promoting a member now takes effect immediately again.",
+    });
+  });
+});
+
+describe("updateCancelledWalkRetentionDays", () => {
+  it("saves a valid day count", async () => {
+    const result = await updateCancelledWalkRetentionDays(
+      null,
+      form({ cancelledWalkRetentionDays: "45" }),
+    );
+    expect(prismaMock.siteSetting.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ update: { cancelledWalkRetentionDays: 45 } }),
+    );
+    expect(result).toEqual({
+      ok: true,
+      message: "Cancelled walks are deleted automatically after 45 days.",
+    });
+  });
+
+  it("turns auto-delete off when left blank", async () => {
+    const result = await updateCancelledWalkRetentionDays(null, form({}));
+    expect(prismaMock.siteSetting.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ update: { cancelledWalkRetentionDays: null } }),
+    );
+    expect(result).toEqual({
+      ok: true,
+      message: "Cancelled walks are no longer deleted automatically.",
+    });
+  });
+
+  it("rejects a value over the cap", async () => {
+    const result = await updateCancelledWalkRetentionDays(
+      null,
+      form({ cancelledWalkRetentionDays: "999999" }),
+    );
+    expect(result.ok).toBe(false);
+  });
+});
+
+describe("updateAccidentReportRetentionDays", () => {
+  it("saves a valid day count", async () => {
+    const result = await updateAccidentReportRetentionDays(
+      null,
+      form({ accidentReportRetentionDays: "90" }),
+    );
+    expect(prismaMock.siteSetting.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ update: { accidentReportRetentionDays: 90 } }),
+    );
+    expect(result).toEqual({
+      ok: true,
+      message: "Accident reports are deleted automatically 90 days after they're logged.",
+    });
+  });
+
+  it("turns auto-delete off when left blank", async () => {
+    const result = await updateAccidentReportRetentionDays(null, form({}));
+    expect(prismaMock.siteSetting.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ update: { accidentReportRetentionDays: null } }),
+    );
+    expect(result).toEqual({
+      ok: true,
+      message: "Accident reports are no longer deleted automatically.",
     });
   });
 });

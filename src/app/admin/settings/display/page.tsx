@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { requireAdmin, displayName } from "@/lib/auth";
 import { getSiteTheme } from "@/lib/site-theme";
 import { getAllWalksTabEnabled } from "@/lib/walk-progress";
+import { DEFAULT_CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { SettingsPage, SettingsSectionGroup } from "../settings-page";
 import { AboutListsSettings } from "./about-lists-settings";
@@ -10,6 +11,7 @@ import { CarouselToggle } from "../hero-photos/carousel-toggle";
 import { ContactMessagesOwnerSettings } from "./contact-messages-owner-settings";
 import { CookieConsentSettings } from "./cookie-consent-settings";
 import { OrganiserInviteToggle } from "./organiser-invite-toggle";
+import { AccidentReportRetentionSettings, CancelledWalkRetentionSettings } from "./retention-settings";
 import { DisplaySettings } from "./display-form";
 import { DisplaySettingsLayout } from "./display-settings-layout";
 import { FacebookGroupSettings } from "./facebook-group-settings";
@@ -26,7 +28,7 @@ export const dynamic = "force-dynamic";
 
 export default async function DisplaySettingsPage() {
   await requireAdmin();
-  const [theme, allWalksTabEnabled, organisers, contactSetting] = await Promise.all([
+  const [theme, allWalksTabEnabled, organisers, settings] = await Promise.all([
     getSiteTheme(),
     getAllWalksTabEnabled(),
     prisma.user.findMany({
@@ -36,7 +38,12 @@ export default async function DisplaySettingsPage() {
     }),
     prisma.siteSetting.findUnique({
       where: { id: SITE_SETTING_ID },
-      select: { contactMessagesOwnerId: true, organiserInviteRequired: true },
+      select: {
+        contactMessagesOwnerId: true,
+        organiserInviteRequired: true,
+        cancelledWalkRetentionDays: true,
+        accidentReportRetentionDays: true,
+      },
     }),
   ]);
 
@@ -85,7 +92,7 @@ export default async function DisplaySettingsPage() {
           title="Contact messages"
         >
           <ContactMessagesOwnerSettings
-            currentOwnerId={contactSetting?.contactMessagesOwnerId ?? null}
+            currentOwnerId={settings?.contactMessagesOwnerId ?? null}
             organisers={organisers.map((organiser) => ({ id: organiser.id, name: displayName(organiser) }))}
           />
         </SettingsSectionGroup>
@@ -95,7 +102,22 @@ export default async function DisplaySettingsPage() {
           id="organisers"
           title="Organisers"
         >
-          <OrganiserInviteToggle enabled={contactSetting?.organiserInviteRequired ?? false} />
+          <OrganiserInviteToggle enabled={settings?.organiserInviteRequired ?? false} />
+        </SettingsSectionGroup>
+
+        <SettingsSectionGroup
+          description="Automatic deletion of old cancelled walks and accident reports. Flag an individual walk or report to keep it regardless, from that walk or report itself."
+          id="retention"
+          title="Retention"
+        >
+          <CancelledWalkRetentionSettings
+            cancelledWalkRetentionDays={
+              settings ? settings.cancelledWalkRetentionDays : DEFAULT_CANCELLED_WALK_RETENTION_DAYS
+            }
+          />
+          <AccidentReportRetentionSettings
+            accidentReportRetentionDays={settings ? settings.accidentReportRetentionDays : null}
+          />
         </SettingsSectionGroup>
 
         <SettingsSectionGroup

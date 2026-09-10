@@ -86,6 +86,7 @@ export default async function AccidentReportsPage({
           })),
           whatWeDid: report.whatWeDid,
           organiserNotes: report.organiserNotes,
+          retentionLocked: report.retentionLocked,
         }))}
         sortOrder={sort}
         walks={completedWalks.map((walk) => ({

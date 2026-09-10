@@ -593,3 +593,32 @@ export async function deleteWalk(_prev: ActionResult | null, formData: FormData)
     href: "/admin",
   };
 }
+
+/** Flags/unflags a cancelled walk to exempt it from the cancelled-walk
+ * auto-delete cron (Settings → Display → Retention), regardless of the
+ * configured days. Meaningless (and harmless) for a walk that isn't
+ * cancelled — the cron only ever considers cancelled walks anyway. */
+export async function setWalkRetentionLocked(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("walkId") ?? "");
+  const locked = String(formData.get("retentionLocked") ?? "") === "on";
+  if (!id) return { ok: false, error: "No walk selected." };
+
+  try {
+    await prisma.walk.update({ where: { id }, data: { retentionLocked: locked } });
+  } catch (err) {
+    if (isPrismaCode(err, "P2025")) return { ok: false, error: "That walk is no longer there." };
+    return logActionError("setWalkRetentionLocked", err, "Could not save that. Try again.");
+  }
+
+  revalidatePath(`/admin/walks/${id}`);
+  return {
+    ok: true,
+    message: locked
+      ? "This walk is flagged — it won't be deleted automatically."
+      : "This walk is no longer flagged — it will be deleted automatically like any other, once old enough.",
+  };
+}

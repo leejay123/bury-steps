@@ -15,6 +15,7 @@ export {
   reopenWalk,
   updateWalk,
   deleteWalk,
+  setWalkRetentionLocked,
 } from "./actions/walks";
 
 export { createJourneyEvent, updateJourneyEvent, deleteJourneyEvent } from "./actions/journey";
@@ -81,6 +82,8 @@ export {
 export {
   updateCarouselEnabled,
   updateAllWalksTabEnabled,
+  updateAccidentReportRetentionDays,
+  updateCancelledWalkRetentionDays,
   updateContactMessagesOwner,
   updateOrganiserInviteRequired,
   updateScrollToTopEnabled,
@@ -102,6 +105,7 @@ export {
   addAccidentReport,
   updateAccidentReport,
   deleteAccidentReport,
+  setAccidentReportRetentionLocked,
   getWalkAttendeesForReportForm,
 } from "./actions/reports";
 

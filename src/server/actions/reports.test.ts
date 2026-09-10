@@ -19,7 +19,12 @@ vi.mock("@/lib/auth", async () => {
 // not mocked above) and hits the network — out of scope for these tests.
 vi.mock("@/lib/email/mailer", () => ({ sendAccidentReportAlertEmail }));
 
-import { addAccidentReport, deleteAccidentReport, updateAccidentReport } from "./reports";
+import {
+  addAccidentReport,
+  deleteAccidentReport,
+  setAccidentReportRetentionLocked,
+  updateAccidentReport,
+} from "./reports";
 
 const ADMIN = { id: "admin-1" };
 
@@ -157,5 +162,49 @@ describe("deleteAccidentReport", () => {
     formData.set("reportId", "report-1");
     const result = await deleteAccidentReport(null, formData);
     expect(result).toEqual({ ok: true, message: "Accident report removed." });
+  });
+});
+
+describe("setAccidentReportRetentionLocked", () => {
+  it("requires a report to be selected", async () => {
+    const result = await setAccidentReportRetentionLocked(null, new FormData());
+    expect(result).toEqual({ ok: false, error: "No report selected." });
+  });
+
+  it("reports the report as already gone (P2025) rather than a generic failure", async () => {
+    prismaMock.accidentReport.update.mockRejectedValueOnce({ code: "P2025" });
+    const formData = new FormData();
+    formData.set("reportId", "report-1");
+    formData.set("retentionLocked", "on");
+    const result = await setAccidentReportRetentionLocked(null, formData);
+    expect(result).toEqual({ ok: false, error: "That report is no longer there." });
+  });
+
+  it("flags the report", async () => {
+    prismaMock.accidentReport.update.mockResolvedValueOnce({});
+    const formData = new FormData();
+    formData.set("reportId", "report-1");
+    formData.set("retentionLocked", "on");
+    const result = await setAccidentReportRetentionLocked(null, formData);
+    expect(prismaMock.accidentReport.update).toHaveBeenCalledWith({
+      where: { id: "report-1" },
+      data: { retentionLocked: true },
+    });
+    expect(result).toEqual({
+      ok: true,
+      message: "This report is flagged — it won't be deleted automatically.",
+    });
+  });
+
+  it("unflags the report", async () => {
+    prismaMock.accidentReport.update.mockResolvedValueOnce({});
+    const formData = new FormData();
+    formData.set("reportId", "report-1");
+    const result = await setAccidentReportRetentionLocked(null, formData);
+    expect(prismaMock.accidentReport.update).toHaveBeenCalledWith({
+      where: { id: "report-1" },
+      data: { retentionLocked: false },
+    });
+    expect(result.ok).toBe(true);
   });
 });

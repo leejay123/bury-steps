@@ -11,6 +11,9 @@ export type ReportView = {
   involvedMembers: InvolvedMember[];
   whatWeDid: string;
   organiserNotes: string | null;
+  /** Exempts this report from the accident-report auto-delete cron
+   * (Settings → Display → Retention), regardless of the configured days. */
+  retentionLocked: boolean;
 };
 
 export type WalkOption = { id: string; title: string; startsAt: string };

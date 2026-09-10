@@ -66,7 +66,15 @@ vi.mock("@/lib/auth", async () => {
   return { ...actual, requireAdmin };
 });
 
-import { cancelWalk, deleteWalk, duplicateWalk, reopenWalk, searchWalkPlaces, updateWalk } from "./walks";
+import {
+  cancelWalk,
+  deleteWalk,
+  duplicateWalk,
+  reopenWalk,
+  searchWalkPlaces,
+  setWalkRetentionLocked,
+  updateWalk,
+} from "./walks";
 
 const ADMIN = { id: "admin-1" };
 
@@ -482,5 +490,47 @@ describe("deleteWalk", () => {
       message: "“Sunday stroll” has been removed.",
       href: "/admin",
     });
+  });
+});
+
+describe("setWalkRetentionLocked", () => {
+  it("requires a walk to be selected", async () => {
+    const result = await setWalkRetentionLocked(null, form({}));
+    expect(result).toEqual({ ok: false, error: "No walk selected." });
+  });
+
+  it("reports the walk as already gone (P2025) rather than a generic failure", async () => {
+    prismaMock.walk.update.mockRejectedValueOnce({ code: "P2025" });
+    const result = await setWalkRetentionLocked(
+      null,
+      form({ walkId: "walk-1", retentionLocked: "on" }),
+    );
+    expect(result).toEqual({ ok: false, error: "That walk is no longer there." });
+  });
+
+  it("flags the walk", async () => {
+    prismaMock.walk.update.mockResolvedValueOnce({});
+    const result = await setWalkRetentionLocked(
+      null,
+      form({ walkId: "walk-1", retentionLocked: "on" }),
+    );
+    expect(prismaMock.walk.update).toHaveBeenCalledWith({
+      where: { id: "walk-1" },
+      data: { retentionLocked: true },
+    });
+    expect(result).toEqual({
+      ok: true,
+      message: "This walk is flagged — it won't be deleted automatically.",
+    });
+  });
+
+  it("unflags the walk", async () => {
+    prismaMock.walk.update.mockResolvedValueOnce({});
+    const result = await setWalkRetentionLocked(null, form({ walkId: "walk-1" }));
+    expect(prismaMock.walk.update).toHaveBeenCalledWith({
+      where: { id: "walk-1" },
+      data: { retentionLocked: false },
+    });
+    expect(result.ok).toBe(true);
   });
 });
