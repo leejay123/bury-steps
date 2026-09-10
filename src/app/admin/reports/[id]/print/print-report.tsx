@@ -121,11 +121,17 @@ export function PrintReport({
           separate uploaded image from the header logo, shown only once an
           admin has set one under Settings > Display > Report banner. */}
       {reportBannerSrc ? (
-        <div className="mt-4 border-t border-black pt-4 break-inside-avoid">
+        <div className="mt-4 h-32 border-t border-black pt-4 break-inside-avoid">
           {/* A plain <img>, not next/image: this is a printed page, not a
-              served-and-cached web view, so the optimizer buys nothing here. */}
+              served-and-cached web view, so the optimizer buys nothing here.
+              object-contain inside a capped-height box shows the full
+              banner uncropped, however wide it is, rather than stretching
+              it across the whole page at whatever height that implies —
+              a wide/thin letterhead came out sensible either way, but a
+              banner closer to square was printing far taller than the
+              rest of the page warranted. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img alt="" className="h-auto w-full object-contain" src={reportBannerSrc} />
+          <img alt="" className="h-full w-full object-contain" src={reportBannerSrc} />
         </div>
       ) : null}
     </div>
