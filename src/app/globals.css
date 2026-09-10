@@ -70,6 +70,22 @@ body {
    * outright instead of just containing it.
    */
   overscroll-behavior-x: none;
+  /*
+   * UnlockPageOnNavigate (overlay-root.tsx) deliberately snaps scroll to 0
+   * on every client-side navigation, since Next defers to the browser's
+   * native scroll handling once history.scrollRestoration is "manual" and
+   * the browser itself does nothing on an in-page route change. Without
+   * this, the browser's own "scroll anchoring" can still nudge that
+   * position by a few pixels a moment later if anything above the fold
+   * changes size right after landing (an image finishing loading, a
+   * banner appearing, a font swapping in) — which reads as "navigated
+   * here already scrolled a tiny bit" instead of landing cleanly at the
+   * top. Nothing on this site relies on scroll anchoring's usual benefit
+   * (keeping a reading position steady while content loads above it, e.g.
+   * a chat feed or infinite-scroll list), so there is no downside to
+   * turning it off everywhere.
+   */
+  overflow-anchor: none;
 }
 
 /*
