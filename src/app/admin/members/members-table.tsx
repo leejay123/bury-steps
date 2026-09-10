@@ -73,6 +73,18 @@ export function MembersTable({
   const [refreshNonce, setRefreshNonce] = useState(0);
   const refetch = useCallback(() => setRefreshNonce((n) => n + 1), []);
 
+  // `initialRows`/`initialTotal` are already the result of this exact
+  // query (page 1, no search, current roleFilter) — the server component
+  // fetches with `searchMembers({ role })` before ever rendering this
+  // component. Without this, the effect below re-ran that identical fetch
+  // on every mount (and again on every roleFilter change, since
+  // `useResetOnChange` re-syncs rows/total to the fresh initialRows but
+  // doesn't stop the effect from firing too), producing a visible
+  // opacity fade over data that hadn't actually changed. Starts `true` so
+  // the very first mount is skipped; set back to `true` whenever
+  // useResetOnChange re-syncs to a fresh set of server-provided rows.
+  const skipNextFetchRef = useRef(true);
+
   // A full navigation changes roleFilter/initialRows — drop back to page 1,
   // no search, and the fresh server-rendered rows for that role.
   useResetOnChange([roleFilter], () => {
@@ -80,9 +92,14 @@ export function MembersTable({
     setPage(1);
     setRows(initialRows);
     setTotal(initialTotal);
+    skipNextFetchRef.current = true;
   });
 
   useEffect(() => {
+    if (skipNextFetchRef.current) {
+      skipNextFetchRef.current = false;
+      return;
+    }
     const handle = setTimeout(
       () => {
         startTransition(async () => {
