@@ -107,12 +107,16 @@ function DeleteMemberDialogForm({
 export function DeleteMemberButton({
   userId,
   name,
+  onDeleted,
   walkCount,
   attendanceCount,
   redirectTo,
 }: {
   userId: string;
   name: string;
+  /** Called after a successful removal — lets a parent list re-fetch its own
+   * local rows, which a plain router.refresh() doesn't reach on its own. */
+  onDeleted?: () => void;
   walkCount: number;
   attendanceCount: number;
   /** Where to navigate after removal — used when this button lives on the member's own page, which no longer exists once they are removed. */
@@ -139,7 +143,10 @@ export function DeleteMemberButton({
           key={session}
           attendanceCount={attendanceCount}
           name={name}
-          onClose={() => setOpen(false)}
+          onClose={() => {
+            setOpen(false);
+            onDeleted?.();
+          }}
           redirectTo={redirectTo}
           userId={userId}
           walkCount={walkCount}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Search } from "lucide-react";
@@ -63,6 +63,15 @@ export function MembersTable({
   const [rows, setRows] = useState(initialRows);
   const [total, setTotal] = useState(initialTotal);
   const [isPending, startTransition] = useTransition();
+  // Bumped by a row action (resend/cancel invite, role change, remove) once
+  // it succeeds, to re-run the fetch below with the *current* query/page —
+  // `rows`/`total` are local state seeded once from `initialRows`/
+  // `initialTotal`, so a server action's own router.refresh() alone doesn't
+  // reach them (a fresh `initialRows` prop doesn't re-run a useState
+  // initializer). Without this, a row's status only ever visually updated
+  // after a manual page reload.
+  const [refreshNonce, setRefreshNonce] = useState(0);
+  const refetch = useCallback(() => setRefreshNonce((n) => n + 1), []);
 
   // A full navigation changes roleFilter/initialRows — drop back to page 1,
   // no search, and the fresh server-rendered rows for that role.
@@ -85,7 +94,7 @@ export function MembersTable({
       query === "" && page === 1 ? 0 : 300,
     );
     return () => clearTimeout(handle);
-  }, [query, page, roleFilter, viewerId]);
+  }, [query, page, roleFilter, viewerId, refreshNonce]);
 
   function handleQueryChange(next: string) {
     setQuery(next);
@@ -179,14 +188,14 @@ export function MembersTable({
                       {member.pendingInvite.expired ? "Invite expired" : "Invited"}
                     </span>
                   ) : (
-                    <Badge className="h-7 px-2" variant={member.role === "ADMIN" ? "default" : "secondary"}>
+                    <Badge className="h-7 px-2" variant={member.role === "ADMIN" ? "outline" : "secondary"}>
                       {member.role === "ADMIN" ? "Organiser" : "Member"}
                     </Badge>
                   )}
                   {member.pendingInvite ? (
                     <>
-                      <ResendInviteButton userId={member.id} />
-                      <CancelInviteButton userId={member.id} />
+                      <ResendInviteButton onDone={refetch} userId={member.id} />
+                      <CancelInviteButton onDone={refetch} userId={member.id} />
                     </>
                   ) : /* Changing your own role here would be easy to hit by
                          mistake and immediately cost you organiser access to
@@ -197,6 +206,7 @@ export function MembersTable({
                     <MemberRoleButton
                       inviteRequired={inviteRequired}
                       name={member.name}
+                      onChanged={refetch}
                       role={member.role}
                       userId={member.id}
                     />
@@ -205,6 +215,7 @@ export function MembersTable({
                     <DeleteMemberButton
                       attendanceCount={member.attendanceCount}
                       name={member.name}
+                      onDeleted={refetch}
                       userId={member.id}
                       walkCount={member.walkCount}
                     />

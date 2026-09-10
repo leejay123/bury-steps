@@ -15,9 +15,15 @@ function ResendSubmit() {
   );
 }
 
-export function ResendInviteButton({ userId }: { userId: string }) {
+export function ResendInviteButton({
+  onDone,
+  userId,
+}: {
+  onDone?: () => void;
+  userId: string;
+}) {
   const [state, action] = useActionState<ActionResult | null, FormData>(resendOrganiserInvite, null);
-  useActionToast(state);
+  useActionToast(state, onDone);
   return (
     <form action={action}>
       <input name="userId" type="hidden" value={userId} />
@@ -35,9 +41,15 @@ function CancelSubmit() {
   );
 }
 
-export function CancelInviteButton({ userId }: { userId: string }) {
+export function CancelInviteButton({
+  onDone,
+  userId,
+}: {
+  onDone?: () => void;
+  userId: string;
+}) {
   const [state, action] = useActionState<ActionResult | null, FormData>(cancelOrganiserInvite, null);
-  useActionToast(state);
+  useActionToast(state, onDone);
   return (
     <form action={action}>
       <input name="userId" type="hidden" value={userId} />

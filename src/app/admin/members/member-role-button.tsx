@@ -54,6 +54,7 @@ function ConfirmSubmit({
 export function MemberRoleButton({
   inviteRequired = false,
   name,
+  onChanged,
   role,
   userId,
 }: {
@@ -61,6 +62,9 @@ export function MemberRoleButton({
    * taking effect immediately — see Settings → Display → Organisers. */
   inviteRequired?: boolean;
   name: string;
+  /** Called after a successful change — lets a parent list re-fetch its own
+   * local rows, which a plain router.refresh() doesn't reach on its own. */
+  onChanged?: () => void;
   role: "ADMIN" | "MEMBER";
   userId: string;
 }) {
@@ -72,7 +76,10 @@ export function MemberRoleButton({
   );
   const [open, setOpen] = useState(false);
   const [confirmValue, setConfirmValue] = useState("");
-  useActionToast(state, () => setOpen(false));
+  useActionToast(state, () => {
+    setOpen(false);
+    onChanged?.();
+  });
 
   useResetOnChange([open], () => {
     if (!open) setConfirmValue("");

@@ -56,7 +56,7 @@ export default async function MemberDetailPage({
                   {member.pendingInvite.expired ? "Invite expired" : "Invited"}
                 </span>
               ) : (
-                <Badge className="h-7 px-2" variant={member.role === "ADMIN" ? "default" : "secondary"}>
+                <Badge className="h-7 px-2" variant={member.role === "ADMIN" ? "outline" : "secondary"}>
                   {member.role === "ADMIN" ? "Organiser" : "Member"}
                 </Badge>
               )}
