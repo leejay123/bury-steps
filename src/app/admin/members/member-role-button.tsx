@@ -39,12 +39,12 @@ function ConfirmSubmit({
       {pending
         ? promoting
           ? inviteRequired
-            ? "Sending invite…"
+            ? "Inviting…"
             : "Promoting…"
           : "Demoting…"
         : promoting
           ? inviteRequired
-            ? "Send invite"
+            ? "Invite as organiser"
             : "Make organiser"
           : "Make member"}
     </Button>
@@ -86,7 +86,7 @@ export function MemberRoleButton({
     >
       <AlertDialogTrigger asChild>
         <Button size="xs" variant="outline">
-          {promoting ? (inviteRequired ? "Send invite" : "Make organiser") : "Make member"}
+          {promoting ? (inviteRequired ? "Invite as organiser" : "Make organiser") : "Make member"}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent closeDisabled={isPending}>
