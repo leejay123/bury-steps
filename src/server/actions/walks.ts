@@ -21,12 +21,13 @@ import { allocateWalkSlug, walkShareUrl } from "@/lib/walk-slug";
 import { appUrl } from "@/lib/urls";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
 import {
-  sendWalkAnnouncedEmail,
-  sendWalkCancelledEmail,
-  sendWalkReopenedEmail,
+  buildWalkAnnouncedEmail,
+  buildWalkCancelledEmail,
+  buildWalkReopenedEmail,
   type MemberLike,
   type WalkLike,
 } from "@/lib/email/mailer";
+import { sendEmailBatch } from "@/lib/email/client";
 import {
   type ActionResult,
   LimitReachedError,
@@ -70,38 +71,31 @@ async function membersOptedIntoWalkAnnouncements(): Promise<MemberLike[]> {
   });
 }
 
-/** Best-effort fan-out to every opted-in member — one email each, never a
- * single email with everyone in `to:` (that would leak every member's
- * address to every other member). */
+/** Best-effort fan-out to every opted-in member via Resend's batch send
+ * (see sendEmailBatch) — never a single email with everyone in `to:` (that
+ * would leak every member's address to every other member); each member
+ * still gets their own separate, individually addressed email. Building
+ * each member's email (a couple of DB/config reads, no network call to
+ * Resend) stays a plain Promise.all — only the actual send needs chunking. */
 async function notifyMembersOfNewWalk(
   walk: WalkLike & { durationText: string; meetingPoint: string | null; what3words: string | null },
 ): Promise<void> {
   try {
     const members = await membersOptedIntoWalkAnnouncements();
-    await Promise.all(
-      members.map((member) =>
-        sendWalkAnnouncedEmail(walk, member).catch((err) => {
-          console.error("notifyMembersOfNewWalk: failed to notify", member.id, err);
-        }),
-      ),
-    );
+    const emails = await Promise.all(members.map((member) => buildWalkAnnouncedEmail(walk, member)));
+    await sendEmailBatch(emails);
   } catch (err) {
-    console.error("notifyMembersOfNewWalk: failed to load recipients", err);
+    console.error("notifyMembersOfNewWalk: failed to notify recipients", err);
   }
 }
 
 async function notifyMembersOfCancelledWalk(walk: WalkLike & { reason: string | null }): Promise<void> {
   try {
     const members = await membersOptedIntoWalkAnnouncements();
-    await Promise.all(
-      members.map((member) =>
-        sendWalkCancelledEmail(walk, member).catch((err) => {
-          console.error("notifyMembersOfCancelledWalk: failed to notify", member.id, err);
-        }),
-      ),
-    );
+    const emails = await Promise.all(members.map((member) => buildWalkCancelledEmail(walk, member)));
+    await sendEmailBatch(emails);
   } catch (err) {
-    console.error("notifyMembersOfCancelledWalk: failed to load recipients", err);
+    console.error("notifyMembersOfCancelledWalk: failed to notify recipients", err);
   }
 }
 
@@ -110,15 +104,10 @@ async function notifyMembersOfWalkReopened(
 ): Promise<void> {
   try {
     const members = await membersOptedIntoWalkAnnouncements();
-    await Promise.all(
-      members.map((member) =>
-        sendWalkReopenedEmail(walk, member).catch((err) => {
-          console.error("notifyMembersOfWalkReopened: failed to notify", member.id, err);
-        }),
-      ),
-    );
+    const emails = await Promise.all(members.map((member) => buildWalkReopenedEmail(walk, member)));
+    await sendEmailBatch(emails);
   } catch (err) {
-    console.error("notifyMembersOfWalkReopened: failed to load recipients", err);
+    console.error("notifyMembersOfWalkReopened: failed to notify recipients", err);
   }
 }
 

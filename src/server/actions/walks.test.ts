@@ -14,9 +14,10 @@ const {
   walkStatus,
   prismaMock,
   transaction,
-  sendWalkAnnouncedEmail,
-  sendWalkCancelledEmail,
-  sendWalkReopenedEmail,
+  buildWalkAnnouncedEmail,
+  buildWalkCancelledEmail,
+  buildWalkReopenedEmail,
+  sendEmailBatch,
 } = vi.hoisted(() => {
   const prismaMock: Record<string, Record<string, ReturnType<typeof vi.fn>>> = {
     walk: { create: vi.fn(), update: vi.fn(), delete: vi.fn(), findUnique: vi.fn() },
@@ -40,9 +41,16 @@ const {
     walkStatus: vi.fn(() => "upcoming"),
     prismaMock,
     transaction,
-    sendWalkAnnouncedEmail: vi.fn(async () => {}),
-    sendWalkCancelledEmail: vi.fn(async () => {}),
-    sendWalkReopenedEmail: vi.fn(async () => {}),
+    // buildWalkXEmail normally returns the SendEmailInput it would send;
+    // the walk-notification fan-outs hand an array of these to
+    // sendEmailBatch, which is what these tests assert on instead of a
+    // per-member send call. Keeping `walk`/`member` on the stub result
+    // (rather than a real SendEmailInput shape) lets the assertions below
+    // check the same content the old per-call assertions did.
+    buildWalkAnnouncedEmail: vi.fn(async (walk: unknown, member: unknown) => ({ walk, member })),
+    buildWalkCancelledEmail: vi.fn(async (walk: unknown, member: unknown) => ({ walk, member })),
+    buildWalkReopenedEmail: vi.fn(async (walk: unknown, member: unknown) => ({ walk, member })),
+    sendEmailBatch: vi.fn(async () => ({ sent: 0, failed: 0 })),
   };
 });
 
@@ -52,7 +60,12 @@ vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
 vi.mock("@/lib/walk-slug", () => ({ allocateWalkSlug, walkShareUrl: vi.fn(() => "https://example.com/w/test") }));
 // Real email sending pulls in site-theme.ts (next/cache's unstable_cache,
 // not mocked above) and hits the network — out of scope for these tests.
-vi.mock("@/lib/email/mailer", () => ({ sendWalkAnnouncedEmail, sendWalkCancelledEmail, sendWalkReopenedEmail }));
+vi.mock("@/lib/email/mailer", () => ({
+  buildWalkAnnouncedEmail,
+  buildWalkCancelledEmail,
+  buildWalkReopenedEmail,
+}));
+vi.mock("@/lib/email/client", () => ({ sendEmailBatch }));
 vi.mock("@/lib/walk-window", async () => {
   const actual = await vi.importActual<typeof import("@/lib/walk-window")>("@/lib/walk-window");
   return { ...actual, isWalkScheduleLocked, isWalkStartInThePast, walkStatus };
@@ -277,10 +290,12 @@ describe("cancelWalk", () => {
     expect(prismaMock.user.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { emailWalkAnnouncements: true } }),
     );
-    expect(sendWalkCancelledEmail).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Sunday stroll", reason: "Bad weather" }),
-      expect.objectContaining({ id: "user-1" }),
-    );
+    expect(sendEmailBatch).toHaveBeenCalledWith([
+      expect.objectContaining({
+        walk: expect.objectContaining({ title: "Sunday stroll", reason: "Bad weather" }),
+        member: expect.objectContaining({ id: "user-1" }),
+      }),
+    ]);
   });
 });
 
@@ -342,10 +357,12 @@ describe("reopenWalk", () => {
     expect(prismaMock.user.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { emailWalkAnnouncements: true } }),
     );
-    expect(sendWalkReopenedEmail).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Sunday stroll" }),
-      expect.objectContaining({ id: "user-1" }),
-    );
+    expect(sendEmailBatch).toHaveBeenCalledWith([
+      expect.objectContaining({
+        walk: expect.objectContaining({ title: "Sunday stroll" }),
+        member: expect.objectContaining({ id: "user-1" }),
+      }),
+    ]);
   });
 });
 
@@ -444,10 +461,12 @@ describe("updateWalk", () => {
 
     await updateWalk(null, updateForm({ wasCancelled: "on" }));
 
-    expect(sendWalkReopenedEmail).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Sunday stroll" }),
-      expect.objectContaining({ id: "user-1" }),
-    );
+    expect(sendEmailBatch).toHaveBeenCalledWith([
+      expect.objectContaining({
+        walk: expect.objectContaining({ title: "Sunday stroll" }),
+        member: expect.objectContaining({ id: "user-1" }),
+      }),
+    ]);
   });
 
   it("does not notify members on an ordinary edit that isn't reopening anything", async () => {
@@ -462,7 +481,8 @@ describe("updateWalk", () => {
 
     await updateWalk(null, updateForm());
 
-    expect(sendWalkReopenedEmail).not.toHaveBeenCalled();
+    expect(buildWalkReopenedEmail).not.toHaveBeenCalled();
+    expect(sendEmailBatch).not.toHaveBeenCalled();
   });
 });
 

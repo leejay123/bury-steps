@@ -125,9 +125,18 @@ export async function sendNewsletterCampaign(
     for (const member of newsletterMembers) {
       uniqueByEmail.set(member.email.toLowerCase(), member.firstName);
     }
-    await Promise.all(
-      [...uniqueByEmail].map(([email, firstName]) => syncContactSubscribed(email, firstName)),
-    );
+    // Resend's Contacts API has no batch/bulk endpoint (unlike /emails/batch
+    // — see sendEmailBatch in lib/email/client.ts), so this stays one
+    // request per contact. A small chunk of concurrent requests at a time,
+    // rather than firing every contact at once via a single Promise.all,
+    // keeps a large subscriber list from bursting well past Resend's
+    // ~10-requests/second rate limit (https://resend.com/docs/api-reference/rate-limit).
+    const CONTACT_SYNC_CHUNK_SIZE = 10;
+    const contacts = [...uniqueByEmail];
+    for (let i = 0; i < contacts.length; i += CONTACT_SYNC_CHUNK_SIZE) {
+      const chunk = contacts.slice(i, i + CONTACT_SYNC_CHUNK_SIZE);
+      await Promise.all(chunk.map(([email, firstName]) => syncContactSubscribed(email, firstName)));
+    }
 
     const brand = await getEmailBrand();
     const { error } = await resend.broadcasts.create({

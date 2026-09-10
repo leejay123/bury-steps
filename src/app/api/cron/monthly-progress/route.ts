@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { LONDON } from "@/lib/dates";
 import { loadWalkGame } from "@/lib/walk-progress";
-import { sendProgressSummaryEmail } from "@/lib/email/mailer";
+import { buildProgressSummaryEmail } from "@/lib/email/mailer";
+import { sendEmailBatch, type SendEmailInput } from "@/lib/email/client";
 
 /**
  * Monthly recap — walks done, streak, group goal progress — for every
@@ -37,34 +38,46 @@ export async function GET(req: Request) {
   );
   const monthKey = `${prevMonth.getUTCFullYear()}-${String(prevMonth.getUTCMonth() + 1).padStart(2, "0")}`;
 
+  // orderBy keeps the recipient list in a stable order across a retried
+  // invocation, so sendEmailBatch's per-chunk idempotency key below (there's
+  // no per-email idempotency on Resend's batch endpoint) lines up with the
+  // same members' emails both times, rather than risking a reshuffled
+  // chunk boundary re-sending someone or skipping them.
   const members = await prisma.user.findMany({
     where: { emailProgress: true },
     select: { id: true, email: true, firstName: true, unsubscribeToken: true },
+    orderBy: { id: "asc" },
   });
 
-  let sent = 0;
+  // Building each member's email means a DB read (loadWalkGame) per
+  // person, so this stays a sequential loop rather than a Promise.all —
+  // the actual send to Resend, batched below, is the part that needs
+  // pacing, not this.
+  const emails: SendEmailInput[] = [];
   for (const member of members) {
     try {
       const game = await loadWalkGame(member.id, referenceNow);
       // Skip anyone with nothing to report — no walks that month and no
       // streak — rather than send an empty, slightly deflating email.
       if (game.viewer.monthCount === 0 && game.viewer.streakWeeks === 0) continue;
-      await sendProgressSummaryEmail(
-        {
-          monthLabel,
-          monthKey,
-          monthCount: game.viewer.monthCount,
-          streakWeeks: game.viewer.streakWeeks,
-          yearCount: game.viewer.yearCount,
-          together: game.together,
-        },
-        member,
+      emails.push(
+        await buildProgressSummaryEmail(
+          {
+            monthLabel,
+            monthCount: game.viewer.monthCount,
+            streakWeeks: game.viewer.streakWeeks,
+            yearCount: game.viewer.yearCount,
+            together: game.together,
+          },
+          member,
+        ),
       );
-      sent += 1;
     } catch (err) {
-      console.error("monthly-progress: failed to notify", member.id, err);
+      console.error("monthly-progress: failed to build email for", member.id, err);
     }
   }
+
+  const { sent } = await sendEmailBatch(emails, { idempotencyKeyPrefix: `progress-summary/${monthKey}` });
 
   return NextResponse.json({ monthKey, eligible: members.length, sent });
 }

@@ -7,7 +7,8 @@ const {
   requireUser,
   checkRateLimit,
   recordSiteNoticeRead,
-  sendNoticePostedEmail,
+  buildNoticePostedEmail,
+  sendEmailBatch,
   prismaMock,
   transaction,
 } = vi.hoisted(() => {
@@ -42,7 +43,14 @@ const {
       requireUser: vi.fn(),
       checkRateLimit: vi.fn((): RateLimitResult => ({ ok: true })),
       recordSiteNoticeRead: vi.fn(),
-      sendNoticePostedEmail: vi.fn(async () => {}),
+      // buildNoticePostedEmail normally returns the SendEmailInput it would
+      // send; notifyMembersOfNewNotice hands an array of these to
+      // sendEmailBatch, which is what these tests assert on instead of a
+      // per-member send call. Keeping `notice`/`member` on the stub result
+      // (rather than a real SendEmailInput shape) lets the assertions below
+      // check the same content the old per-call assertions did.
+      buildNoticePostedEmail: vi.fn(async (notice: unknown, member: { id: string }) => ({ notice, member })),
+      sendEmailBatch: vi.fn(async () => ({ sent: 0, failed: 0 })),
       prismaMock,
       transaction,
     };
@@ -58,8 +66,9 @@ vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
 vi.mock("@/lib/urls", () => ({ appUrl: () => "https://example.test" }));
 // Real notice-posted emails pull in site-theme.ts (next/cache's unstable_cache,
 // not mocked above) and hit the network — out of scope for these tests,
-// which only care that addSiteNotice calls the right mailer function.
-vi.mock("@/lib/email/mailer", () => ({ sendNoticePostedEmail }));
+// which only care that addSiteNotice builds and batch-sends the right email.
+vi.mock("@/lib/email/mailer", () => ({ buildNoticePostedEmail }));
+vi.mock("@/lib/email/client", () => ({ sendEmailBatch }));
 vi.mock("@/lib/site-notices", async () => {
   const actual = await vi.importActual<typeof import("@/lib/site-notices")>("@/lib/site-notices");
   return { ...actual, recordSiteNoticeRead };
@@ -133,14 +142,16 @@ describe("addSiteNotice", () => {
     expect(prismaMock.user.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { emailNotices: true } }),
     );
-    expect(sendNoticePostedEmail).toHaveBeenCalledWith(
+    expect(sendEmailBatch).toHaveBeenCalledWith([
       expect.objectContaining({
-        title: "Path closed",
-        body: "The riverside path is closed this week.",
-        noticeUrl: "https://example.test/notices",
+        notice: expect.objectContaining({
+          title: "Path closed",
+          body: "The riverside path is closed this week.",
+          noticeUrl: "https://example.test/notices",
+        }),
+        member: expect.objectContaining({ id: "user-1" }),
       }),
-      expect.objectContaining({ id: "user-1" }),
-    );
+    ]);
   });
 
   it("links to the notice's own page for a full-page notice", async () => {
@@ -156,10 +167,14 @@ describe("addSiteNotice", () => {
       bellForm({ kind: "PAGE", categoryId: "cat-1", pageBody: "Full text here." }),
     );
 
-    expect(sendNoticePostedEmail).toHaveBeenCalledWith(
-      expect.objectContaining({ noticeUrl: expect.stringContaining("https://example.test/notices/") }),
-      expect.objectContaining({ id: "user-1" }),
-    );
+    expect(sendEmailBatch).toHaveBeenCalledWith([
+      expect.objectContaining({
+        notice: expect.objectContaining({
+          noticeUrl: expect.stringContaining("https://example.test/notices/"),
+        }),
+        member: expect.objectContaining({ id: "user-1" }),
+      }),
+    ]);
   });
 
   it("rejects a full-page notice pointing at a category that doesn't exist", async () => {

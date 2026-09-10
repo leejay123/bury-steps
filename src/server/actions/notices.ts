@@ -19,8 +19,9 @@ import {
 import { NOTICES_CACHE_TAG, recordSiteNoticeRead } from "@/lib/site-notices";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { appUrl } from "@/lib/urls";
-import { sendNoticePostedEmail } from "@/lib/email/mailer";
+import { buildNoticePostedEmail } from "@/lib/email/mailer";
 import type { MemberLike } from "@/lib/email/mailer";
+import { sendEmailBatch } from "@/lib/email/client";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
 import {
   type ActionResult,
@@ -120,9 +121,10 @@ function readNoticeCopy(
   return { title, body, kind: "BELL", pageBody: null, categoryId: null };
 }
 
-/** Best-effort fan-out to every member opted into notices — one email
- * each, never a single email with everyone in `to:`. Same pattern as
- * notifyMembersOfNewWalk in src/server/actions/walks.ts. */
+/** Best-effort fan-out to every member opted into notices via Resend's
+ * batch send (see sendEmailBatch) — never a single email with everyone in
+ * `to:`. Same pattern as notifyMembersOfNewWalk in
+ * src/server/actions/walks.ts. */
 async function notifyMembersOfNewNotice(notice: {
   title: string;
   body: string;
@@ -133,15 +135,10 @@ async function notifyMembersOfNewNotice(notice: {
       where: { emailNotices: true },
       select: { id: true, email: true, firstName: true, unsubscribeToken: true },
     });
-    await Promise.all(
-      members.map((member) =>
-        sendNoticePostedEmail(notice, member).catch((err) => {
-          console.error("notifyMembersOfNewNotice: failed to notify", member.id, err);
-        }),
-      ),
-    );
+    const emails = await Promise.all(members.map((member) => buildNoticePostedEmail(notice, member)));
+    await sendEmailBatch(emails);
   } catch (err) {
-    console.error("notifyMembersOfNewNotice: failed to load recipients", err);
+    console.error("notifyMembersOfNewNotice: failed to notify recipients", err);
   }
 }
 

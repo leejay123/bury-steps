@@ -1,4 +1,4 @@
-import { sendEmail } from "./client";
+import { sendEmail, type SendEmailInput } from "./client";
 import { getEmailBrand } from "./brand";
 import { resolveEmailCopy } from "./overrides";
 import { getOrCreateUserUnsubscribeToken, memberPreferencesUrl, newsletterUnsubscribeUrl } from "./unsubscribe";
@@ -203,14 +203,16 @@ export async function sendNewsletterSubscribedEmail(subscriber: {
 }
 
 /**
- * New walk posted — one call per opted-in member (src/server/actions/walks.ts
- * loops over the recipient list). Never batch these into one `to:` array:
- * that would put every member's address in every other member's inbox.
+ * Builds the email a single member would get for a new walk, without
+ * sending it — src/server/actions/walks.ts fans this out to every opted-in
+ * member via sendEmailBatch rather than one sendEmail call each. Never
+ * batch recipients into one `to:` array instead: that would put every
+ * member's address in every other member's inbox.
  */
-export async function sendWalkAnnouncedEmail(
+export async function buildWalkAnnouncedEmail(
   walk: WalkLike & { durationText: string; meetingPoint: string | null; what3words: string | null },
   member: MemberLike,
-): Promise<void> {
+): Promise<SendEmailInput> {
   const [brand, preferencesUrl] = await Promise.all([getEmailBrand(), memberPreferences(member)]);
   const copy = await resolveEmailCopy("walkAnnounced", {
     firstName: greetingName(member.firstName),
@@ -220,7 +222,7 @@ export async function sendWalkAnnouncedEmail(
     durationText: walk.durationText,
     meetingPoint: walk.meetingPoint ?? "",
   });
-  await sendEmail({
+  return {
     to: member.email,
     subject: copy.subject,
     react: WalkAnnouncedEmail({
@@ -234,14 +236,24 @@ export async function sendWalkAnnouncedEmail(
       preferencesUrl,
       bodyParagraphs: copy.bodyParagraphs,
     }),
-  });
+  };
 }
 
-/** Walk cancelled — same one-per-member rule as sendWalkAnnouncedEmail. */
-export async function sendWalkCancelledEmail(
-  walk: WalkLike & { reason: string | null },
+/** Single-recipient convenience wrapper around buildWalkAnnouncedEmail —
+ * kept for any one-off caller; the opted-in-members fan-out in walks.ts
+ * uses the builder directly with sendEmailBatch instead. */
+export async function sendWalkAnnouncedEmail(
+  walk: WalkLike & { durationText: string; meetingPoint: string | null; what3words: string | null },
   member: MemberLike,
 ): Promise<void> {
+  await sendEmail(await buildWalkAnnouncedEmail(walk, member));
+}
+
+/** Same build/send split as buildWalkAnnouncedEmail/sendWalkAnnouncedEmail, for a cancelled walk. */
+export async function buildWalkCancelledEmail(
+  walk: WalkLike & { reason: string | null },
+  member: MemberLike,
+): Promise<SendEmailInput> {
   const [brand, preferencesUrl] = await Promise.all([getEmailBrand(), memberPreferences(member)]);
   const copy = await resolveEmailCopy("walkCancelled", {
     firstName: greetingName(member.firstName),
@@ -250,7 +262,7 @@ export async function sendWalkCancelledEmail(
     whenText: walk.whenText,
     reason: walk.reason ?? "",
   });
-  await sendEmail({
+  return {
     to: member.email,
     subject: copy.subject,
     react: WalkCancelledEmail({
@@ -262,14 +274,21 @@ export async function sendWalkCancelledEmail(
       preferencesUrl,
       bodyParagraphs: copy.bodyParagraphs,
     }),
-  });
+  };
 }
 
-/** A cancelled walk was reopened — same one-per-member rule as sendWalkAnnouncedEmail. */
-export async function sendWalkReopenedEmail(
-  walk: WalkLike & { durationText: string; meetingPoint: string | null; what3words: string | null },
+export async function sendWalkCancelledEmail(
+  walk: WalkLike & { reason: string | null },
   member: MemberLike,
 ): Promise<void> {
+  await sendEmail(await buildWalkCancelledEmail(walk, member));
+}
+
+/** Same build/send split as buildWalkAnnouncedEmail/sendWalkAnnouncedEmail, for a reopened walk. */
+export async function buildWalkReopenedEmail(
+  walk: WalkLike & { durationText: string; meetingPoint: string | null; what3words: string | null },
+  member: MemberLike,
+): Promise<SendEmailInput> {
   const [brand, preferencesUrl] = await Promise.all([getEmailBrand(), memberPreferences(member)]);
   const copy = await resolveEmailCopy("walkReopened", {
     firstName: greetingName(member.firstName),
@@ -279,7 +298,7 @@ export async function sendWalkReopenedEmail(
     durationText: walk.durationText,
     meetingPoint: walk.meetingPoint ?? "",
   });
-  await sendEmail({
+  return {
     to: member.email,
     subject: copy.subject,
     react: WalkReopenedEmail({
@@ -293,7 +312,14 @@ export async function sendWalkReopenedEmail(
       preferencesUrl,
       bodyParagraphs: copy.bodyParagraphs,
     }),
-  });
+  };
+}
+
+export async function sendWalkReopenedEmail(
+  walk: WalkLike & { durationText: string; meetingPoint: string | null; what3words: string | null },
+  member: MemberLike,
+): Promise<void> {
+  await sendEmail(await buildWalkReopenedEmail(walk, member));
 }
 
 /** An organiser manually added this member to a walk (src/server/actions/attendance.ts). */
@@ -324,19 +350,20 @@ export async function sendAddedToWalkEmail(
   });
 }
 
-/** New notice posted — one call per opted-in member (src/server/actions/notices.ts
- * loops over the recipient list), same one-per-member rule as sendWalkAnnouncedEmail. */
-export async function sendNoticePostedEmail(
+/** New notice posted — builds the email for one member without sending it;
+ * src/server/actions/notices.ts fans this out via sendEmailBatch, same
+ * pattern as buildWalkAnnouncedEmail. */
+export async function buildNoticePostedEmail(
   notice: { title: string; body: string; noticeUrl: string },
   member: MemberLike,
-): Promise<void> {
+): Promise<SendEmailInput> {
   const [brand, preferencesUrl] = await Promise.all([getEmailBrand(), memberPreferences(member)]);
   const copy = await resolveEmailCopy("noticePosted", {
     firstName: greetingName(member.firstName),
     siteName: brand.siteName,
     noticeTitle: notice.title,
   });
-  await sendEmail({
+  return {
     to: member.email,
     subject: copy.subject,
     react: NoticePostedEmail({
@@ -347,34 +374,39 @@ export async function sendNoticePostedEmail(
       preferencesUrl,
       bodyParagraphs: copy.bodyParagraphs,
     }),
-  });
+  };
 }
 
-/** Monthly progress recap — one call per opted-in member (the monthly-progress
- * cron loops over the recipient list), same one-per-member rule as
- * sendWalkAnnouncedEmail. Idempotency key so a cron retry (Vercel retries a
- * failed invocation) can't send the same month's recap twice. */
-export async function sendProgressSummaryEmail(
+export async function sendNoticePostedEmail(
+  notice: { title: string; body: string; noticeUrl: string },
+  member: MemberLike,
+): Promise<void> {
+  await sendEmail(await buildNoticePostedEmail(notice, member));
+}
+
+/** Monthly progress recap — builds the email for one member without
+ * sending it; the monthly-progress cron fans this out via sendEmailBatch
+ * (whole-batch idempotency there, keyed by month, takes the place of this
+ * used to carry a per-member idempotencyKey — Resend's batch endpoint only
+ * supports one idempotency key per call, not per email inside it). */
+export async function buildProgressSummaryEmail(
   summary: {
     /** Human-readable, e.g. "August" — shown in the email. */
     monthLabel: string;
-    /** Stable, e.g. "2026-08" — monthLabel alone repeats every year, so this
-     * is what actually keys the idempotency check below. */
-    monthKey: string;
     monthCount: number;
     streakWeeks: number;
     yearCount: number;
     together: { goal: number; count: number } | null;
   },
   member: MemberLike,
-): Promise<void> {
+): Promise<SendEmailInput> {
   const [brand, preferencesUrl] = await Promise.all([getEmailBrand(), memberPreferences(member)]);
   const copy = await resolveEmailCopy("progressSummary", {
     firstName: greetingName(member.firstName),
     siteName: brand.siteName,
     monthLabel: summary.monthLabel,
   });
-  await sendEmail({
+  return {
     to: member.email,
     subject: copy.subject,
     react: ProgressSummaryEmail({
@@ -387,8 +419,7 @@ export async function sendProgressSummaryEmail(
       preferencesUrl,
       bodyParagraphs: copy.bodyParagraphs,
     }),
-    idempotencyKey: `progress-summary/${member.id}/${summary.monthKey}`,
-  });
+  };
 }
 
 /** Alert every other organiser that a new accident report has been logged. */
