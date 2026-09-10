@@ -57,10 +57,16 @@ html {
  * (see the components) contains it; this is the top-level fallback for
  * the page itself so reaching the very top/bottom doesn't hand scroll
  * input off to browser gestures like Chrome's pull-to-refresh.
+ *
+ * `none` rather than `contain` on the y-axis: `contain` would still stop
+ * scroll from chaining past the page, but it leaves iOS's own elastic
+ * "rubber-band" bounce past the top/bottom in place, which read as a
+ * jump/glitch on a fast phone scroll. `none` also suppresses that local
+ * bounce — the page just stops firmly at each end instead.
  */
 html,
 body {
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: none;
   /*
    * Chrome/Edge tie their two-finger (trackpad) and edge-swipe (touch)
    * back/forward navigation gesture to overscroll-behavior-x: dragging the
