@@ -170,7 +170,14 @@ export function MembersTable({
                   <Badge className="h-7 px-2" variant={member.role === "ADMIN" ? "default" : "secondary"}>
                     {member.role === "ADMIN" ? "Organiser" : "Member"}
                   </Badge>
-                  <MemberRoleButton name={member.name} role={member.role} userId={member.id} />
+                  {/* Changing your own role here would be easy to hit by
+                      mistake and immediately cost you organiser access to
+                      fix it — same reasoning as hiding your own Remove
+                      button below. Another organiser can change it for you
+                      instead. */}
+                  {member.isYou ? null : (
+                    <MemberRoleButton name={member.name} role={member.role} userId={member.id} />
+                  )}
                   {member.isYou ? null : (
                     <DeleteMemberButton
                       attendanceCount={member.attendanceCount}

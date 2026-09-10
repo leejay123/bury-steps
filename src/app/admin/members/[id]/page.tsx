@@ -39,7 +39,7 @@ export default async function MemberDetailPage({
           <div className="flex min-w-0 flex-col gap-1.5">
             <div className="flex flex-wrap items-center gap-2">
               <CardTitle className="text-2xl">{member.name}</CardTitle>
-              <Badge variant={member.role === "ADMIN" ? "default" : "secondary"}>
+              <Badge className="h-7 px-2" variant={member.role === "ADMIN" ? "default" : "secondary"}>
                 {member.role === "ADMIN" ? "Organiser" : "Member"}
               </Badge>
             </div>
@@ -52,7 +52,11 @@ export default async function MemberDetailPage({
           </div>
           <div className="flex flex-wrap gap-2 sm:shrink-0 sm:justify-end">
             {member.role === "MEMBER" ? <ImpersonateButton name={member.name} userId={id} /> : null}
-            <MemberRoleButton name={member.name} role={member.role} userId={id} />
+            {/* Changing your own role here would be easy to hit by mistake
+                and immediately cost you organiser access to fix it — same
+                reasoning as hiding your own Remove button below. Another
+                organiser can change it for you instead. */}
+            {!member.isYou ? <MemberRoleButton name={member.name} role={member.role} userId={id} /> : null}
             {!member.isYou ? (
               <DeleteMemberButton
                 attendanceCount={attendanceCount}
