@@ -39,7 +39,14 @@ export async function SiteFooter() {
         */}
         <nav
           aria-label="Footer"
-          className="-mx-4 flex flex-nowrap gap-x-6 gap-y-2 overflow-x-auto overscroll-x-contain px-4 [scrollbar-width:none] [-ms-overflow-style:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden [&>*]:shrink-0"
+          // [transform:translateZ(0)]: same fix, same reason, as the sticky
+          // header in layout.tsx — a horizontally-scrolling strip like this
+          // one can briefly fail to repaint on Safari while the whole page
+          // is flying past it during a fast vertical scroll, blanking out
+          // for a frame or two before catching up once the scroll settles.
+          // Promoting it to its own compositor layer avoids that repaint
+          // race instead of leaning on the main-thread paint to keep up.
+          className="-mx-4 flex flex-nowrap gap-x-6 gap-y-2 overflow-x-auto overscroll-x-contain px-4 [scrollbar-width:none] [-ms-overflow-style:none] [transform:translateZ(0)] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden [&>*]:shrink-0"
         >
           <Link className={linkClassName} href="/">
             Home
