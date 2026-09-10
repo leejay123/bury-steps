@@ -23,23 +23,33 @@ model User {
 
   /// Walk created/updated/cancelled notices. Default on — organiser-run
   /// content, not marketing.
-  emailWalkAnnouncements Boolean @default(true)
+  emailWalkAnnouncements   Boolean   @default(true)
   /// Digest of new /notices posts.
-  emailNotices           Boolean @default(true)
+  emailNotices             Boolean   @default(true)
   /// Personal/group progress summaries (monthly clock-in goal, streaks).
-  emailProgress          Boolean @default(true)
+  emailProgress            Boolean   @default(true)
   /// Newsletter campaigns. Off by default — needs explicit opt-in (PECR),
   /// separate from the account-lifecycle toggles above.
-  emailNewsletter        Boolean @default(false)
+  emailNewsletter          Boolean   @default(false)
   /// New accident-report alerts, sent to organisers. Only consulted for
   /// ADMIN rows (see notifyOtherAdminsOfAccidentReport) — meaningless, and
   /// harmless, on a MEMBER row.
-  emailAccidentAlerts    Boolean @default(true)
+  emailAccidentAlerts      Boolean   @default(true)
   /// Lets the public preferences/one-click-unsubscribe page identify a
   /// member without requiring sign-in. Null for every row until first
   /// needed — generated lazily by getOrCreateUnsubscribeToken() rather than
   /// backfilled, so adding this column never touches existing rows.
-  unsubscribeToken       String? @unique
+  unsubscribeToken         String?   @unique
+  /// Set when an organiser promotes this member while
+  /// SiteSetting.organiserInviteRequired is on — role stays MEMBER until
+  /// they click the emailed accept link (see acceptOrganiserInvite). Null
+  /// once accepted, cancelled, or never invited; also null for every
+  /// existing organiser, since a row only ever reaches ADMIN through this
+  /// flow (or instantly, when the setting is off) — an ADMIN row is
+  /// therefore always effectively "verified" with no separate flag needed.
+  organiserInviteToken     String?   @unique
+  organiserInviteSentAt    DateTime?
+  organiserInviteExpiresAt DateTime?
 
   walksCreated            Walk[]                 @relation("WalkCreator")
   attendances             Attendance[]
@@ -346,6 +356,10 @@ model SiteSetting {
   /// is notified. Cleared automatically if that organiser is removed
   /// (onDelete: SetNull) or demoted (see setMemberRole).
   contactMessagesOwnerId     String?
+  /// When on, promoting a member to organiser sends an email invite
+  /// instead of taking effect immediately — they only become an organiser
+  /// once they accept it. Off by default (instant promotion, as before).
+  organiserInviteRequired    Boolean  @default(false)
   updatedAt                  DateTime @updatedAt
 
   contactMessagesOwner User? @relation("ContactMessagesOwner", fields: [contactMessagesOwnerId], references: [id], onDelete: SetNull)

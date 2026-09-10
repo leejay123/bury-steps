@@ -2,6 +2,7 @@ import { Users } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { formatDateTime } from "@/lib/dates";
+import { SITE_SETTING_ID } from "@/lib/theme";
 import { searchMembers, type MemberRoleFilter } from "@/server/actions";
 import { MembersTable } from "./members-table";
 import { AdminPageIntro } from "../admin-page-intro";
@@ -27,13 +28,17 @@ export default async function MembersPage({
   // Only the first page loads here — search and later pages are fetched
   // live from searchMembers, so this stays fast and correct no matter how
   // many members the group has.
-  const [{ rows, total }, totalMembers, impersonations] = await Promise.all([
+  const [{ rows, total }, totalMembers, impersonations, setting] = await Promise.all([
     searchMembers({ role }),
     prisma.user.count(),
     prisma.impersonationEvent.findMany({
       orderBy: { createdAt: "desc" },
       take: 20,
       select: { id: true, adminName: true, targetName: true, createdAt: true },
+    }),
+    prisma.siteSetting.findUnique({
+      where: { id: SITE_SETTING_ID },
+      select: { organiserInviteRequired: true },
     }),
   ]);
 
@@ -53,6 +58,7 @@ export default async function MembersPage({
         <MembersTable
           initialRows={rows.map((member) => ({ ...member, isYou: member.id === admin.id }))}
           initialTotal={total}
+          inviteRequired={setting?.organiserInviteRequired ?? false}
           roleFilter={role}
           viewerId={admin.id}
         />

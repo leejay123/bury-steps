@@ -11,6 +11,7 @@ import { searchMembers, type MemberRoleFilter, type MemberRow } from "@/server/a
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { DeleteMemberButton } from "./delete-member-button";
 import { MemberRoleButton } from "./member-role-button";
+import { CancelInviteButton, ResendInviteButton } from "./pending-invite-actions";
 import { EmptyState } from "@/components/empty-state";
 import {
   DataList,
@@ -45,11 +46,13 @@ type ViewMember = MemberRow & { isYou: boolean };
 export function MembersTable({
   initialRows,
   initialTotal,
+  inviteRequired,
   roleFilter,
   viewerId,
 }: {
   initialRows: ViewMember[];
   initialTotal: number;
+  inviteRequired: boolean;
   roleFilter: MemberRoleFilter;
   viewerId: string;
 }) {
@@ -167,16 +170,37 @@ export function MembersTable({
                 <DataListActions
                   className={cn("relative z-10 flex-wrap gap-2", dataListActionsStackClassName)}
                 >
-                  <Badge className="h-7 px-2" variant={member.role === "ADMIN" ? "default" : "secondary"}>
-                    {member.role === "ADMIN" ? "Organiser" : "Member"}
+                  <Badge
+                    className="h-7 px-2"
+                    variant={
+                      member.role === "ADMIN" ? "default" : member.pendingInvite ? "outline" : "secondary"
+                    }
+                  >
+                    {member.role === "ADMIN"
+                      ? "Organiser"
+                      : member.pendingInvite
+                        ? member.pendingInvite.expired
+                          ? "Invite expired"
+                          : "Invited"
+                        : "Member"}
                   </Badge>
-                  {/* Changing your own role here would be easy to hit by
-                      mistake and immediately cost you organiser access to
-                      fix it — same reasoning as hiding your own Remove
-                      button below. Another organiser can change it for you
-                      instead. */}
-                  {member.isYou ? null : (
-                    <MemberRoleButton name={member.name} role={member.role} userId={member.id} />
+                  {member.pendingInvite ? (
+                    <>
+                      <ResendInviteButton userId={member.id} />
+                      <CancelInviteButton userId={member.id} />
+                    </>
+                  ) : /* Changing your own role here would be easy to hit by
+                         mistake and immediately cost you organiser access to
+                         fix it — same reasoning as hiding your own Remove
+                         button below. Another organiser can change it for you
+                         instead. */
+                  member.isYou ? null : (
+                    <MemberRoleButton
+                      inviteRequired={inviteRequired}
+                      name={member.name}
+                      role={member.role}
+                      userId={member.id}
+                    />
                   )}
                   {member.isYou ? null : (
                     <DeleteMemberButton

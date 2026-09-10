@@ -25,9 +25,11 @@ export const ROLE_CONFIRM_WORD = "Confirm";
 
 function ConfirmSubmit({
   confirmValue,
+  inviteRequired,
   promoting,
 }: {
   confirmValue: string;
+  inviteRequired: boolean;
   promoting: boolean;
 }) {
   const { pending } = useFormStatus();
@@ -36,20 +38,28 @@ function ConfirmSubmit({
     <Button disabled={pending || !ready} type="submit">
       {pending
         ? promoting
-          ? "Promoting…"
+          ? inviteRequired
+            ? "Sending invite…"
+            : "Promoting…"
           : "Demoting…"
         : promoting
-          ? "Make organiser"
+          ? inviteRequired
+            ? "Send invite"
+            : "Make organiser"
           : "Make member"}
     </Button>
   );
 }
 
 export function MemberRoleButton({
+  inviteRequired = false,
   name,
   role,
   userId,
 }: {
+  /** When true, promoting sends an invite the member must accept instead of
+   * taking effect immediately — see Settings → Display → Organisers. */
+  inviteRequired?: boolean;
   name: string;
   role: "ADMIN" | "MEMBER";
   userId: string;
@@ -76,7 +86,7 @@ export function MemberRoleButton({
     >
       <AlertDialogTrigger asChild>
         <Button size="xs" variant="outline">
-          {promoting ? "Make organiser" : "Make member"}
+          {promoting ? (inviteRequired ? "Send invite" : "Make organiser") : "Make member"}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent closeDisabled={isPending}>
@@ -88,18 +98,36 @@ export function MemberRoleButton({
         <form action={action} className="flex flex-col gap-4">
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {promoting ? `Make ${name} an organiser?` : `Make ${name} a member?`}
+              {promoting
+                ? inviteRequired
+                  ? `Invite ${name} to become an organiser?`
+                  : `Make ${name} an organiser?`
+                : `Make ${name} a member?`}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2 text-sm text-muted-foreground">
                 {promoting ? (
-                  <>
-                    <p>
-                      They will see Members, Reports, Settings, and this Guide, and can create and
-                      manage walks — including other people’s data.
-                    </p>
-                    <p>You can change them back to a member later.</p>
-                  </>
+                  inviteRequired ? (
+                    <>
+                      <p>
+                        They&rsquo;ll get an email with a link to accept. Nothing changes for them
+                        until they click it — you can cancel or resend the invite any time before
+                        then.
+                      </p>
+                      <p>
+                        Once accepted, they will see Members, Reports, Settings, and this Guide, and
+                        can create and manage walks — including other people&rsquo;s data.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p>
+                        They will see Members, Reports, Settings, and this Guide, and can create and
+                        manage walks — including other people’s data.
+                      </p>
+                      <p>You can change them back to a member later.</p>
+                    </>
+                  )
                 ) : (
                   <>
                     <p>
@@ -134,7 +162,7 @@ export function MemberRoleButton({
             <AlertDialogCancel disabled={isPending} type="button">
               Cancel
             </AlertDialogCancel>
-            <ConfirmSubmit confirmValue={confirmValue} promoting={promoting} />
+            <ConfirmSubmit confirmValue={confirmValue} inviteRequired={inviteRequired} promoting={promoting} />
           </AlertDialogFooter>
         </form>
       </AlertDialogContent>

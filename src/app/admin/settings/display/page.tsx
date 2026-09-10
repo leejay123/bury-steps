@@ -9,6 +9,7 @@ import { AllWalksTabToggle } from "./all-walks-tab-toggle";
 import { CarouselToggle } from "../hero-photos/carousel-toggle";
 import { ContactMessagesOwnerSettings } from "./contact-messages-owner-settings";
 import { CookieConsentSettings } from "./cookie-consent-settings";
+import { OrganiserInviteToggle } from "./organiser-invite-toggle";
 import { DisplaySettings } from "./display-form";
 import { DisplaySettingsLayout } from "./display-settings-layout";
 import { FacebookGroupSettings } from "./facebook-group-settings";
@@ -35,7 +36,7 @@ export default async function DisplaySettingsPage() {
     }),
     prisma.siteSetting.findUnique({
       where: { id: SITE_SETTING_ID },
-      select: { contactMessagesOwnerId: true },
+      select: { contactMessagesOwnerId: true, organiserInviteRequired: true },
     }),
   ]);
 
@@ -87,6 +88,14 @@ export default async function DisplaySettingsPage() {
             currentOwnerId={contactSetting?.contactMessagesOwnerId ?? null}
             organisers={organisers.map((organiser) => ({ id: organiser.id, name: displayName(organiser) }))}
           />
+        </SettingsSectionGroup>
+
+        <SettingsSectionGroup
+          description="How promoting a member to organiser takes effect."
+          id="organisers"
+          title="Organisers"
+        >
+          <OrganiserInviteToggle enabled={contactSetting?.organiserInviteRequired ?? false} />
         </SettingsSectionGroup>
 
         <SettingsSectionGroup

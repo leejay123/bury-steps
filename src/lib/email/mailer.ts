@@ -6,6 +6,8 @@ import { WelcomeEmail } from "./templates/welcome";
 import { AccountDeletedEmail } from "./templates/account-deleted";
 import { AdminPromotedEmail } from "./templates/admin-promoted";
 import { AdminDemotedEmail } from "./templates/admin-demoted";
+import { OrganiserInviteEmail } from "./templates/organiser-invite";
+import { ORGANISER_INVITE_EXPIRY_DAYS } from "@/lib/organiser-invite";
 import { ContactMessageReceivedEmail } from "./templates/contact-message-received";
 import { ContactMessageAdminAlertEmail } from "./templates/contact-message-admin-alert";
 import { NewsletterSubscribedEmail } from "./templates/newsletter-subscribed";
@@ -93,6 +95,29 @@ export async function sendAdminPromotedEmail(member: MemberLike): Promise<void> 
     to: member.email,
     subject: copy.subject,
     react: AdminPromotedEmail({ ...brand, preferencesUrl, bodyParagraphs: copy.bodyParagraphs }),
+  });
+}
+
+/** Invite to become an organiser, pending their acceptance — see
+ * setMemberRole in src/server/actions/members.ts. */
+export async function sendOrganiserInviteEmail(
+  member: { email: string; firstName: string | null },
+  token: string,
+): Promise<void> {
+  const brand = await getEmailBrand();
+  const copy = await resolveEmailCopy("organiserInvite", {
+    firstName: greetingName(member.firstName),
+    siteName: brand.siteName,
+    expiresInDays: String(ORGANISER_INVITE_EXPIRY_DAYS),
+  });
+  await sendEmail({
+    to: member.email,
+    subject: copy.subject,
+    react: OrganiserInviteEmail({
+      ...brand,
+      acceptUrl: `${brand.siteUrl}/organiser-invite/${token}`,
+      bodyParagraphs: copy.bodyParagraphs,
+    }),
   });
 }
 

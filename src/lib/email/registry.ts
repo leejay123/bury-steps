@@ -16,6 +16,7 @@ export type EmailTemplateKey =
   | "accountDeleted"
   | "adminPromoted"
   | "adminDemoted"
+  | "organiserInvite"
   | "contactReceived"
   | "contactAdminAlert"
   | "newsletterSubscribed"
@@ -99,6 +100,21 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
     defaultSubject: "You're now a member of {siteName}",
     defaultBody:
       "Hi {firstName}, another organiser has moved you back to a regular member on {siteName}. You'll still see and clock in to walks as before, but you can no longer create walks or manage members.\n\nDidn't expect this? Let another organiser know.",
+  },
+  {
+    key: "organiserInvite",
+    label: "Organiser invite",
+    trigger:
+      "Sent instead of an instant promotion when \"Require accepted invite\" is on in Settings → Display → Organisers — the invited member becomes an organiser only once they accept.",
+    category: "Member lifecycle",
+    placeholders: [
+      { token: "firstName", description: "Their first name (\"there\" if not set)" },
+      { token: "siteName", description: "Your site's name" },
+      { token: "expiresInDays", description: "How many days the invite link stays valid" },
+    ],
+    defaultSubject: "You've been invited to become an organiser of {siteName}",
+    defaultBody:
+      "Hi {firstName}, an organiser has invited you to become an organiser on {siteName}. Accept below to get organiser access — you can create and edit walks, manage members, and see who's coming on each walk.\n\nThis invite expires in {expiresInDays} days. Didn't expect this? You can safely ignore it — nothing changes unless you accept.",
   },
   {
     key: "contactReceived",

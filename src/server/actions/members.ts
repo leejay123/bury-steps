@@ -10,7 +10,16 @@ import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { safeAppPath } from "@/lib/urls";
-import { sendAccountDeletedEmail, sendAdminPromotedEmail, sendAdminDemotedEmail } from "@/lib/email/mailer";
+import {
+  makeOrganiserInviteToken,
+  organiserInviteExpiresAt,
+} from "@/lib/organiser-invite";
+import {
+  sendAccountDeletedEmail,
+  sendAdminPromotedEmail,
+  sendAdminDemotedEmail,
+  sendOrganiserInviteEmail,
+} from "@/lib/email/mailer";
 import {
   type ActionResult,
   LimitReachedError,
@@ -27,6 +36,9 @@ export type MemberRow = {
   createdAt: string;
   attendanceCount: number;
   walkCount: number;
+  /** Set only while role is still MEMBER and an organiser invite is
+   * outstanding — see setMemberRole/acceptOrganiserInvite. */
+  pendingInvite: { sentAt: string; expiresAt: string; expired: boolean } | null;
 };
 
 export type MemberRoleFilter = "all" | "ADMIN" | "MEMBER";
@@ -97,11 +109,14 @@ export async function searchMembers({
         email: true,
         role: true,
         createdAt: true,
+        organiserInviteSentAt: true,
+        organiserInviteExpiresAt: true,
         _count: { select: { attendances: true, walksCreated: true } },
       },
     }),
   ]);
 
+  const now = Date.now();
   return {
     total,
     rows: members.map((member) => ({
@@ -112,6 +127,13 @@ export async function searchMembers({
       createdAt: member.createdAt.toISOString(),
       attendanceCount: member._count.attendances,
       walkCount: member._count.walksCreated,
+      pendingInvite: member.organiserInviteSentAt
+        ? {
+            sentAt: member.organiserInviteSentAt.toISOString(),
+            expiresAt: (member.organiserInviteExpiresAt ?? member.organiserInviteSentAt).toISOString(),
+            expired: (member.organiserInviteExpiresAt?.getTime() ?? 0) < now,
+          }
+        : null,
     })),
   };
 }
@@ -278,6 +300,19 @@ export async function setMemberRole(
     };
   }
 
+  // Promoting, with the "must accept an emailed invite first" setting on:
+  // send the invite instead of promoting immediately. Role stays MEMBER
+  // until they accept — see acceptOrganiserInvite.
+  if (role === "ADMIN") {
+    const setting = await prisma.siteSetting.findUnique({
+      where: { id: SITE_SETTING_ID },
+      select: { organiserInviteRequired: true },
+    });
+    if (setting?.organiserInviteRequired) {
+      return sendOrganiserInvite(target);
+    }
+  }
+
   try {
     await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.lastAdmin, async (tx) => {
       const fresh = await tx.user.findUnique({ where: { id: target.id } });
@@ -335,6 +370,143 @@ export async function setMemberRole(
   };
 }
 
+/** Issues (or reissues) an organiser invite — shared by setMemberRole's
+ * promote branch and resendOrganiserInvite. Role stays MEMBER; only
+ * acceptOrganiserInvite ever flips it to ADMIN. */
+async function sendOrganiserInvite(target: {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+}): Promise<ActionResult> {
+  const token = makeOrganiserInviteToken();
+  const expiresAt = organiserInviteExpiresAt();
+
+  try {
+    await prisma.user.update({
+      where: { id: target.id },
+      data: {
+        organiserInviteToken: token,
+        organiserInviteSentAt: new Date(),
+        organiserInviteExpiresAt: expiresAt,
+      },
+    });
+  } catch (err) {
+    return logActionError("setMemberRole", err, "Could not send the invite. Try again.");
+  }
+
+  // Best-effort — the invite is already recorded and visible in the members
+  // list either way (as "Invited"), so a failed send here doesn't need to
+  // block the admin; they can hit Resend.
+  await sendOrganiserInviteEmail(target, token).catch((err) => {
+    console.error("setMemberRole: failed to send organiser invite email", err);
+  });
+
+  revalidatePath("/admin/members");
+  revalidatePath(`/admin/members/${target.id}`);
+
+  return {
+    ok: true,
+    message: `Invite sent to ${displayName(target)}. They'll become an organiser once they accept it.`,
+  };
+}
+
+export async function resendOrganiserInvite(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("userId") ?? "");
+  if (!id) return { ok: false, error: "No member selected." };
+
+  const target = await prisma.user.findUnique({ where: { id } });
+  if (!target) return { ok: false, error: "That member is no longer in the group." };
+  if (target.role !== "MEMBER" || !target.organiserInviteToken) {
+    return { ok: false, error: "There is no pending invite for this person." };
+  }
+
+  return sendOrganiserInvite(target);
+}
+
+export async function cancelOrganiserInvite(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("userId") ?? "");
+  if (!id) return { ok: false, error: "No member selected." };
+
+  const target = await prisma.user.findUnique({ where: { id } });
+  if (!target) return { ok: false, error: "That member is no longer in the group." };
+  if (target.role !== "MEMBER" || !target.organiserInviteToken) {
+    return { ok: false, error: "There is no pending invite for this person." };
+  }
+
+  try {
+    await prisma.user.update({
+      where: { id },
+      data: { organiserInviteToken: null, organiserInviteSentAt: null, organiserInviteExpiresAt: null },
+    });
+  } catch (err) {
+    return logActionError("cancelOrganiserInvite", err, "Could not cancel the invite. Try again.");
+  }
+
+  revalidatePath("/admin/members");
+  revalidatePath(`/admin/members/${id}`);
+  return { ok: true, message: `Invite for ${displayName(target)} cancelled.` };
+}
+
+/**
+ * Public — reached from the emailed invite link, no sign-in required (same
+ * trust model as the email-preferences unsubscribe tokens: an unguessable
+ * token mailed only to the invitee's own address is treated as
+ * authorization on its own). Actually grants organiser access — the whole
+ * point of the "require accepted invite" setting is that this is the one
+ * and only place role flips to ADMIN while it's on.
+ */
+export async function acceptOrganiserInvite(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const token = String(formData.get("token") ?? "");
+  if (!token) return { ok: false, error: "This invite link is invalid." };
+
+  const target = await prisma.user.findUnique({ where: { organiserInviteToken: token } });
+  if (!target || target.role !== "MEMBER") {
+    return { ok: false, error: "This invite link is invalid or has already been used." };
+  }
+  if (!target.organiserInviteExpiresAt || target.organiserInviteExpiresAt.getTime() < Date.now()) {
+    return { ok: false, error: "This invite link has expired. Ask an organiser to resend it." };
+  }
+
+  try {
+    await prisma.user.update({
+      where: { id: target.id },
+      data: {
+        role: "ADMIN",
+        organiserInviteToken: null,
+        organiserInviteSentAt: null,
+        organiserInviteExpiresAt: null,
+      },
+    });
+  } catch (err) {
+    return logActionError("acceptOrganiserInvite", err, "Could not accept the invite. Try again.");
+  }
+
+  await sendAdminPromotedEmail(target).catch((err) => {
+    console.error("acceptOrganiserInvite: failed to send admin-promoted confirmation email", err);
+  });
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/members");
+  revalidatePath(`/admin/members/${target.id}`);
+  revalidatePath("/dashboard");
+  // Layout nav (Members / Reports / Settings) depends on role for this person.
+  revalidatePath("/", "layout");
+
+  return { ok: true, message: "You're now an organiser." };
+}
+
 export type MemberHistoryItem = {
   id: string;
   walkId: string;
@@ -358,6 +530,7 @@ export async function getMemberHistory(userId: string): Promise<{
   attendanceCount: number;
   isYou: boolean;
   items: MemberHistoryItem[];
+  pendingInvite: { sentAt: string; expiresAt: string; expired: boolean } | null;
 } | null> {
   const admin = await requireAdmin();
   const [member, attendanceCount] = await Promise.all([
@@ -402,6 +575,13 @@ export async function getMemberHistory(userId: string): Promise<{
     walkCount: member._count.walksCreated,
     attendanceCount,
     isYou: member.id === admin.id,
+    pendingInvite: member.organiserInviteSentAt
+      ? {
+          sentAt: member.organiserInviteSentAt.toISOString(),
+          expiresAt: (member.organiserInviteExpiresAt ?? member.organiserInviteSentAt).toISOString(),
+          expired: (member.organiserInviteExpiresAt?.getTime() ?? 0) < Date.now(),
+        }
+      : null,
     items: member.attendances.map((attendance) => ({
       id: attendance.id,
       walkId: attendance.walk.id,

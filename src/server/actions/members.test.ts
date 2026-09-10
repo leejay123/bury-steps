@@ -9,7 +9,7 @@ const { revalidatePath, requireAdmin, checkRateLimit, deleteUser, prismaMock, tr
       accidentReport: { updateMany: vi.fn() },
       walkJourneyEvent: { updateMany: vi.fn() },
       attendance: { count: vi.fn() },
-      siteSetting: { updateMany: vi.fn() },
+      siteSetting: { updateMany: vi.fn(), findUnique: vi.fn() },
     };
     const transaction = vi.fn(async (arg: unknown) => {
       if (Array.isArray(arg)) return Promise.all(arg);
@@ -41,13 +41,27 @@ vi.mock("@/lib/email/mailer", () => ({
   sendAccountDeletedEmail: vi.fn(async () => {}),
   sendAdminPromotedEmail: vi.fn(async () => {}),
   sendAdminDemotedEmail: vi.fn(async () => {}),
+  sendOrganiserInviteEmail: vi.fn(async () => {}),
+}));
+vi.mock("@/lib/organiser-invite", () => ({
+  makeOrganiserInviteToken: vi.fn(() => "invite-token-123"),
+  organiserInviteExpiresAt: vi.fn((from = new Date()) => new Date(from.getTime() + 7 * 24 * 60 * 60 * 1000)),
 }));
 vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
   return { ...actual, requireAdmin };
 });
 
-import { deleteMember, getMemberHistory, searchMembers, setMemberRole } from "./members";
+import { sendOrganiserInviteEmail, sendAdminPromotedEmail } from "@/lib/email/mailer";
+import {
+  acceptOrganiserInvite,
+  cancelOrganiserInvite,
+  deleteMember,
+  getMemberHistory,
+  resendOrganiserInvite,
+  searchMembers,
+  setMemberRole,
+} from "./members";
 
 const ADMIN = { id: "admin-1", clerkId: "clerk-admin-1" };
 
@@ -488,6 +502,7 @@ describe("getMemberHistory", () => {
       walkCount: 4,
       attendanceCount: 1,
       isYou: true,
+      pendingInvite: null,
       items: [
         {
           id: "att-1",
@@ -551,6 +566,7 @@ describe("searchMembers", () => {
         createdAt: "2026-01-05T00:00:00.000Z",
         attendanceCount: 2,
         walkCount: 0,
+        pendingInvite: null,
       },
     ]);
   });
@@ -609,5 +625,221 @@ describe("searchMembers", () => {
 
     const call = prismaMock.user.findMany.mock.calls[0][0];
     expect(call.where.AND[0].OR).not.toEqual(expect.arrayContaining([{ role: "ADMIN" }]));
+  });
+});
+
+describe("setMemberRole — organiser invite required", () => {
+  const target = {
+    id: "member-1",
+    role: "MEMBER",
+    firstName: "Jo",
+    lastName: "Bloggs",
+    email: "jo@example.com",
+  };
+
+  it("sends an invite instead of promoting immediately when the setting is on", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce(target);
+    prismaMock.siteSetting.findUnique.mockResolvedValueOnce({ organiserInviteRequired: true });
+    prismaMock.user.update.mockResolvedValueOnce({});
+
+    const result = await setMemberRole(
+      null,
+      roleForm({ userId: target.id, role: "ADMIN", confirm: "confirm" }),
+    );
+
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: target.id },
+      data: {
+        organiserInviteToken: "invite-token-123",
+        organiserInviteSentAt: expect.any(Date),
+        organiserInviteExpiresAt: expect.any(Date),
+      },
+    });
+    expect(sendOrganiserInviteEmail).toHaveBeenCalledWith(target, "invite-token-123");
+    expect(transaction).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      ok: true,
+      message: "Invite sent to Jo Bloggs. They'll become an organiser once they accept it.",
+    });
+  });
+
+  it("still promotes immediately when the setting is off", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce(target).mockResolvedValueOnce(target);
+    prismaMock.siteSetting.findUnique.mockResolvedValueOnce({ organiserInviteRequired: false });
+    prismaMock.user.update.mockResolvedValueOnce({ ...target, role: "ADMIN" });
+
+    const result = await setMemberRole(
+      null,
+      roleForm({ userId: target.id, role: "ADMIN", confirm: "confirm" }),
+    );
+
+    expect(sendOrganiserInviteEmail).not.toHaveBeenCalled();
+    expect(result).toEqual({ ok: true, message: "Jo Bloggs is now an organiser." });
+  });
+});
+
+describe("resendOrganiserInvite", () => {
+  it("requires a member id", async () => {
+    const result = await resendOrganiserInvite(null, roleForm({}));
+    expect(result).toEqual({ ok: false, error: "No member selected." });
+  });
+
+  it("refuses when there is no pending invite", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({
+      id: "member-1",
+      role: "MEMBER",
+      organiserInviteToken: null,
+    });
+    const result = await resendOrganiserInvite(null, roleForm({ userId: "member-1" }));
+    expect(result).toEqual({ ok: false, error: "There is no pending invite for this person." });
+  });
+
+  it("refuses for someone already an organiser", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({
+      id: "admin-1",
+      role: "ADMIN",
+      organiserInviteToken: null,
+    });
+    const result = await resendOrganiserInvite(null, roleForm({ userId: "admin-1" }));
+    expect(result).toEqual({ ok: false, error: "There is no pending invite for this person." });
+  });
+
+  it("reissues the invite with a fresh token", async () => {
+    const target = {
+      id: "member-1",
+      role: "MEMBER",
+      firstName: "Jo",
+      lastName: "Bloggs",
+      email: "jo@example.com",
+      organiserInviteToken: "old-token",
+    };
+    prismaMock.user.findUnique.mockResolvedValueOnce(target);
+    prismaMock.user.update.mockResolvedValueOnce({});
+
+    const result = await resendOrganiserInvite(null, roleForm({ userId: target.id }));
+
+    expect(prismaMock.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: target.id },
+        data: expect.objectContaining({ organiserInviteToken: "invite-token-123" }),
+      }),
+    );
+    expect(sendOrganiserInviteEmail).toHaveBeenCalledWith(target, "invite-token-123");
+    expect(result.ok).toBe(true);
+  });
+});
+
+describe("cancelOrganiserInvite", () => {
+  it("requires a member id", async () => {
+    const result = await cancelOrganiserInvite(null, roleForm({}));
+    expect(result).toEqual({ ok: false, error: "No member selected." });
+  });
+
+  it("refuses when there is no pending invite", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({
+      id: "member-1",
+      role: "MEMBER",
+      organiserInviteToken: null,
+    });
+    const result = await cancelOrganiserInvite(null, roleForm({ userId: "member-1" }));
+    expect(result).toEqual({ ok: false, error: "There is no pending invite for this person." });
+  });
+
+  it("clears the pending invite", async () => {
+    const target = {
+      id: "member-1",
+      role: "MEMBER",
+      firstName: "Jo",
+      lastName: "Bloggs",
+      email: "jo@example.com",
+      organiserInviteToken: "tok",
+    };
+    prismaMock.user.findUnique.mockResolvedValueOnce(target);
+    prismaMock.user.update.mockResolvedValueOnce({});
+
+    const result = await cancelOrganiserInvite(null, roleForm({ userId: target.id }));
+
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: target.id },
+      data: { organiserInviteToken: null, organiserInviteSentAt: null, organiserInviteExpiresAt: null },
+    });
+    expect(result).toEqual({ ok: true, message: "Invite for Jo Bloggs cancelled." });
+  });
+});
+
+describe("acceptOrganiserInvite", () => {
+  function acceptForm(token: string): FormData {
+    const formData = new FormData();
+    formData.set("token", token);
+    return formData;
+  }
+
+  it("rejects a missing token", async () => {
+    const result = await acceptOrganiserInvite(null, acceptForm(""));
+    expect(result).toEqual({ ok: false, error: "This invite link is invalid." });
+    expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("rejects an unknown token", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce(null);
+    const result = await acceptOrganiserInvite(null, acceptForm("bad-token"));
+    expect(result).toEqual({
+      ok: false,
+      error: "This invite link is invalid or has already been used.",
+    });
+  });
+
+  it("rejects a token whose invite has already been accepted (role no longer MEMBER)", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({
+      id: "member-1",
+      role: "ADMIN",
+      organiserInviteExpiresAt: new Date(Date.now() + 1000),
+    });
+    const result = await acceptOrganiserInvite(null, acceptForm("tok"));
+    expect(result).toEqual({
+      ok: false,
+      error: "This invite link is invalid or has already been used.",
+    });
+  });
+
+  it("rejects an expired invite", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({
+      id: "member-1",
+      role: "MEMBER",
+      organiserInviteExpiresAt: new Date(Date.now() - 1000),
+    });
+    const result = await acceptOrganiserInvite(null, acceptForm("tok"));
+    expect(result).toEqual({
+      ok: false,
+      error: "This invite link has expired. Ask an organiser to resend it.",
+    });
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
+  });
+
+  it("promotes the invitee and clears the invite fields", async () => {
+    const target = {
+      id: "member-1",
+      role: "MEMBER",
+      firstName: "Jo",
+      lastName: "Bloggs",
+      email: "jo@example.com",
+      organiserInviteExpiresAt: new Date(Date.now() + 1000),
+    };
+    prismaMock.user.findUnique.mockResolvedValueOnce(target);
+    prismaMock.user.update.mockResolvedValueOnce({});
+
+    const result = await acceptOrganiserInvite(null, acceptForm("tok"));
+
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: target.id },
+      data: {
+        role: "ADMIN",
+        organiserInviteToken: null,
+        organiserInviteSentAt: null,
+        organiserInviteExpiresAt: null,
+      },
+    });
+    expect(sendAdminPromotedEmail).toHaveBeenCalledWith(target);
+    expect(result).toEqual({ ok: true, message: "You're now an organiser." });
   });
 });

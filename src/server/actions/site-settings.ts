@@ -107,6 +107,43 @@ export async function updateAllWalksTabEnabled(
 /** Sets the single organiser who gets contact-form alert emails and is
  * expected to reply (via the alert email's reply-to). Pass an empty string
  * to designate no one. */
+/** Toggles whether promoting a member to organiser sends an invite email
+ * (taking effect only once accepted) instead of promoting immediately. */
+export async function updateOrganiserInviteRequired(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const enabled = String(formData.get("organiserInviteRequired") ?? "") === "on";
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        organiserInviteRequired: enabled,
+      },
+      update: { organiserInviteRequired: enabled },
+    });
+  } catch (err) {
+    return logActionError(
+      "updateOrganiserInviteRequired",
+      err,
+      "Could not save that setting. Try again.",
+    );
+  }
+
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/display");
+  return {
+    ok: true,
+    message: enabled
+      ? "Promoting a member now sends them an invite to accept first."
+      : "Promoting a member now takes effect immediately again.",
+  };
+}
+
 export async function updateContactMessagesOwner(
   _prev: ActionResult | null,
   formData: FormData,

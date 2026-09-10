@@ -1,15 +1,18 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { getMemberHistory } from "@/server/actions";
 import { formatDate, formatMembershipAge } from "@/lib/dates";
 import { walkStatus } from "@/lib/walk-window";
+import { SITE_SETTING_ID } from "@/lib/theme";
 import { AttendanceHistory } from "@/components/attendance-history";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeleteMemberButton } from "../delete-member-button";
 import { ImpersonateButton } from "../impersonate-button";
 import { MemberRoleButton } from "../member-role-button";
+import { CancelInviteButton, ResendInviteButton } from "../pending-invite-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +24,13 @@ export default async function MemberDetailPage({
   await requireAdmin();
   const { id } = await params;
 
-  const member = await getMemberHistory(id);
+  const [member, setting] = await Promise.all([
+    getMemberHistory(id),
+    prisma.siteSetting.findUnique({
+      where: { id: SITE_SETTING_ID },
+      select: { organiserInviteRequired: true },
+    }),
+  ]);
   if (!member) notFound();
 
   const joinedAt = new Date(member.createdAt);
@@ -39,8 +48,19 @@ export default async function MemberDetailPage({
           <div className="flex min-w-0 flex-col gap-1.5">
             <div className="flex flex-wrap items-center gap-2">
               <CardTitle className="text-2xl">{member.name}</CardTitle>
-              <Badge className="h-7 px-2" variant={member.role === "ADMIN" ? "default" : "secondary"}>
-                {member.role === "ADMIN" ? "Organiser" : "Member"}
+              <Badge
+                className="h-7 px-2"
+                variant={
+                  member.role === "ADMIN" ? "default" : member.pendingInvite ? "outline" : "secondary"
+                }
+              >
+                {member.role === "ADMIN"
+                  ? "Organiser"
+                  : member.pendingInvite
+                    ? member.pendingInvite.expired
+                      ? "Invite expired"
+                      : "Invited"
+                    : "Member"}
               </Badge>
             </div>
             <CardDescription className="flex flex-col gap-1">
@@ -51,12 +71,28 @@ export default async function MemberDetailPage({
             </CardDescription>
           </div>
           <div className="flex flex-wrap gap-2 sm:shrink-0 sm:justify-end">
-            {member.role === "MEMBER" ? <ImpersonateButton name={member.name} userId={id} /> : null}
-            {/* Changing your own role here would be easy to hit by mistake
-                and immediately cost you organiser access to fix it — same
-                reasoning as hiding your own Remove button below. Another
-                organiser can change it for you instead. */}
-            {!member.isYou ? <MemberRoleButton name={member.name} role={member.role} userId={id} /> : null}
+            {member.role === "MEMBER" && !member.pendingInvite ? (
+              <ImpersonateButton name={member.name} userId={id} />
+            ) : null}
+            {member.pendingInvite ? (
+              <>
+                <ResendInviteButton userId={id} />
+                <CancelInviteButton userId={id} />
+              </>
+            ) : (
+              /* Changing your own role here would be easy to hit by mistake
+                 and immediately cost you organiser access to fix it — same
+                 reasoning as hiding your own Remove button below. Another
+                 organiser can change it for you instead. */
+              !member.isYou && (
+                <MemberRoleButton
+                  inviteRequired={setting?.organiserInviteRequired ?? false}
+                  name={member.name}
+                  role={member.role}
+                  userId={id}
+                />
+              )
+            )}
             {!member.isYou ? (
               <DeleteMemberButton
                 attendanceCount={attendanceCount}

@@ -3,10 +3,12 @@ import { getEmailBrand } from "./brand";
 import { resolveEmailCopy } from "./overrides";
 import { getOrCreateUserUnsubscribeToken, memberPreferencesUrl, newsletterUnsubscribeUrl } from "./unsubscribe";
 import type { EmailTemplateKey } from "./registry";
+import { ORGANISER_INVITE_EXPIRY_DAYS } from "@/lib/organiser-invite";
 import { WelcomeEmail } from "./templates/welcome";
 import { AccountDeletedEmail } from "./templates/account-deleted";
 import { AdminPromotedEmail } from "./templates/admin-promoted";
 import { AdminDemotedEmail } from "./templates/admin-demoted";
+import { OrganiserInviteEmail } from "./templates/organiser-invite";
 import { ContactMessageReceivedEmail } from "./templates/contact-message-received";
 import { ContactMessageAdminAlertEmail } from "./templates/contact-message-admin-alert";
 import { NewsletterSubscribedEmail } from "./templates/newsletter-subscribed";
@@ -105,6 +107,22 @@ export async function sendTestEmail(key: EmailTemplateKey, admin: TestRecipient)
       await send(
         copy.subject,
         AdminDemotedEmail({ ...brand, preferencesUrl, bodyParagraphs: copy.bodyParagraphs }),
+      );
+      return;
+    }
+    case "organiserInvite": {
+      const copy = await resolveEmailCopy("organiserInvite", {
+        firstName,
+        siteName: brand.siteName,
+        expiresInDays: String(ORGANISER_INVITE_EXPIRY_DAYS),
+      });
+      await send(
+        copy.subject,
+        OrganiserInviteEmail({
+          ...brand,
+          acceptUrl: `${brand.siteUrl}/organiser-invite/sample`,
+          bodyParagraphs: copy.bodyParagraphs,
+        }),
       );
       return;
     }

@@ -23,6 +23,7 @@ import {
   updateCookieConsentVariant,
   updateFacebookGroupUrl,
   updateMonthlyClockInGoal,
+  updateOrganiserInviteRequired,
   updateSiteBranding,
 } from "./site-settings";
 
@@ -250,5 +251,32 @@ describe("updateContactMessagesOwner", () => {
     );
 
     expect(result).toEqual({ ok: false, error: "Choose a current organiser." });
+  });
+});
+
+describe("updateOrganiserInviteRequired", () => {
+  it("turns the setting on", async () => {
+    const result = await updateOrganiserInviteRequired(
+      null,
+      form({ organiserInviteRequired: "on" }),
+    );
+    expect(prismaMock.siteSetting.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ update: { organiserInviteRequired: true } }),
+    );
+    expect(result).toEqual({
+      ok: true,
+      message: "Promoting a member now sends them an invite to accept first.",
+    });
+  });
+
+  it("turns the setting off", async () => {
+    const result = await updateOrganiserInviteRequired(null, form({}));
+    expect(prismaMock.siteSetting.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ update: { organiserInviteRequired: false } }),
+    );
+    expect(result).toEqual({
+      ok: true,
+      message: "Promoting a member now takes effect immediately again.",
+    });
   });
 });
