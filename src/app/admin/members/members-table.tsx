@@ -170,20 +170,19 @@ export function MembersTable({
                 <DataListActions
                   className={cn("relative z-10 flex-wrap gap-2", dataListActionsStackClassName)}
                 >
-                  <Badge
-                    className="h-7 px-2"
-                    variant={
-                      member.role === "ADMIN" ? "default" : member.pendingInvite ? "outline" : "secondary"
-                    }
-                  >
-                    {member.role === "ADMIN"
-                      ? "Organiser"
-                      : member.pendingInvite
-                        ? member.pendingInvite.expired
-                          ? "Invite expired"
-                          : "Invited"
-                        : "Member"}
-                  </Badge>
+                  {member.pendingInvite ? (
+                    // Plain text, not a Badge — an outline badge sitting
+                    // right next to the outline Resend/Cancel buttons below
+                    // read as a third (non-working) button rather than a
+                    // status label.
+                    <span className="flex h-7 items-center text-xs font-medium text-muted-foreground">
+                      {member.pendingInvite.expired ? "Invite expired" : "Invited"}
+                    </span>
+                  ) : (
+                    <Badge className="h-7 px-2" variant={member.role === "ADMIN" ? "default" : "secondary"}>
+                      {member.role === "ADMIN" ? "Organiser" : "Member"}
+                    </Badge>
+                  )}
                   {member.pendingInvite ? (
                     <>
                       <ResendInviteButton userId={member.id} />
