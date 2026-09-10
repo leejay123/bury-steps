@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { clerkClient } from "@clerk/nextjs/server";
 import type { Prisma } from "@prisma/client";
-import { requireAdmin, displayName } from "@/lib/auth";
+import { requireAdmin, displayName, getOptionalUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
@@ -504,7 +504,18 @@ export async function acceptOrganiserInvite(
   // Layout nav (Members / Reports / Settings) depends on role for this person.
   revalidatePath("/", "layout");
 
-  return { ok: true, message: "You're now an organiser." };
+  // Only redirect straight into /admin/members if the browser that just
+  // clicked the email link is already signed in as the person who was
+  // invited — /admin/* 404s for anyone else (see src/proxy.ts), so
+  // redirecting an unauthenticated or different-account browser there
+  // would just be a confusing dead end. The accept page shows a sign-in
+  // prompt itself when this is absent.
+  const viewer = await getOptionalUser();
+  return {
+    ok: true,
+    message: "You're now an organiser.",
+    ...(viewer?.id === target.id ? { href: "/admin/members" } : {}),
+  };
 }
 
 export type MemberHistoryItem = {

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { getSiteTheme } from "@/lib/site-theme";
 import { PAGE_X } from "@/lib/page-x";
+import { appUrl, accountPortalHref } from "@/lib/urls";
 import { AcceptInviteForm } from "./accept-invite-form";
 
 export const dynamic = "force-dynamic";
@@ -13,8 +14,9 @@ export const metadata: Metadata = {
 
 /** Reached from the link in the organiser-invite email — no sign-in
  * required, same trust model as the email-preferences token pages (see
- * acceptOrganiserInvite). Requires an explicit click, unlike the
- * newsletter-unsubscribe token page, since this one grants real access. */
+ * acceptOrganiserInvite). Clicking the button in the email is the whole
+ * interaction — this page auto-accepts on load rather than asking for a
+ * second click, since that's real access being granted either way. */
 export default async function OrganiserInvitePage({
   params,
 }: {
@@ -50,7 +52,10 @@ export default async function OrganiserInvitePage({
             You&rsquo;ve been invited to become an organiser of {theme.siteName}. Accepting gives you
             access to manage walks, members, and settings.
           </p>
-          <AcceptInviteForm token={token} />
+          <AcceptInviteForm
+            signInHref={accountPortalHref("sign-in", `${appUrl()}/admin/members`)}
+            token={token}
+          />
         </>
       )}
     </div>

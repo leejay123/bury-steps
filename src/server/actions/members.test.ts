@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { RateLimitResult } from "@/lib/rate-limit";
 
-const { revalidatePath, requireAdmin, checkRateLimit, deleteUser, prismaMock, transaction } =
+const { revalidatePath, requireAdmin, getOptionalUser, checkRateLimit, deleteUser, prismaMock, transaction } =
   vi.hoisted(() => {
     const prismaMock: Record<string, Record<string, ReturnType<typeof vi.fn>>> = {
       user: { findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn(), update: vi.fn(), delete: vi.fn() },
@@ -21,6 +21,7 @@ const { revalidatePath, requireAdmin, checkRateLimit, deleteUser, prismaMock, tr
     return {
       revalidatePath: vi.fn(),
       requireAdmin: vi.fn(),
+      getOptionalUser: vi.fn(async (): Promise<{ id: string } | null> => null),
       checkRateLimit: vi.fn((): RateLimitResult => ({ ok: true })),
       deleteUser: vi.fn(),
       prismaMock,
@@ -49,7 +50,7 @@ vi.mock("@/lib/organiser-invite", () => ({
 }));
 vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
-  return { ...actual, requireAdmin };
+  return { ...actual, requireAdmin, getOptionalUser };
 });
 
 import { sendOrganiserInviteEmail, sendAdminPromotedEmail } from "@/lib/email/mailer";
@@ -840,6 +841,46 @@ describe("acceptOrganiserInvite", () => {
       },
     });
     expect(sendAdminPromotedEmail).toHaveBeenCalledWith(target);
+    expect(result).toEqual({ ok: true, message: "You're now an organiser." });
+  });
+
+  it("includes a redirect href when the current browser is already signed in as the invitee", async () => {
+    const target = {
+      id: "member-1",
+      role: "MEMBER",
+      firstName: "Jo",
+      lastName: "Bloggs",
+      email: "jo@example.com",
+      organiserInviteExpiresAt: new Date(Date.now() + 1000),
+    };
+    prismaMock.user.findUnique.mockResolvedValueOnce(target);
+    prismaMock.user.update.mockResolvedValueOnce({});
+    getOptionalUser.mockResolvedValueOnce({ id: target.id });
+
+    const result = await acceptOrganiserInvite(null, acceptForm("tok"));
+
+    expect(result).toEqual({
+      ok: true,
+      message: "You're now an organiser.",
+      href: "/admin/members",
+    });
+  });
+
+  it("omits the redirect href when no one, or someone else, is signed in", async () => {
+    const target = {
+      id: "member-1",
+      role: "MEMBER",
+      firstName: "Jo",
+      lastName: "Bloggs",
+      email: "jo@example.com",
+      organiserInviteExpiresAt: new Date(Date.now() + 1000),
+    };
+    prismaMock.user.findUnique.mockResolvedValueOnce(target);
+    prismaMock.user.update.mockResolvedValueOnce({});
+    getOptionalUser.mockResolvedValueOnce({ id: "someone-else" });
+
+    const result = await acceptOrganiserInvite(null, acceptForm("tok"));
+
     expect(result).toEqual({ ok: true, message: "You're now an organiser." });
   });
 });
