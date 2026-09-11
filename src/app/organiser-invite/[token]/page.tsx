@@ -12,11 +12,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-/** Reached from the link in the organiser-invite email — no sign-in
- * required, same trust model as the email-preferences token pages (see
- * acceptOrganiserInvite). Clicking the button in the email is the whole
- * interaction — this page auto-accepts on load rather than asking for a
- * second click, since that's real access being granted either way. */
+/** Reached from the link in the organiser-invite email. Deliberately
+ * requires a real button click on AcceptInviteForm below (not an
+ * auto-submit on load) — this grants real admin access on a single-use
+ * token, and an automated pre-fetch of the link (Outlook Safe Links, Gmail
+ * link scanning, corporate security gateways) would otherwise burn the
+ * token before the actual person ever opens it. */
 export default async function OrganiserInvitePage({
   params,
 }: {
@@ -36,28 +37,30 @@ export default async function OrganiserInvitePage({
   const invalid = !invitee || invitee.role !== "MEMBER";
 
   return (
-    <div className={`mx-auto flex w-full max-w-md flex-col items-center gap-4 py-16 text-center ${PAGE_X}`}>
-      <h1 className="text-2xl font-semibold tracking-tight">Become an organiser</h1>
-      {invalid ? (
-        <p className="text-sm text-muted-foreground">
-          This invite link is invalid or has already been used.
-        </p>
-      ) : expired ? (
-        <p className="text-sm text-muted-foreground">
-          This invite link has expired. Ask an organiser to send you a new one.
-        </p>
-      ) : (
-        <>
+    <div className={`mx-auto w-full max-w-md py-16 ${PAGE_X}`}>
+      <div className="flex min-h-64 flex-col items-center justify-center gap-4 rounded-lg border border-dashed bg-muted/30 p-6 text-center md:p-12">
+        <h1 className="text-2xl font-semibold tracking-tight">Become an organiser</h1>
+        {invalid ? (
           <p className="text-sm text-muted-foreground">
-            You&rsquo;ve been invited to become an organiser of {theme.siteName}. Accepting gives you
-            access to manage walks, members, and settings.
+            This invite link is invalid or has already been used.
           </p>
-          <AcceptInviteForm
-            signInHref={accountPortalHref("sign-in", `${appUrl()}/admin/members`)}
-            token={token}
-          />
-        </>
-      )}
+        ) : expired ? (
+          <p className="text-sm text-muted-foreground">
+            This invite link has expired. Ask an organiser to send you a new one.
+          </p>
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground">
+              You&rsquo;ve been invited to become an organiser of {theme.siteName}. Accepting gives
+              you access to manage walks, members, and settings.
+            </p>
+            <AcceptInviteForm
+              signInHref={accountPortalHref("sign-in", `${appUrl()}/admin/members`)}
+              token={token}
+            />
+          </>
+        )}
+      </div>
     </div>
   );
 }
