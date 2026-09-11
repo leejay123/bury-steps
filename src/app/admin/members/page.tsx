@@ -2,6 +2,7 @@ import { Users } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { formatDateTime } from "@/lib/dates";
+import { pickOrganiserPermissions } from "@/lib/organiser-permissions";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { searchMembers, type MemberRoleFilter } from "@/server/actions";
 import { MembersTable } from "./members-table";
@@ -61,6 +62,7 @@ export default async function MembersPage({
           inviteRequired={setting?.organiserInviteRequired ?? false}
           roleFilter={role}
           viewerId={admin.id}
+          viewerPermissions={pickOrganiserPermissions(admin)}
         />
       )}
 

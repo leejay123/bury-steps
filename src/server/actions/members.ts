@@ -15,6 +15,8 @@ import {
   organiserInviteExpiresAt,
 } from "@/lib/organiser-invite";
 import {
+  clampGrantablePermissions,
+  NO_ORGANISER_PERMISSIONS,
   pickOrganiserPermissions,
   readOrganiserPermissions,
   type OrganiserPermissions,
@@ -307,8 +309,16 @@ export async function setMemberRole(
     return { ok: false, error: "Choose organiser or member." };
   }
   const role = roleRaw as "ADMIN" | "MEMBER";
-  // Only read/applied when promoting — see below.
-  const permissions = readOrganiserPermissions(formData);
+  // Only read/applied when promoting — see below. Capped to what the
+  // acting organiser can actually grant: without this, holding just the
+  // Members permission would be enough to promote anyone (including a
+  // fresh account they control) straight to full access, regardless of
+  // what they were given themselves.
+  const permissions = clampGrantablePermissions(
+    admin,
+    readOrganiserPermissions(formData),
+    NO_ORGANISER_PERMISSIONS,
+  );
 
   const target = await prisma.user.findUnique({ where: { id } });
   if (!target) return { ok: false, error: "That member is no longer in the group." };
@@ -417,13 +427,24 @@ export async function setOrganiserPermissions(
 
   const id = String(formData.get("userId") ?? "");
   if (!id) return { ok: false, error: "No member selected." };
-  const permissions = readOrganiserPermissions(formData);
 
   const target = await prisma.user.findUnique({ where: { id } });
   if (!target) return { ok: false, error: "That member is no longer in the group." };
   if (target.role !== "ADMIN" && !target.organiserInviteToken) {
     return { ok: false, error: "This person is not an organiser and has no pending invite." };
   }
+
+  // Capped to what the acting organiser can actually grant — anything
+  // outside their own permissions stays exactly as it was on this row,
+  // in either direction. Without this, holding just the Members
+  // permission would be enough to hand anyone (including a fresh account
+  // the organiser controls) full access, regardless of what they were
+  // given themselves.
+  const permissions = clampGrantablePermissions(
+    admin,
+    readOrganiserPermissions(formData),
+    pickOrganiserPermissions(target),
+  );
 
   try {
     await prisma.user.update({ where: { id }, data: permissions });

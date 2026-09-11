@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { getMemberHistory } from "@/server/actions";
 import { formatDate, formatMembershipAge } from "@/lib/dates";
 import { walkStatus } from "@/lib/walk-window";
+import { pickOrganiserPermissions } from "@/lib/organiser-permissions";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { AttendanceHistory } from "@/components/attendance-history";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +23,8 @@ export default async function MemberDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdmin();
+  const viewer = await requireAdmin();
+  const viewerPermissions = pickOrganiserPermissions(viewer);
   const { id } = await params;
 
   const [member, setting] = await Promise.all([
@@ -81,6 +83,7 @@ export default async function MemberDetailPage({
                   initialPermissions={member.permissions}
                   name={member.name}
                   userId={id}
+                  viewerPermissions={viewerPermissions}
                 />
               </>
             ) : (
@@ -96,12 +99,14 @@ export default async function MemberDetailPage({
                     name={member.name}
                     role={member.role}
                     userId={id}
+                    viewerPermissions={viewerPermissions}
                   />
                   {member.role === "ADMIN" ? (
                     <EditPermissionsButton
                       initialPermissions={member.permissions}
                       name={member.name}
                       userId={id}
+                      viewerPermissions={viewerPermissions}
                     />
                   ) : null}
                 </>

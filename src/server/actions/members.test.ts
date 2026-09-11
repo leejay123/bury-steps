@@ -65,7 +65,17 @@ import {
   setOrganiserPermissions,
 } from "./members";
 
-const ADMIN = { id: "admin-1", clerkId: "clerk-admin-1", permMembers: true };
+// Full access by default so existing tests exercise the unclamped path —
+// see the "clampGrantablePermissions" describe block below for a limited
+// (Members-only) actor's behaviour specifically.
+const ADMIN = {
+  id: "admin-1",
+  clerkId: "clerk-admin-1",
+  permWalks: true,
+  permMembers: true,
+  permReportsMessages: true,
+  permSettings: true,
+};
 
 function deleteMemberForm(fields: Record<string, string>): FormData {
   const formData = new FormData();
@@ -498,6 +508,53 @@ describe("setMemberRole", () => {
     expect(result).toEqual({ ok: false, error: "Too many attempts. Try again in 42s." });
     expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
   });
+
+  it("caps a limited organiser to promoting with only the permissions they hold themselves", async () => {
+    // Only Members and Walks — no Reports/Settings — same shape a
+    // Members-only organiser could otherwise use to hand a fresh account
+    // full access by simply asking for it.
+    requireAdmin.mockResolvedValueOnce({
+      ...ADMIN,
+      permReportsMessages: false,
+      permSettings: false,
+    });
+    const target = {
+      id: "member-1",
+      role: "MEMBER",
+      firstName: "Jo",
+      lastName: null,
+      email: "jo@example.com",
+    };
+    prismaMock.user.findUnique.mockResolvedValueOnce(target).mockResolvedValueOnce(target);
+    prismaMock.user.update.mockResolvedValueOnce({ ...target, role: "ADMIN" });
+
+    await setMemberRole(
+      null,
+      roleForm({
+        userId: target.id,
+        role: "ADMIN",
+        confirm: "confirm",
+        // Asks for everything, including the two the actor doesn't have.
+        permWalks: "on",
+        permMembers: "on",
+        permReportsMessages: "on",
+        permSettings: "on",
+      }),
+    );
+
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: target.id },
+      data: {
+        role: "ADMIN",
+        permWalks: true,
+        permMembers: true,
+        // Forced to false — the actor doesn't hold these themselves, and
+        // a brand-new organiser has no legitimate existing state to keep.
+        permReportsMessages: false,
+        permSettings: false,
+      },
+    });
+  });
 });
 
 describe("getMemberHistory", () => {
@@ -871,6 +928,50 @@ describe("setOrganiserPermissions", () => {
       },
     });
     expect(result).toEqual({ ok: true, message: "Sam Lee's permissions have been updated." });
+  });
+
+  it("caps a limited organiser to editing only the permissions they hold themselves", async () => {
+    // Members only — no Walks, Reports, or Settings.
+    requireAdmin.mockResolvedValueOnce({
+      ...ADMIN,
+      permWalks: false,
+      permReportsMessages: false,
+      permSettings: false,
+    });
+    const target = {
+      id: "admin-2",
+      role: "ADMIN",
+      firstName: "Sam",
+      lastName: "Lee",
+      email: "sam@example.com",
+      // Sam currently has Walks but not Settings.
+      permWalks: true,
+      permMembers: false,
+      permReportsMessages: false,
+      permSettings: false,
+    };
+    prismaMock.user.findUnique.mockResolvedValueOnce(target);
+    prismaMock.user.update.mockResolvedValueOnce({});
+
+    await setOrganiserPermissions(
+      null,
+      // Tries to both grant Settings and revoke Walks — the actor controls
+      // neither, so both requests are ignored.
+      roleForm({ userId: target.id, permMembers: "on", permSettings: "on" }),
+    );
+
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: target.id },
+      data: {
+        // Granted — the actor holds Members themselves.
+        permMembers: true,
+        // Untouched — Sam keeps the Walks access they already had, and
+        // does not gain Settings, regardless of what was submitted.
+        permWalks: true,
+        permReportsMessages: false,
+        permSettings: false,
+      },
+    });
   });
 
   it("allows editing permissions on a still-pending invite", async () => {

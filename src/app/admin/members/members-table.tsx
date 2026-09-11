@@ -8,6 +8,7 @@ import { formatDate, formatMembershipAge } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { searchMembers, type MemberRoleFilter, type MemberRow } from "@/server/actions";
+import type { OrganiserPermissions } from "@/lib/organiser-permissions";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { DeleteMemberButton } from "./delete-member-button";
 import { EditPermissionsButton } from "./edit-permissions-button";
@@ -50,12 +51,16 @@ export function MembersTable({
   inviteRequired,
   roleFilter,
   viewerId,
+  viewerPermissions,
 }: {
   initialRows: ViewMember[];
   initialTotal: number;
   inviteRequired: boolean;
   roleFilter: MemberRoleFilter;
   viewerId: string;
+  /** The signed-in organiser's own permissions — caps what they can grant
+   * or change for someone else (see clampGrantablePermissions). */
+  viewerPermissions: OrganiserPermissions;
 }) {
   const router = useRouter();
   const listRef = useRef<HTMLDivElement>(null);
@@ -219,6 +224,7 @@ export function MembersTable({
                         name={member.name}
                         onChanged={refetch}
                         userId={member.id}
+                        viewerPermissions={viewerPermissions}
                       />
                     </>
                   ) : /* Changing your own role here would be easy to hit by
@@ -235,6 +241,7 @@ export function MembersTable({
                         onChanged={refetch}
                         role={member.role}
                         userId={member.id}
+                        viewerPermissions={viewerPermissions}
                       />
                       {member.role === "ADMIN" ? (
                         <EditPermissionsButton
@@ -242,6 +249,7 @@ export function MembersTable({
                           name={member.name}
                           onChanged={refetch}
                           userId={member.id}
+                          viewerPermissions={viewerPermissions}
                         />
                       ) : null}
                     </>
