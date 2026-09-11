@@ -1,4 +1,12 @@
-import { EmailButton, EmailFact, EmailLayout, EmailParagraphs, EmailText, type EmailBrand } from "../shared";
+import {
+  EmailButton,
+  EmailFact,
+  EmailLayout,
+  EmailParagraphs,
+  EmailText,
+  preserveLineBreaks,
+  type EmailBrand,
+} from "../shared";
 
 export type ContactMessageAdminAlertEmailProps = EmailBrand & {
   name: string;
@@ -42,7 +50,7 @@ export function ContactMessageAdminAlertEmail({
           whiteSpace: "pre-wrap",
         }}
       >
-        {message}
+        {preserveLineBreaks(message)}
       </EmailText>
       <EmailButton href={`${brand.siteUrl}/admin/messages`}>Open in admin</EmailButton>
     </EmailLayout>

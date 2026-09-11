@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import { Fragment, type CSSProperties, type ReactNode } from "react";
 import { Body, Container, Head, Heading, Hr, Html, Img, Link, Preview, Section, Text } from "@react-email/components";
 
 // Email clients don't reliably load web fonts, so this matches the system
@@ -122,6 +122,26 @@ export function EmailText({
       {children}
     </Text>
   );
+}
+
+/**
+ * Turns a raw multi-line string (a contact-form message, say) into real
+ * <br/> line breaks instead of literal "\n" characters. CSS
+ * `white-space: pre-wrap` alone isn't enough — it's how the sender's own
+ * confirmation and the admin alert both used to render this text, but
+ * Outlook's Word-based HTML renderer in particular ignores that CSS
+ * property entirely and collapses blank lines/spacing the sender actually
+ * typed. Baking real <br/> tags into the HTML works in every email client,
+ * CSS support or not.
+ */
+export function preserveLineBreaks(text: string): ReactNode {
+  const lines = text.split("\n");
+  return lines.map((line, index) => (
+    <Fragment key={index}>
+      {line}
+      {index < lines.length - 1 ? <br /> : null}
+    </Fragment>
+  ));
 }
 
 /**

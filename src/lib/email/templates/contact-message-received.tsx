@@ -1,4 +1,4 @@
-import { EmailLayout, EmailParagraphs, EmailText, type EmailBrand } from "../shared";
+import { EmailLayout, EmailParagraphs, EmailText, preserveLineBreaks, type EmailBrand } from "../shared";
 
 export type ContactMessageReceivedEmailProps = EmailBrand & {
   message: string;
@@ -30,7 +30,7 @@ export function ContactMessageReceivedEmail({
           whiteSpace: "pre-wrap",
         }}
       >
-        {message}
+        {preserveLineBreaks(message)}
       </EmailText>
     </EmailLayout>
   );
