@@ -1168,7 +1168,7 @@ describe("acceptOrganiserInvite", () => {
     expect(prismaMock.user.update).not.toHaveBeenCalled();
   });
 
-  it("promotes the invitee, clears the invite fields, and redirects to /admin/members", async () => {
+  it("promotes the invitee, clears the invite fields, and redirects to the Walks dashboard when granted Walks", async () => {
     const target = {
       id: "member-1",
       role: "MEMBER",
@@ -1176,6 +1176,10 @@ describe("acceptOrganiserInvite", () => {
       lastName: "Bloggs",
       email: "jo@example.com",
       organiserInviteExpiresAt: new Date(Date.now() + 1000),
+      permWalks: true,
+      permMembers: false,
+      permReportsMessages: false,
+      permSettings: false,
     };
     prismaMock.user.findUnique.mockResolvedValueOnce(target);
     prismaMock.user.update.mockResolvedValueOnce({});
@@ -1196,7 +1200,37 @@ describe("acceptOrganiserInvite", () => {
     expect(result).toEqual({
       ok: true,
       message: "You're now an organiser.",
-      href: "/admin/members",
+      href: "/admin",
+    });
+  });
+
+  // Regression test: every admin page now checks its own specific
+  // permission (requirePermission), so a fixed "/admin/members" 404s on
+  // an organiser who was only granted Reports & messages — this is
+  // exactly the bug an invite-time permission split can reintroduce.
+  it("redirects to the first page an organiser without Walks or Members can actually use", async () => {
+    const target = {
+      id: "member-1",
+      role: "MEMBER",
+      firstName: "Jo",
+      lastName: "Bloggs",
+      email: "jo@example.com",
+      organiserInviteExpiresAt: new Date(Date.now() + 1000),
+      permWalks: false,
+      permMembers: false,
+      permReportsMessages: true,
+      permSettings: false,
+    };
+    prismaMock.user.findUnique.mockResolvedValueOnce(target);
+    prismaMock.user.update.mockResolvedValueOnce({});
+    getOptionalUser.mockResolvedValueOnce({ id: target.id });
+
+    const result = await acceptOrganiserInvite(null, acceptForm("tok"));
+
+    expect(result).toEqual({
+      ok: true,
+      message: "You're now an organiser.",
+      href: "/admin/messages",
     });
   });
 

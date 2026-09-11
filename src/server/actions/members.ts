@@ -15,6 +15,7 @@ import {
   organiserInviteExpiresAt,
 } from "@/lib/organiser-invite";
 import {
+  adminLandingPath,
   clampGrantablePermissions,
   hasAnyPermission,
   NO_ORGANISER_PERMISSIONS,
@@ -640,10 +641,11 @@ export async function acceptOrganiserInvite(
   // Layout nav (Members / Reports / Settings) depends on role for this person.
   revalidatePath("/", "layout");
 
-  // The viewer-match check above guarantees this is the invitee's own
-  // signed-in browser by this point, so /admin/members is always safe to
-  // send them to (/admin/* 404s for anyone else — see src/proxy.ts).
-  return { ok: true, message: "You're now an organiser.", href: "/admin/members" };
+  // Send them to the first admin page they can actually use — every admin
+  // page now checks the specific permission it needs, so a fixed
+  // "/admin/members" 404s on anyone who wasn't granted Members (see
+  // adminLandingPath).
+  return { ok: true, message: "You're now an organiser.", href: adminLandingPath(target) };
 }
 
 export type MemberHistoryItem = {

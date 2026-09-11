@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  adminLandingPath,
   describeOrganiserPermissions,
   FULL_ORGANISER_PERMISSIONS,
   hasAnyPermission,
@@ -30,6 +31,19 @@ describe("hasAnyPermission", () => {
   it("is true when at least one permission is granted", () => {
     expect(hasAnyPermission({ ...NONE, permWalks: true })).toBe(true);
     expect(hasAnyPermission(FULL_ORGANISER_PERMISSIONS)).toBe(true);
+  });
+});
+
+describe("adminLandingPath", () => {
+  it("prefers Walks, then Members, then Reports & messages, then Settings", () => {
+    expect(adminLandingPath(FULL_ORGANISER_PERMISSIONS)).toBe("/admin");
+    expect(adminLandingPath({ ...NONE, permMembers: true })).toBe("/admin/members");
+    expect(adminLandingPath({ ...NONE, permReportsMessages: true })).toBe("/admin/messages");
+    expect(adminLandingPath({ ...NONE, permSettings: true })).toBe("/admin/settings");
+  });
+
+  it("falls back to the Guide when nothing is granted", () => {
+    expect(adminLandingPath(NONE)).toBe("/admin/guide");
   });
 });
 

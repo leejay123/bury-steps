@@ -129,6 +129,25 @@ export function clampGrantablePermissions(
   return result;
 }
 
+/**
+ * Where to actually send a brand-new organiser right after they gain
+ * access (e.g. accepting an invite) — every admin page now 404s for an
+ * organiser lacking the specific permission it needs (requirePermission),
+ * so a fixed "/admin/members" is only safe for someone who was granted
+ * Members. Walks first, then Members, then Reports & messages, then
+ * Settings, matching the nav's own order (site-nav-items.ts); Guide is
+ * the last resort since every organiser can see it regardless of what
+ * they were granted — hasAnyPermission guarantees at least one of the
+ * four is true, so that fallback is defensive rather than reachable.
+ */
+export function adminLandingPath(perms: OrganiserPermissions): string {
+  if (perms.permWalks) return "/admin";
+  if (perms.permMembers) return "/admin/members";
+  if (perms.permReportsMessages) return "/admin/messages";
+  if (perms.permSettings) return "/admin/settings";
+  return "/admin/guide";
+}
+
 export function pickOrganiserPermissions(user: OrganiserPermissions): OrganiserPermissions {
   return {
     permWalks: user.permWalks,
