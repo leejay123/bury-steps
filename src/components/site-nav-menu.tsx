@@ -94,6 +94,9 @@ function useScrollEdges(scrollerRef: RefObject<HTMLElement | null>) {
 /** Fades the scroller's edge toward the surrounding background when there's
  * more content past it — a plain CSS mask on the scroller would fade the
  * links' own background too, so this overlays a matching gradient instead.
+ * Not rendered at all rather than just faded to invisible when there's
+ * nothing past that edge — the first/last item then has nothing sitting
+ * over it at rest.
  *
  * Built with an inline `style` rather than Tailwind's `bg-gradient-to-*`
  * utilities: those compile to `linear-gradient(to left/right in oklab, …)`
@@ -102,13 +105,13 @@ function useScrollEdges(scrollerRef: RefObject<HTMLElement | null>) {
  * one edge but not the other. A plain gradient in the default (sRGB)
  * color space sidesteps that entirely and is universally supported. */
 function ScrollEdgeFade({ side, visible }: { side: "left" | "right"; visible: boolean }) {
+  if (!visible) return null;
   return (
     <div
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute inset-y-0 z-10 w-8 transition-opacity duration-150",
+        "pointer-events-none absolute inset-y-0 z-10 w-8",
         side === "left" ? "left-0" : "right-0",
-        visible ? "opacity-100" : "opacity-0",
       )}
       style={{
         backgroundImage: `linear-gradient(to ${side === "left" ? "right" : "left"}, var(--background), transparent)`,
