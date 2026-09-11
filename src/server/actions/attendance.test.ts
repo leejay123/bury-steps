@@ -70,8 +70,15 @@ const ADMIN = {
   id: "admin-1",
   permWalks: true,
   permMembers: true,
-  permReportsMessages: true,
-  permSettings: true,
+  permMessages: true,
+  permReports: true,
+  permHomepage: true,
+  permNotices: true,
+  permProgress: true,
+  permEmails: true,
+  permSubscribers: true,
+  permDisplay: true,
+  permCacheReset: true,
 };
 
 function form(fields: Record<string, string>): FormData {

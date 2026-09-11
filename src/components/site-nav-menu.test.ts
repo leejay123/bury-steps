@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { NO_ORGANISER_PERMISSIONS } from "@/lib/organiser-permissions";
 import { isNavItemActive, navItems, shouldPrefetchNavLink } from "./site-nav-items";
 
 describe("navItems", () => {
@@ -27,43 +28,53 @@ describe("navItems", () => {
 describe("navItems with limited organiser permissions", () => {
   it("hides each section behind its own permission, keeps Guide unconditional", () => {
     expect(
-      navItems(true, "/admin", {
-        permWalks: false,
-        permMembers: true,
-        permReportsMessages: false,
-        permSettings: false,
-      }).map((item) => item.href),
+      navItems(true, "/admin", { ...NO_ORGANISER_PERMISSIONS, permMembers: true }).map(
+        (item) => item.href,
+      ),
     ).toEqual(["/", "/walks", "/notices", "/progress", "/admin/members", "/admin/guide"]);
   });
 
   it("hides every organiser section for someone with no permissions at all", () => {
+    expect(navItems(true, "/admin", NO_ORGANISER_PERMISSIONS).map((item) => item.href)).toEqual([
+      "/",
+      "/walks",
+      "/notices",
+      "/progress",
+      "/admin/guide",
+    ]);
+  });
+
+  it("shows Settings for any one of the seven settings-area permissions", () => {
     expect(
-      navItems(true, "/admin", {
-        permWalks: false,
-        permMembers: false,
-        permReportsMessages: false,
-        permSettings: false,
-      }).map((item) => item.href),
-    ).toEqual(["/", "/walks", "/notices", "/progress", "/admin/guide"]);
+      navItems(true, "/admin", { ...NO_ORGANISER_PERMISSIONS, permCacheReset: true })
+        .map((item) => item.href)
+        .includes("/admin/settings"),
+    ).toBe(true);
+  });
+
+  it("shows Messages and Reports independently of each other", () => {
+    const messagesOnly = navItems(true, "/admin", {
+      ...NO_ORGANISER_PERMISSIONS,
+      permMessages: true,
+    }).map((item) => item.href);
+    expect(messagesOnly).toContain("/admin/messages");
+    expect(messagesOnly).not.toContain("/admin/reports");
+
+    const reportsOnly = navItems(true, "/admin", {
+      ...NO_ORGANISER_PERMISSIONS,
+      permReports: true,
+    }).map((item) => item.href);
+    expect(reportsOnly).toContain("/admin/reports");
+    expect(reportsOnly).not.toContain("/admin/messages");
   });
 
   it("without the Walks permission, Walks points at the member page instead of the admin dashboard", () => {
-    const items = navItems(true, "/admin", {
-      permWalks: false,
-      permMembers: false,
-      permReportsMessages: false,
-      permSettings: false,
-    });
+    const items = navItems(true, "/admin", NO_ORGANISER_PERMISSIONS);
     expect(items.find((item) => item.label === "Walks")?.href).toBe("/walks");
   });
 
   it("with the Walks permission, Walks still points at the admin dashboard", () => {
-    const items = navItems(true, "/admin", {
-      permWalks: true,
-      permMembers: false,
-      permReportsMessages: false,
-      permSettings: false,
-    });
+    const items = navItems(true, "/admin", { ...NO_ORGANISER_PERMISSIONS, permWalks: true });
     expect(items.find((item) => item.label === "Walks")?.href).toBe("/admin");
   });
 });

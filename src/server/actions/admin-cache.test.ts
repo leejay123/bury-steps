@@ -63,14 +63,21 @@ vi.mock("@/lib/auth", async () => {
 import { clearSiteCache, resetSiteToDefault } from "./admin-cache";
 
 // Full access by default so existing tests exercise the authorized path —
-// see the "permission guard" tests below for permSettings: false.
+// see the "permission guard" tests below for permCacheReset: false.
 const ADMIN = {
   id: "admin-1",
   clerkId: "clerk-admin-1",
   permWalks: true,
   permMembers: true,
-  permReportsMessages: true,
-  permSettings: true,
+  permMessages: true,
+  permReports: true,
+  permHomepage: true,
+  permNotices: true,
+  permProgress: true,
+  permEmails: true,
+  permSubscribers: true,
+  permDisplay: true,
+  permCacheReset: true,
 };
 
 function resetForm(confirm: string): FormData {
@@ -89,9 +96,9 @@ beforeEach(() => {
 
 describe("clearSiteCache", () => {
   it("rejects an organiser without the Settings permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permCacheReset: false });
     const result = await clearSiteCache(null, new FormData());
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage the site cache and reset." });
     expect(revalidateTag).not.toHaveBeenCalled();
   });
 
@@ -109,9 +116,9 @@ describe("clearSiteCache", () => {
 
 describe("resetSiteToDefault", () => {
   it("rejects an organiser without the Settings permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permCacheReset: false });
     const result = await resetSiteToDefault(null, resetForm("delete"));
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage the site cache and reset." });
     expect(transaction).not.toHaveBeenCalled();
   });
 

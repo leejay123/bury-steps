@@ -73,8 +73,15 @@ const ADMIN = {
   clerkId: "clerk-admin-1",
   permWalks: true,
   permMembers: true,
-  permReportsMessages: true,
-  permSettings: true,
+  permMessages: true,
+  permReports: true,
+  permHomepage: true,
+  permNotices: true,
+  permProgress: true,
+  permEmails: true,
+  permSubscribers: true,
+  permDisplay: true,
+  permCacheReset: true,
 };
 
 function deleteMemberForm(fields: Record<string, string>): FormData {
@@ -525,8 +532,15 @@ describe("setMemberRole", () => {
         role: "ADMIN",
         permWalks: true,
         permMembers: true,
-        permReportsMessages: false,
-        permSettings: false,
+        permMessages: false,
+        permReports: false,
+        permHomepage: false,
+        permNotices: false,
+        permProgress: false,
+        permEmails: false,
+        permSubscribers: false,
+        permDisplay: false,
+        permCacheReset: false,
       },
     });
   });
@@ -542,13 +556,20 @@ describe("setMemberRole", () => {
   });
 
   it("caps a limited organiser to promoting with only the permissions they hold themselves", async () => {
-    // Only Members and Walks — no Reports/Settings — same shape a
-    // Members-only organiser could otherwise use to hand a fresh account
-    // full access by simply asking for it.
+    // Only Members and Walks — nothing else — same shape a Members-only
+    // organiser could otherwise use to hand a fresh account full access
+    // by simply asking for it.
     requireAdmin.mockResolvedValueOnce({
       ...ADMIN,
-      permReportsMessages: false,
-      permSettings: false,
+      permMessages: false,
+      permReports: false,
+      permHomepage: false,
+      permNotices: false,
+      permProgress: false,
+      permEmails: false,
+      permSubscribers: false,
+      permDisplay: false,
+      permCacheReset: false,
     });
     const target = {
       id: "member-1",
@@ -566,11 +587,18 @@ describe("setMemberRole", () => {
         userId: target.id,
         role: "ADMIN",
         confirm: "confirm",
-        // Asks for everything, including the two the actor doesn't have.
+        // Asks for everything, including what the actor doesn't have.
         permWalks: "on",
         permMembers: "on",
-        permReportsMessages: "on",
-        permSettings: "on",
+        permMessages: "on",
+        permReports: "on",
+        permHomepage: "on",
+        permNotices: "on",
+        permProgress: "on",
+        permEmails: "on",
+        permSubscribers: "on",
+        permDisplay: "on",
+        permCacheReset: "on",
       }),
     );
 
@@ -582,8 +610,15 @@ describe("setMemberRole", () => {
         permMembers: true,
         // Forced to false — the actor doesn't hold these themselves, and
         // a brand-new organiser has no legitimate existing state to keep.
-        permReportsMessages: false,
-        permSettings: false,
+        permMessages: false,
+        permReports: false,
+        permHomepage: false,
+        permNotices: false,
+        permProgress: false,
+        permEmails: false,
+        permSubscribers: false,
+        permDisplay: false,
+        permCacheReset: false,
       },
     });
   });
@@ -616,8 +651,15 @@ describe("getMemberHistory", () => {
       createdAt: new Date("2025-01-01T00:00:00Z"),
       permWalks: true,
       permMembers: true,
-      permReportsMessages: true,
-      permSettings: true,
+      permMessages: true,
+      permReports: true,
+      permHomepage: true,
+      permNotices: true,
+      permProgress: true,
+      permEmails: true,
+      permSubscribers: true,
+      permDisplay: true,
+      permCacheReset: true,
       _count: { walksCreated: 4 },
       attendances: [
         {
@@ -652,8 +694,15 @@ describe("getMemberHistory", () => {
       permissions: {
         permWalks: true,
         permMembers: true,
-        permReportsMessages: true,
-        permSettings: true,
+        permMessages: true,
+        permReports: true,
+        permHomepage: true,
+        permNotices: true,
+        permProgress: true,
+        permEmails: true,
+        permSubscribers: true,
+        permDisplay: true,
+        permCacheReset: true,
       },
       items: [
         {
@@ -692,8 +741,15 @@ describe("searchMembers", () => {
       createdAt: new Date("2026-01-05T00:00:00Z"),
       permWalks: true,
       permMembers: true,
-      permReportsMessages: true,
-      permSettings: true,
+      permMessages: true,
+      permReports: true,
+      permHomepage: true,
+      permNotices: true,
+      permProgress: true,
+      permEmails: true,
+      permSubscribers: true,
+      permDisplay: true,
+      permCacheReset: true,
       _count: { attendances: 2, walksCreated: 0 },
       ...overrides,
     };
@@ -734,8 +790,15 @@ describe("searchMembers", () => {
         permissions: {
           permWalks: true,
           permMembers: true,
-          permReportsMessages: true,
-          permSettings: true,
+          permMessages: true,
+          permReports: true,
+          permHomepage: true,
+          permNotices: true,
+          permProgress: true,
+          permEmails: true,
+          permSubscribers: true,
+          permDisplay: true,
+          permCacheReset: true,
         },
       },
     ]);
@@ -841,15 +904,29 @@ describe("setMemberRole — organiser invite required", () => {
         organiserInviteExpiresAt: expect.any(Date),
         permWalks: true,
         permMembers: false,
-        permReportsMessages: false,
-        permSettings: false,
+        permMessages: false,
+        permReports: false,
+        permHomepage: false,
+        permNotices: false,
+        permProgress: false,
+        permEmails: false,
+        permSubscribers: false,
+        permDisplay: false,
+        permCacheReset: false,
       },
     });
     expect(sendOrganiserInviteEmail).toHaveBeenCalledWith(target, "invite-token-123", {
       permWalks: true,
       permMembers: false,
-      permReportsMessages: false,
-      permSettings: false,
+      permMessages: false,
+      permReports: false,
+      permHomepage: false,
+      permNotices: false,
+      permProgress: false,
+      permEmails: false,
+      permSubscribers: false,
+      permDisplay: false,
+      permCacheReset: false,
     });
     expect(transaction).not.toHaveBeenCalled();
     expect(result).toEqual({
@@ -916,8 +993,15 @@ describe("resendOrganiserInvite", () => {
       organiserInviteToken: "old-token",
       permWalks: true,
       permMembers: false,
-      permReportsMessages: true,
-      permSettings: false,
+      permMessages: true,
+      permReports: false,
+      permHomepage: false,
+      permNotices: false,
+      permProgress: false,
+      permEmails: false,
+      permSubscribers: false,
+      permDisplay: false,
+      permCacheReset: false,
     };
     prismaMock.user.findUnique.mockResolvedValueOnce(target);
     prismaMock.user.update.mockResolvedValueOnce({});
@@ -935,8 +1019,15 @@ describe("resendOrganiserInvite", () => {
     expect(sendOrganiserInviteEmail).toHaveBeenCalledWith(target, "invite-token-123", {
       permWalks: true,
       permMembers: false,
-      permReportsMessages: true,
-      permSettings: false,
+      permMessages: true,
+      permReports: false,
+      permHomepage: false,
+      permNotices: false,
+      permProgress: false,
+      permEmails: false,
+      permSubscribers: false,
+      permDisplay: false,
+      permCacheReset: false,
     });
     expect(result.ok).toBe(true);
   });
@@ -981,7 +1072,7 @@ describe("setOrganiserPermissions", () => {
 
     const result = await setOrganiserPermissions(
       null,
-      roleForm({ userId: target.id, permWalks: "on", permSettings: "on" }),
+      roleForm({ userId: target.id, permWalks: "on", permDisplay: "on" }),
     );
 
     expect(prismaMock.user.update).toHaveBeenCalledWith({
@@ -989,20 +1080,34 @@ describe("setOrganiserPermissions", () => {
       data: {
         permWalks: true,
         permMembers: false,
-        permReportsMessages: false,
-        permSettings: true,
+        permMessages: false,
+        permReports: false,
+        permHomepage: false,
+        permNotices: false,
+        permProgress: false,
+        permEmails: false,
+        permSubscribers: false,
+        permDisplay: true,
+        permCacheReset: false,
       },
     });
     expect(result).toEqual({ ok: true, message: "Sam Lee's permissions have been updated." });
   });
 
   it("caps a limited organiser to editing only the permissions they hold themselves", async () => {
-    // Members only — no Walks, Reports, or Settings.
+    // Members only — nothing else.
     requireAdmin.mockResolvedValueOnce({
       ...ADMIN,
       permWalks: false,
-      permReportsMessages: false,
-      permSettings: false,
+      permMessages: false,
+      permReports: false,
+      permHomepage: false,
+      permNotices: false,
+      permProgress: false,
+      permEmails: false,
+      permSubscribers: false,
+      permDisplay: false,
+      permCacheReset: false,
     });
     const target = {
       id: "admin-2",
@@ -1010,20 +1115,27 @@ describe("setOrganiserPermissions", () => {
       firstName: "Sam",
       lastName: "Lee",
       email: "sam@example.com",
-      // Sam currently has Walks but not Settings.
+      // Sam currently has Walks but not Display.
       permWalks: true,
       permMembers: false,
-      permReportsMessages: false,
-      permSettings: false,
+      permMessages: false,
+      permReports: false,
+      permHomepage: false,
+      permNotices: false,
+      permProgress: false,
+      permEmails: false,
+      permSubscribers: false,
+      permDisplay: false,
+      permCacheReset: false,
     };
     prismaMock.user.findUnique.mockResolvedValueOnce(target);
     prismaMock.user.update.mockResolvedValueOnce({});
 
     await setOrganiserPermissions(
       null,
-      // Tries to both grant Settings and revoke Walks — the actor controls
+      // Tries to both grant Display and revoke Walks — the actor controls
       // neither, so both requests are ignored.
-      roleForm({ userId: target.id, permMembers: "on", permSettings: "on" }),
+      roleForm({ userId: target.id, permMembers: "on", permDisplay: "on" }),
     );
 
     expect(prismaMock.user.update).toHaveBeenCalledWith({
@@ -1032,10 +1144,17 @@ describe("setOrganiserPermissions", () => {
         // Granted — the actor holds Members themselves.
         permMembers: true,
         // Untouched — Sam keeps the Walks access they already had, and
-        // does not gain Settings, regardless of what was submitted.
+        // does not gain Display, regardless of what was submitted.
         permWalks: true,
-        permReportsMessages: false,
-        permSettings: false,
+        permMessages: false,
+        permReports: false,
+        permHomepage: false,
+        permNotices: false,
+        permProgress: false,
+        permEmails: false,
+        permSubscribers: false,
+        permDisplay: false,
+        permCacheReset: false,
       },
     });
   });
@@ -1178,8 +1297,15 @@ describe("acceptOrganiserInvite", () => {
       organiserInviteExpiresAt: new Date(Date.now() + 1000),
       permWalks: true,
       permMembers: false,
-      permReportsMessages: false,
-      permSettings: false,
+      permMessages: false,
+      permReports: false,
+      permHomepage: false,
+      permNotices: false,
+      permProgress: false,
+      permEmails: false,
+      permSubscribers: false,
+      permDisplay: false,
+      permCacheReset: false,
     };
     prismaMock.user.findUnique.mockResolvedValueOnce(target);
     prismaMock.user.update.mockResolvedValueOnce({});
@@ -1219,8 +1345,15 @@ describe("acceptOrganiserInvite", () => {
       organiserInviteExpiresAt: new Date(Date.now() + 1000),
       permWalks: false,
       permMembers: false,
-      permReportsMessages: true,
-      permSettings: false,
+      permMessages: true,
+      permReports: false,
+      permHomepage: false,
+      permNotices: false,
+      permProgress: false,
+      permEmails: false,
+      permSubscribers: false,
+      permDisplay: false,
+      permCacheReset: false,
     };
     prismaMock.user.findUnique.mockResolvedValueOnce(target);
     prismaMock.user.update.mockResolvedValueOnce({});

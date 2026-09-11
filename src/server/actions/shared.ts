@@ -18,8 +18,15 @@ export type ActionResult =
 const PERMISSION_AREA_LABEL: Record<keyof OrganiserPermissions, string> = {
   permWalks: "walks",
   permMembers: "members",
-  permReportsMessages: "reports and messages",
-  permSettings: "site settings",
+  permMessages: "messages",
+  permReports: "accident reports",
+  permHomepage: "homepage content",
+  permNotices: "notices",
+  permProgress: "the progress goal",
+  permEmails: "emails",
+  permSubscribers: "subscribers",
+  permDisplay: "site display and branding",
+  permCacheReset: "the site cache and reset",
 };
 
 /**

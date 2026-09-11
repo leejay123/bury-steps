@@ -36,7 +36,7 @@ export async function addHomepageTestimonial(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permSettings) return permissionDenied("permSettings");
+  if (!admin.permHomepage) return permissionDenied("permHomepage");
 
   const copy = readTestimonialCopy(formData);
   if ("error" in copy) return { ok: false, error: copy.error };
@@ -76,7 +76,7 @@ export async function updateHomepageTestimonial(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permSettings) return permissionDenied("permSettings");
+  if (!admin.permHomepage) return permissionDenied("permHomepage");
   const id = String(formData.get("testimonialId") ?? "");
   if (!id) return { ok: false, error: "No testimonial selected." };
 
@@ -114,7 +114,7 @@ export async function deleteHomepageTestimonial(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permSettings) return permissionDenied("permSettings");
+  if (!admin.permHomepage) return permissionDenied("permHomepage");
   const id = String(formData.get("testimonialId") ?? "");
   if (!id) return { ok: false, error: "No testimonial selected." };
 
@@ -145,7 +145,7 @@ export async function deleteHomepageTestimonial(
 
 export async function reorderHomepageTestimonials(ids: string[]): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permSettings) return permissionDenied("permSettings");
+  if (!admin.permHomepage) return permissionDenied("permHomepage");
   const validated = validateReorderIds(ids, MAX_HOMEPAGE_TESTIMONIALS * 2);
   if ("error" in validated) return { ok: false, error: validated.error };
   try {

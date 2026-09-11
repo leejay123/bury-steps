@@ -7,7 +7,7 @@ import { SettingsPage } from "../settings-page";
 export const dynamic = "force-dynamic";
 
 export default async function FaqsSettingsPage() {
-  await requirePermission("permSettings");
+  await requirePermission("permHomepage");
   await ensureDefaultFaqCategories();
   const { faqs, categories } = await loadHomepageFaqData();
 

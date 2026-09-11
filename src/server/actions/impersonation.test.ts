@@ -34,8 +34,15 @@ const ADMIN = {
   // see "rejects an organiser without the Members permission" for the guard.
   permWalks: true,
   permMembers: true,
-  permReportsMessages: true,
-  permSettings: true,
+  permMessages: true,
+  permReports: true,
+  permHomepage: true,
+  permNotices: true,
+  permProgress: true,
+  permEmails: true,
+  permSubscribers: true,
+  permDisplay: true,
+  permCacheReset: true,
 };
 const MEMBER = {
   id: "member-1",

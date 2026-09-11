@@ -53,8 +53,15 @@ beforeEach(() => {
     id: "admin-1",
     permWalks: true,
     permMembers: true,
-    permReportsMessages: true,
-    permSettings: true,
+    permMessages: true,
+    permReports: true,
+    permHomepage: true,
+    permNotices: true,
+    permProgress: true,
+    permEmails: true,
+    permSubscribers: true,
+    permDisplay: true,
+    permCacheReset: true,
   });
 });
 
@@ -122,18 +129,25 @@ describe("submitContactMessage", () => {
 });
 
 describe("markContactMessageRead", () => {
-  it("rejects an organiser without the Reports & messages permission", async () => {
+  it("rejects an organiser without the Messages permission", async () => {
     requireAdmin.mockResolvedValueOnce({
       id: "admin-1",
       permWalks: true,
       permMembers: true,
-      permReportsMessages: false,
-      permSettings: true,
+      permMessages: false,
+      permReports: true,
+      permHomepage: true,
+      permNotices: true,
+      permProgress: true,
+      permEmails: true,
+      permSubscribers: true,
+      permDisplay: true,
+      permCacheReset: true,
     });
     const result = await markContactMessageRead(null, contactForm({ messageId: "msg-1" }));
     expect(result).toEqual({
       ok: false,
-      error: "You do not have permission to manage reports and messages.",
+      error: "You do not have permission to manage messages.",
     });
     expect(prismaMock.contactMessage.update).not.toHaveBeenCalled();
   });
@@ -155,18 +169,25 @@ describe("markContactMessageRead", () => {
 });
 
 describe("deleteContactMessage", () => {
-  it("rejects an organiser without the Reports & messages permission", async () => {
+  it("rejects an organiser without the Messages permission", async () => {
     requireAdmin.mockResolvedValueOnce({
       id: "admin-1",
       permWalks: true,
       permMembers: true,
-      permReportsMessages: false,
-      permSettings: true,
+      permMessages: false,
+      permReports: true,
+      permHomepage: true,
+      permNotices: true,
+      permProgress: true,
+      permEmails: true,
+      permSubscribers: true,
+      permDisplay: true,
+      permCacheReset: true,
     });
     const result = await deleteContactMessage(null, contactForm({ messageId: "msg-1" }));
     expect(result).toEqual({
       ok: false,
-      error: "You do not have permission to manage reports and messages.",
+      error: "You do not have permission to manage messages.",
     });
     expect(prismaMock.contactMessage.delete).not.toHaveBeenCalled();
   });

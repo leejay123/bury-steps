@@ -5,7 +5,7 @@ import { ClearCacheForm } from "./cache-form";
 export const dynamic = "force-dynamic";
 
 export default async function CacheSettingsPage() {
-  await requirePermission("permSettings");
+  await requirePermission("permCacheReset");
 
   return (
     <SettingsPage

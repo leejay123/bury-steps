@@ -8,6 +8,10 @@ import {
   type OrganiserPermissions,
 } from "@/lib/organiser-permissions";
 
+/** Order the two groups appear in — matches ORGANISER_PERMISSION_OPTIONS'
+ * own group values (see organiser-permissions.ts). */
+const PERMISSION_GROUPS = ["Core", "Settings & homepage"] as const;
+
 /**
  * Shared "what can they do" checklist — used both when inviting/promoting
  * someone (MemberRoleButton) and when editing an existing organiser's
@@ -73,38 +77,45 @@ export function OrganiserPermissionFields({
           </span>
         </Label>
       </div>
-      <div className="flex flex-col divide-y rounded-xl border">
-        {ORGANISER_PERMISSION_OPTIONS.map((option) => {
-          const locked = Boolean(viewerPermissions && !viewerPermissions[option.name]);
-          return (
-            <div className="flex items-start gap-3 px-4 py-3.5" key={option.name}>
-              <Checkbox
-                checked={permissions[option.name]}
-                className="mt-0.5"
-                disabled={disabled || locked}
-                id={`perm-${option.name}`}
-                name={option.name}
-                onCheckedChange={(checked) =>
-                  onChange({ ...permissions, [option.name]: checked === true })
-                }
-              />
-              <Label
-                className="flex flex-col items-start gap-0.5 font-normal"
-                htmlFor={`perm-${option.name}`}
-              >
-                <span className="text-sm font-medium">{option.label}</span>
-                <span className="text-sm text-muted-foreground">{option.hint}</span>
-                {locked ? (
-                  <span className="text-sm text-muted-foreground italic">
-                    You don&rsquo;t have this permission yourself, so you can&rsquo;t grant or
-                    change it.
-                  </span>
-                ) : null}
-              </Label>
-            </div>
-          );
-        })}
-      </div>
+      {PERMISSION_GROUPS.map((group) => (
+        <div className="flex flex-col gap-1.5" key={group}>
+          <p className="px-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            {group}
+          </p>
+          <div className="flex flex-col divide-y rounded-xl border">
+            {ORGANISER_PERMISSION_OPTIONS.filter((option) => option.group === group).map((option) => {
+              const locked = Boolean(viewerPermissions && !viewerPermissions[option.name]);
+              return (
+                <div className="flex items-start gap-3 px-4 py-3.5" key={option.name}>
+                  <Checkbox
+                    checked={permissions[option.name]}
+                    className="mt-0.5"
+                    disabled={disabled || locked}
+                    id={`perm-${option.name}`}
+                    name={option.name}
+                    onCheckedChange={(checked) =>
+                      onChange({ ...permissions, [option.name]: checked === true })
+                    }
+                  />
+                  <Label
+                    className="flex flex-col items-start gap-0.5 font-normal"
+                    htmlFor={`perm-${option.name}`}
+                  >
+                    <span className="text-sm font-medium">{option.label}</span>
+                    <span className="text-sm text-muted-foreground">{option.hint}</span>
+                    {locked ? (
+                      <span className="text-sm text-muted-foreground italic">
+                        You don&rsquo;t have this permission yourself, so you can&rsquo;t grant or
+                        change it.
+                      </span>
+                    ) : null}
+                  </Label>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
       {noneChecked ? (
         <p className="text-sm text-destructive">
           Choose at least one — an organiser with nothing switched on can&rsquo;t do anything a

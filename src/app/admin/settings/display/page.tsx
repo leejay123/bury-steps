@@ -25,7 +25,7 @@ import { TestimonialsSectionCopySettings } from "./testimonials-section-copy-set
 export const dynamic = "force-dynamic";
 
 export default async function DisplaySettingsPage() {
-  await requirePermission("permSettings");
+  await requirePermission("permDisplay");
   const [theme, organisers, settings] = await Promise.all([
     getSiteTheme(),
     prisma.user.findMany({

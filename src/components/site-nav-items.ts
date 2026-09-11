@@ -1,4 +1,8 @@
-import { FULL_ORGANISER_PERMISSIONS, type OrganiserPermissions } from "@/lib/organiser-permissions";
+import {
+  FULL_ORGANISER_PERMISSIONS,
+  hasAnySettingsPermission,
+  type OrganiserPermissions,
+} from "@/lib/organiser-permissions";
 
 /**
  * Which nav items an organiser sees depends on their granular permissions
@@ -29,13 +33,9 @@ export function navItems(isAdmin: boolean, walksHref: string, permissions?: Orga
     ...(isAdmin
       ? [
           ...(perms.permMembers ? [{ href: "/admin/members", label: "Members" }] : []),
-          ...(perms.permReportsMessages
-            ? [
-                { href: "/admin/messages", label: "Messages" },
-                { href: "/admin/reports", label: "Reports" },
-              ]
-            : []),
-          ...(perms.permSettings ? [{ href: "/admin/settings", label: "Settings" }] : []),
+          ...(perms.permMessages ? [{ href: "/admin/messages", label: "Messages" }] : []),
+          ...(perms.permReports ? [{ href: "/admin/reports", label: "Reports" }] : []),
+          ...(hasAnySettingsPermission(perms) ? [{ href: "/admin/settings", label: "Settings" }] : []),
           { href: "/admin/guide", label: "Guide" },
         ]
       : [{ href: "/history", label: "History" }]),

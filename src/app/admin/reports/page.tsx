@@ -33,7 +33,7 @@ export default async function AccidentReportsPage({
 }: {
   searchParams: Promise<{ link?: string; sort?: string }>;
 }) {
-  await requirePermission("permReportsMessages");
+  await requirePermission("permReports");
   const params = await searchParams;
   const link = parseLinkFilter(params.link);
   const sort = parseSort(params.sort);

@@ -8,7 +8,7 @@ import { SettingsPage } from "../settings-page";
 export const dynamic = "force-dynamic";
 
 export default async function NoticesSettingsPage() {
-  const admin = await requirePermission("permSettings");
+  const admin = await requirePermission("permNotices");
   const [notices, categories] = await Promise.all([
     getSiteNotices(),
     getSiteNoticeCategories(),

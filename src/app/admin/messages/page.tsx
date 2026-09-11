@@ -8,7 +8,7 @@ import { ContactMessagesList } from "./contact-messages-list";
 export const dynamic = "force-dynamic";
 
 export default async function AdminMessagesPage() {
-  await requirePermission("permReportsMessages");
+  await requirePermission("permMessages");
 
   const [messages, setting] = await Promise.all([
     prisma.contactMessage.findMany({

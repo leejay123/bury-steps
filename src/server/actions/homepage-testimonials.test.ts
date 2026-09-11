@@ -36,13 +36,20 @@ import {
 } from "./homepage-testimonials";
 
 // Full access by default so existing tests exercise the authorized path —
-// see the "permission guard" tests below for permSettings: false.
+// see the "permission guard" tests below for permHomepage: false.
 const ADMIN = {
   id: "admin-1",
   permWalks: true,
   permMembers: true,
-  permReportsMessages: true,
-  permSettings: true,
+  permMessages: true,
+  permReports: true,
+  permHomepage: true,
+  permNotices: true,
+  permProgress: true,
+  permEmails: true,
+  permSubscribers: true,
+  permDisplay: true,
+  permCacheReset: true,
 };
 
 function baseForm(fields: Record<string, string> = {}): FormData {
@@ -59,19 +66,19 @@ beforeEach(() => {
 });
 
 describe("Homepage testimonials permission guard", () => {
-  it("rejects addHomepageTestimonial for an organiser without the Settings permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+  it("rejects addHomepageTestimonial for an organiser without the Homepage permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permHomepage: false });
     const result = await addHomepageTestimonial(null, baseForm());
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage homepage content." });
     expect(prismaMock.homepageTestimonial.create).not.toHaveBeenCalled();
   });
 
-  it("rejects deleteHomepageTestimonial for an organiser without the Settings permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+  it("rejects deleteHomepageTestimonial for an organiser without the Homepage permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permHomepage: false });
     const formData = new FormData();
     formData.set("testimonialId", "t-1");
     const result = await deleteHomepageTestimonial(null, formData);
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage homepage content." });
     expect(prismaMock.homepageTestimonial.delete).not.toHaveBeenCalled();
   });
 });

@@ -99,7 +99,7 @@ export async function markContactMessageRead(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permReportsMessages) return permissionDenied("permReportsMessages");
+  if (!admin.permMessages) return permissionDenied("permMessages");
   const id = String(formData.get("messageId") ?? "");
   if (!id) return { ok: false, error: "No message selected." };
 
@@ -119,7 +119,7 @@ export async function deleteContactMessage(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permReportsMessages) return permissionDenied("permReportsMessages");
+  if (!admin.permMessages) return permissionDenied("permMessages");
   const id = String(formData.get("messageId") ?? "");
   if (!id) return { ok: false, error: "No message selected." };
 

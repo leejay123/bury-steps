@@ -16,7 +16,7 @@ const CATEGORY_ORDER: EmailTemplateMeta["category"][] = [
 ];
 
 export default async function AdminEmailsSettingsPage() {
-  await requirePermission("permSettings");
+  await requirePermission("permEmails");
   const overrides = await getEmailTemplateOverrides();
 
   return (

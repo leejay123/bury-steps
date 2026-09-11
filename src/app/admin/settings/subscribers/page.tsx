@@ -22,7 +22,7 @@ function StatTile({ label, value }: { label: string; value: number }) {
 }
 
 export default async function AdminSubscribersSettingsPage() {
-  await requirePermission("permSettings");
+  await requirePermission("permSubscribers");
 
   const [
     activeFooterSubscribers,

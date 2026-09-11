@@ -87,7 +87,7 @@ export async function sendNewsletterCampaign(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permSettings) return permissionDenied("permSettings");
+  if (!admin.permSubscribers) return permissionDenied("permSubscribers");
   const limited = checkRateLimit(`${admin.id}:sendNewsletterCampaign`, 5, 60 * 60_000);
   if (!limited.ok) {
     return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
@@ -168,7 +168,7 @@ export async function removeNewsletterSubscriber(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permSettings) return permissionDenied("permSettings");
+  if (!admin.permSubscribers) return permissionDenied("permSubscribers");
   const id = String(formData.get("id") ?? "");
   if (!id) return { ok: false, error: "No subscriber selected." };
 

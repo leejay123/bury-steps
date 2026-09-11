@@ -7,7 +7,7 @@ import { SettingsPage } from "../settings-page";
 export const dynamic = "force-dynamic";
 
 export default async function TestimonialsSettingsPage() {
-  await requirePermission("permSettings");
+  await requirePermission("permHomepage");
   const testimonials = await getHomepageTestimonials();
 
   return (

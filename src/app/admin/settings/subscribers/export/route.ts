@@ -19,7 +19,7 @@ function csvCell(value: string | null): string {
  * columns for context that Resend just ignores.
  */
 export async function GET() {
-  await requirePermission("permSettings");
+  await requirePermission("permSubscribers");
 
   const [footerSubscribers, memberSubscribers] = await Promise.all([
     prisma.newsletterSubscriber.findMany({

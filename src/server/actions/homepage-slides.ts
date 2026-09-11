@@ -23,7 +23,7 @@ export async function addHomepageSlide(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permSettings) return permissionDenied("permSettings");
+  if (!admin.permHomepage) return permissionDenied("permHomepage");
 
   const image = await readSlideImage(formData);
   if ("error" in image) return { ok: false, error: image.error };
@@ -60,7 +60,7 @@ export async function replaceHomepageSlideImage(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permSettings) return permissionDenied("permSettings");
+  if (!admin.permHomepage) return permissionDenied("permHomepage");
   const id = String(formData.get("slideId") ?? "");
   if (!id) return { ok: false, error: "No slide selected." };
 
@@ -93,7 +93,7 @@ export async function deleteHomepageSlide(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permSettings) return permissionDenied("permSettings");
+  if (!admin.permHomepage) return permissionDenied("permHomepage");
   const id = String(formData.get("slideId") ?? "");
   if (!id) return { ok: false, error: "No slide selected." };
 
@@ -126,7 +126,7 @@ export async function deleteHomepageSlide(
 
 export async function reorderHomepageSlides(ids: string[]): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permSettings) return permissionDenied("permSettings");
+  if (!admin.permHomepage) return permissionDenied("permHomepage");
   const validated = validateReorderIds(ids, MAX_HOMEPAGE_SLIDES * 2);
   if ("error" in validated) return { ok: false, error: validated.error };
   try {

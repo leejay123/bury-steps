@@ -5,7 +5,7 @@ import { prisma } from "./db";
 import type { User } from "@prisma/client";
 import { SIGN_IN_URL } from "./urls";
 import { syncLocalUser } from "./local-user";
-import type { OrganiserPermissions } from "./organiser-permissions";
+import { hasAnySettingsPermission, type OrganiserPermissions } from "./organiser-permissions";
 
 /** Clerk throws this when auth() runs on a request that skipped middleware. */
 export function isClerkMiddlewareMissingError(error: unknown): boolean {
@@ -85,6 +85,19 @@ export async function requireAdmin(): Promise<User> {
 export async function requirePermission(permission: keyof OrganiserPermissions): Promise<User> {
   const user = await requireAdmin();
   if (!user[permission]) notFound();
+  return user;
+}
+
+/**
+ * Like requirePermission, but for the Settings hub page — it isn't tied to
+ * any one of the seven settings-area pages it links out to, so it 404s
+ * only for an organiser with none of them (see hasAnySettingsPermission).
+ * The hub itself is responsible for only showing links to pages the
+ * viewer actually holds the permission for.
+ */
+export async function requireAnySettingsPermission(): Promise<User> {
+  const user = await requireAdmin();
+  if (!hasAnySettingsPermission(user)) notFound();
   return user;
 }
 

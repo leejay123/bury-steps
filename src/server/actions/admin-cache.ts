@@ -46,7 +46,7 @@ export async function clearSiteCache(
   _formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permSettings) return permissionDenied("permSettings");
+  if (!admin.permCacheReset) return permissionDenied("permCacheReset");
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidateTag(NOTICES_CACHE_TAG, { expire: 0 });
   revalidatePath("/", "layout");
@@ -65,7 +65,7 @@ export async function resetSiteToDefault(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permSettings) return permissionDenied("permSettings");
+  if (!admin.permCacheReset) return permissionDenied("permCacheReset");
   if (!isResetConfirmWord(String(formData.get("confirm") ?? ""))) {
     return { ok: false, error: "Type delete to confirm, then try again." };
   }

@@ -17,7 +17,7 @@ export async function getWalkAttendeesForReportForm(
   walkId: string,
 ): Promise<{ id: string; name: string }[]> {
   const admin = await requireAdmin();
-  if (!admin.permReportsMessages) return [];
+  if (!admin.permReports) return [];
   if (!walkId) return [];
   return getWalkAttendeesForReport(walkId);
 }
@@ -60,7 +60,7 @@ export async function addAccidentReport(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permReportsMessages) return permissionDenied("permReportsMessages");
+  if (!admin.permReports) return permissionDenied("permReports");
   const parsed = readReportCopy(formData);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
@@ -140,7 +140,7 @@ export async function updateAccidentReport(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permReportsMessages) return permissionDenied("permReportsMessages");
+  if (!admin.permReports) return permissionDenied("permReports");
   const id = String(formData.get("reportId") ?? "");
   if (!id) return { ok: false, error: "No report selected." };
 
@@ -191,7 +191,7 @@ export async function deleteAccidentReport(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permReportsMessages) return permissionDenied("permReportsMessages");
+  if (!admin.permReports) return permissionDenied("permReports");
   const id = String(formData.get("reportId") ?? "");
   if (!id) return { ok: false, error: "No report selected." };
 
@@ -213,7 +213,7 @@ export async function setAccidentReportRetentionLocked(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permReportsMessages) return permissionDenied("permReportsMessages");
+  if (!admin.permReports) return permissionDenied("permReports");
   const id = String(formData.get("reportId") ?? "");
   const locked = String(formData.get("retentionLocked") ?? "") === "on";
   if (!id) return { ok: false, error: "No report selected." };

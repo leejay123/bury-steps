@@ -5,7 +5,7 @@ import { ResetSiteForm } from "./reset-form";
 export const dynamic = "force-dynamic";
 
 export default async function ResetSiteSettingsPage() {
-  await requirePermission("permSettings");
+  await requirePermission("permCacheReset");
 
   return (
     <SettingsPage

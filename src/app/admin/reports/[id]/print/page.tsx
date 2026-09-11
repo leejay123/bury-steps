@@ -18,7 +18,7 @@ export default async function PrintAccidentReportPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requirePermission("permReportsMessages");
+  await requirePermission("permReports");
   const { id } = await params;
 
   const report = await prisma.accidentReport.findUnique({

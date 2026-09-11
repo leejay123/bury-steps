@@ -30,13 +30,20 @@ import {
 } from "./site-settings";
 
 // Full access by default so existing tests exercise the authorized path —
-// see the "permission guard" tests below for permSettings: false.
+// see the "permission guard" tests below for permDisplay: false.
 const ADMIN = {
   id: "admin-1",
   permWalks: true,
   permMembers: true,
-  permReportsMessages: true,
-  permSettings: true,
+  permMessages: true,
+  permReports: true,
+  permHomepage: true,
+  permNotices: true,
+  permProgress: true,
+  permEmails: true,
+  permSubscribers: true,
+  permDisplay: true,
+  permCacheReset: true,
 };
 
 function form(fields: Record<string, string>): FormData {
@@ -52,20 +59,27 @@ beforeEach(() => {
 });
 
 describe("Site settings permission guard", () => {
-  it("rejects updateSiteBranding for an organiser without the Settings permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+  it("rejects updateSiteBranding for an organiser without the Display permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permDisplay: false });
     const result = await updateSiteBranding(
       null,
       form({ siteName: "Bury Steps", siteTagline: "A friendly walking group." }),
     );
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site display and branding." });
     expect(prismaMock.siteSetting.upsert).not.toHaveBeenCalled();
   });
 
-  it("rejects updateOrganiserInviteRequired for an organiser without the Settings permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+  it("rejects updateOrganiserInviteRequired for an organiser without the Display permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permDisplay: false });
     const result = await updateOrganiserInviteRequired(null, form({}));
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site display and branding." });
+    expect(prismaMock.siteSetting.upsert).not.toHaveBeenCalled();
+  });
+
+  it("rejects updateMonthlyClockInGoal for an organiser without the Progress permission (a separate permission from Display)", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permProgress: false });
+    const result = await updateMonthlyClockInGoal(null, form({ monthlyClockInGoal: "150" }));
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage the progress goal." });
     expect(prismaMock.siteSetting.upsert).not.toHaveBeenCalled();
   });
 });

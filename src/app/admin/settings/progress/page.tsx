@@ -6,7 +6,7 @@ import { ProgressSettingsForm } from "./progress-form";
 export const dynamic = "force-dynamic";
 
 export default async function ProgressSettingsPage() {
-  await requirePermission("permSettings");
+  await requirePermission("permProgress");
   const monthlyClockInGoal = await getMonthlyClockInGoal();
 
   return (

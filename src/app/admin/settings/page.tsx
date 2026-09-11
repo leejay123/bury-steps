@@ -1,4 +1,4 @@
-import { requirePermission } from "@/lib/auth";
+import { requireAnySettingsPermission } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
@@ -11,7 +11,10 @@ import { SettingsGrid } from "./settings-grid";
 export const dynamic = "force-dynamic";
 
 export default async function AdminSettingsPage() {
-  await requirePermission("permSettings");
+  // 404s only for an organiser with none of the seven settings-area
+  // permissions — each item below is then filtered to the specific one
+  // it needs, so this hub only ever links to a page the viewer can open.
+  const admin = await requireAnySettingsPermission();
 
   const [slideCount, testimonialCount, faqCount, noticeCount] = await Promise.all([
     prisma.homepageSlide.count(),
@@ -21,62 +24,95 @@ export default async function AdminSettingsPage() {
   ]);
 
   const items = [
-    {
-      href: "/admin/settings/hero-photos",
-      title: "Hero photos",
-      description: `Homepage carousel. ${slideCount} of ${MAX_HOMEPAGE_SLIDES} slides.`,
-    },
-    {
-      href: "/admin/settings/testimonials",
-      title: "Testimonials",
-      description: `Quotes on the homepage. ${testimonialCount} of ${MAX_HOMEPAGE_TESTIMONIALS}.`,
-    },
-    {
-      href: "/admin/settings/faqs",
-      title: "FAQs",
-      description: `Questions on the homepage. ${faqCount} of ${MAX_HOMEPAGE_FAQS}, in up to ${MAX_FAQ_CATEGORIES} categories.`,
-    },
-    {
-      href: "/admin/settings/notices",
-      title: "Notices",
-      description: `Member bell (welcome + ${BELL_NOTICE_LIMIT} newest) and full-page notices. ${noticeCount} total.`,
-    },
-    {
-      href: "/admin/settings/progress",
-      title: "Progress",
-      description: "Optional monthly together goal for signed-in members.",
-    },
-    {
-      href: "/admin/settings/display",
-      title: "Display",
-      description:
-        "Site name, tagline, Facebook link, homepage copy and section order, cookie notice, and back to top.",
-    },
-    {
-      href: "/admin/settings/emails",
-      title: "Emails",
-      description: "Edit the subject and wording the site sends for each email — signup, walks, contact form, and more.",
-    },
-    {
-      href: "/admin/settings/subscribers",
-      title: "Subscribers",
-      description: "Who's opted into the newsletter and walk emails, and an export for Resend campaigns.",
-    },
-    {
-      href: "/admin/settings/cache",
-      title: "Site cache",
-      description: "Refresh the public homepage if it still shows old content.",
-    },
-    {
-      href: "/admin/settings/reset",
-      title: "Reset the site",
-      description: "Delete all walks, members, and homepage edits. You stay the organiser.",
-    },
-    {
-      href: "/admin/reports",
-      title: "Accident reports",
-      description: "Record what happened on a walk, then print or save as PDF.",
-    },
+    ...(admin.permHomepage
+      ? [
+          {
+            href: "/admin/settings/hero-photos",
+            title: "Hero photos",
+            description: `Homepage carousel. ${slideCount} of ${MAX_HOMEPAGE_SLIDES} slides.`,
+          },
+          {
+            href: "/admin/settings/testimonials",
+            title: "Testimonials",
+            description: `Quotes on the homepage. ${testimonialCount} of ${MAX_HOMEPAGE_TESTIMONIALS}.`,
+          },
+          {
+            href: "/admin/settings/faqs",
+            title: "FAQs",
+            description: `Questions on the homepage. ${faqCount} of ${MAX_HOMEPAGE_FAQS}, in up to ${MAX_FAQ_CATEGORIES} categories.`,
+          },
+        ]
+      : []),
+    ...(admin.permNotices
+      ? [
+          {
+            href: "/admin/settings/notices",
+            title: "Notices",
+            description: `Member bell (welcome + ${BELL_NOTICE_LIMIT} newest) and full-page notices. ${noticeCount} total.`,
+          },
+        ]
+      : []),
+    ...(admin.permProgress
+      ? [
+          {
+            href: "/admin/settings/progress",
+            title: "Progress",
+            description: "Optional monthly together goal for signed-in members.",
+          },
+        ]
+      : []),
+    ...(admin.permDisplay
+      ? [
+          {
+            href: "/admin/settings/display",
+            title: "Display",
+            description:
+              "Site name, tagline, Facebook link, homepage copy and section order, cookie notice, and back to top.",
+          },
+        ]
+      : []),
+    ...(admin.permEmails
+      ? [
+          {
+            href: "/admin/settings/emails",
+            title: "Emails",
+            description:
+              "Edit the subject and wording the site sends for each email — signup, walks, contact form, and more.",
+          },
+        ]
+      : []),
+    ...(admin.permSubscribers
+      ? [
+          {
+            href: "/admin/settings/subscribers",
+            title: "Subscribers",
+            description: "Who's opted into the newsletter and walk emails, and an export for Resend campaigns.",
+          },
+        ]
+      : []),
+    ...(admin.permCacheReset
+      ? [
+          {
+            href: "/admin/settings/cache",
+            title: "Site cache",
+            description: "Refresh the public homepage if it still shows old content.",
+          },
+          {
+            href: "/admin/settings/reset",
+            title: "Reset the site",
+            description: "Delete all walks, members, and homepage edits. You stay the organiser.",
+          },
+        ]
+      : []),
+    ...(admin.permReports
+      ? [
+          {
+            href: "/admin/reports",
+            title: "Accident reports",
+            description: "Record what happened on a walk, then print or save as PDF.",
+          },
+        ]
+      : []),
     {
       href: "/admin/guide",
       title: "Guide",

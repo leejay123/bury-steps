@@ -43,13 +43,20 @@ import {
 } from "./homepage-faqs";
 
 // Full access by default so existing tests exercise the authorized path —
-// see the "permission guard" tests below for permSettings: false.
+// see the "permission guard" tests below for permHomepage: false.
 const ADMIN = {
   id: "admin-1",
   permWalks: true,
   permMembers: true,
-  permReportsMessages: true,
-  permSettings: true,
+  permMessages: true,
+  permReports: true,
+  permHomepage: true,
+  permNotices: true,
+  permProgress: true,
+  permEmails: true,
+  permSubscribers: true,
+  permDisplay: true,
+  permCacheReset: true,
 };
 
 function faqForm(fields: Record<string, string> = {}): FormData {
@@ -68,28 +75,28 @@ beforeEach(() => {
 });
 
 describe("Homepage FAQs permission guard", () => {
-  it("rejects addHomepageFaq for an organiser without the Settings permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+  it("rejects addHomepageFaq for an organiser without the Homepage permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permHomepage: false });
     const result = await addHomepageFaq(null, faqForm());
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage homepage content." });
     expect(prismaMock.homepageFaq.create).not.toHaveBeenCalled();
   });
 
-  it("rejects deleteHomepageFaq for an organiser without the Settings permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+  it("rejects deleteHomepageFaq for an organiser without the Homepage permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permHomepage: false });
     const formData = new FormData();
     formData.set("faqId", "faq-1");
     const result = await deleteHomepageFaq(null, formData);
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage homepage content." });
     expect(prismaMock.homepageFaq.delete).not.toHaveBeenCalled();
   });
 
-  it("rejects addHomepageFaqCategory for an organiser without the Settings permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+  it("rejects addHomepageFaqCategory for an organiser without the Homepage permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permHomepage: false });
     const formData = new FormData();
     formData.set("label", "New category");
     const result = await addHomepageFaqCategory(null, formData);
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage homepage content." });
     expect(prismaMock.homepageFaqCategory.create).not.toHaveBeenCalled();
   });
 });

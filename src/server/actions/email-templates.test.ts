@@ -37,32 +37,37 @@ function form(fields: Record<string, string>): FormData {
   return formData;
 }
 
-beforeEach(() => {
-  vi.clearAllMocks();
-  // Full access by default so existing tests exercise the authorized path —
-  // see the "permission guard" tests below for permSettings: false.
-  requireAdmin.mockResolvedValue({
+// Full access by default so existing tests exercise the authorized path —
+// see the "permission guard" tests below for permEmails: false.
+function admin(overrides: Partial<Record<string, boolean>> = {}) {
+  return {
     id: "admin-1",
     email: "admin@example.com",
     permWalks: true,
     permMembers: true,
-    permReportsMessages: true,
-    permSettings: true,
-  });
+    permMessages: true,
+    permReports: true,
+    permHomepage: true,
+    permNotices: true,
+    permProgress: true,
+    permEmails: true,
+    permSubscribers: true,
+    permDisplay: true,
+    permCacheReset: true,
+    ...overrides,
+  };
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  requireAdmin.mockResolvedValue(admin());
   prismaMock.emailTemplateOverride.findMany.mockResolvedValue([]);
   checkRateLimit.mockReturnValue({ ok: true });
 });
 
 describe("getEmailTemplateOverrides", () => {
-  it("returns null subject/body for every template for an organiser without the Settings permission", async () => {
-    requireAdmin.mockResolvedValueOnce({
-      id: "admin-1",
-      email: "admin@example.com",
-      permWalks: true,
-      permMembers: true,
-      permReportsMessages: true,
-      permSettings: false,
-    });
+  it("returns null subject/body for every template for an organiser without the Emails permission", async () => {
+    requireAdmin.mockResolvedValueOnce(admin({ permEmails: false }));
     const overrides = await getEmailTemplateOverrides();
     expect(overrides.welcome).toEqual({ subject: null, body: null });
     expect(prismaMock.emailTemplateOverride.findMany).not.toHaveBeenCalled();
@@ -87,17 +92,10 @@ describe("getEmailTemplateOverrides", () => {
 });
 
 describe("updateEmailTemplate", () => {
-  it("rejects an organiser without the Settings permission", async () => {
-    requireAdmin.mockResolvedValueOnce({
-      id: "admin-1",
-      email: "admin@example.com",
-      permWalks: true,
-      permMembers: true,
-      permReportsMessages: true,
-      permSettings: false,
-    });
+  it("rejects an organiser without the Emails permission", async () => {
+    requireAdmin.mockResolvedValueOnce(admin({ permEmails: false }));
     const result = await updateEmailTemplate(null, form({ key: "welcome" }));
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage emails." });
     expect(prismaMock.emailTemplateOverride.upsert).not.toHaveBeenCalled();
   });
 
@@ -133,17 +131,10 @@ describe("updateEmailTemplate", () => {
 });
 
 describe("sendTestEmailTemplate", () => {
-  it("rejects an organiser without the Settings permission", async () => {
-    requireAdmin.mockResolvedValueOnce({
-      id: "admin-1",
-      email: "admin@example.com",
-      permWalks: true,
-      permMembers: true,
-      permReportsMessages: true,
-      permSettings: false,
-    });
+  it("rejects an organiser without the Emails permission", async () => {
+    requireAdmin.mockResolvedValueOnce(admin({ permEmails: false }));
     const result = await sendTestEmailTemplate(null, form({ key: "welcome" }));
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage emails." });
     expect(sendTestEmail).not.toHaveBeenCalled();
   });
 
@@ -178,17 +169,10 @@ describe("sendTestEmailTemplate", () => {
 });
 
 describe("resetEmailTemplate", () => {
-  it("rejects an organiser without the Settings permission", async () => {
-    requireAdmin.mockResolvedValueOnce({
-      id: "admin-1",
-      email: "admin@example.com",
-      permWalks: true,
-      permMembers: true,
-      permReportsMessages: true,
-      permSettings: false,
-    });
+  it("rejects an organiser without the Emails permission", async () => {
+    requireAdmin.mockResolvedValueOnce(admin({ permEmails: false }));
     const result = await resetEmailTemplate(null, form({ key: "welcome" }));
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage emails." });
     expect(prismaMock.emailTemplateOverride.deleteMany).not.toHaveBeenCalled();
   });
 

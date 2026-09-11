@@ -26,7 +26,7 @@ export async function getEmailTemplateOverrides(): Promise<
   const admin = await requireAdmin();
   const empty = {} as Record<EmailTemplateKey, EmailTemplateOverrideValues>;
   for (const meta of EMAIL_TEMPLATES) empty[meta.key] = { subject: null, body: null };
-  if (!admin.permSettings) return empty;
+  if (!admin.permEmails) return empty;
 
   const rows = await prisma.emailTemplateOverride.findMany({
     select: { key: true, subject: true, body: true },
@@ -46,7 +46,7 @@ export async function updateEmailTemplate(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permSettings) return permissionDenied("permSettings");
+  if (!admin.permEmails) return permissionDenied("permEmails");
   const key = String(formData.get("key") ?? "");
   if (!isEmailTemplateKey(key)) return { ok: false, error: "Unknown email." };
 
@@ -88,7 +88,7 @@ export async function sendTestEmailTemplate(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permSettings) return permissionDenied("permSettings");
+  if (!admin.permEmails) return permissionDenied("permEmails");
   const key = String(formData.get("key") ?? "");
   if (!isEmailTemplateKey(key)) return { ok: false, error: "Unknown email." };
 
@@ -111,7 +111,7 @@ export async function resetEmailTemplate(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permSettings) return permissionDenied("permSettings");
+  if (!admin.permEmails) return permissionDenied("permEmails");
   const key = String(formData.get("key") ?? "");
   if (!isEmailTemplateKey(key)) return { ok: false, error: "Unknown email." };
 

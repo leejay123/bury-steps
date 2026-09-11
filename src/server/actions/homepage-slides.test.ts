@@ -31,13 +31,20 @@ vi.mock("@/lib/auth", async () => {
 import { addHomepageSlide, deleteHomepageSlide, replaceHomepageSlideImage, reorderHomepageSlides } from "./homepage-slides";
 
 // Full access by default so existing tests exercise the authorized path —
-// see the "permission guard" tests below for permSettings: false.
+// see the "permission guard" tests below for permHomepage: false.
 const ADMIN = {
   id: "admin-1",
   permWalks: true,
   permMembers: true,
-  permReportsMessages: true,
-  permSettings: true,
+  permMessages: true,
+  permReports: true,
+  permHomepage: true,
+  permNotices: true,
+  permProgress: true,
+  permEmails: true,
+  permSubscribers: true,
+  permDisplay: true,
+  permCacheReset: true,
 };
 
 function pngBytes(byteLength = 100): Uint8Array<ArrayBuffer> {
@@ -58,19 +65,19 @@ beforeEach(() => {
 });
 
 describe("Homepage slides permission guard", () => {
-  it("rejects addHomepageSlide for an organiser without the Settings permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+  it("rejects addHomepageSlide for an organiser without the Homepage permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permHomepage: false });
     const result = await addHomepageSlide(null, formWithImage());
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage homepage content." });
     expect(transaction).not.toHaveBeenCalled();
   });
 
-  it("rejects deleteHomepageSlide for an organiser without the Settings permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+  it("rejects deleteHomepageSlide for an organiser without the Homepage permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permHomepage: false });
     const formData = new FormData();
     formData.set("slideId", "slide-1");
     const result = await deleteHomepageSlide(null, formData);
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage homepage content." });
     expect(prismaMock.homepageSlide.delete).not.toHaveBeenCalled();
   });
 });

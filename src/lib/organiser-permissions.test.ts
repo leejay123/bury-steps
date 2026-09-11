@@ -3,22 +3,19 @@ import {
   describeOrganiserPermissions,
   FULL_ORGANISER_PERMISSIONS,
   hasAnyPermission,
+  hasAnySettingsPermission,
   hasFullAccess,
+  NO_ORGANISER_PERMISSIONS,
   type OrganiserPermissions,
   walksLandingPath,
 } from "./organiser-permissions";
 
-const NONE: OrganiserPermissions = {
-  permWalks: false,
-  permMembers: false,
-  permReportsMessages: false,
-  permSettings: false,
-};
+const NONE: OrganiserPermissions = NO_ORGANISER_PERMISSIONS;
 
 describe("hasFullAccess", () => {
   it("is true only when every permission is granted", () => {
     expect(hasFullAccess(FULL_ORGANISER_PERMISSIONS)).toBe(true);
-    expect(hasFullAccess({ ...FULL_ORGANISER_PERMISSIONS, permSettings: false })).toBe(false);
+    expect(hasFullAccess({ ...FULL_ORGANISER_PERMISSIONS, permCacheReset: false })).toBe(false);
     expect(hasFullAccess(NONE)).toBe(false);
   });
 });
@@ -31,6 +28,22 @@ describe("hasAnyPermission", () => {
   it("is true when at least one permission is granted", () => {
     expect(hasAnyPermission({ ...NONE, permWalks: true })).toBe(true);
     expect(hasAnyPermission(FULL_ORGANISER_PERMISSIONS)).toBe(true);
+  });
+});
+
+describe("hasAnySettingsPermission", () => {
+  it("is false when none of the seven settings-area permissions is granted", () => {
+    expect(hasAnySettingsPermission(NONE)).toBe(false);
+    // Core permissions don't count — Walks/Members/Messages/Reports aren't
+    // part of the Settings hub.
+    expect(
+      hasAnySettingsPermission({ ...NONE, permWalks: true, permMembers: true, permReports: true }),
+    ).toBe(false);
+  });
+
+  it("is true when any one settings-area permission is granted", () => {
+    expect(hasAnySettingsPermission({ ...NONE, permHomepage: true })).toBe(true);
+    expect(hasAnySettingsPermission({ ...NONE, permCacheReset: true })).toBe(true);
   });
 });
 
@@ -49,7 +62,7 @@ describe("walksLandingPath", () => {
 describe("describeOrganiserPermissions", () => {
   it("uses the short full-access phrasing when everything is granted", () => {
     expect(describeOrganiserPermissions(FULL_ORGANISER_PERMISSIONS)).toBe(
-      "You'll be able to create and edit walks, manage members, and see who's coming on each walk.",
+      "You'll have full access — everything an organiser can do on the site.",
     );
   });
 
@@ -64,10 +77,10 @@ describe("describeOrganiserPermissions", () => {
     const result = describeOrganiserPermissions({
       ...NONE,
       permWalks: true,
-      permSettings: true,
+      permCacheReset: true,
     });
     expect(result.startsWith("You'll be able to create, edit, and cancel walks")).toBe(true);
-    expect(result).toContain("; and edit homepage content, FAQs, notices, and site-wide settings.");
+    expect(result).toContain("; and clear the site cache, or reset the whole site back to its defaults.");
   });
 
   it("explains nothing was granted when every permission is false", () => {
