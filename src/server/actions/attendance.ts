@@ -77,9 +77,10 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
           slug: string | null;
           startsAt: Date;
           durationMins: number;
+          endedAt: Date | null;
           cancelledAt: Date | null;
         }>
-      >`SELECT id, token, slug, "startsAt", "durationMins", "cancelledAt"
+      >`SELECT id, token, slug, "startsAt", "durationMins", "endedAt", "cancelledAt"
         FROM "Walk" WHERE token = ${parsed.data.token} FOR UPDATE`;
       const locked = rows[0];
       if (!locked) return { ok: false as const, error: "This walk link is not valid." };
@@ -88,7 +89,7 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
         return { ok: false as const, error: "This walk link is not valid." };
       }
 
-      const state = windowState(locked.startsAt, locked.durationMins);
+      const state = windowState(locked.startsAt, locked.durationMins, new Date(), locked.endedAt);
       if (state === "too-early") {
         return { ok: false as const, error: "Clock-in opens an hour before the walk starts." };
       }
@@ -173,6 +174,7 @@ export async function searchAddableMembers(
       id: true,
       startsAt: true,
       durationMins: true,
+      endedAt: true,
       cancelledAt: true,
       attendances: { select: { userId: true, clockedOutAt: true } },
     },
@@ -182,7 +184,7 @@ export async function searchAddableMembers(
   // While the window is open, clocked-out members can be re-added. Once it
   // has closed, anyone with any attendance row is already on the roster.
   const excludeIds =
-    windowState(walk.startsAt, walk.durationMins) === "closed"
+    windowState(walk.startsAt, walk.durationMins, new Date(), walk.endedAt) === "closed"
       ? walk.attendances.map((row) => row.userId)
       : walk.attendances.filter((row) => !row.clockedOutAt).map((row) => row.userId);
   const needle = query.trim();
@@ -265,9 +267,10 @@ export async function adminClockIn(
           postcode: string | null;
           startsAt: Date;
           durationMins: number;
+          endedAt: Date | null;
           cancelledAt: Date | null;
         }>
-      >`SELECT id, token, slug, title, location, postcode, "startsAt", "durationMins", "cancelledAt"
+      >`SELECT id, token, slug, title, location, postcode, "startsAt", "durationMins", "endedAt", "cancelledAt"
         FROM "Walk" WHERE id = ${parsed.data.walkId} FOR UPDATE`;
       const locked = rows[0];
       if (!locked) return { ok: false as const, error: "That walk is no longer there." };
@@ -286,7 +289,7 @@ export async function adminClockIn(
         select: { id: true, clockedOutAt: true },
       });
 
-      const win = windowState(locked.startsAt, locked.durationMins);
+      const win = windowState(locked.startsAt, locked.durationMins, new Date(), locked.endedAt);
       if (existingAttendance) {
         if (win === "closed" || !existingAttendance.clockedOutAt) {
           return {
@@ -495,9 +498,10 @@ export async function clockOut(_prev: ActionResult | null, formData: FormData): 
           slug: string | null;
           startsAt: Date;
           durationMins: number;
+          endedAt: Date | null;
           cancelledAt: Date | null;
         }>
-      >`SELECT id, token, slug, "startsAt", "durationMins", "cancelledAt"
+      >`SELECT id, token, slug, "startsAt", "durationMins", "endedAt", "cancelledAt"
         FROM "Walk" WHERE token = ${parsed.data.token} FOR UPDATE`;
       const locked = rows[0];
       if (!locked || locked.cancelledAt) {
@@ -508,7 +512,7 @@ export async function clockOut(_prev: ActionResult | null, formData: FormData): 
       // is still under way — once its window has fully closed there's nothing
       // left to leave early from. Anyone who never clocked out by then simply
       // stayed for the whole walk, which needs no action from them.
-      if (windowState(locked.startsAt, locked.durationMins) === "closed") {
+      if (windowState(locked.startsAt, locked.durationMins, new Date(), locked.endedAt) === "closed") {
         return {
           ok: false as const,
           error: "This walk has finished — there's no need to clock out.",

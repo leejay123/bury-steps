@@ -611,6 +611,8 @@ export type MemberHistoryItem = {
   location: string | null;
   durationMins: number;
   startsAt: string;
+  /** Set once an organiser ends the walk early — see endWalkEarly. */
+  endedAt: string | null;
   cancelledAt: string | null;
   clockedInAt: string;
   clockedOutAt: string | null;
@@ -654,6 +656,7 @@ export async function getMemberHistory(userId: string): Promise<{
                 location: true,
                 durationMins: true,
                 startsAt: true,
+                endedAt: true,
                 cancelledAt: true,
               },
             },
@@ -688,6 +691,7 @@ export async function getMemberHistory(userId: string): Promise<{
       location: attendance.walk.location,
       durationMins: attendance.walk.durationMins,
       startsAt: attendance.walk.startsAt.toISOString(),
+      endedAt: attendance.walk.endedAt?.toISOString() ?? null,
       cancelledAt: attendance.walk.cancelledAt?.toISOString() ?? null,
       clockedInAt: attendance.clockedInAt.toISOString(),
       clockedOutAt: attendance.clockedOutAt?.toISOString() ?? null,

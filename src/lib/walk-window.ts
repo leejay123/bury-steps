@@ -18,29 +18,46 @@ export function walkOpensAt(startsAt: Date): Date {
   return new Date(startsAt.getTime() - OPENS_BEFORE_MS);
 }
 
-function walkEndsAt(startsAt: Date, durationMins: number): Date {
+function scheduledEndsAt(startsAt: Date, durationMins: number): Date {
   return new Date(startsAt.getTime() + durationMins * 60_000);
 }
 
-/** Same as the scheduled end — self clock-in stops when the walk is due to finish. */
-function walkClosesAt(startsAt: Date, durationMins: number): Date {
-  return walkEndsAt(startsAt, durationMins);
+/**
+ * When the walk actually finishes (or finished) — the organiser's early end
+ * (see endWalkEarly in src/server/actions/walks.ts) if one was recorded,
+ * otherwise the scheduled end from its published length. `endedAt` can only
+ * pull the finish in, never push it out: a value at or after the scheduled
+ * end is ignored rather than extending the walk, since setting a *later*
+ * end isn't what this field is for.
+ */
+export function effectiveEndsAt(walk: {
+  startsAt: Date;
+  durationMins: number;
+  endedAt?: Date | null;
+}): Date {
+  const scheduled = scheduledEndsAt(walk.startsAt, walk.durationMins);
+  if (!walk.endedAt || walk.endedAt.getTime() >= scheduled.getTime()) return scheduled;
+  return walk.endedAt;
 }
 
 export function windowState(
   startsAt: Date,
   durationMins: number,
   now: Date = new Date(),
+  endedAt: Date | null = null,
 ): WindowState {
   if (now.getTime() < walkOpensAt(startsAt).getTime()) return "too-early";
-  if (now.getTime() >= walkClosesAt(startsAt, durationMins).getTime()) return "closed";
+  if (now.getTime() >= effectiveEndsAt({ startsAt, durationMins, endedAt }).getTime()) {
+    return "closed";
+  }
   return "open";
 }
 
 /**
  * The overall lifecycle status of a walk, as shown on organiser and member
  * surfaces. Clock-in is available for starting-soon and in-progress only;
- * Completed means the scheduled end has been reached.
+ * Completed means the walk's actual end (its early end if it has one,
+ * otherwise the scheduled end) has been reached.
  */
 export type WalkStatus =
   | "cancelled"
@@ -50,19 +67,19 @@ export type WalkStatus =
   | "completed";
 
 export function walkStatus(
-  walk: { cancelledAt: Date | null; startsAt: Date; durationMins: number },
+  walk: { cancelledAt: Date | null; startsAt: Date; durationMins: number; endedAt?: Date | null },
   now: Date = new Date(),
 ): WalkStatus {
   if (walk.cancelledAt) return "cancelled";
   if (now.getTime() < walkOpensAt(walk.startsAt).getTime()) return "upcoming";
   if (now.getTime() < walk.startsAt.getTime()) return "starting-soon";
-  if (now.getTime() < walkEndsAt(walk.startsAt, walk.durationMins).getTime()) return "in-progress";
+  if (now.getTime() < effectiveEndsAt(walk).getTime()) return "in-progress";
   return "completed";
 }
 
 /** Organisers may add journey events once the walk has started (not cancelled). */
 export function canOrganiserEditJourney(
-  walk: { cancelledAt: Date | null; startsAt: Date; durationMins: number },
+  walk: { cancelledAt: Date | null; startsAt: Date; durationMins: number; endedAt?: Date | null },
   now: Date = new Date(),
 ): boolean {
   if (walk.cancelledAt) return false;
@@ -75,12 +92,12 @@ export function canOrganiserEditJourney(
  * is cancelled or completed — nothing left on a timer.
  */
 export function nextWalkStatusChangeAt(
-  walk: { cancelledAt: Date | null; startsAt: Date; durationMins: number },
+  walk: { cancelledAt: Date | null; startsAt: Date; durationMins: number; endedAt?: Date | null },
   now: Date = new Date(),
 ): Date | null {
   if (walk.cancelledAt) return null;
   const opensAt = walkOpensAt(walk.startsAt);
-  const endsAt = walkEndsAt(walk.startsAt, walk.durationMins);
+  const endsAt = effectiveEndsAt(walk);
   if (now.getTime() < opensAt.getTime()) return opensAt;
   if (now.getTime() < walk.startsAt.getTime()) return walk.startsAt;
   if (now.getTime() < endsAt.getTime()) return endsAt;
@@ -104,6 +121,26 @@ export function formatStartingSoonCountdown(
 }
 
 /**
+ * Remaining time until a walk actually finishes while In progress, e.g.
+ * "23 min" — coarse to the minute (matching the minute-by-minute ticking
+ * useWalkClock actually does for most of a walk; showing a stale mm:ss
+ * that hasn't moved in 45 seconds would look broken), switching to a
+ * seconds-precise "0:12" only in the final minute, which is also where
+ * useWalkClock switches to ticking every second. Returns null once the
+ * walk's actual end has already passed.
+ */
+export function formatInProgressCountdown(endsAt: Date, now: Date = new Date()): string | null {
+  const ms = endsAt.getTime() - now.getTime();
+  if (ms <= 0) return null;
+  if (ms < 60_000) {
+    const secs = Math.ceil(ms / 1000);
+    return `0:${secs.toString().padStart(2, "0")}`;
+  }
+  const mins = Math.floor(ms / 60_000);
+  return `${mins} min`;
+}
+
+/**
  * Whether a walk a member clocked in to belongs in their "history" yet. A
  * walk that's still under way isn't history — it's happening right now —
  * so this is only true once it's cancelled (kept as a record either way)
@@ -112,11 +149,11 @@ export function formatStartingSoonCountdown(
  * requires its window to already be open.
  */
 export function isWalkHistoryReady(
-  walk: { cancelledAt: Date | null; startsAt: Date; durationMins: number },
+  walk: { cancelledAt: Date | null; startsAt: Date; durationMins: number; endedAt?: Date | null },
   now: Date = new Date(),
 ): boolean {
   if (walk.cancelledAt) return true;
-  return windowState(walk.startsAt, walk.durationMins, now) === "closed";
+  return windowState(walk.startsAt, walk.durationMins, now, walk.endedAt ?? null) === "closed";
 }
 
 /**
@@ -140,7 +177,7 @@ export function isWalkStartInThePast(startsAt: Date, now: Date = new Date()): bo
  * completed walks stay off calendars.
  */
 export function canAddWalkToCalendar(
-  walk: { cancelledAt: Date | null; startsAt: Date; durationMins: number },
+  walk: { cancelledAt: Date | null; startsAt: Date; durationMins: number; endedAt?: Date | null },
   now: Date = new Date(),
 ): boolean {
   if (walk.cancelledAt) return false;
@@ -154,11 +191,11 @@ export function canAddWalkToCalendar(
  * cancelled walk (reopen it first).
  */
 export function canOrganiserAddAttendance(
-  walk: { cancelledAt: Date | null; startsAt: Date; durationMins: number },
+  walk: { cancelledAt: Date | null; startsAt: Date; durationMins: number; endedAt?: Date | null },
   now: Date = new Date(),
 ): boolean {
   if (walk.cancelledAt) return false;
-  return windowState(walk.startsAt, walk.durationMins, now) !== "too-early";
+  return windowState(walk.startsAt, walk.durationMins, now, walk.endedAt ?? null) !== "too-early";
 }
 
 /**
@@ -168,8 +205,10 @@ export function canOrganiserAddAttendance(
  * than appearing to clock in after it finished.
  */
 export function organiserRecordedClockInAt(
-  walk: { startsAt: Date; durationMins: number },
+  walk: { startsAt: Date; durationMins: number; endedAt?: Date | null },
   now: Date = new Date(),
 ): Date {
-  return windowState(walk.startsAt, walk.durationMins, now) === "closed" ? walk.startsAt : now;
+  return windowState(walk.startsAt, walk.durationMins, now, walk.endedAt ?? null) === "closed"
+    ? walk.startsAt
+    : now;
 }

@@ -14,6 +14,8 @@ export type AllWalksRow = {
   location: string | null;
   startsAt: Date;
   durationMins: number;
+  /** Set once an organiser ends the walk early — see endWalkEarly. */
+  endedAt: Date | null;
   cancelledAt: Date | null;
   attendanceCount: number;
 };
@@ -46,6 +48,7 @@ export async function getAllWalksSiteWide(): Promise<AllWalksRow[]> {
       location: true,
       startsAt: true,
       durationMins: true,
+      endedAt: true,
       cancelledAt: true,
       _count: { select: { attendances: true } },
     },
@@ -64,6 +67,7 @@ export async function getAllWalksSiteWide(): Promise<AllWalksRow[]> {
       location: walk.location,
       startsAt: walk.startsAt,
       durationMins: walk.durationMins,
+      endedAt: walk.endedAt,
       cancelledAt: walk.cancelledAt,
       attendanceCount: walk._count.attendances,
     }));

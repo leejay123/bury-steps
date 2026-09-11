@@ -567,6 +567,7 @@ describe("getMemberHistory", () => {
           location: "The park",
           durationMins: 60,
           startsAt: startsAt.toISOString(),
+          endedAt: null,
           cancelledAt: null,
           clockedInAt: clockedInAt.toISOString(),
           clockedOutAt: null,

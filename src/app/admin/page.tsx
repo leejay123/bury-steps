@@ -15,6 +15,7 @@ function toRow(walk: {
   location: string | null;
   startsAt: Date;
   durationMins: number;
+  endedAt: Date | null;
   cancelledAt: Date | null;
   _count: { attendances: number };
 }) {
@@ -24,6 +25,7 @@ function toRow(walk: {
     location: walk.location,
     startsAt: walk.startsAt.toISOString(),
     durationMins: walk.durationMins,
+    endedAt: walk.endedAt?.toISOString() ?? null,
     cancelledAt: walk.cancelledAt?.toISOString() ?? null,
     attendanceCount: walk._count.attendances,
   };
@@ -39,6 +41,7 @@ export default async function AdminPage() {
     location: true,
     startsAt: true,
     durationMins: true,
+    endedAt: true,
     cancelledAt: true,
   } as const;
 

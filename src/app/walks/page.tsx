@@ -44,6 +44,7 @@ export default async function DashboardPage() {
         location: true,
         startsAt: true,
         durationMins: true,
+        endedAt: true,
         attendances: {
           where: { userId: user.id, clockedOutAt: null },
           select: { clockedInAt: true },
@@ -72,6 +73,7 @@ export default async function DashboardPage() {
             slug: true,
             startsAt: true,
             durationMins: true,
+            endedAt: true,
             cancelledAt: true,
           },
         },
@@ -81,7 +83,7 @@ export default async function DashboardPage() {
   ]);
 
   const walks = walkCandidates.filter(
-    (walk) => windowState(walk.startsAt, walk.durationMins, now) !== "closed",
+    (walk) => windowState(walk.startsAt, walk.durationMins, now, walk.endedAt) !== "closed",
   );
 
   const completedHistory = historyCandidates.filter(
@@ -145,7 +147,8 @@ export default async function DashboardPage() {
                   startsAt: walk.startsAt.toISOString(),
                   durationMins: walk.durationMins,
                   clockedInAt: clockedIn ? clockedIn.clockedInAt.toISOString() : null,
-                  state: windowState(walk.startsAt, walk.durationMins, now),
+                  endedAt: walk.endedAt?.toISOString() ?? null,
+                  state: windowState(walk.startsAt, walk.durationMins, now, walk.endedAt),
                   memberCount: memberCountsByWalk.get(walk.id) ?? 0,
                 };
               })}
@@ -161,6 +164,7 @@ export default async function DashboardPage() {
               location: walk.location,
               startsAt: walk.startsAt.toISOString(),
               durationMins: walk.durationMins,
+              endedAt: walk.endedAt?.toISOString() ?? null,
               cancelledAt: walk.cancelledAt?.toISOString() ?? null,
               attendanceCount: walk.attendanceCount,
             }))}

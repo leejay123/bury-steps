@@ -7,12 +7,13 @@ import { WalkMembers } from "@/components/walk-members";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { useWalkClock } from "@/hooks/use-walk-clock";
 import { formatDateTime } from "@/lib/dates";
-import { walkStatus, windowState } from "@/lib/walk-window";
+import { effectiveEndsAt, formatInProgressCountdown, walkStatus, windowState } from "@/lib/walk-window";
 import { Button } from "@/components/ui/button";
 
 export function WalkLivePanel({
   alreadyClockedInAt,
   durationMins,
+  endedAt = null,
   memberNames,
   startsAt,
   token,
@@ -20,16 +21,20 @@ export function WalkLivePanel({
 }: {
   alreadyClockedInAt: string | null;
   durationMins: number;
+  /** Set once an organiser ends the walk early — see endWalkEarly. */
+  endedAt?: string | null;
   memberNames: string[];
   startsAt: string;
   token: string;
   walksHref: string;
 }) {
   const start = new Date(startsAt);
-  const now = useWalkClock({ cancelledAt: null, durationMins, startsAt });
-  const status = walkStatus({ cancelledAt: null, durationMins, startsAt: start }, now);
-  const state = windowState(start, durationMins, now);
+  const now = useWalkClock({ cancelledAt: null, durationMins, endedAt, startsAt });
+  const walk = { cancelledAt: null, durationMins, endedAt: endedAt ? new Date(endedAt) : null, startsAt: start };
+  const status = walkStatus(walk, now);
+  const state = windowState(start, durationMins, now, walk.endedAt);
   const completed = status === "completed";
+  const countdown = status === "in-progress" ? formatInProgressCountdown(effectiveEndsAt(walk), now) : null;
 
   if (alreadyClockedInAt) {
     return (
@@ -55,7 +60,9 @@ export function WalkLivePanel({
               do here.
             </p>
           ) : status === "in-progress" ? (
-            <p className="text-sm text-muted-foreground">This walk is in progress.</p>
+            <p className="text-sm tabular-nums text-muted-foreground">
+              This walk is in progress{countdown ? ` · finishes in ${countdown}` : ""}.
+            </p>
           ) : null}
         </div>
         <WalkMembers completed={completed} names={memberNames} />
@@ -78,7 +85,9 @@ export function WalkLivePanel({
   return (
     <div className="flex flex-col gap-4">
       {status === "in-progress" ? (
-        <p className="text-sm text-muted-foreground">This walk is in progress.</p>
+        <p className="text-sm tabular-nums text-muted-foreground">
+          This walk is in progress{countdown ? ` · finishes in ${countdown}` : ""}.
+        </p>
       ) : null}
       <ClockInForm token={token} />
     </div>

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   canOrganiserAddAttendance,
   canOrganiserEditJourney,
+  effectiveEndsAt,
+  formatInProgressCountdown,
   formatStartingSoonCountdown,
   isWalkHistoryReady,
   isWalkScheduleLocked,
@@ -45,6 +47,45 @@ describe("windowState", () => {
   });
 });
 
+describe("effectiveEndsAt", () => {
+  const startsAt = new Date("2026-06-01T10:00:00.000Z");
+  const durationMins = 90;
+  const scheduledEnd = new Date(startsAt.getTime() + durationMins * 60_000);
+
+  it("is the scheduled end when there's no early end", () => {
+    expect(effectiveEndsAt({ startsAt, durationMins })).toEqual(scheduledEnd);
+    expect(effectiveEndsAt({ startsAt, durationMins, endedAt: null })).toEqual(scheduledEnd);
+  });
+
+  it("is the early end when it's before the scheduled end", () => {
+    const endedAt = new Date(startsAt.getTime() + 40 * 60_000);
+    expect(effectiveEndsAt({ startsAt, durationMins, endedAt })).toEqual(endedAt);
+  });
+
+  it("ignores an early end at or after the scheduled end — it can only pull the finish in", () => {
+    expect(effectiveEndsAt({ startsAt, durationMins, endedAt: scheduledEnd })).toEqual(
+      scheduledEnd,
+    );
+    const later = new Date(scheduledEnd.getTime() + 60_000);
+    expect(effectiveEndsAt({ startsAt, durationMins, endedAt: later })).toEqual(scheduledEnd);
+  });
+});
+
+describe("windowState with an early end", () => {
+  const startsAt = new Date("2026-06-01T10:00:00.000Z");
+  const durationMins = 90;
+  const endedAt = new Date(startsAt.getTime() + 40 * 60_000);
+
+  it("stays open right up to the early end", () => {
+    const now = new Date(endedAt.getTime() - 1000);
+    expect(windowState(startsAt, durationMins, now, endedAt)).toBe("open");
+  });
+
+  it("closes at the early end, well before the scheduled end", () => {
+    expect(windowState(startsAt, durationMins, endedAt, endedAt)).toBe("closed");
+  });
+});
+
 describe("walkStatus", () => {
   const startsAt = new Date("2026-06-01T10:00:00.000Z");
   const durationMins = 90;
@@ -83,6 +124,19 @@ describe("walkStatus", () => {
     expect(
       walkStatus({ cancelledAt: null, startsAt, durationMins }, new Date(endsAt + 1000)),
     ).toBe("completed");
+  });
+
+  it("is completed once an early end is reached, well before the scheduled end", () => {
+    const endedAt = new Date(startsAt.getTime() + 40 * 60_000);
+    expect(walkStatus({ cancelledAt: null, startsAt, durationMins, endedAt }, endedAt)).toBe(
+      "completed",
+    );
+    expect(
+      walkStatus(
+        { cancelledAt: null, startsAt, durationMins, endedAt },
+        new Date(endedAt.getTime() - 1000),
+      ),
+    ).toBe("in-progress");
   });
 });
 
@@ -146,6 +200,25 @@ describe("formatStartingSoonCountdown", () => {
 
   it("returns null once start has passed", () => {
     expect(formatStartingSoonCountdown(startsAt, startsAt)).toBeNull();
+  });
+});
+
+describe("formatInProgressCountdown", () => {
+  const endsAt = new Date("2026-06-01T11:30:00.000Z");
+
+  it("rounds down to the last whole minute while more than a minute remains", () => {
+    const now = new Date(endsAt.getTime() - (23 * 60 + 4) * 1000);
+    expect(formatInProgressCountdown(endsAt, now)).toBe("23 min");
+  });
+
+  it("shows exact seconds once under a minute remains", () => {
+    const now = new Date(endsAt.getTime() - 45 * 1000);
+    expect(formatInProgressCountdown(endsAt, now)).toBe("0:45");
+  });
+
+  it("returns null once the end has passed", () => {
+    expect(formatInProgressCountdown(endsAt, endsAt)).toBeNull();
+    expect(formatInProgressCountdown(endsAt, new Date(endsAt.getTime() + 1000))).toBeNull();
   });
 });
 

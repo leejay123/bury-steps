@@ -16,6 +16,8 @@ export {
   updateWalk,
   deleteWalk,
   setWalkRetentionLocked,
+  endWalkEarly,
+  END_WALK_MINUTES_AGO_OPTIONS,
 } from "./actions/walks";
 
 export { createJourneyEvent, updateJourneyEvent, deleteJourneyEvent } from "./actions/journey";

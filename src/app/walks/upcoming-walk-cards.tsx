@@ -39,6 +39,8 @@ export type UpcomingWalkCard = {
   startsAt: string;
   durationMins: number;
   clockedInAt: string | null;
+  /** Set once an organiser ends the walk early — see endWalkEarly. */
+  endedAt: string | null;
   /** Kept for SSR first paint; the card recomputes live with useWalkClock. */
   state: WindowState;
   memberCount: number;
@@ -61,9 +63,15 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
   const now = useWalkClock({
     cancelledAt: null,
     durationMins: walk.durationMins,
+    endedAt: walk.endedAt,
     startsAt: walk.startsAt,
   });
-  const state = windowState(new Date(walk.startsAt), walk.durationMins, now);
+  const state = windowState(
+    new Date(walk.startsAt),
+    walk.durationMins,
+    now,
+    walk.endedAt ? new Date(walk.endedAt) : null,
+  );
 
   return (
     <Card className="relative gap-3 transition-colors hover:bg-muted/40">
@@ -102,7 +110,12 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
           </CardDescription>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <WalkStatusBadge cancelledAt={null} durationMins={walk.durationMins} startsAt={walk.startsAt} />
+          <WalkStatusBadge
+            cancelledAt={null}
+            durationMins={walk.durationMins}
+            endedAt={walk.endedAt}
+            startsAt={walk.startsAt}
+          />
           <ChevronRight aria-hidden className="size-4 text-muted-foreground" />
         </div>
       </CardHeader>
@@ -158,6 +171,7 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
           cancelledAt: null,
           startsAt: new Date(walk.startsAt),
           durationMins: walk.durationMins,
+          endedAt: walk.endedAt ? new Date(walk.endedAt) : null,
         });
         if (status !== statusFilter) return false;
       }

@@ -102,6 +102,15 @@ model Walk {
   /// Stored in UTC. Always render with timeZone: "Europe/London".
   startsAt        DateTime
   durationMins    Int       @default(90)
+  /// Set when an organiser ends the walk before its scheduled length is up
+  /// (see endWalkEarly) — "now" for an immediate end, or a few minutes in
+  /// the past if they're correcting the record after the fact. Always
+  /// earlier than startsAt + durationMins; never later, so it can only
+  /// pull the finish in, not push it out. Null for the ordinary case,
+  /// where the scheduled length alone decides when it's done — see
+  /// effectiveEndsAt in src/lib/walk-window.ts, which every finish-time
+  /// check goes through instead of the raw duration.
+  endedAt         DateTime?
   cancelledAt     DateTime?
   cancelledReason String?
   createdAt       DateTime  @default(now())

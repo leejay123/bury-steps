@@ -326,6 +326,7 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
           cancelledAt: true,
           startsAt: true,
           durationMins: true,
+          endedAt: true,
         },
       });
       if (!current) throw new Error("WALK_GONE");
@@ -427,6 +428,81 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
   return { ok: true, message: "Walk reopened. Members can clock in again if the window is still open." };
 }
 
+/** How long ago an organiser can say a walk actually finished, when correcting
+ * the record after the fact rather than ending it right now — see endWalkEarly. */
+export const END_WALK_MINUTES_AGO_OPTIONS = [0, 5, 10, 15, 30, 45, 60] as const;
+
+/**
+ * Ends an in-progress walk before its published length is up — right now,
+ * or a few minutes ago if there was no one free to tap the button the
+ * moment it actually wrapped up. Clock-in closes immediately either way.
+ * Attendances are left untouched: anyone still clocked in simply counts as
+ * having stayed for the whole (now-shorter) walk, exactly like the
+ * ordinary "walk finished and they never explicitly clocked out" case.
+ */
+export async function endWalkEarly(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = String(formData.get("walkId") ?? "");
+  if (!id) return { ok: false, error: "No walk selected." };
+
+  const minutesAgoRaw = Number(formData.get("minutesAgo") ?? 0);
+  const minutesAgo = (
+    END_WALK_MINUTES_AGO_OPTIONS as readonly number[]
+  ).includes(minutesAgoRaw)
+    ? minutesAgoRaw
+    : 0;
+
+  const walk = await prisma.walk.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      token: true,
+      slug: true,
+      title: true,
+      startsAt: true,
+      durationMins: true,
+      endedAt: true,
+      cancelledAt: true,
+    },
+  });
+  if (!walk) return { ok: false, error: "That walk is no longer there." };
+  if (walk.endedAt) return { ok: false, error: "This walk has already been ended early." };
+  if (walkStatus(walk) !== "in-progress") {
+    return {
+      ok: false,
+      error: "This walk isn't in progress right now, so there's nothing to end.",
+    };
+  }
+
+  const endedAt = new Date(Date.now() - minutesAgo * 60_000);
+  if (endedAt.getTime() <= walk.startsAt.getTime()) {
+    return { ok: false, error: "That's before this walk even started." };
+  }
+
+  try {
+    await prisma.walk.update({ where: { id }, data: { endedAt } });
+  } catch (err) {
+    if (isPrismaCode(err, "P2025")) return { ok: false, error: "That walk is no longer there." };
+    return logActionError("endWalkEarly", err, "Could not end this walk. Try again.");
+  }
+
+  revalidatePath("/admin");
+  revalidatePath(`/admin/walks/${id}`);
+  revalidatePath("/walks");
+  revalidateWalkShare(walk);
+
+  return {
+    ok: true,
+    message:
+      minutesAgo === 0
+        ? "Walk ended. Clock-in is now closed."
+        : `Walk marked as finished ${minutesAgo} minutes ago. Clock-in is now closed.`,
+  };
+}
+
 export async function updateWalk(
   _prev: ActionResult | null,
   formData: FormData,
@@ -479,7 +555,14 @@ export async function updateWalk(
   // unaffected by this check.
   const existing = await prisma.walk.findUnique({
     where: { id },
-    select: { cancelledAt: true, startsAt: true, durationMins: true, token: true, slug: true },
+    select: {
+      cancelledAt: true,
+      startsAt: true,
+      durationMins: true,
+      endedAt: true,
+      token: true,
+      slug: true,
+    },
   });
   if (!existing) return { ok: false, error: "That walk is no longer there." };
   if (walkStatus(existing) === "completed") {

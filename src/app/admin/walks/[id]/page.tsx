@@ -16,6 +16,7 @@ import { ensureWalkSlug, walkShareUrl } from "@/lib/walk-slug";
 import { CancelWalkButton } from "./cancel-walk-button";
 import { DuplicateWalkButton } from "./duplicate-walk-button";
 import { EditWalkButton } from "./edit-walk-button";
+import { EndWalkButton } from "./end-walk-button";
 import { AddAttendanceButton } from "./add-attendance-button";
 import { ReopenWalkButton } from "./reopen-walk-button";
 import { RetentionLockToggle } from "./retention-lock-toggle";
@@ -61,6 +62,7 @@ export default async function WalkDetailPage({
       what3words: true,
       startsAt: true,
       durationMins: true,
+      endedAt: true,
       cancelledAt: true,
       cancelledReason: true,
       retentionLocked: true,
@@ -140,6 +142,7 @@ export default async function WalkDetailPage({
           <WalkStatusBadge
             cancelledAt={walk.cancelledAt?.toISOString() ?? null}
             durationMins={walk.durationMins}
+            endedAt={walk.endedAt?.toISOString() ?? null}
             startsAt={walk.startsAt.toISOString()}
           />
         </CardHeader>
@@ -189,6 +192,11 @@ export default async function WalkDetailPage({
         {!walk.cancelledAt && !isCompleted && (
           <CancelWalkButton walkId={walk.id} attendanceCount={stillIn.length} />
         )}
+        {/* Only makes sense while the walk is actually under way — before
+            that there's nothing to cut short, and after it's already
+            completed (naturally or via this same button) there's nothing
+            left to end. */}
+        {status === "in-progress" && <EndWalkButton walkId={walk.id} />}
         {!isCompleted && (
           <EditWalkButton
             cancelled={Boolean(walk.cancelledAt)}

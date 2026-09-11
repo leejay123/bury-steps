@@ -37,6 +37,7 @@ export default async function WalkHistoryPage() {
             location: true,
             startsAt: true,
             durationMins: true,
+            endedAt: true,
             cancelledAt: true,
           },
         },

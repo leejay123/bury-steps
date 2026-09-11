@@ -3,6 +3,8 @@
 import { Badge } from "@/components/ui/badge";
 import { useWalkClock } from "@/hooks/use-walk-clock";
 import {
+  effectiveEndsAt,
+  formatInProgressCountdown,
   formatStartingSoonCountdown,
   walkStatus,
   type WalkStatus,
@@ -26,37 +28,43 @@ const VARIANT: Record<WalkStatus, "destructive" | "default" | "secondary" | "out
 
 /**
  * Shared status pill so the walk list, a walk's own page, and member cards
- * always agree. Recomputes when the published start/length says the phase
- * has changed, so a page left open ticks from Starting soon → In progress
- * → Completed on its own. Starting soon also shows a live
- * mm:ss countdown to the published start.
+ * always agree. Recomputes when the published start/length (or an early
+ * end — see endedAt) says the phase has changed, so a page left open ticks
+ * from Starting soon → In progress → Completed on its own. Starting soon
+ * shows a live mm:ss countdown to the published start; In progress shows a
+ * countdown to when the walk actually finishes.
  */
 export function WalkStatusBadge({
   cancelledAt,
   durationMins,
+  endedAt = null,
   startsAt,
 }: {
   cancelledAt: string | null;
   durationMins: number;
+  /** Set once an organiser ends the walk early — see endWalkEarly. */
+  endedAt?: string | null;
   startsAt: string;
 }) {
-  const now = useWalkClock({ cancelledAt, durationMins, startsAt });
+  const now = useWalkClock({ cancelledAt, durationMins, endedAt, startsAt });
   const start = new Date(startsAt);
-  const status = walkStatus(
-    {
-      cancelledAt: cancelledAt ? new Date(cancelledAt) : null,
-      durationMins,
-      startsAt: start,
-    },
-    now,
-  );
+  const walk = {
+    cancelledAt: cancelledAt ? new Date(cancelledAt) : null,
+    durationMins,
+    endedAt: endedAt ? new Date(endedAt) : null,
+    startsAt: start,
+  };
+  const status = walkStatus(walk, now);
 
   const countdown =
-    status === "starting-soon" ? formatStartingSoonCountdown(start, now) : null;
-  const label =
-    status === "starting-soon" && countdown
-      ? `Starting soon · ${countdown}`
-      : LABEL[status];
+    status === "starting-soon"
+      ? formatStartingSoonCountdown(start, now)
+      : status === "in-progress"
+        ? formatInProgressCountdown(effectiveEndsAt(walk), now)
+        : null;
+  const label = countdown
+    ? `${LABEL[status]} · ${status === "in-progress" ? `${countdown} left` : countdown}`
+    : LABEL[status];
 
   return <Badge variant={VARIANT[status]}>{label}</Badge>;
 }

@@ -22,6 +22,7 @@ export async function GET(
       durationMins: true,
       token: true,
       slug: true,
+      endedAt: true,
       cancelledAt: true,
     },
   });

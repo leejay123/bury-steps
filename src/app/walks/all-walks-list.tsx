@@ -19,6 +19,8 @@ export type AllWalksRow = {
   location: string | null;
   startsAt: string;
   durationMins: number;
+  /** Set once an organiser ends the walk early — see endWalkEarly. */
+  endedAt: string | null;
   cancelledAt: string | null;
   attendanceCount: number;
 };
@@ -139,6 +141,7 @@ export function AllWalksList({ rows }: { rows: AllWalksRow[] }) {
                       <WalkStatusBadge
                         cancelledAt={row.cancelledAt}
                         durationMins={row.durationMins}
+                        endedAt={row.endedAt}
                         startsAt={row.startsAt}
                       />
                       <ChevronRight className="size-4 shrink-0 text-muted-foreground" />

@@ -55,7 +55,14 @@ export default async function AccidentReportsPage({
     prisma.walk.findMany({
       orderBy: { startsAt: "desc" },
       take: 200,
-      select: { id: true, title: true, startsAt: true, durationMins: true, cancelledAt: true },
+      select: {
+        id: true,
+        title: true,
+        startsAt: true,
+        durationMins: true,
+        endedAt: true,
+        cancelledAt: true,
+      },
     }),
   ]);
 

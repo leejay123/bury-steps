@@ -27,6 +27,8 @@ export type AdminWalkRow = {
   location: string | null;
   startsAt: string;
   durationMins: number;
+  /** Set once an organiser ends the walk early — see endWalkEarly. */
+  endedAt: string | null;
   cancelledAt: string | null;
   attendanceCount: number;
 };
@@ -76,6 +78,7 @@ export function AdminWalkTable({
           cancelledAt: walk.cancelledAt ? new Date(walk.cancelledAt) : null,
           startsAt: new Date(walk.startsAt),
           durationMins: walk.durationMins,
+          endedAt: walk.endedAt ? new Date(walk.endedAt) : null,
         });
         if (status !== statusFilter) return false;
       }
@@ -174,6 +177,7 @@ export function AdminWalkTable({
                   <WalkStatusBadge
                     cancelledAt={walk.cancelledAt}
                     durationMins={walk.durationMins}
+                    endedAt={walk.endedAt}
                     startsAt={walk.startsAt}
                   />
                   <ChevronRight className="size-4 shrink-0 text-muted-foreground" />

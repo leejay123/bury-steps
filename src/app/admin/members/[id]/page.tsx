@@ -164,6 +164,7 @@ export default async function MemberDetailPage({
                 cancelledAt: item.cancelledAt ? new Date(item.cancelledAt) : null,
                 startsAt: new Date(item.startsAt),
                 durationMins: item.durationMins,
+                endedAt: item.endedAt ? new Date(item.endedAt) : null,
               }) === "completed",
             href: `/admin/walks/${item.walkId}`,
           }))}

@@ -41,6 +41,7 @@ const getWalkByShareKey = cache((key: string) =>
       what3words: true,
       startsAt: true,
       durationMins: true,
+      endedAt: true,
       cancelledAt: true,
       journeyEvents: {
         orderBy: { happenedAt: "asc" },
@@ -62,6 +63,7 @@ export async function generateMetadata({
   const status = walkStatus({
     cancelledAt: walk.cancelledAt,
     durationMins: walk.durationMins,
+    endedAt: walk.endedAt,
     startsAt: walk.startsAt,
   });
 
@@ -98,6 +100,7 @@ export default async function WalkLinkPage({
   const status = walkStatus({
     cancelledAt: walk.cancelledAt,
     durationMins: walk.durationMins,
+    endedAt: walk.endedAt,
     startsAt: walk.startsAt,
   });
 
@@ -126,7 +129,7 @@ export default async function WalkLinkPage({
   // people who have not joined yet. WalkMembers paginates at 20, so a
   // thousand names on one walk stay usable.
   const memberNames = alreadyIn ? await getWalkMemberNames(walk.id) : [];
-  const windowStateNow = windowState(walk.startsAt, walk.durationMins);
+  const windowStateNow = windowState(walk.startsAt, walk.durationMins, new Date(), walk.endedAt);
   const tooEarly = windowStateNow === "too-early";
   // A signed-in member who never clocked in and the window has now closed —
   // this used to only show at the very bottom of the page (inside
@@ -210,6 +213,7 @@ export default async function WalkLinkPage({
             <WalkStatusBadge
               cancelledAt={walk.cancelledAt?.toISOString() ?? null}
               durationMins={walk.durationMins}
+              endedAt={walk.endedAt?.toISOString() ?? null}
               startsAt={walk.startsAt.toISOString()}
             />
           </div>
@@ -244,6 +248,7 @@ export default async function WalkLinkPage({
         <WalkLivePanel
           alreadyClockedInAt={alreadyIn?.clockedInAt.toISOString() ?? null}
           durationMins={walk.durationMins}
+          endedAt={walk.endedAt?.toISOString() ?? null}
           memberNames={memberNames}
           startsAt={walk.startsAt.toISOString()}
           token={walk.token}
