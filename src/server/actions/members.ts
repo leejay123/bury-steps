@@ -479,6 +479,19 @@ export async function acceptOrganiserInvite(
     return { ok: false, error: "This invite link has expired. Ask an organiser to resend it." };
   }
 
+  // Belt and braces: the accept page itself already redirects a signed-out
+  // browser to sign in first, and never renders the Accept button at all
+  // for a browser signed in as someone else — so this only ever fires on a
+  // direct call that skipped the page (or a session that changed between
+  // page load and the click).
+  const viewer = await getOptionalUser();
+  if (!viewer || viewer.id !== target.id) {
+    return {
+      ok: false,
+      error: "This invite can only be accepted by signing in as the invited account.",
+    };
+  }
+
   try {
     await prisma.user.update({
       where: { id: target.id },
@@ -504,18 +517,10 @@ export async function acceptOrganiserInvite(
   // Layout nav (Members / Reports / Settings) depends on role for this person.
   revalidatePath("/", "layout");
 
-  // Only redirect straight into /admin/members if the browser that just
-  // clicked the email link is already signed in as the person who was
-  // invited — /admin/* 404s for anyone else (see src/proxy.ts), so
-  // redirecting an unauthenticated or different-account browser there
-  // would just be a confusing dead end. The accept page shows a sign-in
-  // prompt itself when this is absent.
-  const viewer = await getOptionalUser();
-  return {
-    ok: true,
-    message: "You're now an organiser.",
-    ...(viewer?.id === target.id ? { href: "/admin/members" } : {}),
-  };
+  // The viewer-match check above guarantees this is the invitee's own
+  // signed-in browser by this point, so /admin/members is always safe to
+  // send them to (/admin/* 404s for anyone else — see src/proxy.ts).
+  return { ok: true, message: "You're now an organiser.", href: "/admin/members" };
 }
 
 export type MemberHistoryItem = {

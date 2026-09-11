@@ -817,34 +817,7 @@ describe("acceptOrganiserInvite", () => {
     expect(prismaMock.user.update).not.toHaveBeenCalled();
   });
 
-  it("promotes the invitee and clears the invite fields", async () => {
-    const target = {
-      id: "member-1",
-      role: "MEMBER",
-      firstName: "Jo",
-      lastName: "Bloggs",
-      email: "jo@example.com",
-      organiserInviteExpiresAt: new Date(Date.now() + 1000),
-    };
-    prismaMock.user.findUnique.mockResolvedValueOnce(target);
-    prismaMock.user.update.mockResolvedValueOnce({});
-
-    const result = await acceptOrganiserInvite(null, acceptForm("tok"));
-
-    expect(prismaMock.user.update).toHaveBeenCalledWith({
-      where: { id: target.id },
-      data: {
-        role: "ADMIN",
-        organiserInviteToken: null,
-        organiserInviteSentAt: null,
-        organiserInviteExpiresAt: null,
-      },
-    });
-    expect(sendAdminPromotedEmail).toHaveBeenCalledWith(target);
-    expect(result).toEqual({ ok: true, message: "You're now an organiser." });
-  });
-
-  it("includes a redirect href when the current browser is already signed in as the invitee", async () => {
+  it("promotes the invitee, clears the invite fields, and redirects to /admin/members", async () => {
     const target = {
       id: "member-1",
       role: "MEMBER",
@@ -859,6 +832,16 @@ describe("acceptOrganiserInvite", () => {
 
     const result = await acceptOrganiserInvite(null, acceptForm("tok"));
 
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: target.id },
+      data: {
+        role: "ADMIN",
+        organiserInviteToken: null,
+        organiserInviteSentAt: null,
+        organiserInviteExpiresAt: null,
+      },
+    });
+    expect(sendAdminPromotedEmail).toHaveBeenCalledWith(target);
     expect(result).toEqual({
       ok: true,
       message: "You're now an organiser.",
@@ -866,21 +849,39 @@ describe("acceptOrganiserInvite", () => {
     });
   });
 
-  it("omits the redirect href when no one, or someone else, is signed in", async () => {
+  it("refuses when no one is signed in", async () => {
     const target = {
       id: "member-1",
       role: "MEMBER",
-      firstName: "Jo",
-      lastName: "Bloggs",
-      email: "jo@example.com",
       organiserInviteExpiresAt: new Date(Date.now() + 1000),
     };
     prismaMock.user.findUnique.mockResolvedValueOnce(target);
-    prismaMock.user.update.mockResolvedValueOnce({});
+    // getOptionalUser defaults to resolving null (not signed in).
+
+    const result = await acceptOrganiserInvite(null, acceptForm("tok"));
+
+    expect(result).toEqual({
+      ok: false,
+      error: "This invite can only be accepted by signing in as the invited account.",
+    });
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
+  });
+
+  it("refuses when signed in as a different account", async () => {
+    const target = {
+      id: "member-1",
+      role: "MEMBER",
+      organiserInviteExpiresAt: new Date(Date.now() + 1000),
+    };
+    prismaMock.user.findUnique.mockResolvedValueOnce(target);
     getOptionalUser.mockResolvedValueOnce({ id: "someone-else" });
 
     const result = await acceptOrganiserInvite(null, acceptForm("tok"));
 
-    expect(result).toEqual({ ok: true, message: "You're now an organiser." });
+    expect(result).toEqual({
+      ok: false,
+      error: "This invite can only be accepted by signing in as the invited account.",
+    });
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
   });
 });

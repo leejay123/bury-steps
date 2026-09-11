@@ -15,10 +15,12 @@ import { Button } from "@/components/ui/button";
  * it's safe. An auto-accepting page burns the one-time token to that
  * automated visit, and the real person then clicks the real link and gets
  * "invalid or already used." A real button press can't be triggered that
- * way. useNotifyActionState handles the success case: when the action
- * returns an `href`, it flash-toasts "You're now an organiser." and
- * hard-navigates there — otherwise (viewer isn't currently signed in as
- * the invitee) we show the sign-in prompt below ourselves.
+ * way.
+ *
+ * Only ever rendered once the page has already confirmed the viewer is
+ * signed in as the invitee themselves, so the action always succeeds with
+ * an `href` — useNotifyActionState flash-toasts "You're now an organiser."
+ * and hard-navigates to /admin/members.
  */
 function Submit() {
   const { pending } = useFormStatus();
@@ -29,26 +31,8 @@ function Submit() {
   );
 }
 
-export function AcceptInviteForm({
-  signInHref,
-  token,
-}: {
-  signInHref: string;
-  token: string;
-}) {
+export function AcceptInviteForm({ token }: { token: string }) {
   const [state, action] = useNotifyActionState(acceptOrganiserInvite);
-
-  if (state?.ok && !state.href) {
-    return (
-      <div className="flex flex-col items-center gap-3">
-        <p className="text-sm font-medium">You&rsquo;re now an organiser.</p>
-        <p className="text-sm text-muted-foreground">Sign in to see the admin area.</p>
-        <Button asChild>
-          <a href={signInHref}>Sign in</a>
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <form action={action} className="flex flex-col items-center gap-3">

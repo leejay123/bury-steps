@@ -1,9 +1,12 @@
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
+import { getOptionalUser } from "@/lib/auth";
 import { getSiteTheme } from "@/lib/site-theme";
 import { PAGE_X } from "@/lib/page-x";
 import { appUrl, accountPortalHref } from "@/lib/urls";
 import { AcceptInviteForm } from "./accept-invite-form";
+import { WrongAccountNotice } from "./wrong-account-notice";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +20,13 @@ export const metadata: Metadata = {
  * auto-submit on load) — this grants real admin access on a single-use
  * token, and an automated pre-fetch of the link (Outlook Safe Links, Gmail
  * link scanning, corporate security gateways) would otherwise burn the
- * token before the actual person ever opens it. */
+ * token before the actual person ever opens it.
+ *
+ * Also gated on *who's* opening it, not just the token: a signed-out
+ * browser is sent to sign in first (an invite is always to an existing
+ * member — promoting someone already implies an account), and a browser
+ * signed in as someone other than the invitee is shown a clear notice
+ * rather than silently accepting on the wrong account. */
 export default async function OrganiserInvitePage({
   params,
 }: {
@@ -27,7 +36,7 @@ export default async function OrganiserInvitePage({
   const [invitee, theme] = await Promise.all([
     prisma.user.findUnique({
       where: { organiserInviteToken: token },
-      select: { role: true, organiserInviteExpiresAt: true },
+      select: { id: true, email: true, role: true, organiserInviteExpiresAt: true },
     }),
     getSiteTheme(),
   ]);
@@ -35,6 +44,18 @@ export default async function OrganiserInvitePage({
   const now = new Date();
   const expired = !invitee?.organiserInviteExpiresAt || invitee.organiserInviteExpiresAt < now;
   const invalid = !invitee || invitee.role !== "MEMBER";
+
+  const inviteUrl = `${appUrl()}/organiser-invite/${token}`;
+  const signInHref = accountPortalHref("sign-in", inviteUrl);
+
+  // No point asking who's signed in for a token that's already invalid —
+  // that message should show regardless of the viewer's own sign-in state.
+  let wrongAccount = false;
+  if (!invalid && !expired) {
+    const viewer = await getOptionalUser();
+    if (!viewer) redirect(signInHref);
+    wrongAccount = viewer.id !== invitee.id;
+  }
 
   return (
     <div className={`mx-auto w-full max-w-md py-16 ${PAGE_X}`}>
@@ -48,16 +69,21 @@ export default async function OrganiserInvitePage({
           <p className="text-sm text-muted-foreground">
             This invite link has expired. Ask an organiser to send you a new one.
           </p>
+        ) : wrongAccount ? (
+          <>
+            <p className="text-sm text-muted-foreground">
+              This invite is for <strong>{invitee.email}</strong>. You&rsquo;re signed in as a
+              different account. Sign out and sign back in as {invitee.email} to accept it.
+            </p>
+            <WrongAccountNotice signInHref={signInHref} />
+          </>
         ) : (
           <>
             <p className="text-sm text-muted-foreground">
-              You&rsquo;ve been invited to become an organiser of {theme.siteName}. Accepting gives
-              you access to manage walks, members, and settings.
+              This invite is for <strong>{invitee.email}</strong>. Accepting gives you access to
+              manage walks, members, and settings on {theme.siteName}.
             </p>
-            <AcceptInviteForm
-              signInHref={accountPortalHref("sign-in", `${appUrl()}/admin/members`)}
-              token={token}
-            />
+            <AcceptInviteForm token={token} />
           </>
         )}
       </div>
