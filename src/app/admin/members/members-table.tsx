@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import type React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Search } from "lucide-react";
@@ -13,7 +12,6 @@ import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { DeleteMemberButton } from "./delete-member-button";
 import { EditPermissionsButton } from "./edit-permissions-button";
 import { MemberRoleButton } from "./member-role-button";
-import { MemberRowActionsMenu } from "./member-row-actions-menu";
 import { TransferOwnershipButton } from "./transfer-ownership-button";
 import { CancelInviteButton, ResendInviteButton } from "./pending-invite-actions";
 import { EmptyState } from "@/components/empty-state";
@@ -181,128 +179,110 @@ export function MembersTable({
       ) : (
         <>
           <DataList className={cn(isPending && "opacity-60")}>
-            {rows.map((member) => {
-              // One "primary" action shown as a direct button — the one
-              // someone's most likely to want next — plus whatever else
-              // applies collapsed behind a single "⋯" menu, so an owner
-              // looking at an organiser's row doesn't get a wall of four
-              // buttons (Make member/Edit permissions/Make owner/Remove).
-              // A lone secondary action is still shown inline rather than
-              // hidden behind a one-item menu.
-              let primary: React.ReactNode = null;
-              const secondary: React.ReactNode[] = [];
-
-              if (member.pendingInvite) {
-                primary = <ResendInviteButton key="resend" onDone={refetch} userId={member.id} />;
-                secondary.push(<CancelInviteButton key="cancel" onDone={refetch} userId={member.id} />);
-                if (viewerIsOwner) {
-                  secondary.push(
-                    <EditPermissionsButton
-                      initialPermissions={member.permissions}
-                      key="edit-permissions"
+            {rows.map((member) => (
+              <DataListItem className={cn("relative", dataListItemStackClassName)} key={member.id}>
+                <DataListItemMain>
+                  <DataListBody>
+                    <p className="font-medium">
+                      <Link className="after:absolute after:inset-0" href={`/admin/members/${member.id}`}>
+                        {member.name}
+                      </Link>
+                      {member.isYou ? (
+                        <span className="ml-2 text-xs font-normal text-muted-foreground">You</span>
+                      ) : null}
+                    </p>
+                    <p className="text-sm text-muted-foreground wrap-break-word">
+                      {member.email || "No email"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDate(new Date(member.createdAt))} ·{" "}
+                      {formatMembershipAge(new Date(member.createdAt))} · {member.attendanceCount}{" "}
+                      {member.attendanceCount === 1 ? "clock-in" : "clock-ins"}
+                    </p>
+                  </DataListBody>
+                  <ChevronRight className="mt-1 size-4 shrink-0 text-muted-foreground sm:mt-0" />
+                </DataListItemMain>
+                {/* Never wraps to a second line, however many buttons a row
+                    has (an owner viewing an organiser can have four) —
+                    instead it scrolls horizontally on mobile, edge to edge,
+                    the same trick used for the walk page's action row. */}
+                <DataListActions
+                  className={cn(
+                    "relative z-10 -mx-3 flex-nowrap gap-2 overflow-x-auto overscroll-x-contain px-3 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden [&>*]:shrink-0",
+                    dataListActionsStackClassName,
+                  )}
+                >
+                  {member.pendingInvite ? (
+                    // Plain text, not a Badge — an outline badge sitting
+                    // right next to the outline Resend/Cancel buttons below
+                    // read as a third (non-working) button rather than a
+                    // status label.
+                    <span className="flex h-7 items-center text-xs font-medium text-muted-foreground">
+                      {member.pendingInvite.expired ? "Invite expired" : "Invited"}
+                    </span>
+                  ) : (
+                    <Badge className="h-7 border-border px-2" variant="secondary">
+                      {member.isOwner ? "Owner" : member.role === "ADMIN" ? "Organiser" : "Member"}
+                    </Badge>
+                  )}
+                  {member.pendingInvite ? (
+                    <>
+                      <ResendInviteButton onDone={refetch} userId={member.id} />
+                      <CancelInviteButton onDone={refetch} userId={member.id} />
+                      {viewerIsOwner ? (
+                        <EditPermissionsButton
+                          initialPermissions={member.permissions}
+                          name={member.name}
+                          onChanged={refetch}
+                          userId={member.id}
+                        />
+                      ) : null}
+                    </>
+                  ) : /* Changing your own role here would be easy to hit by
+                         mistake and immediately cost you organiser access to
+                         fix it — same reasoning as hiding your own Remove
+                         button below. Another organiser can change it for you
+                         instead. Promoting/demoting/editing permissions is
+                         also owner-only regardless of whose row this is. */
+                  member.isYou || !viewerIsOwner ? null : (
+                    <>
+                      <MemberRoleButton
+                        initialPermissions={member.permissions}
+                        inviteRequired={inviteRequired}
+                        name={member.name}
+                        onChanged={refetch}
+                        role={member.role}
+                        userId={member.id}
+                      />
+                      {member.role === "ADMIN" ? (
+                        <>
+                          <EditPermissionsButton
+                            initialPermissions={member.permissions}
+                            name={member.name}
+                            onChanged={refetch}
+                            userId={member.id}
+                          />
+                          <TransferOwnershipButton
+                            name={member.name}
+                            onChanged={refetch}
+                            userId={member.id}
+                          />
+                        </>
+                      ) : null}
+                    </>
+                  )}
+                  {member.isYou || (member.role === "ADMIN" && !viewerIsOwner) ? null : (
+                    <DeleteMemberButton
+                      attendanceCount={member.attendanceCount}
                       name={member.name}
-                      onChanged={refetch}
+                      onDeleted={refetch}
                       userId={member.id}
-                    />,
-                  );
-                }
-              } else if (
-                // Changing your own role here would be easy to hit by
-                // mistake and immediately cost you organiser access to fix
-                // it — same reasoning as hiding your own Remove button
-                // below. Another organiser can change it for you instead.
-                // Promoting/demoting/editing permissions is also owner-only
-                // regardless of whose row this is.
-                !member.isYou &&
-                viewerIsOwner
-              ) {
-                primary = (
-                  <MemberRoleButton
-                    initialPermissions={member.permissions}
-                    inviteRequired={inviteRequired}
-                    key="role"
-                    name={member.name}
-                    onChanged={refetch}
-                    role={member.role}
-                    userId={member.id}
-                  />
-                );
-                if (member.role === "ADMIN") {
-                  secondary.push(
-                    <EditPermissionsButton
-                      initialPermissions={member.permissions}
-                      key="edit-permissions"
-                      name={member.name}
-                      onChanged={refetch}
-                      userId={member.id}
-                    />,
-                    <TransferOwnershipButton key="transfer" name={member.name} onChanged={refetch} userId={member.id} />,
-                  );
-                }
-              }
-
-              if (!member.isYou && (member.role !== "ADMIN" || viewerIsOwner)) {
-                secondary.push(
-                  <DeleteMemberButton
-                    attendanceCount={member.attendanceCount}
-                    key="delete"
-                    name={member.name}
-                    onDeleted={refetch}
-                    userId={member.id}
-                    walkCount={member.walkCount}
-                  />,
-                );
-              }
-
-              return (
-                <DataListItem className={cn("relative", dataListItemStackClassName)} key={member.id}>
-                  <DataListItemMain>
-                    <DataListBody>
-                      <p className="font-medium">
-                        <Link className="after:absolute after:inset-0" href={`/admin/members/${member.id}`}>
-                          {member.name}
-                        </Link>
-                        {member.isYou ? (
-                          <span className="ml-2 text-xs font-normal text-muted-foreground">You</span>
-                        ) : null}
-                      </p>
-                      <p className="text-sm text-muted-foreground wrap-break-word">
-                        {member.email || "No email"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDate(new Date(member.createdAt))} ·{" "}
-                        {formatMembershipAge(new Date(member.createdAt))} · {member.attendanceCount}{" "}
-                        {member.attendanceCount === 1 ? "clock-in" : "clock-ins"}
-                      </p>
-                    </DataListBody>
-                    <ChevronRight className="mt-1 size-4 shrink-0 text-muted-foreground sm:mt-0" />
-                  </DataListItemMain>
-                  <DataListActions
-                    className={cn("relative z-10 flex-wrap gap-2", dataListActionsStackClassName)}
-                  >
-                    {member.pendingInvite ? (
-                      // Plain text, not a Badge — an outline badge sitting
-                      // right next to the outline Resend/Cancel buttons below
-                      // read as a third (non-working) button rather than a
-                      // status label.
-                      <span className="flex h-7 items-center text-xs font-medium text-muted-foreground">
-                        {member.pendingInvite.expired ? "Invite expired" : "Invited"}
-                      </span>
-                    ) : (
-                      <Badge className="h-7 border-border px-2" variant="secondary">
-                        {member.isOwner ? "Owner" : member.role === "ADMIN" ? "Organiser" : "Member"}
-                      </Badge>
-                    )}
-                    {primary}
-                    {secondary.length === 0
-                      ? null
-                      : secondary.length === 1
-                        ? secondary[0]
-                        : <MemberRowActionsMenu>{secondary}</MemberRowActionsMenu>}
-                  </DataListActions>
-                </DataListItem>
-              );
-            })}
+                      walkCount={member.walkCount}
+                    />
+                  )}
+                </DataListActions>
+              </DataListItem>
+            ))}
           </DataList>
           <ListPagination
             noun="members"
