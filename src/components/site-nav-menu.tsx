@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -50,6 +50,61 @@ function NavLink({
       {active ? <span className="absolute inset-0 rounded-md bg-muted" /> : null}
       <span className="relative z-10">{label}</span>
     </Link>
+  );
+}
+
+/** Whether the nav's horizontal scroller has more content hidden past
+ * either edge, so callers can fade that edge to hint "there's more to
+ * scroll" instead of letting the row just clip mid-label. */
+function useScrollEdges(scrollerRef: RefObject<HTMLElement | null>) {
+  const [edges, setEdges] = useState({ start: false, end: false });
+
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+
+    const update = () => {
+      const { scrollLeft, scrollWidth, clientWidth } = scroller;
+      // 1px slop: browsers can report a fractional px of "scroll left" at
+      // rest due to subpixel rounding, which would otherwise flicker the
+      // fade on for a row that isn't actually scrollable.
+      setEdges({
+        start: scrollLeft > 1,
+        end: scrollLeft < scrollWidth - clientWidth - 1,
+      });
+    };
+
+    update();
+    scroller.addEventListener("scroll", update, { passive: true });
+    // Nav items don't change size on their own, but the viewport can
+    // (rotation, resizing a desktop window) which flips whether the row
+    // overflows at all.
+    const resizeObserver = new ResizeObserver(update);
+    resizeObserver.observe(scroller);
+    return () => {
+      scroller.removeEventListener("scroll", update);
+      resizeObserver.disconnect();
+    };
+  }, [scrollerRef]);
+
+  return edges;
+}
+
+/** Fades the scroller's edge toward the surrounding background when there's
+ * more content past it — a plain CSS mask on the scroller would fade the
+ * links' own background too, so this overlays a matching gradient instead. */
+function ScrollEdgeFade({ side, visible }: { side: "left" | "right"; visible: boolean }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        "pointer-events-none absolute inset-y-0 z-10 w-8 transition-opacity duration-150",
+        side === "left"
+          ? "left-0 bg-gradient-to-r from-background to-transparent"
+          : "right-0 bg-gradient-to-l from-background to-transparent",
+        visible ? "opacity-100" : "opacity-0",
+      )}
+    />
   );
 }
 
@@ -113,6 +168,7 @@ export function SiteMobileNavBar({
 }) {
   const pathname = usePathname();
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const edges = useScrollEdges(scrollerRef);
 
   useEffect(() => {
     const scroller = scrollerRef.current;
@@ -121,7 +177,8 @@ export function SiteMobileNavBar({
   }, [pathname]);
 
   return (
-    <nav aria-label="Site" className="border-t md:hidden">
+    <nav aria-label="Site" className="relative border-t md:hidden">
+      <ScrollEdgeFade side="left" visible={edges.start} />
       <div
         className="flex gap-1 overflow-x-auto overscroll-x-contain px-3 py-1.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         ref={scrollerRef}
@@ -143,6 +200,7 @@ export function SiteMobileNavBar({
           );
         })}
       </div>
+      <ScrollEdgeFade side="right" visible={edges.end} />
     </nav>
   );
 }
