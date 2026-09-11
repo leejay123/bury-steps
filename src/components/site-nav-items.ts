@@ -14,11 +14,10 @@ import { FULL_ORGANISER_PERMISSIONS, type OrganiserPermissions } from "@/lib/org
  * link points at the member page (/walks) instead of the admin dashboard
  * (see also the matching redirect in src/app/walks/page.tsx).
  *
- * This only decides what's *shown* — it is not yet enforced on the other
- * admin pages/actions themselves, so a limited organiser who already knows
- * a hidden URL can still open it today. See setMemberRole's permMembers
- * check and clampGrantablePermissions for the capabilities that are
- * actually enforced so far.
+ * This decides what's *shown*, but it isn't the real gate — every admin
+ * page and server action re-checks the specific permission itself
+ * (requirePermission / permissionDenied), so a limited organiser who
+ * guesses a hidden URL still gets turned away there too.
  */
 export function navItems(isAdmin: boolean, walksHref: string, permissions?: OrganiserPermissions) {
   const perms = permissions ?? FULL_ORGANISER_PERMISSIONS;
