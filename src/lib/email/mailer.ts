@@ -8,6 +8,7 @@ import { AdminPromotedEmail } from "./templates/admin-promoted";
 import { AdminDemotedEmail } from "./templates/admin-demoted";
 import { OrganiserInviteEmail } from "./templates/organiser-invite";
 import { ORGANISER_INVITE_EXPIRY_DAYS } from "@/lib/organiser-invite";
+import { describeOrganiserPermissions, type OrganiserPermissions } from "@/lib/organiser-permissions";
 import { ContactMessageReceivedEmail } from "./templates/contact-message-received";
 import { ContactMessageAdminAlertEmail } from "./templates/contact-message-admin-alert";
 import { NewsletterSubscribedEmail } from "./templates/newsletter-subscribed";
@@ -99,16 +100,21 @@ export async function sendAdminPromotedEmail(member: MemberLike): Promise<void> 
 }
 
 /** Invite to become an organiser, pending their acceptance — see
- * setMemberRole in src/server/actions/members.ts. */
+ * setMemberRole in src/server/actions/members.ts. `permissions` is what
+ * was actually chosen for this invite (or already on the row, for a
+ * resend) — the email lists only those, rather than always promising
+ * full access. */
 export async function sendOrganiserInviteEmail(
   member: { email: string; firstName: string | null },
   token: string,
+  permissions: OrganiserPermissions,
 ): Promise<void> {
   const brand = await getEmailBrand();
   const copy = await resolveEmailCopy("organiserInvite", {
     firstName: greetingName(member.firstName),
     siteName: brand.siteName,
     expiresInDays: String(ORGANISER_INVITE_EXPIRY_DAYS),
+    permissionsList: describeOrganiserPermissions(permissions),
   });
   await sendEmail({
     to: member.email,

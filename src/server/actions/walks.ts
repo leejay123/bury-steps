@@ -338,8 +338,16 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
       if (current.cancelledAt) {
         throw new LimitReachedError("This walk is already cancelled.");
       }
-      if (walkStatus(current) === "completed") {
+      // Cancelled means it never happened — no longer true once people are
+      // actually out on it. End it early instead once it's under way.
+      const status = walkStatus(current);
+      if (status === "completed") {
         throw new LimitReachedError("This walk has already finished, so it can't be cancelled.");
+      }
+      if (status === "in-progress") {
+        throw new LimitReachedError(
+          "This walk has already started, so it can't be cancelled. End it early instead if it needs to stop.",
+        );
       }
 
       try {

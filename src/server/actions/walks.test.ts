@@ -247,6 +247,23 @@ describe("cancelWalk", () => {
     });
   });
 
+  it("refuses to cancel a walk that has already started", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({
+      id: "walk-1",
+      token: "tok-1",
+      slug: null,
+      cancelledAt: null,
+      startsAt: new Date(),
+      durationMins: 60,
+    });
+    walkStatus.mockReturnValueOnce("in-progress");
+    const result = await cancelWalk(null, form({ walkId: "walk-1" }));
+    expect(result).toEqual({
+      ok: false,
+      error: "This walk has already started, so it can't be cancelled. End it early instead if it needs to stop.",
+    });
+  });
+
   it("cancels the walk with the given reason", async () => {
     prismaMock.walk.findUnique.mockResolvedValueOnce({
       id: "walk-1",

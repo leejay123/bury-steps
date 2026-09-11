@@ -79,3 +79,29 @@ export function pickOrganiserPermissions(user: OrganiserPermissions): OrganiserP
     permSettings: user.permSettings,
   };
 }
+
+/**
+ * A complete sentence describing what's actually granted — used to fill
+ * the `{permissionsList}` placeholder in the organiser-invite email (see
+ * sendOrganiserInviteEmail), so the email never overpromises full access
+ * for an invite that only switched a couple of things on. Same wording as
+ * the invite accept page (src/app/organiser-invite/[token]/page.tsx) for
+ * the "nothing granted" case; the granted case is prose instead of that
+ * page's bullet list, since this is one paragraph in an email.
+ */
+export function describeOrganiserPermissions(perms: OrganiserPermissions): string {
+  const granted = ORGANISER_PERMISSION_OPTIONS.filter((option) => perms[option.name]);
+  if (granted.length === 0) {
+    return "No specific organiser tools were switched on for this invite — check with whoever invited you once you've accepted.";
+  }
+  if (granted.length === ORGANISER_PERMISSION_OPTIONS.length) {
+    return "You'll be able to create and edit walks, manage members, and see who's coming on each walk.";
+  }
+  const clauses = granted.map((option) => {
+    const hint = option.hint.replace(/\.$/, "");
+    return hint.charAt(0).toLowerCase() + hint.slice(1);
+  });
+  const joined =
+    clauses.length === 1 ? clauses[0] : `${clauses.slice(0, -1).join("; ")}; and ${clauses[clauses.length - 1]}`;
+  return `You'll be able to ${joined}.`;
+}

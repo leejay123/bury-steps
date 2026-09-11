@@ -111,10 +111,15 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
       { token: "firstName", description: "Their first name (\"there\" if not set)" },
       { token: "siteName", description: "Your site's name" },
       { token: "expiresInDays", description: "How many days the invite link stays valid" },
+      {
+        token: "permissionsList",
+        description:
+          "What this invite actually grants (only the areas switched on for them — see the permissions drawer when you invite or promote someone)",
+      },
     ],
     defaultSubject: "You've been invited to become an organiser of {siteName}",
     defaultBody:
-      "Hi {firstName}, an organiser has invited you to become an organiser on {siteName}. Accept below to get organiser access — you can create and edit walks, manage members, and see who's coming on each walk.\n\nThis invite expires in {expiresInDays} days. Didn't expect this? You can safely ignore it — nothing changes unless you accept.",
+      "Hi {firstName}, an organiser has invited you to become an organiser on {siteName}. Accept below to get organiser access. {permissionsList}\n\nThis invite expires in {expiresInDays} days. Didn't expect this? You can safely ignore it — nothing changes unless you accept.",
   },
   {
     key: "contactReceived",

@@ -131,20 +131,23 @@ export default async function WalkDetailPage({
       ) : null}
 
       <Card>
-        <CardHeader className="flex flex-row items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-col gap-1.5">
-            <CardTitle className="text-2xl">{walk.title}</CardTitle>
-            <CardDescription>
-              {formatWalkDate(walk.startsAt)}
-              {meeting ? ` · ${meeting}` : ""} · {walk.durationMins} min
-            </CardDescription>
+        <CardHeader className="flex flex-col gap-1.5">
+          <CardTitle className="text-2xl">{walk.title}</CardTitle>
+          <CardDescription>
+            {formatWalkDate(walk.startsAt)}
+            {meeting ? ` · ${meeting}` : ""} · {walk.durationMins} min
+          </CardDescription>
+          {/* Below the schedule line, not beside the title — the countdown
+              ("In progress · 23 min left") reads as a comment on how much
+              of that length is left, not as a label for the walk itself. */}
+          <div>
+            <WalkStatusBadge
+              cancelledAt={walk.cancelledAt?.toISOString() ?? null}
+              durationMins={walk.durationMins}
+              endedAt={walk.endedAt?.toISOString() ?? null}
+              startsAt={walk.startsAt.toISOString()}
+            />
           </div>
-          <WalkStatusBadge
-            cancelledAt={walk.cancelledAt?.toISOString() ?? null}
-            durationMins={walk.durationMins}
-            endedAt={walk.endedAt?.toISOString() ?? null}
-            startsAt={walk.startsAt.toISOString()}
-          />
         </CardHeader>
         {walk.description || (walk.cancelledAt && walk.cancelledReason) ? (
           <CardContent className="flex flex-col gap-2">
@@ -181,15 +184,13 @@ export default async function WalkDetailPage({
         ) : null}
         <DuplicateWalkButton walkId={walk.id} />
         {/*
-          A completed walk already happened — there's nothing left to
-          cancel or edit. Cancel only ever applied to a walk that hadn't
-          happened yet, and Edit for a completed walk would silently rewrite
-          history rather than change a plan. Both actions stay hidden the
-          moment the clock-in window has fully closed; Delete and the CSV
-          export remain, since a completed walk is still a real record that
-          might need correcting or removing.
+          Cancel only ever applies to a walk that hasn't started yet —
+          "cancelled" means it never happened, which stops being true the
+          moment people are out on it. Once it's in progress, End walk is
+          the equivalent action instead (marks it finished early rather
+          than un-happening it); once it's completed, neither applies.
         */}
-        {!walk.cancelledAt && !isCompleted && (
+        {!walk.cancelledAt && (status === "upcoming" || status === "starting-soon") && (
           <CancelWalkButton walkId={walk.id} attendanceCount={stillIn.length} />
         )}
         {/* Only makes sense while the walk is actually under way — before
@@ -197,6 +198,13 @@ export default async function WalkDetailPage({
             completed (naturally or via this same button) there's nothing
             left to end. */}
         {status === "in-progress" && <EndWalkButton walkId={walk.id} />}
+        {/*
+          Edit for a completed walk would silently rewrite history rather
+          than change a plan, so it stays hidden the moment the clock-in
+          window has fully closed; Delete and the CSV export remain below,
+          since a completed walk is still a real record that might need
+          correcting or removing.
+        */}
         {!isCompleted && (
           <EditWalkButton
             cancelled={Boolean(walk.cancelledAt)}

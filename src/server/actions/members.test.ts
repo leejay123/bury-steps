@@ -729,7 +729,12 @@ describe("setMemberRole — organiser invite required", () => {
         permSettings: false,
       },
     });
-    expect(sendOrganiserInviteEmail).toHaveBeenCalledWith(target, "invite-token-123");
+    expect(sendOrganiserInviteEmail).toHaveBeenCalledWith(target, "invite-token-123", {
+      permWalks: false,
+      permMembers: false,
+      permReportsMessages: false,
+      permSettings: false,
+    });
     expect(transaction).not.toHaveBeenCalled();
     expect(result).toEqual({
       ok: true,
@@ -786,6 +791,10 @@ describe("resendOrganiserInvite", () => {
       lastName: "Bloggs",
       email: "jo@example.com",
       organiserInviteToken: "old-token",
+      permWalks: true,
+      permMembers: false,
+      permReportsMessages: true,
+      permSettings: false,
     };
     prismaMock.user.findUnique.mockResolvedValueOnce(target);
     prismaMock.user.update.mockResolvedValueOnce({});
@@ -798,7 +807,14 @@ describe("resendOrganiserInvite", () => {
         data: expect.objectContaining({ organiserInviteToken: "invite-token-123" }),
       }),
     );
-    expect(sendOrganiserInviteEmail).toHaveBeenCalledWith(target, "invite-token-123");
+    // No permissions were passed for a resend — the email reflects whatever
+    // is already on the row instead (see sendOrganiserInvite).
+    expect(sendOrganiserInviteEmail).toHaveBeenCalledWith(target, "invite-token-123", {
+      permWalks: true,
+      permMembers: false,
+      permReportsMessages: true,
+      permSettings: false,
+    });
     expect(result.ok).toBe(true);
   });
 });

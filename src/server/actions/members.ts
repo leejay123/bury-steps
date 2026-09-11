@@ -456,7 +456,7 @@ async function sendOrganiserInvite(
     email: string;
     firstName: string | null;
     lastName: string | null;
-  },
+  } & OrganiserPermissions,
   permissions?: OrganiserPermissions,
 ): Promise<ActionResult> {
   const token = makeOrganiserInviteToken();
@@ -478,10 +478,15 @@ async function sendOrganiserInvite(
 
   // Best-effort — the invite is already recorded and visible in the members
   // list either way (as "Invited"), so a failed send here doesn't need to
-  // block the admin; they can hit Resend.
-  await sendOrganiserInviteEmail(target, token).catch((err) => {
-    console.error("setMemberRole: failed to send organiser invite email", err);
-  });
+  // block the admin; they can hit Resend. The email lists what's actually
+  // granted — the just-chosen permissions on the initial invite (`target`
+  // itself still has the pre-update values at this point), or whatever's
+  // already on the row for a resend.
+  await sendOrganiserInviteEmail(target, token, permissions ?? pickOrganiserPermissions(target)).catch(
+    (err) => {
+      console.error("setMemberRole: failed to send organiser invite email", err);
+    },
+  );
 
   revalidatePath("/admin/members");
   revalidatePath(`/admin/members/${target.id}`);
