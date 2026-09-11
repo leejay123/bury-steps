@@ -1,13 +1,16 @@
 import Link from "next/link";
+import { Crown } from "lucide-react";
 import { notFound } from "next/navigation";
 import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getMemberHistory } from "@/server/actions";
-import { formatDate, formatMembershipAge } from "@/lib/dates";
+import { formatDate, formatMembershipAge, formatRelativeDays } from "@/lib/dates";
+import { initials } from "@/lib/names";
 import { walkStatus } from "@/lib/walk-window";
 import { getOwnerId } from "@/lib/site-owner";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { AttendanceHistory } from "@/components/attendance-history";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeleteMemberButton } from "../delete-member-button";
@@ -50,28 +53,36 @@ export default async function MemberDetailPage({
 
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 flex-col gap-1.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <CardTitle className="text-2xl">{member.name}</CardTitle>
-              {member.pendingInvite ? (
-                // Plain text, not a Badge — an outline badge next to the
-                // outline Resend/Cancel buttons below read as a third
-                // (non-working) button rather than a status label.
-                <span className="text-sm font-medium text-muted-foreground">
-                  {member.pendingInvite.expired ? "Invite expired" : "Invited"}
+          <div className="flex min-w-0 gap-3">
+            <Avatar className="size-12 shrink-0">
+              <AvatarFallback>{initials(member.name)}</AvatarFallback>
+            </Avatar>
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <CardTitle className="text-2xl">{member.name}</CardTitle>
+                {member.pendingInvite ? (
+                  // Plain text, not a Badge — an outline badge next to the
+                  // outline Resend/Cancel buttons below read as a third
+                  // (non-working) button rather than a status label.
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {member.pendingInvite.expired
+                      ? `Invite expired ${formatRelativeDays(new Date(member.pendingInvite.expiresAt))}`
+                      : `Invited ${formatRelativeDays(new Date(member.pendingInvite.sentAt))}`}
+                  </span>
+                ) : (
+                  <Badge className="h-7 border-border px-2" variant="secondary">
+                    {member.isOwner ? <Crown /> : null}
+                    {member.isOwner ? "Owner" : member.role === "ADMIN" ? "Organiser" : "Member"}
+                  </Badge>
+                )}
+              </div>
+              <CardDescription className="flex flex-col gap-1">
+                <span className="wrap-break-word">{member.email || "No email"}</span>
+                <span>
+                  Joined {formatDate(joinedAt)} · member for {formatMembershipAge(joinedAt)}
                 </span>
-              ) : (
-                <Badge className="h-7 border-border px-2" variant="secondary">
-                  {member.isOwner ? "Owner" : member.role === "ADMIN" ? "Organiser" : "Member"}
-                </Badge>
-              )}
+              </CardDescription>
             </div>
-            <CardDescription className="flex flex-col gap-1">
-              <span className="wrap-break-word">{member.email || "No email"}</span>
-              <span>
-                Joined {formatDate(joinedAt)} · member for {formatMembershipAge(joinedAt)}
-              </span>
-            </CardDescription>
           </div>
           {/* Never wraps to a second line, however many buttons apply (the
               owner viewing an organiser can have up to five here) — instead

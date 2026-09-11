@@ -6,6 +6,7 @@ import { requirePermission, displayName } from "@/lib/auth";
 import { formatWalkDate, utcToLondonWallClock } from "@/lib/dates";
 import { canOrganiserAddAttendance, canOrganiserEditJourney, canAddWalkToCalendar, isWalkScheduleLocked, walkStatus } from "@/lib/walk-window";
 import { appUrl } from "@/lib/urls";
+import { initials } from "@/lib/names";
 import { ShareLink } from "@/components/share-link";
 import { EmptyState } from "@/components/empty-state";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
@@ -29,15 +30,6 @@ import { Separator } from "@/components/ui/separator";
 import { WalkAttendanceTable, type WalkAttendanceRow } from "./walk-attendance";
 
 export const dynamic = "force-dynamic";
-
-function initials(name: string) {
-  return name
-    .split(/[\s@.]+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase() ?? "")
-    .join("");
-}
 
 export default async function WalkDetailPage({
   params,

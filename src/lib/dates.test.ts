@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatMembershipAge,
+  formatRelativeDays,
   formatWalkLength,
   londonMonthKey,
   londonWallClockToUtc,
@@ -105,6 +106,27 @@ describe("formatMembershipAge", () => {
     const joined = new Date("2026-01-01T12:00:00.000Z");
     const now = new Date("2026-02-01T12:00:00.000Z");
     expect(formatMembershipAge(joined, now)).toBe("1 month");
+  });
+});
+
+describe("formatRelativeDays", () => {
+  const now = new Date("2026-06-15T12:00:00.000Z");
+
+  it("returns 'today' for the same day", () => {
+    expect(formatRelativeDays(new Date("2026-06-15T09:00:00.000Z"), now)).toBe("today");
+  });
+
+  it("returns 'tomorrow' and 'yesterday' for adjacent days", () => {
+    expect(formatRelativeDays(new Date("2026-06-16T12:00:00.000Z"), now)).toBe("tomorrow");
+    expect(formatRelativeDays(new Date("2026-06-14T12:00:00.000Z"), now)).toBe("yesterday");
+  });
+
+  it("counts whole days into the future", () => {
+    expect(formatRelativeDays(new Date("2026-06-18T12:00:00.000Z"), now)).toBe("in 3 days");
+  });
+
+  it("counts whole days into the past", () => {
+    expect(formatRelativeDays(new Date("2026-06-10T12:00:00.000Z"), now)).toBe("5 days ago");
   });
 });
 

@@ -777,6 +777,7 @@ describe("searchMembers", () => {
         walkCount: 0,
         pendingInvite: null,
         isOwner: false,
+        needsAttention: false,
         permissions: {
           permWalks: true,
           permMembers: true,
@@ -848,6 +849,108 @@ describe("searchMembers", () => {
 
     const call = prismaMock.user.findMany.mock.calls[0][0];
     expect(call.where.AND[0].OR).not.toEqual(expect.arrayContaining([{ role: "ADMIN" }]));
+  });
+
+  it.each([
+    ["newest", [{ createdAt: "desc" }, { id: "desc" }]],
+    ["oldest", [{ createdAt: "asc" }, { id: "asc" }]],
+    ["name", [{ firstName: "asc" }, { lastName: "asc" }, { id: "asc" }]],
+    ["clockins", [{ attendances: { _count: "desc" } }, { id: "asc" }]],
+  ] as const)("orders by %s", async (sort, orderBy) => {
+    prismaMock.user.findMany.mockResolvedValueOnce([]);
+    prismaMock.user.count.mockResolvedValueOnce(0);
+
+    await searchMembers({ sort });
+
+    expect(prismaMock.user.findMany).toHaveBeenCalledWith(expect.objectContaining({ orderBy }));
+  });
+
+  it("defaults to the oldest-first order when no sort is given", async () => {
+    prismaMock.user.findMany.mockResolvedValueOnce([]);
+    prismaMock.user.count.mockResolvedValueOnce(0);
+
+    await searchMembers({});
+
+    expect(prismaMock.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
+    );
+  });
+
+  it("adds the needs-attention condition when asked, alongside any search text", async () => {
+    prismaMock.user.findMany.mockResolvedValueOnce([]);
+    prismaMock.user.count.mockResolvedValueOnce(0);
+
+    await searchMembers({ needsAttention: true, query: "jo" });
+
+    const call = prismaMock.user.findMany.mock.calls[0][0];
+    expect(call.where.AND).toHaveLength(2);
+    expect(call.where.AND[1]).toEqual({
+      OR: [
+        { organiserInviteExpiresAt: { lt: expect.any(Date) } },
+        { role: "MEMBER", organiserInviteToken: null, attendances: { none: {} } },
+      ],
+    });
+  });
+
+  it("leaves the where clause alone when needsAttention is off", async () => {
+    prismaMock.user.findMany.mockResolvedValueOnce([]);
+    prismaMock.user.count.mockResolvedValueOnce(0);
+
+    await searchMembers({ needsAttention: false });
+
+    expect(prismaMock.user.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: {} }));
+  });
+
+  it("flags a member who has never clocked in and has no invite in flight", async () => {
+    prismaMock.user.findMany.mockResolvedValueOnce([
+      member({ _count: { attendances: 0, walksCreated: 0 } }),
+    ]);
+    prismaMock.user.count.mockResolvedValueOnce(1);
+
+    const result = await searchMembers({});
+
+    expect(result.rows[0].needsAttention).toBe(true);
+  });
+
+  it("does not flag a member with no clock-ins while an invite is still pending", async () => {
+    prismaMock.user.findMany.mockResolvedValueOnce([
+      member({
+        _count: { attendances: 0, walksCreated: 0 },
+        organiserInviteToken: "tok",
+        organiserInviteSentAt: new Date("2026-01-01T00:00:00Z"),
+        organiserInviteExpiresAt: new Date("2099-01-01T00:00:00Z"),
+      }),
+    ]);
+    prismaMock.user.count.mockResolvedValueOnce(1);
+
+    const result = await searchMembers({});
+
+    expect(result.rows[0].needsAttention).toBe(false);
+  });
+
+  it("flags an expired organiser invite even for an organiser with clock-ins", async () => {
+    prismaMock.user.findMany.mockResolvedValueOnce([
+      member({
+        role: "ADMIN",
+        organiserInviteToken: null,
+        organiserInviteSentAt: new Date("2026-01-01T00:00:00Z"),
+        organiserInviteExpiresAt: new Date("2026-01-08T00:00:00Z"),
+      }),
+    ]);
+    prismaMock.user.count.mockResolvedValueOnce(1);
+
+    const result = await searchMembers({});
+
+    expect(result.rows[0].needsAttention).toBe(true);
+  });
+
+  it("does not flag an organiser with clock-ins and no invite history", async () => {
+    prismaMock.user.findMany.mockResolvedValueOnce([member({ role: "ADMIN" })]);
+    prismaMock.user.count.mockResolvedValueOnce(1);
+
+    const result = await searchMembers({});
+
+    expect(result.rows[0].needsAttention).toBe(false);
   });
 });
 

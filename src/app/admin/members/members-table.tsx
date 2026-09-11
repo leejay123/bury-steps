@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Search } from "lucide-react";
-import { formatDate, formatMembershipAge } from "@/lib/dates";
+import { AlertCircle, ChevronRight, Crown, Search } from "lucide-react";
+import { formatDate, formatMembershipAge, formatRelativeDays } from "@/lib/dates";
 import { cn } from "@/lib/utils";
+import { initials } from "@/lib/names";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
-import { searchMembers, type MemberRoleFilter, type MemberRow } from "@/server/actions";
+import { searchMembers, type MemberRoleFilter, type MemberRow, type MemberSort } from "@/server/actions";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { DeleteMemberButton } from "./delete-member-button";
 import { EditPermissionsButton } from "./edit-permissions-button";
@@ -25,7 +26,9 @@ import {
   dataListItemStackClassName,
 } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import {
@@ -68,6 +71,8 @@ export function MembersTable({
   const router = useRouter();
   const listRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<MemberSort>("oldest");
+  const [needsAttention, setNeedsAttention] = useState(false);
   const [page, setPage] = useState(1);
   const [rows, setRows] = useState(initialRows);
   const [total, setTotal] = useState(initialTotal);
@@ -95,9 +100,13 @@ export function MembersTable({
   const skipNextFetchRef = useRef(true);
 
   // A full navigation changes roleFilter/initialRows — drop back to page 1,
-  // no search, and the fresh server-rendered rows for that role.
+  // no search, the default sort, no attention filter, and the fresh
+  // server-rendered rows for that role (which the server always fetches
+  // with that same default view).
   useResetOnChange([roleFilter], () => {
     setQuery("");
+    setSort("oldest");
+    setNeedsAttention(false);
     setPage(1);
     setRows(initialRows);
     setTotal(initialTotal);
@@ -112,7 +121,7 @@ export function MembersTable({
     const handle = setTimeout(
       () => {
         startTransition(async () => {
-          const result = await searchMembers({ page, query, role: roleFilter });
+          const result = await searchMembers({ needsAttention, page, query, role: roleFilter, sort });
           setRows(result.rows.map((row) => ({ ...row, isYou: row.id === viewerId })));
           setTotal(result.total);
         });
@@ -120,10 +129,20 @@ export function MembersTable({
       query === "" && page === 1 ? 0 : 300,
     );
     return () => clearTimeout(handle);
-  }, [query, page, roleFilter, viewerId, refreshNonce]);
+  }, [query, sort, needsAttention, page, roleFilter, viewerId, refreshNonce]);
 
   function handleQueryChange(next: string) {
     setQuery(next);
+    setPage(1);
+  }
+
+  function handleSortChange(next: MemberSort) {
+    setSort(next);
+    setPage(1);
+  }
+
+  function toggleNeedsAttention() {
+    setNeedsAttention((value) => !value);
     setPage(1);
   }
 
@@ -131,8 +150,8 @@ export function MembersTable({
 
   return (
     <div className="flex flex-col gap-4" ref={listRef}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <InputGroup className="w-full min-w-0 sm:flex-1">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+        <InputGroup className="w-full min-w-0 sm:min-w-56 sm:flex-1">
           <InputGroupInput
             aria-label="Search members"
             onChange={(event) => handleQueryChange(event.target.value)}
@@ -154,7 +173,7 @@ export function MembersTable({
             }}
             value={roleFilter}
           >
-            <SelectTrigger className="w-full sm:w-[11rem]" id="member-role-filter">
+            <SelectTrigger className="w-full sm:w-44" id="member-role-filter">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -164,14 +183,49 @@ export function MembersTable({
             </SelectContent>
           </Select>
         </div>
+        <div className="flex shrink-0 flex-col gap-1.5">
+          <Label htmlFor="member-sort">Sort by</Label>
+          <Select onValueChange={(value) => handleSortChange(value as MemberSort)} value={sort}>
+            <SelectTrigger className="w-full sm:w-44" id="member-sort">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="oldest">Oldest first</SelectItem>
+              <SelectItem value="newest">Newest first</SelectItem>
+              <SelectItem value="name">Name A–Z</SelectItem>
+              <SelectItem value="clockins">Most clock-ins</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {/* Surfaces the two things on this list most worth a look: a member
+            who's never clocked in, and an organiser invite that's expired —
+            see MemberRow.needsAttention. Rows matching either are also
+            marked individually (see the AlertCircle below) even with this
+            off, so switching it on is only for isolating them. */}
+        <Button
+          aria-pressed={needsAttention}
+          className={cn(
+            "shrink-0 gap-1.5",
+            needsAttention &&
+              "border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 hover:text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200 dark:hover:bg-amber-900",
+          )}
+          onClick={toggleNeedsAttention}
+          type="button"
+          variant="outline"
+        >
+          <AlertCircle />
+          Needs attention
+        </Button>
       </div>
 
       {rows.length === 0 && !isPending ? (
         <EmptyState
           description={
-            total === 0 && !query
-              ? "When someone signs up, they will show here."
-              : "Try a different name, email, or role."
+            total === 0 && needsAttention && !query
+              ? "Nobody needs attention right now."
+              : total === 0 && !query
+                ? "When someone signs up, they will show here."
+                : "Try a different name, email, or role."
           }
           icon={Search}
           title="No matching members"
@@ -180,8 +234,14 @@ export function MembersTable({
         <>
           <DataList className={cn(isPending && "opacity-60")}>
             {rows.map((member) => (
-              <DataListItem className={cn("relative", dataListItemStackClassName)} key={member.id}>
+              <DataListItem
+                className={cn("relative", member.isYou && "bg-muted/40", dataListItemStackClassName)}
+                key={member.id}
+              >
                 <DataListItemMain>
+                  <Avatar className="size-9 shrink-0">
+                    <AvatarFallback className="text-xs">{initials(member.name)}</AvatarFallback>
+                  </Avatar>
                   <DataListBody>
                     <p className="font-medium">
                       <Link className="after:absolute after:inset-0" href={`/admin/members/${member.id}`}>
@@ -189,6 +249,12 @@ export function MembersTable({
                       </Link>
                       {member.isYou ? (
                         <span className="ml-2 text-xs font-normal text-muted-foreground">You</span>
+                      ) : null}
+                      {member.needsAttention && !member.pendingInvite ? (
+                        <AlertCircle
+                          aria-label="Never clocked in"
+                          className="ml-1.5 inline size-3.5 align-text-bottom text-amber-600 dark:text-amber-400"
+                        />
                       ) : null}
                     </p>
                     <p className="text-sm text-muted-foreground wrap-break-word">
@@ -218,10 +284,13 @@ export function MembersTable({
                     // read as a third (non-working) button rather than a
                     // status label.
                     <span className="flex h-7 items-center text-xs font-medium text-muted-foreground">
-                      {member.pendingInvite.expired ? "Invite expired" : "Invited"}
+                      {member.pendingInvite.expired
+                        ? `Invite expired ${formatRelativeDays(new Date(member.pendingInvite.expiresAt))}`
+                        : `Invited ${formatRelativeDays(new Date(member.pendingInvite.sentAt))}`}
                     </span>
                   ) : (
                     <Badge className="h-7 border-border px-2" variant="secondary">
+                      {member.isOwner ? <Crown /> : null}
                       {member.isOwner ? "Owner" : member.role === "ADMIN" ? "Organiser" : "Member"}
                     </Badge>
                   )}

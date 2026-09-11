@@ -13,10 +13,17 @@ export function MembersSection() {
             Open <Link href="/admin/members">Members</Link> to see everyone who has signed up:
             name, email, whether they are an organiser or a member, when they joined, how long
             they have been a member, and how many clock-ins they have. The joined date is the day
-            they first signed in. Filter by role (All, Organisers, or Members), and search by
-            name, email, or role. Search stays on this page only — it is not put in the address
-            bar. If there are more than 20 people, Previous and Next at the
-            bottom of the list take you through them.
+            they first signed in. Filter by role (All, Organisers, or Members), sort the list
+            (newest or oldest first, name, or most clock-ins), and search by name, email, or
+            role. Search stays on this page only — it is not put in the address bar. If there
+            are more than 20 people, Previous and Next at the bottom of the list take you through
+            them.
+          </p>
+          <p>
+            <strong>Needs attention</strong> narrows the list to the two things most worth a
+            look: a member who has never clocked in, and an organiser invite that has expired.
+            Either is also marked with a small warning icon next to their name even with the
+            filter off, so they still stand out while browsing the full list.
           </p>
           <p className="font-medium text-foreground">Walk history</p>
           <p>

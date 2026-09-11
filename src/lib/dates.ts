@@ -256,6 +256,20 @@ export function formatWalkLength(mins: number): string {
   return `${hourPart} ${minPart}`;
 }
 
+/** Day-granularity relative phrase: "today", "yesterday", "3 days ago", "in 2 days". */
+export function formatRelativeDays(at: DateInput, now: DateInput = new Date()): string {
+  const from = londonYmd(now);
+  const to = londonYmd(at);
+  const fromUtc = Date.UTC(from.year, from.month - 1, from.day);
+  const toUtc = Date.UTC(to.year, to.month - 1, to.day);
+  const diffDays = Math.round((toUtc - fromUtc) / 86_400_000);
+
+  if (diffDays === 0) return "today";
+  if (diffDays === 1) return "tomorrow";
+  if (diffDays === -1) return "yesterday";
+  return diffDays > 0 ? `in ${diffDays} days` : `${Math.abs(diffDays)} days ago`;
+}
+
 export function formatDateTime(at: DateInput): string {
   const date = toDate(at);
   if (!isValidDate(date)) return "";

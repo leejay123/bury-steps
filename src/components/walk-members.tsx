@@ -5,15 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DataList, DataListItem } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
 import { usePagedList } from "@/hooks/use-paged-list";
-
-function initials(name: string) {
-  return name
-    .split(/[\s@.]+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
-}
+import { initials } from "@/lib/names";
 
 export function WalkMembers({
   completed = false,

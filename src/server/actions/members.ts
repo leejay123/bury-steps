@@ -58,9 +58,27 @@ export type MemberRow = {
    * only they can promote/demote an organiser, edit an organiser's
    * permissions, or remove an organiser's account. */
   isOwner: boolean;
+  /** A plain member who has never clocked in, or an organiser invite that's
+   * expired — the two things on this list most worth an organiser's notice.
+   * Powers the "Needs attention" filter, and a small marker shown on the row
+   * regardless of whether that filter is on. */
+  needsAttention: boolean;
 };
 
 export type MemberRoleFilter = "all" | "ADMIN" | "MEMBER";
+
+export type MemberSort = "oldest" | "newest" | "name" | "clockins";
+
+/** A plain member with no clock-ins yet and no invite in flight, or an
+ * organiser invite that's expired — see MemberRow.needsAttention. */
+function attentionWhere(now: Date): Prisma.UserWhereInput {
+  return {
+    OR: [
+      { organiserInviteExpiresAt: { lt: now } },
+      { role: "MEMBER", organiserInviteToken: null, attendances: { none: {} } },
+    ],
+  };
+}
 
 /**
  * Server-side search + pagination for the admin Members page. Matching and
@@ -74,10 +92,15 @@ export async function searchMembers({
   page = 1,
   query = "",
   role = "all",
+  sort = "oldest",
+  needsAttention = false,
 }: {
   page?: number;
   query?: string;
   role?: MemberRoleFilter;
+  sort?: MemberSort;
+  /** Only members needing a look — see MemberRow.needsAttention. */
+  needsAttention?: boolean;
 }): Promise<{ rows: MemberRow[]; total: number }> {
   const admin = await requireAdmin();
   if (!admin.permMembers) return { rows: [], total: 0 };
@@ -106,10 +129,26 @@ export async function searchMembers({
         : textMatch;
   }
 
+  const now = new Date();
+  const andConditions: Prisma.UserWhereInput[] = [];
+  if (searchWhere) andConditions.push(searchWhere);
+  if (needsAttention) andConditions.push(attentionWhere(now));
+
   const where: Prisma.UserWhereInput = {
     ...(role !== "all" ? { role } : {}),
-    ...(searchWhere ? { AND: [searchWhere] } : {}),
+    ...(andConditions.length > 0 ? { AND: andConditions } : {}),
   };
+
+  const orderBy: Prisma.UserOrderByWithRelationInput[] =
+    sort === "newest"
+      ? [{ createdAt: "desc" }, { id: "desc" }]
+      : sort === "name"
+        ? [{ firstName: "asc" }, { lastName: "asc" }, { id: "asc" }]
+        : sort === "clockins"
+          ? [{ attendances: { _count: "desc" } }, { id: "asc" }]
+          : // "oldest" (default) — id as a tiebreaker keeps pages stable even
+            // when rows share a createdAt millisecond.
+            [{ createdAt: "asc" }, { id: "asc" }];
 
   const skip = (Math.max(1, page) - 1) * LIST_PAGE_SIZE;
 
@@ -117,9 +156,7 @@ export async function searchMembers({
     prisma.user.count({ where }),
     prisma.user.findMany({
       where,
-      // id as a tiebreaker keeps pages stable even when rows share a
-      // createdAt millisecond.
-      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      orderBy,
       skip,
       take: LIST_PAGE_SIZE,
       select: {
@@ -129,6 +166,7 @@ export async function searchMembers({
         email: true,
         role: true,
         createdAt: true,
+        organiserInviteToken: true,
         organiserInviteSentAt: true,
         organiserInviteExpiresAt: true,
         permWalks: true,
@@ -148,27 +186,36 @@ export async function searchMembers({
     getOwnerId(),
   ]);
 
-  const now = Date.now();
+  const nowMs = now.getTime();
   return {
     total,
-    rows: members.map((member) => ({
-      id: member.id,
-      name: displayName(member),
-      email: member.email,
-      role: member.role,
-      createdAt: member.createdAt.toISOString(),
-      attendanceCount: member._count.attendances,
-      walkCount: member._count.walksCreated,
-      pendingInvite: member.organiserInviteSentAt
-        ? {
-            sentAt: member.organiserInviteSentAt.toISOString(),
-            expiresAt: (member.organiserInviteExpiresAt ?? member.organiserInviteSentAt).toISOString(),
-            expired: (member.organiserInviteExpiresAt?.getTime() ?? 0) < now,
-          }
-        : null,
-      permissions: pickOrganiserPermissions(member),
-      isOwner: member.id === ownerId,
-    })),
+    rows: members.map((member) => {
+      const inviteExpiresAtMs = member.organiserInviteExpiresAt?.getTime() ?? 0;
+      const inviteExpired = member.organiserInviteSentAt ? inviteExpiresAtMs < nowMs : false;
+      return {
+        id: member.id,
+        name: displayName(member),
+        email: member.email,
+        role: member.role,
+        createdAt: member.createdAt.toISOString(),
+        attendanceCount: member._count.attendances,
+        walkCount: member._count.walksCreated,
+        pendingInvite: member.organiserInviteSentAt
+          ? {
+              sentAt: member.organiserInviteSentAt.toISOString(),
+              expiresAt: (member.organiserInviteExpiresAt ?? member.organiserInviteSentAt).toISOString(),
+              expired: inviteExpired,
+            }
+          : null,
+        permissions: pickOrganiserPermissions(member),
+        isOwner: member.id === ownerId,
+        needsAttention:
+          inviteExpired ||
+          (member.role === "MEMBER" &&
+            !member.organiserInviteToken &&
+            member._count.attendances === 0),
+      };
+    }),
   };
 }
 
