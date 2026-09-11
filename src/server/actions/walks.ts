@@ -15,7 +15,12 @@ import {
   type PlaceHit,
 } from "@/lib/geocode";
 import { normalizeWhat3Words } from "@/lib/what3words";
-import { isWalkScheduleLocked, isWalkStartInThePast, walkStatus } from "@/lib/walk-window";
+import {
+  END_WALK_MINUTES_AGO_OPTIONS,
+  isWalkScheduleLocked,
+  isWalkStartInThePast,
+  walkStatus,
+} from "@/lib/walk-window";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { allocateWalkSlug, walkShareUrl } from "@/lib/walk-slug";
 import { appUrl } from "@/lib/urls";
@@ -427,10 +432,6 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
 
   return { ok: true, message: "Walk reopened. Members can clock in again if the window is still open." };
 }
-
-/** How long ago an organiser can say a walk actually finished, when correcting
- * the record after the fact rather than ending it right now — see endWalkEarly. */
-export const END_WALK_MINUTES_AGO_OPTIONS = [0, 5, 10, 15, 30, 45, 60] as const;
 
 /**
  * Ends an in-progress walk before its published length is up — right now,

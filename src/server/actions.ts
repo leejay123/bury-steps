@@ -17,8 +17,11 @@ export {
   deleteWalk,
   setWalkRetentionLocked,
   endWalkEarly,
-  END_WALK_MINUTES_AGO_OPTIONS,
 } from "./actions/walks";
+// Not a server action — a plain constant used by both endWalkEarly and the
+// End walk dialog. Lives in @/lib/walk-window (see there for why), not in
+// the "use server" file, which may only export async functions.
+export { END_WALK_MINUTES_AGO_OPTIONS } from "@/lib/walk-window";
 
 export { createJourneyEvent, updateJourneyEvent, deleteJourneyEvent } from "./actions/journey";
 

@@ -4,6 +4,13 @@ export const OPENS_BEFORE_MS = 60 * 60 * 1000;
 /** Longest walk duration allowed by the schema (minutes). Used for list lookbacks. */
 export const MAX_WALK_DURATION_MINS = 600;
 
+/** How long ago an organiser can say a walk actually finished, when correcting
+ * the record after the fact rather than ending it right now — see
+ * endWalkEarly in src/server/actions/walks.ts. Kept in this plain module
+ * rather than that "use server" file, which may only export async
+ * functions. */
+export const END_WALK_MINUTES_AGO_OPTIONS = [0, 5, 10, 15, 30, 45, 60] as const;
+
 /**
  * Earliest `startsAt` that might still have an open clock-in window.
  * Shorter than this and the walk is safely in History.
