@@ -137,7 +137,7 @@ export default async function WalkLinkPage({
   const closedNoClockIn = Boolean(user) && !alreadyIn && windowStateNow === "closed";
   const opensAt = walkOpensAt(walk.startsAt);
   const meeting = meetingPointLabel(walk.location, walk.postcode);
-  const walksHref = user?.role === "ADMIN" ? "/admin" : "/walks";
+  const walksHref = user?.role === "ADMIN" && user.permWalks ? "/admin" : "/walks";
   const journeyEvents = walk.journeyEvents.map((event) => ({
     id: event.id,
     title: event.title,

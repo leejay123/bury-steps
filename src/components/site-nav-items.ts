@@ -8,16 +8,23 @@ import { FULL_ORGANISER_PERMISSIONS, type OrganiserPermissions } from "@/lib/org
  * (and this file's own tests) working unchanged. The Guide is always shown
  * to any organiser regardless — it's just documentation, nothing to gate.
  *
- * This only decides what's *shown* — it is not yet enforced on the pages
- * themselves, so a limited organiser who already knows a hidden URL can
- * still open it today. See setMemberRole's permMembers check for the one
- * capability that is actually enforced so far.
+ * Lacking the Walks permission drops the *admin* walk tools, not walks
+ * themselves — every signed-in person, organiser or not, can still browse
+ * and clock in to walks like an ordinary member, so that organiser's Walks
+ * link points at the member page (/walks) instead of the admin dashboard
+ * (see also the matching redirect in src/app/walks/page.tsx).
+ *
+ * This only decides what's *shown* — it is not yet enforced on the other
+ * admin pages/actions themselves, so a limited organiser who already knows
+ * a hidden URL can still open it today. See setMemberRole's permMembers
+ * check and clampGrantablePermissions for the capabilities that are
+ * actually enforced so far.
  */
 export function navItems(isAdmin: boolean, walksHref: string, permissions?: OrganiserPermissions) {
   const perms = permissions ?? FULL_ORGANISER_PERMISSIONS;
   return [
     { href: "/", label: "Home" },
-    ...(isAdmin && !perms.permWalks ? [] : [{ href: walksHref, label: "Walks" }]),
+    { href: isAdmin && !perms.permWalks ? "/walks" : walksHref, label: "Walks" },
     { href: "/notices", label: "Notices" },
     { href: "/progress", label: "Progress" },
     ...(isAdmin

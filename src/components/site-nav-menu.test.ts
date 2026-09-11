@@ -33,7 +33,7 @@ describe("navItems with limited organiser permissions", () => {
         permReportsMessages: false,
         permSettings: false,
       }).map((item) => item.href),
-    ).toEqual(["/", "/notices", "/progress", "/admin/members", "/admin/guide"]);
+    ).toEqual(["/", "/walks", "/notices", "/progress", "/admin/members", "/admin/guide"]);
   });
 
   it("hides every organiser section for someone with no permissions at all", () => {
@@ -44,7 +44,27 @@ describe("navItems with limited organiser permissions", () => {
         permReportsMessages: false,
         permSettings: false,
       }).map((item) => item.href),
-    ).toEqual(["/", "/notices", "/progress", "/admin/guide"]);
+    ).toEqual(["/", "/walks", "/notices", "/progress", "/admin/guide"]);
+  });
+
+  it("without the Walks permission, Walks points at the member page instead of the admin dashboard", () => {
+    const items = navItems(true, "/admin", {
+      permWalks: false,
+      permMembers: false,
+      permReportsMessages: false,
+      permSettings: false,
+    });
+    expect(items.find((item) => item.label === "Walks")?.href).toBe("/walks");
+  });
+
+  it("with the Walks permission, Walks still points at the admin dashboard", () => {
+    const items = navItems(true, "/admin", {
+      permWalks: true,
+      permMembers: false,
+      permReportsMessages: false,
+      permSettings: false,
+    });
+    expect(items.find((item) => item.label === "Walks")?.href).toBe("/admin");
   });
 });
 

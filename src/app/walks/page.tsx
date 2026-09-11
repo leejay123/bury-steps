@@ -20,7 +20,11 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const user = await requireUser();
 
-  if (user.role === "ADMIN") {
+  // An organiser without the Walks permission has no admin dashboard to
+  // send them to instead — they still get the ordinary member experience
+  // below (browse walks, clock in), same as anyone else. See the matching
+  // fallback in site-nav-items.ts.
+  if (user.role === "ADMIN" && user.permWalks) {
     redirect("/admin");
   }
 
