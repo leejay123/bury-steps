@@ -16,18 +16,17 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWalkClock } from "@/hooks/use-walk-clock";
 
-type StatusFilter = "all" | WalkStatus;
+// Upcoming never holds a cancelled walk — that lives in All walks instead
+// (see src/app/walks/page.tsx) — nor a completed one, so both are left out
+// of the filter, matching AdminWalkTable's own upcoming-scope options.
+type StatusFilter = "all" | Exclude<WalkStatus, "cancelled" | "completed">;
 type SortOrder = "asc" | "desc";
 
-// This list only ever holds upcoming walks (recently cancelled ones stay
-// visible too) — "completed" never appears here, so it's left out of the
-// filter, matching AdminWalkTable's own upcoming-scope options.
 const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "all", label: "All statuses" },
   { value: "upcoming", label: "Upcoming" },
   { value: "starting-soon", label: "Starting soon" },
   { value: "in-progress", label: "In progress" },
-  { value: "cancelled", label: "Cancelled" },
 ];
 
 export type UpcomingWalkCard = {
@@ -39,7 +38,6 @@ export type UpcomingWalkCard = {
   location: string | null;
   startsAt: string;
   durationMins: number;
-  cancelledAt: string | null;
   clockedInAt: string | null;
   /** Kept for SSR first paint; the card recomputes live with useWalkClock. */
   state: WindowState;
@@ -53,7 +51,6 @@ function walkMemberCountLabel(count: number) {
 }
 
 function walkLinkLabel(walk: UpcomingWalkCard, state: WindowState) {
-  if (walk.cancelledAt) return `${walk.title} — view walk details`;
   if (walk.clockedInAt) return `${walk.title} — view walk details`;
   if (state === "open") return `${walk.title} — clock in`;
   if (state === "closed") return `${walk.title} — view walk details`;
@@ -62,21 +59,14 @@ function walkLinkLabel(walk: UpcomingWalkCard, state: WindowState) {
 
 function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
   const now = useWalkClock({
-    cancelledAt: walk.cancelledAt,
+    cancelledAt: null,
     durationMins: walk.durationMins,
     startsAt: walk.startsAt,
   });
-  const state = walk.cancelledAt
-    ? "closed"
-    : windowState(new Date(walk.startsAt), walk.durationMins, now);
+  const state = windowState(new Date(walk.startsAt), walk.durationMins, now);
 
   return (
-    <Card
-      className={cn(
-        "relative gap-3",
-        walk.cancelledAt ? undefined : "transition-colors hover:bg-muted/40",
-      )}
-    >
+    <Card className="relative gap-3 transition-colors hover:bg-muted/40">
       {/*
         A single real link stretched over the whole card (rather than a
         clickable `role="button"` wrapper around a *second*, separately
@@ -85,17 +75,12 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
         breaks keyboard focus order. Everything below is presentational;
         this is the only focus stop and the only thing a screen reader
         announces as interactive.
-
-        Cancelled walks stay on the list as a notice only — members cannot
-        open the walk page (organisers use Admin).
       */}
-      {walk.cancelledAt ? null : (
-        <Link
-          aria-label={walkLinkLabel(walk, state)}
-          className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          href={walkSharePath(walk)}
-        />
-      )}
+      <Link
+        aria-label={walkLinkLabel(walk, state)}
+        className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        href={walkSharePath(walk)}
+      />
       <CardHeader className="flex flex-row items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1.5">
           <CardTitle className="text-base">{walk.title}</CardTitle>
@@ -117,14 +102,8 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
           </CardDescription>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <WalkStatusBadge
-            cancelledAt={walk.cancelledAt}
-            durationMins={walk.durationMins}
-            startsAt={walk.startsAt}
-          />
-          {walk.cancelledAt ? null : (
-            <ChevronRight aria-hidden className="size-4 text-muted-foreground" />
-          )}
+          <WalkStatusBadge cancelledAt={null} durationMins={walk.durationMins} startsAt={walk.startsAt} />
+          <ChevronRight aria-hidden className="size-4 text-muted-foreground" />
         </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -133,10 +112,7 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
             {walk.description}
           </p>
         ) : null}
-        {walk.cancelledAt ? (
-          <p className="text-sm text-destructive">This walk has been cancelled.</p>
-        ) : null}
-        {!walk.cancelledAt && !walk.clockedInAt && state !== "closed" ? (
+        {!walk.clockedInAt && state !== "closed" ? (
           // Purely visual — the stretched link above already goes to
           // this same destination, so this isn't a second real button.
           <span
@@ -149,7 +125,7 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
             {state === "open" ? "Clock in" : "Open pre-walk check"}
           </span>
         ) : null}
-        {walk.clockedInAt && !walk.cancelledAt ? (
+        {walk.clockedInAt ? (
           <div className="flex flex-col gap-1.5">
             <p className="text-sm text-muted-foreground">
               Clocked in at {formatDateTime(new Date(walk.clockedInAt))}
@@ -179,7 +155,7 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
     const rows = walks.filter((walk) => {
       if (statusFilter !== "all") {
         const status = walkStatus({
-          cancelledAt: walk.cancelledAt ? new Date(walk.cancelledAt) : null,
+          cancelledAt: null,
           startsAt: new Date(walk.startsAt),
           durationMins: walk.durationMins,
         });

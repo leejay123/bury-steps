@@ -65,18 +65,6 @@ export async function generateMetadata({
     startsAt: walk.startsAt,
   });
 
-  // Match page visibility: non-organisers get a 404 for cancelled walks, so
-  // metadata must not leak the title or schedule into link previews.
-  if (status === "cancelled") {
-    const user = await getOptionalUser();
-    if (user?.role !== "ADMIN") {
-      return {
-        title: "Walk not found",
-        robots: { index: false, follow: false },
-      };
-    }
-  }
-
   const when = formatWalkDate(walk.startsAt);
   const meeting = meetingPointLabel(walk.location, walk.postcode);
   const title = status === "cancelled" ? `Cancelled: ${walk.title}` : walk.title;
@@ -113,12 +101,12 @@ export default async function WalkLinkPage({
     startsAt: walk.startsAt,
   });
 
-  // Members and visitors cannot open a cancelled walk. Check before the
-  // token→slug redirect so cancelled walks do not reveal their share slug.
-  if (status === "cancelled" && user?.role !== "ADMIN") {
-    notFound();
-  }
-
+  // A cancelled walk is viewable by anyone, same as a completed one — the
+  // member-facing "All walks" tab lists and links to cancelled walks
+  // alongside completed ones, so this page must not 404 for them. There's
+  // nothing sensitive to protect either way: WalkLivePanel (clock-in,
+  // attendee names) never renders for a cancelled walk regardless of who's
+  // looking.
   const slug = await ensureWalkSlug(walk);
   if (token === walk.token && slug !== walk.token) {
     redirect(`/w/${slug}`);

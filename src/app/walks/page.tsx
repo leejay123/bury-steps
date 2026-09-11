@@ -44,7 +44,6 @@ export default async function DashboardPage() {
         location: true,
         startsAt: true,
         durationMins: true,
-        cancelledAt: true,
         attendances: {
           where: { userId: user.id, clockedOutAt: null },
           select: { clockedInAt: true },
@@ -145,7 +144,6 @@ export default async function DashboardPage() {
                   location: walk.location,
                   startsAt: walk.startsAt.toISOString(),
                   durationMins: walk.durationMins,
-                  cancelledAt: walk.cancelledAt?.toISOString() ?? null,
                   clockedInAt: clockedIn ? clockedIn.clockedInAt.toISOString() : null,
                   state: windowState(walk.startsAt, walk.durationMins, now),
                   memberCount: memberCountsByWalk.get(walk.id) ?? 0,
