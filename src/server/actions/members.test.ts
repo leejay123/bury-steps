@@ -90,6 +90,13 @@ beforeEach(() => {
 });
 
 describe("deleteMember", () => {
+  it("rejects an organiser without the Members permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembers: false });
+    const result = await deleteMember(null, deleteMemberForm({ userId: "member-1", confirm: "confirm" }));
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage members." });
+    expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+  });
+
   it("rejects when no member is selected", async () => {
     const result = await deleteMember(null, deleteMemberForm({ confirm: "confirm" }));
     expect(result).toEqual({ ok: false, error: "No member selected." });
@@ -565,6 +572,13 @@ describe("getMemberHistory", () => {
     expect(result).toBeNull();
   });
 
+  it("returns null for an organiser without the Members permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembers: false });
+    const result = await getMemberHistory(ADMIN.id);
+    expect(result).toBeNull();
+    expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+  });
+
   it("maps the member's attendance history and flags isYou for the acting admin's own record", async () => {
     const startsAt = new Date("2026-01-05T14:00:00Z");
     const clockedInAt = new Date("2026-01-05T13:55:00Z");
@@ -636,6 +650,13 @@ describe("getMemberHistory", () => {
 });
 
 describe("searchMembers", () => {
+  it("returns an empty page for an organiser without the Members permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembers: false });
+    const result = await searchMembers({ role: "all" });
+    expect(result).toEqual({ rows: [], total: 0 });
+    expect(prismaMock.user.findMany).not.toHaveBeenCalled();
+  });
+
   function member(overrides: Partial<Record<string, unknown>> = {}) {
     return {
       id: "member-1",
@@ -815,6 +836,13 @@ describe("setMemberRole — organiser invite required", () => {
 });
 
 describe("resendOrganiserInvite", () => {
+  it("rejects an organiser without the Members permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembers: false });
+    const result = await resendOrganiserInvite(null, roleForm({ userId: "member-1" }));
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage members." });
+    expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+  });
+
   it("requires a member id", async () => {
     const result = await resendOrganiserInvite(null, roleForm({}));
     expect(result).toEqual({ ok: false, error: "No member selected." });
@@ -993,6 +1021,13 @@ describe("setOrganiserPermissions", () => {
 });
 
 describe("cancelOrganiserInvite", () => {
+  it("rejects an organiser without the Members permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembers: false });
+    const result = await cancelOrganiserInvite(null, roleForm({ userId: "member-1" }));
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage members." });
+    expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+  });
+
   it("requires a member id", async () => {
     const result = await cancelOrganiserInvite(null, roleForm({}));
     expect(result).toEqual({ ok: false, error: "No member selected." });

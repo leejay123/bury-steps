@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { memberDisplayName, requireAdmin } from "@/lib/auth";
+import { memberDisplayName, requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { walkStatus } from "@/lib/walk-window";
 import { AdminPageIntro } from "../admin-page-intro";
@@ -33,7 +33,7 @@ export default async function AccidentReportsPage({
 }: {
   searchParams: Promise<{ link?: string; sort?: string }>;
 }) {
-  await requireAdmin();
+  await requirePermission("permReportsMessages");
   const params = await searchParams;
   const link = parseLinkFilter(params.link);
   const sort = parseSort(params.sort);

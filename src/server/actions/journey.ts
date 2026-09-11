@@ -12,6 +12,7 @@ import {
   type ActionResult,
   LimitReachedError,
   logActionError,
+  permissionDenied,
   revalidateWalkShare,
   withCountLimitLock,
 } from "./shared";
@@ -39,6 +40,7 @@ export async function createJourneyEvent(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
+  if (!admin.permWalks) return permissionDenied("permWalks");
 
   const parsed = journeyEventSchema.safeParse({
     walkId: formData.get("walkId"),
@@ -112,7 +114,8 @@ export async function updateJourneyEvent(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permWalks) return permissionDenied("permWalks");
 
   const parsed = journeyEventSchema
     .extend({ eventId: z.string().min(1) })
@@ -186,7 +189,8 @@ export async function deleteJourneyEvent(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permWalks) return permissionDenied("permWalks");
 
   const eventId = String(formData.get("eventId") ?? "");
   if (!eventId) return { ok: false, error: "That event is no longer there." };

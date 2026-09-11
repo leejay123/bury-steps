@@ -39,13 +39,14 @@ import {
   DEFAULT_WELCOME_NOTICE,
 } from "@/lib/site-defaults";
 import { isResetConfirmWord } from "@/lib/site-reset";
-import { type ActionResult, isNotFoundStatus, logActionError } from "./shared";
+import { type ActionResult, isNotFoundStatus, logActionError, permissionDenied } from "./shared";
 
 export async function clearSiteCache(
   _prev: ActionResult | null,
   _formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidateTag(NOTICES_CACHE_TAG, { expire: 0 });
   revalidatePath("/", "layout");
@@ -64,6 +65,7 @@ export async function resetSiteToDefault(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   if (!isResetConfirmWord(String(formData.get("confirm") ?? ""))) {
     return { ok: false, error: "Type delete to confirm, then try again." };
   }

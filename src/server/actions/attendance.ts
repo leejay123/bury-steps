@@ -20,6 +20,7 @@ import {
   LimitReachedError,
   isPrismaCode,
   logActionError,
+  permissionDenied,
   revalidateWalkShare,
 } from "./shared";
 
@@ -165,7 +166,8 @@ export async function searchAddableMembers(
   walkId: string,
   query: string,
 ): Promise<{ id: string; label: string }[]> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permWalks) return [];
   if (!walkId) return [];
 
   const walk = await prisma.walk.findUnique({
@@ -221,7 +223,8 @@ export async function adminClockIn(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permWalks) return permissionDenied("permWalks");
 
   const parsed = adminClockInSchema.safeParse({
     walkId: formData.get("walkId"),
@@ -393,7 +396,8 @@ export async function adminRemoveAttendance(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permWalks) return permissionDenied("permWalks");
 
   const parsed = adminRemoveAttendanceSchema.safeParse({
     attendanceId: formData.get("attendanceId"),

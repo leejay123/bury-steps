@@ -39,12 +39,35 @@ function form(fields: Record<string, string>): FormData {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  requireAdmin.mockResolvedValue({ id: "admin-1", email: "admin@example.com" });
+  // Full access by default so existing tests exercise the authorized path —
+  // see the "permission guard" tests below for permSettings: false.
+  requireAdmin.mockResolvedValue({
+    id: "admin-1",
+    email: "admin@example.com",
+    permWalks: true,
+    permMembers: true,
+    permReportsMessages: true,
+    permSettings: true,
+  });
   prismaMock.emailTemplateOverride.findMany.mockResolvedValue([]);
   checkRateLimit.mockReturnValue({ ok: true });
 });
 
 describe("getEmailTemplateOverrides", () => {
+  it("returns null subject/body for every template for an organiser without the Settings permission", async () => {
+    requireAdmin.mockResolvedValueOnce({
+      id: "admin-1",
+      email: "admin@example.com",
+      permWalks: true,
+      permMembers: true,
+      permReportsMessages: true,
+      permSettings: false,
+    });
+    const overrides = await getEmailTemplateOverrides();
+    expect(overrides.welcome).toEqual({ subject: null, body: null });
+    expect(prismaMock.emailTemplateOverride.findMany).not.toHaveBeenCalled();
+  });
+
   it("returns null subject/body for every template with no saved row", async () => {
     const overrides = await getEmailTemplateOverrides();
     expect(overrides.welcome).toEqual({ subject: null, body: null });
@@ -64,6 +87,20 @@ describe("getEmailTemplateOverrides", () => {
 });
 
 describe("updateEmailTemplate", () => {
+  it("rejects an organiser without the Settings permission", async () => {
+    requireAdmin.mockResolvedValueOnce({
+      id: "admin-1",
+      email: "admin@example.com",
+      permWalks: true,
+      permMembers: true,
+      permReportsMessages: true,
+      permSettings: false,
+    });
+    const result = await updateEmailTemplate(null, form({ key: "welcome" }));
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(prismaMock.emailTemplateOverride.upsert).not.toHaveBeenCalled();
+  });
+
   it("rejects an unknown key", async () => {
     const result = await updateEmailTemplate(null, form({ key: "not-a-real-key" }));
     expect(result).toEqual({ ok: false, error: "Unknown email." });
@@ -96,6 +133,20 @@ describe("updateEmailTemplate", () => {
 });
 
 describe("sendTestEmailTemplate", () => {
+  it("rejects an organiser without the Settings permission", async () => {
+    requireAdmin.mockResolvedValueOnce({
+      id: "admin-1",
+      email: "admin@example.com",
+      permWalks: true,
+      permMembers: true,
+      permReportsMessages: true,
+      permSettings: false,
+    });
+    const result = await sendTestEmailTemplate(null, form({ key: "welcome" }));
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(sendTestEmail).not.toHaveBeenCalled();
+  });
+
   it("rejects an unknown key", async () => {
     const result = await sendTestEmailTemplate(null, form({ key: "not-a-real-key" }));
     expect(result).toEqual({ ok: false, error: "Unknown email." });
@@ -105,7 +156,10 @@ describe("sendTestEmailTemplate", () => {
   it("sends a test to the requesting admin's own address", async () => {
     const result = await sendTestEmailTemplate(null, form({ key: "welcome" }));
 
-    expect(sendTestEmail).toHaveBeenCalledWith("welcome", { id: "admin-1", email: "admin@example.com" });
+    expect(sendTestEmail).toHaveBeenCalledWith(
+      "welcome",
+      expect.objectContaining({ id: "admin-1", email: "admin@example.com" }),
+    );
     expect(result).toEqual({ ok: true, message: "Test email sent to admin@example.com." });
   });
 
@@ -124,6 +178,20 @@ describe("sendTestEmailTemplate", () => {
 });
 
 describe("resetEmailTemplate", () => {
+  it("rejects an organiser without the Settings permission", async () => {
+    requireAdmin.mockResolvedValueOnce({
+      id: "admin-1",
+      email: "admin@example.com",
+      permWalks: true,
+      permMembers: true,
+      permReportsMessages: true,
+      permSettings: false,
+    });
+    const result = await resetEmailTemplate(null, form({ key: "welcome" }));
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(prismaMock.emailTemplateOverride.deleteMany).not.toHaveBeenCalled();
+  });
+
   it("rejects an unknown key", async () => {
     const result = await resetEmailTemplate(null, form({ key: "not-a-real-key" }));
     expect(result).toEqual({ ok: false, error: "Unknown email." });

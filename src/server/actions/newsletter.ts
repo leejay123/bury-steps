@@ -12,7 +12,7 @@ import { sendNewsletterSubscribedEmail } from "@/lib/email/mailer";
 import { paragraphsFrom } from "@/lib/email/render-template";
 import { getOrCreateAudienceId, syncContactSubscribed, syncContactUnsubscribed } from "@/lib/email/resend-audience";
 import { NewsletterCampaignEmail } from "@/lib/email/templates/newsletter-campaign";
-import { type ActionResult, isPrismaCode, logActionError } from "./shared";
+import { type ActionResult, isPrismaCode, logActionError, permissionDenied } from "./shared";
 
 async function requesterKey(): Promise<string> {
   const h = await headers();
@@ -87,6 +87,7 @@ export async function sendNewsletterCampaign(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const limited = checkRateLimit(`${admin.id}:sendNewsletterCampaign`, 5, 60 * 60_000);
   if (!limited.ok) {
     return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
@@ -166,7 +167,8 @@ export async function removeNewsletterSubscriber(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const id = String(formData.get("id") ?? "");
   if (!id) return { ok: false, error: "No subscriber selected." };
 

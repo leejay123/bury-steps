@@ -12,7 +12,7 @@ import {
 import { MAX_EMAIL_TEMPLATE_BODY, MAX_EMAIL_TEMPLATE_SUBJECT } from "@/lib/email/template-limits";
 import { sendTestEmail } from "@/lib/email/test-send";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { type ActionResult, logActionError } from "./shared";
+import { type ActionResult, logActionError, permissionDenied } from "./shared";
 
 /**
  * Every template's saved override, keyed for the admin page — a template
@@ -23,7 +23,11 @@ import { type ActionResult, logActionError } from "./shared";
 export async function getEmailTemplateOverrides(): Promise<
   Record<EmailTemplateKey, EmailTemplateOverrideValues>
 > {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  const empty = {} as Record<EmailTemplateKey, EmailTemplateOverrideValues>;
+  for (const meta of EMAIL_TEMPLATES) empty[meta.key] = { subject: null, body: null };
+  if (!admin.permSettings) return empty;
+
   const rows = await prisma.emailTemplateOverride.findMany({
     select: { key: true, subject: true, body: true },
   });
@@ -41,7 +45,8 @@ export async function updateEmailTemplate(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const key = String(formData.get("key") ?? "");
   if (!isEmailTemplateKey(key)) return { ok: false, error: "Unknown email." };
 
@@ -83,6 +88,7 @@ export async function sendTestEmailTemplate(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const key = String(formData.get("key") ?? "");
   if (!isEmailTemplateKey(key)) return { ok: false, error: "Unknown email." };
 
@@ -104,7 +110,8 @@ export async function resetEmailTemplate(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const key = String(formData.get("key") ?? "");
   if (!isEmailTemplateKey(key)) return { ok: false, error: "Unknown email." };
 

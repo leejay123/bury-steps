@@ -28,6 +28,7 @@ import {
   LimitReachedError,
   isPrismaCode,
   logActionError,
+  permissionDenied,
   validateReorderIds,
   withCountLimitLock,
 } from "./shared";
@@ -146,7 +147,8 @@ export async function addSiteNotice(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
 
   const copy = readNoticeCopy(formData);
   if ("error" in copy) return { ok: false, error: copy.error };
@@ -203,7 +205,8 @@ export async function updateSiteNotice(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const id = String(formData.get("noticeId") ?? "");
   if (!id) return { ok: false, error: "No notice selected." };
 
@@ -282,7 +285,8 @@ export async function deleteSiteNotice(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const id = String(formData.get("noticeId") ?? "");
   if (!id) return { ok: false, error: "No notice selected." };
 
@@ -309,7 +313,8 @@ export async function setSiteNoticeEnabled(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const id = String(formData.get("noticeId") ?? "");
   if (!id) return { ok: false, error: "No notice selected." };
 
@@ -421,7 +426,8 @@ export async function addSiteNoticeCategory(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const copy = readNoticeCategoryLabel(formData);
   if ("error" in copy) return { ok: false, error: copy.error };
 
@@ -452,7 +458,8 @@ export async function updateSiteNoticeCategory(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const id = String(formData.get("categoryId") ?? "");
   if (!id) return { ok: false, error: "No category selected." };
   const copy = readNoticeCategoryLabel(formData);
@@ -476,7 +483,8 @@ export async function deleteSiteNoticeCategory(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const id = String(formData.get("categoryId") ?? "");
   if (!id) return { ok: false, error: "No category selected." };
 
@@ -522,7 +530,8 @@ export async function deleteSiteNoticeCategory(
 }
 
 export async function reorderSiteNoticeCategories(ids: string[]): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const validated = validateReorderIds(ids, MAX_NOTICE_CATEGORIES * 2);
   if ("error" in validated) return { ok: false, error: validated.error };
 

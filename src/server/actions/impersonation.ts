@@ -5,7 +5,7 @@ import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { requireAdmin, displayName } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { type ActionResult, logActionError } from "./shared";
+import { type ActionResult, logActionError, permissionDenied } from "./shared";
 
 /**
  * Signs the calling admin into a member's account via a Clerk actor token —
@@ -25,6 +25,7 @@ export async function startImpersonation(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
+  if (!admin.permMembers) return permissionDenied("permMembers");
   const limited = checkRateLimit(`${admin.id}:startImpersonation`, 10, 60_000);
   if (!limited.ok) {
     return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };

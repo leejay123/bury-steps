@@ -1,6 +1,6 @@
 import { Users } from "lucide-react";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { formatDateTime } from "@/lib/dates";
 import { pickOrganiserPermissions } from "@/lib/organiser-permissions";
 import { SITE_SETTING_ID } from "@/lib/theme";
@@ -22,7 +22,7 @@ export default async function MembersPage({
 }: {
   searchParams: Promise<{ role?: string }>;
 }) {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("permMembers");
   const params = await searchParams;
   const role = parseRoleFilter(params.role);
 

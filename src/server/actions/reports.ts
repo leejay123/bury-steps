@@ -8,7 +8,7 @@ import { formatDateTime, londonWallClockToUtc } from "@/lib/dates";
 import { sendAccidentReportAlertEmail } from "@/lib/email/mailer";
 import { involvedSummaryText } from "@/lib/accident-reports";
 import { getWalkAttendeesForReport } from "@/lib/walk-members";
-import { type ActionResult, isPrismaCode, logActionError } from "./shared";
+import { type ActionResult, isPrismaCode, logActionError, permissionDenied } from "./shared";
 
 /** Powers the member checklist on the report form once a walk is picked —
  * a plain data fetch, not a mutation, but still gated on admin auth since
@@ -16,7 +16,8 @@ import { type ActionResult, isPrismaCode, logActionError } from "./shared";
 export async function getWalkAttendeesForReportForm(
   walkId: string,
 ): Promise<{ id: string; name: string }[]> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permReportsMessages) return [];
   if (!walkId) return [];
   return getWalkAttendeesForReport(walkId);
 }
@@ -59,6 +60,7 @@ export async function addAccidentReport(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
+  if (!admin.permReportsMessages) return permissionDenied("permReportsMessages");
   const parsed = readReportCopy(formData);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
@@ -137,7 +139,8 @@ export async function updateAccidentReport(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permReportsMessages) return permissionDenied("permReportsMessages");
   const id = String(formData.get("reportId") ?? "");
   if (!id) return { ok: false, error: "No report selected." };
 
@@ -187,7 +190,8 @@ export async function deleteAccidentReport(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permReportsMessages) return permissionDenied("permReportsMessages");
   const id = String(formData.get("reportId") ?? "");
   if (!id) return { ok: false, error: "No report selected." };
 
@@ -208,7 +212,8 @@ export async function setAccidentReportRetentionLocked(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permReportsMessages) return permissionDenied("permReportsMessages");
   const id = String(formData.get("reportId") ?? "");
   const locked = String(formData.get("retentionLocked") ?? "") === "on";
   if (!id) return { ok: false, error: "No report selected." };

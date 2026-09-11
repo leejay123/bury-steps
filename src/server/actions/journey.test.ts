@@ -32,7 +32,15 @@ vi.mock("@/lib/auth", async () => {
 
 import { createJourneyEvent, deleteJourneyEvent, updateJourneyEvent } from "./journey";
 
-const ADMIN = { id: "admin-1" };
+// Full access by default so existing tests exercise the authorized path —
+// see the "requires the Walks permission" tests for the guard itself.
+const ADMIN = {
+  id: "admin-1",
+  permWalks: true,
+  permMembers: true,
+  permReportsMessages: true,
+  permSettings: true,
+};
 
 function form(fields: Record<string, string>): FormData {
   const formData = new FormData();
@@ -68,6 +76,12 @@ describe("createJourneyEvent", () => {
   it("rejects an empty title", async () => {
     const result = await createJourneyEvent(null, eventForm({ title: "" }));
     expect(result.ok).toBe(false);
+  });
+
+  it("rejects an organiser without the Walks permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permWalks: false });
+    const result = await createJourneyEvent(null, eventForm());
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage walks." });
   });
 
   it("reports the walk as gone if it no longer exists", async () => {

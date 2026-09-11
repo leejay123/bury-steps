@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { requireAdmin, displayName } from "@/lib/auth";
+import { requirePermission, displayName } from "@/lib/auth";
 import { getSiteTheme } from "@/lib/site-theme";
 import { DEFAULT_CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { SITE_SETTING_ID } from "@/lib/theme";
@@ -25,7 +25,7 @@ import { TestimonialsSectionCopySettings } from "./testimonials-section-copy-set
 export const dynamic = "force-dynamic";
 
 export default async function DisplaySettingsPage() {
-  await requireAdmin();
+  await requirePermission("permSettings");
   const [theme, organisers, settings] = await Promise.all([
     getSiteTheme(),
     prisma.user.findMany({

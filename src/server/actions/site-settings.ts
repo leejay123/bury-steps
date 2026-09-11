@@ -42,6 +42,7 @@ import { readImageDimensions } from "@/lib/image-dimensions";
 import {
   type ActionResult,
   logActionError,
+  permissionDenied,
   readOptionalImage,
   revalidateHomepage,
 } from "./shared";
@@ -50,7 +51,8 @@ export async function updateCarouselEnabled(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const enabled = String(formData.get("carouselEnabled") ?? "") === "on";
 
   try {
@@ -80,7 +82,8 @@ export async function updateOrganiserInviteRequired(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const enabled = String(formData.get("organiserInviteRequired") ?? "") === "on";
 
   try {
@@ -118,7 +121,8 @@ export async function updateCancelledWalkRetentionDays(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const parsed = parseRetentionDays(String(formData.get("cancelledWalkRetentionDays") ?? ""));
   if (parsed === "invalid") {
     return {
@@ -165,7 +169,8 @@ export async function updateAccidentReportRetentionDays(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const parsed = parseRetentionDays(String(formData.get("accidentReportRetentionDays") ?? ""));
   if (parsed === "invalid") {
     return {
@@ -211,7 +216,8 @@ export async function updateContactMessagesOwner(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const userId = String(formData.get("contactMessagesOwnerId") ?? "").trim();
 
   let owner: { firstName: string | null; lastName: string | null; email: string; role: string } | null =
@@ -259,7 +265,8 @@ export async function updateScrollToTopEnabled(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const enabled = String(formData.get("scrollToTopEnabled") ?? "") === "on";
 
   try {
@@ -288,7 +295,8 @@ export async function updateCookieConsentVariant(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const variant = parseCookieConsentVariant(String(formData.get("cookieConsentVariant") ?? ""));
   if (!variant) {
     return { ok: false, error: "Choose a cookie notice layout." };
@@ -329,7 +337,8 @@ export async function updateSiteBranding(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const siteName = parseSiteName(String(formData.get("siteName") ?? ""));
   const siteTagline = parseSiteTagline(String(formData.get("siteTagline") ?? ""));
   if (siteName === "invalid") {
@@ -369,7 +378,8 @@ export async function updateFacebookGroupUrl(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const facebookGroupUrl = parseFacebookGroupUrl(String(formData.get("facebookGroupUrl") ?? ""));
   if (facebookGroupUrl === "invalid") {
     return {
@@ -409,7 +419,8 @@ export async function updateFacebookGroupUrl(
 }
 
 export async function reorderHomepageSections(ids: HomepageSectionId[]): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const order = parseHomepageSectionOrder(serializeHomepageSectionOrder(ids));
   if (order === "invalid") {
     return { ok: false, error: "Could not save that order. Try again." };
@@ -443,7 +454,8 @@ export async function updateFaqSectionCopy(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const faqSectionTitle = parseFaqSectionTitle(String(formData.get("faqSectionTitle") ?? ""));
   const faqSectionIntro = parseFaqSectionIntro(String(formData.get("faqSectionIntro") ?? ""));
   if (faqSectionTitle === "invalid") {
@@ -482,7 +494,8 @@ export async function updateTestimonialsSectionCopy(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const testimonialsSectionEyebrow = parseTestimonialsSectionEyebrow(
     String(formData.get("testimonialsSectionEyebrow") ?? ""),
   );
@@ -536,7 +549,8 @@ export async function updateHowThisStartedCopy(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const howThisStartedTitle = parseHowThisStartedTitle(
     String(formData.get("howThisStartedTitle") ?? ""),
   );
@@ -602,7 +616,8 @@ export async function updateAboutLists(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const aboutGoals = parseAboutList(String(formData.get("aboutGoals") ?? ""));
   const aboutPlaces = parseAboutList(String(formData.get("aboutPlaces") ?? ""));
   const aboutExpect = parseAboutList(String(formData.get("aboutExpect") ?? ""));
@@ -709,7 +724,8 @@ export async function updateMonthlyClockInGoal(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const parsed = parseMonthlyClockInGoal(String(formData.get("monthlyClockInGoal") ?? ""));
   if (parsed === "invalid") {
     return {
@@ -748,7 +764,8 @@ export async function updateSiteLogo(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const image = await readOptionalImage(formData);
   if (image && "error" in image) return { ok: false, error: image.error };
   const removing = !image && formData.get("removeImage") === "on";
@@ -778,7 +795,8 @@ export async function updateSiteFavicon(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const image = await readOptionalImage(formData);
   if (image && "error" in image) return { ok: false, error: image.error };
   const removing = !image && formData.get("removeImage") === "on";
@@ -825,7 +843,8 @@ export async function updateReportBanner(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const image = await readOptionalImage(formData);
   if (image && "error" in image) return { ok: false, error: image.error };
   const removing = !image && formData.get("removeImage") === "on";

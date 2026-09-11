@@ -10,6 +10,7 @@ import {
   applySortOrder,
   isPrismaCode,
   logActionError,
+  permissionDenied,
   readOptionalImage,
   readSlideImage,
   revalidateHomepage,
@@ -21,7 +22,8 @@ export async function addHomepageSlide(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
 
   const image = await readSlideImage(formData);
   if ("error" in image) return { ok: false, error: image.error };
@@ -57,7 +59,8 @@ export async function replaceHomepageSlideImage(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const id = String(formData.get("slideId") ?? "");
   if (!id) return { ok: false, error: "No slide selected." };
 
@@ -89,7 +92,8 @@ export async function deleteHomepageSlide(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const id = String(formData.get("slideId") ?? "");
   if (!id) return { ok: false, error: "No slide selected." };
 
@@ -121,7 +125,8 @@ export async function deleteHomepageSlide(
 }
 
 export async function reorderHomepageSlides(ids: string[]): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const validated = validateReorderIds(ids, MAX_HOMEPAGE_SLIDES * 2);
   if ("error" in validated) return { ok: false, error: validated.error };
   try {

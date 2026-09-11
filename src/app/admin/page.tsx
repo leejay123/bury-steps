@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { CreateWalkForm } from "./create-walk-form";
 import { AdminPageIntro } from "./admin-page-intro";
 import { AdminWalkTable } from "./admin-walk-table";
@@ -32,7 +32,7 @@ function toRow(walk: {
 }
 
 export default async function AdminPage() {
-  await requireAdmin();
+  await requirePermission("permWalks");
 
   const lookback = upcomingListLookbackFrom();
   const base = {

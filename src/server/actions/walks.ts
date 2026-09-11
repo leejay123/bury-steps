@@ -38,6 +38,7 @@ import {
   LimitReachedError,
   isPrismaCode,
   logActionError,
+  permissionDenied,
   revalidateWalkShare,
   withCountLimitLock,
 } from "./shared";
@@ -133,6 +134,7 @@ function parseWhat3Words(
 
 export async function createWalk(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const admin = await requireAdmin();
+  if (!admin.permWalks) return permissionDenied("permWalks");
 
   const parsed = walkDetailsSchema.safeParse({
     title: formData.get("title"),
@@ -216,6 +218,7 @@ export async function duplicateWalk(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
+  if (!admin.permWalks) return permissionDenied("permWalks");
   const id = String(formData.get("walkId") ?? "");
   if (!id) return { ok: false, error: "No walk selected." };
 
@@ -288,6 +291,7 @@ export async function searchWalkPlaces(
   postcode: string,
 ): Promise<{ ok: true; places: PlaceHit[] } | { ok: false; error: string }> {
   const admin = await requireAdmin();
+  if (!admin.permWalks) return permissionDenied("permWalks");
   const limited = checkRateLimit(`${admin.id}:searchWalkPlaces`, 10, 60_000);
   if (!limited.ok) {
     return { ok: false, error: `Too many searches. Try again in ${limited.retryAfterSeconds}s.` };
@@ -307,7 +311,8 @@ export async function searchWalkPlaces(
 }
 
 export async function cancelWalk(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permWalks) return permissionDenied("permWalks");
   const id = String(formData.get("walkId") ?? "");
   if (!id) return { ok: false, error: "No walk selected." };
 
@@ -392,7 +397,8 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
 }
 
 export async function reopenWalk(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permWalks) return permissionDenied("permWalks");
   const id = String(formData.get("walkId") ?? "");
   if (!id) return { ok: false, error: "No walk selected." };
 
@@ -453,7 +459,8 @@ export async function endWalkEarly(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permWalks) return permissionDenied("permWalks");
   const id = String(formData.get("walkId") ?? "");
   if (!id) return { ok: false, error: "No walk selected." };
 
@@ -516,7 +523,8 @@ export async function updateWalk(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permWalks) return permissionDenied("permWalks");
   const id = String(formData.get("walkId") ?? "");
   if (!id) return { ok: false, error: "No walk selected." };
 
@@ -650,7 +658,8 @@ export async function updateWalk(
 }
 
 export async function deleteWalk(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permWalks) return permissionDenied("permWalks");
   const id = String(formData.get("walkId") ?? "");
   if (!id) return { ok: false, error: "No walk selected." };
 
@@ -683,7 +692,8 @@ export async function setWalkRetentionLocked(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permWalks) return permissionDenied("permWalks");
   const id = String(formData.get("walkId") ?? "");
   const locked = String(formData.get("retentionLocked") ?? "") === "on";
   if (!id) return { ok: false, error: "No walk selected." };

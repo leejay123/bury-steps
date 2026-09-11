@@ -29,7 +29,15 @@ import {
   updateSiteBranding,
 } from "./site-settings";
 
-const ADMIN = { id: "admin-1" };
+// Full access by default so existing tests exercise the authorized path —
+// see the "permission guard" tests below for permSettings: false.
+const ADMIN = {
+  id: "admin-1",
+  permWalks: true,
+  permMembers: true,
+  permReportsMessages: true,
+  permSettings: true,
+};
 
 function form(fields: Record<string, string>): FormData {
   const formData = new FormData();
@@ -41,6 +49,25 @@ beforeEach(() => {
   vi.clearAllMocks();
   requireAdmin.mockResolvedValue(ADMIN);
   prismaMock.siteSetting.upsert.mockResolvedValue({});
+});
+
+describe("Site settings permission guard", () => {
+  it("rejects updateSiteBranding for an organiser without the Settings permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+    const result = await updateSiteBranding(
+      null,
+      form({ siteName: "Bury Steps", siteTagline: "A friendly walking group." }),
+    );
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(prismaMock.siteSetting.upsert).not.toHaveBeenCalled();
+  });
+
+  it("rejects updateOrganiserInviteRequired for an organiser without the Settings permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+    const result = await updateOrganiserInviteRequired(null, form({}));
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(prismaMock.siteSetting.upsert).not.toHaveBeenCalled();
+  });
 });
 
 describe("updateSiteBranding", () => {

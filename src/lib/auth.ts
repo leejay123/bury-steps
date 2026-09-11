@@ -5,6 +5,7 @@ import { prisma } from "./db";
 import type { User } from "@prisma/client";
 import { SIGN_IN_URL } from "./urls";
 import { syncLocalUser } from "./local-user";
+import type { OrganiserPermissions } from "./organiser-permissions";
 
 /** Clerk throws this when auth() runs on a request that skipped middleware. */
 export function isClerkMiddlewareMissingError(error: unknown): boolean {
@@ -63,6 +64,27 @@ export async function requireUser(): Promise<User> {
 export async function requireAdmin(): Promise<User> {
   const user = await getOptionalUser();
   if (!user || user.role !== "ADMIN") notFound();
+  return user;
+}
+
+/**
+ * Like requireAdmin, but for one specific organiser capability — see
+ * @/lib/organiser-permissions. 404s the same way requireAdmin does for a
+ * plain member (per the admin guide: "Organiser pages look the same as a
+ * missing link to everyone else"), so a limited organiser hitting a page
+ * outside their permissions sees exactly the same "this doesn't exist" as
+ * anyone else who isn't an organiser at all — not a distinguishable
+ * "access denied" that would confirm the page exists.
+ *
+ * For a server action rather than a page, prefer the friendlier inline
+ * `if (!admin.permX) return permissionDenied("permX")` pattern instead
+ * (see src/server/actions/shared.ts) — notFound() replaces the whole page
+ * the action was called from, which reads as a crash for something a
+ * stale button click could trigger, rather than a normal form error.
+ */
+export async function requirePermission(permission: keyof OrganiserPermissions): Promise<User> {
+  const user = await requireAdmin();
+  if (!user[permission]) notFound();
   return user;
 }
 

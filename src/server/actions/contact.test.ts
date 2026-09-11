@@ -49,7 +49,13 @@ const VALID_FIELDS = {
 beforeEach(() => {
   vi.clearAllMocks();
   checkRateLimit.mockReturnValue({ ok: true });
-  requireAdmin.mockResolvedValue({ id: "admin-1" });
+  requireAdmin.mockResolvedValue({
+    id: "admin-1",
+    permWalks: true,
+    permMembers: true,
+    permReportsMessages: true,
+    permSettings: true,
+  });
 });
 
 describe("submitContactMessage", () => {
@@ -116,6 +122,22 @@ describe("submitContactMessage", () => {
 });
 
 describe("markContactMessageRead", () => {
+  it("rejects an organiser without the Reports & messages permission", async () => {
+    requireAdmin.mockResolvedValueOnce({
+      id: "admin-1",
+      permWalks: true,
+      permMembers: true,
+      permReportsMessages: false,
+      permSettings: true,
+    });
+    const result = await markContactMessageRead(null, contactForm({ messageId: "msg-1" }));
+    expect(result).toEqual({
+      ok: false,
+      error: "You do not have permission to manage reports and messages.",
+    });
+    expect(prismaMock.contactMessage.update).not.toHaveBeenCalled();
+  });
+
   it("requires a message id", async () => {
     const result = await markContactMessageRead(null, contactForm({}));
     expect(result).toEqual({ ok: false, error: "No message selected." });
@@ -133,6 +155,22 @@ describe("markContactMessageRead", () => {
 });
 
 describe("deleteContactMessage", () => {
+  it("rejects an organiser without the Reports & messages permission", async () => {
+    requireAdmin.mockResolvedValueOnce({
+      id: "admin-1",
+      permWalks: true,
+      permMembers: true,
+      permReportsMessages: false,
+      permSettings: true,
+    });
+    const result = await deleteContactMessage(null, contactForm({ messageId: "msg-1" }));
+    expect(result).toEqual({
+      ok: false,
+      error: "You do not have permission to manage reports and messages.",
+    });
+    expect(prismaMock.contactMessage.delete).not.toHaveBeenCalled();
+  });
+
   it("requires a message id", async () => {
     const result = await deleteContactMessage(null, contactForm({}));
     expect(result).toEqual({ ok: false, error: "No message selected." });

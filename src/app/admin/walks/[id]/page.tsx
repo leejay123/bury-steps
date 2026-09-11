@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ClipboardList, CalendarPlus, Download } from "lucide-react";
 import { prisma } from "@/lib/db";
-import { requireAdmin, displayName } from "@/lib/auth";
+import { requirePermission, displayName } from "@/lib/auth";
 import { formatWalkDate, utcToLondonWallClock } from "@/lib/dates";
 import { canOrganiserAddAttendance, canOrganiserEditJourney, canAddWalkToCalendar, isWalkScheduleLocked, walkStatus } from "@/lib/walk-window";
 import { appUrl } from "@/lib/urls";
@@ -44,7 +44,7 @@ export default async function WalkDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdmin();
+  await requirePermission("permWalks");
   const { id } = await params;
 
   const walk = await prisma.walk.findUnique({

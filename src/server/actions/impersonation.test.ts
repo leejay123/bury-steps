@@ -24,7 +24,19 @@ vi.mock("@/lib/auth", async () => {
 
 import { startImpersonation } from "./impersonation";
 
-const ADMIN = { id: "admin-1", clerkId: "clerk-admin-1", email: "admin@example.com", firstName: "Ada", lastName: "Min" };
+const ADMIN = {
+  id: "admin-1",
+  clerkId: "clerk-admin-1",
+  email: "admin@example.com",
+  firstName: "Ada",
+  lastName: "Min",
+  // Full access by default so existing tests exercise the authorized path —
+  // see "rejects an organiser without the Members permission" for the guard.
+  permWalks: true,
+  permMembers: true,
+  permReportsMessages: true,
+  permSettings: true,
+};
 const MEMBER = {
   id: "member-1",
   clerkId: "clerk-member-1",
@@ -47,6 +59,13 @@ beforeEach(() => {
 });
 
 describe("startImpersonation", () => {
+  it("rejects an organiser without the Members permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembers: false });
+    const result = await startImpersonation(null, form({ targetId: MEMBER.id }));
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage members." });
+    expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+  });
+
   it("rejects a missing target", async () => {
     const result = await startImpersonation(null, form({}));
     expect(result).toEqual({ ok: false, error: "No member selected." });

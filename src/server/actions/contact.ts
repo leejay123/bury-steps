@@ -13,7 +13,7 @@ import {
   parseContactPhone,
 } from "@/lib/contact";
 import { sendContactMessageAdminAlertEmail, sendContactMessageReceivedEmail } from "@/lib/email/mailer";
-import { type ActionResult, isPrismaCode, logActionError } from "./shared";
+import { type ActionResult, isPrismaCode, logActionError, permissionDenied } from "./shared";
 
 /** Best-effort caller identity for rate-limiting an unauthenticated public
  * form — there's no signed-in user to key on here. */
@@ -98,7 +98,8 @@ export async function markContactMessageRead(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permReportsMessages) return permissionDenied("permReportsMessages");
   const id = String(formData.get("messageId") ?? "");
   if (!id) return { ok: false, error: "No message selected." };
 
@@ -117,7 +118,8 @@ export async function deleteContactMessage(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permReportsMessages) return permissionDenied("permReportsMessages");
   const id = String(formData.get("messageId") ?? "");
   if (!id) return { ok: false, error: "No message selected." };
 

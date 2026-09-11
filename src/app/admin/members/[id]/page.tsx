@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getMemberHistory } from "@/server/actions";
 import { formatDate, formatMembershipAge } from "@/lib/dates";
@@ -23,7 +23,7 @@ export default async function MemberDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const viewer = await requireAdmin();
+  const viewer = await requirePermission("permMembers");
   const viewerPermissions = pickOrganiserPermissions(viewer);
   const { id } = await params;
 

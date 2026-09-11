@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { ensureDefaultHomepageSlide, getHomepageSlides } from "@/lib/homepage-slides";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { HomepageSlideManager } from "../../homepage/slide-manager";
@@ -7,7 +7,7 @@ import { SettingsPage } from "../settings-page";
 export const dynamic = "force-dynamic";
 
 export default async function HeroPhotosSettingsPage() {
-  await requireAdmin();
+  await requirePermission("permSettings");
   await ensureDefaultHomepageSlide();
   const slides = await getHomepageSlides();
 

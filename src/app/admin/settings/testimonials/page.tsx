@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { getHomepageTestimonials } from "@/lib/homepage-testimonials";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { HomepageTestimonialManager } from "../../homepage/testimonial-manager";
@@ -7,7 +7,7 @@ import { SettingsPage } from "../settings-page";
 export const dynamic = "force-dynamic";
 
 export default async function TestimonialsSettingsPage() {
-  await requireAdmin();
+  await requirePermission("permSettings");
   const testimonials = await getHomepageTestimonials();
 
   return (

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireAdmin, displayName } from "@/lib/auth";
+import { requirePermission, displayName } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { AdminPageIntro } from "../admin-page-intro";
@@ -8,7 +8,7 @@ import { ContactMessagesList } from "./contact-messages-list";
 export const dynamic = "force-dynamic";
 
 export default async function AdminMessagesPage() {
-  await requireAdmin();
+  await requirePermission("permReportsMessages");
 
   const [messages, setting] = await Promise.all([
     prisma.contactMessage.findMany({

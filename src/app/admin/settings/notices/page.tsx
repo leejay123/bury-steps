@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { getSiteNoticeCategories, getSiteNotices } from "@/lib/site-notices";
 import { BELL_NOTICE_LIMIT, MAX_NOTICE_CATEGORIES } from "@/lib/notices";
 import { PreviewMemberWelcomeDialog } from "@/components/member-welcome-dialog";
@@ -8,7 +8,7 @@ import { SettingsPage } from "../settings-page";
 export const dynamic = "force-dynamic";
 
 export default async function NoticesSettingsPage() {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("permSettings");
   const [notices, categories] = await Promise.all([
     getSiteNotices(),
     getSiteNoticeCategories(),

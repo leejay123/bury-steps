@@ -30,7 +30,15 @@ vi.mock("@/lib/auth", async () => {
 
 import { addHomepageSlide, deleteHomepageSlide, replaceHomepageSlideImage, reorderHomepageSlides } from "./homepage-slides";
 
-const ADMIN = { id: "admin-1" };
+// Full access by default so existing tests exercise the authorized path —
+// see the "permission guard" tests below for permSettings: false.
+const ADMIN = {
+  id: "admin-1",
+  permWalks: true,
+  permMembers: true,
+  permReportsMessages: true,
+  permSettings: true,
+};
 
 function pngBytes(byteLength = 100): Uint8Array<ArrayBuffer> {
   const bytes = new Uint8Array(new ArrayBuffer(byteLength));
@@ -47,6 +55,24 @@ function formWithImage(): FormData {
 beforeEach(() => {
   vi.clearAllMocks();
   requireAdmin.mockResolvedValue(ADMIN);
+});
+
+describe("Homepage slides permission guard", () => {
+  it("rejects addHomepageSlide for an organiser without the Settings permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+    const result = await addHomepageSlide(null, formWithImage());
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it("rejects deleteHomepageSlide for an organiser without the Settings permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+    const formData = new FormData();
+    formData.set("slideId", "slide-1");
+    const result = await deleteHomepageSlide(null, formData);
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(prismaMock.homepageSlide.delete).not.toHaveBeenCalled();
+  });
 });
 
 describe("addHomepageSlide", () => {

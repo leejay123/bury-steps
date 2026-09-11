@@ -1,11 +1,11 @@
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { SettingsPage } from "../settings-page";
 import { ClearCacheForm } from "./cache-form";
 
 export const dynamic = "force-dynamic";
 
 export default async function CacheSettingsPage() {
-  await requireAdmin();
+  await requirePermission("permSettings");
 
   return (
     <SettingsPage

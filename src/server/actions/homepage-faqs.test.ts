@@ -42,7 +42,15 @@ import {
   updateHomepageFaqCategory,
 } from "./homepage-faqs";
 
-const ADMIN = { id: "admin-1" };
+// Full access by default so existing tests exercise the authorized path —
+// see the "permission guard" tests below for permSettings: false.
+const ADMIN = {
+  id: "admin-1",
+  permWalks: true,
+  permMembers: true,
+  permReportsMessages: true,
+  permSettings: true,
+};
 
 function faqForm(fields: Record<string, string> = {}): FormData {
   const formData = new FormData();
@@ -57,6 +65,33 @@ beforeEach(() => {
   vi.clearAllMocks();
   requireAdmin.mockResolvedValue(ADMIN);
   prismaMock.homepageFaqCategory.findUnique.mockResolvedValue({ id: "cat-1" });
+});
+
+describe("Homepage FAQs permission guard", () => {
+  it("rejects addHomepageFaq for an organiser without the Settings permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+    const result = await addHomepageFaq(null, faqForm());
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(prismaMock.homepageFaq.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects deleteHomepageFaq for an organiser without the Settings permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+    const formData = new FormData();
+    formData.set("faqId", "faq-1");
+    const result = await deleteHomepageFaq(null, formData);
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(prismaMock.homepageFaq.delete).not.toHaveBeenCalled();
+  });
+
+  it("rejects addHomepageFaqCategory for an organiser without the Settings permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+    const formData = new FormData();
+    formData.set("label", "New category");
+    const result = await addHomepageFaqCategory(null, formData);
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(prismaMock.homepageFaqCategory.create).not.toHaveBeenCalled();
+  });
 });
 
 describe("addHomepageFaq", () => {

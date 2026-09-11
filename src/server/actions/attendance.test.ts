@@ -64,7 +64,15 @@ vi.mock("@/lib/email/mailer", () => ({ sendAddedToWalkEmail }));
 import { adminClockIn, adminRemoveAttendance, clockIn, clockOut, searchAddableMembers } from "./attendance";
 
 const USER = { id: "user-1" };
-const ADMIN = { id: "admin-1" };
+// Full access by default so existing tests exercise the authorized path —
+// see the "requires the Walks permission" tests for the guard itself.
+const ADMIN = {
+  id: "admin-1",
+  permWalks: true,
+  permMembers: true,
+  permReportsMessages: true,
+  permSettings: true,
+};
 
 function form(fields: Record<string, string>): FormData {
   const formData = new FormData();
@@ -225,6 +233,13 @@ describe("adminClockIn", () => {
     prismaMock.user.findUnique.mockResolvedValueOnce(null);
     const result = await adminClockIn(null, adminClockInForm());
     expect(result).toEqual({ ok: false, error: "That member is no longer there." });
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it("rejects an organiser without the Walks permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permWalks: false });
+    const result = await adminClockIn(null, adminClockInForm());
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage walks." });
     expect(transaction).not.toHaveBeenCalled();
   });
 
@@ -464,6 +479,12 @@ describe("clockOut", () => {
 describe("searchAddableMembers", () => {
   it("returns nothing when no walk is selected", async () => {
     expect(await searchAddableMembers("", "jo")).toEqual([]);
+    expect(prismaMock.walk.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("returns nothing for an organiser without the Walks permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permWalks: false });
+    expect(await searchAddableMembers("walk-1", "jo")).toEqual([]);
     expect(prismaMock.walk.findUnique).not.toHaveBeenCalled();
   });
 

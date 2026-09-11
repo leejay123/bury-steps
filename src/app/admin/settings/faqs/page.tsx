@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { ensureDefaultFaqCategories, loadHomepageFaqData } from "@/lib/homepage-faqs";
 import { MAX_FAQ_CATEGORIES, MAX_HOMEPAGE_FAQS } from "@/lib/faqs";
 import { HomepageFaqManager } from "../../homepage/faq-manager";
@@ -7,7 +7,7 @@ import { SettingsPage } from "../settings-page";
 export const dynamic = "force-dynamic";
 
 export default async function FaqsSettingsPage() {
-  await requireAdmin();
+  await requirePermission("permSettings");
   await ensureDefaultFaqCategories();
   const { faqs, categories } = await loadHomepageFaqData();
 

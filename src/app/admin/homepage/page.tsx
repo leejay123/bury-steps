@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 export default async function AdminHomepageRedirect() {
-  await requireAdmin();
+  await requirePermission("permSettings");
   redirect("/admin/settings");
 }

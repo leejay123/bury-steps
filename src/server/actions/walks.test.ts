@@ -90,7 +90,15 @@ import {
   updateWalk,
 } from "./walks";
 
-const ADMIN = { id: "admin-1" };
+// Full access by default so existing tests exercise the authorized path —
+// see the "requires the Walks permission" tests for the guard itself.
+const ADMIN = {
+  id: "admin-1",
+  permWalks: true,
+  permMembers: true,
+  permReportsMessages: true,
+  permSettings: true,
+};
 
 function form(fields: Record<string, string>): FormData {
   const formData = new FormData();
@@ -107,6 +115,28 @@ beforeEach(() => {
   isWalkScheduleLocked.mockReturnValue(false);
   isWalkStartInThePast.mockReturnValue(false);
   walkStatus.mockReturnValue("upcoming");
+});
+
+describe("Walks permission guard", () => {
+  it("rejects an organiser without the Walks permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permWalks: false });
+    const result = await duplicateWalk(null, form({ walkId: "walk-1" }));
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage walks." });
+    expect(prismaMock.walk.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("rejects cancelWalk without the Walks permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permWalks: false });
+    const result = await cancelWalk(null, form({ walkId: "walk-1" }));
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage walks." });
+  });
+
+  it("rejects deleteWalk without the Walks permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permWalks: false });
+    const result = await deleteWalk(null, form({ walkId: "walk-1" }));
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage walks." });
+    expect(prismaMock.walk.delete).not.toHaveBeenCalled();
+  });
 });
 
 describe("duplicateWalk", () => {

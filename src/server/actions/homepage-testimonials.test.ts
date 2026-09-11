@@ -35,7 +35,15 @@ import {
   updateHomepageTestimonial,
 } from "./homepage-testimonials";
 
-const ADMIN = { id: "admin-1" };
+// Full access by default so existing tests exercise the authorized path —
+// see the "permission guard" tests below for permSettings: false.
+const ADMIN = {
+  id: "admin-1",
+  permWalks: true,
+  permMembers: true,
+  permReportsMessages: true,
+  permSettings: true,
+};
 
 function baseForm(fields: Record<string, string> = {}): FormData {
   const formData = new FormData();
@@ -48,6 +56,24 @@ function baseForm(fields: Record<string, string> = {}): FormData {
 beforeEach(() => {
   vi.clearAllMocks();
   requireAdmin.mockResolvedValue(ADMIN);
+});
+
+describe("Homepage testimonials permission guard", () => {
+  it("rejects addHomepageTestimonial for an organiser without the Settings permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+    const result = await addHomepageTestimonial(null, baseForm());
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(prismaMock.homepageTestimonial.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects deleteHomepageTestimonial for an organiser without the Settings permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+    const formData = new FormData();
+    formData.set("testimonialId", "t-1");
+    const result = await deleteHomepageTestimonial(null, formData);
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(prismaMock.homepageTestimonial.delete).not.toHaveBeenCalled();
+  });
 });
 
 describe("addHomepageTestimonial", () => {

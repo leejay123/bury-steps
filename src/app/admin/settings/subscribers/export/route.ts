@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { formatDateTime } from "@/lib/dates";
 
 function csvCell(value: string | null): string {
@@ -19,7 +19,7 @@ function csvCell(value: string | null): string {
  * columns for context that Resend just ignores.
  */
 export async function GET() {
-  await requireAdmin();
+  await requirePermission("permSettings");
 
   const [footerSubscribers, memberSubscribers] = await Promise.all([
     prisma.newsletterSubscriber.findMany({

@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { getEmailTemplateOverrides } from "@/server/actions";
 import { EMAIL_TEMPLATES, type EmailTemplateMeta } from "@/lib/email/registry";
 import { SettingsPage, SettingsSectionGroup } from "../settings-page";
@@ -16,7 +16,7 @@ const CATEGORY_ORDER: EmailTemplateMeta["category"][] = [
 ];
 
 export default async function AdminEmailsSettingsPage() {
-  await requireAdmin();
+  await requirePermission("permSettings");
   const overrides = await getEmailTemplateOverrides();
 
   return (

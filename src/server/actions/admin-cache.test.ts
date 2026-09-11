@@ -62,7 +62,16 @@ vi.mock("@/lib/auth", async () => {
 
 import { clearSiteCache, resetSiteToDefault } from "./admin-cache";
 
-const ADMIN = { id: "admin-1", clerkId: "clerk-admin-1" };
+// Full access by default so existing tests exercise the authorized path —
+// see the "permission guard" tests below for permSettings: false.
+const ADMIN = {
+  id: "admin-1",
+  clerkId: "clerk-admin-1",
+  permWalks: true,
+  permMembers: true,
+  permReportsMessages: true,
+  permSettings: true,
+};
 
 function resetForm(confirm: string): FormData {
   const formData = new FormData();
@@ -79,6 +88,13 @@ beforeEach(() => {
 });
 
 describe("clearSiteCache", () => {
+  it("rejects an organiser without the Settings permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+    const result = await clearSiteCache(null, new FormData());
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(revalidateTag).not.toHaveBeenCalled();
+  });
+
   it("revalidates both cache tags and the public/admin/walks routes", async () => {
     const result = await clearSiteCache(null, new FormData());
     expect(revalidateTag).toHaveBeenCalledWith("homepage", { expire: 0 });
@@ -92,6 +108,13 @@ describe("clearSiteCache", () => {
 });
 
 describe("resetSiteToDefault", () => {
+  it("rejects an organiser without the Settings permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+    const result = await resetSiteToDefault(null, resetForm("delete"));
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
   it("refuses without the exact confirm word", async () => {
     const result = await resetSiteToDefault(null, resetForm("yes please"));
     expect(result).toEqual({ ok: false, error: "Type delete to confirm, then try again." });

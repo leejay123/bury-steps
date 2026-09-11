@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { getMonthlyClockInGoal } from "@/lib/walk-progress";
 import { SettingsPage } from "../settings-page";
 import { ProgressSettingsForm } from "./progress-form";
@@ -6,7 +6,7 @@ import { ProgressSettingsForm } from "./progress-form";
 export const dynamic = "force-dynamic";
 
 export default async function ProgressSettingsPage() {
-  await requireAdmin();
+  await requirePermission("permSettings");
   const monthlyClockInGoal = await getMonthlyClockInGoal();
 
   return (

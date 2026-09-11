@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAdmin, displayName } from "@/lib/auth";
+import { requirePermission, displayName } from "@/lib/auth";
 import { formatDateTime } from "@/lib/dates";
 
 function csvCell(value: string | null): string {
@@ -14,7 +14,7 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  await requireAdmin();
+  await requirePermission("permWalks");
   const { id } = await params;
 
   const walk = await prisma.walk.findUnique({

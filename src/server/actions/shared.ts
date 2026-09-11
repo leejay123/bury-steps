@@ -9,10 +9,34 @@ import type { Prisma } from "@prisma/client";
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
 import { isAllowedImageMime, sniffImageMime } from "@/lib/image-bytes";
 import { stripImageMetadata } from "@/lib/strip-image-metadata";
+import type { OrganiserPermissions } from "@/lib/organiser-permissions";
 
 export type ActionResult =
   | { ok: true; message?: string; href?: string }
   | { ok: false; error: string };
+
+const PERMISSION_AREA_LABEL: Record<keyof OrganiserPermissions, string> = {
+  permWalks: "walks",
+  permMembers: "members",
+  permReportsMessages: "reports and messages",
+  permSettings: "site settings",
+};
+
+/**
+ * Friendly ActionResult for a signed-in organiser who lacks one specific
+ * permission — same message shape setMemberRole/setOrganiserPermissions
+ * already use for permMembers. Use this (not requirePermission from
+ * @/lib/auth, which 404s) inside a server action: `notFound()` would
+ * replace the whole page the action was called from, which reads as a
+ * crash for something a stale button click could trigger, rather than a
+ * normal form/inline error.
+ *
+ *   const admin = await requireAdmin();
+ *   if (!admin.permWalks) return permissionDenied("permWalks");
+ */
+export function permissionDenied(permission: keyof OrganiserPermissions): { ok: false; error: string } {
+  return { ok: false, error: `You do not have permission to manage ${PERMISSION_AREA_LABEL[permission]}.` };
+}
 
 /** Thrown by a locked count-check to signal "this would exceed the
  * configured limit" — told apart from a genuine, unexpected DB error so it

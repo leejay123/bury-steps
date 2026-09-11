@@ -10,6 +10,7 @@ import {
   applySortOrder,
   isPrismaCode,
   logActionError,
+  permissionDenied,
   readOptionalImage,
   revalidateHomepage,
   validateReorderIds,
@@ -34,7 +35,8 @@ export async function addHomepageTestimonial(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
 
   const copy = readTestimonialCopy(formData);
   if ("error" in copy) return { ok: false, error: copy.error };
@@ -73,7 +75,8 @@ export async function updateHomepageTestimonial(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const id = String(formData.get("testimonialId") ?? "");
   if (!id) return { ok: false, error: "No testimonial selected." };
 
@@ -110,7 +113,8 @@ export async function deleteHomepageTestimonial(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const id = String(formData.get("testimonialId") ?? "");
   if (!id) return { ok: false, error: "No testimonial selected." };
 
@@ -140,7 +144,8 @@ export async function deleteHomepageTestimonial(
 }
 
 export async function reorderHomepageTestimonials(ids: string[]): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permSettings) return permissionDenied("permSettings");
   const validated = validateReorderIds(ids, MAX_HOMEPAGE_TESTIMONIALS * 2);
   if ("error" in validated) return { ok: false, error: validated.error };
   try {

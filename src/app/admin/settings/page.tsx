@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
@@ -11,7 +11,7 @@ import { SettingsGrid } from "./settings-grid";
 export const dynamic = "force-dynamic";
 
 export default async function AdminSettingsPage() {
-  await requireAdmin();
+  await requirePermission("permSettings");
 
   const [slideCount, testimonialCount, faqCount, noticeCount] = await Promise.all([
     prisma.homepageSlide.count(),

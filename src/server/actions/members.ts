@@ -32,6 +32,7 @@ import {
   LimitReachedError,
   isNotFoundStatus,
   logActionError,
+  permissionDenied,
   withCountLimitLock,
 } from "./shared";
 
@@ -71,7 +72,8 @@ export async function searchMembers({
   query?: string;
   role?: MemberRoleFilter;
 }): Promise<{ rows: MemberRow[]; total: number }> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permMembers) return { rows: [], total: 0 };
 
   const needle = query.trim();
   let searchWhere: Prisma.UserWhereInput | undefined;
@@ -156,6 +158,7 @@ export async function searchMembers({
 
 export async function deleteMember(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const admin = await requireAdmin();
+  if (!admin.permMembers) return permissionDenied("permMembers");
   const id = String(formData.get("userId") ?? "");
   if (!id) return { ok: false, error: "No member selected." };
 
@@ -290,9 +293,7 @@ export async function setMemberRole(
   // Changing who's an organiser (or what they can do) is itself a Members
   // capability — a limited organiser who lacks it can't use this at all,
   // even by posting directly to this action.
-  if (!admin.permMembers) {
-    return { ok: false, error: "You do not have permission to manage members." };
-  }
+  if (!admin.permMembers) return permissionDenied("permMembers");
   const limited = checkRateLimit(`${admin.id}:setMemberRole`, 20, 60_000);
   if (!limited.ok) {
     return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
@@ -417,9 +418,7 @@ export async function setOrganiserPermissions(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permMembers) {
-    return { ok: false, error: "You do not have permission to manage members." };
-  }
+  if (!admin.permMembers) return permissionDenied("permMembers");
   const limited = checkRateLimit(`${admin.id}:setOrganiserPermissions`, 20, 60_000);
   if (!limited.ok) {
     return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
@@ -522,7 +521,8 @@ export async function resendOrganiserInvite(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permMembers) return permissionDenied("permMembers");
   const id = String(formData.get("userId") ?? "");
   if (!id) return { ok: false, error: "No member selected." };
 
@@ -539,7 +539,8 @@ export async function cancelOrganiserInvite(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.permMembers) return permissionDenied("permMembers");
   const id = String(formData.get("userId") ?? "");
   if (!id) return { ok: false, error: "No member selected." };
 
@@ -659,6 +660,7 @@ export async function getMemberHistory(userId: string): Promise<{
   permissions: OrganiserPermissions;
 } | null> {
   const admin = await requireAdmin();
+  if (!admin.permMembers) return null;
   const [member, attendanceCount] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },

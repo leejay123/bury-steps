@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Download } from "lucide-react";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { displayName } from "@/lib/auth";
 import { formatDate } from "@/lib/dates";
@@ -22,7 +22,7 @@ function StatTile({ label, value }: { label: string; value: number }) {
 }
 
 export default async function AdminSubscribersSettingsPage() {
-  await requireAdmin();
+  await requirePermission("permSettings");
 
   const [
     activeFooterSubscribers,

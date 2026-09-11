@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { requireAdmin, displayName } from "@/lib/auth";
+import { requirePermission, displayName } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/dates";
 import { involvedSummaryText } from "@/lib/accident-reports";
@@ -18,7 +18,7 @@ export default async function PrintAccidentReportPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdmin();
+  await requirePermission("permReportsMessages");
   const { id } = await params;
 
   const report = await prisma.accidentReport.findUnique({

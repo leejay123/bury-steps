@@ -91,7 +91,15 @@ import {
   updateSiteNoticeCategory,
 } from "./notices";
 
-const ADMIN = { id: "admin-1" };
+// Full access by default so existing tests exercise the authorized path —
+// see the "permission guard" tests below for permSettings: false.
+const ADMIN = {
+  id: "admin-1",
+  permWalks: true,
+  permMembers: true,
+  permReportsMessages: true,
+  permSettings: true,
+};
 const USER = { id: "user-1" };
 
 function bellForm(fields: Record<string, string> = {}): FormData {
@@ -108,6 +116,33 @@ beforeEach(() => {
   requireAdmin.mockResolvedValue(ADMIN);
   requireUser.mockResolvedValue(USER);
   checkRateLimit.mockReturnValue({ ok: true });
+});
+
+describe("Site notices permission guard", () => {
+  it("rejects addSiteNotice for an organiser without the Settings permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+    const result = await addSiteNotice(null, bellForm());
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(prismaMock.siteNotice.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects deleteSiteNotice for an organiser without the Settings permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+    const formData = new FormData();
+    formData.set("noticeId", "notice-1");
+    const result = await deleteSiteNotice(null, formData);
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(prismaMock.siteNotice.delete).not.toHaveBeenCalled();
+  });
+
+  it("rejects addSiteNoticeCategory for an organiser without the Settings permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permSettings: false });
+    const formData = new FormData();
+    formData.set("label", "General");
+    const result = await addSiteNoticeCategory(null, formData);
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage site settings." });
+    expect(prismaMock.siteNoticeCategory.create).not.toHaveBeenCalled();
+  });
 });
 
 describe("addSiteNotice", () => {
