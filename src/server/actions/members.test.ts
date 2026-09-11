@@ -1145,10 +1145,11 @@ describe("transferOwnership", () => {
     expect(result).toEqual({ ok: false, error: "You are already the owner." });
   });
 
-  it("requires the confirm phrase", async () => {
-    const result = await transferOwnership(null, roleForm({ userId: "admin-2", confirm: "no" }));
-    expect(result).toEqual({ ok: false, error: "Type confirm to transfer ownership." });
-    expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+  it("requires typing the target's own name, not a generic confirm word", async () => {
+    const target = { id: "admin-2", role: "ADMIN", firstName: "Sam", lastName: "Lee", email: "sam@example.com" };
+    prismaMock.user.findUnique.mockResolvedValueOnce(target);
+    const result = await transferOwnership(null, roleForm({ userId: "admin-2", confirm: "confirm" }));
+    expect(result).toEqual({ ok: false, error: "Type Sam Lee's name to transfer ownership." });
   });
 
   it("refuses a target who isn't an existing organiser", async () => {
@@ -1175,7 +1176,7 @@ describe("transferOwnership", () => {
     prismaMock.siteSetting.update.mockResolvedValueOnce({});
     prismaMock.user.update.mockResolvedValueOnce({});
 
-    const result = await transferOwnership(null, roleForm({ userId: target.id, confirm: "confirm" }));
+    const result = await transferOwnership(null, roleForm({ userId: target.id, confirm: "Sam Lee" }));
 
     expect(prismaMock.siteSetting.update).toHaveBeenCalledWith({
       where: { id: "site" },

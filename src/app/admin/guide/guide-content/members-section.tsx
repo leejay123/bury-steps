@@ -75,7 +75,9 @@ export function MembersSection() {
             owner always has full access and cannot demote or remove themselves — choose{" "}
             <strong>Make owner</strong> on another organiser&rsquo;s row to hand the role over
             first. That organiser gains full access; you keep whatever permissions you already
-            had, just without the owner-only powers.
+            had, just without the owner-only powers. Because this is such a big change, it asks
+            you to type that organiser&rsquo;s own name to confirm, rather than just the word
+            &ldquo;Confirm&rdquo; used elsewhere.
           </p>
         </GuideBody>
       </AccordionContent>

@@ -532,14 +532,19 @@ export async function transferOwnership(
   if (!id) return { ok: false, error: "No organiser selected." };
   if (id === admin.id) return { ok: false, error: "You are already the owner." };
 
-  const confirm = String(formData.get("confirm") ?? "").trim().toLowerCase();
-  if (confirm !== "confirm") {
-    return { ok: false, error: "Type confirm to transfer ownership." };
-  }
-
   const target = await prisma.user.findUnique({ where: { id } });
   if (!target || target.role !== "ADMIN") {
     return { ok: false, error: "Choose an existing organiser to hand ownership to." };
+  }
+
+  // A generic "type Confirm" is fine for a routine, reversible change, but
+  // handing over ultimate control warrants something more deliberate and
+  // self-documenting: typing the specific person's name they're about to
+  // make owner. Never trust the client-side check alone (matches
+  // isResetConfirmWord's dual validation for the site-reset action).
+  const confirm = String(formData.get("confirm") ?? "").trim().toLowerCase();
+  if (confirm !== displayName(target).trim().toLowerCase()) {
+    return { ok: false, error: `Type ${displayName(target)}'s name to transfer ownership.` };
   }
 
   try {

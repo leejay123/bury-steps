@@ -18,8 +18,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const CONFIRM_WORD = "Confirm";
-
 /**
  * Hands the site's single "master organiser" role to another existing
  * organiser — see src/lib/site-owner.ts. Only ever rendered for the
@@ -49,7 +47,7 @@ export function TransferOwnershipButton({
   useResetOnChange([open], () => {
     if (!open) setConfirmValue("");
   });
-  const ready = confirmValue.trim().toLowerCase() === CONFIRM_WORD.toLowerCase();
+  const ready = confirmValue.trim().toLowerCase() === name.trim().toLowerCase();
 
   return (
     <>
@@ -83,14 +81,14 @@ export function TransferOwnershipButton({
             <input name="confirm" type="hidden" value={confirmValue} />
             <div className="flex flex-col gap-1.5">
               <Label htmlFor={`transfer-owner-confirm-${userId}`}>
-                Type &ldquo;{CONFIRM_WORD}&rdquo; to continue
+                Type &ldquo;{name}&rdquo; to continue
               </Label>
               <Input
                 autoComplete="off"
                 disabled={isPending}
                 id={`transfer-owner-confirm-${userId}`}
                 onChange={(event) => setConfirmValue(event.target.value)}
-                placeholder={CONFIRM_WORD}
+                placeholder={name}
                 spellCheck={false}
                 value={confirmValue}
               />
