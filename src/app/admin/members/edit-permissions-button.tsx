@@ -16,12 +16,16 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { OrganiserPermissionFields } from "./organiser-permissions-fields";
-import { FULL_ORGANISER_PERMISSIONS, type OrganiserPermissions } from "@/lib/organiser-permissions";
+import {
+  FULL_ORGANISER_PERMISSIONS,
+  hasAnyPermission,
+  type OrganiserPermissions,
+} from "@/lib/organiser-permissions";
 
-function SaveSubmit() {
+function SaveSubmit({ hasSelection }: { hasSelection: boolean }) {
   const { pending } = useFormStatus();
   return (
-    <Button disabled={pending} type="submit">
+    <Button disabled={pending || !hasSelection} type="submit">
       {pending ? "Saving…" : "Save permissions"}
     </Button>
   );
@@ -90,7 +94,7 @@ export function EditPermissionsButton({
             </div>
             <input name="userId" type="hidden" value={userId} />
             <DrawerFooter>
-              <SaveSubmit />
+              <SaveSubmit hasSelection={hasAnyPermission(permissions)} />
             </DrawerFooter>
           </form>
         </DrawerContent>

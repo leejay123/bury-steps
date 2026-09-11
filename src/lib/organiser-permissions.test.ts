@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   describeOrganiserPermissions,
   FULL_ORGANISER_PERMISSIONS,
+  hasAnyPermission,
   hasFullAccess,
   type OrganiserPermissions,
 } from "./organiser-permissions";
@@ -18,6 +19,17 @@ describe("hasFullAccess", () => {
     expect(hasFullAccess(FULL_ORGANISER_PERMISSIONS)).toBe(true);
     expect(hasFullAccess({ ...FULL_ORGANISER_PERMISSIONS, permSettings: false })).toBe(false);
     expect(hasFullAccess(NONE)).toBe(false);
+  });
+});
+
+describe("hasAnyPermission", () => {
+  it("is false only when every permission is off", () => {
+    expect(hasAnyPermission(NONE)).toBe(false);
+  });
+
+  it("is true when at least one permission is granted", () => {
+    expect(hasAnyPermission({ ...NONE, permWalks: true })).toBe(true);
+    expect(hasAnyPermission(FULL_ORGANISER_PERMISSIONS)).toBe(true);
   });
 });
 

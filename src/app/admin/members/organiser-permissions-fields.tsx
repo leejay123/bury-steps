@@ -105,6 +105,12 @@ export function OrganiserPermissionFields({
           );
         })}
       </div>
+      {noneChecked ? (
+        <p className="text-sm text-destructive">
+          Choose at least one — an organiser with nothing switched on can&rsquo;t do anything a
+          member can&rsquo;t.
+        </p>
+      ) : null}
     </div>
   );
 }

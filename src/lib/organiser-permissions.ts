@@ -9,14 +9,18 @@
  * they accept.
  *
  * These are read alongside role (getOptionalUser already selects every
- * column) to decide what the nav shows — see site-nav-items.ts. They are
- * NOT yet enforced on most admin pages/actions themselves: a limited
- * organiser who already knows a hidden URL can still reach it today.
- * Enforcing each one is the deliberate next step, done gradually rather
- * than as one large change. The one exception is delegation itself —
- * see clampGrantablePermissions — which is enforced now, since without it
- * any organiser with just the Members permission could hand out (to a new
- * account, or anyone else) more access than they hold themselves.
+ * column) to decide what the nav shows — see site-nav-items.ts — and are
+ * enforced on every admin page and server action itself (requirePermission
+ * in src/lib/auth.ts; permissionDenied in src/server/actions/shared.ts), so
+ * a limited organiser who already knows a hidden URL is still turned away
+ * there. Delegation is capped separately — see clampGrantablePermissions —
+ * since without it any organiser with just the Members permission could
+ * hand out (to a new account, or anyone else) more access than they hold
+ * themselves. And setMemberRole/setOrganiserPermissions both refuse to
+ * leave an organiser with none of these switched on at all (see
+ * hasAnyPermission below) — the whole point of the role is the extra
+ * access, so an organiser with nothing granted is never a state either
+ * action will produce.
  */
 export type OrganiserPermissions = {
   permWalks: boolean;
@@ -68,6 +72,14 @@ export const ORGANISER_PERMISSION_OPTIONS: {
 
 export function hasFullAccess(perms: OrganiserPermissions): boolean {
   return ORGANISER_PERMISSION_OPTIONS.every((option) => perms[option.name]);
+}
+
+/** The whole point of being an organiser is the extra access it grants —
+ * an organiser with every permission switched off can't do anything an
+ * ordinary member can't, so setMemberRole and setOrganiserPermissions both
+ * require this to be true before saving. */
+export function hasAnyPermission(perms: OrganiserPermissions): boolean {
+  return ORGANISER_PERMISSION_OPTIONS.some((option) => perms[option.name]);
 }
 
 /** Same "absent checkbox reads as false" convention as email preferences

@@ -23,6 +23,7 @@ import { OrganiserPermissionFields } from "./organiser-permissions-fields";
 import {
   clampGrantablePermissions,
   FULL_ORGANISER_PERMISSIONS,
+  hasAnyPermission,
   hasFullAccess,
   NO_ORGANISER_PERMISSIONS,
   type OrganiserPermissions,
@@ -118,10 +119,10 @@ function DemoteDialog({
   );
 }
 
-function PromoteSubmit({ inviteRequired }: { inviteRequired: boolean }) {
+function PromoteSubmit({ hasSelection, inviteRequired }: { hasSelection: boolean; inviteRequired: boolean }) {
   const { pending } = useFormStatus();
   return (
-    <Button disabled={pending} type="submit">
+    <Button disabled={pending || !hasSelection} type="submit">
       {pending ? (inviteRequired ? "Inviting…" : "Promoting…") : inviteRequired ? "Invite as organiser" : "Make organiser"}
     </Button>
   );
@@ -213,7 +214,7 @@ function PromoteDrawer({
               separate typed confirmation like the demote dialog asks for. */}
           <input name="confirm" type="hidden" value="confirm" />
           <DrawerFooter>
-            <PromoteSubmit inviteRequired={inviteRequired} />
+            <PromoteSubmit hasSelection={hasAnyPermission(permissions)} inviteRequired={inviteRequired} />
           </DrawerFooter>
         </form>
       </DrawerContent>

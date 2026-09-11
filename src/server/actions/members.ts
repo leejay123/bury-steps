@@ -16,6 +16,7 @@ import {
 } from "@/lib/organiser-invite";
 import {
   clampGrantablePermissions,
+  hasAnyPermission,
   NO_ORGANISER_PERMISSIONS,
   pickOrganiserPermissions,
   readOrganiserPermissions,
@@ -333,6 +334,14 @@ export async function setMemberRole(
     };
   }
 
+  // The whole point of the organiser role is the extra access it grants —
+  // an invite/promotion that switches nothing on would just be a member
+  // with an unused ADMIN flag, so refuse it here rather than let it
+  // through and rely on the invite email's "nothing was granted" fallback.
+  if (role === "ADMIN" && !hasAnyPermission(permissions)) {
+    return { ok: false, error: "Choose at least one permission for them to have as an organiser." };
+  }
+
   // Promoting, with the "must accept an emailed invite first" setting on:
   // send the invite instead of promoting immediately. Role stays MEMBER
   // until they accept — see acceptOrganiserInvite. The chosen permissions
@@ -444,6 +453,12 @@ export async function setOrganiserPermissions(
     readOrganiserPermissions(formData),
     pickOrganiserPermissions(target),
   );
+
+  // Same rule as promoting: an organiser is defined by having some
+  // access, so this can't be used to leave one with none at all.
+  if (!hasAnyPermission(permissions)) {
+    return { ok: false, error: "Choose at least one permission — or make them a member instead." };
+  }
 
   try {
     await prisma.user.update({ where: { id }, data: permissions });

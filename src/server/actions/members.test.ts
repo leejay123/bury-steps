@@ -447,9 +447,34 @@ describe("setMemberRole", () => {
     prismaMock.user.findUnique.mockResolvedValueOnce(target).mockResolvedValueOnce(target);
     prismaMock.user.update.mockResolvedValueOnce({ ...target, role: "ADMIN" });
 
-    await setMemberRole(null, roleForm({ userId: target.id, role: "ADMIN", confirm: "confirm" }));
+    await setMemberRole(
+      null,
+      roleForm({ userId: target.id, role: "ADMIN", confirm: "confirm", permWalks: "on" }),
+    );
 
     expect(prismaMock.siteSetting.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("rejects promoting with no permissions selected — an organiser is defined by having some", async () => {
+    const target = {
+      id: "member-1",
+      role: "MEMBER",
+      firstName: "Jo",
+      lastName: null,
+      email: "jo@example.com",
+    };
+    prismaMock.user.findUnique.mockResolvedValueOnce(target);
+
+    const result = await setMemberRole(
+      null,
+      roleForm({ userId: target.id, role: "ADMIN", confirm: "confirm" }),
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Choose at least one permission for them to have as an organiser.",
+    });
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
   });
 
   it("allows promoting a member to organiser without touching the last-organiser check", async () => {
@@ -465,7 +490,7 @@ describe("setMemberRole", () => {
 
     const result = await setMemberRole(
       null,
-      roleForm({ userId: target.id, role: "ADMIN", confirm: "confirm" }),
+      roleForm({ userId: target.id, role: "ADMIN", confirm: "confirm", permWalks: "on" }),
     );
 
     expect(prismaMock.user.count).not.toHaveBeenCalled();
@@ -782,6 +807,22 @@ describe("setMemberRole — organiser invite required", () => {
     email: "jo@example.com",
   };
 
+  it("rejects with no permissions selected before even checking the invite setting", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce(target);
+
+    const result = await setMemberRole(
+      null,
+      roleForm({ userId: target.id, role: "ADMIN", confirm: "confirm" }),
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Choose at least one permission for them to have as an organiser.",
+    });
+    expect(prismaMock.siteSetting.findUnique).not.toHaveBeenCalled();
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
+  });
+
   it("sends an invite instead of promoting immediately when the setting is on", async () => {
     prismaMock.user.findUnique.mockResolvedValueOnce(target);
     prismaMock.siteSetting.findUnique.mockResolvedValueOnce({ organiserInviteRequired: true });
@@ -789,7 +830,7 @@ describe("setMemberRole — organiser invite required", () => {
 
     const result = await setMemberRole(
       null,
-      roleForm({ userId: target.id, role: "ADMIN", confirm: "confirm" }),
+      roleForm({ userId: target.id, role: "ADMIN", confirm: "confirm", permWalks: "on" }),
     );
 
     expect(prismaMock.user.update).toHaveBeenCalledWith({
@@ -798,17 +839,14 @@ describe("setMemberRole — organiser invite required", () => {
         organiserInviteToken: "invite-token-123",
         organiserInviteSentAt: expect.any(Date),
         organiserInviteExpiresAt: expect.any(Date),
-        // No permission checkboxes were submitted — writing all-false
-        // still happens (see setMemberRole), rather than leaving the
-        // row's existing values untouched.
-        permWalks: false,
+        permWalks: true,
         permMembers: false,
         permReportsMessages: false,
         permSettings: false,
       },
     });
     expect(sendOrganiserInviteEmail).toHaveBeenCalledWith(target, "invite-token-123", {
-      permWalks: false,
+      permWalks: true,
       permMembers: false,
       permReportsMessages: false,
       permSettings: false,
@@ -827,7 +865,7 @@ describe("setMemberRole — organiser invite required", () => {
 
     const result = await setMemberRole(
       null,
-      roleForm({ userId: target.id, role: "ADMIN", confirm: "confirm" }),
+      roleForm({ userId: target.id, role: "ADMIN", confirm: "confirm", permWalks: "on" }),
     );
 
     expect(sendOrganiserInviteEmail).not.toHaveBeenCalled();
@@ -1014,9 +1052,25 @@ describe("setOrganiserPermissions", () => {
     prismaMock.user.findUnique.mockResolvedValueOnce(target);
     prismaMock.user.update.mockResolvedValueOnce({});
 
-    const result = await setOrganiserPermissions(null, roleForm({ userId: target.id }));
+    const result = await setOrganiserPermissions(
+      null,
+      roleForm({ userId: target.id, permWalks: "on" }),
+    );
 
     expect(result.ok).toBe(true);
+  });
+
+  it("rejects clearing every permission — an organiser must keep at least one", async () => {
+    const target = { id: "admin-2", role: "ADMIN", firstName: "Sam", lastName: "Lee", email: "sam@example.com" };
+    prismaMock.user.findUnique.mockResolvedValueOnce(target);
+
+    const result = await setOrganiserPermissions(null, roleForm({ userId: target.id }));
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Choose at least one permission — or make them a member instead.",
+    });
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
   });
 });
 
