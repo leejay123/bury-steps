@@ -16,11 +16,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { OrganiserPermissionFields } from "./organiser-permissions-fields";
-import {
-  FULL_ORGANISER_PERMISSIONS,
-  hasAnyPermission,
-  type OrganiserPermissions,
-} from "@/lib/organiser-permissions";
+import { hasAnyPermission, type OrganiserPermissions } from "@/lib/organiser-permissions";
 
 function SaveSubmit({ hasSelection }: { hasSelection: boolean }) {
   const { pending } = useFormStatus();
@@ -39,16 +35,11 @@ export function EditPermissionsButton({
   name,
   onChanged,
   userId,
-  viewerPermissions = FULL_ORGANISER_PERMISSIONS,
 }: {
   initialPermissions: OrganiserPermissions;
   name: string;
   onChanged?: () => void;
   userId: string;
-  /** The signed-in organiser's own permissions — caps what they can change
-   * here to what they hold themselves (see clampGrantablePermissions).
-   * Omitted defaults to full access. */
-  viewerPermissions?: OrganiserPermissions;
 }) {
   const [open, setOpen] = useState(false);
   const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
@@ -88,7 +79,6 @@ export function EditPermissionsButton({
                 disabled={isPending}
                 onChange={setPermissions}
                 permissions={permissions}
-                viewerPermissions={viewerPermissions}
               />
               <FormError message={state && !state.ok ? state.error : null} />
             </div>

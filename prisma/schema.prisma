@@ -89,6 +89,9 @@ model User {
   /// At most one SiteSetting row ever exists, so this is really 0-or-1 —
   /// Prisma still requires the relation's other side to be declared.
   contactMessagesOwnerFor SiteSetting[]          @relation("ContactMessagesOwner")
+  /// Same 0-or-1-in-practice note as above — this is who src/lib/site-owner.ts
+  /// treats as the site's single "master organiser".
+  siteOwnerFor            SiteSetting[]          @relation("SiteOwner")
 
   @@index([createdAt])
 }
@@ -409,9 +412,20 @@ model SiteSetting {
   /// auto-delete off — this is a new feature, not an existing behaviour
   /// being made configurable.
   accidentReportRetentionDays Int?
+  /// The single "master organiser" — the only account that can promote or
+  /// demote an organiser, edit an organiser's permissions, or remove an
+  /// organiser's account (see src/lib/site-owner.ts). Set automatically
+  /// for whoever bootstraps as the very first organiser; transferred
+  /// deliberately after that (transferOwnership). A single FK can only
+  /// ever point to one row, so "exactly one owner" is structural rather
+  /// than a rule enforced by hand. onDelete: SetNull is a defensive
+  /// fallback only — the app itself refuses to remove or demote the
+  /// owner without a transfer first, so this should not normally fire.
+  ownerId                     String?
   updatedAt                   DateTime @updatedAt
 
   contactMessagesOwner User? @relation("ContactMessagesOwner", fields: [contactMessagesOwnerId], references: [id], onDelete: SetNull)
+  owner                User? @relation("SiteOwner", fields: [ownerId], references: [id], onDelete: SetNull)
 }
 
 /// Organiser-only accident reports. Printed from the report page.

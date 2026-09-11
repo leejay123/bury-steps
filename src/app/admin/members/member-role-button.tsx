@@ -21,11 +21,8 @@ import {
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { OrganiserPermissionFields } from "./organiser-permissions-fields";
 import {
-  clampGrantablePermissions,
   FULL_ORGANISER_PERMISSIONS,
   hasAnyPermission,
-  hasFullAccess,
-  NO_ORGANISER_PERMISSIONS,
   type OrganiserPermissions,
 } from "@/lib/organiser-permissions";
 
@@ -136,7 +133,6 @@ function PromoteDrawer({
   open,
   setOpen,
   userId,
-  viewerPermissions,
 }: {
   initialPermissions: OrganiserPermissions;
   inviteRequired: boolean;
@@ -145,20 +141,12 @@ function PromoteDrawer({
   open: boolean;
   setOpen: (open: boolean) => void;
   userId: string;
-  viewerPermissions: OrganiserPermissions;
 }) {
   const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
     setMemberRole,
     null,
   );
-  // Pre-checking a box the viewer can't actually grant would promise
-  // something the server-side cap (clampGrantablePermissions) then
-  // silently drops — so a limited organiser's starting selection is capped
-  // to what they hold themselves, same as what actually gets saved.
-  const seedPermissions = hasFullAccess(viewerPermissions)
-    ? initialPermissions
-    : clampGrantablePermissions(viewerPermissions, initialPermissions, NO_ORGANISER_PERMISSIONS);
-  const [permissions, setPermissions] = useState<OrganiserPermissions>(seedPermissions);
+  const [permissions, setPermissions] = useState<OrganiserPermissions>(initialPermissions);
   useActionToast(state, () => {
     setOpen(false);
     onChanged?.();
@@ -168,7 +156,7 @@ function PromoteDrawer({
   // keep showing whatever was ticked last time instead of their actual
   // starting permissions.
   useResetOnChange([open], () => {
-    if (open) setPermissions(seedPermissions);
+    if (open) setPermissions(initialPermissions);
   });
 
   return (
@@ -203,7 +191,6 @@ function PromoteDrawer({
               disabled={isPending}
               onChange={setPermissions}
               permissions={permissions}
-              viewerPermissions={viewerPermissions}
             />
             <FormError message={state && !state.ok ? state.error : null} />
           </div>
@@ -229,7 +216,6 @@ export function MemberRoleButton({
   onChanged,
   role,
   userId,
-  viewerPermissions = FULL_ORGANISER_PERMISSIONS,
 }: {
   /** Permissions to preselect in the promote drawer — the row's existing
    * columns (already true-by-default for anyone never customized). */
@@ -243,10 +229,6 @@ export function MemberRoleButton({
   onChanged?: () => void;
   role: "ADMIN" | "MEMBER";
   userId: string;
-  /** The signed-in organiser's own permissions — caps what they can grant
-   * here to what they hold themselves (see clampGrantablePermissions).
-   * Omitted defaults to full access. */
-  viewerPermissions?: OrganiserPermissions;
 }) {
   const promoting = role === "MEMBER";
   const [open, setOpen] = useState(false);
@@ -265,7 +247,6 @@ export function MemberRoleButton({
           open={open}
           setOpen={setOpen}
           userId={userId}
-          viewerPermissions={viewerPermissions}
         />
       ) : (
         <DemoteDialog name={name} onChanged={onChanged} open={open} setOpen={setOpen} userId={userId} />

@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import { getMemberHistory } from "@/server/actions";
 import { formatDate, formatMembershipAge } from "@/lib/dates";
 import { walkStatus } from "@/lib/walk-window";
-import { pickOrganiserPermissions } from "@/lib/organiser-permissions";
+import { getOwnerId } from "@/lib/site-owner";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { AttendanceHistory } from "@/components/attendance-history";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ import { DeleteMemberButton } from "../delete-member-button";
 import { EditPermissionsButton } from "../edit-permissions-button";
 import { ImpersonateButton } from "../impersonate-button";
 import { MemberRoleButton } from "../member-role-button";
+import { TransferOwnershipButton } from "../transfer-ownership-button";
 import { CancelInviteButton, ResendInviteButton } from "../pending-invite-actions";
 
 export const dynamic = "force-dynamic";
@@ -24,17 +25,18 @@ export default async function MemberDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const viewer = await requirePermission("permMembers");
-  const viewerPermissions = pickOrganiserPermissions(viewer);
   const { id } = await params;
 
-  const [member, setting] = await Promise.all([
+  const [member, setting, ownerId] = await Promise.all([
     getMemberHistory(id),
     prisma.siteSetting.findUnique({
       where: { id: SITE_SETTING_ID },
       select: { organiserInviteRequired: true },
     }),
+    getOwnerId(),
   ]);
   if (!member) notFound();
+  const viewerIsOwner = viewer.id === ownerId;
 
   const joinedAt = new Date(member.createdAt);
   const attendanceCount = member.attendanceCount;
@@ -60,7 +62,7 @@ export default async function MemberDetailPage({
                 </span>
               ) : (
                 <Badge className="h-7 px-2" variant={member.role === "ADMIN" ? "outline" : "secondary"}>
-                  {member.role === "ADMIN" ? "Organiser" : "Member"}
+                  {member.isOwner ? "Owner" : member.role === "ADMIN" ? "Organiser" : "Member"}
                 </Badge>
               )}
             </div>
@@ -79,19 +81,23 @@ export default async function MemberDetailPage({
               <>
                 <ResendInviteButton userId={id} />
                 <CancelInviteButton userId={id} />
-                <EditPermissionsButton
-                  initialPermissions={member.permissions}
-                  name={member.name}
-                  userId={id}
-                  viewerPermissions={viewerPermissions}
-                />
+                {viewerIsOwner ? (
+                  <EditPermissionsButton
+                    initialPermissions={member.permissions}
+                    name={member.name}
+                    userId={id}
+                  />
+                ) : null}
               </>
             ) : (
               /* Changing your own role here would be easy to hit by mistake
                  and immediately cost you organiser access to fix it — same
                  reasoning as hiding your own Remove button below. Another
-                 organiser can change it for you instead. */
-              !member.isYou && (
+                 organiser can change it for you instead. Promoting,
+                 demoting, editing permissions, and transferring ownership
+                 are all owner-only regardless of whose page this is. */
+              !member.isYou &&
+              viewerIsOwner && (
                 <>
                   <MemberRoleButton
                     initialPermissions={member.permissions}
@@ -99,20 +105,21 @@ export default async function MemberDetailPage({
                     name={member.name}
                     role={member.role}
                     userId={id}
-                    viewerPermissions={viewerPermissions}
                   />
                   {member.role === "ADMIN" ? (
-                    <EditPermissionsButton
-                      initialPermissions={member.permissions}
-                      name={member.name}
-                      userId={id}
-                      viewerPermissions={viewerPermissions}
-                    />
+                    <>
+                      <EditPermissionsButton
+                        initialPermissions={member.permissions}
+                        name={member.name}
+                        userId={id}
+                      />
+                      <TransferOwnershipButton name={member.name} userId={id} />
+                    </>
                   ) : null}
                 </>
               )
             )}
-            {!member.isYou ? (
+            {!member.isYou && (member.role !== "ADMIN" || viewerIsOwner) ? (
               <DeleteMemberButton
                 attendanceCount={attendanceCount}
                 name={member.name}

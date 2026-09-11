@@ -68,9 +68,7 @@ describe("describeOrganiserPermissions", () => {
 
   it("names only what's granted for a single permission", () => {
     const result = describeOrganiserPermissions({ ...NONE, permMembers: true });
-    expect(result).toBe(
-      "You'll be able to view the member list, promote or demote organisers, and remove members.",
-    );
+    expect(result).toBe("You'll be able to view the member list, and remove a member's account.");
   });
 
   it("joins multiple granted permissions with a final 'and'", () => {

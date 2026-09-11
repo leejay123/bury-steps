@@ -45,6 +45,20 @@ export function permissionDenied(permission: keyof OrganiserPermissions): { ok: 
   return { ok: false, error: `You do not have permission to manage ${PERMISSION_AREA_LABEL[permission]}.` };
 }
 
+/**
+ * Friendly ActionResult for an organiser who isn't the site's single
+ * owner — see src/lib/site-owner.ts. Promoting/demoting an organiser,
+ * editing an organiser's permissions, and removing an organiser's account
+ * are all owner-only, regardless of what permissions the acting organiser
+ * otherwise holds.
+ *
+ *   const admin = await requireAdmin();
+ *   if (!(await isOwner(admin.id))) return ownerDenied("change an organiser's role");
+ */
+export function ownerDenied(action: string): { ok: false; error: string } {
+  return { ok: false, error: `Only the site owner can ${action}.` };
+}
+
 /** Thrown by a locked count-check to signal "this would exceed the
  * configured limit" — told apart from a genuine, unexpected DB error so it
  * can be reported with its own message instead of the generic

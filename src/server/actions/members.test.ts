@@ -1,37 +1,58 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { RateLimitResult } from "@/lib/rate-limit";
 
-const { revalidatePath, requireAdmin, getOptionalUser, checkRateLimit, deleteUser, prismaMock, transaction } =
-  vi.hoisted(() => {
-    const prismaMock: Record<string, Record<string, ReturnType<typeof vi.fn>>> = {
-      user: { findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn(), update: vi.fn(), delete: vi.fn() },
-      walk: { updateMany: vi.fn() },
-      accidentReport: { updateMany: vi.fn() },
-      walkJourneyEvent: { updateMany: vi.fn() },
-      attendance: { count: vi.fn() },
-      siteSetting: { updateMany: vi.fn(), findUnique: vi.fn() },
-    };
-    const transaction = vi.fn(async (arg: unknown) => {
-      if (Array.isArray(arg)) return Promise.all(arg);
-      return (arg as (tx: unknown) => unknown)({
-        $executeRawUnsafe: vi.fn(),
-        ...prismaMock,
-      });
+// Must match ADMIN.id below — the default owner for tests that don't
+// override it (see the getOwnerId/isOwner mocks).
+const OWNER_ID = "admin-1";
+
+const {
+  revalidatePath,
+  requireAdmin,
+  getOptionalUser,
+  checkRateLimit,
+  deleteUser,
+  prismaMock,
+  transaction,
+  getOwnerId,
+  isOwner,
+} = vi.hoisted(() => {
+  const prismaMock: Record<string, Record<string, ReturnType<typeof vi.fn>>> = {
+    user: { findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    walk: { updateMany: vi.fn() },
+    accidentReport: { updateMany: vi.fn() },
+    walkJourneyEvent: { updateMany: vi.fn() },
+    attendance: { count: vi.fn() },
+    siteSetting: { updateMany: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
+  };
+  const transaction = vi.fn(async (arg: unknown) => {
+    if (Array.isArray(arg)) return Promise.all(arg);
+    return (arg as (tx: unknown) => unknown)({
+      $executeRawUnsafe: vi.fn(),
+      ...prismaMock,
     });
-    return {
-      revalidatePath: vi.fn(),
-      requireAdmin: vi.fn(),
-      getOptionalUser: vi.fn(async (): Promise<{ id: string } | null> => null),
-      checkRateLimit: vi.fn((): RateLimitResult => ({ ok: true })),
-      deleteUser: vi.fn(),
-      prismaMock,
-      transaction,
-    };
   });
+  return {
+    revalidatePath: vi.fn(),
+    requireAdmin: vi.fn(),
+    getOptionalUser: vi.fn(async (): Promise<{ id: string } | null> => null),
+    checkRateLimit: vi.fn((): RateLimitResult => ({ ok: true })),
+    deleteUser: vi.fn(),
+    prismaMock,
+    transaction,
+    // Own their own mocked module (see vi.mock("@/lib/site-owner") below)
+    // instead of going through prismaMock.siteSetting — that field is
+    // shared with the organiserInviteRequired lookup elsewhere in
+    // setMemberRole, and a single-owner-only fixture would either clobber
+    // that lookup's queued mock value or vice versa.
+    getOwnerId: vi.fn(async (): Promise<string | null> => "admin-1"),
+    isOwner: vi.fn(async (userId: string): Promise<boolean> => userId === "admin-1"),
+  };
+});
 
 vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("@/lib/db", () => ({ prisma: { ...prismaMock, $transaction: transaction } }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
+vi.mock("@/lib/site-owner", () => ({ getOwnerId, isOwner }));
 vi.mock("@clerk/nextjs/server", () => ({
   clerkClient: vi.fn(async () => ({ users: { deleteUser } })),
 }));
@@ -54,6 +75,7 @@ vi.mock("@/lib/auth", async () => {
 });
 
 import { sendOrganiserInviteEmail, sendAdminPromotedEmail } from "@/lib/email/mailer";
+import { FULL_ORGANISER_PERMISSIONS } from "@/lib/organiser-permissions";
 import {
   acceptOrganiserInvite,
   cancelOrganiserInvite,
@@ -63,6 +85,7 @@ import {
   searchMembers,
   setMemberRole,
   setOrganiserPermissions,
+  transferOwnership,
 } from "./members";
 
 // Full access by default so existing tests exercise the unclamped path —
@@ -94,14 +117,35 @@ beforeEach(() => {
   vi.clearAllMocks();
   requireAdmin.mockResolvedValue(ADMIN);
   checkRateLimit.mockReturnValue({ ok: true });
+  // ADMIN is the owner by default — see the "not the owner" tests in each
+  // describe block below for the opposite case.
+  getOwnerId.mockResolvedValue(OWNER_ID);
+  isOwner.mockImplementation(async (userId: string) => userId === OWNER_ID);
 });
 
 describe("deleteMember", () => {
-  it("rejects an organiser without the Members permission", async () => {
+  it("rejects an organiser without the Members permission from removing a plain member", async () => {
     requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembers: false });
+    prismaMock.user.findUnique.mockResolvedValueOnce({
+      id: "member-1",
+      role: "MEMBER",
+      clerkId: "clerk-member-1",
+    });
     const result = await deleteMember(null, deleteMemberForm({ userId: "member-1", confirm: "confirm" }));
     expect(result).toEqual({ ok: false, error: "You do not have permission to manage members." });
-    expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+    expect(prismaMock.user.delete).not.toHaveBeenCalled();
+  });
+
+  it("rejects removing an organiser's account when the acting admin isn't the owner", async () => {
+    isOwner.mockResolvedValueOnce(false);
+    prismaMock.user.findUnique.mockResolvedValueOnce({
+      id: "admin-2",
+      role: "ADMIN",
+      clerkId: "clerk-admin-2",
+    });
+    const result = await deleteMember(null, deleteMemberForm({ userId: "admin-2", confirm: "confirm" }));
+    expect(result).toEqual({ ok: false, error: "Only the site owner can remove an organiser's account." });
+    expect(prismaMock.user.delete).not.toHaveBeenCalled();
   });
 
   it("rejects when no member is selected", async () => {
@@ -323,13 +367,13 @@ function roleForm(fields: Record<string, string>): FormData {
 }
 
 describe("setMemberRole", () => {
-  it("rejects when the acting admin lacks the Members permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembers: false });
+  it("rejects promoting or demoting when the acting admin isn't the owner", async () => {
+    getOwnerId.mockResolvedValueOnce("someone-else");
     const result = await setMemberRole(
       null,
       roleForm({ userId: "member-1", role: "ADMIN", confirm: "confirm" }),
     );
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage members." });
+    expect(result).toEqual({ ok: false, error: "Only the site owner can change an organiser's role." });
     expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
   });
 
@@ -555,72 +599,16 @@ describe("setMemberRole", () => {
     expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
   });
 
-  it("caps a limited organiser to promoting with only the permissions they hold themselves", async () => {
-    // Only Members and Walks — nothing else — same shape a Members-only
-    // organiser could otherwise use to hand a fresh account full access
-    // by simply asking for it.
-    requireAdmin.mockResolvedValueOnce({
-      ...ADMIN,
-      permMessages: false,
-      permReports: false,
-      permHomepage: false,
-      permNotices: false,
-      permProgress: false,
-      permEmails: false,
-      permSubscribers: false,
-      permDisplay: false,
-      permCacheReset: false,
-    });
-    const target = {
-      id: "member-1",
-      role: "MEMBER",
-      firstName: "Jo",
-      lastName: null,
-      email: "jo@example.com",
-    };
-    prismaMock.user.findUnique.mockResolvedValueOnce(target).mockResolvedValueOnce(target);
-    prismaMock.user.update.mockResolvedValueOnce({ ...target, role: "ADMIN" });
-
-    await setMemberRole(
+  it("rejects transferring ownership before demoting yourself", async () => {
+    const result = await setMemberRole(
       null,
-      roleForm({
-        userId: target.id,
-        role: "ADMIN",
-        confirm: "confirm",
-        // Asks for everything, including what the actor doesn't have.
-        permWalks: "on",
-        permMembers: "on",
-        permMessages: "on",
-        permReports: "on",
-        permHomepage: "on",
-        permNotices: "on",
-        permProgress: "on",
-        permEmails: "on",
-        permSubscribers: "on",
-        permDisplay: "on",
-        permCacheReset: "on",
-      }),
+      roleForm({ userId: ADMIN.id, role: "MEMBER", confirm: "confirm" }),
     );
-
-    expect(prismaMock.user.update).toHaveBeenCalledWith({
-      where: { id: target.id },
-      data: {
-        role: "ADMIN",
-        permWalks: true,
-        permMembers: true,
-        // Forced to false — the actor doesn't hold these themselves, and
-        // a brand-new organiser has no legitimate existing state to keep.
-        permMessages: false,
-        permReports: false,
-        permHomepage: false,
-        permNotices: false,
-        permProgress: false,
-        permEmails: false,
-        permSubscribers: false,
-        permDisplay: false,
-        permCacheReset: false,
-      },
+    expect(result).toEqual({
+      ok: false,
+      error: "Transfer ownership to another organiser before demoting yourself.",
     });
+    expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
   });
 });
 
@@ -690,6 +678,7 @@ describe("getMemberHistory", () => {
       walkCount: 4,
       attendanceCount: 1,
       isYou: true,
+      isOwner: true,
       pendingInvite: null,
       permissions: {
         permWalks: true,
@@ -787,6 +776,7 @@ describe("searchMembers", () => {
         attendanceCount: 2,
         walkCount: 0,
         pendingInvite: null,
+        isOwner: false,
         permissions: {
           permWalks: true,
           permMembers: true,
@@ -1034,10 +1024,19 @@ describe("resendOrganiserInvite", () => {
 });
 
 describe("setOrganiserPermissions", () => {
-  it("rejects when the acting admin lacks the Members permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembers: false });
+  it("rejects editing an organiser's permissions when the acting admin isn't the owner", async () => {
+    isOwner.mockResolvedValueOnce(false);
     const result = await setOrganiserPermissions(null, roleForm({ userId: "admin-2" }));
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage members." });
+    expect(result).toEqual({
+      ok: false,
+      error: "Only the site owner can edit an organiser's permissions.",
+    });
+    expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("refuses to let the owner edit their own permissions", async () => {
+    const result = await setOrganiserPermissions(null, roleForm({ userId: ADMIN.id }));
+    expect(result).toEqual({ ok: false, error: "The owner always has full access." });
     expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
   });
 
@@ -1094,71 +1093,6 @@ describe("setOrganiserPermissions", () => {
     expect(result).toEqual({ ok: true, message: "Sam Lee's permissions have been updated." });
   });
 
-  it("caps a limited organiser to editing only the permissions they hold themselves", async () => {
-    // Members only — nothing else.
-    requireAdmin.mockResolvedValueOnce({
-      ...ADMIN,
-      permWalks: false,
-      permMessages: false,
-      permReports: false,
-      permHomepage: false,
-      permNotices: false,
-      permProgress: false,
-      permEmails: false,
-      permSubscribers: false,
-      permDisplay: false,
-      permCacheReset: false,
-    });
-    const target = {
-      id: "admin-2",
-      role: "ADMIN",
-      firstName: "Sam",
-      lastName: "Lee",
-      email: "sam@example.com",
-      // Sam currently has Walks but not Display.
-      permWalks: true,
-      permMembers: false,
-      permMessages: false,
-      permReports: false,
-      permHomepage: false,
-      permNotices: false,
-      permProgress: false,
-      permEmails: false,
-      permSubscribers: false,
-      permDisplay: false,
-      permCacheReset: false,
-    };
-    prismaMock.user.findUnique.mockResolvedValueOnce(target);
-    prismaMock.user.update.mockResolvedValueOnce({});
-
-    await setOrganiserPermissions(
-      null,
-      // Tries to both grant Display and revoke Walks — the actor controls
-      // neither, so both requests are ignored.
-      roleForm({ userId: target.id, permMembers: "on", permDisplay: "on" }),
-    );
-
-    expect(prismaMock.user.update).toHaveBeenCalledWith({
-      where: { id: target.id },
-      data: {
-        // Granted — the actor holds Members themselves.
-        permMembers: true,
-        // Untouched — Sam keeps the Walks access they already had, and
-        // does not gain Display, regardless of what was submitted.
-        permWalks: true,
-        permMessages: false,
-        permReports: false,
-        permHomepage: false,
-        permNotices: false,
-        permProgress: false,
-        permEmails: false,
-        permSubscribers: false,
-        permDisplay: false,
-        permCacheReset: false,
-      },
-    });
-  });
-
   it("allows editing permissions on a still-pending invite", async () => {
     const target = {
       id: "member-1",
@@ -1190,6 +1124,75 @@ describe("setOrganiserPermissions", () => {
       error: "Choose at least one permission — or make them a member instead.",
     });
     expect(prismaMock.user.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("transferOwnership", () => {
+  it("rejects when the acting admin isn't the owner", async () => {
+    isOwner.mockResolvedValueOnce(false);
+    const result = await transferOwnership(null, roleForm({ userId: "admin-2", confirm: "confirm" }));
+    expect(result).toEqual({ ok: false, error: "Only the site owner can transfer ownership." });
+    expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("requires an organiser to be selected", async () => {
+    const result = await transferOwnership(null, roleForm({ confirm: "confirm" }));
+    expect(result).toEqual({ ok: false, error: "No organiser selected." });
+  });
+
+  it("refuses to transfer to yourself", async () => {
+    const result = await transferOwnership(null, roleForm({ userId: ADMIN.id, confirm: "confirm" }));
+    expect(result).toEqual({ ok: false, error: "You are already the owner." });
+  });
+
+  it("requires the confirm phrase", async () => {
+    const result = await transferOwnership(null, roleForm({ userId: "admin-2", confirm: "no" }));
+    expect(result).toEqual({ ok: false, error: "Type confirm to transfer ownership." });
+    expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("refuses a target who isn't an existing organiser", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({ id: "member-1", role: "MEMBER" });
+    const result = await transferOwnership(null, roleForm({ userId: "member-1", confirm: "confirm" }));
+    expect(result).toEqual({
+      ok: false,
+      error: "Choose an existing organiser to hand ownership to.",
+    });
+  });
+
+  it("refuses a target that no longer exists", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce(null);
+    const result = await transferOwnership(null, roleForm({ userId: "gone", confirm: "confirm" }));
+    expect(result).toEqual({
+      ok: false,
+      error: "Choose an existing organiser to hand ownership to.",
+    });
+  });
+
+  it("hands ownership to the target and forces them to full access", async () => {
+    const target = { id: "admin-2", role: "ADMIN", firstName: "Sam", lastName: "Lee", email: "sam@example.com" };
+    prismaMock.user.findUnique.mockResolvedValueOnce(target);
+    prismaMock.siteSetting.update.mockResolvedValueOnce({});
+    prismaMock.user.update.mockResolvedValueOnce({});
+
+    const result = await transferOwnership(null, roleForm({ userId: target.id, confirm: "confirm" }));
+
+    expect(prismaMock.siteSetting.update).toHaveBeenCalledWith({
+      where: { id: "site" },
+      data: { ownerId: target.id },
+    });
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: target.id },
+      data: FULL_ORGANISER_PERMISSIONS,
+    });
+    expect(result).toEqual({ ok: true, message: "Sam Lee is now the site owner." });
+  });
+
+  it("rejects when the acting admin is rate-limited", async () => {
+    checkRateLimit.mockReturnValueOnce({ ok: false, retryAfterSeconds: 30 });
+    const result = await transferOwnership(null, roleForm({ userId: "admin-2", confirm: "confirm" }));
+    expect(result).toEqual({ ok: false, error: "Too many attempts. Try again in 30s." });
+    expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
   });
 });
 

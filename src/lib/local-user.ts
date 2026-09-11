@@ -1,5 +1,6 @@
 import type { User } from "@prisma/client";
 import { prisma } from "./db";
+import { DEFAULT_PRIMARY_COLOR, SITE_SETTING_ID } from "./theme";
 
 /**
  * Optional allowlist for the one-time "first account becomes organiser"
@@ -72,7 +73,7 @@ export async function syncLocalUser(input: {
     }
 
     isNewUser = true;
-    return tx.user.create({
+    const created = await tx.user.create({
       data: {
         clerkId: input.clerkId,
         email: input.email,
@@ -81,6 +82,19 @@ export async function syncLocalUser(input: {
         role: bootstrapAsAdmin ? "ADMIN" : "MEMBER",
       },
     });
+
+    if (bootstrapAsAdmin) {
+      // The first organiser is also the site's one "master organiser" —
+      // see src/lib/site-owner.ts. Upsert rather than update: this may be
+      // the very first time the SiteSetting row is ever touched.
+      await tx.siteSetting.upsert({
+        where: { id: SITE_SETTING_ID },
+        create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, ownerId: created.id },
+        update: { ownerId: created.id },
+      });
+    }
+
+    return created;
   });
 
   // Outside the transaction — this makes an external network call, which

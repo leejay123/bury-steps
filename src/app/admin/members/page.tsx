@@ -2,7 +2,7 @@ import { Users } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/auth";
 import { formatDateTime } from "@/lib/dates";
-import { pickOrganiserPermissions } from "@/lib/organiser-permissions";
+import { getOwnerId } from "@/lib/site-owner";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { searchMembers, type MemberRoleFilter } from "@/server/actions";
 import { MembersTable } from "./members-table";
@@ -29,7 +29,7 @@ export default async function MembersPage({
   // Only the first page loads here — search and later pages are fetched
   // live from searchMembers, so this stays fast and correct no matter how
   // many members the group has.
-  const [{ rows, total }, totalMembers, impersonations, setting] = await Promise.all([
+  const [{ rows, total }, totalMembers, impersonations, setting, ownerId] = await Promise.all([
     searchMembers({ role }),
     prisma.user.count(),
     prisma.impersonationEvent.findMany({
@@ -41,6 +41,7 @@ export default async function MembersPage({
       where: { id: SITE_SETTING_ID },
       select: { organiserInviteRequired: true },
     }),
+    getOwnerId(),
   ]);
 
   return (
@@ -62,7 +63,7 @@ export default async function MembersPage({
           inviteRequired={setting?.organiserInviteRequired ?? false}
           roleFilter={role}
           viewerId={admin.id}
-          viewerPermissions={pickOrganiserPermissions(admin)}
+          viewerIsOwner={admin.id === ownerId}
         />
       )}
 

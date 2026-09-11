@@ -8,11 +8,11 @@ import { formatDate, formatMembershipAge } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { searchMembers, type MemberRoleFilter, type MemberRow } from "@/server/actions";
-import type { OrganiserPermissions } from "@/lib/organiser-permissions";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { DeleteMemberButton } from "./delete-member-button";
 import { EditPermissionsButton } from "./edit-permissions-button";
 import { MemberRoleButton } from "./member-role-button";
+import { TransferOwnershipButton } from "./transfer-ownership-button";
 import { CancelInviteButton, ResendInviteButton } from "./pending-invite-actions";
 import { EmptyState } from "@/components/empty-state";
 import {
@@ -51,16 +51,19 @@ export function MembersTable({
   inviteRequired,
   roleFilter,
   viewerId,
-  viewerPermissions,
+  viewerIsOwner,
 }: {
   initialRows: ViewMember[];
   initialTotal: number;
   inviteRequired: boolean;
   roleFilter: MemberRoleFilter;
   viewerId: string;
-  /** The signed-in organiser's own permissions — caps what they can grant
-   * or change for someone else (see clampGrantablePermissions). */
-  viewerPermissions: OrganiserPermissions;
+  /** Whether the signed-in organiser is the site's single owner (see
+   * src/lib/site-owner.ts) — promoting/demoting an organiser, editing an
+   * organiser's permissions, removing an organiser's account, and
+   * transferring ownership are all owner-only, regardless of what
+   * permissions the viewer otherwise holds. */
+  viewerIsOwner: boolean;
 }) {
   const router = useRouter();
   const listRef = useRef<HTMLDivElement>(null);
@@ -212,27 +215,29 @@ export function MembersTable({
                     </span>
                   ) : (
                     <Badge className="h-7 px-2" variant={member.role === "ADMIN" ? "outline" : "secondary"}>
-                      {member.role === "ADMIN" ? "Organiser" : "Member"}
+                      {member.isOwner ? "Owner" : member.role === "ADMIN" ? "Organiser" : "Member"}
                     </Badge>
                   )}
                   {member.pendingInvite ? (
                     <>
                       <ResendInviteButton onDone={refetch} userId={member.id} />
                       <CancelInviteButton onDone={refetch} userId={member.id} />
-                      <EditPermissionsButton
-                        initialPermissions={member.permissions}
-                        name={member.name}
-                        onChanged={refetch}
-                        userId={member.id}
-                        viewerPermissions={viewerPermissions}
-                      />
+                      {viewerIsOwner ? (
+                        <EditPermissionsButton
+                          initialPermissions={member.permissions}
+                          name={member.name}
+                          onChanged={refetch}
+                          userId={member.id}
+                        />
+                      ) : null}
                     </>
                   ) : /* Changing your own role here would be easy to hit by
                          mistake and immediately cost you organiser access to
                          fix it — same reasoning as hiding your own Remove
                          button below. Another organiser can change it for you
-                         instead. */
-                  member.isYou ? null : (
+                         instead. Promoting/demoting/editing permissions is
+                         also owner-only regardless of whose row this is. */
+                  member.isYou || !viewerIsOwner ? null : (
                     <>
                       <MemberRoleButton
                         initialPermissions={member.permissions}
@@ -241,20 +246,25 @@ export function MembersTable({
                         onChanged={refetch}
                         role={member.role}
                         userId={member.id}
-                        viewerPermissions={viewerPermissions}
                       />
                       {member.role === "ADMIN" ? (
-                        <EditPermissionsButton
-                          initialPermissions={member.permissions}
-                          name={member.name}
-                          onChanged={refetch}
-                          userId={member.id}
-                          viewerPermissions={viewerPermissions}
-                        />
+                        <>
+                          <EditPermissionsButton
+                            initialPermissions={member.permissions}
+                            name={member.name}
+                            onChanged={refetch}
+                            userId={member.id}
+                          />
+                          <TransferOwnershipButton
+                            name={member.name}
+                            onChanged={refetch}
+                            userId={member.id}
+                          />
+                        </>
                       ) : null}
                     </>
                   )}
-                  {member.isYou ? null : (
+                  {member.isYou || (member.role === "ADMIN" && !viewerIsOwner) ? null : (
                     <DeleteMemberButton
                       attendanceCount={member.attendanceCount}
                       name={member.name}

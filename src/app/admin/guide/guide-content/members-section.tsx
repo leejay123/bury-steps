@@ -31,25 +31,28 @@ export function MembersSection() {
             stays readable even for someone who has been on hundreds of walks.
           </p>
           <p className="font-medium text-foreground">Make organiser or member</p>
+          <p>
+            Only the site&rsquo;s one owner can promote a member, demote an organiser, edit an
+            organiser&rsquo;s permissions, or remove an organiser&rsquo;s account — see
+            &ldquo;The owner&rdquo; below. Everyone else with the Members permission can still
+            view and search this list, and remove a plain member&rsquo;s account.
+          </p>
           <Steps>
             <li>
               Open the person on <Link href="/admin/members">Members</Link>, or use the button
               on their row in the list.
             </li>
             <li>
-              Choose <strong>Make organiser</strong> to give them organiser tools (walks,
-              Members, Reports, Settings, and this Guide), or <strong>Make member</strong> to
-              take those tools away. Their account, clock-ins, and walk history stay.
+              Choose <strong>Make organiser</strong> and pick what they can do — you do not have
+              to give them everything. <strong>Make member</strong> takes organiser tools away
+              entirely. Their account, clock-ins, and walk history stay either way.
             </li>
             <li>
               Type <strong>&ldquo;Confirm&rdquo;</strong> in the box, then confirm again. That
               stops an accidental click from changing someone’s access.
             </li>
           </Steps>
-          <p>
-            You cannot demote the last organiser, so the group is never left without one. You
-            can demote yourself if another organiser is still in the group.
-          </p>
+          <p>You cannot demote the last organiser, so the group is never left without one.</p>
           <p className="font-medium text-foreground">Remove someone</p>
           <Steps>
             <li>
@@ -64,6 +67,16 @@ export function MembersSection() {
             </li>
           </Steps>
           <p>You cannot remove the last organiser, so the group is never left without one.</p>
+          <p className="font-medium text-foreground">The owner</p>
+          <p>
+            The site has exactly one owner — the &ldquo;master organiser&rdquo; — shown with an
+            Owner badge instead of Organiser. Only the owner can promote or demote an organiser,
+            edit an organiser&rsquo;s permissions, or remove an organiser&rsquo;s account. The
+            owner always has full access and cannot demote or remove themselves — choose{" "}
+            <strong>Make owner</strong> on another organiser&rsquo;s row to hand the role over
+            first. That organiser gains full access; you keep whatever permissions you already
+            had, just without the owner-only powers.
+          </p>
         </GuideBody>
       </AccordionContent>
     </AccordionItem>

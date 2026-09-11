@@ -9,15 +9,15 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { SITE_SETTING_ID } from "@/lib/theme";
+import { getOwnerId, isOwner } from "@/lib/site-owner";
 import { safeAppPath } from "@/lib/urls";
 import {
   makeOrganiserInviteToken,
   organiserInviteExpiresAt,
 } from "@/lib/organiser-invite";
 import {
-  clampGrantablePermissions,
+  FULL_ORGANISER_PERMISSIONS,
   hasAnyPermission,
-  NO_ORGANISER_PERMISSIONS,
   pickOrganiserPermissions,
   readOrganiserPermissions,
   walksLandingPath,
@@ -34,6 +34,7 @@ import {
   LimitReachedError,
   isNotFoundStatus,
   logActionError,
+  ownerDenied,
   permissionDenied,
   withCountLimitLock,
 } from "./shared";
@@ -53,6 +54,10 @@ export type MemberRow = {
    * invite's chosen permissions can still be shown/edited before it's
    * accepted. */
   permissions: OrganiserPermissions;
+  /** The site's single "master organiser" (see src/lib/site-owner.ts) —
+   * only they can promote/demote an organiser, edit an organiser's
+   * permissions, or remove an organiser's account. */
+  isOwner: boolean;
 };
 
 export type MemberRoleFilter = "all" | "ADMIN" | "MEMBER";
@@ -108,7 +113,7 @@ export async function searchMembers({
 
   const skip = (Math.max(1, page) - 1) * LIST_PAGE_SIZE;
 
-  const [total, members] = await Promise.all([
+  const [total, members, ownerId] = await Promise.all([
     prisma.user.count({ where }),
     prisma.user.findMany({
       where,
@@ -140,6 +145,7 @@ export async function searchMembers({
         _count: { select: { attendances: true, walksCreated: true } },
       },
     }),
+    getOwnerId(),
   ]);
 
   const now = Date.now();
@@ -161,13 +167,13 @@ export async function searchMembers({
           }
         : null,
       permissions: pickOrganiserPermissions(member),
+      isOwner: member.id === ownerId,
     })),
   };
 }
 
 export async function deleteMember(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permMembers) return permissionDenied("permMembers");
   const id = String(formData.get("userId") ?? "");
   if (!id) return { ok: false, error: "No member selected." };
 
@@ -192,6 +198,17 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
     },
   });
   if (!target) return { ok: false, error: "That member is no longer in the group." };
+
+  // Removing an organiser's account is one of the owner-only actions (see
+  // src/lib/site-owner.ts) — anyone with the Members permission can still
+  // remove a plain member's account. The owner can never target themselves
+  // here anyway (the self-delete check above already blocks that), so
+  // there's no separate "can't delete the owner" case to handle.
+  if (target.role === "ADMIN") {
+    if (!(await isOwner(admin.id))) return ownerDenied("remove an organiser's account");
+  } else if (!admin.permMembers) {
+    return permissionDenied("permMembers");
+  }
 
   // Do the database side first. It is transactional and fully reversible on
   // failure, unlike removing their Clerk login below — if this fails, we
@@ -299,10 +316,11 @@ export async function setMemberRole(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  // Changing who's an organiser (or what they can do) is itself a Members
-  // capability — a limited organiser who lacks it can't use this at all,
-  // even by posting directly to this action.
-  if (!admin.permMembers) return permissionDenied("permMembers");
+  const ownerId = await getOwnerId();
+  // Promoting or demoting an organiser is one of the owner-only actions
+  // (see src/lib/site-owner.ts) — regardless of what permissions the
+  // acting organiser otherwise holds.
+  if (admin.id !== ownerId) return ownerDenied("change an organiser's role");
   const limited = checkRateLimit(`${admin.id}:setMemberRole`, 20, 60_000);
   if (!limited.ok) {
     return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
@@ -319,16 +337,17 @@ export async function setMemberRole(
     return { ok: false, error: "Choose organiser or member." };
   }
   const role = roleRaw as "ADMIN" | "MEMBER";
-  // Only read/applied when promoting — see below. Capped to what the
-  // acting organiser can actually grant: without this, holding just the
-  // Members permission would be enough to promote anyone (including a
-  // fresh account they control) straight to full access, regardless of
-  // what they were given themselves.
-  const permissions = clampGrantablePermissions(
-    admin,
-    readOrganiserPermissions(formData),
-    NO_ORGANISER_PERMISSIONS,
-  );
+  // Only the owner ever reaches this (see above), and the owner always
+  // holds full access, so whatever's checked is simply what gets granted —
+  // no need to cap it against the actor's own permissions.
+  const permissions = readOrganiserPermissions(formData);
+
+  if (role === "MEMBER" && id === ownerId) {
+    return {
+      ok: false,
+      error: "Transfer ownership to another organiser before demoting yourself.",
+    };
+  }
 
   const target = await prisma.user.findUnique({ where: { id } });
   if (!target) return { ok: false, error: "That member is no longer in the group." };
@@ -435,7 +454,10 @@ export async function setOrganiserPermissions(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permMembers) return permissionDenied("permMembers");
+  // Editing an organiser's permissions is one of the owner-only actions
+  // (see src/lib/site-owner.ts) — regardless of what permissions the
+  // acting organiser otherwise holds.
+  if (!(await isOwner(admin.id))) return ownerDenied("edit an organiser's permissions");
   const limited = checkRateLimit(`${admin.id}:setOrganiserPermissions`, 20, 60_000);
   if (!limited.ok) {
     return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
@@ -444,23 +466,22 @@ export async function setOrganiserPermissions(
   const id = String(formData.get("userId") ?? "");
   if (!id) return { ok: false, error: "No member selected." };
 
+  // The owner always has full access — there's nothing to edit here, and
+  // the only way to change who that is is to transfer ownership.
+  if (id === admin.id) {
+    return { ok: false, error: "The owner always has full access." };
+  }
+
   const target = await prisma.user.findUnique({ where: { id } });
   if (!target) return { ok: false, error: "That member is no longer in the group." };
   if (target.role !== "ADMIN" && !target.organiserInviteToken) {
     return { ok: false, error: "This person is not an organiser and has no pending invite." };
   }
 
-  // Capped to what the acting organiser can actually grant — anything
-  // outside their own permissions stays exactly as it was on this row,
-  // in either direction. Without this, holding just the Members
-  // permission would be enough to hand anyone (including a fresh account
-  // the organiser controls) full access, regardless of what they were
-  // given themselves.
-  const permissions = clampGrantablePermissions(
-    admin,
-    readOrganiserPermissions(formData),
-    pickOrganiserPermissions(target),
-  );
+  // Only the owner ever reaches this (see above), and the owner always
+  // holds full access, so whatever's checked simply replaces what's
+  // stored — no need to cap it against the actor's own permissions.
+  const permissions = readOrganiserPermissions(formData);
 
   // Same rule as promoting: an organiser is defined by having some
   // access, so this can't be used to leave one with none at all.
@@ -484,6 +505,57 @@ export async function setOrganiserPermissions(
   revalidatePath("/", "layout");
 
   return { ok: true, message: `${displayName(target)}'s permissions have been updated.` };
+}
+
+/**
+ * Hands the site's single "master organiser" role (see
+ * src/lib/site-owner.ts) to another existing organiser. Owner-only — the
+ * current owner is the only one who can give it up, and only to someone
+ * already an organiser (promote them first if they aren't one yet). The
+ * new owner is forced to full access, same as any owner; the outgoing
+ * owner keeps whatever permissions they already held — they simply stop
+ * being able to promote/demote an organiser, edit an organiser's
+ * permissions, or remove an organiser's account.
+ */
+export async function transferOwnership(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!(await isOwner(admin.id))) return ownerDenied("transfer ownership");
+  const limited = checkRateLimit(`${admin.id}:transferOwnership`, 10, 60_000);
+  if (!limited.ok) {
+    return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
+  }
+
+  const id = String(formData.get("userId") ?? "");
+  if (!id) return { ok: false, error: "No organiser selected." };
+  if (id === admin.id) return { ok: false, error: "You are already the owner." };
+
+  const confirm = String(formData.get("confirm") ?? "").trim().toLowerCase();
+  if (confirm !== "confirm") {
+    return { ok: false, error: "Type confirm to transfer ownership." };
+  }
+
+  const target = await prisma.user.findUnique({ where: { id } });
+  if (!target || target.role !== "ADMIN") {
+    return { ok: false, error: "Choose an existing organiser to hand ownership to." };
+  }
+
+  try {
+    await prisma.$transaction([
+      prisma.siteSetting.update({ where: { id: SITE_SETTING_ID }, data: { ownerId: target.id } }),
+      prisma.user.update({ where: { id: target.id }, data: FULL_ORGANISER_PERMISSIONS }),
+    ]);
+  } catch (err) {
+    return logActionError("transferOwnership", err, "Could not transfer ownership. Try again.");
+  }
+
+  revalidatePath("/admin/members");
+  revalidatePath(`/admin/members/${target.id}`);
+  revalidatePath(`/admin/members/${admin.id}`);
+
+  return { ok: true, message: `${displayName(target)} is now the site owner.` };
 }
 
 /** Issues (or reissues) an organiser invite — shared by setMemberRole's
@@ -682,10 +754,12 @@ export async function getMemberHistory(userId: string): Promise<{
   items: MemberHistoryItem[];
   pendingInvite: { sentAt: string; expiresAt: string; expired: boolean } | null;
   permissions: OrganiserPermissions;
+  /** The site's single "master organiser" (see src/lib/site-owner.ts). */
+  isOwner: boolean;
 } | null> {
   const admin = await requireAdmin();
   if (!admin.permMembers) return null;
-  const [member, attendanceCount] = await Promise.all([
+  const [member, attendanceCount, ownerId] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -717,6 +791,7 @@ export async function getMemberHistory(userId: string): Promise<{
       },
     }),
     prisma.attendance.count({ where: { userId } }),
+    getOwnerId(),
   ]);
   if (!member) return null;
 
@@ -728,6 +803,7 @@ export async function getMemberHistory(userId: string): Promise<{
     walkCount: member._count.walksCreated,
     attendanceCount,
     isYou: member.id === admin.id,
+    isOwner: member.id === ownerId,
     pendingInvite: member.organiserInviteSentAt
       ? {
           sentAt: member.organiserInviteSentAt.toISOString(),

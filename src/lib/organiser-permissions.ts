@@ -18,14 +18,17 @@
  * enforced on every admin page and server action itself (requirePermission
  * in src/lib/auth.ts; permissionDenied in src/server/actions/shared.ts), so
  * a limited organiser who already knows a hidden URL is still turned away
- * there. Delegation is capped separately — see clampGrantablePermissions —
- * since without it any organiser with just the Members permission could
- * hand out (to a new account, or anyone else) more access than they hold
- * themselves. And setMemberRole/setOrganiserPermissions both refuse to
- * leave an organiser with none of these switched on at all (see
- * hasAnyPermission below) — the whole point of the role is the extra
- * access, so an organiser with nothing granted is never a state either
- * action will produce.
+ * there.
+ *
+ * Choosing WHO gets these permissions is itself a separate, narrower
+ * capability — promoting/demoting an organiser, editing an existing
+ * organiser's permissions, and removing an organiser's account are all
+ * restricted to the single site owner (see src/lib/site-owner.ts), not
+ * just anyone holding the Members permission here. setMemberRole and
+ * setOrganiserPermissions both also refuse to leave an organiser with
+ * none of these switched on at all (see hasAnyPermission below) — the
+ * whole point of the role is the extra access, so an organiser with
+ * nothing granted is never a state either action will produce.
  */
 export type OrganiserPermissions = {
   permWalks: boolean;
@@ -86,7 +89,7 @@ export const ORGANISER_PERMISSION_OPTIONS: {
   {
     name: "permMembers",
     label: "Members",
-    hint: "View the member list, promote or demote organisers, and remove members.",
+    hint: "View the member list, and remove a member's account.",
     group: "Core",
   },
   {
@@ -174,42 +177,6 @@ export function readOrganiserPermissions(formData: FormData): OrganiserPermissio
   const result = {} as OrganiserPermissions;
   for (const option of ORGANISER_PERMISSION_OPTIONS) {
     result[option.name] = formData.get(option.name) === "on";
-  }
-  return result;
-}
-
-/**
- * Caps what `actor` may hand to someone else. A full-access actor can
- * grant anything requested; anyone else can only grant a permission they
- * hold themselves — for every other requested field, `fallback` decides
- * what actually gets written instead of the request:
- *
- * - Promoting someone new (setMemberRole): pass NO_ORGANISER_PERMISSIONS —
- *   there's no existing organiser state to preserve, and a MEMBER row's
- *   own permission columns are meaningless leftovers (they default to
- *   true in the database purely so an already-promoted organiser isn't
- *   affected by that default — see the schema comment on User.permWalks).
- *   Trusting them here would let a limited organiser promote a fresh
- *   account straight to full access by simply never asking for less.
- * - Editing an existing organiser (setOrganiserPermissions): pass that
- *   row's current permissions — a limited actor can't touch a permission
- *   outside their own remit, in either direction, but a legitimately
- *   granted one stays as it was rather than being silently stripped.
- *
- * This is what actually stops the escalation a permissions system like
- * this invites: without it, holding just the Members permission would be
- * enough to hand any account — including a fresh one the organiser
- * controls — full access, regardless of what they were given themselves.
- */
-export function clampGrantablePermissions(
-  actor: OrganiserPermissions,
-  requested: OrganiserPermissions,
-  fallback: OrganiserPermissions,
-): OrganiserPermissions {
-  if (hasFullAccess(actor)) return requested;
-  const result = { ...fallback };
-  for (const option of ORGANISER_PERMISSION_OPTIONS) {
-    if (actor[option.name]) result[option.name] = requested[option.name];
   }
   return result;
 }
