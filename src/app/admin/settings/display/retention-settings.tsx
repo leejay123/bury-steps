@@ -61,7 +61,7 @@ export function CancelledWalkRetentionSettings({
             min={0}
             name="cancelledWalkRetentionDays"
             onChange={(event) => setValue(event.target.value)}
-            placeholder="e.g. 30"
+            placeholder="e.g. 30 — leave blank for never"
             type="number"
             value={value}
           />
