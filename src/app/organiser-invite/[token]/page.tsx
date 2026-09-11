@@ -35,7 +35,7 @@ export default async function OrganiserInvitePage({
   const [invitee, theme] = await Promise.all([
     prisma.user.findUnique({
       where: { organiserInviteToken: token },
-      select: { id: true, email: true, role: true, organiserInviteExpiresAt: true },
+      select: { id: true, email: true, firstName: true, role: true, organiserInviteExpiresAt: true },
     }),
     getSiteTheme(),
   ]);
@@ -43,6 +43,7 @@ export default async function OrganiserInvitePage({
   const now = new Date();
   const expired = !invitee?.organiserInviteExpiresAt || invitee.organiserInviteExpiresAt < now;
   const invalid = !invitee || invitee.role !== "MEMBER";
+  const inviteeName = invitee?.firstName?.trim() || "there";
 
   const inviteUrl = `${appUrl()}/organiser-invite/${token}`;
   const signInHref = accountPortalHref("sign-in", inviteUrl);
@@ -78,9 +79,23 @@ export default async function OrganiserInvitePage({
       ) : (
         <>
           <p className="text-sm text-muted-foreground">
-            This invite is for <strong>{invitee.email}</strong>. Accepting gives you access to
-            manage walks, members, and settings on {theme.siteName}.
+            Hi {inviteeName}, this invite is for <strong>{invitee.email}</strong>. Accepting gives
+            you organiser access on {theme.siteName}.
           </p>
+          <div className="w-full max-w-sm text-left">
+            <p className="text-sm font-medium">As an organiser, you&rsquo;ll be able to:</p>
+            <ul className="mt-2 list-disc pl-5 text-sm text-muted-foreground [&_li]:mt-1.5">
+              <li>Create, edit, and cancel walks, and share their links</li>
+              <li>See who&rsquo;s coming on a walk, including any health notes shared for it</li>
+              <li>Record accident reports if something happens on a walk</li>
+              <li>Manage members — promote, demote, or remove someone</li>
+              <li>Edit homepage content and site settings</li>
+            </ul>
+            <p className="mt-3 text-sm text-muted-foreground">
+              This is real access to other members&rsquo; personal details — please only use it
+              for group business, and keep what you see private.
+            </p>
+          </div>
           <AcceptInviteForm token={token} />
         </>
       )}
