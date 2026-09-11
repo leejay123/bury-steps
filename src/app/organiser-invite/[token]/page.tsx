@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { getOptionalUser } from "@/lib/auth";
 import { getSiteTheme } from "@/lib/site-theme";
-import { PAGE_X } from "@/lib/page-x";
 import { appUrl, accountPortalHref } from "@/lib/urls";
 import { AcceptInviteForm } from "./accept-invite-form";
 import { WrongAccountNotice } from "./wrong-account-notice";
@@ -58,35 +57,33 @@ export default async function OrganiserInvitePage({
   }
 
   return (
-    <div className={`mx-auto w-full max-w-md py-16 ${PAGE_X}`}>
-      <div className="flex min-h-64 flex-col items-center justify-center gap-4 rounded-lg border border-dashed bg-muted/30 p-6 text-center md:p-12">
-        <h1 className="text-2xl font-semibold tracking-tight">Become an organiser</h1>
-        {invalid ? (
+    <div className="flex min-h-64 w-full flex-col items-center justify-center gap-4 rounded-lg border border-dashed bg-muted/30 p-6 text-center md:p-12">
+      <h1 className="text-2xl font-semibold tracking-tight">Become an organiser</h1>
+      {invalid ? (
+        <p className="text-sm text-muted-foreground">
+          This invite link is invalid or has already been used.
+        </p>
+      ) : expired ? (
+        <p className="text-sm text-muted-foreground">
+          This invite link has expired. Ask an organiser to send you a new one.
+        </p>
+      ) : wrongAccount ? (
+        <>
           <p className="text-sm text-muted-foreground">
-            This invite link is invalid or has already been used.
+            This invite is for <strong>{invitee.email}</strong>. You&rsquo;re signed in as a
+            different account. Sign out and sign back in as {invitee.email} to accept it.
           </p>
-        ) : expired ? (
+          <WrongAccountNotice signInHref={signInHref} />
+        </>
+      ) : (
+        <>
           <p className="text-sm text-muted-foreground">
-            This invite link has expired. Ask an organiser to send you a new one.
+            This invite is for <strong>{invitee.email}</strong>. Accepting gives you access to
+            manage walks, members, and settings on {theme.siteName}.
           </p>
-        ) : wrongAccount ? (
-          <>
-            <p className="text-sm text-muted-foreground">
-              This invite is for <strong>{invitee.email}</strong>. You&rsquo;re signed in as a
-              different account. Sign out and sign back in as {invitee.email} to accept it.
-            </p>
-            <WrongAccountNotice signInHref={signInHref} />
-          </>
-        ) : (
-          <>
-            <p className="text-sm text-muted-foreground">
-              This invite is for <strong>{invitee.email}</strong>. Accepting gives you access to
-              manage walks, members, and settings on {theme.siteName}.
-            </p>
-            <AcceptInviteForm token={token} />
-          </>
-        )}
-      </div>
+          <AcceptInviteForm token={token} />
+        </>
+      )}
     </div>
   );
 }
