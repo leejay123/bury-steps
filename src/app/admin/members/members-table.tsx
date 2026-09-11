@@ -10,6 +10,7 @@ import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { searchMembers, type MemberRoleFilter, type MemberRow } from "@/server/actions";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { DeleteMemberButton } from "./delete-member-button";
+import { EditPermissionsButton } from "./edit-permissions-button";
 import { MemberRoleButton } from "./member-role-button";
 import { CancelInviteButton, ResendInviteButton } from "./pending-invite-actions";
 import { EmptyState } from "@/components/empty-state";
@@ -213,6 +214,12 @@ export function MembersTable({
                     <>
                       <ResendInviteButton onDone={refetch} userId={member.id} />
                       <CancelInviteButton onDone={refetch} userId={member.id} />
+                      <EditPermissionsButton
+                        initialPermissions={member.permissions}
+                        name={member.name}
+                        onChanged={refetch}
+                        userId={member.id}
+                      />
                     </>
                   ) : /* Changing your own role here would be easy to hit by
                          mistake and immediately cost you organiser access to
@@ -220,13 +227,24 @@ export function MembersTable({
                          button below. Another organiser can change it for you
                          instead. */
                   member.isYou ? null : (
-                    <MemberRoleButton
-                      inviteRequired={inviteRequired}
-                      name={member.name}
-                      onChanged={refetch}
-                      role={member.role}
-                      userId={member.id}
-                    />
+                    <>
+                      <MemberRoleButton
+                        initialPermissions={member.permissions}
+                        inviteRequired={inviteRequired}
+                        name={member.name}
+                        onChanged={refetch}
+                        role={member.role}
+                        userId={member.id}
+                      />
+                      {member.role === "ADMIN" ? (
+                        <EditPermissionsButton
+                          initialPermissions={member.permissions}
+                          name={member.name}
+                          onChanged={refetch}
+                          userId={member.id}
+                        />
+                      ) : null}
+                    </>
                   )}
                   {member.isYou ? null : (
                     <DeleteMemberButton

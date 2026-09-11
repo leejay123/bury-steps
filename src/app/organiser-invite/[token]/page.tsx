@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getOptionalUser } from "@/lib/auth";
 import { getSiteTheme } from "@/lib/site-theme";
 import { appUrl, accountPortalHref } from "@/lib/urls";
+import { ORGANISER_PERMISSION_OPTIONS, pickOrganiserPermissions } from "@/lib/organiser-permissions";
 import { AcceptInviteForm } from "./accept-invite-form";
 import { WrongAccountNotice } from "./wrong-account-notice";
 
@@ -35,7 +36,17 @@ export default async function OrganiserInvitePage({
   const [invitee, theme] = await Promise.all([
     prisma.user.findUnique({
       where: { organiserInviteToken: token },
-      select: { id: true, email: true, firstName: true, role: true, organiserInviteExpiresAt: true },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        role: true,
+        organiserInviteExpiresAt: true,
+        permWalks: true,
+        permMembers: true,
+        permReportsMessages: true,
+        permSettings: true,
+      },
     }),
     getSiteTheme(),
   ]);
@@ -44,6 +55,9 @@ export default async function OrganiserInvitePage({
   const expired = !invitee?.organiserInviteExpiresAt || invitee.organiserInviteExpiresAt < now;
   const invalid = !invitee || invitee.role !== "MEMBER";
   const inviteeName = invitee?.firstName?.trim() || "there";
+  const grantedOptions = invitee
+    ? ORGANISER_PERMISSION_OPTIONS.filter((option) => pickOrganiserPermissions(invitee)[option.name])
+    : [];
 
   const inviteUrl = `${appUrl()}/organiser-invite/${token}`;
   const signInHref = accountPortalHref("sign-in", inviteUrl);
@@ -82,20 +96,25 @@ export default async function OrganiserInvitePage({
             Hi {inviteeName}, this invite is for <strong>{invitee.email}</strong>. Accepting gives
             you organiser access on {theme.siteName}.
           </p>
-          <div className="w-full max-w-sm text-left">
-            <p className="text-sm font-medium">As an organiser, you&rsquo;ll be able to:</p>
-            <ul className="mt-2 list-disc pl-5 text-sm text-muted-foreground [&_li]:mt-1.5">
-              <li>Create, edit, and cancel walks, and share their links</li>
-              <li>See who&rsquo;s coming on a walk, including any health notes shared for it</li>
-              <li>Record accident reports if something happens on a walk</li>
-              <li>Manage members — promote, demote, or remove someone</li>
-              <li>Edit homepage content and site settings</li>
-            </ul>
-            <p className="mt-3 text-sm text-muted-foreground">
-              This is real access to other members&rsquo; personal details — please only use it
-              for group business, and keep what you see private.
+          {grantedOptions.length > 0 ? (
+            <div className="w-full max-w-sm text-left">
+              <p className="text-sm font-medium">As an organiser, you&rsquo;ll be able to:</p>
+              <ul className="mt-2 list-disc pl-5 text-sm text-muted-foreground [&_li]:mt-1.5">
+                {grantedOptions.map((option) => (
+                  <li key={option.name}>{option.hint}</li>
+                ))}
+              </ul>
+              <p className="mt-3 text-sm text-muted-foreground">
+                This is real access to other members&rsquo; personal details — please only use it
+                for group business, and keep what you see private.
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No specific organiser tools were switched on for this invite yet — check with
+              whoever invited you once you&rsquo;ve accepted.
             </p>
-          </div>
+          )}
           <AcceptInviteForm token={token} />
         </>
       )}

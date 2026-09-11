@@ -10,6 +10,7 @@ import { AttendanceHistory } from "@/components/attendance-history";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeleteMemberButton } from "../delete-member-button";
+import { EditPermissionsButton } from "../edit-permissions-button";
 import { ImpersonateButton } from "../impersonate-button";
 import { MemberRoleButton } from "../member-role-button";
 import { CancelInviteButton, ResendInviteButton } from "../pending-invite-actions";
@@ -76,6 +77,11 @@ export default async function MemberDetailPage({
               <>
                 <ResendInviteButton userId={id} />
                 <CancelInviteButton userId={id} />
+                <EditPermissionsButton
+                  initialPermissions={member.permissions}
+                  name={member.name}
+                  userId={id}
+                />
               </>
             ) : (
               /* Changing your own role here would be easy to hit by mistake
@@ -83,12 +89,22 @@ export default async function MemberDetailPage({
                  reasoning as hiding your own Remove button below. Another
                  organiser can change it for you instead. */
               !member.isYou && (
-                <MemberRoleButton
-                  inviteRequired={setting?.organiserInviteRequired ?? false}
-                  name={member.name}
-                  role={member.role}
-                  userId={id}
-                />
+                <>
+                  <MemberRoleButton
+                    initialPermissions={member.permissions}
+                    inviteRequired={setting?.organiserInviteRequired ?? false}
+                    name={member.name}
+                    role={member.role}
+                    userId={id}
+                  />
+                  {member.role === "ADMIN" ? (
+                    <EditPermissionsButton
+                      initialPermissions={member.permissions}
+                      name={member.name}
+                      userId={id}
+                    />
+                  ) : null}
+                </>
               )
             )}
             {!member.isYou ? (

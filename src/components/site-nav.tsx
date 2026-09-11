@@ -6,6 +6,7 @@ import { SiteNavLinks, SiteMobileNavBar } from "@/components/site-nav-menu";
 import { SiteUserButton } from "@/components/site-user-button";
 import { NotificationBell } from "@/components/notification-bell";
 import { getSiteNoticeState } from "@/lib/site-notices";
+import { pickOrganiserPermissions } from "@/lib/organiser-permissions";
 
 export function SiteNavFallback() {
   return (
@@ -33,7 +34,11 @@ export async function SiteNav() {
     <>
       <div className="hidden min-w-0 items-center justify-center md:flex">
         <Show when="signed-in">
-          <SiteNavLinks isAdmin={isAdmin} walksHref={walksHref} />
+          <SiteNavLinks
+            isAdmin={isAdmin}
+            permissions={user ? pickOrganiserPermissions(user) : undefined}
+            walksHref={walksHref}
+          />
         </Show>
       </div>
       <div className="flex min-w-0 items-center justify-end gap-2 justify-self-end sm:gap-3">
@@ -60,5 +65,11 @@ export async function SiteMobileNav() {
 
   const isAdmin = user.role === "ADMIN";
 
-  return <SiteMobileNavBar isAdmin={isAdmin} walksHref={isAdmin ? "/admin" : "/walks"} />;
+  return (
+    <SiteMobileNavBar
+      isAdmin={isAdmin}
+      permissions={pickOrganiserPermissions(user)}
+      walksHref={isAdmin ? "/admin" : "/walks"}
+    />
+  );
 }

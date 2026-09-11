@@ -62,9 +62,10 @@ import {
   resendOrganiserInvite,
   searchMembers,
   setMemberRole,
+  setOrganiserPermissions,
 } from "./members";
 
-const ADMIN = { id: "admin-1", clerkId: "clerk-admin-1" };
+const ADMIN = { id: "admin-1", clerkId: "clerk-admin-1", permMembers: true };
 
 function deleteMemberForm(fields: Record<string, string>): FormData {
   const formData = new FormData();
@@ -298,6 +299,16 @@ function roleForm(fields: Record<string, string>): FormData {
 }
 
 describe("setMemberRole", () => {
+  it("rejects when the acting admin lacks the Members permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembers: false });
+    const result = await setMemberRole(
+      null,
+      roleForm({ userId: "member-1", role: "ADMIN", confirm: "confirm" }),
+    );
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage members." });
+    expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+  });
+
   it("rejects when no member is selected", async () => {
     const result = await setMemberRole(null, roleForm({ role: "ADMIN", confirm: "confirm" }));
     expect(result).toEqual({ ok: false, error: "No member selected." });
@@ -444,6 +455,40 @@ describe("setMemberRole", () => {
     expect(result).toEqual({ ok: true, message: "Jo is now an organiser." });
   });
 
+  it("writes the chosen permissions when promoting immediately", async () => {
+    const target = {
+      id: "member-1",
+      role: "MEMBER",
+      firstName: "Jo",
+      lastName: null,
+      email: "jo@example.com",
+    };
+    prismaMock.user.findUnique.mockResolvedValueOnce(target).mockResolvedValueOnce(target);
+    prismaMock.user.update.mockResolvedValueOnce({ ...target, role: "ADMIN" });
+
+    await setMemberRole(
+      null,
+      roleForm({
+        userId: target.id,
+        role: "ADMIN",
+        confirm: "confirm",
+        permWalks: "on",
+        permMembers: "on",
+      }),
+    );
+
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: target.id },
+      data: {
+        role: "ADMIN",
+        permWalks: true,
+        permMembers: true,
+        permReportsMessages: false,
+        permSettings: false,
+      },
+    });
+  });
+
   it("rejects when the acting admin is rate-limited", async () => {
     checkRateLimit.mockReturnValueOnce({ ok: false, retryAfterSeconds: 42 });
     const result = await setMemberRole(
@@ -473,6 +518,10 @@ describe("getMemberHistory", () => {
       email: "admin@example.com",
       role: "ADMIN",
       createdAt: new Date("2025-01-01T00:00:00Z"),
+      permWalks: true,
+      permMembers: true,
+      permReportsMessages: true,
+      permSettings: true,
       _count: { walksCreated: 4 },
       attendances: [
         {
@@ -504,6 +553,12 @@ describe("getMemberHistory", () => {
       attendanceCount: 1,
       isYou: true,
       pendingInvite: null,
+      permissions: {
+        permWalks: true,
+        permMembers: true,
+        permReportsMessages: true,
+        permSettings: true,
+      },
       items: [
         {
           id: "att-1",
@@ -531,6 +586,10 @@ describe("searchMembers", () => {
       email: "jo@example.com",
       role: "MEMBER",
       createdAt: new Date("2026-01-05T00:00:00Z"),
+      permWalks: true,
+      permMembers: true,
+      permReportsMessages: true,
+      permSettings: true,
       _count: { attendances: 2, walksCreated: 0 },
       ...overrides,
     };
@@ -568,6 +627,12 @@ describe("searchMembers", () => {
         attendanceCount: 2,
         walkCount: 0,
         pendingInvite: null,
+        permissions: {
+          permWalks: true,
+          permMembers: true,
+          permReportsMessages: true,
+          permSettings: true,
+        },
       },
     ]);
   });
@@ -654,6 +719,13 @@ describe("setMemberRole — organiser invite required", () => {
         organiserInviteToken: "invite-token-123",
         organiserInviteSentAt: expect.any(Date),
         organiserInviteExpiresAt: expect.any(Date),
+        // No permission checkboxes were submitted — writing all-false
+        // still happens (see setMemberRole), rather than leaving the
+        // row's existing values untouched.
+        permWalks: false,
+        permMembers: false,
+        permReportsMessages: false,
+        permSettings: false,
       },
     });
     expect(sendOrganiserInviteEmail).toHaveBeenCalledWith(target, "invite-token-123");
@@ -726,6 +798,78 @@ describe("resendOrganiserInvite", () => {
       }),
     );
     expect(sendOrganiserInviteEmail).toHaveBeenCalledWith(target, "invite-token-123");
+    expect(result.ok).toBe(true);
+  });
+});
+
+describe("setOrganiserPermissions", () => {
+  it("rejects when the acting admin lacks the Members permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembers: false });
+    const result = await setOrganiserPermissions(null, roleForm({ userId: "admin-2" }));
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage members." });
+    expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("requires a member id", async () => {
+    const result = await setOrganiserPermissions(null, roleForm({}));
+    expect(result).toEqual({ ok: false, error: "No member selected." });
+  });
+
+  it("reports the member as already gone if the lookup finds nothing", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce(null);
+    const result = await setOrganiserPermissions(null, roleForm({ userId: "admin-2" }));
+    expect(result).toEqual({ ok: false, error: "That member is no longer in the group." });
+  });
+
+  it("refuses for a plain member with no pending invite", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({
+      id: "member-1",
+      role: "MEMBER",
+      organiserInviteToken: null,
+    });
+    const result = await setOrganiserPermissions(null, roleForm({ userId: "member-1" }));
+    expect(result).toEqual({
+      ok: false,
+      error: "This person is not an organiser and has no pending invite.",
+    });
+  });
+
+  it("saves the chosen permissions for an existing organiser", async () => {
+    const target = { id: "admin-2", role: "ADMIN", firstName: "Sam", lastName: "Lee", email: "sam@example.com" };
+    prismaMock.user.findUnique.mockResolvedValueOnce(target);
+    prismaMock.user.update.mockResolvedValueOnce({});
+
+    const result = await setOrganiserPermissions(
+      null,
+      roleForm({ userId: target.id, permWalks: "on", permSettings: "on" }),
+    );
+
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: target.id },
+      data: {
+        permWalks: true,
+        permMembers: false,
+        permReportsMessages: false,
+        permSettings: true,
+      },
+    });
+    expect(result).toEqual({ ok: true, message: "Sam Lee's permissions have been updated." });
+  });
+
+  it("allows editing permissions on a still-pending invite", async () => {
+    const target = {
+      id: "member-1",
+      role: "MEMBER",
+      firstName: "Jo",
+      lastName: null,
+      email: "jo@example.com",
+      organiserInviteToken: "tok",
+    };
+    prismaMock.user.findUnique.mockResolvedValueOnce(target);
+    prismaMock.user.update.mockResolvedValueOnce({});
+
+    const result = await setOrganiserPermissions(null, roleForm({ userId: target.id }));
+
     expect(result.ok).toBe(true);
   });
 });

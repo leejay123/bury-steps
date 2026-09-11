@@ -51,6 +51,20 @@ model User {
   organiserInviteSentAt    DateTime?
   organiserInviteExpiresAt DateTime?
 
+  /// Granular organiser capabilities — chosen when a member is
+  /// invited/promoted (setMemberRole) and editable after from Members
+  /// (setOrganiserPermissions). Only meaningful once role is ADMIN; a
+  /// MEMBER row's columns just sit unused. Written immediately on
+  /// promotion even while an invite is still pending, so whatever was
+  /// picked at invite time is already in place the moment they accept.
+  /// All four default to true so every organiser that existed before this
+  /// column shipped silently kept full access — see src/lib/organiser-
+  /// permissions.ts for the shared list this maps onto.
+  permWalks           Boolean @default(true)
+  permMembers         Boolean @default(true)
+  permReportsMessages Boolean @default(true)
+  permSettings        Boolean @default(true)
+
   walksCreated            Walk[]                 @relation("WalkCreator")
   attendances             Attendance[]
   noticeReads             SiteNoticeRead[]

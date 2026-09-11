@@ -24,6 +24,30 @@ describe("navItems", () => {
   });
 });
 
+describe("navItems with limited organiser permissions", () => {
+  it("hides each section behind its own permission, keeps Guide unconditional", () => {
+    expect(
+      navItems(true, "/admin", {
+        permWalks: false,
+        permMembers: true,
+        permReportsMessages: false,
+        permSettings: false,
+      }).map((item) => item.href),
+    ).toEqual(["/", "/notices", "/progress", "/admin/members", "/admin/guide"]);
+  });
+
+  it("hides every organiser section for someone with no permissions at all", () => {
+    expect(
+      navItems(true, "/admin", {
+        permWalks: false,
+        permMembers: false,
+        permReportsMessages: false,
+        permSettings: false,
+      }).map((item) => item.href),
+    ).toEqual(["/", "/notices", "/progress", "/admin/guide"]);
+  });
+});
+
 describe("isNavItemActive", () => {
   it("does not treat Progress as the member Walks page", () => {
     expect(isNavItemActive("/progress", "/walks")).toBe(false);

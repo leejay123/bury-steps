@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { unlockIdleDocument } from "@/components/overlay-root";
 import { isNavItemActive, navItems } from "@/components/site-nav-items";
+import type { OrganiserPermissions } from "@/lib/organiser-permissions";
 
 function navLinkClass(active: boolean) {
   return cn(
@@ -128,9 +129,12 @@ function scrollNavItemIntoView(scroller: HTMLElement, item: HTMLElement) {
 
 export function SiteNavLinks({
   isAdmin,
+  permissions,
   walksHref,
 }: {
   isAdmin: boolean;
+  /** Omitted defaults to full access — see navItems. */
+  permissions?: OrganiserPermissions;
   walksHref: string;
 }) {
   const pathname = usePathname();
@@ -147,7 +151,7 @@ export function SiteNavLinks({
       className="hidden max-w-full items-center justify-center gap-1 overflow-x-auto overscroll-x-contain text-sm [scrollbar-width:none] [-ms-overflow-style:none] md:flex [&::-webkit-scrollbar]:hidden"
       ref={scrollerRef}
     >
-      {navItems(isAdmin, walksHref).map((item) => {
+      {navItems(isAdmin, walksHref, permissions).map((item) => {
         const active = isNavItemActive(pathname, item.href);
         return (
           <NavLink
@@ -169,9 +173,12 @@ export function SiteNavLinks({
 
 export function SiteMobileNavBar({
   isAdmin,
+  permissions,
   walksHref,
 }: {
   isAdmin: boolean;
+  /** Omitted defaults to full access — see navItems. */
+  permissions?: OrganiserPermissions;
   walksHref: string;
 }) {
   const pathname = usePathname();
@@ -191,7 +198,7 @@ export function SiteMobileNavBar({
         className="flex gap-1 overflow-x-auto overscroll-x-contain px-3 py-1.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         ref={scrollerRef}
       >
-        {navItems(isAdmin, walksHref).map((item) => {
+        {navItems(isAdmin, walksHref, permissions).map((item) => {
           const active = isNavItemActive(pathname, item.href);
           return (
             <NavLink

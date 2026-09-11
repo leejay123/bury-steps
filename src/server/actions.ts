@@ -31,6 +31,7 @@ export {
 export {
   deleteMember,
   setMemberRole,
+  setOrganiserPermissions,
   getMemberHistory,
   searchMembers,
   resendOrganiserInvite,

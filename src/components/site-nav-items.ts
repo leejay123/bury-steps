@@ -1,15 +1,35 @@
-export function navItems(isAdmin: boolean, walksHref: string) {
+import { FULL_ORGANISER_PERMISSIONS, type OrganiserPermissions } from "@/lib/organiser-permissions";
+
+/**
+ * Which nav items an organiser sees depends on their granular permissions
+ * (see @/lib/organiser-permissions) — omitted here defaults to full access,
+ * which is every real caller's fallback anyway (getOptionalUser's row
+ * always carries real values once role is ADMIN) and keeps existing calls
+ * (and this file's own tests) working unchanged. The Guide is always shown
+ * to any organiser regardless — it's just documentation, nothing to gate.
+ *
+ * This only decides what's *shown* — it is not yet enforced on the pages
+ * themselves, so a limited organiser who already knows a hidden URL can
+ * still open it today. See setMemberRole's permMembers check for the one
+ * capability that is actually enforced so far.
+ */
+export function navItems(isAdmin: boolean, walksHref: string, permissions?: OrganiserPermissions) {
+  const perms = permissions ?? FULL_ORGANISER_PERMISSIONS;
   return [
     { href: "/", label: "Home" },
-    { href: walksHref, label: "Walks" },
+    ...(isAdmin && !perms.permWalks ? [] : [{ href: walksHref, label: "Walks" }]),
     { href: "/notices", label: "Notices" },
     { href: "/progress", label: "Progress" },
     ...(isAdmin
       ? [
-          { href: "/admin/members", label: "Members" },
-          { href: "/admin/messages", label: "Messages" },
-          { href: "/admin/reports", label: "Reports" },
-          { href: "/admin/settings", label: "Settings" },
+          ...(perms.permMembers ? [{ href: "/admin/members", label: "Members" }] : []),
+          ...(perms.permReportsMessages
+            ? [
+                { href: "/admin/messages", label: "Messages" },
+                { href: "/admin/reports", label: "Reports" },
+              ]
+            : []),
+          ...(perms.permSettings ? [{ href: "/admin/settings", label: "Settings" }] : []),
           { href: "/admin/guide", label: "Guide" },
         ]
       : [{ href: "/history", label: "History" }]),

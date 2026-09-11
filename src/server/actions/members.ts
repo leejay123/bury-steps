@@ -15,6 +15,11 @@ import {
   organiserInviteExpiresAt,
 } from "@/lib/organiser-invite";
 import {
+  pickOrganiserPermissions,
+  readOrganiserPermissions,
+  type OrganiserPermissions,
+} from "@/lib/organiser-permissions";
+import {
   sendAccountDeletedEmail,
   sendAdminPromotedEmail,
   sendAdminDemotedEmail,
@@ -39,6 +44,10 @@ export type MemberRow = {
   /** Set only while role is still MEMBER and an organiser invite is
    * outstanding — see setMemberRole/acceptOrganiserInvite. */
   pendingInvite: { sentAt: string; expiresAt: string; expired: boolean } | null;
+  /** Meaningless while role is MEMBER — present regardless so a pending
+   * invite's chosen permissions can still be shown/edited before it's
+   * accepted. */
+  permissions: OrganiserPermissions;
 };
 
 export type MemberRoleFilter = "all" | "ADMIN" | "MEMBER";
@@ -111,6 +120,10 @@ export async function searchMembers({
         createdAt: true,
         organiserInviteSentAt: true,
         organiserInviteExpiresAt: true,
+        permWalks: true,
+        permMembers: true,
+        permReportsMessages: true,
+        permSettings: true,
         _count: { select: { attendances: true, walksCreated: true } },
       },
     }),
@@ -134,6 +147,7 @@ export async function searchMembers({
             expired: (member.organiserInviteExpiresAt?.getTime() ?? 0) < now,
           }
         : null,
+      permissions: pickOrganiserPermissions(member),
     })),
   };
 }
@@ -271,6 +285,12 @@ export async function setMemberRole(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
+  // Changing who's an organiser (or what they can do) is itself a Members
+  // capability — a limited organiser who lacks it can't use this at all,
+  // even by posting directly to this action.
+  if (!admin.permMembers) {
+    return { ok: false, error: "You do not have permission to manage members." };
+  }
   const limited = checkRateLimit(`${admin.id}:setMemberRole`, 20, 60_000);
   if (!limited.ok) {
     return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
@@ -287,6 +307,8 @@ export async function setMemberRole(
     return { ok: false, error: "Choose organiser or member." };
   }
   const role = roleRaw as "ADMIN" | "MEMBER";
+  // Only read/applied when promoting — see below.
+  const permissions = readOrganiserPermissions(formData);
 
   const target = await prisma.user.findUnique({ where: { id } });
   if (!target) return { ok: false, error: "That member is no longer in the group." };
@@ -302,14 +324,16 @@ export async function setMemberRole(
 
   // Promoting, with the "must accept an emailed invite first" setting on:
   // send the invite instead of promoting immediately. Role stays MEMBER
-  // until they accept — see acceptOrganiserInvite.
+  // until they accept — see acceptOrganiserInvite. The chosen permissions
+  // are written right away regardless, so they're already in place the
+  // moment the invite is accepted.
   if (role === "ADMIN") {
     const setting = await prisma.siteSetting.findUnique({
       where: { id: SITE_SETTING_ID },
       select: { organiserInviteRequired: true },
     });
     if (setting?.organiserInviteRequired) {
-      return sendOrganiserInvite(target);
+      return sendOrganiserInvite(target, permissions);
     }
   }
 
@@ -324,7 +348,10 @@ export async function setMemberRole(
           throw new LimitReachedError("You cannot demote the last organiser.");
         }
       }
-      await tx.user.update({ where: { id: fresh.id }, data: { role } });
+      await tx.user.update({
+        where: { id: fresh.id },
+        data: role === "ADMIN" ? { role, ...permissions } : { role },
+      });
       // Demoting the designated contact-messages owner would otherwise
       // leave that setting silently pointing at a plain member — the FK's
       // onDelete: SetNull only helps if they're removed outright, not
@@ -370,15 +397,68 @@ export async function setMemberRole(
   };
 }
 
+/**
+ * Change what an existing organiser (or a member with a pending organiser
+ * invite) can do, without touching their role — see setMemberRole for
+ * picking permissions at invite time instead.
+ */
+export async function setOrganiserPermissions(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permMembers) {
+    return { ok: false, error: "You do not have permission to manage members." };
+  }
+  const limited = checkRateLimit(`${admin.id}:setOrganiserPermissions`, 20, 60_000);
+  if (!limited.ok) {
+    return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
+  }
+
+  const id = String(formData.get("userId") ?? "");
+  if (!id) return { ok: false, error: "No member selected." };
+  const permissions = readOrganiserPermissions(formData);
+
+  const target = await prisma.user.findUnique({ where: { id } });
+  if (!target) return { ok: false, error: "That member is no longer in the group." };
+  if (target.role !== "ADMIN" && !target.organiserInviteToken) {
+    return { ok: false, error: "This person is not an organiser and has no pending invite." };
+  }
+
+  try {
+    await prisma.user.update({ where: { id }, data: permissions });
+  } catch (err) {
+    return logActionError(
+      "setOrganiserPermissions",
+      err,
+      "Could not save their permissions. Try again.",
+    );
+  }
+
+  revalidatePath("/admin/members");
+  revalidatePath(`/admin/members/${id}`);
+  // Layout nav (Members / Reports / Settings) depends on this for them.
+  revalidatePath("/", "layout");
+
+  return { ok: true, message: `${displayName(target)}'s permissions have been updated.` };
+}
+
 /** Issues (or reissues) an organiser invite — shared by setMemberRole's
  * promote branch and resendOrganiserInvite. Role stays MEMBER; only
- * acceptOrganiserInvite ever flips it to ADMIN. */
-async function sendOrganiserInvite(target: {
-  id: string;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-}): Promise<ActionResult> {
+ * acceptOrganiserInvite ever flips it to ADMIN.
+ *
+ * `permissions` is only passed on the initial invite (from setMemberRole) —
+ * a resend reuses whatever was already chosen rather than silently
+ * resetting it, so omit it there. */
+async function sendOrganiserInvite(
+  target: {
+    id: string;
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+  },
+  permissions?: OrganiserPermissions,
+): Promise<ActionResult> {
   const token = makeOrganiserInviteToken();
   const expiresAt = organiserInviteExpiresAt();
 
@@ -389,6 +469,7 @@ async function sendOrganiserInvite(target: {
         organiserInviteToken: token,
         organiserInviteSentAt: new Date(),
         organiserInviteExpiresAt: expiresAt,
+        ...permissions,
       },
     });
   } catch (err) {
@@ -547,6 +628,7 @@ export async function getMemberHistory(userId: string): Promise<{
   isYou: boolean;
   items: MemberHistoryItem[];
   pendingInvite: { sentAt: string; expiresAt: string; expired: boolean } | null;
+  permissions: OrganiserPermissions;
 } | null> {
   const admin = await requireAdmin();
   const [member, attendanceCount] = await Promise.all([
@@ -598,6 +680,7 @@ export async function getMemberHistory(userId: string): Promise<{
           expired: (member.organiserInviteExpiresAt?.getTime() ?? 0) < Date.now(),
         }
       : null,
+    permissions: pickOrganiserPermissions(member),
     items: member.attendances.map((attendance) => ({
       id: attendance.id,
       walkId: attendance.walk.id,

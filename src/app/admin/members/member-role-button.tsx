@@ -17,73 +17,43 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { OrganiserPermissionFields } from "./organiser-permissions-fields";
+import { FULL_ORGANISER_PERMISSIONS, type OrganiserPermissions } from "@/lib/organiser-permissions";
 
-/** Must type this word to confirm a role change — same idea as site reset. */
+/** Must type this word to confirm a *demotion* — same idea as site reset.
+ * Promoting goes through the permissions drawer instead: picking what
+ * they can do and clicking the (clearly labelled) submit button is
+ * already a deliberate step, so it doesn't also ask for typed confirmation. */
 export const ROLE_CONFIRM_WORD = "Confirm";
 
-function ConfirmSubmit({
-  confirmValue,
-  inviteRequired,
-  promoting,
-}: {
-  confirmValue: string;
-  inviteRequired: boolean;
-  promoting: boolean;
-}) {
-  const { pending } = useFormStatus();
-  const ready = confirmValue.trim().toLowerCase() === ROLE_CONFIRM_WORD.toLowerCase();
-  return (
-    <Button disabled={pending || !ready} type="submit">
-      {pending
-        ? promoting
-          ? inviteRequired
-            ? "Inviting…"
-            : "Promoting…"
-          : "Demoting…"
-        : promoting
-          ? inviteRequired
-            ? "Invite as organiser"
-            : "Make organiser"
-          : "Make member"}
-    </Button>
-  );
-}
-
-export function MemberRoleButton({
-  inviteRequired = false,
+function DemoteDialog({
   name,
   onChanged,
-  role,
+  open,
+  setOpen,
   userId,
 }: {
-  /** When true, promoting sends an invite the member must accept instead of
-   * taking effect immediately — see Settings → Display → Organisers. */
-  inviteRequired?: boolean;
   name: string;
-  /** Called after a successful change — lets a parent list re-fetch its own
-   * local rows, which a plain router.refresh() doesn't reach on its own. */
   onChanged?: () => void;
-  role: "ADMIN" | "MEMBER";
+  open: boolean;
+  setOpen: (open: boolean) => void;
   userId: string;
 }) {
-  const promoting = role === "MEMBER";
-  const nextRole = promoting ? "ADMIN" : "MEMBER";
   const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
     setMemberRole,
     null,
   );
-  const [open, setOpen] = useState(false);
   const [confirmValue, setConfirmValue] = useState("");
   useActionToast(state, () => {
     setOpen(false);
     onChanged?.();
   });
-
   useResetOnChange([open], () => {
     if (!open) setConfirmValue("");
   });
+  const ready = confirmValue.trim().toLowerCase() === ROLE_CONFIRM_WORD.toLowerCase();
 
   return (
     <AlertDialog
@@ -91,11 +61,6 @@ export function MemberRoleButton({
       onOpenChange={preventDismissWhilePending(isPending, setOpen)}
       open={open}
     >
-      <AlertDialogTrigger asChild>
-        <Button size="xs" variant="outline">
-          {promoting ? (inviteRequired ? "Invite as organiser" : "Make organiser") : "Make member"}
-        </Button>
-      </AlertDialogTrigger>
       <AlertDialogContent closeDisabled={isPending}>
         {/*
           Use a normal submit Button — not AlertDialogAction. Radix Action
@@ -104,51 +69,19 @@ export function MemberRoleButton({
         */}
         <form action={action} className="flex flex-col gap-4">
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {promoting
-                ? inviteRequired
-                  ? `Invite ${name} to become an organiser?`
-                  : `Make ${name} an organiser?`
-                : `Make ${name} a member?`}
-            </AlertDialogTitle>
+            <AlertDialogTitle>Make {name} a member?</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2 text-sm text-muted-foreground">
-                {promoting ? (
-                  inviteRequired ? (
-                    <>
-                      <p>
-                        They&rsquo;ll get an email with a link to accept. Nothing changes for them
-                        until they click it — you can cancel or resend the invite any time before
-                        then.
-                      </p>
-                      <p>
-                        Once accepted, they will see Members, Reports, Settings, and this Guide, and
-                        can create and manage walks — including other people&rsquo;s data.
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p>
-                        They will see Members, Reports, Settings, and this Guide, and can create and
-                        manage walks — including other people’s data.
-                      </p>
-                      <p>You can change them back to a member later.</p>
-                    </>
-                  )
-                ) : (
-                  <>
-                    <p>
-                      They will lose organiser tools and keep their member account, walk history,
-                      and clock-ins.
-                    </p>
-                    <p>There must still be at least one organiser left in the group.</p>
-                  </>
-                )}
+                <p>
+                  They will lose organiser tools and keep their member account, walk history, and
+                  clock-ins.
+                </p>
+                <p>There must still be at least one organiser left in the group.</p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <input name="userId" type="hidden" value={userId} />
-          <input name="role" type="hidden" value={nextRole} />
+          <input name="role" type="hidden" value="MEMBER" />
           <input name="confirm" type="hidden" value={confirmValue} />
           <div className="flex flex-col gap-1.5">
             <Label htmlFor={`role-confirm-${userId}`}>
@@ -169,10 +102,151 @@ export function MemberRoleButton({
             <AlertDialogCancel disabled={isPending} type="button">
               Cancel
             </AlertDialogCancel>
-            <ConfirmSubmit confirmValue={confirmValue} inviteRequired={inviteRequired} promoting={promoting} />
+            <Button disabled={isPending || !ready} type="submit">
+              {isPending ? "Demoting…" : "Make member"}
+            </Button>
           </AlertDialogFooter>
         </form>
       </AlertDialogContent>
     </AlertDialog>
+  );
+}
+
+function PromoteSubmit({ inviteRequired }: { inviteRequired: boolean }) {
+  const { pending } = useFormStatus();
+  return (
+    <Button disabled={pending} type="submit">
+      {pending ? (inviteRequired ? "Inviting…" : "Promoting…") : inviteRequired ? "Invite as organiser" : "Make organiser"}
+    </Button>
+  );
+}
+
+function PromoteDrawer({
+  initialPermissions,
+  inviteRequired,
+  name,
+  onChanged,
+  open,
+  setOpen,
+  userId,
+}: {
+  initialPermissions: OrganiserPermissions;
+  inviteRequired: boolean;
+  name: string;
+  onChanged?: () => void;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  userId: string;
+}) {
+  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
+    setMemberRole,
+    null,
+  );
+  const [permissions, setPermissions] = useState<OrganiserPermissions>(initialPermissions);
+  useActionToast(state, () => {
+    setOpen(false);
+    onChanged?.();
+  });
+  // Re-seed from the current row every time the drawer opens — otherwise a
+  // second invite (after cancelling the first without submitting) would
+  // keep showing whatever was ticked last time instead of their actual
+  // starting permissions.
+  useResetOnChange([open], () => {
+    if (open) setPermissions(initialPermissions);
+  });
+
+  return (
+    <Drawer
+      closeDisabled={isPending}
+      onOpenChange={preventDismissWhilePending(isPending, setOpen)}
+      open={open}
+      variant="form"
+    >
+      <DrawerContent className="sm:max-w-md">
+        <form action={action} className="flex min-h-0 flex-1 flex-col">
+          <DrawerHeader>
+            <DrawerTitle>
+              {inviteRequired ? `Invite ${name} to become an organiser?` : `Make ${name} an organiser?`}
+            </DrawerTitle>
+            <DrawerDescription asChild>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                {inviteRequired ? (
+                  <p>
+                    They&rsquo;ll get an email with a link to accept. Nothing changes for them
+                    until they click it — you can cancel or resend the invite, or change these
+                    permissions, any time before then.
+                  </p>
+                ) : (
+                  <p>You can change these permissions, or change them back to a member, any time from Members.</p>
+                )}
+              </div>
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="flex-1 overflow-y-auto overscroll-y-contain px-4">
+            <OrganiserPermissionFields
+              disabled={isPending}
+              onChange={setPermissions}
+              permissions={permissions}
+            />
+            <FormError message={state && !state.ok ? state.error : null} />
+          </div>
+          <input name="userId" type="hidden" value={userId} />
+          <input name="role" type="hidden" value="ADMIN" />
+          {/* The drawer itself — picking permissions, then clicking this
+              clearly-labelled submit — is the deliberate step here, so no
+              separate typed confirmation like the demote dialog asks for. */}
+          <input name="confirm" type="hidden" value="confirm" />
+          <DrawerFooter>
+            <PromoteSubmit inviteRequired={inviteRequired} />
+          </DrawerFooter>
+        </form>
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
+export function MemberRoleButton({
+  initialPermissions = FULL_ORGANISER_PERMISSIONS,
+  inviteRequired = false,
+  name,
+  onChanged,
+  role,
+  userId,
+}: {
+  /** Permissions to preselect in the promote drawer — the row's existing
+   * columns (already true-by-default for anyone never customized). */
+  initialPermissions?: OrganiserPermissions;
+  /** When true, promoting sends an invite the member must accept instead of
+   * taking effect immediately — see Settings → Display → Organisers. */
+  inviteRequired?: boolean;
+  name: string;
+  /** Called after a successful change — lets a parent list re-fetch its own
+   * local rows, which a plain router.refresh() doesn't reach on its own. */
+  onChanged?: () => void;
+  role: "ADMIN" | "MEMBER";
+  userId: string;
+}) {
+  const promoting = role === "MEMBER";
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button onClick={() => setOpen(true)} size="xs" variant="outline">
+        {promoting ? (inviteRequired ? "Invite as organiser" : "Make organiser") : "Make member"}
+      </Button>
+      {promoting ? (
+        <PromoteDrawer
+          initialPermissions={initialPermissions}
+          inviteRequired={inviteRequired}
+          name={name}
+          onChanged={onChanged}
+          open={open}
+          setOpen={setOpen}
+          userId={userId}
+        />
+      ) : (
+        <DemoteDialog name={name} onChanged={onChanged} open={open} setOpen={setOpen} userId={userId} />
+      )}
+    </>
   );
 }
