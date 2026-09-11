@@ -15,12 +15,12 @@ import {
   organiserInviteExpiresAt,
 } from "@/lib/organiser-invite";
 import {
-  adminLandingPath,
   clampGrantablePermissions,
   hasAnyPermission,
   NO_ORGANISER_PERMISSIONS,
   pickOrganiserPermissions,
   readOrganiserPermissions,
+  walksLandingPath,
   type OrganiserPermissions,
 } from "@/lib/organiser-permissions";
 import {
@@ -641,11 +641,11 @@ export async function acceptOrganiserInvite(
   // Layout nav (Members / Reports / Settings) depends on role for this person.
   revalidatePath("/", "layout");
 
-  // Send them to the first admin page they can actually use — every admin
-  // page now checks the specific permission it needs, so a fixed
-  // "/admin/members" 404s on anyone who wasn't granted Members (see
-  // adminLandingPath).
-  return { ok: true, message: "You're now an organiser.", href: adminLandingPath(target) };
+  // Always land on Walks — the admin dashboard if they were granted Walks,
+  // the ordinary member Walks page otherwise (see walksLandingPath). Every
+  // other admin page now checks its own specific permission, so a fixed
+  // "/admin/members" would 404 on anyone who wasn't granted Members.
+  return { ok: true, message: "You're now an organiser.", href: walksLandingPath(target) };
 }
 
 export type MemberHistoryItem = {

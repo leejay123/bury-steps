@@ -20,9 +20,10 @@ import { Button } from "@/components/ui/button";
  * Only ever rendered once the page has already confirmed the viewer is
  * signed in as the invitee themselves, so the action always succeeds with
  * an `href` — useNotifyActionState flash-toasts "You're now an organiser."
- * and hard-navigates to the first admin page they were actually granted
- * (see adminLandingPath), not a fixed page every admin page now checks
- * its own permission for.
+ * and hard-navigates to Walks (see walksLandingPath) — the admin
+ * dashboard if they were granted Walks, the ordinary member Walks page
+ * otherwise, since every other admin page now checks its own specific
+ * permission and a fixed destination there could 404 on them.
  */
 function Submit() {
   const { pending } = useFormStatus();

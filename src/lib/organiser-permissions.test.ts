@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-  adminLandingPath,
   describeOrganiserPermissions,
   FULL_ORGANISER_PERMISSIONS,
   hasAnyPermission,
   hasFullAccess,
   type OrganiserPermissions,
+  walksLandingPath,
 } from "./organiser-permissions";
 
 const NONE: OrganiserPermissions = {
@@ -34,16 +34,15 @@ describe("hasAnyPermission", () => {
   });
 });
 
-describe("adminLandingPath", () => {
-  it("prefers Walks, then Members, then Reports & messages, then Settings", () => {
-    expect(adminLandingPath(FULL_ORGANISER_PERMISSIONS)).toBe("/admin");
-    expect(adminLandingPath({ ...NONE, permMembers: true })).toBe("/admin/members");
-    expect(adminLandingPath({ ...NONE, permReportsMessages: true })).toBe("/admin/messages");
-    expect(adminLandingPath({ ...NONE, permSettings: true })).toBe("/admin/settings");
+describe("walksLandingPath", () => {
+  it("goes to the admin Walks dashboard when granted Walks", () => {
+    expect(walksLandingPath(FULL_ORGANISER_PERMISSIONS)).toBe("/admin");
+    expect(walksLandingPath({ ...NONE, permWalks: true })).toBe("/admin");
   });
 
-  it("falls back to the Guide when nothing is granted", () => {
-    expect(adminLandingPath(NONE)).toBe("/admin/guide");
+  it("goes to the ordinary member Walks page otherwise", () => {
+    expect(walksLandingPath(NONE)).toBe("/walks");
+    expect(walksLandingPath({ ...NONE, permMembers: true })).toBe("/walks");
   });
 });
 

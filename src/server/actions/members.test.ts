@@ -1206,9 +1206,10 @@ describe("acceptOrganiserInvite", () => {
 
   // Regression test: every admin page now checks its own specific
   // permission (requirePermission), so a fixed "/admin/members" 404s on
-  // an organiser who was only granted Reports & messages — this is
-  // exactly the bug an invite-time permission split can reintroduce.
-  it("redirects to the first page an organiser without Walks or Members can actually use", async () => {
+  // an organiser who wasn't granted Members — landing on Walks avoids
+  // that regardless of which other permissions were granted, since Walks
+  // (member or admin view) is the one page every organiser can open.
+  it("redirects to the member Walks page for an organiser not granted Walks", async () => {
     const target = {
       id: "member-1",
       role: "MEMBER",
@@ -1230,7 +1231,7 @@ describe("acceptOrganiserInvite", () => {
     expect(result).toEqual({
       ok: true,
       message: "You're now an organiser.",
-      href: "/admin/messages",
+      href: "/walks",
     });
   });
 
