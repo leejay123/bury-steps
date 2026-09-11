@@ -84,13 +84,3 @@ export async function getMonthlyClockInGoal(): Promise<number | null> {
   });
   return row?.monthlyClockInGoal ?? null;
 }
-
-/** Whether the member Walks page shows an "All walks" tab (every completed
- * walk site-wide) alongside their own upcoming list. Off by default. */
-export async function getAllWalksTabEnabled(): Promise<boolean> {
-  const row = await prisma.siteSetting.findUnique({
-    where: { id: SITE_SETTING_ID },
-    select: { allWalksTabEnabled: true },
-  });
-  return row?.allWalksTabEnabled ?? false;
-}

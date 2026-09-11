@@ -74,40 +74,6 @@ export async function updateCarouselEnabled(
   return { ok: true, message: enabled ? "You have turned the carousel on." : "You have turned the carousel off." };
 }
 
-export async function updateAllWalksTabEnabled(
-  _prev: ActionResult | null,
-  formData: FormData,
-): Promise<ActionResult> {
-  await requireAdmin();
-  const enabled = String(formData.get("allWalksTabEnabled") ?? "") === "on";
-
-  try {
-    await prisma.siteSetting.upsert({
-      where: { id: SITE_SETTING_ID },
-      create: {
-        id: SITE_SETTING_ID,
-        primaryColor: DEFAULT_PRIMARY_COLOR,
-        allWalksTabEnabled: enabled,
-      },
-      update: { allWalksTabEnabled: enabled },
-    });
-  } catch (err) {
-    return logActionError("updateAllWalksTabEnabled", err, "Could not save that setting. Try again.");
-  }
-
-  revalidatePath("/walks");
-  revalidatePath("/admin/settings");
-  return {
-    ok: true,
-    message: enabled
-      ? "Members can now see every completed walk."
-      : "Members will only see their own walks again.",
-  };
-}
-
-/** Sets the single organiser who gets contact-form alert emails and is
- * expected to reply (via the alert email's reply-to). Pass an empty string
- * to designate no one. */
 /** Toggles whether promoting a member to organiser sends an invite email
  * (taking effect only once accepted) instead of promoting immediately. */
 export async function updateOrganiserInviteRequired(
@@ -238,6 +204,9 @@ export async function updateAccidentReportRetentionDays(
   };
 }
 
+/** Sets the single organiser who gets contact-form alert emails and is
+ * expected to reply (via the alert email's reply-to). Pass an empty string
+ * to designate no one. */
 export async function updateContactMessagesOwner(
   _prev: ActionResult | null,
   formData: FormData,

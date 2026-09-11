@@ -4,7 +4,7 @@ import { walkStatus } from "@/lib/walk-window";
 
 /** Cap for the member-facing "All walks" tab — a weekly walk for a decade
  * is ~520, so this comfortably covers any realistic history. */
-const ALL_COMPLETED_WALKS_LIMIT = 500;
+const ALL_WALKS_LIMIT = 500;
 
 export type AllWalksRow = {
   id: string;
@@ -14,18 +14,30 @@ export type AllWalksRow = {
   location: string | null;
   startsAt: Date;
   durationMins: number;
+  cancelledAt: Date | null;
   attendanceCount: number;
 };
 
-/** Every completed walk site-wide, newest first — title/date/location only.
+/**
+ * Every completed or cancelled walk site-wide, newest first —
+ * title/date/location only (plus cancelledAt, so the list can label and
+ * filter cancelled ones). Deliberately excludes anything still upcoming,
+ * starting soon, or in progress — those live in the Upcoming tab instead.
  * Attendee names are deliberately not included here: WalkLivePanel already
  * only reveals who attended to someone who was on that walk themselves,
- * and this list must not bypass that by exposing names some other way. */
-export async function getAllCompletedWalks(): Promise<AllWalksRow[]> {
+ * and this list must not bypass that by exposing names some other way.
+ */
+export async function getAllWalksSiteWide(): Promise<AllWalksRow[]> {
+  const now = new Date();
   const candidates = await prisma.walk.findMany({
-    where: { cancelledAt: null },
+    // A walk only ever belongs here once it's resolved one way or the
+    // other: it has already started (so it's completed or in-progress —
+    // in-progress gets filtered out below), or it was cancelled outright
+    // (which can happen before its original date, so that alone also
+    // qualifies regardless of startsAt).
+    where: { OR: [{ cancelledAt: { not: null } }, { startsAt: { lte: now } }] },
     orderBy: { startsAt: "desc" },
-    take: ALL_COMPLETED_WALKS_LIMIT,
+    take: ALL_WALKS_LIMIT,
     select: {
       id: true,
       token: true,
@@ -40,7 +52,10 @@ export async function getAllCompletedWalks(): Promise<AllWalksRow[]> {
   });
 
   return candidates
-    .filter((walk) => walkStatus(walk) === "completed")
+    .filter((walk) => {
+      const status = walkStatus(walk, now);
+      return status === "completed" || status === "cancelled";
+    })
     .map((walk) => ({
       id: walk.id,
       token: walk.token,
@@ -49,6 +64,7 @@ export async function getAllCompletedWalks(): Promise<AllWalksRow[]> {
       location: walk.location,
       startsAt: walk.startsAt,
       durationMins: walk.durationMins,
+      cancelledAt: walk.cancelledAt,
       attendanceCount: walk._count.attendances,
     }));
 }

@@ -1,12 +1,10 @@
 import { prisma } from "@/lib/db";
 import { requireAdmin, displayName } from "@/lib/auth";
 import { getSiteTheme } from "@/lib/site-theme";
-import { getAllWalksTabEnabled } from "@/lib/walk-progress";
 import { DEFAULT_CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { SettingsPage, SettingsSectionGroup } from "../settings-page";
 import { AboutListsSettings } from "./about-lists-settings";
-import { AllWalksTabToggle } from "./all-walks-tab-toggle";
 import { CarouselToggle } from "../hero-photos/carousel-toggle";
 import { ContactMessagesOwnerSettings } from "./contact-messages-owner-settings";
 import { CookieConsentSettings } from "./cookie-consent-settings";
@@ -28,9 +26,8 @@ export const dynamic = "force-dynamic";
 
 export default async function DisplaySettingsPage() {
   await requireAdmin();
-  const [theme, allWalksTabEnabled, organisers, settings] = await Promise.all([
+  const [theme, organisers, settings] = await Promise.all([
     getSiteTheme(),
-    getAllWalksTabEnabled(),
     prisma.user.findMany({
       where: { role: "ADMIN" },
       orderBy: { createdAt: "asc" },
@@ -76,14 +73,6 @@ export default async function DisplaySettingsPage() {
         >
           <HomepageSectionsSettings sectionOrder={theme.homepageSectionOrder} />
           <CarouselToggle enabled={theme.carouselEnabled} />
-        </SettingsSectionGroup>
-
-        <SettingsSectionGroup
-          description="What members can see about walks beyond their own history."
-          id="member-walks"
-          title="Member walks"
-        >
-          <AllWalksTabToggle enabled={allWalksTabEnabled} />
         </SettingsSectionGroup>
 
         <SettingsSectionGroup

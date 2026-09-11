@@ -81,7 +81,6 @@ export {
 
 export {
   updateCarouselEnabled,
-  updateAllWalksTabEnabled,
   updateAccidentReportRetentionDays,
   updateCancelledWalkRetentionDays,
   updateContactMessagesOwner,

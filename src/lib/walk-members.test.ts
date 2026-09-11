@@ -6,7 +6,7 @@ const { prismaMock } = vi.hoisted(() => ({
 
 vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
 
-import { getAllCompletedWalks } from "./walk-members";
+import { getAllWalksSiteWide } from "./walk-members";
 
 function walk(overrides: Partial<Parameters<typeof baseWalk>[0]> = {}) {
   return baseWalk(overrides);
@@ -39,12 +39,13 @@ beforeEach(() => {
   vi.setSystemTime(new Date("2026-06-15T12:00:00Z"));
 });
 
-describe("getAllCompletedWalks", () => {
+describe("getAllWalksSiteWide", () => {
   it("includes a walk that has fully finished", async () => {
     prismaMock.walk.findMany.mockResolvedValueOnce([walk({ id: "done" })]);
-    const rows = await getAllCompletedWalks();
+    const rows = await getAllWalksSiteWide();
     expect(rows.map((r) => r.id)).toEqual(["done"]);
     expect(rows[0].attendanceCount).toBe(3);
+    expect(rows[0].cancelledAt).toBeNull();
   });
 
   it("excludes a walk that's still upcoming or in progress", async () => {
@@ -52,25 +53,28 @@ describe("getAllCompletedWalks", () => {
       walk({ id: "future", startsAt: new Date("2026-06-20T10:00:00Z") }),
       walk({ id: "in-progress", startsAt: new Date(), durationMins: 90 }),
     ]);
-    const rows = await getAllCompletedWalks();
+    const rows = await getAllWalksSiteWide();
     expect(rows).toEqual([]);
   });
 
-  it("excludes a cancelled walk even if its time has passed", async () => {
+  it("includes a cancelled walk even if its original time hasn't passed yet", async () => {
+    const cancelledAt = new Date("2026-06-14T10:00:00Z");
     prismaMock.walk.findMany.mockResolvedValueOnce([
-      walk({ id: "cancelled", cancelledAt: new Date("2026-06-14T10:00:00Z") }),
+      walk({ id: "cancelled", startsAt: new Date("2026-06-20T10:00:00Z"), cancelledAt }),
     ]);
-    // cancelled walks are already excluded at the query level (where:
-    // cancelledAt: null), but the status filter is a second safety net.
-    const rows = await getAllCompletedWalks();
-    expect(rows).toEqual([]);
+    const rows = await getAllWalksSiteWide();
+    expect(rows.map((r) => r.id)).toEqual(["cancelled"]);
+    expect(rows[0].cancelledAt).toEqual(cancelledAt);
   });
 
-  it("queries with cancelledAt: null so cancelled walks never reach the filter", async () => {
+  it("queries for anything already cancelled or already started, ordered newest first", async () => {
     prismaMock.walk.findMany.mockResolvedValueOnce([]);
-    await getAllCompletedWalks();
+    await getAllWalksSiteWide();
     expect(prismaMock.walk.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { cancelledAt: null } }),
+      expect.objectContaining({
+        where: { OR: [{ cancelledAt: { not: null } }, { startsAt: { lte: expect.any(Date) } }] },
+        orderBy: { startsAt: "desc" },
+      }),
     );
   });
 });
