@@ -92,18 +92,26 @@ function useScrollEdges(scrollerRef: RefObject<HTMLElement | null>) {
 
 /** Fades the scroller's edge toward the surrounding background when there's
  * more content past it — a plain CSS mask on the scroller would fade the
- * links' own background too, so this overlays a matching gradient instead. */
+ * links' own background too, so this overlays a matching gradient instead.
+ *
+ * Built with an inline `style` rather than Tailwind's `bg-gradient-to-*`
+ * utilities: those compile to `linear-gradient(to left/right in oklab, …)`
+ * in Tailwind v4, and Safari has had inconsistent support for the
+ * "to left"/"to right in oklab" combination — it was showing the fade on
+ * one edge but not the other. A plain gradient in the default (sRGB)
+ * color space sidesteps that entirely and is universally supported. */
 function ScrollEdgeFade({ side, visible }: { side: "left" | "right"; visible: boolean }) {
   return (
     <div
       aria-hidden="true"
       className={cn(
         "pointer-events-none absolute inset-y-0 z-10 w-8 transition-opacity duration-150",
-        side === "left"
-          ? "left-0 bg-gradient-to-r from-background to-transparent"
-          : "right-0 bg-gradient-to-l from-background to-transparent",
+        side === "left" ? "left-0" : "right-0",
         visible ? "opacity-100" : "opacity-0",
       )}
+      style={{
+        backgroundImage: `linear-gradient(to ${side === "left" ? "right" : "left"}, var(--background), transparent)`,
+      }}
     />
   );
 }
