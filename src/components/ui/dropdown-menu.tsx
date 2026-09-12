@@ -17,6 +17,7 @@ function DropdownMenuContent({
   className,
   sideOffset = 4,
   align = "end",
+  onCloseAutoFocus,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Content>) {
   const overlayRoot = useOverlayRoot();
@@ -29,6 +30,16 @@ function DropdownMenuContent({
           "z-[80] min-w-40 origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
           className,
         )}
+        // Radix returns focus to the trigger on close by default. If an item
+        // just opened a dialog/drawer on top (see openAfterMenuCloses in
+        // member-row-actions-menu.tsx), that focus return happens after —
+        // and yanks focus back out of the dialog, which reads as "the
+        // dialog opened and instantly closed itself". Nothing here needs
+        // the trigger refocused on close, so skip it unless a caller asks.
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          onCloseAutoFocus?.(event);
+        }}
         sideOffset={sideOffset}
         {...props}
       />
