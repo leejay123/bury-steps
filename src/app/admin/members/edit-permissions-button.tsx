@@ -8,7 +8,7 @@ import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { openAfterMenuCloses } from "./member-row-actions-menu";
+import { useMenuActionScheduler } from "./member-row-actions-menu";
 import {
   Drawer,
   DrawerContent,
@@ -60,11 +60,14 @@ export function EditPermissionsButton({
   useResetOnChange([open], () => {
     if (open) setPermissions(initialPermissions);
   });
+  const scheduleMenuAction = useMenuActionScheduler();
 
   return (
     <>
       {asMenuItem ? (
-        <DropdownMenuItem onSelect={() => openAfterMenuCloses(setOpen)}>Edit permissions</DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => scheduleMenuAction?.(() => setOpen(true))}>
+          Edit permissions
+        </DropdownMenuItem>
       ) : (
         <Button onClick={() => setOpen(true)} size="xs" variant="outline">
           Edit permissions
