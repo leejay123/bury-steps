@@ -101,6 +101,12 @@ export function MembersTable({
   // the very first mount is skipped; set back to `true` whenever
   // useResetOnChange re-syncs to a fresh set of server-provided rows.
   const skipNextFetchRef = useRef(true);
+  // Only an actual change to the typed query should wait out the debounce
+  // below — a discrete click (role, sort, needs-attention, pagination)
+  // is already a deliberate one-off action, not a keystroke that might be
+  // followed by more keystrokes a moment later, so it should fetch right
+  // away even while a search query is also active.
+  const lastDebouncedQueryRef = useRef(query);
 
   // A full navigation changes roleFilter/initialRows — drop back to page 1,
   // no search, the default sort, no attention filter, and the fresh
@@ -119,8 +125,11 @@ export function MembersTable({
   useEffect(() => {
     if (skipNextFetchRef.current) {
       skipNextFetchRef.current = false;
+      lastDebouncedQueryRef.current = query;
       return;
     }
+    const queryJustChanged = query !== lastDebouncedQueryRef.current;
+    lastDebouncedQueryRef.current = query;
     const handle = setTimeout(
       () => {
         startTransition(async () => {
@@ -129,7 +138,7 @@ export function MembersTable({
           setTotal(result.total);
         });
       },
-      query === "" && page === 1 ? 0 : 300,
+      queryJustChanged && query !== "" ? 300 : 0,
     );
     return () => clearTimeout(handle);
   }, [query, sort, needsAttention, page, roleFilter, viewerId, refreshNonce]);
@@ -204,7 +213,10 @@ export function MembersTable({
             who's never clocked in, and an organiser invite that's expired —
             see MemberRow.needsAttention. Rows matching either are also
             marked individually (see the AlertCircle below) even with this
-            off, so switching it on is only for isolating them. */}
+            off, so switching it on is only for isolating them. `title` is
+            a plain hover tooltip — desktop-only, so the caption under the
+            filter row (below) carries the same explanation for everyone
+            once the filter is actually on. */}
         <Button
           aria-pressed={needsAttention}
           className={cn(
@@ -213,6 +225,7 @@ export function MembersTable({
               "border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 hover:text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200 dark:hover:bg-amber-900",
           )}
           onClick={toggleNeedsAttention}
+          title="Show only members who've never clocked in, or whose organiser invite has expired"
           type="button"
           variant="outline"
         >
@@ -220,6 +233,12 @@ export function MembersTable({
           Needs attention
         </Button>
       </div>
+
+      {needsAttention ? (
+        <p className="-mt-2 text-xs text-muted-foreground">
+          Showing members who&rsquo;ve never clocked in, or whose organiser invite has expired.
+        </p>
+      ) : null}
 
       {rows.length === 0 && !isPending ? (
         <EmptyState
@@ -435,17 +454,17 @@ export function MembersTable({
                       <AvatarFallback className="text-xs">{initials(member.name)}</AvatarFallback>
                     </Avatar>
                     <DataListBody>
-                      <p className="font-medium">
+                      <p className="flex items-center gap-1.5 font-medium">
                         <Link className="after:absolute after:inset-0" href={`/admin/members/${member.id}`}>
                           {member.name}
                         </Link>
                         {member.isYou ? (
-                          <span className="ml-2 text-xs font-normal text-muted-foreground">You</span>
+                          <span className="text-xs font-normal text-muted-foreground">You</span>
                         ) : null}
                         {member.needsAttention && !member.pendingInvite ? (
                           <AlertCircle
                             aria-label="Never clocked in"
-                            className="ml-1.5 inline size-3.5 align-text-bottom text-amber-600 dark:text-amber-400"
+                            className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400"
                           />
                         ) : null}
                       </p>
