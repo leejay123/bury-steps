@@ -1,15 +1,14 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import type React from "react";
 import { transferOwnership, type ActionResult } from "@/server/actions";
 import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useMenuActionScheduler } from "./member-row-actions-menu";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -28,16 +27,20 @@ import {
  * admin/members/[id]/page.tsx).
  */
 export function TransferOwnershipButton({
-  asMenuItem = false,
+  hideTrigger = false,
   name,
   onChanged,
+  triggerRef,
   userId,
 }: {
-  /** Render the trigger as a DropdownMenuItem (for use inside
-   * MemberRowActionsMenu) instead of a standalone Button. */
-  asMenuItem?: boolean;
+  /** Visually hide the trigger button while keeping it mounted and
+   * clickable via `triggerRef` — used when a MemberRowActionsMenu item
+   * proxies a click to it, so the dialog this opens lives outside the
+   * dropdown menu's own React tree. See MemberRowActionsMenu for why. */
+  hideTrigger?: boolean;
   name: string;
   onChanged?: () => void;
+  triggerRef?: React.Ref<HTMLButtonElement>;
   userId: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -54,19 +57,12 @@ export function TransferOwnershipButton({
     if (!open) setConfirmValue("");
   });
   const ready = confirmValue.trim().toLowerCase() === name.trim().toLowerCase();
-  const scheduleMenuAction = useMenuActionScheduler();
 
   return (
     <>
-      {asMenuItem ? (
-        <DropdownMenuItem onSelect={() => scheduleMenuAction?.(() => setOpen(true))}>
-          Make owner
-        </DropdownMenuItem>
-      ) : (
-        <Button onClick={() => setOpen(true)} size="xs" variant="outline">
-          Make owner
-        </Button>
-      )}
+      <Button hidden={hideTrigger} onClick={() => setOpen(true)} ref={triggerRef} size="xs" variant="outline">
+        Make owner
+      </Button>
       <AlertDialog
         closeDisabled={isPending}
         onOpenChange={preventDismissWhilePending(isPending, setOpen)}

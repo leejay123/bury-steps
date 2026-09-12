@@ -30,12 +30,11 @@ function DropdownMenuContent({
           "z-[80] min-w-40 origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
           className,
         )}
-        // Radix returns focus to the trigger on close by default. Prevented
-        // here unconditionally — MemberRowActionsMenu relies on this event
-        // as its "the menu has genuinely finished closing" signal to open a
-        // dialog/drawer a selected item wants on top (see its own
-        // onCloseAutoFocus and useMenuActionScheduler), and moving focus to
-        // the trigger first would yank it straight back out of that dialog.
+        // Radix returns focus to the trigger on close by default. An item
+        // that proxies a click to a dialog/drawer's own hidden trigger (see
+        // MemberRowActionsMenu) opens that dialog independently of this
+        // menu closing, so this would otherwise yank focus back out of it
+        // moments later — skip it unless a caller asks.
         onCloseAutoFocus={(event) => {
           event.preventDefault();
           onCloseAutoFocus?.(event);

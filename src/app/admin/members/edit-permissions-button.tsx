@@ -1,14 +1,13 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import type React from "react";
 import { useFormStatus } from "react-dom";
 import { setOrganiserPermissions, type ActionResult } from "@/server/actions";
 import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { useMenuActionScheduler } from "./member-row-actions-menu";
 import {
   Drawer,
   DrawerContent,
@@ -33,18 +32,25 @@ function SaveSubmit({ hasSelection }: { hasSelection: boolean }) {
  * it's even accepted — without touching their role. See MemberRoleButton
  * for picking permissions at invite time instead. */
 export function EditPermissionsButton({
-  asMenuItem = false,
+  hideTrigger = false,
   initialPermissions,
   name,
   onChanged,
+  triggerRef,
   userId,
 }: {
-  /** Render the trigger as a DropdownMenuItem (for use inside
-   * MemberRowActionsMenu) instead of a standalone Button. */
-  asMenuItem?: boolean;
+  /** Visually hide the trigger button while keeping it mounted and
+   * clickable via `triggerRef` — used when a MemberRowActionsMenu item
+   * proxies a click to it, so the drawer this opens lives outside the
+   * dropdown menu's own React tree. See MemberRowActionsMenu for why:
+   * Radix unmounts a DropdownMenuContent's entire subtree once it finishes
+   * closing, and a drawer nested inside it would be unmounted right along
+   * with it the instant it opened. */
+  hideTrigger?: boolean;
   initialPermissions: OrganiserPermissions;
   name: string;
   onChanged?: () => void;
+  triggerRef?: React.Ref<HTMLButtonElement>;
   userId: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -60,19 +66,12 @@ export function EditPermissionsButton({
   useResetOnChange([open], () => {
     if (open) setPermissions(initialPermissions);
   });
-  const scheduleMenuAction = useMenuActionScheduler();
 
   return (
     <>
-      {asMenuItem ? (
-        <DropdownMenuItem onSelect={() => scheduleMenuAction?.(() => setOpen(true))}>
-          Edit permissions
-        </DropdownMenuItem>
-      ) : (
-        <Button onClick={() => setOpen(true)} size="xs" variant="outline">
-          Edit permissions
-        </Button>
-      )}
+      <Button hidden={hideTrigger} onClick={() => setOpen(true)} ref={triggerRef} size="xs" variant="outline">
+        Edit permissions
+      </Button>
       <Drawer
         closeDisabled={isPending}
         onOpenChange={preventDismissWhilePending(isPending, setOpen)}

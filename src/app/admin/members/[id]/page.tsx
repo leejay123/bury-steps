@@ -14,6 +14,7 @@ import { AttendanceHistory } from "@/components/attendance-history";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DeleteMemberButton } from "../delete-member-button";
 import { EditPermissionsButton } from "../edit-permissions-button";
 import { ImpersonateButton } from "../impersonate-button";
@@ -52,28 +53,58 @@ export default async function MemberDetailPage({
   // single "⋯" menu, so the owner viewing an organiser's page doesn't get a
   // wall of buttons (Make member/Edit permissions/Make owner/Remove). A lone
   // secondary action is still shown as a plain button rather than hidden
-  // behind a one-item menu — each factory takes `asMenuItem` so that choice
-  // can be made once the full count is known, below. Impersonate stays a
-  // direct button on its own — it's unrelated to role changes and only ever
-  // appears for a plain member.
+  // behind a one-item menu. Impersonate stays a direct button on its own —
+  // it's unrelated to role changes and only ever appears for a plain member.
+  //
+  // For an action that opens a dialog/drawer, `menuItem` never renders that
+  // widget itself — it only proxies a click to the real (always-mounted,
+  // visually hidden) trigger rendered by `hiddenWidget`, which lives
+  // outside MemberRowActionsMenu entirely. See that component's own doc
+  // comment for why. Resend/Cancel invite have no dialog to protect, so
+  // their `menuItem` is just their own real DropdownMenuItem form.
   let primaryAction: React.ReactNode = null;
-  const secondaryActions: ((asMenuItem: boolean) => React.ReactNode)[] = [];
+  const secondaryActions: {
+    key: string;
+    menuItem: React.ReactNode;
+    standalone: React.ReactNode;
+    hiddenWidget?: React.ReactNode;
+  }[] = [];
 
   if (member.pendingInvite) {
     primaryAction = <ResendInviteButton key="resend" userId={id} />;
-    secondaryActions.push((asMenuItem) => (
-      <CancelInviteButton asMenuItem={asMenuItem} key="cancel" userId={id} />
-    ));
+    secondaryActions.push({
+      key: "cancel",
+      menuItem: <CancelInviteButton asMenuItem key="cancel" userId={id} />,
+      standalone: <CancelInviteButton key="cancel" userId={id} />,
+    });
     if (viewerIsOwner) {
-      secondaryActions.push((asMenuItem) => (
-        <EditPermissionsButton
-          asMenuItem={asMenuItem}
-          initialPermissions={member.permissions}
-          key="edit-permissions"
-          name={member.name}
-          userId={id}
-        />
-      ));
+      const editPermissionsRef: { current: HTMLButtonElement | null } = { current: null };
+      secondaryActions.push({
+        key: "edit-permissions",
+        menuItem: (
+          <DropdownMenuItem key="edit-permissions" onSelect={() => editPermissionsRef.current?.click()}>
+            Edit permissions
+          </DropdownMenuItem>
+        ),
+        standalone: (
+          <EditPermissionsButton
+            initialPermissions={member.permissions}
+            key="edit-permissions"
+            name={member.name}
+            userId={id}
+          />
+        ),
+        hiddenWidget: (
+          <EditPermissionsButton
+            hideTrigger
+            initialPermissions={member.permissions}
+            key="edit-permissions-hidden"
+            name={member.name}
+            triggerRef={editPermissionsRef}
+            userId={id}
+          />
+        ),
+      });
     }
   } else if (
     // Changing your own role here would be easy to hit by mistake and
@@ -96,35 +127,83 @@ export default async function MemberDetailPage({
       />
     );
     if (member.role === "ADMIN") {
+      const editPermissionsRef: { current: HTMLButtonElement | null } = { current: null };
+      const transferRef: { current: HTMLButtonElement | null } = { current: null };
       secondaryActions.push(
-        (asMenuItem) => (
-          <EditPermissionsButton
-            asMenuItem={asMenuItem}
-            initialPermissions={member.permissions}
-            key="edit-permissions"
-            name={member.name}
-            userId={id}
-          />
-        ),
-        (asMenuItem) => (
-          <TransferOwnershipButton asMenuItem={asMenuItem} key="transfer" name={member.name} userId={id} />
-        ),
+        {
+          key: "edit-permissions",
+          menuItem: (
+            <DropdownMenuItem key="edit-permissions" onSelect={() => editPermissionsRef.current?.click()}>
+              Edit permissions
+            </DropdownMenuItem>
+          ),
+          standalone: (
+            <EditPermissionsButton
+              initialPermissions={member.permissions}
+              key="edit-permissions"
+              name={member.name}
+              userId={id}
+            />
+          ),
+          hiddenWidget: (
+            <EditPermissionsButton
+              hideTrigger
+              initialPermissions={member.permissions}
+              key="edit-permissions-hidden"
+              name={member.name}
+              triggerRef={editPermissionsRef}
+              userId={id}
+            />
+          ),
+        },
+        {
+          key: "transfer",
+          menuItem: (
+            <DropdownMenuItem key="transfer" onSelect={() => transferRef.current?.click()}>
+              Make owner
+            </DropdownMenuItem>
+          ),
+          standalone: <TransferOwnershipButton key="transfer" name={member.name} userId={id} />,
+          hiddenWidget: (
+            <TransferOwnershipButton hideTrigger key="transfer-hidden" name={member.name} triggerRef={transferRef} userId={id} />
+          ),
+        },
       );
     }
   }
 
   if (!member.isYou && (member.role !== "ADMIN" || viewerIsOwner)) {
-    secondaryActions.push((asMenuItem) => (
-      <DeleteMemberButton
-        asMenuItem={asMenuItem}
-        attendanceCount={attendanceCount}
-        key="delete"
-        name={member.name}
-        redirectTo="/admin/members"
-        userId={id}
-        walkCount={member.walkCount}
-      />
-    ));
+    const deleteRef: { current: HTMLButtonElement | null } = { current: null };
+    secondaryActions.push({
+      key: "delete",
+      menuItem: (
+        <DropdownMenuItem key="delete" onSelect={() => deleteRef.current?.click()} variant="destructive">
+          Remove
+        </DropdownMenuItem>
+      ),
+      standalone: (
+        <DeleteMemberButton
+          attendanceCount={attendanceCount}
+          key="delete"
+          name={member.name}
+          redirectTo="/admin/members"
+          userId={id}
+          walkCount={member.walkCount}
+        />
+      ),
+      hiddenWidget: (
+        <DeleteMemberButton
+          attendanceCount={attendanceCount}
+          hideTrigger
+          key="delete-hidden"
+          name={member.name}
+          redirectTo="/admin/members"
+          triggerRef={deleteRef}
+          userId={id}
+          walkCount={member.walkCount}
+        />
+      ),
+    });
   }
 
   return (
@@ -174,12 +253,17 @@ export default async function MemberDetailPage({
             {secondaryActions.length === 0
               ? null
               : secondaryActions.length === 1
-                ? secondaryActions[0](false)
+                ? secondaryActions[0].standalone
                 : (
                     <MemberRowActionsMenu>
-                      {secondaryActions.map((render) => render(true))}
+                      {secondaryActions.map((s) => s.menuItem)}
                     </MemberRowActionsMenu>
                   )}
+            {/* Always-mounted, visually hidden widgets for whichever
+                secondary actions the menu above is proxying clicks to —
+                never rendered while that action shows as the lone
+                standalone button instead. */}
+            {secondaryActions.length > 1 ? secondaryActions.map((s) => s.hiddenWidget) : null}
           </div>
         </CardHeader>
       </Card>

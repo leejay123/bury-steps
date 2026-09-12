@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import type React from "react";
 import { useFormStatus } from "react-dom";
 import { deleteMember } from "@/server/actions";
 import { useNotifyActionState } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -19,7 +19,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ROLE_CONFIRM_WORD } from "./member-role-button";
-import { useMenuActionScheduler } from "./member-row-actions-menu";
 
 function ConfirmSubmit({ confirmValue }: { confirmValue: string }) {
   const { pending } = useFormStatus();
@@ -106,22 +105,26 @@ function DeleteMemberDialogForm({
 }
 
 export function DeleteMemberButton({
-  asMenuItem = false,
+  hideTrigger = false,
   userId,
   name,
   onDeleted,
+  triggerRef,
   walkCount,
   attendanceCount,
   redirectTo,
 }: {
-  /** Render the trigger as a DropdownMenuItem (for use inside
-   * MemberRowActionsMenu) instead of a standalone Button. */
-  asMenuItem?: boolean;
+  /** Visually hide the trigger button while keeping it mounted and
+   * clickable via `triggerRef` — used when a MemberRowActionsMenu item
+   * proxies a click to it, so the dialog this opens lives outside the
+   * dropdown menu's own React tree. See MemberRowActionsMenu for why. */
+  hideTrigger?: boolean;
   userId: string;
   name: string;
   /** Called after a successful removal — lets a parent list re-fetch its own
    * local rows, which a plain router.refresh() doesn't reach on its own. */
   onDeleted?: () => void;
+  triggerRef?: React.Ref<HTMLButtonElement>;
   walkCount: number;
   attendanceCount: number;
   /** Where to navigate after removal — used when this button lives on the member's own page, which no longer exists once they are removed. */
@@ -134,19 +137,12 @@ export function DeleteMemberButton({
     setSession((value) => value + 1);
     setOpen(true);
   }
-  const scheduleMenuAction = useMenuActionScheduler();
 
   return (
     <AlertDialog onOpenChange={setOpen} open={open}>
-      {asMenuItem ? (
-        <DropdownMenuItem onSelect={() => scheduleMenuAction?.(openDialog)} variant="destructive">
-          Remove
-        </DropdownMenuItem>
-      ) : (
-        <Button onClick={openDialog} size="xs" variant="outline">
-          Remove
-        </Button>
-      )}
+      <Button hidden={hideTrigger} onClick={openDialog} ref={triggerRef} size="xs" variant="outline">
+        Remove
+      </Button>
       {open ? (
         <DeleteMemberDialogForm
           key={session}
