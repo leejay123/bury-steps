@@ -6,6 +6,7 @@ import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-t
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -26,10 +27,14 @@ import {
  * admin/members/[id]/page.tsx).
  */
 export function TransferOwnershipButton({
+  asMenuItem = false,
   name,
   onChanged,
   userId,
 }: {
+  /** Render the trigger as a DropdownMenuItem (for use inside
+   * MemberRowActionsMenu) instead of a standalone Button. */
+  asMenuItem?: boolean;
   name: string;
   onChanged?: () => void;
   userId: string;
@@ -51,9 +56,13 @@ export function TransferOwnershipButton({
 
   return (
     <>
-      <Button onClick={() => setOpen(true)} size="xs" variant="outline">
-        Make owner
-      </Button>
+      {asMenuItem ? (
+        <DropdownMenuItem onSelect={() => setOpen(true)}>Make owner</DropdownMenuItem>
+      ) : (
+        <Button onClick={() => setOpen(true)} size="xs" variant="outline">
+          Make owner
+        </Button>
+      )}
       <AlertDialog
         closeDisabled={isPending}
         onOpenChange={preventDismissWhilePending(isPending, setOpen)}

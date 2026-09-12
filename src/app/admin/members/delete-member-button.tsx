@@ -6,6 +6,7 @@ import { deleteMember } from "@/server/actions";
 import { useNotifyActionState } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -16,7 +17,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { ROLE_CONFIRM_WORD } from "./member-role-button";
 
@@ -105,6 +105,7 @@ function DeleteMemberDialogForm({
 }
 
 export function DeleteMemberButton({
+  asMenuItem = false,
   userId,
   name,
   onDeleted,
@@ -112,6 +113,9 @@ export function DeleteMemberButton({
   attendanceCount,
   redirectTo,
 }: {
+  /** Render the trigger as a DropdownMenuItem (for use inside
+   * MemberRowActionsMenu) instead of a standalone Button. */
+  asMenuItem?: boolean;
   userId: string;
   name: string;
   /** Called after a successful removal — lets a parent list re-fetch its own
@@ -125,19 +129,22 @@ export function DeleteMemberButton({
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState(0);
 
+  function openDialog() {
+    setSession((value) => value + 1);
+    setOpen(true);
+  }
+
   return (
-    <AlertDialog
-      onOpenChange={(next) => {
-        if (next) setSession((value) => value + 1);
-        setOpen(next);
-      }}
-      open={open}
-    >
-      <AlertDialogTrigger asChild>
-        <Button size="xs" variant="outline">
+    <AlertDialog onOpenChange={setOpen} open={open}>
+      {asMenuItem ? (
+        <DropdownMenuItem onSelect={openDialog} variant="destructive">
+          Remove
+        </DropdownMenuItem>
+      ) : (
+        <Button onClick={openDialog} size="xs" variant="outline">
           Remove
         </Button>
-      </AlertDialogTrigger>
+      )}
       {open ? (
         <DeleteMemberDialogForm
           key={session}

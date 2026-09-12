@@ -7,6 +7,7 @@ import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-t
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
   Drawer,
   DrawerContent,
@@ -31,11 +32,15 @@ function SaveSubmit({ hasSelection }: { hasSelection: boolean }) {
  * it's even accepted — without touching their role. See MemberRoleButton
  * for picking permissions at invite time instead. */
 export function EditPermissionsButton({
+  asMenuItem = false,
   initialPermissions,
   name,
   onChanged,
   userId,
 }: {
+  /** Render the trigger as a DropdownMenuItem (for use inside
+   * MemberRowActionsMenu) instead of a standalone Button. */
+  asMenuItem?: boolean;
   initialPermissions: OrganiserPermissions;
   name: string;
   onChanged?: () => void;
@@ -57,9 +62,13 @@ export function EditPermissionsButton({
 
   return (
     <>
-      <Button onClick={() => setOpen(true)} size="xs" variant="outline">
-        Edit permissions
-      </Button>
+      {asMenuItem ? (
+        <DropdownMenuItem onSelect={() => setOpen(true)}>Edit permissions</DropdownMenuItem>
+      ) : (
+        <Button onClick={() => setOpen(true)} size="xs" variant="outline">
+          Edit permissions
+        </Button>
+      )}
       <Drawer
         closeDisabled={isPending}
         onOpenChange={preventDismissWhilePending(isPending, setOpen)}

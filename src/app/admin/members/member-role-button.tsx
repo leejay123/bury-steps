@@ -7,6 +7,7 @@ import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-t
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -210,6 +211,7 @@ function PromoteDrawer({
 }
 
 export function MemberRoleButton({
+  asMenuItem = false,
   initialPermissions = FULL_ORGANISER_PERMISSIONS,
   inviteRequired = false,
   name,
@@ -217,6 +219,9 @@ export function MemberRoleButton({
   role,
   userId,
 }: {
+  /** Render the trigger as a DropdownMenuItem (for use inside
+   * MemberRowActionsMenu) instead of a standalone Button. */
+  asMenuItem?: boolean;
   /** Permissions to preselect in the promote drawer — the row's existing
    * columns (already true-by-default for anyone never customized). */
   initialPermissions?: OrganiserPermissions;
@@ -232,12 +237,17 @@ export function MemberRoleButton({
 }) {
   const promoting = role === "MEMBER";
   const [open, setOpen] = useState(false);
+  const label = promoting ? (inviteRequired ? "Invite as organiser" : "Make organiser") : "Make member";
 
   return (
     <>
-      <Button onClick={() => setOpen(true)} size="xs" variant="outline">
-        {promoting ? (inviteRequired ? "Invite as organiser" : "Make organiser") : "Make member"}
-      </Button>
+      {asMenuItem ? (
+        <DropdownMenuItem onSelect={() => setOpen(true)}>{label}</DropdownMenuItem>
+      ) : (
+        <Button onClick={() => setOpen(true)} size="xs" variant="outline">
+          {label}
+        </Button>
+      )}
       {promoting ? (
         <PromoteDrawer
           initialPermissions={initialPermissions}
