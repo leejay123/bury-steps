@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import type React from "react";
 import { useFormStatus } from "react-dom";
 import { setMemberRole, type ActionResult } from "@/server/actions";
 import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
@@ -210,13 +211,20 @@ function PromoteDrawer({
 }
 
 export function MemberRoleButton({
+  hideTrigger = false,
   initialPermissions = FULL_ORGANISER_PERMISSIONS,
   inviteRequired = false,
   name,
   onChanged,
   role,
+  triggerRef,
   userId,
 }: {
+  /** Visually hide the trigger button while keeping it mounted and
+   * clickable via `triggerRef` — used when a MemberRowActionsMenu item
+   * proxies a click to it, so the drawer/dialog this opens lives outside
+   * the dropdown menu's own React tree. See MemberRowActionsMenu for why. */
+  hideTrigger?: boolean;
   /** Permissions to preselect in the promote drawer — the row's existing
    * columns (already true-by-default for anyone never customized). */
   initialPermissions?: OrganiserPermissions;
@@ -228,6 +236,7 @@ export function MemberRoleButton({
    * local rows, which a plain router.refresh() doesn't reach on its own. */
   onChanged?: () => void;
   role: "ADMIN" | "MEMBER";
+  triggerRef?: React.Ref<HTMLButtonElement>;
   userId: string;
 }) {
   const promoting = role === "MEMBER";
@@ -236,7 +245,7 @@ export function MemberRoleButton({
 
   return (
     <>
-      <Button onClick={() => setOpen(true)} size="xs" variant="outline">
+      <Button hidden={hideTrigger} onClick={() => setOpen(true)} ref={triggerRef} size="xs" variant="outline">
         {label}
       </Button>
       {promoting ? (
