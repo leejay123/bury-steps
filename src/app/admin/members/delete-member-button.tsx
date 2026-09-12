@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ROLE_CONFIRM_WORD } from "./member-role-button";
+import { openAfterMenuCloses } from "./member-row-actions-menu";
 
 function ConfirmSubmit({ confirmValue }: { confirmValue: string }) {
   const { pending } = useFormStatus();
@@ -137,7 +138,7 @@ export function DeleteMemberButton({
   return (
     <AlertDialog onOpenChange={setOpen} open={open}>
       {asMenuItem ? (
-        <DropdownMenuItem onSelect={openDialog} variant="destructive">
+        <DropdownMenuItem onSelect={() => openAfterMenuCloses(openDialog)} variant="destructive">
           Remove
         </DropdownMenuItem>
       ) : (

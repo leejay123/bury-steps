@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { openAfterMenuCloses } from "./member-row-actions-menu";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -57,7 +58,7 @@ export function TransferOwnershipButton({
   return (
     <>
       {asMenuItem ? (
-        <DropdownMenuItem onSelect={() => setOpen(true)}>Make owner</DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => openAfterMenuCloses(setOpen)}>Make owner</DropdownMenuItem>
       ) : (
         <Button onClick={() => setOpen(true)} size="xs" variant="outline">
           Make owner
