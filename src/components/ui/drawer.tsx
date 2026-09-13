@@ -211,7 +211,11 @@ function DrawerOverlay({
         // Full-viewport blur: page and header stay put underneath; nothing
         // peeks above the dim layer. Blur is applied immediately — fading
         // opacity on a backdrop-filter layer is what lagged on every browser.
-        "fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
+        // `translateZ(0)` + `will-change-transform` push this layer onto the
+        // GPU — Safari renders backdrop-blur on a full-viewport element on
+        // the CPU otherwise, which is what caused the delayed click / the
+        // drawer's own slide-in animation getting skipped on desktop Safari.
+        "fixed inset-0 z-[60] [transform:translateZ(0)] [-webkit-transform:translateZ(0)] will-change-transform bg-black/30 backdrop-blur-sm data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
         dismissed && "invisible !pointer-events-none",
         className,
       )}
