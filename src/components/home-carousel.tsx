@@ -42,16 +42,23 @@ export function HomeCarousel({
   // Otherwise this keeps scrolling behind an open Drawer/Dialog — its own
   // transform animation competing with the overlay's for the same frame
   // budget is what made a homepage drawer feel laggy specifically on
-  // Safari. See useAnyOverlayOpen's own doc comment. Guarded on
-  // showControls — with one slide the plugin is never handed to <Carousel>
-  // (see plugins={} below), so it's never initialized and calling
-  // play()/stop() on it would throw.
+  // Safari. See useAnyOverlayOpen's own doc comment.
+  //
+  // Guarded on `api`, not just `showControls`: Embla's actual instance
+  // (and so the Autoplay plugin's own init(), which is what makes
+  // play()/stop() safe to call at all) is only created in an effect of
+  // its own, one render after the ref callback that measures the
+  // viewport — genuinely later than this component's first mount, not
+  // just "the same tick". `api` only becomes non-null once that's
+  // actually happened (see the effect above), so it's the real
+  // readiness signal — `showControls` alone let this fire before Embla
+  // had finished initializing and threw.
   const overlayOpen = useAnyOverlayOpen();
   React.useEffect(() => {
-    if (!showControls) return;
+    if (!showControls || !api) return;
     if (overlayOpen) plugin.stop();
     else plugin.play();
-  }, [overlayOpen, plugin, showControls]);
+  }, [overlayOpen, plugin, showControls, api]);
 
   if (slides.length === 0) return null;
 
