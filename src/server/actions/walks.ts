@@ -22,7 +22,8 @@ import {
   walkStatus,
 } from "@/lib/walk-window";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { allocateWalkSlug, walkShareUrl } from "@/lib/walk-slug";
+import { walkShareUrl } from "@/lib/walk-slug";
+import { allocateWalkSlug } from "@/lib/walk-slug-server";
 import { appUrl } from "@/lib/urls";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
 import {
