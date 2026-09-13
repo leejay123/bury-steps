@@ -1,5 +1,8 @@
 import { requireAdmin } from "@/lib/auth";
-import { getAccidentReportRetentionDays, getCancelledWalkRetentionDays } from "@/lib/walk-retention";
+import {
+  getAccidentReportRetentionDays,
+  getCancelledWalkRetentionDays,
+} from "@/lib/walk-retention-server";
 import { AdminPageIntro } from "../admin-page-intro";
 import { GUIDE_LAST_UPDATED, OrganiserGuide } from "./guide-content";
 import { FullWidthDivider } from "@/components/full-width-divider";
