@@ -57,7 +57,8 @@ const {
 vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("@/lib/db", () => ({ prisma: { ...prismaMock, $transaction: transaction } }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
-vi.mock("@/lib/walk-slug", () => ({ allocateWalkSlug, walkShareUrl: vi.fn(() => "https://example.com/w/test") }));
+vi.mock("@/lib/walk-slug", () => ({ walkShareUrl: vi.fn(() => "https://example.com/w/test") }));
+vi.mock("@/lib/walk-slug-server", () => ({ allocateWalkSlug }));
 // Real email sending pulls in site-theme.ts (next/cache's unstable_cache,
 // not mocked above) and hits the network — out of scope for these tests.
 vi.mock("@/lib/email/mailer", () => ({

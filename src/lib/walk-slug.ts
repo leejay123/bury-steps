@@ -1,11 +1,13 @@
-import { customAlphabet } from "nanoid";
-import { prisma } from "@/lib/db";
-
+// Pure, client-safe string helpers only — no `prisma` import here. This
+// module is imported by client components (recent-walks-carousel,
+// upcoming-walk-cards, …) just for walkSharePath; pulling in `@/lib/db`
+// alongside it used to drag @prisma/client's browser stub (~110KB of
+// runtime error stubs that can never work in a browser) into those pages'
+// first-load JS. The DB-touching slug allocators live in
+// walk-slug-server.ts instead — see that file for why.
 const TITLE_SLUG_MAX = 48;
 const NAME_WORD_MAX = 12;
 const SKIP_WORDS = new Set(["the", "a", "an", "and", "of", "at", "to", "from"]);
-/** Unguessable suffix so public /w/{slug} links cannot be enumerated from place names. */
-const slugSuffix = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 6);
 
 /** Lowercase hyphenated title, letters and digits only. */
 export function slugifyWalkTitle(title: string): string {
@@ -40,44 +42,4 @@ export function walkShareUrl(
   walk: { slug?: string | null; token: string },
 ): string {
   return `${origin}${walkSharePath(walk)}`;
-}
-
-/**
- * Readable-but-unguessable share slug: `burrs-x7k2m9`. Place word for humans;
- * random suffix so guests cannot enumerate walks from common titles.
- */
-export async function allocateWalkSlug(title: string, excludeId?: string): Promise<string> {
-  const base = walkSlugBase(title);
-  for (let n = 0; n < 25; n++) {
-    const slug = `${base}-${slugSuffix()}`;
-    const taken = await prisma.walk.findFirst({
-      where: {
-        slug,
-        ...(excludeId ? { id: { not: excludeId } } : {}),
-      },
-      select: { id: true },
-    });
-    if (!taken) return slug;
-  }
-  return `${base}-${Date.now().toString(36)}`;
-}
-
-/** Fill in a slug for older walks that were created before readable links. */
-export async function ensureWalkSlug(walk: {
-  id: string;
-  title: string;
-  slug: string | null;
-}): Promise<string> {
-  if (walk.slug) return walk.slug;
-  const slug = await allocateWalkSlug(walk.title, walk.id);
-  try {
-    await prisma.walk.update({ where: { id: walk.id }, data: { slug } });
-    return slug;
-  } catch {
-    const fresh = await prisma.walk.findUnique({
-      where: { id: walk.id },
-      select: { slug: true },
-    });
-    return fresh?.slug ?? slug;
-  }
 }
