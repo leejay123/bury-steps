@@ -11,6 +11,7 @@ import {
   CarouselPrevious,
   type CarouselApi,
 } from "@/components/ui/carousel";
+import { useAnyOverlayOpen } from "@/components/overlay-root";
 import { cn } from "@/lib/utils";
 import type { SlideView } from "@/lib/slides";
 
@@ -37,6 +38,20 @@ export function HomeCarousel({
       api.off("select", onSelect);
     };
   }, [api]);
+
+  // Otherwise this keeps scrolling behind an open Drawer/Dialog — its own
+  // transform animation competing with the overlay's for the same frame
+  // budget is what made a homepage drawer feel laggy specifically on
+  // Safari. See useAnyOverlayOpen's own doc comment. Guarded on
+  // showControls — with one slide the plugin is never handed to <Carousel>
+  // (see plugins={} below), so it's never initialized and calling
+  // play()/stop() on it would throw.
+  const overlayOpen = useAnyOverlayOpen();
+  React.useEffect(() => {
+    if (!showControls) return;
+    if (overlayOpen) plugin.stop();
+    else plugin.play();
+  }, [overlayOpen, plugin, showControls]);
 
   if (slides.length === 0) return null;
 

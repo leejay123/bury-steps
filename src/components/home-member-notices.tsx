@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Autoplay from "embla-carousel-autoplay";
 import {
   Carousel,
@@ -10,6 +10,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { useAnyOverlayOpen } from "@/components/overlay-root";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { HeroCopy } from "@/components/hero-copy";
 import { noticeDateLabel } from "@/lib/notices";
@@ -76,10 +77,23 @@ export function HomeMemberNoticesSection({
   const [plugin] = useState(() =>
     Autoplay({ delay: 6000, stopOnInteraction: false, stopOnMouseEnter: true }),
   );
+  const showControls = notices.length > 1;
+
+  // Otherwise this keeps scrolling behind an open Drawer/Dialog — its own
+  // transform animation competing with the overlay's for the same frame
+  // budget is what made a homepage drawer feel laggy specifically on
+  // Safari. See useAnyOverlayOpen's own doc comment. Guarded on
+  // showControls — with one notice the plugin is never handed to
+  // <Carousel> (see plugins={} below), so it's never initialized and
+  // calling play()/stop() on it would throw.
+  const overlayOpen = useAnyOverlayOpen();
+  useEffect(() => {
+    if (!showControls) return;
+    if (overlayOpen) plugin.stop();
+    else plugin.play();
+  }, [overlayOpen, plugin, showControls]);
 
   if (notices.length === 0) return null;
-
-  const showControls = notices.length > 1;
 
   return (
     <section>

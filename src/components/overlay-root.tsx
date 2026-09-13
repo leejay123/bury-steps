@@ -38,6 +38,43 @@ const OPEN_CONTENT_SELECTOR = [
 ].join(", ");
 
 /**
+ * Whether a Drawer/Dialog/AlertDialog is open anywhere on the page right
+ * now. An always-running carousel (embla-carousel-autoplay) keeps
+ * animating behind an open overlay unless told to stop — its own
+ * transform-driven autoplay scroll then competes with the overlay's own
+ * transform-driven open/drag animation for the same main-thread frame
+ * budget, which Safari/WebKit visibly drops far more readily than
+ * Chromium does. The homepage's autoplaying carousels (HomeCarousel,
+ * HomeMemberNoticesSection) use this to pause themselves while `true` —
+ * this is what made the homepage's "Read more" drawer feel laggy
+ * specifically on Safari: no other page has an always-on autoplaying
+ * carousel running behind its drawers.
+ */
+export function useAnyOverlayOpen() {
+  const [open, setOpen] = useState(
+    () => typeof document !== "undefined" && Boolean(document.querySelector(OPEN_CONTENT_SELECTOR)),
+  );
+
+  useEffect(() => {
+    const check = () => setOpen(Boolean(document.querySelector(OPEN_CONTENT_SELECTOR)));
+    check();
+    // Radix flips `data-state` on the content element itself on open/close —
+    // cheap to watch directly rather than polling, and catches an overlay
+    // opened from anywhere on the page, not just ones this hook's own
+    // component tree knows about.
+    const observer = new MutationObserver(check);
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["data-state"],
+      subtree: true,
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  return open;
+}
+
+/**
  * Every Radix DismissableLayer (Popover, the Popover-based Select, dropdown
  * menus, plus Dialog/AlertDialog/Drawer) temporarily sets
  * `document.body.style.pointerEvents = "none"` while it is open and restores
