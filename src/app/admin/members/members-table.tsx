@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState, useTransition } from "react";
 import type React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertCircle, ChevronRight, Crown, Search } from "lucide-react";
+import { AlertCircle, ChevronRight, Search } from "lucide-react";
 import { formatDate, formatMembershipAge, formatRelativeDays } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { initials } from "@/lib/names";
@@ -29,7 +29,6 @@ import {
 } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
@@ -44,6 +43,23 @@ import {
 } from "@/components/ui/select";
 
 type ViewMember = MemberRow & { isYou: boolean };
+
+/** Owner, Organiser, Member — the fixed section order the list groups rows
+ * into (see GROUP_ORDER below). Owner is its own group even though it's
+ * also an ADMIN under the hood, matching the distinction the old per-row
+ * badge used to draw with the crown icon. */
+type MemberGroupKey = "OWNER" | "ADMIN" | "MEMBER";
+
+const GROUP_ORDER: { key: MemberGroupKey; label: string }[] = [
+  { key: "OWNER", label: "Owner" },
+  { key: "ADMIN", label: "Organisers" },
+  { key: "MEMBER", label: "Members" },
+];
+
+function memberGroupKey(member: ViewMember): MemberGroupKey {
+  if (member.isOwner) return "OWNER";
+  return member.role === "ADMIN" ? "ADMIN" : "MEMBER";
+}
 
 /** Stands in for a real row while a search/filter/sort/page change is in
  * flight — same shape as a loaded row, so the list doesn't jump size, and
@@ -62,6 +78,241 @@ function MemberRowSkeleton() {
       </DataListItemMain>
       <DataListActions className={cn("justify-end", dataListActionsStackClassName)}>
         <Skeleton className="h-7 w-20 rounded-md" />
+      </DataListActions>
+    </DataListItem>
+  );
+}
+
+/** A section divider between role groups (Owner / Organisers / Members) —
+ * only rendered when the current rows span more than one group, since the
+ * whole point is to replace the old per-row role badge: with just one
+ * group showing, a header would be redundant with the Role filter above. */
+function MemberGroupHeader({ count, first, label }: { count: number; first: boolean; label: string }) {
+  return (
+    <li
+      aria-hidden
+      className={cn(
+        "flex items-baseline gap-1.5 bg-muted/50 px-3 py-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase",
+        "border-b",
+        !first && "border-t",
+      )}
+    >
+      {label}
+      <span className="text-xs font-normal normal-case text-muted-foreground/80">({count})</span>
+    </li>
+  );
+}
+
+function MemberListRow({
+  inviteRequired,
+  member,
+  onChanged,
+  viewerIsOwner,
+}: {
+  inviteRequired: boolean;
+  member: ViewMember;
+  onChanged: () => void;
+  viewerIsOwner: boolean;
+}) {
+  // Every applicable action collapses behind a single "⋯"
+  // menu — even when there's only one — so a row's controls
+  // are always just the role badge plus that one button.
+  // Keeps the row visually consistent regardless of how many
+  // actions apply, rather than sometimes a bare button and
+  // sometimes a menu depending on the count.
+  //
+  // For an action that opens a dialog/drawer, `menuItem`
+  // never renders that widget itself — it only proxies a
+  // click to the real (always-mounted, visually hidden)
+  // trigger rendered by `hiddenWidget`, which lives outside
+  // MemberRowActionsMenu entirely. See that component's own
+  // doc comment for why. Resend/Cancel invite have no
+  // dialog to protect, so their `menuItem` is just their
+  // own real DropdownMenuItem form.
+  const actions: {
+    key: string;
+    menuItem: React.ReactNode;
+    hiddenWidget?: React.ReactNode;
+  }[] = [];
+
+  if (member.pendingInvite) {
+    actions.push({
+      key: "resend",
+      menuItem: <ResendInviteButton asMenuItem key="resend" onDone={onChanged} userId={member.id} />,
+    });
+    actions.push({
+      key: "cancel",
+      menuItem: <CancelInviteButton asMenuItem key="cancel" onDone={onChanged} userId={member.id} />,
+    });
+    if (viewerIsOwner) {
+      const editPermissionsRef: { current: HTMLButtonElement | null } = { current: null };
+      actions.push({
+        key: "edit-permissions",
+        menuItem: (
+          <DropdownMenuItem key="edit-permissions" onSelect={() => editPermissionsRef.current?.click()}>
+            Edit permissions
+          </DropdownMenuItem>
+        ),
+        hiddenWidget: (
+          <EditPermissionsButton
+            hideTrigger
+            initialPermissions={member.permissions}
+            key="edit-permissions-hidden"
+            name={member.name}
+            onChanged={onChanged}
+            triggerRef={editPermissionsRef}
+            userId={member.id}
+          />
+        ),
+      });
+    }
+  } else if (
+    // Changing your own role here would be easy to hit by
+    // mistake and immediately cost you organiser access to
+    // fix it — same reasoning as hiding your own Remove
+    // action below. Another organiser can change it for you
+    // instead. Promoting/demoting/editing permissions is
+    // also owner-only regardless of whose row this is.
+    !member.isYou &&
+    viewerIsOwner
+  ) {
+    const roleRef: { current: HTMLButtonElement | null } = { current: null };
+    const promoting = member.role === "MEMBER";
+    actions.push({
+      key: "role",
+      menuItem: (
+        <DropdownMenuItem key="role" onSelect={() => roleRef.current?.click()}>
+          {promoting ? (inviteRequired ? "Invite as organiser" : "Make organiser") : "Make member"}
+        </DropdownMenuItem>
+      ),
+      hiddenWidget: (
+        <MemberRoleButton
+          hideTrigger
+          initialPermissions={member.permissions}
+          inviteRequired={inviteRequired}
+          key="role-hidden"
+          name={member.name}
+          onChanged={onChanged}
+          role={member.role}
+          triggerRef={roleRef}
+          userId={member.id}
+        />
+      ),
+    });
+    if (member.role === "ADMIN") {
+      const editPermissionsRef: { current: HTMLButtonElement | null } = { current: null };
+      const transferRef: { current: HTMLButtonElement | null } = { current: null };
+      actions.push(
+        {
+          key: "edit-permissions",
+          menuItem: (
+            <DropdownMenuItem key="edit-permissions" onSelect={() => editPermissionsRef.current?.click()}>
+              Edit permissions
+            </DropdownMenuItem>
+          ),
+          hiddenWidget: (
+            <EditPermissionsButton
+              hideTrigger
+              initialPermissions={member.permissions}
+              key="edit-permissions-hidden"
+              name={member.name}
+              onChanged={onChanged}
+              triggerRef={editPermissionsRef}
+              userId={member.id}
+            />
+          ),
+        },
+        {
+          key: "transfer",
+          menuItem: (
+            <DropdownMenuItem key="transfer" onSelect={() => transferRef.current?.click()}>
+              Make owner
+            </DropdownMenuItem>
+          ),
+          hiddenWidget: (
+            <TransferOwnershipButton
+              hideTrigger
+              key="transfer-hidden"
+              name={member.name}
+              onChanged={onChanged}
+              triggerRef={transferRef}
+              userId={member.id}
+            />
+          ),
+        },
+      );
+    }
+  }
+
+  if (!member.isYou && (member.role !== "ADMIN" || viewerIsOwner)) {
+    const deleteRef: { current: HTMLButtonElement | null } = { current: null };
+    actions.push({
+      key: "delete",
+      menuItem: (
+        <DropdownMenuItem key="delete" onSelect={() => deleteRef.current?.click()} variant="destructive">
+          Remove
+        </DropdownMenuItem>
+      ),
+      hiddenWidget: (
+        <DeleteMemberButton
+          attendanceCount={member.attendanceCount}
+          hideTrigger
+          key="delete-hidden"
+          name={member.name}
+          onDeleted={onChanged}
+          triggerRef={deleteRef}
+          userId={member.id}
+          walkCount={member.walkCount}
+        />
+      ),
+    });
+  }
+
+  return (
+    <DataListItem className={cn("relative", member.isYou && "bg-muted/40", dataListItemStackClassName)}>
+      <DataListItemMain>
+        <Avatar className="size-9 shrink-0">
+          <AvatarFallback className="text-xs">{initials(member.name)}</AvatarFallback>
+        </Avatar>
+        <DataListBody>
+          <p className="flex items-center gap-1.5 font-medium">
+            <Link className="after:absolute after:inset-0" href={`/admin/members/${member.id}`}>
+              {member.name}
+            </Link>
+            {member.isYou ? <span className="text-xs font-normal text-muted-foreground">You</span> : null}
+            {member.needsAttention && !member.pendingInvite ? (
+              <AlertCircle
+                aria-label="Never clocked in"
+                className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400"
+              />
+            ) : null}
+          </p>
+          <p className="text-sm text-muted-foreground wrap-break-word">{member.email || "No email"}</p>
+          <p className="text-xs text-muted-foreground">
+            {formatDate(new Date(member.createdAt))} · {formatMembershipAge(new Date(member.createdAt))} ·{" "}
+            {member.attendanceCount} {member.attendanceCount === 1 ? "clock-in" : "clock-ins"}
+          </p>
+        </DataListBody>
+        <ChevronRight className="mt-1 size-4 shrink-0 text-muted-foreground sm:mt-0" />
+      </DataListItemMain>
+      <DataListActions className={cn("relative z-10 flex-wrap gap-2", dataListActionsStackClassName)}>
+        {member.pendingInvite ? (
+          // The role badge used to sit here too — now that role is a group
+          // header instead of a per-row badge, this is just the invite
+          // status.
+          <span className="flex h-7 items-center text-xs font-medium text-muted-foreground">
+            {member.pendingInvite.expired
+              ? `Invite expired ${formatRelativeDays(new Date(member.pendingInvite.expiresAt))}`
+              : `Invited ${formatRelativeDays(new Date(member.pendingInvite.sentAt))}`}
+          </span>
+        ) : null}
+        {actions.length > 0 ? (
+          <MemberRowActionsMenu>{actions.map((a) => a.menuItem)}</MemberRowActionsMenu>
+        ) : null}
+        {/* Always-mounted, visually hidden widgets the menu
+            above proxies clicks to — see
+            MemberRowActionsMenu. */}
+        {actions.map((a) => a.hiddenWidget)}
       </DataListActions>
     </DataListItem>
   );
@@ -199,6 +450,19 @@ export function MembersTable({
 
   const pageCount = Math.max(1, Math.ceil(total / LIST_PAGE_SIZE));
 
+  // Group the current page's rows into Owner / Organisers / Members
+  // sections, in that fixed order, keeping each group's own current sort
+  // order intact. This is what replaced the old per-row role badge — see
+  // MemberGroupHeader. With a role filter active there's usually only one
+  // group, so the header (redundant with the Role select above) is
+  // skipped entirely.
+  const groupedRows = GROUP_ORDER.map(({ key, label }) => ({
+    key,
+    label,
+    members: rows.filter((member) => memberGroupKey(member) === key),
+  })).filter((group) => group.members.length > 0);
+  const showGroupHeaders = groupedRows.length > 1;
+
   return (
     <div className="flex flex-col gap-4" ref={listRef}>
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
@@ -303,247 +567,22 @@ export function MembersTable({
               ? Array.from({ length: Math.min(rows.length || 5, LIST_PAGE_SIZE) }, (_, i) => (
                   <MemberRowSkeleton key={i} />
                 ))
-              : rows.map((member) => {
-                  // Every applicable action collapses behind a single "⋯"
-                  // menu — even when there's only one — so a row's controls
-                  // are always just the role badge plus that one button.
-                  // Keeps the row visually consistent regardless of how many
-                  // actions apply, rather than sometimes a bare button and
-                  // sometimes a menu depending on the count.
-                  //
-                  // For an action that opens a dialog/drawer, `menuItem`
-                  // never renders that widget itself — it only proxies a
-                  // click to the real (always-mounted, visually hidden)
-                  // trigger rendered by `hiddenWidget`, which lives outside
-                  // MemberRowActionsMenu entirely. See that component's own
-                  // doc comment for why. Resend/Cancel invite have no
-                  // dialog to protect, so their `menuItem` is just their
-                  // own real DropdownMenuItem form.
-                  const actions: {
-                    key: string;
-                    menuItem: React.ReactNode;
-                    hiddenWidget?: React.ReactNode;
-                  }[] = [];
-
-                  if (member.pendingInvite) {
-                    actions.push({
-                      key: "resend",
-                      menuItem: (
-                        <ResendInviteButton asMenuItem key="resend" onDone={refetch} userId={member.id} />
-                      ),
-                    });
-                    actions.push({
-                      key: "cancel",
-                      menuItem: (
-                        <CancelInviteButton asMenuItem key="cancel" onDone={refetch} userId={member.id} />
-                      ),
-                    });
-                    if (viewerIsOwner) {
-                      const editPermissionsRef: { current: HTMLButtonElement | null } = { current: null };
-                      actions.push({
-                        key: "edit-permissions",
-                        menuItem: (
-                          <DropdownMenuItem
-                            key="edit-permissions"
-                            onSelect={() => editPermissionsRef.current?.click()}
-                          >
-                            Edit permissions
-                          </DropdownMenuItem>
-                        ),
-                        hiddenWidget: (
-                          <EditPermissionsButton
-                            hideTrigger
-                            initialPermissions={member.permissions}
-                            key="edit-permissions-hidden"
-                            name={member.name}
-                            onChanged={refetch}
-                            triggerRef={editPermissionsRef}
-                            userId={member.id}
-                          />
-                        ),
-                      });
-                    }
-                  } else if (
-                    // Changing your own role here would be easy to hit by
-                    // mistake and immediately cost you organiser access to
-                    // fix it — same reasoning as hiding your own Remove
-                    // action below. Another organiser can change it for you
-                    // instead. Promoting/demoting/editing permissions is
-                    // also owner-only regardless of whose row this is.
-                    !member.isYou &&
-                    viewerIsOwner
-                  ) {
-                    const roleRef: { current: HTMLButtonElement | null } = { current: null };
-                    const promoting = member.role === "MEMBER";
-                    actions.push({
-                      key: "role",
-                      menuItem: (
-                        <DropdownMenuItem key="role" onSelect={() => roleRef.current?.click()}>
-                          {promoting
-                            ? inviteRequired
-                              ? "Invite as organiser"
-                              : "Make organiser"
-                            : "Make member"}
-                        </DropdownMenuItem>
-                      ),
-                      hiddenWidget: (
-                        <MemberRoleButton
-                          hideTrigger
-                          initialPermissions={member.permissions}
-                          inviteRequired={inviteRequired}
-                          key="role-hidden"
-                          name={member.name}
-                          onChanged={refetch}
-                          role={member.role}
-                          triggerRef={roleRef}
-                          userId={member.id}
-                        />
-                      ),
-                    });
-                    if (member.role === "ADMIN") {
-                      const editPermissionsRef: { current: HTMLButtonElement | null } = { current: null };
-                      const transferRef: { current: HTMLButtonElement | null } = { current: null };
-                      actions.push(
-                        {
-                          key: "edit-permissions",
-                          menuItem: (
-                            <DropdownMenuItem
-                              key="edit-permissions"
-                              onSelect={() => editPermissionsRef.current?.click()}
-                            >
-                              Edit permissions
-                            </DropdownMenuItem>
-                          ),
-                          hiddenWidget: (
-                            <EditPermissionsButton
-                              hideTrigger
-                              initialPermissions={member.permissions}
-                              key="edit-permissions-hidden"
-                              name={member.name}
-                              onChanged={refetch}
-                              triggerRef={editPermissionsRef}
-                              userId={member.id}
-                            />
-                          ),
-                        },
-                        {
-                          key: "transfer",
-                          menuItem: (
-                            <DropdownMenuItem key="transfer" onSelect={() => transferRef.current?.click()}>
-                              Make owner
-                            </DropdownMenuItem>
-                          ),
-                          hiddenWidget: (
-                            <TransferOwnershipButton
-                              hideTrigger
-                              key="transfer-hidden"
-                              name={member.name}
-                              onChanged={refetch}
-                              triggerRef={transferRef}
-                              userId={member.id}
-                            />
-                          ),
-                        },
-                      );
-                    }
-                  }
-
-                  if (!member.isYou && (member.role !== "ADMIN" || viewerIsOwner)) {
-                    const deleteRef: { current: HTMLButtonElement | null } = { current: null };
-                    actions.push({
-                      key: "delete",
-                      menuItem: (
-                        <DropdownMenuItem
-                          key="delete"
-                          onSelect={() => deleteRef.current?.click()}
-                          variant="destructive"
-                        >
-                          Remove
-                        </DropdownMenuItem>
-                      ),
-                      hiddenWidget: (
-                        <DeleteMemberButton
-                          attendanceCount={member.attendanceCount}
-                          hideTrigger
-                          key="delete-hidden"
-                          name={member.name}
-                          onDeleted={refetch}
-                          triggerRef={deleteRef}
-                          userId={member.id}
-                          walkCount={member.walkCount}
-                        />
-                      ),
-                    });
-                  }
-
-                  return (
-                    <DataListItem
-                      className={cn("relative", member.isYou && "bg-muted/40", dataListItemStackClassName)}
-                      key={member.id}
-                    >
-                      <DataListItemMain>
-                        <Avatar className="size-9 shrink-0">
-                          <AvatarFallback className="text-xs">{initials(member.name)}</AvatarFallback>
-                        </Avatar>
-                        <DataListBody>
-                          <p className="flex items-center gap-1.5 font-medium">
-                            <Link
-                              className="after:absolute after:inset-0"
-                              href={`/admin/members/${member.id}`}
-                            >
-                              {member.name}
-                            </Link>
-                            {member.isYou ? (
-                              <span className="text-xs font-normal text-muted-foreground">You</span>
-                            ) : null}
-                            {member.needsAttention && !member.pendingInvite ? (
-                              <AlertCircle
-                                aria-label="Never clocked in"
-                                className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400"
-                              />
-                            ) : null}
-                          </p>
-                          <p className="text-sm text-muted-foreground wrap-break-word">
-                            {member.email || "No email"}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {formatDate(new Date(member.createdAt))} ·{" "}
-                            {formatMembershipAge(new Date(member.createdAt))} · {member.attendanceCount}{" "}
-                            {member.attendanceCount === 1 ? "clock-in" : "clock-ins"}
-                          </p>
-                        </DataListBody>
-                        <ChevronRight className="mt-1 size-4 shrink-0 text-muted-foreground sm:mt-0" />
-                      </DataListItemMain>
-                      <DataListActions
-                        className={cn("relative z-10 flex-wrap gap-2", dataListActionsStackClassName)}
-                      >
-                        {member.pendingInvite ? (
-                          // Plain text, not a Badge — an outline badge
-                          // sitting right next to the menu below reads as a
-                          // second (non-working) button rather than a
-                          // status label.
-                          <span className="flex h-7 items-center text-xs font-medium text-muted-foreground">
-                            {member.pendingInvite.expired
-                              ? `Invite expired ${formatRelativeDays(new Date(member.pendingInvite.expiresAt))}`
-                              : `Invited ${formatRelativeDays(new Date(member.pendingInvite.sentAt))}`}
-                          </span>
-                        ) : (
-                          <Badge className="h-7 border-border px-2" variant="secondary">
-                            {member.isOwner ? <Crown /> : null}
-                            {member.isOwner ? "Owner" : member.role === "ADMIN" ? "Organiser" : "Member"}
-                          </Badge>
-                        )}
-                        {actions.length > 0 ? (
-                          <MemberRowActionsMenu>{actions.map((a) => a.menuItem)}</MemberRowActionsMenu>
-                        ) : null}
-                        {/* Always-mounted, visually hidden widgets the menu
-                            above proxies clicks to — see
-                            MemberRowActionsMenu. */}
-                        {actions.map((a) => a.hiddenWidget)}
-                      </DataListActions>
-                    </DataListItem>
-                  );
-                })}
+              : groupedRows.map((group, groupIndex) => (
+                  <Fragment key={group.key}>
+                    {showGroupHeaders ? (
+                      <MemberGroupHeader count={group.members.length} first={groupIndex === 0} label={group.label} />
+                    ) : null}
+                    {group.members.map((member) => (
+                      <MemberListRow
+                        inviteRequired={inviteRequired}
+                        key={member.id}
+                        member={member}
+                        onChanged={refetch}
+                        viewerIsOwner={viewerIsOwner}
+                      />
+                    ))}
+                  </Fragment>
+                ))}
           </DataList>
           <ListPagination
             noun="members"

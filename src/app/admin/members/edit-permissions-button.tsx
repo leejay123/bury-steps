@@ -86,7 +86,7 @@ export function EditPermissionsButton({
                 What they can do in organiser tools. Takes effect immediately.
               </DrawerDescription>
             </DrawerHeader>
-            <div className="flex-1 overflow-y-auto overscroll-y-contain px-4">
+            <div className="flex-1 overflow-y-auto overscroll-y-contain px-4 py-4">
               <OrganiserPermissionFields
                 disabled={isPending}
                 onChange={setPermissions}
