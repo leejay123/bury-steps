@@ -97,6 +97,22 @@ export async function requirePermission(permission: keyof OrganiserPermissions):
 }
 
 /**
+ * Like requirePermission, but for a page reachable two ways that each
+ * carry their own permission — e.g. an individual walk's page, which is
+ * both a Walks-admin page in its own right AND where a member's walk
+ * history (a Members-admin page) links to. 404s only for an organiser
+ * with none of the listed permissions, same owner bypass as
+ * requirePermission. Mutating actions on the page (edit/cancel/etc.)
+ * still independently require the specific permission they need — this
+ * only governs whether the page renders at all.
+ */
+export async function requireAnyPermission(permissions: (keyof OrganiserPermissions)[]): Promise<User> {
+  const user = await requireAdmin();
+  if (!permissions.some((permission) => user[permission]) && !(await isOwner(user.id))) notFound();
+  return user;
+}
+
+/**
  * Like requirePermission, but for the Settings hub page — it isn't tied to
  * any one of the seven settings-area pages it links out to, so it 404s
  * only for an organiser with none of them (see hasAnySettingsPermission).

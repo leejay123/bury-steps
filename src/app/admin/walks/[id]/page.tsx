@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ClipboardList, CalendarPlus, Download } from "lucide-react";
 import { prisma } from "@/lib/db";
-import { requirePermission, displayName } from "@/lib/auth";
+import { requireAnyPermission, displayName } from "@/lib/auth";
 import { formatWalkDate, utcToLondonWallClock } from "@/lib/dates";
 import { canOrganiserAddAttendance, canOrganiserEditJourney, canAddWalkToCalendar, isWalkScheduleLocked, walkStatus } from "@/lib/walk-window";
 import { appUrl } from "@/lib/urls";
@@ -37,7 +37,12 @@ export default async function WalkDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requirePermission("permWalks");
+  // An organiser reaches this page either as a Walks-admin page in its own
+  // right, or by clicking through from a member's walk history (a
+  // Members-admin page) — either permission is enough to view it. The
+  // action buttons below (Edit, Cancel, End, Add attendance, …) still each
+  // independently require permWalks specifically when actually used.
+  await requireAnyPermission(["permWalks", "permMembers"]);
   const { id } = await params;
 
   const walk = await prisma.walk.findUnique({
