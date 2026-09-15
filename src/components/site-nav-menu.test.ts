@@ -84,6 +84,29 @@ describe("isNavItemActive", () => {
     expect(isNavItemActive("/progress", "/walks")).toBe(false);
     expect(isNavItemActive("/progress", "/progress")).toBe(true);
   });
+
+  it("treats an individual walk's share page (/w/<slug>) as the Walks tab", () => {
+    expect(isNavItemActive("/w/sunday-stroll-ab12", "/walks")).toBe(true);
+    expect(isNavItemActive("/w/ab12", "/walks")).toBe(true);
+  });
+});
+
+describe("navItems progressEnabled", () => {
+  it("shows Progress by default, and when explicitly on", () => {
+    expect(navItems(false, "/walks").some((item) => item.label === "Progress")).toBe(true);
+    expect(navItems(false, "/walks", undefined, true).some((item) => item.label === "Progress")).toBe(
+      true,
+    );
+  });
+
+  it("drops Progress from the nav when the site-wide switch is off", () => {
+    expect(navItems(false, "/walks", undefined, false).some((item) => item.label === "Progress")).toBe(
+      false,
+    );
+    expect(navItems(true, "/admin", undefined, false).some((item) => item.label === "Progress")).toBe(
+      false,
+    );
+  });
 });
 
 describe("shouldPrefetchNavLink", () => {

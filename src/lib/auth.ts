@@ -6,6 +6,7 @@ import type { User } from "@prisma/client";
 import { SIGN_IN_URL } from "./urls";
 import { syncLocalUser } from "./local-user";
 import { hasAnySettingsPermission, type OrganiserPermissions } from "./organiser-permissions";
+import { isOwner } from "./site-owner";
 
 /** Clerk throws this when auth() runs on a request that skipped middleware. */
 export function isClerkMiddlewareMissingError(error: unknown): boolean {
@@ -84,7 +85,14 @@ export async function requireAdmin(): Promise<User> {
  */
 export async function requirePermission(permission: keyof OrganiserPermissions): Promise<User> {
   const user = await requireAdmin();
-  if (!user[permission]) notFound();
+  // The owner is the one account whose own permission checkboxes can't be
+  // edited in the UI (self-editing is blocked — see MembersTable's
+  // `!member.isYou` gate), so a false value here — however it got set —
+  // would otherwise lock the owner out of their own admin pages with no
+  // self-service way back in. The owner is meant to always have full
+  // access regardless of the individual booleans; this is the one place
+  // that guarantee actually gets enforced.
+  if (!user[permission] && !(await isOwner(user.id))) notFound();
   return user;
 }
 
@@ -97,7 +105,10 @@ export async function requirePermission(permission: keyof OrganiserPermissions):
  */
 export async function requireAnySettingsPermission(): Promise<User> {
   const user = await requireAdmin();
-  if (!hasAnySettingsPermission(user)) notFound();
+  // Same owner bypass as requirePermission above — the owner's own
+  // checkboxes aren't self-editable, so this is the guarantee that
+  // matters in practice.
+  if (!hasAnySettingsPermission(user) && !(await isOwner(user.id))) notFound();
   return user;
 }
 

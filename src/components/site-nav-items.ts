@@ -23,13 +23,21 @@ import {
  * (requirePermission / permissionDenied), so a limited organiser who
  * guesses a hidden URL still gets turned away there too.
  */
-export function navItems(isAdmin: boolean, walksHref: string, permissions?: OrganiserPermissions) {
+export function navItems(
+  isAdmin: boolean,
+  walksHref: string,
+  permissions?: OrganiserPermissions,
+  // Site-wide switch (Settings → Display → Site chrome) — defaults true so
+  // existing callers (and this file's own tests) that don't pass it keep
+  // showing Progress unchanged.
+  progressEnabled: boolean = true,
+) {
   const perms = permissions ?? FULL_ORGANISER_PERMISSIONS;
   return [
     { href: "/", label: "Home" },
     { href: isAdmin && !perms.permWalks ? "/walks" : walksHref, label: "Walks" },
     { href: "/notices", label: "Notices" },
-    { href: "/progress", label: "Progress" },
+    ...(progressEnabled ? [{ href: "/progress", label: "Progress" }] : []),
     ...(isAdmin
       ? [
           ...(perms.permMembers ? [{ href: "/admin/members", label: "Members" }] : []),
@@ -66,7 +74,11 @@ export function shouldPrefetchNavLink(href: string): boolean {
 export function isNavItemActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
   if (href === "/walks") {
-    return pathname === "/walks";
+    // Individual walk pages live at their own short share URL (/w/<slug
+    // or token> — see walkSharePath), not under /walks/, so they need
+    // their own check here rather than falling through to the generic
+    // startsWith(`${href}/`) case below.
+    return pathname === "/walks" || pathname.startsWith("/w/");
   }
   if (href === "/admin") {
     return pathname === "/admin" || pathname.startsWith("/admin/walks");

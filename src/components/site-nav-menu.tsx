@@ -133,11 +133,14 @@ function scrollNavItemIntoView(scroller: HTMLElement, item: HTMLElement) {
 export function SiteNavLinks({
   isAdmin,
   permissions,
+  progressEnabled,
   walksHref,
 }: {
   isAdmin: boolean;
   /** Omitted defaults to full access — see navItems. */
   permissions?: OrganiserPermissions;
+  /** Omitted defaults to true — see navItems. */
+  progressEnabled?: boolean;
   walksHref: string;
 }) {
   const pathname = usePathname();
@@ -154,7 +157,7 @@ export function SiteNavLinks({
       className="hidden max-w-full items-center justify-center gap-1 overflow-x-auto overscroll-x-contain text-sm [scrollbar-width:none] [-ms-overflow-style:none] md:flex [&::-webkit-scrollbar]:hidden"
       ref={scrollerRef}
     >
-      {navItems(isAdmin, walksHref, permissions).map((item) => {
+      {navItems(isAdmin, walksHref, permissions, progressEnabled).map((item) => {
         const active = isNavItemActive(pathname, item.href);
         return (
           <NavLink
@@ -177,11 +180,14 @@ export function SiteNavLinks({
 export function SiteMobileNavBar({
   isAdmin,
   permissions,
+  progressEnabled,
   walksHref,
 }: {
   isAdmin: boolean;
   /** Omitted defaults to full access — see navItems. */
   permissions?: OrganiserPermissions;
+  /** Omitted defaults to true — see navItems. */
+  progressEnabled?: boolean;
   walksHref: string;
 }) {
   const pathname = usePathname();
@@ -201,7 +207,7 @@ export function SiteMobileNavBar({
         className="flex gap-1 overflow-x-auto overscroll-x-contain px-3 py-1.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         ref={scrollerRef}
       >
-        {navItems(isAdmin, walksHref, permissions).map((item) => {
+        {navItems(isAdmin, walksHref, permissions, progressEnabled).map((item) => {
           const active = isNavItemActive(pathname, item.href);
           return (
             <NavLink

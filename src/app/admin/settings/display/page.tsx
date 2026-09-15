@@ -9,6 +9,7 @@ import { CarouselToggle } from "../hero-photos/carousel-toggle";
 import { ContactMessagesOwnerSettings } from "./contact-messages-owner-settings";
 import { CookieConsentSettings } from "./cookie-consent-settings";
 import { OrganiserInviteToggle } from "./organiser-invite-toggle";
+import { ProgressToggle } from "./progress-toggle";
 import { AccidentReportRetentionSettings, CancelledWalkRetentionSettings } from "./retention-settings";
 import { DisplaySettings } from "./display-form";
 import { DisplaySettingsLayout } from "./display-settings-layout";
@@ -38,6 +39,7 @@ export default async function DisplaySettingsPage() {
       select: {
         contactMessagesOwnerId: true,
         organiserInviteRequired: true,
+        progressEnabled: true,
         cancelledWalkRetentionDays: true,
         accidentReportRetentionDays: true,
       },
@@ -148,6 +150,7 @@ export default async function DisplaySettingsPage() {
         >
           <CookieConsentSettings variant={theme.cookieConsentVariant} />
           <DisplaySettings scrollToTopEnabled={theme.scrollToTopEnabled} />
+          <ProgressToggle enabled={settings?.progressEnabled ?? true} />
         </SettingsSectionGroup>
       </DisplaySettingsLayout>
     </SettingsPage>

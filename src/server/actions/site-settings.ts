@@ -76,6 +76,41 @@ export async function updateCarouselEnabled(
   return { ok: true, message: enabled ? "You have turned the carousel on." : "You have turned the carousel off." };
 }
 
+/** Site-wide switch for /progress (see getProgressEnabled) — off 404s the
+ * page for everyone, organisers included, not just members. */
+export async function updateProgressEnabled(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  const enabled = String(formData.get("progressEnabled") ?? "") === "on";
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        progressEnabled: enabled,
+      },
+      update: { progressEnabled: enabled },
+    });
+  } catch (err) {
+    return logActionError("updateProgressEnabled", err, "Could not save that setting. Try again.");
+  }
+
+  // Not homepage-tagged (Progress isn't part of the homepage) — just the
+  // nav (every page, via the root layout) and Progress itself.
+  revalidatePath("/", "layout");
+  revalidatePath("/progress");
+  revalidatePath("/admin/settings");
+  return {
+    ok: true,
+    message: enabled ? "Progress is back on for everyone." : "Progress is now off for everyone.",
+  };
+}
+
 /** Toggles whether promoting a member to organiser sends an invite email
  * (taking effect only once accepted) instead of promoting immediately. */
 export async function updateOrganiserInviteRequired(

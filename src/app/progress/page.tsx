@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { Footprints } from "lucide-react";
 import { requireUser } from "@/lib/auth";
+import { getProgressEnabled } from "@/lib/progress-settings";
 import { loadWalkGame } from "@/lib/walk-progress";
 import { EmptyState } from "@/components/empty-state";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +32,11 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 export default async function ProgressPage() {
   const user = await requireUser();
+  // Site-wide switch (Settings → Display → Site chrome) — off 404s the
+  // page for every signed-in account, organisers included, same as any
+  // other gated page (see requirePermission's own doc comment for why
+  // a plain 404 rather than a distinguishable "disabled" message).
+  if (!(await getProgressEnabled())) notFound();
   const game = await loadWalkGame(user.id);
 
   const togetherPct = game.together
