@@ -15,11 +15,13 @@ import { Bell, History, LineChart, Mail } from "lucide-react";
  * across the server/client boundary — the menu items silently don't
  * render (no error, just missing) if this lives in a server component.
  */
-export function SiteUserButton() {
+export function SiteUserButton({ progressEnabled = true }: { progressEnabled?: boolean }) {
   return (
     <UserButton>
       <UserButton.MenuItems>
-        <UserButton.Link href="/progress" label="Progress" labelIcon={<LineChart className="size-4" />} />
+        {progressEnabled ? (
+          <UserButton.Link href="/progress" label="Progress" labelIcon={<LineChart className="size-4" />} />
+        ) : null}
         <UserButton.Link href="/history" label="History" labelIcon={<History className="size-4" />} />
         <UserButton.Link
           href="/email-preferences"

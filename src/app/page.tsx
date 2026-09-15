@@ -5,6 +5,7 @@ import { getHomepageSlides } from "@/lib/homepage-slides";
 import { getHomepageTestimonials } from "@/lib/homepage-testimonials";
 import { getHomepageFaqData } from "@/lib/homepage-faqs";
 import { getHomepageMemberNotices } from "@/lib/site-notices";
+import { getProgressEnabled } from "@/lib/progress-settings";
 import { PAGE_X_BLEED } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
@@ -15,12 +16,13 @@ export const revalidate = 120;
 export default async function Home() {
   const origin = appUrl();
   const user = await getOptionalUser();
-  const [slides, testimonials, faqData, theme, memberNotices] = await Promise.all([
+  const [slides, testimonials, faqData, theme, memberNotices, progressEnabled] = await Promise.all([
     getHomepageSlides(),
     getHomepageTestimonials(),
     getHomepageFaqData(),
     getSiteTheme(),
     user ? getHomepageMemberNotices(user.id, user.firstName) : Promise.resolve([]),
+    getProgressEnabled(),
   ]);
 
   return (
@@ -54,6 +56,7 @@ export default async function Home() {
         howThisStartedTitle={theme.howThisStartedTitle}
         isSignedIn={user !== null}
         memberNotices={memberNotices}
+        progressEnabled={progressEnabled}
         testimonials={testimonials}
         testimonialsSectionEyebrow={theme.testimonialsSectionEyebrow}
         testimonialsSectionIntro={theme.testimonialsSectionIntro}

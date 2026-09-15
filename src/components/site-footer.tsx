@@ -5,12 +5,13 @@ import { NewsletterFooterGate } from "@/components/newsletter-footer-gate";
 import { SiteLogo } from "@/components/site-logo";
 import { shouldPrefetchNavLink } from "@/components/site-nav-items";
 import { PAGE_X } from "@/lib/page-x";
+import { getProgressEnabled } from "@/lib/progress-settings";
 import { getSiteTheme } from "@/lib/site-theme";
 
 const linkClassName = "text-sm text-muted-foreground transition-colors hover:text-foreground";
 
 export async function SiteFooter() {
-  const theme = await getSiteTheme();
+  const [theme, progressEnabled] = await Promise.all([getSiteTheme(), getProgressEnabled()]);
   const facebookUrl = theme.facebookGroupUrl.trim();
 
   return (
@@ -54,9 +55,11 @@ export async function SiteFooter() {
           <Link className={linkClassName} href="/notices" prefetch={shouldPrefetchNavLink("/notices")}>
             Notices
           </Link>
-          <Link className={linkClassName} href="/progress" prefetch={shouldPrefetchNavLink("/progress")}>
-            Progress
-          </Link>
+          {progressEnabled ? (
+            <Link className={linkClassName} href="/progress" prefetch={shouldPrefetchNavLink("/progress")}>
+              Progress
+            </Link>
+          ) : null}
           <Link className={linkClassName} href="/contact">
             Contact Us
           </Link>

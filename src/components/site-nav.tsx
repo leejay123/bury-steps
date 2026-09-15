@@ -55,7 +55,7 @@ export async function SiteNav() {
         </Show>
         <Show when="signed-in">
           <NotificationBell notices={notices} unreadIds={unreadIds} />
-          <SiteUserButton />
+          <SiteUserButton progressEnabled={progressEnabled} />
         </Show>
       </div>
     </>

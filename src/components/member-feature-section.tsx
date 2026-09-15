@@ -13,7 +13,7 @@ type BentoTile = {
   wide?: boolean;
 };
 
-const TILES: BentoTile[] = [
+const BASE_TILES: BentoTile[] = [
   {
     title: "See what's on",
     description: "Upcoming walks, meeting points, and a one-tap clock-in on the day.",
@@ -53,13 +53,14 @@ const TILES: BentoTile[] = [
  * members instead of the "how this group works" explainer, which stops
  * being useful once you've already joined.
  */
-export function MemberFeatureSection() {
+export function MemberFeatureSection({ progressEnabled = true }: { progressEnabled?: boolean }) {
+  const tiles = progressEnabled ? BASE_TILES : BASE_TILES.filter((tile) => tile.href !== "/progress");
   return (
     <div className="relative w-full">
       <DecorIcon className="size-4" position="bottom-left" />
       <DecorIcon className="size-4" position="bottom-right" />
       <div className="grid w-full grid-cols-1 gap-px bg-border sm:grid-cols-3">
-        {TILES.map((tile) => (
+        {tiles.map((tile) => (
           <BentoCard className={cn("h-full", tile.wide && "sm:col-span-2")} key={tile.title} tile={tile} />
         ))}
       </div>

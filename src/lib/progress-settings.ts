@@ -15,9 +15,16 @@ import { SITE_SETTING_ID } from "./theme";
  * running their own query.
  */
 export const getProgressEnabled = cache(async (): Promise<boolean> => {
-  const setting = await prisma.siteSetting.findUnique({
-    where: { id: SITE_SETTING_ID },
-    select: { progressEnabled: true },
-  });
-  return setting?.progressEnabled ?? true;
+  try {
+    const setting = await prisma.siteSetting.findUnique({
+      where: { id: SITE_SETTING_ID },
+      select: { progressEnabled: true },
+    });
+    return setting?.progressEnabled ?? true;
+  } catch {
+    // Same fallback as getSiteTheme — build-time prerendering (e.g.
+    // /_not-found) has no real database to reach, so default to the
+    // schema's own default rather than fail the whole build.
+    return true;
+  }
 });

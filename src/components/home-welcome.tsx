@@ -56,6 +56,7 @@ export function HomeWelcome({
   howThisStartedTitle,
   isSignedIn,
   memberNotices,
+  progressEnabled,
   testimonials,
   testimonialsSectionEyebrow,
   testimonialsSectionIntro,
@@ -84,13 +85,20 @@ export function HomeWelcome({
    * useful once someone's actually joined. */
   isSignedIn: boolean;
   memberNotices: HomepageNoticeSlide[];
+  /** Site-wide switch (Settings → Display → Site chrome) — hides the
+   * "Track your progress" tile when off. */
+  progressEnabled: boolean;
   testimonials: TestimonialView[];
   testimonialsSectionEyebrow: string;
   testimonialsSectionIntro: string;
   testimonialsSectionTitle: string;
 }) {
   const sections: Record<HomepageSectionId, ReactNode | null> = {
-    howWalksWork: isSignedIn ? <MemberFeatureSection /> : <FeatureSection />,
+    howWalksWork: isSignedIn ? (
+      <MemberFeatureSection progressEnabled={progressEnabled} />
+    ) : (
+      <FeatureSection />
+    ),
     howThisStarted: (
       <section>
         <HeroCopy
