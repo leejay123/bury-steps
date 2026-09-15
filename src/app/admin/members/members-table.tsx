@@ -87,15 +87,14 @@ function MemberRowSkeleton() {
  * only rendered when the current rows span more than one group, since the
  * whole point is to replace the old per-row role badge: with just one
  * group showing, a header would be redundant with the Role filter above. */
-function MemberGroupHeader({ count, first, label }: { count: number; first: boolean; label: string }) {
+function MemberGroupHeader({ count, label }: { count: number; label: string }) {
   return (
+    // No `border-t` here: every group but the last already ends on a row
+    // with its own `border-b` (DataListItem), so adding one here as well
+    // doubled up into two hairlines stacked back to back between groups.
     <li
       aria-hidden
-      className={cn(
-        "flex items-baseline gap-1.5 bg-muted/50 px-3 py-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase",
-        "border-b",
-        !first && "border-t",
-      )}
+      className="flex items-baseline gap-1.5 border-b bg-muted/50 px-3 py-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
     >
       {label}
       <span className="text-xs font-normal normal-case text-muted-foreground/80">({count})</span>
@@ -567,10 +566,10 @@ export function MembersTable({
               ? Array.from({ length: Math.min(rows.length || 5, LIST_PAGE_SIZE) }, (_, i) => (
                   <MemberRowSkeleton key={i} />
                 ))
-              : groupedRows.map((group, groupIndex) => (
+              : groupedRows.map((group) => (
                   <Fragment key={group.key}>
                     {showGroupHeaders ? (
-                      <MemberGroupHeader count={group.members.length} first={groupIndex === 0} label={group.label} />
+                      <MemberGroupHeader count={group.members.length} label={group.label} />
                     ) : null}
                     {group.members.map((member) => (
                       <MemberListRow
