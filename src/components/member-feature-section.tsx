@@ -55,6 +55,15 @@ const BASE_TILES: BentoTile[] = [
  */
 export function MemberFeatureSection({ progressEnabled = true }: { progressEnabled?: boolean }) {
   const tiles = progressEnabled ? BASE_TILES : BASE_TILES.filter((tile) => tile.href !== "/progress");
+  // The grid is 3 columns, a wide tile spans 2 — with all 5 tiles that's
+  // 6 column-tracks (2+1+1+1+1), filling two full rows exactly. Dropping
+  // "Track your progress" leaves 5 tracks (2+1+1+1), one short of a full
+  // row: without this, the last row would end with one cell that's just
+  // the grid's own bg-border colour showing through — a "missing tile"
+  // grey box. Making the last tile wide too brings it back to 6.
+  if (!progressEnabled && tiles.length > 0) {
+    tiles[tiles.length - 1] = { ...tiles[tiles.length - 1], wide: true };
+  }
   return (
     <div className="relative w-full">
       <DecorIcon className="size-4" position="bottom-left" />
