@@ -4,9 +4,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ORGANISER_PERMISSION_OPTIONS, type OrganiserPermissions } from "@/lib/organiser-permissions";
 
-/** Order the two groups appear in — matches ORGANISER_PERMISSION_OPTIONS'
+/** Order the groups appear in — matches ORGANISER_PERMISSION_OPTIONS'
  * own group values (see organiser-permissions.ts). */
-const PERMISSION_GROUPS = ["Core", "Settings & homepage"] as const;
+const PERMISSION_GROUPS = ["Walks", "Core", "Settings & homepage"] as const;
 
 /**
  * Shared "what can they do" checklist — used both when inviting/promoting

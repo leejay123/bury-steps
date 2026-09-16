@@ -95,7 +95,15 @@ import {
 // see the "permission guard" tests below for permNotices: false.
 const ADMIN = {
   id: "admin-1",
-  permWalks: true,
+  permWalksView: true,
+  permWalksCreate: true,
+  permWalksEdit: true,
+  permWalksCancel: true,
+  permWalksDelete: true,
+  permWalksAttendance: true,
+  permWalksHealth: true,
+  permWalksJourney: true,
+  permWalksExport: true,
   permMembers: true,
   permMessages: true,
   permReports: true,

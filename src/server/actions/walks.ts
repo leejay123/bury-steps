@@ -135,7 +135,7 @@ function parseWhat3Words(
 
 export async function createWalk(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permWalks) return permissionDenied("permWalks");
+  if (!admin.permWalksCreate) return permissionDenied("permWalksCreate");
 
   const parsed = walkDetailsSchema.safeParse({
     title: formData.get("title"),
@@ -219,7 +219,7 @@ export async function duplicateWalk(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permWalks) return permissionDenied("permWalks");
+  if (!admin.permWalksCreate) return permissionDenied("permWalksCreate");
   const id = String(formData.get("walkId") ?? "");
   if (!id) return { ok: false, error: "No walk selected." };
 
@@ -292,7 +292,9 @@ export async function searchWalkPlaces(
   postcode: string,
 ): Promise<{ ok: true; places: PlaceHit[] } | { ok: false; error: string }> {
   const admin = await requireAdmin();
-  if (!admin.permWalks) return permissionDenied("permWalks");
+  // Used by both the create and edit forms' address autocomplete — either
+  // capability that would actually reach this is enough.
+  if (!admin.permWalksCreate && !admin.permWalksEdit) return permissionDenied("permWalksCreate");
   const limited = checkRateLimit(`${admin.id}:searchWalkPlaces`, 10, 60_000);
   if (!limited.ok) {
     return { ok: false, error: `Too many searches. Try again in ${limited.retryAfterSeconds}s.` };
@@ -313,7 +315,7 @@ export async function searchWalkPlaces(
 
 export async function cancelWalk(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permWalks) return permissionDenied("permWalks");
+  if (!admin.permWalksCancel) return permissionDenied("permWalksCancel");
   const id = String(formData.get("walkId") ?? "");
   if (!id) return { ok: false, error: "No walk selected." };
 
@@ -399,7 +401,7 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
 
 export async function reopenWalk(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permWalks) return permissionDenied("permWalks");
+  if (!admin.permWalksCancel) return permissionDenied("permWalksCancel");
   const id = String(formData.get("walkId") ?? "");
   if (!id) return { ok: false, error: "No walk selected." };
 
@@ -461,7 +463,7 @@ export async function endWalkEarly(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permWalks) return permissionDenied("permWalks");
+  if (!admin.permWalksCancel) return permissionDenied("permWalksCancel");
   const id = String(formData.get("walkId") ?? "");
   if (!id) return { ok: false, error: "No walk selected." };
 
@@ -525,7 +527,7 @@ export async function updateWalk(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permWalks) return permissionDenied("permWalks");
+  if (!admin.permWalksEdit) return permissionDenied("permWalksEdit");
   const id = String(formData.get("walkId") ?? "");
   if (!id) return { ok: false, error: "No walk selected." };
 
@@ -660,7 +662,7 @@ export async function updateWalk(
 
 export async function deleteWalk(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permWalks) return permissionDenied("permWalks");
+  if (!admin.permWalksDelete) return permissionDenied("permWalksDelete");
   const id = String(formData.get("walkId") ?? "");
   if (!id) return { ok: false, error: "No walk selected." };
 
@@ -694,7 +696,7 @@ export async function setWalkRetentionLocked(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permWalks) return permissionDenied("permWalks");
+  if (!admin.permWalksExport) return permissionDenied("permWalksExport");
   const id = String(formData.get("walkId") ?? "");
   const locked = String(formData.get("retentionLocked") ?? "") === "on";
   if (!id) return { ok: false, error: "No walk selected." };

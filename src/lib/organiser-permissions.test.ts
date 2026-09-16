@@ -26,7 +26,7 @@ describe("hasAnyPermission", () => {
   });
 
   it("is true when at least one permission is granted", () => {
-    expect(hasAnyPermission({ ...NONE, permWalks: true })).toBe(true);
+    expect(hasAnyPermission({ ...NONE, permWalksView: true })).toBe(true);
     expect(hasAnyPermission(FULL_ORGANISER_PERMISSIONS)).toBe(true);
   });
 });
@@ -37,7 +37,7 @@ describe("hasAnySettingsPermission", () => {
     // Core permissions don't count — Walks/Members/Messages/Reports aren't
     // part of the Settings hub.
     expect(
-      hasAnySettingsPermission({ ...NONE, permWalks: true, permMembers: true, permReports: true }),
+      hasAnySettingsPermission({ ...NONE, permWalksView: true, permMembers: true, permReports: true }),
     ).toBe(false);
   });
 
@@ -50,7 +50,7 @@ describe("hasAnySettingsPermission", () => {
 describe("walksLandingPath", () => {
   it("goes to the admin Walks dashboard when granted Walks", () => {
     expect(walksLandingPath(FULL_ORGANISER_PERMISSIONS)).toBe("/admin");
-    expect(walksLandingPath({ ...NONE, permWalks: true })).toBe("/admin");
+    expect(walksLandingPath({ ...NONE, permWalksView: true })).toBe("/admin");
   });
 
   it("goes to the ordinary member Walks page otherwise", () => {
@@ -74,10 +74,20 @@ describe("describeOrganiserPermissions", () => {
   it("joins multiple granted permissions with a final 'and'", () => {
     const result = describeOrganiserPermissions({
       ...NONE,
-      permWalks: true,
+      permWalksView: true,
+      permWalksCreate: true,
+      permWalksEdit: true,
+      permWalksCancel: true,
+      permWalksDelete: true,
+      permWalksAttendance: true,
+      permWalksHealth: true,
+      permWalksJourney: true,
+      permWalksExport: true,
       permCacheReset: true,
     });
-    expect(result.startsWith("You'll be able to create, edit, and cancel walks")).toBe(true);
+    expect(
+      result.startsWith("You'll be able to see the walks admin pages — schedule, roster counts, and journey log"),
+    ).toBe(true);
     expect(result).toContain("; and clear the site cache, or reset the whole site back to its defaults.");
   });
 

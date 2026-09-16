@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Footprints } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+import { isOwner } from "@/lib/site-owner";
 import { formatDate, formatMembershipAge } from "@/lib/dates";
 import { windowState, walkStatus, upcomingListLookbackFrom } from "@/lib/walk-window";
 import { walkSharePath } from "@/lib/walk-slug";
@@ -24,9 +25,17 @@ export default async function DashboardPage() {
   // send them to instead — they still get the ordinary member experience
   // below (browse walks, clock in), same as anyone else. See the matching
   // fallback in site-nav-items.ts.
-  if (user.role === "ADMIN" && user.permWalks) {
+  if (user.role === "ADMIN" && user.permWalksView) {
     redirect("/admin");
   }
+
+  // Reaching this far means the viewer never has permWalksView (an admin
+  // with it was just redirected away above) — so a cancelled walk stays
+  // non-clickable here for everyone except the owner, same boundary as
+  // the admin walk page (src/app/admin/walks/[id]/page.tsx). Cancelled
+  // walks aren't hidden entirely, just not a link: the row still shows
+  // what happened (see AllWalksList).
+  const viewerCanOpenCancelledWalk = await isOwner(user.id);
 
   const now = new Date();
   const upcomingFrom = upcomingListLookbackFrom(now);
@@ -163,7 +172,10 @@ export default async function DashboardPage() {
           <AllWalksList
             rows={allWalks.map((walk) => ({
               id: walk.id,
-              href: walkSharePath(walk),
+              href:
+                walk.cancelledAt && !viewerCanOpenCancelledWalk
+                  ? undefined
+                  : walkSharePath(walk),
               title: walk.title,
               location: walk.location,
               startsAt: walk.startsAt.toISOString(),

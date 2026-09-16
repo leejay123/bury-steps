@@ -35,7 +35,7 @@ export function navItems(
   const perms = permissions ?? FULL_ORGANISER_PERMISSIONS;
   return [
     { href: "/", label: "Home" },
-    { href: isAdmin && !perms.permWalks ? "/walks" : walksHref, label: "Walks" },
+    { href: isAdmin && !perms.permWalksView ? "/walks" : walksHref, label: "Walks" },
     { href: "/notices", label: "Notices" },
     ...(progressEnabled ? [{ href: "/progress", label: "Progress" }] : []),
     ...(isAdmin

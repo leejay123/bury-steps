@@ -14,7 +14,11 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  await requirePermission("permWalks");
+  // The CSV always includes reported conditions (below), so downloading
+  // it needs both — Export alone would otherwise be a back door around
+  // Health notes being switched off.
+  const admin = await requirePermission("permWalksExport");
+  if (!admin.permWalksHealth) return new NextResponse("Not found", { status: 404 });
   const { id } = await params;
 
   const walk = await prisma.walk.findUnique({

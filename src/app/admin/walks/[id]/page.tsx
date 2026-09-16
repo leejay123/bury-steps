@@ -40,16 +40,11 @@ export default async function WalkDetailPage({
 }) {
   // An organiser reaches this page either as a Walks-admin page in its own
   // right, or by clicking through from a member's walk history (a
-  // Members-admin page) — either permission is enough to view it. The
-  // action buttons below (Edit, Cancel, End, Add attendance, …) still each
-  // independently require permWalks specifically when actually used.
-  const admin = await requireAnyPermission(["permWalks", "permMembers"]);
-  // Gates every actual walk-management control below (edit, cancel, end,
-  // delete, duplicate, add/remove attendance, journey events, retention
-  // lock, the roster export) — someone here only via permMembers can view
-  // everything on the page but shouldn't see buttons that would just get
-  // refused when clicked.
-  const canManageWalks = admin.permWalks;
+  // Members-admin page) — either permission is enough to view it. Every
+  // actual capability below (edit, cancel, delete, attendance, health
+  // notes, journey, export, …) is now its own permission, checked
+  // individually — see the nine permWalks* fields in organiser-permissions.ts.
+  const admin = await requireAnyPermission(["permWalksView", "permMembers"]);
   const { id } = await params;
 
   const walk = await prisma.walk.findUnique({
@@ -84,13 +79,13 @@ export default async function WalkDetailPage({
 
   if (!walk) notFound();
 
-  // A cancelled walk's full admin view stays owner/Walks-permission
+  // A cancelled walk's full admin view stays owner/View-permission
   // territory even for someone here via Members access — but this isn't a
   // "page doesn't exist" situation (they got here from a real link, e.g.
   // a member's own walk history — see the greyed-out row in
   // src/app/admin/members/[id]/page.tsx), so it's honest about what
   // happened rather than a bare 404.
-  if (walk.cancelledAt && !canManageWalks && !(await isOwner(admin.id))) {
+  if (walk.cancelledAt && !admin.permWalksView && !(await isOwner(admin.id))) {
     return (
       <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
         <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">
@@ -126,7 +121,7 @@ export default async function WalkDetailPage({
   // Members access sees the attendee list the same way a member would,
   // not the full roster just because they can open the page.
   const viewerAttended = attendances.some((a) => a.userId === admin.id);
-  const canSeeAttendance = canManageWalks || viewerAttended;
+  const canSeeAttendance = admin.permWalksAttendance || viewerAttended;
   const status = walkStatus(walk);
   const isCompleted = status === "completed";
   const scheduleLocked = isWalkScheduleLocked(walk.startsAt);
@@ -164,11 +159,11 @@ export default async function WalkDetailPage({
       </Link>
 
       {/* Only tells someone what THEY can still do about it — an
-          organiser without Walks access can't cancel, edit, or add a
-          forgotten clock-in either, so this stays silent for them rather
-          than describing tools they don't have (the status badge above
-          already says "Completed"). */}
-      {isCompleted && canManageWalks ? (
+          organiser without any of Edit/Cancel/Attendance can't act on any
+          of what this mentions, so it stays silent for them rather than
+          describing tools they don't have (the status badge above already
+          says "Completed"). */}
+      {isCompleted && (admin.permWalksEdit || admin.permWalksCancel || admin.permWalksAttendance) ? (
         <Alert variant="info">
           <AlertDescription>
             This walk has finished, so it can no longer be cancelled or edited. If someone was
@@ -223,60 +218,60 @@ export default async function WalkDetailPage({
             </a>
           </Button>
         ) : null}
-        {canManageWalks ? (
-          <>
-            <Button asChild size="sm" variant="outline">
-              <a href={`/admin/walks/${walk.id}/export`}>
-                <Download data-icon="inline-start" />
-                Download roster (CSV)
-              </a>
-            </Button>
-            <DuplicateWalkButton walkId={walk.id} />
-            {/*
-              Cancel only ever applies to a walk that hasn't started yet —
-              "cancelled" means it never happened, which stops being true the
-              moment people are out on it. Once it's in progress, End walk is
-              the equivalent action instead (marks it finished early rather
-              than un-happening it); once it's completed, neither applies.
-            */}
-            {!walk.cancelledAt && (status === "upcoming" || status === "starting-soon") && (
-              <CancelWalkButton walkId={walk.id} attendanceCount={stillIn.length} />
-            )}
-            {/* Only makes sense while the walk is actually under way — before
-                that there's nothing to cut short, and after it's already
-                completed (naturally or via this same button) there's nothing
-                left to end. */}
-            {status === "in-progress" && <EndWalkButton walkId={walk.id} />}
-            {/*
-              Edit for a completed walk would silently rewrite history rather
-              than change a plan, so it stays hidden the moment the clock-in
-              window has fully closed; Delete and the CSV export remain below,
-              since a completed walk is still a real record that might need
-              correcting or removing.
-            */}
-            {!isCompleted && (
-              <EditWalkButton
-                cancelled={Boolean(walk.cancelledAt)}
-                description={walk.description}
-                durationMins={walk.durationMins}
-                latitude={walk.latitude}
-                location={walk.location}
-                longitude={walk.longitude}
-                postcode={walk.postcode}
-                scheduleLocked={scheduleLocked}
-                startsAt={walk.startsAt.toISOString()}
-                title={walk.title}
-                walkId={walk.id}
-                what3words={walk.what3words}
-              />
-            )}
-            {walk.cancelledAt ? <ReopenWalkButton walkId={walk.id} /> : null}
-            <DeleteWalkButton walkId={walk.id} attendanceCount={walk.attendances.length} />
-          </>
+        {admin.permWalksExport && admin.permWalksHealth ? (
+          <Button asChild size="sm" variant="outline">
+            <a href={`/admin/walks/${walk.id}/export`}>
+              <Download data-icon="inline-start" />
+              Download roster (CSV)
+            </a>
+          </Button>
+        ) : null}
+        {admin.permWalksCreate ? <DuplicateWalkButton walkId={walk.id} /> : null}
+        {/*
+          Cancel only ever applies to a walk that hasn't started yet —
+          "cancelled" means it never happened, which stops being true the
+          moment people are out on it. Once it's in progress, End walk is
+          the equivalent action instead (marks it finished early rather
+          than un-happening it); once it's completed, neither applies.
+        */}
+        {admin.permWalksCancel && !walk.cancelledAt && (status === "upcoming" || status === "starting-soon") && (
+          <CancelWalkButton walkId={walk.id} attendanceCount={stillIn.length} />
+        )}
+        {/* Only makes sense while the walk is actually under way — before
+            that there's nothing to cut short, and after it's already
+            completed (naturally or via this same button) there's nothing
+            left to end. */}
+        {admin.permWalksCancel && status === "in-progress" && <EndWalkButton walkId={walk.id} />}
+        {/*
+          Edit for a completed walk would silently rewrite history rather
+          than change a plan, so it stays hidden the moment the clock-in
+          window has fully closed; Delete and the CSV export remain below,
+          since a completed walk is still a real record that might need
+          correcting or removing.
+        */}
+        {admin.permWalksEdit && !isCompleted && (
+          <EditWalkButton
+            cancelled={Boolean(walk.cancelledAt)}
+            description={walk.description}
+            durationMins={walk.durationMins}
+            latitude={walk.latitude}
+            location={walk.location}
+            longitude={walk.longitude}
+            postcode={walk.postcode}
+            scheduleLocked={scheduleLocked}
+            startsAt={walk.startsAt.toISOString()}
+            title={walk.title}
+            walkId={walk.id}
+            what3words={walk.what3words}
+          />
+        )}
+        {admin.permWalksCancel && walk.cancelledAt ? <ReopenWalkButton walkId={walk.id} /> : null}
+        {admin.permWalksDelete ? (
+          <DeleteWalkButton walkId={walk.id} attendanceCount={walk.attendances.length} />
         ) : null}
       </div>
 
-      {walk.cancelledAt && canManageWalks ? (
+      {walk.cancelledAt && admin.permWalksExport ? (
         <RetentionLockToggle locked={walk.retentionLocked} walkId={walk.id} />
       ) : null}
 
@@ -284,7 +279,7 @@ export default async function WalkDetailPage({
 
       {canSeeAttendance ? (
         <>
-          {withConditions > 0 && (
+          {admin.permWalksHealth && withConditions > 0 && (
             <Alert variant="warning">
               <AlertTitle>
                 {withConditions} {withConditions === 1 ? "member has" : "members have"} reported a
@@ -311,7 +306,7 @@ export default async function WalkDetailPage({
             without clocking out, not people still out there.
           */}
           <section className="flex flex-col gap-3">
-            {canAddAttendance && canManageWalks ? (
+            {canAddAttendance && admin.permWalksAttendance ? (
               <div className="flex justify-end">
                 <AddAttendanceButton
                   className="w-full sm:w-auto"
@@ -343,7 +338,8 @@ export default async function WalkDetailPage({
               />
             ) : (
               <WalkAttendanceTable
-                canRemove={!walk.cancelledAt && canManageWalks}
+                canRemove={!walk.cancelledAt && admin.permWalksAttendance}
+                canSeeHealthNotes={admin.permWalksHealth}
                 heading={{ count: stillIn.length, label: isCompleted ? "Attended" : "Attendance" }}
                 rows={stillIn.map(toAttendanceRow)}
                 walkCompleted={isCompleted}
@@ -354,7 +350,8 @@ export default async function WalkDetailPage({
           {clockedOut.length > 0 ? (
             <section className="flex flex-col gap-3">
               <WalkAttendanceTable
-                canRemove={!walk.cancelledAt && canManageWalks}
+                canRemove={!walk.cancelledAt && admin.permWalksAttendance}
+                canSeeHealthNotes={admin.permWalksHealth}
                 heading={{ count: clockedOut.length, label: "Clocked out" }}
                 rows={clockedOut.map(toAttendanceRow)}
                 walkCompleted={isCompleted}
@@ -367,7 +364,7 @@ export default async function WalkDetailPage({
         // (see viewerAttended above) — reached this page via Members
         // access only, and never clocked into this particular walk.
         <EmptyState
-          description="You'll see who's on this walk once you've clocked into it yourself, or if you're given the Walks permission."
+          description="You'll see who's on this walk once you've clocked into it yourself, or if you're given the Attendance permission."
           icon={ClipboardList}
           title="Attendance is private to this walk"
         />
@@ -376,7 +373,7 @@ export default async function WalkDetailPage({
       <Separator />
 
       <WalkJourneyManager
-        canEdit={canEditJourney && canManageWalks}
+        canEdit={canEditJourney && admin.permWalksJourney}
         defaultHappenedAt={journeyDefaultAt}
         events={journeyEvents}
         walkId={walk.id}

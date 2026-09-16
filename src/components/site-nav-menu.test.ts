@@ -74,7 +74,7 @@ describe("navItems with limited organiser permissions", () => {
   });
 
   it("with the Walks permission, Walks still points at the admin dashboard", () => {
-    const items = navItems(true, "/admin", { ...NO_ORGANISER_PERMISSIONS, permWalks: true });
+    const items = navItems(true, "/admin", { ...NO_ORGANISER_PERMISSIONS, permWalksView: true });
     expect(items.find((item) => item.label === "Walks")?.href).toBe("/admin");
   });
 });

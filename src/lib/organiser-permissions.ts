@@ -31,7 +31,15 @@
  * nothing granted is never a state either action will produce.
  */
 export type OrganiserPermissions = {
-  permWalks: boolean;
+  permWalksView: boolean;
+  permWalksCreate: boolean;
+  permWalksEdit: boolean;
+  permWalksCancel: boolean;
+  permWalksDelete: boolean;
+  permWalksAttendance: boolean;
+  permWalksHealth: boolean;
+  permWalksJourney: boolean;
+  permWalksExport: boolean;
   permMembers: boolean;
   permMessages: boolean;
   permReports: boolean;
@@ -45,7 +53,15 @@ export type OrganiserPermissions = {
 };
 
 export const FULL_ORGANISER_PERMISSIONS: OrganiserPermissions = {
-  permWalks: true,
+  permWalksView: true,
+  permWalksCreate: true,
+  permWalksEdit: true,
+  permWalksCancel: true,
+  permWalksDelete: true,
+  permWalksAttendance: true,
+  permWalksHealth: true,
+  permWalksJourney: true,
+  permWalksExport: true,
   permMembers: true,
   permMessages: true,
   permReports: true,
@@ -59,7 +75,15 @@ export const FULL_ORGANISER_PERMISSIONS: OrganiserPermissions = {
 };
 
 export const NO_ORGANISER_PERMISSIONS: OrganiserPermissions = {
-  permWalks: false,
+  permWalksView: false,
+  permWalksCreate: false,
+  permWalksEdit: false,
+  permWalksCancel: false,
+  permWalksDelete: false,
+  permWalksAttendance: false,
+  permWalksHealth: false,
+  permWalksJourney: false,
+  permWalksExport: false,
   permMembers: false,
   permMessages: false,
   permReports: false,
@@ -73,18 +97,66 @@ export const NO_ORGANISER_PERMISSIONS: OrganiserPermissions = {
 };
 
 /** `group` is a UI grouping only (see organiser-permissions-fields.tsx) —
- * every check in this file treats all eleven the same way. */
+ * every check in this file treats all nineteen the same way. */
 export const ORGANISER_PERMISSION_OPTIONS: {
   name: keyof OrganiserPermissions;
   label: string;
   hint: string;
-  group: "Core" | "Settings & homepage";
+  group: "Walks" | "Core" | "Settings & homepage";
 }[] = [
   {
-    name: "permWalks",
-    label: "Walks",
-    hint: "Create, edit, and cancel walks; see rosters and health notes.",
-    group: "Core",
+    name: "permWalksView",
+    label: "View walks",
+    hint: "See the walks admin pages — schedule, roster counts, and journey log.",
+    group: "Walks",
+  },
+  {
+    name: "permWalksCreate",
+    label: "Create walks",
+    hint: "Add new walks to the schedule.",
+    group: "Walks",
+  },
+  {
+    name: "permWalksEdit",
+    label: "Edit walks",
+    hint: "Change an existing walk's time, location, or description.",
+    group: "Walks",
+  },
+  {
+    name: "permWalksCancel",
+    label: "Cancel or end walks",
+    hint: "Cancel a walk before it starts, or end one early.",
+    group: "Walks",
+  },
+  {
+    name: "permWalksDelete",
+    label: "Delete walks",
+    hint: "Permanently remove a walk.",
+    group: "Walks",
+  },
+  {
+    name: "permWalksAttendance",
+    label: "Attendance",
+    hint: "See who's on a walk, and add or remove someone's clock-in.",
+    group: "Walks",
+  },
+  {
+    name: "permWalksHealth",
+    label: "Health notes",
+    hint: "See health or medical condition notes members have reported.",
+    group: "Walks",
+  },
+  {
+    name: "permWalksJourney",
+    label: "Journey updates",
+    hint: "Post live journey updates while a walk is under way.",
+    group: "Walks",
+  },
+  {
+    name: "permWalksExport",
+    label: "Retention & export",
+    hint: "Lock retention on a cancelled walk, and download the attendee roster (CSV).",
+    group: "Walks",
   },
   {
     name: "permMembers",
@@ -193,7 +265,7 @@ export function readOrganiserPermissions(formData: FormData): OrganiserPermissio
  * alike can always open.
  */
 export function walksLandingPath(perms: OrganiserPermissions): string {
-  return perms.permWalks ? "/admin" : "/walks";
+  return perms.permWalksView ? "/admin" : "/walks";
 }
 
 export function pickOrganiserPermissions(user: OrganiserPermissions): OrganiserPermissions {

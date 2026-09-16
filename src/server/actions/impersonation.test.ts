@@ -32,7 +32,15 @@ const ADMIN = {
   lastName: "Min",
   // Full access by default so existing tests exercise the authorized path —
   // see "rejects an organiser without the Members permission" for the guard.
-  permWalks: true,
+  permWalksView: true,
+  permWalksCreate: true,
+  permWalksEdit: true,
+  permWalksCancel: true,
+  permWalksDelete: true,
+  permWalksAttendance: true,
+  permWalksHealth: true,
+  permWalksJourney: true,
+  permWalksExport: true,
   permMembers: true,
   permMessages: true,
   permReports: true,

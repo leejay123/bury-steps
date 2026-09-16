@@ -16,7 +16,15 @@ export type ActionResult =
   | { ok: false; error: string };
 
 const PERMISSION_AREA_LABEL: Record<keyof OrganiserPermissions, string> = {
-  permWalks: "walks",
+  permWalksView: "walks",
+  permWalksCreate: "creating walks",
+  permWalksEdit: "editing walks",
+  permWalksCancel: "cancelling or ending walks",
+  permWalksDelete: "deleting walks",
+  permWalksAttendance: "attendance",
+  permWalksHealth: "health notes",
+  permWalksJourney: "journey updates",
+  permWalksExport: "retention and export",
   permMembers: "members",
   permMessages: "messages",
   permReports: "accident reports",
@@ -39,7 +47,7 @@ const PERMISSION_AREA_LABEL: Record<keyof OrganiserPermissions, string> = {
  * normal form/inline error.
  *
  *   const admin = await requireAdmin();
- *   if (!admin.permWalks) return permissionDenied("permWalks");
+ *   if (!admin.permWalksEdit) return permissionDenied("permWalksEdit");
  */
 export function permissionDenied(permission: keyof OrganiserPermissions): { ok: false; error: string } {
   return { ok: false, error: `You do not have permission to manage ${PERMISSION_AREA_LABEL[permission]}.` };

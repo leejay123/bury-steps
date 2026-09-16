@@ -60,12 +60,17 @@ function stillInLabel(walkCompleted: boolean) {
 
 export function WalkAttendanceTable({
   canRemove = false,
+  canSeeHealthNotes = false,
   heading,
   rows,
   walkCompleted = false,
 }: {
   /** Organiser can delete a mistaken clock-in (not on cancelled walks). */
   canRemove?: boolean;
+  /** permWalksHealth — hides the health-notes row in the detail drawer
+   * entirely for an organiser without it, rather than showing an empty
+   * or placeholder value. */
+  canSeeHealthNotes?: boolean;
   /** Grouped-header strip at the top of the list, same style as the
    * Members list's role sections (see DataListGroupHeader) — "Attendance"
    * or "Clocked out", with a live count. */
@@ -150,8 +155,9 @@ export function WalkAttendanceTable({
           <DrawerHeader>
             <DrawerTitle>{selected?.name ?? "Member"}</DrawerTitle>
             <DrawerDescription>
-              Clock-in details for this walk. Health notes and clock-out reasons are only for
-              organisers.
+              {canSeeHealthNotes
+                ? "Clock-in details for this walk. Health notes are only for organisers with that permission."
+                : "Clock-in details for this walk."}
             </DrawerDescription>
           </DrawerHeader>
           {selected ? (
@@ -175,9 +181,11 @@ export function WalkAttendanceTable({
               {selected.clockedOutReason ? (
                 <Detail label="Clock-out reason">{selected.clockedOutReason}</Detail>
               ) : null}
-              <Detail label="Health notes">
-                {selected.conditions ? selected.conditions : "No conditions reported"}
-              </Detail>
+              {canSeeHealthNotes ? (
+                <Detail label="Health notes">
+                  {selected.conditions ? selected.conditions : "No conditions reported"}
+                </Detail>
+              ) : null}
             </div>
           ) : null}
         </DrawerContent>

@@ -167,7 +167,7 @@ export async function searchAddableMembers(
   query: string,
 ): Promise<{ id: string; label: string }[]> {
   const admin = await requireAdmin();
-  if (!admin.permWalks) return [];
+  if (!admin.permWalksAttendance) return [];
   if (!walkId) return [];
 
   const walk = await prisma.walk.findUnique({
@@ -224,7 +224,7 @@ export async function adminClockIn(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permWalks) return permissionDenied("permWalks");
+  if (!admin.permWalksAttendance) return permissionDenied("permWalksAttendance");
 
   const parsed = adminClockInSchema.safeParse({
     walkId: formData.get("walkId"),
@@ -397,7 +397,7 @@ export async function adminRemoveAttendance(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permWalks) return permissionDenied("permWalks");
+  if (!admin.permWalksAttendance) return permissionDenied("permWalksAttendance");
 
   const parsed = adminRemoveAttendanceSchema.safeParse({
     attendanceId: formData.get("attendanceId"),

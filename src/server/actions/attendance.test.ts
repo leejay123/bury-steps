@@ -68,7 +68,15 @@ const USER = { id: "user-1" };
 // see the "requires the Walks permission" tests for the guard itself.
 const ADMIN = {
   id: "admin-1",
-  permWalks: true,
+  permWalksView: true,
+  permWalksCreate: true,
+  permWalksEdit: true,
+  permWalksCancel: true,
+  permWalksDelete: true,
+  permWalksAttendance: true,
+  permWalksHealth: true,
+  permWalksJourney: true,
+  permWalksExport: true,
   permMembers: true,
   permMessages: true,
   permReports: true,
@@ -243,10 +251,10 @@ describe("adminClockIn", () => {
     expect(transaction).not.toHaveBeenCalled();
   });
 
-  it("rejects an organiser without the Walks permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permWalks: false });
+  it("rejects an organiser without the Attendance permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permWalksAttendance: false });
     const result = await adminClockIn(null, adminClockInForm());
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage walks." });
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage attendance." });
     expect(transaction).not.toHaveBeenCalled();
   });
 
@@ -489,8 +497,8 @@ describe("searchAddableMembers", () => {
     expect(prismaMock.walk.findUnique).not.toHaveBeenCalled();
   });
 
-  it("returns nothing for an organiser without the Walks permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permWalks: false });
+  it("returns nothing for an organiser without the Attendance permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permWalksAttendance: false });
     expect(await searchAddableMembers("walk-1", "jo")).toEqual([]);
     expect(prismaMock.walk.findUnique).not.toHaveBeenCalled();
   });

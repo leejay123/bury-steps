@@ -66,7 +66,20 @@ model User {
   /// 20260911140000_split_organiser_permissions migration, which copied
   /// each old column's value into all of its replacements so no existing
   /// organiser's actual access changed on the day of the split.
-  permWalks       Boolean @default(true)
+  /// Walks was originally one combined column (permWalks) — split into
+  /// nine in the 20260916000000_split_walks_permissions migration (same
+  /// copy-forward pattern as the splits above), so e.g. someone can see
+  /// and manage attendance without also being able to delete a walk or
+  /// see health notes.
+  permWalksView       Boolean @default(true)
+  permWalksCreate     Boolean @default(true)
+  permWalksEdit       Boolean @default(true)
+  permWalksCancel     Boolean @default(true)
+  permWalksDelete     Boolean @default(true)
+  permWalksAttendance Boolean @default(true)
+  permWalksHealth     Boolean @default(true)
+  permWalksJourney    Boolean @default(true)
+  permWalksExport     Boolean @default(true)
   permMembers     Boolean @default(true)
   permMessages    Boolean @default(true)
   permReports     Boolean @default(true)

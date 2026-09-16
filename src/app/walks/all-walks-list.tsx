@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Footprints, Search } from "lucide-react";
 import { formatDate, formatTime, londonYear } from "@/lib/dates";
+import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/empty-state";
 import { ListPagination } from "@/components/list-pagination";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
@@ -14,7 +15,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export type AllWalksRow = {
   id: string;
-  href: string;
+  /** Absent for a cancelled walk when the viewer isn't an organiser with
+   * Walks access — see viewerCanOpenCancelledWalk in page.tsx. Renders as
+   * a greyed-out, unclickable row instead of a link. */
+  href?: string;
   title: string;
   location: string | null;
   startsAt: string;
@@ -130,12 +134,22 @@ export function AllWalksList({ rows }: { rows: AllWalksRow[] }) {
             {paging.paged.map((row) => {
               const startsAt = new Date(row.startsAt);
               return (
-                <div className="relative flex flex-col gap-2 p-4 hover:bg-muted/50" key={row.id}>
+                <div
+                  className={cn(
+                    "relative flex flex-col gap-2 p-4",
+                    row.href ? "hover:bg-muted/50" : "opacity-70",
+                  )}
+                  key={row.id}
+                >
                   <div className="flex items-start justify-between gap-3">
-                    <p className="font-medium">
-                      <Link className="after:absolute after:inset-0" href={row.href}>
-                        {row.title}
-                      </Link>
+                    <p className={cn("font-medium", !row.href && "text-muted-foreground")}>
+                      {row.href ? (
+                        <Link className="after:absolute after:inset-0" href={row.href}>
+                          {row.title}
+                        </Link>
+                      ) : (
+                        row.title
+                      )}
                     </p>
                     <div className="relative z-10 flex shrink-0 items-center gap-2">
                       <WalkStatusBadge
@@ -144,7 +158,9 @@ export function AllWalksList({ rows }: { rows: AllWalksRow[] }) {
                         endedAt={row.endedAt}
                         startsAt={row.startsAt}
                       />
-                      <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                      {row.href ? (
+                        <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                      ) : null}
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground">

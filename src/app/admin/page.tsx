@@ -32,7 +32,7 @@ function toRow(walk: {
 }
 
 export default async function AdminPage() {
-  await requirePermission("permWalks");
+  await requirePermission("permWalksView");
 
   const lookback = upcomingListLookbackFrom();
   const base = {

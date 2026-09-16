@@ -33,10 +33,18 @@ vi.mock("@/lib/auth", async () => {
 import { createJourneyEvent, deleteJourneyEvent, updateJourneyEvent } from "./journey";
 
 // Full access by default so existing tests exercise the authorized path —
-// see the "requires the Walks permission" tests for the guard itself.
+// see the "Journey updates permission" test for the guard itself.
 const ADMIN = {
   id: "admin-1",
-  permWalks: true,
+  permWalksView: true,
+  permWalksCreate: true,
+  permWalksEdit: true,
+  permWalksCancel: true,
+  permWalksDelete: true,
+  permWalksAttendance: true,
+  permWalksHealth: true,
+  permWalksJourney: true,
+  permWalksExport: true,
   permMembers: true,
   permMessages: true,
   permReports: true,
@@ -85,10 +93,10 @@ describe("createJourneyEvent", () => {
     expect(result.ok).toBe(false);
   });
 
-  it("rejects an organiser without the Walks permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permWalks: false });
+  it("rejects an organiser without the Journey updates permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permWalksJourney: false });
     const result = await createJourneyEvent(null, eventForm());
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage walks." });
+    expect(result).toEqual({ ok: false, error: "You do not have permission to manage journey updates." });
   });
 
   it("reports the walk as gone if it no longer exists", async () => {
