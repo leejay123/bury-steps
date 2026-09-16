@@ -83,3 +83,21 @@ export function DataListActions({ className, ...props }: React.ComponentProps<"d
     />
   );
 }
+
+/** A section divider inside a DataList — a grey strip with an uppercase
+ * label and count, sitting as its own `<li>` before the rows it groups
+ * (see MembersTable's role sections, or WalkAttendanceTable's groups). No
+ * `border-t`: every group but the last already ends on a row with its own
+ * `border-b` (DataListItem), so adding one here too doubled up into two
+ * hairlines stacked back to back between groups. */
+export function DataListGroupHeader({ count, label }: { count: number; label: string }) {
+  return (
+    <li
+      aria-hidden
+      className="flex items-baseline gap-1.5 border-b bg-muted/50 px-3 py-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+    >
+      {label}
+      <span className="text-xs font-normal normal-case text-muted-foreground/80">({count})</span>
+    </li>
+  );
+}

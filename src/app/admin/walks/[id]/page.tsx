@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ClipboardList, CalendarPlus, Download } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireAnyPermission, displayName } from "@/lib/auth";
+import { isOwner } from "@/lib/site-owner";
 import { formatWalkDate, utcToLondonWallClock } from "@/lib/dates";
 import { canOrganiserAddAttendance, canOrganiserEditJourney, canAddWalkToCalendar, isWalkScheduleLocked, walkStatus } from "@/lib/walk-window";
 import { appUrl } from "@/lib/urls";
@@ -83,6 +84,36 @@ export default async function WalkDetailPage({
 
   if (!walk) notFound();
 
+  // A cancelled walk's full admin view stays owner/Walks-permission
+  // territory even for someone here via Members access — but this isn't a
+  // "page doesn't exist" situation (they got here from a real link, e.g.
+  // a member's own walk history — see the greyed-out row in
+  // src/app/admin/members/[id]/page.tsx), so it's honest about what
+  // happened rather than a bare 404.
+  if (walk.cancelledAt && !canManageWalks && !(await isOwner(admin.id))) {
+    return (
+      <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
+        <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">
+          &larr; All walks
+        </Link>
+        <Alert variant="destructive">
+          <AlertTitle>This walk has been cancelled</AlertTitle>
+          <AlertDescription>
+            {walk.cancelledReason || "Check with an organiser who has Walks access for details."}
+          </AlertDescription>
+        </Alert>
+        <Card>
+          <CardHeader className="flex flex-col gap-1.5">
+            <CardTitle className="text-2xl">{walk.title}</CardTitle>
+            <CardDescription>
+              {formatWalkDate(walk.startsAt)} · {walk.durationMins} min
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
   const slug = await ensureWalkSlug(walk);
   const meeting = meetingPointLabel(walk.location, walk.postcode);
   const attendances = walk.attendances;
@@ -132,7 +163,12 @@ export default async function WalkDetailPage({
         &larr; All walks
       </Link>
 
-      {isCompleted ? (
+      {/* Only tells someone what THEY can still do about it — an
+          organiser without Walks access can't cancel, edit, or add a
+          forgotten clock-in either, so this stays silent for them rather
+          than describing tools they don't have (the status badge above
+          already says "Completed"). */}
+      {isCompleted && canManageWalks ? (
         <Alert variant="info">
           <AlertDescription>
             This walk has finished, so it can no longer be cancelled or edited. If someone was
@@ -275,25 +311,15 @@ export default async function WalkDetailPage({
             without clocking out, not people still out there.
           */}
           <section className="flex flex-col gap-3">
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-              <h2 className="text-sm font-medium text-muted-foreground">
-                {isCompleted ? "Attended" : "Attendance"}
-              </h2>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm tabular-nums text-muted-foreground">
-                  {isCompleted
-                    ? `${stillIn.length} stayed for the full walk · Click a row for details`
-                    : `${stillIn.length} on the walk · Click a row for details`}
-                </span>
-                {canAddAttendance && canManageWalks ? (
-                  <AddAttendanceButton
-                    className="w-full sm:w-auto"
-                    walkCompleted={isCompleted}
-                    walkId={walk.id}
-                  />
-                ) : null}
+            {canAddAttendance && canManageWalks ? (
+              <div className="flex justify-end">
+                <AddAttendanceButton
+                  className="w-full sm:w-auto"
+                  walkCompleted={isCompleted}
+                  walkId={walk.id}
+                />
               </div>
-            </div>
+            ) : null}
 
             {stillIn.length === 0 ? (
               <EmptyState
@@ -318,6 +344,7 @@ export default async function WalkDetailPage({
             ) : (
               <WalkAttendanceTable
                 canRemove={!walk.cancelledAt && canManageWalks}
+                heading={{ count: stillIn.length, label: isCompleted ? "Attended" : "Attendance" }}
                 rows={stillIn.map(toAttendanceRow)}
                 walkCompleted={isCompleted}
               />
@@ -326,15 +353,9 @@ export default async function WalkDetailPage({
 
           {clockedOut.length > 0 ? (
             <section className="flex flex-col gap-3">
-              <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
-                <h2 className="text-sm font-medium text-muted-foreground">Clocked out</h2>
-                <span className="text-sm tabular-nums text-muted-foreground">
-                  {clockedOut.length} {clockedOut.length === 1 ? "person" : "people"} · left early
-                  or after finishing · click a row for details
-                </span>
-              </div>
               <WalkAttendanceTable
                 canRemove={!walk.cancelledAt && canManageWalks}
+                heading={{ count: clockedOut.length, label: "Clocked out" }}
                 rows={clockedOut.map(toAttendanceRow)}
                 walkCompleted={isCompleted}
               />

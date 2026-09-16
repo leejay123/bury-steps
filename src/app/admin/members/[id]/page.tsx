@@ -35,6 +35,10 @@ export default async function MemberDetailPage({
   ]);
   if (!member) notFound();
   const viewerIsOwner = viewer.id === ownerId;
+  // A cancelled walk's admin page is owner/Walks-permission territory
+  // (see src/app/admin/walks/[id]/page.tsx) — a row for one shouldn't
+  // promise a destination a Members-only viewer can't actually open.
+  const viewerCanOpenCancelledWalk = viewer.permWalks || viewerIsOwner;
 
   const joinedAt = new Date(member.createdAt);
   const attendanceCount = member.attendanceCount;
@@ -140,7 +144,10 @@ export default async function MemberDetailPage({
                 durationMins: item.durationMins,
                 endedAt: item.endedAt ? new Date(item.endedAt) : null,
               }) === "completed",
-            href: `/admin/walks/${item.walkId}`,
+            href:
+              item.cancelledAt && !viewerCanOpenCancelledWalk
+                ? undefined
+                : `/admin/walks/${item.walkId}`,
           }))}
         />
       </section>

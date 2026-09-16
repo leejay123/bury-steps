@@ -22,6 +22,7 @@ import {
   DataList,
   DataListActions,
   DataListBody,
+  DataListGroupHeader,
   DataListItem,
   DataListItemMain,
   dataListActionsStackClassName,
@@ -80,25 +81,6 @@ function MemberRowSkeleton() {
         <Skeleton className="h-7 w-20 rounded-md" />
       </DataListActions>
     </DataListItem>
-  );
-}
-
-/** A section divider between role groups (Owner / Organisers / Members) —
- * only rendered when the current rows span more than one group, since the
- * whole point is to replace the old per-row role badge: with just one
- * group showing, a header would be redundant with the Role filter above. */
-function MemberGroupHeader({ count, label }: { count: number; label: string }) {
-  return (
-    // No `border-t` here: every group but the last already ends on a row
-    // with its own `border-b` (DataListItem), so adding one here as well
-    // doubled up into two hairlines stacked back to back between groups.
-    <li
-      aria-hidden
-      className="flex items-baseline gap-1.5 border-b bg-muted/50 px-3 py-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
-    >
-      {label}
-      <span className="text-xs font-normal normal-case text-muted-foreground/80">({count})</span>
-    </li>
   );
 }
 
@@ -452,7 +434,7 @@ export function MembersTable({
   // Group the current page's rows into Owner / Organisers / Members
   // sections, in that fixed order, keeping each group's own current sort
   // order intact. This is what replaced the old per-row role badge — see
-  // MemberGroupHeader. With a role filter active there's usually only one
+  // DataListGroupHeader. With a role filter active there's usually only one
   // group, so the header (redundant with the Role select above) is
   // skipped entirely.
   const groupedRows = GROUP_ORDER.map(({ key, label }) => ({
@@ -569,7 +551,7 @@ export function MembersTable({
               : groupedRows.map((group) => (
                   <Fragment key={group.key}>
                     {showGroupHeaders ? (
-                      <MemberGroupHeader count={group.members.length} label={group.label} />
+                      <DataListGroupHeader count={group.members.length} label={group.label} />
                     ) : null}
                     {group.members.map((member) => (
                       <MemberListRow

@@ -182,9 +182,15 @@ function HistoryList({ rows }: { rows: AttendanceHistoryRow[] }) {
       {rows.map((row) => {
         const startsAt = new Date(row.startsAt);
         return (
-          <div className={cn("relative flex flex-col gap-2 p-4", row.href && "hover:bg-muted/50")} key={row.id}>
+          <div
+            className={cn(
+              "relative flex flex-col gap-2 p-4",
+              row.href ? "hover:bg-muted/50" : "opacity-70",
+            )}
+            key={row.id}
+          >
             <div className="flex items-start justify-between gap-3">
-              <p className="font-medium">
+              <p className={cn("font-medium", !row.href && "text-muted-foreground")}>
                 {row.href ? (
                   <Link className="after:absolute after:inset-0" href={row.href}>
                     {row.title}

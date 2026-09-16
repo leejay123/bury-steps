@@ -8,6 +8,7 @@ import {
   DataList,
   DataListActions,
   DataListBody,
+  DataListGroupHeader,
   DataListItem,
   DataListItemMain,
   dataListActionsStackClassName,
@@ -58,20 +59,28 @@ function stillInLabel(walkCompleted: boolean) {
 }
 
 export function WalkAttendanceTable({
+  canRemove = false,
+  heading,
   rows,
   walkCompleted = false,
-  canRemove = false,
 }: {
+  /** Organiser can delete a mistaken clock-in (not on cancelled walks). */
+  canRemove?: boolean;
+  /** Grouped-header strip at the top of the list, same style as the
+   * Members list's role sections (see DataListGroupHeader) — "Attendance"
+   * or "Clocked out", with a live count. */
+  heading: { count: number; label: string };
   rows: WalkAttendanceRow[];
   /** Pass true once the walk's clock-in window has fully closed. */
   walkCompleted?: boolean;
-  /** Organiser can delete a mistaken clock-in (not on cancelled walks). */
-  canRemove?: boolean;
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
-  const selected = rows.find((row) => row.id === openId) ?? null;
+  // A-Z by name, same ordering the Members list uses — clock time is still
+  // visible per-row, just not what determines row order any more.
+  const sortedRows = [...rows].sort((a, b) => a.name.localeCompare(b.name));
+  const selected = sortedRows.find((row) => row.id === openId) ?? null;
   const listRef = useRef<HTMLDivElement>(null);
-  const paging = usePagedList(rows);
+  const paging = usePagedList(sortedRows);
 
   useResetOnChange([openId, rows], () => {
     if (openId && !rows.some((row) => row.id === openId)) {
@@ -82,6 +91,7 @@ export function WalkAttendanceTable({
   return (
     <div className="flex flex-col gap-4" ref={listRef}>
       <DataList>
+        <DataListGroupHeader count={heading.count} label={heading.label} />
         {paging.paged.map((row) => (
           <DataListItem
             className={dataListItemStackClassName}
