@@ -89,6 +89,13 @@ export default async function WalkDetailPage({
   const stillIn = attendances.filter((a) => !a.clockedOutAt);
   const clockedOut = attendances.filter((a) => a.clockedOutAt);
   const withConditions = attendances.filter((a) => a.conditions).length;
+  // Same rule the public walk page already applies to an ordinary member
+  // (see getWalkMemberNames in src/app/w/[token]/page.tsx: names only show
+  // once *you've* clocked into that walk) — an organiser here only via
+  // Members access sees the attendee list the same way a member would,
+  // not the full roster just because they can open the page.
+  const viewerAttended = attendances.some((a) => a.userId === admin.id);
+  const canSeeAttendance = canManageWalks || viewerAttended;
   const status = walkStatus(walk);
   const isCompleted = status === "completed";
   const scheduleLocked = isWalkScheduleLocked(walk.startsAt);
@@ -239,98 +246,111 @@ export default async function WalkDetailPage({
 
       <Separator />
 
-      {withConditions > 0 && (
-        <Alert variant="warning">
-          <AlertTitle>
-            {withConditions} {withConditions === 1 ? "member has" : "members have"} reported a
-            condition
-          </AlertTitle>
-          <AlertDescription>
-            Read these before setting off. They are deleted 90 days after the walk.
-          </AlertDescription>
-        </Alert>
-      )}
+      {canSeeAttendance ? (
+        <>
+          {withConditions > 0 && (
+            <Alert variant="warning">
+              <AlertTitle>
+                {withConditions} {withConditions === 1 ? "member has" : "members have"} reported a
+                condition
+              </AlertTitle>
+              <AlertDescription>
+                Read these before setting off. They are deleted 90 days after the walk.
+              </AlertDescription>
+            </Alert>
+          )}
 
-      {/*
-        Split into two lists rather than one merged table: "Attendance" is
-        who is on the walk right now, full stop — someone who clocked out
-        has left, so they no longer belong there, even with a badge. Their
-        record isn't lost (it's still in Clocked out below, in their walk
-        history, and in the CSV export) but the live headcount and the rows
-        under it now always agree, instead of the header saying "1 on the
-        walk" while the table still lists 2 people.
+          {/*
+            Split into two lists rather than one merged table: "Attendance" is
+            who is on the walk right now, full stop — someone who clocked out
+            has left, so they no longer belong there, even with a badge. Their
+            record isn't lost (it's still in Clocked out below, in their walk
+            history, and in the CSV export) but the live headcount and the rows
+            under it now always agree, instead of the header saying "1 on the
+            walk" while the table still lists 2 people.
 
-        Once the walk is completed, "on the walk" stops being true for
-        anyone — the walk is over — so this section relabels itself to
-        "Attended": these are the people who stayed for the whole thing
-        without clocking out, not people still out there.
-      */}
-      <section className="flex flex-col gap-3">
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-          <h2 className="text-sm font-medium text-muted-foreground">
-            {isCompleted ? "Attended" : "Attendance"}
-          </h2>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm tabular-nums text-muted-foreground">
-              {isCompleted
-                ? `${stillIn.length} stayed for the full walk · Click a row for details`
-                : `${stillIn.length} on the walk · Click a row for details`}
-            </span>
-            {canAddAttendance && canManageWalks ? (
-              <AddAttendanceButton
-                className="w-full sm:w-auto"
-                walkCompleted={isCompleted}
-                walkId={walk.id}
+            Once the walk is completed, "on the walk" stops being true for
+            anyone — the walk is over — so this section relabels itself to
+            "Attended": these are the people who stayed for the whole thing
+            without clocking out, not people still out there.
+          */}
+          <section className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+              <h2 className="text-sm font-medium text-muted-foreground">
+                {isCompleted ? "Attended" : "Attendance"}
+              </h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm tabular-nums text-muted-foreground">
+                  {isCompleted
+                    ? `${stillIn.length} stayed for the full walk · Click a row for details`
+                    : `${stillIn.length} on the walk · Click a row for details`}
+                </span>
+                {canAddAttendance && canManageWalks ? (
+                  <AddAttendanceButton
+                    className="w-full sm:w-auto"
+                    walkCompleted={isCompleted}
+                    walkId={walk.id}
+                  />
+                ) : null}
+              </div>
+            </div>
+
+            {stillIn.length === 0 ? (
+              <EmptyState
+                description={
+                  walk.attendances.length === 0
+                    ? isCompleted
+                      ? "Nobody clocked in for this walk. If someone was there, use Add someone."
+                      : "Share the link above with the group."
+                    : isCompleted
+                      ? "Everyone who clocked in also clocked out before the walk finished."
+                      : "Everyone who clocked in has since clocked out."
+                }
+                icon={ClipboardList}
+                title={
+                  walk.attendances.length === 0
+                    ? "Nobody has clocked in yet"
+                    : isCompleted
+                      ? "Nobody stayed to the end"
+                      : "Nobody is on the walk right now"
+                }
               />
-            ) : null}
-          </div>
-        </div>
+            ) : (
+              <WalkAttendanceTable
+                canRemove={!walk.cancelledAt && canManageWalks}
+                rows={stillIn.map(toAttendanceRow)}
+                walkCompleted={isCompleted}
+              />
+            )}
+          </section>
 
-        {stillIn.length === 0 ? (
-          <EmptyState
-            description={
-              walk.attendances.length === 0
-                ? isCompleted
-                  ? "Nobody clocked in for this walk. If someone was there, use Add someone."
-                  : "Share the link above with the group."
-                : isCompleted
-                  ? "Everyone who clocked in also clocked out before the walk finished."
-                  : "Everyone who clocked in has since clocked out."
-            }
-            icon={ClipboardList}
-            title={
-              walk.attendances.length === 0
-                ? "Nobody has clocked in yet"
-                : isCompleted
-                  ? "Nobody stayed to the end"
-                  : "Nobody is on the walk right now"
-            }
-          />
-        ) : (
-          <WalkAttendanceTable
-            canRemove={!walk.cancelledAt && canManageWalks}
-            rows={stillIn.map(toAttendanceRow)}
-            walkCompleted={isCompleted}
-          />
-        )}
-      </section>
-
-      {clockedOut.length > 0 ? (
-        <section className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
-            <h2 className="text-sm font-medium text-muted-foreground">Clocked out</h2>
-            <span className="text-sm tabular-nums text-muted-foreground">
-              {clockedOut.length} {clockedOut.length === 1 ? "person" : "people"} · left early or
-              after finishing · click a row for details
-            </span>
-          </div>
-          <WalkAttendanceTable
-            canRemove={!walk.cancelledAt && canManageWalks}
-            rows={clockedOut.map(toAttendanceRow)}
-            walkCompleted={isCompleted}
-          />
-        </section>
-      ) : null}
+          {clockedOut.length > 0 ? (
+            <section className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
+                <h2 className="text-sm font-medium text-muted-foreground">Clocked out</h2>
+                <span className="text-sm tabular-nums text-muted-foreground">
+                  {clockedOut.length} {clockedOut.length === 1 ? "person" : "people"} · left early
+                  or after finishing · click a row for details
+                </span>
+              </div>
+              <WalkAttendanceTable
+                canRemove={!walk.cancelledAt && canManageWalks}
+                rows={clockedOut.map(toAttendanceRow)}
+                walkCompleted={isCompleted}
+              />
+            </section>
+          ) : null}
+        </>
+      ) : (
+        // Same boundary the public walk page draws for an ordinary member
+        // (see viewerAttended above) — reached this page via Members
+        // access only, and never clocked into this particular walk.
+        <EmptyState
+          description="You'll see who's on this walk once you've clocked into it yourself, or if you're given the Walks permission."
+          icon={ClipboardList}
+          title="Attendance is private to this walk"
+        />
+      )}
 
       <Separator />
 
