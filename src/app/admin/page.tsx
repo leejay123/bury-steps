@@ -32,7 +32,7 @@ function toRow(walk: {
 }
 
 export default async function AdminPage() {
-  await requirePermission("permWalksView");
+  const admin = await requirePermission("permWalksView");
 
   const lookback = upcomingListLookbackFrom();
   const base = {
@@ -78,15 +78,19 @@ export default async function AdminPage() {
 
   return (
     <div className="flex flex-col gap-8 px-4 py-6 md:px-6">
-      <section className="flex flex-col gap-4">
-        <AdminPageIntro
-          description="A share link is generated automatically. People must be signed in to clock in. If they do not have an account yet, they create one first. If they already have one, they sign in. The link brings them back to this walk afterwards."
-          title="Create a walk"
-        />
-        <CreateWalkForm />
-      </section>
+      {admin.permWalksCreate ? (
+        <>
+          <section className="flex flex-col gap-4">
+            <AdminPageIntro
+              description="A share link is generated automatically. People must be signed in to clock in. If they do not have an account yet, they create one first. If they already have one, they sign in. The link brings them back to this walk afterwards."
+              title="Create a walk"
+            />
+            <CreateWalkForm />
+          </section>
 
-      <Separator />
+          <Separator />
+        </>
+      ) : null}
 
       <section className="flex flex-col gap-4">
         <AdminPageIntro
