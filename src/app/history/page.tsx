@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { isWalkHistoryReady, walkStatus } from "@/lib/walk-window";
@@ -14,11 +13,12 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function WalkHistoryPage() {
+  // This is about the viewer's own clock-ins, not an admin capability — an
+  // organiser or the owner who personally walks wants to see their own
+  // history too, same as a plain member. The account menu (SiteUserButton)
+  // already links here unconditionally for every role; this used to bounce
+  // an admin straight back to /admin without ever showing it.
   const user = await requireUser();
-
-  if (user.role === "ADMIN") {
-    redirect("/admin");
-  }
 
   const [attendances, totalCount] = await Promise.all([
     prisma.attendance.findMany({
