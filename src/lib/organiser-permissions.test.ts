@@ -37,7 +37,12 @@ describe("hasAnySettingsPermission", () => {
     // Core permissions don't count — Walks/Members/Messages/Reports aren't
     // part of the Settings hub.
     expect(
-      hasAnySettingsPermission({ ...NONE, permWalksView: true, permMembers: true, permReports: true }),
+      hasAnySettingsPermission({
+        ...NONE,
+        permWalksView: true,
+        permMembersView: true,
+        permReports: true,
+      }),
     ).toBe(false);
   });
 
@@ -55,7 +60,7 @@ describe("walksLandingPath", () => {
 
   it("goes to the ordinary member Walks page otherwise", () => {
     expect(walksLandingPath(NONE)).toBe("/walks");
-    expect(walksLandingPath({ ...NONE, permMembers: true })).toBe("/walks");
+    expect(walksLandingPath({ ...NONE, permMembersView: true })).toBe("/walks");
   });
 });
 
@@ -67,8 +72,10 @@ describe("describeOrganiserPermissions", () => {
   });
 
   it("names only what's granted for a single permission", () => {
-    const result = describeOrganiserPermissions({ ...NONE, permMembers: true });
-    expect(result).toBe("You'll be able to view the member list, and remove a member's account.");
+    const result = describeOrganiserPermissions({ ...NONE, permMembersView: true });
+    expect(result).toBe(
+      "You'll be able to see the member list, walk history, and resend or cancel an invite.",
+    );
   });
 
   it("joins multiple granted permissions with a final 'and'", () => {

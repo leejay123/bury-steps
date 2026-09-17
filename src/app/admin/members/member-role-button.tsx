@@ -22,7 +22,7 @@ import {
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { OrganiserPermissionFields } from "./organiser-permissions-fields";
 import {
-  FULL_ORGANISER_PERMISSIONS,
+  DEFAULT_INVITE_PERMISSIONS,
   hasAnyPermission,
   type OrganiserPermissions,
 } from "@/lib/organiser-permissions";
@@ -212,7 +212,7 @@ function PromoteDrawer({
 
 export function MemberRoleButton({
   hideTrigger = false,
-  initialPermissions = FULL_ORGANISER_PERMISSIONS,
+  initialPermissions = DEFAULT_INVITE_PERMISSIONS,
   inviteRequired = false,
   name,
   onChanged,

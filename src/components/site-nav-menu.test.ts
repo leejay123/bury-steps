@@ -28,7 +28,7 @@ describe("navItems", () => {
 describe("navItems with limited organiser permissions", () => {
   it("hides each section behind its own permission, keeps Guide unconditional", () => {
     expect(
-      navItems(true, "/admin", { ...NO_ORGANISER_PERMISSIONS, permMembers: true }).map(
+      navItems(true, "/admin", { ...NO_ORGANISER_PERMISSIONS, permMembersView: true }).map(
         (item) => item.href,
       ),
     ).toEqual(["/", "/walks", "/notices", "/progress", "/admin/members", "/admin/guide"]);

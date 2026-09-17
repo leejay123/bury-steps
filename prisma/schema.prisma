@@ -80,7 +80,12 @@ model User {
   permWalksHealth     Boolean @default(true)
   permWalksJourney    Boolean @default(true)
   permWalksExport     Boolean @default(true)
-  permMembers     Boolean @default(true)
+  /// Members split into two — View (list, search, invite resend/cancel,
+  /// walk-history) and Remove (delete a plain member's account, log in as
+  /// one) — in the 20260917000000_split_members_permissions migration,
+  /// same copy-forward pattern as the Walks split above.
+  permMembersView   Boolean @default(true)
+  permMembersRemove Boolean @default(true)
   permMessages    Boolean @default(true)
   permReports     Boolean @default(true)
   permHomepage    Boolean @default(true)

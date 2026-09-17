@@ -41,7 +41,8 @@ const ADMIN = {
   permWalksHealth: true,
   permWalksJourney: true,
   permWalksExport: true,
-  permMembers: true,
+  permMembersView: true,
+  permMembersRemove: true,
   permMessages: true,
   permReports: true,
   permHomepage: true,
@@ -74,10 +75,13 @@ beforeEach(() => {
 });
 
 describe("startImpersonation", () => {
-  it("rejects an organiser without the Members permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembers: false });
+  it("rejects an organiser without the Remove members permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembersRemove: false });
     const result = await startImpersonation(null, form({ targetId: MEMBER.id }));
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage members." });
+    expect(result).toEqual({
+      ok: false,
+      error: "You do not have permission to manage removing a member's account.",
+    });
     expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
   });
 

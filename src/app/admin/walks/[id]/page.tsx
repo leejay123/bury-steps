@@ -44,7 +44,7 @@ export default async function WalkDetailPage({
   // actual capability below (edit, cancel, delete, attendance, health
   // notes, journey, export, …) is now its own permission, checked
   // individually — see the nine permWalks* fields in organiser-permissions.ts.
-  const admin = await requireAnyPermission(["permWalksView", "permMembers"]);
+  const admin = await requireAnyPermission(["permWalksView", "permMembersView"]);
   const { id } = await params;
 
   const walk = await prisma.walk.findUnique({

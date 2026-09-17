@@ -22,7 +22,7 @@ export default async function MemberDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const viewer = await requirePermission("permMembers");
+  const viewer = await requirePermission("permMembersView");
   const { id } = await params;
 
   const [member, setting, ownerId] = await Promise.all([
@@ -92,6 +92,7 @@ export default async function MemberDetailPage({
             pendingInvite={member.pendingInvite}
             permissions={member.permissions}
             role={member.role}
+            viewerCanRemoveMembers={viewer.permMembersRemove}
             viewerIsOwner={viewerIsOwner}
             walkCount={member.walkCount}
           />

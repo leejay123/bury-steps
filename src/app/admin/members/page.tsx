@@ -22,7 +22,7 @@ export default async function MembersPage({
 }: {
   searchParams: Promise<{ role?: string }>;
 }) {
-  const admin = await requirePermission("permMembers");
+  const admin = await requirePermission("permMembersView");
   const params = await searchParams;
   const role = parseRoleFilter(params.role);
 
@@ -62,6 +62,7 @@ export default async function MembersPage({
           initialTotal={total}
           inviteRequired={setting?.organiserInviteRequired ?? false}
           roleFilter={role}
+          viewerCanRemoveMembers={admin.permMembersRemove}
           viewerId={admin.id}
           viewerIsOwner={admin.id === ownerId}
         />

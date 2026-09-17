@@ -103,7 +103,8 @@ const ADMIN = {
   permWalksHealth: true,
   permWalksJourney: true,
   permWalksExport: true,
-  permMembers: true,
+  permMembersView: true,
+  permMembersRemove: true,
   permMessages: true,
   permReports: true,
   permHomepage: true,
@@ -132,15 +133,18 @@ beforeEach(() => {
 });
 
 describe("deleteMember", () => {
-  it("rejects an organiser without the Members permission from removing a plain member", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembers: false });
+  it("rejects an organiser without the Remove members permission from removing a plain member", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembersRemove: false });
     prismaMock.user.findUnique.mockResolvedValueOnce({
       id: "member-1",
       role: "MEMBER",
       clerkId: "clerk-member-1",
     });
     const result = await deleteMember(null, deleteMemberForm({ userId: "member-1", confirm: "confirm" }));
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage members." });
+    expect(result).toEqual({
+      ok: false,
+      error: "You do not have permission to manage removing a member's account.",
+    });
     expect(prismaMock.user.delete).not.toHaveBeenCalled();
   });
 
@@ -582,7 +586,8 @@ describe("setMemberRole", () => {
         permWalksHealth: "on",
         permWalksJourney: "on",
         permWalksExport: "on",
-        permMembers: "on",
+        permMembersView: "on",
+        permMembersRemove: "on",
       }),
     );
 
@@ -599,7 +604,8 @@ describe("setMemberRole", () => {
         permWalksHealth: true,
         permWalksJourney: true,
         permWalksExport: true,
-        permMembers: true,
+        permMembersView: true,
+        permMembersRemove: true,
         permMessages: false,
         permReports: false,
         permHomepage: false,
@@ -644,8 +650,8 @@ describe("getMemberHistory", () => {
     expect(result).toBeNull();
   });
 
-  it("returns null for an organiser without the Members permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembers: false });
+  it("returns null for an organiser without the View members permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembersView: false });
     const result = await getMemberHistory(ADMIN.id);
     expect(result).toBeNull();
     expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
@@ -670,7 +676,8 @@ describe("getMemberHistory", () => {
       permWalksHealth: true,
       permWalksJourney: true,
       permWalksExport: true,
-      permMembers: true,
+      permMembersView: true,
+      permMembersRemove: true,
       permMessages: true,
       permReports: true,
       permHomepage: true,
@@ -722,7 +729,8 @@ describe("getMemberHistory", () => {
         permWalksHealth: true,
         permWalksJourney: true,
         permWalksExport: true,
-        permMembers: true,
+        permMembersView: true,
+        permMembersRemove: true,
         permMessages: true,
         permReports: true,
         permHomepage: true,
@@ -753,8 +761,8 @@ describe("getMemberHistory", () => {
 });
 
 describe("searchMembers", () => {
-  it("returns an empty page for an organiser without the Members permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembers: false });
+  it("returns an empty page for an organiser without the View members permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembersView: false });
     const result = await searchMembers({ role: "all" });
     expect(result).toEqual({ rows: [], total: 0 });
     expect(prismaMock.user.findMany).not.toHaveBeenCalled();
@@ -777,7 +785,8 @@ describe("searchMembers", () => {
       permWalksHealth: true,
       permWalksJourney: true,
       permWalksExport: true,
-      permMembers: true,
+      permMembersView: true,
+      permMembersRemove: true,
       permMessages: true,
       permReports: true,
       permHomepage: true,
@@ -836,7 +845,8 @@ describe("searchMembers", () => {
           permWalksHealth: true,
           permWalksJourney: true,
           permWalksExport: true,
-          permMembers: true,
+          permMembersView: true,
+          permMembersRemove: true,
           permMessages: true,
           permReports: true,
           permHomepage: true,
@@ -1073,7 +1083,8 @@ describe("setMemberRole — organiser invite required", () => {
         permWalksHealth: true,
         permWalksJourney: true,
         permWalksExport: true,
-        permMembers: false,
+        permMembersView: false,
+        permMembersRemove: false,
         permMessages: false,
         permReports: false,
         permHomepage: false,
@@ -1095,7 +1106,8 @@ describe("setMemberRole — organiser invite required", () => {
       permWalksHealth: true,
       permWalksJourney: true,
       permWalksExport: true,
-      permMembers: false,
+      permMembersView: false,
+      permMembersRemove: false,
       permMessages: false,
       permReports: false,
       permHomepage: false,
@@ -1129,8 +1141,8 @@ describe("setMemberRole — organiser invite required", () => {
 });
 
 describe("resendOrganiserInvite", () => {
-  it("rejects an organiser without the Members permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembers: false });
+  it("rejects an organiser without the View members permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembersView: false });
     const result = await resendOrganiserInvite(null, roleForm({ userId: "member-1" }));
     expect(result).toEqual({ ok: false, error: "You do not have permission to manage members." });
     expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
@@ -1178,7 +1190,8 @@ describe("resendOrganiserInvite", () => {
       permWalksHealth: true,
       permWalksJourney: true,
       permWalksExport: true,
-      permMembers: false,
+      permMembersView: false,
+      permMembersRemove: false,
       permMessages: true,
       permReports: false,
       permHomepage: false,
@@ -1212,7 +1225,8 @@ describe("resendOrganiserInvite", () => {
       permWalksHealth: true,
       permWalksJourney: true,
       permWalksExport: true,
-      permMembers: false,
+      permMembersView: false,
+      permMembersRemove: false,
       permMessages: true,
       permReports: false,
       permHomepage: false,
@@ -1302,7 +1316,8 @@ describe("setOrganiserPermissions", () => {
         permWalksHealth: true,
         permWalksJourney: true,
         permWalksExport: true,
-        permMembers: false,
+        permMembersView: false,
+        permMembersRemove: false,
         permMessages: false,
         permReports: false,
         permHomepage: false,
@@ -1422,8 +1437,8 @@ describe("transferOwnership", () => {
 });
 
 describe("cancelOrganiserInvite", () => {
-  it("rejects an organiser without the Members permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembers: false });
+  it("rejects an organiser without the View members permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembersView: false });
     const result = await cancelOrganiserInvite(null, roleForm({ userId: "member-1" }));
     expect(result).toEqual({ ok: false, error: "You do not have permission to manage members." });
     expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
@@ -1532,7 +1547,8 @@ describe("acceptOrganiserInvite", () => {
       permWalksHealth: true,
       permWalksJourney: true,
       permWalksExport: true,
-      permMembers: false,
+      permMembersView: false,
+      permMembersRemove: false,
       permMessages: false,
       permReports: false,
       permHomepage: false,
@@ -1588,7 +1604,8 @@ describe("acceptOrganiserInvite", () => {
       permWalksHealth: false,
       permWalksJourney: false,
       permWalksExport: false,
-      permMembers: false,
+      permMembersView: false,
+      permMembersRemove: false,
       permMessages: true,
       permReports: false,
       permHomepage: false,

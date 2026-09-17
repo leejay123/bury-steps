@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import type { OrganiserPermissions } from "@/lib/organiser-permissions";
+import { DEFAULT_INVITE_PERMISSIONS, type OrganiserPermissions } from "@/lib/organiser-permissions";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DeleteMemberButton } from "../delete-member-button";
 import { EditPermissionsButton } from "../edit-permissions-button";
@@ -34,6 +34,7 @@ export function MemberDetailActions({
   pendingInvite,
   permissions,
   role,
+  viewerCanRemoveMembers,
   viewerIsOwner,
   walkCount,
 }: {
@@ -45,6 +46,10 @@ export function MemberDetailActions({
   pendingInvite: { sentAt: string; expiresAt: string; expired: boolean } | null;
   permissions: OrganiserPermissions;
   role: "ADMIN" | "MEMBER";
+  /** permMembersRemove — gates removing a plain member's account and
+   * logging in as one. Removing an organiser stays owner-only regardless
+   * (see viewerIsOwner below), same as the server action's own check. */
+  viewerCanRemoveMembers: boolean;
   viewerIsOwner: boolean;
   walkCount: number;
 }) {
@@ -115,7 +120,12 @@ export function MemberDetailActions({
       hiddenWidget: (
         <MemberRoleButton
           hideTrigger
-          initialPermissions={permissions}
+          // Promoting starts from the safer "walk helper" default
+          // (DEFAULT_INVITE_PERMISSIONS) rather than whatever's sitting
+          // in this MEMBER row's dormant, never-used permission columns
+          // — demoting keeps passing their real current permissions,
+          // which still matters there.
+          initialPermissions={promoting ? DEFAULT_INVITE_PERMISSIONS : permissions}
           inviteRequired={inviteRequired}
           key="role-hidden"
           name={name}
@@ -168,7 +178,7 @@ export function MemberDetailActions({
     }
   }
 
-  if (!isYou && (role !== "ADMIN" || viewerIsOwner)) {
+  if (!isYou && (role === "ADMIN" ? viewerIsOwner : viewerCanRemoveMembers)) {
     const deleteRef: { current: HTMLButtonElement | null } = { current: null };
     actions.push({
       key: "delete",
@@ -194,7 +204,9 @@ export function MemberDetailActions({
 
   return (
     <div className="flex flex-wrap gap-2 sm:shrink-0 sm:justify-end">
-      {role === "MEMBER" && !pendingInvite ? <ImpersonateButton name={name} userId={id} /> : null}
+      {role === "MEMBER" && !pendingInvite && viewerCanRemoveMembers ? (
+        <ImpersonateButton name={name} userId={id} />
+      ) : null}
       {actions.length > 0 ? (
         <MemberRowActionsMenu>{actions.map((a) => a.menuItem)}</MemberRowActionsMenu>
       ) : null}

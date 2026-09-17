@@ -25,7 +25,7 @@ export async function startImpersonation(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permMembers) return permissionDenied("permMembers");
+  if (!admin.permMembersRemove) return permissionDenied("permMembersRemove");
   const limited = checkRateLimit(`${admin.id}:startImpersonation`, 10, 60_000);
   if (!limited.ok) {
     return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };

@@ -40,7 +40,7 @@ export function navItems(
     ...(progressEnabled ? [{ href: "/progress", label: "Progress" }] : []),
     ...(isAdmin
       ? [
-          ...(perms.permMembers ? [{ href: "/admin/members", label: "Members" }] : []),
+          ...(perms.permMembersView ? [{ href: "/admin/members", label: "Members" }] : []),
           ...(perms.permMessages ? [{ href: "/admin/messages", label: "Messages" }] : []),
           ...(perms.permReports ? [{ href: "/admin/reports", label: "Reports" }] : []),
           ...(hasAnySettingsPermission(perms) ? [{ href: "/admin/settings", label: "Settings" }] : []),

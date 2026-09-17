@@ -40,7 +40,8 @@ export type OrganiserPermissions = {
   permWalksHealth: boolean;
   permWalksJourney: boolean;
   permWalksExport: boolean;
-  permMembers: boolean;
+  permMembersView: boolean;
+  permMembersRemove: boolean;
   permMessages: boolean;
   permReports: boolean;
   permHomepage: boolean;
@@ -62,7 +63,8 @@ export const FULL_ORGANISER_PERMISSIONS: OrganiserPermissions = {
   permWalksHealth: true,
   permWalksJourney: true,
   permWalksExport: true,
-  permMembers: true,
+  permMembersView: true,
+  permMembersRemove: true,
   permMessages: true,
   permReports: true,
   permHomepage: true,
@@ -84,7 +86,8 @@ export const NO_ORGANISER_PERMISSIONS: OrganiserPermissions = {
   permWalksHealth: false,
   permWalksJourney: false,
   permWalksExport: false,
-  permMembers: false,
+  permMembersView: false,
+  permMembersRemove: false,
   permMessages: false,
   permReports: false,
   permHomepage: false,
@@ -96,8 +99,31 @@ export const NO_ORGANISER_PERMISSIONS: OrganiserPermissions = {
   permCacheReset: false,
 };
 
+/**
+ * Pre-checked when inviting/promoting a new organiser (see
+ * MemberRoleButton) — a "day-to-day walk helper" profile rather than
+ * full access: the things a helper actually needs (schedule and adjust
+ * walks, see and manage who's coming, log an accident, see the member
+ * list) are on; permanent, sensitive, or site-wide things (deleting a
+ * walk, health notes, retention/export, removing a member's account,
+ * the contact inbox, anything under Settings & homepage) stay off until
+ * the owner deliberately extends that trust. Editable per-row before
+ * sending the invite either way — this is just the starting point.
+ */
+export const DEFAULT_INVITE_PERMISSIONS: OrganiserPermissions = {
+  ...NO_ORGANISER_PERMISSIONS,
+  permWalksView: true,
+  permWalksCreate: true,
+  permWalksEdit: true,
+  permWalksCancel: true,
+  permWalksAttendance: true,
+  permWalksJourney: true,
+  permMembersView: true,
+  permReports: true,
+};
+
 /** `group` is a UI grouping only (see organiser-permissions-fields.tsx) —
- * every check in this file treats all nineteen the same way. */
+ * every check in this file treats all twenty the same way. */
 export const ORGANISER_PERMISSION_OPTIONS: {
   name: keyof OrganiserPermissions;
   label: string;
@@ -159,9 +185,15 @@ export const ORGANISER_PERMISSION_OPTIONS: {
     group: "Walks",
   },
   {
-    name: "permMembers",
-    label: "Members",
-    hint: "View the member list, and remove a member's account.",
+    name: "permMembersView",
+    label: "View members",
+    hint: "See the member list, walk history, and resend or cancel an invite.",
+    group: "Core",
+  },
+  {
+    name: "permMembersRemove",
+    label: "Remove members",
+    hint: "Delete a plain member's account, or log in as one.",
     group: "Core",
   },
   {

@@ -103,7 +103,7 @@ export async function searchMembers({
   needsAttention?: boolean;
 }): Promise<{ rows: MemberRow[]; total: number }> {
   const admin = await requireAdmin();
-  if (!admin.permMembers) return { rows: [], total: 0 };
+  if (!admin.permMembersView) return { rows: [], total: 0 };
 
   const needle = query.trim();
   let searchWhere: Prisma.UserWhereInput | undefined;
@@ -178,7 +178,8 @@ export async function searchMembers({
         permWalksHealth: true,
         permWalksJourney: true,
         permWalksExport: true,
-        permMembers: true,
+        permMembersView: true,
+        permMembersRemove: true,
         permMessages: true,
         permReports: true,
         permHomepage: true,
@@ -255,14 +256,14 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
   if (!target) return { ok: false, error: "That member is no longer in the group." };
 
   // Removing an organiser's account is one of the owner-only actions (see
-  // src/lib/site-owner.ts) — anyone with the Members permission can still
-  // remove a plain member's account. The owner can never target themselves
-  // here anyway (the self-delete check above already blocks that), so
-  // there's no separate "can't delete the owner" case to handle.
+  // src/lib/site-owner.ts) — anyone with the Remove members permission can
+  // still remove a plain member's account. The owner can never target
+  // themselves here anyway (the self-delete check above already blocks
+  // that), so there's no separate "can't delete the owner" case to handle.
   if (target.role === "ADMIN") {
     if (!(await isOwner(admin.id))) return ownerDenied("remove an organiser's account");
-  } else if (!admin.permMembers) {
-    return permissionDenied("permMembers");
+  } else if (!admin.permMembersRemove) {
+    return permissionDenied("permMembersRemove");
   }
 
   // Do the database side first. It is transactional and fully reversible on
@@ -677,7 +678,7 @@ export async function resendOrganiserInvite(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permMembers) return permissionDenied("permMembers");
+  if (!admin.permMembersView) return permissionDenied("permMembersView");
   const id = String(formData.get("userId") ?? "");
   if (!id) return { ok: false, error: "No member selected." };
 
@@ -695,7 +696,7 @@ export async function cancelOrganiserInvite(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permMembers) return permissionDenied("permMembers");
+  if (!admin.permMembersView) return permissionDenied("permMembersView");
   const id = String(formData.get("userId") ?? "");
   if (!id) return { ok: false, error: "No member selected." };
 
@@ -818,7 +819,7 @@ export async function getMemberHistory(userId: string): Promise<{
   isOwner: boolean;
 } | null> {
   const admin = await requireAdmin();
-  if (!admin.permMembers) return null;
+  if (!admin.permMembersView) return null;
   const [member, attendanceCount, ownerId] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
