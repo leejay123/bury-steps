@@ -20,15 +20,15 @@ const PERMISSION_AREA_LABEL: Record<keyof OrganiserPermissions, string> = {
   permWalksCreate: "creating walks",
   permWalksEdit: "editing walks",
   permWalksCancel: "cancelling or ending walks",
-  permWalksDelete: "deleting walks",
   permWalksAttendance: "attendance",
   permWalksHealth: "health notes",
   permWalksJourney: "journey updates",
   permWalksExport: "retention and export",
   permMembersView: "members",
-  permMembersRemove: "removing a member's account",
   permMessages: "messages",
-  permReports: "accident reports",
+  permReportsView: "accident reports",
+  permReportsEdit: "editing accident reports",
+  permReportsCreate: "creating accident reports",
   permHomepage: "homepage content",
   permNotices: "notices",
   permProgress: "the progress goal",
@@ -40,9 +40,9 @@ const PERMISSION_AREA_LABEL: Record<keyof OrganiserPermissions, string> = {
 
 /**
  * Friendly ActionResult for a signed-in organiser who lacks one specific
- * permission — same message shape setMemberRole/setOrganiserPermissions
- * already use for permMembersRemove. Use this (not requirePermission from
- * @/lib/auth, which 404s) inside a server action: `notFound()` would
+ * permission — same message shape ownerDenied uses for an owner-only
+ * action. Use this (not requirePermission from @/lib/auth, which 404s)
+ * inside a server action: `notFound()` would
  * replace the whole page the action was called from, which reads as a
  * crash for something a stale button click could trigger, rather than a
  * normal form/inline error.

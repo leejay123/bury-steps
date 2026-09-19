@@ -101,9 +101,8 @@ export async function sendAdminPromotedEmail(member: MemberLike): Promise<void> 
 
 /** Invite to become an organiser, pending their acceptance — see
  * setMemberRole in src/server/actions/members.ts. `permissions` is what
- * was actually chosen for this invite (or already on the row, for a
- * resend) — the email lists only those, rather than always promising
- * full access. */
+ * the shared Organiser role currently grants (see Settings → Roles) — the
+ * email lists exactly what accepting will give them. */
 export async function sendOrganiserInviteEmail(
   member: { email: string; firstName: string | null },
   token: string,

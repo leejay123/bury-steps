@@ -9,11 +9,9 @@ import { formatDate, formatMembershipAge, formatRelativeDays } from "@/lib/dates
 import { cn } from "@/lib/utils";
 import { initials } from "@/lib/names";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
-import { DEFAULT_INVITE_PERMISSIONS } from "@/lib/organiser-permissions";
 import { searchMembers, type MemberRoleFilter, type MemberRow, type MemberSort } from "@/server/actions";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { DeleteMemberButton } from "./delete-member-button";
-import { EditPermissionsButton } from "./edit-permissions-button";
 import { MemberRoleButton } from "./member-role-button";
 import { MemberRowActionsMenu } from "./member-row-actions-menu";
 import { TransferOwnershipButton } from "./transfer-ownership-button";
@@ -89,16 +87,13 @@ function MemberListRow({
   inviteRequired,
   member,
   onChanged,
-  viewerCanRemoveMembers,
   viewerIsOwner,
 }: {
   inviteRequired: boolean;
   member: ViewMember;
   onChanged: () => void;
-  /** permMembersRemove — gates removing a plain member's account.
-   * Removing an organiser stays owner-only regardless (see viewerIsOwner
-   * below), same as the server action's own check. */
-  viewerCanRemoveMembers: boolean;
+  /** Removing any member's account — plain member or organiser — is
+   * owner-only, same as the server action's own check. */
   viewerIsOwner: boolean;
 }) {
   // Every applicable action collapses behind a single "⋯"
@@ -131,28 +126,6 @@ function MemberListRow({
       key: "cancel",
       menuItem: <CancelInviteButton asMenuItem key="cancel" onDone={onChanged} userId={member.id} />,
     });
-    if (viewerIsOwner) {
-      const editPermissionsRef: { current: HTMLButtonElement | null } = { current: null };
-      actions.push({
-        key: "edit-permissions",
-        menuItem: (
-          <DropdownMenuItem key="edit-permissions" onSelect={() => editPermissionsRef.current?.click()}>
-            Edit permissions
-          </DropdownMenuItem>
-        ),
-        hiddenWidget: (
-          <EditPermissionsButton
-            hideTrigger
-            initialPermissions={member.permissions}
-            key="edit-permissions-hidden"
-            name={member.name}
-            onChanged={onChanged}
-            triggerRef={editPermissionsRef}
-            userId={member.id}
-          />
-        ),
-      });
-    }
   } else if (
     // Changing your own role here would be easy to hit by
     // mistake and immediately cost you organiser access to
@@ -175,12 +148,6 @@ function MemberListRow({
       hiddenWidget: (
         <MemberRoleButton
           hideTrigger
-          // Promoting starts from the safer "walk helper" default
-          // (DEFAULT_INVITE_PERMISSIONS) rather than whatever's sitting
-          // in this MEMBER row's dormant, never-used permission columns
-          // — demoting keeps passing their real current permissions,
-          // which still matters there.
-          initialPermissions={promoting ? DEFAULT_INVITE_PERMISSIONS : member.permissions}
           inviteRequired={inviteRequired}
           key="role-hidden"
           name={member.name}
@@ -192,51 +159,29 @@ function MemberListRow({
       ),
     });
     if (member.role === "ADMIN") {
-      const editPermissionsRef: { current: HTMLButtonElement | null } = { current: null };
       const transferRef: { current: HTMLButtonElement | null } = { current: null };
-      actions.push(
-        {
-          key: "edit-permissions",
-          menuItem: (
-            <DropdownMenuItem key="edit-permissions" onSelect={() => editPermissionsRef.current?.click()}>
-              Edit permissions
-            </DropdownMenuItem>
-          ),
-          hiddenWidget: (
-            <EditPermissionsButton
-              hideTrigger
-              initialPermissions={member.permissions}
-              key="edit-permissions-hidden"
-              name={member.name}
-              onChanged={onChanged}
-              triggerRef={editPermissionsRef}
-              userId={member.id}
-            />
-          ),
-        },
-        {
-          key: "transfer",
-          menuItem: (
-            <DropdownMenuItem key="transfer" onSelect={() => transferRef.current?.click()}>
-              Make owner
-            </DropdownMenuItem>
-          ),
-          hiddenWidget: (
-            <TransferOwnershipButton
-              hideTrigger
-              key="transfer-hidden"
-              name={member.name}
-              onChanged={onChanged}
-              triggerRef={transferRef}
-              userId={member.id}
-            />
-          ),
-        },
-      );
+      actions.push({
+        key: "transfer",
+        menuItem: (
+          <DropdownMenuItem key="transfer" onSelect={() => transferRef.current?.click()}>
+            Make owner
+          </DropdownMenuItem>
+        ),
+        hiddenWidget: (
+          <TransferOwnershipButton
+            hideTrigger
+            key="transfer-hidden"
+            name={member.name}
+            onChanged={onChanged}
+            triggerRef={transferRef}
+            userId={member.id}
+          />
+        ),
+      });
     }
   }
 
-  if (!member.isYou && (member.role === "ADMIN" ? viewerIsOwner : viewerCanRemoveMembers)) {
+  if (!member.isYou && viewerIsOwner) {
     const deleteRef: { current: HTMLButtonElement | null } = { current: null };
     actions.push({
       key: "delete",
@@ -322,7 +267,6 @@ export function MembersTable({
   initialTotal,
   inviteRequired,
   roleFilter,
-  viewerCanRemoveMembers,
   viewerId,
   viewerIsOwner,
 }: {
@@ -330,8 +274,6 @@ export function MembersTable({
   initialTotal: number;
   inviteRequired: boolean;
   roleFilter: MemberRoleFilter;
-  /** permMembersRemove — see MemberListRow. */
-  viewerCanRemoveMembers: boolean;
   viewerId: string;
   /** Whether the signed-in organiser is the site's single owner (see
    * src/lib/site-owner.ts) — promoting/demoting an organiser, editing an
@@ -573,7 +515,6 @@ export function MembersTable({
                         key={member.id}
                         member={member}
                         onChanged={refetch}
-                        viewerCanRemoveMembers={viewerCanRemoveMembers}
                         viewerIsOwner={viewerIsOwner}
                       />
                     ))}

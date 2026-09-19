@@ -15,14 +15,8 @@ import {
   makeOrganiserInviteToken,
   organiserInviteExpiresAt,
 } from "@/lib/organiser-invite";
-import {
-  FULL_ORGANISER_PERMISSIONS,
-  hasAnyPermission,
-  pickOrganiserPermissions,
-  readOrganiserPermissions,
-  walksLandingPath,
-  type OrganiserPermissions,
-} from "@/lib/organiser-permissions";
+import { walksLandingPath } from "@/lib/organiser-permissions";
+import { getOrganiserRolePermissions, resolveOrganiserPermissions } from "@/lib/role-permissions";
 import {
   sendAccountDeletedEmail,
   sendAdminPromotedEmail,
@@ -50,10 +44,6 @@ export type MemberRow = {
   /** Set only while role is still MEMBER and an organiser invite is
    * outstanding — see setMemberRole/acceptOrganiserInvite. */
   pendingInvite: { sentAt: string; expiresAt: string; expired: boolean } | null;
-  /** Meaningless while role is MEMBER — present regardless so a pending
-   * invite's chosen permissions can still be shown/edited before it's
-   * accepted. */
-  permissions: OrganiserPermissions;
   /** The site's single "master organiser" (see src/lib/site-owner.ts) —
    * only they can promote/demote an organiser, edit an organiser's
    * permissions, or remove an organiser's account. */
@@ -169,26 +159,6 @@ export async function searchMembers({
         organiserInviteToken: true,
         organiserInviteSentAt: true,
         organiserInviteExpiresAt: true,
-        permWalksView: true,
-        permWalksCreate: true,
-        permWalksEdit: true,
-        permWalksCancel: true,
-        permWalksDelete: true,
-        permWalksAttendance: true,
-        permWalksHealth: true,
-        permWalksJourney: true,
-        permWalksExport: true,
-        permMembersView: true,
-        permMembersRemove: true,
-        permMessages: true,
-        permReports: true,
-        permHomepage: true,
-        permNotices: true,
-        permProgress: true,
-        permEmails: true,
-        permSubscribers: true,
-        permDisplay: true,
-        permCacheReset: true,
         _count: { select: { attendances: true, walksCreated: true } },
       },
     }),
@@ -216,7 +186,6 @@ export async function searchMembers({
               expired: inviteExpired,
             }
           : null,
-        permissions: pickOrganiserPermissions(member),
         isOwner: member.id === ownerId,
         needsAttention:
           inviteExpired ||
@@ -255,15 +224,15 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
   });
   if (!target) return { ok: false, error: "That member is no longer in the group." };
 
-  // Removing an organiser's account is one of the owner-only actions (see
-  // src/lib/site-owner.ts) — anyone with the Remove members permission can
-  // still remove a plain member's account. The owner can never target
+  // Removing a member's account — organiser or plain member — is
+  // permanent and irreversible, so it stays owner-only regardless of what
+  // the Organiser role otherwise grants. The owner can never target
   // themselves here anyway (the self-delete check above already blocks
   // that), so there's no separate "can't delete the owner" case to handle.
-  if (target.role === "ADMIN") {
-    if (!(await isOwner(admin.id))) return ownerDenied("remove an organiser's account");
-  } else if (!admin.permMembersRemove) {
-    return permissionDenied("permMembersRemove");
+  if (!(await isOwner(admin.id))) {
+    return ownerDenied(
+      target.role === "ADMIN" ? "remove an organiser's account" : "remove a member's account",
+    );
   }
 
   // Do the database side first. It is transactional and fully reversible on
@@ -393,10 +362,6 @@ export async function setMemberRole(
     return { ok: false, error: "Choose organiser or member." };
   }
   const role = roleRaw as "ADMIN" | "MEMBER";
-  // Only the owner ever reaches this (see above), and the owner always
-  // holds full access, so whatever's checked is simply what gets granted —
-  // no need to cap it against the actor's own permissions.
-  const permissions = readOrganiserPermissions(formData);
 
   if (role === "MEMBER" && id === ownerId) {
     return {
@@ -417,26 +382,16 @@ export async function setMemberRole(
     };
   }
 
-  // The whole point of the organiser role is the extra access it grants —
-  // an invite/promotion that switches nothing on would just be a member
-  // with an unused ADMIN flag, so refuse it here rather than let it
-  // through and rely on the invite email's "nothing was granted" fallback.
-  if (role === "ADMIN" && !hasAnyPermission(permissions)) {
-    return { ok: false, error: "Choose at least one permission for them to have as an organiser." };
-  }
-
   // Promoting, with the "must accept an emailed invite first" setting on:
   // send the invite instead of promoting immediately. Role stays MEMBER
-  // until they accept — see acceptOrganiserInvite. The chosen permissions
-  // are written right away regardless, so they're already in place the
-  // moment the invite is accepted.
+  // until they accept — see acceptOrganiserInvite.
   if (role === "ADMIN") {
     const setting = await prisma.siteSetting.findUnique({
       where: { id: SITE_SETTING_ID },
       select: { organiserInviteRequired: true },
     });
     if (setting?.organiserInviteRequired) {
-      return sendOrganiserInvite(target, permissions);
+      return sendOrganiserInvite(target);
     }
   }
 
@@ -453,7 +408,7 @@ export async function setMemberRole(
       }
       await tx.user.update({
         where: { id: fresh.id },
-        data: role === "ADMIN" ? { role, ...permissions } : { role },
+        data: { role },
       });
       // Demoting the designated contact-messages owner would otherwise
       // leave that setting silently pointing at a plain member — the FK's
@@ -501,77 +456,13 @@ export async function setMemberRole(
 }
 
 /**
- * Change what an existing organiser (or a member with a pending organiser
- * invite) can do, without touching their role — see setMemberRole for
- * picking permissions at invite time instead.
- */
-export async function setOrganiserPermissions(
-  _prev: ActionResult | null,
-  formData: FormData,
-): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  // Editing an organiser's permissions is one of the owner-only actions
-  // (see src/lib/site-owner.ts) — regardless of what permissions the
-  // acting organiser otherwise holds.
-  if (!(await isOwner(admin.id))) return ownerDenied("edit an organiser's permissions");
-  const limited = checkRateLimit(`${admin.id}:setOrganiserPermissions`, 20, 60_000);
-  if (!limited.ok) {
-    return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
-  }
-
-  const id = String(formData.get("userId") ?? "");
-  if (!id) return { ok: false, error: "No member selected." };
-
-  // The owner always has full access — there's nothing to edit here, and
-  // the only way to change who that is is to transfer ownership.
-  if (id === admin.id) {
-    return { ok: false, error: "The owner always has full access." };
-  }
-
-  const target = await prisma.user.findUnique({ where: { id } });
-  if (!target) return { ok: false, error: "That member is no longer in the group." };
-  if (target.role !== "ADMIN" && !target.organiserInviteToken) {
-    return { ok: false, error: "This person is not an organiser and has no pending invite." };
-  }
-
-  // Only the owner ever reaches this (see above), and the owner always
-  // holds full access, so whatever's checked simply replaces what's
-  // stored — no need to cap it against the actor's own permissions.
-  const permissions = readOrganiserPermissions(formData);
-
-  // Same rule as promoting: an organiser is defined by having some
-  // access, so this can't be used to leave one with none at all.
-  if (!hasAnyPermission(permissions)) {
-    return { ok: false, error: "Choose at least one permission — or make them a member instead." };
-  }
-
-  try {
-    await prisma.user.update({ where: { id }, data: permissions });
-  } catch (err) {
-    return logActionError(
-      "setOrganiserPermissions",
-      err,
-      "Could not save their permissions. Try again.",
-    );
-  }
-
-  revalidatePath("/admin/members");
-  revalidatePath(`/admin/members/${id}`);
-  // Layout nav (Members / Reports / Settings) depends on this for them.
-  revalidatePath("/", "layout");
-
-  return { ok: true, message: `${displayName(target)}'s permissions have been updated.` };
-}
-
-/**
  * Hands the site's single "master organiser" role (see
  * src/lib/site-owner.ts) to another existing organiser. Owner-only — the
  * current owner is the only one who can give it up, and only to someone
- * already an organiser (promote them first if they aren't one yet). The
- * new owner is forced to full access, same as any owner; the outgoing
- * owner keeps whatever permissions they already held — they simply stop
- * being able to promote/demote an organiser, edit an organiser's
- * permissions, or remove an organiser's account.
+ * already an organiser (promote them first if they aren't one yet). Both
+ * the new and outgoing owner already have full access regardless — the
+ * only real change is who can promote/demote an organiser, edit the
+ * shared Organiser role, or remove a member's account from here on.
  */
 export async function transferOwnership(
   _prev: ActionResult | null,
@@ -604,10 +495,7 @@ export async function transferOwnership(
   }
 
   try {
-    await prisma.$transaction([
-      prisma.siteSetting.update({ where: { id: SITE_SETTING_ID }, data: { ownerId: target.id } }),
-      prisma.user.update({ where: { id: target.id }, data: FULL_ORGANISER_PERMISSIONS }),
-    ]);
+    await prisma.siteSetting.update({ where: { id: SITE_SETTING_ID }, data: { ownerId: target.id } });
   } catch (err) {
     return logActionError("transferOwnership", err, "Could not transfer ownership. Try again.");
   }
@@ -621,20 +509,13 @@ export async function transferOwnership(
 
 /** Issues (or reissues) an organiser invite — shared by setMemberRole's
  * promote branch and resendOrganiserInvite. Role stays MEMBER; only
- * acceptOrganiserInvite ever flips it to ADMIN.
- *
- * `permissions` is only passed on the initial invite (from setMemberRole) —
- * a resend reuses whatever was already chosen rather than silently
- * resetting it, so omit it there. */
-async function sendOrganiserInvite(
-  target: {
-    id: string;
-    email: string;
-    firstName: string | null;
-    lastName: string | null;
-  } & OrganiserPermissions,
-  permissions?: OrganiserPermissions,
-): Promise<ActionResult> {
+ * acceptOrganiserInvite ever flips it to ADMIN. */
+async function sendOrganiserInvite(target: {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+}): Promise<ActionResult> {
   const token = makeOrganiserInviteToken();
   const expiresAt = organiserInviteExpiresAt();
 
@@ -645,7 +526,6 @@ async function sendOrganiserInvite(
         organiserInviteToken: token,
         organiserInviteSentAt: new Date(),
         organiserInviteExpiresAt: expiresAt,
-        ...permissions,
       },
     });
   } catch (err) {
@@ -654,15 +534,12 @@ async function sendOrganiserInvite(
 
   // Best-effort — the invite is already recorded and visible in the members
   // list either way (as "Invited"), so a failed send here doesn't need to
-  // block the admin; they can hit Resend. The email lists what's actually
-  // granted — the just-chosen permissions on the initial invite (`target`
-  // itself still has the pre-update values at this point), or whatever's
-  // already on the row for a resend.
-  await sendOrganiserInviteEmail(target, token, permissions ?? pickOrganiserPermissions(target)).catch(
-    (err) => {
-      console.error("setMemberRole: failed to send organiser invite email", err);
-    },
-  );
+  // block the admin; they can hit Resend. The email lists what the shared
+  // Organiser role currently grants — see Settings → Roles.
+  const rolePermissions = await getOrganiserRolePermissions();
+  await sendOrganiserInviteEmail(target, token, rolePermissions).catch((err) => {
+    console.error("setMemberRole: failed to send organiser invite email", err);
+  });
 
   revalidatePath("/admin/members");
   revalidatePath(`/admin/members/${target.id}`);
@@ -785,7 +662,11 @@ export async function acceptOrganiserInvite(
   // the ordinary member Walks page otherwise (see walksLandingPath). Every
   // other admin page now checks its own specific permission, so a fixed
   // "/admin/members" would 404 on anyone who wasn't granted Members.
-  return { ok: true, message: "You're now an organiser.", href: walksLandingPath(target) };
+  return {
+    ok: true,
+    message: "You're now an organiser.",
+    href: walksLandingPath(await resolveOrganiserPermissions(target.id)),
+  };
 }
 
 export type MemberHistoryItem = {
@@ -814,7 +695,6 @@ export async function getMemberHistory(userId: string): Promise<{
   isYou: boolean;
   items: MemberHistoryItem[];
   pendingInvite: { sentAt: string; expiresAt: string; expired: boolean } | null;
-  permissions: OrganiserPermissions;
   /** The site's single "master organiser" (see src/lib/site-owner.ts). */
   isOwner: boolean;
 } | null> {
@@ -872,7 +752,6 @@ export async function getMemberHistory(userId: string): Promise<{
           expired: (member.organiserInviteExpiresAt?.getTime() ?? 0) < Date.now(),
         }
       : null,
-    permissions: pickOrganiserPermissions(member),
     items: member.attendances.map((attendance) => ({
       id: attendance.id,
       walkId: attendance.walk.id,

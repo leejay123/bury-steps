@@ -90,9 +90,7 @@ export default async function MemberDetailPage({
             isYou={member.isYou}
             name={member.name}
             pendingInvite={member.pendingInvite}
-            permissions={member.permissions}
             role={member.role}
-            viewerCanRemoveMembers={viewer.permMembersRemove}
             viewerIsOwner={viewerIsOwner}
             walkCount={member.walkCount}
           />

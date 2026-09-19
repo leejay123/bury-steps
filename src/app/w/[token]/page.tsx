@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { getOptionalUser } from "@/lib/auth";
+import { resolveOrganiserPermissions } from "@/lib/role-permissions";
 import { formatDate, formatTime, formatWalkDate } from "@/lib/dates";
 import { accountPortalHref, appUrl } from "@/lib/urls";
 import { meetingPointLabel } from "@/lib/geocode";
@@ -138,7 +139,10 @@ export default async function WalkLinkPage({
   const closedNoClockIn = Boolean(user) && !alreadyIn && windowStateNow === "closed";
   const opensAt = walkOpensAt(walk.startsAt);
   const meeting = meetingPointLabel(walk.location, walk.postcode);
-  const walksHref = user?.role === "ADMIN" && user.permWalksView ? "/admin" : "/walks";
+  const viewerPerms =
+    user?.role === "ADMIN" ? await resolveOrganiserPermissions(user.id) : null;
+  const walksHref =
+    viewerPerms && (viewerPerms.permWalksView || viewerPerms.permWalksCreate) ? "/admin" : "/walks";
   const journeyEvents = walk.journeyEvents.map((event) => ({
     id: event.id,
     title: event.title,

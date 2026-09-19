@@ -6,7 +6,12 @@ import type { User } from "@prisma/client";
 import { SIGN_IN_URL } from "./urls";
 import { syncLocalUser } from "./local-user";
 import { hasAnySettingsPermission, type OrganiserPermissions } from "./organiser-permissions";
-import { isOwner } from "./site-owner";
+import { resolveOrganiserPermissions } from "./role-permissions";
+
+/** An ADMIN's User row merged with what they can actually do right now
+ * (see resolveOrganiserPermissions) — the shape every admin page and
+ * server action reads permissions off (`admin.permWalksView`, etc.). */
+export type AdminUser = User & OrganiserPermissions;
 
 /** Clerk throws this when auth() runs on a request that skipped middleware. */
 export function isClerkMiddlewareMissingError(error: unknown): boolean {
@@ -62,10 +67,19 @@ export async function requireUser(): Promise<User> {
   return user;
 }
 
-export async function requireAdmin(): Promise<User> {
+/**
+ * Every admin page and server action reads permissions straight off the
+ * returned row (`admin.permWalksView`, etc.), so this always merges in
+ * what the caller can actually do right now (resolveOrganiserPermissions)
+ * — full access for the site owner, the shared Organiser role's current
+ * settings for anyone else. See requirePermission/requireAnyPermission
+ * below for the page-gating helpers built on top of this.
+ */
+export async function requireAdmin(): Promise<AdminUser> {
   const user = await getOptionalUser();
   if (!user || user.role !== "ADMIN") notFound();
-  return user;
+  const perms = await resolveOrganiserPermissions(user.id);
+  return { ...user, ...perms };
 }
 
 /**
@@ -83,17 +97,10 @@ export async function requireAdmin(): Promise<User> {
  * the action was called from, which reads as a crash for something a
  * stale button click could trigger, rather than a normal form error.
  */
-export async function requirePermission(permission: keyof OrganiserPermissions): Promise<User> {
-  const user = await requireAdmin();
-  // The owner is the one account whose own permission checkboxes can't be
-  // edited in the UI (self-editing is blocked — see MembersTable's
-  // `!member.isYou` gate), so a false value here — however it got set —
-  // would otherwise lock the owner out of their own admin pages with no
-  // self-service way back in. The owner is meant to always have full
-  // access regardless of the individual booleans; this is the one place
-  // that guarantee actually gets enforced.
-  if (!user[permission] && !(await isOwner(user.id))) notFound();
-  return user;
+export async function requirePermission(permission: keyof OrganiserPermissions): Promise<AdminUser> {
+  const admin = await requireAdmin();
+  if (!admin[permission]) notFound();
+  return admin;
 }
 
 /**
@@ -101,15 +108,14 @@ export async function requirePermission(permission: keyof OrganiserPermissions):
  * carry their own permission — e.g. an individual walk's page, which is
  * both a Walks-admin page in its own right AND where a member's walk
  * history (a Members-admin page) links to. 404s only for an organiser
- * with none of the listed permissions, same owner bypass as
- * requirePermission. Mutating actions on the page (edit/cancel/etc.)
- * still independently require the specific permission they need — this
- * only governs whether the page renders at all.
+ * with none of the listed permissions. Mutating actions on the page
+ * (edit/cancel/etc.) still independently require the specific permission
+ * they need — this only governs whether the page renders at all.
  */
-export async function requireAnyPermission(permissions: (keyof OrganiserPermissions)[]): Promise<User> {
-  const user = await requireAdmin();
-  if (!permissions.some((permission) => user[permission]) && !(await isOwner(user.id))) notFound();
-  return user;
+export async function requireAnyPermission(permissions: (keyof OrganiserPermissions)[]): Promise<AdminUser> {
+  const admin = await requireAdmin();
+  if (!permissions.some((permission) => admin[permission])) notFound();
+  return admin;
 }
 
 /**
@@ -119,13 +125,10 @@ export async function requireAnyPermission(permissions: (keyof OrganiserPermissi
  * The hub itself is responsible for only showing links to pages the
  * viewer actually holds the permission for.
  */
-export async function requireAnySettingsPermission(): Promise<User> {
-  const user = await requireAdmin();
-  // Same owner bypass as requirePermission above — the owner's own
-  // checkboxes aren't self-editable, so this is the guarantee that
-  // matters in practice.
-  if (!hasAnySettingsPermission(user) && !(await isOwner(user.id))) notFound();
-  return user;
+export async function requireAnySettingsPermission(): Promise<AdminUser> {
+  const admin = await requireAdmin();
+  if (!hasAnySettingsPermission(admin)) notFound();
+  return admin;
 }
 
 /**

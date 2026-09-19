@@ -3,12 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin, displayName } from "@/lib/auth";
+import { isOwner } from "@/lib/site-owner";
 import { prisma } from "@/lib/db";
 import { formatDateTime, londonWallClockToUtc } from "@/lib/dates";
 import { sendAccidentReportAlertEmail } from "@/lib/email/mailer";
 import { involvedSummaryText } from "@/lib/accident-reports";
 import { getWalkAttendeesForReport } from "@/lib/walk-members";
-import { type ActionResult, isPrismaCode, logActionError, permissionDenied } from "./shared";
+import { type ActionResult, isPrismaCode, logActionError, ownerDenied, permissionDenied } from "./shared";
 
 /** Powers the member checklist on the report form once a walk is picked —
  * a plain data fetch, not a mutation, but still gated on admin auth since
@@ -17,7 +18,7 @@ export async function getWalkAttendeesForReportForm(
   walkId: string,
 ): Promise<{ id: string; name: string }[]> {
   const admin = await requireAdmin();
-  if (!admin.permReports) return [];
+  if (!admin.permReportsCreate) return [];
   if (!walkId) return [];
   return getWalkAttendeesForReport(walkId);
 }
@@ -60,7 +61,7 @@ export async function addAccidentReport(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permReports) return permissionDenied("permReports");
+  if (!admin.permReportsCreate) return permissionDenied("permReportsCreate");
   const parsed = readReportCopy(formData);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
@@ -140,7 +141,7 @@ export async function updateAccidentReport(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permReports) return permissionDenied("permReports");
+  if (!admin.permReportsEdit) return permissionDenied("permReportsEdit");
   const id = String(formData.get("reportId") ?? "");
   if (!id) return { ok: false, error: "No report selected." };
 
@@ -191,7 +192,9 @@ export async function deleteAccidentReport(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permReports) return permissionDenied("permReports");
+  // Deleting a report is permanent, so it stays owner-only regardless of
+  // what the Organiser role otherwise grants.
+  if (!(await isOwner(admin.id))) return ownerDenied("delete an accident report");
   const id = String(formData.get("reportId") ?? "");
   if (!id) return { ok: false, error: "No report selected." };
 
@@ -213,7 +216,7 @@ export async function setAccidentReportRetentionLocked(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permReports) return permissionDenied("permReports");
+  if (!admin.permReportsEdit) return permissionDenied("permReportsEdit");
   const id = String(formData.get("reportId") ?? "");
   const locked = String(formData.get("retentionLocked") ?? "") === "on";
   if (!id) return { ok: false, error: "No report selected." };

@@ -46,6 +46,9 @@ export function AccidentReportManager({
   hasAnyReports,
   linkFilter,
   sortOrder,
+  canCreate,
+  canEdit,
+  canDelete,
 }: {
   /** Rows for the current link/sort filters — search is client-only (no PII in the URL). */
   reports: ReportView[];
@@ -53,6 +56,12 @@ export function AccidentReportManager({
   hasAnyReports: boolean;
   linkFilter: "all" | "linked" | "unlinked";
   sortOrder: "desc" | "asc";
+  /** permReportsCreate — gates the "Add report" button. */
+  canCreate: boolean;
+  /** permReportsEdit — gates the Edit button on an open report. */
+  canEdit: boolean;
+  /** Owner-only — deleting a report is permanent. */
+  canDelete: boolean;
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
   const [isPending, setIsPending] = useState(false);
@@ -119,9 +128,11 @@ export function AccidentReportManager({
             </div>
           </div>
         ) : null}
-        <Button className="w-full shrink-0 sm:w-auto" onClick={() => setMode({ type: "add" })} size="sm">
-          Add report
-        </Button>
+        {canCreate ? (
+          <Button className="w-full shrink-0 sm:w-auto" onClick={() => setMode({ type: "add" })} size="sm">
+            Add report
+          </Button>
+        ) : null}
       </div>
 
       {!hasAnyReports ? (
@@ -173,7 +184,7 @@ export function AccidentReportManager({
                       Print
                     </a>
                   </Button>
-                  <RemoveButton reportId={report.id} title={formatWalkDay(at)} />
+                  {canDelete ? <RemoveButton reportId={report.id} title={formatWalkDay(at)} /> : null}
                 </DataListActions>
               </DataListItem>
             );
@@ -238,9 +249,11 @@ export function AccidentReportManager({
                     Print
                   </a>
                 </Button>
-                <Button onClick={() => setMode({ type: "edit", report: viewing })} type="button">
-                  Edit
-                </Button>
+                {canEdit ? (
+                  <Button onClick={() => setMode({ type: "edit", report: viewing })} type="button">
+                    Edit
+                  </Button>
+                ) : null}
               </DrawerFooter>
             </div>
           ) : null}

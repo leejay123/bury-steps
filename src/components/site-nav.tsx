@@ -7,7 +7,7 @@ import { SiteUserButton } from "@/components/site-user-button";
 import { NotificationBell } from "@/components/notification-bell";
 import { getSiteNoticeState } from "@/lib/site-notices";
 import { getProgressEnabled } from "@/lib/progress-settings";
-import { pickOrganiserPermissions } from "@/lib/organiser-permissions";
+import { resolveOrganiserPermissions } from "@/lib/role-permissions";
 
 export function SiteNavFallback() {
   return (
@@ -27,9 +27,10 @@ export async function SiteNav() {
   const isAdmin = user?.role === "ADMIN";
 
   const walksHref = isAdmin ? "/admin" : "/walks";
-  const [{ notices, unreadIds }, progressEnabled] = await Promise.all([
+  const [{ notices, unreadIds }, progressEnabled, permissions] = await Promise.all([
     user ? getSiteNoticeState(user.id, user.firstName) : Promise.resolve({ notices: [], unreadIds: [] as string[] }),
     getProgressEnabled(),
+    user && isAdmin ? resolveOrganiserPermissions(user.id) : Promise.resolve(undefined),
   ]);
 
   return (
@@ -38,7 +39,7 @@ export async function SiteNav() {
         <Show when="signed-in">
           <SiteNavLinks
             isAdmin={isAdmin}
-            permissions={user ? pickOrganiserPermissions(user) : undefined}
+            permissions={permissions}
             progressEnabled={progressEnabled}
             walksHref={walksHref}
           />
@@ -67,12 +68,15 @@ export async function SiteMobileNav() {
   if (!user) return null;
 
   const isAdmin = user.role === "ADMIN";
-  const progressEnabled = await getProgressEnabled();
+  const [progressEnabled, permissions] = await Promise.all([
+    getProgressEnabled(),
+    isAdmin ? resolveOrganiserPermissions(user.id) : Promise.resolve(undefined),
+  ]);
 
   return (
     <SiteMobileNavBar
       isAdmin={isAdmin}
-      permissions={pickOrganiserPermissions(user)}
+      permissions={permissions}
       progressEnabled={progressEnabled}
       walksHref={isAdmin ? "/admin" : "/walks"}
     />

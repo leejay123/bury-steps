@@ -4,7 +4,8 @@ import { prisma } from "@/lib/db";
 import { getOptionalUser } from "@/lib/auth";
 import { getSiteTheme } from "@/lib/site-theme";
 import { appUrl, accountPortalHref } from "@/lib/urls";
-import { ORGANISER_PERMISSION_OPTIONS, pickOrganiserPermissions } from "@/lib/organiser-permissions";
+import { ORGANISER_PERMISSION_OPTIONS } from "@/lib/organiser-permissions";
+import { getOrganiserRolePermissions } from "@/lib/role-permissions";
 import { AcceptInviteForm } from "./accept-invite-form";
 import { WrongAccountNotice } from "./wrong-account-notice";
 
@@ -33,7 +34,7 @@ export default async function OrganiserInvitePage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-  const [invitee, theme] = await Promise.all([
+  const [invitee, theme, rolePermissions] = await Promise.all([
     prisma.user.findUnique({
       where: { organiserInviteToken: token },
       select: {
@@ -42,38 +43,20 @@ export default async function OrganiserInvitePage({
         firstName: true,
         role: true,
         organiserInviteExpiresAt: true,
-        permWalksView: true,
-        permWalksCreate: true,
-        permWalksEdit: true,
-        permWalksCancel: true,
-        permWalksDelete: true,
-        permWalksAttendance: true,
-        permWalksHealth: true,
-        permWalksJourney: true,
-        permWalksExport: true,
-        permMembersView: true,
-        permMembersRemove: true,
-        permMessages: true,
-        permReports: true,
-        permHomepage: true,
-        permNotices: true,
-        permProgress: true,
-        permEmails: true,
-        permSubscribers: true,
-        permDisplay: true,
-        permCacheReset: true,
       },
     }),
     getSiteTheme(),
+    getOrganiserRolePermissions(),
   ]);
 
   const now = new Date();
   const expired = !invitee?.organiserInviteExpiresAt || invitee.organiserInviteExpiresAt < now;
   const invalid = !invitee || invitee.role !== "MEMBER";
   const inviteeName = invitee?.firstName?.trim() || "there";
-  const grantedOptions = invitee
-    ? ORGANISER_PERMISSION_OPTIONS.filter((option) => pickOrganiserPermissions(invitee)[option.name])
-    : [];
+  // What the shared Organiser role currently grants (see Settings →
+  // Roles) — the same list every organiser gets, not something chosen
+  // per invite any more.
+  const grantedOptions = ORGANISER_PERMISSION_OPTIONS.filter((option) => rolePermissions[option.name]);
 
   const inviteUrl = `${appUrl()}/organiser-invite/${token}`;
   const signInHref = accountPortalHref("sign-in", inviteUrl);

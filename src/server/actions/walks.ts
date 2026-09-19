@@ -39,10 +39,12 @@ import {
   LimitReachedError,
   isPrismaCode,
   logActionError,
+  ownerDenied,
   permissionDenied,
   revalidateWalkShare,
   withCountLimitLock,
 } from "./shared";
+import { isOwner } from "@/lib/site-owner";
 
 /** Stable unguessable id for clock-in forms. Old /w/<token> links still work. */
 const makeToken = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 12);
@@ -662,7 +664,9 @@ export async function updateWalk(
 
 export async function deleteWalk(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permWalksDelete) return permissionDenied("permWalksDelete");
+  // Deleting a walk is permanent and irreversible, so it stays owner-only
+  // regardless of what the Organiser role otherwise grants.
+  if (!(await isOwner(admin.id))) return ownerDenied("delete a walk");
   const id = String(formData.get("walkId") ?? "");
   if (!id) return { ok: false, error: "No walk selected." };
 

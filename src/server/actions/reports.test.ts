@@ -1,16 +1,20 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const { requireAdmin, prismaMock, sendAccidentReportAlertEmail } = vi.hoisted(() => ({
+const { requireAdmin, prismaMock, sendAccidentReportAlertEmail, isOwner } = vi.hoisted(() => ({
   requireAdmin: vi.fn(),
   prismaMock: {
     accidentReport: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
     user: { findMany: vi.fn(async (): Promise<{ email: string }[]> => []) },
   },
   sendAccidentReportAlertEmail: vi.fn(async () => {}),
+  // Owner by default — deleting a report is owner-only regardless of the
+  // Reports permissions. See the "not the owner" test below.
+  isOwner: vi.fn(async (userId: string) => userId === "admin-1"),
 }));
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
+vi.mock("@/lib/site-owner", () => ({ isOwner }));
 vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
   return { ...actual, requireAdmin };
@@ -27,22 +31,22 @@ import {
 } from "./reports";
 
 // Full access by default so existing tests exercise the authorized path —
-// see the "permission guard" tests below for permReports: false.
+// see the "permission guard" tests below for the false cases.
 const ADMIN = {
   id: "admin-1",
   permWalksView: true,
   permWalksCreate: true,
   permWalksEdit: true,
   permWalksCancel: true,
-  permWalksDelete: true,
   permWalksAttendance: true,
   permWalksHealth: true,
   permWalksJourney: true,
   permWalksExport: true,
   permMembersView: true,
-  permMembersRemove: true,
   permMessages: true,
-  permReports: true,
+  permReportsView: true,
+  permReportsEdit: true,
+  permReportsCreate: true,
   permHomepage: true,
   permNotices: true,
   permProgress: true,
@@ -68,12 +72,12 @@ beforeEach(() => {
 });
 
 describe("addAccidentReport", () => {
-  it("rejects an organiser without the Reports permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permReports: false });
+  it("rejects an organiser without the Create reports permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permReportsCreate: false });
     const result = await addAccidentReport(null, reportForm());
     expect(result).toEqual({
       ok: false,
-      error: "You do not have permission to manage accident reports.",
+      error: "You do not have permission to manage creating accident reports.",
     });
     expect(prismaMock.accidentReport.create).not.toHaveBeenCalled();
   });
@@ -166,12 +170,12 @@ describe("addAccidentReport", () => {
 });
 
 describe("updateAccidentReport", () => {
-  it("rejects an organiser without the Reports permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permReports: false });
+  it("rejects an organiser without the Edit reports permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permReportsEdit: false });
     const result = await updateAccidentReport(null, reportForm({ reportId: "report-1" }));
     expect(result).toEqual({
       ok: false,
-      error: "You do not have permission to manage accident reports.",
+      error: "You do not have permission to manage editing accident reports.",
     });
     expect(prismaMock.accidentReport.update).not.toHaveBeenCalled();
   });
@@ -195,14 +199,14 @@ describe("updateAccidentReport", () => {
 });
 
 describe("deleteAccidentReport", () => {
-  it("rejects an organiser without the Reports permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permReports: false });
+  it("rejects an organiser who isn't the owner — deleting a report is owner-only", async () => {
+    isOwner.mockResolvedValueOnce(false);
     const formData = new FormData();
     formData.set("reportId", "report-1");
     const result = await deleteAccidentReport(null, formData);
     expect(result).toEqual({
       ok: false,
-      error: "You do not have permission to manage accident reports.",
+      error: "Only the site owner can delete an accident report.",
     });
     expect(prismaMock.accidentReport.delete).not.toHaveBeenCalled();
   });
@@ -222,14 +226,14 @@ describe("deleteAccidentReport", () => {
 });
 
 describe("setAccidentReportRetentionLocked", () => {
-  it("rejects an organiser without the Reports permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permReports: false });
+  it("rejects an organiser without the Edit reports permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permReportsEdit: false });
     const formData = new FormData();
     formData.set("reportId", "report-1");
     const result = await setAccidentReportRetentionLocked(null, formData);
     expect(result).toEqual({
       ok: false,
-      error: "You do not have permission to manage accident reports.",
+      error: "You do not have permission to manage editing accident reports.",
     });
     expect(prismaMock.accidentReport.update).not.toHaveBeenCalled();
   });

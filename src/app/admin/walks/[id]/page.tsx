@@ -66,6 +66,7 @@ export default async function WalkDetailPage({
       cancelledAt: true,
       cancelledReason: true,
       retentionLocked: true,
+      createdBy: { select: { id: true, firstName: true, lastName: true, email: true } },
       attendances: {
         orderBy: [{ clockedOutAt: "asc" }, { clockedInAt: "asc" }],
         include: { user: { select: { firstName: true, lastName: true, email: true } } },
@@ -79,13 +80,16 @@ export default async function WalkDetailPage({
 
   if (!walk) notFound();
 
+  const viewerIsOwner = await isOwner(admin.id);
+  const creatorIsOwner = await isOwner(walk.createdBy.id);
+
   // A cancelled walk's full admin view stays owner/View-permission
   // territory even for someone here via Members access — but this isn't a
   // "page doesn't exist" situation (they got here from a real link, e.g.
   // a member's own walk history — see the greyed-out row in
   // src/app/admin/members/[id]/page.tsx), so it's honest about what
   // happened rather than a bare 404.
-  if (walk.cancelledAt && !admin.permWalksView && !(await isOwner(admin.id))) {
+  if (walk.cancelledAt && !admin.permWalksView && !viewerIsOwner) {
     return (
       <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
         <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">
@@ -179,6 +183,10 @@ export default async function WalkDetailPage({
             {formatWalkDate(walk.startsAt)}
             {meeting ? ` · ${meeting}` : ""} · {walk.durationMins} min
           </CardDescription>
+          {/* Organiser/owner-only — members never see who created a walk. */}
+          <p className="text-xs text-muted-foreground">
+            Created by {displayName(walk.createdBy)} ({creatorIsOwner ? "Owner" : "Organiser"})
+          </p>
           {/* Below the schedule line, not beside the title — the countdown
               ("In progress · 23 min left") reads as a comment on how much
               of that length is left, not as a label for the walk itself. */}
@@ -266,7 +274,7 @@ export default async function WalkDetailPage({
           />
         )}
         {admin.permWalksCancel && walk.cancelledAt ? <ReopenWalkButton walkId={walk.id} /> : null}
-        {admin.permWalksDelete ? (
+        {viewerIsOwner ? (
           <DeleteWalkButton walkId={walk.id} attendanceCount={walk.attendances.length} />
         ) : null}
       </div>

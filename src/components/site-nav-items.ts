@@ -35,14 +35,17 @@ export function navItems(
   const perms = permissions ?? FULL_ORGANISER_PERMISSIONS;
   return [
     { href: "/", label: "Home" },
-    { href: isAdmin && !perms.permWalksView ? "/walks" : walksHref, label: "Walks" },
+    {
+      href: isAdmin && !perms.permWalksView && !perms.permWalksCreate ? "/walks" : walksHref,
+      label: "Walks",
+    },
     { href: "/notices", label: "Notices" },
     ...(progressEnabled ? [{ href: "/progress", label: "Progress" }] : []),
     ...(isAdmin
       ? [
           ...(perms.permMembersView ? [{ href: "/admin/members", label: "Members" }] : []),
           ...(perms.permMessages ? [{ href: "/admin/messages", label: "Messages" }] : []),
-          ...(perms.permReports ? [{ href: "/admin/reports", label: "Reports" }] : []),
+          ...(perms.permReportsView ? [{ href: "/admin/reports", label: "Reports" }] : []),
           ...(hasAnySettingsPermission(perms) ? [{ href: "/admin/settings", label: "Settings" }] : []),
           { href: "/admin/guide", label: "Guide" },
         ]

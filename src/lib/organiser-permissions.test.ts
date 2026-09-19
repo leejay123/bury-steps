@@ -2,32 +2,23 @@ import { describe, expect, it } from "vitest";
 import {
   describeOrganiserPermissions,
   FULL_ORGANISER_PERMISSIONS,
-  hasAnyPermission,
   hasAnySettingsPermission,
   hasFullAccess,
-  NO_ORGANISER_PERMISSIONS,
+  ORGANISER_PERMISSION_OPTIONS,
   type OrganiserPermissions,
   walksLandingPath,
 } from "./organiser-permissions";
 
-const NONE: OrganiserPermissions = NO_ORGANISER_PERMISSIONS;
+const NONE: OrganiserPermissions = ORGANISER_PERMISSION_OPTIONS.reduce((acc, option) => {
+  acc[option.name] = false;
+  return acc;
+}, {} as OrganiserPermissions);
 
 describe("hasFullAccess", () => {
   it("is true only when every permission is granted", () => {
     expect(hasFullAccess(FULL_ORGANISER_PERMISSIONS)).toBe(true);
     expect(hasFullAccess({ ...FULL_ORGANISER_PERMISSIONS, permCacheReset: false })).toBe(false);
     expect(hasFullAccess(NONE)).toBe(false);
-  });
-});
-
-describe("hasAnyPermission", () => {
-  it("is false only when every permission is off", () => {
-    expect(hasAnyPermission(NONE)).toBe(false);
-  });
-
-  it("is true when at least one permission is granted", () => {
-    expect(hasAnyPermission({ ...NONE, permWalksView: true })).toBe(true);
-    expect(hasAnyPermission(FULL_ORGANISER_PERMISSIONS)).toBe(true);
   });
 });
 
@@ -41,7 +32,7 @@ describe("hasAnySettingsPermission", () => {
         ...NONE,
         permWalksView: true,
         permMembersView: true,
-        permReports: true,
+        permReportsView: true,
       }),
     ).toBe(false);
   });
@@ -53,9 +44,10 @@ describe("hasAnySettingsPermission", () => {
 });
 
 describe("walksLandingPath", () => {
-  it("goes to the admin Walks dashboard when granted Walks", () => {
+  it("goes to the admin Walks dashboard when granted View or Create", () => {
     expect(walksLandingPath(FULL_ORGANISER_PERMISSIONS)).toBe("/admin");
     expect(walksLandingPath({ ...NONE, permWalksView: true })).toBe("/admin");
+    expect(walksLandingPath({ ...NONE, permWalksCreate: true })).toBe("/admin");
   });
 
   it("goes to the ordinary member Walks page otherwise", () => {
@@ -85,7 +77,6 @@ describe("describeOrganiserPermissions", () => {
       permWalksCreate: true,
       permWalksEdit: true,
       permWalksCancel: true,
-      permWalksDelete: true,
       permWalksAttendance: true,
       permWalksHealth: true,
       permWalksJourney: true,
@@ -93,14 +84,16 @@ describe("describeOrganiserPermissions", () => {
       permCacheReset: true,
     });
     expect(
-      result.startsWith("You'll be able to see the walks admin pages — schedule, roster counts, and journey log"),
+      result.startsWith(
+        "You'll be able to see the walks admin pages — schedule, roster counts, journey log, and cancelled walks",
+      ),
     ).toBe(true);
     expect(result).toContain("; and clear the site cache, or reset the whole site back to its defaults.");
   });
 
   it("explains nothing was granted when every permission is false", () => {
     expect(describeOrganiserPermissions(NONE)).toBe(
-      "No specific organiser tools were switched on for this invite — check with whoever invited you once you've accepted.",
+      "No organiser tools are currently switched on — check with whoever invited you once you've accepted.",
     );
   });
 });

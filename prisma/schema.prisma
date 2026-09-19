@@ -51,51 +51,6 @@ model User {
   organiserInviteSentAt    DateTime?
   organiserInviteExpiresAt DateTime?
 
-  /// Granular organiser capabilities — chosen when a member is
-  /// invited/promoted (setMemberRole) and editable after from Members
-  /// (setOrganiserPermissions). Only meaningful once role is ADMIN; a
-  /// MEMBER row's columns just sit unused. Written immediately on
-  /// promotion even while an invite is still pending, so whatever was
-  /// picked at invite time is already in place the moment they accept.
-  /// All default to true so every organiser that existed before a given
-  /// column shipped silently kept full access — see src/lib/organiser-
-  /// permissions.ts for the shared list this maps onto. Reports and
-  /// Messages were originally one combined column (permReportsMessages),
-  /// and everything below permMembers here was originally one combined
-  /// column (permSettings) — split apart in the
-  /// 20260911140000_split_organiser_permissions migration, which copied
-  /// each old column's value into all of its replacements so no existing
-  /// organiser's actual access changed on the day of the split.
-  /// Walks was originally one combined column (permWalks) — split into
-  /// nine in the 20260916000000_split_walks_permissions migration (same
-  /// copy-forward pattern as the splits above), so e.g. someone can see
-  /// and manage attendance without also being able to delete a walk or
-  /// see health notes.
-  permWalksView       Boolean @default(true)
-  permWalksCreate     Boolean @default(true)
-  permWalksEdit       Boolean @default(true)
-  permWalksCancel     Boolean @default(true)
-  permWalksDelete     Boolean @default(true)
-  permWalksAttendance Boolean @default(true)
-  permWalksHealth     Boolean @default(true)
-  permWalksJourney    Boolean @default(true)
-  permWalksExport     Boolean @default(true)
-  /// Members split into two — View (list, search, invite resend/cancel,
-  /// walk-history) and Remove (delete a plain member's account, log in as
-  /// one) — in the 20260917000000_split_members_permissions migration,
-  /// same copy-forward pattern as the Walks split above.
-  permMembersView   Boolean @default(true)
-  permMembersRemove Boolean @default(true)
-  permMessages    Boolean @default(true)
-  permReports     Boolean @default(true)
-  permHomepage    Boolean @default(true)
-  permNotices     Boolean @default(true)
-  permProgress    Boolean @default(true)
-  permEmails      Boolean @default(true)
-  permSubscribers Boolean @default(true)
-  permDisplay     Boolean @default(true)
-  permCacheReset  Boolean @default(true)
-
   walksCreated            Walk[]                 @relation("WalkCreator")
   attendances             Attendance[]
   noticeReads             SiteNoticeRead[]
@@ -448,6 +403,46 @@ model SiteSetting {
 
   contactMessagesOwner User? @relation("ContactMessagesOwner", fields: [contactMessagesOwnerId], references: [id], onDelete: SetNull)
   owner                User? @relation("SiteOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+}
+
+/// Singleton row (`id` is always "organiser") holding the one shared set of
+/// capabilities every organiser has — see src/lib/organiser-permissions.ts.
+/// Organisers are no longer configured individually (that per-person
+/// picker — setOrganiserPermissions, the invite-time checklist — is gone):
+/// every organiser has exactly this, editable from Settings → Roles by the
+/// site owner. The owner always has full access regardless of these values
+/// (see src/lib/site-owner.ts) — this row only ever governs a plain ADMIN
+/// who isn't the owner. A few sensitive, irreversible actions (deleting a
+/// walk, removing a member's account or logging in as one, deleting an
+/// accident report) stay owner-only outright and so have no column here at
+/// all — see PERMISSION_AREA_LABEL / ownerDenied call sites for the list.
+/// Replaced the old per-user permission columns on User in the
+/// 20260919000000_role_based_permissions migration.
+model RolePermissions {
+  id String @id
+
+  permWalksView       Boolean @default(true)
+  permWalksCreate     Boolean @default(true)
+  permWalksEdit       Boolean @default(true)
+  permWalksCancel     Boolean @default(true)
+  permWalksAttendance Boolean @default(true)
+  permWalksHealth     Boolean @default(true)
+  permWalksJourney    Boolean @default(true)
+  permWalksExport     Boolean @default(true)
+  permMembersView     Boolean @default(true)
+  permMessages        Boolean @default(true)
+  permReportsView     Boolean @default(true)
+  permReportsEdit     Boolean @default(true)
+  permReportsCreate   Boolean @default(true)
+  permHomepage        Boolean @default(true)
+  permNotices         Boolean @default(true)
+  permProgress        Boolean @default(true)
+  permEmails          Boolean @default(true)
+  permSubscribers     Boolean @default(true)
+  permDisplay         Boolean @default(true)
+  permCacheReset      Boolean @default(true)
+
+  updatedAt DateTime @updatedAt
 }
 
 /// Organiser-only accident reports. Printed from the report page.

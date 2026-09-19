@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { NO_ORGANISER_PERMISSIONS } from "@/lib/organiser-permissions";
+import { ORGANISER_PERMISSION_OPTIONS, type OrganiserPermissions } from "@/lib/organiser-permissions";
 import { isNavItemActive, navItems, shouldPrefetchNavLink } from "./site-nav-items";
+
+const NO_ORGANISER_PERMISSIONS: OrganiserPermissions = ORGANISER_PERMISSION_OPTIONS.reduce(
+  (acc, option) => {
+    acc[option.name] = false;
+    return acc;
+  },
+  {} as OrganiserPermissions,
+);
 
 describe("navItems", () => {
   it("includes Notices and Progress for members and organisers", () => {
@@ -62,7 +70,7 @@ describe("navItems with limited organiser permissions", () => {
 
     const reportsOnly = navItems(true, "/admin", {
       ...NO_ORGANISER_PERMISSIONS,
-      permReports: true,
+      permReportsView: true,
     }).map((item) => item.href);
     expect(reportsOnly).toContain("/admin/reports");
     expect(reportsOnly).not.toContain("/admin/messages");

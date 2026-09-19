@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { ClerkAPIResponseError } from "@clerk/nextjs/errors";
 import type { RateLimitResult } from "@/lib/rate-limit";
 
-const { requireAdmin, checkRateLimit, actorTokensCreate, prismaMock } = vi.hoisted(() => ({
+const { requireAdmin, checkRateLimit, actorTokensCreate, prismaMock, isOwner } = vi.hoisted(() => ({
   requireAdmin: vi.fn(),
   checkRateLimit: vi.fn((): RateLimitResult => ({ ok: true })),
   actorTokensCreate: vi.fn(),
@@ -10,10 +10,14 @@ const { requireAdmin, checkRateLimit, actorTokensCreate, prismaMock } = vi.hoist
     user: { findUnique: vi.fn() },
     impersonationEvent: { create: vi.fn() },
   },
+  // Owner by default — impersonation is owner-only regardless of the
+  // Organiser role. See the "not the owner" test below.
+  isOwner: vi.fn(async (userId: string) => userId === "admin-1"),
 }));
 
 vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
+vi.mock("@/lib/site-owner", () => ({ isOwner }));
 vi.mock("@clerk/nextjs/server", () => ({
   clerkClient: vi.fn(async () => ({ actorTokens: { create: actorTokensCreate } })),
 }));
@@ -30,21 +34,19 @@ const ADMIN = {
   email: "admin@example.com",
   firstName: "Ada",
   lastName: "Min",
-  // Full access by default so existing tests exercise the authorized path —
-  // see "rejects an organiser without the Members permission" for the guard.
   permWalksView: true,
   permWalksCreate: true,
   permWalksEdit: true,
   permWalksCancel: true,
-  permWalksDelete: true,
   permWalksAttendance: true,
   permWalksHealth: true,
   permWalksJourney: true,
   permWalksExport: true,
   permMembersView: true,
-  permMembersRemove: true,
   permMessages: true,
-  permReports: true,
+  permReportsView: true,
+  permReportsEdit: true,
+  permReportsCreate: true,
   permHomepage: true,
   permNotices: true,
   permProgress: true,
@@ -75,12 +77,12 @@ beforeEach(() => {
 });
 
 describe("startImpersonation", () => {
-  it("rejects an organiser without the Remove members permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembersRemove: false });
+  it("rejects an organiser who isn't the owner — impersonation is owner-only", async () => {
+    isOwner.mockResolvedValueOnce(false);
     const result = await startImpersonation(null, form({ targetId: MEMBER.id }));
     expect(result).toEqual({
       ok: false,
-      error: "You do not have permission to manage removing a member's account.",
+      error: "Only the site owner can log in as a member.",
     });
     expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
   });

@@ -1,49 +1,37 @@
 /**
- * Granular organiser capabilities — chosen when a member is
- * invited/promoted (see setMemberRole in src/server/actions/members.ts)
- * and editable after from Members (see setOrganiserPermissions). Only
- * meaningful once role is ADMIN; a MEMBER row's columns just sit unused
- * until they're promoted, and a promotion writes these columns
- * immediately — even while the row is still MEMBER pending an invite —
- * so whatever was picked at invite time is already in place the moment
- * they accept.
+ * Granular organiser capabilities — one shared set applied to every
+ * organiser at once (see src/lib/role-permissions.ts), editable by the
+ * site owner from Settings → Roles. Organisers are no longer configured
+ * individually — there is no more per-person picker at invite time or
+ * afterwards.
  *
- * One permission per admin page (Reports and Messages used to be one
- * combined permission, and everything from Homepage down used to be one
- * combined "Settings" permission — split apart so, e.g., someone can
- * manage the newsletter without also being able to reset the site).
+ * One permission per admin page (Reports split into View/Edit/Create;
+ * everything from Homepage down is one permission per settings area).
+ * A few sensitive, irreversible actions — deleting a walk, removing a
+ * member's account or logging in as one, deleting an accident report —
+ * stay owner-only outright and have no column here at all (see
+ * PERMISSION_AREA_LABEL / ownerDenied call sites for the list).
  *
- * These are read alongside role (getOptionalUser already selects every
- * column) to decide what the nav shows — see site-nav-items.ts — and are
- * enforced on every admin page and server action itself (requirePermission
- * in src/lib/auth.ts; permissionDenied in src/server/actions/shared.ts), so
- * a limited organiser who already knows a hidden URL is still turned away
- * there.
- *
- * Choosing WHO gets these permissions is itself a separate, narrower
- * capability — promoting/demoting an organiser, editing an existing
- * organiser's permissions, and removing an organiser's account are all
- * restricted to the single site owner (see src/lib/site-owner.ts), not
- * just anyone holding the Members permission here. setMemberRole and
- * setOrganiserPermissions both also refuse to leave an organiser with
- * none of these switched on at all (see hasAnyPermission below) — the
- * whole point of the role is the extra access, so an organiser with
- * nothing granted is never a state either action will produce.
+ * Read alongside role to decide what the nav shows — see site-nav-items.ts
+ * — and enforced on every admin page and server action itself
+ * (requirePermission in src/lib/auth.ts; permissionDenied in
+ * src/server/actions/shared.ts), so a limited organiser who already knows
+ * a hidden URL is still turned away there.
  */
 export type OrganiserPermissions = {
   permWalksView: boolean;
   permWalksCreate: boolean;
   permWalksEdit: boolean;
   permWalksCancel: boolean;
-  permWalksDelete: boolean;
   permWalksAttendance: boolean;
   permWalksHealth: boolean;
   permWalksJourney: boolean;
   permWalksExport: boolean;
   permMembersView: boolean;
-  permMembersRemove: boolean;
   permMessages: boolean;
-  permReports: boolean;
+  permReportsView: boolean;
+  permReportsEdit: boolean;
+  permReportsCreate: boolean;
   permHomepage: boolean;
   permNotices: boolean;
   permProgress: boolean;
@@ -58,15 +46,15 @@ export const FULL_ORGANISER_PERMISSIONS: OrganiserPermissions = {
   permWalksCreate: true,
   permWalksEdit: true,
   permWalksCancel: true,
-  permWalksDelete: true,
   permWalksAttendance: true,
   permWalksHealth: true,
   permWalksJourney: true,
   permWalksExport: true,
   permMembersView: true,
-  permMembersRemove: true,
   permMessages: true,
-  permReports: true,
+  permReportsView: true,
+  permReportsEdit: true,
+  permReportsCreate: true,
   permHomepage: true,
   permNotices: true,
   permProgress: true,
@@ -76,54 +64,8 @@ export const FULL_ORGANISER_PERMISSIONS: OrganiserPermissions = {
   permCacheReset: true,
 };
 
-export const NO_ORGANISER_PERMISSIONS: OrganiserPermissions = {
-  permWalksView: false,
-  permWalksCreate: false,
-  permWalksEdit: false,
-  permWalksCancel: false,
-  permWalksDelete: false,
-  permWalksAttendance: false,
-  permWalksHealth: false,
-  permWalksJourney: false,
-  permWalksExport: false,
-  permMembersView: false,
-  permMembersRemove: false,
-  permMessages: false,
-  permReports: false,
-  permHomepage: false,
-  permNotices: false,
-  permProgress: false,
-  permEmails: false,
-  permSubscribers: false,
-  permDisplay: false,
-  permCacheReset: false,
-};
-
-/**
- * Pre-checked when inviting/promoting a new organiser (see
- * MemberRoleButton) — a "day-to-day walk helper" profile rather than
- * full access: the things a helper actually needs (schedule and adjust
- * walks, see and manage who's coming, log an accident, see the member
- * list) are on; permanent, sensitive, or site-wide things (deleting a
- * walk, health notes, retention/export, removing a member's account,
- * the contact inbox, anything under Settings & homepage) stay off until
- * the owner deliberately extends that trust. Editable per-row before
- * sending the invite either way — this is just the starting point.
- */
-export const DEFAULT_INVITE_PERMISSIONS: OrganiserPermissions = {
-  ...NO_ORGANISER_PERMISSIONS,
-  permWalksView: true,
-  permWalksCreate: true,
-  permWalksEdit: true,
-  permWalksCancel: true,
-  permWalksAttendance: true,
-  permWalksJourney: true,
-  permMembersView: true,
-  permReports: true,
-};
-
-/** `group` is a UI grouping only (see organiser-permissions-fields.tsx) —
- * every check in this file treats all twenty the same way. */
+/** `group` is a UI grouping only (see the Settings → Roles grid) — every
+ * check in this file treats all twenty the same way. */
 export const ORGANISER_PERMISSION_OPTIONS: {
   name: keyof OrganiserPermissions;
   label: string;
@@ -133,7 +75,7 @@ export const ORGANISER_PERMISSION_OPTIONS: {
   {
     name: "permWalksView",
     label: "View walks",
-    hint: "See the walks admin pages — schedule, roster counts, and journey log.",
+    hint: "See the walks admin pages — schedule, roster counts, journey log, and cancelled walks.",
     group: "Walks",
   },
   {
@@ -152,12 +94,6 @@ export const ORGANISER_PERMISSION_OPTIONS: {
     name: "permWalksCancel",
     label: "Cancel or end walks",
     hint: "Cancel a walk before it starts, or end one early.",
-    group: "Walks",
-  },
-  {
-    name: "permWalksDelete",
-    label: "Delete walks",
-    hint: "Permanently remove a walk.",
     group: "Walks",
   },
   {
@@ -191,21 +127,27 @@ export const ORGANISER_PERMISSION_OPTIONS: {
     group: "Core",
   },
   {
-    name: "permMembersRemove",
-    label: "Remove members",
-    hint: "Delete a plain member's account, or log in as one.",
-    group: "Core",
-  },
-  {
     name: "permMessages",
     label: "Messages",
     hint: "Read and manage contact-form messages.",
     group: "Core",
   },
   {
-    name: "permReports",
-    label: "Accident reports",
-    hint: "Record and view accident reports.",
+    name: "permReportsView",
+    label: "View accident reports",
+    hint: "See the accident report list and print a report.",
+    group: "Core",
+  },
+  {
+    name: "permReportsEdit",
+    label: "Edit accident reports",
+    hint: "Update an existing accident report's details.",
+    group: "Core",
+  },
+  {
+    name: "permReportsCreate",
+    label: "Create accident reports",
+    hint: "Log a new accident report.",
     group: "Core",
   },
   {
@@ -267,14 +209,6 @@ export function hasAnySettingsPermission(perms: OrganiserPermissions): boolean {
   return SETTINGS_GROUP_OPTIONS.some((option) => perms[option.name]);
 }
 
-/** The whole point of being an organiser is the extra access it grants —
- * an organiser with every permission switched off can't do anything an
- * ordinary member can't, so setMemberRole and setOrganiserPermissions both
- * require this to be true before saving. */
-export function hasAnyPermission(perms: OrganiserPermissions): boolean {
-  return ORGANISER_PERMISSION_OPTIONS.some((option) => perms[option.name]);
-}
-
 /** Same "absent checkbox reads as false" convention as email preferences
  * (see readPreferences in src/server/actions/email-preferences.ts). */
 export function readOrganiserPermissions(formData: FormData): OrganiserPermissions {
@@ -289,38 +223,24 @@ export function readOrganiserPermissions(formData: FormData): OrganiserPermissio
  * Where to send a brand-new organiser right after they gain access (e.g.
  * accepting an invite) — always the Walks page, same as the nav's own
  * Walks link (site-nav-items.ts) and the walk-share page's back-link
- * (src/app/w/[token]/page.tsx): the admin dashboard if they were granted
- * Walks, the ordinary member Walks page otherwise. Every admin page now
- * checks its own specific permission (requirePermission), so a fixed
- * "/admin/members" or similar would 404 for an organiser who wasn't
- * granted that one — Walks is the one page every organiser and member
- * alike can always open.
+ * (src/app/w/[token]/page.tsx): the admin dashboard if the Organiser role
+ * currently includes Walks, the ordinary member Walks page otherwise.
  */
 export function walksLandingPath(perms: OrganiserPermissions): string {
-  return perms.permWalksView ? "/admin" : "/walks";
-}
-
-export function pickOrganiserPermissions(user: OrganiserPermissions): OrganiserPermissions {
-  const result = {} as OrganiserPermissions;
-  for (const option of ORGANISER_PERMISSION_OPTIONS) {
-    result[option.name] = user[option.name];
-  }
-  return result;
+  return perms.permWalksView || perms.permWalksCreate ? "/admin" : "/walks";
 }
 
 /**
- * A complete sentence describing what's actually granted — used to fill
- * the `{permissionsList}` placeholder in the organiser-invite email (see
- * sendOrganiserInviteEmail), so the email never overpromises full access
- * for an invite that only switched a couple of things on. Same wording as
- * the invite accept page (src/app/organiser-invite/[token]/page.tsx) for
- * the "nothing granted" case; the granted case is prose instead of that
- * page's bullet list, since this is one paragraph in an email.
+ * A complete sentence describing what the Organiser role currently grants —
+ * used to fill the `{permissionsList}` placeholder in the organiser-invite
+ * email (see sendOrganiserInviteEmail) and shown on the invite-accept page
+ * (src/app/organiser-invite/[token]/page.tsx), so an invitee knows upfront
+ * what they're accepting.
  */
 export function describeOrganiserPermissions(perms: OrganiserPermissions): string {
   const granted = ORGANISER_PERMISSION_OPTIONS.filter((option) => perms[option.name]);
   if (granted.length === 0) {
-    return "No specific organiser tools were switched on for this invite — check with whoever invited you once you've accepted.";
+    return "No organiser tools are currently switched on — check with whoever invited you once you've accepted.";
   }
   if (granted.length === ORGANISER_PERMISSION_OPTIONS.length) {
     return "You'll have full access — everything an organiser can do on the site.";

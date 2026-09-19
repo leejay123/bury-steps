@@ -62,7 +62,6 @@ export default async function MembersPage({
           initialTotal={total}
           inviteRequired={setting?.organiserInviteRequired ?? false}
           roleFilter={role}
-          viewerCanRemoveMembers={admin.permMembersRemove}
           viewerId={admin.id}
           viewerIsOwner={admin.id === ownerId}
         />

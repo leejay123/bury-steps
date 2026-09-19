@@ -1,10 +1,8 @@
 "use client";
 
 import type React from "react";
-import { DEFAULT_INVITE_PERMISSIONS, type OrganiserPermissions } from "@/lib/organiser-permissions";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DeleteMemberButton } from "../delete-member-button";
-import { EditPermissionsButton } from "../edit-permissions-button";
 import { ImpersonateButton } from "../impersonate-button";
 import { MemberRoleButton } from "../member-role-button";
 import { MemberRowActionsMenu } from "../member-row-actions-menu";
@@ -13,8 +11,8 @@ import { CancelInviteButton, ResendInviteButton } from "../pending-invite-action
 
 /**
  * All the header action buttons on a member's own page (role change/invite,
- * permissions, ownership transfer, remove) — a client component, not built
- * inline in the server-rendered page.
+ * ownership transfer, remove) — a client component, not built inline in the
+ * server-rendered page.
  *
  * Building the "⋯" menu means sharing one plain mutable ref object between
  * two separately-rendered pieces: the hidden widget it points at, and the
@@ -32,9 +30,7 @@ export function MemberDetailActions({
   isYou,
   name,
   pendingInvite,
-  permissions,
   role,
-  viewerCanRemoveMembers,
   viewerIsOwner,
   walkCount,
 }: {
@@ -44,12 +40,8 @@ export function MemberDetailActions({
   isYou: boolean;
   name: string;
   pendingInvite: { sentAt: string; expiresAt: string; expired: boolean } | null;
-  permissions: OrganiserPermissions;
   role: "ADMIN" | "MEMBER";
-  /** permMembersRemove — gates removing a plain member's account and
-   * logging in as one. Removing an organiser stays owner-only regardless
-   * (see viewerIsOwner below), same as the server action's own check. */
-  viewerCanRemoveMembers: boolean;
+  /** Removing any member's account (or logging in as one) is owner-only. */
   viewerIsOwner: boolean;
   walkCount: number;
 }) {
@@ -77,34 +69,12 @@ export function MemberDetailActions({
       key: "cancel",
       menuItem: <CancelInviteButton asMenuItem key="cancel" userId={id} />,
     });
-    if (viewerIsOwner) {
-      const editPermissionsRef: { current: HTMLButtonElement | null } = { current: null };
-      actions.push({
-        key: "edit-permissions",
-        menuItem: (
-          <DropdownMenuItem key="edit-permissions" onSelect={() => editPermissionsRef.current?.click()}>
-            Edit permissions
-          </DropdownMenuItem>
-        ),
-        hiddenWidget: (
-          <EditPermissionsButton
-            hideTrigger
-            initialPermissions={permissions}
-            key="edit-permissions-hidden"
-            name={name}
-            triggerRef={editPermissionsRef}
-            userId={id}
-          />
-        ),
-      });
-    }
   } else if (
     // Changing your own role here would be easy to hit by mistake and
     // immediately cost you organiser access to fix it — same reasoning as
     // hiding your own Remove action below. Another organiser can change it
-    // for you instead. Promoting, demoting, editing permissions, and
-    // transferring ownership are all owner-only regardless of whose page
-    // this is.
+    // for you instead. Promoting, demoting, and transferring ownership are
+    // all owner-only regardless of whose page this is.
     !isYou &&
     viewerIsOwner
   ) {
@@ -120,12 +90,6 @@ export function MemberDetailActions({
       hiddenWidget: (
         <MemberRoleButton
           hideTrigger
-          // Promoting starts from the safer "walk helper" default
-          // (DEFAULT_INVITE_PERMISSIONS) rather than whatever's sitting
-          // in this MEMBER row's dormant, never-used permission columns
-          // — demoting keeps passing their real current permissions,
-          // which still matters there.
-          initialPermissions={promoting ? DEFAULT_INVITE_PERMISSIONS : permissions}
           inviteRequired={inviteRequired}
           key="role-hidden"
           name={name}
@@ -136,49 +100,28 @@ export function MemberDetailActions({
       ),
     });
     if (role === "ADMIN") {
-      const editPermissionsRef: { current: HTMLButtonElement | null } = { current: null };
       const transferRef: { current: HTMLButtonElement | null } = { current: null };
-      actions.push(
-        {
-          key: "edit-permissions",
-          menuItem: (
-            <DropdownMenuItem key="edit-permissions" onSelect={() => editPermissionsRef.current?.click()}>
-              Edit permissions
-            </DropdownMenuItem>
-          ),
-          hiddenWidget: (
-            <EditPermissionsButton
-              hideTrigger
-              initialPermissions={permissions}
-              key="edit-permissions-hidden"
-              name={name}
-              triggerRef={editPermissionsRef}
-              userId={id}
-            />
-          ),
-        },
-        {
-          key: "transfer",
-          menuItem: (
-            <DropdownMenuItem key="transfer" onSelect={() => transferRef.current?.click()}>
-              Make owner
-            </DropdownMenuItem>
-          ),
-          hiddenWidget: (
-            <TransferOwnershipButton
-              hideTrigger
-              key="transfer-hidden"
-              name={name}
-              triggerRef={transferRef}
-              userId={id}
-            />
-          ),
-        },
-      );
+      actions.push({
+        key: "transfer",
+        menuItem: (
+          <DropdownMenuItem key="transfer" onSelect={() => transferRef.current?.click()}>
+            Make owner
+          </DropdownMenuItem>
+        ),
+        hiddenWidget: (
+          <TransferOwnershipButton
+            hideTrigger
+            key="transfer-hidden"
+            name={name}
+            triggerRef={transferRef}
+            userId={id}
+          />
+        ),
+      });
     }
   }
 
-  if (!isYou && (role === "ADMIN" ? viewerIsOwner : viewerCanRemoveMembers)) {
+  if (!isYou && viewerIsOwner) {
     const deleteRef: { current: HTMLButtonElement | null } = { current: null };
     actions.push({
       key: "delete",
@@ -204,7 +147,7 @@ export function MemberDetailActions({
 
   return (
     <div className="flex flex-wrap gap-2 sm:shrink-0 sm:justify-end">
-      {role === "MEMBER" && !pendingInvite && viewerCanRemoveMembers ? (
+      {role === "MEMBER" && !pendingInvite && viewerIsOwner ? (
         <ImpersonateButton name={name} userId={id} />
       ) : null}
       {actions.length > 0 ? (
