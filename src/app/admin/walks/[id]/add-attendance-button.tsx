@@ -5,8 +5,10 @@ import { useFormStatus } from "react-dom";
 import { UserPlus } from "lucide-react";
 import { adminClockIn, searchAddableMembers, type ActionResult } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { utcToLondonWallClock } from "@/lib/dates";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
+import { DateTimePicker } from "@/components/date-time-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,10 +43,12 @@ function AddAttendanceDialogForm({
   onClose,
   walkCompleted,
   walkId,
+  walkStartsAt,
 }: {
   onClose: () => void;
   walkCompleted: boolean;
   walkId: string;
+  walkStartsAt: string;
 }) {
   const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
     adminClockIn,
@@ -56,6 +60,14 @@ function AddAttendanceDialogForm({
   const [selectedUserId, setSelectedUserId] = useState("");
   const [searching, startSearch] = useTransition();
   useActionToast(state, onClose);
+
+  // A sensible starting point, not a fixed rule any more — the organiser
+  // can pick any time in the fields below. Completed walk: default to its
+  // start, same reasoning as before (they did the walk, not "arrived"
+  // after it finished). Still open: default to right now.
+  const defaultClockedInAt = walkCompleted
+    ? utcToLondonWallClock(walkStartsAt)
+    : utcToLondonWallClock(new Date());
 
   useEffect(() => {
     let cancelled = false;
@@ -84,8 +96,8 @@ function AddAttendanceDialogForm({
           <AlertDialogTitle>Add someone who was there?</AlertDialogTitle>
           <AlertDialogDescription>
             {walkCompleted
-              ? "Use this when they walked with you but missed clock-in, or could not sign in before the window closed. They need an account. They will show as attending from the start, with no health notes."
-              : "Use this when they are on the walk but their phone died, or they cannot clock in themselves. They need an account. Clock-in time is recorded now, with no health notes."}
+              ? "Use this when they walked with you but missed clock-in, or could not sign in before the window closed. They need an account, and won't have any health notes on file."
+              : "Use this when they are on the walk but their phone died, or they cannot clock in themselves. They need an account, and won't have any health notes on file."}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <input name="walkId" type="hidden" value={walkId} />
@@ -143,6 +155,26 @@ function AddAttendanceDialogForm({
                 </p>
               ) : null}
             </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor={`add-clocked-in-${walkId}`} required>
+                  Clocked in
+                </Label>
+                <DateTimePicker
+                  defaultValue={defaultClockedInAt}
+                  id={`add-clocked-in-${walkId}`}
+                  name="clockedInAt"
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor={`add-clocked-out-${walkId}`}>Clocked out</Label>
+                <DateTimePicker id={`add-clocked-out-${walkId}`} name="clockedOutAt" />
+                <p className="text-xs text-muted-foreground">
+                  Leave blank if they’re still on the walk.
+                </p>
+              </div>
+            </div>
           </div>
         )}
         <FormError message={state && !state.ok ? state.error : null} />
@@ -163,10 +195,12 @@ export function AddAttendanceButton({
   className,
   walkCompleted,
   walkId,
+  walkStartsAt,
 }: {
   className?: string;
   walkCompleted: boolean;
   walkId: string;
+  walkStartsAt: string;
 }) {
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState(0);
@@ -191,6 +225,7 @@ export function AddAttendanceButton({
           onClose={() => setOpen(false)}
           walkCompleted={walkCompleted}
           walkId={walkId}
+          walkStartsAt={walkStartsAt}
         />
       ) : null}
     </AlertDialog>

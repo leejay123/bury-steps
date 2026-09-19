@@ -4,13 +4,9 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireAdmin, requireUser, displayName } from "@/lib/auth";
-import {
-  canOrganiserAddAttendance,
-  organiserRecordedClockInAt,
-  windowState,
-} from "@/lib/walk-window";
+import { canOrganiserAddAttendance, windowState } from "@/lib/walk-window";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { formatWalkDate } from "@/lib/dates";
+import { formatWalkDate, londonWallClockToUtc } from "@/lib/dates";
 import { meetingPointLabel } from "@/lib/geocode";
 import { walkShareUrl } from "@/lib/walk-slug";
 import { appUrl } from "@/lib/urls";
@@ -157,6 +153,19 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
 const adminClockInSchema = z.object({
   walkId: z.string().min(1),
   userId: z.string().min(1, "Choose who to add."),
+  clockedInAt: z
+    .string()
+    .min(1, "Pick when they clocked in.")
+    .refine((value) => !Number.isNaN(londonWallClockToUtc(value).getTime()), "Pick a valid time."),
+  // Optional — blank means they're still on the walk, same as clocking in
+  // normally leaves clockedOutAt null until they actually clock out.
+  clockedOutAt: z
+    .string()
+    .refine(
+      (value) => value === "" || !Number.isNaN(londonWallClockToUtc(value).getTime()),
+      "Pick a valid time.",
+    )
+    .optional(),
 });
 
 /** Cap for the Add someone picker so thousands of members never flood the dialog. */
@@ -229,9 +238,23 @@ export async function adminClockIn(
   const parsed = adminClockInSchema.safeParse({
     walkId: formData.get("walkId"),
     userId: formData.get("userId"),
+    clockedInAt: formData.get("clockedInAt"),
+    // The picker's hidden input always renders (even blank), so a normal
+    // submission sends "" here, not a missing field — but be defensive
+    // against a request that omits it outright too.
+    clockedOutAt: formData.get("clockedOutAt") ?? "",
   });
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0].message };
+  }
+
+  const recordedClockedInAt = londonWallClockToUtc(parsed.data.clockedInAt);
+  const recordedClockedOutAt =
+    parsed.data.clockedOutAt && parsed.data.clockedOutAt !== ""
+      ? londonWallClockToUtc(parsed.data.clockedOutAt)
+      : null;
+  if (recordedClockedOutAt && recordedClockedOutAt <= recordedClockedInAt) {
+    return { ok: false, error: "Clock-out time must be after clock-in time." };
   }
 
   const member = await prisma.user.findUnique({
@@ -303,16 +326,15 @@ export async function adminClockIn(
       }
 
       const now = new Date();
-      const clockedInAt = organiserRecordedClockInAt(locked, now);
       const purgeAfter = new Date(
         locked.startsAt.getTime() + CONDITIONS_RETENTION_DAYS * 24 * 60 * 60 * 1000,
       );
       const attendanceData = {
-        clockedInAt,
+        clockedInAt: recordedClockedInAt,
         medicalAckAt: now,
         conditions: null,
         conditionsPurgeAfter: purgeAfter,
-        clockedOutAt: null,
+        clockedOutAt: recordedClockedOutAt,
         clockedOutReason: null,
       };
 

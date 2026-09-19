@@ -242,7 +242,12 @@ describe("adminClockIn", () => {
   };
 
   function adminClockInForm(overrides: Partial<Record<string, string>> = {}) {
-    return form({ walkId: "walk-1", userId: member.id, ...overrides });
+    return form({
+      walkId: "walk-1",
+      userId: member.id,
+      clockedInAt: "2026-01-05T14:30",
+      ...overrides,
+    });
   }
 
   it("rejects when the member is no longer there", async () => {
@@ -329,6 +334,45 @@ describe("adminClockIn", () => {
       }),
     );
     expect(result).toEqual({ ok: true, message: "Jo has been clocked in." });
+  });
+
+  it("records the organiser-chosen clock-in and clock-out times, not just now", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce(member);
+    queryRaw.mockResolvedValueOnce([lockedWalkRow()]);
+    prismaMock.attendance.findUnique.mockResolvedValueOnce(null);
+    windowState.mockReturnValueOnce("open");
+    prismaMock.attendance.create.mockResolvedValueOnce({});
+
+    await adminClockIn(
+      null,
+      adminClockInForm({ clockedInAt: "2026-01-05T14:05", clockedOutAt: "2026-01-05T15:35" }),
+    );
+
+    const data = prismaMock.attendance.create.mock.calls[0][0].data;
+    expect(data.clockedInAt.toISOString()).toBe("2026-01-05T14:05:00.000Z");
+    expect(data.clockedOutAt.toISOString()).toBe("2026-01-05T15:35:00.000Z");
+  });
+
+  it("leaves clockedOutAt null when no clock-out time is given", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce(member);
+    queryRaw.mockResolvedValueOnce([lockedWalkRow()]);
+    prismaMock.attendance.findUnique.mockResolvedValueOnce(null);
+    windowState.mockReturnValueOnce("open");
+    prismaMock.attendance.create.mockResolvedValueOnce({});
+
+    await adminClockIn(null, adminClockInForm());
+
+    const data = prismaMock.attendance.create.mock.calls[0][0].data;
+    expect(data.clockedOutAt).toBeNull();
+  });
+
+  it("rejects a clock-out time at or before the clock-in time", async () => {
+    const result = await adminClockIn(
+      null,
+      adminClockInForm({ clockedInAt: "2026-01-05T14:30", clockedOutAt: "2026-01-05T14:30" }),
+    );
+    expect(result).toEqual({ ok: false, error: "Clock-out time must be after clock-in time." });
+    expect(transaction).not.toHaveBeenCalled();
   });
 
   it("emails the member that they were added", async () => {

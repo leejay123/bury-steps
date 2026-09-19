@@ -312,6 +312,7 @@ export default async function WalkDetailPage({
                   className="w-full sm:w-auto"
                   walkCompleted={isCompleted}
                   walkId={walk.id}
+                  walkStartsAt={walk.startsAt.toISOString()}
                 />
               </div>
             ) : null}
