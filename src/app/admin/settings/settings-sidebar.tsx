@@ -22,7 +22,8 @@ import {
 import { cn } from "@/lib/utils";
 import { unlockIdleDocument } from "@/components/overlay-root";
 
-type NavItem = { href: string; label: string; icon: LucideIcon; danger?: boolean };
+type NavChild = { href: string; label: string };
+type NavItem = { href: string; label: string; icon: LucideIcon; danger?: boolean; children?: NavChild[] };
 type NavGroup = { label: string; items: NavItem[] };
 
 const GROUPS: NavGroup[] = [
@@ -34,7 +35,18 @@ const GROUPS: NavGroup[] = [
       { href: "/admin/settings/faqs", label: "FAQs", icon: HelpCircle },
       { href: "/admin/settings/branding", label: "Branding", icon: LayoutGrid },
       { href: "/admin/settings/homepage-layout", label: "Homepage layout", icon: SlidersHorizontal },
-      { href: "/admin/settings/site-wording", label: "Site wording", icon: Text },
+      {
+        href: "/admin/settings/site-wording/how-this-started",
+        label: "Site wording",
+        icon: Text,
+        children: [
+          { href: "/admin/settings/site-wording/how-this-started", label: "How this started" },
+          { href: "/admin/settings/site-wording/about-lists", label: "About lists" },
+          { href: "/admin/settings/site-wording/testimonials", label: "Testimonials heading" },
+          { href: "/admin/settings/site-wording/faqs", label: "FAQ heading" },
+          { href: "/admin/settings/site-wording/walk-page-cards", label: "Walk page cards" },
+        ],
+      },
     ],
   },
   {
@@ -79,7 +91,7 @@ export function SettingsSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-56 shrink-0 flex-col gap-5 border-r bg-muted/30 px-3 py-5 md:flex">
+    <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-56 shrink-0 flex-col gap-5 overflow-y-auto border-r bg-muted/30 px-3 py-5 md:flex">
       <Link
         className="flex items-center gap-2 rounded-md px-2 py-1 text-sm font-semibold tracking-tight"
         href="/admin/settings"
@@ -87,35 +99,61 @@ export function SettingsSidebar() {
       >
         Settings
       </Link>
-      <nav className="flex flex-col gap-4 overflow-y-auto">
+      <nav className="flex flex-col gap-4">
         {GROUPS.map((group) => (
           <div className="flex flex-col gap-0.5" key={group.label}>
             <p className="px-2.5 py-1 text-[0.65rem] font-semibold tracking-wider text-muted-foreground uppercase">
               {group.label}
             </p>
             {group.items.map((item) => {
-              const active = pathname === item.href;
+              // A parent with children (Site wording) is "active" as long as
+              // you're anywhere under it — its own row then just opens the
+              // first child rather than needing a page of its own.
+              const active = item.children
+                ? pathname.startsWith(item.href.slice(0, item.href.lastIndexOf("/")))
+                : pathname === item.href;
               return (
-                <Link
-                  className={cn(
-                    "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-foreground transition-colors",
-                    active ? "bg-accent font-medium" : "hover:bg-accent/60",
-                    item.danger && "text-destructive",
-                  )}
-                  href={item.href}
-                  key={item.href}
-                  onClick={() => unlockIdleDocument()}
-                >
-                  <item.icon
-                    aria-hidden
+                <div key={item.href}>
+                  <Link
                     className={cn(
-                      "size-4 shrink-0",
-                      item.danger ? "text-destructive" : "text-muted-foreground",
-                      active && !item.danger && "text-foreground",
+                      "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-foreground transition-colors",
+                      active ? "bg-accent font-medium" : "hover:bg-accent/60",
+                      item.danger && "text-destructive",
                     )}
-                  />
-                  {item.label}
-                </Link>
+                    href={item.href}
+                    onClick={() => unlockIdleDocument()}
+                  >
+                    <item.icon
+                      aria-hidden
+                      className={cn(
+                        "size-4 shrink-0",
+                        item.danger ? "text-destructive" : "text-muted-foreground",
+                        active && !item.danger && "text-foreground",
+                      )}
+                    />
+                    {item.label}
+                  </Link>
+                  {item.children ? (
+                    <div className="mt-0.5 ml-[1.125rem] flex flex-col gap-0.5 border-l pl-3">
+                      {item.children.map((child) => {
+                        const childActive = pathname === child.href;
+                        return (
+                          <Link
+                            className={cn(
+                              "rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors",
+                              childActive ? "bg-accent font-medium text-foreground" : "hover:bg-accent/60",
+                            )}
+                            href={child.href}
+                            key={child.href}
+                            onClick={() => unlockIdleDocument()}
+                          >
+                            {child.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
               );
             })}
           </div>

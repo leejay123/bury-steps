@@ -100,7 +100,7 @@ const SETTINGS_ITEM_ICONS: Record<string, LucideIcon> = {
   "/admin/settings/faqs": HelpCircle,
   "/admin/settings/branding": LayoutGrid,
   "/admin/settings/homepage-layout": SlidersHorizontal,
-  "/admin/settings/site-wording": Text,
+  "/admin/settings/site-wording/how-this-started": Text,
   "/admin/settings/notices": Bell,
   "/admin/settings/emails": Mail,
   "/admin/settings/subscribers": Users,

@@ -71,7 +71,7 @@ export const SETTINGS_MENU_GROUPS: { label: string; items: { href: string; label
       { href: "/admin/settings/faqs", label: "FAQs" },
       { href: "/admin/settings/branding", label: "Branding" },
       { href: "/admin/settings/homepage-layout", label: "Homepage layout" },
-      { href: "/admin/settings/site-wording", label: "Site wording" },
+      { href: "/admin/settings/site-wording/how-this-started", label: "Site wording" },
     ],
   },
   {

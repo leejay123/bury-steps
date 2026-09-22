@@ -521,7 +521,7 @@ export async function updateFaqSectionCopy(
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/site-wording");
+  revalidatePath("/admin/settings/site-wording/faqs");
   return { ok: true, message: "FAQ heading and intro saved." };
 }
 
@@ -576,7 +576,7 @@ export async function updateTestimonialsSectionCopy(
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/site-wording");
+  revalidatePath("/admin/settings/site-wording/testimonials");
   return { ok: true, message: "Testimonials heading and intro saved." };
 }
 
@@ -643,7 +643,7 @@ export async function updateHowThisStartedCopy(
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/site-wording");
+  revalidatePath("/admin/settings/site-wording/how-this-started");
   return { ok: true, message: "How this started copy saved." };
 }
 
@@ -741,7 +741,7 @@ export async function updateAboutLists(
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/site-wording");
+  revalidatePath("/admin/settings/site-wording/about-lists");
   return { ok: true, message: "About lists saved." };
 }
 
@@ -796,7 +796,7 @@ export async function updateWalkPageCopy(
 
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/site-wording");
+  revalidatePath("/admin/settings/site-wording/walk-page-cards");
   return { ok: true, message: "Walk page copy saved." };
 }
 
