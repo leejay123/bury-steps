@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 import { setSiteNoticeEnabled } from "@/server/actions";
 import type { NoticeView } from "@/lib/notices";
 import { useOptimisticSettingToggle } from "@/hooks/use-optimistic-setting-toggle";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 
 export function WelcomeEnabledToggle({ notice }: { notice: NoticeView }) {
   const { on, toggle, isPending } = useOptimisticSettingToggle({
@@ -25,7 +25,7 @@ export function WelcomeEnabledToggle({ notice }: { notice: NoticeView }) {
       {isPending ? (
         <Loader2 aria-label="Saving" className="size-4 shrink-0 animate-spin" role="status" />
       ) : (
-        <Checkbox checked={on} onCheckedChange={(value) => toggle(value === true)} />
+        <Switch checked={on} onCheckedChange={toggle} size="sm" />
       )}
       <span>{on ? "On in bell" : "Hidden"}</span>
     </label>
