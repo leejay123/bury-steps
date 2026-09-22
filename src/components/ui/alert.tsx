@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Info } from "lucide-react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
@@ -23,8 +24,58 @@ const alertVariants = cva(
   },
 );
 
-function Alert({ className, variant, ...props }: React.ComponentProps<"div"> & VariantProps<typeof alertVariants>) {
-  return <div data-slot="alert" role="alert" className={cn(alertVariants({ variant }), className)} {...props} />;
+/** An info alert reads as one flowing sentence — icon, then the title
+ * (bold) running straight into the description — rather than a bold
+ * title stacked above a separate line of body text. destructive/warning/
+ * success/default alerts keep the usual stacked title+description
+ * layout untouched.
+ *
+ * AlertTitle/AlertDescription are still passed exactly as before at every
+ * call site — this reads their `children` directly off the element props
+ * (no rendering trick, no context) and composes them into one paragraph,
+ * so no call site needs to change. */
+function Alert({
+  className,
+  variant,
+  children,
+  ...props
+}: React.ComponentProps<"div"> & VariantProps<typeof alertVariants>) {
+  if (variant === "info") {
+    const items = React.Children.toArray(children);
+    const titleEl = items.find(
+      (child): child is React.ReactElement<{ children?: React.ReactNode }> =>
+        React.isValidElement(child) && child.type === AlertTitle,
+    );
+    const descriptionEl = items.find(
+      (child): child is React.ReactElement<{ children?: React.ReactNode }> =>
+        React.isValidElement(child) && child.type === AlertDescription,
+    );
+    const rest = items.filter((child) => child !== titleEl && child !== descriptionEl);
+
+    return (
+      <div
+        data-slot="alert"
+        role="alert"
+        className={cn(alertVariants({ variant }), "flex items-start gap-3", className)}
+        {...props}
+      >
+        <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-current" />
+        <div className="flex-1 space-y-1">
+          <p className="leading-relaxed">
+            {titleEl ? <span className="font-medium">{titleEl.props.children} </span> : null}
+            {descriptionEl?.props.children}
+          </p>
+          {rest}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div data-slot="alert" role="alert" className={cn(alertVariants({ variant }), className)} {...props}>
+      {children}
+    </div>
+  );
 }
 
 function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
