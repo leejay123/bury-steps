@@ -69,6 +69,9 @@ export const SETTINGS_MENU_GROUPS: { label: string; items: { href: string; label
       { href: "/admin/settings/hero-photos", label: "Hero photos" },
       { href: "/admin/settings/testimonials", label: "Testimonials" },
       { href: "/admin/settings/faqs", label: "FAQs" },
+      { href: "/admin/settings/branding", label: "Branding" },
+      { href: "/admin/settings/homepage-layout", label: "Homepage layout" },
+      { href: "/admin/settings/site-wording", label: "Site wording" },
     ],
   },
   {
@@ -82,13 +85,14 @@ export const SETTINGS_MENU_GROUPS: { label: string; items: { href: string; label
   {
     label: "Site behaviour",
     items: [
-      { href: "/admin/settings/display", label: "Display" },
+      { href: "/admin/settings/behaviour", label: "Site behaviour" },
       { href: "/admin/settings/progress", label: "Progress" },
     ],
   },
   {
     label: "Maintenance",
     items: [
+      { href: "/admin/settings/retention", label: "Retention" },
       { href: "/admin/settings/cache", label: "Site cache" },
       { href: "/admin/settings/reset", label: "Reset the site" },
     ],

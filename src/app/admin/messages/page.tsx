@@ -28,13 +28,13 @@ export default async function AdminMessagesPage() {
         description={
           owner
             ? `Submissions from the public Contact us form. ${displayName(owner)} gets an email alert for each new one and can reply straight from it — nothing else happens automatically.`
-            : "Submissions from the public Contact us form. No one is set to be alerted by email yet — set that in Settings → Display → Contact messages."
+            : "Submissions from the public Contact us form. No one is set to be alerted by email yet — set that in Settings → Site behaviour → Contact messages."
         }
         title="Messages"
       />
       {!owner ? (
         <p className="text-sm text-muted-foreground">
-          <Link className="underline underline-offset-2" href="/admin/settings/display#contact-messages">
+          <Link className="underline underline-offset-2" href="/admin/settings/behaviour#contact-messages">
             Choose who gets alerted
           </Link>
         </p>

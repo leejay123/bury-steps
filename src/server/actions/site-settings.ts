@@ -140,7 +140,7 @@ export async function updateOrganiserInviteRequired(
   }
 
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/display");
+  revalidatePath("/admin/settings/behaviour");
   return {
     ok: true,
     message: enabled
@@ -186,7 +186,7 @@ export async function updateCancelledWalkRetentionDays(
 
   revalidatePath("/walks");
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/display");
+  revalidatePath("/admin/settings/retention");
   revalidatePath("/admin/guide");
   return {
     ok: true,
@@ -234,7 +234,7 @@ export async function updateAccidentReportRetentionDays(
 
   revalidatePath("/admin/reports");
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/display");
+  revalidatePath("/admin/settings/retention");
   revalidatePath("/admin/guide");
   return {
     ok: true,
@@ -286,7 +286,7 @@ export async function updateContactMessagesOwner(
   }
 
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/display");
+  revalidatePath("/admin/settings/behaviour");
   revalidatePath("/admin/messages");
   return {
     ok: true,
@@ -322,7 +322,7 @@ export async function updateScrollToTopEnabled(
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/", "layout");
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/display");
+  revalidatePath("/admin/settings/behaviour");
   return { ok: true, message: enabled ? "Back to top is on." : "Back to top is off." };
 }
 
@@ -356,7 +356,7 @@ export async function updateCookieConsentVariant(
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/", "layout");
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/display");
+  revalidatePath("/admin/settings/behaviour");
   return {
     ok: true,
     message:
@@ -405,7 +405,7 @@ export async function updateSiteBranding(
   revalidatePath("/", "layout");
   revalidatePath("/");
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/display");
+  revalidatePath("/admin/settings/branding");
   return { ok: true, message: "Site name and tagline saved." };
 }
 
@@ -444,7 +444,7 @@ export async function updateFacebookGroupUrl(
   revalidatePath("/", "layout");
   revalidatePath("/");
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/display");
+  revalidatePath("/admin/settings/branding");
   return {
     ok: true,
     message: facebookGroupUrl
@@ -481,7 +481,7 @@ export async function reorderHomepageSections(ids: HomepageSectionId[]): Promise
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/display");
+  revalidatePath("/admin/settings/homepage-layout");
   return { ok: true, message: "Homepage section order saved." };
 }
 
@@ -521,7 +521,7 @@ export async function updateFaqSectionCopy(
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/display");
+  revalidatePath("/admin/settings/site-wording");
   return { ok: true, message: "FAQ heading and intro saved." };
 }
 
@@ -576,7 +576,7 @@ export async function updateTestimonialsSectionCopy(
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/display");
+  revalidatePath("/admin/settings/site-wording");
   return { ok: true, message: "Testimonials heading and intro saved." };
 }
 
@@ -643,7 +643,7 @@ export async function updateHowThisStartedCopy(
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/display");
+  revalidatePath("/admin/settings/site-wording");
   return { ok: true, message: "How this started copy saved." };
 }
 
@@ -741,7 +741,7 @@ export async function updateAboutLists(
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/display");
+  revalidatePath("/admin/settings/site-wording");
   return { ok: true, message: "About lists saved." };
 }
 
@@ -796,7 +796,7 @@ export async function updateWalkPageCopy(
 
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/display");
+  revalidatePath("/admin/settings/site-wording");
   return { ok: true, message: "Walk page copy saved." };
 }
 

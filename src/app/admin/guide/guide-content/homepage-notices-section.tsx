@@ -41,9 +41,9 @@ export function HomepageNoticesSection() {
             <p>
               On <Link href="/admin/settings/hero-photos">Hero photos</Link> you add and reorder
               slides. Turn the carousel on or off under{" "}
-              <Link href="/admin/settings/display">Display</Link> → Layout. When it is off, the
-              homepage skips the slider. Photos you have added stay here so you can switch it back
-              on later.
+              <Link href="/admin/settings/homepage-layout">Homepage layout</Link>. When it is off,
+              the homepage skips the slider. Photos you have added stay here so you can switch it
+              back on later.
             </p>
             <p className="font-medium text-foreground">Testimonials</p>
             <p>
@@ -51,15 +51,16 @@ export function HomepageNoticesSection() {
               “Member”), the quote, and an optional photo. The photo fills the drawer; use the
               cross on it to take the photo off before you save. The section{" "}
               <strong>heading</strong> and <strong>intro</strong> are edited under{" "}
-              <Link href="/admin/settings/display">Display</Link>. Hidden on the homepage if you
-              have none.
+              <Link href="/admin/settings/site-wording">Site wording</Link>. Hidden on the
+              homepage if you have none.
             </p>
             <p className="font-medium text-foreground">FAQs</p>
             <p>
               Up to {MAX_HOMEPAGE_FAQS} questions in up to {MAX_FAQ_CATEGORIES} categories. Open{" "}
               <Link href="/admin/settings/faqs">FAQs</Link> to manage categories and questions.
               The section <strong>heading</strong> and <strong>intro</strong> are edited under{" "}
-              <Link href="/admin/settings/display">Display</Link>. Categories have their own
+              <Link href="/admin/settings/site-wording">Site wording</Link>. Categories have their
+              own
               list: tap a row to rename it in a drawer, or choose Add category to open the same
               drawer empty. Remove is on the list. You cannot remove a category that still has
               questions, or the last category.

@@ -42,18 +42,18 @@ export function PrivacySiteSection() {
               soon as you save. If they do not, use{" "}
               <Link href="/admin/settings/cache">Site cache</Link> in Settings. The photo slider
               is not created on every visit. A <strong>Back to top</strong> button can be turned
-              off in Display.
+              off in <Link href="/admin/settings/behaviour">Site behaviour</Link>.
             </p>
             <p>
               First-time visitors see a cookie notice at the bottom of the screen, with Accept
               and Decline. Organisers choose the layout under{" "}
-              <Link href="/admin/settings/display">Display</Link> (Default, Small, or Mini).
-              Either choice is remembered for a year. The site does not use advertising cookies.
-              Clerk still uses cookies that are needed to sign in. Vercel
+              <Link href="/admin/settings/behaviour">Site behaviour</Link> (Default, Small, or
+              Mini). Either choice is remembered for a year. The site does not use advertising
+              cookies. Clerk still uses cookies that are needed to sign in. Vercel
               Analytics counts page views to show which pages are popular, without a cookie or a
               per-person ID, so it is not affected by Accept or Decline. The notice links to the{" "}
               <Link href="/privacy-policy">Privacy Policy</Link>. The Facebook group link on the
-              site is also set under Display.
+              site is also set under <Link href="/admin/settings/branding">Branding</Link>.
             </p>
             <p>
               Pasting a link to the homepage or a walk (<code>/w/burrs-x7k2m9</code>) into WhatsApp,

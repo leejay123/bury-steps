@@ -3,7 +3,7 @@ import { HOMEPAGE_MEMBER_NOTICES_LIMIT } from "@/lib/homepage-copy";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { GuideBody, Steps } from "./shared";
 
-/** "Accident reports" and "Display". */
+/** "Accident reports" and "Settings". */
 export function ReportsDisplaySection() {
   return (
     <>
@@ -43,36 +43,51 @@ export function ReportsDisplaySection() {
       </AccordionItem>
 
       <AccordionItem className="px-4 md:px-6" value="display">
-        <AccordionTrigger className="text-base">Display</AccordionTrigger>
+        <AccordionTrigger className="text-base">Settings</AccordionTrigger>
         <AccordionContent>
           <GuideBody>
             <p>
               The site uses a fixed black and white look. Remove and Cancel stay red. Other
-              buttons stay white with a border. There is no colour picker.
+              buttons stay white with a border. There is no colour picker. Everything below sits
+              under <Link href="/admin/settings">Settings</Link>, split across a few pages.
             </p>
+            <p className="font-medium text-foreground">Branding</p>
             <p>
-              Open <Link href="/admin/settings/display">Display</Link> to set the public{" "}
+              Open <Link href="/admin/settings/branding">Branding</Link> to set the public{" "}
               <strong>site name</strong> and <strong>homepage tagline</strong> (also used in
-              browser tabs and share previews), the <strong>Facebook group</strong> link (leave
-              blank to hide it), the <strong>homepage section order</strong> (blocks below the
-              hero — <strong>How walks work</strong>, <strong>How this started</strong>,{" "}
+              browser tabs and share previews), the logo and favicon, the accident-report banner,
+              and the <strong>Facebook group</strong> link (leave blank to hide it).
+            </p>
+            <p className="font-medium text-foreground">Homepage layout</p>
+            <p>
+              Open <Link href="/admin/settings/homepage-layout">Homepage layout</Link> to set the{" "}
+              <strong>homepage section order</strong> (blocks below the hero —{" "}
+              <strong>How walks work</strong>, <strong>How this started</strong>,{" "}
               <strong>Latest notices</strong>, <strong>Testimonials</strong>,{" "}
-              <strong>FAQs</strong>), whether the <strong>hero photo carousel</strong> shows, the{" "}
+              <strong>FAQs</strong>) and whether the <strong>hero photo carousel</strong> shows.
+            </p>
+            <p className="font-medium text-foreground">Site wording</p>
+            <p>
+              Open <Link href="/admin/settings/site-wording">Site wording</Link> to edit the{" "}
               <strong>How this started</strong> heading, blurb, and full story (the story opens
               in a drawer), the About drawer <strong>goals / places / expect / rules</strong>{" "}
-              lists (each opens in a drawer), the{" "}
-              <strong>Testimonials</strong> heading and intro, the <strong>FAQ</strong> heading
-              and intro, how the cookie notice looks (
-              <strong>Default</strong>, <strong>Small</strong>, or <strong>Mini</strong>), and
-              whether <strong>Back to top</strong> appears after you scroll. Testimonials and FAQs
-              still hide on the homepage until you add at least one quote or question. Signed-in
+              lists (each opens in a drawer), the <strong>Testimonials</strong> heading and
+              intro, the <strong>FAQ</strong> heading and intro, and the walk-page cards. Signed-in
               members see up to {HOMEPAGE_MEMBER_NOTICES_LIMIT} of the newest notices in the{" "}
               <strong>Latest notices</strong> carousel (not the pinned welcome — that stays in
               the bell only; each card shows a short teaser). Tap a bell-only notice to open it
               in the bell drawer; tap a full-page notice to go to its page on{" "}
-              <strong>Notices</strong>.
-              Hairlines sit between sections, not under the last block before
-              the footer.
+              <strong>Notices</strong>. Testimonials and FAQs still hide on the homepage until you
+              add at least one quote or question. Hairlines sit between sections, not under the
+              last block before the footer.
+            </p>
+            <p className="font-medium text-foreground">Site behaviour</p>
+            <p>
+              Open <Link href="/admin/settings/behaviour">Site behaviour</Link> to set how the
+              cookie notice looks (<strong>Default</strong>, <strong>Small</strong>, or{" "}
+              <strong>Mini</strong>), whether <strong>Back to top</strong> appears after you
+              scroll, whether new organisers need an invite, and who gets emailed about contact
+              form messages.
             </p>
             <p>
               Open <Link href="/admin/settings/cache">Site cache</Link> if the public homepage

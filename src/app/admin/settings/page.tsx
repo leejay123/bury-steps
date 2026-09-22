@@ -40,6 +40,21 @@ export default async function AdminSettingsPage() {
               title: "FAQs",
               description: `Questions on the homepage. ${faqCount} of ${MAX_HOMEPAGE_FAQS}, in up to ${MAX_FAQ_CATEGORIES} categories.`,
             },
+            {
+              href: "/admin/settings/branding",
+              title: "Branding",
+              description: "Site name, tagline, logo, favicon, and the Facebook link.",
+            },
+            {
+              href: "/admin/settings/homepage-layout",
+              title: "Homepage layout",
+              description: "Section order and whether the photo carousel shows.",
+            },
+            {
+              href: "/admin/settings/site-wording",
+              title: "Site wording",
+              description: "Headings and body copy for homepage sections and the walk-page cards.",
+            },
           ]
         : [],
     },
@@ -82,10 +97,9 @@ export default async function AdminSettingsPage() {
         ...(admin.permDisplay
           ? [
               {
-                href: "/admin/settings/display",
-                title: "Display",
-                description:
-                  "Site name, tagline, Facebook link, homepage copy and section order, cookie notice, and back to top.",
+                href: "/admin/settings/behaviour",
+                title: "Site behaviour",
+                description: "Cookie notice, back to top, organiser invites, and the contact form.",
               },
             ]
           : []),
@@ -104,6 +118,11 @@ export default async function AdminSettingsPage() {
       label: "Maintenance",
       items: admin.permCacheReset
         ? [
+            {
+              href: "/admin/settings/retention",
+              title: "Retention",
+              description: "How long cancelled walks and accident reports are kept before auto-delete.",
+            },
             {
               href: "/admin/settings/cache",
               title: "Site cache",
@@ -143,7 +162,7 @@ export default async function AdminSettingsPage() {
     <div className="flex flex-col">
       <div className="relative px-4 py-6 md:px-6">
         <AdminPageIntro
-          description="Homepage photos, quotes, FAQs, notices, Progress, display, cache, and reset."
+          description="Homepage content, branding, wording, notices, site behaviour, and maintenance."
           title="Settings"
         />
         <FullWidthDivider position="bottom" />

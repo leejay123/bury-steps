@@ -1,5 +1,5 @@
 // Pure, client-safe constants/helpers only — no `prisma` import here. A
-// client component (admin/settings/display/retention-settings.tsx) imports
+// client component (admin/settings/retention/retention-settings.tsx) imports
 // MAX_RETENTION_DAYS from this module; keeping the DB-backed getters in a
 // separate walk-retention-server.ts stops @prisma/client's browser stub
 // from riding along into that page's client bundle (same issue as
