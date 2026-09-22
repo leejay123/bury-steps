@@ -25,7 +25,7 @@ export function RecentWalksCarousel({ walks }: { walks: RecentWalkCard[] }) {
     <Carousel className="w-full" opts={{ align: "start" }}>
       <CarouselContent>
         {walks.map((walk) => (
-          <CarouselItem key={walk.id}>
+          <CarouselItem className="md:basis-1/2" key={walk.id}>
             <Link
               className="block h-full w-full rounded-xl border p-4 transition-colors hover:bg-muted/50"
               href={walkSharePath(walk)}

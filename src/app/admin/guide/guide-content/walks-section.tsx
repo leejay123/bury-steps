@@ -33,7 +33,10 @@ export function WalksSection({
           </p>
           <p className="font-medium text-foreground">Create a walk</p>
           <Steps>
-            <li>Fill in a title (for example “Burrs Country Park loop”).</li>
+            <li>
+              Choose <strong>Create a walk</strong> above the list — it opens a panel with the
+              form. Fill in a title (for example “Burrs Country Park loop”).
+            </li>
             <li>
               Set the date and start time in <strong>UK time</strong>. Choose date and time
               opens a compact calendar over the form: pick the day, then the hour and minute.

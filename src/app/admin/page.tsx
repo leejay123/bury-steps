@@ -1,9 +1,8 @@
 import { prisma } from "@/lib/db";
 import { requireAnyPermission } from "@/lib/auth";
-import { CreateWalkForm } from "./create-walk-form";
+import { CreateWalkDrawer } from "./create-walk-drawer";
 import { AdminPageIntro } from "./admin-page-intro";
 import { AdminWalkTable } from "./admin-walk-table";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { upcomingListLookbackFrom, walkStatus } from "@/lib/walk-window";
 
@@ -92,23 +91,10 @@ export default async function AdminPage() {
 
   return (
     <div className="flex flex-col gap-8 px-4 py-6 md:px-6">
-      {admin.permWalksCreate ? (
-        <>
-          <section className="flex flex-col gap-4">
-            <AdminPageIntro
-              description="A share link is generated automatically. People must be signed in to clock in. If they do not have an account yet, they create one first. If they already have one, they sign in. The link brings them back to this walk afterwards."
-              title="Create a walk"
-            />
-            <CreateWalkForm />
-          </section>
-
-          <Separator />
-        </>
-      ) : null}
-
       {admin.permWalksView ? (
         <section className="flex flex-col gap-4">
           <AdminPageIntro
+            action={admin.permWalksCreate ? <CreateWalkDrawer /> : null}
             description="Upcoming walks, and every finished walk. Filter by status, sort by date, or search. Open a walk to share the link, cancel it, reopen it, or remove it. Long walks stay under Upcoming until clock-in closes."
             title="Walks"
           />
@@ -120,7 +106,7 @@ export default async function AdminPage() {
             <TabsContent className="mt-4" value="upcoming">
               <AdminWalkTable
                 attendanceLabel="On the walk"
-                emptyDescription="Create one above and it will show here."
+                emptyDescription="Create one and it will show here."
                 emptyTitle="No walks scheduled"
                 scope="upcoming"
                 walks={upcoming}
@@ -135,6 +121,17 @@ export default async function AdminPage() {
               />
             </TabsContent>
           </Tabs>
+        </section>
+      ) : admin.permWalksCreate ? (
+        // Create without View: no list to attach the button to (see the
+        // permission split noted above), so it still gets its own small
+        // section rather than disappearing entirely.
+        <section className="flex flex-col gap-4">
+          <AdminPageIntro
+            action={<CreateWalkDrawer />}
+            description="A share link is generated automatically. People must be signed in to clock in. If they do not have an account yet, they create one first. If they already have one, they sign in. The link brings them back to this walk afterwards."
+            title="Create a walk"
+          />
         </section>
       ) : null}
     </div>

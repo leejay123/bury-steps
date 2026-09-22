@@ -28,8 +28,14 @@ export type HomepageNoticeSlide = {
   slug: string | null;
 };
 
+// group-has-[:focus-visible], not group-focus-within: a mouse click on an
+// arrow leaves it holding plain (non-visible) focus, which focus-within
+// would keep matching — and so the arrows visible — until you clicked
+// somewhere else entirely, instead of hiding again as soon as the pointer
+// left. :focus-visible only matches real keyboard focus, so a click's
+// residual focus no longer holds the arrows open.
 const carouselControlClassName =
-  "left-3 border-0 bg-background/80 text-foreground shadow-sm hover:bg-background opacity-100 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/carousel:opacity-100 [@media(hover:hover)]:group-focus-within/carousel:opacity-100 focus-visible:opacity-100";
+  "left-3 border-0 bg-background/80 text-foreground shadow-sm hover:bg-background opacity-100 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/carousel:opacity-100 [@media(hover:hover)]:group-has-[:focus-visible]/carousel:opacity-100 focus-visible:opacity-100";
 
 const noticeCardClassName =
   "flex h-44 w-full flex-col gap-3 bg-background p-6 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:h-48 sm:border-r sm:border-border md:p-8";
