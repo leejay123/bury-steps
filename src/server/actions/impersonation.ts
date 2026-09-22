@@ -3,9 +3,10 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { requireAdmin, displayName } from "@/lib/auth";
+import { isOwner } from "@/lib/site-owner";
 import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { type ActionResult, logActionError } from "./shared";
+import { type ActionResult, logActionError, ownerDenied } from "./shared";
 
 /**
  * Signs the calling admin into a member's account via a Clerk actor token —
@@ -25,6 +26,10 @@ export async function startImpersonation(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
+  // Logging in as a member is sensitive, so it stays owner-only —
+  // organisers can't delete or remove anything, and this is right next to
+  // that same class of action.
+  if (!(await isOwner(admin.id))) return ownerDenied("log in as a member");
   const limited = checkRateLimit(`${admin.id}:startImpersonation`, 10, 60_000);
   if (!limited.ok) {
     return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };

@@ -100,9 +100,9 @@ export async function sendAdminPromotedEmail(member: MemberLike): Promise<void> 
 }
 
 /** Invite to become an organiser, pending their acceptance — see
- * setMemberRole in src/server/actions/members.ts. `permissions` is what
- * the shared Organiser role currently grants (see Settings → Roles) — the
- * email lists exactly what accepting will give them. */
+ * setMemberRole in src/server/actions/members.ts. `permissions` is the
+ * fixed Organiser profile (see @/lib/organiser-permissions) — the email
+ * lists exactly what accepting will give them. */
 export async function sendOrganiserInviteEmail(
   member: { email: string; firstName: string | null },
   token: string,

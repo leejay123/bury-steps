@@ -18,6 +18,7 @@ const {
   buildWalkCancelledEmail,
   buildWalkReopenedEmail,
   sendEmailBatch,
+  isOwner,
 } = vi.hoisted(() => {
   const prismaMock: Record<string, Record<string, ReturnType<typeof vi.fn>>> = {
     walk: { create: vi.fn(), update: vi.fn(), delete: vi.fn(), findUnique: vi.fn() },
@@ -51,12 +52,16 @@ const {
     buildWalkCancelledEmail: vi.fn(async (walk: unknown, member: unknown) => ({ walk, member })),
     buildWalkReopenedEmail: vi.fn(async (walk: unknown, member: unknown) => ({ walk, member })),
     sendEmailBatch: vi.fn(async () => ({ sent: 0, failed: 0 })),
+    // Owner by default — deleting a walk is owner-only regardless of the
+    // Walks permissions. See the "not the owner" test below.
+    isOwner: vi.fn(async (userId: string) => userId === "admin-1"),
   };
 });
 
 vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("@/lib/db", () => ({ prisma: { ...prismaMock, $transaction: transaction } }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
+vi.mock("@/lib/site-owner", () => ({ isOwner }));
 vi.mock("@/lib/walk-slug", () => ({ walkShareUrl: vi.fn(() => "https://example.com/w/test") }));
 vi.mock("@/lib/walk-slug-server", () => ({ allocateWalkSlug }));
 // Real email sending pulls in site-theme.ts (next/cache's unstable_cache,
@@ -659,6 +664,13 @@ describe("updateWalk", () => {
 });
 
 describe("deleteWalk", () => {
+  it("rejects an organiser who isn't the owner — deleting is owner-only", async () => {
+    isOwner.mockResolvedValueOnce(false);
+    const result = await deleteWalk(null, form({ walkId: "walk-1" }));
+    expect(result).toEqual({ ok: false, error: "Only the site owner can delete a walk." });
+    expect(prismaMock.walk.delete).not.toHaveBeenCalled();
+  });
+
   it("requires a walk to be selected", async () => {
     const result = await deleteWalk(null, form({}));
     expect(result).toEqual({ ok: false, error: "No walk selected." });

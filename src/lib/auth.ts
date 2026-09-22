@@ -5,16 +5,21 @@ import { prisma } from "./db";
 import type { User } from "@prisma/client";
 import { SIGN_IN_URL } from "./urls";
 import { syncLocalUser } from "./local-user";
-import { FULL_ORGANISER_PERMISSIONS, type OrganiserPermissions } from "./organiser-permissions";
+import {
+  FULL_ORGANISER_PERMISSIONS,
+  ORGANISER_PERMISSIONS,
+  hasAnySettingsPermission,
+  type OrganiserPermissions,
+} from "./organiser-permissions";
+import { isOwner } from "./site-owner";
 
-/** An ADMIN's User row merged with what they can do — every organiser has
- * full access (see FULL_ORGANISER_PERMISSIONS); the only thing that sets
- * the owner apart is a handful of actions checked separately with
- * isOwner() (promoting/demoting/inviting another organiser, transferring
- * ownership) — see src/lib/site-owner.ts. This is the shape every admin
- * page and server action reads permissions off (`admin.permWalksView`,
- * etc.) — kept as a real field set, not just "is this person an admin",
- * so each page/action still names the specific thing it needs. */
+/** An ADMIN's User row merged with what they can do — full access for the
+ * site owner, the fixed ORGANISER_PERMISSIONS profile for anyone else. A
+ * further handful of actions (promoting/demoting/inviting another
+ * organiser, transferring ownership, and anything destructive) are
+ * checked separately with isOwner() — see src/lib/site-owner.ts. This is
+ * the shape every admin page and server action reads permissions off
+ * (`admin.permWalksView`, etc.). */
 export type AdminUser = User & OrganiserPermissions;
 
 /** Clerk throws this when auth() runs on a request that skipped middleware. */
@@ -81,7 +86,8 @@ export async function requireUser(): Promise<User> {
 export async function requireAdmin(): Promise<AdminUser> {
   const user = await getOptionalUser();
   if (!user || user.role !== "ADMIN") notFound();
-  return { ...user, ...FULL_ORGANISER_PERMISSIONS };
+  const perms = (await isOwner(user.id)) ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS;
+  return { ...user, ...perms };
 }
 
 /**
@@ -121,12 +127,15 @@ export async function requireAnyPermission(permissions: (keyof OrganiserPermissi
 }
 
 /**
- * Like requirePermission, but for the Settings hub page — every organiser
- * has full access, so this is really just requireAdmin with a name that
- * matches the other page-gating helpers above.
+ * Like requirePermission, but for the Settings hub page — it isn't tied to
+ * any one of the settings-area pages it links out to, so it 404s only for
+ * an organiser (owner-only in practice: ORGANISER_PERMISSIONS grants none
+ * of the settings-area fields at all — see hasAnySettingsPermission).
  */
 export async function requireAnySettingsPermission(): Promise<AdminUser> {
-  return requireAdmin();
+  const admin = await requireAdmin();
+  if (!hasAnySettingsPermission(admin)) notFound();
+  return admin;
 }
 
 /**

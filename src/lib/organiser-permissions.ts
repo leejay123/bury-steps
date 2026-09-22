@@ -1,16 +1,20 @@
 /**
- * Every organiser has full access — see FULL_ORGANISER_PERMISSIONS below,
- * which requireAdmin (src/lib/auth.ts) always merges onto the signed-in
- * ADMIN's User row. The only thing that sets the site owner apart is a
- * handful of actions the owner alone can take — inviting/promoting/
- * demoting another organiser, and transferring ownership — each checked
- * separately with isOwner() (see src/lib/site-owner.ts), not through this
- * type at all.
+ * Every organiser has the same fixed set of capabilities — see
+ * ORGANISER_PERMISSIONS below, which requireAdmin (src/lib/auth.ts) merges
+ * onto a signed-in ADMIN's User row (FULL_ORGANISER_PERMISSIONS instead,
+ * for the site owner). Not user-editable — there is no settings page for
+ * this, just these two fixed profiles.
  *
- * This type still names one field per admin area (Reports split into
+ * The owner-only handful — inviting/promoting/demoting another organiser,
+ * transferring ownership, and anything destructive (deleting a walk or
+ * accident report, removing a member's account, logging in as one) — is
+ * checked separately with isOwner() (see src/lib/site-owner.ts), not
+ * through this type at all.
+ *
+ * This type names one field per admin area (Reports split into
  * View/Edit/Create; everything from Homepage down is one field per
- * settings area) purely so each page/action can say which specific thing
- * it needs (`admin.permWalksEdit`), even though the value is always true.
+ * settings area) so each page/action can say which specific thing it
+ * needs (`admin.permWalksEdit`).
  */
 export type OrganiserPermissions = {
   permWalksView: boolean;
@@ -56,6 +60,38 @@ export const FULL_ORGANISER_PERMISSIONS: OrganiserPermissions = {
   permSubscribers: true,
   permDisplay: true,
   permCacheReset: true,
+};
+
+/**
+ * What a plain organiser (not the owner) actually gets: walks (create,
+ * edit, cancel/reopen, attendance, journey updates, export) and accident
+ * reports (view, edit, create) — but not health notes on a walk (owner
+ * only), and no access at all to Members, Messages, or any Settings area.
+ * Deleting a walk or report is not a field here at all — see the doc
+ * comment above — it's owner-only outright, checked with isOwner()
+ * wherever it's relevant, not through this type.
+ */
+export const ORGANISER_PERMISSIONS: OrganiserPermissions = {
+  permWalksView: true,
+  permWalksCreate: true,
+  permWalksEdit: true,
+  permWalksCancel: true,
+  permWalksAttendance: true,
+  permWalksHealth: false,
+  permWalksJourney: true,
+  permWalksExport: true,
+  permMembersView: false,
+  permMessages: false,
+  permReportsView: true,
+  permReportsEdit: true,
+  permReportsCreate: true,
+  permHomepage: false,
+  permNotices: false,
+  permProgress: false,
+  permEmails: false,
+  permSubscribers: false,
+  permDisplay: false,
+  permCacheReset: false,
 };
 
 /** `group` is a UI grouping only, used by describeOrganiserPermissions'

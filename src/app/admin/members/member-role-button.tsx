@@ -92,14 +92,15 @@ function RoleChangeDialog({
                 {promoting ? (
                   inviteRequired ? (
                     <p>
-                      They&rsquo;ll get an email with a link to accept, listing what the Organiser
-                      role can currently do (see Settings → Roles). Nothing changes for them
-                      until they click it.
+                      They&rsquo;ll get an email with a link to accept, listing what an organiser
+                      can do — walks and accident reports, not members, messages, or settings.
+                      Nothing changes for them until they click it.
                     </p>
                   ) : (
                     <p>
-                      They&rsquo;ll get everything the Organiser role currently grants (see
-                      Settings → Roles) — the same set every organiser has.
+                      They&rsquo;ll get the standard organiser access — walks and accident
+                      reports, but not members, messages, health notes, or settings. Only you can
+                      see those.
                     </p>
                   )
                 ) : (

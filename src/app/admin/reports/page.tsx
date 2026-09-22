@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { memberDisplayName, requirePermission } from "@/lib/auth";
+import { isOwner } from "@/lib/site-owner";
 import { prisma } from "@/lib/db";
 import { walkStatus } from "@/lib/walk-window";
 import { AdminPageIntro } from "../admin-page-intro";
@@ -34,6 +35,7 @@ export default async function AccidentReportsPage({
   searchParams: Promise<{ link?: string; sort?: string }>;
 }) {
   const admin = await requirePermission("permReportsView");
+  const canDelete = await isOwner(admin.id);
   const params = await searchParams;
   const link = parseLinkFilter(params.link);
   const sort = parseSort(params.sort);
@@ -78,7 +80,7 @@ export default async function AccidentReportsPage({
       />
       <AccidentReportManager
         canCreate={admin.permReportsCreate}
-        canDelete
+        canDelete={canDelete}
         canEdit={admin.permReportsEdit}
         hasAnyReports={totalReports > 0}
         linkFilter={link}

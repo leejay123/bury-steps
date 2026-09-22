@@ -92,9 +92,10 @@ function MemberListRow({
   inviteRequired: boolean;
   member: ViewMember;
   onChanged: () => void;
-  /** Promoting/demoting an organiser, and transferring ownership, are
-   * owner-only — see the server actions' own checks. Removing a member's
-   * account is not: any organiser can remove any non-owner account. */
+  /** Organisers have no Members access at all — this table only ever
+   * renders for the owner, so this is really always true, but every
+   * action below still names it explicitly (matching the server actions'
+   * own checks) rather than assuming. */
   viewerIsOwner: boolean;
 }) {
   // Every applicable action collapses behind a single "⋯"

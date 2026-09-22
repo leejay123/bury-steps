@@ -152,7 +152,9 @@ export function MemberDetailActions({
 
   return (
     <div className="flex flex-wrap gap-2 sm:shrink-0 sm:justify-end">
-      {role === "MEMBER" && !pendingInvite ? <ImpersonateButton name={name} userId={id} /> : null}
+      {role === "MEMBER" && !pendingInvite && viewerIsOwner ? (
+        <ImpersonateButton name={name} userId={id} />
+      ) : null}
       {actions.length > 0 ? (
         <MemberRowActionsMenu>{actions.map((a) => a.menuItem)}</MemberRowActionsMenu>
       ) : null}

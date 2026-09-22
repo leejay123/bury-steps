@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { ClerkAPIResponseError } from "@clerk/nextjs/errors";
 import type { RateLimitResult } from "@/lib/rate-limit";
 
-const { requireAdmin, checkRateLimit, actorTokensCreate, prismaMock } = vi.hoisted(() => ({
+const { requireAdmin, checkRateLimit, actorTokensCreate, prismaMock, isOwner } = vi.hoisted(() => ({
   requireAdmin: vi.fn(),
   checkRateLimit: vi.fn((): RateLimitResult => ({ ok: true })),
   actorTokensCreate: vi.fn(),
@@ -10,10 +10,14 @@ const { requireAdmin, checkRateLimit, actorTokensCreate, prismaMock } = vi.hoist
     user: { findUnique: vi.fn() },
     impersonationEvent: { create: vi.fn() },
   },
+  // Owner by default — impersonation is owner-only. See the "not the
+  // owner" test below.
+  isOwner: vi.fn(async (userId: string) => userId === "admin-1"),
 }));
 
 vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
+vi.mock("@/lib/site-owner", () => ({ isOwner }));
 vi.mock("@clerk/nextjs/server", () => ({
   clerkClient: vi.fn(async () => ({ actorTokens: { create: actorTokensCreate } })),
 }));
@@ -73,6 +77,13 @@ beforeEach(() => {
 });
 
 describe("startImpersonation", () => {
+  it("rejects an organiser who isn't the owner", async () => {
+    isOwner.mockResolvedValueOnce(false);
+    const result = await startImpersonation(null, form({ targetId: "member-1" }));
+    expect(result).toEqual({ ok: false, error: "Only the site owner can log in as a member." });
+    expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+  });
+
   it("rejects a missing target", async () => {
     const result = await startImpersonation(null, form({}));
     expect(result).toEqual({ ok: false, error: "No member selected." });

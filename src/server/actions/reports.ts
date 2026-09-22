@@ -3,12 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin, displayName } from "@/lib/auth";
+import { isOwner } from "@/lib/site-owner";
 import { prisma } from "@/lib/db";
 import { formatDateTime, londonWallClockToUtc } from "@/lib/dates";
 import { sendAccidentReportAlertEmail } from "@/lib/email/mailer";
 import { involvedSummaryText } from "@/lib/accident-reports";
 import { getWalkAttendeesForReport } from "@/lib/walk-members";
-import { type ActionResult, isPrismaCode, logActionError, permissionDenied } from "./shared";
+import { type ActionResult, isPrismaCode, logActionError, ownerDenied, permissionDenied } from "./shared";
 
 /** Powers the member checklist on the report form once a walk is picked —
  * a plain data fetch, not a mutation, but still gated on admin auth since
@@ -190,7 +191,10 @@ export async function deleteAccidentReport(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  // Deleting a report is permanent, so it stays owner-only — organisers
+  // can't delete or remove anything.
+  if (!(await isOwner(admin.id))) return ownerDenied("delete an accident report");
   const id = String(formData.get("reportId") ?? "");
   if (!id) return { ok: false, error: "No report selected." };
 

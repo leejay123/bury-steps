@@ -274,7 +274,9 @@ export default async function WalkDetailPage({
           />
         )}
         {admin.permWalksCancel && walk.cancelledAt ? <ReopenWalkButton walkId={walk.id} /> : null}
-        <DeleteWalkButton attendanceCount={walk.attendances.length} walkId={walk.id} />
+        {viewerIsOwner ? (
+          <DeleteWalkButton attendanceCount={walk.attendances.length} walkId={walk.id} />
+        ) : null}
       </div>
 
       {walk.cancelledAt && admin.permWalksExport ? (

@@ -15,7 +15,7 @@ import {
   makeOrganiserInviteToken,
   organiserInviteExpiresAt,
 } from "@/lib/organiser-invite";
-import { FULL_ORGANISER_PERMISSIONS, walksLandingPath } from "@/lib/organiser-permissions";
+import { ORGANISER_PERMISSIONS, walksLandingPath } from "@/lib/organiser-permissions";
 import {
   sendAccountDeletedEmail,
   sendAdminPromotedEmail,
@@ -222,13 +222,15 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
   });
   if (!target) return { ok: false, error: "That member is no longer in the group." };
 
-  // Any organiser can remove any member's account — organiser or plain
-  // member — except the owner's: removing the owner's account here would
-  // leave the group without one, so that stays blocked outright (transfer
-  // ownership first, from Members, then remove the old owner as a plain
-  // organiser).
-  if (target.id === (await getOwnerId())) {
-    return { ok: false, error: "Transfer ownership to someone else before removing the owner's account." };
+  // Removing a member's account — organiser or plain member — is
+  // permanent and irreversible, so it stays owner-only — organisers can't
+  // delete or remove anything. The owner can never target themselves here
+  // anyway (the self-delete check above already blocks that), so there's
+  // no separate "can't delete the owner" case to handle.
+  if (!(await isOwner(admin.id))) {
+    return ownerDenied(
+      target.role === "ADMIN" ? "remove an organiser's account" : "remove a member's account",
+    );
   }
 
   // Do the database side first. It is transactional and fully reversible on
@@ -530,9 +532,10 @@ async function sendOrganiserInvite(target: {
 
   // Best-effort — the invite is already recorded and visible in the members
   // list either way (as "Invited"), so a failed send here doesn't need to
-  // block the admin; they can hit Resend. Every organiser has full access,
-  // so the email always describes the same thing.
-  await sendOrganiserInviteEmail(target, token, FULL_ORGANISER_PERMISSIONS).catch((err) => {
+  // block the admin; they can hit Resend. Every organiser has the same
+  // fixed set of capabilities, so the email always describes the same
+  // thing.
+  await sendOrganiserInviteEmail(target, token, ORGANISER_PERMISSIONS).catch((err) => {
     console.error("setMemberRole: failed to send organiser invite email", err);
   });
 
@@ -656,12 +659,12 @@ export async function acceptOrganiserInvite(
   // Layout nav (Members / Reports / Settings) depends on role for this person.
   revalidatePath("/", "layout");
 
-  // Every organiser has full access, so this always lands on the admin
+  // Every organiser has permWalksView, so this always lands on the admin
   // dashboard (see walksLandingPath).
   return {
     ok: true,
     message: "You're now an organiser.",
-    href: walksLandingPath(FULL_ORGANISER_PERMISSIONS),
+    href: walksLandingPath(ORGANISER_PERMISSIONS),
   };
 }
 
