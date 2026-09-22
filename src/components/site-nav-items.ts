@@ -57,22 +57,42 @@ export function navItems(
  * What the "Settings" nav item expands to — see SettingsNavMenu in
  * site-nav-menu.tsx, which turns that one link into a dropdown listing
  * these directly, rather than always landing on the hub page first. Same
- * pages as the hub (src/app/admin/settings/page.tsx) lists, minus
- * Accident reports (already its own top-level "Reports" nav item) — kept
- * as a flat list here since every organiser has full access to all of
- * them, so there's no per-item gating left to do.
+ * groups and pages as the hub (src/app/admin/settings/page.tsx), minus
+ * Accident reports (already its own top-level "Reports" nav item) and
+ * Guide — every organiser has full access to all of them, so there's no
+ * per-item gating left to do.
  */
-export const SETTINGS_MENU_ITEMS: { href: string; label: string }[] = [
-  { href: "/admin/settings/hero-photos", label: "Hero photos" },
-  { href: "/admin/settings/testimonials", label: "Testimonials" },
-  { href: "/admin/settings/faqs", label: "FAQs" },
-  { href: "/admin/settings/notices", label: "Notices" },
-  { href: "/admin/settings/progress", label: "Progress" },
-  { href: "/admin/settings/display", label: "Display" },
-  { href: "/admin/settings/emails", label: "Emails" },
-  { href: "/admin/settings/subscribers", label: "Subscribers" },
-  { href: "/admin/settings/cache", label: "Site cache" },
-  { href: "/admin/settings/reset", label: "Reset the site" },
+export const SETTINGS_MENU_GROUPS: { label: string; items: { href: string; label: string }[] }[] = [
+  {
+    label: "Homepage content",
+    items: [
+      { href: "/admin/settings/hero-photos", label: "Hero photos" },
+      { href: "/admin/settings/testimonials", label: "Testimonials" },
+      { href: "/admin/settings/faqs", label: "FAQs" },
+    ],
+  },
+  {
+    label: "Communication",
+    items: [
+      { href: "/admin/settings/notices", label: "Notices" },
+      { href: "/admin/settings/emails", label: "Emails" },
+      { href: "/admin/settings/subscribers", label: "Subscribers" },
+    ],
+  },
+  {
+    label: "Site behaviour",
+    items: [
+      { href: "/admin/settings/display", label: "Display" },
+      { href: "/admin/settings/progress", label: "Progress" },
+    ],
+  },
+  {
+    label: "Maintenance",
+    items: [
+      { href: "/admin/settings/cache", label: "Site cache" },
+      { href: "/admin/settings/reset", label: "Reset the site" },
+    ],
+  },
 ];
 
 /**

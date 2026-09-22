@@ -3,14 +3,28 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown } from "lucide-react";
+import {
+  AlertTriangle,
+  Bell,
+  ChevronDown,
+  HelpCircle,
+  ImageIcon,
+  Mail,
+  Palette,
+  Quote,
+  RefreshCw,
+  TrendingUp,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { unlockIdleDocument } from "@/components/overlay-root";
-import { isNavItemActive, navItems, SETTINGS_MENU_ITEMS } from "@/components/site-nav-items";
+import { isNavItemActive, navItems, SETTINGS_MENU_GROUPS } from "@/components/site-nav-items";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -73,6 +87,22 @@ function NavLink({
  * dropdown locks background scroll the way Dialog/Drawer do by default,
  * which breaks the sticky top nav this lives in.
  */
+/** Same icon-per-page assignments as the Settings hub
+ * (src/app/admin/settings/page.tsx) — kept alongside the nav rather than
+ * imported from there since that file also does server-side data
+ * fetching this client component doesn't need. */
+const SETTINGS_ITEM_ICONS: Record<string, LucideIcon> = {
+  "/admin/settings/hero-photos": ImageIcon,
+  "/admin/settings/testimonials": Quote,
+  "/admin/settings/faqs": HelpCircle,
+  "/admin/settings/notices": Bell,
+  "/admin/settings/emails": Mail,
+  "/admin/settings/subscribers": Users,
+  "/admin/settings/display": Palette,
+  "/admin/settings/progress": TrendingUp,
+  "/admin/settings/cache": RefreshCw,
+};
+
 function SettingsNavMenu({
   active,
   className,
@@ -92,13 +122,25 @@ function SettingsNavMenu({
         <span className="relative z-10">Settings</span>
         <ChevronDown aria-hidden className="relative z-10 size-3.5" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-48">
-        {SETTINGS_MENU_ITEMS.map((item) => (
-          <DropdownMenuItem asChild key={item.href}>
-            <Link href={item.href} onClick={() => unlockIdleDocument()}>
-              {item.label}
-            </Link>
-          </DropdownMenuItem>
+      <DropdownMenuContent align="start" className="w-56">
+        {SETTINGS_MENU_GROUPS.map((group) => (
+          <div key={group.label}>
+            <DropdownMenuLabel>{group.label}</DropdownMenuLabel>
+            {group.items.map((item) => {
+              // "Reset the site" is the one destructive item in here —
+              // same red treatment as its row on the hub.
+              const danger = item.href === "/admin/settings/reset";
+              const Icon = danger ? AlertTriangle : SETTINGS_ITEM_ICONS[item.href];
+              return (
+                <DropdownMenuItem asChild key={item.href} variant={danger ? "destructive" : "default"}>
+                  <Link href={item.href} onClick={() => unlockIdleDocument()}>
+                    {Icon ? <Icon aria-hidden /> : null}
+                    {item.label}
+                  </Link>
+                </DropdownMenuItem>
+              );
+            })}
+          </div>
         ))}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
