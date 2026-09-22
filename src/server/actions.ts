@@ -48,7 +48,6 @@ export {
   type MemberSort,
 } from "./actions/members";
 
-export { setRolePermissions } from "./actions/role-permissions";
 
 export {
   addHomepageSlide,

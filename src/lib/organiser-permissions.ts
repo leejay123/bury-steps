@@ -1,22 +1,16 @@
 /**
- * Granular organiser capabilities — one shared set applied to every
- * organiser at once (see src/lib/role-permissions.ts), editable by the
- * site owner from Settings → Roles. Organisers are no longer configured
- * individually — there is no more per-person picker at invite time or
- * afterwards.
+ * Every organiser has full access — see FULL_ORGANISER_PERMISSIONS below,
+ * which requireAdmin (src/lib/auth.ts) always merges onto the signed-in
+ * ADMIN's User row. The only thing that sets the site owner apart is a
+ * handful of actions the owner alone can take — inviting/promoting/
+ * demoting another organiser, and transferring ownership — each checked
+ * separately with isOwner() (see src/lib/site-owner.ts), not through this
+ * type at all.
  *
- * One permission per admin page (Reports split into View/Edit/Create;
- * everything from Homepage down is one permission per settings area).
- * A few sensitive, irreversible actions — deleting a walk, removing a
- * member's account or logging in as one, deleting an accident report —
- * stay owner-only outright and have no column here at all (see
- * PERMISSION_AREA_LABEL / ownerDenied call sites for the list).
- *
- * Read alongside role to decide what the nav shows — see site-nav-items.ts
- * — and enforced on every admin page and server action itself
- * (requirePermission in src/lib/auth.ts; permissionDenied in
- * src/server/actions/shared.ts), so a limited organiser who already knows
- * a hidden URL is still turned away there.
+ * This type still names one field per admin area (Reports split into
+ * View/Edit/Create; everything from Homepage down is one field per
+ * settings area) purely so each page/action can say which specific thing
+ * it needs (`admin.permWalksEdit`), even though the value is always true.
  */
 export type OrganiserPermissions = {
   permWalksView: boolean;
@@ -64,8 +58,9 @@ export const FULL_ORGANISER_PERMISSIONS: OrganiserPermissions = {
   permCacheReset: true,
 };
 
-/** `group` is a UI grouping only (see the Settings → Roles grid) — every
- * check in this file treats all twenty the same way. */
+/** `group` is a UI grouping only, used by describeOrganiserPermissions'
+ * "you'll be able to…" phrasing — every check in this file treats all
+ * twenty the same way. */
 export const ORGANISER_PERMISSION_OPTIONS: {
   name: keyof OrganiserPermissions;
   label: string;
@@ -207,16 +202,6 @@ const SETTINGS_GROUP_OPTIONS = ORGANISER_PERMISSION_OPTIONS.filter(
  * the hub itself isn't tied to any one of the pages it links to. */
 export function hasAnySettingsPermission(perms: OrganiserPermissions): boolean {
   return SETTINGS_GROUP_OPTIONS.some((option) => perms[option.name]);
-}
-
-/** Same "absent checkbox reads as false" convention as email preferences
- * (see readPreferences in src/server/actions/email-preferences.ts). */
-export function readOrganiserPermissions(formData: FormData): OrganiserPermissions {
-  const result = {} as OrganiserPermissions;
-  for (const option of ORGANISER_PERMISSION_OPTIONS) {
-    result[option.name] = formData.get(option.name) === "on";
-  }
-  return result;
 }
 
 /**

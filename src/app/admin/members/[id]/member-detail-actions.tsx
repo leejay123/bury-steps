@@ -27,6 +27,7 @@ export function MemberDetailActions({
   attendanceCount,
   id,
   inviteRequired,
+  isTargetOwner,
   isYou,
   name,
   pendingInvite,
@@ -37,11 +38,15 @@ export function MemberDetailActions({
   attendanceCount: number;
   id: string;
   inviteRequired: boolean;
+  /** Whether this page's own member is the site owner — the owner's
+   * account can never be removed here (transfer ownership first). */
+  isTargetOwner: boolean;
   isYou: boolean;
   name: string;
   pendingInvite: { sentAt: string; expiresAt: string; expired: boolean } | null;
   role: "ADMIN" | "MEMBER";
-  /** Removing any member's account (or logging in as one) is owner-only. */
+  /** Promoting/demoting an organiser, and transferring ownership, are
+   * owner-only — see the server actions' own checks. */
   viewerIsOwner: boolean;
   walkCount: number;
 }) {
@@ -121,7 +126,7 @@ export function MemberDetailActions({
     }
   }
 
-  if (!isYou && viewerIsOwner) {
+  if (!isYou && !isTargetOwner) {
     const deleteRef: { current: HTMLButtonElement | null } = { current: null };
     actions.push({
       key: "delete",
@@ -147,9 +152,7 @@ export function MemberDetailActions({
 
   return (
     <div className="flex flex-wrap gap-2 sm:shrink-0 sm:justify-end">
-      {role === "MEMBER" && !pendingInvite && viewerIsOwner ? (
-        <ImpersonateButton name={name} userId={id} />
-      ) : null}
+      {role === "MEMBER" && !pendingInvite ? <ImpersonateButton name={name} userId={id} /> : null}
       {actions.length > 0 ? (
         <MemberRowActionsMenu>{actions.map((a) => a.menuItem)}</MemberRowActionsMenu>
       ) : null}

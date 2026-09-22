@@ -92,8 +92,9 @@ function MemberListRow({
   inviteRequired: boolean;
   member: ViewMember;
   onChanged: () => void;
-  /** Removing any member's account — plain member or organiser — is
-   * owner-only, same as the server action's own check. */
+  /** Promoting/demoting an organiser, and transferring ownership, are
+   * owner-only — see the server actions' own checks. Removing a member's
+   * account is not: any organiser can remove any non-owner account. */
   viewerIsOwner: boolean;
 }) {
   // Every applicable action collapses behind a single "⋯"
@@ -181,7 +182,7 @@ function MemberListRow({
     }
   }
 
-  if (!member.isYou && viewerIsOwner) {
+  if (!member.isYou && !member.isOwner) {
     const deleteRef: { current: HTMLButtonElement | null } = { current: null };
     actions.push({
       key: "delete",

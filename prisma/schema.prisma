@@ -405,46 +405,6 @@ model SiteSetting {
   owner                User? @relation("SiteOwner", fields: [ownerId], references: [id], onDelete: SetNull)
 }
 
-/// Singleton row (`id` is always "organiser") holding the one shared set of
-/// capabilities every organiser has — see src/lib/organiser-permissions.ts.
-/// Organisers are no longer configured individually (that per-person
-/// picker — setOrganiserPermissions, the invite-time checklist — is gone):
-/// every organiser has exactly this, editable from Settings → Roles by the
-/// site owner. The owner always has full access regardless of these values
-/// (see src/lib/site-owner.ts) — this row only ever governs a plain ADMIN
-/// who isn't the owner. A few sensitive, irreversible actions (deleting a
-/// walk, removing a member's account or logging in as one, deleting an
-/// accident report) stay owner-only outright and so have no column here at
-/// all — see PERMISSION_AREA_LABEL / ownerDenied call sites for the list.
-/// Replaced the old per-user permission columns on User in the
-/// 20260919000000_role_based_permissions migration.
-model RolePermissions {
-  id String @id
-
-  permWalksView       Boolean @default(true)
-  permWalksCreate     Boolean @default(true)
-  permWalksEdit       Boolean @default(true)
-  permWalksCancel     Boolean @default(true)
-  permWalksAttendance Boolean @default(true)
-  permWalksHealth     Boolean @default(true)
-  permWalksJourney    Boolean @default(true)
-  permWalksExport     Boolean @default(true)
-  permMembersView     Boolean @default(true)
-  permMessages        Boolean @default(true)
-  permReportsView     Boolean @default(true)
-  permReportsEdit     Boolean @default(true)
-  permReportsCreate   Boolean @default(true)
-  permHomepage        Boolean @default(true)
-  permNotices         Boolean @default(true)
-  permProgress        Boolean @default(true)
-  permEmails          Boolean @default(true)
-  permSubscribers     Boolean @default(true)
-  permDisplay         Boolean @default(true)
-  permCacheReset      Boolean @default(true)
-
-  updatedAt DateTime @updatedAt
-}
-
 /// Organiser-only accident reports. Printed from the report page.
 model AccidentReport {
   id              String   @id @default(cuid())

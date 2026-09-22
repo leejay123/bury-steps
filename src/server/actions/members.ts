@@ -15,8 +15,7 @@ import {
   makeOrganiserInviteToken,
   organiserInviteExpiresAt,
 } from "@/lib/organiser-invite";
-import { walksLandingPath } from "@/lib/organiser-permissions";
-import { getOrganiserRolePermissions, resolveOrganiserPermissions } from "@/lib/role-permissions";
+import { FULL_ORGANISER_PERMISSIONS, walksLandingPath } from "@/lib/organiser-permissions";
 import {
   sendAccountDeletedEmail,
   sendAdminPromotedEmail,
@@ -29,7 +28,6 @@ import {
   isNotFoundStatus,
   logActionError,
   ownerDenied,
-  permissionDenied,
   withCountLimitLock,
 } from "./shared";
 
@@ -224,15 +222,13 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
   });
   if (!target) return { ok: false, error: "That member is no longer in the group." };
 
-  // Removing a member's account — organiser or plain member — is
-  // permanent and irreversible, so it stays owner-only regardless of what
-  // the Organiser role otherwise grants. The owner can never target
-  // themselves here anyway (the self-delete check above already blocks
-  // that), so there's no separate "can't delete the owner" case to handle.
-  if (!(await isOwner(admin.id))) {
-    return ownerDenied(
-      target.role === "ADMIN" ? "remove an organiser's account" : "remove a member's account",
-    );
+  // Any organiser can remove any member's account — organiser or plain
+  // member — except the owner's: removing the owner's account here would
+  // leave the group without one, so that stays blocked outright (transfer
+  // ownership first, from Members, then remove the old owner as a plain
+  // organiser).
+  if (target.id === (await getOwnerId())) {
+    return { ok: false, error: "Transfer ownership to someone else before removing the owner's account." };
   }
 
   // Do the database side first. It is transactional and fully reversible on
@@ -534,10 +530,9 @@ async function sendOrganiserInvite(target: {
 
   // Best-effort — the invite is already recorded and visible in the members
   // list either way (as "Invited"), so a failed send here doesn't need to
-  // block the admin; they can hit Resend. The email lists what the shared
-  // Organiser role currently grants — see Settings → Roles.
-  const rolePermissions = await getOrganiserRolePermissions();
-  await sendOrganiserInviteEmail(target, token, rolePermissions).catch((err) => {
+  // block the admin; they can hit Resend. Every organiser has full access,
+  // so the email always describes the same thing.
+  await sendOrganiserInviteEmail(target, token, FULL_ORGANISER_PERMISSIONS).catch((err) => {
     console.error("setMemberRole: failed to send organiser invite email", err);
   });
 
@@ -555,7 +550,9 @@ export async function resendOrganiserInvite(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permMembersView) return permissionDenied("permMembersView");
+  // Inviting/promoting a new organiser is owner-only — resending an
+  // invite is part of that same flow.
+  if (!(await isOwner(admin.id))) return ownerDenied("resend an organiser invite");
   const id = String(formData.get("userId") ?? "");
   if (!id) return { ok: false, error: "No member selected." };
 
@@ -573,7 +570,8 @@ export async function cancelOrganiserInvite(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permMembersView) return permissionDenied("permMembersView");
+  // Same as resendOrganiserInvite — owner-only.
+  if (!(await isOwner(admin.id))) return ownerDenied("cancel an organiser invite");
   const id = String(formData.get("userId") ?? "");
   if (!id) return { ok: false, error: "No member selected." };
 
@@ -658,14 +656,12 @@ export async function acceptOrganiserInvite(
   // Layout nav (Members / Reports / Settings) depends on role for this person.
   revalidatePath("/", "layout");
 
-  // Always land on Walks — the admin dashboard if they were granted Walks,
-  // the ordinary member Walks page otherwise (see walksLandingPath). Every
-  // other admin page now checks its own specific permission, so a fixed
-  // "/admin/members" would 404 on anyone who wasn't granted Members.
+  // Every organiser has full access, so this always lands on the admin
+  // dashboard (see walksLandingPath).
   return {
     ok: true,
     message: "You're now an organiser.",
-    href: walksLandingPath(await resolveOrganiserPermissions(target.id)),
+    href: walksLandingPath(FULL_ORGANISER_PERMISSIONS),
   };
 }
 

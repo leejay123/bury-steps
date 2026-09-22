@@ -15,8 +15,6 @@ const {
   transaction,
   getOwnerId,
   isOwner,
-  resolveOrganiserPermissions,
-  getOrganiserRolePermissions,
 } = vi.hoisted(() => {
   const prismaMock: Record<string, Record<string, ReturnType<typeof vi.fn>>> = {
     user: { findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn(), update: vi.fn(), delete: vi.fn() },
@@ -48,11 +46,6 @@ const {
     // that lookup's queued mock value or vice versa.
     getOwnerId: vi.fn(async (): Promise<string | null> => "admin-1"),
     isOwner: vi.fn(async (userId: string): Promise<boolean> => userId === "admin-1"),
-    // The shared Organiser role — full access by default so existing tests
-    // exercise the unclamped path. Override per test (mockResolvedValueOnce)
-    // for a limited-role scenario, same idea as requireAdmin below.
-    resolveOrganiserPermissions: vi.fn(),
-    getOrganiserRolePermissions: vi.fn(),
   };
 });
 
@@ -60,11 +53,6 @@ vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("@/lib/db", () => ({ prisma: { ...prismaMock, $transaction: transaction } }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
 vi.mock("@/lib/site-owner", () => ({ getOwnerId, isOwner }));
-vi.mock("@/lib/role-permissions", () => ({
-  resolveOrganiserPermissions,
-  getOrganiserRolePermissions,
-  ROLE_PERMISSIONS_ID: "organiser",
-}));
 vi.mock("@clerk/nextjs/server", () => ({
   clerkClient: vi.fn(async () => ({ users: { deleteUser } })),
 }));
@@ -139,36 +127,86 @@ beforeEach(() => {
   // describe block below for the opposite case.
   getOwnerId.mockResolvedValue(OWNER_ID);
   isOwner.mockImplementation(async (userId: string) => userId === OWNER_ID);
-  resolveOrganiserPermissions.mockResolvedValue(FULL_ORGANISER_PERMISSIONS);
-  getOrganiserRolePermissions.mockResolvedValue(FULL_ORGANISER_PERMISSIONS);
 });
 
 describe("deleteMember", () => {
-  it("rejects an organiser who isn't the owner from removing a plain member", async () => {
-    isOwner.mockImplementation(async () => false);
+  it("refuses to remove the owner's account, even by another organiser", async () => {
+    // Acting as a different organiser than the owner, so the "cannot
+    // delete your own account" check above doesn't shadow this one.
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, id: "admin-2" });
     prismaMock.user.findUnique.mockResolvedValueOnce({
-      id: "member-1",
-      role: "MEMBER",
-      clerkId: "clerk-member-1",
+      id: OWNER_ID,
+      role: "ADMIN",
+      clerkId: "clerk-owner",
     });
-    const result = await deleteMember(null, deleteMemberForm({ userId: "member-1", confirm: "confirm" }));
+    const result = await deleteMember(
+      null,
+      deleteMemberForm({ userId: OWNER_ID, confirm: "confirm" }),
+    );
     expect(result).toEqual({
       ok: false,
-      error: "Only the site owner can remove a member's account.",
+      error: "Transfer ownership to someone else before removing the owner's account.",
     });
     expect(prismaMock.user.delete).not.toHaveBeenCalled();
   });
 
-  it("rejects removing an organiser's account when the acting admin isn't the owner", async () => {
-    isOwner.mockResolvedValueOnce(false);
-    prismaMock.user.findUnique.mockResolvedValueOnce({
+  it("lets a non-owner organiser remove a plain member's account", async () => {
+    isOwner.mockImplementation(async () => false);
+    const target = {
+      id: "member-1",
+      clerkId: "clerk-member-1",
+      firstName: "Jo",
+      lastName: null,
+      email: "jo@example.com",
+      role: "MEMBER",
+    };
+    prismaMock.user.findUnique
+      .mockResolvedValueOnce(target)
+      .mockResolvedValueOnce({
+        id: target.id,
+        role: "MEMBER",
+        _count: { walksCreated: 0, accidentReports: 0, journeyEvents: 0 },
+      });
+    prismaMock.user.delete.mockResolvedValueOnce(target);
+    deleteUser.mockResolvedValueOnce(undefined);
+
+    const result = await deleteMember(
+      null,
+      deleteMemberForm({ userId: target.id, confirm: "confirm" }),
+    );
+
+    expect(prismaMock.user.delete).toHaveBeenCalledWith({ where: { id: target.id } });
+    expect(result).toEqual({ ok: true, message: "Jo has been removed from the group." });
+  });
+
+  it("lets a non-owner organiser remove another organiser's account", async () => {
+    isOwner.mockImplementation(async () => false);
+    const target = {
       id: "admin-2",
-      role: "ADMIN",
       clerkId: "clerk-admin-2",
-    });
-    const result = await deleteMember(null, deleteMemberForm({ userId: "admin-2", confirm: "confirm" }));
-    expect(result).toEqual({ ok: false, error: "Only the site owner can remove an organiser's account." });
-    expect(prismaMock.user.delete).not.toHaveBeenCalled();
+      firstName: "Sam",
+      lastName: "Lee",
+      email: "sam@example.com",
+      role: "ADMIN",
+    };
+    prismaMock.user.findUnique
+      .mockResolvedValueOnce(target)
+      .mockResolvedValueOnce({
+        id: target.id,
+        role: "ADMIN",
+        _count: { walksCreated: 0, accidentReports: 0, journeyEvents: 0 },
+      });
+    prismaMock.user.count.mockResolvedValueOnce(2);
+    prismaMock.user.delete.mockResolvedValueOnce(target);
+    deleteUser.mockResolvedValueOnce(undefined);
+
+    const result = await deleteMember(
+      null,
+      deleteMemberForm({ userId: target.id, confirm: "confirm" }),
+    );
+
+    expect(prismaMock.user.delete).toHaveBeenCalledWith({ where: { id: target.id } });
+    expect(result).toEqual({ ok: true, message: "Sam Lee has been removed from the group." });
   });
 
   it("rejects when no member is selected", async () => {
@@ -968,10 +1006,10 @@ describe("setMemberRole — organiser invite required", () => {
 });
 
 describe("resendOrganiserInvite", () => {
-  it("rejects an organiser without the View members permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembersView: false });
+  it("rejects an organiser who isn't the owner", async () => {
+    isOwner.mockResolvedValueOnce(false);
     const result = await resendOrganiserInvite(null, roleForm({ userId: "member-1" }));
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage members." });
+    expect(result).toEqual({ ok: false, error: "Only the site owner can resend an organiser invite." });
     expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
   });
 
@@ -1098,10 +1136,10 @@ describe("transferOwnership", () => {
 });
 
 describe("cancelOrganiserInvite", () => {
-  it("rejects an organiser without the View members permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembersView: false });
+  it("rejects an organiser who isn't the owner", async () => {
+    isOwner.mockResolvedValueOnce(false);
     const result = await cancelOrganiserInvite(null, roleForm({ userId: "member-1" }));
-    expect(result).toEqual({ ok: false, error: "You do not have permission to manage members." });
+    expect(result).toEqual({ ok: false, error: "Only the site owner can cancel an organiser invite." });
     expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
   });
 
@@ -1220,38 +1258,6 @@ describe("acceptOrganiserInvite", () => {
       ok: true,
       message: "You're now an organiser.",
       href: "/admin",
-    });
-  });
-
-  // Regression test: every admin page now checks its own specific
-  // permission (requirePermission), so a fixed "/admin/members" 404s on
-  // an organiser who wasn't granted Members — landing on Walks avoids
-  // that regardless of which other permissions were granted, since Walks
-  // (member or admin view) is the one page every organiser can open.
-  it("redirects to the member Walks page for an organiser not granted View or Create", async () => {
-    const target = {
-      id: "member-1",
-      role: "MEMBER",
-      firstName: "Jo",
-      lastName: "Bloggs",
-      email: "jo@example.com",
-      organiserInviteExpiresAt: new Date(Date.now() + 1000),
-    };
-    prismaMock.user.findUnique.mockResolvedValueOnce(target);
-    prismaMock.user.update.mockResolvedValueOnce({});
-    getOptionalUser.mockResolvedValueOnce({ id: target.id });
-    resolveOrganiserPermissions.mockResolvedValueOnce({
-      ...FULL_ORGANISER_PERMISSIONS,
-      permWalksView: false,
-      permWalksCreate: false,
-    });
-
-    const result = await acceptOrganiserInvite(null, acceptForm("tok"));
-
-    expect(result).toEqual({
-      ok: true,
-      message: "You're now an organiser.",
-      href: "/walks",
     });
   });
 

@@ -5,12 +5,16 @@ import { prisma } from "./db";
 import type { User } from "@prisma/client";
 import { SIGN_IN_URL } from "./urls";
 import { syncLocalUser } from "./local-user";
-import { hasAnySettingsPermission, type OrganiserPermissions } from "./organiser-permissions";
-import { resolveOrganiserPermissions } from "./role-permissions";
+import { FULL_ORGANISER_PERMISSIONS, type OrganiserPermissions } from "./organiser-permissions";
 
-/** An ADMIN's User row merged with what they can actually do right now
- * (see resolveOrganiserPermissions) — the shape every admin page and
- * server action reads permissions off (`admin.permWalksView`, etc.). */
+/** An ADMIN's User row merged with what they can do — every organiser has
+ * full access (see FULL_ORGANISER_PERMISSIONS); the only thing that sets
+ * the owner apart is a handful of actions checked separately with
+ * isOwner() (promoting/demoting/inviting another organiser, transferring
+ * ownership) — see src/lib/site-owner.ts. This is the shape every admin
+ * page and server action reads permissions off (`admin.permWalksView`,
+ * etc.) — kept as a real field set, not just "is this person an admin",
+ * so each page/action still names the specific thing it needs. */
 export type AdminUser = User & OrganiserPermissions;
 
 /** Clerk throws this when auth() runs on a request that skipped middleware. */
@@ -69,17 +73,15 @@ export async function requireUser(): Promise<User> {
 
 /**
  * Every admin page and server action reads permissions straight off the
- * returned row (`admin.permWalksView`, etc.), so this always merges in
- * what the caller can actually do right now (resolveOrganiserPermissions)
- * — full access for the site owner, the shared Organiser role's current
- * settings for anyone else. See requirePermission/requireAnyPermission
- * below for the page-gating helpers built on top of this.
+ * returned row (`admin.permWalksView`, etc.) — every organiser has full
+ * access, so this always merges in FULL_ORGANISER_PERMISSIONS. See
+ * requirePermission/requireAnyPermission below for the page-gating
+ * helpers built on top of this.
  */
 export async function requireAdmin(): Promise<AdminUser> {
   const user = await getOptionalUser();
   if (!user || user.role !== "ADMIN") notFound();
-  const perms = await resolveOrganiserPermissions(user.id);
-  return { ...user, ...perms };
+  return { ...user, ...FULL_ORGANISER_PERMISSIONS };
 }
 
 /**
@@ -119,16 +121,12 @@ export async function requireAnyPermission(permissions: (keyof OrganiserPermissi
 }
 
 /**
- * Like requirePermission, but for the Settings hub page — it isn't tied to
- * any one of the seven settings-area pages it links out to, so it 404s
- * only for an organiser with none of them (see hasAnySettingsPermission).
- * The hub itself is responsible for only showing links to pages the
- * viewer actually holds the permission for.
+ * Like requirePermission, but for the Settings hub page — every organiser
+ * has full access, so this is really just requireAdmin with a name that
+ * matches the other page-gating helpers above.
  */
 export async function requireAnySettingsPermission(): Promise<AdminUser> {
-  const admin = await requireAdmin();
-  if (!hasAnySettingsPermission(admin)) notFound();
-  return admin;
+  return requireAdmin();
 }
 
 /**

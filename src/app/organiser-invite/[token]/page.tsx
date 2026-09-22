@@ -4,8 +4,6 @@ import { prisma } from "@/lib/db";
 import { getOptionalUser } from "@/lib/auth";
 import { getSiteTheme } from "@/lib/site-theme";
 import { appUrl, accountPortalHref } from "@/lib/urls";
-import { ORGANISER_PERMISSION_OPTIONS } from "@/lib/organiser-permissions";
-import { getOrganiserRolePermissions } from "@/lib/role-permissions";
 import { AcceptInviteForm } from "./accept-invite-form";
 import { WrongAccountNotice } from "./wrong-account-notice";
 
@@ -34,7 +32,7 @@ export default async function OrganiserInvitePage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-  const [invitee, theme, rolePermissions] = await Promise.all([
+  const [invitee, theme] = await Promise.all([
     prisma.user.findUnique({
       where: { organiserInviteToken: token },
       select: {
@@ -46,17 +44,12 @@ export default async function OrganiserInvitePage({
       },
     }),
     getSiteTheme(),
-    getOrganiserRolePermissions(),
   ]);
 
   const now = new Date();
   const expired = !invitee?.organiserInviteExpiresAt || invitee.organiserInviteExpiresAt < now;
   const invalid = !invitee || invitee.role !== "MEMBER";
   const inviteeName = invitee?.firstName?.trim() || "there";
-  // What the shared Organiser role currently grants (see Settings →
-  // Roles) — the same list every organiser gets, not something chosen
-  // per invite any more.
-  const grantedOptions = ORGANISER_PERMISSION_OPTIONS.filter((option) => rolePermissions[option.name]);
 
   const inviteUrl = `${appUrl()}/organiser-invite/${token}`;
   const signInHref = accountPortalHref("sign-in", inviteUrl);
@@ -95,25 +88,16 @@ export default async function OrganiserInvitePage({
             Hi {inviteeName}, this invite is for <strong>{invitee.email}</strong>. Accepting gives
             you organiser access on {theme.siteName}.
           </p>
-          {grantedOptions.length > 0 ? (
-            <div className="w-full max-w-sm text-left">
-              <p className="text-sm font-medium">As an organiser, you&rsquo;ll be able to:</p>
-              <ul className="mt-2 list-disc pl-5 text-sm text-muted-foreground [&_li]:mt-1.5">
-                {grantedOptions.map((option) => (
-                  <li key={option.name}>{option.hint}</li>
-                ))}
-              </ul>
-              <p className="mt-3 text-sm text-muted-foreground">
-                This is real access to other members&rsquo; personal details — please only use it
-                for group business, and keep what you see private.
-              </p>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              No specific organiser tools were switched on for this invite yet — check with
-              whoever invited you once you&rsquo;ve accepted.
+          <div className="w-full max-w-sm text-left">
+            <p className="text-sm font-medium">
+              You&rsquo;ll have full organiser access — everything the site owner can do, except
+              inviting, promoting, or demoting another organiser.
             </p>
-          )}
+            <p className="mt-3 text-sm text-muted-foreground">
+              This is real access to other members&rsquo; personal details — please only use it
+              for group business, and keep what you see private.
+            </p>
+          </div>
           <AcceptInviteForm token={token} />
         </>
       )}

@@ -87,6 +87,7 @@ export default async function MemberDetailPage({
             attendanceCount={attendanceCount}
             id={id}
             inviteRequired={setting?.organiserInviteRequired ?? false}
+            isTargetOwner={member.isOwner}
             isYou={member.isYou}
             name={member.name}
             pendingInvite={member.pendingInvite}

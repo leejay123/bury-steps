@@ -3,8 +3,6 @@ import { redirect } from "next/navigation";
 import { Footprints } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
-import { isOwner } from "@/lib/site-owner";
-import { resolveOrganiserPermissions } from "@/lib/role-permissions";
 import { formatDate, formatMembershipAge } from "@/lib/dates";
 import { windowState, walkStatus, upcomingListLookbackFrom } from "@/lib/walk-window";
 import { walkSharePath } from "@/lib/walk-slug";
@@ -22,22 +20,18 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const user = await requireUser();
 
-  // An organiser without View or Create has no admin dashboard to send
-  // them to instead — they still get the ordinary member experience
-  // below (browse walks, clock in), same as anyone else. See the matching
-  // fallback in site-nav-items.ts.
-  const viewerPerms = user.role === "ADMIN" ? await resolveOrganiserPermissions(user.id) : null;
-  if (viewerPerms && (viewerPerms.permWalksView || viewerPerms.permWalksCreate)) {
+  // Every organiser has the full admin dashboard — this page is the
+  // ordinary member experience (browse walks, clock in), so an admin is
+  // always sent to /admin instead.
+  if (user.role === "ADMIN") {
     redirect("/admin");
   }
 
-  // Reaching this far means the viewer never has View or Create (an admin
-  // with either was just redirected away above) — so a cancelled walk stays
-  // non-clickable here for everyone except the owner, same boundary as
-  // the admin walk page (src/app/admin/walks/[id]/page.tsx). Cancelled
-  // walks aren't hidden entirely, just not a link: the row still shows
-  // what happened (see AllWalksList).
-  const viewerCanOpenCancelledWalk = await isOwner(user.id);
+  // Reaching this far means the viewer is a plain member (the owner, like
+  // any admin, was already redirected away above) — so a cancelled walk
+  // stays non-clickable here. Cancelled walks aren't hidden entirely, just
+  // not a link: the row still shows what happened (see AllWalksList).
+  const viewerCanOpenCancelledWalk = false;
 
   const now = new Date();
   const upcomingFrom = upcomingListLookbackFrom(now);

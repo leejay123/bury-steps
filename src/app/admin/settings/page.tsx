@@ -1,5 +1,4 @@
 import { requireAnySettingsPermission } from "@/lib/auth";
-import { isOwner } from "@/lib/site-owner";
 import { prisma } from "@/lib/db";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
@@ -12,11 +11,7 @@ import { SettingsGrid } from "./settings-grid";
 export const dynamic = "force-dynamic";
 
 export default async function AdminSettingsPage() {
-  // 404s only for an organiser with none of the seven settings-area
-  // permissions — each item below is then filtered to the specific one
-  // it needs, so this hub only ever links to a page the viewer can open.
   const admin = await requireAnySettingsPermission();
-  const isOwnerViewer = await isOwner(admin.id);
 
   const [slideCount, testimonialCount, faqCount, noticeCount] = await Promise.all([
     prisma.homepageSlide.count(),
@@ -112,15 +107,6 @@ export default async function AdminSettingsPage() {
             href: "/admin/reports",
             title: "Accident reports",
             description: "Record what happened on a walk, then print or save as PDF.",
-          },
-        ]
-      : []),
-    ...(isOwnerViewer
-      ? [
-          {
-            href: "/admin/settings/roles",
-            title: "Roles",
-            description: "What the Organiser role can do — one shared set, applied to every organiser.",
           },
         ]
       : []),
