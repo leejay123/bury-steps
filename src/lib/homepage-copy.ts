@@ -266,3 +266,48 @@ export function aboutRulesFromStored(raw: string | null | undefined): AboutRule[
     ? DEFAULT_ABOUT_RULES.map((rule) => ({ ...rule }))
     : parsed;
 }
+
+/** Walk-page "Before you set off" card — one tip per line, same shape as
+ * the About lists above, so it reuses parseAboutList/serializeAboutList. */
+export const DEFAULT_BEFORE_YOU_SET_OFF_TIPS = [
+  "Wear comfortable shoes and dress for the weather.",
+  "Bring a bottle of water — snacks too, for longer walks.",
+  "Aim to arrive at the meeting point a few minutes early.",
+  "New to the group? Say hello when you arrive — everyone was new once.",
+] as const;
+
+export const DEFAULT_BEFORE_YOU_SET_OFF_TIPS_TEXT = serializeAboutList(DEFAULT_BEFORE_YOU_SET_OFF_TIPS);
+
+export function beforeYouSetOffTipsFromStored(raw: string | null | undefined): string[] {
+  return aboutListFromStored(raw, DEFAULT_BEFORE_YOU_SET_OFF_TIPS);
+}
+
+/** Walk-page "How this group works" card — one "Title | Body" step per
+ * line, same shape as the About rules above, so it reuses
+ * parseAboutRules/serializeAboutRules. Icons are assigned by position in
+ * the component, not stored here. */
+export const DEFAULT_HOW_WALKS_WORK_STEPS: AboutRule[] = [
+  {
+    title: "Create an account",
+    body: "Sign up with email or Google so we know who is on the walk.",
+  },
+  {
+    title: "Come to the meeting point",
+    body: "The time and place are on this page. Walks are self-paced — come as you are.",
+  },
+  {
+    title: "Clock in when you arrive",
+    body: "That is how the walk leader knows you are there. You will do that after you sign in.",
+  },
+];
+
+export const DEFAULT_HOW_WALKS_WORK_STEPS_TEXT = serializeAboutRules(DEFAULT_HOW_WALKS_WORK_STEPS);
+
+export function howWalksWorkStepsFromStored(raw: string | null | undefined): AboutRule[] {
+  const trimmed = raw?.trim() ?? "";
+  if (!trimmed) return DEFAULT_HOW_WALKS_WORK_STEPS.map((step) => ({ ...step }));
+  const parsed = parseAboutRules(trimmed);
+  return parsed === "invalid"
+    ? DEFAULT_HOW_WALKS_WORK_STEPS.map((step) => ({ ...step }))
+    : parsed;
+}

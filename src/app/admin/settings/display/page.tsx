@@ -18,6 +18,7 @@ import { FaqSectionCopySettings } from "./faq-section-copy-settings";
 import { HomepageSectionsSettings } from "./homepage-sections-settings";
 import { HowThisStartedCopySettings } from "./how-this-started-copy-settings";
 import { SiteBrandingSettings } from "./site-branding-settings";
+import { WalkPageCopySettings } from "./walk-page-copy-settings";
 import { ReportBannerSettings } from "./report-banner-settings";
 import { SiteFaviconSettings } from "./site-favicon-settings";
 import { SiteLogoSettings } from "./site-logo-settings";
@@ -140,6 +141,10 @@ export default async function DisplaySettingsPage() {
           <FaqSectionCopySettings
             faqSectionIntro={theme.faqSectionIntro}
             faqSectionTitle={theme.faqSectionTitle}
+          />
+          <WalkPageCopySettings
+            beforeYouSetOffTipsText={theme.beforeYouSetOffTipsText}
+            howWalksWorkStepsText={theme.howWalksWorkStepsText}
           />
         </SettingsSectionGroup>
 

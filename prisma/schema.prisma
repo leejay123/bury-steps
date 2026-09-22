@@ -344,6 +344,13 @@ model SiteSetting {
   memberNoticesEnabled        Boolean  @default(true)
   /// Homepage “how it works” strip and walk-page “How this group works” card.
   howWalksWorkEnabled         Boolean  @default(true)
+  /// Walk-page "How this group works" card — one "Title | Body" step per
+  /// line. Empty uses the built-in three-step default. Icons are assigned
+  /// by position, not stored.
+  howWalksWorkSteps           String   @default("")
+  /// Walk-page "Before you set off" card — one tip per line. Empty uses
+  /// the built-in default.
+  beforeYouSetOffTips         String   @default("")
   /// Optional group clock-in target for the current UK month. Null hides Together.
   monthlyClockInGoal          Int?
   /// Site-wide switch for the /progress page. When false it 404s for

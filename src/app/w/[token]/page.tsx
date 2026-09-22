@@ -17,6 +17,7 @@ import { WalkJourneyDrawer } from "@/components/walk-journey-drawer";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { HowWalksWork } from "@/components/how-walks-work";
 import { getWalkMemberNames } from "@/lib/walk-members";
+import { getSiteTheme } from "@/lib/site-theme";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { WalkLivePanel } from "./walk-live-panel";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -97,7 +98,7 @@ export default async function WalkLinkPage({
   const walk = await getWalkByShareKey(token);
   if (!walk) notFound();
 
-  const user = await getOptionalUser();
+  const [user, theme] = await Promise.all([getOptionalUser(), getSiteTheme()]);
   const status = walkStatus({
     cancelledAt: walk.cancelledAt,
     durationMins: walk.durationMins,
@@ -165,7 +166,7 @@ export default async function WalkLinkPage({
         </Alert>
       ) : completed && !user ? (
         <Alert variant="info">
-          <AlertTitle>This walk has finished</AlertTitle>
+          <AlertTitle className="font-bold">This walk has finished</AlertTitle>
           <AlertDescription>
             Clock-in is closed. Details and the journey below are still here to look back on.
           </AlertDescription>
@@ -248,6 +249,7 @@ export default async function WalkLinkPage({
       {status === "cancelled" ? null : user ? (
         <WalkLivePanel
           alreadyClockedInAt={alreadyIn?.clockedInAt.toISOString() ?? null}
+          beforeYouSetOffTips={theme.beforeYouSetOffTips}
           durationMins={walk.durationMins}
           endedAt={walk.endedAt?.toISOString() ?? null}
           memberNames={memberNames}
@@ -257,8 +259,8 @@ export default async function WalkLinkPage({
         />
       ) : completed ? null : (
         <>
-          <BeforeYouSetOff />
-          <HowWalksWork />
+          <BeforeYouSetOff tips={theme.beforeYouSetOffTips} />
+          <HowWalksWork steps={theme.howWalksWorkSteps} />
         </>
       )}
     </div>

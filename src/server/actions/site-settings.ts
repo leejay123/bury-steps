@@ -745,6 +745,61 @@ export async function updateAboutLists(
   return { ok: true, message: "About lists saved." };
 }
 
+/** The walk-page "Before you set off" and "How this group works" cards —
+ * same list/rule format as the About lists above, so it reuses their
+ * parse/serialize helpers. */
+export async function updateWalkPageCopy(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+
+  const tips = parseAboutList(String(formData.get("beforeYouSetOffTips") ?? ""));
+  const steps = parseAboutRules(String(formData.get("howWalksWorkSteps") ?? ""));
+  if (tips === "invalid") {
+    return {
+      ok: false,
+      error: `"Before you set off" needs 1–${MAX_ABOUT_LIST_ITEMS} lines, each up to ${MAX_ABOUT_LIST_ITEM} characters.`,
+    };
+  }
+  if (steps === "invalid") {
+    return {
+      ok: false,
+      error: `"How this group works" needs 1–${MAX_ABOUT_RULES} lines as "Title | Body".`,
+    };
+  }
+
+  const tipsText = serializeAboutList(tips);
+  const stepsText = serializeAboutRules(steps);
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        carouselEnabled: true,
+        scrollToTopEnabled: true,
+        cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
+        beforeYouSetOffTips: tipsText,
+        howWalksWorkSteps: stepsText,
+      },
+      update: {
+        beforeYouSetOffTips: tipsText,
+        howWalksWorkSteps: stepsText,
+      },
+    });
+  } catch (err) {
+    return logActionError("updateWalkPageCopy", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/display");
+  return { ok: true, message: "Walk page copy saved." };
+}
+
 function parseMonthlyClockInGoal(raw: string): number | null | "invalid" {
   const trimmed = raw.trim();
   if (trimmed === "") return null;

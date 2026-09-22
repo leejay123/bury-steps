@@ -38,8 +38,14 @@ import {
   DEFAULT_HOW_THIS_STARTED_EYEBROW,
   DEFAULT_HOW_THIS_STARTED_TEASER,
   DEFAULT_HOW_THIS_STARTED_TITLE,
+  DEFAULT_BEFORE_YOU_SET_OFF_TIPS,
+  DEFAULT_BEFORE_YOU_SET_OFF_TIPS_TEXT,
+  DEFAULT_HOW_WALKS_WORK_STEPS,
+  DEFAULT_HOW_WALKS_WORK_STEPS_TEXT,
   aboutListFromStored,
   aboutRulesFromStored,
+  beforeYouSetOffTipsFromStored,
+  howWalksWorkStepsFromStored,
   serializeAboutList,
   serializeAboutRules,
   type AboutRule,
@@ -76,6 +82,11 @@ export type SiteTheme = {
   aboutPlacesHeading: string;
   aboutExpectHeading: string;
   aboutRulesHeading: string;
+  /** Walk-page cards. */
+  beforeYouSetOffTips: string[];
+  beforeYouSetOffTipsText: string;
+  howWalksWorkSteps: AboutRule[];
+  howWalksWorkStepsText: string;
   homepageSectionOrder: HomepageSectionId[];
   /** Bundled default, or `/api/site-logo?v=...` once an admin has uploaded one. */
   logoSrc: string;
@@ -119,6 +130,10 @@ function defaultTheme(): SiteTheme {
     aboutPlacesHeading: DEFAULT_ABOUT_PLACES_HEADING,
     aboutExpectHeading: DEFAULT_ABOUT_EXPECT_HEADING,
     aboutRulesHeading: DEFAULT_ABOUT_RULES_HEADING,
+    beforeYouSetOffTips: [...DEFAULT_BEFORE_YOU_SET_OFF_TIPS],
+    beforeYouSetOffTipsText: DEFAULT_BEFORE_YOU_SET_OFF_TIPS_TEXT,
+    howWalksWorkSteps: DEFAULT_HOW_WALKS_WORK_STEPS.map((step) => ({ ...step })),
+    howWalksWorkStepsText: DEFAULT_HOW_WALKS_WORK_STEPS_TEXT,
     homepageSectionOrder: normalizeHomepageSectionOrder(null),
     logoSrc: DEFAULT_LOGO_SRC,
     hasCustomLogo: false,
@@ -155,6 +170,8 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       aboutPlacesHeading: true,
       aboutExpectHeading: true,
       aboutRulesHeading: true,
+      beforeYouSetOffTips: true,
+      howWalksWorkSteps: true,
       homepageSectionOrder: true,
       logoMime: true,
       faviconMime: true,
@@ -167,6 +184,8 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   const aboutPlaces = aboutListFromStored(row?.aboutPlaces, DEFAULT_ABOUT_PLACES);
   const aboutExpect = aboutListFromStored(row?.aboutExpect, DEFAULT_ABOUT_EXPECT);
   const aboutRules = aboutRulesFromStored(row?.aboutRules);
+  const beforeYouSetOffTips = beforeYouSetOffTipsFromStored(row?.beforeYouSetOffTips);
+  const howWalksWorkSteps = howWalksWorkStepsFromStored(row?.howWalksWorkSteps);
 
   return {
     carouselEnabled: row?.carouselEnabled ?? true,
@@ -210,6 +229,14 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     aboutPlacesHeading: row?.aboutPlacesHeading?.trim() || DEFAULT_ABOUT_PLACES_HEADING,
     aboutExpectHeading: row?.aboutExpectHeading?.trim() || DEFAULT_ABOUT_EXPECT_HEADING,
     aboutRulesHeading: row?.aboutRulesHeading?.trim() || DEFAULT_ABOUT_RULES_HEADING,
+    beforeYouSetOffTips,
+    beforeYouSetOffTipsText: row?.beforeYouSetOffTips?.trim()
+      ? serializeAboutList(beforeYouSetOffTips)
+      : DEFAULT_BEFORE_YOU_SET_OFF_TIPS_TEXT,
+    howWalksWorkSteps,
+    howWalksWorkStepsText: row?.howWalksWorkSteps?.trim()
+      ? serializeAboutRules(howWalksWorkSteps)
+      : DEFAULT_HOW_WALKS_WORK_STEPS_TEXT,
     homepageSectionOrder: normalizeHomepageSectionOrder(row?.homepageSectionOrder),
     logoSrc: row?.logoMime
       ? `/api/site-logo?v=${row.updatedAt.getTime()}`
@@ -225,7 +252,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v13"], {
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v14"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });

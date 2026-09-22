@@ -103,6 +103,7 @@ export {
   updateTestimonialsSectionCopy,
   updateHowThisStartedCopy,
   updateAboutLists,
+  updateWalkPageCopy,
   updateMonthlyClockInGoal,
   updateSiteLogo,
   updateSiteFavicon,

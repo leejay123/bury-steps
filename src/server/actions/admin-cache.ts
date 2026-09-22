@@ -135,6 +135,8 @@ export async function resetSiteToDefault(
           homepageSectionOrder: DEFAULT_HOMEPAGE_SECTION_ORDER_TEXT,
           memberNoticesEnabled: true,
           howWalksWorkEnabled: true,
+          howWalksWorkSteps: "",
+          beforeYouSetOffTips: "",
           monthlyClockInGoal: null,
         },
         update: {
@@ -163,6 +165,8 @@ export async function resetSiteToDefault(
           homepageSectionOrder: DEFAULT_HOMEPAGE_SECTION_ORDER_TEXT,
           memberNoticesEnabled: true,
           howWalksWorkEnabled: true,
+          howWalksWorkSteps: "",
+          beforeYouSetOffTips: "",
           monthlyClockInGoal: null,
         },
       });

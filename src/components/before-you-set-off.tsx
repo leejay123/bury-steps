@@ -1,13 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DEFAULT_BEFORE_YOU_SET_OFF_TIPS } from "@/lib/homepage-copy";
 
-const TIPS = [
-  "Wear comfortable shoes and dress for the weather.",
-  "Bring a bottle of water — snacks too, for longer walks.",
-  "Aim to arrive at the meeting point a few minutes early.",
-  "New to the group? Say hello when you arrive — everyone was new once.",
-];
-
-export function BeforeYouSetOff() {
+export function BeforeYouSetOff({
+  tips = DEFAULT_BEFORE_YOU_SET_OFF_TIPS,
+}: {
+  /** Editable in Settings → Display → Homepage copy — see @/lib/homepage-copy. */
+  tips?: readonly string[];
+}) {
   return (
     <Card>
       <CardHeader>
@@ -15,7 +14,7 @@ export function BeforeYouSetOff() {
       </CardHeader>
       <CardContent>
         <ul className="list-disc space-y-1.5 pl-5 text-sm text-muted-foreground">
-          {TIPS.map((tip) => (
+          {tips.map((tip) => (
             <li key={tip}>{tip}</li>
           ))}
         </ul>
