@@ -38,7 +38,13 @@ export default async function SettingsLayout({ children }: { children: React.Rea
     // column, below the header) rather than the viewport. Portaled content
     // (Drawer/Dialog overlays) is unaffected: portals render outside this
     // subtree in the DOM regardless of CSS containment.
-    <div className="[contain:layout]">
+    //
+    // `overflow-hidden` alongside it: the collapsed (offcanvas) state
+    // slides the panel to `left: -16rem` relative to that same containing
+    // box — on a screen wider than the site's own max-w-[1200px] column,
+    // that has room to bleed into the column's outer margin instead of
+    // going fully offscreen, without this to clip it there.
+    <div className="overflow-hidden [contain:layout]">
       <SidebarProvider className="min-h-0">
         <SettingsSidebar />
         <SidebarInset>{children}</SidebarInset>
