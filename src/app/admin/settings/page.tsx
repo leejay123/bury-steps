@@ -1,17 +1,3 @@
-import {
-  AlertTriangle,
-  Bell,
-  BookOpen,
-  ClipboardList,
-  HelpCircle,
-  ImageIcon,
-  Mail,
-  Palette,
-  Quote,
-  RefreshCw,
-  TrendingUp,
-  Users,
-} from "lucide-react";
 import { requireAnySettingsPermission } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
@@ -43,19 +29,16 @@ export default async function AdminSettingsPage() {
               href: "/admin/settings/hero-photos",
               title: "Hero photos",
               description: `Homepage carousel. ${slideCount} of ${MAX_HOMEPAGE_SLIDES} slides.`,
-              icon: ImageIcon,
             },
             {
               href: "/admin/settings/testimonials",
               title: "Testimonials",
               description: `Quotes on the homepage. ${testimonialCount} of ${MAX_HOMEPAGE_TESTIMONIALS}.`,
-              icon: Quote,
             },
             {
               href: "/admin/settings/faqs",
               title: "FAQs",
               description: `Questions on the homepage. ${faqCount} of ${MAX_HOMEPAGE_FAQS}, in up to ${MAX_FAQ_CATEGORIES} categories.`,
-              icon: HelpCircle,
             },
           ]
         : [],
@@ -69,7 +52,6 @@ export default async function AdminSettingsPage() {
                 href: "/admin/settings/notices",
                 title: "Notices",
                 description: `Member bell (welcome + ${BELL_NOTICE_LIMIT} newest) and full-page notices. ${noticeCount} total.`,
-                icon: Bell,
               },
             ]
           : []),
@@ -80,7 +62,6 @@ export default async function AdminSettingsPage() {
                 title: "Emails",
                 description:
                   "Edit the subject and wording the site sends for each email — signup, walks, contact form, and more.",
-                icon: Mail,
               },
             ]
           : []),
@@ -90,7 +71,6 @@ export default async function AdminSettingsPage() {
                 href: "/admin/settings/subscribers",
                 title: "Subscribers",
                 description: "Who's opted into the newsletter and walk emails, and an export for Resend campaigns.",
-                icon: Users,
               },
             ]
           : []),
@@ -106,7 +86,6 @@ export default async function AdminSettingsPage() {
                 title: "Display",
                 description:
                   "Site name, tagline, Facebook link, homepage copy and section order, cookie notice, and back to top.",
-                icon: Palette,
               },
             ]
           : []),
@@ -116,7 +95,6 @@ export default async function AdminSettingsPage() {
                 href: "/admin/settings/progress",
                 title: "Progress",
                 description: "Optional monthly together goal for signed-in members.",
-                icon: TrendingUp,
               },
             ]
           : []),
@@ -130,13 +108,11 @@ export default async function AdminSettingsPage() {
               href: "/admin/settings/cache",
               title: "Site cache",
               description: "Refresh the public homepage if it still shows old content.",
-              icon: RefreshCw,
             },
             {
               href: "/admin/settings/reset",
               title: "Reset the site",
               description: "Delete all walks, members, and homepage edits. You stay the organiser.",
-              icon: AlertTriangle,
               tone: "danger" as const,
             },
           ]
@@ -151,7 +127,6 @@ export default async function AdminSettingsPage() {
                 href: "/admin/reports",
                 title: "Accident reports",
                 description: "Record what happened on a walk, then print or save as PDF.",
-                icon: ClipboardList,
               },
             ]
           : []),
@@ -159,7 +134,6 @@ export default async function AdminSettingsPage() {
           href: "/admin/guide",
           title: "Guide",
           description: "How to use this site as an organiser.",
-          icon: BookOpen,
         },
       ],
     },
