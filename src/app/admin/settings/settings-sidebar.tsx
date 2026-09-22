@@ -7,14 +7,13 @@ import {
   AlertTriangle,
   Archive,
   Bell,
-  ChevronDown,
+  ChevronRight,
   ClipboardList,
   BookOpen,
   HelpCircle,
   ImageIcon,
   LayoutGrid,
   Mail,
-  Menu,
   Quote,
   RefreshCw,
   SlidersHorizontal,
@@ -24,8 +23,21 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { unlockIdleDocument } from "@/components/overlay-root";
-import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+} from "@/components/ui/sidebar";
 
 type NavChild = { href: string; label: string };
 type NavItem = { href: string; label: string; icon: LucideIcon; danger?: boolean; children?: NavChild[] };
@@ -91,179 +103,103 @@ function sectionPrefix(href: string) {
   return href.slice(0, href.lastIndexOf("/"));
 }
 
-/** The nav tree shared by the desktop sidebar and the mobile drawer below —
- * same groups, same active/expand logic, so the two never drift apart. */
-function SettingsNavTree({ onNavigate, pathname }: { onNavigate?: () => void; pathname: string }) {
-  // Whether each item-with-children is expanded. Defaults to "open on its
-  // own pages, closed elsewhere"; a manual click can override that default
-  // in either direction for the rest of this visit.
-  const [expandedOverrides, setExpandedOverrides] = useState<Record<string, boolean>>({});
-
-  function handleNavigate() {
-    unlockIdleDocument();
-    onNavigate?.();
-  }
+function NavItemWithChildren({ item, pathname }: { item: NavItem & { children: NavChild[] }; pathname: string }) {
+  const inSection = pathname.startsWith(sectionPrefix(item.href));
+  // Defaults to "open on its own pages, closed elsewhere"; a manual click
+  // can override that default in either direction for the rest of this visit.
+  const [manualOpen, setManualOpen] = useState<boolean | null>(null);
+  const open = manualOpen ?? inSection;
 
   return (
-    <nav className="flex flex-col gap-4">
-      {GROUPS.map((group) => (
-        <div className="flex flex-col gap-0.5" key={group.label}>
-          <p className="px-2.5 py-1 text-[0.65rem] font-semibold tracking-wider text-muted-foreground uppercase">
-            {group.label}
-          </p>
-          {group.items.map((item) => {
-            const inSection = item.children ? pathname.startsWith(sectionPrefix(item.href)) : false;
-            const active = item.children ? inSection : pathname === item.href;
-            const expanded = item.children ? (expandedOverrides[item.href] ?? inSection) : false;
-            return (
-              <div key={item.href}>
-                <div className="flex items-center gap-0.5">
-                  <Link
-                    className={cn(
-                      "flex flex-1 items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-foreground transition-colors",
-                      active ? "bg-accent font-medium" : "hover:bg-accent/60",
-                      item.danger && "text-destructive",
-                    )}
-                    href={item.href}
-                    onClick={handleNavigate}
-                  >
-                    <item.icon
-                      aria-hidden
-                      className={cn(
-                        "size-4 shrink-0",
-                        item.danger ? "text-destructive" : "text-muted-foreground",
-                        active && !item.danger && "text-foreground",
-                      )}
-                    />
-                    {item.label}
+    <Collapsible asChild defaultOpen={inSection} onOpenChange={setManualOpen} open={open}>
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={inSection}>
+          <Link href={item.href} onClick={() => unlockIdleDocument()}>
+            <item.icon aria-hidden />
+            {item.label}
+          </Link>
+        </SidebarMenuButton>
+        <CollapsibleTrigger asChild>
+          <button
+            aria-label={open ? `Collapse ${item.label}` : `Expand ${item.label}`}
+            className="absolute top-1.5 right-1 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-sidebar-foreground outline-hidden transition-transform hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:rotate-90"
+            type="button"
+          >
+            <ChevronRight aria-hidden className="size-4" />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            {item.children.map((child) => (
+              <SidebarMenuSubItem key={child.href}>
+                <SidebarMenuSubButton asChild isActive={pathname === child.href}>
+                  <Link href={child.href} onClick={() => unlockIdleDocument()}>
+                    {child.label}
                   </Link>
-                  {item.children ? (
-                    <button
-                      aria-expanded={expanded}
-                      aria-label={expanded ? `Collapse ${item.label}` : `Expand ${item.label}`}
-                      className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
-                      onClick={() =>
-                        setExpandedOverrides((prev) => ({ ...prev, [item.href]: !expanded }))
-                      }
-                      type="button"
-                    >
-                      <ChevronDown
-                        aria-hidden
-                        className={cn("size-3.5 transition-transform", expanded && "rotate-180")}
-                      />
-                    </button>
-                  ) : null}
-                </div>
-                {item.children && expanded ? (
-                  <div className="mt-0.5 ml-[1.125rem] flex flex-col gap-0.5 border-l pl-3">
-                    {item.children.map((child) => {
-                      const childActive = pathname === child.href;
-                      return (
-                        <Link
-                          className={cn(
-                            "rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors",
-                            childActive ? "bg-accent font-medium text-foreground" : "hover:bg-accent/60",
-                          )}
-                          href={child.href}
-                          key={child.href}
-                          onClick={handleNavigate}
-                        >
-                          {child.label}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
-      ))}
-    </nav>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+            ))}
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      </SidebarMenuItem>
+    </Collapsible>
   );
 }
 
 /**
- * Persistent left nav for the whole Settings area (src/app/admin/settings/
- * layout.tsx) — every settings page lives under one shared shell instead
- * of each page starting from a blank slate, matching the top site nav's
- * own always-visible-while-you're-in-this-area pattern. Only the owner
- * ever reaches anything under /admin/settings (every settings-area
+ * The Settings area's nav, built on shadcn's Sidebar primitives — desktop
+ * gets the persistent panel, a phone automatically gets the same tree as a
+ * slide-in sheet (see SidebarProvider/Sidebar's own built-in behaviour),
+ * both opened from the SettingsSidebarTrigger in ../settings-page.tsx. Only
+ * the owner ever reaches anything under /admin/settings (every settings-area
  * permission is owner-only — see @/lib/organiser-permissions), so unlike
  * the top nav this never needs to hide an item per viewer.
- *
- * `sticky top-14`: stays in view as the page content scrolls, pinned just
- * below the site's own sticky header (h-14). Its own scrollbar is styled
- * thin rather than the browser's default — a full-width scrollbar looked
- * heavy next to how narrow this column is.
  */
 export function SettingsSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside
-      className={cn(
-        "sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-56 shrink-0 flex-col gap-5 overflow-y-auto border-r bg-muted/30 px-3 py-5 md:flex",
-        "[scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]",
-        "[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent",
-      )}
-    >
-      <Link
-        className="flex items-center gap-2 rounded-md px-2 py-1 text-sm font-semibold tracking-tight"
-        href="/admin/settings"
-        onClick={() => unlockIdleDocument()}
-      >
-        Settings
-      </Link>
-      <SettingsNavTree pathname={pathname} />
-    </aside>
-  );
-}
-
-/** Finds the current page's label (with its parent, for a nested page) so
- * the mobile trigger button can show where you are, not just "Menu". */
-function currentPageLabel(pathname: string): string | null {
-  for (const group of GROUPS) {
-    for (const item of group.items) {
-      const child = item.children?.find((c) => c.href === pathname);
-      if (child) return `${item.label} · ${child.label}`;
-      if (item.href === pathname) return item.label;
-    }
-  }
-  return null;
-}
-
-/**
- * The sidebar above is desktop-only (`md:flex`) — on a phone there was no
- * way to move between settings pages at all once you'd landed on one,
- * short of going back to the top nav's Settings dropdown each time. This is
- * that same nav tree, opened from a full-width button as a bottom sheet.
- */
-export function SettingsMobileNav() {
-  const pathname = usePathname();
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="sticky top-14 z-10 border-b bg-background px-4 py-2 md:hidden">
-      <Drawer onOpenChange={setOpen} open={open}>
-        <DrawerTrigger asChild>
-          <Button className="w-full justify-between font-normal" size="sm" type="button" variant="outline">
-            <span className="flex min-w-0 items-center gap-2">
-              <Menu aria-hidden className="size-4 shrink-0 text-muted-foreground" />
-              <span className="truncate">{currentPageLabel(pathname) ?? "Browse settings"}</span>
-            </span>
-            <ChevronDown aria-hidden className="size-4 shrink-0 text-muted-foreground" />
-          </Button>
-        </DrawerTrigger>
-        <DrawerContent className="max-h-[85dvh]">
-          <DrawerHeader className="shrink-0">
-            <DrawerTitle>Settings</DrawerTitle>
-          </DrawerHeader>
-          <div className="overflow-y-auto px-4 pb-6">
-            <SettingsNavTree onNavigate={() => setOpen(false)} pathname={pathname} />
-          </div>
-        </DrawerContent>
-      </Drawer>
-    </div>
+    <Sidebar collapsible="offcanvas">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild className="font-semibold">
+              <Link href="/admin/settings" onClick={() => unlockIdleDocument()}>
+                Settings
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+      <SidebarContent>
+        {GROUPS.map((group) => (
+          <SidebarGroup key={group.label}>
+            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((item) =>
+                  item.children ? (
+                    <NavItemWithChildren item={item as NavItem & { children: NavChild[] }} key={item.href} pathname={pathname} />
+                  ) : (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton
+                        asChild
+                        className={cn(item.danger && "text-destructive hover:text-destructive")}
+                        isActive={pathname === item.href}
+                      >
+                        <Link href={item.href} onClick={() => unlockIdleDocument()}>
+                          <item.icon aria-hidden className={cn(item.danger && "text-destructive")} />
+                          {item.label}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ),
+                )}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
+      </SidebarContent>
+    </Sidebar>
   );
 }

@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { SettingsBackLink } from "./settings-back-link";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 /**
  * Shared shell for every Settings → … page so each one matches the hub:
@@ -27,7 +28,10 @@ export function SettingsPage({
   return (
     <div className="flex flex-col">
       <div className="relative flex flex-col gap-4 px-4 py-6 md:px-6">
-        <SettingsBackLink page={title} />
+        <div className="flex items-center gap-1">
+          <SidebarTrigger className="-ml-1" />
+          <SettingsBackLink page={title} />
+        </div>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
           <div className="flex max-w-2xl flex-col gap-1.5">
             <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
