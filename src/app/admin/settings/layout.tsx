@@ -27,9 +27,22 @@ export default async function SettingsLayout({ children }: { children: React.Rea
   await requireAnySettingsPermission();
 
   return (
-    <SidebarProvider className="min-h-0">
-      <SettingsSidebar />
-      <SidebarInset>{children}</SidebarInset>
-    </SidebarProvider>
+    // Sidebar's desktop panel is `position: fixed` against the viewport,
+    // which is right for shadcn's own assumption that SidebarProvider sits
+    // directly under <body> — here it's nested inside the site's own
+    // centered, bordered shell (see src/app/layout.tsx), so a plain fixed
+    // sidebar pinned itself to the real browser edge instead of that
+    // column, floating above the site's own header. `contain: layout`
+    // makes this div the containing block for its fixed descendants
+    // instead — the sidebar now positions against this box (inside the
+    // column, below the header) rather than the viewport. Portaled content
+    // (Drawer/Dialog overlays) is unaffected: portals render outside this
+    // subtree in the DOM regardless of CSS containment.
+    <div className="[contain:layout]">
+      <SidebarProvider className="min-h-0">
+        <SettingsSidebar />
+        <SidebarInset>{children}</SidebarInset>
+      </SidebarProvider>
+    </div>
   );
 }
