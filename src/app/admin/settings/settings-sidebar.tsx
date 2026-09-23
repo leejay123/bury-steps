@@ -203,6 +203,17 @@ function SettingsNavTree({ onNavigate, pathname }: { onNavigate?: () => void; pa
  * thin rather than the browser's default — a full-width scrollbar looked
  * heavy next to how narrow this column is.
  *
+ * `z-[65]`, above every Drawer/Dialog/AlertDialog's shared overlay
+ * (z-[60], see those components) — without this, opening any drawer on a
+ * settings page (editing an FAQ, a notice, anything) blurred and dimmed
+ * the sidebar along with the rest of the page, same as page content. Page
+ * content dimming that way is the point (draw focus to the drawer); this
+ * persistent nav isn't page content, so it stays sharp and usable instead.
+ * That full-viewport blur is also genuinely expensive to paint — layering
+ * it every open/close over this sticky, independently-scrolling column was
+ * very likely what made opening/closing a drawer feel laggy specifically
+ * on settings pages.
+ *
  * Collapses to a slim rail (just the toggle button) on desktop — local
  * state, not persisted: reopens full-width on your next visit rather than
  * remembering a collapsed choice, which is fine for a settings area only
@@ -215,7 +226,7 @@ export function SettingsSidebar() {
   return (
     <aside
       className={cn(
-        "sticky top-14 hidden h-[calc(100dvh-3.5rem)] shrink-0 flex-col gap-5 overflow-y-auto border-r bg-muted/30 py-5 transition-[width] duration-200 ease-linear md:flex",
+        "sticky top-14 z-[65] hidden h-[calc(100dvh-3.5rem)] shrink-0 flex-col gap-5 overflow-y-auto border-r bg-muted/30 py-5 transition-[width] duration-200 ease-linear md:flex",
         collapsed ? "w-12 px-2" : "w-56 px-3",
         "[scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]",
         "[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent",
