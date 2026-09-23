@@ -226,7 +226,7 @@ export function SettingsSidebar() {
   return (
     <aside
       className={cn(
-        "sticky top-14 z-[65] hidden h-[calc(100dvh-3.5rem)] shrink-0 flex-col gap-5 overflow-y-auto border-r bg-muted/30 py-5 transition-[width] duration-200 ease-linear md:flex",
+        "sticky top-14 z-[65] hidden h-[calc(100dvh-3.5rem)] shrink-0 flex-col gap-5 overflow-y-auto border-r bg-muted/30 py-5 md:flex",
         collapsed ? "w-12 px-2" : "w-56 px-3",
         "[scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]",
         "[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent",
