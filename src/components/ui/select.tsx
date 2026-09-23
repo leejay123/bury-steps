@@ -131,7 +131,7 @@ function SelectTrigger({
           button's own flex-item sizing one level up. */}
       <Button
         aria-expanded={open}
-        className={cn("min-w-0 w-full justify-between font-normal", className)}
+        className={cn("group min-w-0 w-full justify-between font-normal", className)}
         data-select-trigger=""
         disabled={disabled}
         ref={triggerRef}
@@ -141,7 +141,12 @@ function SelectTrigger({
         type="button"
       >
         {children}
-        <ChevronDownIcon className="opacity-50" />
+        <ChevronDownIcon
+          className={cn(
+            "shrink-0 text-muted-foreground transition-transform duration-200 group-hover:text-foreground",
+            open && "rotate-180",
+          )}
+        />
       </Button>
     </PopoverTrigger>
   );
@@ -190,7 +195,7 @@ function SelectContent({
       }}
       {...props}
     >
-      <div className="flex flex-col gap-1" role="listbox">
+      <div className="flex flex-col gap-0.5" role="listbox">
         {children}
       </div>
     </PopoverContent>
@@ -214,15 +219,20 @@ function SelectItem({
   return (
     <Button
       aria-selected={isSelected}
-      className={cn("w-full justify-between font-normal", isSelected && "bg-accent", className)}
+      className={cn(
+        "h-8 w-full justify-between font-normal",
+        isSelected && "bg-accent",
+        className,
+      )}
       disabled={disabled}
       onClick={() => select(value)}
       role="option"
+      size="sm"
       type="button"
       variant="ghost"
     >
       <span className="truncate">{children}</span>
-      {isSelected ? <CheckIcon /> : null}
+      {isSelected ? <CheckIcon className="shrink-0 text-primary" /> : null}
     </Button>
   );
 }

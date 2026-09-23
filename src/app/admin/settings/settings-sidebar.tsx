@@ -15,6 +15,7 @@ import {
   LayoutGrid,
   Mail,
   Menu,
+  PanelLeft,
   Quote,
   RefreshCw,
   SlidersHorizontal,
@@ -113,7 +114,12 @@ function SettingsNavTree({ onNavigate, pathname }: { onNavigate?: () => void; pa
           </p>
           {group.items.map((item) => {
             const inSection = item.children ? pathname.startsWith(sectionPrefix(item.href)) : false;
-            const active = item.children ? inSection : pathname === item.href;
+            // Exact match only, even for a parent with children — using
+            // `inSection` here highlighted "Site wording" itself for every
+            // one of its 5 pages, showing two rows "active" (it and
+            // whichever child) at once. Real shadcn sidebars only ever
+            // highlight the one row you're actually on.
+            const active = pathname === item.href;
             const expanded = item.children ? (expandedOverrides[item.href] ?? inSection) : false;
             return (
               <div key={item.href}>
@@ -196,26 +202,45 @@ function SettingsNavTree({ onNavigate, pathname }: { onNavigate?: () => void; pa
  * below the site's own sticky header (h-14). Its own scrollbar is styled
  * thin rather than the browser's default — a full-width scrollbar looked
  * heavy next to how narrow this column is.
+ *
+ * Collapses to a slim rail (just the toggle button) on desktop — local
+ * state, not persisted: reopens full-width on your next visit rather than
+ * remembering a collapsed choice, which is fine for a settings area only
+ * the owner ever opens.
  */
 export function SettingsSidebar() {
   const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
     <aside
       className={cn(
-        "sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-56 shrink-0 flex-col gap-5 overflow-y-auto border-r bg-muted/30 px-3 py-5 md:flex",
+        "sticky top-14 hidden h-[calc(100dvh-3.5rem)] shrink-0 flex-col gap-5 overflow-y-auto border-r bg-muted/30 py-5 transition-[width] duration-200 ease-linear md:flex",
+        collapsed ? "w-12 px-2" : "w-56 px-3",
         "[scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]",
         "[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent",
       )}
     >
-      <Link
-        className="flex items-center gap-2 rounded-md px-2 py-1 text-sm font-semibold tracking-tight"
-        href="/admin/settings"
-        onClick={() => unlockIdleDocument()}
-      >
-        Settings
-      </Link>
-      <SettingsNavTree pathname={pathname} />
+      <div className={cn("flex items-center", collapsed ? "justify-center" : "justify-between gap-1")}>
+        {collapsed ? null : (
+          <Link
+            className="flex items-center gap-2 rounded-md px-2 py-1 text-sm font-semibold tracking-tight"
+            href="/admin/settings"
+            onClick={() => unlockIdleDocument()}
+          >
+            Settings
+          </Link>
+        )}
+        <button
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
+          onClick={() => setCollapsed((current) => !current)}
+          type="button"
+        >
+          <PanelLeft aria-hidden className="size-4" />
+        </button>
+      </div>
+      {collapsed ? null : <SettingsNavTree pathname={pathname} />}
     </aside>
   );
 }
