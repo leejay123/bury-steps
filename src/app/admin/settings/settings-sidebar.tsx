@@ -161,7 +161,7 @@ function SettingsNavTree({ onNavigate, pathname }: { onNavigate?: () => void; pa
                   ) : null}
                 </div>
                 {item.children && expanded ? (
-                  <div className="mt-0.5 ml-[1.125rem] flex flex-col gap-0.5 border-l pl-3">
+                  <div className="mt-0.5 ml-[0.9375rem] flex flex-col gap-0.5 border-l pl-3">
                     {item.children.map((child) => {
                       const childActive = pathname === child.href;
                       return (

@@ -69,6 +69,7 @@ export default async function AdminSubscribersSettingsPage() {
 
       <SettingsSection
         description={`${newsletterRecipientCount} people currently opted in (${unsubscribedFooterCount} have unsubscribed via the footer form over time). Includes a name where the subscriber is also a member — everyone's own account emails also stays counted under "Notices"/"Walk announcements"/"Progress" above regardless of their newsletter choice.`}
+        flush
         title="Newsletter list"
       >
         <Button asChild size="sm" variant="outline">

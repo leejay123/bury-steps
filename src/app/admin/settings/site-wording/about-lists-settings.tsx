@@ -386,6 +386,7 @@ export function AboutListsSettings({
   return (
     <SettingsSection
       description="Headings and lists in the Read more About drawer. Tap a row to edit."
+      flush
       title="About lists"
     >
       <DataList>
