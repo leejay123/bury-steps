@@ -12,4 +12,5 @@ export const COUNT_LIMIT_LOCK_KEYS = {
   siteNoticeCategory: 900106,
   lastAdmin: 900107,
   journeyEvent: 900108,
+  lastOwner: 900109,
 } as const;

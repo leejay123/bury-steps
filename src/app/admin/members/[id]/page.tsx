@@ -7,7 +7,7 @@ import { getMemberHistory } from "@/server/actions";
 import { formatDate, formatMembershipAge, formatRelativeDays } from "@/lib/dates";
 import { initials } from "@/lib/names";
 import { walkStatus } from "@/lib/walk-window";
-import { getOwnerId } from "@/lib/site-owner";
+import { isOwner } from "@/lib/site-owner";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { AttendanceHistory } from "@/components/attendance-history";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -25,16 +25,15 @@ export default async function MemberDetailPage({
   const viewer = await requirePermission("permMembersView");
   const { id } = await params;
 
-  const [member, setting, ownerId] = await Promise.all([
+  const [member, setting, viewerIsOwner] = await Promise.all([
     getMemberHistory(id),
     prisma.siteSetting.findUnique({
       where: { id: SITE_SETTING_ID },
       select: { organiserInviteRequired: true },
     }),
-    getOwnerId(),
+    isOwner(viewer.id),
   ]);
   if (!member) notFound();
-  const viewerIsOwner = viewer.id === ownerId;
   // A cancelled walk's admin page is owner/Walks-permission territory
   // (see src/app/admin/walks/[id]/page.tsx) — a row for one shouldn't
   // promise a destination a Members-only viewer can't actually open.

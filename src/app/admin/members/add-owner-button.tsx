@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import type React from "react";
-import { transferOwnership, type ActionResult } from "@/server/actions";
+import { addOwner, type ActionResult } from "@/server/actions";
 import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { FormError } from "@/components/form-error";
@@ -20,14 +20,14 @@ import {
 } from "@/components/ui/alert-dialog";
 
 /**
- * A full handover: gives an existing organiser owner access and gives up
- * the acting owner's own in the same step — see src/lib/site-owner.ts. For
- * adding a co-owner without giving up your own access, see
- * AddOwnerButton instead. Only ever rendered for a current owner, on
- * another organiser's row (never their own, and never a plain member's —
- * see the caller in members-table.tsx and admin/members/[id]/page.tsx).
+ * Grants another existing organiser owner access alongside the acting
+ * owner's own — see src/lib/site-owner.ts. Only ever rendered for a
+ * current owner, on another organiser's row (never their own, and never a
+ * plain member's — see the caller in members-table.tsx and
+ * admin/members/[id]/page.tsx). Unlike TransferOwnershipButton, the acting
+ * owner keeps their own access afterward.
  */
-export function TransferOwnershipButton({
+export function AddOwnerButton({
   hideTrigger = false,
   name,
   onChanged,
@@ -45,10 +45,7 @@ export function TransferOwnershipButton({
   userId: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    transferOwnership,
-    null,
-  );
+  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(addOwner, null);
   const [confirmValue, setConfirmValue] = useState("");
   useActionToast(state, () => {
     setOpen(false);
@@ -62,7 +59,7 @@ export function TransferOwnershipButton({
   return (
     <>
       <Button hidden={hideTrigger} onClick={() => setOpen(true)} ref={triggerRef} size="xs" variant="outline">
-        Make owner
+        Add as co-owner
       </Button>
       <AlertDialog
         closeDisabled={isPending}
@@ -72,31 +69,26 @@ export function TransferOwnershipButton({
         <AlertDialogContent closeDisabled={isPending}>
           <form action={action} className="flex flex-col gap-4">
             <AlertDialogHeader>
-              <AlertDialogTitle>Make {name} the site owner?</AlertDialogTitle>
+              <AlertDialogTitle>Make {name} a co-owner?</AlertDialogTitle>
               <AlertDialogDescription asChild>
                 <div className="space-y-2 text-sm text-muted-foreground">
                   <p>
-                    {name} will gain full access to everything and become the only person who can
-                    promote or demote an organiser, edit an organiser&rsquo;s permissions, or
-                    remove an organiser&rsquo;s account.
+                    {name} will gain full access to everything — able to promote or demote an
+                    organiser, edit an organiser&rsquo;s permissions, remove an organiser&rsquo;s
+                    account, and grant or remove another account&rsquo;s owner access, same as you.
                   </p>
-                  <p>
-                    You will keep your own current permissions as a regular organiser, but will no
-                    longer be able to do any of that.
-                  </p>
+                  <p>You keep your own owner access too — this adds them, it doesn&rsquo;t replace you.</p>
                 </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <input name="userId" type="hidden" value={userId} />
             <input name="confirm" type="hidden" value={confirmValue} />
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor={`transfer-owner-confirm-${userId}`}>
-                Type &ldquo;{name}&rdquo; to continue
-              </Label>
+              <Label htmlFor={`add-owner-confirm-${userId}`}>Type &ldquo;{name}&rdquo; to continue</Label>
               <Input
                 autoComplete="off"
                 disabled={isPending}
-                id={`transfer-owner-confirm-${userId}`}
+                id={`add-owner-confirm-${userId}`}
                 onChange={(event) => setConfirmValue(event.target.value)}
                 placeholder={name}
                 spellCheck={false}
@@ -109,7 +101,7 @@ export function TransferOwnershipButton({
                 Cancel
               </AlertDialogCancel>
               <Button disabled={isPending || !ready} type="submit">
-                {isPending ? "Transferring…" : "Make owner"}
+                {isPending ? "Adding…" : "Add as co-owner"}
               </Button>
             </AlertDialogFooter>
           </form>

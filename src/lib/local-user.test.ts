@@ -53,7 +53,7 @@ describe("syncLocalUser", () => {
   it("bootstraps the first-ever account as ADMIN and makes them the site owner", async () => {
     prismaMock.user.findUnique.mockResolvedValueOnce(null);
     prismaMock.user.count.mockResolvedValueOnce(0);
-    const created = { id: "user-1", ...INPUT, role: "ADMIN" };
+    const created = { id: "user-1", ...INPUT, role: "ADMIN", isOwner: true };
     prismaMock.user.create.mockResolvedValueOnce(created);
 
     await syncLocalUser(INPUT);
@@ -65,12 +65,13 @@ describe("syncLocalUser", () => {
         firstName: INPUT.firstName,
         lastName: INPUT.lastName,
         role: "ADMIN",
+        isOwner: true,
       },
     });
     expect(prismaMock.siteSetting.upsert).toHaveBeenCalledWith({
       where: { id: "site" },
-      create: expect.objectContaining({ id: "site", ownerId: created.id }),
-      update: { ownerId: created.id },
+      create: { id: "site", primaryColor: "#111111" },
+      update: {},
     });
     expect(sendWelcomeEmail).toHaveBeenCalledWith(created);
   });
@@ -119,7 +120,7 @@ describe("syncLocalUser", () => {
       expect.objectContaining({ data: expect.objectContaining({ role: "ADMIN" }) }),
     );
     expect(prismaMock.siteSetting.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({ update: { ownerId: created.id } }),
+      expect.objectContaining({ update: {} }),
     );
   });
 });

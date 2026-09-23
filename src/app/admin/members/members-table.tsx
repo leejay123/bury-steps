@@ -11,9 +11,11 @@ import { initials } from "@/lib/names";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { searchMembers, type MemberRoleFilter, type MemberRow, type MemberSort } from "@/server/actions";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { AddOwnerButton } from "./add-owner-button";
 import { DeleteMemberButton } from "./delete-member-button";
 import { MemberRoleButton } from "./member-role-button";
 import { MemberRowActionsMenu } from "./member-row-actions-menu";
+import { RemoveOwnerButton } from "./remove-owner-button";
 import { TransferOwnershipButton } from "./transfer-ownership-button";
 import { CancelInviteButton, ResendInviteButton } from "./pending-invite-actions";
 import { EmptyState } from "@/components/empty-state";
@@ -138,48 +140,93 @@ function MemberListRow({
     !member.isYou &&
     viewerIsOwner
   ) {
-    const roleRef: { current: HTMLButtonElement | null } = { current: null };
-    const promoting = member.role === "MEMBER";
-    actions.push({
-      key: "role",
-      menuItem: (
-        <DropdownMenuItem key="role" onSelect={() => roleRef.current?.click()}>
-          {promoting ? (inviteRequired ? "Invite as organiser" : "Make organiser") : "Make member"}
-        </DropdownMenuItem>
-      ),
-      hiddenWidget: (
-        <MemberRoleButton
-          hideTrigger
-          inviteRequired={inviteRequired}
-          key="role-hidden"
-          name={member.name}
-          onChanged={onChanged}
-          role={member.role}
-          triggerRef={roleRef}
-          userId={member.id}
-        />
-      ),
-    });
-    if (member.role === "ADMIN") {
-      const transferRef: { current: HTMLButtonElement | null } = { current: null };
+    if (member.role === "ADMIN" && member.isOwner) {
+      // Already one of the group's owners — the only thing left to offer
+      // is removing that access (setMemberRole refuses to demote them to
+      // a plain member while it's still set, and they're already an
+      // owner, so neither the role toggle nor Add/Make owner apply).
+      const removeOwnerRef: { current: HTMLButtonElement | null } = { current: null };
       actions.push({
-        key: "transfer",
+        key: "remove-owner",
         menuItem: (
-          <DropdownMenuItem key="transfer" onSelect={() => transferRef.current?.click()}>
-            Make owner
+          <DropdownMenuItem key="remove-owner" onSelect={() => removeOwnerRef.current?.click()}>
+            Remove as owner
           </DropdownMenuItem>
         ),
         hiddenWidget: (
-          <TransferOwnershipButton
+          <RemoveOwnerButton
             hideTrigger
-            key="transfer-hidden"
+            key="remove-owner-hidden"
             name={member.name}
             onChanged={onChanged}
-            triggerRef={transferRef}
+            triggerRef={removeOwnerRef}
             userId={member.id}
           />
         ),
       });
+    } else {
+      const roleRef: { current: HTMLButtonElement | null } = { current: null };
+      const promoting = member.role === "MEMBER";
+      actions.push({
+        key: "role",
+        menuItem: (
+          <DropdownMenuItem key="role" onSelect={() => roleRef.current?.click()}>
+            {promoting ? (inviteRequired ? "Invite as organiser" : "Make organiser") : "Make member"}
+          </DropdownMenuItem>
+        ),
+        hiddenWidget: (
+          <MemberRoleButton
+            hideTrigger
+            inviteRequired={inviteRequired}
+            key="role-hidden"
+            name={member.name}
+            onChanged={onChanged}
+            role={member.role}
+            triggerRef={roleRef}
+            userId={member.id}
+          />
+        ),
+      });
+      if (member.role === "ADMIN") {
+        const addOwnerRef: { current: HTMLButtonElement | null } = { current: null };
+        actions.push({
+          key: "add-owner",
+          menuItem: (
+            <DropdownMenuItem key="add-owner" onSelect={() => addOwnerRef.current?.click()}>
+              Add as co-owner
+            </DropdownMenuItem>
+          ),
+          hiddenWidget: (
+            <AddOwnerButton
+              hideTrigger
+              key="add-owner-hidden"
+              name={member.name}
+              onChanged={onChanged}
+              triggerRef={addOwnerRef}
+              userId={member.id}
+            />
+          ),
+        });
+        const transferRef: { current: HTMLButtonElement | null } = { current: null };
+        actions.push({
+          key: "transfer",
+          menuItem: (
+            <DropdownMenuItem key="transfer" onSelect={() => transferRef.current?.click()}>
+              Make owner
+            </DropdownMenuItem>
+          ),
+          hiddenWidget: (
+            <TransferOwnershipButton
+              hideTrigger
+              key="transfer-hidden"
+              name={member.name}
+              onChanged={onChanged}
+              triggerRef={transferRef}
+              userId={member.id}
+            />
+          ),
+        });
+      }
     }
   }
 
@@ -277,11 +324,12 @@ export function MembersTable({
   inviteRequired: boolean;
   roleFilter: MemberRoleFilter;
   viewerId: string;
-  /** Whether the signed-in organiser is the site's single owner (see
-   * src/lib/site-owner.ts) — promoting/demoting an organiser, editing an
-   * organiser's permissions, removing an organiser's account, and
-   * transferring ownership are all owner-only, regardless of what
-   * permissions the viewer otherwise holds. */
+  /** Whether the signed-in organiser is one of the site's owners (see
+   * src/lib/site-owner.ts — there can be more than one) —
+   * promoting/demoting an organiser, editing an organiser's permissions,
+   * removing an organiser's account, and granting/transferring/removing
+   * ownership are all owner-only, regardless of what permissions the
+   * viewer otherwise holds. */
   viewerIsOwner: boolean;
 }) {
   const router = useRouter();

@@ -1,49 +1,56 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 const { prismaMock } = vi.hoisted(() => ({
-  prismaMock: { siteSetting: { findUnique: vi.fn() } },
+  prismaMock: { user: { findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn() } },
 }));
 
 vi.mock("./db", () => ({ prisma: prismaMock }));
 
-import { getOwnerId, isOwner } from "./site-owner";
+import { getOwnerIds, isOwner, ownerCount } from "./site-owner";
 
 beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe("getOwnerId", () => {
-  it("returns the stored ownerId", async () => {
-    prismaMock.siteSetting.findUnique.mockResolvedValueOnce({ ownerId: "user-1" });
-    expect(await getOwnerId()).toBe("user-1");
-    expect(prismaMock.siteSetting.findUnique).toHaveBeenCalledWith({
-      where: { id: "site" },
-      select: { ownerId: true },
+describe("isOwner", () => {
+  it("is true for an account with isOwner set", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({ isOwner: true });
+    expect(await isOwner("user-1")).toBe(true);
+    expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      select: { isOwner: true },
     });
   });
 
-  it("returns null when no owner has ever been set", async () => {
-    prismaMock.siteSetting.findUnique.mockResolvedValueOnce({ ownerId: null });
-    expect(await getOwnerId()).toBeNull();
-  });
+  it("is false for an account without it, or one that no longer exists", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({ isOwner: false });
+    expect(await isOwner("user-2")).toBe(false);
 
-  it("returns null when the SiteSetting row doesn't exist yet", async () => {
-    prismaMock.siteSetting.findUnique.mockResolvedValueOnce(null);
-    expect(await getOwnerId()).toBeNull();
+    prismaMock.user.findUnique.mockResolvedValueOnce(null);
+    expect(await isOwner("gone")).toBe(false);
   });
 });
 
-describe("isOwner", () => {
-  it("is true only for the account matching the stored ownerId", async () => {
-    prismaMock.siteSetting.findUnique.mockResolvedValueOnce({ ownerId: "user-1" });
-    expect(await isOwner("user-1")).toBe(true);
+describe("getOwnerIds", () => {
+  it("returns every owner's id", async () => {
+    prismaMock.user.findMany.mockResolvedValueOnce([{ id: "user-1" }, { id: "user-2" }]);
+    expect(await getOwnerIds()).toEqual(["user-1", "user-2"]);
+    expect(prismaMock.user.findMany).toHaveBeenCalledWith({
+      where: { isOwner: true },
+      select: { id: true },
+    });
   });
 
-  it("is false for anyone else, including when no owner is set", async () => {
-    prismaMock.siteSetting.findUnique.mockResolvedValueOnce({ ownerId: "user-1" });
-    expect(await isOwner("user-2")).toBe(false);
+  it("returns an empty array when there are none", async () => {
+    prismaMock.user.findMany.mockResolvedValueOnce([]);
+    expect(await getOwnerIds()).toEqual([]);
+  });
+});
 
-    prismaMock.siteSetting.findUnique.mockResolvedValueOnce(null);
-    expect(await isOwner("user-1")).toBe(false);
+describe("ownerCount", () => {
+  it("counts owners", async () => {
+    prismaMock.user.count.mockResolvedValueOnce(2);
+    expect(await ownerCount()).toBe(2);
+    expect(prismaMock.user.count).toHaveBeenCalledWith({ where: { isOwner: true } });
   });
 });

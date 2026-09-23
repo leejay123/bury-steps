@@ -9,7 +9,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { SITE_SETTING_ID } from "@/lib/theme";
-import { getOwnerId, isOwner } from "@/lib/site-owner";
+import { getOwnerIds, isOwner } from "@/lib/site-owner";
 import { safeAppPath } from "@/lib/urls";
 import {
   makeOrganiserInviteToken,
@@ -140,7 +140,7 @@ export async function searchMembers({
 
   const skip = (Math.max(1, page) - 1) * LIST_PAGE_SIZE;
 
-  const [total, members, ownerId] = await Promise.all([
+  const [total, members, ownerIds] = await Promise.all([
     prisma.user.count({ where }),
     prisma.user.findMany({
       where,
@@ -160,8 +160,9 @@ export async function searchMembers({
         _count: { select: { attendances: true, walksCreated: true } },
       },
     }),
-    getOwnerId(),
+    getOwnerIds(),
   ]);
+  const ownerIdSet = new Set(ownerIds);
 
   const nowMs = now.getTime();
   return {
@@ -184,7 +185,7 @@ export async function searchMembers({
               expired: inviteExpired,
             }
           : null,
-        isOwner: member.id === ownerId,
+        isOwner: ownerIdSet.has(member.id),
         needsAttention:
           inviteExpired ||
           (member.role === "MEMBER" &&
@@ -339,11 +340,10 @@ export async function setMemberRole(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  const ownerId = await getOwnerId();
   // Promoting or demoting an organiser is one of the owner-only actions
   // (see src/lib/site-owner.ts) — regardless of what permissions the
   // acting organiser otherwise holds.
-  if (admin.id !== ownerId) return ownerDenied("change an organiser's role");
+  if (!(await isOwner(admin.id))) return ownerDenied("change an organiser's role");
   const limited = checkRateLimit(`${admin.id}:setMemberRole`, 20, 60_000);
   if (!limited.ok) {
     return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
@@ -361,15 +361,20 @@ export async function setMemberRole(
   }
   const role = roleRaw as "ADMIN" | "MEMBER";
 
-  if (role === "MEMBER" && id === ownerId) {
-    return {
-      ok: false,
-      error: "Transfer ownership to another organiser before demoting yourself.",
-    };
-  }
-
   const target = await prisma.user.findUnique({ where: { id } });
   if (!target) return { ok: false, error: "That member is no longer in the group." };
+
+  // Owner access travels with organiser status — demoting one of the
+  // group's owners to a plain member without them giving up owner access
+  // first would leave a MEMBER row still holding it. Remove their owner
+  // access (or, if they're the last owner, hand it to someone else first)
+  // before demoting them.
+  if (role === "MEMBER" && target.isOwner) {
+    return {
+      ok: false,
+      error: "Remove their owner access before making them a member.",
+    };
+  }
   if (target.role === role) {
     return {
       ok: true,
@@ -454,13 +459,11 @@ export async function setMemberRole(
 }
 
 /**
- * Hands the site's single "master organiser" role (see
- * src/lib/site-owner.ts) to another existing organiser. Owner-only — the
- * current owner is the only one who can give it up, and only to someone
- * already an organiser (promote them first if they aren't one yet). Both
- * the new and outgoing owner already have full access regardless — the
- * only real change is who can promote/demote an organiser, edit the
- * shared Organiser role, or remove a member's account from here on.
+ * A full handover: gives an existing organiser owner access (see
+ * src/lib/site-owner.ts) and gives up the acting owner's own in the same
+ * step. Owner-only, and only to someone already an organiser (promote
+ * them first if they aren't one yet). For adding a co-owner without giving
+ * up your own access, see addOwner below instead.
  */
 export async function transferOwnership(
   _prev: ActionResult | null,
@@ -493,7 +496,10 @@ export async function transferOwnership(
   }
 
   try {
-    await prisma.siteSetting.update({ where: { id: SITE_SETTING_ID }, data: { ownerId: target.id } });
+    await prisma.$transaction([
+      prisma.user.update({ where: { id: target.id }, data: { isOwner: true } }),
+      prisma.user.update({ where: { id: admin.id }, data: { isOwner: false } }),
+    ]);
   } catch (err) {
     return logActionError("transferOwnership", err, "Could not transfer ownership. Try again.");
   }
@@ -503,6 +509,106 @@ export async function transferOwnership(
   revalidatePath(`/admin/members/${admin.id}`);
 
   return { ok: true, message: `${displayName(target)} is now the site owner.` };
+}
+
+/**
+ * Grants an existing organiser owner access without giving up the acting
+ * owner's own — the group can have more than one owner at once (see
+ * src/lib/site-owner.ts), unlike transferOwnership above, which is a full
+ * handover. Owner-only, and only to someone already an organiser.
+ */
+export async function addOwner(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!(await isOwner(admin.id))) return ownerDenied("add another owner");
+  const limited = checkRateLimit(`${admin.id}:addOwner`, 10, 60_000);
+  if (!limited.ok) {
+    return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
+  }
+
+  const id = String(formData.get("userId") ?? "");
+  if (!id) return { ok: false, error: "No organiser selected." };
+
+  const target = await prisma.user.findUnique({ where: { id } });
+  if (!target || target.role !== "ADMIN") {
+    return { ok: false, error: "Choose an existing organiser to make a co-owner." };
+  }
+  if (target.isOwner) {
+    return { ok: true, message: `${displayName(target)} is already an owner.` };
+  }
+
+  // Same weight as transferOwnership's own confirm — granting full access
+  // deserves the same deliberate, self-documenting step either way.
+  const confirm = String(formData.get("confirm") ?? "").trim().toLowerCase();
+  if (confirm !== displayName(target).trim().toLowerCase()) {
+    return { ok: false, error: `Type ${displayName(target)}'s name to add them as an owner.` };
+  }
+
+  try {
+    await prisma.user.update({ where: { id: target.id }, data: { isOwner: true } });
+  } catch (err) {
+    return logActionError("addOwner", err, "Could not add them as an owner. Try again.");
+  }
+
+  revalidatePath("/admin/members");
+  revalidatePath(`/admin/members/${target.id}`);
+
+  return { ok: true, message: `${displayName(target)} is now also a site owner.` };
+}
+
+/**
+ * Strips owner access from one of the group's owners, leaving them a
+ * regular organiser — refused if they are the group's last remaining
+ * owner (see src/lib/site-owner.ts's ownerCount; at least one must always
+ * remain). Owner-only, same as every other action here.
+ */
+export async function removeOwner(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!(await isOwner(admin.id))) return ownerDenied("remove another owner");
+  const limited = checkRateLimit(`${admin.id}:removeOwner`, 10, 60_000);
+  if (!limited.ok) {
+    return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
+  }
+
+  const id = String(formData.get("userId") ?? "");
+  if (!id) return { ok: false, error: "No organiser selected." };
+
+  const target = await prisma.user.findUnique({ where: { id } });
+  if (!target) return { ok: false, error: "That member is no longer in the group." };
+  if (!target.isOwner) {
+    return { ok: true, message: `${displayName(target)} is not an owner.` };
+  }
+
+  const confirm = String(formData.get("confirm") ?? "").trim().toLowerCase();
+  if (confirm !== "confirm") {
+    return { ok: false, error: "Type Confirm to remove their owner access." };
+  }
+
+  try {
+    await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.lastOwner, async (tx) => {
+      const fresh = await tx.user.findUnique({ where: { id: target.id } });
+      if (!fresh) throw new Error("MEMBER_GONE");
+      if (!fresh.isOwner) return;
+      const remaining = await tx.user.count({ where: { isOwner: true } });
+      if (remaining <= 1) {
+        throw new LimitReachedError("You cannot remove the group's last owner.");
+      }
+      await tx.user.update({ where: { id: fresh.id }, data: { isOwner: false } });
+    });
+  } catch (err) {
+    if (err instanceof LimitReachedError) return { ok: false, error: err.message };
+    if (err instanceof Error && err.message === "MEMBER_GONE") {
+      return { ok: false, error: "That member is no longer in the group." };
+    }
+    return logActionError("removeOwner", err, "Could not remove their owner access. Try again.");
+  }
+
+  revalidatePath("/admin/members");
+  revalidatePath(`/admin/members/${target.id}`);
+
+  return { ok: true, message: `${displayName(target)} is no longer a site owner.` };
 }
 
 /** Issues (or reissues) an organiser invite — shared by setMemberRole's
@@ -694,12 +800,13 @@ export async function getMemberHistory(userId: string): Promise<{
   isYou: boolean;
   items: MemberHistoryItem[];
   pendingInvite: { sentAt: string; expiresAt: string; expired: boolean } | null;
-  /** The site's single "master organiser" (see src/lib/site-owner.ts). */
+  /** One of the group's owners (see src/lib/site-owner.ts) — there can be
+   * more than one. */
   isOwner: boolean;
 } | null> {
   const admin = await requireAdmin();
   if (!admin.permMembersView) return null;
-  const [member, attendanceCount, ownerId] = await Promise.all([
+  const [member, attendanceCount] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -731,7 +838,6 @@ export async function getMemberHistory(userId: string): Promise<{
       },
     }),
     prisma.attendance.count({ where: { userId } }),
-    getOwnerId(),
   ]);
   if (!member) return null;
 
@@ -743,7 +849,7 @@ export async function getMemberHistory(userId: string): Promise<{
     walkCount: member._count.walksCreated,
     attendanceCount,
     isYou: member.id === admin.id,
-    isOwner: member.id === ownerId,
+    isOwner: member.isOwner,
     pendingInvite: member.organiserInviteSentAt
       ? {
           sentAt: member.organiserInviteSentAt.toISOString(),

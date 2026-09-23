@@ -50,6 +50,15 @@ model User {
   organiserInviteToken     String?   @unique
   organiserInviteSentAt    DateTime?
   organiserInviteExpiresAt DateTime?
+  /// The site's "owner" set — any number of organisers can hold this at
+  /// once (see src/lib/site-owner.ts). Only an owner can promote/demote an
+  /// organiser, edit an organiser's permissions, remove an organiser's
+  /// account, or grant/revoke another account's owner access. Set
+  /// automatically for whoever bootstraps as the very first organiser;
+  /// changed after that via addOwner/removeOwner/transferOwnership. At
+  /// least one owner must always remain — removeOwner refuses to strip the
+  /// last one.
+  isOwner                  Boolean   @default(false)
 
   walksCreated            Walk[]                 @relation("WalkCreator")
   attendances             Attendance[]
@@ -62,9 +71,6 @@ model User {
   /// At most one SiteSetting row ever exists, so this is really 0-or-1 —
   /// Prisma still requires the relation's other side to be declared.
   contactMessagesOwnerFor SiteSetting[]          @relation("ContactMessagesOwner")
-  /// Same 0-or-1-in-practice note as above — this is who src/lib/site-owner.ts
-  /// treats as the site's single "master organiser".
-  siteOwnerFor            SiteSetting[]          @relation("SiteOwner")
 
   @@index([createdAt])
 }
@@ -396,20 +402,9 @@ model SiteSetting {
   /// auto-delete off — this is a new feature, not an existing behaviour
   /// being made configurable.
   accidentReportRetentionDays Int?
-  /// The single "master organiser" — the only account that can promote or
-  /// demote an organiser, edit an organiser's permissions, or remove an
-  /// organiser's account (see src/lib/site-owner.ts). Set automatically
-  /// for whoever bootstraps as the very first organiser; transferred
-  /// deliberately after that (transferOwnership). A single FK can only
-  /// ever point to one row, so "exactly one owner" is structural rather
-  /// than a rule enforced by hand. onDelete: SetNull is a defensive
-  /// fallback only — the app itself refuses to remove or demote the
-  /// owner without a transfer first, so this should not normally fire.
-  ownerId                     String?
   updatedAt                   DateTime @updatedAt
 
   contactMessagesOwner User? @relation("ContactMessagesOwner", fields: [contactMessagesOwnerId], references: [id], onDelete: SetNull)
-  owner                User? @relation("SiteOwner", fields: [ownerId], references: [id], onDelete: SetNull)
 }
 
 /// Organiser-only accident reports. Printed from the report page.

@@ -80,17 +80,22 @@ export async function syncLocalUser(input: {
         firstName: input.firstName,
         lastName: input.lastName,
         role: bootstrapAsAdmin ? "ADMIN" : "MEMBER",
+        // The first organiser is also the site's first owner — see
+        // src/lib/site-owner.ts. Plain field on this row now, not a
+        // separate SiteSetting pointer, since more than one account can
+        // hold it from here on (addOwner/transferOwnership).
+        isOwner: bootstrapAsAdmin,
       },
     });
 
     if (bootstrapAsAdmin) {
-      // The first organiser is also the site's one "master organiser" —
-      // see src/lib/site-owner.ts. Upsert rather than update: this may be
-      // the very first time the SiteSetting row is ever touched.
+      // Ensure the SiteSetting row exists at all — this may be the very
+      // first time it's ever touched. Ownership itself no longer lives
+      // here (see above); this is just the row's own bootstrap.
       await tx.siteSetting.upsert({
         where: { id: SITE_SETTING_ID },
-        create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, ownerId: created.id },
-        update: { ownerId: created.id },
+        create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR },
+        update: {},
       });
     }
 

@@ -2,10 +2,12 @@
 
 import type React from "react";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { AddOwnerButton } from "../add-owner-button";
 import { DeleteMemberButton } from "../delete-member-button";
 import { ImpersonateButton } from "../impersonate-button";
 import { MemberRoleButton } from "../member-role-button";
 import { MemberRowActionsMenu } from "../member-row-actions-menu";
+import { RemoveOwnerButton } from "../remove-owner-button";
 import { TransferOwnershipButton } from "../transfer-ownership-button";
 import { CancelInviteButton, ResendInviteButton } from "../pending-invite-actions";
 
@@ -83,46 +85,89 @@ export function MemberDetailActions({
     !isYou &&
     viewerIsOwner
   ) {
-    const roleRef: { current: HTMLButtonElement | null } = { current: null };
-    const promoting = role === "MEMBER";
-    actions.push({
-      key: "role",
-      menuItem: (
-        <DropdownMenuItem key="role" onSelect={() => roleRef.current?.click()}>
-          {promoting ? (inviteRequired ? "Invite as organiser" : "Make organiser") : "Make member"}
-        </DropdownMenuItem>
-      ),
-      hiddenWidget: (
-        <MemberRoleButton
-          hideTrigger
-          inviteRequired={inviteRequired}
-          key="role-hidden"
-          name={name}
-          role={role}
-          triggerRef={roleRef}
-          userId={id}
-        />
-      ),
-    });
-    if (role === "ADMIN") {
-      const transferRef: { current: HTMLButtonElement | null } = { current: null };
+    if (role === "ADMIN" && isTargetOwner) {
+      // Already one of the group's owners — the only thing left to offer
+      // is removing that access (setMemberRole refuses to demote them to
+      // a plain member while it's still set, and they're already an
+      // owner, so neither the role toggle nor Add/Make owner apply).
+      const removeOwnerRef: { current: HTMLButtonElement | null } = { current: null };
       actions.push({
-        key: "transfer",
+        key: "remove-owner",
         menuItem: (
-          <DropdownMenuItem key="transfer" onSelect={() => transferRef.current?.click()}>
-            Make owner
+          <DropdownMenuItem key="remove-owner" onSelect={() => removeOwnerRef.current?.click()}>
+            Remove as owner
           </DropdownMenuItem>
         ),
         hiddenWidget: (
-          <TransferOwnershipButton
+          <RemoveOwnerButton
             hideTrigger
-            key="transfer-hidden"
+            key="remove-owner-hidden"
             name={name}
-            triggerRef={transferRef}
+            triggerRef={removeOwnerRef}
             userId={id}
           />
         ),
       });
+    } else {
+      const roleRef: { current: HTMLButtonElement | null } = { current: null };
+      const promoting = role === "MEMBER";
+      actions.push({
+        key: "role",
+        menuItem: (
+          <DropdownMenuItem key="role" onSelect={() => roleRef.current?.click()}>
+            {promoting ? (inviteRequired ? "Invite as organiser" : "Make organiser") : "Make member"}
+          </DropdownMenuItem>
+        ),
+        hiddenWidget: (
+          <MemberRoleButton
+            hideTrigger
+            inviteRequired={inviteRequired}
+            key="role-hidden"
+            name={name}
+            role={role}
+            triggerRef={roleRef}
+            userId={id}
+          />
+        ),
+      });
+      if (role === "ADMIN") {
+        const addOwnerRef: { current: HTMLButtonElement | null } = { current: null };
+        actions.push({
+          key: "add-owner",
+          menuItem: (
+            <DropdownMenuItem key="add-owner" onSelect={() => addOwnerRef.current?.click()}>
+              Add as co-owner
+            </DropdownMenuItem>
+          ),
+          hiddenWidget: (
+            <AddOwnerButton
+              hideTrigger
+              key="add-owner-hidden"
+              name={name}
+              triggerRef={addOwnerRef}
+              userId={id}
+            />
+          ),
+        });
+        const transferRef: { current: HTMLButtonElement | null } = { current: null };
+        actions.push({
+          key: "transfer",
+          menuItem: (
+            <DropdownMenuItem key="transfer" onSelect={() => transferRef.current?.click()}>
+              Make owner
+            </DropdownMenuItem>
+          ),
+          hiddenWidget: (
+            <TransferOwnershipButton
+              hideTrigger
+              key="transfer-hidden"
+              name={name}
+              triggerRef={transferRef}
+              userId={id}
+            />
+          ),
+        });
+      }
     }
   }
 
