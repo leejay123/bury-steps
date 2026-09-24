@@ -16,6 +16,7 @@ import {
   dataListItemStackClassName,
 } from "@/components/data-list";
 import { Button } from "@/components/ui/button";
+import { SettingsListHeader } from "../../settings/settings-page";
 import {
   Drawer,
   DrawerContent,
@@ -67,17 +68,18 @@ export function HomepageFaqManager({
       <FaqCategoryManager categories={categories} maxCategories={maxCategories} />
 
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-sm font-medium">Questions</h2>
-          <Button
-            className="w-full sm:w-auto"
-            disabled={atLimit || noCategories}
-            onClick={() => setMode({ type: "add" })}
-            size="sm"
-          >
-            Add FAQ
-          </Button>
-        </div>
+        <SettingsListHeader
+          action={
+            <Button
+              disabled={atLimit || noCategories}
+              onClick={() => setMode({ type: "add" })}
+              size="sm"
+            >
+              Add FAQ
+            </Button>
+          }
+          title={`Questions (${faqs.length} of ${maxFaqs})`}
+        />
         {noCategories ? (
           <p className="text-sm text-muted-foreground">Add a category before you add a question.</p>
         ) : null}

@@ -138,15 +138,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               visible lag on MacBooks; an opaque bar stays crisp and cheap.
               [transform:translateZ(0)] keeps it on its own compositor layer.
 
-              z-[66], above the Settings sidebar's z-[65] (see
-              settings-sidebar.tsx): that sidebar is sticky within a much
-              taller page and, once you scroll past where it can still
-              stick, settles into normal flow further down — at that point
-              its own box can still spatially reach back up into this
-              header's own screen region (position: sticky reverting to
-              static, not clamped to never re-enter where it started). With
-              a lower z-index than the sidebar it painted over this header
-              there; this keeps the header always on top when that happens.
+              z-[66] keeps the header above any sticky or raised page content
+              scrolling underneath it.
             */}
             <header className="sticky top-0 z-[66] touch-manipulation bg-background [transform:translateZ(0)]">
               <Suspense fallback={null}>

@@ -61,7 +61,7 @@ export function ResetSiteForm() {
         open={open}
       >
         <AlertDialogTrigger asChild>
-          <Button className="w-full sm:w-auto" type="button" variant="destructive">
+          <Button className="w-full sm:w-auto sm:self-start" type="button" variant="destructive">
             Reset the site
           </Button>
         </AlertDialogTrigger>

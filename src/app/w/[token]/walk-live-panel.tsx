@@ -21,7 +21,7 @@ export function WalkLivePanel({
   walksHref,
 }: {
   alreadyClockedInAt: string | null;
-  /** Editable in Settings → Display → Homepage copy — see @/lib/homepage-copy. */
+  /** Editable in Settings → Site wording → Walk page cards — see @/lib/homepage-copy. */
   beforeYouSetOffTips: readonly string[];
   durationMins: number;
   /** Set once an organiser ends the walk early — see endWalkEarly. */

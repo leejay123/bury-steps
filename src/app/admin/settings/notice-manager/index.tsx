@@ -9,6 +9,7 @@ import { DataList, DataListActions, DataListBody, DataListItem, DataListItemMain
 import { ListPagination } from "@/components/list-pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SettingsListHeader } from "../settings-page";
 import {
   Drawer,
   DrawerContent,
@@ -16,7 +17,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { Separator } from "@/components/ui/separator";
 import { AddNoticeForm, EditNoticeForm } from "./notice-form";
 import { NoticeCategoryManager } from "./notice-category-manager";
 import { RemoveNoticeButton } from "./remove-notice-button";
@@ -51,20 +51,16 @@ export function SiteNoticeManager({
   return (
     <div className="flex flex-col gap-8">
       <NoticeCategoryManager categories={categories} maxCategories={maxCategories} />
-      <Separator />
       <div className="flex flex-col gap-4" ref={listRef}>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <h2 className="text-sm font-medium">Notices</h2>
-            <p className="text-sm text-muted-foreground">
-              Unlimited notices. The member bell shows the welcome (if on) plus the{" "}
-              {BELL_NOTICE_LIMIT} newest others. Full-page notices stay on Notices forever.
-            </p>
-          </div>
-          <Button className="w-full sm:w-auto" onClick={() => setMode({ type: "add" })} size="sm">
-            Add notice
-          </Button>
-        </div>
+        <SettingsListHeader
+          action={
+            <Button onClick={() => setMode({ type: "add" })} size="sm">
+              Add notice
+            </Button>
+          }
+          description={`The member bell shows the welcome (if on) plus the ${BELL_NOTICE_LIMIT} newest others. Full-page notices stay on the Notices page for good.`}
+          title={`Notices (${notices.length})`}
+        />
         {noCategories ? (
           <p className="text-sm text-muted-foreground">
             Add a category above before you publish a full-page notice.

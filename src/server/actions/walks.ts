@@ -701,7 +701,7 @@ export async function deleteWalk(_prev: ActionResult | null, formData: FormData)
 }
 
 /** Flags/unflags a cancelled walk to exempt it from the cancelled-walk
- * auto-delete cron (Settings → Display → Retention), regardless of the
+ * auto-delete cron (Settings → Data retention), regardless of the
  * configured days. Meaningless (and harmless) for a walk that isn't
  * cancelled — the cron only ever considers cancelled walks anyway. */
 export async function setWalkRetentionLocked(

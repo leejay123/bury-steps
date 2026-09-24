@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 /** Flags this report to exempt it from the accident-report auto-delete cron
- * (Settings → Display → Retention). */
+ * (Settings → Data retention). */
 export function ReportRetentionToggle({ locked, reportId }: { locked: boolean; reportId: string }) {
   const { on, toggle, isPending } = useOptimisticSettingToggle({
     action: (prev, formData) => {

@@ -4,7 +4,7 @@ import { DEFAULT_BEFORE_YOU_SET_OFF_TIPS } from "@/lib/homepage-copy";
 export function BeforeYouSetOff({
   tips = DEFAULT_BEFORE_YOU_SET_OFF_TIPS,
 }: {
-  /** Editable in Settings → Display → Homepage copy — see @/lib/homepage-copy. */
+  /** Editable in Settings → Site wording → Walk page cards — see @/lib/homepage-copy. */
   tips?: readonly string[];
 }) {
   return (

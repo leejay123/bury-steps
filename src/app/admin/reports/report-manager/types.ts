@@ -12,7 +12,7 @@ export type ReportView = {
   whatWeDid: string;
   organiserNotes: string | null;
   /** Exempts this report from the accident-report auto-delete cron
-   * (Settings → Display → Retention), regardless of the configured days. */
+   * (Settings → Data retention), regardless of the configured days. */
   retentionLocked: boolean;
 };
 

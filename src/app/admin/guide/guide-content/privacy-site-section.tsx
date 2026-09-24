@@ -40,7 +40,7 @@ export function PrivacySiteSection() {
               The homepage is cached so visitors get it quickly, without waiting on a sign-in
               check. Photos, quotes, FAQs, and the carousel switch update on the public site as
               soon as you save. If they do not, use{" "}
-              <Link href="/admin/settings/cache">Site cache</Link> in Settings. The photo slider
+              <Link href="/admin/settings/cache">Refresh the homepage</Link> in Settings. The photo slider
               is not created on every visit. A <strong>Back to top</strong> button can be turned
               off in <Link href="/admin/settings/behaviour">Site behaviour</Link>.
             </p>

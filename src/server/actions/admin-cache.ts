@@ -56,7 +56,7 @@ export async function clearSiteCache(
   revalidatePath("/walks");
   return {
     ok: true,
-    message: "Site cache cleared. The public homepage will refresh on the next visit.",
+    message: "Homepage refreshed. Visitors will see the latest version on their next visit.",
   };
 }
 

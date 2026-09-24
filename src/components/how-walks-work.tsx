@@ -10,7 +10,7 @@ const STEP_ICONS = [UserPlus, CalendarDays, Footprints, MapPin];
 export function HowWalksWork({
   steps = DEFAULT_HOW_WALKS_WORK_STEPS,
 }: {
-  /** Editable in Settings → Display → Homepage copy — see @/lib/homepage-copy. */
+  /** Editable in Settings → Site wording → Walk page cards — see @/lib/homepage-copy. */
   steps?: readonly AboutRule[];
 }) {
   return (

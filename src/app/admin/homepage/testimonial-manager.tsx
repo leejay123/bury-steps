@@ -39,6 +39,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { SettingsListHeader } from "../settings/settings-page";
 
 const DEMO_TESTIMONIAL = {
   name: "Jane H.",
@@ -306,16 +307,18 @@ export function HomepageTestimonialManager({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-end">
-        <Button
-          className="w-full sm:w-auto"
-          disabled={atLimit}
-          onClick={() => setMode({ type: "add" })}
-          size="sm"
-        >
-          Add testimonial
-        </Button>
-      </div>
+      <SettingsListHeader
+        action={
+          <Button
+            disabled={atLimit}
+            onClick={() => setMode({ type: "add" })}
+            size="sm"
+          >
+            Add testimonial
+          </Button>
+        }
+        title={`Quotes (${testimonials.length} of ${maxTestimonials})`}
+      />
       {atLimit ? (
         <p className="text-sm text-muted-foreground">
           You already have {maxTestimonials} testimonials. Remove one to add another.

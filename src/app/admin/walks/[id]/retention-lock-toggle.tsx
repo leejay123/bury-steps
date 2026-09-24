@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 /** Flags this cancelled walk to exempt it from the cancelled-walk
- * auto-delete cron (Settings → Display → Retention). */
+ * auto-delete cron (Settings → Data retention). */
 export function RetentionLockToggle({ locked, walkId }: { locked: boolean; walkId: string }) {
   const { on, toggle, isPending } = useOptimisticSettingToggle({
     action: (prev, formData) => {

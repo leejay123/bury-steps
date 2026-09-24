@@ -39,6 +39,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { SettingsListHeader } from "../settings/settings-page";
 
 type DrawerMode = { type: "add" } | { type: "edit"; slide: SlideView; index: number };
 
@@ -252,16 +253,18 @@ export function HomepageSlideManager({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-end">
-        <Button
-          className="w-full sm:w-auto"
-          disabled={atLimit}
-          onClick={() => setMode({ type: "add" })}
-          size="sm"
-        >
-          Add slide
-        </Button>
-      </div>
+      <SettingsListHeader
+        action={
+          <Button
+            disabled={atLimit}
+            onClick={() => setMode({ type: "add" })}
+            size="sm"
+          >
+            Add slide
+          </Button>
+        }
+        title={`Photos (${slides.length} of ${maxSlides})`}
+      />
       {atLimit ? (
         <p className="text-sm text-muted-foreground">
           You already have {maxSlides} slides. Remove one to add another.

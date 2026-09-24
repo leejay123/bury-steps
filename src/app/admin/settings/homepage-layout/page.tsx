@@ -13,15 +13,12 @@ export default async function HomepageLayoutSettingsPage() {
 
   return (
     <SettingsPage
-      description="The hero (site name and tagline) always stays at the top. Reorder the blocks below it and choose whether the photo carousel shows."
+      description="The site name and tagline always stay at the top. Choose the order of the sections below them, and whether the photos and latest notices show."
       previewHref="/"
       title="Homepage layout"
     >
-      <SettingsSectionGroup
-        description="The hero (site name and tagline) always stays at the top. Reorder the blocks below it and choose whether the photo carousel shows."
-        title="Layout"
-      >
-        <HomepageSectionsSettings sectionOrder={theme.homepageSectionOrder} />
+      <HomepageSectionsSettings sectionOrder={theme.homepageSectionOrder} />
+      <SettingsSectionGroup title="Show or hide">
         <CarouselToggle enabled={theme.carouselEnabled} />
         <MemberNoticesToggle enabled={theme.memberNoticesEnabled} />
       </SettingsSectionGroup>

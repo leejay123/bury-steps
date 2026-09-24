@@ -16,13 +16,10 @@ export default async function RetentionSettingsPage() {
 
   return (
     <SettingsPage
-      description="Automatic deletion of old cancelled walks and accident reports. Flag an individual walk or report to keep it regardless, from that walk or report itself."
-      title="Retention"
+      description="How long cancelled walks and accident reports are kept before they're deleted automatically. To keep a particular walk or report for good, flag it on that walk or report itself."
+      title="Data retention"
     >
-      <SettingsSectionGroup
-        description="How long cancelled walks and accident reports are kept before they're deleted automatically."
-        title="Retention"
-      >
+      <SettingsSectionGroup title="Automatic deletion">
         <CancelledWalkRetentionSettings
           cancelledWalkRetentionDays={
             settings ? settings.cancelledWalkRetentionDays : DEFAULT_CANCELLED_WALK_RETENTION_DAYS

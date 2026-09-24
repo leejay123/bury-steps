@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Popover, PopoverContent, PopoverDescription, PopoverTrigger } from "@/components/ui/popover";
 import { PendingSubmit, RemoveConfirm } from "./shared";
+import { SettingsListHeader } from "../../settings/settings-page";
 
 type CategoryDrawerMode = { type: "add" } | { type: "edit"; category: FaqCategoryView };
 
@@ -253,18 +254,20 @@ export function FaqCategoryManager({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-sm font-medium">Categories</h2>
-        <Button
-          className="w-full sm:w-auto"
-          disabled={atLimit}
-          onClick={() => setMode({ type: "add" })}
-          size="sm"
-          variant="outline"
-        >
-          Add category
-        </Button>
-      </div>
+      <SettingsListHeader
+        action={
+          <Button
+            disabled={atLimit}
+            onClick={() => setMode({ type: "add" })}
+            size="sm"
+            variant="outline"
+          >
+            Add category
+          </Button>
+        }
+        description="The filters visitors can use to narrow down the questions."
+        title={`Categories (${categories.length} of ${maxCategories})`}
+      />
       {atLimit ? (
         <p className="text-sm text-muted-foreground">
           You already have {maxCategories} categories. Remove one to add another.

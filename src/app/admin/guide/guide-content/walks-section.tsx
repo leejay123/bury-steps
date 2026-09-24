@@ -149,7 +149,7 @@ export function WalksSection({
             ) : (
               "Auto-delete for cancelled walks is currently off, so a cancelled walk is kept until it's reopened or removed by hand."
             )}{" "}
-            Set the number of days, or turn auto-delete off, in Settings → Display → Retention.
+            Set the number of days, or turn auto-delete off, in Settings → Data retention.
           </p>
           <p>
             Open the walk from the list. <strong>Attendance</strong> is names and clock-in time

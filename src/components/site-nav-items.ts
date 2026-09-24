@@ -3,6 +3,7 @@ import {
   hasAnySettingsPermission,
   type OrganiserPermissions,
 } from "@/lib/organiser-permissions";
+import { SETTINGS_PAGE_GROUPS } from "@/lib/settings-pages";
 
 /**
  * Which nav items an organiser sees depends on their granular permissions
@@ -27,7 +28,7 @@ export function navItems(
   isAdmin: boolean,
   walksHref: string,
   permissions?: OrganiserPermissions,
-  // Site-wide switch (Settings → Display → Site chrome) — defaults true so
+  // Site-wide switch (Settings → Site behaviour) — defaults true so
   // existing callers (and this file's own tests) that don't pass it keep
   // showing Progress unchanged.
   progressEnabled: boolean = true,
@@ -56,48 +57,17 @@ export function navItems(
 /**
  * What the "Settings" nav item expands to — see SettingsNavMenu in
  * site-nav-menu.tsx, which turns that one link into a dropdown listing
- * these directly, rather than always landing on the hub page first. Same
- * groups and pages as the hub (src/app/admin/settings/page.tsx), minus
- * Accident reports (already its own top-level "Reports" nav item) and
- * Guide — every organiser has full access to all of them, so there's no
- * per-item gating left to do.
+ * these directly, rather than always landing on the hub page first.
+ * Derived from the same registry the hub itself uses
+ * (src/lib/settings-pages.ts), so the two always list the same pages.
  */
-export const SETTINGS_MENU_GROUPS: { label: string; items: { href: string; label: string }[] }[] = [
-  {
-    label: "Homepage content",
-    items: [
-      { href: "/admin/settings/hero-photos", label: "Hero photos" },
-      { href: "/admin/settings/testimonials", label: "Testimonials" },
-      { href: "/admin/settings/faqs", label: "FAQs" },
-      { href: "/admin/settings/branding", label: "Branding" },
-      { href: "/admin/settings/homepage-layout", label: "Homepage layout" },
-      { href: "/admin/settings/site-wording/how-this-started", label: "Site wording" },
-    ],
-  },
-  {
-    label: "Communication",
-    items: [
-      { href: "/admin/settings/notices", label: "Notices" },
-      { href: "/admin/settings/emails", label: "Emails" },
-      { href: "/admin/settings/subscribers", label: "Subscribers" },
-    ],
-  },
-  {
-    label: "Site behaviour",
-    items: [
-      { href: "/admin/settings/behaviour", label: "Site behaviour" },
-      { href: "/admin/settings/progress", label: "Progress" },
-    ],
-  },
-  {
-    label: "Maintenance",
-    items: [
-      { href: "/admin/settings/retention", label: "Retention" },
-      { href: "/admin/settings/cache", label: "Site cache" },
-      { href: "/admin/settings/reset", label: "Reset the site" },
-    ],
-  },
-];
+export const SETTINGS_MENU_GROUPS: {
+  label: string;
+  items: { href: string; label: string; danger?: boolean }[];
+}[] = SETTINGS_PAGE_GROUPS.map((group) => ({
+  label: group.label,
+  items: group.pages.map((page) => ({ href: page.href, label: page.title, danger: page.danger })),
+}));
 
 /**
  * Routes that require sign-in but aren't in the middleware's public-route

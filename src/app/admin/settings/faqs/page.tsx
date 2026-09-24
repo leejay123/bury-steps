@@ -13,7 +13,7 @@ export default async function FaqsSettingsPage() {
 
   return (
     <SettingsPage
-      description={`Up to ${MAX_HOMEPAGE_FAQS} questions on the public homepage, in up to ${MAX_FAQ_CATEGORIES} categories. Edit the section heading and intro under Display.`}
+      description={`Up to ${MAX_HOMEPAGE_FAQS} questions on the public homepage, in up to ${MAX_FAQ_CATEGORIES} categories. Change the heading above them under Site wording → FAQ heading.`}
       previewHref="/"
       title="FAQs"
     >

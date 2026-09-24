@@ -105,7 +105,7 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
     key: "organiserInvite",
     label: "Organiser invite",
     trigger:
-      "Sent instead of an instant promotion when \"Require accepted invite\" is on in Settings → Display → Organisers — the invited member becomes an organiser only once they accept.",
+      "Sent instead of an instant promotion when \"Require accepted invite\" is on in Settings → Site behaviour — the invited member becomes an organiser only once they accept.",
     category: "Member lifecycle",
     placeholders: [
       { token: "firstName", description: "Their first name (\"there\" if not set)" },

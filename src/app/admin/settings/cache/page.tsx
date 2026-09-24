@@ -9,8 +9,8 @@ export default async function CacheSettingsPage() {
 
   return (
     <SettingsPage
-      description="Refresh the public homepage if it still shows old photos, quotes, or FAQs."
-      title="Site cache"
+      description="Use this if the public homepage still shows old photos, quotes or questions after you've saved changes."
+      title="Refresh the homepage"
     >
       <ClearCacheForm />
     </SettingsPage>

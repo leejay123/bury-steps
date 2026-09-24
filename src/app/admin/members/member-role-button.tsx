@@ -162,7 +162,7 @@ export function MemberRoleButton({
    * the dropdown menu's own React tree. See MemberRowActionsMenu for why. */
   hideTrigger?: boolean;
   /** When true, promoting sends an invite the member must accept instead of
-   * taking effect immediately — see Settings → Display → Organisers. */
+   * taking effect immediately — see Settings → Site behaviour. */
   inviteRequired?: boolean;
   name: string;
   /** Called after a successful change — lets a parent list re-fetch its own

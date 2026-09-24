@@ -51,6 +51,17 @@ export function ReportsDisplaySection() {
               buttons stay white with a border. There is no colour picker. Everything below sits
               under <Link href="/admin/settings">Settings</Link>, split across a few pages.
             </p>
+            <p>
+              The Settings home is a table of every settings page, grouped by what it covers. Each
+              row shows where that setting stands now (for example how many hero photos there
+              are, or who gets contact-form messages). Anything unfinished or not set up — such as
+              email sending, or no one receiving contact messages — is marked in amber on its
+              row and listed together at the top. Type in the search box to find a setting by
+              what&apos;s on it (&ldquo;logo&rdquo;, &ldquo;cookie&rdquo;, &ldquo;newsletter&rdquo;).
+              Site wording opens in place to show its five pages. Reset the site sits on its own
+              under <strong>Danger zone</strong>. Every settings page has an{" "}
+              <strong>All settings</strong> link at the top to come back.
+            </p>
             <p className="font-medium text-foreground">Branding</p>
             <p>
               Open <Link href="/admin/settings/branding">Branding</Link> to set the public{" "}
@@ -64,7 +75,8 @@ export function ReportsDisplaySection() {
               <strong>homepage section order</strong> (blocks below the hero —{" "}
               <strong>How walks work</strong>, <strong>How this started</strong>,{" "}
               <strong>Latest notices</strong>, <strong>Testimonials</strong>,{" "}
-              <strong>FAQs</strong>) and whether the <strong>hero photo carousel</strong> shows.
+              <strong>FAQs</strong>) and whether the <strong>hero photo carousel</strong> and{" "}
+              <strong>Latest notices</strong> show.
             </p>
             <p className="font-medium text-foreground">Site wording</p>
             <p>
@@ -90,9 +102,9 @@ export function ReportsDisplaySection() {
               form messages.
             </p>
             <p>
-              Open <Link href="/admin/settings/cache">Site cache</Link> if the public homepage
-              still shows old photos, quotes, FAQs, or notices after you saved. Clear cache
-              refreshes that stored copy. It does not delete walks, members, or photos.
+              Open <Link href="/admin/settings/cache">Refresh the homepage</Link> if the public
+              homepage still shows old photos, quotes, FAQs, or notices after you saved. It
+              refreshes the stored copy visitors are shown. It does not delete walks, members, or photos.
             </p>
             <p>
               Open <Link href="/admin/settings/reset">Reset the site</Link> to wipe walks,

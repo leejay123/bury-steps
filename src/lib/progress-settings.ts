@@ -4,7 +4,7 @@ import { SITE_SETTING_ID } from "./theme";
 
 /**
  * Site-wide switch for the /progress page (see the toggle in
- * Settings → Display → Site chrome, and updateProgressEnabled). When
+ * Settings → Site behaviour, and updateProgressEnabled). When
  * false, /progress 404s for everyone — organisers included, not just
  * members — and the nav drops the link. Defaults true, so a row that
  * predates this column (or a SiteSetting that hasn't been created at

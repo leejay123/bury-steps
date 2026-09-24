@@ -13,7 +13,8 @@ export default async function HeroPhotosSettingsPage() {
 
   return (
     <SettingsPage
-      description={`The carousel at the top of the public homepage. You can keep up to ${MAX_HOMEPAGE_SLIDES} slides, change each picture, and drag them into the order visitors will see. With two or more slides, the photos rotate automatically. Show or hide the carousel under Display → Layout.`}
+      description={`The carousel at the top of the public homepage. You can keep up to ${MAX_HOMEPAGE_SLIDES} slides, change each picture, and drag them into the order visitors will see. With two or more, they rotate automatically. Show or hide them under Homepage layout.`}
+      previewHref="/"
       title="Hero photos"
     >
       <HomepageSlideManager maxSlides={MAX_HOMEPAGE_SLIDES} slides={slides} />

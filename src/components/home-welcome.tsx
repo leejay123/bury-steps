@@ -89,7 +89,7 @@ export function HomeWelcome({
   /** Site-wide switch (Settings → Homepage layout → Latest notices) — hides
    * the section entirely when off, even if there are notices. */
   memberNoticesEnabled: boolean;
-  /** Site-wide switch (Settings → Display → Site chrome) — hides the
+  /** Site-wide switch (Settings → Site behaviour) — hides the
    * "Track your progress" tile when off. */
   progressEnabled: boolean;
   testimonials: TestimonialView[];

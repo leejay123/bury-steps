@@ -70,7 +70,7 @@ export async function submitContactMessage(
   return { ok: true, message: "Thanks — we'll get back to you soon." };
 }
 
-/** Alerts the single organiser designated in Settings → Display → "Contact
+/** Alerts the single organiser designated in Settings → Site behaviour → "Contact
  * messages" (SiteSetting.contactMessagesOwnerId) — not every organiser, so
  * exactly one person is expected to reply, via the alert email's reply-to.
  * Silently does nothing if no one has been designated yet, or the

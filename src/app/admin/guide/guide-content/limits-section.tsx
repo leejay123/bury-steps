@@ -64,8 +64,8 @@ export function LimitsSection({
               ) : (
                 " kept forever unless reopened (auto-delete is off)"
               )}
-              . Flag a walk to keep it regardless. Set the number of days in Settings → Display →
-              Retention.
+              . Flag a walk to keep it regardless. Set the number of days in Settings → Data
+              retention.
             </li>
             <li>
               <strong>Accident reports</strong> —{" "}

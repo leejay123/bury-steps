@@ -12,7 +12,6 @@ export default async function WalkPageCardsWordingPage() {
   return (
     <SettingsPage
       description="The two cards shown on a walk's own page — before someone clocks in, and while waiting for clock-in to open. Not shown on the homepage."
-      previewHref="/"
       title="Walk page cards"
     >
       <WalkPageCopySettings

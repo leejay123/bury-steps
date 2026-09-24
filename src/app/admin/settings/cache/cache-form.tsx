@@ -22,7 +22,7 @@ function ConfirmClear() {
   const { pending } = useFormStatus();
   return (
     <Button disabled={pending} type="submit">
-      {pending ? "Clearing…" : "Clear cache"}
+      {pending ? "Refreshing…" : "Refresh now"}
     </Button>
   );
 }
@@ -37,8 +37,8 @@ export function ClearCacheForm() {
 
   return (
     <SettingsSection
-      description="The homepage is stored briefly so it loads quickly. Clear it if photos, quotes, or FAQs still look old after you saved. Walks and members are not deleted."
-      title="Public homepage cache"
+      description="The homepage is stored briefly so it loads quickly for visitors. Refresh it if photos, quotes or questions still look old after you saved. Nothing is deleted."
+      title="Refresh the public homepage"
     >
       <AlertDialog
         closeDisabled={isPending}
@@ -46,14 +46,14 @@ export function ClearCacheForm() {
         open={open}
       >
         <AlertDialogTrigger asChild>
-          <Button className="w-full sm:w-auto" type="button">
-            Clear cache
+          <Button className="w-full sm:w-auto sm:self-start" type="button">
+            Refresh now
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent closeDisabled={isPending}>
           <form action={action}>
             <AlertDialogHeader>
-              <AlertDialogTitle>Clear the site cache?</AlertDialogTitle>
+              <AlertDialogTitle>Refresh the homepage?</AlertDialogTitle>
               <AlertDialogDescription>
                 The public homepage will reload fresh content on the next visit. Nothing is deleted.
               </AlertDialogDescription>
@@ -61,7 +61,7 @@ export function ClearCacheForm() {
             <FormError message={state && !state.ok ? state.error : null} />
             <AlertDialogFooter>
               <AlertDialogCancel disabled={isPending} type="button">
-                Keep it
+                Not now
               </AlertDialogCancel>
               <ConfirmClear />
             </AlertDialogFooter>

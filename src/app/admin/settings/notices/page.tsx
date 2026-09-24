@@ -1,9 +1,9 @@
 import { requirePermission } from "@/lib/auth";
 import { getSiteNoticeCategories, getSiteNotices } from "@/lib/site-notices";
-import { BELL_NOTICE_LIMIT, MAX_NOTICE_CATEGORIES } from "@/lib/notices";
+import { MAX_NOTICE_CATEGORIES } from "@/lib/notices";
 import { PreviewMemberWelcomeDialog } from "@/components/member-welcome-dialog";
 import { SiteNoticeManager } from "../notice-manager";
-import { SettingsPage } from "../settings-page";
+import { SettingsPage, SettingsSection } from "../settings-page";
 
 export const dynamic = "force-dynamic";
 
@@ -16,24 +16,22 @@ export default async function NoticesSettingsPage() {
 
   return (
     <SettingsPage
-      description={`Unlimited notices for members. The bell shows the welcome (if on) plus the ${BELL_NOTICE_LIMIT} newest others. Up to ${MAX_NOTICE_CATEGORIES} categories for full-page notices.`}
+      description={`Messages for signed-in members — short ones in the bell, longer ones as their own page on Notices, filed under up to ${MAX_NOTICE_CATEGORIES} categories.`}
       title="Notices"
     >
-      <div className="mb-6 flex flex-col gap-2 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <p className="text-sm font-medium">One-time Walks welcome</p>
-          <p className="text-sm text-muted-foreground">
-            Members with no clock-ins yet see this popup once on Walks. Preview it here — it does
-            not change whether a real member has already dismissed it.
-          </p>
-        </div>
-        <PreviewMemberWelcomeDialog firstName={admin.firstName} />
-      </div>
       <SiteNoticeManager
         categories={categories}
         maxCategories={MAX_NOTICE_CATEGORIES}
         notices={notices}
       />
+      <SettingsSection
+        description="New members who haven't clocked in yet see this popup once on the Walks page. Previewing it here doesn't affect whether a real member has already seen it."
+        title="Welcome popup"
+      >
+        <div>
+          <PreviewMemberWelcomeDialog firstName={admin.firstName} />
+        </div>
+      </SettingsSection>
     </SettingsPage>
   );
 }
