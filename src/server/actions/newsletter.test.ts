@@ -11,8 +11,8 @@ const {
   checkRateLimit: vi.fn((): RateLimitResult => ({ ok: true })),
   prismaMock: {
     newsletterSubscriber: {
-      findUnique: vi.fn(),
-      upsert: vi.fn(),
+      create: vi.fn(),
+      updateMany: vi.fn(),
       update: vi.fn(),
     },
   },
@@ -46,18 +46,18 @@ function form(fields: Record<string, string>): FormData {
 beforeEach(() => {
   vi.clearAllMocks();
   checkRateLimit.mockReturnValue({ ok: true });
-  prismaMock.newsletterSubscriber.findUnique.mockResolvedValue(null);
-  prismaMock.newsletterSubscriber.upsert.mockResolvedValue({
+  prismaMock.newsletterSubscriber.create.mockResolvedValue({
     email: "jane@example.com",
     unsubscribeToken: "tok123",
   });
+  prismaMock.newsletterSubscriber.updateMany.mockResolvedValue({ count: 0 });
 });
 
 describe("subscribeToNewsletter", () => {
   it("rejects an invalid email without touching the database", async () => {
     const result = await subscribeToNewsletter(null, form({ email: "not-an-email" }));
     expect(result).toEqual({ ok: false, error: "Enter a valid email address." });
-    expect(prismaMock.newsletterSubscriber.upsert).not.toHaveBeenCalled();
+    expect(prismaMock.newsletterSubscriber.create).not.toHaveBeenCalled();
   });
 
   it("silently succeeds without subscribing when the honeypot is filled", async () => {
@@ -66,7 +66,7 @@ describe("subscribeToNewsletter", () => {
       form({ email: "jane@example.com", company: "Acme" }),
     );
     expect(result.ok).toBe(true);
-    expect(prismaMock.newsletterSubscriber.upsert).not.toHaveBeenCalled();
+    expect(prismaMock.newsletterSubscriber.create).not.toHaveBeenCalled();
   });
 
   it("rate limits repeated attempts", async () => {
@@ -75,14 +75,12 @@ describe("subscribeToNewsletter", () => {
     expect(result).toEqual({ ok: false, error: "Too many attempts. Try again in a few minutes." });
   });
 
-  it("upserts the subscriber (clearing a prior unsubscribe) and sends a confirmation", async () => {
+  it("creates a new subscriber and sends a confirmation", async () => {
     const result = await subscribeToNewsletter(null, form({ email: "jane@example.com" }));
 
-    expect(prismaMock.newsletterSubscriber.upsert).toHaveBeenCalledWith(
+    expect(prismaMock.newsletterSubscriber.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { email: "jane@example.com" },
-        create: { email: "jane@example.com", unsubscribeToken: expect.any(String) },
-        update: { unsubscribedAt: null, unsubscribeToken: expect.any(String) },
+        data: { email: "jane@example.com", unsubscribeToken: expect.any(String) },
       }),
     );
     expect(sendNewsletterSubscribedEmail).toHaveBeenCalledWith({
@@ -100,28 +98,34 @@ describe("subscribeToNewsletter", () => {
   });
 
   it("tells an already-active subscriber they're already on the list, without re-sending the email", async () => {
-    prismaMock.newsletterSubscriber.findUnique.mockResolvedValueOnce({ unsubscribedAt: null });
+    prismaMock.newsletterSubscriber.create.mockRejectedValueOnce({ code: "P2002" });
+    prismaMock.newsletterSubscriber.updateMany.mockResolvedValueOnce({ count: 0 });
 
     const result = await subscribeToNewsletter(null, form({ email: "jane@example.com" }));
 
     expect(result).toEqual({ ok: true, message: "You're already subscribed — thanks!" });
-    expect(prismaMock.newsletterSubscriber.upsert).not.toHaveBeenCalled();
+    expect(prismaMock.newsletterSubscriber.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { email: "jane@example.com", unsubscribedAt: { not: null } },
+      }),
+    );
     expect(sendNewsletterSubscribedEmail).not.toHaveBeenCalled();
   });
 
   it("resubscribes (and emails) someone who had previously unsubscribed", async () => {
-    prismaMock.newsletterSubscriber.findUnique.mockResolvedValueOnce({
-      unsubscribedAt: new Date("2026-01-01"),
-    });
+    prismaMock.newsletterSubscriber.create.mockRejectedValueOnce({ code: "P2002" });
+    prismaMock.newsletterSubscriber.updateMany.mockResolvedValueOnce({ count: 1 });
 
     const result = await subscribeToNewsletter(null, form({ email: "jane@example.com" }));
 
-    expect(prismaMock.newsletterSubscriber.upsert).toHaveBeenCalledWith(
+    expect(prismaMock.newsletterSubscriber.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        update: { unsubscribedAt: null, unsubscribeToken: expect.any(String) },
+        data: { unsubscribedAt: null, unsubscribeToken: expect.any(String) },
       }),
     );
-    expect(sendNewsletterSubscribedEmail).toHaveBeenCalled();
+    expect(sendNewsletterSubscribedEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ email: "jane@example.com", unsubscribeToken: expect.any(String) }),
+    );
     expect(result.ok).toBe(true);
   });
 });

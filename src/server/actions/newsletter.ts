@@ -35,25 +35,31 @@ export async function subscribeToNewsletter(
   if (email === "invalid") return { ok: false, error: "Enter a valid email address." };
 
   try {
-    const existing = await prisma.newsletterSubscriber.findUnique({
-      where: { email },
-      select: { unsubscribedAt: true },
-    });
-    // Already an active subscriber — say so instead of quietly re-sending
-    // the same confirmation email every time they submit the form again.
-    if (existing && !existing.unsubscribedAt) {
-      return { ok: true, message: "You're already subscribed — thanks!" };
+    // Create-first avoids the old findUnique→upsert race: two concurrent
+    // new signups for the same address used to both "update" and rotate the
+    // active unsubscribe token (breaking the first confirmation email).
+    const token = makeCapabilityToken();
+    let subscriber: { email: string; unsubscribeToken: string };
+    try {
+      subscriber = await prisma.newsletterSubscriber.create({
+        data: { email, unsubscribeToken: token },
+        select: { email: true, unsubscribeToken: true },
+      });
+    } catch (err) {
+      if (!isPrismaCode(err, "P2002")) throw err;
+      // Row already exists — only reactivate if they had unsubscribed.
+      // updateMany keyed on unsubscribedAt means a double-click on an
+      // already-active address is a no-op (no second confirmation email).
+      const newToken = makeCapabilityToken();
+      const reactivated = await prisma.newsletterSubscriber.updateMany({
+        where: { email, unsubscribedAt: { not: null } },
+        data: { unsubscribedAt: null, unsubscribeToken: newToken },
+      });
+      if (reactivated.count === 0) {
+        return { ok: true, message: "You're already subscribed — thanks!" };
+      }
+      subscriber = { email, unsubscribeToken: newToken };
     }
-
-    // Upsert rather than create: resubscribing after a previous unsubscribe
-    // clears unsubscribedAt and rotates the capability token so a leaked
-    // legacy cuid (or old link) cannot keep working after they opt back in.
-    const subscriber = await prisma.newsletterSubscriber.upsert({
-      where: { email },
-      create: { email, unsubscribeToken: makeCapabilityToken() },
-      update: { unsubscribedAt: null, unsubscribeToken: makeCapabilityToken() },
-      select: { email: true, unsubscribeToken: true },
-    });
 
     await Promise.all([
       sendNewsletterSubscribedEmail(subscriber).catch((err) => {
