@@ -27,7 +27,7 @@ export function ImpersonationBanner({ adminName, targetName }: { adminName: stri
         {adminName} is viewing as {targetName}
       </span>
       <Button
-        className="h-7 pointer-coarse:h-9 border-amber-950/30 bg-transparent px-2 text-amber-950 hover:bg-amber-950/10"
+        className="h-7 border-amber-950/30 bg-transparent px-2 text-amber-950 hover:bg-amber-950/10"
         disabled={ending}
         onClick={() => {
           setEnding(true);
