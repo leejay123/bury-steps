@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { LONDON } from "@/lib/dates";
+import { LONDON, londonWallClockToUtc } from "@/lib/dates";
 import { loadWalkGame } from "@/lib/walk-progress";
 import { buildProgressSummaryEmail } from "@/lib/email/mailer";
 import { sendEmailBatch, type SendEmailInput } from "@/lib/email/client";
@@ -28,7 +28,12 @@ export async function GET(req: Request) {
   }).formatToParts(new Date());
   const year = Number(londonParts.find((p) => p.type === "year")?.value);
   const month = Number(londonParts.find((p) => p.type === "month")?.value); // 1-12
-  const referenceNow = new Date(Date.UTC(year, month - 1, 1));
+  // Midnight on the 1st is already the *new* month in London (00:00 GMT or
+  // 01:00 BST as a UTC instant is still the 1st), so step back one
+  // millisecond from London's own midnight to land in the month that ended.
+  const referenceNow = new Date(
+    londonWallClockToUtc(`${year}-${String(month).padStart(2, "0")}-01T00:00`).getTime() - 1,
+  );
   // JS Date.UTC rolls a negative month index back into the prior year on its
   // own (month - 2 is -1 in January), so deriving both the label and the
   // key from this one Date avoids hand-rolling that rollover ourselves.

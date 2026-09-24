@@ -250,6 +250,17 @@ describe("adminClockIn", () => {
     });
   }
 
+  it("rejects an unreadable clock-in or clock-out time with a message instead of crashing", async () => {
+    await expect(adminClockIn(null, adminClockInForm({ clockedInAt: "not-a-time" }))).resolves.toEqual({
+      ok: false,
+      error: "Pick a valid time.",
+    });
+    await expect(
+      adminClockIn(null, adminClockInForm({ clockedOutAt: "2026-13-45T99:99" })),
+    ).resolves.toEqual({ ok: false, error: "Pick a valid time." });
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
   it("rejects when the member is no longer there", async () => {
     prismaMock.user.findUnique.mockResolvedValueOnce(null);
     const result = await adminClockIn(null, adminClockInForm());

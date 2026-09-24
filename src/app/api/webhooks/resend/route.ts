@@ -77,7 +77,11 @@ export async function POST(req: NextRequest) {
   // as subscribed. Mirror that unsubscribe back into our own tables so
   // both stay accurate.
   if (event.type === "contact.updated" && event.data.unsubscribed === true && event.data.email) {
-    const email = event.data.email;
+    // Case-insensitive: contacts are synced to Resend lowercased (see
+    // sendNewsletterCampaign), but a member's own email is stored however
+    // Clerk had it. An exact match would miss "Jane@Example.com", leave
+    // them opted in here, and the next campaign would re-add them.
+    const email = { equals: event.data.email, mode: "insensitive" as const };
     try {
       await Promise.all([
         prisma.newsletterSubscriber.updateMany({

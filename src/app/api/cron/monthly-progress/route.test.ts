@@ -63,7 +63,9 @@ describe("GET /api/cron/monthly-progress", () => {
     const res = await GET(request("test-secret"));
     const body = await res.json();
 
-    expect(loadWalkGame).toHaveBeenCalledWith(MEMBER.id, new Date("2026-09-01T00:00:00Z"));
+    // The last instant of August in London (BST) — midnight UTC on the 1st
+    // would already be 1 September there, counting the wrong month.
+    expect(loadWalkGame).toHaveBeenCalledWith(MEMBER.id, new Date("2026-08-31T22:59:59.999Z"));
     expect(buildProgressSummaryEmail).toHaveBeenCalledWith(
       expect.objectContaining({ monthLabel: "August", monthCount: 3 }),
       expect.objectContaining({ id: MEMBER.id }),
@@ -86,6 +88,8 @@ describe("GET /api/cron/monthly-progress", () => {
 
     await GET(request("test-secret"));
 
+    // GMT: London midnight is UTC midnight, so one ms before it is still 2025.
+    expect(loadWalkGame).toHaveBeenCalledWith(MEMBER.id, new Date("2025-12-31T23:59:59.999Z"));
     expect(buildProgressSummaryEmail).toHaveBeenCalledWith(
       expect.objectContaining({ monthLabel: "December" }),
       expect.anything(),

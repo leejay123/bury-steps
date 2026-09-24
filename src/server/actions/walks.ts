@@ -420,6 +420,7 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
       what3words: true,
       startsAt: true,
       durationMins: true,
+      endedAt: true,
     },
   });
   if (!walk) return { ok: false, error: "That walk is no longer there." };
@@ -440,14 +441,19 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
   revalidatePath("/walks");
   revalidateWalkShare(walk);
 
-  await notifyMembersOfWalkReopened({
-    title: walk.title,
-    whenText: formatWalkDate(walk.startsAt),
-    durationText: formatWalkLength(walk.durationMins),
-    meetingPoint: meetingPointLabel(walk.location, walk.postcode) || null,
-    what3words: walk.what3words,
-    shareUrl: walkShareUrl(appUrl(), walk),
-  });
+  // Reopening a walk whose time has already passed just restores the
+  // record — telling every member it's "back on" would be wrong.
+  const finished = walkStatus({ ...walk, cancelledAt: null }) === "completed";
+  if (!finished) {
+    await notifyMembersOfWalkReopened({
+      title: walk.title,
+      whenText: formatWalkDate(walk.startsAt),
+      durationText: formatWalkLength(walk.durationMins),
+      meetingPoint: meetingPointLabel(walk.location, walk.postcode) || null,
+      what3words: walk.what3words,
+      shareUrl: walkShareUrl(appUrl(), walk),
+    });
+  }
 
   return { ok: true, message: "Walk reopened. Members can clock in again if the window is still open." };
 }
@@ -645,7 +651,10 @@ export async function updateWalk(
 
   // Only notify when this edit actually brought a cancelled walk back — not
   // on every ordinary edit, and not if it was already open.
-  if (existing.cancelledAt !== null && (parsed.data.reopen === "on" || wasCancelled)) {
+  // Also not for a walk that has already finished — see reopenWalk.
+  const finished =
+    walkStatus({ cancelledAt: null, startsAt, durationMins, endedAt: existing.endedAt }) === "completed";
+  if (existing.cancelledAt !== null && (parsed.data.reopen === "on" || wasCancelled) && !finished) {
     await notifyMembersOfWalkReopened({
       title: parsed.data.title,
       whenText: formatWalkDate(startsAt),

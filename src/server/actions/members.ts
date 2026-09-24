@@ -411,7 +411,17 @@ export async function setMemberRole(
       }
       await tx.user.update({
         where: { id: fresh.id },
-        data: { role },
+        // A direct role change supersedes any organiser invite still in
+        // flight (e.g. sent while invites were required, then promoted
+        // instantly after the setting was turned off). Left in place, an
+        // unexpired token would let someone later demoted accept it and
+        // promote themselves straight back.
+        data: {
+          role,
+          organiserInviteToken: null,
+          organiserInviteSentAt: null,
+          organiserInviteExpiresAt: null,
+        },
       });
       // Demoting the designated contact-messages owner would otherwise
       // leave that setting silently pointing at a plain member — the FK's

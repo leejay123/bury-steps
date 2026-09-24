@@ -471,9 +471,11 @@ describe("setMemberRole", () => {
       roleForm({ userId: target.id, role: "MEMBER", confirm: "confirm" }),
     );
 
+    // Clears any stray invite too — an unexpired one would otherwise let
+    // them accept it later and promote themselves straight back.
     expect(prismaMock.user.update).toHaveBeenCalledWith({
       where: { id: target.id },
-      data: { role: "MEMBER" },
+      data: { role: "MEMBER", organiserInviteToken: null, organiserInviteSentAt: null, organiserInviteExpiresAt: null },
     });
     expect(result).toEqual({ ok: true, message: "Sam Lee is now a member." });
   });
@@ -536,7 +538,7 @@ describe("setMemberRole", () => {
     expect(prismaMock.user.count).not.toHaveBeenCalled();
     expect(prismaMock.user.update).toHaveBeenCalledWith({
       where: { id: target.id },
-      data: { role: "ADMIN" },
+      data: { role: "ADMIN", organiserInviteToken: null, organiserInviteSentAt: null, organiserInviteExpiresAt: null },
     });
     expect(result).toEqual({ ok: true, message: "Jo is now an organiser." });
   });

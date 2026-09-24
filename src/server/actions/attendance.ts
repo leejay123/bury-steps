@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { requireAdmin, requireUser, displayName } from "@/lib/auth";
 import { canOrganiserAddAttendance, windowState } from "@/lib/walk-window";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { formatWalkDate, londonWallClockToUtc } from "@/lib/dates";
+import { formatWalkDate, isValidLondonWallClock, londonWallClockToUtc } from "@/lib/dates";
 import { meetingPointLabel } from "@/lib/geocode";
 import { walkShareUrl } from "@/lib/walk-slug";
 import { appUrl } from "@/lib/urls";
@@ -156,15 +156,12 @@ const adminClockInSchema = z.object({
   clockedInAt: z
     .string()
     .min(1, "Pick when they clocked in.")
-    .refine((value) => !Number.isNaN(londonWallClockToUtc(value).getTime()), "Pick a valid time."),
+    .refine(isValidLondonWallClock, "Pick a valid time."),
   // Optional — blank means they're still on the walk, same as clocking in
   // normally leaves clockedOutAt null until they actually clock out.
   clockedOutAt: z
     .string()
-    .refine(
-      (value) => value === "" || !Number.isNaN(londonWallClockToUtc(value).getTime()),
-      "Pick a valid time.",
-    )
+    .refine((value) => value === "" || isValidLondonWallClock(value), "Pick a valid time.")
     .optional(),
 });
 

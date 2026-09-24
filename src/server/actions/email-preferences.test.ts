@@ -56,7 +56,6 @@ describe("updateMemberEmailPreferences", () => {
         emailNotices: true,
         emailProgress: false,
         emailNewsletter: false,
-        emailAccidentAlerts: false,
       },
       select: { email: true, firstName: true },
     });
@@ -79,8 +78,8 @@ describe("updateMemberEmailPreferences", () => {
     expect(result).toEqual({ ok: false, error: "This link is invalid or has expired." });
   });
 
-  it("saves an organiser's accident-alert preference independently, harmless for a non-admin row", async () => {
-    prismaMock.user.findUnique.mockResolvedValueOnce({ emailNewsletter: false });
+  it("saves an organiser's accident-alert preference independently", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({ emailNewsletter: false, role: "ADMIN" });
     prismaMock.user.update.mockResolvedValueOnce({ email: "a@example.com", firstName: null });
 
     await updateMemberEmailPreferences(
@@ -94,11 +93,30 @@ describe("updateMemberEmailPreferences", () => {
       }),
     );
   });
+
+  it("leaves a plain member's accident-alert default alone, so it survives a later promotion", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({ emailNewsletter: false, role: "MEMBER" });
+    prismaMock.user.update.mockResolvedValueOnce({ email: "a@example.com", firstName: null });
+
+    await updateMemberEmailPreferences(null, form({ token: "tok123" }));
+
+    const { data } = prismaMock.user.update.mock.calls[0][0];
+    expect(data).not.toHaveProperty("emailAccidentAlerts");
+  });
+
+  it("finishes removing an unsubscribed member from the newsletter audience before returning", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({ emailNewsletter: true, role: "MEMBER" });
+    prismaMock.user.update.mockResolvedValueOnce({ email: "a@example.com", firstName: null });
+
+    await updateMemberEmailPreferences(null, form({ token: "tok123" }));
+
+    expect(syncContactUnsubscribed).toHaveBeenCalledWith("a@example.com");
+  });
 });
 
 describe("updateMyEmailPreferences", () => {
   beforeEach(() => {
-    requireUser.mockResolvedValue({ id: "user-1" });
+    requireUser.mockResolvedValue({ id: "user-1", role: "MEMBER" });
   });
 
   it("saves preferences for the signed-in user, no token needed", async () => {
@@ -116,7 +134,6 @@ describe("updateMyEmailPreferences", () => {
         emailNotices: false,
         emailProgress: false,
         emailNewsletter: true,
-        emailAccidentAlerts: false,
       },
     });
     expect(result).toEqual({ ok: true, message: "Your email preferences have been saved." });

@@ -94,6 +94,11 @@ describe("createJourneyEvent", () => {
     expect(result.ok).toBe(false);
   });
 
+  it("rejects an unreadable time with a message instead of crashing", async () => {
+    const result = await createJourneyEvent(null, eventForm({ happenedAt: "not-a-time" }));
+    expect(result).toEqual({ ok: false, error: "Pick a valid time." });
+  });
+
   it("rejects an organiser without the Journey updates permission", async () => {
     requireAdmin.mockResolvedValueOnce({ ...ADMIN, permWalksJourney: false });
     const result = await createJourneyEvent(null, eventForm());

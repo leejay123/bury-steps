@@ -1,4 +1,4 @@
-import { sendEmail, type SendEmailInput } from "./client";
+import { sendEmail, sendEmailBatch, type SendEmailInput } from "./client";
 import { getEmailBrand } from "./brand";
 import { resolveEmailCopy } from "./overrides";
 import { getOrCreateUserUnsubscribeToken, memberPreferencesUrl, newsletterUnsubscribeUrl } from "./unsubscribe";
@@ -441,9 +441,13 @@ export async function sendAccidentReportAlertEmail(
     createdByName: report.createdByName,
     siteName: brand.siteName,
   });
-  await sendEmail({
-    to: adminEmails,
-    subject: copy.subject,
-    react: AccidentReportAlertEmail({ ...brand, ...report, bodyParagraphs: copy.bodyParagraphs }),
-  });
+  // One separate email per organiser, not one email with everyone in `to:`
+  // — that would show every organiser's address to every other one.
+  await sendEmailBatch(
+    adminEmails.map((to) => ({
+      to,
+      subject: copy.subject,
+      react: AccidentReportAlertEmail({ ...brand, ...report, bodyParagraphs: copy.bodyParagraphs }),
+    })),
+  );
 }

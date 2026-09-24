@@ -431,6 +431,31 @@ describe("reopenWalk", () => {
       }),
     ]);
   });
+
+  it("restores a walk that has already finished without telling members it's back on", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({
+      id: "walk-1",
+      token: "tok-1",
+      slug: "sunday-stroll",
+      cancelledAt: new Date(),
+      title: "Sunday stroll",
+      location: null,
+      postcode: null,
+      what3words: null,
+      startsAt: new Date(Date.now() - 7 * 24 * 60 * 60_000),
+      durationMins: 60,
+      endedAt: null,
+    });
+    prismaMock.walk.update.mockResolvedValueOnce({});
+    walkStatus.mockReturnValueOnce("completed");
+
+    const result = await reopenWalk(null, form({ walkId: "walk-1" }));
+
+    expect(result.ok).toBe(true);
+    // Judged as if no longer cancelled — the state the walk is now in.
+    expect(walkStatus).toHaveBeenCalledWith(expect.objectContaining({ cancelledAt: null }));
+    expect(sendEmailBatch).not.toHaveBeenCalled();
+  });
 });
 
 describe("endWalkEarly", () => {

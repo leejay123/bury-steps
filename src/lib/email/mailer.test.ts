@@ -1,7 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const { sendEmail, getEmailBrand, getOrCreateUserUnsubscribeToken, prismaMock } = vi.hoisted(() => ({
+const { sendEmail, sendEmailBatch, getEmailBrand, getOrCreateUserUnsubscribeToken, prismaMock } = vi.hoisted(() => ({
   sendEmail: vi.fn(async () => {}),
+  sendEmailBatch: vi.fn(async (inputs: unknown[]) => ({ sent: inputs.length, failed: 0 })),
   getEmailBrand: vi.fn(async () => ({
     siteName: "Bury Steps Walking Group",
     logoUrl: "https://burysteps-walkinggroup.co.uk/bury-steps-logo.png",
@@ -15,7 +16,7 @@ const { sendEmail, getEmailBrand, getOrCreateUserUnsubscribeToken, prismaMock } 
   },
 }));
 
-vi.mock("./client", () => ({ sendEmail }));
+vi.mock("./client", () => ({ sendEmail, sendEmailBatch }));
 vi.mock("./brand", () => ({ getEmailBrand }));
 vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
 vi.mock("./unsubscribe", () => ({
@@ -217,7 +218,7 @@ describe("sendAddedToWalkEmail", () => {
 });
 
 describe("sendAccidentReportAlertEmail", () => {
-  it("emails every other organiser", async () => {
+  it("emails every other organiser separately, never exposing one another's addresses", async () => {
     await sendAccidentReportAlertEmail(
       {
         whenText: "5 Jan 2026, 14:00",
@@ -228,12 +229,11 @@ describe("sendAccidentReportAlertEmail", () => {
       ["admin1@example.com", "admin2@example.com"],
     );
 
-    expect(sendEmail).toHaveBeenCalledWith(
-      expect.objectContaining({
-        to: ["admin1@example.com", "admin2@example.com"],
-        subject: "New accident report logged",
-      }),
-    );
+    expect(sendEmail).not.toHaveBeenCalled();
+    expect(sendEmailBatch).toHaveBeenCalledWith([
+      expect.objectContaining({ to: "admin1@example.com", subject: "New accident report logged" }),
+      expect.objectContaining({ to: "admin2@example.com", subject: "New accident report logged" }),
+    ]);
   });
 
   it("skips sending when there's no one else to notify", async () => {
@@ -243,5 +243,6 @@ describe("sendAccidentReportAlertEmail", () => {
     );
 
     expect(sendEmail).not.toHaveBeenCalled();
+    expect(sendEmailBatch).not.toHaveBeenCalled();
   });
 });

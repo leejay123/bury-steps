@@ -163,7 +163,7 @@ function NoticeFields({
               value={pageBody}
             />
             <p className="text-xs text-muted-foreground">
-              Up to {MAX_NOTICE_PAGE_BODY.toLocaleString()} characters. Plain text; line breaks are
+              Up to {MAX_NOTICE_PAGE_BODY.toLocaleString("en-GB")} characters. Plain text; line breaks are
               kept.
             </p>
           </div>

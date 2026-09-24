@@ -100,6 +100,18 @@ export function londonWallClockToUtc(value: string): Date {
   return new Date(beforeCandidate);
 }
 
+/** Non-throwing check for schema refinements — londonWallClockToUtc throws
+ * on unreadable input, which would escape a zod `.refine()` as a crash
+ * instead of a validation message. */
+export function isValidLondonWallClock(value: string): boolean {
+  try {
+    londonWallClockToUtc(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Inverse — produces a `datetime-local` string for prefilling the form. */
 export function utcToLondonWallClock(at: DateInput): string {
   const date = toDate(at);

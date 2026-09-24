@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
-import { londonWallClockToUtc } from "@/lib/dates";
+import { isValidLondonWallClock, londonWallClockToUtc } from "@/lib/dates";
 import { canOrganiserEditJourney } from "@/lib/walk-window";
 import { MAX_JOURNEY_BODY, MAX_JOURNEY_EVENTS, MAX_JOURNEY_TITLE } from "@/lib/walk-journey";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
@@ -32,7 +32,7 @@ const journeyEventSchema = z.object({
   happenedAt: z
     .string()
     .min(1, "Pick a time.")
-    .refine((value) => !Number.isNaN(londonWallClockToUtc(value).getTime()), "Pick a valid time."),
+    .refine(isValidLondonWallClock, "Pick a valid time."),
 });
 
 export async function createJourneyEvent(

@@ -111,11 +111,12 @@ describe("POST /api/webhooks/resend", () => {
 
     expect(res.status).toBe(200);
     expect(prismaMock.newsletterSubscriber.updateMany).toHaveBeenCalledWith({
-      where: { email: "jo@example.com", unsubscribedAt: null },
+      where: { email: { equals: "jo@example.com", mode: "insensitive" }, unsubscribedAt: null },
       data: { unsubscribedAt: expect.any(Date) },
     });
     expect(prismaMock.user.updateMany).toHaveBeenCalledWith({
-      where: { email: "jo@example.com", emailNewsletter: true },
+      // Case-insensitive: a member stored as "Jo@Example.com" must still match.
+      where: { email: { equals: "jo@example.com", mode: "insensitive" }, emailNewsletter: true },
       data: { emailNewsletter: false },
     });
   });

@@ -110,7 +110,9 @@ export function WalksSection({
             </li>
             <li>
               <strong>Reopen</strong> undoes a cancel without changing the details. Clock-in
-              works again if the time window is still open.
+              works again if the time window is still open. Members who get walk emails are told
+              it is back on — unless its time has already passed, in which case it just goes back
+              in the record without an email.
             </li>
             <li>
               <strong>Duplicate</strong> makes a new walk with the same title, meeting point,

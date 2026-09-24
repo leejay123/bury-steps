@@ -20,15 +20,20 @@ async function syncNewsletterToggle(
   else await syncContactUnsubscribed(email);
 }
 
-function readPreferences(formData: FormData): EmailPreferences {
+/** `isAdmin` decides whether the organiser-only toggle is read at all. It
+ * isn't rendered for a plain member, so reading it would always write
+ * false — silently switching off the default-on accident alerts they'd
+ * otherwise get if they were ever made an organiser. */
+function readPreferences(
+  formData: FormData,
+  isAdmin: boolean,
+): Omit<EmailPreferences, "emailAccidentAlerts"> & Partial<Pick<EmailPreferences, "emailAccidentAlerts">> {
   return {
     emailWalkAnnouncements: formData.get("emailWalkAnnouncements") === "on",
     emailNotices: formData.get("emailNotices") === "on",
     emailProgress: formData.get("emailProgress") === "on",
     emailNewsletter: formData.get("emailNewsletter") === "on",
-    // Not rendered for a non-admin, so it's simply absent from their
-    // FormData — harmless, since it's never read for a MEMBER row.
-    emailAccidentAlerts: formData.get("emailAccidentAlerts") === "on",
+    ...(isAdmin ? { emailAccidentAlerts: formData.get("emailAccidentAlerts") === "on" } : {}),
   };
 }
 
@@ -42,22 +47,24 @@ export async function updateMemberEmailPreferences(
   const token = String(formData.get("token") ?? "");
   if (!token) return { ok: false, error: "This link is missing its token." };
 
-  const preferences = readPreferences(formData);
   try {
     const before = await prisma.user.findUnique({
       where: { unsubscribeToken: token },
-      select: { emailNewsletter: true },
+      select: { emailNewsletter: true, role: true },
     });
     if (!before) return { ok: false, error: "This link is invalid or has expired." };
 
+    const preferences = readPreferences(formData, before.role === "ADMIN");
     const updated = await prisma.user.update({
       where: { unsubscribeToken: token },
       data: preferences,
       select: { email: true, firstName: true },
     });
-    // Best-effort — the toggle itself is already saved above regardless of
-    // whether this succeeds.
-    void syncNewsletterToggle(
+    // Best-effort (it never throws) — the toggle itself is already saved
+    // above regardless. Awaited so a serverless instance can't be frozen
+    // mid-sync after the response, which would leave an unsubscribed
+    // member still in the Resend newsletter audience.
+    await syncNewsletterToggle(
       before.emailNewsletter,
       preferences.emailNewsletter,
       updated.email,
@@ -80,14 +87,19 @@ export async function updateMyEmailPreferences(
   formData: FormData,
 ): Promise<ActionResult> {
   const user = await requireUser();
-  const preferences = readPreferences(formData);
+  const preferences = readPreferences(formData, user.role === "ADMIN");
 
   try {
     await prisma.user.update({
       where: { id: user.id },
       data: preferences,
     });
-    void syncNewsletterToggle(user.emailNewsletter, preferences.emailNewsletter, user.email, user.firstName);
+    await syncNewsletterToggle(
+      user.emailNewsletter,
+      preferences.emailNewsletter,
+      user.email,
+      user.firstName,
+    );
   } catch (err) {
     return logActionError("updateMyEmailPreferences", err, "Could not save your preferences. Try again.");
   }
