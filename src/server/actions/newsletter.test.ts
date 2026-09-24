@@ -82,7 +82,7 @@ describe("subscribeToNewsletter", () => {
       expect.objectContaining({
         where: { email: "jane@example.com" },
         create: { email: "jane@example.com", unsubscribeToken: expect.any(String) },
-        update: { unsubscribedAt: null },
+        update: { unsubscribedAt: null, unsubscribeToken: expect.any(String) },
       }),
     );
     expect(sendNewsletterSubscribedEmail).toHaveBeenCalledWith({
@@ -117,7 +117,9 @@ describe("subscribeToNewsletter", () => {
     const result = await subscribeToNewsletter(null, form({ email: "jane@example.com" }));
 
     expect(prismaMock.newsletterSubscriber.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({ update: { unsubscribedAt: null } }),
+      expect.objectContaining({
+        update: { unsubscribedAt: null, unsubscribeToken: expect.any(String) },
+      }),
     );
     expect(sendNewsletterSubscribedEmail).toHaveBeenCalled();
     expect(result.ok).toBe(true);

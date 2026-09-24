@@ -76,11 +76,12 @@ export default async function OrganiserInvitePage({
         <p className="text-sm text-muted-foreground">
           This invite link has expired. Ask an organiser to send you a new one.
         </p>
-      ) : wrongAccount ? (
+          ) : wrongAccount ? (
         <>
           <p className="text-sm text-muted-foreground">
-            This invite is for <strong>{invitee.email}</strong>. You&rsquo;re signed in as a
-            different account. Sign out and sign back in as {invitee.email} to accept it.
+            This invite is for a different account than the one you&rsquo;re signed in as. Sign out
+            and sign back in with the email address the invite was sent to, then open the link
+            again.
           </p>
           <WrongAccountNotice signInHref={signInHref} />
         </>

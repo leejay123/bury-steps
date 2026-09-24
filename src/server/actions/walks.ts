@@ -331,19 +331,20 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
   let walk: { token: string; slug: string | null; title: string; startsAt: Date };
   try {
     walk = await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.journeyEvent, async (tx) => {
-      const current = await tx.walk.findUnique({
-        where: { id },
-        select: {
-          id: true,
-          token: true,
-          slug: true,
-          title: true,
-          cancelledAt: true,
-          startsAt: true,
-          durationMins: true,
-          endedAt: true,
-        },
-      });
+      const rows = await tx.$queryRaw<
+        Array<{
+          id: string;
+          token: string;
+          slug: string | null;
+          title: string;
+          cancelledAt: Date | null;
+          startsAt: Date;
+          durationMins: number;
+          endedAt: Date | null;
+        }>
+      >`SELECT id, token, slug, title, "cancelledAt", "startsAt", "durationMins", "endedAt"
+        FROM "Walk" WHERE id = ${id} FOR UPDATE`;
+      const current = rows[0];
       if (!current) throw new Error("WALK_GONE");
       if (current.cancelledAt) {
         throw new LimitReachedError("This walk is already cancelled.");
@@ -389,6 +390,7 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
   revalidatePath("/admin");
   revalidatePath(`/admin/walks/${id}`);
   revalidatePath("/walks");
+  revalidatePath("/progress");
   revalidateWalkShare(walk);
 
   await notifyMembersOfCancelledWalk({
@@ -444,6 +446,7 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
   revalidatePath("/admin");
   revalidatePath(`/admin/walks/${id}`);
   revalidatePath("/walks");
+  revalidatePath("/progress");
   revalidateWalkShare(walk);
 
   // Reopening a walk whose time has already passed just restores the
@@ -460,7 +463,12 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
     });
   }
 
-  return { ok: true, message: "Walk reopened. Members can clock in again if the window is still open." };
+  return {
+    ok: true,
+    message: finished
+      ? "Walk reopened in the record. Its time has already passed, so clock-in stays closed."
+      : "Walk reopened. Members can clock in again if the window is still open.",
+  };
 }
 
 /**
@@ -540,6 +548,7 @@ export async function endWalkEarly(
   revalidatePath("/admin");
   revalidatePath(`/admin/walks/${id}`);
   revalidatePath("/walks");
+  revalidatePath("/progress");
   revalidateWalkShare(walk);
 
   return {

@@ -362,7 +362,6 @@ export async function markSiteNoticesRead(): Promise<ActionResult> {
         kind: true,
         audience: true,
         slug: true,
-        pageBody: true,
         categoryId: true,
         systemKey: true,
         enabled: true,
@@ -373,6 +372,7 @@ export async function markSiteNoticesRead(): Promise<ActionResult> {
     const bell = noticesForBell(
       rows.map((row) => ({
         ...row,
+        pageBody: null,
         categoryLabel: null,
       })),
     );

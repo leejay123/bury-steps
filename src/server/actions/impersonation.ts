@@ -3,6 +3,7 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { requireAdmin, displayName } from "@/lib/auth";
+import { isTrustedClerkActorUrl } from "@/lib/clerk-actor-url";
 import { isOwner } from "@/lib/site-owner";
 import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -67,6 +68,10 @@ export async function startImpersonation(
     });
 
     if (!actorToken.url) return { ok: false, error: "Clerk did not return a sign-in link. Try again." };
+    if (!isTrustedClerkActorUrl(actorToken.url)) {
+      console.error("startImpersonation: unexpected actor token host", actorToken.url);
+      return { ok: false, error: "Could not start that sign-in. Try again." };
+    }
     return {
       ok: true,
       message: `Signed in as ${displayName(target)}.`,

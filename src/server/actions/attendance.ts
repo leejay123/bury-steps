@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireAdmin, requireUser, displayName } from "@/lib/auth";
-import { canOrganiserAddAttendance, windowState } from "@/lib/walk-window";
+import { canOrganiserAddAttendance, effectiveEndsAt, walkOpensAt, windowState } from "@/lib/walk-window";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { formatWalkDate, isValidLondonWallClock, londonWallClockToUtc } from "@/lib/dates";
 import { meetingPointLabel } from "@/lib/geocode";
@@ -146,6 +146,8 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
 
   revalidateWalkShare(walk);
   revalidatePath("/walks");
+  revalidatePath("/history");
+  revalidatePath("/progress");
   revalidatePath(`/admin/walks/${walk.id}`);
   return { ok: true, message: "Clocked in. Enjoy the walk." };
 }
@@ -312,6 +314,28 @@ export async function adminClockIn(
         };
       }
 
+      const opensAt = walkOpensAt(locked.startsAt);
+      const endsAt = effectiveEndsAt(locked);
+      if (
+        recordedClockedInAt.getTime() < opensAt.getTime() ||
+        recordedClockedInAt.getTime() > endsAt.getTime()
+      ) {
+        return {
+          ok: false as const,
+          error:
+            "Clock-in time must fall between when clock-in opens and when the walk finishes.",
+        };
+      }
+      if (
+        recordedClockedOutAt &&
+        recordedClockedOutAt.getTime() > endsAt.getTime()
+      ) {
+        return {
+          ok: false as const,
+          error: "Clock-out time can't be after the walk finished.",
+        };
+      }
+
       const existingAttendance = await tx.attendance.findUnique({
         where: { walkId_userId: { walkId: locked.id, userId: member.id } },
         select: { id: true, clockedOutAt: true },
@@ -383,6 +407,7 @@ export async function adminClockIn(
   revalidateWalkShare(walk);
   revalidatePath("/walks");
   revalidatePath("/history");
+  revalidatePath("/progress");
   revalidatePath(`/admin/walks/${walk.id}`);
   revalidatePath(`/admin/members/${member.id}`);
   revalidatePath("/admin/members");
@@ -477,6 +502,7 @@ export async function adminRemoveAttendance(
   revalidateWalkShare(attendance.walk);
   revalidatePath("/walks");
   revalidatePath("/history");
+  revalidatePath("/progress");
   revalidatePath(`/admin/walks/${attendance.walk.id}`);
   revalidatePath(`/admin/members/${attendance.userId}`);
   revalidatePath("/admin/members");
@@ -572,6 +598,8 @@ export async function clockOut(_prev: ActionResult | null, formData: FormData): 
 
   revalidateWalkShare(walk);
   revalidatePath("/walks");
+  revalidatePath("/history");
+  revalidatePath("/progress");
   revalidatePath(`/admin/walks/${walk.id}`);
   return { ok: true, message: "You have clocked out. Your name is no longer on the walk for other members." };
 }

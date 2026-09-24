@@ -26,8 +26,10 @@ export default async function AdminSubscribersSettingsPage() {
 
   const [
     activeFooterSubscribers,
+    activeFooterCount,
     unsubscribedFooterCount,
     newsletterMembers,
+    newsletterMemberCount,
     walkAnnouncementCount,
     noticesCount,
     progressCount,
@@ -38,6 +40,7 @@ export default async function AdminSubscribersSettingsPage() {
       orderBy: { createdAt: "desc" },
       take: 200,
     }),
+    prisma.newsletterSubscriber.count({ where: { unsubscribedAt: null } }),
     prisma.newsletterSubscriber.count({ where: { unsubscribedAt: { not: null } } }),
     prisma.user.findMany({
       where: { emailNewsletter: true },
@@ -45,12 +48,13 @@ export default async function AdminSubscribersSettingsPage() {
       orderBy: { createdAt: "desc" },
       take: 200,
     }),
+    prisma.user.count({ where: { emailNewsletter: true } }),
     prisma.user.count({ where: { emailWalkAnnouncements: true } }),
     prisma.user.count({ where: { emailNotices: true } }),
     prisma.user.count({ where: { emailProgress: true } }),
   ]);
 
-  const newsletterRecipientCount = activeFooterSubscribers.length + newsletterMembers.length;
+  const newsletterRecipientCount = activeFooterCount + newsletterMemberCount;
 
   return (
     <SettingsPage
@@ -58,8 +62,8 @@ export default async function AdminSubscribersSettingsPage() {
       title="Subscribers"
     >
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
-        <StatTile label="Newsletter (footer)" value={activeFooterSubscribers.length} />
-        <StatTile label="Newsletter (members)" value={newsletterMembers.length} />
+        <StatTile label="Newsletter (footer)" value={activeFooterCount} />
+        <StatTile label="Newsletter (members)" value={newsletterMemberCount} />
         <StatTile label="Walk announcements on" value={walkAnnouncementCount} />
         <StatTile label="Notices on" value={noticesCount} />
         <StatTile label="Progress on" value={progressCount} />

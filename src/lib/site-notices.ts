@@ -169,16 +169,18 @@ export async function getSiteNoticeState(
   unreadIds: string[];
 }> {
   try {
-    const [rows, reads] = await Promise.all([
-      getCachedSiteNotices(),
-      prisma.siteNoticeRead.findMany({
-        where: { userId },
-        select: { noticeId: true },
-      }),
-    ]);
+    const rows = await getCachedSiteNotices();
     const notices = noticesForBell(reviveNotices(rows)).map((notice) =>
       personalizeNotice(notice, firstName),
     );
+    const bellIds = notices.map((notice) => notice.id);
+    const reads =
+      bellIds.length === 0
+        ? []
+        : await prisma.siteNoticeRead.findMany({
+            where: { userId, noticeId: { in: bellIds } },
+            select: { noticeId: true },
+          });
     const read = new Set(reads.map((row) => row.noticeId));
     return {
       notices,

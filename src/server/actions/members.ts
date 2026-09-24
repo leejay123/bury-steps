@@ -673,6 +673,10 @@ export async function resendOrganiserInvite(
   // Inviting/promoting a new organiser is owner-only — resending an
   // invite is part of that same flow.
   if (!(await isOwner(admin.id))) return ownerDenied("resend an organiser invite");
+  const limited = checkRateLimit(`${admin.id}:resendOrganiserInvite`, 5, 60_000);
+  if (!limited.ok) {
+    return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
+  }
   const id = String(formData.get("userId") ?? "");
   if (!id) return { ok: false, error: "No member selected." };
 
@@ -732,6 +736,11 @@ export async function acceptOrganiserInvite(
 ): Promise<ActionResult> {
   const token = String(formData.get("token") ?? "");
   if (!token) return { ok: false, error: "This invite link is invalid." };
+
+  const limited = checkRateLimit(`acceptOrganiserInvite:${token}`, 10, 60_000);
+  if (!limited.ok) {
+    return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
+  }
 
   const target = await prisma.user.findUnique({ where: { organiserInviteToken: token } });
   if (!target || target.role !== "MEMBER") {

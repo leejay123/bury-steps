@@ -212,9 +212,11 @@ function HistoryList({ rows }: { rows: AttendanceHistoryRow[] }) {
               In {formatCompactDateTime(new Date(row.clockedInAt))}
               {row.clockedOutAt
                 ? ` · Out ${formatCompactDateTime(new Date(row.clockedOutAt))}`
-                : row.completed
-                  ? " · Stayed for the whole walk"
-                  : " · Still on the walk"}
+                : row.cancelledAt
+                  ? ""
+                  : row.completed
+                    ? " · Stayed for the whole walk"
+                    : " · Still on the walk"}
             </p>
             {row.clockedOutReason ? (
               <p className="text-sm text-muted-foreground">{row.clockedOutReason}</p>

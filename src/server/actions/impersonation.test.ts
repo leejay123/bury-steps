@@ -121,7 +121,7 @@ describe("startImpersonation", () => {
 
   it("creates an actor token, logs the event, and returns its url as href", async () => {
     prismaMock.user.findUnique.mockResolvedValueOnce(MEMBER);
-    actorTokensCreate.mockResolvedValueOnce({ url: "https://clerk.example/actor/abc" });
+    actorTokensCreate.mockResolvedValueOnce({ url: "https://accounts.clerk.com/v1/client/actor/abc" });
 
     const result = await startImpersonation(null, form({ targetId: MEMBER.id }));
 
@@ -144,7 +144,7 @@ describe("startImpersonation", () => {
     expect(result).toEqual({
       ok: true,
       message: "Signed in as Jane Doe.",
-      href: "https://clerk.example/actor/abc",
+      href: "https://accounts.clerk.com/v1/client/actor/abc",
     });
   });
 

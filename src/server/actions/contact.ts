@@ -1,11 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { requesterIpKey } from "@/lib/requester-ip";
 import {
   parseContactEmail,
   parseContactMessage,
@@ -14,13 +14,6 @@ import {
 } from "@/lib/contact";
 import { sendContactMessageAdminAlertEmail, sendContactMessageReceivedEmail } from "@/lib/email/mailer";
 import { type ActionResult, isPrismaCode, logActionError, permissionDenied } from "./shared";
-
-/** Best-effort caller identity for rate-limiting an unauthenticated public
- * form — there's no signed-in user to key on here. */
-async function requesterKey(): Promise<string> {
-  const h = await headers();
-  return h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
-}
 
 export async function submitContactMessage(
   _prev: ActionResult | null,
@@ -33,7 +26,7 @@ export async function submitContactMessage(
     return { ok: true, message: "Thanks — we'll get back to you soon." };
   }
 
-  const key = await requesterKey();
+  const key = await requesterIpKey();
   const limited = checkRateLimit(`${key}:submitContactMessage`, 3, 10 * 60_000);
   if (!limited.ok) {
     return { ok: false, error: "Too many messages sent. Try again in a few minutes." };

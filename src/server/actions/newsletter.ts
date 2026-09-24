@@ -1,10 +1,10 @@
 "use server";
 
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { requesterIpKey } from "@/lib/requester-ip";
 import { parseContactEmail } from "@/lib/contact";
 import { getEmailBrand } from "@/lib/email/brand";
 import { getResendClient, fromAddress } from "@/lib/email/client";
@@ -14,11 +14,6 @@ import { getOrCreateAudienceId, syncContactSubscribed, syncContactUnsubscribed }
 import { NewsletterCampaignEmail } from "@/lib/email/templates/newsletter-campaign";
 import { makeCapabilityToken } from "@/lib/email/unsubscribe";
 import { type ActionResult, isPrismaCode, logActionError, permissionDenied } from "./shared";
-
-async function requesterKey(): Promise<string> {
-  const h = await headers();
-  return h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
-}
 
 export async function subscribeToNewsletter(
   _prev: ActionResult | null,
@@ -30,7 +25,7 @@ export async function subscribeToNewsletter(
     return { ok: true, message: "Thanks — we'll be in touch." };
   }
 
-  const key = await requesterKey();
+  const key = await requesterIpKey();
   const limited = checkRateLimit(`${key}:subscribeToNewsletter`, 5, 10 * 60_000);
   if (!limited.ok) {
     return { ok: false, error: "Too many attempts. Try again in a few minutes." };
@@ -51,11 +46,12 @@ export async function subscribeToNewsletter(
     }
 
     // Upsert rather than create: resubscribing after a previous unsubscribe
-    // should just clear unsubscribedAt, not fail on the unique email index.
+    // clears unsubscribedAt and rotates the capability token so a leaked
+    // legacy cuid (or old link) cannot keep working after they opt back in.
     const subscriber = await prisma.newsletterSubscriber.upsert({
       where: { email },
       create: { email, unsubscribeToken: makeCapabilityToken() },
-      update: { unsubscribedAt: null },
+      update: { unsubscribedAt: null, unsubscribeToken: makeCapabilityToken() },
       select: { email: true, unsubscribeToken: true },
     });
 
