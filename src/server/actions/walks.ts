@@ -456,10 +456,12 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
   revalidateWalkShare(walk);
 
   // Reopening a walk that has already started (or finished) just restores
-  // the record — telling every member it's "back on" / clock-in from an hour
-  // before would be wrong once the meet time has passed.
+  // the record — telling every member it's "back on" would be wrong once
+  // the meet time has passed. Still email for upcoming and starting-soon
+  // (clock-in window open, meet not yet).
   const status = walkStatus({ ...walk, cancelledAt: null });
-  if (status === "upcoming") {
+  const notifyReopened = status === "upcoming" || status === "starting-soon";
+  if (notifyReopened) {
     await notifyMembersOfWalkReopened({
       title: walk.title,
       whenText: formatWalkDate(walk.startsAt),
@@ -763,14 +765,19 @@ export async function updateWalk(
 
   // Only notify when this edit actually brought a cancelled walk back — not
   // on every ordinary edit, and not if it was already open. Skip once the
-  // meet time has passed (in-progress or completed) — see reopenWalk.
+  // meet time has passed (in-progress or completed) — still mail for
+  // upcoming and starting-soon. See reopenWalk.
   const reopenStatus = walkStatus({
     cancelledAt: null,
     startsAt: appliedStartsAt,
     durationMins: appliedDurationMins,
     endedAt: existing.endedAt,
   });
-  if (existing.cancelledAt !== null && shouldReopen && reopenStatus === "upcoming") {
+  const notifyReopened =
+    existing.cancelledAt !== null &&
+    shouldReopen &&
+    (reopenStatus === "upcoming" || reopenStatus === "starting-soon");
+  if (notifyReopened) {
     await notifyMembersOfWalkReopened({
       title: parsed.data.title,
       whenText: formatWalkDate(appliedStartsAt),

@@ -531,6 +531,35 @@ describe("reopenWalk", () => {
       message: "Walk reopened. Clock-in is already open for this walk — no email was sent.",
     });
   });
+
+  it("still emails members when reopening in the starting-soon window", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({
+      id: "walk-1",
+      token: "tok-1",
+      slug: "sunday-stroll",
+      cancelledAt: new Date(),
+      title: "Sunday stroll",
+      location: "The park",
+      postcode: null,
+      what3words: null,
+      startsAt: new Date(Date.now() + 30 * 60_000),
+      durationMins: 60,
+      endedAt: null,
+    });
+    prismaMock.walk.updateMany.mockResolvedValueOnce({ count: 1 });
+    walkStatus.mockReturnValueOnce("starting-soon");
+    prismaMock.user.findMany.mockResolvedValueOnce([
+      { id: "user-1", email: "jane@example.com", firstName: "Jane", unsubscribeToken: null },
+    ]);
+
+    const result = await reopenWalk(null, form({ walkId: "walk-1" }));
+
+    expect(sendEmailBatch).toHaveBeenCalled();
+    expect(result).toEqual({
+      ok: true,
+      message: "Walk reopened. Members can clock in again if the window is still open.",
+    });
+  });
 });
 
 describe("endWalkEarly", () => {
