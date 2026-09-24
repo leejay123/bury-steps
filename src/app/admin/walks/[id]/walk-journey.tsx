@@ -19,6 +19,7 @@ import {
 import { useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { FormError } from "@/components/form-error";
+import { DrawerFormFooter } from "@/components/drawer-form";
 import { WalkJourneyDrawer } from "@/components/walk-journey-drawer";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
@@ -48,19 +49,9 @@ import {
   Drawer,
   DrawerContent,
   DrawerDescription,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-
-function Submit({ label, pendingLabel }: { label: string; pendingLabel: string }) {
-  const { pending } = useFormStatus();
-  return (
-    <Button disabled={pending} type="submit">
-      {pending ? pendingLabel : label}
-    </Button>
-  );
-}
 
 function RemoveConfirm() {
   const { pending } = useFormStatus();
@@ -190,7 +181,9 @@ export function WalkJourneyManager({
         </div>
         <div
           className={
-            showBothButtons ? "grid w-full grid-cols-2 gap-2 sm:w-auto" : "flex w-full flex-col gap-2 sm:w-auto"
+            showBothButtons
+              ? "grid w-full grid-cols-2 gap-2 sm:w-auto"
+              : "flex w-full flex-col gap-2 sm:w-auto"
           }
         >
           <WalkJourneyDrawer className="w-full" events={events} />
@@ -265,61 +258,62 @@ export function WalkJourneyManager({
         <DrawerContent className="sm:max-w-md">
           <DrawerHeader>
             <DrawerTitle>{editing ? "Edit event" : "Add event"}</DrawerTitle>
-            <DrawerDescription>
-              Title and optional notes. Time is UK time on this walk’s day.
-            </DrawerDescription>
+            <DrawerDescription>What happened, and when (UK time).</DrawerDescription>
           </DrawerHeader>
           <form
             action={editing ? updateAction : createAction}
-            className="flex flex-col gap-4 px-4"
+            className="flex min-h-0 flex-1 flex-col"
             key={editing?.id ?? "add"}
           >
             <input name="walkId" type="hidden" value={walkId} />
             {editing ? <input name="eventId" type="hidden" value={editing.id} /> : null}
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="journey-title" required>
-                Title
-              </Label>
-              <Input
-                defaultValue={editing?.title ?? ""}
-                id="journey-title"
-                maxLength={MAX_JOURNEY_TITLE}
-                name="title"
-                placeholder="Stopped at Burrs cafe"
-                required
-              />
+            {/* Only the fields scroll — on a phone with the keyboard up, the
+                old unscrollable form clipped When and the button off the
+                bottom of the drawer. */}
+            <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain px-4 pb-4">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="journey-title" required>
+                  Title
+                </Label>
+                <Input
+                  defaultValue={editing?.title ?? ""}
+                  id="journey-title"
+                  maxLength={MAX_JOURNEY_TITLE}
+                  name="title"
+                  placeholder="Stopped at Burrs cafe"
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="journey-body">Notes</Label>
+                <Textarea
+                  defaultValue={editing?.body ?? ""}
+                  id="journey-body"
+                  maxLength={MAX_JOURNEY_BODY}
+                  name="body"
+                  placeholder="Optional — what happened"
+                  rows={3}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="journey-when" required>
+                  When
+                </Label>
+                <DateTimePicker
+                  defaultValue={
+                    editing ? utcToLondonWallClock(editing.happenedAt) : defaultHappenedAt
+                  }
+                  id="journey-when"
+                  name="happenedAt"
+                  required
+                />
+              </div>
+              <FormError message={formState && !formState.ok ? formState.error : null} />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="journey-body">Notes</Label>
-              <Textarea
-                defaultValue={editing?.body ?? ""}
-                id="journey-body"
-                maxLength={MAX_JOURNEY_BODY}
-                name="body"
-                placeholder="Optional — what happened"
-                rows={3}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="journey-when" required>
-                When
-              </Label>
-              <DateTimePicker
-                defaultValue={
-                  editing ? utcToLondonWallClock(editing.happenedAt) : defaultHappenedAt
-                }
-                id="journey-when"
-                name="happenedAt"
-                required
-              />
-            </div>
-            <FormError message={formState && !formState.ok ? formState.error : null} />
-            <DrawerFooter className="px-0">
-              <Submit
-                label={editing ? "Save changes" : "Add event"}
-                pendingLabel={editing ? "Saving…" : "Adding…"}
-              />
-            </DrawerFooter>
+            <DrawerFormFooter
+              label={editing ? "Save changes" : "Add event"}
+              pendingLabel={editing ? "Saving…" : "Adding…"}
+            />
           </form>
         </DrawerContent>
       </Drawer>

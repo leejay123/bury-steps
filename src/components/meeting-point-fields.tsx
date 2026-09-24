@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { FieldHint, MoreOptions } from "@/components/drawer-form";
 
 export function MeetingPointFields({
   defaultLatitude = null,
@@ -104,11 +105,17 @@ export function MeetingPointFields({
   const what3wordsId = `${idPrefix}-what3words`;
   const coordsId = `${idPrefix}-coords`;
 
+  const locationHintId = `${locationId}-hint`;
+  const postcodeHintId = `${postcodeId}-hint`;
+  const what3wordsHintId = `${what3wordsId}-hint`;
+  const coordsHintId = `${coordsId}-hint`;
+
   return (
-    <div className="space-y-3">
-      <div className="space-y-1.5">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1.5">
         <Label htmlFor={locationId}>Meeting point</Label>
         <Input
+          aria-describedby={locationHintId}
           id={locationId}
           maxLength={200}
           name="location"
@@ -117,16 +124,14 @@ export function MeetingPointFields({
           placeholder="Visitor centre, Burrs Country Park"
           value={location}
         />
-        <p className="text-xs text-muted-foreground">
-          What people see on the share link. Changing this does not move the pin — Find this place
-          or Exact coordinates below does.
-        </p>
+        <FieldHint id={locationHintId}>What members see on the walk page.</FieldHint>
       </div>
 
-      <div className="space-y-1.5">
+      <div className="flex flex-col gap-1.5">
         <Label htmlFor={postcodeId}>Postcode</Label>
         <div className="flex flex-col gap-2 sm:flex-row">
           <Input
+            aria-describedby={postcodeHintId}
             autoComplete="postal-code"
             className="sm:max-w-40"
             id={postcodeId}
@@ -146,48 +151,10 @@ export function MeetingPointFields({
             {searching ? "Finding…" : "Find this place"}
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Optional, but a UK postcode is the most reliable pin. Tap Find this place, then pick the
-          match.
-        </p>
+        <FieldHint id={postcodeHintId}>
+          Optional — tap Find this place to put it on the map.
+        </FieldHint>
       </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor={what3wordsId}>What3words (optional)</Label>
-        <Input
-          defaultValue={defaultWhat3words}
-          id={what3wordsId}
-          maxLength={120}
-          name="what3words"
-          placeholder="e.g. filled.count.soap"
-        />
-        <p className="text-xs text-muted-foreground">
-          For a pinpoint-exact spot (a car park entrance, a specific bench). Members get a link
-          to what3words&apos; own map with turn-by-turn directions — separate from the map above.
-        </p>
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor={coordsId}>Exact coordinates (optional)</Label>
-        <Input
-          id={coordsId}
-          onBlur={(event) => applyCoordsInput(event.target.value)}
-          onChange={(event) => setCoordsInput(event.target.value)}
-          placeholder="e.g. 53.610292, -2.306141"
-          value={coordsInput}
-        />
-        <p className="text-xs text-muted-foreground">
-          For a pin that&apos;s exactly right, not just close — the search above can land tens of
-          metres off for a car park or a spot with no proper address. Get exact coordinates for
-          free from Google Maps (long-press the spot → copy what pops up) or from a what3words
-          address&apos;s own page, then paste them here. This is what moves the pin on the map
-          above; What3words below is only for the separate directions link.
-        </p>
-        {coordsError ? <FormError message={coordsError} /> : null}
-      </div>
-
-      <input name="latitude" type="hidden" value={pin ? String(pin.lat) : ""} />
-      <input name="longitude" type="hidden" value={pin ? String(pin.lng) : ""} />
 
       {error ? <FormError message={error} /> : null}
 
@@ -219,11 +186,48 @@ export function MeetingPointFields({
         </fieldset>
       ) : null}
 
-      {pin ? (
-        <p className="text-xs text-muted-foreground">
-          Pin set. The map on the walk page uses this exact spot.
-        </p>
-      ) : null}
+      {pin ? <FieldHint>Pin set — the walk page map uses this spot.</FieldHint> : null}
+
+      {/* Rarely needed — most walks are placed fine by Find this place.
+          Opens by itself when the walk already has a what3words address, so
+          it's never hidden from whoever set it. Exact coordinates don't need
+          that: Find this place fills them in, and "Pin set" above says so. */}
+      <MoreOptions defaultOpen={Boolean(defaultWhat3words)} label="More location options">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={what3wordsId}>What3words</Label>
+          <Input
+            aria-describedby={what3wordsHintId}
+            defaultValue={defaultWhat3words}
+            id={what3wordsId}
+            maxLength={120}
+            name="what3words"
+            placeholder="e.g. filled.count.soap"
+          />
+          <FieldHint id={what3wordsHintId}>
+            Gives members a link to directions to an exact spot.
+          </FieldHint>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={coordsId}>Exact coordinates</Label>
+          <Input
+            aria-describedby={coordsHintId}
+            id={coordsId}
+            inputMode="decimal"
+            onBlur={(event) => applyCoordsInput(event.target.value)}
+            onChange={(event) => setCoordsInput(event.target.value)}
+            placeholder="e.g. 53.610292, -2.306141"
+            value={coordsInput}
+          />
+          <FieldHint id={coordsHintId}>
+            For an exact pin: press and hold the spot in Google Maps, copy, and paste here.
+          </FieldHint>
+          {coordsError ? <FormError message={coordsError} /> : null}
+        </div>
+      </MoreOptions>
+
+      <input name="latitude" type="hidden" value={pin ? String(pin.lat) : ""} />
+      <input name="longitude" type="hidden" value={pin ? String(pin.lng) : ""} />
     </div>
   );
 }

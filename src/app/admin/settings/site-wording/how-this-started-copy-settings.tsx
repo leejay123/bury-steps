@@ -19,12 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  DataList,
-  DataListBody,
-  DataListItem,
-  DataListItemMain,
-} from "@/components/data-list";
+import { DataList, DataListBody, DataListItem, DataListItemMain } from "@/components/data-list";
 import {
   MAX_HOW_THIS_STARTED_BODY,
   MAX_HOW_THIS_STARTED_EYEBROW,
@@ -32,6 +27,7 @@ import {
   MAX_HOW_THIS_STARTED_TITLE,
 } from "@/lib/homepage-copy";
 import { SettingsSection } from "../settings-page";
+import { DrawerFormFooter } from "@/components/drawer-form";
 
 function Submit({ disabled, label = "Save" }: { disabled: boolean; label?: string }) {
   const { pending } = useFormStatus();
@@ -45,7 +41,11 @@ function Submit({ disabled, label = "Save" }: { disabled: boolean; label?: strin
 function bodyPreview(body: string) {
   const trimmed = body.trim();
   if (!trimmed) return "No story yet";
-  const firstLine = trimmed.split("\n").find((line) => line.trim())?.trim() ?? trimmed;
+  const firstLine =
+    trimmed
+      .split("\n")
+      .find((line) => line.trim())
+      ?.trim() ?? trimmed;
   if (firstLine.length <= 96) return firstLine;
   return `${firstLine.slice(0, 96)}…`;
 }
@@ -92,42 +92,34 @@ function FullStoryDrawer({
       open={open}
       variant="form"
     >
-      <DrawerContent
-        className="sm:max-w-lg"
-        onPointerDownOutside={onPointerDownOutside}
-      >
+      <DrawerContent className="sm:max-w-lg" onPointerDownOutside={onPointerDownOutside}>
         <DrawerHeader>
           <DrawerTitle>Full story</DrawerTitle>
-          <DrawerDescription>
-            Shown in the Read more drawer on the homepage. Use a blank line between paragraphs.
-          </DrawerDescription>
+          <DrawerDescription>Leave a blank line between paragraphs.</DrawerDescription>
         </DrawerHeader>
-        <form action={action} className="flex min-h-0 flex-1 flex-col gap-4 px-4 pb-6">
+        <form action={action} className="flex min-h-0 flex-1 flex-col">
           <input name="howThisStartedTitle" type="hidden" value={title} />
           <input name="howThisStartedEyebrow" type="hidden" value={eyebrow} />
           <input name="howThisStartedTeaser" type="hidden" value={teaser} />
-          <div className="flex min-h-0 flex-1 flex-col gap-2">
-            <Label htmlFor="howThisStartedBodyDrawer">Story</Label>
-            <Textarea
-              className="min-h-64 flex-1 font-mono text-sm"
-              id="howThisStartedBodyDrawer"
-              maxLength={MAX_HOW_THIS_STARTED_BODY}
-              name="howThisStartedBody"
-              onChange={(event) => setDraft(event.target.value)}
-              required
-              rows={16}
-              value={draft}
-            />
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain px-4 pb-4">
+            <div className="flex min-h-0 flex-1 flex-col gap-2">
+              <Label htmlFor="howThisStartedBodyDrawer">Story</Label>
+              <Textarea
+                className="min-h-64 flex-1 font-mono text-sm"
+                id="howThisStartedBodyDrawer"
+                maxLength={MAX_HOW_THIS_STARTED_BODY}
+                name="howThisStartedBody"
+                onChange={(event) => setDraft(event.target.value)}
+                required
+                rows={16}
+                value={draft}
+              />
+            </div>
+            <FormError message={state && !state.ok ? state.error : null} />
           </div>
-          <FormError message={state && !state.ok ? state.error : null} />
-          <div className="flex flex-wrap gap-2">
-            <Submit disabled={!dirty} />
-            {dirty ? (
-              <Button onClick={() => setDraft(body)} type="button" variant="outline">
-                Discard
-              </Button>
-            ) : null}
-          </div>
+          {/* Cancel discards: the draft resets from the saved story each time
+              the drawer opens (useResetOnChange above). */}
+          <DrawerFormFooter disabled={!dirty} label="Save" pendingLabel="Saving…" />
         </form>
       </DrawerContent>
     </Drawer>
@@ -151,7 +143,10 @@ export function HowThisStartedCopySettings({
   const [body, setBody] = useState(howThisStartedBody);
   const [bodyDrawerOpen, setBodyDrawerOpen] = useState(false);
   const { openSoon, onPointerDownOutside } = useControlledDrawerDismissGuard();
-  const [state, action] = useActionState<ActionResult | null, FormData>(updateHowThisStartedCopy, null);
+  const [state, action] = useActionState<ActionResult | null, FormData>(
+    updateHowThisStartedCopy,
+    null,
+  );
   useActionToast(state);
 
   useResetOnChange(

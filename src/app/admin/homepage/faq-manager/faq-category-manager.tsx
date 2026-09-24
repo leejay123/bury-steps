@@ -43,8 +43,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Popover, PopoverContent, PopoverDescription, PopoverTrigger } from "@/components/ui/popover";
-import { PendingSubmit, RemoveConfirm } from "./shared";
+import {
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { RemoveConfirm } from "./shared";
+import { DrawerFormFooter } from "@/components/drawer-form";
 import { SettingsListHeader } from "../../settings/settings-page";
 
 type CategoryDrawerMode = { type: "add" } | { type: "edit"; category: FaqCategoryView };
@@ -57,10 +63,7 @@ function CategoryLabelForm({
   submitLabel,
   submitPendingLabel,
 }: {
-  action: (
-    prev: ActionResult | null,
-    formData: FormData,
-  ) => Promise<ActionResult>;
+  action: (prev: ActionResult | null, formData: FormData) => Promise<ActionResult>;
   category?: FaqCategoryView;
   onPendingChange?: (pending: boolean) => void;
   onSaved: () => void;
@@ -76,24 +79,26 @@ function CategoryLabelForm({
   useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
 
   return (
-    <form action={formAction} className="flex flex-col gap-3 pb-4">
-      {category ? <input name="categoryId" type="hidden" value={category.id} /> : null}
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor={category ? `edit-category-${category.id}` : "new-category"} required>
-          Name
-        </Label>
-        <Input
-          id={category ? `edit-category-${category.id}` : "new-category"}
-          maxLength={MAX_FAQ_CATEGORY_LABEL}
-          name="label"
-          onChange={(event) => setLabel(event.target.value)}
-          placeholder="On the day"
-          required
-          value={label}
-        />
+    <form action={formAction} className="flex min-h-0 flex-1 flex-col">
+      <div className="flex flex-1 flex-col gap-3 overflow-y-auto overscroll-y-contain px-4 pb-4">
+        {category ? <input name="categoryId" type="hidden" value={category.id} /> : null}
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={category ? `edit-category-${category.id}` : "new-category"} required>
+            Name
+          </Label>
+          <Input
+            id={category ? `edit-category-${category.id}` : "new-category"}
+            maxLength={MAX_FAQ_CATEGORY_LABEL}
+            name="label"
+            onChange={(event) => setLabel(event.target.value)}
+            placeholder="On the day"
+            required
+            value={label}
+          />
+        </div>
+        <FormError message={state && !state.ok ? state.error : null} />
       </div>
-      <FormError message={state && !state.ok ? state.error : null} />
-      <PendingSubmit label={submitLabel} pendingLabel={submitPendingLabel} />
+      <DrawerFormFooter label={submitLabel} pendingLabel={submitPendingLabel} />
     </form>
   );
 }
@@ -119,7 +124,7 @@ function CategoryDrawer({
           <DrawerTitle>{mode?.type === "edit" ? "Edit category" : "Add a category"}</DrawerTitle>
           <DrawerDescription>This name shows as a filter on the public FAQ.</DrawerDescription>
         </DrawerHeader>
-        <div className="px-4">
+        <div className="flex min-h-0 flex-1 flex-col">
           {mode?.type === "edit" ? (
             <CategoryLabelForm
               action={updateHomepageFaqCategory}
@@ -305,10 +310,7 @@ export function FaqCategoryManager({
                 <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
               </DataListItemMain>
               <DataListActions className={dataListActionsStackClassName}>
-                <RemoveCategoryButton
-                  category={category}
-                  onlyCategory={categories.length <= 1}
-                />
+                <RemoveCategoryButton category={category} onlyCategory={categories.length <= 1} />
               </DataListActions>
             </DataListItem>
           ))}

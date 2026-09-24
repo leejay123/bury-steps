@@ -25,7 +25,6 @@ import {
   Drawer,
   DrawerContent,
   DrawerDescription,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
@@ -40,25 +39,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { SettingsListHeader } from "../settings/settings-page";
+import { DrawerFormFooter } from "@/components/drawer-form";
 
 type DrawerMode = { type: "add" } | { type: "edit"; slide: SlideView; index: number };
-
-function PendingSubmit({
-  label,
-  pendingLabel,
-  disabled,
-}: {
-  label: string;
-  pendingLabel: string;
-  disabled?: boolean;
-}) {
-  const { pending } = useFormStatus();
-  return (
-    <Button disabled={pending || disabled} type="submit">
-      {pending ? pendingLabel : label}
-    </Button>
-  );
-}
 
 function SlideFields({
   disabled,
@@ -126,9 +109,7 @@ function AddDrawerForm({
         <SlideFields disabled={disabled} prefix="new" />
         <FormError message={state && !state.ok ? state.error : null} />
       </div>
-      <DrawerFooter>
-        <PendingSubmit disabled={disabled} label="Add slide" pendingLabel="Adding…" />
-      </DrawerFooter>
+      <DrawerFormFooter disabled={disabled} label="Add slide" pendingLabel="Adding…" />
     </form>
   );
 }
@@ -157,9 +138,7 @@ function EditDrawerForm({
           <SlideFields prefix={`edit-${slide.id}`} slide={slide} />
           <FormError message={updateState && !updateState.ok ? updateState.error : null} />
         </div>
-        <DrawerFooter>
-          <PendingSubmit label="Save" pendingLabel="Saving…" />
-        </DrawerFooter>
+        <DrawerFormFooter label="Save" pendingLabel="Saving…" />
       </form>
     </div>
   );

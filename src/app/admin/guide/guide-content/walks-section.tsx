@@ -53,6 +53,11 @@ export function WalksSection({
               save. If nothing matches, people still get directions from the text, just without
               a pin. The map uses free OpenStreetMap — no extra account is needed.
             </li>
+            <li>
+              Most walks need nothing more for the location. For a what3words address or exact
+              map coordinates, open <strong>More location options</strong> under the postcode.
+              It opens by itself when you edit a walk that already has a what3words address.
+            </li>
             <li>Add a short description if you want.</li>
             <li>
               Choose Create walk. The start must still be in the future — you cannot create a
@@ -94,8 +99,8 @@ export function WalksSection({
               (or the share link while signed in as an organiser).
             </li>
             <li>
-              <strong>Edit</strong> changes the title, date, time, length, meeting point, or
-              description — the same fields as Create walk, including Find this place. Use this
+              <strong>Edit</strong> opens the same panel as Create a walk, filled in with this
+              walk, to change the title, date, time, length, meeting point, or description. Use this
               when the meeting point moves, or when Sunday becomes Wednesday. People already
               clocked in stay on the walk. If you change the title, copy the share
               link again — it uses the new name. Changing the date does not change the link.

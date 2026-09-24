@@ -1,75 +1,36 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { useFormStatus } from "react-dom";
 import { Pencil } from "lucide-react";
 import { updateWalk, type ActionResult } from "@/server/actions";
-import { utcToLondonWallClock } from "@/lib/dates";
-import { useActionToast, preventDismissWhilePending } from "@/hooks/use-action-toast";
-import { DateTimePicker } from "@/components/date-time-picker";
-import { MeetingPointFields } from "@/components/meeting-point-fields";
+import { useActionToast } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
+import { DrawerFormFooter } from "@/components/drawer-form";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { WalkFormFields, type WalkFormDefaults } from "../../walk-form-fields";
 
-function Confirm({ cancelled }: { cancelled: boolean }) {
-  const { pending } = useFormStatus();
-  return (
-    <Button disabled={pending} type="submit">
-      {pending ? "Saving…" : cancelled ? "Save and reopen" : "Save changes"}
-    </Button>
-  );
-}
-
-function EditWalkDialogForm({
+function EditWalkForm({
   cancelled,
-  description,
-  durationMins,
-  latitude,
-  location,
-  longitude,
+  defaults,
   onClose,
   onPendingChange,
-  postcode,
   scheduleLocked,
-  startsAt,
-  title,
   walkId,
-  what3words,
 }: {
   cancelled: boolean;
-  description: string | null;
-  durationMins: number;
-  latitude: number | null;
-  location: string | null;
-  longitude: number | null;
+  defaults: WalkFormDefaults;
   onClose: () => void;
   onPendingChange: (pending: boolean) => void;
-  postcode: string | null;
   scheduleLocked: boolean;
-  startsAt: string;
-  title: string;
   walkId: string;
-  what3words: string | null;
 }) {
   const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
     updateWalk,
@@ -82,103 +43,35 @@ function EditWalkDialogForm({
   }, [isPending, onPendingChange]);
 
   return (
-    <AlertDialogContent
-      className="max-h-[min(90dvh,42rem)] overflow-y-auto sm:max-w-xl"
-      closeDisabled={isPending}
-    >
-      <form action={action} className="flex flex-col gap-4">
-        <AlertDialogHeader>
-          <AlertDialogTitle>Edit this walk?</AlertDialogTitle>
-          <AlertDialogDescription>
-            {cancelled
-              ? scheduleLocked
-                ? "Change the title, meeting point, or notes and put it back on the diary. Date, time, and length stay as published now the walk has started. The cancelled mark will come off. If you change the title, copy the share link again."
-                : "Change the details and put it back on the diary. The cancelled mark will come off. If you change the title, copy the share link again."
-              : scheduleLocked
-                ? "The date, time, and length stay as published now the walk has started. You can still change the title, meeting point, or notes. People already clocked in stay on the walk. If you change the title, copy the share link again."
-                : "Change the title, date, time, length, meeting point, or notes. People already clocked in stay on the walk. If you change the title, copy the share link again."}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <input name="walkId" type="hidden" value={walkId} />
-        <input name="wasCancelled" type="hidden" value={cancelled ? "on" : ""} />
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor={`edit-title-${walkId}`} required>
-            Title
-          </Label>
-          <Input
-            defaultValue={title}
-            id={`edit-title-${walkId}`}
-            name="title"
-            placeholder="Burrs Country Park loop"
-            required
-          />
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`edit-starts-${walkId}`} required>
-              Date and start time
-            </Label>
-            <DateTimePicker
-              defaultValue={utcToLondonWallClock(new Date(startsAt))}
-              disabled={scheduleLocked}
-              disablePast={!scheduleLocked}
-              id={`edit-starts-${walkId}`}
-              name="startsAt"
-              required
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`edit-duration-${walkId}`}>Expected length</Label>
-            <Select defaultValue={String(durationMins)} disabled={scheduleLocked} name="durationMins">
-              <SelectTrigger id={`edit-duration-${walkId}`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[30, 45, 60, 90, 120, 150, 180, 240].map((mins) => (
-                  <SelectItem key={mins} value={String(mins)}>
-                    {mins < 60 ? `${mins} minutes` : `${mins / 60} ${mins === 60 ? "hour" : "hours"}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {scheduleLocked ? (
-            <p className="text-xs text-muted-foreground sm:col-span-2">
-              Date, time, and length can’t be changed after the walk has started. If someone was
-              there but did not clock in, add them on this walk page instead.
-            </p>
-          ) : null}
-        </div>
-        <MeetingPointFields
-          defaultLatitude={latitude}
-          defaultLocation={location ?? ""}
-          defaultLongitude={longitude}
-          defaultPostcode={postcode ?? ""}
-          defaultWhat3words={what3words ?? ""}
+    <form action={action} className="flex min-h-0 flex-1 flex-col">
+      <DrawerHeader className="shrink-0">
+        <DrawerTitle>Edit walk</DrawerTitle>
+        <DrawerDescription>
+          {cancelled
+            ? "Saving puts this walk back on the diary. If you change the title, copy the share link again."
+            : "If you change the title, copy the share link again."}
+        </DrawerDescription>
+      </DrawerHeader>
+      <input name="walkId" type="hidden" value={walkId} />
+      <input name="wasCancelled" type="hidden" value={cancelled ? "on" : ""} />
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain px-4 pb-4">
+        <WalkFormFields
+          defaults={defaults}
           idPrefix={`edit-${walkId}`}
+          scheduleLocked={scheduleLocked}
         />
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor={`edit-description-${walkId}`}>Description</Label>
-          <Textarea
-            defaultValue={description ?? ""}
-            id={`edit-description-${walkId}`}
-            name="description"
-            placeholder="Roughly 4 miles, one steady climb. Boots recommended after rain."
-            rows={3}
-          />
-        </div>
         <FormError message={state && !state.ok ? state.error : null} />
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending} type="button">
-            Don’t save
-          </AlertDialogCancel>
-          <Confirm cancelled={cancelled} />
-        </AlertDialogFooter>
-      </form>
-    </AlertDialogContent>
+      </div>
+      <DrawerFormFooter
+        label={cancelled ? "Save and reopen" : "Save changes"}
+        pendingLabel="Saving…"
+      />
+    </form>
   );
 }
 
+/** Same drawer and fields as Create a walk (WalkFormFields), filled in
+ * with this walk. */
 export function EditWalkButton({
   cancelled,
   description,
@@ -207,43 +100,48 @@ export function EditWalkButton({
   what3words: string | null;
 }) {
   const [open, setOpen] = useState(false);
+  // A fresh form each time it opens, so a half-finished edit that was
+  // cancelled never reappears.
   const [session, setSession] = useState(0);
-  const [blocking, setBlocking] = useState(false);
+  const [pending, setPending] = useState(false);
 
   return (
-    <AlertDialog
-      closeDisabled={blocking}
-      onOpenChange={preventDismissWhilePending(blocking, (next) => {
+    <Drawer
+      closeDisabled={pending}
+      onOpenChange={(next) => {
         if (next) setSession((value) => value + 1);
         setOpen(next);
-      })}
+      }}
       open={open}
+      variant="form"
     >
-      <AlertDialogTrigger asChild>
+      <DrawerTrigger asChild>
         <Button size="sm" variant="outline">
           <Pencil data-icon="inline-start" />
           Edit
         </Button>
-      </AlertDialogTrigger>
-      {open ? (
-        <EditWalkDialogForm
-          key={session}
+      </DrawerTrigger>
+      <DrawerContent className="min-h-0 sm:max-w-lg">
+        <EditWalkForm
           cancelled={cancelled}
-          description={description}
-          durationMins={durationMins}
-          latitude={latitude}
-          location={location}
-          longitude={longitude}
+          defaults={{
+            description,
+            durationMins,
+            latitude,
+            location,
+            longitude,
+            postcode,
+            startsAt,
+            title,
+            what3words,
+          }}
+          key={session}
           onClose={() => setOpen(false)}
-          onPendingChange={setBlocking}
-          postcode={postcode}
+          onPendingChange={setPending}
           scheduleLocked={scheduleLocked}
-          startsAt={startsAt}
-          title={title}
           walkId={walkId}
-          what3words={what3words}
         />
-      ) : null}
-    </AlertDialog>
+      </DrawerContent>
+    </Drawer>
   );
 }

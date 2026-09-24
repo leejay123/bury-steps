@@ -25,7 +25,6 @@ import {
   Drawer,
   DrawerContent,
   DrawerDescription,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
@@ -40,6 +39,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { SettingsListHeader } from "../settings/settings-page";
+import { DrawerFormFooter } from "@/components/drawer-form";
 
 const DEMO_TESTIMONIAL = {
   name: "Jane H.",
@@ -49,23 +49,6 @@ const DEMO_TESTIMONIAL = {
 };
 
 type DrawerMode = { type: "add" } | { type: "edit"; testimonial: TestimonialView; index: number };
-
-function PendingSubmit({
-  label,
-  pendingLabel,
-  disabled,
-}: {
-  label: string;
-  pendingLabel: string;
-  disabled?: boolean;
-}) {
-  const { pending } = useFormStatus();
-  return (
-    <Button disabled={pending || disabled} type="submit">
-      {pending ? pendingLabel : label}
-    </Button>
-  );
-}
 
 function TestimonialFields({
   disabled,
@@ -179,9 +162,7 @@ function AddDrawerForm({
         <TestimonialFields disabled={disabled} prefix="new" />
         <FormError message={state && !state.ok ? state.error : null} />
       </div>
-      <DrawerFooter>
-        <PendingSubmit disabled={disabled} label="Add testimonial" pendingLabel="Adding…" />
-      </DrawerFooter>
+      <DrawerFormFooter disabled={disabled} label="Add testimonial" pendingLabel="Adding…" />
     </form>
   );
 }
@@ -210,9 +191,7 @@ function EditDrawerForm({
           <TestimonialFields prefix={`edit-${testimonial.id}`} testimonial={testimonial} />
           <FormError message={updateState && !updateState.ok ? updateState.error : null} />
         </div>
-        <DrawerFooter>
-          <PendingSubmit label="Save" pendingLabel="Saving…" />
-        </DrawerFooter>
+        <DrawerFormFooter label="Save" pendingLabel="Saving…" />
       </form>
     </div>
   );

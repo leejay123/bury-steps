@@ -6,8 +6,8 @@ import { updateAboutLists } from "@/server/actions";
 import { useNotifyActionState } from "@/hooks/use-action-toast";
 import { useControlledDrawerDismissGuard } from "@/hooks/use-controlled-drawer";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { DrawerFormFooter } from "@/components/drawer-form";
 import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerContent,
@@ -18,12 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  DataList,
-  DataListBody,
-  DataListItem,
-  DataListItemMain,
-} from "@/components/data-list";
+import { DataList, DataListBody, DataListItem, DataListItemMain } from "@/components/data-list";
 import {
   MAX_ABOUT_LIST_ITEMS,
   MAX_ABOUT_RULES,
@@ -36,7 +31,8 @@ type AboutListId = "goals" | "places" | "expect" | "rules";
 const ABOUT_LISTS: Array<{
   description: string;
   field: "aboutGoals" | "aboutPlaces" | "aboutExpect" | "aboutRules";
-  headingField: "aboutGoalsHeading" | "aboutPlacesHeading" | "aboutExpectHeading" | "aboutRulesHeading";
+  headingField:
+    "aboutGoalsHeading" | "aboutPlacesHeading" | "aboutExpectHeading" | "aboutRulesHeading";
   hint?: string;
   id: AboutListId;
   /** Internal name only — organises this settings list. Not shown on the site; see the heading field for that. */
@@ -73,7 +69,7 @@ const ABOUT_LISTS: Array<{
     headingField: "aboutRulesHeading",
     label: "Group rules",
     description: `Up to ${MAX_ABOUT_RULES} lines as “Title | Body”.`,
-    hint: 'Each line: Title | Body — for example Respect every walker | Kindness first, always.',
+    hint: "Each line: Title | Body — for example Respect every walker | Kindness first, always.",
     rows: 12,
   },
 ];
@@ -167,17 +163,7 @@ function AboutListDrawer({
   });
 
   useResetOnChange(
-    [
-      expect,
-      expectHeading,
-      goals,
-      goalsHeading,
-      open,
-      places,
-      placesHeading,
-      rules,
-      rulesHeading,
-    ],
+    [expect, expectHeading, goals, goalsHeading, open, places, placesHeading, rules, rulesHeading],
     () => {
       if (!open) return;
       setDraftGoals(goals);
@@ -250,15 +236,12 @@ function AboutListDrawer({
       open={open}
       variant="form"
     >
-      <DrawerContent
-        className="sm:max-w-lg"
-        onPointerDownOutside={onPointerDownOutside}
-      >
+      <DrawerContent className="sm:max-w-lg" onPointerDownOutside={onPointerDownOutside}>
         <DrawerHeader>
           <DrawerTitle>{active.label}</DrawerTitle>
           <DrawerDescription>{active.description}</DrawerDescription>
         </DrawerHeader>
-        <form action={action} className="flex min-h-0 flex-1 flex-col gap-4 px-4 pb-6">
+        <form action={action} className="flex min-h-0 flex-1 flex-col">
           <input name="aboutGoals" type="hidden" value={draftGoals} />
           <input name="aboutGoalsHeading" type="hidden" value={draftGoalsHeading} />
           <input name="aboutPlaces" type="hidden" value={draftPlaces} />
@@ -267,48 +250,34 @@ function AboutListDrawer({
           <input name="aboutExpectHeading" type="hidden" value={draftExpectHeading} />
           <input name="aboutRules" type="hidden" value={draftRules} />
           <input name="aboutRulesHeading" type="hidden" value={draftRulesHeading} />
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`about-${active.id}-heading`}>Heading shown on the site</Label>
-            <Input
-              id={`about-${active.id}-heading`}
-              maxLength={MAX_ABOUT_SECTION_HEADING}
-              onChange={(event) => setDraftHeading(event.target.value)}
-              required
-              value={draftHeading}
-            />
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain px-4 pb-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor={`about-${active.id}-heading`}>Heading shown on the site</Label>
+              <Input
+                id={`about-${active.id}-heading`}
+                maxLength={MAX_ABOUT_SECTION_HEADING}
+                onChange={(event) => setDraftHeading(event.target.value)}
+                required
+                value={draftHeading}
+              />
+            </div>
+            <div className="flex min-h-0 flex-1 flex-col gap-2">
+              <Label htmlFor={`about-${active.id}`}>{active.label}</Label>
+              <Textarea
+                className="min-h-64 flex-1 font-mono text-sm"
+                id={`about-${active.id}`}
+                onChange={(event) => setDraftValue(event.target.value)}
+                required
+                rows={active.rows}
+                value={draftValue}
+              />
+              {active.hint ? <p className="text-xs text-muted-foreground">{active.hint}</p> : null}
+            </div>
+            <FormError message={state && !state.ok ? state.error : null} />
           </div>
-          <div className="flex min-h-0 flex-1 flex-col gap-2">
-            <Label htmlFor={`about-${active.id}`}>{active.label}</Label>
-            <Textarea
-              className="min-h-64 flex-1 font-mono text-sm"
-              id={`about-${active.id}`}
-              onChange={(event) => setDraftValue(event.target.value)}
-              required
-              rows={active.rows}
-              value={draftValue}
-            />
-            {active.hint ? (
-              <p className="text-xs text-muted-foreground">{active.hint}</p>
-            ) : null}
-          </div>
-          <FormError message={state && !state.ok ? state.error : null} />
-          <div className="flex flex-wrap gap-2">
-            <Button disabled={!dirty || isPending} type="submit">
-              {isPending ? "Saving…" : "Save"}
-            </Button>
-            {dirty ? (
-              <Button
-                onClick={() => {
-                  setDraftValue(savedValue);
-                  setDraftHeading(savedHeading);
-                }}
-                type="button"
-                variant="outline"
-              >
-                Discard
-              </Button>
-            ) : null}
-          </div>
+          {/* Cancel discards: drafts reset from the saved lists each time
+              the drawer opens (useResetOnChange above). */}
+          <DrawerFormFooter disabled={!dirty} label="Save" pendingLabel="Saving…" />
         </form>
       </DrawerContent>
     </Drawer>

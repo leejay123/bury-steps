@@ -2,46 +2,26 @@
 
 import { useRef, useState } from "react";
 import { Plus } from "lucide-react";
-import { useFormStatus } from "react-dom";
 import { createWalk } from "@/server/actions";
-import { DateTimePicker } from "@/components/date-time-picker";
-import { MeetingPointFields } from "@/components/meeting-point-fields";
 import { FormError } from "@/components/form-error";
+import { DrawerFormFooter } from "@/components/drawer-form";
 import { useNotifyActionState } from "@/hooks/use-action-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Drawer,
   DrawerContent,
   DrawerDescription,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-function Submit() {
-  const { pending } = useFormStatus();
-  return (
-    <Button className="w-full sm:w-auto" disabled={pending} type="submit">
-      {pending ? "Creating…" : "Create walk"}
-    </Button>
-  );
-}
+import { WalkFormFields } from "./walk-form-fields";
 
 /**
  * Was a form permanently on the page (see git history) — moved into a
  * Drawer behind a "Create a walk" button instead, so the Walks page opens
- * straight on the list rather than a form every visit.
+ * straight on the list rather than a form every visit. Same fields as
+ * Edit walk (WalkFormFields).
  */
 export function CreateWalkDrawer() {
   const [open, setOpen] = useState(false);
@@ -66,59 +46,14 @@ export function CreateWalkDrawer() {
           <DrawerHeader className="shrink-0">
             <DrawerTitle>Create a walk</DrawerTitle>
             <DrawerDescription>
-              You&apos;ll get a share link for members. Anyone without an account is asked to
-              join or sign in first, then brought straight back to the walk.
+              You&apos;ll get a share link members use to join and clock in.
             </DrawerDescription>
           </DrawerHeader>
-          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain px-4 pb-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="title" required>
-                Title
-              </Label>
-              <Input id="title" name="title" required placeholder="Burrs Country Park loop" />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="startsAt" required>
-                  Date and start time
-                </Label>
-                <DateTimePicker disablePast id="startsAt" key={formKey} name="startsAt" required />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="durationMins">Expected length</Label>
-                <Select key={formKey} name="durationMins" defaultValue="90">
-                  <SelectTrigger id="durationMins">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[30, 45, 60, 90, 120, 150, 180, 240].map((m) => (
-                      <SelectItem key={m} value={String(m)}>
-                        {m < 60 ? `${m} minutes` : `${m / 60} ${m === 60 ? "hour" : "hours"}`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <MeetingPointFields idPrefix="create-walk" key={formKey} />
-
-            <div className="space-y-1.5">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                rows={3}
-                placeholder="Roughly 4 miles, one steady climb. Boots recommended after rain."
-              />
-            </div>
-
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain px-4 pb-4">
+            <WalkFormFields idPrefix="create-walk" key={formKey} />
             <FormError message={state && !state.ok ? state.error : null} />
           </div>
-          <DrawerFooter>
-            <Submit />
-          </DrawerFooter>
+          <DrawerFormFooter label="Create walk" pendingLabel="Creating…" />
         </form>
       </DrawerContent>
     </Drawer>

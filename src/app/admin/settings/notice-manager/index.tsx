@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Bell, ChevronRight } from "lucide-react";
-import { BELL_NOTICE_LIMIT, isPinnedNotice, isWelcomeNotice, noticeDateLabel, type NoticeCategoryView, type NoticeView } from "@/lib/notices";
+import { BELL_NOTICE_LIMIT, isWelcomeNotice, noticeDateLabel, type NoticeCategoryView, type NoticeView } from "@/lib/notices";
 import { usePagedList } from "@/hooks/use-paged-list";
 import { EmptyState } from "@/components/empty-state";
 import { DataList, DataListActions, DataListBody, DataListItem, DataListItemMain, dataListActionsStackClassName, dataListItemStackClassName } from "@/components/data-list";
@@ -164,10 +164,8 @@ export function SiteNoticeManager({
             <DrawerTitle>{editing ? "Edit notice" : "Add a notice"}</DrawerTitle>
             <DrawerDescription>
               {editing
-                ? isPinnedNotice(editing.notice)
-                  ? "Edit the welcome title and message. Saving shows it as updated in the bell."
-                  : "Change the type, title, or message. Saving it will show as updated in the bell."
-                : "Bell only stays in the drawer. Full page also appears on Notices. Notices are for signed-in members only."}
+                ? "Saving shows it as updated in the bell."
+                : "Members see it in the bell; a full page also appears on Notices."}
             </DrawerDescription>
           </DrawerHeader>
           {mode?.type === "add" ? (

@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { DrawerFooter } from "@/components/ui/drawer";
 import {
   Select,
   SelectContent,
@@ -18,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PendingSubmit } from "./shared";
+import { DrawerFormFooter } from "@/components/drawer-form";
 
 function CategorySelect({
   categories,
@@ -160,9 +159,7 @@ export function AddFaqForm({
         <FaqFields categories={categories} disabled={disabled} prefix="new" />
         <FormError message={state && !state.ok ? state.error : null} />
       </div>
-      <DrawerFooter>
-        <PendingSubmit disabled={disabled} label="Add FAQ" pendingLabel="Adding…" />
-      </DrawerFooter>
+      <DrawerFormFooter disabled={disabled} label="Add FAQ" pendingLabel="Adding…" />
     </form>
   );
 }
@@ -193,9 +190,7 @@ export function EditFaqForm({
           <FaqFields categories={categories} faq={faq} prefix={`edit-${faq.id}`} />
           <FormError message={updateState && !updateState.ok ? updateState.error : null} />
         </div>
-        <DrawerFooter>
-          <PendingSubmit label="Save" pendingLabel="Saving…" />
-        </DrawerFooter>
+        <DrawerFormFooter label="Save" pendingLabel="Saving…" />
       </form>
     </div>
   );

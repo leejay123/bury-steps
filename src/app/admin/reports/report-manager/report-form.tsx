@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useEffect, useState, type ComponentType, type ReactNode } from "react";
-import { useFormStatus } from "react-dom";
 import { AlertTriangle, Clock, Footprints, HeartPulse, NotebookPen, Users } from "lucide-react";
 import {
   addAccidentReport,
@@ -13,14 +12,13 @@ import { utcToLondonWallClock } from "@/lib/dates";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DrawerFooter } from "@/components/ui/drawer";
 import type { InvolvedMember, ReportView, WalkOption } from "./types";
+import { DrawerFormFooter } from "@/components/drawer-form";
 
 /** A form-section label: icon + text, consistent across every field here. */
 function FieldLabel({
@@ -141,15 +139,6 @@ function InvolvedMembersField({
         <input key={id} name="involvedMemberIds" type="hidden" value={id} />
       ))}
     </div>
-  );
-}
-
-function PendingSubmit({ label, pendingLabel }: { label: string; pendingLabel: string }) {
-  const { pending } = useFormStatus();
-  return (
-    <Button disabled={pending} type="submit">
-      {pending ? pendingLabel : label}
-    </Button>
   );
 }
 
@@ -283,9 +272,7 @@ export function AddForm({
     <form action={action} className="flex min-h-0 flex-1 flex-col">
       <ReportFields prefix="add" walks={walks} />
       <FormError message={state && !state.ok ? state.error : null} />
-      <DrawerFooter>
-        <PendingSubmit label="Save report" pendingLabel="Saving…" />
-      </DrawerFooter>
+      <DrawerFormFooter label="Save report" pendingLabel="Saving…" />
     </form>
   );
 }
@@ -313,12 +300,7 @@ export function EditForm({
     <form action={action} className="flex min-h-0 flex-1 flex-col">
       <ReportFields prefix="edit" report={report} walks={walks} />
       <FormError message={state && !state.ok ? state.error : null} />
-      <DrawerFooter>
-        <Button disabled={isPending} onClick={onCancel} type="button" variant="outline">
-          Cancel
-        </Button>
-        <PendingSubmit label="Save changes" pendingLabel="Saving…" />
-      </DrawerFooter>
+      <DrawerFormFooter label="Save changes" onCancel={onCancel} pendingLabel="Saving…" />
     </form>
   );
 }

@@ -30,7 +30,6 @@ import {
   Drawer,
   DrawerContent,
   DrawerDescription,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
@@ -45,8 +44,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Popover, PopoverContent, PopoverDescription, PopoverTrigger } from "@/components/ui/popover";
-import { PendingSubmit, RemoveConfirm } from "./shared";
+import { RemoveConfirm } from "./shared";
 import { SettingsListHeader } from "../settings-page";
+import { DrawerFormFooter } from "@/components/drawer-form";
 
 type CategoryDrawerMode = { type: "add" } | { type: "edit"; category: NoticeCategoryView };
 
@@ -93,9 +93,7 @@ function CategoryLabelForm({
         </div>
         <FormError message={state && !state.ok ? state.error : null} />
       </div>
-      <DrawerFooter>
-        <PendingSubmit label={submitLabel} pendingLabel={submitPendingLabel} />
-      </DrawerFooter>
+      <DrawerFormFooter label={submitLabel} pendingLabel={submitPendingLabel} />
     </form>
   );
 }

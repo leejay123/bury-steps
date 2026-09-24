@@ -1,11 +1,11 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { useFormStatus } from "react-dom";
 import { Send } from "lucide-react";
 import { sendNewsletterCampaign, type ActionResult } from "@/server/actions";
 import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
+import { DrawerFormFooter } from "@/components/drawer-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,21 +14,11 @@ import {
   Drawer,
   DrawerContent,
   DrawerDescription,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { SettingsSection } from "../settings-page";
-
-function SendButton({ recipientCount }: { recipientCount: number }) {
-  const { pending } = useFormStatus();
-  return (
-    <Button disabled={pending} type="submit">
-      {pending ? "Sending…" : `Send to ${recipientCount}`}
-    </Button>
-  );
-}
 
 export function SendNewsletterForm({ recipientCount }: { recipientCount: number }) {
   const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
@@ -66,8 +56,8 @@ export function SendNewsletterForm({ recipientCount }: { recipientCount: number 
             <DrawerHeader className="shrink-0">
               <DrawerTitle>Send a newsletter</DrawerTitle>
               <DrawerDescription>
-                Goes out immediately to {recipientCount} subscriber{recipientCount === 1 ? "" : "s"}{" "}
-                through Resend. This cannot be recalled once sent.
+                Sends straight away to {recipientCount} subscriber{recipientCount === 1 ? "" : "s"},
+                and can&apos;t be undone.
               </DrawerDescription>
             </DrawerHeader>
             <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-y-contain px-4 pb-2">
@@ -101,9 +91,7 @@ export function SendNewsletterForm({ recipientCount }: { recipientCount: number 
               </div>
               <FormError message={state && !state.ok ? state.error : null} />
             </div>
-            <DrawerFooter>
-              <SendButton recipientCount={recipientCount} />
-            </DrawerFooter>
+            <DrawerFormFooter label={`Send to ${recipientCount}`} pendingLabel="Sending…" />
           </form>
         </DrawerContent>
       </Drawer>
