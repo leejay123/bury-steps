@@ -5,7 +5,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { isValidLondonWallClock, londonWallClockToUtc } from "@/lib/dates";
-import { canOrganiserEditJourney } from "@/lib/walk-window";
+import { canOrganiserEditJourney, effectiveEndsAt } from "@/lib/walk-window";
 import { MAX_JOURNEY_BODY, MAX_JOURNEY_EVENTS, MAX_JOURNEY_TITLE } from "@/lib/walk-journey";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
 import {
@@ -34,6 +34,29 @@ const journeyEventSchema = z.object({
     .min(1, "Pick a time.")
     .refine(isValidLondonWallClock, "Pick a valid time."),
 });
+
+function assertHappenedAtDuringWalk(
+  happenedAt: Date,
+  walk: { startsAt: Date; durationMins: number; endedAt?: Date | null },
+): void {
+  const endsAt = effectiveEndsAt(walk);
+  if (
+    happenedAt.getTime() < walk.startsAt.getTime() ||
+    happenedAt.getTime() > endsAt.getTime()
+  ) {
+    throw new LimitReachedError("Pick a time during the walk.");
+  }
+  // While the published end is still ahead, refuse times still in the
+  // future — otherwise a foreshadowed journey row blocks End walk (which
+  // refuses to finish before max happenedAt), leaving clock-in open.
+  // Small skew matches adminClockIn so a phone a minute ahead is fine.
+  const FUTURE_SKEW_MS = 2 * 60_000;
+  if (happenedAt.getTime() > Date.now() + FUTURE_SKEW_MS) {
+    throw new LimitReachedError(
+      "Pick a time that has already happened — not one still in the future.",
+    );
+  }
+}
 
 export async function createJourneyEvent(
   _prev: ActionResult | null,
@@ -79,12 +102,15 @@ export async function createJourneyEvent(
         throw new LimitReachedError(`You can keep up to ${MAX_JOURNEY_EVENTS} events on a walk.`);
       }
 
+      const happenedAt = londonWallClockToUtc(parsed.data.happenedAt);
+      assertHappenedAtDuringWalk(happenedAt, walk);
+
       await tx.walkJourneyEvent.create({
         data: {
           walkId: walk.id,
           title: parsed.data.title,
           body: parsed.data.body || null,
-          happenedAt: londonWallClockToUtc(parsed.data.happenedAt),
+          happenedAt,
           createdById: admin.id,
         },
       });
@@ -161,12 +187,15 @@ export async function updateJourneyEvent(
         );
       }
 
+      const happenedAt = londonWallClockToUtc(parsed.data.happenedAt);
+      assertHappenedAtDuringWalk(happenedAt, existing.walk);
+
       await tx.walkJourneyEvent.update({
         where: { id: existing.id },
         data: {
           title: parsed.data.title,
           body: parsed.data.body || null,
-          happenedAt: londonWallClockToUtc(parsed.data.happenedAt),
+          happenedAt,
         },
       });
 

@@ -105,28 +105,39 @@ export function WalksSection({
               walk finished early (right now, or a few minutes ago if you are catching up the
               record). Clock-in closes immediately. Anyone still clocked in counts as having
               stayed for the whole (now-shorter) walk — the same as if they never clocked out.
-              Use this when the group wraps up early, not Cancel.
+              You cannot pick a finish time before someone clocked in or out, or before a
+              Journey event already on the walk. Journey times themselves cannot be set in the
+              future while the walk is still going, so they cannot block End walk. Use this when
+              the group wraps up early, not Cancel.
             </li>
             <li>
               <strong>Edit</strong> opens the same panel as Create a walk, filled in with this
               walk, to change the title, date, time, length, meeting point, or description. Use this
               when the meeting point moves, or when Sunday becomes Wednesday. People already
-              clocked in stay on the walk. If you change the title, copy the share
-              link again — it uses the new name. Changing the date does not change the link.
-              Links you already posted still work
-              and send people to the updated page. If the walk was
-              cancelled, saving also puts it back on the diary. The walk’s own organiser page
-              shows the same map members see on the share link. Once the published start time
-              has passed, date, time, and length freeze — changing them would rewrite the
-              record under people already walking. Title, meeting point, and notes stay
-              editable until the walk is Completed. Self clock-in stops at the scheduled end (or
-              earlier if you used End walk); if someone was there but missed it, use Add someone.
+              clocked in stay on the walk. The share link stays the same unless you change the
+              title’s place word (the short name in the link, e.g. <code>burrs</code> in{" "}
+              <code>/w/burrs-x7k2m9</code>) — then copy the link again. Changing the date does
+              not change the link. Links you already posted still work and send people to the
+              updated page. If the walk was cancelled, saving also puts it back on the diary.
+              When that reopen lands as <strong>Completed</strong> (the window already finished),
+              any clock-ins from before the cancel are cleared so they do not count on Progress,
+              and clock-in stays closed. When it lands as <strong>In progress</strong>, the roster
+              stays, clock-in stays open, and no “back on” email is sent. The walk’s own organiser
+              page shows the same map members see on the share link. Once the published start time
+              has passed — or once anyone has clocked in during Starting soon — date, time, and
+              length freeze — changing them would rewrite the record under people already on the
+              walk. Title, meeting point, and notes stay editable until the walk is Completed.
+              Self clock-in stops at the scheduled end (or earlier if you used End walk); if
+              someone was there but missed it, use Add someone.
             </li>
             <li>
               <strong>Reopen</strong> undoes a cancel without changing the details. Clock-in
               works again if the time window is still open. Members who get walk emails are told
-              it is back on — unless its time has already passed, in which case it just goes back
-              in the record without an email (and the confirmation says clock-in stays closed).
+              it is back on for upcoming and starting-soon windows. If the walk is already{" "}
+              <strong>In progress</strong> when you reopen, the roster stays, clock-in stays open,
+              and no email is sent. If it is already <strong>Completed</strong>, it goes back in
+              the record without an email, clock-in stays closed, and any clock-ins from before
+              the cancel are cleared so they do not count on Progress.
             </li>
             <li>
               <strong>Duplicate</strong> makes a new walk with the same title, meeting point,
@@ -168,6 +179,8 @@ export function WalksSection({
               "Auto-delete for cancelled walks is currently off, so a cancelled walk is kept until it's reopened or removed by hand."
             )}{" "}
             Set the number of days, or turn auto-delete off, in Settings → Data retention.
+            On a cancelled walk, owners can flag it to keep it past that window; reopening
+            the walk clears the flag so a later cancel uses the normal schedule again.
           </p>
           <p>
             Open the walk from the list. <strong>Attendance</strong> is names and clock-in time
@@ -186,11 +199,13 @@ export function WalksSection({
           <p>
             <strong>Journey</strong> is the story of the walk — short timed events (a cafe stop,
             a viewpoint) with an optional note. It sits at the bottom of the organiser walk
-            page. Add events once the walk has started, including after Completed. Tap a row to
-            edit; <strong>Remove</strong> on the list asks you to confirm, same as notices and
-            reports. Use <strong>View journey</strong> to open the animated timeline in a
-            drawer — members get the same button at the top of the walk link. Up to 20 events.
-            A cancelled walk keeps what you already wrote, but you cannot add more.
+            page. Add events once the walk has started, including after Completed — the time
+            must fall between the published start and the walk’s finish, and while the walk is
+            still In progress it cannot be set in the future (so it cannot block End walk). Tap
+            a row to edit; <strong>Remove</strong> on the list asks you to confirm, same as
+            notices and reports. Use <strong>View journey</strong> to open the animated timeline
+            in a drawer — members get the same button at the top of the walk link. Up to 20
+            events. A cancelled walk keeps what you already wrote, but you cannot add more.
           </p>
           <p>
             <strong>Add someone</strong> on that attendance section is for a member who was
@@ -198,10 +213,12 @@ export function WalksSection({
             closed. They must already have an account; you cannot add someone who has never
             signed up. While the walk is still open, they are clocked in at the time you add
             them — including someone who already clocked out and came back. After Completed,
-            they show as attending from the start, with no health notes, and anyone already
-            on the roster cannot be added again. Reopen a cancelled walk first if you need
-            to add someone to it. Search by name or email — the list shows up to 40 matches
-            so it stays quick even with thousands of members.
+            they show as attending from the start, with no health notes. Someone still actively
+            on the roster cannot be added again; someone who left early can still have their
+            times corrected (or be marked as staying to the end) — correcting times keeps their
+            original medical acknowledgement. Reopen a cancelled walk first
+            if you need to add someone to it. Search by name or email — the list shows up to 40
+            matches so it stays quick even with thousands of members.
           </p>
           <p>
             To take someone off the roster, use <strong>Remove</strong> on their row. That
@@ -218,10 +235,11 @@ export function WalksSection({
             those rows one by one.
           </p>
           <p>
-            Download roster (CSV) gives you names, emails, times, and clock-out reasons — and,
-            for owners, any health notes for that walk. On a phone, the action buttons under the
-            map (roster, calendar, Duplicate, Cancel or End walk, Edit, Remove) scroll sideways
-            in one row.
+            Download roster (CSV) gives you names, emails, times, and clock-out reasons.
+            Organisers get that roster without health notes; owners (with Health notes) also get
+            medical acknowledgement and reported conditions on the same download. On a phone, the
+            action buttons under the map (roster, calendar, Duplicate, Cancel or End walk, Edit,
+            Remove) scroll sideways in one row.
           </p>
         </GuideBody>
       </AccordionContent>

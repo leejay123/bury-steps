@@ -14,6 +14,13 @@ describe("PUBLIC_ROUTE_PATTERNS", () => {
     expect(PUBLIC_ROUTE_PATTERNS).not.toContain("/email-preferences");
     expect(PUBLIC_ROUTE_PATTERNS).not.toContain("/email-preferences(.*)");
   });
+
+  it("exposes walk share links without opening /walks", () => {
+    expect(PUBLIC_ROUTE_PATTERNS).toContain("/w");
+    expect(PUBLIC_ROUTE_PATTERNS).toContain("/w/(.*)");
+    // `/w(.*)` would also match `/walks`, which must stay auth-gated.
+    expect(PUBLIC_ROUTE_PATTERNS).not.toContain("/w(.*)");
+  });
 });
 
 describe("isTokenPublicPath", () => {

@@ -62,6 +62,7 @@ vi.mock("next/cache", () => ({
   unstable_cache: (fn: unknown) => fn,
 }));
 vi.mock("@/lib/db", () => ({ prisma: { ...prismaMock, $transaction: transaction } }));
+vi.mock("@/lib/site-owner", () => ({ actorStillOwner: vi.fn(async () => true) }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
 vi.mock("@/lib/urls", () => ({ appUrl: () => "https://example.test" }));
 // Real notice-posted emails pull in site-theme.ts (next/cache's unstable_cache,

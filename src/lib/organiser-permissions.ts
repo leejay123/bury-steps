@@ -148,7 +148,7 @@ export const ORGANISER_PERMISSION_OPTIONS: {
   {
     name: "permWalksExport",
     label: "Retention & export",
-    hint: "Lock retention on a cancelled walk, and download the attendee roster (CSV).",
+    hint: "Lock retention on a cancelled walk, and download the attendee roster (CSV). Health notes on the CSV need Health notes as well.",
     group: "Walks",
   },
   {

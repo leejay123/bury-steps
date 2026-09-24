@@ -20,6 +20,7 @@ import {
   revalidateHomepage,
   validateReorderIds,
   withCountLimitLock,
+  ensureStillOwner,
 } from "./shared";
 
 async function readFaqCopy(
@@ -72,6 +73,10 @@ export async function addHomepageFaq(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permHomepage) return permissionDenied("permHomepage");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage homepage FAQs");
+    if (lostOwner) return lostOwner;
+  }
 
   const copy = await readFaqCopy(formData);
   if ("error" in copy) return { ok: false, error: copy.error };
@@ -106,6 +111,10 @@ export async function updateHomepageFaq(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permHomepage) return permissionDenied("permHomepage");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage homepage FAQs");
+    if (lostOwner) return lostOwner;
+  }
   const id = String(formData.get("faqId") ?? "");
   if (!id) return { ok: false, error: "No FAQ selected." };
 
@@ -136,6 +145,10 @@ export async function deleteHomepageFaq(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permHomepage) return permissionDenied("permHomepage");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage homepage FAQs");
+    if (lostOwner) return lostOwner;
+  }
   const id = String(formData.get("faqId") ?? "");
   if (!id) return { ok: false, error: "No FAQ selected." };
 
@@ -167,6 +180,10 @@ export async function deleteHomepageFaq(
 export async function reorderHomepageFaqs(ids: string[]): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permHomepage) return permissionDenied("permHomepage");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage homepage FAQs");
+    if (lostOwner) return lostOwner;
+  }
   const validated = validateReorderIds(ids, MAX_HOMEPAGE_FAQS * 2);
   if ("error" in validated) return { ok: false, error: validated.error };
   try {
@@ -187,6 +204,10 @@ export async function addHomepageFaqCategory(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permHomepage) return permissionDenied("permHomepage");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage homepage FAQs");
+    if (lostOwner) return lostOwner;
+  }
 
   const copy = readCategoryLabel(formData);
   if ("error" in copy) return { ok: false, error: copy.error };
@@ -225,6 +246,10 @@ export async function updateHomepageFaqCategory(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permHomepage) return permissionDenied("permHomepage");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage homepage FAQs");
+    if (lostOwner) return lostOwner;
+  }
   const id = String(formData.get("categoryId") ?? "");
   if (!id) return { ok: false, error: "No category selected." };
 
@@ -251,6 +276,10 @@ export async function deleteHomepageFaqCategory(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permHomepage) return permissionDenied("permHomepage");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage homepage FAQs");
+    if (lostOwner) return lostOwner;
+  }
   const id = String(formData.get("categoryId") ?? "");
   if (!id) return { ok: false, error: "No category selected." };
 
@@ -298,6 +327,10 @@ export async function deleteHomepageFaqCategory(
 export async function reorderHomepageFaqCategories(ids: string[]): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permHomepage) return permissionDenied("permHomepage");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage homepage FAQs");
+    if (lostOwner) return lostOwner;
+  }
   const validated = validateReorderIds(ids, MAX_FAQ_CATEGORIES * 2);
   if ("error" in validated) return { ok: false, error: validated.error };
   try {

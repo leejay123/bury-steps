@@ -40,7 +40,8 @@ export function OverviewSection({
             <p>
               <Badge variant="secondary">Visitors</Badge> can read the homepage, privacy and
               terms, and open a walk share link. They can search and filter FAQs by the
-              categories you set. They cannot clock in or see notices until they have an account.
+              categories you set. They cannot clock in, see notices, or use the newsletter
+              signup in the footer until they have an account.
             </p>
             <p>
               <Badge variant="secondary">Members</Badge> see Walks, Progress, and History in the
@@ -50,8 +51,12 @@ export function OverviewSection({
                 : " for as long as they stay cancelled (auto-delete is currently off)"}
               , can search Walks by title or meeting point, clock in and out, see who else is
               still on a walk (names only), read notices in the bell (including a pinned welcome),
-              look back over every walk they have clocked in to, and see Progress — this month’s
-              clock-ins together, not a race.
+              look back over every walk they have clocked in to, see Progress — this month’s
+              clock-ins together, not a race — and subscribe to the newsletter from the footer
+              on Home, Privacy Policy, and Terms of Service using their account email (you must
+              be a signed-in member to see that form; visitors do not). That also turns on
+              Newsletter in email preferences, so turning it off there stops both the prefs
+              toggle and the footer signup for the same address.
             </p>
             <p>
               <Badge>Organisers</Badge> get Walks tools and Reports in the top menu, plus this

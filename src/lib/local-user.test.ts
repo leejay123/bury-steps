@@ -1,24 +1,35 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const { prismaMock, transaction, sendWelcomeEmail } = vi.hoisted(() => {
-  const prismaMock = {
-    user: {
-      findUnique: vi.fn(),
-      count: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-    },
-    siteSetting: { upsert: vi.fn() },
-  };
-  const transaction = vi.fn(async (fn: (tx: unknown) => unknown) =>
-    fn({ $executeRaw: vi.fn(), ...prismaMock }),
-  );
-  return { prismaMock, transaction, sendWelcomeEmail: vi.fn(async () => {}) };
-});
+const { prismaMock, transaction, sendWelcomeEmail, optOutNewsletterEverywhere, syncNewsletterAudienceToPreference } =
+  vi.hoisted(() => {
+    const prismaMock = {
+      user: {
+        findUnique: vi.fn(),
+        count: vi.fn(),
+        create: vi.fn(),
+        update: vi.fn(),
+      },
+      siteSetting: { upsert: vi.fn() },
+    };
+    const transaction = vi.fn(async (fn: (tx: unknown) => unknown) =>
+      fn({ $executeRaw: vi.fn(), ...prismaMock }),
+    );
+    return {
+      prismaMock,
+      transaction,
+      sendWelcomeEmail: vi.fn(async () => {}),
+      optOutNewsletterEverywhere: vi.fn(async () => {}),
+      syncNewsletterAudienceToPreference: vi.fn(async () => {}),
+    };
+  });
 
 vi.mock("./db", () => ({ prisma: { ...prismaMock, $transaction: transaction } }));
 // Dynamically imported inside syncLocalUser — see the comment there for why.
 vi.mock("./email/mailer", () => ({ sendWelcomeEmail }));
+vi.mock("./email/newsletter-opt-out", () => ({
+  optOutNewsletterEverywhere,
+  syncNewsletterAudienceToPreference,
+}));
 
 import { syncLocalUser } from "./local-user";
 
@@ -36,7 +47,12 @@ beforeEach(() => {
 
 describe("syncLocalUser", () => {
   it("updates an already-existing account without touching site ownership", async () => {
-    const existing = { id: "user-1", clerkId: INPUT.clerkId, role: "MEMBER" };
+    const existing = {
+      id: "user-1",
+      clerkId: INPUT.clerkId,
+      email: INPUT.email,
+      role: "MEMBER",
+    };
     prismaMock.user.findUnique.mockResolvedValueOnce(existing);
     prismaMock.user.update.mockResolvedValueOnce(existing);
 
@@ -48,6 +64,43 @@ describe("syncLocalUser", () => {
     });
     expect(prismaMock.siteSetting.upsert).not.toHaveBeenCalled();
     expect(sendWelcomeEmail).not.toHaveBeenCalled();
+    expect(optOutNewsletterEverywhere).not.toHaveBeenCalled();
+  });
+
+  it("ignores a blank Clerk email instead of clearing the local address", async () => {
+    const existing = {
+      id: "user-1",
+      clerkId: INPUT.clerkId,
+      email: "kept@example.com",
+      role: "MEMBER",
+    };
+    prismaMock.user.findUnique.mockResolvedValueOnce(existing);
+    prismaMock.user.update.mockResolvedValueOnce(existing);
+
+    await syncLocalUser({ ...INPUT, email: "   " });
+
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { clerkId: INPUT.clerkId },
+      data: { firstName: INPUT.firstName, lastName: INPUT.lastName },
+    });
+    expect(optOutNewsletterEverywhere).not.toHaveBeenCalled();
+  });
+
+  it("opts the old address out of newsletter and syncs the new one when email changes", async () => {
+    const existing = {
+      id: "user-1",
+      clerkId: INPUT.clerkId,
+      email: "old@example.com",
+      role: "MEMBER",
+    };
+    const updated = { ...existing, email: INPUT.email, firstName: INPUT.firstName };
+    prismaMock.user.findUnique.mockResolvedValueOnce(existing);
+    prismaMock.user.update.mockResolvedValueOnce(updated);
+
+    await syncLocalUser(INPUT);
+
+    expect(optOutNewsletterEverywhere).toHaveBeenCalledWith("old@example.com");
+    expect(syncNewsletterAudienceToPreference).toHaveBeenCalledWith(INPUT.email, INPUT.firstName);
   });
 
   it("bootstraps the first-ever account as ADMIN and makes them the site owner", async () => {

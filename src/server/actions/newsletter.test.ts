@@ -10,6 +10,7 @@ const {
   getOrCreateAudienceId,
   getResendClient,
   requireAdmin,
+  getOptionalUser,
   broadcastsCreate,
 } = vi.hoisted(() => ({
   checkRateLimit: vi.fn((): RateLimitResult => ({ ok: true })),
@@ -23,6 +24,10 @@ const {
     },
     user: {
       findMany: vi.fn(),
+      updateMany: vi.fn(async () => ({ count: 0 })),
+    },
+    siteSetting: {
+      findUnique: vi.fn(),
     },
   },
   sendNewsletterSubscribedEmail: vi.fn(async () => {}),
@@ -31,11 +36,13 @@ const {
   getOrCreateAudienceId: vi.fn(async () => "aud-1"),
   getResendClient: vi.fn(),
   requireAdmin: vi.fn(),
+  getOptionalUser: vi.fn(),
   broadcastsCreate: vi.fn(async () => ({ error: null })),
 }));
 
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
 vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
+vi.mock("@/lib/site-owner", () => ({ actorStillOwner: vi.fn(async () => true) }));
 vi.mock("@/lib/email/mailer", () => ({ sendNewsletterSubscribedEmail }));
 vi.mock("@/lib/email/resend-audience", () => ({
   syncContactSubscribed,
@@ -59,7 +66,7 @@ vi.mock("@/lib/email/newsletter-opt-out", () => ({
 }));
 vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
-  return { ...actual, requireAdmin };
+  return { ...actual, requireAdmin, getOptionalUser };
 });
 vi.mock("next/headers", () => ({
   headers: vi.fn(async () => new Headers({ "x-forwarded-for": "203.0.113.1" })),
@@ -98,11 +105,20 @@ function mockCampaignLists(opts: {
   prismaMock.user.findMany.mockResolvedValueOnce(members);
 }
 
+/** After the final recipient load, campaign send queries members with newsletter off. */
+function mockMemberOptOutPurge(optedOutMembers: { email: string }[] = []) {
+  prismaMock.user.findMany.mockResolvedValueOnce(optedOutMembers);
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
+  prismaMock.newsletterSubscriber.findMany.mockReset();
+  prismaMock.user.findMany.mockReset();
   checkRateLimit.mockReturnValue({ ok: true });
   requireAdmin.mockResolvedValue(ADMIN);
+  getOptionalUser.mockResolvedValue({ id: "member-1", email: "jane@example.com" });
   getOrCreateAudienceId.mockResolvedValue("aud-1");
+  prismaMock.siteSetting.findUnique.mockResolvedValue({ resendAudienceId: "aud-1" });
   getResendClient.mockReturnValue({ broadcasts: { create: broadcastsCreate } });
   broadcastsCreate.mockResolvedValue({ error: null });
   prismaMock.newsletterSubscriber.create.mockResolvedValue({
@@ -113,16 +129,40 @@ beforeEach(() => {
 });
 
 describe("subscribeToNewsletter", () => {
-  it("rejects an invalid email without touching the database", async () => {
-    const result = await subscribeToNewsletter(null, form({ email: "not-an-email" }));
-    expect(result).toEqual({ ok: false, error: "Enter a valid email address." });
+  it("rejects when nobody is signed in", async () => {
+    getOptionalUser.mockResolvedValueOnce(null);
+    const result = await subscribeToNewsletter(null, form({}));
+    expect(result).toEqual({ ok: false, error: "Sign in to subscribe to the newsletter." });
     expect(prismaMock.newsletterSubscriber.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects when the account email is not a valid address", async () => {
+    getOptionalUser.mockResolvedValueOnce({ id: "member-1", email: "not-an-email" });
+    const result = await subscribeToNewsletter(null, form({}));
+    expect(result).toEqual({
+      ok: false,
+      error: "Your account email is not valid for the newsletter. Update it in your account first.",
+    });
+    expect(prismaMock.newsletterSubscriber.create).not.toHaveBeenCalled();
+  });
+
+  it("ignores a posted email and always uses the signed-in member’s address", async () => {
+    const result = await subscribeToNewsletter(
+      null,
+      form({ email: "victim@example.com" }),
+    );
+    expect(prismaMock.newsletterSubscriber.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { email: "jane@example.com", unsubscribeToken: expect.any(String) },
+      }),
+    );
+    expect(result.ok).toBe(true);
   });
 
   it("silently succeeds without subscribing when the honeypot is filled", async () => {
     const result = await subscribeToNewsletter(
       null,
-      form({ email: "jane@example.com", company: "Acme" }),
+      form({ company: "Acme" }),
     );
     expect(result.ok).toBe(true);
     expect(prismaMock.newsletterSubscriber.create).not.toHaveBeenCalled();
@@ -130,12 +170,12 @@ describe("subscribeToNewsletter", () => {
 
   it("rate limits repeated attempts", async () => {
     checkRateLimit.mockReturnValue({ ok: false, retryAfterSeconds: 42 });
-    const result = await subscribeToNewsletter(null, form({ email: "jane@example.com" }));
+    const result = await subscribeToNewsletter(null, form({}));
     expect(result).toEqual({ ok: false, error: "Too many attempts. Try again in a few minutes." });
   });
 
   it("creates a new subscriber and sends a confirmation", async () => {
-    const result = await subscribeToNewsletter(null, form({ email: "jane@example.com" }));
+    const result = await subscribeToNewsletter(null, form({}));
 
     expect(prismaMock.newsletterSubscriber.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -146,28 +186,41 @@ describe("subscribeToNewsletter", () => {
       email: "jane@example.com",
       unsubscribeToken: "tok123",
     });
-    expect(optInNewsletterEverywhere).toHaveBeenCalledWith("jane@example.com");
+    expect(syncContactSubscribed).toHaveBeenCalledWith("jane@example.com");
+    expect(prismaMock.user.updateMany).toHaveBeenCalledWith({
+      where: { id: "member-1", emailNewsletter: false },
+      data: { emailNewsletter: true },
+    });
+    expect(optInNewsletterEverywhere).not.toHaveBeenCalled();
     expect(result.ok).toBe(true);
   });
 
   it("still reports success if only the confirmation email fails", async () => {
     sendNewsletterSubscribedEmail.mockRejectedValueOnce(new Error("network down"));
-    const result = await subscribeToNewsletter(null, form({ email: "jane@example.com" }));
+    const result = await subscribeToNewsletter(null, form({}));
     expect(result.ok).toBe(true);
   });
 
-  it("tells an already-active subscriber they're already on the list, without re-sending the email", async () => {
+  it("succeeds with the same copy for an already-active subscriber, without re-sending the email", async () => {
     prismaMock.newsletterSubscriber.create.mockRejectedValueOnce({ code: "P2002" });
     prismaMock.newsletterSubscriber.updateMany.mockResolvedValueOnce({ count: 0 });
 
-    const result = await subscribeToNewsletter(null, form({ email: "jane@example.com" }));
+    const result = await subscribeToNewsletter(null, form({}));
 
-    expect(result).toEqual({ ok: true, message: "You're already subscribed — thanks!" });
+    // Same message as a new signup — do not reveal the address was already listed.
+    expect(result).toEqual({
+      ok: true,
+      message: "Thanks — we'll be in touch once there's news to share.",
+    });
     expect(prismaMock.newsletterSubscriber.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { email: "jane@example.com", unsubscribedAt: { not: null } },
       }),
     );
+    expect(prismaMock.user.updateMany).toHaveBeenCalledWith({
+      where: { id: "member-1", emailNewsletter: false },
+      data: { emailNewsletter: true },
+    });
     expect(sendNewsletterSubscribedEmail).not.toHaveBeenCalled();
   });
 
@@ -175,7 +228,7 @@ describe("subscribeToNewsletter", () => {
     prismaMock.newsletterSubscriber.create.mockRejectedValueOnce({ code: "P2002" });
     prismaMock.newsletterSubscriber.updateMany.mockResolvedValueOnce({ count: 1 });
 
-    const result = await subscribeToNewsletter(null, form({ email: "jane@example.com" }));
+    const result = await subscribeToNewsletter(null, form({}));
 
     expect(prismaMock.newsletterSubscriber.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -242,6 +295,7 @@ describe("sendNewsletterCampaign", () => {
       members: [],
       optedOutFooter: [],
     });
+    mockMemberOptOutPurge();
 
     const result = await sendNewsletterCampaign(
       null,
@@ -256,7 +310,9 @@ describe("sendNewsletterCampaign", () => {
 
   it("does not treat default-off member prefs as a block on a dual-listed footer address", async () => {
     // Same email on active footer; member toggle is false so they are absent
-    // from the members query — must still sync from the footer list.
+    // from the members query — must still sync from the footer list. The
+    // post-send purge also sees them as emailNewsletter:false, but they stay
+    // in recipients via the footer row so Resend is not cleared.
     mockCampaignLists({
       activeFooter: [{ email: "both@example.com" }],
       members: [],
@@ -272,10 +328,12 @@ describe("sendNewsletterCampaign", () => {
       members: [],
       optedOutFooter: [],
     });
+    mockMemberOptOutPurge([{ email: "both@example.com" }]);
 
     await sendNewsletterCampaign(null, form({ subject: "Hello", body: "News" }));
 
     expect(syncContactSubscribed).toHaveBeenCalledWith("both@example.com", null);
+    expect(syncContactUnsubscribed).not.toHaveBeenCalled();
   });
 
   it("skips force-subscribe and purges Resend when a recipient opted out mid-send", async () => {
@@ -296,11 +354,17 @@ describe("sendNewsletterCampaign", () => {
       members: [],
       optedOutFooter: [{ email: "gone@example.com" }],
     });
+    mockMemberOptOutPurge();
 
-    await sendNewsletterCampaign(null, form({ subject: "Hello", body: "News" }));
+    const result = await sendNewsletterCampaign(null, form({ subject: "Hello", body: "News" }));
 
     expect(syncContactSubscribed).not.toHaveBeenCalled();
     expect(syncContactUnsubscribed).toHaveBeenCalledWith("gone@example.com");
+    expect(result).toEqual({
+      ok: false,
+      error: "Nobody is opted into the newsletter right now — nothing was sent.",
+    });
+    expect(broadcastsCreate).not.toHaveBeenCalled();
   });
 
   it("skips members whose footer row is unsubscribed (mirror-lag defense)", async () => {
@@ -314,10 +378,73 @@ describe("sendNewsletterCampaign", () => {
       members: [{ email: "stale@example.com", firstName: "Sam" }],
       optedOutFooter: [{ email: "stale@example.com" }],
     });
+    mockCampaignLists({
+      activeFooter: [],
+      members: [{ email: "stale@example.com", firstName: "Sam" }],
+      optedOutFooter: [{ email: "stale@example.com" }],
+    });
+    mockMemberOptOutPurge();
 
-    await sendNewsletterCampaign(null, form({ subject: "Hello", body: "News" }));
+    const result = await sendNewsletterCampaign(null, form({ subject: "Hello", body: "News" }));
 
     expect(syncContactSubscribed).not.toHaveBeenCalled();
     expect(syncContactUnsubscribed).toHaveBeenCalledWith("stale@example.com");
+    expect(result).toEqual({
+      ok: false,
+      error: "Nobody is opted into the newsletter right now — nothing was sent.",
+    });
+    expect(broadcastsCreate).not.toHaveBeenCalled();
+  });
+
+  it("purges Resend for member-only opt-outs with no active footer row", async () => {
+    mockCampaignLists({
+      activeFooter: [{ email: "footer@example.com" }],
+      members: [],
+      optedOutFooter: [],
+    });
+    mockCampaignLists({
+      activeFooter: [{ email: "footer@example.com" }],
+      members: [],
+      optedOutFooter: [],
+    });
+    mockCampaignLists({
+      activeFooter: [{ email: "footer@example.com" }],
+      members: [],
+      optedOutFooter: [],
+    });
+    mockMemberOptOutPurge([{ email: "member-only@example.com" }]);
+
+    await sendNewsletterCampaign(null, form({ subject: "Hello", body: "News" }));
+
+    expect(syncContactUnsubscribed).toHaveBeenCalledWith("member-only@example.com");
+    expect(broadcastsCreate).toHaveBeenCalled();
+  });
+
+  it("aborts the broadcast if the Resend audience was reset during the send", async () => {
+    mockCampaignLists({
+      activeFooter: [{ email: "footer@example.com" }],
+      members: [],
+      optedOutFooter: [],
+    });
+    mockCampaignLists({
+      activeFooter: [{ email: "footer@example.com" }],
+      members: [],
+      optedOutFooter: [],
+    });
+    mockCampaignLists({
+      activeFooter: [{ email: "footer@example.com" }],
+      members: [],
+      optedOutFooter: [],
+    });
+    mockMemberOptOutPurge();
+    prismaMock.siteSetting.findUnique.mockResolvedValueOnce({ resendAudienceId: null });
+
+    const result = await sendNewsletterCampaign(null, form({ subject: "Hello", body: "News" }));
+
+    expect(result).toEqual({
+      ok: false,
+      error: "The newsletter audience changed while sending — try again.",
+    });
+    expect(broadcastsCreate).not.toHaveBeenCalled();
   });
 });

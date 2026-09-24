@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
+import { alignNewsletterPrefWithActiveFooter } from "@/lib/email/newsletter-opt-out";
 import { EmailPreferencesForm } from "./email-preferences-form";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +20,7 @@ export default async function EmailPreferencesPage({
   const member = await prisma.user.findUnique({
     where: { unsubscribeToken: token },
     select: {
+      id: true,
       email: true,
       role: true,
       emailWalkAnnouncements: true,
@@ -30,6 +32,8 @@ export default async function EmailPreferencesPage({
   });
   if (!member) notFound();
 
+  const emailNewsletter = await alignNewsletterPrefWithActiveFooter(member.id, member.email);
+
   return (
     <div className="flex flex-col gap-6">
       <div className="space-y-1">
@@ -38,7 +42,7 @@ export default async function EmailPreferencesPage({
       </div>
       <EmailPreferencesForm
         emailAccidentAlerts={member.emailAccidentAlerts}
-        emailNewsletter={member.emailNewsletter}
+        emailNewsletter={emailNewsletter}
         emailNotices={member.emailNotices}
         emailProgress={member.emailProgress}
         emailWalkAnnouncements={member.emailWalkAnnouncements}

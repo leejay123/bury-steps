@@ -30,10 +30,11 @@ export async function optOutNewsletterEverywhere(email: string): Promise<void> {
 }
 
 /**
- * Mirror of {@link optOutNewsletterEverywhere}: clear a footer unsubscribe,
- * turn the member newsletter toggle back on when a matching User exists, and
- * re-add them to the Resend audience. Does not create a new footer row —
- * callers that need one (public subscribe) create/reactivate first.
+ * Mirror of {@link optOutNewsletterEverywhere} for authenticated preference
+ * flows that intentionally turn the member newsletter toggle on. Clears a
+ * footer unsubscribe, sets matching `User.emailNewsletter = true`, and
+ * re-adds them to Resend. Public footer signup must NOT call this — it would
+ * let anyone force-write a member preference by email alone.
  */
 export async function optInNewsletterEverywhere(
   email: string,
@@ -56,9 +57,18 @@ export async function optInNewsletterEverywhere(
 }
 
 /**
- * Align footer + Resend with an already-saved `User.emailNewsletter` value.
- * Re-reads the user row so a concurrent preferences save cannot leave Resend
- * subscribed after the DB ends opted out. Does not flip `User.emailNewsletter`.
+ * Align Resend (and, on opt-in, a prior footer unsubscribe) with an
+ * already-saved `User.emailNewsletter` value. Re-reads the user row so a
+ * concurrent preferences save cannot leave Resend subscribed after the DB
+ * ends opted out. Does not flip `User.emailNewsletter`.
+ *
+ * When the member toggle is off, an active footer signup must stay active
+ * until a true→false prefs save (or unsubscribe link) opts out everywhere —
+ * wiping the footer on every prefs save (newsletter often left unchecked
+ * while default-off) would undo a footer subscribe. Prefer
+ * {@link alignNewsletterPrefWithActiveFooter} on prefs load so the toggle
+ * matches legacy footer-only signups. Resend stays subscribed iff an active
+ * footer row remains while the toggle is off.
  */
 export async function syncNewsletterAudienceToPreference(
   email: string,
@@ -74,10 +84,14 @@ export async function syncNewsletterAudienceToPreference(
   if (!user) return;
 
   if (!user.emailNewsletter) {
-    await prisma.newsletterSubscriber.updateMany({
+    const activeFooter = await prisma.newsletterSubscriber.findFirst({
       where: { email: match, unsubscribedAt: null },
-      data: { unsubscribedAt: new Date() },
+      select: { id: true },
     });
+    if (activeFooter) {
+      await syncContactSubscribed(normalised, firstName);
+      return;
+    }
     await syncContactUnsubscribed(normalised);
     return;
   }
@@ -96,4 +110,37 @@ export async function syncNewsletterAudienceToPreference(
     return;
   }
   await syncContactSubscribed(normalised, firstName);
+}
+
+/**
+ * Legacy / dual-store repair: if this member has an active footer newsletter
+ * row but `User.emailNewsletter` is still false (signed up before footer
+ * subscribe flipped the toggle), turn the prefs flag on so Email preferences
+ * shows Newsletter checked and a later uncheck can opt out everywhere.
+ * Returns the effective newsletter preference after alignment.
+ */
+export async function alignNewsletterPrefWithActiveFooter(
+  userId: string,
+  email: string,
+): Promise<boolean> {
+  const normalised = email.trim().toLowerCase();
+  if (!userId || !normalised) return false;
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { emailNewsletter: true },
+  });
+  if (!user) return false;
+  if (user.emailNewsletter) return true;
+
+  const match = emailMatch(normalised);
+  const activeFooter = await prisma.newsletterSubscriber.findFirst({
+    where: { email: match, unsubscribedAt: null },
+    select: { id: true },
+  });
+  if (!activeFooter) return false;
+  await prisma.user.updateMany({
+    where: { id: userId, emailNewsletter: false },
+    data: { emailNewsletter: true },
+  });
+  return true;
 }

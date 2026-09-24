@@ -21,8 +21,12 @@ function SubmitButton() {
   );
 }
 
-/** Footer newsletter signup, backed by NewsletterSubscriber via Resend. */
-export function NewsletterSignup() {
+/**
+ * Footer newsletter signup for signed-in members. Subscribes the account
+ * email from the session — the form never posts an address (so one member
+ * cannot force-subscribe another).
+ */
+export function NewsletterSignup({ email }: { email: string }) {
   const inputId = useId();
   const formRef = useRef<HTMLFormElement>(null);
   const [state, action] = useActionState<ActionResult | null, FormData>(
@@ -59,7 +63,12 @@ export function NewsletterSignup() {
           <InputGroupAddon>
             <AtSign aria-hidden data-icon="inline-start" />
           </InputGroupAddon>
-          <InputGroupInput id={inputId} name="email" placeholder="Enter your email" required type="email" />
+          <InputGroupInput
+            id={inputId}
+            readOnly
+            type="email"
+            value={email}
+          />
         </InputGroup>
         <SubmitButton />
       </form>

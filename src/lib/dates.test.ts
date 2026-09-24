@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  addLondonCalendarDays,
   formatMembershipAge,
   formatRelativeDays,
   formatWalkLength,
+  londonDateKey,
   londonMonthKey,
   londonWallClockToUtc,
   londonWeekStartKey,
@@ -61,6 +63,24 @@ describe("londonWallClockToUtc", () => {
   it("resolves an unambiguous time after the autumn fold ends", () => {
     const result = londonWallClockToUtc("2026-10-25T03:00");
     expect(result.toISOString()).toBe("2026-10-25T03:00:00.000Z");
+  });
+});
+
+describe("addLondonCalendarDays", () => {
+  it("preserves London wall-clock time across a spring-forward week", () => {
+    // Clocks go forward 29 March 2026 — raw +7×24h would land at 15:00 UK.
+    const before = londonWallClockToUtc("2026-03-22T14:00");
+    const after = addLondonCalendarDays(before, 7);
+    expect(utcToLondonWallClock(after)).toBe("2026-03-29T14:00");
+    expect(
+      utcToLondonWallClock(new Date(before.getTime() + 7 * 24 * 60 * 60 * 1000)),
+    ).toBe("2026-03-29T15:00");
+  });
+
+  it("matches +7×24h when no DST transition sits between the days", () => {
+    const before = londonWallClockToUtc("2026-01-04T14:00");
+    const after = addLondonCalendarDays(before, 7);
+    expect(after.getTime()).toBe(before.getTime() + 7 * 24 * 60 * 60 * 1000);
   });
 });
 
@@ -167,5 +187,13 @@ describe("londonMonthKey", () => {
   it("uses the UK calendar month of the instant", () => {
     expect(londonMonthKey(londonWallClockToUtc("2026-08-30T14:00"))).toBe("2026-08");
     expect(londonMonthKey(new Date("2026-07-31T23:30:00.000Z"))).toBe("2026-08");
+  });
+});
+
+describe("londonDateKey", () => {
+  it("uses the UK calendar day of the instant", () => {
+    expect(londonDateKey(londonWallClockToUtc("2026-08-30T14:00"))).toBe("2026-08-30");
+    // 00:30 BST = previous UTC calendar day.
+    expect(londonDateKey(new Date("2026-08-29T23:30:00.000Z"))).toBe("2026-08-30");
   });
 });

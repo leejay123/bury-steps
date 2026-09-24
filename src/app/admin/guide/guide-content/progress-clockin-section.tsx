@@ -22,7 +22,8 @@ export function ProgressClockInSection() {
             <p>
               Each person sees their own month, year, and streak (consecutive UK weeks with at
               least one finished walk). A week with no completed group walk does not break a
-              streak. Badges mark first walk, 5 / 10 / 25 walks, staying for a whole walk, every
+              streak — and a finished walk with nobody on the roster does not count as a group
+              walk either. Badges mark first walk, 5 / 10 / 25 walks, staying for a whole walk, every
               walk in a month (when that month had at least two), a streak of two weeks or more,
               and a comeback after missing three or more weeks that did have walks.
             </p>
@@ -82,7 +83,8 @@ export function ProgressClockInSection() {
               and their walk history on their own member page in Members both show the clock-out
               time when they have left, not the clock-in time again. A member who never clocked
               out shows as “Still on the walk” while it’s open, and “Stayed for the whole walk”
-              once it’s Completed.
+              once it’s Completed. History counts finished and cancelled walks; Progress cups
+              and badges only count finished walks that were not cancelled.
             </p>
             <p>
               After clocking out, they can clock in again on the same walk if the window is still

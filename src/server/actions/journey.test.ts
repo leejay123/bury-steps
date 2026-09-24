@@ -167,6 +167,61 @@ describe("createJourneyEvent", () => {
     expect(revalidatePath).toHaveBeenCalledWith("/admin/walks/walk-1");
     expect(result).toEqual({ ok: true, message: "Event added to the journey." });
   });
+
+  it("rejects a time before the walk started", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({
+      ...walk,
+      _count: { journeyEvents: 0 },
+    });
+
+    const result = await createJourneyEvent(null, eventForm({ happenedAt: "2026-01-05T13:00" }));
+    expect(result).toEqual({ ok: false, error: "Pick a time during the walk." });
+    expect(prismaMock.walkJourneyEvent.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects a time after the walk finished", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({
+      ...walk,
+      _count: { journeyEvents: 0 },
+    });
+
+    const result = await createJourneyEvent(null, eventForm({ happenedAt: "2026-01-05T16:00" }));
+    expect(result).toEqual({ ok: false, error: "Pick a time during the walk." });
+    expect(prismaMock.walkJourneyEvent.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects a time still in the future while the walk is in progress", async () => {
+    const startsAt = new Date(Date.now() - 20 * 60_000);
+    prismaMock.walk.findUnique.mockResolvedValueOnce({
+      ...walk,
+      startsAt,
+      durationMins: 120,
+      endedAt: null,
+      _count: { journeyEvents: 0 },
+    });
+    // 30 minutes ahead — still inside the published window, but not yet happened.
+    const futureLocal = new Date(Date.now() + 30 * 60_000);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    // London wall-clock string for the picker (same shape the form posts).
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/London",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(futureLocal);
+    const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "00";
+    const happenedAt = `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}`;
+
+    const result = await createJourneyEvent(null, eventForm({ happenedAt }));
+    expect(result).toEqual({
+      ok: false,
+      error: "Pick a time that has already happened — not one still in the future.",
+    });
+    expect(prismaMock.walkJourneyEvent.create).not.toHaveBeenCalled();
+  });
 });
 
 describe("updateJourneyEvent", () => {

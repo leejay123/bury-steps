@@ -187,12 +187,12 @@ export async function searchAddableMembers(
   });
   if (!walk || !canOrganiserAddAttendance(walk)) return [];
 
-  // While the window is open, clocked-out members can be re-added. Once it
-  // has closed, anyone with any attendance row is already on the roster.
-  const excludeIds =
-    windowState(walk.startsAt, walk.durationMins, new Date(), walk.endedAt) === "closed"
-      ? walk.attendances.map((row) => row.userId)
-      : walk.attendances.filter((row) => !row.clockedOutAt).map((row) => row.userId);
+  // Only people still actively on the walk are locked out of Add someone.
+  // Left-early rows stay searchable so organisers can correct times after
+  // the window closes (adminClockIn allows that update path).
+  const excludeIds = walk.attendances
+    .filter((row) => !row.clockedOutAt)
+    .map((row) => row.userId);
   const needle = query.trim();
   const where = {
     ...(excludeIds.length ? { id: { notIn: excludeIds } } : {}),
@@ -257,6 +257,18 @@ export async function adminClockIn(
     return { ok: false, error: "Clock-out time must be after clock-in time." };
   }
 
+  const now = Date.now();
+  // Small skew so an organiser whose phone is a minute ahead is not blocked;
+  // a future clock-in on a live walk would otherwise show them on the roster
+  // early and can block ending the walk.
+  const FUTURE_SKEW_MS = 2 * 60_000;
+  if (recordedClockedInAt.getTime() > now + FUTURE_SKEW_MS) {
+    return { ok: false, error: "Clock-in time can't be in the future." };
+  }
+  if (recordedClockedOutAt && recordedClockedOutAt.getTime() > now + FUTURE_SKEW_MS) {
+    return { ok: false, error: "Clock-out time can't be in the future." };
+  }
+
   const member = await prisma.user.findUnique({
     where: { id: parsed.data.userId },
     select: {
@@ -280,6 +292,7 @@ export async function adminClockIn(
     postcode: string | null;
   };
   let window: ReturnType<typeof windowState>;
+  let createdNewAttendance = false;
 
   try {
     const outcome = await prisma.$transaction(async (tx) => {
@@ -324,11 +337,12 @@ export async function adminClockIn(
       }
       if (
         recordedClockedOutAt &&
-        recordedClockedOutAt.getTime() > endsAt.getTime()
+        recordedClockedOutAt.getTime() >= endsAt.getTime()
       ) {
         return {
           ok: false as const,
-          error: "Clock-out time can't be after the walk finished.",
+          error:
+            "Leave clock-out blank if they stayed to the end — or pick a time before the walk finished.",
         };
       }
 
@@ -339,27 +353,34 @@ export async function adminClockIn(
 
       const win = windowState(locked.startsAt, locked.durationMins, new Date(), locked.endedAt);
       if (existingAttendance) {
-        if (win === "closed" || !existingAttendance.clockedOutAt) {
+        // Still actively on the walk — cannot add again.
+        if (!existingAttendance.clockedOutAt) {
           return {
             ok: false as const,
             error: `${displayName(member)} is already on this walk’s list.`,
           };
         }
+        // Left early: allow correction / re-add even after the window closed
+        // (organiser catching up the record). While the window is open this
+        // also covers coming back mid-walk.
       }
 
       const now = new Date();
       const purgeAfter = conditionsPurgeAfterFromStartsAt(locked.startsAt);
       // Re-adding someone who left early must not wipe medical notes they
       // already gave — only a brand-new attendance row starts with null.
+      // Clear clockedOutReason only when marking them as stayed (no clock-out);
+      // correcting left-early times must keep the reason they gave.
       if (existingAttendance) {
         await tx.attendance.update({
           where: { id: existingAttendance.id },
           data: {
             clockedInAt: recordedClockedInAt,
-            medicalAckAt: now,
+            // Keep the member’s original medical acknowledgement — correcting
+            // times must not rewrite the Art.9 audit trail.
             conditionsPurgeAfter: purgeAfter,
             clockedOutAt: recordedClockedOutAt,
-            clockedOutReason: null,
+            ...(recordedClockedOutAt === null ? { clockedOutReason: null } : {}),
           },
         });
       } else {
@@ -379,6 +400,7 @@ export async function adminClockIn(
 
       return {
         ok: true as const,
+        created: !existingAttendance,
         walk: {
           id: locked.id,
           token: locked.token,
@@ -395,6 +417,7 @@ export async function adminClockIn(
     if (!outcome.ok) return { ok: false, error: outcome.error };
     walk = outcome.walk;
     window = outcome.window;
+    createdNewAttendance = outcome.created;
   } catch (err) {
     if (isPrismaCode(err, "P2002")) {
       return { ok: false, error: `${displayName(member)} is already on this walk’s list.` };
@@ -410,9 +433,9 @@ export async function adminClockIn(
   revalidatePath(`/admin/members/${member.id}`);
   revalidatePath("/admin/members");
 
-  // Same preference as the other walk emails (new/cancelled/reopened) — being
-  // manually added is still a walk notification, not its own category.
-  if (member.emailWalkAnnouncements) {
+  // First-add only — correcting a left-early row or clocking someone back
+  // mid-walk must not re-send the "you've been added" email.
+  if (createdNewAttendance && member.emailWalkAnnouncements) {
     await sendAddedToWalkEmail(
       {
         title: walk.title,

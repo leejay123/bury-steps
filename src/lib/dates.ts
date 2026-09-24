@@ -120,6 +120,24 @@ export function utcToLondonWallClock(at: DateInput): string {
   return shifted.toISOString().slice(0, 16);
 }
 
+/**
+ * Add whole London calendar days while keeping the same London wall-clock
+ * time. Raw `+ N * 24h` in UTC drifts by ±1h across UK DST transitions
+ * (e.g. duplicating a 14:00 walk across the spring-forward weekend).
+ */
+export function addLondonCalendarDays(at: DateInput, days: number): Date {
+  const wall = utcToLondonWallClock(at);
+  const year = Number(wall.slice(0, 4));
+  const month = Number(wall.slice(5, 7));
+  const day = Number(wall.slice(8, 10));
+  const time = wall.slice(11, 16);
+  // Gregorian day arithmetic via UTC noon — independent of London offset.
+  const shifted = new Date(Date.UTC(year, month - 1, day + days, 12, 0, 0));
+  return londonWallClockToUtc(
+    `${shifted.getUTCFullYear()}-${pad2(shifted.getUTCMonth() + 1)}-${pad2(shifted.getUTCDate())}T${time}`,
+  );
+}
+
 function pad2(value: number): string {
   return String(value).padStart(2, "0");
 }
@@ -200,6 +218,12 @@ export function londonWeekStartKey(at: DateInput): string {
 export function londonMonthKey(at: DateInput): string {
   const { year, month } = londonYmd(at);
   return `${year}-${pad2(month)}`;
+}
+
+/** UK calendar day as `YYYY-MM-DD` — for download filenames, not UTC. */
+export function londonDateKey(at: DateInput): string {
+  const { year, month, day } = londonYmd(at);
+  return `${year}-${pad2(month)}-${pad2(day)}`;
 }
 
 export function londonYmd(at: DateInput): { day: number; month: number; year: number } {

@@ -77,7 +77,9 @@ describe("buildWalkIcs", () => {
 });
 
 describe("walkIcsFilename", () => {
-  it("uses the walk date", () => {
+  it("uses the London calendar date, not the UTC day", () => {
     expect(walkIcsFilename(new Date("2026-08-30T10:00:00.000Z"))).toBe("bury-steps-2026-08-30.ics");
+    // 00:30 BST = previous UTC calendar day.
+    expect(walkIcsFilename(new Date("2026-08-29T23:30:00.000Z"))).toBe("bury-steps-2026-08-30.ics");
   });
 });

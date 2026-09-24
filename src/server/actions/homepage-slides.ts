@@ -16,6 +16,7 @@ import {
   revalidateHomepage,
   validateReorderIds,
   withCountLimitLock,
+  ensureStillOwner,
 } from "./shared";
 
 export async function addHomepageSlide(
@@ -24,6 +25,10 @@ export async function addHomepageSlide(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permHomepage) return permissionDenied("permHomepage");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage homepage slides");
+    if (lostOwner) return lostOwner;
+  }
 
   const image = await readSlideImage(formData);
   if ("error" in image) return { ok: false, error: image.error };
@@ -61,6 +66,10 @@ export async function replaceHomepageSlideImage(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permHomepage) return permissionDenied("permHomepage");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage homepage slides");
+    if (lostOwner) return lostOwner;
+  }
   const id = String(formData.get("slideId") ?? "");
   if (!id) return { ok: false, error: "No slide selected." };
 
@@ -94,6 +103,10 @@ export async function deleteHomepageSlide(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permHomepage) return permissionDenied("permHomepage");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage homepage slides");
+    if (lostOwner) return lostOwner;
+  }
   const id = String(formData.get("slideId") ?? "");
   if (!id) return { ok: false, error: "No slide selected." };
 
@@ -127,6 +140,10 @@ export async function deleteHomepageSlide(
 export async function reorderHomepageSlides(ids: string[]): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permHomepage) return permissionDenied("permHomepage");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage homepage slides");
+    if (lostOwner) return lostOwner;
+  }
   const validated = validateReorderIds(ids, MAX_HOMEPAGE_SLIDES * 2);
   if ("error" in validated) return { ok: false, error: validated.error };
   try {

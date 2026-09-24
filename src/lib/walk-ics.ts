@@ -1,5 +1,6 @@
 import { appUrl } from "@/lib/urls";
 import { walkShareUrl } from "@/lib/walk-slug";
+import { londonDateKey } from "@/lib/dates";
 
 type WalkIcsInput = {
   /** Stable primary key — used in UID so calendars keep one event if the share token changes. */
@@ -101,5 +102,5 @@ export function buildWalkIcs(walk: WalkIcsInput): string {
 }
 
 export function walkIcsFilename(startsAt: Date): string {
-  return `bury-steps-${startsAt.toISOString().slice(0, 10)}.ics`;
+  return `bury-steps-${londonDateKey(startsAt)}.ics`;
 }

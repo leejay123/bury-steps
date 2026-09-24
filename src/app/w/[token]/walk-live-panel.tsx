@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 export function WalkLivePanel({
   alreadyClockedInAt,
   beforeYouSetOffTips,
+  cancelledAt = null,
   clockedOutAt = null,
   durationMins,
   endedAt = null,
@@ -24,6 +25,8 @@ export function WalkLivePanel({
   alreadyClockedInAt: string | null;
   /** Editable in Settings → Site wording → Walk page cards — see @/lib/homepage-copy. */
   beforeYouSetOffTips: readonly string[];
+  /** Set when an organiser cancels the walk — see cancelWalk. */
+  cancelledAt?: string | null;
   /** Set when the member left early — see clockOut. */
   clockedOutAt?: string | null;
   durationMins: number;
@@ -35,13 +38,22 @@ export function WalkLivePanel({
   walksHref: string;
 }) {
   const start = new Date(startsAt);
-  const now = useWalkClock({ cancelledAt: null, durationMins, endedAt, startsAt });
-  const walk = { cancelledAt: null, durationMins, endedAt: endedAt ? new Date(endedAt) : null, startsAt: start };
+  const now = useWalkClock({ cancelledAt, durationMins, endedAt, startsAt });
+  const walk = {
+    cancelledAt: cancelledAt ? new Date(cancelledAt) : null,
+    durationMins,
+    endedAt: endedAt ? new Date(endedAt) : null,
+    startsAt: start,
+  };
   const status = walkStatus(walk, now);
   const state = windowState(start, durationMins, now, walk.endedAt);
   const completed = status === "completed";
   const countdown = status === "in-progress" ? formatInProgressCountdown(effectiveEndsAt(walk), now) : null;
   const leftEarly = Boolean(alreadyClockedInAt && clockedOutAt);
+
+  // Parent usually skips rendering when cancelled; keep the live clock honest
+  // if a soft refresh lands cancelledAt while this panel is still mounted.
+  if (status === "cancelled") return null;
 
   // Still on the walk (never clocked out).
   if (alreadyClockedInAt && !clockedOutAt) {

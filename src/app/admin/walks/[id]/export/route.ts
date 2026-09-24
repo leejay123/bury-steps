@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission, displayName } from "@/lib/auth";
-import { formatDateTime } from "@/lib/dates";
+import { formatDateTime, londonDateKey } from "@/lib/dates";
 
 function csvCell(value: string | null): string {
   const v = value ?? "";
@@ -14,11 +14,11 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  // The CSV always includes reported conditions (below), so downloading
-  // it needs both — Export alone would otherwise be a back door around
-  // Health notes being switched off.
+  // Export alone is enough for the roster CSV. Health notes / medical ack
+  // columns are only included when the viewer also has permWalksHealth —
+  // organisers get names, emails, and times without a back door into notes.
   const admin = await requirePermission("permWalksExport");
-  if (!admin.permWalksHealth) return new NextResponse("Not found", { status: 404 });
+  const includeHealth = admin.permWalksHealth;
   const { id } = await params;
 
   const walk = await prisma.walk.findUnique({
@@ -33,21 +33,35 @@ export async function GET(
 
   if (!walk) return new NextResponse("Not found", { status: 404 });
 
+  const header = includeHealth
+    ? [
+        "Name",
+        "Email",
+        "Clocked in (UK time)",
+        "Clocked out (UK time)",
+        "Clock-out reason",
+        "Medical acknowledgement",
+        "Reported conditions",
+      ]
+    : ["Name", "Email", "Clocked in (UK time)", "Clocked out (UK time)", "Clock-out reason"];
+
   const rows = [
-    ["Name", "Email", "Clocked in (UK time)", "Clocked out (UK time)", "Clock-out reason", "Medical acknowledgement", "Reported conditions"],
-    ...walk.attendances.map((a) => [
-      displayName(a.user),
-      a.user.email,
-      formatDateTime(a.clockedInAt),
-      a.clockedOutAt ? formatDateTime(a.clockedOutAt) : "",
-      a.clockedOutReason ?? "",
-      formatDateTime(a.medicalAckAt),
-      a.conditions ?? "None reported",
-    ]),
+    header,
+    ...walk.attendances.map((a) => {
+      const base = [
+        displayName(a.user),
+        a.user.email,
+        formatDateTime(a.clockedInAt),
+        a.clockedOutAt ? formatDateTime(a.clockedOutAt) : "",
+        a.clockedOutReason ?? "",
+      ];
+      if (!includeHealth) return base;
+      return [...base, formatDateTime(a.medicalAckAt), a.conditions ?? "None reported"];
+    }),
   ];
 
   const csv = rows.map((r) => r.map((c) => csvCell(c)).join(",")).join("\r\n");
-  const filename = `bury-steps-${walk.startsAt.toISOString().slice(0, 10)}.csv`;
+  const filename = `bury-steps-${londonDateKey(walk.startsAt)}.csv`;
 
   return new NextResponse(`\uFEFF${csv}`, {
     headers: {

@@ -67,8 +67,8 @@ vi.mock("@/lib/email/mailer", () => ({
   sendAdminDemotedEmail: vi.fn(async () => {}),
   sendOrganiserInviteEmail: vi.fn(async () => {}),
 }));
-vi.mock("@/lib/email/resend-audience", () => ({
-  syncContactUnsubscribed: vi.fn(async () => {}),
+vi.mock("@/lib/email/newsletter-opt-out", () => ({
+  optOutNewsletterEverywhere: vi.fn(async () => {}),
 }));
 vi.mock("@/lib/organiser-invite", () => ({
   makeOrganiserInviteToken: vi.fn(() => "invite-token-123"),
@@ -618,6 +618,32 @@ describe("setMemberRole", () => {
     });
     expect(prismaMock.user.update).not.toHaveBeenCalled();
   });
+
+  it("re-checks isOwner under the lock so a concurrent addOwner cannot leave a MEMBER owning", async () => {
+    const target = {
+      id: "admin-2",
+      role: "ADMIN",
+      isOwner: false,
+      firstName: "Sam",
+      lastName: "Lee",
+      email: "sam@example.com",
+    };
+    // Pre-lock read: not an owner. Locked re-read: concurrent addOwner won.
+    prismaMock.user.findUnique
+      .mockResolvedValueOnce(target)
+      .mockResolvedValueOnce({ ...target, isOwner: true });
+
+    const result = await setMemberRole(
+      null,
+      roleForm({ userId: target.id, role: "MEMBER", confirm: "confirm" }),
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Remove their owner access before making them a member.",
+    });
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
+  });
 });
 
 describe("getMemberHistory", () => {
@@ -989,11 +1015,29 @@ describe("setMemberRole — organiser invite required", () => {
       "invite-token-123",
       ORGANISER_PERMISSIONS,
     );
-    expect(transaction).not.toHaveBeenCalled();
+    expect(transaction).toHaveBeenCalled();
     expect(result).toEqual({
       ok: true,
       message: "Invite sent to Jo Bloggs. They'll become an organiser once they accept it.",
     });
+  });
+
+  it("refuses to mint an invite when ownership is revoked under the lock", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce(target);
+    prismaMock.siteSetting.findUnique.mockResolvedValueOnce({ organiserInviteRequired: true });
+    actorStillOwner.mockResolvedValueOnce(false);
+
+    const result = await setMemberRole(
+      null,
+      roleForm({ userId: target.id, role: "ADMIN", confirm: "confirm" }),
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Only a site owner can change an organiser's role.",
+    });
+    expect(prismaMock.user.updateMany).not.toHaveBeenCalled();
+    expect(sendOrganiserInviteEmail).not.toHaveBeenCalled();
   });
 
   it("still promotes immediately when the setting is off", async () => {
@@ -1401,6 +1445,7 @@ describe("acceptOrganiserInvite", () => {
         id: target.id,
         role: "MEMBER",
         organiserInviteToken: "tok",
+        organiserInviteExpiresAt: { gt: expect.any(Date) },
       },
       data: {
         role: "ADMIN",

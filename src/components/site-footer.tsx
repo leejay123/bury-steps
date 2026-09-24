@@ -4,6 +4,7 @@ import { FullWidthDivider } from "@/components/full-width-divider";
 import { NewsletterFooterGate } from "@/components/newsletter-footer-gate";
 import { SiteLogo } from "@/components/site-logo";
 import { shouldPrefetchNavLink } from "@/components/site-nav-items";
+import { getOptionalUser } from "@/lib/auth";
 import { PAGE_X } from "@/lib/page-x";
 import { getProgressEnabled } from "@/lib/progress-settings";
 import { getSiteTheme } from "@/lib/site-theme";
@@ -11,13 +12,18 @@ import { getSiteTheme } from "@/lib/site-theme";
 const linkClassName = "text-sm text-muted-foreground transition-colors hover:text-foreground";
 
 export async function SiteFooter() {
-  const [theme, progressEnabled] = await Promise.all([getSiteTheme(), getProgressEnabled()]);
+  const [theme, progressEnabled, user] = await Promise.all([
+    getSiteTheme(),
+    getProgressEnabled(),
+    getOptionalUser(),
+  ]);
   const facebookUrl = theme.facebookGroupUrl.trim();
 
   return (
     <footer className="relative z-10 shrink-0 bg-background">
       <FullWidthDivider position="top" />
-      <NewsletterFooterGate />
+      {/* Newsletter signup is members-only — visitors must create an account first. */}
+      {user ? <NewsletterFooterGate email={user.email} /> : null}
       <div className={`flex flex-col gap-6 py-8 ${PAGE_X}`}>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <SiteLogo alt={theme.siteName} src={theme.logoSrc} />

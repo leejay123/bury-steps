@@ -48,6 +48,7 @@ import { DEFAULT_CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { clearAudienceCache } from "@/lib/email/resend-audience";
 import {
   type ActionResult,
+  ensureStillOwner,
   isNotFoundStatus,
   logActionError,
   ownerDenied,
@@ -60,6 +61,8 @@ export async function clearSiteCache(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permCacheReset) return permissionDenied("permCacheReset");
+  const lostOwner = await ensureStillOwner(admin.id, "clear the site cache");
+  if (lostOwner) return lostOwner;
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidateTag(NOTICES_CACHE_TAG, { expire: 0 });
   revalidatePath("/", "layout");

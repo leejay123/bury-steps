@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, getOptionalUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { requesterIpKey } from "@/lib/requester-ip";
@@ -11,13 +11,19 @@ import { getResendClient, fromAddress } from "@/lib/email/client";
 import { sendNewsletterSubscribedEmail } from "@/lib/email/mailer";
 import { paragraphsFrom } from "@/lib/email/render-template";
 import { getOrCreateAudienceId, syncContactSubscribed, syncContactUnsubscribed } from "@/lib/email/resend-audience";
-import {
-  optInNewsletterEverywhere,
-  optOutNewsletterEverywhere,
-} from "@/lib/email/newsletter-opt-out";
+import { SITE_SETTING_ID } from "@/lib/theme";
+import { optOutNewsletterEverywhere } from "@/lib/email/newsletter-opt-out";
 import { NewsletterCampaignEmail } from "@/lib/email/templates/newsletter-campaign";
 import { makeCapabilityToken } from "@/lib/email/unsubscribe";
-import { type ActionResult, isPrismaCode, logActionError, permissionDenied } from "./shared";
+import { actorStillOwner } from "@/lib/site-owner";
+import {
+  type ActionResult,
+  ensureStillOwner,
+  isPrismaCode,
+  logActionError,
+  ownerDenied,
+  permissionDenied,
+} from "./shared";
 
 export async function subscribeToNewsletter(
   _prev: ActionResult | null,
@@ -29,14 +35,25 @@ export async function subscribeToNewsletter(
     return { ok: true, message: "Thanks — we'll be in touch." };
   }
 
+  // Footer form is members-only (see SiteFooter). Reject anonymous posts
+  // even if someone crafts a request without the UI.
+  const member = await getOptionalUser();
+  if (!member) {
+    return { ok: false, error: "Sign in to subscribe to the newsletter." };
+  }
+
   const key = await requesterIpKey();
   const limited = checkRateLimit(`${key}:subscribeToNewsletter`, 5, 10 * 60_000);
   if (!limited.ok) {
     return { ok: false, error: "Too many attempts. Try again in a few minutes." };
   }
 
-  const email = parseContactEmail(String(formData.get("email") ?? ""));
-  if (email === "invalid") return { ok: false, error: "Enter a valid email address." };
+  // Always the signed-in member’s account email — never trust a posted
+  // address (that would let any member force-subscribe someone else).
+  const email = parseContactEmail(member.email);
+  if (email === "invalid") {
+    return { ok: false, error: "Your account email is not valid for the newsletter. Update it in your account first." };
+  }
 
   try {
     // Create-first avoids the old findUnique→upsert race: two concurrent
@@ -60,7 +77,15 @@ export async function subscribeToNewsletter(
         data: { unsubscribedAt: null, unsubscribeToken: newToken },
       });
       if (reactivated.count === 0) {
-        return { ok: true, message: "You're already subscribed — thanks!" };
+        // Already on the footer list — still align the prefs toggle so they
+        // can turn Newsletter off later without an on→off dance.
+        await prisma.user.updateMany({
+          where: { id: member.id, emailNewsletter: false },
+          data: { emailNewsletter: true },
+        });
+        // Same success copy as a new signup — do not reveal whether the
+        // address was already on the list (email enumeration).
+        return { ok: true, message: "Thanks — we'll be in touch once there's news to share." };
       }
       subscriber = { email, unsubscribeToken: newToken };
     }
@@ -69,9 +94,14 @@ export async function subscribeToNewsletter(
       sendNewsletterSubscribedEmail(subscriber).catch((err) => {
         console.error("subscribeToNewsletter: failed to send confirmation email", err);
       }),
-      // Mirror into User.emailNewsletter + Resend — footer-only opt-in must
-      // not leave a member preference stuck off (or the reverse on opt-out).
-      optInNewsletterEverywhere(subscriber.email),
+      syncContactSubscribed(subscriber.email),
+      // Members-only + session email: flip the prefs toggle on so Email
+      // preferences matches the footer signup and true→false can opt out
+      // everywhere. Safe — we never write another member’s preference.
+      prisma.user.updateMany({
+        where: { id: member.id, emailNewsletter: false },
+        data: { emailNewsletter: true },
+      }),
     ]);
   } catch (err) {
     return logActionError("subscribeToNewsletter", err, "Could not subscribe. Try again.");
@@ -139,6 +169,8 @@ export async function sendNewsletterCampaign(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permSubscribers) return permissionDenied("permSubscribers");
+  const lostOwner = await ensureStillOwner(admin.id, "send a newsletter campaign");
+  if (lostOwner) return lostOwner;
   const limited = checkRateLimit(`${admin.id}:sendNewsletterCampaign`, 5, 60 * 60_000);
   if (!limited.ok) {
     return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
@@ -166,6 +198,9 @@ export async function sendNewsletterCampaign(
     const CONTACT_SYNC_CHUNK_SIZE = 10;
     const contacts = [...initial.recipients];
     for (let i = 0; i < contacts.length; i += CONTACT_SYNC_CHUNK_SIZE) {
+      if (!(await actorStillOwner(admin.id))) {
+        return ownerDenied("send a newsletter campaign");
+      }
       const chunk = contacts.slice(i, i + CONTACT_SYNC_CHUNK_SIZE);
       // Fresh read per chunk — a concurrent opt-out after the snapshot must
       // not be force-subscribed back into Resend before the broadcast.
@@ -178,13 +213,51 @@ export async function sendNewsletterCampaign(
       );
     }
 
-    // Drop anyone with a real footer unsubscribe from the Resend segment
-    // before broadcasting — a stale contact would still get the campaign.
+    // Drop anyone who must not receive this broadcast from the Resend
+    // segment before creating it — a stale contact (failed prior opt-out
+    // sync, or member-toggle off with no footer row) would still get it.
     const final = await loadCampaignRecipients();
-    const blockedEmails = [...final.footerUnsubscribed];
-    for (let i = 0; i < blockedEmails.length; i += CONTACT_SYNC_CHUNK_SIZE) {
-      const chunk = blockedEmails.slice(i, i + CONTACT_SYNC_CHUNK_SIZE);
+    const blockedEmails = new Set(final.footerUnsubscribed);
+    const optedOutMembers = await prisma.user.findMany({
+      where: { emailNewsletter: false },
+      select: { email: true },
+    });
+    for (const row of optedOutMembers) {
+      const key = row.email.trim().toLowerCase();
+      if (key && !final.recipients.has(key)) blockedEmails.add(key);
+    }
+    const blockedList = [...blockedEmails];
+    for (let i = 0; i < blockedList.length; i += CONTACT_SYNC_CHUNK_SIZE) {
+      const chunk = blockedList.slice(i, i + CONTACT_SYNC_CHUNK_SIZE);
       await Promise.all(chunk.map((email) => syncContactUnsubscribed(email)));
+    }
+
+    // Ownership can be revoked during a long contact sync — abort before
+    // the irreversible broadcast if the actor is no longer an owner.
+    if (!(await actorStillOwner(admin.id))) {
+      return ownerDenied("send a newsletter campaign");
+    }
+
+    if (final.recipients.size === 0) {
+      return {
+        ok: false,
+        error: "Nobody is opted into the newsletter right now — nothing was sent.",
+      };
+    }
+
+    // Site reset (or another warm instance) may have nulled/replaced the
+    // Resend segment while we were syncing contacts against `audienceId`.
+    // Re-read the DB id — do not create a replacement here — and refuse to
+    // broadcast to a pre-wipe segment.
+    const setting = await prisma.siteSetting.findUnique({
+      where: { id: SITE_SETTING_ID },
+      select: { resendAudienceId: true },
+    });
+    if (!setting?.resendAudienceId || setting.resendAudienceId !== audienceId) {
+      return {
+        ok: false,
+        error: "The newsletter audience changed while sending — try again.",
+      };
     }
 
     const brand = await getEmailBrand();
@@ -217,6 +290,8 @@ export async function removeNewsletterSubscriber(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permSubscribers) return permissionDenied("permSubscribers");
+  const lostOwner = await ensureStillOwner(admin.id, "remove a newsletter subscriber");
+  if (lostOwner) return lostOwner;
   const id = String(formData.get("id") ?? "");
   if (!id) return { ok: false, error: "No subscriber selected." };
 

@@ -29,19 +29,33 @@ export async function syncLocalUser(input: {
   lastName: string | null;
 }): Promise<User> {
   let isNewUser = false;
+  let previousEmail: string | null = null;
 
   const user = await prisma.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(847291)`;
 
     const existing = await tx.user.findUnique({ where: { clerkId: input.clerkId } });
     if (existing) {
+      const nextEmail = input.email.trim();
+      // Blank Clerk email must not wipe a known address (and skip newsletter
+      // opt-out of the old one). Treat empty as "no email change".
+      const data: {
+        email?: string;
+        firstName: string | null;
+        lastName: string | null;
+      } = {
+        firstName: input.firstName,
+        lastName: input.lastName,
+      };
+      if (nextEmail) {
+        if (existing.email.trim().toLowerCase() !== nextEmail.toLowerCase()) {
+          previousEmail = existing.email;
+        }
+        data.email = nextEmail;
+      }
       return tx.user.update({
         where: { clerkId: input.clerkId },
-        data: {
-          email: input.email,
-          firstName: input.firstName,
-          lastName: input.lastName,
-        },
+        data,
       });
     }
 
@@ -116,6 +130,21 @@ export async function syncLocalUser(input: {
     const { sendWelcomeEmail } = await import("./email/mailer");
     await sendWelcomeEmail(user).catch((err) => {
       console.error("[local-user] Failed to send welcome email", err);
+    });
+  }
+
+  // Clerk email change: clear the old address from footer + Resend so
+  // campaigns do not keep mailing a vacated inbox, then align the new
+  // address with the saved member newsletter preference.
+  if (previousEmail) {
+    const { optOutNewsletterEverywhere, syncNewsletterAudienceToPreference } = await import(
+      "./email/newsletter-opt-out"
+    );
+    await optOutNewsletterEverywhere(previousEmail).catch((err) => {
+      console.error("[local-user] Failed to opt old email out of newsletter after change", err);
+    });
+    await syncNewsletterAudienceToPreference(user.email, user.firstName).catch((err) => {
+      console.error("[local-user] Failed to sync newsletter after email change", err);
     });
   }
 

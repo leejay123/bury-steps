@@ -1,17 +1,27 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const { requireAdmin, prismaMock, actorStillOwner } = vi.hoisted(() => ({
-  requireAdmin: vi.fn(),
-  prismaMock: { siteSetting: { upsert: vi.fn() }, user: { findUnique: vi.fn() } },
-  actorStillOwner: vi.fn(async () => true),
-}));
+const { requireAdmin, prismaMock, actorStillOwner, transaction } = vi.hoisted(() => {
+  const prismaMock = {
+    siteSetting: { upsert: vi.fn() },
+    user: { findUnique: vi.fn() },
+  };
+  const transaction = vi.fn(async (fn: (tx: unknown) => unknown) =>
+    fn({ $executeRawUnsafe: vi.fn(), ...prismaMock }),
+  );
+  return {
+    requireAdmin: vi.fn(),
+    prismaMock,
+    actorStillOwner: vi.fn(async () => true),
+    transaction,
+  };
+});
 
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
   revalidateTag: vi.fn(),
   unstable_cache: (fn: unknown) => fn,
 }));
-vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
+vi.mock("@/lib/db", () => ({ prisma: { ...prismaMock, $transaction: transaction } }));
 vi.mock("@/lib/site-owner", () => ({ actorStillOwner }));
 vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
@@ -272,12 +282,14 @@ describe("updateMonthlyClockInGoal", () => {
 
 describe("updateContactMessagesOwner", () => {
   it("saves the chosen organiser as the owner", async () => {
-    prismaMock.user.findUnique.mockResolvedValueOnce({
+    const organiser = {
       firstName: "Sam",
       lastName: "Lee",
       email: "sam@example.com",
       role: "ADMIN",
-    });
+    };
+    // Pre-check + locked re-read.
+    prismaMock.user.findUnique.mockResolvedValueOnce(organiser).mockResolvedValueOnce(organiser);
 
     const result = await updateContactMessagesOwner(
       null,
@@ -317,6 +329,30 @@ describe("updateContactMessagesOwner", () => {
     const result = await updateContactMessagesOwner(
       null,
       form({ contactMessagesOwnerId: "member-1" }),
+    );
+
+    expect(result).toEqual({ ok: false, error: "Choose a current organiser." });
+    expect(prismaMock.siteSetting.upsert).not.toHaveBeenCalled();
+  });
+
+  it("rejects when the target is demoted between the pre-check and the locked write", async () => {
+    prismaMock.user.findUnique
+      .mockResolvedValueOnce({
+        firstName: "Sam",
+        lastName: "Lee",
+        email: "sam@example.com",
+        role: "ADMIN",
+      })
+      .mockResolvedValueOnce({
+        firstName: "Sam",
+        lastName: "Lee",
+        email: "sam@example.com",
+        role: "MEMBER",
+      });
+
+    const result = await updateContactMessagesOwner(
+      null,
+      form({ contactMessagesOwnerId: "admin-2" }),
     );
 
     expect(result).toEqual({ ok: false, error: "Choose a current organiser." });

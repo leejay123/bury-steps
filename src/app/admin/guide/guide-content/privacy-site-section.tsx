@@ -52,7 +52,9 @@ export function PrivacySiteSection() {
               Mini). Either choice is remembered for a year. The site does not use advertising
               cookies. Clerk still uses cookies that are needed to sign in. Vercel
               Analytics counts page views to show which pages are popular, without a cookie or a
-              per-person ID, so it is not affected by Accept or Decline. The notice links to the{" "}
+              per-person ID, so it is not affected by Accept or Decline. Views of invite,
+              email-preferences, and walk-share links (URLs that contain a private token) are
+              not sent to Analytics or Speed Insights. The notice links to the{" "}
               <Link href="/privacy-policy">Privacy Policy</Link>. The Facebook group link on the
               site is also set under <Link href="/admin/settings/branding">Branding</Link>.
             </p>
@@ -64,7 +66,15 @@ export function PrivacySiteSection() {
               Get directions into Google Maps or Apple Maps. The browser tab and bookmark icon
               use the same walking-boot mark. On a phone,
               “Add to Home Screen” (Safari) or “Install app”
-              (Chrome) adds a Bury Steps icon that opens straight to Walks.
+              (Chrome) adds a Bury Steps icon that opens straight to Walks.               The newsletter
+              subscribe form in the footer (Home, Privacy Policy, Terms of Service) is for
+              signed-in members only — you must have an account on the site before you can see
+              or use it; visitors do not see the form. It always uses the member’s account
+              email (not a typed-in address) and turns on Newsletter in their email
+              preferences. Opening Email preferences also turns the toggle on if they
+              already had an active footer signup from before that change. Turning
+              Newsletter off under email preferences also stops that footer signup for
+              the same address.
             </p>
             <p>
               Text, tables, and forms line up with the logo and nav. Photo and quote grids, and

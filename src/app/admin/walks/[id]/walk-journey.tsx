@@ -326,6 +326,7 @@ export function WalkJourneyManager({
                   defaultValue={
                     editing ? utcToLondonWallClock(editing.happenedAt) : liveDefaultHappenedAt
                   }
+                  disableFuture
                   id="journey-when"
                   name="happenedAt"
                   required

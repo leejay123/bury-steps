@@ -226,7 +226,7 @@ export default async function WalkDetailPage({
         canCancel={admin.permWalksCancel}
         canCreate={admin.permWalksCreate}
         canEdit={admin.permWalksEdit}
-        canExportRoster={admin.permWalksExport && admin.permWalksHealth}
+        canExportRoster={admin.permWalksExport}
         description={walk.description}
         durationMins={walk.durationMins}
         endedAt={walk.endedAt?.toISOString() ?? null}

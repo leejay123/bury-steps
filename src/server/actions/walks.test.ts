@@ -35,6 +35,11 @@ const {
     attendance: {
       updateMany: vi.fn(async () => ({ count: 0 })),
       aggregate: vi.fn(async () => ({ _max: { clockedInAt: null, clockedOutAt: null } })),
+      count: vi.fn(async () => 0),
+      deleteMany: vi.fn(async () => ({ count: 0 })),
+    },
+    walkJourneyEvent: {
+      aggregate: vi.fn(async () => ({ _max: { happenedAt: null } })),
     },
   };
   const transaction = vi.fn(async (arg: unknown) => {
@@ -81,7 +86,13 @@ vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("@/lib/db", () => ({ prisma: { ...prismaMock, $transaction: transaction } }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
 vi.mock("@/lib/site-owner", () => ({ isOwner, actorStillOwner }));
-vi.mock("@/lib/walk-slug", () => ({ walkShareUrl: vi.fn(() => "https://example.com/w/test") }));
+vi.mock("@/lib/walk-slug", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/walk-slug")>("@/lib/walk-slug");
+  return {
+    ...actual,
+    walkShareUrl: vi.fn(() => "https://example.com/w/test"),
+  };
+});
 vi.mock("@/lib/walk-slug-server", () => ({ allocateWalkSlug }));
 // Real email sending pulls in site-theme.ts (next/cache's unstable_cache,
 // not mocked above) and hits the network — out of scope for these tests.
@@ -209,6 +220,7 @@ describe("duplicateWalk", () => {
 
     const createCall = prismaMock.walk.create.mock.calls[0][0];
     expect(createCall.data.title).toBe(source.title);
+    // January — no DST transition in the week, so same as +7×24h UTC.
     expect(createCall.data.startsAt.getTime()).toBe(
       source.startsAt.getTime() + 7 * 24 * 60 * 60 * 1000,
     );
@@ -430,7 +442,19 @@ describe("reopenWalk", () => {
       token: "tok-1",
       slug: null,
       cancelledAt: new Date(),
+      startsAt: new Date("2030-09-13T13:30:00Z"),
+      durationMins: 60,
+      endedAt: null,
     });
+    queryRaw.mockResolvedValueOnce([
+      {
+        id: "walk-1",
+        cancelledAt: new Date(),
+        startsAt: new Date("2030-09-13T13:30:00Z"),
+        durationMins: 60,
+        endedAt: null,
+      },
+    ]);
     prismaMock.walk.updateMany.mockResolvedValueOnce({ count: 1 });
 
     const result = await reopenWalk(null, form({ walkId: "walk-1" }));
@@ -438,9 +462,10 @@ describe("reopenWalk", () => {
     expect(prismaMock.walk.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: "walk-1", cancelledAt: { not: null } },
-        data: { cancelledAt: null, cancelledReason: null },
+        data: { cancelledAt: null, cancelledReason: null, retentionLocked: false },
       }),
     );
+    expect(prismaMock.attendance.deleteMany).not.toHaveBeenCalled();
     expect(result.ok).toBe(true);
   });
 
@@ -454,9 +479,19 @@ describe("reopenWalk", () => {
       location: "The park",
       postcode: "BL9 0AA",
       what3words: null,
-      startsAt: new Date("2026-09-13T13:30:00Z"),
+      startsAt: new Date("2030-09-13T13:30:00Z"),
       durationMins: 60,
+      endedAt: null,
     });
+    queryRaw.mockResolvedValueOnce([
+      {
+        id: "walk-1",
+        cancelledAt: new Date(),
+        startsAt: new Date("2030-09-13T13:30:00Z"),
+        durationMins: 60,
+        endedAt: null,
+      },
+    ]);
     prismaMock.walk.updateMany.mockResolvedValueOnce({ count: 1 });
     prismaMock.user.findMany.mockResolvedValueOnce([
       { id: "user-1", email: "jane@example.com", firstName: "Jane", unsubscribeToken: null },
@@ -476,6 +511,7 @@ describe("reopenWalk", () => {
   });
 
   it("restores a walk that has already finished without telling members it's back on", async () => {
+    const pastStart = new Date(Date.now() - 7 * 24 * 60 * 60_000);
     prismaMock.walk.findUnique.mockResolvedValueOnce({
       id: "walk-1",
       token: "tok-1",
@@ -485,23 +521,107 @@ describe("reopenWalk", () => {
       location: null,
       postcode: null,
       what3words: null,
-      startsAt: new Date(Date.now() - 7 * 24 * 60 * 60_000),
+      startsAt: pastStart,
       durationMins: 60,
       endedAt: null,
     });
+    queryRaw.mockResolvedValueOnce([
+      {
+        id: "walk-1",
+        cancelledAt: new Date(),
+        startsAt: pastStart,
+        durationMins: 60,
+        endedAt: null,
+      },
+    ]);
     prismaMock.walk.updateMany.mockResolvedValueOnce({ count: 1 });
-    walkStatus.mockReturnValueOnce("completed");
+    prismaMock.attendance.deleteMany.mockResolvedValueOnce({ count: 2 });
+    walkStatus.mockReturnValue("completed");
 
     const result = await reopenWalk(null, form({ walkId: "walk-1" }));
 
-    expect(result.ok).toBe(true);
-    // Judged as if no longer cancelled — the state the walk is now in.
-    expect(walkStatus).toHaveBeenCalledWith(expect.objectContaining({ cancelledAt: null }));
+    expect(prismaMock.attendance.deleteMany).toHaveBeenCalledWith({ where: { walkId: "walk-1" } });
     expect(sendEmailBatch).not.toHaveBeenCalled();
     expect(result).toEqual({
       ok: true,
       message:
-        "Walk reopened in the record. Its time has already passed, so clock-in stays closed.",
+        "Walk reopened in the record. Its time has already passed, so clock-in stays closed and any clock-ins from before it was cancelled were cleared (they do not count on Progress).",
+    });
+  });
+
+  it("does not email members when reopening a walk that is already in progress", async () => {
+    const startsAt = new Date(Date.now() - 30 * 60_000);
+    prismaMock.walk.findUnique.mockResolvedValueOnce({
+      id: "walk-1",
+      token: "tok-1",
+      slug: "sunday-stroll",
+      cancelledAt: new Date(),
+      title: "Sunday stroll",
+      location: null,
+      postcode: null,
+      what3words: null,
+      startsAt,
+      durationMins: 60,
+      endedAt: null,
+    });
+    queryRaw.mockResolvedValueOnce([
+      {
+        id: "walk-1",
+        cancelledAt: new Date(),
+        startsAt,
+        durationMins: 60,
+        endedAt: null,
+      },
+    ]);
+    prismaMock.walk.updateMany.mockResolvedValueOnce({ count: 1 });
+    walkStatus.mockReturnValue("in-progress");
+
+    const result = await reopenWalk(null, form({ walkId: "walk-1" }));
+
+    expect(sendEmailBatch).not.toHaveBeenCalled();
+    expect(prismaMock.attendance.deleteMany).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      ok: true,
+      message: "Walk reopened. Clock-in is already open for this walk — no email was sent.",
+    });
+  });
+
+  it("still emails members when reopening in the starting-soon window", async () => {
+    const startsAt = new Date(Date.now() + 30 * 60_000);
+    prismaMock.walk.findUnique.mockResolvedValueOnce({
+      id: "walk-1",
+      token: "tok-1",
+      slug: "sunday-stroll",
+      cancelledAt: new Date(),
+      title: "Sunday stroll",
+      location: "The park",
+      postcode: null,
+      what3words: null,
+      startsAt,
+      durationMins: 60,
+      endedAt: null,
+    });
+    queryRaw.mockResolvedValueOnce([
+      {
+        id: "walk-1",
+        cancelledAt: new Date(),
+        startsAt,
+        durationMins: 60,
+        endedAt: null,
+      },
+    ]);
+    prismaMock.walk.updateMany.mockResolvedValueOnce({ count: 1 });
+    walkStatus.mockReturnValue("starting-soon");
+    prismaMock.user.findMany.mockResolvedValueOnce([
+      { id: "user-1", email: "jane@example.com", firstName: "Jane", unsubscribeToken: null },
+    ]);
+
+    const result = await reopenWalk(null, form({ walkId: "walk-1" }));
+
+    expect(sendEmailBatch).toHaveBeenCalled();
+    expect(result).toEqual({
+      ok: true,
+      message: "Walk reopened. Members can clock in again if the window is still open.",
     });
   });
 });
@@ -634,6 +754,23 @@ describe("endWalkEarly", () => {
     });
     expect(prismaMock.walk.updateMany).not.toHaveBeenCalled();
   });
+
+  it("refuses a backdated end earlier than an existing journey event", async () => {
+    walkStatus.mockReturnValueOnce("in-progress");
+    queryRaw.mockResolvedValueOnce([inProgressWalk()]);
+    prismaMock.walkJourneyEvent.aggregate.mockResolvedValueOnce({
+      _max: { happenedAt: new Date(Date.now() - 2 * 60_000) },
+    });
+
+    const result = await endWalkEarly(null, form({ walkId: "walk-1", minutesAgo: "15" }));
+
+    expect(result).toEqual({
+      ok: false,
+      error:
+        "That finish time is before a journey event on this walk. Choose a later time, or end it now.",
+    });
+    expect(prismaMock.walk.updateMany).not.toHaveBeenCalled();
+  });
 });
 
 describe("updateWalk", () => {
@@ -656,6 +793,7 @@ describe("updateWalk", () => {
       endedAt: null,
       token: "tok-1",
       slug: "sunday-stroll",
+      title: "Sunday stroll",
       ...overrides,
     };
   }
@@ -682,6 +820,22 @@ describe("updateWalk", () => {
 
     // Form posts a *different* start time and duration than what's stored.
     await updateWalk(null, updateForm({ startsAt: "2030-01-01T09:00", durationMins: "30" }));
+
+    const updateCall = prismaMock.walk.update.mock.calls[0][0];
+    expect(updateCall.data.startsAt).toEqual(original);
+    expect(updateCall.data.durationMins).toBe(60);
+  });
+
+  it("freezes date/time once someone has clocked in, even during starting-soon", async () => {
+    const original = new Date("2030-06-01T14:00:00Z");
+    queryRaw.mockResolvedValueOnce([
+      lockedWalk({ startsAt: original, durationMins: 60, slug: "sunday-stroll" }),
+    ]);
+    isWalkScheduleLocked.mockReturnValueOnce(false);
+    prismaMock.attendance.count.mockResolvedValueOnce(1);
+    prismaMock.walk.update.mockResolvedValueOnce({ token: "tok-1", slug: "sunday-stroll" });
+
+    await updateWalk(null, updateForm({ startsAt: "2030-06-08T09:00", durationMins: "30" }));
 
     const updateCall = prismaMock.walk.update.mock.calls[0][0];
     expect(updateCall.data.startsAt).toEqual(original);
@@ -740,17 +894,51 @@ describe("updateWalk", () => {
     // Schedule locked so the posted future start is ignored; walkStatus sees
     // a finished window once cancelledAt is cleared for the message check.
     isWalkScheduleLocked.mockReturnValueOnce(true);
-    walkStatus.mockReturnValueOnce("cancelled").mockReturnValueOnce("completed");
+    walkStatus
+      .mockReturnValueOnce("cancelled")
+      .mockReturnValueOnce("completed")
+      .mockReturnValueOnce("completed");
     prismaMock.walk.update.mockResolvedValueOnce({ token: "tok-1", slug: "sunday-stroll" });
+    prismaMock.attendance.deleteMany.mockResolvedValueOnce({ count: 1 });
 
     const result = await updateWalk(null, updateForm({ wasCancelled: "on" }));
 
+    expect(prismaMock.attendance.deleteMany).toHaveBeenCalledWith({ where: { walkId: "walk-1" } });
     expect(result).toEqual({
       ok: true,
       message:
-        "Walk updated and reopened in the record. Its time has already passed, so clock-in stays closed.",
+        "Walk updated and reopened in the record. Its time has already passed, so clock-in stays closed and any clock-ins from before it was cancelled were cleared (they do not count on Progress).",
     });
     expect(sendEmailBatch).not.toHaveBeenCalled();
+  });
+
+  it("keeps the public share slug when the title’s place word is unchanged", async () => {
+    queryRaw.mockResolvedValueOnce([lockedWalk({ slug: "sunday-a1b2c3", title: "Sunday stroll" })]);
+    prismaMock.walk.update.mockResolvedValueOnce({ token: "tok-1", slug: "sunday-a1b2c3" });
+
+    await updateWalk(null, updateForm({ title: "Sunday morning stroll" }));
+
+    expect(allocateWalkSlug).not.toHaveBeenCalled();
+    expect(prismaMock.walk.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ slug: "sunday-a1b2c3", title: "Sunday morning stroll" }),
+      }),
+    );
+  });
+
+  it("allocates a new share slug when the title’s place word changes", async () => {
+    queryRaw.mockResolvedValueOnce([lockedWalk({ slug: "sunday-a1b2c3", title: "Sunday stroll" })]);
+    allocateWalkSlug.mockResolvedValueOnce("burrs-x9y8z7");
+    prismaMock.walk.update.mockResolvedValueOnce({ token: "tok-1", slug: "burrs-x9y8z7" });
+
+    await updateWalk(null, updateForm({ title: "Burrs Country Park" }));
+
+    expect(allocateWalkSlug).toHaveBeenCalledWith("Burrs Country Park", "walk-1");
+    expect(prismaMock.walk.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ slug: "burrs-x9y8z7", title: "Burrs Country Park" }),
+      }),
+    );
   });
 
   it("notifies opted-in members when an edit brings a cancelled walk back", async () => {
@@ -834,7 +1022,17 @@ describe("setWalkRetentionLocked", () => {
     expect(result).toEqual({ ok: false, error: "No walk selected." });
   });
 
+  it("reports the walk as already gone when it cannot be found", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce(null);
+    const result = await setWalkRetentionLocked(
+      null,
+      form({ walkId: "walk-1", retentionLocked: "on" }),
+    );
+    expect(result).toEqual({ ok: false, error: "That walk is no longer there." });
+  });
+
   it("reports the walk as already gone (P2025) rather than a generic failure", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({ cancelledAt: new Date() });
     prismaMock.walk.update.mockRejectedValueOnce({ code: "P2025" });
     const result = await setWalkRetentionLocked(
       null,
@@ -843,7 +1041,21 @@ describe("setWalkRetentionLocked", () => {
     expect(result).toEqual({ ok: false, error: "That walk is no longer there." });
   });
 
+  it("refuses to flag a walk that is not cancelled", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({ cancelledAt: null });
+    const result = await setWalkRetentionLocked(
+      null,
+      form({ walkId: "walk-1", retentionLocked: "on" }),
+    );
+    expect(result).toEqual({
+      ok: false,
+      error: "Only a cancelled walk can be flagged to keep past auto-delete.",
+    });
+    expect(prismaMock.walk.update).not.toHaveBeenCalled();
+  });
+
   it("flags the walk", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({ cancelledAt: new Date() });
     prismaMock.walk.update.mockResolvedValueOnce({});
     const result = await setWalkRetentionLocked(
       null,
@@ -860,6 +1072,7 @@ describe("setWalkRetentionLocked", () => {
   });
 
   it("unflags the walk", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({ cancelledAt: new Date() });
     prismaMock.walk.update.mockResolvedValueOnce({});
     const result = await setWalkRetentionLocked(null, form({ walkId: "walk-1" }));
     expect(prismaMock.walk.update).toHaveBeenCalledWith({

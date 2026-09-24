@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import Script from "next/script";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/themes";
 import { Toaster } from "@/components/ui/sonner";
@@ -18,6 +16,7 @@ import { UnlockPageOnNavigate } from "@/components/overlay-root";
 import { SiteCookieConsentGate } from "@/components/site-cookie-consent-gate";
 import { StaleDeployReload } from "@/components/stale-deploy-reload";
 import { ImpersonationBannerSlot } from "@/components/impersonation-banner-slot";
+import { SiteAnalytics } from "@/components/site-analytics";
 import { getSiteTheme } from "@/lib/site-theme";
 import { DEFAULT_SITE_NAME, siteMetaDescription } from "@/lib/site-branding";
 import "./globals.css";
@@ -216,11 +215,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Vercel Analytics and Speed Insights are cookieless — page views and
           performance samples use a request-time hash, not a client-side
           identifier — so they need no entry in the cookie notice and work the
-          same whether someone accepts or declines it. See the "Cookies"
-          section of the privacy policy for the full explanation.
+          same whether someone accepts or declines it. Capability-token URLs
+          (invite / email-preferences / walk share) are dropped before send on
+          both scripts — see SiteAnalytics. See the "Cookies" section of the
+          privacy policy for the full explanation.
         */}
-        <Analytics />
-        <SpeedInsights />
+        <SiteAnalytics />
       </body>
     </html>
   );

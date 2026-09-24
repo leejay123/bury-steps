@@ -16,13 +16,14 @@ import {
   organiserInviteExpiresAt,
 } from "@/lib/organiser-invite";
 import { ORGANISER_PERMISSIONS, walksLandingPath } from "@/lib/organiser-permissions";
+import { isWalkHistoryReady } from "@/lib/walk-window";
 import {
   sendAccountDeletedEmail,
   sendAdminPromotedEmail,
   sendAdminDemotedEmail,
   sendOrganiserInviteEmail,
 } from "@/lib/email/mailer";
-import { syncContactUnsubscribed } from "@/lib/email/resend-audience";
+import { optOutNewsletterEverywhere } from "@/lib/email/newsletter-opt-out";
 import {
   type ActionResult,
   LimitReachedError,
@@ -315,10 +316,11 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
   await sendAccountDeletedEmail(target).catch((err) => {
     console.error("deleteMember: failed to send deletion confirmation email", err);
   });
-  // Drop them from the Resend newsletter segment too — campaigns broadcast
-  // to that audience, not only to live User rows.
-  await syncContactUnsubscribed(target.email).catch((err) => {
-    console.error("deleteMember: failed to remove from newsletter audience", err);
+  // Drop them from footer + member newsletter prefs + Resend — campaigns
+  // union active footer rows with opted-in members, so a bare Resend remove
+  // would be undone on the next campaign sync if a footer signup remained.
+  await optOutNewsletterEverywhere(target.email).catch((err) => {
+    console.error("deleteMember: failed to opt removed member out of newsletter", err);
   });
 
   const redirectTo = String(formData.get("redirectTo") ?? "").trim();
@@ -424,10 +426,7 @@ export async function setMemberRole(
       select: { organiserInviteRequired: true },
     });
     if (setting?.organiserInviteRequired) {
-      if (!(await actorStillOwner(admin.id))) {
-        return ownerDenied("change an organiser's role");
-      }
-      return sendOrganiserInvite(target);
+      return sendOrganiserInvite(admin.id, target);
     }
   }
 
@@ -438,6 +437,9 @@ export async function setMemberRole(
       const fresh = await tx.user.findUnique({ where: { id: target.id } });
       if (!fresh) throw new Error("MEMBER_GONE");
       if (fresh.role === role) return;
+      // Re-check under the owner lock — a concurrent addOwner/transfer can
+      // set isOwner after the pre-lock read and leave a MEMBER still owning.
+      if (role === "MEMBER" && fresh.isOwner) throw new Error("STILL_OWNER");
       if (role === "MEMBER" && fresh.role === "ADMIN") {
         const adminCount = await tx.user.count({ where: { role: "ADMIN" } });
         if (adminCount <= 1) {
@@ -473,6 +475,12 @@ export async function setMemberRole(
     if (err instanceof LimitReachedError) return { ok: false, error: err.message };
     if (err instanceof Error && err.message === "NOT_OWNER") {
       return ownerDenied("change an organiser's role");
+    }
+    if (err instanceof Error && err.message === "STILL_OWNER") {
+      return {
+        ok: false,
+        error: "Remove their owner access before making them a member.",
+      };
     }
     if (err instanceof Error && err.message === "MEMBER_GONE") {
       return { ok: false, error: "That member is no longer in the group." };
@@ -697,33 +705,48 @@ export async function removeOwner(
 /** Issues (or reissues) an organiser invite — shared by setMemberRole's
  * promote branch and resendOrganiserInvite. Role stays MEMBER; only
  * acceptOrganiserInvite ever flips it to ADMIN. */
-async function sendOrganiserInvite(target: {
-  id: string;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-}): Promise<ActionResult> {
+async function sendOrganiserInvite(
+  adminId: string,
+  target: {
+    id: string;
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+  },
+  ownerAction = "change an organiser's role",
+): Promise<ActionResult> {
   const token = makeOrganiserInviteToken();
   const expiresAt = organiserInviteExpiresAt();
 
   try {
-    // Only a still-MEMBER row can hold an invite — a concurrent accept or
-    // direct promote must not be overwritten with a fresh unused token.
-    const claimed = await prisma.user.updateMany({
-      where: { id: target.id, role: "MEMBER" },
-      data: {
-        organiserInviteToken: token,
-        organiserInviteSentAt: new Date(),
-        organiserInviteExpiresAt: expiresAt,
-      },
+    // Same owner locks as direct promote — a concurrent removeOwner after
+    // the caller's pre-check must not still mint an invite that escalates
+    // to ADMIN.
+    await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.lastAdmin, async (tx) => {
+      await tx.$executeRawUnsafe(`SELECT pg_advisory_xact_lock(${COUNT_LIMIT_LOCK_KEYS.lastOwner})`);
+      if (!(await actorStillOwner(adminId, tx))) throw new Error("NOT_OWNER");
+      // Only a still-MEMBER row can hold an invite — a concurrent accept or
+      // direct promote must not be overwritten with a fresh unused token.
+      const claimed = await tx.user.updateMany({
+        where: { id: target.id, role: "MEMBER" },
+        data: {
+          organiserInviteToken: token,
+          organiserInviteSentAt: new Date(),
+          organiserInviteExpiresAt: expiresAt,
+        },
+      });
+      if (claimed.count !== 1) throw new Error("INVITE_INELIGIBLE");
     });
-    if (claimed.count !== 1) {
+  } catch (err) {
+    if (err instanceof Error && err.message === "NOT_OWNER") {
+      return ownerDenied(ownerAction);
+    }
+    if (err instanceof Error && err.message === "INVITE_INELIGIBLE") {
       return {
         ok: false,
         error: "That member is no longer eligible for an organiser invite.",
       };
     }
-  } catch (err) {
     return logActionError("setMemberRole", err, "Could not send the invite. Try again.");
   }
 
@@ -765,9 +788,8 @@ export async function resendOrganiserInvite(
   if (target.role !== "MEMBER" || !target.organiserInviteToken) {
     return { ok: false, error: "There is no pending invite for this person." };
   }
-  if (!(await actorStillOwner(admin.id))) return ownerDenied("resend an organiser invite");
 
-  return sendOrganiserInvite(target);
+  return sendOrganiserInvite(admin.id, target, "resend an organiser invite");
 }
 
 export async function cancelOrganiserInvite(
@@ -862,6 +884,9 @@ export async function acceptOrganiserInvite(
         id: target.id,
         role: "MEMBER",
         organiserInviteToken: token,
+        // Claim must enforce expiry too — an in-memory check above can race
+        // the clock and still promote an invite that expired mid-request.
+        organiserInviteExpiresAt: { gt: new Date() },
       },
       data: {
         role: "ADMIN",
@@ -871,6 +896,8 @@ export async function acceptOrganiserInvite(
       },
     });
     if (accepted.count === 0) {
+      // Distinguishing "expired" vs "already used" here would need another
+      // read; treat both as invalid/used so the accept page stays simple.
       return { ok: false, error: "This invite link is invalid or has already been used." };
     }
   } catch (err) {
@@ -964,13 +991,21 @@ export async function getMemberHistory(userId: string): Promise<{
   ]);
   if (!member) return null;
 
+  // Same rule as /history — a live walk is not history yet. Subtract any
+  // in-progress rows in this page from the uncapped total so the organiser
+  // "Total walks" matches what the member sees on their History page.
+  const historyReady = member.attendances.filter((attendance) =>
+    isWalkHistoryReady(attendance.walk),
+  );
+  const inProgressCount = member.attendances.length - historyReady.length;
+
   return {
     name: displayName(member),
     email: member.email,
     role: member.role,
     createdAt: member.createdAt.toISOString(),
     walkCount: member._count.walksCreated,
-    attendanceCount,
+    attendanceCount: attendanceCount - inProgressCount,
     isYou: member.id === admin.id,
     isOwner: member.isOwner,
     pendingInvite: member.organiserInviteSentAt
@@ -980,7 +1015,7 @@ export async function getMemberHistory(userId: string): Promise<{
           expired: (member.organiserInviteExpiresAt?.getTime() ?? 0) < Date.now(),
         }
       : null,
-    items: member.attendances.map((attendance) => ({
+    items: historyReady.map((attendance) => ({
       id: attendance.id,
       walkId: attendance.walk.id,
       walkTitle: attendance.walk.title,
