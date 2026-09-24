@@ -3,8 +3,7 @@
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import type { EmailPreferences } from "@/lib/email-preferences";
-import { syncContactSubscribed } from "@/lib/email/resend-audience";
-import { optOutNewsletterEverywhere } from "@/lib/email/newsletter-opt-out";
+import { optInNewsletterEverywhere, optOutNewsletterEverywhere } from "@/lib/email/newsletter-opt-out";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { type ActionResult, isPrismaCode, logActionError } from "./shared";
 
@@ -18,7 +17,7 @@ async function syncNewsletterToggle(
   firstName: string | null,
 ): Promise<void> {
   if (wasSubscribed === isSubscribed) return;
-  if (isSubscribed) await syncContactSubscribed(email, firstName);
+  if (isSubscribed) await optInNewsletterEverywhere(email, firstName);
   else await optOutNewsletterEverywhere(email);
 }
 

@@ -3,6 +3,7 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { actorStillOwner } from "@/lib/site-owner";
 import {
   parseTestimonialsSectionEyebrow,
   parseTestimonialsSectionIntro,
@@ -42,6 +43,7 @@ import { readImageDimensions } from "@/lib/image-dimensions";
 import {
   type ActionResult,
   logActionError,
+  ownerDenied,
   permissionDenied,
   readOptionalImage,
   revalidateHomepage,
@@ -198,6 +200,7 @@ export async function updateCancelledWalkRetentionDays(
   // Display. An organiser with branding access alone must not change
   // auto-delete windows.
   if (!admin.permCacheReset) return permissionDenied("permCacheReset");
+  if (!(await actorStillOwner(admin.id))) return ownerDenied("change cancelled-walk retention");
   const parsed = parseRetentionDays(String(formData.get("cancelledWalkRetentionDays") ?? ""));
   if (parsed === "invalid") {
     return {
@@ -249,6 +252,7 @@ export async function updateAccidentReportRetentionDays(
   // Display. An organiser with branding access alone must not change
   // auto-delete windows.
   if (!admin.permCacheReset) return permissionDenied("permCacheReset");
+  if (!(await actorStillOwner(admin.id))) return ownerDenied("change accident-report retention");
   const parsed = parseRetentionDays(String(formData.get("accidentReportRetentionDays") ?? ""));
   if (parsed === "invalid") {
     return {

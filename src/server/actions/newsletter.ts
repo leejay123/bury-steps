@@ -11,7 +11,10 @@ import { getResendClient, fromAddress } from "@/lib/email/client";
 import { sendNewsletterSubscribedEmail } from "@/lib/email/mailer";
 import { paragraphsFrom } from "@/lib/email/render-template";
 import { getOrCreateAudienceId, syncContactSubscribed, syncContactUnsubscribed } from "@/lib/email/resend-audience";
-import { optOutNewsletterEverywhere } from "@/lib/email/newsletter-opt-out";
+import {
+  optInNewsletterEverywhere,
+  optOutNewsletterEverywhere,
+} from "@/lib/email/newsletter-opt-out";
 import { NewsletterCampaignEmail } from "@/lib/email/templates/newsletter-campaign";
 import { makeCapabilityToken } from "@/lib/email/unsubscribe";
 import { type ActionResult, isPrismaCode, logActionError, permissionDenied } from "./shared";
@@ -66,7 +69,9 @@ export async function subscribeToNewsletter(
       sendNewsletterSubscribedEmail(subscriber).catch((err) => {
         console.error("subscribeToNewsletter: failed to send confirmation email", err);
       }),
-      syncContactSubscribed(subscriber.email),
+      // Mirror into User.emailNewsletter + Resend — footer-only opt-in must
+      // not leave a member preference stuck off (or the reverse on opt-out).
+      optInNewsletterEverywhere(subscriber.email),
     ]);
   } catch (err) {
     return logActionError("subscribeToNewsletter", err, "Could not subscribe. Try again.");
@@ -160,6 +165,14 @@ export async function sendNewsletterCampaign(
     for (let i = 0; i < contacts.length; i += CONTACT_SYNC_CHUNK_SIZE) {
       const chunk = contacts.slice(i, i + CONTACT_SYNC_CHUNK_SIZE);
       await Promise.all(chunk.map(([email, firstName]) => syncContactSubscribed(email, firstName)));
+    }
+    // Drop anyone opted out on either store from the Resend segment before
+    // broadcasting — skipping re-sync alone leaves a stale contact that
+    // still receives the campaign.
+    const blockedEmails = [...blocked];
+    for (let i = 0; i < blockedEmails.length; i += CONTACT_SYNC_CHUNK_SIZE) {
+      const chunk = blockedEmails.slice(i, i + CONTACT_SYNC_CHUNK_SIZE);
+      await Promise.all(chunk.map((email) => syncContactUnsubscribed(email)));
     }
 
     const brand = await getEmailBrand();

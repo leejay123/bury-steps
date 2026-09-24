@@ -1,9 +1,9 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const { prismaMock, requireUser, syncContactSubscribed, optOutNewsletterEverywhere } = vi.hoisted(() => ({
+const { prismaMock, requireUser, optInNewsletterEverywhere, optOutNewsletterEverywhere } = vi.hoisted(() => ({
   prismaMock: { user: { update: vi.fn(), findUnique: vi.fn() } },
   requireUser: vi.fn(),
-  syncContactSubscribed: vi.fn(),
+  optInNewsletterEverywhere: vi.fn(async () => {}),
   optOutNewsletterEverywhere: vi.fn(async () => {}),
 }));
 
@@ -12,10 +12,10 @@ vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
   return { ...actual, requireUser };
 });
-// Real syncing hits Resend and the DB-cached audience id — out of scope for
-// these tests, which only care that the preferences row itself is saved.
-vi.mock("@/lib/email/resend-audience", () => ({ syncContactSubscribed }));
-vi.mock("@/lib/email/newsletter-opt-out", () => ({ optOutNewsletterEverywhere }));
+vi.mock("@/lib/email/newsletter-opt-out", () => ({
+  optInNewsletterEverywhere,
+  optOutNewsletterEverywhere,
+}));
 
 import { updateMemberEmailPreferences, updateMyEmailPreferences } from "./email-preferences";
 
@@ -112,6 +112,18 @@ describe("updateMemberEmailPreferences", () => {
     await updateMemberEmailPreferences(null, form({ token: "tok123" }));
 
     expect(optOutNewsletterEverywhere).toHaveBeenCalledWith("a@example.com");
+  });
+
+  it("mirrors a newsletter opt-in into the footer store and Resend", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({ emailNewsletter: false, role: "MEMBER" });
+    prismaMock.user.update.mockResolvedValueOnce({ email: "a@example.com", firstName: "Ada" });
+
+    await updateMemberEmailPreferences(
+      null,
+      form({ token: "tok123", emailNewsletter: "on" }),
+    );
+
+    expect(optInNewsletterEverywhere).toHaveBeenCalledWith("a@example.com", "Ada");
   });
 });
 

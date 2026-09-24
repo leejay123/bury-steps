@@ -4,6 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { clerkClient } from "@clerk/nextjs/server";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { actorStillOwner } from "@/lib/site-owner";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { WELCOME_NOTICE_SYSTEM_KEY } from "@/lib/notices";
 import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR } from "@/lib/theme";
@@ -45,7 +46,13 @@ import {
 import { isResetConfirmWord } from "@/lib/site-reset";
 import { DEFAULT_CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { clearAudienceCache } from "@/lib/email/resend-audience";
-import { type ActionResult, isNotFoundStatus, logActionError, permissionDenied } from "./shared";
+import {
+  type ActionResult,
+  isNotFoundStatus,
+  logActionError,
+  ownerDenied,
+  permissionDenied,
+} from "./shared";
 
 export async function clearSiteCache(
   _prev: ActionResult | null,
@@ -78,9 +85,13 @@ export async function resetSiteToDefault(
 
   const limited = checkRateLimit(`${admin.id}:resetSiteToDefault`, 3, 10 * 60_000);
   if (!limited.ok) return { ok: false, error: "Try again in a few minutes." };
+  // Fresh read — concurrent removeOwner must not leave a wipe past a
+  // stale React-cached owner flag from requireAdmin earlier in the request.
+  if (!(await actorStillOwner(admin.id))) return ownerDenied("reset the site");
 
   try {
     await prisma.$transaction(async (tx) => {
+      if (!(await actorStillOwner(admin.id, tx))) throw new Error("NOT_OWNER");
       await tx.accidentReport.deleteMany();
       await tx.walk.deleteMany();
       await tx.siteNotice.deleteMany();
@@ -253,6 +264,9 @@ export async function resetSiteToDefault(
       });
     });
   } catch (err) {
+    if (err instanceof Error && err.message === "NOT_OWNER") {
+      return ownerDenied("reset the site");
+    }
     return logActionError("resetSiteToDefault", err, "Could not reset the site. Try again.");
   }
 

@@ -34,13 +34,14 @@ vi.mock("@/lib/email/resend-audience", () => ({
 }));
 vi.mock("@/lib/email/newsletter-opt-out", () => ({
   optOutNewsletterEverywhere: vi.fn(async () => {}),
+  optInNewsletterEverywhere: vi.fn(async () => {}),
 }));
 vi.mock("next/headers", () => ({
   headers: vi.fn(async () => new Headers({ "x-forwarded-for": "203.0.113.1" })),
 }));
 
 import { subscribeToNewsletter, unsubscribeFromNewsletter } from "./newsletter";
-import { optOutNewsletterEverywhere } from "@/lib/email/newsletter-opt-out";
+import { optInNewsletterEverywhere, optOutNewsletterEverywhere } from "@/lib/email/newsletter-opt-out";
 
 function form(fields: Record<string, string>): FormData {
   const formData = new FormData();
@@ -92,7 +93,7 @@ describe("subscribeToNewsletter", () => {
       email: "jane@example.com",
       unsubscribeToken: "tok123",
     });
-    expect(syncContactSubscribed).toHaveBeenCalledWith("jane@example.com");
+    expect(optInNewsletterEverywhere).toHaveBeenCalledWith("jane@example.com");
     expect(result.ok).toBe(true);
   });
 

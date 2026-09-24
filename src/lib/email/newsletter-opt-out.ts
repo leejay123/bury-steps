@@ -1,5 +1,11 @@
 import { prisma } from "@/lib/db";
-import { syncContactUnsubscribed } from "@/lib/email/resend-audience";
+import { syncContactSubscribed, syncContactUnsubscribed } from "@/lib/email/resend-audience";
+
+function emailMatch(normalised: string) {
+  // Case-insensitive match — Clerk may store mixed-case emails while the
+  // footer form lowercases on the way in (same pattern as the Resend webhook).
+  return { equals: normalised, mode: "insensitive" as const };
+}
 
 /**
  * Newsletter opt-out is one preference across two stores (footer
@@ -9,18 +15,42 @@ import { syncContactUnsubscribed } from "@/lib/email/resend-audience";
 export async function optOutNewsletterEverywhere(email: string): Promise<void> {
   const normalised = email.trim().toLowerCase();
   if (!normalised) return;
-  // Case-insensitive match — Clerk may store mixed-case emails while the
-  // footer form lowercases on the way in (same pattern as the Resend webhook).
-  const emailMatch = { equals: normalised, mode: "insensitive" as const };
+  const match = emailMatch(normalised);
   await Promise.all([
     prisma.newsletterSubscriber.updateMany({
-      where: { email: emailMatch, unsubscribedAt: null },
+      where: { email: match, unsubscribedAt: null },
       data: { unsubscribedAt: new Date() },
     }),
     prisma.user.updateMany({
-      where: { email: emailMatch, emailNewsletter: true },
+      where: { email: match, emailNewsletter: true },
       data: { emailNewsletter: false },
     }),
   ]);
   await syncContactUnsubscribed(normalised);
+}
+
+/**
+ * Mirror of {@link optOutNewsletterEverywhere}: clear a footer unsubscribe,
+ * turn the member newsletter toggle back on when a matching User exists, and
+ * re-add them to the Resend audience. Does not create a new footer row —
+ * callers that need one (public subscribe) create/reactivate first.
+ */
+export async function optInNewsletterEverywhere(
+  email: string,
+  firstName?: string | null,
+): Promise<void> {
+  const normalised = email.trim().toLowerCase();
+  if (!normalised) return;
+  const match = emailMatch(normalised);
+  await Promise.all([
+    prisma.newsletterSubscriber.updateMany({
+      where: { email: match, unsubscribedAt: { not: null } },
+      data: { unsubscribedAt: null },
+    }),
+    prisma.user.updateMany({
+      where: { email: match, emailNewsletter: false },
+      data: { emailNewsletter: true },
+    }),
+  ]);
+  await syncContactSubscribed(normalised, firstName);
 }

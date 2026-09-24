@@ -10,6 +10,7 @@ const {
   getCount,
   deleteUser,
   transaction,
+  actorStillOwner,
 } = vi.hoisted(() => {
   // resetSiteToDefault's transaction touches a dozen-plus prisma models —
   // stub every model.method() call it could make with a Proxy two levels
@@ -40,6 +41,7 @@ const {
     getCount: vi.fn(),
     deleteUser: vi.fn(),
     transaction,
+    actorStillOwner: vi.fn(async () => true),
   };
 });
 
@@ -52,6 +54,7 @@ vi.mock("next/cache", () => ({
 }));
 vi.mock("@/lib/db", () => ({ prisma: { $transaction: transaction } }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
+vi.mock("@/lib/site-owner", () => ({ actorStillOwner }));
 vi.mock("@clerk/nextjs/server", () => ({
   clerkClient: vi.fn(async () => ({ users: { getUserList, getCount, deleteUser } })),
 }));
@@ -105,6 +108,7 @@ beforeEach(() => {
   checkRateLimit.mockReturnValue({ ok: true });
   getUserList.mockResolvedValue({ data: [] });
   getCount.mockResolvedValue(0);
+  actorStillOwner.mockResolvedValue(true);
 });
 
 describe("clearSiteCache", () => {
@@ -138,6 +142,13 @@ describe("resetSiteToDefault", () => {
   it("refuses without the exact confirm word", async () => {
     const result = await resetSiteToDefault(null, resetForm("yes please"));
     expect(result).toEqual({ ok: false, error: "Type delete to confirm, then try again." });
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it("refuses if the acting admin lost ownership before the wipe", async () => {
+    actorStillOwner.mockResolvedValueOnce(false);
+    const result = await resetSiteToDefault(null, resetForm("delete"));
+    expect(result).toEqual({ ok: false, error: "Only a site owner can reset the site." });
     expect(transaction).not.toHaveBeenCalled();
   });
 
