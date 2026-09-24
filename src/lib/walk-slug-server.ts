@@ -33,14 +33,16 @@ export async function ensureWalkSlug(walk: {
 }): Promise<string> {
   if (walk.slug) return walk.slug;
   const slug = await allocateWalkSlug(walk.title, walk.id);
-  try {
-    await prisma.walk.update({ where: { id: walk.id }, data: { slug } });
-    return slug;
-  } catch {
-    const fresh = await prisma.walk.findUnique({
-      where: { id: walk.id },
-      select: { slug: true },
-    });
-    return fresh?.slug ?? slug;
-  }
+  // Only the first concurrent claim wins — a plain update would overwrite a
+  // slug already shown on another tab / share link.
+  const claimed = await prisma.walk.updateMany({
+    where: { id: walk.id, slug: null },
+    data: { slug },
+  });
+  if (claimed.count === 1) return slug;
+  const fresh = await prisma.walk.findUnique({
+    where: { id: walk.id },
+    select: { slug: true },
+  });
+  return fresh?.slug ?? slug;
 }

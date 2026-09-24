@@ -120,7 +120,7 @@ describe("startImpersonation", () => {
   });
 
   it("creates an actor token, logs the event, and returns its url as href", async () => {
-    prismaMock.user.findUnique.mockResolvedValueOnce(MEMBER);
+    prismaMock.user.findUnique.mockResolvedValueOnce(MEMBER).mockResolvedValueOnce(MEMBER);
     actorTokensCreate.mockResolvedValueOnce({ url: "https://accounts.clerk.com/v1/client/actor/abc" });
 
     const result = await startImpersonation(null, form({ targetId: MEMBER.id }));
@@ -148,8 +148,22 @@ describe("startImpersonation", () => {
     });
   });
 
+  it("refuses if the target was promoted between the first check and token create", async () => {
+    prismaMock.user.findUnique
+      .mockResolvedValueOnce(MEMBER)
+      .mockResolvedValueOnce({ ...MEMBER, role: "ADMIN" });
+
+    const result = await startImpersonation(null, form({ targetId: MEMBER.id }));
+
+    expect(result).toEqual({
+      ok: false,
+      error: "You can only log in as a member, not another organiser.",
+    });
+    expect(actorTokensCreate).not.toHaveBeenCalled();
+  });
+
   it("reports an error if Clerk doesn't return a sign-in url", async () => {
-    prismaMock.user.findUnique.mockResolvedValueOnce(MEMBER);
+    prismaMock.user.findUnique.mockResolvedValueOnce(MEMBER).mockResolvedValueOnce(MEMBER);
     actorTokensCreate.mockResolvedValueOnce({ url: null });
 
     const result = await startImpersonation(null, form({ targetId: MEMBER.id }));
@@ -158,7 +172,7 @@ describe("startImpersonation", () => {
   });
 
   it("reports a generic failure if Clerk's API call throws", async () => {
-    prismaMock.user.findUnique.mockResolvedValueOnce(MEMBER);
+    prismaMock.user.findUnique.mockResolvedValueOnce(MEMBER).mockResolvedValueOnce(MEMBER);
     actorTokensCreate.mockRejectedValueOnce(new Error("network down"));
 
     const result = await startImpersonation(null, form({ targetId: MEMBER.id }));
@@ -171,7 +185,7 @@ describe("startImpersonation", () => {
   // instead of the generic fallback is the whole point, since "try again"
   // would be actively misleading for a quota that resets monthly.
   it("surfaces Clerk's own message when the impersonation plan limit is hit", async () => {
-    prismaMock.user.findUnique.mockResolvedValueOnce(MEMBER);
+    prismaMock.user.findUnique.mockResolvedValueOnce(MEMBER).mockResolvedValueOnce(MEMBER);
     actorTokensCreate.mockRejectedValueOnce(
       new ClerkAPIResponseError("Unprocessable Entity", {
         status: 422,

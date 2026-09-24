@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { bearerMatches } from "@/lib/bearer-auth";
 import { LONDON, londonWallClockToUtc } from "@/lib/dates";
+import { SITE_SETTING_ID } from "@/lib/theme";
 import { loadWalkGameData, walkGameFromLoadedData } from "@/lib/walk-progress";
 import { buildProgressSummaryEmail } from "@/lib/email/mailer";
 import { sendEmailBatch, type SendEmailInput } from "@/lib/email/client";
@@ -15,6 +16,14 @@ import { sendEmailBatch, type SendEmailInput } from "@/lib/email/client";
 export async function GET(req: Request) {
   if (!bearerMatches(req.headers.get("authorization"), process.env.CRON_SECRET)) {
     return new NextResponse("Unauthorised", { status: 401 });
+  }
+
+  const setting = await prisma.siteSetting.findUnique({
+    where: { id: SITE_SETTING_ID },
+    select: { progressEnabled: true },
+  });
+  if (setting && !setting.progressEnabled) {
+    return NextResponse.json({ skipped: true, reason: "progressDisabled" });
   }
 
   // The last instant of the previous month, in London's calendar — passing

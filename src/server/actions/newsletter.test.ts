@@ -32,11 +32,15 @@ vi.mock("@/lib/email/resend-audience", () => ({
   syncContactUnsubscribed,
   getOrCreateAudienceId: vi.fn(async () => null),
 }));
+vi.mock("@/lib/email/newsletter-opt-out", () => ({
+  optOutNewsletterEverywhere: vi.fn(async () => {}),
+}));
 vi.mock("next/headers", () => ({
   headers: vi.fn(async () => new Headers({ "x-forwarded-for": "203.0.113.1" })),
 }));
 
 import { subscribeToNewsletter, unsubscribeFromNewsletter } from "./newsletter";
+import { optOutNewsletterEverywhere } from "@/lib/email/newsletter-opt-out";
 
 function form(fields: Record<string, string>): FormData {
   const formData = new FormData();
@@ -142,18 +146,19 @@ describe("unsubscribeFromNewsletter", () => {
       where: { unsubscribeToken: "tok123", unsubscribedAt: null },
       data: { unsubscribedAt: expect.any(Date) },
     });
-    expect(syncContactUnsubscribed).toHaveBeenCalledWith("jane@example.com");
+    expect(optOutNewsletterEverywhere).toHaveBeenCalledWith("jane@example.com");
   });
 
   it("returns true idempotently when already unsubscribed", async () => {
     prismaMock.newsletterSubscriber.updateMany.mockReset();
     prismaMock.newsletterSubscriber.updateMany.mockResolvedValueOnce({ count: 0 });
     prismaMock.newsletterSubscriber.findUnique.mockResolvedValueOnce({
+      email: "jane@example.com",
       unsubscribedAt: new Date(),
     });
     const ok = await unsubscribeFromNewsletter("tok123");
     expect(ok).toBe(true);
-    expect(syncContactUnsubscribed).not.toHaveBeenCalled();
+    expect(optOutNewsletterEverywhere).toHaveBeenCalledWith("jane@example.com");
   });
 
   it("returns false for an unknown token instead of throwing", async () => {

@@ -90,6 +90,7 @@ export default async function AccidentReportsPage({
         canCreate={admin.permReportsCreate}
         canDelete={canDelete}
         canEdit={admin.permReportsEdit}
+        canViewMembers={admin.permMembersView}
         hasAnyReports={totalReports > 0}
         linkFilter={link}
         reports={reports.map((report) => ({

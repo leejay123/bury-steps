@@ -3,7 +3,8 @@
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import type { EmailPreferences } from "@/lib/email-preferences";
-import { syncContactSubscribed, syncContactUnsubscribed } from "@/lib/email/resend-audience";
+import { syncContactSubscribed } from "@/lib/email/resend-audience";
+import { optOutNewsletterEverywhere } from "@/lib/email/newsletter-opt-out";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { type ActionResult, isPrismaCode, logActionError } from "./shared";
 
@@ -18,7 +19,7 @@ async function syncNewsletterToggle(
 ): Promise<void> {
   if (wasSubscribed === isSubscribed) return;
   if (isSubscribed) await syncContactSubscribed(email, firstName);
-  else await syncContactUnsubscribed(email);
+  else await optOutNewsletterEverywhere(email);
 }
 
 /** `isAdmin` decides whether the organiser-only toggle is read at all. It

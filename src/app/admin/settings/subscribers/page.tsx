@@ -33,6 +33,8 @@ export default async function AdminSubscribersSettingsPage() {
     walkAnnouncementCount,
     noticesCount,
     progressCount,
+    footerEmailsForDedupe,
+    memberEmailsForDedupe,
   ] = await Promise.all([
     prisma.newsletterSubscriber.findMany({
       where: { unsubscribedAt: null },
@@ -52,9 +54,22 @@ export default async function AdminSubscribersSettingsPage() {
     prisma.user.count({ where: { emailWalkAnnouncements: true } }),
     prisma.user.count({ where: { emailNotices: true } }),
     prisma.user.count({ where: { emailProgress: true } }),
+    // Uncapped email-only scans for the campaign recipient total (same
+    // dedupe as sendNewsletterCampaign — people on both lists count once).
+    prisma.newsletterSubscriber.findMany({
+      where: { unsubscribedAt: null },
+      select: { email: true },
+    }),
+    prisma.user.findMany({
+      where: { emailNewsletter: true },
+      select: { email: true },
+    }),
   ]);
 
-  const newsletterRecipientCount = activeFooterCount + newsletterMemberCount;
+  const recipientEmails = new Set<string>();
+  for (const row of footerEmailsForDedupe) recipientEmails.add(row.email.toLowerCase());
+  for (const row of memberEmailsForDedupe) recipientEmails.add(row.email.toLowerCase());
+  const newsletterRecipientCount = recipientEmails.size;
 
   return (
     <SettingsPage

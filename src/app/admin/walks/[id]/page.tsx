@@ -221,7 +221,7 @@ export default async function WalkDetailPage({
       {walk.what3words ? <What3wordsLink address={walk.what3words} /> : null}
 
       <WalkDetailActions
-        attendanceCount={stillIn.length}
+        attendanceCount={walk.attendances.length}
         cancelledAt={walk.cancelledAt?.toISOString() ?? null}
         canCancel={admin.permWalksCancel}
         canCreate={admin.permWalksCreate}

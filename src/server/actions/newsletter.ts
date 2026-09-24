@@ -11,6 +11,7 @@ import { getResendClient, fromAddress } from "@/lib/email/client";
 import { sendNewsletterSubscribedEmail } from "@/lib/email/mailer";
 import { paragraphsFrom } from "@/lib/email/render-template";
 import { getOrCreateAudienceId, syncContactSubscribed, syncContactUnsubscribed } from "@/lib/email/resend-audience";
+import { optOutNewsletterEverywhere } from "@/lib/email/newsletter-opt-out";
 import { NewsletterCampaignEmail } from "@/lib/email/templates/newsletter-campaign";
 import { makeCapabilityToken } from "@/lib/email/unsubscribe";
 import { type ActionResult, isPrismaCode, logActionError, permissionDenied } from "./shared";
@@ -108,26 +109,45 @@ export async function sendNewsletterCampaign(
   if (!audienceId) return { ok: false, error: "Could not reach Resend to set up the newsletter audience." };
 
   try {
-    const [footerSubscribers, newsletterMembers] = await Promise.all([
-      prisma.newsletterSubscriber.findMany({
-        where: { unsubscribedAt: null },
-        select: { email: true },
-      }),
-      prisma.user.findMany({
-        where: { emailNewsletter: true },
-        select: { email: true, firstName: true },
-      }),
-    ]);
+    const [footerSubscribers, newsletterMembers, optedOutFooter, optedOutMembers] =
+      await Promise.all([
+        prisma.newsletterSubscriber.findMany({
+          where: { unsubscribedAt: null },
+          select: { email: true },
+        }),
+        prisma.user.findMany({
+          where: { emailNewsletter: true },
+          select: { email: true, firstName: true },
+        }),
+        // Defense in depth: an address opted out on either list must not be
+        // re-synced from the other (mirroring should already have cleared both).
+        prisma.newsletterSubscriber.findMany({
+          where: { unsubscribedAt: { not: null } },
+          select: { email: true },
+        }),
+        prisma.user.findMany({
+          where: { emailNewsletter: false },
+          select: { email: true },
+        }),
+      ]);
+
+    const blocked = new Set<string>();
+    for (const row of optedOutFooter) blocked.add(row.email.toLowerCase());
+    for (const row of optedOutMembers) blocked.add(row.email.toLowerCase());
 
     // Keyed by lowercased email so an old case-variant duplicate (e.g. from
     // before parseContactEmail lowercased on the way in) is only synced
     // once, not sent the campaign twice under two different-cased contacts.
     const uniqueByEmail = new Map<string, string | null>();
     for (const subscriber of footerSubscribers) {
-      uniqueByEmail.set(subscriber.email.toLowerCase(), null);
+      const key = subscriber.email.toLowerCase();
+      if (blocked.has(key)) continue;
+      uniqueByEmail.set(key, null);
     }
     for (const member of newsletterMembers) {
-      uniqueByEmail.set(member.email.toLowerCase(), member.firstName);
+      const key = member.email.toLowerCase();
+      if (blocked.has(key)) continue;
+      uniqueByEmail.set(key, member.firstName);
     }
     // Resend's Contacts API has no batch/bulk endpoint (unlike /emails/batch
     // — see sendEmailBatch in lib/email/client.ts), so this stays one
@@ -180,7 +200,7 @@ export async function removeNewsletterSubscriber(
       where: { id },
       select: { email: true },
     });
-    await syncContactUnsubscribed(subscriber.email);
+    await optOutNewsletterEverywhere(subscriber.email);
   } catch (err) {
     if (isPrismaCode(err, "P2025")) return { ok: true, message: "Already removed." };
     return logActionError("removeNewsletterSubscriber", err, "Could not remove that subscriber. Try again.");
@@ -211,14 +231,20 @@ export async function unsubscribeFromNewsletter(token: string): Promise<boolean>
         where: { unsubscribeToken: token },
         select: { email: true },
       });
-      if (subscriber) await syncContactUnsubscribed(subscriber.email);
+      if (subscriber) await optOutNewsletterEverywhere(subscriber.email);
       return true;
     }
     const existing = await prisma.newsletterSubscriber.findUnique({
       where: { unsubscribeToken: token },
-      select: { unsubscribedAt: true },
+      select: { email: true, unsubscribedAt: true },
     });
-    return Boolean(existing?.unsubscribedAt);
+    if (existing?.unsubscribedAt) {
+      // Idempotent confirm — still mirror in case a prior run only cleared
+      // the footer row before crashing.
+      await optOutNewsletterEverywhere(existing.email);
+      return true;
+    }
+    return false;
   } catch {
     return false;
   }

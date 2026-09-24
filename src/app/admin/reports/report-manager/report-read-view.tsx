@@ -6,9 +6,12 @@ import type { ReportView } from "./types";
 
 export function ReportReadView({
   canEdit,
+  canViewMembers = false,
   report,
 }: {
   canEdit: boolean;
+  /** permMembersView — member name badges link to their page only when true. */
+  canViewMembers?: boolean;
   report: ReportView;
 }) {
   const at = new Date(report.happenedAt);
@@ -38,11 +41,17 @@ export function ReportReadView({
         <p className="text-xs font-medium text-muted-foreground">Who was involved</p>
         {report.involvedMembers.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
-            {report.involvedMembers.map((member) => (
-              <Badge asChild key={member.id} variant="secondary">
-                <Link href={`/admin/members/${member.id}`}>{member.name}</Link>
-              </Badge>
-            ))}
+            {report.involvedMembers.map((member) =>
+              canViewMembers ? (
+                <Badge asChild key={member.id} variant="secondary">
+                  <Link href={`/admin/members/${member.id}`}>{member.name}</Link>
+                </Badge>
+              ) : (
+                <Badge key={member.id} variant="secondary">
+                  {member.name}
+                </Badge>
+              ),
+            )}
           </div>
         ) : null}
         {report.whoInvolved ? (

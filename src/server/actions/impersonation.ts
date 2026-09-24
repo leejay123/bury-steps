@@ -48,8 +48,18 @@ export async function startImpersonation(
 
   try {
     const clerk = await clerkClient();
+    // Re-check role immediately before minting — a concurrent promote must
+    // not leave an actor token for a brand-new organiser.
+    const fresh = await prisma.user.findUnique({
+      where: { id: target.id },
+      select: { id: true, clerkId: true, role: true, firstName: true, lastName: true, email: true },
+    });
+    if (!fresh || fresh.role !== "MEMBER") {
+      return { ok: false, error: "You can only log in as a member, not another organiser." };
+    }
+
     const actorToken = await clerk.actorTokens.create({
-      userId: target.clerkId,
+      userId: fresh.clerkId,
       actor: { sub: admin.clerkId },
       // Short-lived on purpose — this is a one-time sign-in link, not a
       // standing credential.
@@ -61,9 +71,9 @@ export async function startImpersonation(
         adminId: admin.id,
         adminName: displayName(admin),
         adminEmail: admin.email,
-        targetId: target.id,
-        targetName: displayName(target),
-        targetEmail: target.email,
+        targetId: fresh.id,
+        targetName: displayName(fresh),
+        targetEmail: fresh.email,
       },
     });
 
@@ -74,7 +84,7 @@ export async function startImpersonation(
     }
     return {
       ok: true,
-      message: `Signed in as ${displayName(target)}.`,
+      message: `Signed in as ${displayName(fresh)}.`,
       href: actorToken.url,
     };
   } catch (err) {

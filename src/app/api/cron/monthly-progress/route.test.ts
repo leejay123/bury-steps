@@ -7,7 +7,10 @@ const {
   buildProgressSummaryEmail,
   sendEmailBatch,
 } = vi.hoisted(() => ({
-  prismaMock: { user: { findMany: vi.fn(async (): Promise<unknown[]> => []) } },
+  prismaMock: {
+    user: { findMany: vi.fn(async (): Promise<unknown[]> => []) },
+    siteSetting: { findUnique: vi.fn(async () => ({ progressEnabled: true })) },
+  },
   loadWalkGameData: vi.fn(),
   walkGameFromLoadedData: vi.fn(),
   // buildProgressSummaryEmail normally returns the SendEmailInput it would
@@ -40,6 +43,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   sendEmailBatch.mockImplementation(async (emails: unknown[]) => ({ sent: emails.length, failed: 0 }));
   loadWalkGameData.mockResolvedValue(GAME_DATA);
+  prismaMock.siteSetting.findUnique.mockResolvedValue({ progressEnabled: true });
   process.env.CRON_SECRET = "test-secret";
 });
 
@@ -58,6 +62,15 @@ describe("GET /api/cron/monthly-progress", () => {
     delete process.env.CRON_SECRET;
     const res = await GET(request("anything"));
     expect(res.status).toBe(401);
+  });
+
+  it("skips sending when Progress is turned off in settings", async () => {
+    prismaMock.siteSetting.findUnique.mockResolvedValueOnce({ progressEnabled: false });
+    const res = await GET(request("test-secret"));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ skipped: true, reason: "progressDisabled" });
+    expect(prismaMock.user.findMany).not.toHaveBeenCalled();
+    expect(sendEmailBatch).not.toHaveBeenCalled();
   });
 
   it("summarises the month that just finished, not the current one", async () => {

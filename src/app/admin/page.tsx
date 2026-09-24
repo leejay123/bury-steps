@@ -62,7 +62,13 @@ export default async function AdminPage() {
         take: 200,
         select: {
           ...base,
-          _count: { select: { attendances: { where: { clockedOutAt: null } } } },
+          // Full clock-in count for History; still-on-walk for Upcoming's
+          // "On the walk" label (early leavers stay in History totals).
+          _count: { select: { attendances: true } },
+          attendances: {
+            where: { clockedOutAt: null },
+            select: { id: true },
+          },
         },
       }),
       prisma.walk.findMany({
@@ -80,7 +86,14 @@ export default async function AdminPage() {
       }),
     ]);
 
-    upcoming = recent.filter((walk) => walkStatus(walk) !== "completed").map(toRow);
+    upcoming = recent
+      .filter((walk) => walkStatus(walk) !== "completed")
+      .map((walk) =>
+        toRow({
+          ...walk,
+          _count: { attendances: walk.attendances.length },
+        }),
+      );
     past = [
       ...recent.filter((walk) => walkStatus(walk) === "completed"),
       ...older,
@@ -103,7 +116,11 @@ export default async function AdminPage() {
               <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
               <TabsTrigger value="past">History ({past.length})</TabsTrigger>
             </TabsList>
-            <TabsContent className="mt-4" value="upcoming">
+            <TabsContent
+              className="mt-4 data-[state=inactive]:hidden"
+              forceMount
+              value="upcoming"
+            >
               <AdminWalkTable
                 attendanceLabel="On the walk"
                 emptyDescription="Create one and it will show here."

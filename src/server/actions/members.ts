@@ -557,6 +557,8 @@ export async function transferOwnership(
   revalidatePath("/admin/members");
   revalidatePath(`/admin/members/${target.id}`);
   revalidatePath(`/admin/members/${admin.id}`);
+  // Layout nav (Members / Messages / Settings) depends on owner status.
+  revalidatePath("/", "layout");
 
   return { ok: true, message: `${displayName(target)} is now the site owner.` };
 }
@@ -620,6 +622,7 @@ export async function addOwner(_prev: ActionResult | null, formData: FormData): 
 
   revalidatePath("/admin/members");
   revalidatePath(`/admin/members/${target.id}`);
+  revalidatePath("/", "layout");
 
   return { ok: true, message: `${displayName(target)} is now also a site owner.` };
 }
@@ -676,6 +679,7 @@ export async function removeOwner(
 
   revalidatePath("/admin/members");
   revalidatePath(`/admin/members/${target.id}`);
+  revalidatePath("/", "layout");
 
   return { ok: true, message: `${displayName(target)} is no longer a site owner.` };
 }
