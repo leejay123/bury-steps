@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Email preferences",
+  robots: { index: false, follow: false },
 };
 
 export default async function EmailPreferencesPage({

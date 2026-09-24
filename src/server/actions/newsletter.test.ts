@@ -35,7 +35,11 @@ vi.mock("next/headers", () => ({
   headers: vi.fn(async () => new Headers({ "x-forwarded-for": "203.0.113.1" })),
 }));
 
-import { subscribeToNewsletter, unsubscribeFromNewsletter } from "./newsletter";
+import {
+  confirmNewsletterUnsubscribe,
+  subscribeToNewsletter,
+  unsubscribeFromNewsletter,
+} from "./newsletter";
 
 function form(fields: Record<string, string>): FormData {
   const formData = new FormData();
@@ -141,5 +145,32 @@ describe("unsubscribeFromNewsletter", () => {
     prismaMock.newsletterSubscriber.update.mockRejectedValueOnce(new Error("not found"));
     const ok = await unsubscribeFromNewsletter("does-not-exist");
     expect(ok).toBe(false);
+  });
+});
+
+describe("confirmNewsletterUnsubscribe", () => {
+  function tokenForm(token: string) {
+    const formData = new FormData();
+    formData.set("token", token);
+    return formData;
+  }
+
+  it("unsubscribes when the person presses the button", async () => {
+    prismaMock.newsletterSubscriber.update.mockResolvedValueOnce({ email: "jane@example.com" });
+    const result = await confirmNewsletterUnsubscribe(null, tokenForm("tok123"));
+    expect(result).toEqual({ ok: true, message: "You've been unsubscribed." });
+    expect(syncContactUnsubscribed).toHaveBeenCalledWith("jane@example.com");
+  });
+
+  it("reports an invalid link without throwing", async () => {
+    prismaMock.newsletterSubscriber.update.mockRejectedValueOnce(new Error("not found"));
+    const result = await confirmNewsletterUnsubscribe(null, tokenForm("nope"));
+    expect(result.ok).toBe(false);
+  });
+
+  it("does nothing for a missing token", async () => {
+    const result = await confirmNewsletterUnsubscribe(null, new FormData());
+    expect(result.ok).toBe(false);
+    expect(prismaMock.newsletterSubscriber.update).not.toHaveBeenCalled();
   });
 });

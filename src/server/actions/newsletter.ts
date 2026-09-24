@@ -201,3 +201,18 @@ export async function unsubscribeFromNewsletter(token: string): Promise<boolean>
     return false;
   }
 }
+
+/** The Unsubscribe button on /email-preferences/newsletter/[token]. The page
+ * itself no longer unsubscribes on load: email security scanners (Outlook
+ * Safe Links and the like) open links to check them, which silently
+ * unsubscribed people who never clicked. */
+export async function confirmNewsletterUnsubscribe(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const token = String(formData.get("token") ?? "");
+  if (!token || !(await unsubscribeFromNewsletter(token))) {
+    return { ok: false, error: "This unsubscribe link is invalid. Try the link in your most recent email." };
+  }
+  return { ok: true, message: "You've been unsubscribed." };
+}

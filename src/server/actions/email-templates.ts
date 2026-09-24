@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import {
   EMAIL_TEMPLATES,
+  getEmailTemplateMeta,
   isEmailTemplateKey,
   type EmailTemplateKey,
   type EmailTemplateOverrideValues,
@@ -59,15 +60,28 @@ export async function updateEmailTemplate(
     return { ok: false, error: `Keep the body under ${MAX_EMAIL_TEMPLATE_BODY} characters.` };
   }
 
+  // Store only what actually differs from the built-in wording. Saving an
+  // email where just the subject changed used to store the whole default
+  // body as an override too — marking it customised and freezing it, so
+  // later improvements to the default wording never reached it. A field
+  // put back to its default goes back to following the default.
+  // A blank subject isn't a real choice — null, so the default subject
+  // applies (see resolveEmailCopy). A blank body IS a real choice on some
+  // templates, so it's stored as-is, not nulled.
+  const meta = getEmailTemplateMeta(key);
+  const subjectOverride = subject && subject !== meta.defaultSubject ? subject : null;
+  const bodyOverride = body.trim() === meta.defaultBody.trim() ? null : body;
+
   try {
-    await prisma.emailTemplateOverride.upsert({
-      where: { key },
-      // A blank subject isn't a real choice — leave it null so the default
-      // subject applies (see resolveEmailCopy). A blank body IS a real
-      // choice on some templates, so it's stored as-is, not nulled.
-      create: { key, subject: subject || null, body },
-      update: { subject: subject || null, body },
-    });
+    if (subjectOverride === null && bodyOverride === null) {
+      await prisma.emailTemplateOverride.deleteMany({ where: { key } });
+    } else {
+      await prisma.emailTemplateOverride.upsert({
+        where: { key },
+        create: { key, subject: subjectOverride, body: bodyOverride },
+        update: { subject: subjectOverride, body: bodyOverride },
+      });
+    }
   } catch (err) {
     return logActionError("updateEmailTemplate", err, "Could not save this email. Try again.");
   }

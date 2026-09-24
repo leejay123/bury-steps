@@ -24,6 +24,7 @@ vi.mock("@/lib/auth", async () => {
 vi.mock("@/lib/email/test-send", () => ({ sendTestEmail }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
 
+import { getEmailTemplateMeta } from "@/lib/email/registry";
 import {
   getEmailTemplateOverrides,
   resetEmailTemplate,
@@ -116,16 +117,41 @@ describe("updateEmailTemplate", () => {
 
   it("saves subject and body, nulling a blank subject but keeping a blank body", async () => {
     prismaMock.emailTemplateOverride.upsert.mockResolvedValueOnce({});
-    const result = await updateEmailTemplate(
+    // welcome's default body isn't blank, so clearing it is a real change.
+    const result = await updateEmailTemplate(null, form({ key: "welcome", subject: "  ", body: "" }));
+
+    expect(prismaMock.emailTemplateOverride.upsert).toHaveBeenCalledWith({
+      where: { key: "welcome" },
+      create: { key: "welcome", subject: null, body: "" },
+      update: { subject: null, body: "" },
+    });
+    expect(result).toEqual({ ok: true, message: "Email updated." });
+  });
+
+  it("changing only the subject leaves the body following the default wording", async () => {
+    prismaMock.emailTemplateOverride.upsert.mockResolvedValueOnce({});
+    const meta = getEmailTemplateMeta("welcome");
+    await updateEmailTemplate(
       null,
-      form({ key: "contactAdminAlert", subject: "  ", body: "" }),
+      form({ key: "welcome", subject: "Hello from the group", body: meta.defaultBody }),
     );
 
     expect(prismaMock.emailTemplateOverride.upsert).toHaveBeenCalledWith({
-      where: { key: "contactAdminAlert" },
-      create: { key: "contactAdminAlert", subject: null, body: "" },
-      update: { subject: null, body: "" },
+      where: { key: "welcome" },
+      create: { key: "welcome", subject: "Hello from the group", body: null },
+      update: { subject: "Hello from the group", body: null },
     });
+  });
+
+  it("saving the default wording unchanged removes the override instead of storing a copy", async () => {
+    const meta = getEmailTemplateMeta("welcome");
+    const result = await updateEmailTemplate(
+      null,
+      form({ key: "welcome", subject: meta.defaultSubject, body: meta.defaultBody }),
+    );
+
+    expect(prismaMock.emailTemplateOverride.upsert).not.toHaveBeenCalled();
+    expect(prismaMock.emailTemplateOverride.deleteMany).toHaveBeenCalledWith({ where: { key: "welcome" } });
     expect(result).toEqual({ ok: true, message: "Email updated." });
   });
 

@@ -2,7 +2,8 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { clerkAuthorizedParties, shouldProxyClerkFrontendApi } from "@/lib/urls";
 
-const isPublic = createRouteMatcher([
+/** Routes that skip auth.protect() — exported for src/proxy.test.ts. */
+export const PUBLIC_ROUTES = [
   "/",
   "/home",
   "/w(.*)",
@@ -26,6 +27,13 @@ const isPublic = createRouteMatcher([
   // browser hit auth.protect() fetching it and got a 404 instead of the icon.
   "/icon",
   "/api/health",
+  // Linked from every email footer and must work signed out: newsletter
+  // subscribers who joined from the homepage footer have no account at
+  // all, so without this they were sent to sign-in and could never
+  // unsubscribe. Each page is gated by its own unguessable token instead.
+  // (The bare /email-preferences page — the signed-in version — stays
+  // protected.)
+  "/email-preferences/(.+)",
   "/__clerk(.*)",
   // Organiser URLs 404 for anyone who is not a signed-in organiser.
   // auth.protect() would send members and guests to sign-in, which would
@@ -40,7 +48,9 @@ const isPublic = createRouteMatcher([
   "/sitemap.xml",
   "/manifest.webmanifest",
   "/opengraph-image",
-]);
+];
+
+const isPublic = createRouteMatcher(PUBLIC_ROUTES);
 
 export default clerkMiddleware(
   async (auth, req) => {

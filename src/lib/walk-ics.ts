@@ -28,33 +28,45 @@ function icsUtc(date: Date): string {
 }
 
 function escapeIcsText(value: string): string {
-  return value
-    .replace(/\\/g, "\\\\")
-    .replace(/\n/g, "\\n")
-    .replace(/,/g, "\\,")
-    .replace(/;/g, "\\;");
+  return (
+    value
+      // Textarea input arrives with CRLF line endings; a bare CR left in a
+      // property value corrupts the file, so normalise before escaping.
+      .replace(/\r\n?/g, "\n")
+      .replace(/\\/g, "\\\\")
+      .replace(/\n/g, "\\n")
+      .replace(/,/g, "\\,")
+      .replace(/;/g, "\\;")
+  );
 }
 
+const utf8 = new TextEncoder();
+
+/**
+ * RFC 5545 §3.1: content lines are folded at 75 *octets*, continuation
+ * lines starting with a space. Counting characters let lines with curly
+ * quotes, accents or emoji run over, and slicing by UTF-16 unit could cut
+ * an emoji in half — so this walks whole code points and counts bytes.
+ */
 function foldLine(line: string): string {
-  // RFC 5545: lines longer than 75 octets should be folded with CRLF + space.
-  if (line.length <= 75) return line;
+  if (utf8.encode(line).length <= 75) return line;
   const chunks: string[] = [];
-  let remaining = line;
-  chunks.push(remaining.slice(0, 75));
-  remaining = remaining.slice(75);
-  while (remaining.length > 0) {
-    chunks.push(` ${remaining.slice(0, 74)}`);
-    remaining = remaining.slice(74);
+  let current = "";
+  let currentBytes = 0;
+  for (const char of line) {
+    const bytes = utf8.encode(char).length;
+    if (currentBytes + bytes > 75) {
+      chunks.push(current);
+      current = " ";
+      currentBytes = 1;
+    }
+    current += char;
+    currentBytes += bytes;
   }
+  chunks.push(current);
   return chunks.join("\r\n");
 }
 
-/**
- * Builds a single-event .ics file for a walk so phones and calendars can
- * add it. Times are stored as UTC (Z); calendar apps convert to the user's
- * local zone. The share URL is included so the invite still points at the
- * live walk page.
- */
 export function buildWalkIcs(walk: WalkIcsInput): string {
   const endsAt = new Date(walk.startsAt.getTime() + walk.durationMins * 60_000);
   const url = walkShareUrl(appUrl(), { token: walk.token, slug: walk.slug });

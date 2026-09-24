@@ -109,10 +109,16 @@ export function ReportsDisplaySection() {
             <p>
               Open <Link href="/admin/settings/reset">Reset the site</Link> to wipe walks,
               clock-ins, members, accident reports, notices, and homepage edits, and put the
-              starter photos, quotes, and FAQs back. A box asks you to type{" "}
+              starter photos, quotes, FAQs, and all the site wording back. A box asks you to type{" "}
               <strong>delete</strong> before it runs. You stay signed in as the organiser, so a
               member who joins afterwards cannot take that role. Everyone else has to create an
               account again. This cannot be undone.
+            </p>
+            <p>
+              Every newsletter has an unsubscribe link. It opens a page with an Unsubscribe
+              button, so people who signed up in the footer can stop the emails without an
+              account. Nothing changes until they press the button, because some email systems
+              open links automatically to check them.
             </p>
           </GuideBody>
         </AccordionContent>
