@@ -682,10 +682,15 @@ export async function updateWalk(
         // After the published start, keep the stored date, time, and length
         // even if the form still posts those fields (disabled controls) or
         // someone tampers with them. Title, meeting point, and notes can
-        // still change.
+        // still change. Same freeze once anyone has clocked in during the
+        // starting-soon window — rescheduling would rewrite opensAt/endsAt
+        // under existing attendance rows.
         let nextStartsAt = startsAt;
         let nextDurationMins = durationMins;
-        if (isWalkScheduleLocked(locked.startsAt)) {
+        const attendanceCount = await tx.attendance.count({ where: { walkId: id } });
+        const scheduleFrozen =
+          isWalkScheduleLocked(locked.startsAt) || attendanceCount > 0;
+        if (scheduleFrozen) {
           nextStartsAt = locked.startsAt;
           nextDurationMins = locked.durationMins;
         } else if (isWalkStartInThePast(startsAt)) {
@@ -849,6 +854,18 @@ export async function setWalkRetentionLocked(
   if (!id) return { ok: false, error: "No walk selected." };
 
   try {
+    const walk = await prisma.walk.findUnique({
+      where: { id },
+      select: { cancelledAt: true },
+    });
+    if (!walk) return { ok: false, error: "That walk is no longer there." };
+    if (!walk.cancelledAt) {
+      return {
+        ok: false,
+        error: "Only a cancelled walk can be flagged to keep past auto-delete.",
+      };
+    }
+
     await prisma.walk.update({ where: { id }, data: { retentionLocked: locked } });
   } catch (err) {
     if (isPrismaCode(err, "P2025")) return { ok: false, error: "That walk is no longer there." };

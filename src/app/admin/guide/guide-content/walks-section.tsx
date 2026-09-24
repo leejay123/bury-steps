@@ -117,8 +117,9 @@ export function WalksSection({
               and send people to the updated page. If the walk was
               cancelled, saving also puts it back on the diary. The walk’s own organiser page
               shows the same map members see on the share link. Once the published start time
-              has passed, date, time, and length freeze — changing them would rewrite the
-              record under people already walking. Title, meeting point, and notes stay
+              has passed — or once anyone has clocked in during Starting soon — date, time,
+              and length freeze — changing them would rewrite the
+              record under people already on the walk. Title, meeting point, and notes stay
               editable until the walk is Completed. Self clock-in stops at the scheduled end (or
               earlier if you used End walk); if someone was there but missed it, use Add someone.
             </li>
@@ -188,7 +189,8 @@ export function WalksSection({
           <p>
             <strong>Journey</strong> is the story of the walk — short timed events (a cafe stop,
             a viewpoint) with an optional note. It sits at the bottom of the organiser walk
-            page. Add events once the walk has started, including after Completed. Tap a row to
+            page. Add events once the walk has started, including after Completed — the time
+            must fall between the published start and the walk’s finish. Tap a row to
             edit; <strong>Remove</strong> on the list asks you to confirm, same as notices and
             reports. Use <strong>View journey</strong> to open the animated timeline in a
             drawer — members get the same button at the top of the walk link. Up to 20 events.
@@ -200,10 +202,11 @@ export function WalksSection({
             closed. They must already have an account; you cannot add someone who has never
             signed up. While the walk is still open, they are clocked in at the time you add
             them — including someone who already clocked out and came back. After Completed,
-            they show as attending from the start, with no health notes, and anyone already
-            on the roster cannot be added again. Reopen a cancelled walk first if you need
-            to add someone to it. Search by name or email — the list shows up to 40 matches
-            so it stays quick even with thousands of members.
+            they show as attending from the start, with no health notes. Someone still actively
+            on the roster cannot be added again; someone who left early can still have their
+            times corrected (or be marked as staying to the end). Reopen a cancelled walk first
+            if you need to add someone to it. Search by name or email — the list shows up to 40
+            matches so it stays quick even with thousands of members.
           </p>
           <p>
             To take someone off the roster, use <strong>Remove</strong> on their row. That

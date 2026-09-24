@@ -175,6 +175,7 @@ export default async function WalkLinkPage({
         <WalkLivePanel
           alreadyClockedInAt={myAttendance?.clockedInAt.toISOString() ?? null}
           beforeYouSetOffTips={theme.beforeYouSetOffTips}
+          cancelledAt={cancelledAtIso}
           clockedOutAt={myAttendance?.clockedOutAt?.toISOString() ?? null}
           durationMins={walk.durationMins}
           endedAt={endedAtIso}

@@ -321,13 +321,10 @@ describe("adminClockIn", () => {
     expect(prismaMock.attendance.update).not.toHaveBeenCalled();
   });
 
-  it("blocks re-adding once the window has closed, even if they'd clocked out", async () => {
+  it("still blocks an active attendance after the window has closed", async () => {
     prismaMock.user.findUnique.mockResolvedValueOnce(member);
     queryRaw.mockResolvedValueOnce([lockedWalkRow()]);
-    prismaMock.attendance.findUnique.mockResolvedValueOnce({
-      id: "att-1",
-      clockedOutAt: new Date(),
-    });
+    prismaMock.attendance.findUnique.mockResolvedValueOnce({ id: "att-1", clockedOutAt: null });
     windowState.mockReturnValueOnce("closed");
 
     const result = await adminClockIn(null, adminClockInForm());
@@ -482,6 +479,27 @@ describe("adminClockIn", () => {
       expect.objectContaining({ where: { id: "att-1" } }),
     );
     expect(prismaMock.attendance.create).not.toHaveBeenCalled();
+  });
+
+  it("lets an organiser correct a left-early record after the window has closed", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce(member);
+    queryRaw.mockResolvedValueOnce([lockedWalkRow()]);
+    prismaMock.attendance.findUnique.mockResolvedValueOnce({
+      id: "att-1",
+      clockedOutAt: new Date(),
+    });
+    windowState.mockReturnValueOnce("closed");
+    prismaMock.attendance.update.mockResolvedValueOnce({});
+
+    const result = await adminClockIn(
+      null,
+      adminClockInForm({ clockedInAt: "2026-01-05T14:05", clockedOutAt: "2026-01-05T14:40" }),
+    );
+
+    expect(result.ok).toBe(true);
+    expect(prismaMock.attendance.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "att-1" } }),
+    );
   });
 
   it("phrases the success message as 'added' rather than 'clocked in' once the window has closed", async () => {

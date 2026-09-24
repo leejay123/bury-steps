@@ -38,8 +38,9 @@ export type WalkFormDefaults = {
  * The fields of a walk — the one form behind both Create a walk and Edit
  * walk, so the two always ask for the same things in the same order:
  * title, then When / Where / Details. `defaults` is the walk being edited
- * (absent when creating). `scheduleLocked` — the walk has started, so date,
- * time and length can no longer change (updateWalk keeps the stored values
+ * (absent when creating). `scheduleLocked` — the walk has started, or
+ * someone has already clocked in during Starting soon, so date, time and
+ * length can no longer change (updateWalk keeps the stored values
  * regardless of what's posted).
  */
 export function WalkFormFields({
@@ -107,8 +108,8 @@ export function WalkFormFields({
         </div>
         {scheduleLocked ? (
           <FieldHint>
-            The walk has started, so its date, time and length can&apos;t change. Missed someone?
-            Add them on the walk page.
+            Date, time and length are locked once the walk has started or anyone has clocked
+            in. Missed someone? Add them on the walk page.
           </FieldHint>
         ) : null}
       </FormSection>

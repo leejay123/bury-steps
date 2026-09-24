@@ -352,12 +352,16 @@ export async function adminClockIn(
 
       const win = windowState(locked.startsAt, locked.durationMins, new Date(), locked.endedAt);
       if (existingAttendance) {
-        if (win === "closed" || !existingAttendance.clockedOutAt) {
+        // Still actively on the walk — cannot add again.
+        if (!existingAttendance.clockedOutAt) {
           return {
             ok: false as const,
             error: `${displayName(member)} is already on this walk’s list.`,
           };
         }
+        // Left early: allow correction / re-add even after the window closed
+        // (organiser catching up the record). While the window is open this
+        // also covers coming back mid-walk.
       }
 
       const now = new Date();

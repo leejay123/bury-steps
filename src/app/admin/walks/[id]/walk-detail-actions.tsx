@@ -76,7 +76,8 @@ export function WalkDetailActions({
   const status = walkStatus(walk, now);
   const isCompleted = status === "completed";
   const showCalendar = canAddWalkToCalendar(walk, now);
-  const scheduleLocked = isWalkScheduleLocked(walk.startsAt, now);
+  const scheduleLocked =
+    isWalkScheduleLocked(walk.startsAt, now) || totalAttendanceCount > 0;
   const showCancel =
     canCancel && !walk.cancelledAt && (status === "upcoming" || status === "starting-soon");
   const showEnd = canCancel && status === "in-progress";

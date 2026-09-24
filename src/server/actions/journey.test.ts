@@ -167,6 +167,28 @@ describe("createJourneyEvent", () => {
     expect(revalidatePath).toHaveBeenCalledWith("/admin/walks/walk-1");
     expect(result).toEqual({ ok: true, message: "Event added to the journey." });
   });
+
+  it("rejects a time before the walk started", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({
+      ...walk,
+      _count: { journeyEvents: 0 },
+    });
+
+    const result = await createJourneyEvent(null, eventForm({ happenedAt: "2026-01-05T13:00" }));
+    expect(result).toEqual({ ok: false, error: "Pick a time during the walk." });
+    expect(prismaMock.walkJourneyEvent.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects a time after the walk finished", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({
+      ...walk,
+      _count: { journeyEvents: 0 },
+    });
+
+    const result = await createJourneyEvent(null, eventForm({ happenedAt: "2026-01-05T16:00" }));
+    expect(result).toEqual({ ok: false, error: "Pick a time during the walk." });
+    expect(prismaMock.walkJourneyEvent.create).not.toHaveBeenCalled();
+  });
 });
 
 describe("updateJourneyEvent", () => {
