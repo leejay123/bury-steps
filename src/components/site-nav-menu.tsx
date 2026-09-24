@@ -3,19 +3,9 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { unlockIdleDocument } from "@/components/overlay-root";
-import { isNavItemActive, navItems, SETTINGS_MENU_GROUPS } from "@/components/site-nav-items";
-import { SettingsPageIcon } from "@/components/settings-page-icons";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { isNavItemActive, navItems } from "@/components/site-nav-items";
 import type { OrganiserPermissions } from "@/lib/organiser-permissions";
 
 function navLinkClass(active: boolean) {
@@ -64,64 +54,6 @@ function NavLink({
   );
 }
 
-/**
- * The "Settings" nav item, expanded into a dropdown of its sub-pages
- * (SETTINGS_MENU_ITEMS) instead of always landing on the hub page first —
- * every organiser has full access to all of them, so there's nothing left
- * to gate per item. The hub itself is still reachable (its own link at the
- * foot of the menu) for the fuller page with live counts.
- *
- * `modal={false}`: same reasoning as MemberRowActionsMenu — a modal Radix
- * dropdown locks background scroll the way Dialog/Drawer do by default,
- * which breaks the sticky top nav this lives in.
- */
-function SettingsNavMenu({
-  active,
-  className,
-}: {
-  active: boolean;
-  className?: string;
-}) {
-  return (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger
-        className={cn(navLinkClass(active), "inline-flex items-center gap-1", className)}
-        onPointerDown={() => {
-          unlockIdleDocument();
-        }}
-      >
-        {active ? <span className="absolute inset-0 rounded-md bg-muted" /> : null}
-        <span className="relative z-10">Settings</span>
-        <ChevronDown aria-hidden className="relative z-10 size-3.5" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-56">
-        {SETTINGS_MENU_GROUPS.map((group) => (
-          <div key={group.label}>
-            <DropdownMenuLabel>{group.label}</DropdownMenuLabel>
-            {group.items.map((item) => {
-              // Same red treatment as the hub's Danger zone row.
-              const danger = Boolean(item.danger);
-              return (
-                <DropdownMenuItem asChild key={item.href} variant={danger ? "destructive" : "default"}>
-                  <Link href={item.href} onClick={() => unlockIdleDocument()}>
-                    <SettingsPageIcon aria-hidden href={item.href} />
-                    {item.label}
-                  </Link>
-                </DropdownMenuItem>
-              );
-            })}
-          </div>
-        ))}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/admin/settings" onClick={() => unlockIdleDocument()}>
-            All settings
-          </Link>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
 
 /** Whether the nav's horizontal scroller has more content hidden past
  * either edge, so callers can fade that edge to hint "there's more to
@@ -228,9 +160,6 @@ export function SiteNavLinks({
     >
       {navItems(isAdmin, walksHref, permissions, progressEnabled).map((item) => {
         const active = isNavItemActive(pathname, item.href);
-        if (item.href === "/admin/settings") {
-          return <SettingsNavMenu active={active} className="shrink-0" key={item.href} />;
-        }
         return (
           <NavLink
             active={active}
@@ -281,9 +210,6 @@ export function SiteMobileNavBar({
       >
         {navItems(isAdmin, walksHref, permissions, progressEnabled).map((item) => {
           const active = isNavItemActive(pathname, item.href);
-          if (item.href === "/admin/settings") {
-            return <SettingsNavMenu active={active} className="shrink-0" key={item.href} />;
-          }
           return (
             <NavLink
               active={active}

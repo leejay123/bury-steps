@@ -16,9 +16,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-/** Icon per Settings page (see src/lib/settings-pages.ts), shared by the
- * hub's card table and the top nav's Settings dropdown so the two always
- * show the same picture for the same page. */
+/** Icon per Settings page (see src/lib/settings-pages.ts), for the
+ * Settings home's card table. */
 const SETTINGS_PAGE_ICONS: Record<string, LucideIcon> = {
   "/admin/settings/branding": LayoutGrid,
   "/admin/settings/hero-photos": ImageIcon,

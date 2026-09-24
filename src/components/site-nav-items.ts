@@ -3,7 +3,6 @@ import {
   hasAnySettingsPermission,
   type OrganiserPermissions,
 } from "@/lib/organiser-permissions";
-import { SETTINGS_PAGE_GROUPS } from "@/lib/settings-pages";
 
 /**
  * Which nav items an organiser sees depends on their granular permissions
@@ -53,21 +52,6 @@ export function navItems(
       : [{ href: "/history", label: "History" }]),
   ];
 }
-
-/**
- * What the "Settings" nav item expands to — see SettingsNavMenu in
- * site-nav-menu.tsx, which turns that one link into a dropdown listing
- * these directly, rather than always landing on the hub page first.
- * Derived from the same registry the hub itself uses
- * (src/lib/settings-pages.ts), so the two always list the same pages.
- */
-export const SETTINGS_MENU_GROUPS: {
-  label: string;
-  items: { href: string; label: string; danger?: boolean }[];
-}[] = SETTINGS_PAGE_GROUPS.map((group) => ({
-  label: group.label,
-  items: group.pages.map((page) => ({ href: page.href, label: page.title, danger: page.danger })),
-}));
 
 /**
  * Routes that require sign-in but aren't in the middleware's public-route

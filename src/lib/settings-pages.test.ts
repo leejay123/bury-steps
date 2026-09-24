@@ -1,7 +1,6 @@
 import { existsSync } from "fs";
 import path from "path";
 import { describe, expect, it } from "vitest";
-import { SETTINGS_MENU_GROUPS } from "@/components/site-nav-items";
 import { findSettingsPage, SETTINGS_PAGE_GROUPS, SITE_WORDING_PAGES } from "./settings-pages";
 
 const allLinks = SETTINGS_PAGE_GROUPS.flatMap((group) =>
@@ -32,11 +31,5 @@ describe("settings page registry", () => {
     expect(found?.page.title).toBe("Site wording");
     expect(found?.group.label).toBe("Homepage");
     expect(findSettingsPage("/admin/walks")).toBeNull();
-  });
-
-  it("gives the top nav's Settings menu the same pages as the hub", () => {
-    expect(SETTINGS_MENU_GROUPS.flatMap((group) => group.items.map((item) => item.href))).toEqual(
-      SETTINGS_PAGE_GROUPS.flatMap((group) => group.pages.map((page) => page.href)),
-    );
   });
 });

@@ -2,15 +2,13 @@ import type { OrganiserPermissions } from "./organiser-permissions";
 
 /**
  * The one list of every Settings page — the hub's card table
- * (src/app/admin/settings/page.tsx), the top nav's Settings dropdown
- * (SETTINGS_MENU_GROUPS in src/components/site-nav-items.ts) and each
- * page's own header (the group name above its title, via SettingsPage)
- * all read from here, so adding or renaming a page is a one-place change
- * and the three can never drift apart.
+ * (src/app/admin/settings/page.tsx) and each page's own header (the
+ * group name above its title, via SettingsPage) both read from here, so
+ * adding or renaming a page is a one-place change.
  *
  * Plain data only (no icon components) so a server component can pass it
  * straight to a client one — icons are looked up by `href` in
- * src/components/settings-page-icons.ts.
+ * src/components/settings-page-icons.tsx.
  */
 
 export type SettingsPageLink = {
