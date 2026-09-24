@@ -529,6 +529,22 @@ export async function endWalkEarly(
         throw new LimitReachedError("That's before this walk even started.");
       }
 
+      // Backdating past an existing clock-in/out would close the window under
+      // someone already recorded as attending after that finish time.
+      const latestAttendance = await tx.attendance.aggregate({
+        where: { walkId: locked.id },
+        _max: { clockedInAt: true, clockedOutAt: true },
+      });
+      const latestMs = Math.max(
+        latestAttendance._max.clockedInAt?.getTime() ?? 0,
+        latestAttendance._max.clockedOutAt?.getTime() ?? 0,
+      );
+      if (latestMs > 0 && endedAt.getTime() < latestMs) {
+        throw new LimitReachedError(
+          "That finish time is before someone clocked in or out. Choose a later time, or end it now.",
+        );
+      }
+
       const updated = await tx.walk.updateMany({
         where: { id: locked.id, endedAt: null },
         data: { endedAt },

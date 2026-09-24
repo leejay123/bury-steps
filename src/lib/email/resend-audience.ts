@@ -14,6 +14,13 @@ import { getResendClient } from "./client";
 
 let cachedAudienceId: string | null | undefined;
 
+/** Clears the in-process audience id cache — call after wiping
+ * SiteSetting.resendAudienceId (site reset) so the next sync creates or
+ * reloads a fresh audience instead of emailing the pre-wipe segment. */
+export function clearAudienceCache(): void {
+  cachedAudienceId = undefined;
+}
+
 /**
  * Returns the audience id, creating it on first use and persisting it on
  * the single SiteSetting row. Null if Resend isn't configured or the

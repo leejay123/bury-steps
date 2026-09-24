@@ -31,7 +31,10 @@ const {
       findUnique: vi.fn(),
     },
     user: { findMany: vi.fn(async () => []) },
-    attendance: { updateMany: vi.fn(async () => ({ count: 0 })) },
+    attendance: {
+      updateMany: vi.fn(async () => ({ count: 0 })),
+      aggregate: vi.fn(async () => ({ _max: { clockedInAt: null, clockedOutAt: null } })),
+    },
   };
   const transaction = vi.fn(async (arg: unknown) => {
     if (Array.isArray(arg)) return Promise.all(arg);
@@ -608,6 +611,23 @@ describe("endWalkEarly", () => {
     const result = await endWalkEarly(null, form({ walkId: "walk-1", minutesAgo: "60" }));
 
     expect(result).toEqual({ ok: false, error: "That's before this walk even started." });
+    expect(prismaMock.walk.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("refuses a backdated end earlier than an existing clock-in", async () => {
+    walkStatus.mockReturnValueOnce("in-progress");
+    queryRaw.mockResolvedValueOnce([inProgressWalk()]);
+    prismaMock.attendance.aggregate.mockResolvedValueOnce({
+      _max: { clockedInAt: new Date(Date.now() - 2 * 60_000), clockedOutAt: null },
+    });
+
+    const result = await endWalkEarly(null, form({ walkId: "walk-1", minutesAgo: "15" }));
+
+    expect(result).toEqual({
+      ok: false,
+      error:
+        "That finish time is before someone clocked in or out. Choose a later time, or end it now.",
+    });
     expect(prismaMock.walk.updateMany).not.toHaveBeenCalled();
   });
 });

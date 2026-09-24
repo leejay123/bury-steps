@@ -44,6 +44,7 @@ import {
 } from "@/lib/site-defaults";
 import { isResetConfirmWord } from "@/lib/site-reset";
 import { DEFAULT_CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
+import { clearAudienceCache } from "@/lib/email/resend-audience";
 import { type ActionResult, isNotFoundStatus, logActionError, permissionDenied } from "./shared";
 
 export async function clearSiteCache(
@@ -88,6 +89,9 @@ export async function resetSiteToDefault(
       await tx.newsletterSubscriber.deleteMany();
       await tx.emailTemplateOverride.deleteMany();
       await tx.emailEvent.deleteMany();
+      // Denormalized admin/target emails would otherwise survive the wipe
+      // and still show under Members → Sign-in log.
+      await tx.impersonationEvent.deleteMany();
       await tx.siteNoticeCategory.create({
         data: {
           id: "noticecat_general",
@@ -251,6 +255,10 @@ export async function resetSiteToDefault(
   } catch (err) {
     return logActionError("resetSiteToDefault", err, "Could not reset the site. Try again.");
   }
+
+  // SiteSetting.resendAudienceId was cleared above — drop the in-process
+  // cache so the next campaign doesn't keep mailing the pre-wipe segment.
+  clearAudienceCache();
 
   // List Clerk after the DB wipe so anyone who signed up during the wipe is
   // still revoked — do not trust a pre-transaction snapshot (TOCTOU).

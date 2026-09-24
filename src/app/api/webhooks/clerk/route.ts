@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     // demote/delete cannot wipe the last organiser or last owner. Journey
     // events Restrict on creator — must reassign too.
     try {
-      await prisma.$transaction(async (tx) => {
+      const removedEmail = await prisma.$transaction(async (tx) => {
         await tx.$executeRawUnsafe(
           `SELECT pg_advisory_xact_lock(${COUNT_LIMIT_LOCK_KEYS.lastAdmin})`,
         );
@@ -59,6 +59,7 @@ export async function POST(req: NextRequest) {
           where: { clerkId: evt.data.id },
           select: {
             id: true,
+            email: true,
             role: true,
             isOwner: true,
             _count: {
@@ -131,7 +132,14 @@ export async function POST(req: NextRequest) {
         }
 
         await tx.user.delete({ where: { id: target.id } });
+        return target.email;
       });
+      if (typeof removedEmail === "string" && removedEmail) {
+        const { syncContactUnsubscribed } = await import("@/lib/email/resend-audience");
+        await syncContactUnsubscribed(removedEmail).catch((err) => {
+          console.error("clerk webhook: failed to remove deleted user from newsletter audience", err);
+        });
+      }
     } catch (err) {
       console.error("clerk webhook: failed to remove local user after Clerk deletion", err);
     }

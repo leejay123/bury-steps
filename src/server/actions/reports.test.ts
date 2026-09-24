@@ -5,6 +5,7 @@ const { requireAdmin, prismaMock, sendAccidentReportAlertEmail, isOwner } = vi.h
   prismaMock: {
     accidentReport: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
     walk: { findUnique: vi.fn() },
+    attendance: { findMany: vi.fn(async () => []) },
     user: { findMany: vi.fn(async (): Promise<{ email: string }[]> => []) },
   },
   sendAccidentReportAlertEmail: vi.fn(async () => {}),
@@ -210,6 +211,27 @@ describe("addAccidentReport", () => {
     expect(prismaMock.accidentReport.create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ walkId: "walk-1" }) }),
     );
+  });
+
+  it("rejects tagged members who did not clock in to the linked walk", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({
+      id: "walk-1",
+      cancelledAt: null,
+      startsAt: new Date(Date.now() - 3 * 60 * 60_000),
+      durationMins: 60,
+      endedAt: null,
+    });
+    prismaMock.attendance.findMany.mockResolvedValueOnce([]);
+    const formData = reportForm({ walkId: "walk-1", whoInvolved: "" });
+    formData.append("involvedMemberIds", "member-1");
+
+    const result = await addAccidentReport(null, formData);
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Tagged members must have clocked in to the linked walk.",
+    });
+    expect(prismaMock.accidentReport.create).not.toHaveBeenCalled();
   });
 });
 

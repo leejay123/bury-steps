@@ -65,6 +65,9 @@ vi.mock("@/lib/email/mailer", () => ({
   sendAdminDemotedEmail: vi.fn(async () => {}),
   sendOrganiserInviteEmail: vi.fn(async () => {}),
 }));
+vi.mock("@/lib/email/resend-audience", () => ({
+  syncContactUnsubscribed: vi.fn(async () => {}),
+}));
 vi.mock("@/lib/organiser-invite", () => ({
   makeOrganiserInviteToken: vi.fn(() => "invite-token-123"),
   organiserInviteExpiresAt: vi.fn((from = new Date()) => new Date(from.getTime() + 7 * 24 * 60 * 60 * 1000)),

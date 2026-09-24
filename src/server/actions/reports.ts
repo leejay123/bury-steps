@@ -41,6 +41,27 @@ async function assertLinkableWalkId(
   return { ok: true };
 }
 
+/** When a walk is linked, tagged members must have clocked in to that walk
+ * — matches the checklist UI and stops a tampered id list from formally
+ * linking people who were never on the walk. */
+async function assertInvolvedMembersOnWalk(
+  walkId: string | undefined,
+  memberIds: string[],
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!walkId || memberIds.length === 0) return { ok: true };
+  const onWalk = await prisma.attendance.findMany({
+    where: { walkId, userId: { in: memberIds } },
+    select: { userId: true },
+  });
+  if (onWalk.length !== memberIds.length) {
+    return {
+      ok: false,
+      error: "Tagged members must have clocked in to the linked walk.",
+    };
+  }
+  return { ok: true };
+}
+
 /** Powers the member checklist on the report form once a walk is picked —
  * a plain data fetch, not a mutation, but still gated on admin auth since
  * it's called directly from the client as a server action. */
@@ -111,6 +132,8 @@ export async function addAccidentReport(
 
   const linkable = await assertLinkableWalkId(parsed.data.walkId);
   if (!linkable.ok) return linkable;
+  const onWalk = await assertInvolvedMembersOnWalk(parsed.data.walkId, involvedMemberIds);
+  if (!onWalk.ok) return onWalk;
 
   let walkTitle: string | null;
   let involvedSummary: string;
@@ -197,6 +220,8 @@ export async function updateAccidentReport(
 
   const linkable = await assertLinkableWalkId(parsed.data.walkId);
   if (!linkable.ok) return linkable;
+  const onWalk = await assertInvolvedMembersOnWalk(parsed.data.walkId, involvedMemberIds);
+  if (!onWalk.ok) return onWalk;
 
   try {
     await prisma.accidentReport.update({

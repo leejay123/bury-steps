@@ -109,11 +109,13 @@ export function ReportsDisplaySection() {
             <p>
               Open <Link href="/admin/settings/reset">Reset the site</Link> to wipe walks,
               clock-ins, members, accident reports, notices, contact messages, newsletter
-              subscribers, custom email wording, uploaded logo/favicon/report banner, and
-              homepage edits, and put the starter photos, quotes, FAQs, and retention defaults
-              back. A box asks you to type <strong>delete</strong> before it runs. You stay
-              signed in as the organiser, so a member who joins afterwards cannot take that
-              role. Everyone else has to create an account again. This cannot be undone.
+              subscribers, custom email wording, uploaded logo/favicon/report banner, the
+              organiser sign-in log, and homepage edits, and put the starter photos, quotes,
+              FAQs, and retention defaults back. The linked Resend newsletter audience is
+              cleared so the next campaign does not reuse the old list. A box asks you to type{" "}
+              <strong>delete</strong> before it runs. You stay signed in as the organiser, so a
+              member who joins afterwards cannot take that role. Everyone else has to create an
+              account again. This cannot be undone.
             </p>
           </GuideBody>
         </AccordionContent>
