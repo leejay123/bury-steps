@@ -74,8 +74,8 @@ export function AddOwnerButton({
                 <div className="space-y-2 text-sm text-muted-foreground">
                   <p>
                     {name} will gain full access to everything — able to promote or demote an
-                    organiser, edit an organiser&rsquo;s permissions, remove an organiser&rsquo;s
-                    account, and grant or remove another account&rsquo;s owner access, same as you.
+                    organiser, remove an account, manage who else is an owner, and use every
+                    organiser tool (Members, Messages, Settings, health notes), same as you.
                   </p>
                   <p>You keep your own owner access too — this adds them, it doesn&rsquo;t replace you.</p>
                 </div>

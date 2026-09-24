@@ -78,10 +78,11 @@ export async function requireUser(): Promise<User> {
 
 /**
  * Every admin page and server action reads permissions straight off the
- * returned row (`admin.permWalksView`, etc.) — every organiser has full
- * access, so this always merges in FULL_ORGANISER_PERMISSIONS. See
- * requirePermission/requireAnyPermission below for the page-gating
- * helpers built on top of this.
+ * returned row (`admin.permWalksView`, etc.). Owners get
+ * FULL_ORGANISER_PERMISSIONS; other organisers get the fixed
+ * ORGANISER_PERMISSIONS profile (walks + reports only — see
+ * src/lib/organiser-permissions.ts). See requirePermission /
+ * requireAnyPermission below for the page-gating helpers built on top.
  */
 export async function requireAdmin(): Promise<AdminUser> {
   const user = await getOptionalUser();

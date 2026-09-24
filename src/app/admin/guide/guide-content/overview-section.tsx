@@ -54,15 +54,15 @@ export function OverviewSection({
               clock-ins together, not a race.
             </p>
             <p>
-              <Badge>Organisers</Badge> also get Members, Reports, Settings, and this Guide in
-              the top menu, plus the same Progress page members see. You create walks, share the
-              link, see the roster and any health notes, record accident reports, manage who is
-              in the group, edit the homepage, and optionally set a monthly together goal.
+              <Badge>Organisers</Badge> get Walks tools and Reports in the top menu, plus this
+              Guide and the same Progress page members see. You create walks, share the link, see
+              the roster, record accident reports, and update a walk&rsquo;s Journey.
             </p>
             <p>
-              The first person to sign in becomes an organiser. Everyone after that is a member.
-              You can promote a member to organiser, or demote an organiser back to member, from{" "}
-              <Link href="/admin/members">Members</Link>.
+              <Badge>Owners</Badge> are organisers with full access — Members, Messages, Settings,
+              health notes on walks, and the ability to promote or demote organisers. The first
+              person to sign in becomes an owner. The group can have more than one. Manage who is
+              an owner from <Link href="/admin/members">Members</Link>.
             </p>
             <p>
               Organiser pages look the same as a missing link to everyone else. A member or

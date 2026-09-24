@@ -206,7 +206,7 @@ describe("deleteAccidentReport", () => {
     const result = await deleteAccidentReport(null, formData);
     expect(result).toEqual({
       ok: false,
-      error: "Only the site owner can delete an accident report.",
+      error: "Only a site owner can delete an accident report.",
     });
     expect(prismaMock.accidentReport.delete).not.toHaveBeenCalled();
   });

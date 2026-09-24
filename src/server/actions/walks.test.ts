@@ -692,7 +692,7 @@ describe("deleteWalk", () => {
   it("rejects an organiser who isn't the owner — deleting is owner-only", async () => {
     isOwner.mockResolvedValueOnce(false);
     const result = await deleteWalk(null, form({ walkId: "walk-1" }));
-    expect(result).toEqual({ ok: false, error: "Only the site owner can delete a walk." });
+    expect(result).toEqual({ ok: false, error: "Only a site owner can delete a walk." });
     expect(prismaMock.walk.delete).not.toHaveBeenCalled();
   });
 

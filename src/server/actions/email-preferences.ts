@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import type { EmailPreferences } from "@/lib/email-preferences";
 import { syncContactSubscribed, syncContactUnsubscribed } from "@/lib/email/resend-audience";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { type ActionResult, isPrismaCode, logActionError } from "./shared";
 
 /** Only fires the Resend sync when the newsletter toggle itself actually
@@ -47,6 +48,13 @@ export async function updateMemberEmailPreferences(
   const token = String(formData.get("token") ?? "");
   if (!token) return { ok: false, error: "This link is missing its token." };
 
+  // Token is unguessable (24 chars), but still throttle guess-and-check /
+  // scripted form spam on the public preferences page.
+  const limited = checkRateLimit(`emailPrefs:${token}`, 20, 60_000);
+  if (!limited.ok) {
+    return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
+  }
+
   try {
     const before = await prisma.user.findUnique({
       where: { unsubscribeToken: token },
@@ -87,6 +95,10 @@ export async function updateMyEmailPreferences(
   formData: FormData,
 ): Promise<ActionResult> {
   const user = await requireUser();
+  const limited = checkRateLimit(`${user.id}:emailPrefs`, 20, 60_000);
+  if (!limited.ok) {
+    return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
+  }
   const preferences = readPreferences(formData, user.role === "ADMIN");
 
   try {

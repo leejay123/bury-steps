@@ -165,7 +165,7 @@ export function WalksSection({
             stayed for the whole walk without clocking out, so “on the walk” would be wrong
             once it’s over — and clocking out itself stops being offered to members from then
             on, since there is nothing left to leave early from. Tap a row for email,
-            clock-out time, any clock-out reason, and health notes.{" "}
+            clock-out time, any clock-out reason, and (for owners) health notes.{" "}
             <strong>Remove</strong> sits on each list row (same as Journey and reports) when
             the walk is not cancelled — it asks you to confirm. If more than 20
             people clocked in, Previous and Next sit under either list.
@@ -205,9 +205,9 @@ export function WalksSection({
             those rows one by one.
           </p>
           <p>
-            Download roster (CSV) gives you names, emails, times, clock-out reasons, and any
-            health notes for that walk. On a phone, the action buttons under the map (roster,
-            calendar, Duplicate, Cancel, Edit, Remove) scroll sideways in one row.
+            Download roster (CSV) gives you names, emails, times, and clock-out reasons — and,
+            for owners, any health notes for that walk. On a phone, the action buttons under the
+            map (roster, calendar, Duplicate, Cancel, Edit, Remove) scroll sideways in one row.
           </p>
         </GuideBody>
       </AccordionContent>

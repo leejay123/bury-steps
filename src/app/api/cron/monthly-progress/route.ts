@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { bearerMatches } from "@/lib/bearer-auth";
 import { LONDON, londonWallClockToUtc } from "@/lib/dates";
 import { loadWalkGame } from "@/lib/walk-progress";
 import { buildProgressSummaryEmail } from "@/lib/email/mailer";
@@ -12,8 +13,7 @@ import { sendEmailBatch, type SendEmailInput } from "@/lib/email/client";
  * that's just started.
  */
 export async function GET(req: Request) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
+  if (!bearerMatches(req.headers.get("authorization"), process.env.CRON_SECRET)) {
     return new NextResponse("Unauthorised", { status: 401 });
   }
 

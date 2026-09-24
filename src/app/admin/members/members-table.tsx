@@ -135,7 +135,7 @@ function MemberListRow({
     // mistake and immediately cost you organiser access to
     // fix it — same reasoning as hiding your own Remove
     // action below. Another organiser can change it for you
-    // instead. Promoting/demoting/editing permissions is
+    // instead. Promoting/demoting and managing owner access is
     // also owner-only regardless of whose row this is.
     !member.isYou &&
     viewerIsOwner

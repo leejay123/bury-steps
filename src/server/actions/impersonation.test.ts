@@ -80,7 +80,7 @@ describe("startImpersonation", () => {
   it("rejects an organiser who isn't the owner", async () => {
     isOwner.mockResolvedValueOnce(false);
     const result = await startImpersonation(null, form({ targetId: "member-1" }));
-    expect(result).toEqual({ ok: false, error: "Only the site owner can log in as a member." });
+    expect(result).toEqual({ ok: false, error: "Only a site owner can log in as a member." });
     expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
   });
 

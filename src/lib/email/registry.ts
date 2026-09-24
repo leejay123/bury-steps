@@ -58,7 +58,7 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
     ],
     defaultSubject: "Welcome to {siteName}",
     defaultBody:
-      "Thanks for joining {siteName}. Upcoming walks show up on your dashboard, and you'll get an email when a new one is posted — location, meeting point, start time, and a link to clock in on the day.\n\nCome as you are — no winners, no losers, just people walking together.",
+      "Thanks for joining {siteName}. Upcoming walks show up on your Walks page, and you'll get an email when a new one is posted — location, meeting point, start time, and a link to clock in on the day.\n\nCome as you are — no winners, no losers, just people walking together.",
   },
   {
     key: "accountDeleted",

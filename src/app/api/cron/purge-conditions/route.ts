@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { bearerMatches } from "@/lib/bearer-auth";
 import { DEFAULT_CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { SITE_SETTING_ID } from "@/lib/theme";
 
@@ -17,8 +18,7 @@ import { SITE_SETTING_ID } from "@/lib/theme";
  * only 2 was previously always-on, at a hardcoded 30 days.
  */
 export async function GET(req: Request) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
+  if (!bearerMatches(req.headers.get("authorization"), process.env.CRON_SECRET)) {
     return new NextResponse("Unauthorised", { status: 401 });
   }
 

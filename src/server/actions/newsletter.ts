@@ -189,6 +189,10 @@ export async function removeNewsletterSubscriber(
 
 /** Powers the one-click unsubscribe link in every newsletter email's footer. */
 export async function unsubscribeFromNewsletter(token: string): Promise<boolean> {
+  if (!token) return false;
+  const limited = checkRateLimit(`newsletterUnsub:${token}`, 20, 60_000);
+  if (!limited.ok) return false;
+
   try {
     const subscriber = await prisma.newsletterSubscriber.update({
       where: { unsubscribeToken: token },

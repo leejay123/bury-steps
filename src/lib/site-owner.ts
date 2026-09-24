@@ -3,18 +3,19 @@ import { prisma } from "./db";
 /**
  * The owner set — any number of accounts (at least one; removeOwner in
  * src/server/actions/members.ts refuses to strip the last one) can hold
- * full "master organiser" access: promote or demote an organiser, edit an
- * organiser's permissions, remove an organiser's account, and grant or
- * revoke another account's owner access. Stored directly on User.isOwner —
+ * full "master organiser" access: promote or demote an organiser, remove
+ * an account, grant or revoke another account's owner access, and
+ * everything else in FULL_ORGANISER_PERMISSIONS (Members, Messages,
+ * Settings, health notes on walks, …). Stored directly on User.isOwner —
  * previously a single SiteSetting.ownerId pointer, back when there could
  * only ever be one.
  *
- * Set automatically the moment the very first organiser is bootstrapped
- * (see syncLocalUser in src/lib/local-user.ts); changed after that via
- * addOwner/removeOwner/transferOwnership in src/server/actions/members.ts.
- * Any organiser holding the Members permission can still view the member
- * list and remove a plain member's account — only the owner-only actions
- * above are gated by this.
+ * Plain organisers get a fixed narrower profile (walks + accident reports
+ * only — see ORGANISER_PERMISSIONS); those capabilities are not edited per
+ * person. Set automatically the moment the very first organiser is
+ * bootstrapped (see syncLocalUser in src/lib/local-user.ts); changed after
+ * that via addOwner/removeOwner/transferOwnership in
+ * src/server/actions/members.ts.
  */
 export async function isOwner(userId: string): Promise<boolean> {
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { isOwner: true } });

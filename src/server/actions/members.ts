@@ -42,9 +42,10 @@ export type MemberRow = {
   /** Set only while role is still MEMBER and an organiser invite is
    * outstanding — see setMemberRole/acceptOrganiserInvite. */
   pendingInvite: { sentAt: string; expiresAt: string; expired: boolean } | null;
-  /** The site's single "master organiser" (see src/lib/site-owner.ts) —
-   * only they can promote/demote an organiser, edit an organiser's
-   * permissions, or remove an organiser's account. */
+  /** One of the site's owners (see src/lib/site-owner.ts) — only owners
+   * can promote/demote an organiser, manage owner access, or remove an
+   * account. Organiser capabilities are fixed profiles, not edited per
+   * person. */
   isOwner: boolean;
   /** A plain member who has never clocked in, or an organiser invite that's
    * expired — the two things on this list most worth an organiser's notice.
