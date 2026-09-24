@@ -2,6 +2,7 @@
 
 import { CalendarPlus, Download } from "lucide-react";
 import { useWalkClock } from "@/hooks/use-walk-clock";
+import { useRouterRefreshOnVisible } from "@/hooks/use-router-refresh-on-visible";
 import {
   canAddWalkToCalendar,
   isWalkScheduleLocked,
@@ -20,6 +21,8 @@ import { ReopenWalkButton } from "./reopen-walk-button";
  * on the live phase of the walk — if these were decided only on the server,
  * a page left open through Starting soon → In progress would still offer
  * Cancel (and skip End walk) until a refresh. Same clock the status badge uses.
+ * Soft-refreshes on tab focus so Cancel / End walk from another device updates
+ * the toolbar without navigating away.
  */
 export function WalkDetailActions({
   attendanceCount,
@@ -66,6 +69,7 @@ export function WalkDetailActions({
   walkId: string;
   what3words: string | null;
 }) {
+  useRouterRefreshOnVisible();
   const now = useWalkClock({ cancelledAt, durationMins, endedAt, startsAt });
   const walk = {
     cancelledAt: cancelledAt ? new Date(cancelledAt) : null,

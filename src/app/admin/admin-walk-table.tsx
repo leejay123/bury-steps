@@ -12,6 +12,7 @@ import { DataList, DataListBody, DataListItem, DataListItemMain, dataListItemSta
 import { ListPagination } from "@/components/list-pagination";
 import { usePagedList } from "@/hooks/use-paged-list";
 import { useLiveNow } from "@/hooks/use-live-now";
+import { useRouterRefreshOnVisible } from "@/hooks/use-router-refresh-on-visible";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
@@ -73,6 +74,9 @@ export function AdminWalkTable({
   const statusOptions = scope === "upcoming" ? UPCOMING_STATUS_OPTIONS : PAST_STATUS_OPTIONS;
   const now = useLiveNow();
   const router = useRouter();
+  // Cancel / End walk on another device — pick up when returning to this tab
+  // so early-ended walks leave Upcoming before the scheduled end.
+  useRouterRefreshOnVisible();
 
   // Upcoming is SSR-split from History. Dropping a finished walk client-side
   // alone would hide it from both tabs until the next navigation — refresh

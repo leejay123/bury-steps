@@ -90,6 +90,7 @@ export function WalksSection({
             meeting point, and share link. Members see every upcoming walk on their Walks page.
             If they leave a walk link or Upcoming open, coming back to that tab picks up a
             Cancel or End walk so the badge and clock-in match without navigating away.
+            Organiser Upcoming and the walk toolbar do the same when they return to the tab.
           </p>
           <p className="font-medium text-foreground">Cancel, end early, edit, reopen, duplicate, or remove</p>
           <ul className="list-disc pl-5">

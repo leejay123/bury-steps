@@ -5,6 +5,10 @@ import { walkStatus } from "@/lib/walk-window";
 /** Cap for the member-facing "All walks" tab — a weekly walk for a decade
  * is ~520, so this comfortably covers any realistic history. */
 const ALL_WALKS_LIMIT = 500;
+/** Future-dated cancellations sort ahead of past completed walks by
+ * startsAt desc; keep a small dedicated window so heavy cancel/reschedule
+ * cannot crowd completed history out of the 500-row take. */
+const FUTURE_CANCELLED_LIMIT = 50;
 
 export type AllWalksRow = {
   id: string;
@@ -20,6 +24,32 @@ export type AllWalksRow = {
   attendanceCount: number;
 };
 
+const walkSelect = {
+  id: true,
+  token: true,
+  slug: true,
+  title: true,
+  location: true,
+  startsAt: true,
+  durationMins: true,
+  endedAt: true,
+  cancelledAt: true,
+  _count: { select: { attendances: true } },
+} as const;
+
+type WalkCandidate = {
+  id: string;
+  token: string;
+  slug: string | null;
+  title: string;
+  location: string | null;
+  startsAt: Date;
+  durationMins: number;
+  endedAt: Date | null;
+  cancelledAt: Date | null;
+  _count: { attendances: number };
+};
+
 /**
  * Every completed or cancelled walk site-wide, newest first —
  * title/date/location only (plus cancelledAt, so the list can label and
@@ -31,34 +61,40 @@ export type AllWalksRow = {
  */
 export async function getAllWalksSiteWide(): Promise<AllWalksRow[]> {
   const now = new Date();
-  const candidates = await prisma.walk.findMany({
-    // A walk only ever belongs here once it's resolved one way or the
-    // other: it has already started (so it's completed or in-progress —
-    // in-progress gets filtered out below), or it was cancelled outright
-    // (which can happen before its original date, so that alone also
-    // qualifies regardless of startsAt).
-    where: { OR: [{ cancelledAt: { not: null } }, { startsAt: { lte: now } }] },
-    orderBy: { startsAt: "desc" },
-    take: ALL_WALKS_LIMIT,
-    select: {
-      id: true,
-      token: true,
-      slug: true,
-      title: true,
-      location: true,
-      startsAt: true,
-      durationMins: true,
-      endedAt: true,
-      cancelledAt: true,
-      _count: { select: { attendances: true } },
-    },
-  });
+  // Split the query so future cancellations (high startsAt) cannot fill the
+  // take window and push older completed walks off All walks.
+  const [pastOrStarted, futureCancelled] = await Promise.all([
+    prisma.walk.findMany({
+      where: {
+        OR: [
+          { cancelledAt: { not: null }, startsAt: { lte: now } },
+          { cancelledAt: null, startsAt: { lte: now } },
+        ],
+      },
+      orderBy: { startsAt: "desc" },
+      take: ALL_WALKS_LIMIT,
+      select: walkSelect,
+    }),
+    prisma.walk.findMany({
+      where: { cancelledAt: { not: null }, startsAt: { gt: now } },
+      orderBy: { startsAt: "asc" },
+      take: FUTURE_CANCELLED_LIMIT,
+      select: walkSelect,
+    }),
+  ]);
 
-  return candidates
+  const byId = new Map<string, WalkCandidate>();
+  for (const walk of [...pastOrStarted, ...futureCancelled]) {
+    byId.set(walk.id, walk);
+  }
+
+  return [...byId.values()]
     .filter((walk) => {
       const status = walkStatus(walk, now);
       return status === "completed" || status === "cancelled";
     })
+    .sort((a, b) => b.startsAt.getTime() - a.startsAt.getTime())
+    .slice(0, ALL_WALKS_LIMIT)
     .map((walk) => ({
       id: walk.id,
       token: walk.token,

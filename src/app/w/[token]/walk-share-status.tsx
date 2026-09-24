@@ -8,6 +8,7 @@ import {
   windowState,
 } from "@/lib/walk-window";
 import { useWalkClock } from "@/hooks/use-walk-clock";
+import { useRouterRefreshOnVisible } from "@/hooks/use-router-refresh-on-visible";
 import { accountPortalHref } from "@/lib/urls";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,8 @@ import { WalkFacts } from "@/components/walk-facts";
 /**
  * Status-dependent chrome on the public share page: top alerts, title card,
  * and calendar button. Recomputes with useWalkClock so a tab left open
- * through clock-in open / finish does not keep stale copy.
+ * through clock-in open / finish does not keep stale copy. Soft-refreshes
+ * on tab focus so Cancel / End walk elsewhere update for guests and members.
  */
 export function WalkShareStatusChrome({
   attended,
@@ -47,6 +49,7 @@ export function WalkShareStatusChrome({
   title: string;
   walkUrl: string;
 }) {
+  useRouterRefreshOnVisible();
   const now = useWalkClock({ cancelledAt, durationMins, endedAt, startsAt });
   const walk = {
     cancelledAt: cancelledAt ? new Date(cancelledAt) : null,
