@@ -11,6 +11,7 @@ import { getResendClient, fromAddress } from "@/lib/email/client";
 import { sendNewsletterSubscribedEmail } from "@/lib/email/mailer";
 import { paragraphsFrom } from "@/lib/email/render-template";
 import { getOrCreateAudienceId, syncContactSubscribed, syncContactUnsubscribed } from "@/lib/email/resend-audience";
+import { SITE_SETTING_ID } from "@/lib/theme";
 import { optOutNewsletterEverywhere } from "@/lib/email/newsletter-opt-out";
 import { NewsletterCampaignEmail } from "@/lib/email/templates/newsletter-campaign";
 import { makeCapabilityToken } from "@/lib/email/unsubscribe";
@@ -222,6 +223,28 @@ export async function sendNewsletterCampaign(
     // the irreversible broadcast if the actor is no longer an owner.
     if (!(await actorStillOwner(admin.id))) {
       return ownerDenied("send a newsletter campaign");
+    }
+
+    if (final.recipients.size === 0) {
+      return {
+        ok: false,
+        error: "Nobody is opted into the newsletter right now — nothing was sent.",
+      };
+    }
+
+    // Site reset (or another warm instance) may have nulled/replaced the
+    // Resend segment while we were syncing contacts against `audienceId`.
+    // Re-read the DB id — do not create a replacement here — and refuse to
+    // broadcast to a pre-wipe segment.
+    const setting = await prisma.siteSetting.findUnique({
+      where: { id: SITE_SETTING_ID },
+      select: { resendAudienceId: true },
+    });
+    if (!setting?.resendAudienceId || setting.resendAudienceId !== audienceId) {
+      return {
+        ok: false,
+        error: "The newsletter audience changed while sending — try again.",
+      };
     }
 
     const brand = await getEmailBrand();

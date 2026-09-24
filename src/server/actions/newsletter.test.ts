@@ -25,6 +25,9 @@ const {
     user: {
       findMany: vi.fn(),
     },
+    siteSetting: {
+      findUnique: vi.fn(),
+    },
   },
   sendNewsletterSubscribedEmail: vi.fn(async () => {}),
   syncContactSubscribed: vi.fn(async () => {}),
@@ -114,6 +117,7 @@ beforeEach(() => {
   requireAdmin.mockResolvedValue(ADMIN);
   getOptionalUser.mockResolvedValue({ id: "member-1", email: "jane@example.com" });
   getOrCreateAudienceId.mockResolvedValue("aud-1");
+  prismaMock.siteSetting.findUnique.mockResolvedValue({ resendAudienceId: "aud-1" });
   getResendClient.mockReturnValue({ broadcasts: { create: broadcastsCreate } });
   broadcastsCreate.mockResolvedValue({ error: null });
   prismaMock.newsletterSubscriber.create.mockResolvedValue({
@@ -326,10 +330,15 @@ describe("sendNewsletterCampaign", () => {
     });
     mockMemberOptOutPurge();
 
-    await sendNewsletterCampaign(null, form({ subject: "Hello", body: "News" }));
+    const result = await sendNewsletterCampaign(null, form({ subject: "Hello", body: "News" }));
 
     expect(syncContactSubscribed).not.toHaveBeenCalled();
     expect(syncContactUnsubscribed).toHaveBeenCalledWith("gone@example.com");
+    expect(result).toEqual({
+      ok: false,
+      error: "Nobody is opted into the newsletter right now — nothing was sent.",
+    });
+    expect(broadcastsCreate).not.toHaveBeenCalled();
   });
 
   it("skips members whose footer row is unsubscribed (mirror-lag defense)", async () => {
@@ -350,10 +359,15 @@ describe("sendNewsletterCampaign", () => {
     });
     mockMemberOptOutPurge();
 
-    await sendNewsletterCampaign(null, form({ subject: "Hello", body: "News" }));
+    const result = await sendNewsletterCampaign(null, form({ subject: "Hello", body: "News" }));
 
     expect(syncContactSubscribed).not.toHaveBeenCalled();
     expect(syncContactUnsubscribed).toHaveBeenCalledWith("stale@example.com");
+    expect(result).toEqual({
+      ok: false,
+      error: "Nobody is opted into the newsletter right now — nothing was sent.",
+    });
+    expect(broadcastsCreate).not.toHaveBeenCalled();
   });
 
   it("purges Resend for member-only opt-outs with no active footer row", async () => {
@@ -378,5 +392,33 @@ describe("sendNewsletterCampaign", () => {
 
     expect(syncContactUnsubscribed).toHaveBeenCalledWith("member-only@example.com");
     expect(broadcastsCreate).toHaveBeenCalled();
+  });
+
+  it("aborts the broadcast if the Resend audience was reset during the send", async () => {
+    mockCampaignLists({
+      activeFooter: [{ email: "footer@example.com" }],
+      members: [],
+      optedOutFooter: [],
+    });
+    mockCampaignLists({
+      activeFooter: [{ email: "footer@example.com" }],
+      members: [],
+      optedOutFooter: [],
+    });
+    mockCampaignLists({
+      activeFooter: [{ email: "footer@example.com" }],
+      members: [],
+      optedOutFooter: [],
+    });
+    mockMemberOptOutPurge();
+    prismaMock.siteSetting.findUnique.mockResolvedValueOnce({ resendAudienceId: null });
+
+    const result = await sendNewsletterCampaign(null, form({ subject: "Hello", body: "News" }));
+
+    expect(result).toEqual({
+      ok: false,
+      error: "The newsletter audience changed while sending — try again.",
+    });
+    expect(broadcastsCreate).not.toHaveBeenCalled();
   });
 });
