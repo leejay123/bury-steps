@@ -56,7 +56,7 @@ export function CreateWalkDrawer() {
   return (
     <Drawer closeDisabled={isPending} onOpenChange={setOpen} open={open} variant="form">
       <DrawerTrigger asChild>
-        <Button type="button">
+        <Button className="w-full sm:w-auto" type="button">
           <Plus data-icon="inline-start" />
           Create a walk
         </Button>

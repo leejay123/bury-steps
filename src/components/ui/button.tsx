@@ -15,12 +15,16 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
       },
+      // pointer-coarse: phones and tablets only — a fingertip needs ~44px
+      // (Apple's HIG, WCAG 2.5.5), a mouse pointer doesn't, so desktop keeps
+      // the compact shadcn sizes. An explicit className height still wins
+      // with the same prefix, e.g. "pointer-coarse:h-9" on a compact banner.
       size: {
-        default: "h-9 px-4 py-2 has-[>svg]:px-3",
-        xs: "h-7 rounded-md gap-1 px-2 text-xs has-[>svg]:px-1.5",
-        sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
+        default: "h-9 px-4 py-2 has-[>svg]:px-3 pointer-coarse:h-11",
+        xs: "h-7 rounded-md gap-1 px-2 text-xs has-[>svg]:px-1.5 pointer-coarse:h-9",
+        sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5 pointer-coarse:h-10",
         lg: "h-11 rounded-md px-6 has-[>svg]:px-4",
-        icon: "size-9",
+        icon: "size-9 pointer-coarse:size-11",
       },
     },
     defaultVariants: { variant: "default", size: "default" },
