@@ -376,7 +376,8 @@ export async function adminClockIn(
           where: { id: existingAttendance.id },
           data: {
             clockedInAt: recordedClockedInAt,
-            medicalAckAt: now,
+            // Keep the member’s original medical acknowledgement — correcting
+            // times must not rewrite the Art.9 audit trail.
             conditionsPurgeAfter: purgeAfter,
             clockedOutAt: recordedClockedOutAt,
             ...(recordedClockedOutAt === null ? { clockedOutReason: null } : {}),

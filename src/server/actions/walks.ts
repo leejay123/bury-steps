@@ -23,7 +23,7 @@ import {
 } from "@/lib/walk-window";
 import { conditionsPurgeAfterFromStartsAt } from "@/lib/conditions-retention";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { walkShareUrl } from "@/lib/walk-slug";
+import { walkShareUrl, walkSlugBase, walkSlugNameBase } from "@/lib/walk-slug";
 import { allocateWalkSlug } from "@/lib/walk-slug-server";
 import { appUrl } from "@/lib/urls";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
@@ -430,20 +430,57 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
   if (!walk) return { ok: false, error: "That walk is no longer there." };
   if (!walk.cancelledAt) return { ok: false, error: "This walk is already open." };
 
+  let clearedAttendances = false;
   try {
-    // updateMany keyed on cancelledAt still set — a double-click must not
-    // clear an already-open walk or fan out "back on" email twice.
-    const cleared = await prisma.walk.updateMany({
-      where: { id, cancelledAt: { not: null } },
-      // Clear retentionLocked too — the flag only applies while cancelled,
-      // and leaving it true would silently block later auto-delete after a
-      // future cancel (the UI toggle is hidden once the walk is open).
-      data: { cancelledAt: null, cancelledReason: null, retentionLocked: false },
+    // Lock + updateMany keyed on cancelledAt still set — a double-click must
+    // not clear an already-open walk or fan out "back on" email twice.
+    const outcome = await prisma.$transaction(async (tx) => {
+      const rows = await tx.$queryRaw<
+        Array<{
+          id: string;
+          cancelledAt: Date | null;
+          startsAt: Date;
+          durationMins: number;
+          endedAt: Date | null;
+        }>
+      >`SELECT id, "cancelledAt", "startsAt", "durationMins", "endedAt"
+        FROM "Walk" WHERE id = ${id} FOR UPDATE`;
+      const locked = rows[0];
+      if (!locked) throw new Error("WALK_GONE");
+      if (!locked.cancelledAt) {
+        return { cleared: false as const, dropAttendances: false as const };
+      }
+
+      const cleared = await tx.walk.updateMany({
+        where: { id, cancelledAt: { not: null } },
+        // Clear retentionLocked too — the flag only applies while cancelled,
+        // and leaving it true would silently block later auto-delete after a
+        // future cancel (the UI toggle is hidden once the walk is open).
+        data: { cancelledAt: null, cancelledReason: null, retentionLocked: false },
+      });
+      if (cleared.count === 0) {
+        return { cleared: false as const, dropAttendances: false as const };
+      }
+
+      // Cancelled means it never happened. Reopening after the window has
+      // already closed would otherwise turn kept Starting-soon clock-ins into
+      // Progress credit for a meet that did not run — drop those rows.
+      const status = walkStatus({ ...locked, cancelledAt: null });
+      if (status === "completed") {
+        await tx.attendance.deleteMany({ where: { walkId: id } });
+        return { cleared: true as const, dropAttendances: true as const };
+      }
+      return { cleared: true as const, dropAttendances: false as const };
     });
-    if (cleared.count === 0) {
+
+    if (!outcome.cleared) {
       return { ok: false, error: "This walk is already open." };
     }
+    clearedAttendances = outcome.dropAttendances;
   } catch (err) {
+    if (err instanceof Error && err.message === "WALK_GONE") {
+      return { ok: false, error: "That walk is no longer there." };
+    }
     if (isPrismaCode(err, "P2025")) return { ok: false, error: "That walk is no longer there." };
     return logActionError("reopenWalk", err, "Could not reopen this walk. Try again.");
   }
@@ -476,7 +513,9 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
     ok: true,
     message:
       status === "completed"
-        ? "Walk reopened in the record. Its time has already passed, so clock-in stays closed."
+        ? clearedAttendances
+          ? "Walk reopened in the record. Its time has already passed, so clock-in stays closed and any clock-ins from before it was cancelled were cleared (they do not count on Progress)."
+          : "Walk reopened in the record. Its time has already passed, so clock-in stays closed."
         : status === "in-progress"
           ? "Walk reopened. Clock-in is already open for this walk — no email was sent."
           : "Walk reopened. Members can clock in again if the window is still open.",
@@ -511,7 +550,10 @@ export async function endWalkEarly(
 
   let walk: { token: string; slug: string | null };
   try {
-    walk = await prisma.$transaction(async (tx) => {
+    // Same journeyEvent lock as cancel/journey writes so end cannot race a
+    // create that already passed its cancelledAt / window check, and so we
+    // can refuse finishing before an existing journey event time.
+    walk = await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.journeyEvent, async (tx) => {
       const rows = await tx.$queryRaw<
         Array<{
           id: string;
@@ -544,13 +586,24 @@ export async function endWalkEarly(
         where: { walkId: locked.id },
         _max: { clockedInAt: true, clockedOutAt: true },
       });
-      const latestMs = Math.max(
+      const latestAttendanceMs = Math.max(
         latestAttendance._max.clockedInAt?.getTime() ?? 0,
         latestAttendance._max.clockedOutAt?.getTime() ?? 0,
       );
-      if (latestMs > 0 && endedAt.getTime() < latestMs) {
+      if (latestAttendanceMs > 0 && endedAt.getTime() < latestAttendanceMs) {
         throw new LimitReachedError(
           "That finish time is before someone clocked in or out. Choose a later time, or end it now.",
+        );
+      }
+
+      const latestJourney = await tx.walkJourneyEvent.aggregate({
+        where: { walkId: locked.id },
+        _max: { happenedAt: true },
+      });
+      const latestJourneyMs = latestJourney._max.happenedAt?.getTime() ?? 0;
+      if (latestJourneyMs > 0 && endedAt.getTime() < latestJourneyMs) {
+        throw new LimitReachedError(
+          "That finish time is before a journey event on this walk. Choose a later time, or end it now.",
         );
       }
 
@@ -654,7 +707,6 @@ export async function updateWalk(
   let appliedDurationMins = durationMins;
 
   for (let attempt = 0; attempt < 5; attempt++) {
-    const slug = await allocateWalkSlug(parsed.data.title, id);
     try {
       const result = await prisma.$transaction(async (tx) => {
         const rows = await tx.$queryRaw<
@@ -666,8 +718,9 @@ export async function updateWalk(
             endedAt: Date | null;
             token: string;
             slug: string | null;
+            title: string;
           }>
-        >`SELECT id, "cancelledAt", "startsAt", "durationMins", "endedAt", token, slug
+        >`SELECT id, "cancelledAt", "startsAt", "durationMins", "endedAt", token, slug, title
           FROM "Walk" WHERE id = ${id} FOR UPDATE`;
         const locked = rows[0];
         if (!locked) throw new Error("WALK_GONE");
@@ -697,6 +750,25 @@ export async function updateWalk(
           throw new LimitReachedError("Choose a start time that has not passed yet.");
         }
 
+        // Keep the public /w/{slug} link stable unless the title’s place word
+        // changes — allocateWalkSlug always mints a new suffix.
+        const nextBase = walkSlugBase(parsed.data.title);
+        const existingBase = locked.slug ? walkSlugNameBase(locked.slug) : null;
+        const slug =
+          locked.slug && existingBase === nextBase
+            ? locked.slug
+            : await allocateWalkSlug(parsed.data.title, id);
+
+        const reopenAfterCancel = Boolean(shouldReopen && locked.cancelledAt);
+        const reopenStatus = reopenAfterCancel
+          ? walkStatus({
+              cancelledAt: null,
+              startsAt: nextStartsAt,
+              durationMins: nextDurationMins,
+              endedAt: locked.endedAt,
+            })
+          : null;
+
         const updated = await tx.walk.update({
           where: { id },
           data: {
@@ -717,10 +789,14 @@ export async function updateWalk(
           select: { token: true, slug: true },
         });
 
-        // Clock-in may already have opened in the hour before start while
-        // the schedule was still editable — keep Art.9 purge dates aligned
-        // with the published start so rescheduling cannot expire notes early.
-        if (nextStartsAt.getTime() !== locked.startsAt.getTime()) {
+        // Same Progress rule as reopenWalk — do not credit clock-ins from a
+        // cancelled Starting-soon window once the meet is already over.
+        if (reopenStatus === "completed") {
+          await tx.attendance.deleteMany({ where: { walkId: id } });
+        } else if (nextStartsAt.getTime() !== locked.startsAt.getTime()) {
+          // Clock-in may already have opened in the hour before start while
+          // the schedule was still editable — keep Art.9 purge dates aligned
+          // with the published start so rescheduling cannot expire notes early.
           await tx.attendance.updateMany({
             where: { walkId: id, conditions: { not: null } },
             data: { conditionsPurgeAfter: conditionsPurgeAfterFromStartsAt(nextStartsAt) },
@@ -797,7 +873,7 @@ export async function updateWalk(
     ok: true,
     message: wasCancelled
       ? reopenStatus === "completed"
-        ? "Walk updated and reopened in the record. Its time has already passed, so clock-in stays closed."
+        ? "Walk updated and reopened in the record. Its time has already passed, so clock-in stays closed and any clock-ins from before it was cancelled were cleared (they do not count on Progress)."
         : reopenStatus === "in-progress"
           ? "Walk updated and reopened. Clock-in is already open — no email was sent."
           : "Walk updated and put back on the diary."

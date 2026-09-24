@@ -105,29 +105,34 @@ export function WalksSection({
               walk finished early (right now, or a few minutes ago if you are catching up the
               record). Clock-in closes immediately. Anyone still clocked in counts as having
               stayed for the whole (now-shorter) walk — the same as if they never clocked out.
-              Use this when the group wraps up early, not Cancel.
+              You cannot pick a finish time before someone clocked in or out, or before a
+              Journey event already on the walk. Use this when the group wraps up early, not
+              Cancel.
             </li>
             <li>
               <strong>Edit</strong> opens the same panel as Create a walk, filled in with this
               walk, to change the title, date, time, length, meeting point, or description. Use this
               when the meeting point moves, or when Sunday becomes Wednesday. People already
-              clocked in stay on the walk. If you change the title, copy the share
-              link again — it uses the new name. Changing the date does not change the link.
-              Links you already posted still work
-              and send people to the updated page. If the walk was
-              cancelled, saving also puts it back on the diary. The walk’s own organiser page
-              shows the same map members see on the share link. Once the published start time
-              has passed — or once anyone has clocked in during Starting soon — date, time,
-              and length freeze — changing them would rewrite the
-              record under people already on the walk. Title, meeting point, and notes stay
-              editable until the walk is Completed. Self clock-in stops at the scheduled end (or
-              earlier if you used End walk); if someone was there but missed it, use Add someone.
+              clocked in stay on the walk. The share link stays the same unless you change the
+              title’s place word (the short name in the link, e.g. <code>burrs</code> in{" "}
+              <code>/w/burrs-x7k2m9</code>) — then copy the link again. Changing the date does
+              not change the link. Links you already posted still work and send people to the
+              updated page. If the walk was cancelled, saving also puts it back on the diary —
+              and if its time has already passed, any clock-ins from before the cancel are
+              cleared so they do not count on Progress. The walk’s own organiser page shows the
+              same map members see on the share link. Once the published start time has passed —
+              or once anyone has clocked in during Starting soon — date, time, and length freeze —
+              changing them would rewrite the record under people already on the walk. Title,
+              meeting point, and notes stay editable until the walk is Completed. Self clock-in
+              stops at the scheduled end (or earlier if you used End walk); if someone was there
+              but missed it, use Add someone.
             </li>
             <li>
               <strong>Reopen</strong> undoes a cancel without changing the details. Clock-in
               works again if the time window is still open. Members who get walk emails are told
               it is back on — unless its time has already passed, in which case it just goes back
-              in the record without an email (and the confirmation says clock-in stays closed).
+              in the record without an email, clock-in stays closed, and any clock-ins from before
+              the cancel are cleared so they do not count on Progress.
             </li>
             <li>
               <strong>Duplicate</strong> makes a new walk with the same title, meeting point,
@@ -204,7 +209,8 @@ export function WalksSection({
             them — including someone who already clocked out and came back. After Completed,
             they show as attending from the start, with no health notes. Someone still actively
             on the roster cannot be added again; someone who left early can still have their
-            times corrected (or be marked as staying to the end). Reopen a cancelled walk first
+            times corrected (or be marked as staying to the end) — correcting times keeps their
+            original medical acknowledgement. Reopen a cancelled walk first
             if you need to add someone to it. Search by name or email — the list shows up to 40
             matches so it stays quick even with thousands of members.
           </p>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { slugifyWalkTitle, walkSharePath, walkSlugBase } from "./walk-slug";
+import { slugifyWalkTitle, walkSharePath, walkSlugBase, walkSlugNameBase } from "./walk-slug";
 
 describe("slugifyWalkTitle", () => {
   it("hyphenates and lowercases", () => {
@@ -26,6 +26,16 @@ describe("walkSlugBase", () => {
 
   it("falls back when the title has no letters", () => {
     expect(walkSlugBase("!!!")).toBe("walk");
+  });
+});
+
+describe("walkSlugNameBase", () => {
+  it("strips the random suffix from an allocated share slug", () => {
+    expect(walkSlugNameBase("burrs-x7k2m9")).toBe("burrs");
+  });
+
+  it("returns the whole string when there is no suffix", () => {
+    expect(walkSlugNameBase("walk")).toBe("walk");
   });
 });
 

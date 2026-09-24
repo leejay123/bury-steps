@@ -504,6 +504,11 @@ describe("adminClockIn", () => {
         data: expect.not.objectContaining({ clockedOutReason: null }),
       }),
     );
+    expect(prismaMock.attendance.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.not.objectContaining({ medicalAckAt: expect.anything() }),
+      }),
+    );
     expect(sendAddedToWalkEmail).not.toHaveBeenCalled();
   });
 

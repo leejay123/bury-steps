@@ -33,6 +33,16 @@ export function walkSlugBase(title: string): string {
   return shortWalkName(title) || "walk";
 }
 
+/**
+ * Place-word portion of an allocated share slug (`burrs-x7k2m9` → `burrs`).
+ * Used so Edit can keep the same public link when the title’s place word
+ * has not changed.
+ */
+export function walkSlugNameBase(slug: string): string {
+  const i = slug.lastIndexOf("-");
+  return i > 0 ? slug.slice(0, i) : slug;
+}
+
 export function walkSharePath(walk: { slug?: string | null; token: string }): string {
   return `/w/${walk.slug || walk.token}`;
 }
