@@ -404,12 +404,15 @@ describe("reopenWalk", () => {
       slug: null,
       cancelledAt: new Date(),
     });
-    prismaMock.walk.update.mockResolvedValueOnce({});
+    prismaMock.walk.updateMany.mockResolvedValueOnce({ count: 1 });
 
     const result = await reopenWalk(null, form({ walkId: "walk-1" }));
 
-    expect(prismaMock.walk.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { cancelledAt: null, cancelledReason: null } }),
+    expect(prismaMock.walk.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "walk-1", cancelledAt: { not: null } },
+        data: { cancelledAt: null, cancelledReason: null },
+      }),
     );
     expect(result.ok).toBe(true);
   });
@@ -427,7 +430,7 @@ describe("reopenWalk", () => {
       startsAt: new Date("2026-09-13T13:30:00Z"),
       durationMins: 60,
     });
-    prismaMock.walk.update.mockResolvedValueOnce({});
+    prismaMock.walk.updateMany.mockResolvedValueOnce({ count: 1 });
     prismaMock.user.findMany.mockResolvedValueOnce([
       { id: "user-1", email: "jane@example.com", firstName: "Jane", unsubscribeToken: null },
     ]);
@@ -459,7 +462,7 @@ describe("reopenWalk", () => {
       durationMins: 60,
       endedAt: null,
     });
-    prismaMock.walk.update.mockResolvedValueOnce({});
+    prismaMock.walk.updateMany.mockResolvedValueOnce({ count: 1 });
     walkStatus.mockReturnValueOnce("completed");
 
     const result = await reopenWalk(null, form({ walkId: "walk-1" }));

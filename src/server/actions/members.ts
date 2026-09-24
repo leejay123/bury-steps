@@ -755,8 +755,14 @@ export async function acceptOrganiserInvite(
   }
 
   try {
-    await prisma.user.update({
-      where: { id: target.id },
+    // Only the request that clears the invite token wins — a double Accept
+    // must not promote twice or send two "you're an organiser" emails.
+    const accepted = await prisma.user.updateMany({
+      where: {
+        id: target.id,
+        role: "MEMBER",
+        organiserInviteToken: token,
+      },
       data: {
         role: "ADMIN",
         organiserInviteToken: null,
@@ -764,6 +770,9 @@ export async function acceptOrganiserInvite(
         organiserInviteExpiresAt: null,
       },
     });
+    if (accepted.count === 0) {
+      return { ok: false, error: "This invite link is invalid or has already been used." };
+    }
   } catch (err) {
     return logActionError("acceptOrganiserInvite", err, "Could not accept the invite. Try again.");
   }

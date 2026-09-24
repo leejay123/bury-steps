@@ -155,7 +155,8 @@ export function WalksSection({
             from its page — it already happened, so there is nothing left to cancel, cut short,
             or change. Remove, Duplicate, and the CSV export are still there if you need them.{" "}
             <strong>Add someone</strong> stays, so you can still put a forgotten clock-in on
-            the list.
+            the list. Add someone, Journey add/edit, and the Attended label also update live if
+            you leave the page open through start or finish.
           </p>
           <p>
             {cancelledWalkRetentionDays !== null ? (

@@ -232,6 +232,11 @@ export async function adminClockIn(
   const admin = await requireAdmin();
   if (!admin.permWalksAttendance) return permissionDenied("permWalksAttendance");
 
+  const limited = checkRateLimit(`${admin.id}:adminClockIn`, 30, 60_000);
+  if (!limited.ok) {
+    return { ok: false, error: `Too many adds. Try again in ${limited.retryAfterSeconds}s.` };
+  }
+
   const parsed = adminClockInSchema.safeParse({
     walkId: formData.get("walkId"),
     userId: formData.get("userId"),

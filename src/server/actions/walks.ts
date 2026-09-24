@@ -427,10 +427,15 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
   if (!walk.cancelledAt) return { ok: false, error: "This walk is already open." };
 
   try {
-    await prisma.walk.update({
-      where: { id },
+    // updateMany keyed on cancelledAt still set — a double-click must not
+    // clear an already-open walk or fan out "back on" email twice.
+    const cleared = await prisma.walk.updateMany({
+      where: { id, cancelledAt: { not: null } },
       data: { cancelledAt: null, cancelledReason: null },
     });
+    if (cleared.count === 0) {
+      return { ok: false, error: "This walk is already open." };
+    }
   } catch (err) {
     if (isPrismaCode(err, "P2025")) return { ok: false, error: "That walk is no longer there." };
     return logActionError("reopenWalk", err, "Could not reopen this walk. Try again.");

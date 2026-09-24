@@ -17,7 +17,7 @@ const {
   isOwner,
 } = vi.hoisted(() => {
   const prismaMock: Record<string, Record<string, ReturnType<typeof vi.fn>>> = {
-    user: { findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    user: { findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn(), update: vi.fn(), updateMany: vi.fn(), delete: vi.fn() },
     walk: { updateMany: vi.fn() },
     accidentReport: { updateMany: vi.fn() },
     walkJourneyEvent: { updateMany: vi.fn() },
@@ -1331,6 +1331,7 @@ describe("acceptOrganiserInvite", () => {
       error: "This invite link has expired. Ask an organiser to resend it.",
     });
     expect(prismaMock.user.update).not.toHaveBeenCalled();
+    expect(prismaMock.user.updateMany).not.toHaveBeenCalled();
   });
 
   it("promotes the invitee, clears the invite fields, and redirects to the Walks dashboard when granted Walks", async () => {
@@ -1343,13 +1344,17 @@ describe("acceptOrganiserInvite", () => {
       organiserInviteExpiresAt: new Date(Date.now() + 1000),
     };
     prismaMock.user.findUnique.mockResolvedValueOnce(target);
-    prismaMock.user.update.mockResolvedValueOnce({});
+    prismaMock.user.updateMany.mockResolvedValueOnce({ count: 1 });
     getOptionalUser.mockResolvedValueOnce({ id: target.id });
 
     const result = await acceptOrganiserInvite(null, acceptForm("tok"));
 
-    expect(prismaMock.user.update).toHaveBeenCalledWith({
-      where: { id: target.id },
+    expect(prismaMock.user.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: target.id,
+        role: "MEMBER",
+        organiserInviteToken: "tok",
+      },
       data: {
         role: "ADMIN",
         organiserInviteToken: null,
@@ -1381,6 +1386,7 @@ describe("acceptOrganiserInvite", () => {
       error: "This invite can only be accepted by signing in as the invited account.",
     });
     expect(prismaMock.user.update).not.toHaveBeenCalled();
+    expect(prismaMock.user.updateMany).not.toHaveBeenCalled();
   });
 
   it("refuses when signed in as a different account", async () => {
@@ -1399,5 +1405,6 @@ describe("acceptOrganiserInvite", () => {
       error: "This invite can only be accepted by signing in as the invited account.",
     });
     expect(prismaMock.user.update).not.toHaveBeenCalled();
+    expect(prismaMock.user.updateMany).not.toHaveBeenCalled();
   });
 });

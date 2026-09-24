@@ -4,7 +4,7 @@ import { ClipboardList } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireAnyPermission, displayName } from "@/lib/auth";
 import { formatWalkDate, utcToLondonWallClock } from "@/lib/dates";
-import { canOrganiserAddAttendance, canOrganiserEditJourney, walkStatus } from "@/lib/walk-window";
+import { walkStatus } from "@/lib/walk-window";
 import { appUrl } from "@/lib/urls";
 import { initials } from "@/lib/names";
 import { ShareLink } from "@/components/share-link";
@@ -15,15 +15,15 @@ import { meetingPointLabel } from "@/lib/geocode";
 import { What3wordsLink } from "@/components/what3words-link";
 import { walkShareUrl } from "@/lib/walk-slug";
 import { ensureWalkSlug } from "@/lib/walk-slug-server";
-import { AddAttendanceButton } from "./add-attendance-button";
 import { RetentionLockToggle } from "./retention-lock-toggle";
+import { WalkAttendanceSection } from "./walk-attendance-section";
 import { WalkCompletedNotice } from "./walk-completed-notice";
 import { WalkDetailActions } from "./walk-detail-actions";
 import { WalkJourneyManager } from "./walk-journey";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { WalkAttendanceTable, type WalkAttendanceRow } from "./walk-attendance";
+import type { WalkAttendanceRow } from "./walk-attendance";
 
 export const dynamic = "force-dynamic";
 
@@ -133,9 +133,6 @@ export default async function WalkDetailPage({
   const viewerAttended = attendances.some((a) => a.userId === admin.id);
   const canSeeAttendance = admin.permWalksAttendance || viewerAttended;
   const status = walkStatus(walk);
-  const isCompleted = status === "completed";
-  const canAddAttendance = canOrganiserAddAttendance(walk);
-  const canEditJourney = canOrganiserEditJourney(walk);
   const journeyDefaultAt = utcToLondonWallClock(
     status === "in-progress" ? new Date() : walk.startsAt,
   );
@@ -279,62 +276,21 @@ export default async function WalkDetailPage({
             Once the walk is completed, "on the walk" stops being true for
             anyone — the walk is over — so this section relabels itself to
             "Attended": these are the people who stayed for the whole thing
-            without clocking out, not people still out there.
+            without clocking out, not people still out there. Labels and Add
+            someone tick with the walk clock (see WalkAttendanceSection).
           */}
-          <section className="flex flex-col gap-3">
-            {canAddAttendance && admin.permWalksAttendance ? (
-              <div className="flex justify-end">
-                <AddAttendanceButton
-                  className="w-full sm:w-auto"
-                  walkCompleted={isCompleted}
-                  walkId={walk.id}
-                  walkStartsAt={walk.startsAt.toISOString()}
-                />
-              </div>
-            ) : null}
-
-            {stillIn.length === 0 ? (
-              <EmptyState
-                description={
-                  walk.attendances.length === 0
-                    ? isCompleted
-                      ? "Nobody clocked in for this walk. If someone was there, use Add someone."
-                      : "Share the link above with the group."
-                    : isCompleted
-                      ? "Everyone who clocked in also clocked out before the walk finished."
-                      : "Everyone who clocked in has since clocked out."
-                }
-                icon={ClipboardList}
-                title={
-                  walk.attendances.length === 0
-                    ? "Nobody has clocked in yet"
-                    : isCompleted
-                      ? "Nobody stayed to the end"
-                      : "Nobody is on the walk right now"
-                }
-              />
-            ) : (
-              <WalkAttendanceTable
-                canRemove={!walk.cancelledAt && admin.permWalksAttendance}
-                canSeeHealthNotes={admin.permWalksHealth}
-                heading={{ count: stillIn.length, label: isCompleted ? "Attended" : "Attendance" }}
-                rows={stillIn.map(toAttendanceRow)}
-                walkCompleted={isCompleted}
-              />
-            )}
-          </section>
-
-          {clockedOut.length > 0 ? (
-            <section className="flex flex-col gap-3">
-              <WalkAttendanceTable
-                canRemove={!walk.cancelledAt && admin.permWalksAttendance}
-                canSeeHealthNotes={admin.permWalksHealth}
-                heading={{ count: clockedOut.length, label: "Clocked out" }}
-                rows={clockedOut.map(toAttendanceRow)}
-                walkCompleted={isCompleted}
-              />
-            </section>
-          ) : null}
+          <WalkAttendanceSection
+            canManageAttendance={admin.permWalksAttendance}
+            canSeeHealthNotes={admin.permWalksHealth}
+            cancelledAt={walk.cancelledAt?.toISOString() ?? null}
+            clockedOutRows={clockedOut.map(toAttendanceRow)}
+            durationMins={walk.durationMins}
+            endedAt={walk.endedAt?.toISOString() ?? null}
+            startsAt={walk.startsAt.toISOString()}
+            stillInRows={stillIn.map(toAttendanceRow)}
+            totalAttendanceCount={walk.attendances.length}
+            walkId={walk.id}
+          />
         </>
       ) : (
         // Same boundary the public walk page draws for an ordinary member
@@ -350,9 +306,13 @@ export default async function WalkDetailPage({
       <Separator />
 
       <WalkJourneyManager
-        canEdit={canEditJourney && admin.permWalksJourney}
+        cancelledAt={walk.cancelledAt?.toISOString() ?? null}
         defaultHappenedAt={journeyDefaultAt}
+        durationMins={walk.durationMins}
+        endedAt={walk.endedAt?.toISOString() ?? null}
         events={journeyEvents}
+        mayEdit={admin.permWalksJourney}
+        startsAt={walk.startsAt.toISOString()}
         walkId={walk.id}
       />
     </div>
