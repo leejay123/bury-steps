@@ -13,8 +13,9 @@ export function ReportsDisplaySection() {
           <GuideBody>
             <p>
               Open <Link href="/admin/reports">Reports</Link> in the top menu.
-              Only organisers can see this. Add a report with the date, an optional walk, what
-              happened, who was involved, what you did, and extra notes if you need them. Once
+              Only organisers can see this. Add a report with the date and time (it cannot be
+              set in the future), an optional walk, what happened, who was involved, what you
+              did, and extra notes if you need them. Once
               there is more than one report, a search box appears above the list — it matches the
               linked walk, who was involved, and the write-up text, and stays on this page only
               (it is not put in the address bar). You can also filter by whether a walk is linked,

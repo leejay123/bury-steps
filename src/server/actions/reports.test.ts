@@ -94,6 +94,28 @@ describe("addAccidentReport", () => {
     expect(result.ok).toBe(false);
   });
 
+  it("rejects a time still in the future", async () => {
+    const futureLocal = new Date(Date.now() + 60 * 60_000);
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/London",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(futureLocal);
+    const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "00";
+    const happenedAt = `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}`;
+
+    const result = await addAccidentReport(null, reportForm({ happenedAt }));
+    expect(result).toEqual({
+      ok: false,
+      error: "Choose a time that has already happened — not one still in the future.",
+    });
+    expect(prismaMock.accidentReport.create).not.toHaveBeenCalled();
+  });
+
   it("treats walkId 'none' the same as not selecting a walk", async () => {
     prismaMock.accidentReport.create.mockResolvedValueOnce({ involvedMembers: [] });
     await addAccidentReport(null, reportForm({ walkId: "none" }));

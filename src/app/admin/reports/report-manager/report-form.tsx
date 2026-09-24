@@ -165,6 +165,7 @@ function ReportFields({
         </FieldLabel>
         <DateTimePicker
           defaultValue={report ? utcToLondonWallClock(new Date(report.happenedAt)) : undefined}
+          disableFuture
           id={`${prefix}-happened`}
           name="happenedAt"
           required

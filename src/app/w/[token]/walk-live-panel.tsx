@@ -6,6 +6,7 @@ import { ClockOutButton } from "@/components/clock-out-button";
 import { WalkMembers } from "@/components/walk-members";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { useWalkClock } from "@/hooks/use-walk-clock";
+import { useRouterRefreshOnVisible } from "@/hooks/use-router-refresh-on-visible";
 import { formatDateTime } from "@/lib/dates";
 import { effectiveEndsAt, formatInProgressCountdown, walkStatus, windowState } from "@/lib/walk-window";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ export function WalkLivePanel({
   token: string;
   walksHref: string;
 }) {
+  useRouterRefreshOnVisible();
   const start = new Date(startsAt);
   const now = useWalkClock({ cancelledAt, durationMins, endedAt, startsAt });
   const walk = {

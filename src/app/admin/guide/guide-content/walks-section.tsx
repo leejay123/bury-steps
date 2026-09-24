@@ -88,6 +88,8 @@ export function WalksSection({
           <p>
             You can publish more than one walk in a week. Each walk has its own day, time,
             meeting point, and share link. Members see every upcoming walk on their Walks page.
+            If they leave a walk link or Upcoming open, coming back to that tab picks up a
+            Cancel or End walk so the badge and clock-in match without navigating away.
           </p>
           <p className="font-medium text-foreground">Cancel, end early, edit, reopen, duplicate, or remove</p>
           <ul className="list-disc pl-5">

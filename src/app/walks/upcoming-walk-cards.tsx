@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLiveNow } from "@/hooks/use-live-now";
 import { useWalkClock } from "@/hooks/use-walk-clock";
+import { useRouterRefreshOnVisible } from "@/hooks/use-router-refresh-on-visible";
 
 // Upcoming never holds a cancelled walk — that lives in All walks instead
 // (see src/app/walks/page.tsx) — nor a completed one, so both are left out
@@ -166,6 +167,10 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
   const deferredSearchTerm = useDeferredValue(searchTerm);
   const now = useLiveNow();
   const router = useRouter();
+  // Pick up Cancel / End walk done on another device when the member
+  // returns to this tab (Upcoming hardcodes cancelledAt null because the
+  // SSR list never includes cancelled rows — refresh is what drops them).
+  useRouterRefreshOnVisible();
 
   // Keep the SSR tab count in sync once a walk finishes on an open page.
   const needsRefresh = walks.some((walk) => {

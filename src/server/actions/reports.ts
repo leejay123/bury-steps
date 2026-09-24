@@ -129,6 +129,11 @@ export async function addAccidentReport(
   } catch {
     return { ok: false, error: "That date and time could not be read. Try again." };
   }
+  // Same 2-minute skew as journey / admin clock-in — a phone slightly ahead
+  // is fine; a report timed still in the future is not.
+  if (happenedAt.getTime() > Date.now() + 2 * 60_000) {
+    return { ok: false, error: "Choose a time that has already happened — not one still in the future." };
+  }
 
   const linkable = await assertLinkableWalkId(parsed.data.walkId);
   if (!linkable.ok) return linkable;
@@ -216,6 +221,9 @@ export async function updateAccidentReport(
     happenedAt = londonWallClockToUtc(parsed.data.happenedAt);
   } catch {
     return { ok: false, error: "That date and time could not be read. Try again." };
+  }
+  if (happenedAt.getTime() > Date.now() + 2 * 60_000) {
+    return { ok: false, error: "Choose a time that has already happened — not one still in the future." };
   }
 
   const linkable = await assertLinkableWalkId(parsed.data.walkId);
