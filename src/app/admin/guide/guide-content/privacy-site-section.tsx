@@ -71,8 +71,10 @@ export function PrivacySiteSection() {
               signed-in members only — you must have an account on the site before you can see
               or use it; visitors do not see the form. It always uses the member’s account
               email (not a typed-in address) and turns on Newsletter in their email
-              preferences. Turning Newsletter off under email preferences also stops that
-              footer signup for the same address.
+              preferences. Opening Email preferences also turns the toggle on if they
+              already had an active footer signup from before that change. Turning
+              Newsletter off under email preferences also stops that footer signup for
+              the same address.
             </p>
             <p>
               Text, tables, and forms line up with the logo and nav. Photo and quote grids, and

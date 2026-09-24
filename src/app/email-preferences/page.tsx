@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth";
+import { alignNewsletterPrefWithActiveFooter } from "@/lib/email/newsletter-opt-out";
 import { MyEmailPreferencesForm } from "./my-email-preferences-form";
 
 export const metadata: Metadata = {
@@ -15,6 +16,7 @@ export const dynamic = "force-dynamic";
  * for someone who followed a link from an email without signing in first. */
 export default async function MyEmailPreferencesPage() {
   const user = await requireUser();
+  const emailNewsletter = await alignNewsletterPrefWithActiveFooter(user.id, user.email);
 
   return (
     <div className="flex flex-col gap-6">
@@ -24,7 +26,7 @@ export default async function MyEmailPreferencesPage() {
       </div>
       <MyEmailPreferencesForm
         emailAccidentAlerts={user.emailAccidentAlerts}
-        emailNewsletter={user.emailNewsletter}
+        emailNewsletter={emailNewsletter}
         emailNotices={user.emailNotices}
         emailProgress={user.emailProgress}
         emailWalkAnnouncements={user.emailWalkAnnouncements}

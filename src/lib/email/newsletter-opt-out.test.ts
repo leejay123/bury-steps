@@ -9,6 +9,7 @@ const { prismaMock, syncContactUnsubscribed, syncContactSubscribed } = vi.hoiste
     user: {
       updateMany: vi.fn(async () => ({ count: 0 })),
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
     },
   },
   syncContactUnsubscribed: vi.fn(async () => {}),
@@ -19,6 +20,7 @@ vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
 vi.mock("@/lib/email/resend-audience", () => ({ syncContactUnsubscribed, syncContactSubscribed }));
 
 import {
+  alignNewsletterPrefWithActiveFooter,
   optInNewsletterEverywhere,
   optOutNewsletterEverywhere,
   syncNewsletterAudienceToPreference,
@@ -30,6 +32,7 @@ beforeEach(() => {
   prismaMock.newsletterSubscriber.updateMany.mockReset();
   prismaMock.newsletterSubscriber.updateMany.mockResolvedValue({ count: 0 });
   prismaMock.user.findFirst.mockReset();
+  prismaMock.user.findUnique.mockReset();
   prismaMock.user.updateMany.mockReset();
   prismaMock.user.updateMany.mockResolvedValue({ count: 0 });
 });
@@ -130,5 +133,47 @@ describe("syncNewsletterAudienceToPreference", () => {
 
     expect(syncContactSubscribed).not.toHaveBeenCalled();
     expect(syncContactUnsubscribed).toHaveBeenCalledWith("a@example.com");
+  });
+});
+
+describe("alignNewsletterPrefWithActiveFooter", () => {
+  const emailMatch = { equals: "a@example.com", mode: "insensitive" };
+
+  it("turns the prefs toggle on when an active footer row exists", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({ emailNewsletter: false });
+    prismaMock.newsletterSubscriber.findFirst.mockResolvedValueOnce({ id: "sub-1" });
+    prismaMock.user.updateMany.mockResolvedValueOnce({ count: 1 });
+
+    const result = await alignNewsletterPrefWithActiveFooter("user-1", "A@Example.com");
+
+    expect(result).toBe(true);
+    expect(prismaMock.user.updateMany).toHaveBeenCalledWith({
+      where: { id: "user-1", emailNewsletter: false },
+      data: { emailNewsletter: true },
+    });
+    expect(prismaMock.newsletterSubscriber.findFirst).toHaveBeenCalledWith({
+      where: { email: emailMatch, unsubscribedAt: null },
+      select: { id: true },
+    });
+  });
+
+  it("returns true without writing when the toggle is already on", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({ emailNewsletter: true });
+
+    const result = await alignNewsletterPrefWithActiveFooter("user-1", "a@example.com");
+
+    expect(result).toBe(true);
+    expect(prismaMock.newsletterSubscriber.findFirst).not.toHaveBeenCalled();
+    expect(prismaMock.user.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("returns false when there is no active footer signup", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({ emailNewsletter: false });
+    prismaMock.newsletterSubscriber.findFirst.mockResolvedValueOnce(null);
+
+    const result = await alignNewsletterPrefWithActiveFooter("user-1", "a@example.com");
+
+    expect(result).toBe(false);
+    expect(prismaMock.user.updateMany).not.toHaveBeenCalled();
   });
 });
