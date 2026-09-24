@@ -15,6 +15,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { FACEBOOK_GROUP_URL as DEFAULT_FACEBOOK_GROUP_URL } from "@/lib/urls";
 import type { FaqCategoryView, FaqView } from "@/lib/faqs";
 import { HeroCopy } from "@/components/hero-copy";
+import { centerInScrollStrip } from "@/lib/scroll-strip";
 
 export function FaqsSection({
   categories,
@@ -112,7 +113,7 @@ function FaqBrowser({
 
   function selectCategory(id: string, button: HTMLButtonElement) {
     setActiveCategory(id);
-    button.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    centerInScrollStrip(button);
   }
 
   const filters = useMemo(() => {

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { ListPagination } from "@/components/list-pagination";
+import { centerInScrollStrip } from "@/lib/scroll-strip";
 
 /**
  * Member notices index: search + FAQ-style category chips (border-y), then a
@@ -51,7 +52,7 @@ export function NoticesBlogSection({
 
   function selectCategory(id: string, button: HTMLButtonElement) {
     setActiveCategory(id);
-    button.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    centerInScrollStrip(button);
   }
 
   return (
