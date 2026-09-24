@@ -14,6 +14,7 @@ import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/comp
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useLiveNow } from "@/hooks/use-live-now";
 import { useWalkClock } from "@/hooks/use-walk-clock";
 
 // Upcoming never holds a cancelled walk — that lives in All walks instead
@@ -162,17 +163,26 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const deferredSearchTerm = useDeferredValue(searchTerm);
+  const now = useLiveNow();
 
   const filtered = useMemo(() => {
     const query = deferredSearchTerm.trim().toLowerCase();
     const rows = walks.filter((walk) => {
+      const start = new Date(walk.startsAt);
+      const endedAt = walk.endedAt ? new Date(walk.endedAt) : null;
+      // Drop finished walks client-side so a tab left open past end does not
+      // keep them on Upcoming until the next navigation.
+      if (windowState(start, walk.durationMins, now, endedAt) === "closed") return false;
       if (statusFilter !== "all") {
-        const status = walkStatus({
-          cancelledAt: null,
-          startsAt: new Date(walk.startsAt),
-          durationMins: walk.durationMins,
-          endedAt: walk.endedAt ? new Date(walk.endedAt) : null,
-        });
+        const status = walkStatus(
+          {
+            cancelledAt: null,
+            startsAt: start,
+            durationMins: walk.durationMins,
+            endedAt,
+          },
+          now,
+        );
         if (status !== statusFilter) return false;
       }
       if (!query) return true;
@@ -185,7 +195,7 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
       return sortOrder === "asc" ? delta : -delta;
     });
     return rows;
-  }, [deferredSearchTerm, sortOrder, statusFilter, walks]);
+  }, [deferredSearchTerm, now, sortOrder, statusFilter, walks]);
 
   function clearFilters() {
     setSearchTerm("");

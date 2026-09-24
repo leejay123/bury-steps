@@ -622,14 +622,21 @@ describe("updateWalk", () => {
     });
   }
 
-  it("blocks editing a walk that has already finished", async () => {
-    prismaMock.walk.findUnique.mockResolvedValueOnce({
+  function lockedWalk(overrides: Record<string, unknown> = {}) {
+    return {
+      id: "walk-1",
       cancelledAt: null,
-      startsAt: new Date(),
+      startsAt: new Date("2026-06-01T14:00:00Z"),
       durationMins: 60,
+      endedAt: null,
       token: "tok-1",
-      slug: null,
-    });
+      slug: "sunday-stroll",
+      ...overrides,
+    };
+  }
+
+  it("blocks editing a walk that has already finished", async () => {
+    queryRaw.mockResolvedValueOnce([lockedWalk({ startsAt: new Date() })]);
     walkStatus.mockReturnValueOnce("completed");
 
     const result = await updateWalk(null, updateForm());
@@ -637,17 +644,14 @@ describe("updateWalk", () => {
       ok: false,
       error: "This walk has already finished, so it can't be edited.",
     });
+    expect(prismaMock.walk.update).not.toHaveBeenCalled();
   });
 
   it("keeps the original date/time once the schedule is locked, even if the form posted a different one", async () => {
     const original = new Date("2026-02-01T14:00:00Z");
-    prismaMock.walk.findUnique.mockResolvedValueOnce({
-      cancelledAt: null,
-      startsAt: original,
-      durationMins: 60,
-      token: "tok-1",
-      slug: "sunday-stroll",
-    });
+    queryRaw.mockResolvedValueOnce([
+      lockedWalk({ startsAt: original, durationMins: 60, slug: "sunday-stroll" }),
+    ]);
     isWalkScheduleLocked.mockReturnValueOnce(true);
     prismaMock.walk.update.mockResolvedValueOnce({ token: "tok-1", slug: "sunday-stroll" });
 
@@ -660,28 +664,17 @@ describe("updateWalk", () => {
   });
 
   it("rejects a new start time in the past when the schedule isn't locked", async () => {
-    prismaMock.walk.findUnique.mockResolvedValueOnce({
-      cancelledAt: null,
-      startsAt: new Date("2026-06-01T14:00:00Z"),
-      durationMins: 60,
-      token: "tok-1",
-      slug: null,
-    });
+    queryRaw.mockResolvedValueOnce([lockedWalk()]);
     isWalkScheduleLocked.mockReturnValueOnce(false);
     isWalkStartInThePast.mockReturnValueOnce(true);
 
     const result = await updateWalk(null, updateForm());
     expect(result).toEqual({ ok: false, error: "Choose a start time that has not passed yet." });
+    expect(prismaMock.walk.update).not.toHaveBeenCalled();
   });
 
   it("reopens a walk when the reopen flag is set", async () => {
-    prismaMock.walk.findUnique.mockResolvedValueOnce({
-      cancelledAt: new Date(),
-      startsAt: new Date("2026-06-01T14:00:00Z"),
-      durationMins: 60,
-      token: "tok-1",
-      slug: "sunday-stroll",
-    });
+    queryRaw.mockResolvedValueOnce([lockedWalk({ cancelledAt: new Date() })]);
     prismaMock.walk.update.mockResolvedValueOnce({ token: "tok-1", slug: "sunday-stroll" });
 
     const result = await updateWalk(null, updateForm({ wasCancelled: "on" }));
@@ -692,13 +685,7 @@ describe("updateWalk", () => {
   });
 
   it("notifies opted-in members when an edit brings a cancelled walk back", async () => {
-    prismaMock.walk.findUnique.mockResolvedValueOnce({
-      cancelledAt: new Date(),
-      startsAt: new Date("2026-06-01T14:00:00Z"),
-      durationMins: 60,
-      token: "tok-1",
-      slug: "sunday-stroll",
-    });
+    queryRaw.mockResolvedValueOnce([lockedWalk({ cancelledAt: new Date() })]);
     prismaMock.walk.update.mockResolvedValueOnce({ token: "tok-1", slug: "sunday-stroll" });
     prismaMock.user.findMany.mockResolvedValueOnce([
       { id: "user-1", email: "jane@example.com", firstName: "Jane", unsubscribeToken: null },
@@ -715,19 +702,19 @@ describe("updateWalk", () => {
   });
 
   it("does not notify members on an ordinary edit that isn't reopening anything", async () => {
-    prismaMock.walk.findUnique.mockResolvedValueOnce({
-      cancelledAt: null,
-      startsAt: new Date("2026-06-01T14:00:00Z"),
-      durationMins: 60,
-      token: "tok-1",
-      slug: "sunday-stroll",
-    });
+    queryRaw.mockResolvedValueOnce([lockedWalk({ cancelledAt: null })]);
     prismaMock.walk.update.mockResolvedValueOnce({ token: "tok-1", slug: "sunday-stroll" });
 
     await updateWalk(null, updateForm());
 
     expect(buildWalkReopenedEmail).not.toHaveBeenCalled();
     expect(sendEmailBatch).not.toHaveBeenCalled();
+  });
+
+  it("reports the walk as gone when the lock finds nothing", async () => {
+    queryRaw.mockResolvedValueOnce([]);
+    const result = await updateWalk(null, updateForm());
+    expect(result).toEqual({ ok: false, error: "That walk is no longer there." });
   });
 });
 

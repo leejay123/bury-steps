@@ -47,7 +47,15 @@ export default async function AccidentReportsPage({
       where,
       orderBy: { happenedAt: sort },
       take: REPORTS_FETCH_LIMIT,
-      include: {
+      select: {
+        id: true,
+        happenedAt: true,
+        walkId: true,
+        whatHappened: true,
+        whoInvolved: true,
+        whatWeDid: true,
+        organiserNotes: true,
+        retentionLocked: true,
         walk: { select: { id: true, title: true, location: true } },
         involvedMembers: {
           select: { user: { select: { id: true, firstName: true, lastName: true } } },

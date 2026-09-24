@@ -391,6 +391,7 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
   revalidatePath(`/admin/walks/${id}`);
   revalidatePath("/walks");
   revalidatePath("/progress");
+  revalidatePath("/history");
   revalidateWalkShare(walk);
 
   await notifyMembersOfCancelledWalk({
@@ -447,6 +448,7 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
   revalidatePath(`/admin/walks/${id}`);
   revalidatePath("/walks");
   revalidatePath("/progress");
+  revalidatePath("/history");
   revalidateWalkShare(walk);
 
   // Reopening a walk whose time has already passed just restores the
@@ -549,6 +551,7 @@ export async function endWalkEarly(
   revalidatePath(`/admin/walks/${id}`);
   revalidatePath("/walks");
   revalidatePath("/progress");
+  revalidatePath("/history");
   revalidateWalkShare(walk);
 
   return {
@@ -602,80 +605,123 @@ export async function updateWalk(
   } catch {
     return { ok: false, error: "That date and time could not be read. Try again." };
   }
-  let durationMins = parsed.data.durationMins;
+  const durationMins = parsed.data.durationMins;
 
   const wasCancelled = parsed.data.wasCancelled === "on";
-
-  // A completed walk already happened — editing it would silently rewrite
-  // history instead of changing a plan, so it's blocked the same way
-  // cancelling one is. A cancelled walk is never "completed" (it's its own
-  // status regardless of timing), so reopening a cancelled walk via Edit is
-  // unaffected by this check.
-  const existing = await prisma.walk.findUnique({
-    where: { id },
-    select: {
-      cancelledAt: true,
-      startsAt: true,
-      durationMins: true,
-      endedAt: true,
-      token: true,
-      slug: true,
-    },
-  });
-  if (!existing) return { ok: false, error: "That walk is no longer there." };
-  if (walkStatus(existing) === "completed") {
-    return { ok: false, error: "This walk has already finished, so it can't be edited." };
-  }
-
-  // After the published start, keep the stored date, time, and length even
-  // if the form still posts those fields (disabled controls) or someone
-  // tampers with them. Title, meeting point, and notes can still change.
-  if (isWalkScheduleLocked(existing.startsAt)) {
-    startsAt = existing.startsAt;
-    durationMins = existing.durationMins;
-  } else if (isWalkStartInThePast(startsAt)) {
-    return { ok: false, error: "Choose a start time that has not passed yet." };
-  }
+  const shouldReopen = parsed.data.reopen === "on" || wasCancelled;
 
   const pin = await walkPinFromForm(formData, parsed.data.location, parsed.data.postcode);
 
+  // Lock the row for the completed/schedule checks + write so endWalkEarly
+  // (or the clock rolling over) cannot slip a rewrite in between a stale
+  // findUnique and update. Slug retries re-lock each attempt.
+  let existing: {
+    cancelledAt: Date | null;
+    startsAt: Date;
+    durationMins: number;
+    endedAt: Date | null;
+    token: string;
+    slug: string | null;
+  } | null = null;
   let walk: { token: string; slug: string | null } | null = null;
+  let appliedStartsAt = startsAt;
+  let appliedDurationMins = durationMins;
+
   for (let attempt = 0; attempt < 5; attempt++) {
     const slug = await allocateWalkSlug(parsed.data.title, id);
     try {
-      walk = await prisma.walk.update({
-        where: { id },
-        data: {
-          title: parsed.data.title,
-          description: parsed.data.description ?? null,
-          startsAt,
-          durationMins,
-          location: parsed.data.location ?? null,
-          postcode: pin.postcode,
-          latitude: pin.latitude,
-          longitude: pin.longitude,
-          what3words: what3words.value,
-          slug,
-          ...(parsed.data.reopen === "on" || wasCancelled
-            ? { cancelledAt: null, cancelledReason: null }
-            : {}),
-        },
-        select: { token: true, slug: true },
+      const result = await prisma.$transaction(async (tx) => {
+        const rows = await tx.$queryRaw<
+          Array<{
+            id: string;
+            cancelledAt: Date | null;
+            startsAt: Date;
+            durationMins: number;
+            endedAt: Date | null;
+            token: string;
+            slug: string | null;
+          }>
+        >`SELECT id, "cancelledAt", "startsAt", "durationMins", "endedAt", token, slug
+          FROM "Walk" WHERE id = ${id} FOR UPDATE`;
+        const locked = rows[0];
+        if (!locked) throw new Error("WALK_GONE");
+
+        // A completed walk already happened — editing it would silently
+        // rewrite history. A cancelled walk is never "completed" (its own
+        // status regardless of timing), so reopening via Edit is fine.
+        if (walkStatus(locked) === "completed") {
+          throw new LimitReachedError("This walk has already finished, so it can't be edited.");
+        }
+
+        // After the published start, keep the stored date, time, and length
+        // even if the form still posts those fields (disabled controls) or
+        // someone tampers with them. Title, meeting point, and notes can
+        // still change.
+        let nextStartsAt = startsAt;
+        let nextDurationMins = durationMins;
+        if (isWalkScheduleLocked(locked.startsAt)) {
+          nextStartsAt = locked.startsAt;
+          nextDurationMins = locked.durationMins;
+        } else if (isWalkStartInThePast(startsAt)) {
+          throw new LimitReachedError("Choose a start time that has not passed yet.");
+        }
+
+        const updated = await tx.walk.update({
+          where: { id },
+          data: {
+            title: parsed.data.title,
+            description: parsed.data.description ?? null,
+            startsAt: nextStartsAt,
+            durationMins: nextDurationMins,
+            location: parsed.data.location ?? null,
+            postcode: pin.postcode,
+            latitude: pin.latitude,
+            longitude: pin.longitude,
+            what3words: what3words.value,
+            slug,
+            ...(shouldReopen ? { cancelledAt: null, cancelledReason: null } : {}),
+          },
+          select: { token: true, slug: true },
+        });
+
+        return {
+          existing: {
+            cancelledAt: locked.cancelledAt,
+            startsAt: locked.startsAt,
+            durationMins: locked.durationMins,
+            endedAt: locked.endedAt,
+            token: locked.token,
+            slug: locked.slug,
+          },
+          walk: updated,
+          appliedStartsAt: nextStartsAt,
+          appliedDurationMins: nextDurationMins,
+        };
       });
+      existing = result.existing;
+      walk = result.walk;
+      appliedStartsAt = result.appliedStartsAt;
+      appliedDurationMins = result.appliedDurationMins;
       break;
     } catch (err) {
+      if (err instanceof LimitReachedError) return { ok: false, error: err.message };
+      if (err instanceof Error && err.message === "WALK_GONE") {
+        return { ok: false, error: "That walk is no longer there." };
+      }
       if (isPrismaCode(err, "P2025")) return { ok: false, error: "That walk is no longer there." };
       if (isPrismaCode(err, "P2002") && attempt < 4) continue;
       return logActionError("updateWalk", err, "Could not update this walk. Try again.");
     }
   }
-  if (!walk) {
+  if (!walk || !existing) {
     return { ok: false, error: "Could not update this walk. Try again." };
   }
 
   revalidatePath("/admin");
   revalidatePath(`/admin/walks/${id}`);
   revalidatePath("/walks");
+  revalidatePath("/progress");
+  revalidatePath("/history");
   revalidateWalkShare(existing);
   revalidateWalkShare(walk);
 
@@ -683,12 +729,17 @@ export async function updateWalk(
   // on every ordinary edit, and not if it was already open.
   // Also not for a walk that has already finished — see reopenWalk.
   const finished =
-    walkStatus({ cancelledAt: null, startsAt, durationMins, endedAt: existing.endedAt }) === "completed";
-  if (existing.cancelledAt !== null && (parsed.data.reopen === "on" || wasCancelled) && !finished) {
+    walkStatus({
+      cancelledAt: null,
+      startsAt: appliedStartsAt,
+      durationMins: appliedDurationMins,
+      endedAt: existing.endedAt,
+    }) === "completed";
+  if (existing.cancelledAt !== null && shouldReopen && !finished) {
     await notifyMembersOfWalkReopened({
       title: parsed.data.title,
-      whenText: formatWalkDate(startsAt),
-      durationText: formatWalkLength(durationMins),
+      whenText: formatWalkDate(appliedStartsAt),
+      durationText: formatWalkLength(appliedDurationMins),
       meetingPoint: meetingPointLabel(parsed.data.location, pin.postcode) || null,
       what3words: what3words.value,
       shareUrl: walkShareUrl(appUrl(), walk),
@@ -722,6 +773,8 @@ export async function deleteWalk(_prev: ActionResult | null, formData: FormData)
 
   revalidatePath("/admin");
   revalidatePath("/walks");
+  revalidatePath("/progress");
+  revalidatePath("/history");
   revalidateWalkShare(walk);
   return {
     ok: true,

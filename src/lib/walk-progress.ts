@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { londonMonthKey } from "@/lib/dates";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { buildWalkGame, viewerBadges, type WalkGameView } from "@/lib/walk-game";
 
@@ -26,11 +27,15 @@ export type WalkGameLoadedData = {
  * Shared walk/attendance payload for Progress and the monthly-progress cron.
  * Load once, then build a per-viewer game with {@link walkGameFromLoadedData}
  * so the cron is not O(members × walks).
+ *
+ * Names are only needed for the current-month board/cup — older rows keep
+ * userId + clockedOutAt without hydrating every roster name for 3 years.
  */
 export async function loadWalkGameData(now = new Date()): Promise<WalkGameLoadedData> {
   const historyFrom = new Date(now.getTime() - HISTORY_YEARS * 365 * 24 * 60 * 60 * 1000);
+  const thisMonth = londonMonthKey(now);
 
-  const [walks, setting] = await Promise.all([
+  const [walkRows, setting] = await Promise.all([
     prisma.walk.findMany({
       where: {
         cancelledAt: null,
@@ -46,7 +51,6 @@ export async function loadWalkGameData(now = new Date()): Promise<WalkGameLoaded
           select: {
             userId: true,
             clockedOutAt: true,
-            user: { select: { firstName: true, lastName: true } },
           },
         },
       },
@@ -56,6 +60,36 @@ export async function loadWalkGameData(now = new Date()): Promise<WalkGameLoaded
       select: { monthlyClockInGoal: true },
     }),
   ]);
+
+  const monthUserIds = new Set<string>();
+  for (const walk of walkRows) {
+    if (londonMonthKey(walk.startsAt) !== thisMonth) continue;
+    for (const row of walk.attendances) monthUserIds.add(row.userId);
+  }
+
+  const nameById = new Map<string, { firstName: string | null; lastName: string | null }>();
+  if (monthUserIds.size > 0) {
+    const users = await prisma.user.findMany({
+      where: { id: { in: [...monthUserIds] } },
+      select: { id: true, firstName: true, lastName: true },
+    });
+    for (const user of users) {
+      nameById.set(user.id, { firstName: user.firstName, lastName: user.lastName });
+    }
+  }
+
+  const walks = walkRows.map((walk) => ({
+    id: walk.id,
+    startsAt: walk.startsAt,
+    durationMins: walk.durationMins,
+    cancelledAt: walk.cancelledAt,
+    endedAt: walk.endedAt,
+    attendances: walk.attendances.map((row) => ({
+      userId: row.userId,
+      clockedOutAt: row.clockedOutAt,
+      user: nameById.get(row.userId) ?? { firstName: null, lastName: null },
+    })),
+  }));
 
   return {
     walks,

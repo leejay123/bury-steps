@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/empty-state";
 import { DataList, DataListBody, DataListItem, DataListItemMain, dataListItemStackClassName } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
 import { usePagedList } from "@/hooks/use-paged-list";
+import { useLiveNow } from "@/hooks/use-live-now";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
@@ -69,19 +70,24 @@ export function AdminWalkTable({
   const [sortOrder, setSortOrder] = useState<SortOrder>(scope === "past" ? "desc" : "asc");
   const listRef = useRef<HTMLDivElement>(null);
   const statusOptions = scope === "upcoming" ? UPCOMING_STATUS_OPTIONS : PAST_STATUS_OPTIONS;
+  const now = useLiveNow();
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const rows = walks.filter((walk) => {
-      if (statusFilter !== "all") {
-        const status = walkStatus({
+      const status = walkStatus(
+        {
           cancelledAt: walk.cancelledAt ? new Date(walk.cancelledAt) : null,
           startsAt: new Date(walk.startsAt),
           durationMins: walk.durationMins,
           endedAt: walk.endedAt ? new Date(walk.endedAt) : null,
-        });
-        if (status !== statusFilter) return false;
-      }
+        },
+        now,
+      );
+      // Upcoming tab is SSR-split, but a page left open past finish should
+      // drop completed walks rather than leave them under Upcoming.
+      if (scope === "upcoming" && status === "completed") return false;
+      if (statusFilter !== "all" && status !== statusFilter) return false;
       if (!needle) return true;
       const hay = `${walk.title} ${walk.location ?? ""}`.toLowerCase();
       return hay.includes(needle);
@@ -92,7 +98,7 @@ export function AdminWalkTable({
       return sortOrder === "asc" ? delta : -delta;
     });
     return rows;
-  }, [query, sortOrder, statusFilter, walks]);
+  }, [now, query, scope, sortOrder, statusFilter, walks]);
 
   const paging = usePagedList(filtered, {
     resetKey: `${query}|${statusFilter}|${sortOrder}`,
