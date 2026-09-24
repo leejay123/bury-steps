@@ -46,6 +46,16 @@ function assertHappenedAtDuringWalk(
   ) {
     throw new LimitReachedError("Pick a time during the walk.");
   }
+  // While the published end is still ahead, refuse times still in the
+  // future — otherwise a foreshadowed journey row blocks End walk (which
+  // refuses to finish before max happenedAt), leaving clock-in open.
+  // Small skew matches adminClockIn so a phone a minute ahead is fine.
+  const FUTURE_SKEW_MS = 2 * 60_000;
+  if (happenedAt.getTime() > Date.now() + FUTURE_SKEW_MS) {
+    throw new LimitReachedError(
+      "Pick a time that has already happened — not one still in the future.",
+    );
+  }
 }
 
 export async function createJourneyEvent(

@@ -28,6 +28,11 @@ function nextMinuteAfter(minute: number): string | undefined {
   return MINUTES.find((item) => Number(item) > minute);
 }
 
+/** Latest 5-minute slot at or before the current London minute, if any. */
+function minuteAtOrBefore(minute: number): string | undefined {
+  return [...MINUTES].reverse().find((item) => Number(item) <= minute);
+}
+
 /** Snap hour/minute forward so disablePast never leaves a past wall-clock in state. */
 function snapPastTime(
   hour: string,
@@ -48,6 +53,28 @@ function snapPastTime(
   if (nextHour) return { hour: nextHour, minute: "00" };
   // End of London day — keep whatever we have; hours list will be empty.
   return { hour: String(nowHour).padStart(2, "0"), minute };
+}
+
+/** Snap hour/minute back so disableFuture never leaves a future wall-clock in state. */
+function snapFutureTime(
+  hour: string,
+  minute: string,
+  nowHour: number,
+  nowMinute: number,
+): { hour: string; minute: string } {
+  const h = Number(hour);
+  const m = Number(minute);
+  if (h < nowHour || (h === nowHour && m <= nowMinute)) {
+    return { hour, minute };
+  }
+  const prevMinute = minuteAtOrBefore(nowMinute);
+  if (prevMinute !== undefined) {
+    return { hour: String(nowHour).padStart(2, "0"), minute: prevMinute };
+  }
+  if (nowHour > 0) {
+    return { hour: String(nowHour - 1).padStart(2, "0"), minute: "55" };
+  }
+  return { hour: "00", minute: "00" };
 }
 
 function parseWallClock(value?: string): { date: Date; hour: string; minute: string } | null {
@@ -78,14 +105,17 @@ export function DateTimePicker({
   defaultValue,
   disabled,
   disablePast = false,
+  disableFuture = false,
   id,
   name,
   required,
 }: {
   defaultValue?: string;
   disabled?: boolean;
-                  /** Block calendar days before today (UK), and earlier times today. */
+  /** Block calendar days before today (UK), and earlier times today. */
   disablePast?: boolean;
+  /** Block calendar days after today (UK), and later times today. */
+  disableFuture?: boolean;
   id: string;
   name: string;
   required?: boolean;
@@ -135,13 +165,26 @@ export function DateTimePicker({
     );
   })();
 
-  // Derive a non-past wall clock for today — do not sync via useEffect
-  // (react-hooks/set-state-in-effect). The Select may still show a fallback
-  // option; the hidden form value always uses this snapped pair.
+  // Derive a non-past / non-future wall clock for today — do not sync via
+  // useEffect (react-hooks/set-state-in-effect). The Select may still show a
+  // fallback option; the hidden form value always uses this snapped pair.
   const { hour: effectiveHour, minute: effectiveMinute } = useMemo(() => {
-    if (!disablePast || !isSelectedToday) return { hour, minute };
-    return snapPastTime(hour, minute, nowLondon.hour, nowLondon.minute);
-  }, [disablePast, hour, isSelectedToday, minute, nowLondon.hour, nowLondon.minute]);
+    if (disablePast && isSelectedToday) {
+      return snapPastTime(hour, minute, nowLondon.hour, nowLondon.minute);
+    }
+    if (disableFuture && isSelectedToday) {
+      return snapFutureTime(hour, minute, nowLondon.hour, nowLondon.minute);
+    }
+    return { hour, minute };
+  }, [
+    disableFuture,
+    disablePast,
+    hour,
+    isSelectedToday,
+    minute,
+    nowLondon.hour,
+    nowLondon.minute,
+  ]);
 
   const value = date
     ? combineLondonDateAndTime(date, Number(effectiveHour), Number(effectiveMinute))
@@ -159,23 +202,48 @@ export function DateTimePicker({
     : "Choose date and time";
 
   const hours = useMemo(() => {
-    if (!disablePast || !isSelectedToday) return HOURS;
-    const currentHourHasFutureMinute = Boolean(nextMinuteAfter(nowLondon.minute));
-    return HOURS.filter((item) => {
-      const value = Number(item);
-      if (value > nowLondon.hour) return true;
-      if (value === nowLondon.hour) return currentHourHasFutureMinute;
-      return false;
-    });
-  }, [disablePast, isSelectedToday, nowLondon.hour, nowLondon.minute]);
+    if (disablePast && isSelectedToday) {
+      const currentHourHasFutureMinute = Boolean(nextMinuteAfter(nowLondon.minute));
+      return HOURS.filter((item) => {
+        const value = Number(item);
+        if (value > nowLondon.hour) return true;
+        if (value === nowLondon.hour) return currentHourHasFutureMinute;
+        return false;
+      });
+    }
+    if (disableFuture && isSelectedToday) {
+      return HOURS.filter((item) => Number(item) <= nowLondon.hour);
+    }
+    return HOURS;
+  }, [disableFuture, disablePast, isSelectedToday, nowLondon.hour, nowLondon.minute]);
 
   const selectableMinutes = useMemo(() => {
     const base = minutes;
-    if (!disablePast || !isSelectedToday || Number(effectiveHour) !== nowLondon.hour) {
+    if (!isSelectedToday || Number(effectiveHour) !== nowLondon.hour) {
       return base;
     }
-    return base.filter((item) => Number(item) > nowLondon.minute);
-  }, [disablePast, effectiveHour, isSelectedToday, minutes, nowLondon.hour, nowLondon.minute]);
+    if (disablePast) {
+      return base.filter((item) => Number(item) > nowLondon.minute);
+    }
+    if (disableFuture) {
+      return base.filter((item) => Number(item) <= nowLondon.minute);
+    }
+    return base;
+  }, [
+    disableFuture,
+    disablePast,
+    effectiveHour,
+    isSelectedToday,
+    minutes,
+    nowLondon.hour,
+    nowLondon.minute,
+  ]);
+
+  const calendarDisabled = disablePast
+    ? { before: todayLondon }
+    : disableFuture
+      ? { after: todayLondon }
+      : undefined;
 
   return (
     <div className="flex flex-col gap-2">
@@ -230,13 +298,13 @@ export function DateTimePicker({
             <Calendar
               captionLayout="dropdown"
               className="p-0"
-              disabled={disablePast ? { before: todayLondon } : undefined}
-              endMonth={new Date(2035, 11)}
+              disabled={calendarDisabled}
+              endMonth={disableFuture ? todayLondon : new Date(2035, 11)}
               locale={enGB}
               mode="single"
               onSelect={(next) => {
                 setDate(next);
-                if (!disablePast || !next) return;
+                if (!next) return;
                 const selected = londonYmd(next);
                 const today = londonYmd(todayLondon);
                 const sameDay =
@@ -244,9 +312,15 @@ export function DateTimePicker({
                   selected.month === today.month &&
                   selected.day === today.day;
                 if (!sameDay) return;
-                const snapped = snapPastTime(hour, minute, nowLondon.hour, nowLondon.minute);
-                setHour(snapped.hour);
-                setMinute(snapped.minute);
+                if (disablePast) {
+                  const snapped = snapPastTime(hour, minute, nowLondon.hour, nowLondon.minute);
+                  setHour(snapped.hour);
+                  setMinute(snapped.minute);
+                } else if (disableFuture) {
+                  const snapped = snapFutureTime(hour, minute, nowLondon.hour, nowLondon.minute);
+                  setHour(snapped.hour);
+                  setMinute(snapped.minute);
+                }
               }}
               selected={date}
               startMonth={disablePast ? todayLondon : new Date(2020, 0)}
@@ -263,6 +337,21 @@ export function DateTimePicker({
                       Number(next) === nowLondon.hour
                     ) {
                       const snapped = snapPastTime(next, minute, nowLondon.hour, nowLondon.minute);
+                      setHour(snapped.hour);
+                      setMinute(snapped.minute);
+                      return;
+                    }
+                    if (
+                      disableFuture &&
+                      isSelectedToday &&
+                      Number(next) === nowLondon.hour
+                    ) {
+                      const snapped = snapFutureTime(
+                        next,
+                        minute,
+                        nowLondon.hour,
+                        nowLondon.minute,
+                      );
                       setHour(snapped.hour);
                       setMinute(snapped.minute);
                       return;
