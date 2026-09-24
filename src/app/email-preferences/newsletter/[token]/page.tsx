@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Unsubscribe",
+  robots: { index: false, follow: false },
 };
 
 export default async function NewsletterUnsubscribePage({

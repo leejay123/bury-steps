@@ -8,7 +8,10 @@
 export const PUBLIC_ROUTE_PATTERNS = [
   "/",
   "/home",
-  "/w(.*)",
+  // Walk share links only — `/w` and `/w/<token>`. Do not use `/w(.*)`:
+  // that also matches `/walks`, which must stay behind auth.protect().
+  "/w",
+  "/w/(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/privacy",

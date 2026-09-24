@@ -63,7 +63,9 @@ export async function subscribeToNewsletter(
         data: { unsubscribedAt: null, unsubscribeToken: newToken },
       });
       if (reactivated.count === 0) {
-        return { ok: true, message: "You're already subscribed — thanks!" };
+        // Same success copy as a new signup — do not reveal whether the
+        // address was already on the list (email enumeration).
+        return { ok: true, message: "Thanks — we'll be in touch once there's news to share." };
       }
       subscriber = { email, unsubscribeToken: newToken };
     }
@@ -185,12 +187,22 @@ export async function sendNewsletterCampaign(
       );
     }
 
-    // Drop anyone with a real footer unsubscribe from the Resend segment
-    // before broadcasting — a stale contact would still get the campaign.
+    // Drop anyone who must not receive this broadcast from the Resend
+    // segment before creating it — a stale contact (failed prior opt-out
+    // sync, or member-toggle off with no footer row) would still get it.
     const final = await loadCampaignRecipients();
-    const blockedEmails = [...final.footerUnsubscribed];
-    for (let i = 0; i < blockedEmails.length; i += CONTACT_SYNC_CHUNK_SIZE) {
-      const chunk = blockedEmails.slice(i, i + CONTACT_SYNC_CHUNK_SIZE);
+    const blockedEmails = new Set(final.footerUnsubscribed);
+    const optedOutMembers = await prisma.user.findMany({
+      where: { emailNewsletter: false },
+      select: { email: true },
+    });
+    for (const row of optedOutMembers) {
+      const key = row.email.trim().toLowerCase();
+      if (key && !final.recipients.has(key)) blockedEmails.add(key);
+    }
+    const blockedList = [...blockedEmails];
+    for (let i = 0; i < blockedList.length; i += CONTACT_SYNC_CHUNK_SIZE) {
+      const chunk = blockedList.slice(i, i + CONTACT_SYNC_CHUNK_SIZE);
       await Promise.all(chunk.map((email) => syncContactUnsubscribed(email)));
     }
 

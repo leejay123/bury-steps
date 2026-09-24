@@ -16,6 +16,7 @@ import {
   organiserInviteExpiresAt,
 } from "@/lib/organiser-invite";
 import { ORGANISER_PERMISSIONS, walksLandingPath } from "@/lib/organiser-permissions";
+import { isWalkHistoryReady } from "@/lib/walk-window";
 import {
   sendAccountDeletedEmail,
   sendAdminPromotedEmail,
@@ -969,13 +970,21 @@ export async function getMemberHistory(userId: string): Promise<{
   ]);
   if (!member) return null;
 
+  // Same rule as /history — a live walk is not history yet. Subtract any
+  // in-progress rows in this page from the uncapped total so the organiser
+  // "Total walks" matches what the member sees on their History page.
+  const historyReady = member.attendances.filter((attendance) =>
+    isWalkHistoryReady(attendance.walk),
+  );
+  const inProgressCount = member.attendances.length - historyReady.length;
+
   return {
     name: displayName(member),
     email: member.email,
     role: member.role,
     createdAt: member.createdAt.toISOString(),
     walkCount: member._count.walksCreated,
-    attendanceCount,
+    attendanceCount: attendanceCount - inProgressCount,
     isYou: member.id === admin.id,
     isOwner: member.isOwner,
     pendingInvite: member.organiserInviteSentAt
@@ -985,7 +994,7 @@ export async function getMemberHistory(userId: string): Promise<{
           expired: (member.organiserInviteExpiresAt?.getTime() ?? 0) < Date.now(),
         }
       : null,
-    items: member.attendances.map((attendance) => ({
+    items: historyReady.map((attendance) => ({
       id: attendance.id,
       walkId: attendance.walk.id,
       walkTitle: attendance.walk.title,
