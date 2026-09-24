@@ -15,9 +15,10 @@ const {
   transaction,
   getOwnerIds,
   isOwner,
+  actorStillOwner,
 } = vi.hoisted(() => {
   const prismaMock: Record<string, Record<string, ReturnType<typeof vi.fn>>> = {
-    user: { findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    user: { findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn(), update: vi.fn(), updateMany: vi.fn(), delete: vi.fn() },
     walk: { updateMany: vi.fn() },
     accidentReport: { updateMany: vi.fn() },
     walkJourneyEvent: { updateMany: vi.fn() },
@@ -46,13 +47,14 @@ const {
     // that lookup's queued mock value or vice versa.
     getOwnerIds: vi.fn(async (): Promise<string[]> => ["admin-1"]),
     isOwner: vi.fn(async (userId: string): Promise<boolean> => userId === "admin-1"),
+    actorStillOwner: vi.fn(async (userId: string): Promise<boolean> => userId === "admin-1"),
   };
 });
 
 vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("@/lib/db", () => ({ prisma: { ...prismaMock, $transaction: transaction } }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
-vi.mock("@/lib/site-owner", () => ({ getOwnerIds, isOwner }));
+vi.mock("@/lib/site-owner", () => ({ getOwnerIds, isOwner, actorStillOwner }));
 vi.mock("@clerk/nextjs/server", () => ({
   clerkClient: vi.fn(async () => ({ users: { deleteUser } })),
 }));
@@ -64,6 +66,9 @@ vi.mock("@/lib/email/mailer", () => ({
   sendAdminPromotedEmail: vi.fn(async () => {}),
   sendAdminDemotedEmail: vi.fn(async () => {}),
   sendOrganiserInviteEmail: vi.fn(async () => {}),
+}));
+vi.mock("@/lib/email/resend-audience", () => ({
+  syncContactUnsubscribed: vi.fn(async () => {}),
 }));
 vi.mock("@/lib/organiser-invite", () => ({
   makeOrganiserInviteToken: vi.fn(() => "invite-token-123"),
@@ -129,6 +134,7 @@ beforeEach(() => {
   // describe block below for the opposite case.
   getOwnerIds.mockResolvedValue([OWNER_ID]);
   isOwner.mockImplementation(async (userId: string) => userId === OWNER_ID);
+  actorStillOwner.mockImplementation(async (userId: string) => userId === OWNER_ID);
 });
 
 describe("deleteMember", () => {
@@ -142,7 +148,7 @@ describe("deleteMember", () => {
     const result = await deleteMember(null, deleteMemberForm({ userId: "member-1", confirm: "confirm" }));
     expect(result).toEqual({
       ok: false,
-      error: "Only the site owner can remove a member's account.",
+      error: "Only a site owner can remove a member's account.",
     });
     expect(prismaMock.user.delete).not.toHaveBeenCalled();
   });
@@ -155,7 +161,7 @@ describe("deleteMember", () => {
       clerkId: "clerk-admin-2",
     });
     const result = await deleteMember(null, deleteMemberForm({ userId: "admin-2", confirm: "confirm" }));
-    expect(result).toEqual({ ok: false, error: "Only the site owner can remove an organiser's account." });
+    expect(result).toEqual({ ok: false, error: "Only a site owner can remove an organiser's account." });
     expect(prismaMock.user.delete).not.toHaveBeenCalled();
   });
 
@@ -207,6 +213,7 @@ describe("deleteMember", () => {
       .mockResolvedValueOnce({
         id: target.id,
         role: "ADMIN",
+        isOwner: false,
         _count: { walksCreated: 0, accidentReports: 0, journeyEvents: 0 },
       }); // inner lookup, inside the lock
     prismaMock.user.count.mockResolvedValueOnce(1); // only one organiser left
@@ -217,6 +224,37 @@ describe("deleteMember", () => {
     );
 
     expect(result).toEqual({ ok: false, error: "You cannot delete the last organiser." });
+    expect(prismaMock.user.delete).not.toHaveBeenCalled();
+    expect(deleteUser).not.toHaveBeenCalled();
+  });
+
+  it("blocks deleting the group's last remaining owner even when other organisers remain", async () => {
+    const target = {
+      id: "admin-2",
+      clerkId: "clerk-admin-2",
+      firstName: "Sam",
+      lastName: "Lee",
+      email: "sam@example.com",
+      role: "ADMIN",
+    };
+    prismaMock.user.findUnique
+      .mockResolvedValueOnce(target)
+      .mockResolvedValueOnce({
+        id: target.id,
+        role: "ADMIN",
+        isOwner: true,
+        _count: { walksCreated: 0, accidentReports: 0, journeyEvents: 0 },
+      });
+    prismaMock.user.count
+      .mockResolvedValueOnce(2) // other organisers exist
+      .mockResolvedValueOnce(1); // but this is the last owner
+
+    const result = await deleteMember(
+      null,
+      deleteMemberForm({ userId: target.id, confirm: "confirm" }),
+    );
+
+    expect(result).toEqual({ ok: false, error: "You cannot delete the group's last owner." });
     expect(prismaMock.user.delete).not.toHaveBeenCalled();
     expect(deleteUser).not.toHaveBeenCalled();
   });
@@ -235,6 +273,7 @@ describe("deleteMember", () => {
       .mockResolvedValueOnce({
         id: target.id,
         role: "ADMIN",
+        isOwner: false,
         _count: { walksCreated: 0, accidentReports: 0, journeyEvents: 0 },
       });
     prismaMock.user.count.mockResolvedValueOnce(2); // another organiser exists
@@ -265,6 +304,7 @@ describe("deleteMember", () => {
       .mockResolvedValueOnce({
         id: target.id,
         role: "MEMBER",
+        isOwner: false,
         _count: { walksCreated: 2, accidentReports: 1, journeyEvents: 3 },
       });
     prismaMock.user.delete.mockResolvedValueOnce(target);
@@ -300,6 +340,7 @@ describe("deleteMember", () => {
       .mockResolvedValueOnce({
         id: target.id,
         role: "MEMBER",
+        isOwner: false,
         _count: { walksCreated: 0, accidentReports: 0, journeyEvents: 0 },
       });
     prismaMock.user.delete.mockResolvedValueOnce(target);
@@ -326,6 +367,7 @@ describe("deleteMember", () => {
       .mockResolvedValueOnce({
         id: target.id,
         role: "MEMBER",
+        isOwner: false,
         _count: { walksCreated: 0, accidentReports: 0, journeyEvents: 0 },
       });
     prismaMock.user.delete.mockResolvedValueOnce(target);
@@ -353,6 +395,7 @@ describe("deleteMember", () => {
       .mockResolvedValueOnce({
         id: target.id,
         role: "MEMBER",
+        isOwner: false,
         _count: { walksCreated: 0, accidentReports: 0, journeyEvents: 0 },
       });
     prismaMock.user.delete.mockResolvedValueOnce(target);
@@ -384,7 +427,7 @@ describe("setMemberRole", () => {
       null,
       roleForm({ userId: "member-1", role: "ADMIN", confirm: "confirm" }),
     );
-    expect(result).toEqual({ ok: false, error: "Only the site owner can change an organiser's role." });
+    expect(result).toEqual({ ok: false, error: "Only a site owner can change an organiser's role." });
     expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
   });
 
@@ -924,15 +967,15 @@ describe("setMemberRole — organiser invite required", () => {
   it("sends an invite instead of promoting immediately when the setting is on", async () => {
     prismaMock.user.findUnique.mockResolvedValueOnce(target);
     prismaMock.siteSetting.findUnique.mockResolvedValueOnce({ organiserInviteRequired: true });
-    prismaMock.user.update.mockResolvedValueOnce({});
+    prismaMock.user.updateMany.mockResolvedValueOnce({ count: 1 });
 
     const result = await setMemberRole(
       null,
       roleForm({ userId: target.id, role: "ADMIN", confirm: "confirm" }),
     );
 
-    expect(prismaMock.user.update).toHaveBeenCalledWith({
-      where: { id: target.id },
+    expect(prismaMock.user.updateMany).toHaveBeenCalledWith({
+      where: { id: target.id, role: "MEMBER" },
       data: {
         organiserInviteToken: "invite-token-123",
         organiserInviteSentAt: expect.any(Date),
@@ -972,7 +1015,7 @@ describe("resendOrganiserInvite", () => {
   it("rejects an organiser who isn't the owner", async () => {
     isOwner.mockResolvedValueOnce(false);
     const result = await resendOrganiserInvite(null, roleForm({ userId: "member-1" }));
-    expect(result).toEqual({ ok: false, error: "Only the site owner can resend an organiser invite." });
+    expect(result).toEqual({ ok: false, error: "Only a site owner can resend an organiser invite." });
     expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
   });
 
@@ -1011,13 +1054,13 @@ describe("resendOrganiserInvite", () => {
       organiserInviteToken: "old-token",
     };
     prismaMock.user.findUnique.mockResolvedValueOnce(target);
-    prismaMock.user.update.mockResolvedValueOnce({});
+    prismaMock.user.updateMany.mockResolvedValueOnce({ count: 1 });
 
     const result = await resendOrganiserInvite(null, roleForm({ userId: target.id }));
 
-    expect(prismaMock.user.update).toHaveBeenCalledWith(
+    expect(prismaMock.user.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: target.id },
+        where: { id: target.id, role: "MEMBER" },
         data: expect.objectContaining({ organiserInviteToken: "invite-token-123" }),
       }),
     );
@@ -1035,7 +1078,7 @@ describe("transferOwnership", () => {
   it("rejects when the acting admin isn't the owner", async () => {
     isOwner.mockResolvedValueOnce(false);
     const result = await transferOwnership(null, roleForm({ userId: "admin-2", confirm: "confirm" }));
-    expect(result).toEqual({ ok: false, error: "Only the site owner can transfer ownership." });
+    expect(result).toEqual({ ok: false, error: "Only a site owner can transfer ownership." });
     expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
   });
 
@@ -1076,7 +1119,9 @@ describe("transferOwnership", () => {
 
   it("hands ownership to the target and gives up the acting admin's own in the same step", async () => {
     const target = { id: "admin-2", role: "ADMIN", firstName: "Sam", lastName: "Lee", email: "sam@example.com" };
-    prismaMock.user.findUnique.mockResolvedValueOnce(target);
+    prismaMock.user.findUnique
+      .mockResolvedValueOnce(target)
+      .mockResolvedValueOnce({ id: target.id, role: "ADMIN" });
     prismaMock.user.update.mockResolvedValue({});
 
     const result = await transferOwnership(null, roleForm({ userId: target.id, confirm: "Sam Lee" }));
@@ -1104,7 +1149,7 @@ describe("addOwner", () => {
   it("rejects when the acting admin isn't the owner", async () => {
     isOwner.mockResolvedValueOnce(false);
     const result = await addOwner(null, roleForm({ userId: "admin-2", confirm: "confirm" }));
-    expect(result).toEqual({ ok: false, error: "Only the site owner can add another owner." });
+    expect(result).toEqual({ ok: false, error: "Only a site owner can add another owner." });
     expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
   });
 
@@ -1150,7 +1195,9 @@ describe("addOwner", () => {
       lastName: "Lee",
       email: "sam@example.com",
     };
-    prismaMock.user.findUnique.mockResolvedValueOnce(target);
+    prismaMock.user.findUnique
+      .mockResolvedValueOnce(target)
+      .mockResolvedValueOnce({ id: "admin-2", role: "ADMIN", isOwner: false });
     prismaMock.user.update.mockResolvedValueOnce({});
 
     const result = await addOwner(null, roleForm({ userId: "admin-2", confirm: "Sam Lee" }));
@@ -1175,7 +1222,7 @@ describe("removeOwner", () => {
   it("rejects when the acting admin isn't the owner", async () => {
     isOwner.mockResolvedValueOnce(false);
     const result = await removeOwner(null, roleForm({ userId: "admin-2", confirm: "confirm" }));
-    expect(result).toEqual({ ok: false, error: "Only the site owner can remove another owner." });
+    expect(result).toEqual({ ok: false, error: "Only a site owner can remove another owner." });
     expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
   });
 
@@ -1243,7 +1290,7 @@ describe("cancelOrganiserInvite", () => {
   it("rejects an organiser who isn't the owner", async () => {
     isOwner.mockResolvedValueOnce(false);
     const result = await cancelOrganiserInvite(null, roleForm({ userId: "member-1" }));
-    expect(result).toEqual({ ok: false, error: "Only the site owner can cancel an organiser invite." });
+    expect(result).toEqual({ ok: false, error: "Only a site owner can cancel an organiser invite." });
     expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
   });
 
@@ -1272,12 +1319,12 @@ describe("cancelOrganiserInvite", () => {
       organiserInviteToken: "tok",
     };
     prismaMock.user.findUnique.mockResolvedValueOnce(target);
-    prismaMock.user.update.mockResolvedValueOnce({});
+    prismaMock.user.updateMany.mockResolvedValueOnce({ count: 1 });
 
     const result = await cancelOrganiserInvite(null, roleForm({ userId: target.id }));
 
-    expect(prismaMock.user.update).toHaveBeenCalledWith({
-      where: { id: target.id },
+    expect(prismaMock.user.updateMany).toHaveBeenCalledWith({
+      where: { id: target.id, role: "MEMBER", organiserInviteToken: { not: null } },
       data: { organiserInviteToken: null, organiserInviteSentAt: null, organiserInviteExpiresAt: null },
     });
     expect(result).toEqual({ ok: true, message: "Invite for Jo Bloggs cancelled." });
@@ -1331,6 +1378,7 @@ describe("acceptOrganiserInvite", () => {
       error: "This invite link has expired. Ask an organiser to resend it.",
     });
     expect(prismaMock.user.update).not.toHaveBeenCalled();
+    expect(prismaMock.user.updateMany).not.toHaveBeenCalled();
   });
 
   it("promotes the invitee, clears the invite fields, and redirects to the Walks dashboard when granted Walks", async () => {
@@ -1343,13 +1391,17 @@ describe("acceptOrganiserInvite", () => {
       organiserInviteExpiresAt: new Date(Date.now() + 1000),
     };
     prismaMock.user.findUnique.mockResolvedValueOnce(target);
-    prismaMock.user.update.mockResolvedValueOnce({});
+    prismaMock.user.updateMany.mockResolvedValueOnce({ count: 1 });
     getOptionalUser.mockResolvedValueOnce({ id: target.id });
 
     const result = await acceptOrganiserInvite(null, acceptForm("tok"));
 
-    expect(prismaMock.user.update).toHaveBeenCalledWith({
-      where: { id: target.id },
+    expect(prismaMock.user.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: target.id,
+        role: "MEMBER",
+        organiserInviteToken: "tok",
+      },
       data: {
         role: "ADMIN",
         organiserInviteToken: null,
@@ -1381,6 +1433,7 @@ describe("acceptOrganiserInvite", () => {
       error: "This invite can only be accepted by signing in as the invited account.",
     });
     expect(prismaMock.user.update).not.toHaveBeenCalled();
+    expect(prismaMock.user.updateMany).not.toHaveBeenCalled();
   });
 
   it("refuses when signed in as a different account", async () => {
@@ -1399,5 +1452,6 @@ describe("acceptOrganiserInvite", () => {
       error: "This invite can only be accepted by signing in as the invited account.",
     });
     expect(prismaMock.user.update).not.toHaveBeenCalled();
+    expect(prismaMock.user.updateMany).not.toHaveBeenCalled();
   });
 });

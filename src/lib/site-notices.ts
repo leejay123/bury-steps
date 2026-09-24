@@ -50,7 +50,9 @@ async function loadSiteNotices(): Promise<CachedNotice[]> {
       kind: true,
       audience: true,
       slug: true,
-      pageBody: true,
+      // pageBody is loaded only when opening a full page or editing in
+      // admin — keeping it out of this cache stops multi-KB article text
+      // riding every signed-in layout (bell) and homepage carousel payload.
       categoryId: true,
       category: { select: { label: true } },
       systemKey: true,
@@ -66,7 +68,7 @@ async function loadSiteNotices(): Promise<CachedNotice[]> {
     kind: row.kind,
     audience: row.audience,
     slug: row.slug,
-    pageBody: row.pageBody,
+    pageBody: null,
     categoryId: row.categoryId,
     categoryLabel: row.category?.label ?? null,
     systemKey: row.systemKey,
@@ -96,7 +98,7 @@ async function loadSiteNoticeCategories(): Promise<CachedCategory[]> {
   }));
 }
 
-const getCachedSiteNotices = unstable_cache(loadSiteNotices, ["site-notices", "v9"], {
+const getCachedSiteNotices = unstable_cache(loadSiteNotices, ["site-notices", "v10"], {
   tags: [NOTICES_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });
@@ -120,10 +122,23 @@ function reviveNotices(rows: CachedNotice[]): NoticeView[] {
   );
 }
 
-/** All notices for organiser settings (welcome first, then newest). */
+/** All notices for organiser settings (welcome first, then newest).
+ * Re-attaches pageBody for PAGE notices so the edit form still has the
+ * full article text — the shared cache stays lean for the bell/homepage. */
 export async function getSiteNotices(): Promise<NoticeView[]> {
   try {
-    return sortNoticesForAdmin(reviveNotices(await getCachedSiteNotices()));
+    const notices = sortNoticesForAdmin(reviveNotices(await getCachedSiteNotices()));
+    const pageIds = notices.filter((notice) => notice.kind === "PAGE").map((notice) => notice.id);
+    if (pageIds.length === 0) return notices;
+
+    const bodies = await prisma.siteNotice.findMany({
+      where: { id: { in: pageIds } },
+      select: { id: true, pageBody: true },
+    });
+    const byId = new Map(bodies.map((row) => [row.id, row.pageBody]));
+    return notices.map((notice) =>
+      notice.kind === "PAGE" ? { ...notice, pageBody: byId.get(notice.id) ?? null } : notice,
+    );
   } catch {
     return [];
   }
@@ -154,16 +169,18 @@ export async function getSiteNoticeState(
   unreadIds: string[];
 }> {
   try {
-    const [rows, reads] = await Promise.all([
-      getCachedSiteNotices(),
-      prisma.siteNoticeRead.findMany({
-        where: { userId },
-        select: { noticeId: true },
-      }),
-    ]);
+    const rows = await getCachedSiteNotices();
     const notices = noticesForBell(reviveNotices(rows)).map((notice) =>
       personalizeNotice(notice, firstName),
     );
+    const bellIds = notices.map((notice) => notice.id);
+    const reads =
+      bellIds.length === 0
+        ? []
+        : await prisma.siteNoticeRead.findMany({
+            where: { userId, noticeId: { in: bellIds } },
+            select: { noticeId: true },
+          });
     const read = new Set(reads.map((row) => row.noticeId));
     return {
       notices,

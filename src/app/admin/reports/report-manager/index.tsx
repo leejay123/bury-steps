@@ -49,6 +49,7 @@ export function AccidentReportManager({
   canCreate,
   canEdit,
   canDelete,
+  canViewMembers = false,
 }: {
   /** Rows for the current link/sort filters — search is client-only (no PII in the URL). */
   reports: ReportView[];
@@ -62,6 +63,8 @@ export function AccidentReportManager({
   canEdit: boolean;
   /** Owner-only — deleting a report is permanent. */
   canDelete: boolean;
+  /** permMembersView — involved-member badges link to member pages. */
+  canViewMembers?: boolean;
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
   const [isPending, setIsPending] = useState(false);
@@ -237,7 +240,11 @@ export function AccidentReportManager({
           ) : null}
           {viewing ? (
             <div className="flex min-h-0 flex-1 flex-col">
-              <ReportReadView report={viewing} />
+              <ReportReadView
+                canEdit={canEdit}
+                canViewMembers={canViewMembers}
+                report={viewing}
+              />
               <DrawerFooter>
                 <Button asChild variant="outline">
                   <a

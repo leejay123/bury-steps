@@ -3,13 +3,64 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin, displayName } from "@/lib/auth";
-import { isOwner } from "@/lib/site-owner";
+import { isOwner, actorStillOwner } from "@/lib/site-owner";
 import { prisma } from "@/lib/db";
 import { formatDateTime, londonWallClockToUtc } from "@/lib/dates";
 import { sendAccidentReportAlertEmail } from "@/lib/email/mailer";
 import { involvedSummaryText } from "@/lib/accident-reports";
 import { getWalkAttendeesForReport } from "@/lib/walk-members";
+import { walkStatus } from "@/lib/walk-window";
 import { type ActionResult, isPrismaCode, logActionError, ownerDenied, permissionDenied } from "./shared";
+
+/**
+ * The UI only offers completed walks for linking. Enforce the same on the
+ * server so a tampered walkId cannot attach a report to an upcoming,
+ * in-progress, or cancelled walk.
+ */
+async function assertLinkableWalkId(
+  walkId: string | undefined,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!walkId) return { ok: true };
+  const walk = await prisma.walk.findUnique({
+    where: { id: walkId },
+    select: {
+      id: true,
+      cancelledAt: true,
+      startsAt: true,
+      durationMins: true,
+      endedAt: true,
+    },
+  });
+  if (!walk) return { ok: false, error: "That walk is no longer there." };
+  if (walkStatus(walk) !== "completed") {
+    return {
+      ok: false,
+      error: "Link the report to a walk that has already finished, or leave it unlinked.",
+    };
+  }
+  return { ok: true };
+}
+
+/** When a walk is linked, tagged members must have clocked in to that walk
+ * — matches the checklist UI and stops a tampered id list from formally
+ * linking people who were never on the walk. */
+async function assertInvolvedMembersOnWalk(
+  walkId: string | undefined,
+  memberIds: string[],
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!walkId || memberIds.length === 0) return { ok: true };
+  const onWalk = await prisma.attendance.findMany({
+    where: { walkId, userId: { in: memberIds } },
+    select: { userId: true },
+  });
+  if (onWalk.length !== memberIds.length) {
+    return {
+      ok: false,
+      error: "Tagged members must have clocked in to the linked walk.",
+    };
+  }
+  return { ok: true };
+}
 
 /** Powers the member checklist on the report form once a walk is picked —
  * a plain data fetch, not a mutation, but still gated on admin auth since
@@ -18,8 +69,11 @@ export async function getWalkAttendeesForReportForm(
   walkId: string,
 ): Promise<{ id: string; name: string }[]> {
   const admin = await requireAdmin();
-  if (!admin.permReportsCreate) return [];
+  // Create and edit forms both load this checklist — either permission is enough.
+  if (!admin.permReportsCreate && !admin.permReportsEdit) return [];
   if (!walkId) return [];
+  const linkable = await assertLinkableWalkId(walkId);
+  if (!linkable.ok) return [];
   return getWalkAttendeesForReport(walkId);
 }
 
@@ -55,7 +109,6 @@ function readInvolvedMemberIds(formData: FormData): string[] {
   return [...new Set(formData.getAll("involvedMemberIds").map(String).filter(Boolean))];
 }
 
-
 export async function addAccidentReport(
   _prev: ActionResult | null,
   formData: FormData,
@@ -76,6 +129,11 @@ export async function addAccidentReport(
   } catch {
     return { ok: false, error: "That date and time could not be read. Try again." };
   }
+
+  const linkable = await assertLinkableWalkId(parsed.data.walkId);
+  if (!linkable.ok) return linkable;
+  const onWalk = await assertInvolvedMembersOnWalk(parsed.data.walkId, involvedMemberIds);
+  if (!onWalk.ok) return onWalk;
 
   let walkTitle: string | null;
   let involvedSummary: string;
@@ -160,6 +218,11 @@ export async function updateAccidentReport(
     return { ok: false, error: "That date and time could not be read. Try again." };
   }
 
+  const linkable = await assertLinkableWalkId(parsed.data.walkId);
+  if (!linkable.ok) return linkable;
+  const onWalk = await assertInvolvedMembersOnWalk(parsed.data.walkId, involvedMemberIds);
+  if (!onWalk.ok) return onWalk;
+
   try {
     await prisma.accidentReport.update({
       where: { id },
@@ -197,6 +260,9 @@ export async function deleteAccidentReport(
   if (!(await isOwner(admin.id))) return ownerDenied("delete an accident report");
   const id = String(formData.get("reportId") ?? "");
   if (!id) return { ok: false, error: "No report selected." };
+  // Fresh read — concurrent removeOwner must not leave a delete past a
+  // stale React-cached isOwner from earlier in the request.
+  if (!(await actorStillOwner(admin.id))) return ownerDenied("delete an accident report");
 
   try {
     await prisma.accidentReport.delete({ where: { id } });

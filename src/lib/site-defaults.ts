@@ -117,7 +117,7 @@ export const DEFAULT_FAQS = [
     categoryId: "faqcat_account",
     question: "Who can see my health notes?",
     answer:
-      "Only walk organisers. Members who clock in see names only. Health notes are deleted 90 days after the walk.",
+      "Only the site owner. Members who clock in see names only. Health notes are deleted 90 days after the walk.",
   },
 ] as const;
 

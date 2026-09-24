@@ -33,16 +33,16 @@ export function MembersSection() {
             walk history below, grouped by year. Search by walk or meeting point, and filter by
             status (stayed for the walk, left early, or cancelled) or year if the list is long.
             Previous and Next appear if they have more than 20 walks. Each walk shows the date,
-            meeting point, and in/out times — including whether they stayed for the whole walk.
-            Click a walk name to open that walk. This is a full page rather than a drawer, so it
-            stays readable even for someone who has been on hundreds of walks.
+            meeting point, and in/out times — including whether they stayed for the whole walk,
+            and the reason if they left early. Click a walk name to open that walk. This is a
+            full page rather than a drawer, so it stays readable even for someone who has been
+            on hundreds of walks.
           </p>
           <p className="font-medium text-foreground">Make organiser or member</p>
           <p>
-            Only the site&rsquo;s one owner can promote a member, demote an organiser, edit an
-            organiser&rsquo;s permissions, or remove an organiser&rsquo;s account — see
-            &ldquo;The owner&rdquo; below. Everyone else with the Members permission can still
-            view and search this list, and remove a plain member&rsquo;s account.
+            Only a site owner can open Members, promote a member, demote an organiser, or remove
+            an account — see &ldquo;Owners&rdquo; below. Plain organisers (not owners) run walks
+            and accident reports, but do not see this list.
           </p>
           <Steps>
             <li>
@@ -50,9 +50,11 @@ export function MembersSection() {
               on their row in the list.
             </li>
             <li>
-              Choose <strong>Make organiser</strong> and pick what they can do — you do not have
-              to give them everything. <strong>Make member</strong> takes organiser tools away
-              entirely. Their account, clock-ins, and walk history stay either way.
+              Choose <strong>Make organiser</strong> (or <strong>Invite as organiser</strong> if
+              invite-first is turned on in Settings → Site behaviour). Every organiser gets the
+              same fixed set of walk and report tools — there is nothing to pick.{" "}
+              <strong>Make member</strong> takes organiser tools away entirely. Their account,
+              clock-ins, and walk history stay either way.
             </li>
             <li>
               Type <strong>&ldquo;Confirm&rdquo;</strong> in the box, then confirm again. That
@@ -65,7 +67,8 @@ export function MembersSection() {
             <li>
               Choose the small Remove button, either on the Members list or on the member’s own
               page. On a phone, role and Remove sit under the name so the email is not squeezed.
-              You cannot remove yourself.
+              You cannot remove yourself. Owners must give up owner access first before they can
+              be removed.
             </li>
             <li>
               Type <strong>&ldquo;Confirm&rdquo;</strong> in the box, then choose{" "}
@@ -74,17 +77,21 @@ export function MembersSection() {
             </li>
           </Steps>
           <p>You cannot remove the last organiser, so the group is never left without one.</p>
-          <p className="font-medium text-foreground">The owner</p>
+          <p className="font-medium text-foreground">Owners</p>
           <p>
-            The site has exactly one owner — the &ldquo;master organiser&rdquo; — shown with an
-            Owner badge instead of Organiser. Only the owner can promote or demote an organiser,
-            edit an organiser&rsquo;s permissions, or remove an organiser&rsquo;s account. The
-            owner always has full access and cannot demote or remove themselves — choose{" "}
-            <strong>Make owner</strong> on another organiser&rsquo;s row to hand the role over
-            first. That organiser gains full access; you keep whatever permissions you already
-            had, just without the owner-only powers. Because this is such a big change, it asks
-            you to type that organiser&rsquo;s own name to confirm, rather than just the word
-            &ldquo;Confirm&rdquo; used elsewhere.
+            The group can have more than one owner — each is shown with an Owner badge instead of
+            Organiser. Owners have full access: Members, Messages, Settings, health notes on
+            walks, and the owner-only actions above. Plain organisers keep walks and accident
+            reports only.
+          </p>
+          <p>
+            On another organiser&rsquo;s row, <strong>Add as co-owner</strong> grants them owner
+            access without giving up yours. <strong>Make owner</strong> is a full handover — they
+            gain owner access and you step down (you stay an organiser; any other co-owners are
+            unchanged). <strong>Remove as owner</strong> leaves them as a plain organiser. Because
+            adding or handing over ownership is such a big change, it asks you to type that
+            organiser&rsquo;s own name to confirm, rather than just the word{" "}
+            &ldquo;Confirm&rdquo; used elsewhere. You cannot remove the last remaining owner.
           </p>
         </GuideBody>
       </AccordionContent>

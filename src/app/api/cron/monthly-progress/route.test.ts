@@ -1,8 +1,18 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
-const { prismaMock, loadWalkGame, buildProgressSummaryEmail, sendEmailBatch } = vi.hoisted(() => ({
-  prismaMock: { user: { findMany: vi.fn(async (): Promise<unknown[]> => []) } },
-  loadWalkGame: vi.fn(),
+const {
+  prismaMock,
+  loadWalkGameData,
+  walkGameFromLoadedData,
+  buildProgressSummaryEmail,
+  sendEmailBatch,
+} = vi.hoisted(() => ({
+  prismaMock: {
+    user: { findMany: vi.fn(async (): Promise<unknown[]> => []) },
+    siteSetting: { findUnique: vi.fn(async () => ({ progressEnabled: true })) },
+  },
+  loadWalkGameData: vi.fn(),
+  walkGameFromLoadedData: vi.fn(),
   // buildProgressSummaryEmail normally returns the SendEmailInput it would
   // send; the cron hands an array of these to sendEmailBatch, which is
   // what these tests assert on instead of a per-member send call. Keeping
@@ -14,13 +24,14 @@ const { prismaMock, loadWalkGame, buildProgressSummaryEmail, sendEmailBatch } = 
 }));
 
 vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
-vi.mock("@/lib/walk-progress", () => ({ loadWalkGame }));
+vi.mock("@/lib/walk-progress", () => ({ loadWalkGameData, walkGameFromLoadedData }));
 vi.mock("@/lib/email/mailer", () => ({ buildProgressSummaryEmail }));
 vi.mock("@/lib/email/client", () => ({ sendEmailBatch }));
 
 import { GET } from "./route";
 
 const MEMBER = { id: "member-1", email: "jane@example.com", firstName: "Jane", unsubscribeToken: null };
+const GAME_DATA = { walks: [], monthlyClockInGoal: null, now: new Date() };
 
 function request(secret?: string): Request {
   return new Request("https://example.test/api/cron/monthly-progress", {
@@ -31,6 +42,8 @@ function request(secret?: string): Request {
 beforeEach(() => {
   vi.clearAllMocks();
   sendEmailBatch.mockImplementation(async (emails: unknown[]) => ({ sent: emails.length, failed: 0 }));
+  loadWalkGameData.mockResolvedValue(GAME_DATA);
+  prismaMock.siteSetting.findUnique.mockResolvedValue({ progressEnabled: true });
   process.env.CRON_SECRET = "test-secret";
 });
 
@@ -51,11 +64,20 @@ describe("GET /api/cron/monthly-progress", () => {
     expect(res.status).toBe(401);
   });
 
+  it("skips sending when Progress is turned off in settings", async () => {
+    prismaMock.siteSetting.findUnique.mockResolvedValueOnce({ progressEnabled: false });
+    const res = await GET(request("test-secret"));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ skipped: true, reason: "progressDisabled" });
+    expect(prismaMock.user.findMany).not.toHaveBeenCalled();
+    expect(sendEmailBatch).not.toHaveBeenCalled();
+  });
+
   it("summarises the month that just finished, not the current one", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-01T06:00:00Z"));
     prismaMock.user.findMany.mockResolvedValueOnce([MEMBER]);
-    loadWalkGame.mockResolvedValueOnce({
+    walkGameFromLoadedData.mockReturnValueOnce({
       viewer: { monthCount: 3, yearCount: 20, streakWeeks: 2, badges: [] },
       together: { goal: 30, count: 18 },
     });
@@ -65,7 +87,8 @@ describe("GET /api/cron/monthly-progress", () => {
 
     // The last instant of August in London (BST) — midnight UTC on the 1st
     // would already be 1 September there, counting the wrong month.
-    expect(loadWalkGame).toHaveBeenCalledWith(MEMBER.id, new Date("2026-08-31T22:59:59.999Z"));
+    expect(loadWalkGameData).toHaveBeenCalledWith(new Date("2026-08-31T22:59:59.999Z"));
+    expect(walkGameFromLoadedData).toHaveBeenCalledWith(MEMBER.id, GAME_DATA);
     expect(buildProgressSummaryEmail).toHaveBeenCalledWith(
       expect.objectContaining({ monthLabel: "August", monthCount: 3 }),
       expect.objectContaining({ id: MEMBER.id }),
@@ -81,7 +104,7 @@ describe("GET /api/cron/monthly-progress", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-01-01T06:00:00Z"));
     prismaMock.user.findMany.mockResolvedValueOnce([MEMBER]);
-    loadWalkGame.mockResolvedValueOnce({
+    walkGameFromLoadedData.mockReturnValueOnce({
       viewer: { monthCount: 1, yearCount: 1, streakWeeks: 1, badges: [] },
       together: null,
     });
@@ -89,7 +112,7 @@ describe("GET /api/cron/monthly-progress", () => {
     await GET(request("test-secret"));
 
     // GMT: London midnight is UTC midnight, so one ms before it is still 2025.
-    expect(loadWalkGame).toHaveBeenCalledWith(MEMBER.id, new Date("2025-12-31T23:59:59.999Z"));
+    expect(loadWalkGameData).toHaveBeenCalledWith(new Date("2025-12-31T23:59:59.999Z"));
     expect(buildProgressSummaryEmail).toHaveBeenCalledWith(
       expect.objectContaining({ monthLabel: "December" }),
       expect.anything(),
@@ -101,7 +124,7 @@ describe("GET /api/cron/monthly-progress", () => {
 
   it("skips a member with nothing to report, without emailing them", async () => {
     prismaMock.user.findMany.mockResolvedValueOnce([MEMBER]);
-    loadWalkGame.mockResolvedValueOnce({
+    walkGameFromLoadedData.mockReturnValueOnce({
       viewer: { monthCount: 0, yearCount: 0, streakWeeks: 0, badges: [] },
       together: null,
     });
@@ -117,11 +140,13 @@ describe("GET /api/cron/monthly-progress", () => {
   it("keeps going for other members if one fails to build", async () => {
     const memberTwo = { ...MEMBER, id: "member-2", email: "sam@example.com" };
     prismaMock.user.findMany.mockResolvedValueOnce([MEMBER, memberTwo]);
-    loadWalkGame.mockResolvedValueOnce({
+    walkGameFromLoadedData.mockReturnValueOnce({
       viewer: { monthCount: 2, yearCount: 5, streakWeeks: 1, badges: [] },
       together: null,
     });
-    loadWalkGame.mockRejectedValueOnce(new Error("load failed"));
+    walkGameFromLoadedData.mockImplementationOnce(() => {
+      throw new Error("load failed");
+    });
 
     const res = await GET(request("test-secret"));
     const body = await res.json();
@@ -133,7 +158,7 @@ describe("GET /api/cron/monthly-progress", () => {
 
   it("reports however many sendEmailBatch actually sent", async () => {
     prismaMock.user.findMany.mockResolvedValueOnce([MEMBER]);
-    loadWalkGame.mockResolvedValueOnce({
+    walkGameFromLoadedData.mockReturnValueOnce({
       viewer: { monthCount: 2, yearCount: 5, streakWeeks: 1, badges: [] },
       together: null,
     });

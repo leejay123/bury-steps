@@ -99,8 +99,8 @@ function RoleChangeDialog({
                   ) : (
                     <p>
                       They&rsquo;ll get the standard organiser access — walks and accident
-                      reports, but not members, messages, health notes, or settings. Only you can
-                      see those.
+                      reports, but not members, messages, health notes, or settings. Only owners
+                      can see those.
                     </p>
                   )
                 ) : (

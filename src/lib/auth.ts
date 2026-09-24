@@ -11,15 +11,14 @@ import {
   hasAnySettingsPermission,
   type OrganiserPermissions,
 } from "./organiser-permissions";
-import { isOwner } from "./site-owner";
 
 /** An ADMIN's User row merged with what they can do — full access for the
  * site owner, the fixed ORGANISER_PERMISSIONS profile for anyone else. A
  * further handful of actions (promoting/demoting/inviting another
  * organiser, transferring ownership, and anything destructive) are
- * checked separately with isOwner() — see src/lib/site-owner.ts. This is
- * the shape every admin page and server action reads permissions off
- * (`admin.permWalksView`, etc.). */
+ * checked separately with isOwner() / `user.isOwner` — see
+ * src/lib/site-owner.ts. This is the shape every admin page and server
+ * action reads permissions off (`admin.permWalksView`, etc.). */
 export type AdminUser = User & OrganiserPermissions;
 
 /** Clerk throws this when auth() runs on a request that skipped middleware. */
@@ -78,15 +77,18 @@ export async function requireUser(): Promise<User> {
 
 /**
  * Every admin page and server action reads permissions straight off the
- * returned row (`admin.permWalksView`, etc.) — every organiser has full
- * access, so this always merges in FULL_ORGANISER_PERMISSIONS. See
- * requirePermission/requireAnyPermission below for the page-gating
- * helpers built on top of this.
+ * returned row (`admin.permWalksView`, etc.). Owners get
+ * FULL_ORGANISER_PERMISSIONS; other organisers get the fixed
+ * ORGANISER_PERMISSIONS profile (walks + reports only — see
+ * src/lib/organiser-permissions.ts). See requirePermission /
+ * requireAnyPermission below for the page-gating helpers built on top.
  */
 export async function requireAdmin(): Promise<AdminUser> {
   const user = await getOptionalUser();
   if (!user || user.role !== "ADMIN") notFound();
-  const perms = (await isOwner(user.id)) ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS;
+  // Prefer the already-loaded User.isOwner — avoids a second DB round-trip
+  // on every admin page/action (isOwner() is still fine for id-only callers).
+  const perms = user.isOwner ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS;
   return { ...user, ...perms };
 }
 

@@ -16,6 +16,8 @@ import {
   MAX_JOURNEY_TITLE,
   type JourneyEventView,
 } from "@/lib/walk-journey";
+import { canOrganiserEditJourney, walkStatus } from "@/lib/walk-window";
+import { useWalkClock } from "@/hooks/use-walk-clock";
 import { useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { FormError } from "@/components/form-error";
@@ -139,16 +141,37 @@ function RemoveJourneyEventDialogForm({
 type Mode = { type: "add" } | { type: "edit"; event: JourneyEventView };
 
 export function WalkJourneyManager({
-  canEdit,
+  cancelledAt,
   defaultHappenedAt,
+  durationMins,
+  endedAt = null,
   events,
+  mayEdit,
+  startsAt,
   walkId,
 }: {
-  canEdit: boolean;
+  cancelledAt: string | null;
+  /** SSR first paint for the Add form; recomputed live when In progress. */
   defaultHappenedAt: string;
+  durationMins: number;
+  endedAt?: string | null;
   events: JourneyEventView[];
+  /** permWalksJourney — phase gating is applied live below. */
+  mayEdit: boolean;
+  startsAt: string;
   walkId: string;
 }) {
+  const now = useWalkClock({ cancelledAt, durationMins, endedAt, startsAt });
+  const walk = {
+    cancelledAt: cancelledAt ? new Date(cancelledAt) : null,
+    durationMins,
+    endedAt: endedAt ? new Date(endedAt) : null,
+    startsAt: new Date(startsAt),
+  };
+  const canEdit = mayEdit && canOrganiserEditJourney(walk, now);
+  const liveDefaultHappenedAt =
+    walkStatus(walk, now) === "in-progress" ? utcToLondonWallClock(now) : defaultHappenedAt;
+
   const [mode, setMode] = useState<Mode | null>(null);
   const [createState, createAction, createPending] = useActionState<ActionResult | null, FormData>(
     createJourneyEvent,
@@ -301,7 +324,7 @@ export function WalkJourneyManager({
                 </Label>
                 <DateTimePicker
                   defaultValue={
-                    editing ? utcToLondonWallClock(editing.happenedAt) : defaultHappenedAt
+                    editing ? utcToLondonWallClock(editing.happenedAt) : liveDefaultHappenedAt
                   }
                   id="journey-when"
                   name="happenedAt"

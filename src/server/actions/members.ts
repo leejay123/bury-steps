@@ -9,7 +9,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { SITE_SETTING_ID } from "@/lib/theme";
-import { getOwnerIds, isOwner } from "@/lib/site-owner";
+import { getOwnerIds, isOwner, actorStillOwner } from "@/lib/site-owner";
 import { safeAppPath } from "@/lib/urls";
 import {
   makeOrganiserInviteToken,
@@ -22,6 +22,7 @@ import {
   sendAdminDemotedEmail,
   sendOrganiserInviteEmail,
 } from "@/lib/email/mailer";
+import { syncContactUnsubscribed } from "@/lib/email/resend-audience";
 import {
   type ActionResult,
   LimitReachedError,
@@ -42,9 +43,10 @@ export type MemberRow = {
   /** Set only while role is still MEMBER and an organiser invite is
    * outstanding — see setMemberRole/acceptOrganiserInvite. */
   pendingInvite: { sentAt: string; expiresAt: string; expired: boolean } | null;
-  /** The site's single "master organiser" (see src/lib/site-owner.ts) —
-   * only they can promote/demote an organiser, edit an organiser's
-   * permissions, or remove an organiser's account. */
+  /** One of the site's owners (see src/lib/site-owner.ts) — only owners
+   * can promote/demote an organiser, manage owner access, or remove an
+   * account. Organiser capabilities are fixed profiles, not edited per
+   * person. */
   isOwner: boolean;
   /** A plain member who has never clocked in, or an organiser invite that's
    * expired — the two things on this list most worth an organiser's notice.
@@ -242,11 +244,17 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
   // concurrent deletes cannot leave the group with zero admins.
   try {
     await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.lastAdmin, async (tx) => {
+      // Same order as removeOwner / transferOwnership — lastAdmin then
+      // lastOwner — so concurrent owner+admin deletes cannot deadlock or
+      // wipe the last owner while another organiser still exists.
+      await tx.$executeRawUnsafe(`SELECT pg_advisory_xact_lock(${COUNT_LIMIT_LOCK_KEYS.lastOwner})`);
+      if (!(await actorStillOwner(admin.id, tx))) throw new Error("NOT_OWNER");
       const fresh = await tx.user.findUnique({
         where: { id: target.id },
         select: {
           id: true,
           role: true,
+          isOwner: true,
           _count: {
             select: {
               walksCreated: true,
@@ -260,6 +268,12 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
       if (fresh.role === "ADMIN") {
         const adminCount = await tx.user.count({ where: { role: "ADMIN" } });
         if (adminCount <= 1) throw new LimitReachedError("You cannot delete the last organiser.");
+      }
+      if (fresh.isOwner) {
+        const ownerCount = await tx.user.count({ where: { isOwner: true } });
+        if (ownerCount <= 1) {
+          throw new LimitReachedError("You cannot delete the group's last owner.");
+        }
       }
       if (fresh._count.walksCreated > 0) {
         await tx.walk.updateMany({
@@ -283,6 +297,11 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
     });
   } catch (err) {
     if (err instanceof LimitReachedError) return { ok: false, error: err.message };
+    if (err instanceof Error && err.message === "NOT_OWNER") {
+      return ownerDenied(
+        target.role === "ADMIN" ? "remove an organiser's account" : "remove a member's account",
+      );
+    }
     if (err instanceof Error && err.message === "MEMBER_GONE") {
       return { ok: false, error: "That member is no longer in the group." };
     }
@@ -295,6 +314,11 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
   // the Clerk removal below succeeds.
   await sendAccountDeletedEmail(target).catch((err) => {
     console.error("deleteMember: failed to send deletion confirmation email", err);
+  });
+  // Drop them from the Resend newsletter segment too — campaigns broadcast
+  // to that audience, not only to live User rows.
+  await syncContactUnsubscribed(target.email).catch((err) => {
+    console.error("deleteMember: failed to remove from newsletter audience", err);
   });
 
   const redirectTo = String(formData.get("redirectTo") ?? "").trim();
@@ -311,6 +335,8 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
       console.error("deleteMember: Clerk login removal failed after database removal", err);
       revalidatePath("/admin");
       revalidatePath("/admin/members");
+      revalidatePath("/admin/messages");
+      revalidatePath("/admin/settings");
       revalidatePath("/walks");
       return {
         ok: true,
@@ -322,6 +348,10 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
 
   revalidatePath("/admin");
   revalidatePath("/admin/members");
+  // contactMessagesOwnerId SetNulls on delete — refresh messages + settings
+  // so a stale "messages go to …" label does not linger.
+  revalidatePath("/admin/messages");
+  revalidatePath("/admin/settings");
   revalidatePath("/walks");
 
   return {
@@ -394,12 +424,17 @@ export async function setMemberRole(
       select: { organiserInviteRequired: true },
     });
     if (setting?.organiserInviteRequired) {
+      if (!(await actorStillOwner(admin.id))) {
+        return ownerDenied("change an organiser's role");
+      }
       return sendOrganiserInvite(target);
     }
   }
 
   try {
     await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.lastAdmin, async (tx) => {
+      await tx.$executeRawUnsafe(`SELECT pg_advisory_xact_lock(${COUNT_LIMIT_LOCK_KEYS.lastOwner})`);
+      if (!(await actorStillOwner(admin.id, tx))) throw new Error("NOT_OWNER");
       const fresh = await tx.user.findUnique({ where: { id: target.id } });
       if (!fresh) throw new Error("MEMBER_GONE");
       if (fresh.role === role) return;
@@ -436,6 +471,9 @@ export async function setMemberRole(
     });
   } catch (err) {
     if (err instanceof LimitReachedError) return { ok: false, error: err.message };
+    if (err instanceof Error && err.message === "NOT_OWNER") {
+      return ownerDenied("change an organiser's role");
+    }
     if (err instanceof Error && err.message === "MEMBER_GONE") {
       return { ok: false, error: "That member is no longer in the group." };
     }
@@ -506,17 +544,31 @@ export async function transferOwnership(
   }
 
   try {
-    await prisma.$transaction([
-      prisma.user.update({ where: { id: target.id }, data: { isOwner: true } }),
-      prisma.user.update({ where: { id: admin.id }, data: { isOwner: false } }),
-    ]);
+    await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.lastOwner, async (tx) => {
+      if (!(await actorStillOwner(admin.id, tx))) throw new Error("NOT_OWNER");
+      const fresh = await tx.user.findUnique({
+        where: { id: target.id },
+        select: { id: true, role: true },
+      });
+      if (!fresh || fresh.role !== "ADMIN") throw new Error("NOT_ADMIN");
+      await tx.user.update({ where: { id: fresh.id }, data: { isOwner: true } });
+      await tx.user.update({ where: { id: admin.id }, data: { isOwner: false } });
+    });
   } catch (err) {
+    if (err instanceof Error && err.message === "NOT_OWNER") {
+      return ownerDenied("transfer ownership");
+    }
+    if (err instanceof Error && err.message === "NOT_ADMIN") {
+      return { ok: false, error: "Choose an existing organiser to hand ownership to." };
+    }
     return logActionError("transferOwnership", err, "Could not transfer ownership. Try again.");
   }
 
   revalidatePath("/admin/members");
   revalidatePath(`/admin/members/${target.id}`);
   revalidatePath(`/admin/members/${admin.id}`);
+  // Layout nav (Members / Messages / Settings) depends on owner status.
+  revalidatePath("/", "layout");
 
   return { ok: true, message: `${displayName(target)} is now the site owner.` };
 }
@@ -554,13 +606,29 @@ export async function addOwner(_prev: ActionResult | null, formData: FormData): 
   }
 
   try {
-    await prisma.user.update({ where: { id: target.id }, data: { isOwner: true } });
+    await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.lastOwner, async (tx) => {
+      if (!(await actorStillOwner(admin.id, tx))) throw new Error("NOT_OWNER");
+      const fresh = await tx.user.findUnique({
+        where: { id: target.id },
+        select: { id: true, role: true, isOwner: true },
+      });
+      if (!fresh || fresh.role !== "ADMIN") throw new Error("NOT_ADMIN");
+      if (fresh.isOwner) return;
+      await tx.user.update({ where: { id: fresh.id }, data: { isOwner: true } });
+    });
   } catch (err) {
+    if (err instanceof Error && err.message === "NOT_OWNER") {
+      return ownerDenied("add another owner");
+    }
+    if (err instanceof Error && err.message === "NOT_ADMIN") {
+      return { ok: false, error: "Choose an existing organiser to make a co-owner." };
+    }
     return logActionError("addOwner", err, "Could not add them as an owner. Try again.");
   }
 
   revalidatePath("/admin/members");
   revalidatePath(`/admin/members/${target.id}`);
+  revalidatePath("/", "layout");
 
   return { ok: true, message: `${displayName(target)} is now also a site owner.` };
 }
@@ -598,6 +666,7 @@ export async function removeOwner(
 
   try {
     await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.lastOwner, async (tx) => {
+      if (!(await actorStillOwner(admin.id, tx))) throw new Error("NOT_OWNER");
       const fresh = await tx.user.findUnique({ where: { id: target.id } });
       if (!fresh) throw new Error("MEMBER_GONE");
       if (!fresh.isOwner) return;
@@ -609,6 +678,9 @@ export async function removeOwner(
     });
   } catch (err) {
     if (err instanceof LimitReachedError) return { ok: false, error: err.message };
+    if (err instanceof Error && err.message === "NOT_OWNER") {
+      return ownerDenied("remove another owner");
+    }
     if (err instanceof Error && err.message === "MEMBER_GONE") {
       return { ok: false, error: "That member is no longer in the group." };
     }
@@ -617,6 +689,7 @@ export async function removeOwner(
 
   revalidatePath("/admin/members");
   revalidatePath(`/admin/members/${target.id}`);
+  revalidatePath("/", "layout");
 
   return { ok: true, message: `${displayName(target)} is no longer a site owner.` };
 }
@@ -634,14 +707,22 @@ async function sendOrganiserInvite(target: {
   const expiresAt = organiserInviteExpiresAt();
 
   try {
-    await prisma.user.update({
-      where: { id: target.id },
+    // Only a still-MEMBER row can hold an invite — a concurrent accept or
+    // direct promote must not be overwritten with a fresh unused token.
+    const claimed = await prisma.user.updateMany({
+      where: { id: target.id, role: "MEMBER" },
       data: {
         organiserInviteToken: token,
         organiserInviteSentAt: new Date(),
         organiserInviteExpiresAt: expiresAt,
       },
     });
+    if (claimed.count !== 1) {
+      return {
+        ok: false,
+        error: "That member is no longer eligible for an organiser invite.",
+      };
+    }
   } catch (err) {
     return logActionError("setMemberRole", err, "Could not send the invite. Try again.");
   }
@@ -672,6 +753,10 @@ export async function resendOrganiserInvite(
   // Inviting/promoting a new organiser is owner-only — resending an
   // invite is part of that same flow.
   if (!(await isOwner(admin.id))) return ownerDenied("resend an organiser invite");
+  const limited = checkRateLimit(`${admin.id}:resendOrganiserInvite`, 5, 60_000);
+  if (!limited.ok) {
+    return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
+  }
   const id = String(formData.get("userId") ?? "");
   if (!id) return { ok: false, error: "No member selected." };
 
@@ -680,6 +765,7 @@ export async function resendOrganiserInvite(
   if (target.role !== "MEMBER" || !target.organiserInviteToken) {
     return { ok: false, error: "There is no pending invite for this person." };
   }
+  if (!(await actorStillOwner(admin.id))) return ownerDenied("resend an organiser invite");
 
   return sendOrganiserInvite(target);
 }
@@ -699,12 +785,22 @@ export async function cancelOrganiserInvite(
   if (target.role !== "MEMBER" || !target.organiserInviteToken) {
     return { ok: false, error: "There is no pending invite for this person." };
   }
+  if (!(await actorStillOwner(admin.id))) return ownerDenied("cancel an organiser invite");
 
   try {
-    await prisma.user.update({
-      where: { id },
-      data: { organiserInviteToken: null, organiserInviteSentAt: null, organiserInviteExpiresAt: null },
+    // Claim-clear: if they already accepted (or another cancel won), count
+    // is 0 — do not report success for a token that was already consumed.
+    const cleared = await prisma.user.updateMany({
+      where: { id, role: "MEMBER", organiserInviteToken: { not: null } },
+      data: {
+        organiserInviteToken: null,
+        organiserInviteSentAt: null,
+        organiserInviteExpiresAt: null,
+      },
     });
+    if (cleared.count !== 1) {
+      return { ok: false, error: "There is no pending invite for this person." };
+    }
   } catch (err) {
     return logActionError("cancelOrganiserInvite", err, "Could not cancel the invite. Try again.");
   }
@@ -715,12 +811,15 @@ export async function cancelOrganiserInvite(
 }
 
 /**
- * Public — reached from the emailed invite link, no sign-in required (same
- * trust model as the email-preferences unsubscribe tokens: an unguessable
- * token mailed only to the invitee's own address is treated as
- * authorization on its own). Actually grants organiser access — the whole
- * point of the "require accepted invite" setting is that this is the one
- * and only place role flips to ADMIN while it's on.
+ * Reached from the emailed invite link. The page is public so expired /
+ * invalid tokens can explain themselves without forcing sign-in, but
+ * accepting requires the invitee to be signed in as themselves (see
+ * organiser-invite/[token]/page.tsx). The unguessable token mailed only to
+ * their address is still the capability that authorises the promotion —
+ * the session bind stops someone else with the link accepting on the
+ * wrong account. Actually grants organiser access — the whole point of
+ * the "require accepted invite" setting is that this is the one and only
+ * place role flips to ADMIN while it's on.
  */
 export async function acceptOrganiserInvite(
   _prev: ActionResult | null,
@@ -728,6 +827,11 @@ export async function acceptOrganiserInvite(
 ): Promise<ActionResult> {
   const token = String(formData.get("token") ?? "");
   if (!token) return { ok: false, error: "This invite link is invalid." };
+
+  const limited = checkRateLimit(`acceptOrganiserInvite:${token}`, 10, 60_000);
+  if (!limited.ok) {
+    return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
+  }
 
   const target = await prisma.user.findUnique({ where: { organiserInviteToken: token } });
   if (!target || target.role !== "MEMBER") {
@@ -751,8 +855,14 @@ export async function acceptOrganiserInvite(
   }
 
   try {
-    await prisma.user.update({
-      where: { id: target.id },
+    // Only the request that clears the invite token wins — a double Accept
+    // must not promote twice or send two "you're an organiser" emails.
+    const accepted = await prisma.user.updateMany({
+      where: {
+        id: target.id,
+        role: "MEMBER",
+        organiserInviteToken: token,
+      },
       data: {
         role: "ADMIN",
         organiserInviteToken: null,
@@ -760,6 +870,9 @@ export async function acceptOrganiserInvite(
         organiserInviteExpiresAt: null,
       },
     });
+    if (accepted.count === 0) {
+      return { ok: false, error: "This invite link is invalid or has already been used." };
+    }
   } catch (err) {
     return logActionError("acceptOrganiserInvite", err, "Could not accept the invite. Try again.");
   }

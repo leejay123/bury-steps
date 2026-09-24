@@ -76,13 +76,14 @@ export function TransferOwnershipButton({
               <AlertDialogDescription asChild>
                 <div className="space-y-2 text-sm text-muted-foreground">
                   <p>
-                    {name} will gain full access to everything and become the only person who can
-                    promote or demote an organiser, edit an organiser&rsquo;s permissions, or
-                    remove an organiser&rsquo;s account.
+                    {name} will gain full owner access, and you will step down as an owner
+                    (you stay an organiser). Other co-owners, if any, are unchanged. Owners can
+                    promote or demote organisers, remove accounts, manage who else is an owner,
+                    and use every organiser tool (Members, Messages, Settings, health notes).
                   </p>
                   <p>
-                    You will keep your own current permissions as a regular organiser, but will no
-                    longer be able to do any of that.
+                    Prefer keeping your own owner access? Cancel and choose{" "}
+                    <strong>Add as co-owner</strong> instead.
                   </p>
                 </div>
               </AlertDialogDescription>

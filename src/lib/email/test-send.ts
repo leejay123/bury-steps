@@ -4,7 +4,7 @@ import { resolveEmailCopy } from "./overrides";
 import { getOrCreateUserUnsubscribeToken, memberPreferencesUrl, newsletterUnsubscribeUrl } from "./unsubscribe";
 import type { EmailTemplateKey } from "./registry";
 import { ORGANISER_INVITE_EXPIRY_DAYS } from "@/lib/organiser-invite";
-import { describeOrganiserPermissions, FULL_ORGANISER_PERMISSIONS } from "@/lib/organiser-permissions";
+import { describeOrganiserPermissions, ORGANISER_PERMISSIONS } from "@/lib/organiser-permissions";
 import { WelcomeEmail } from "./templates/welcome";
 import { AccountDeletedEmail } from "./templates/account-deleted";
 import { AdminPromotedEmail } from "./templates/admin-promoted";
@@ -118,7 +118,7 @@ export async function sendTestEmail(key: EmailTemplateKey, admin: TestRecipient)
         expiresInDays: String(ORGANISER_INVITE_EXPIRY_DAYS),
         // Full access — a real send fills this from the invitee's actual
         // chosen permissions instead (see sendOrganiserInviteEmail).
-        permissionsList: describeOrganiserPermissions(FULL_ORGANISER_PERMISSIONS),
+        permissionsList: describeOrganiserPermissions(ORGANISER_PERMISSIONS),
       });
       await send(
         copy.subject,

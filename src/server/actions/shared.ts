@@ -55,17 +55,17 @@ export function permissionDenied(permission: keyof OrganiserPermissions): { ok: 
 }
 
 /**
- * Friendly ActionResult for an organiser who isn't the site's single
- * owner — see src/lib/site-owner.ts. Promoting/demoting an organiser,
- * editing an organiser's permissions, and removing an organiser's account
- * are all owner-only, regardless of what permissions the acting organiser
- * otherwise holds.
+ * Friendly ActionResult for an organiser who isn't one of the site's
+ * owners — see src/lib/site-owner.ts. Promoting/demoting an organiser,
+ * granting or removing owner access, and removing an account are all
+ * owner-only. Organiser capabilities themselves are fixed profiles (not
+ * edited per person) — see src/lib/organiser-permissions.ts.
  *
  *   const admin = await requireAdmin();
  *   if (!(await isOwner(admin.id))) return ownerDenied("change an organiser's role");
  */
 export function ownerDenied(action: string): { ok: false; error: string } {
-  return { ok: false, error: `Only the site owner can ${action}.` };
+  return { ok: false, error: `Only a site owner can ${action}.` };
 }
 
 /** Thrown by a locked count-check to signal "this would exceed the

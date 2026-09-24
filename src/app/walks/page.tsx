@@ -20,9 +20,9 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const user = await requireUser();
 
-  // Every organiser has the full admin dashboard — this page is the
+  // Organisers use the admin Walks tools at /admin — this page is the
   // ordinary member experience (browse walks, clock in), so an admin is
-  // always sent to /admin instead.
+  // always sent there instead.
   if (user.role === "ADMIN") {
     redirect("/admin");
   }
@@ -135,7 +135,11 @@ export default async function DashboardPage() {
           <TabsTrigger value="upcoming">Upcoming ({walks.length})</TabsTrigger>
           <TabsTrigger value="all-walks">All walks ({allWalks.length})</TabsTrigger>
         </TabsList>
-        <TabsContent className="mt-4" value="upcoming">
+        <TabsContent
+          className="mt-4 data-[state=inactive]:hidden"
+          forceMount
+          value="upcoming"
+        >
           {walks.length === 0 ? (
             <EmptyState
               description="Your organiser will post the next one here."

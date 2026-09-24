@@ -52,12 +52,13 @@ model User {
   organiserInviteExpiresAt DateTime?
   /// The site's "owner" set — any number of organisers can hold this at
   /// once (see src/lib/site-owner.ts). Only an owner can promote/demote an
-  /// organiser, edit an organiser's permissions, remove an organiser's
-  /// account, or grant/revoke another account's owner access. Set
-  /// automatically for whoever bootstraps as the very first organiser;
-  /// changed after that via addOwner/removeOwner/transferOwnership. At
-  /// least one owner must always remain — removeOwner refuses to strip the
-  /// last one.
+  /// organiser, remove an account, grant/revoke another account's owner
+  /// access, or use owner-only tools (Members, Messages, Settings, health
+  /// notes). Organiser capabilities are fixed profiles, not edited per
+  /// person. Set automatically for whoever bootstraps as the very first
+  /// organiser; changed after that via addOwner/removeOwner/transferOwnership.
+  /// At least one owner must always remain — removeOwner refuses to strip
+  /// the last one.
   isOwner                  Boolean   @default(false)
 
   walksCreated            Walk[]                 @relation("WalkCreator")
@@ -434,6 +435,7 @@ model AccidentReport {
 
   @@index([happenedAt])
   @@index([walkId])
+  @@index([createdAt])
 }
 
 /// Join row: one member tagged as involved in one accident report.
@@ -488,9 +490,10 @@ model ContactMessage {
 model NewsletterSubscriber {
   id               String    @id @default(cuid())
   email            String    @unique
-  /// Powers the public unsubscribe link — always set at creation, unlike
-  /// User.unsubscribeToken, since this row only exists to be emailed.
-  unsubscribeToken String    @unique @default(cuid())
+  /// Powers the public unsubscribe link — always set at creation with
+  /// makeCapabilityToken() (same entropy as member preference tokens).
+  /// Not a Prisma default: cuid() is too predictable for a capability URL.
+  unsubscribeToken String    @unique
   createdAt        DateTime  @default(now())
   unsubscribedAt   DateTime?
 

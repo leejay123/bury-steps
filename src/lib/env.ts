@@ -22,15 +22,19 @@ const REQUIRED: EnvCheck[] = [
   { name: "CLERK_SECRET_KEY", hint: "Clerk dashboard → your app → API Keys (starts with sk_)." },
 ];
 
-const RECOMMENDED: EnvCheck[] = [
+/** Required on the live Vercel Production deploy only — preview/local warn. */
+const PRODUCTION_REQUIRED: EnvCheck[] = [
   {
     name: "CRON_SECRET",
-    hint: "Without it, the nightly health-note purge and the monthly progress email are both unauthenticated and never run.",
+    hint: "Without it, the nightly health-note purge and monthly progress email return 401 and never run.",
   },
   {
     name: "INITIAL_ADMIN_EMAIL",
-    hint: "Without it, the first person to sign up against an empty database becomes admin.",
+    hint: "Without it, the first person to sign up against an empty database becomes the site owner.",
   },
+];
+
+const RECOMMENDED: EnvCheck[] = [
   {
     name: "RESEND_API_KEY",
     hint: "Resend dashboard → API Keys. Without it, every outgoing email (walk notices, deletion/promotion confirmations, contact form, newsletter) is skipped and only logged.",
@@ -52,10 +56,17 @@ function isSet(name: string): boolean {
  */
 export function validateEnv(): void {
   const isPreview = process.env.VERCEL_ENV === "preview";
+  const isVercelProduction = process.env.VERCEL_ENV === "production";
   const isProductionRuntime = process.env.NODE_ENV === "production" && !isPreview;
 
-  const missingRequired = REQUIRED.filter((check) => !isSet(check.name));
-  const missingRecommended = RECOMMENDED.filter((check) => !isSet(check.name));
+  const missingRequired = [
+    ...REQUIRED.filter((check) => !isSet(check.name)),
+    ...(isVercelProduction ? PRODUCTION_REQUIRED.filter((check) => !isSet(check.name)) : []),
+  ];
+  const missingRecommended = [
+    ...RECOMMENDED.filter((check) => !isSet(check.name)),
+    ...(!isVercelProduction ? PRODUCTION_REQUIRED.filter((check) => !isSet(check.name)) : []),
+  ];
 
   for (const check of missingRecommended) {
     console.warn(`[env] ${check.name} is not set. ${check.hint}`);

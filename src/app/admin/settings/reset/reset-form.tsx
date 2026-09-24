@@ -48,7 +48,7 @@ export function ResetSiteForm() {
 
   return (
     <SettingsSection
-      description="Deletes every walk, clock-in, member, report, notice, and homepage edit. Puts the starter photos, quotes, and FAQs back. You stay the organiser."
+      description="Deletes every walk, clock-in, member, report, notice, contact message, newsletter signup, custom email wording, uploaded logo/banner, and homepage edit. Puts the starter photos, quotes, FAQs, and retention defaults back. You stay the organiser."
       title="Reset to a blank group"
       tone="danger"
     >
@@ -70,8 +70,9 @@ export function ResetSiteForm() {
             <AlertDialogHeader>
               <AlertDialogTitle>Reset the whole site?</AlertDialogTitle>
               <AlertDialogDescription>
-                This cannot be undone. Walks, members, reports, and homepage content will go. You
-                will still be the organiser. Type {RESET_CONFIRM_WORD} to continue.
+                This cannot be undone. Walks, members, messages, subscribers, reports, branding
+                uploads, and homepage content will go. You will still be the organiser. Type{" "}
+                {RESET_CONFIRM_WORD} to continue.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <div className="flex flex-col gap-2">

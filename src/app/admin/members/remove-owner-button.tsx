@@ -50,10 +50,10 @@ function RemoveOwnerDialogForm({
           <AlertDialogDescription asChild>
             <div className="space-y-2 text-sm text-muted-foreground">
               <p>
-                {name} stays an organiser — they just lose the ability to promote/demote an
-                organiser, edit an organiser&rsquo;s permissions, remove an organiser&rsquo;s
-                account, or grant/remove another account&rsquo;s owner access. Refused if they are
-                the group&rsquo;s last remaining owner.
+                {name} stays an organiser — they just lose the ability to promote or demote an
+                organiser, remove an account, manage who else is an owner, or use owner-only
+                tools (Members, Messages, Settings, health notes). Refused if they are the
+                group&rsquo;s last remaining owner.
               </p>
               <p>You can add them back as an owner again at any time.</p>
             </div>

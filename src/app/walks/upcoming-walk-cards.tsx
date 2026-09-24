@@ -1,7 +1,8 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CalendarDays, ChevronRight, Clock, MapPin, Search, SearchX } from "lucide-react";
 import { formatDateTime, formatWalkDate } from "@/lib/dates";
 import { walkSharePath } from "@/lib/walk-slug";
@@ -14,6 +15,7 @@ import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/comp
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useLiveNow } from "@/hooks/use-live-now";
 import { useWalkClock } from "@/hooks/use-walk-clock";
 
 // Upcoming never holds a cancelled walk — that lives in All walks instead
@@ -162,17 +164,36 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const deferredSearchTerm = useDeferredValue(searchTerm);
+  const now = useLiveNow();
+  const router = useRouter();
+
+  // Keep the SSR tab count in sync once a walk finishes on an open page.
+  const needsRefresh = walks.some((walk) => {
+    const endedAt = walk.endedAt ? new Date(walk.endedAt) : null;
+    return windowState(new Date(walk.startsAt), walk.durationMins, now, endedAt) === "closed";
+  });
+  useEffect(() => {
+    if (needsRefresh) router.refresh();
+  }, [needsRefresh, router]);
 
   const filtered = useMemo(() => {
     const query = deferredSearchTerm.trim().toLowerCase();
     const rows = walks.filter((walk) => {
+      const start = new Date(walk.startsAt);
+      const endedAt = walk.endedAt ? new Date(walk.endedAt) : null;
+      // Drop finished walks client-side so a tab left open past end does not
+      // keep them on Upcoming until the next navigation.
+      if (windowState(start, walk.durationMins, now, endedAt) === "closed") return false;
       if (statusFilter !== "all") {
-        const status = walkStatus({
-          cancelledAt: null,
-          startsAt: new Date(walk.startsAt),
-          durationMins: walk.durationMins,
-          endedAt: walk.endedAt ? new Date(walk.endedAt) : null,
-        });
+        const status = walkStatus(
+          {
+            cancelledAt: null,
+            startsAt: start,
+            durationMins: walk.durationMins,
+            endedAt,
+          },
+          now,
+        );
         if (status !== statusFilter) return false;
       }
       if (!query) return true;
@@ -185,12 +206,14 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
       return sortOrder === "asc" ? delta : -delta;
     });
     return rows;
-  }, [deferredSearchTerm, sortOrder, statusFilter, walks]);
+  }, [deferredSearchTerm, now, sortOrder, statusFilter, walks]);
 
   function clearFilters() {
     setSearchTerm("");
     setStatusFilter("all");
   }
+
+  const hasActiveFilters = deferredSearchTerm.trim() !== "" || statusFilter !== "all";
 
   return (
     <div className="flex flex-col gap-4">
@@ -236,20 +259,33 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <Empty className="border">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Search />
-            </EmptyMedia>
-            <EmptyTitle>No walks match your search</EmptyTitle>
-          </EmptyHeader>
-          <EmptyContent>
-            <Button onClick={clearFilters} type="button" variant="outline">
-              <SearchX data-icon="inline-start" />
-              Clear search
-            </Button>
-          </EmptyContent>
-        </Empty>
+        hasActiveFilters ? (
+          <Empty className="border">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Search />
+              </EmptyMedia>
+              <EmptyTitle>No walks match your search</EmptyTitle>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button onClick={clearFilters} type="button" variant="outline">
+                <SearchX data-icon="inline-start" />
+                Clear search
+              </Button>
+            </EmptyContent>
+          </Empty>
+        ) : (
+          <Empty className="border">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <CalendarDays />
+              </EmptyMedia>
+              <EmptyTitle>
+                {needsRefresh ? "Updating upcoming walks…" : "No walks scheduled"}
+              </EmptyTitle>
+            </EmptyHeader>
+          </Empty>
+        )
       ) : (
         filtered.map((walk) => <UpcomingWalkCardRow key={walk.id} walk={walk} />)
       )}

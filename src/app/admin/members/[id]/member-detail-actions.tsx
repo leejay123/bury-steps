@@ -68,14 +68,18 @@ export function MemberDetailActions({
   const actions: { key: string; menuItem: React.ReactNode; hiddenWidget?: React.ReactNode }[] = [];
 
   if (pendingInvite) {
-    actions.push({
-      key: "resend",
-      menuItem: <ResendInviteButton asMenuItem key="resend" userId={id} />,
-    });
-    actions.push({
-      key: "cancel",
-      menuItem: <CancelInviteButton asMenuItem key="cancel" userId={id} />,
-    });
+    // Resend/cancel are owner-only on the server — hide them for plain
+    // organisers so the menu does not offer actions that will be refused.
+    if (viewerIsOwner) {
+      actions.push({
+        key: "resend",
+        menuItem: <ResendInviteButton asMenuItem key="resend" userId={id} />,
+      });
+      actions.push({
+        key: "cancel",
+        menuItem: <CancelInviteButton asMenuItem key="cancel" userId={id} />,
+      });
+    }
   } else if (
     // Changing your own role here would be easy to hit by mistake and
     // immediately cost you organiser access to fix it — same reasoning as
@@ -171,7 +175,7 @@ export function MemberDetailActions({
     }
   }
 
-  if (!isYou && !isTargetOwner) {
+  if (!isYou && !isTargetOwner && viewerIsOwner) {
     const deleteRef: { current: HTMLButtonElement | null } = { current: null };
     actions.push({
       key: "delete",

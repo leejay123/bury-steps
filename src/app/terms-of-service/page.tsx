@@ -23,7 +23,8 @@ export default function TermsOfServicePage() {
               </p>
               <p>
                 Bury Steps is a local walking group. The website helps members see upcoming walks
-                and clock in when they arrive. Organisers create walks and manage membership.
+                and clock in when they arrive. Organisers create walks; owners also manage
+                membership and site settings.
               </p>
             </>
           ),

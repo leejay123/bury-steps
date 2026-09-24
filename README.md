@@ -167,16 +167,20 @@ walks. Everyone after that is a normal member.
 
 ## Make someone else an organiser
 
-This is done in Supabase, not Clerk.
+Do this on the live site, not in Supabase or Clerk.
 
-1. Open your Supabase project.
-2. Click **Table Editor** in the left sidebar.
-3. Open the **User** table.
-4. Find the person. Change **role** from `MEMBER` to `ADMIN`.
-5. Ask them to refresh the page.
+1. Sign in as a site owner.
+2. Open **Members** (`/admin/members`).
+3. On that person’s row, choose **Make organiser** (or **Invite as organiser**
+   if invite-first is on under Settings → Site behaviour).
+4. Type **Confirm** when asked.
 
-If the User table is empty, nobody has signed in yet, or the first deploy did
-not finish creating tables — check that the Vercel deploy succeeded.
+To give them full owner access as well, use **Add as co-owner** on an
+organiser’s row. To hand over your own owner access and step down, use
+**Make owner**.
+
+If nobody appears in Members yet, nobody has signed in, or the first deploy
+did not finish creating tables — check that the Vercel deploy succeeded.
 
 ---
 
@@ -188,7 +192,7 @@ not finish creating tables — check that the Vercel deploy succeeded.
 | Application error / “max clients reached” | Too many open database sessions | Keep `DATABASE_URL` on Session pooler (5432). Redeploy. The live site uses transaction pooling on its own |
 | Vercel deploy fails on a Clerk key | A key was not pasted, or there is an extra space | Re-copy both Clerk keys into Vercel. No quotes around the value in the Vercel form. Redeploy |
 | The site loads but sign-in does nothing | Production keys without the `/__clerk` proxy, or test keys on Production | Confirm Vercel Production has `pk_live_` / `sk_live_` keys, the app is on Clerk SDK 7+, and middleware matches `/__clerk/:path*`. Do not add DNS for `vercel.app` |
-| `/admin` sends you back to walks | Your account is a member, not an organiser | In Supabase → Table Editor → User, set `role` to `ADMIN` |
+| `/admin` shows a 404 | Your account is a member, not an organiser | Sign in as the site owner → Members → Make organiser on your account (or ask an owner to). Do not edit roles in Supabase by hand |
 | Tables are missing in Supabase | Deploy did not run, or it failed before the database step | Open the failed Vercel deployment log. Fix `DATABASE_URL`, then **Redeploy** |
 | Password / authentication failed | The password inside `DATABASE_URL` is wrong | Reset the database password in Supabase, copy the Connect URI again, update Vercel, redeploy |
 
@@ -205,10 +209,10 @@ The live site is [https://burysteps-walkinggroup.co.uk](https://burysteps-walkin
 |---|---|---|
 | `https://burysteps-walkinggroup.co.uk/` | Anyone | Home |
 | `https://burysteps-walkinggroup.co.uk/sign-up` | Anyone | Create an account |
-| `https://burysteps-walkinggroup.co.uk/dashboard` | Signed-in members | Upcoming walks |
-| `https://burysteps-walkinggroup.co.uk/admin` | Organisers only | Create walks and copy share links |
-| `https://burysteps-walkinggroup.co.uk/admin/walks/…` | Organisers only | Who is coming, download a list, cancel |
-| `https://burysteps-walkinggroup.co.uk/w/…` | Signed-in members | Clock in for that walk |
+| `https://burysteps-walkinggroup.co.uk/walks` | Signed-in members | Upcoming walks |
+| `https://burysteps-walkinggroup.co.uk/admin` | Organisers | Create walks and copy share links (owners also get Members, Messages, Settings) |
+| `https://burysteps-walkinggroup.co.uk/admin/walks/…` | Organisers | Who is coming, download a list, cancel |
+| `https://burysteps-walkinggroup.co.uk/w/…` | Anyone can open; clock-in needs sign-in | Clock in for that walk |
 
 Times are shown in UK time (GMT in winter, BST in summer).
 
@@ -220,7 +224,7 @@ Clock-in can store a short health note. That is sensitive information.
 
 - People tick an explicit consent box before it is saved.
 - Notes are wiped automatically 90 days after the walk.
-- Only organisers can read them.
+- Only site owners can read them (not plain organisers).
 - Choosing the **London** region in Supabase keeps the data in the UK.
 
 You should still write a short privacy notice for your group and link it from

@@ -104,8 +104,9 @@ export default function PrivacyPolicyPage() {
                 privacy policy then also apply to that sign-in.
               </li>
               <li>
-                Walk organisers can see attendance, clock-out reasons, and any health notes you
-                submit. Other members only see names of people still on the walk.
+                Walk organisers can see attendance and clock-out reasons. Site owners can also
+                see any health notes you submit. Other members only see names of people still on
+                the walk.
               </li>
             </ul>
           ),

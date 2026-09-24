@@ -89,14 +89,23 @@ export function WalksSection({
             You can publish more than one walk in a week. Each walk has its own day, time,
             meeting point, and share link. Members see every upcoming walk on their Walks page.
           </p>
-          <p className="font-medium text-foreground">Cancel, edit, reopen, duplicate, or remove</p>
+          <p className="font-medium text-foreground">Cancel, end early, edit, reopen, duplicate, or remove</p>
           <ul className="list-disc pl-5">
             <li>
-              <strong>Cancel</strong> stops new clock-ins. People already on the list stay. You
-              can add a reason. Prefer this if you still want a record. Members still see
-              cancelled walks on their Walks page as a notice, but they cannot open the walk
-              page or add it to a calendar. Organisers open cancelled walks from Admin → Walks
-              (or the share link while signed in as an organiser).
+              <strong>Cancel</strong> stops new clock-ins before the walk has started. People
+              already on the list stay. You can add a reason. Prefer this if you still want a
+              record. Members still see cancelled walks on their Walks page as a notice, but they
+              cannot open the walk page or add it to a calendar. Organisers open cancelled walks
+              from Admin → Walks (or the share link while signed in as an organiser). Once the
+              walk is <strong>In progress</strong>, Cancel is replaced by End walk — you cannot
+              un-happen a walk people are already on.
+            </li>
+            <li>
+              <strong>End walk</strong> appears only while the walk is In progress. It marks the
+              walk finished early (right now, or a few minutes ago if you are catching up the
+              record). Clock-in closes immediately. Anyone still clocked in counts as having
+              stayed for the whole (now-shorter) walk — the same as if they never clocked out.
+              Use this when the group wraps up early, not Cancel.
             </li>
             <li>
               <strong>Edit</strong> opens the same panel as Create a walk, filled in with this
@@ -110,25 +119,26 @@ export function WalksSection({
               shows the same map members see on the share link. Once the published start time
               has passed, date, time, and length freeze — changing them would rewrite the
               record under people already walking. Title, meeting point, and notes stay
-              editable until the walk is Completed. Self clock-in stops at the scheduled end; if
-              someone was there but missed it, use Add someone.
+              editable until the walk is Completed. Self clock-in stops at the scheduled end (or
+              earlier if you used End walk); if someone was there but missed it, use Add someone.
             </li>
             <li>
               <strong>Reopen</strong> undoes a cancel without changing the details. Clock-in
               works again if the time window is still open. Members who get walk emails are told
               it is back on — unless its time has already passed, in which case it just goes back
-              in the record without an email.
+              in the record without an email (and the confirmation says clock-in stays closed).
             </li>
             <li>
               <strong>Duplicate</strong> makes a new walk with the same title, meeting point,
-              length, and notes, starting one week later at the same time. Attendance and
-              journey notes stay on the original. You land on the new walk so you can check the
-              date before sharing.
+              length, and notes, starting one week later at the same time (or further ahead if
+              that would still be in the past). Attendance and journey notes stay on the
+              original. You land on the new walk so you can check the date before sharing — the
+              confirmation names that date.
             </li>
             <li>
               <strong>Remove</strong> deletes the walk and every clock-in on it. The share link
-              stops working. Use this only if you do not need the record. Remove walk is the
-              red button on the walk page.
+              stops working. Use this only if you do not need the record. Only a site owner sees
+              Remove walk — it is the red button on the walk page.
             </li>
           </ul>
           <p>
@@ -136,14 +146,17 @@ export function WalksSection({
             downloads a small calendar file (.ics) so phones and calendar apps can save the
             date, time, meeting point, and a link back to the walk. Cancelled and completed
             walks do not offer Add to calendar — for members or organisers — and the calendar
-            file link returns not found.
+            file link returns not found. Those buttons update live if you leave the walk page
+            open as the status changes (for example Cancel becomes End walk when start time
+            arrives).
           </p>
           <p>
-            Once a walk reaches <strong>Completed</strong>, Cancel and Edit disappear from its
-            page — it already happened, so there is nothing left to cancel or change. Remove,
-            Duplicate, and the CSV export are still there if you need them.{" "}
+            Once a walk reaches <strong>Completed</strong>, Cancel, End walk, and Edit disappear
+            from its page — it already happened, so there is nothing left to cancel, cut short,
+            or change. Remove, Duplicate, and the CSV export are still there if you need them.{" "}
             <strong>Add someone</strong> stays, so you can still put a forgotten clock-in on
-            the list.
+            the list. Add someone, Journey add/edit, and the Attended label also update live if
+            you leave the page open through start or finish.
           </p>
           <p>
             {cancelledWalkRetentionDays !== null ? (
@@ -165,7 +178,7 @@ export function WalksSection({
             stayed for the whole walk without clocking out, so “on the walk” would be wrong
             once it’s over — and clocking out itself stops being offered to members from then
             on, since there is nothing left to leave early from. Tap a row for email,
-            clock-out time, any clock-out reason, and health notes.{" "}
+            clock-out time, any clock-out reason, and (for owners) health notes.{" "}
             <strong>Remove</strong> sits on each list row (same as Journey and reports) when
             the walk is not cancelled — it asks you to confirm. If more than 20
             people clocked in, Previous and Next sit under either list.
@@ -205,9 +218,10 @@ export function WalksSection({
             those rows one by one.
           </p>
           <p>
-            Download roster (CSV) gives you names, emails, times, clock-out reasons, and any
-            health notes for that walk. On a phone, the action buttons under the map (roster,
-            calendar, Duplicate, Cancel, Edit, Remove) scroll sideways in one row.
+            Download roster (CSV) gives you names, emails, times, and clock-out reasons — and,
+            for owners, any health notes for that walk. On a phone, the action buttons under the
+            map (roster, calendar, Duplicate, Cancel or End walk, Edit, Remove) scroll sideways
+            in one row.
           </p>
         </GuideBody>
       </AccordionContent>

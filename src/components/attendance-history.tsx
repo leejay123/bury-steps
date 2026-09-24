@@ -40,8 +40,10 @@ function matchesStatus(row: AttendanceHistoryRow, status: StatusFilter): boolean
   if (status === "all") return true;
   if (status === "cancelled") return Boolean(row.cancelledAt);
   if (status === "left-early") return Boolean(row.clockedOutAt) && !row.cancelledAt;
-  // full: finished (or still recorded as stayed) without leaving early, and not cancelled
-  return !row.cancelledAt && !row.clockedOutAt;
+  // full: finished the walk without leaving early, and not cancelled.
+  // Require `completed` so an in-progress row (if ever passed) is not
+  // counted as "stayed for the whole walk" before the window closes.
+  return Boolean(row.completed) && !row.cancelledAt && !row.clockedOutAt;
 }
 
 export function AttendanceHistory({
@@ -212,9 +214,11 @@ function HistoryList({ rows }: { rows: AttendanceHistoryRow[] }) {
               In {formatCompactDateTime(new Date(row.clockedInAt))}
               {row.clockedOutAt
                 ? ` · Out ${formatCompactDateTime(new Date(row.clockedOutAt))}`
-                : row.completed
-                  ? " · Stayed for the whole walk"
-                  : " · Still on the walk"}
+                : row.cancelledAt
+                  ? ""
+                  : row.completed
+                    ? " · Stayed for the whole walk"
+                    : " · Still on the walk"}
             </p>
             {row.clockedOutReason ? (
               <p className="text-sm text-muted-foreground">{row.clockedOutReason}</p>

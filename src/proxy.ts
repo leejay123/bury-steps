@@ -1,56 +1,9 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { PUBLIC_ROUTE_PATTERNS } from "@/lib/public-routes";
 import { clerkAuthorizedParties, shouldProxyClerkFrontendApi } from "@/lib/urls";
 
-/** Routes that skip auth.protect() — exported for src/proxy.test.ts. */
-export const PUBLIC_ROUTES = [
-  "/",
-  "/home",
-  "/w(.*)",
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/privacy",
-  "/privacy-policy",
-  "/terms-of-service",
-  "/contact",
-  "/api/webhooks(.*)",
-  "/api/cron(.*)",
-  "/api/slides(.*)",
-  "/api/testimonials(.*)",
-  // Site logo shows in the header on public pages (home, walk share links)
-  // for signed-out visitors too — without this it 404s/redirects for them
-  // instead of serving the image once an admin uploads a custom logo.
-  "/api/site-logo(.*)",
-  // Browser-tab favicon (src/app/icon.tsx) — same reasoning as site-logo
-  // above. It's a dynamic route (no file extension for the matcher's
-  // static-file exclusion below to catch), so every signed-out visitor's
-  // browser hit auth.protect() fetching it and got a 404 instead of the icon.
-  "/icon",
-  "/api/health",
-  // Linked from every email footer and must work signed out: newsletter
-  // subscribers who joined from the homepage footer have no account at
-  // all, so without this they were sent to sign-in and could never
-  // unsubscribe. Each page is gated by its own unguessable token instead.
-  // (The bare /email-preferences page — the signed-in version — stays
-  // protected.)
-  "/email-preferences/(.+)",
-  "/__clerk(.*)",
-  // Organiser URLs 404 for anyone who is not a signed-in organiser.
-  // auth.protect() would send members and guests to sign-in, which would
-  // reveal that something lives here.
-  "/admin(.*)",
-  // Crawler/browser file-convention routes. Most static extensions are
-  // already excluded from the matcher below, but these don't have one
-  // (or have one the matcher doesn't exclude), so without this they'd hit
-  // auth.protect() and bounce crawlers and not-yet-signed-in installs to
-  // sign-in instead of serving the real file.
-  "/robots.txt",
-  "/sitemap.xml",
-  "/manifest.webmanifest",
-  "/opengraph-image",
-];
-
-const isPublic = createRouteMatcher(PUBLIC_ROUTES);
+const isPublic = createRouteMatcher([...PUBLIC_ROUTE_PATTERNS]);
 
 export default clerkMiddleware(
   async (auth, req) => {

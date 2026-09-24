@@ -4,13 +4,14 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireAdmin, requireUser, displayName } from "@/lib/auth";
-import { canOrganiserAddAttendance, windowState } from "@/lib/walk-window";
+import { canOrganiserAddAttendance, effectiveEndsAt, walkOpensAt, windowState } from "@/lib/walk-window";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { formatWalkDate, isValidLondonWallClock, londonWallClockToUtc } from "@/lib/dates";
 import { meetingPointLabel } from "@/lib/geocode";
 import { walkShareUrl } from "@/lib/walk-slug";
 import { appUrl } from "@/lib/urls";
 import { sendAddedToWalkEmail } from "@/lib/email/mailer";
+import { conditionsPurgeAfterFromStartsAt } from "@/lib/conditions-retention";
 import {
   type ActionResult,
   LimitReachedError,
@@ -19,9 +20,6 @@ import {
   permissionDenied,
   revalidateWalkShare,
 } from "./shared";
-
-/** How long health information is kept after the walk, in days. */
-const CONDITIONS_RETENTION_DAYS = 90;
 
 const clockInSchema = z.object({
   token: z.string().min(1),
@@ -97,9 +95,7 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
         };
       }
 
-      const purgeAfter = new Date(
-        locked.startsAt.getTime() + CONDITIONS_RETENTION_DAYS * 24 * 60 * 60 * 1000,
-      );
+      const purgeAfter = conditionsPurgeAfterFromStartsAt(locked.startsAt);
       const attendanceData = {
         medicalAckAt: new Date(),
         conditions: parsed.data.hasConditions === "yes" ? parsed.data.conditions! : null,
@@ -146,6 +142,8 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
 
   revalidateWalkShare(walk);
   revalidatePath("/walks");
+  revalidatePath("/history");
+  revalidatePath("/progress");
   revalidatePath(`/admin/walks/${walk.id}`);
   return { ok: true, message: "Clocked in. Enjoy the walk." };
 }
@@ -232,6 +230,11 @@ export async function adminClockIn(
   const admin = await requireAdmin();
   if (!admin.permWalksAttendance) return permissionDenied("permWalksAttendance");
 
+  const limited = checkRateLimit(`${admin.id}:adminClockIn`, 30, 60_000);
+  if (!limited.ok) {
+    return { ok: false, error: `Too many adds. Try again in ${limited.retryAfterSeconds}s.` };
+  }
+
   const parsed = adminClockInSchema.safeParse({
     walkId: formData.get("walkId"),
     userId: formData.get("userId"),
@@ -307,6 +310,28 @@ export async function adminClockIn(
         };
       }
 
+      const opensAt = walkOpensAt(locked.startsAt);
+      const endsAt = effectiveEndsAt(locked);
+      if (
+        recordedClockedInAt.getTime() < opensAt.getTime() ||
+        recordedClockedInAt.getTime() > endsAt.getTime()
+      ) {
+        return {
+          ok: false as const,
+          error:
+            "Clock-in time must fall between when clock-in opens and when the walk finishes.",
+        };
+      }
+      if (
+        recordedClockedOutAt &&
+        recordedClockedOutAt.getTime() > endsAt.getTime()
+      ) {
+        return {
+          ok: false as const,
+          error: "Clock-out time can't be after the walk finished.",
+        };
+      }
+
       const existingAttendance = await tx.attendance.findUnique({
         where: { walkId_userId: { walkId: locked.id, userId: member.id } },
         select: { id: true, clockedOutAt: true },
@@ -323,29 +348,31 @@ export async function adminClockIn(
       }
 
       const now = new Date();
-      const purgeAfter = new Date(
-        locked.startsAt.getTime() + CONDITIONS_RETENTION_DAYS * 24 * 60 * 60 * 1000,
-      );
-      const attendanceData = {
-        clockedInAt: recordedClockedInAt,
-        medicalAckAt: now,
-        conditions: null,
-        conditionsPurgeAfter: purgeAfter,
-        clockedOutAt: recordedClockedOutAt,
-        clockedOutReason: null,
-      };
-
+      const purgeAfter = conditionsPurgeAfterFromStartsAt(locked.startsAt);
+      // Re-adding someone who left early must not wipe medical notes they
+      // already gave — only a brand-new attendance row starts with null.
       if (existingAttendance) {
         await tx.attendance.update({
           where: { id: existingAttendance.id },
-          data: attendanceData,
+          data: {
+            clockedInAt: recordedClockedInAt,
+            medicalAckAt: now,
+            conditionsPurgeAfter: purgeAfter,
+            clockedOutAt: recordedClockedOutAt,
+            clockedOutReason: null,
+          },
         });
       } else {
         await tx.attendance.create({
           data: {
             walkId: locked.id,
             userId: member.id,
-            ...attendanceData,
+            clockedInAt: recordedClockedInAt,
+            medicalAckAt: now,
+            conditions: null,
+            conditionsPurgeAfter: purgeAfter,
+            clockedOutAt: recordedClockedOutAt,
+            clockedOutReason: null,
           },
         });
       }
@@ -378,6 +405,7 @@ export async function adminClockIn(
   revalidateWalkShare(walk);
   revalidatePath("/walks");
   revalidatePath("/history");
+  revalidatePath("/progress");
   revalidatePath(`/admin/walks/${walk.id}`);
   revalidatePath(`/admin/members/${member.id}`);
   revalidatePath("/admin/members");
@@ -472,6 +500,7 @@ export async function adminRemoveAttendance(
   revalidateWalkShare(attendance.walk);
   revalidatePath("/walks");
   revalidatePath("/history");
+  revalidatePath("/progress");
   revalidatePath(`/admin/walks/${attendance.walk.id}`);
   revalidatePath(`/admin/members/${attendance.userId}`);
   revalidatePath("/admin/members");
@@ -567,6 +596,8 @@ export async function clockOut(_prev: ActionResult | null, formData: FormData): 
 
   revalidateWalkShare(walk);
   revalidatePath("/walks");
+  revalidatePath("/history");
+  revalidatePath("/progress");
   revalidatePath(`/admin/walks/${walk.id}`);
   return { ok: true, message: "You have clocked out. Your name is no longer on the walk for other members." };
 }
