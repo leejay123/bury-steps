@@ -618,6 +618,32 @@ describe("setMemberRole", () => {
     });
     expect(prismaMock.user.update).not.toHaveBeenCalled();
   });
+
+  it("re-checks isOwner under the lock so a concurrent addOwner cannot leave a MEMBER owning", async () => {
+    const target = {
+      id: "admin-2",
+      role: "ADMIN",
+      isOwner: false,
+      firstName: "Sam",
+      lastName: "Lee",
+      email: "sam@example.com",
+    };
+    // Pre-lock read: not an owner. Locked re-read: concurrent addOwner won.
+    prismaMock.user.findUnique
+      .mockResolvedValueOnce(target)
+      .mockResolvedValueOnce({ ...target, isOwner: true });
+
+    const result = await setMemberRole(
+      null,
+      roleForm({ userId: target.id, role: "MEMBER", confirm: "confirm" }),
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Remove their owner access before making them a member.",
+    });
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
+  });
 });
 
 describe("getMemberHistory", () => {

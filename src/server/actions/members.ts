@@ -439,6 +439,9 @@ export async function setMemberRole(
       const fresh = await tx.user.findUnique({ where: { id: target.id } });
       if (!fresh) throw new Error("MEMBER_GONE");
       if (fresh.role === role) return;
+      // Re-check under the owner lock — a concurrent addOwner/transfer can
+      // set isOwner after the pre-lock read and leave a MEMBER still owning.
+      if (role === "MEMBER" && fresh.isOwner) throw new Error("STILL_OWNER");
       if (role === "MEMBER" && fresh.role === "ADMIN") {
         const adminCount = await tx.user.count({ where: { role: "ADMIN" } });
         if (adminCount <= 1) {
@@ -474,6 +477,12 @@ export async function setMemberRole(
     if (err instanceof LimitReachedError) return { ok: false, error: err.message };
     if (err instanceof Error && err.message === "NOT_OWNER") {
       return ownerDenied("change an organiser's role");
+    }
+    if (err instanceof Error && err.message === "STILL_OWNER") {
+      return {
+        ok: false,
+        error: "Remove their owner access before making them a member.",
+      };
     }
     if (err instanceof Error && err.message === "MEMBER_GONE") {
       return { ok: false, error: "That member is no longer in the group." };
