@@ -25,12 +25,12 @@ export function clearAudienceCache(): void {
  * Returns the audience id, creating it on first use and persisting it on
  * the single SiteSetting row. Null if Resend isn't configured or the
  * create call fails — callers treat that as "skip the sync", not an error.
- * Cached in-process for the life of the server instance; a fresh instance
- * re-reads SiteSetting rather than re-creating a second audience.
+ *
+ * Always re-reads SiteSetting before trusting any in-process cache: a site
+ * reset on another warm serverless instance nulls `resendAudienceId` while
+ * this process may still hold the pre-wipe id.
  */
 export async function getOrCreateAudienceId(): Promise<string | null> {
-  if (cachedAudienceId !== undefined) return cachedAudienceId;
-
   const resend = getResendClient();
   if (!resend) {
     cachedAudienceId = null;
@@ -46,6 +46,10 @@ export async function getOrCreateAudienceId(): Promise<string | null> {
       cachedAudienceId = setting.resendAudienceId;
       return cachedAudienceId;
     }
+
+    // DB has no audience (fresh install or post-reset). Drop any stale
+    // in-process id before creating a replacement segment.
+    cachedAudienceId = undefined;
 
     const { data, error } = await resend.audiences.create({ name: "Newsletter" });
     if (error || !data) {
@@ -88,15 +92,12 @@ export async function syncContactSubscribed(email: string, firstName?: string | 
 }
 
 /** Removes a subscriber from Resend entirely, matching the site's own
- * unsubscribe removing them from future sends. Best-effort. */
+ * unsubscribe removing them from future sends. Best-effort. Contacts are
+ * looked up by email account-wide, so this still clears orphaned contacts
+ * on a pre-reset segment even when SiteSetting.resendAudienceId is null. */
 export async function syncContactUnsubscribed(email: string): Promise<void> {
   const resend = getResendClient();
   if (!resend) return;
-  // No audienceId needed here — contacts.remove looks the contact up by
-  // email account-wide, and creating an audience just to remove someone
-  // from it would be pointless if one doesn't exist yet.
-  if (cachedAudienceId === undefined) await getOrCreateAudienceId();
-  if (!cachedAudienceId) return;
 
   try {
     const { error } = await resend.contacts.remove({ email });

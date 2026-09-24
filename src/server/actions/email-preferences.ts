@@ -3,23 +3,9 @@
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import type { EmailPreferences } from "@/lib/email-preferences";
-import { optInNewsletterEverywhere, optOutNewsletterEverywhere } from "@/lib/email/newsletter-opt-out";
+import { syncNewsletterAudienceToPreference } from "@/lib/email/newsletter-opt-out";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { type ActionResult, isPrismaCode, logActionError } from "./shared";
-
-/** Only fires the Resend sync when the newsletter toggle itself actually
- * flipped — every other preference change on this form updates the same
- * row without touching the newsletter audience. */
-async function syncNewsletterToggle(
-  wasSubscribed: boolean,
-  isSubscribed: boolean,
-  email: string,
-  firstName: string | null,
-): Promise<void> {
-  if (wasSubscribed === isSubscribed) return;
-  if (isSubscribed) await optInNewsletterEverywhere(email, firstName);
-  else await optOutNewsletterEverywhere(email);
-}
 
 /** `isAdmin` decides whether the organiser-only toggle is read at all. It
  * isn't rendered for a plain member, so reading it would always write
@@ -58,7 +44,7 @@ export async function updateMemberEmailPreferences(
   try {
     const before = await prisma.user.findUnique({
       where: { unsubscribeToken: token },
-      select: { emailNewsletter: true, role: true },
+      select: { role: true },
     });
     if (!before) return { ok: false, error: "This link is invalid or has expired." };
 
@@ -68,16 +54,10 @@ export async function updateMemberEmailPreferences(
       data: preferences,
       select: { email: true, firstName: true },
     });
-    // Best-effort (it never throws) — the toggle itself is already saved
-    // above regardless. Awaited so a serverless instance can't be frozen
-    // mid-sync after the response, which would leave an unsubscribed
-    // member still in the Resend newsletter audience.
-    await syncNewsletterToggle(
-      before.emailNewsletter,
-      preferences.emailNewsletter,
-      updated.email,
-      updated.firstName,
-    );
+    // Re-read + align footer/Resend to the final DB value — concurrent tabs
+    // that both started from "off" must not leave Resend subscribed after a
+    // later save writes "off" without a flip detection.
+    await syncNewsletterAudienceToPreference(updated.email, updated.firstName);
   } catch (err) {
     if (isPrismaCode(err, "P2025")) {
       return { ok: false, error: "This link is invalid or has expired." };
@@ -102,16 +82,12 @@ export async function updateMyEmailPreferences(
   const preferences = readPreferences(formData, user.role === "ADMIN");
 
   try {
-    await prisma.user.update({
+    const updated = await prisma.user.update({
       where: { id: user.id },
       data: preferences,
+      select: { email: true, firstName: true },
     });
-    await syncNewsletterToggle(
-      user.emailNewsletter,
-      preferences.emailNewsletter,
-      user.email,
-      user.firstName,
-    );
+    await syncNewsletterAudienceToPreference(updated.email, updated.firstName);
   } catch (err) {
     return logActionError("updateMyEmailPreferences", err, "Could not save your preferences. Try again.");
   }
