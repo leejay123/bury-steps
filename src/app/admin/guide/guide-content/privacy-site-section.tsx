@@ -69,7 +69,9 @@ export function PrivacySiteSection() {
               (Chrome) adds a Bury Steps icon that opens straight to Walks.               The newsletter
               subscribe form in the footer (Home, Privacy Policy, Terms of Service) is for
               signed-in members only — you must have an account on the site before you can see
-              or use it; visitors do not see the form.
+              or use it; visitors do not see the form. It always uses the member’s account
+              email (not a typed-in address). Turning Newsletter off under email preferences
+              also stops that footer signup for the same address.
             </p>
             <p>
               Text, tables, and forms line up with the logo and nav. Photo and quote grids, and

@@ -3,7 +3,10 @@
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import type { EmailPreferences } from "@/lib/email-preferences";
-import { syncNewsletterAudienceToPreference } from "@/lib/email/newsletter-opt-out";
+import {
+  optOutNewsletterEverywhere,
+  syncNewsletterAudienceToPreference,
+} from "@/lib/email/newsletter-opt-out";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { type ActionResult, isPrismaCode, logActionError } from "./shared";
 
@@ -22,6 +25,25 @@ function readPreferences(
     emailNewsletter: formData.get("emailNewsletter") === "on",
     ...(isAdmin ? { emailAccidentAlerts: formData.get("emailAccidentAlerts") === "on" } : {}),
   };
+}
+
+/**
+ * After a prefs save: a true→false Newsletter transition must clear footer
+ * + Resend too (otherwise campaigns keep going via NewsletterSubscriber).
+ * false→false must NOT wipe an independent footer signup — that was the
+ * earlier prefs-save wipe bug. Opt-in / already-on go through the sync helper.
+ */
+async function alignNewsletterAfterPrefsSave(opts: {
+  email: string;
+  firstName: string | null;
+  wasNewsletterOn: boolean;
+  nowNewsletterOn: boolean;
+}): Promise<void> {
+  if (opts.wasNewsletterOn && !opts.nowNewsletterOn) {
+    await optOutNewsletterEverywhere(opts.email);
+    return;
+  }
+  await syncNewsletterAudienceToPreference(opts.email, opts.firstName);
 }
 
 /** Public /email-preferences/[token] page, reached from an email footer link
@@ -44,7 +66,7 @@ export async function updateMemberEmailPreferences(
   try {
     const before = await prisma.user.findUnique({
       where: { unsubscribeToken: token },
-      select: { role: true },
+      select: { role: true, emailNewsletter: true },
     });
     if (!before) return { ok: false, error: "This link is invalid or has expired." };
 
@@ -52,12 +74,14 @@ export async function updateMemberEmailPreferences(
     const updated = await prisma.user.update({
       where: { unsubscribeToken: token },
       data: preferences,
-      select: { email: true, firstName: true },
+      select: { email: true, firstName: true, emailNewsletter: true },
     });
-    // Re-read + align footer/Resend to the final DB value — concurrent tabs
-    // that both started from "off" must not leave Resend subscribed after a
-    // later save writes "off" without a flip detection.
-    await syncNewsletterAudienceToPreference(updated.email, updated.firstName);
+    await alignNewsletterAfterPrefsSave({
+      email: updated.email,
+      firstName: updated.firstName,
+      wasNewsletterOn: before.emailNewsletter,
+      nowNewsletterOn: updated.emailNewsletter,
+    });
   } catch (err) {
     if (isPrismaCode(err, "P2025")) {
       return { ok: false, error: "This link is invalid or has expired." };
@@ -85,9 +109,14 @@ export async function updateMyEmailPreferences(
     const updated = await prisma.user.update({
       where: { id: user.id },
       data: preferences,
-      select: { email: true, firstName: true },
+      select: { email: true, firstName: true, emailNewsletter: true },
     });
-    await syncNewsletterAudienceToPreference(updated.email, updated.firstName);
+    await alignNewsletterAfterPrefsSave({
+      email: updated.email,
+      firstName: updated.firstName,
+      wasNewsletterOn: user.emailNewsletter,
+      nowNewsletterOn: updated.emailNewsletter,
+    });
   } catch (err) {
     return logActionError("updateMyEmailPreferences", err, "Could not save your preferences. Try again.");
   }

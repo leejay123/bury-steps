@@ -23,7 +23,7 @@ export async function SiteFooter() {
     <footer className="relative z-10 shrink-0 bg-background">
       <FullWidthDivider position="top" />
       {/* Newsletter signup is members-only — visitors must create an account first. */}
-      {user ? <NewsletterFooterGate /> : null}
+      {user ? <NewsletterFooterGate email={user.email} /> : null}
       <div className={`flex flex-col gap-6 py-8 ${PAGE_X}`}>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <SiteLogo alt={theme.siteName} src={theme.logoSrc} />

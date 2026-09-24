@@ -48,8 +48,12 @@ export async function subscribeToNewsletter(
     return { ok: false, error: "Too many attempts. Try again in a few minutes." };
   }
 
-  const email = parseContactEmail(String(formData.get("email") ?? ""));
-  if (email === "invalid") return { ok: false, error: "Enter a valid email address." };
+  // Always the signed-in member’s account email — never trust a posted
+  // address (that would let any member force-subscribe someone else).
+  const email = parseContactEmail(member.email);
+  if (email === "invalid") {
+    return { ok: false, error: "Your account email is not valid for the newsletter. Update it in your account first." };
+  }
 
   try {
     // Create-first avoids the old findUnique→upsert race: two concurrent
@@ -84,10 +88,10 @@ export async function subscribeToNewsletter(
       sendNewsletterSubscribedEmail(subscriber).catch((err) => {
         console.error("subscribeToNewsletter: failed to send confirmation email", err);
       }),
-      // Footer list + Resend only — do not flip User.emailNewsletter. Anyone
-      // who knows a member's email could otherwise force their signed-in
-      // preference on via this public form. Campaigns already union active
-      // footer subscribers with opted-in members.
+      // Footer list + Resend only — do not flip User.emailNewsletter. The
+      // form is members-only and bound to their account email, but prefs
+      // remain the intentional toggle for the member store; campaigns already
+      // union active footer subscribers with opted-in members.
       syncContactSubscribed(subscriber.email),
     ]);
   } catch (err) {

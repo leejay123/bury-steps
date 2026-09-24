@@ -53,8 +53,9 @@ export function OverviewSection({
               still on a walk (names only), read notices in the bell (including a pinned welcome),
               look back over every walk they have clocked in to, see Progress — this month’s
               clock-ins together, not a race — and subscribe to the newsletter from the footer
-              on Home, Privacy Policy, and Terms of Service (you must be a signed-in member to
-              see that form; visitors do not).
+              on Home, Privacy Policy, and Terms of Service using their account email (you must
+              be a signed-in member to see that form; visitors do not). Turning Newsletter off
+              in email preferences also stops a footer signup for the same address.
             </p>
             <p>
               <Badge>Organisers</Badge> get Walks tools and Reports in the top menu, plus this

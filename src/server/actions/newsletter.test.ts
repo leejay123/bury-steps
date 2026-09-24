@@ -130,21 +130,38 @@ beforeEach(() => {
 describe("subscribeToNewsletter", () => {
   it("rejects when nobody is signed in", async () => {
     getOptionalUser.mockResolvedValueOnce(null);
-    const result = await subscribeToNewsletter(null, form({ email: "jane@example.com" }));
+    const result = await subscribeToNewsletter(null, form({}));
     expect(result).toEqual({ ok: false, error: "Sign in to subscribe to the newsletter." });
     expect(prismaMock.newsletterSubscriber.create).not.toHaveBeenCalled();
   });
 
-  it("rejects an invalid email without touching the database", async () => {
-    const result = await subscribeToNewsletter(null, form({ email: "not-an-email" }));
-    expect(result).toEqual({ ok: false, error: "Enter a valid email address." });
+  it("rejects when the account email is not a valid address", async () => {
+    getOptionalUser.mockResolvedValueOnce({ id: "member-1", email: "not-an-email" });
+    const result = await subscribeToNewsletter(null, form({}));
+    expect(result).toEqual({
+      ok: false,
+      error: "Your account email is not valid for the newsletter. Update it in your account first.",
+    });
     expect(prismaMock.newsletterSubscriber.create).not.toHaveBeenCalled();
+  });
+
+  it("ignores a posted email and always uses the signed-in member’s address", async () => {
+    const result = await subscribeToNewsletter(
+      null,
+      form({ email: "victim@example.com" }),
+    );
+    expect(prismaMock.newsletterSubscriber.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { email: "jane@example.com", unsubscribeToken: expect.any(String) },
+      }),
+    );
+    expect(result.ok).toBe(true);
   });
 
   it("silently succeeds without subscribing when the honeypot is filled", async () => {
     const result = await subscribeToNewsletter(
       null,
-      form({ email: "jane@example.com", company: "Acme" }),
+      form({ company: "Acme" }),
     );
     expect(result.ok).toBe(true);
     expect(prismaMock.newsletterSubscriber.create).not.toHaveBeenCalled();
@@ -152,12 +169,12 @@ describe("subscribeToNewsletter", () => {
 
   it("rate limits repeated attempts", async () => {
     checkRateLimit.mockReturnValue({ ok: false, retryAfterSeconds: 42 });
-    const result = await subscribeToNewsletter(null, form({ email: "jane@example.com" }));
+    const result = await subscribeToNewsletter(null, form({}));
     expect(result).toEqual({ ok: false, error: "Too many attempts. Try again in a few minutes." });
   });
 
   it("creates a new subscriber and sends a confirmation", async () => {
-    const result = await subscribeToNewsletter(null, form({ email: "jane@example.com" }));
+    const result = await subscribeToNewsletter(null, form({}));
 
     expect(prismaMock.newsletterSubscriber.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -175,7 +192,7 @@ describe("subscribeToNewsletter", () => {
 
   it("still reports success if only the confirmation email fails", async () => {
     sendNewsletterSubscribedEmail.mockRejectedValueOnce(new Error("network down"));
-    const result = await subscribeToNewsletter(null, form({ email: "jane@example.com" }));
+    const result = await subscribeToNewsletter(null, form({}));
     expect(result.ok).toBe(true);
   });
 
@@ -183,7 +200,7 @@ describe("subscribeToNewsletter", () => {
     prismaMock.newsletterSubscriber.create.mockRejectedValueOnce({ code: "P2002" });
     prismaMock.newsletterSubscriber.updateMany.mockResolvedValueOnce({ count: 0 });
 
-    const result = await subscribeToNewsletter(null, form({ email: "jane@example.com" }));
+    const result = await subscribeToNewsletter(null, form({}));
 
     // Same message as a new signup — do not reveal the address was already listed.
     expect(result).toEqual({
@@ -202,7 +219,7 @@ describe("subscribeToNewsletter", () => {
     prismaMock.newsletterSubscriber.create.mockRejectedValueOnce({ code: "P2002" });
     prismaMock.newsletterSubscriber.updateMany.mockResolvedValueOnce({ count: 1 });
 
-    const result = await subscribeToNewsletter(null, form({ email: "jane@example.com" }));
+    const result = await subscribeToNewsletter(null, form({}));
 
     expect(prismaMock.newsletterSubscriber.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
