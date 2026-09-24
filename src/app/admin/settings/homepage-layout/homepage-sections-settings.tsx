@@ -7,6 +7,7 @@ import {
   type HomepageSectionId,
 } from "@/lib/homepage-sections";
 import { SettingsSection } from "../settings-page";
+import { DataList, DataListBody, DataListItem, DataListItemMain } from "@/components/data-list";
 
 async function saveSectionOrder(ids: string[]) {
   return reorderHomepageSections(ids as HomepageSectionId[]);
@@ -22,25 +23,25 @@ export function HomepageSectionsSettings({
   return (
     <SettingsSection
       description="Reorder the blocks below the hero. Empty testimonials or FAQs still skip until you add content."
+      flush
       title="Homepage section order"
     >
-      <ul className="flex flex-col gap-2">
-        <li className="flex items-center gap-3 rounded-lg border bg-background px-3 py-2">
-          <div className="min-w-0 flex-1">
-            <p className="font-medium">Hero</p>
-            <p className="text-xs text-muted-foreground">
-              Site name, tagline, and photo carousel when enabled. Always first — edit name and
-              tagline under Identity; photos under Hero photos.
-            </p>
-          </div>
-        </li>
+      <DataList>
+        <DataListItem className="cursor-default items-start hover:bg-transparent">
+          <DataListItemMain>
+            <DataListBody>
+              <p className="font-medium">Hero</p>
+              <p className="text-xs text-muted-foreground">
+                Site name, tagline, and photo carousel when enabled. Always first — edit name and
+                tagline under Identity; photos under Hero photos.
+              </p>
+            </DataListBody>
+          </DataListItemMain>
+        </DataListItem>
         {order.map((id, index) => {
           const sectionId = id as HomepageSectionId;
           return (
-            <li
-              className="flex items-center gap-3 rounded-lg border bg-background px-3 py-2"
-              key={id}
-            >
+            <DataListItem className="cursor-default items-start hover:bg-transparent" key={id}>
               <ReorderButtons
                 canMoveDown={index < order.length - 1}
                 canMoveUp={index > 0}
@@ -48,16 +49,18 @@ export function HomepageSectionsSettings({
                 onMoveDown={() => moveDown(id)}
                 onMoveUp={() => moveUp(id)}
               />
-              <div className="min-w-0 flex-1">
-                <p className="font-medium">{HOMEPAGE_SECTION_LABELS[sectionId]}</p>
-                <p className="text-xs text-muted-foreground">
-                  {index + 1} of {order.length}
-                </p>
-              </div>
-            </li>
+              <DataListItemMain>
+                <DataListBody>
+                  <p className="font-medium">{HOMEPAGE_SECTION_LABELS[sectionId]}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {index + 1} of {order.length}
+                  </p>
+                </DataListBody>
+              </DataListItemMain>
+            </DataListItem>
           );
         })}
-      </ul>
+      </DataList>
     </SettingsSection>
   );
 }
