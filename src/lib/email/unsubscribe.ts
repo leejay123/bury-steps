@@ -5,7 +5,7 @@ import { appUrl } from "@/lib/urls";
 // Same unambiguous alphabet as walk share tokens (src/server/actions/walks.ts),
 // just longer — this one grants unauthenticated write access to a member's
 // email preferences, so it needs more entropy than a share link does.
-const makeToken = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 24);
+export const makeCapabilityToken = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 24);
 
 /**
  * Members don't get an unsubscribeToken at signup (see the schema comment on
@@ -17,7 +17,7 @@ export async function getOrCreateUserUnsubscribeToken(
   existing: string | null,
 ): Promise<string> {
   if (existing) return existing;
-  const token = makeToken();
+  const token = makeCapabilityToken();
   const updated = await prisma.user.update({
     where: { id: userId },
     data: { unsubscribeToken: token },

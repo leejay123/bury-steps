@@ -5,12 +5,32 @@ import { buildWalkGame, viewerBadges, type WalkGameView } from "@/lib/walk-game"
 /** How far back Progress scans for streaks, cups, and the month board. */
 const HISTORY_YEARS = 3;
 
-export async function loadWalkGame(viewerId: string, now = new Date()): Promise<WalkGameView> {
-  const historyFrom = new Date(
-    now.getTime() - HISTORY_YEARS * 365 * 24 * 60 * 60 * 1000,
-  );
+export type WalkGameLoadedData = {
+  walks: {
+    id: string;
+    startsAt: Date;
+    durationMins: number;
+    cancelledAt: Date | null;
+    endedAt: Date | null;
+    attendances: {
+      userId: string;
+      clockedOutAt: Date | null;
+      user: { firstName: string | null; lastName: string | null };
+    }[];
+  }[];
+  monthlyClockInGoal: number | null;
+  now: Date;
+};
 
-  const [walks, setting, lifetimeCount] = await Promise.all([
+/**
+ * Shared walk/attendance payload for Progress and the monthly-progress cron.
+ * Load once, then build a per-viewer game with {@link walkGameFromLoadedData}
+ * so the cron is not O(members × walks).
+ */
+export async function loadWalkGameData(now = new Date()): Promise<WalkGameLoadedData> {
+  const historyFrom = new Date(now.getTime() - HISTORY_YEARS * 365 * 24 * 60 * 60 * 1000);
+
+  const [walks, setting] = await Promise.all([
     prisma.walk.findMany({
       where: {
         cancelledAt: null,
@@ -21,6 +41,7 @@ export async function loadWalkGame(viewerId: string, now = new Date()): Promise<
         startsAt: true,
         durationMins: true,
         cancelledAt: true,
+        endedAt: true,
         attendances: {
           select: {
             userId: true,
@@ -34,20 +55,26 @@ export async function loadWalkGame(viewerId: string, now = new Date()): Promise<
       where: { id: SITE_SETTING_ID },
       select: { monthlyClockInGoal: true },
     }),
-    prisma.attendance.count({
-      where: {
-        userId: viewerId,
-        walk: { cancelledAt: null, startsAt: { lt: now } },
-      },
-    }),
   ]);
 
-  const game = buildWalkGame({
-    now,
-    viewerId,
-    monthlyClockInGoal: setting?.monthlyClockInGoal ?? null,
+  return {
     walks,
-    attendances: walks.flatMap((walk) =>
+    monthlyClockInGoal: setting?.monthlyClockInGoal ?? null,
+    now,
+  };
+}
+
+export function walkGameFromLoadedData(
+  viewerId: string,
+  data: WalkGameLoadedData,
+  lifetimeCount?: number,
+): WalkGameView {
+  const game = buildWalkGame({
+    now: data.now,
+    viewerId,
+    monthlyClockInGoal: data.monthlyClockInGoal,
+    walks: data.walks,
+    attendances: data.walks.flatMap((walk) =>
       walk.attendances.map((row) => ({
         walkId: walk.id,
         userId: row.userId,
@@ -57,6 +84,8 @@ export async function loadWalkGame(viewerId: string, now = new Date()): Promise<
       })),
     ),
   });
+
+  if (lifetimeCount === undefined) return game;
 
   const totalCount = Math.max(lifetimeCount, game.viewer.totalCount);
   if (totalCount === game.viewer.totalCount) return game;
@@ -75,6 +104,20 @@ export async function loadWalkGame(viewerId: string, now = new Date()): Promise<
       }),
     },
   };
+}
+
+export async function loadWalkGame(viewerId: string, now = new Date()): Promise<WalkGameView> {
+  const [data, lifetimeCount] = await Promise.all([
+    loadWalkGameData(now),
+    prisma.attendance.count({
+      where: {
+        userId: viewerId,
+        walk: { cancelledAt: null, startsAt: { lt: now } },
+      },
+    }),
+  ]);
+
+  return walkGameFromLoadedData(viewerId, data, lifetimeCount);
 }
 
 export async function getMonthlyClockInGoal(): Promise<number | null> {

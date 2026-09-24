@@ -171,7 +171,7 @@ export function MemberDetailActions({
     }
   }
 
-  if (!isYou && !isTargetOwner) {
+  if (!isYou && !isTargetOwner && viewerIsOwner) {
     const deleteRef: { current: HTMLButtonElement | null } = { current: null };
     actions.push({
       key: "delete",

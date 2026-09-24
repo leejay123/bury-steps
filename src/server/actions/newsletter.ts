@@ -12,6 +12,7 @@ import { sendNewsletterSubscribedEmail } from "@/lib/email/mailer";
 import { paragraphsFrom } from "@/lib/email/render-template";
 import { getOrCreateAudienceId, syncContactSubscribed, syncContactUnsubscribed } from "@/lib/email/resend-audience";
 import { NewsletterCampaignEmail } from "@/lib/email/templates/newsletter-campaign";
+import { makeCapabilityToken } from "@/lib/email/unsubscribe";
 import { type ActionResult, isPrismaCode, logActionError, permissionDenied } from "./shared";
 
 async function requesterKey(): Promise<string> {
@@ -53,7 +54,7 @@ export async function subscribeToNewsletter(
     // should just clear unsubscribedAt, not fail on the unique email index.
     const subscriber = await prisma.newsletterSubscriber.upsert({
       where: { email },
-      create: { email },
+      create: { email, unsubscribeToken: makeCapabilityToken() },
       update: { unsubscribedAt: null },
       select: { email: true, unsubscribeToken: true },
     });
@@ -187,7 +188,9 @@ export async function removeNewsletterSubscriber(
   return { ok: true, message: "Subscriber removed." };
 }
 
-/** Powers the one-click unsubscribe link in every newsletter email's footer. */
+/** Powers the one-click unsubscribe link in every newsletter email's footer.
+ * Prefer {@link confirmNewsletterUnsubscribe} from the confirm page so Safe
+ * Links scanners cannot unsubscribe someone on a mere GET. */
 export async function unsubscribeFromNewsletter(token: string): Promise<boolean> {
   if (!token) return false;
   const limited = checkRateLimit(`newsletterUnsub:${token}`, 20, 60_000);
@@ -204,4 +207,16 @@ export async function unsubscribeFromNewsletter(token: string): Promise<boolean>
   } catch {
     return false;
   }
+}
+
+/** Form action for the public confirm-unsubscribe page. */
+export async function confirmNewsletterUnsubscribe(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const token = String(formData.get("token") ?? "");
+  if (!token) return { ok: false, error: "This link is missing its token." };
+  const ok = await unsubscribeFromNewsletter(token);
+  if (!ok) return { ok: false, error: "This unsubscribe link is invalid or has already been used." };
+  return { ok: true, message: "You've been unsubscribed." };
 }

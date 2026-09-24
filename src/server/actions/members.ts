@@ -716,12 +716,15 @@ export async function cancelOrganiserInvite(
 }
 
 /**
- * Public — reached from the emailed invite link, no sign-in required (same
- * trust model as the email-preferences unsubscribe tokens: an unguessable
- * token mailed only to the invitee's own address is treated as
- * authorization on its own). Actually grants organiser access — the whole
- * point of the "require accepted invite" setting is that this is the one
- * and only place role flips to ADMIN while it's on.
+ * Reached from the emailed invite link. The page is public so expired /
+ * invalid tokens can explain themselves without forcing sign-in, but
+ * accepting requires the invitee to be signed in as themselves (see
+ * organiser-invite/[token]/page.tsx). The unguessable token mailed only to
+ * their address is still the capability that authorises the promotion —
+ * the session bind stops someone else with the link accepting on the
+ * wrong account. Actually grants organiser access — the whole point of
+ * the "require accepted invite" setting is that this is the one and only
+ * place role flips to ADMIN while it's on.
  */
 export async function acceptOrganiserInvite(
   _prev: ActionResult | null,

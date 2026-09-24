@@ -435,6 +435,7 @@ model AccidentReport {
 
   @@index([happenedAt])
   @@index([walkId])
+  @@index([createdAt])
 }
 
 /// Join row: one member tagged as involved in one accident report.
@@ -489,9 +490,10 @@ model ContactMessage {
 model NewsletterSubscriber {
   id               String    @id @default(cuid())
   email            String    @unique
-  /// Powers the public unsubscribe link — always set at creation, unlike
-  /// User.unsubscribeToken, since this row only exists to be emailed.
-  unsubscribeToken String    @unique @default(cuid())
+  /// Powers the public unsubscribe link — always set at creation with
+  /// makeCapabilityToken() (same entropy as member preference tokens).
+  /// Not a Prisma default: cuid() is too predictable for a capability URL.
+  unsubscribeToken String    @unique
   createdAt        DateTime  @default(now())
   unsubscribedAt   DateTime?
 

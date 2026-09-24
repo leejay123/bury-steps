@@ -66,6 +66,22 @@ describe("validateEnv", () => {
     expect(console.error).toHaveBeenCalled();
   });
 
+  it("requires CRON_SECRET and INITIAL_ADMIN_EMAIL on Vercel Production", () => {
+    setNodeEnv("production");
+    process.env.VERCEL_ENV = "production";
+    setAllRequired();
+    expect(() => validateEnv()).toThrow(/CRON_SECRET|INITIAL_ADMIN_EMAIL/);
+  });
+
+  it("boots Vercel Production once CRON_SECRET and INITIAL_ADMIN_EMAIL are set", () => {
+    setNodeEnv("production");
+    process.env.VERCEL_ENV = "production";
+    setAllRequired();
+    process.env.CRON_SECRET = "some-secret";
+    process.env.INITIAL_ADMIN_EMAIL = "admin@example.com";
+    expect(() => validateEnv()).not.toThrow();
+  });
+
   it("warns (but does not throw) about missing recommended vars even when required ones are set", () => {
     setNodeEnv("production");
     setAllRequired();

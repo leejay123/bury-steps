@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { ClipboardList, CalendarPlus, Download } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireAnyPermission, displayName } from "@/lib/auth";
-import { isOwner } from "@/lib/site-owner";
 import { formatWalkDate, utcToLondonWallClock } from "@/lib/dates";
 import { canOrganiserAddAttendance, canOrganiserEditJourney, canAddWalkToCalendar, isWalkScheduleLocked, walkStatus } from "@/lib/walk-window";
 import { appUrl } from "@/lib/urls";
@@ -66,10 +65,20 @@ export default async function WalkDetailPage({
       cancelledAt: true,
       cancelledReason: true,
       retentionLocked: true,
-      createdBy: { select: { id: true, firstName: true, lastName: true, email: true } },
+      createdBy: { select: { id: true, firstName: true, lastName: true, email: true, isOwner: true } },
       attendances: {
         orderBy: [{ clockedOutAt: "asc" }, { clockedInAt: "asc" }],
-        include: { user: { select: { firstName: true, lastName: true, email: true } } },
+        select: {
+          id: true,
+          userId: true,
+          clockedInAt: true,
+          clockedOutAt: true,
+          clockedOutReason: true,
+          // Never select health notes unless this viewer may see them —
+          // UI-hiding alone still ships the text in the RSC payload.
+          ...(admin.permWalksHealth ? { conditions: true } : {}),
+          user: { select: { firstName: true, lastName: true, email: true } },
+        },
       },
       journeyEvents: {
         orderBy: { happenedAt: "asc" },
@@ -80,8 +89,8 @@ export default async function WalkDetailPage({
 
   if (!walk) notFound();
 
-  const viewerIsOwner = await isOwner(admin.id);
-  const creatorIsOwner = await isOwner(walk.createdBy.id);
+  const viewerIsOwner = admin.isOwner;
+  const creatorIsOwner = walk.createdBy.isOwner;
 
   // A cancelled walk's full admin view stays owner/View-permission
   // territory even for someone here via Members access — but this isn't a
@@ -118,7 +127,9 @@ export default async function WalkDetailPage({
   const attendances = walk.attendances;
   const stillIn = attendances.filter((a) => !a.clockedOutAt);
   const clockedOut = attendances.filter((a) => a.clockedOutAt);
-  const withConditions = attendances.filter((a) => a.conditions).length;
+  const withConditions = admin.permWalksHealth
+    ? attendances.filter((a) => "conditions" in a && a.conditions).length
+    : 0;
   // Same rule the public walk page already applies to an ordinary member
   // (see getWalkMemberNames in src/app/w/[token]/page.tsx: names only show
   // once *you've* clocked into that walk) — an organiser here only via
@@ -152,7 +163,9 @@ export default async function WalkDetailPage({
       clockedInAt: attendance.clockedInAt.toISOString(),
       clockedOutAt: attendance.clockedOutAt?.toISOString() ?? null,
       clockedOutReason: attendance.clockedOutReason,
-      conditions: attendance.conditions,
+      conditions: admin.permWalksHealth
+        ? ("conditions" in attendance ? (attendance.conditions ?? null) : null)
+        : null,
     };
   }
 

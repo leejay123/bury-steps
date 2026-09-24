@@ -11,6 +11,9 @@ export type WalkGameWalk = {
   startsAt: Date;
   durationMins: number;
   cancelledAt: Date | null;
+  /** When set, Progress treats the walk as finished at this time (same as
+   * clock-in), not at the scheduled end — see endWalkEarly. */
+  endedAt?: Date | null;
 };
 
 export type WalkGameAttendance = {

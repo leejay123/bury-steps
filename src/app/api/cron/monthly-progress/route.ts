@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { bearerMatches } from "@/lib/bearer-auth";
 import { LONDON, londonWallClockToUtc } from "@/lib/dates";
-import { loadWalkGame } from "@/lib/walk-progress";
+import { loadWalkGameData, walkGameFromLoadedData } from "@/lib/walk-progress";
 import { buildProgressSummaryEmail } from "@/lib/email/mailer";
 import { sendEmailBatch, type SendEmailInput } from "@/lib/email/client";
 
@@ -54,14 +54,14 @@ export async function GET(req: Request) {
     orderBy: { id: "asc" },
   });
 
-  // Building each member's email means a DB read (loadWalkGame) per
-  // person, so this stays a sequential loop rather than a Promise.all —
-  // the actual send to Resend, batched below, is the part that needs
-  // pacing, not this.
+  // One shared walk/attendance load for the whole group — building each
+  // member's summary from that in memory, not re-querying per person.
+  const gameData = await loadWalkGameData(referenceNow);
+
   const emails: SendEmailInput[] = [];
   for (const member of members) {
     try {
-      const game = await loadWalkGame(member.id, referenceNow);
+      const game = walkGameFromLoadedData(member.id, gameData);
       // Skip anyone with nothing to report — no walks that month and no
       // streak — rather than send an empty, slightly deflating email.
       if (game.viewer.monthCount === 0 && game.viewer.streakWeeks === 0) continue;

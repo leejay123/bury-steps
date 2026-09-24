@@ -261,6 +261,25 @@ describe("buildWalkGame", () => {
 
     expect(game.viewer.badges.map((badge) => badge.id)).not.toContain("all-month");
   });
+
+  it("counts an early-ended walk as completed once endedAt has passed", () => {
+    // Scheduled end would be 15:30; organiser ended it at 14:45. At 15:00
+    // Progress must already count it — same rule as clock-in.
+    const game = buildWalkGame({
+      now: londonWallClockToUtc("2026-08-02T15:00"),
+      viewerId: "alice",
+      monthlyClockInGoal: null,
+      walks: [
+        walk("w-early", "2026-08-02", {
+          endedAt: londonWallClockToUtc("2026-08-02T14:45"),
+        }),
+      ],
+      attendances: [attendance("w-early", "alice", ALICE)],
+    });
+
+    expect(game.viewer.monthCount).toBe(1);
+    expect(game.viewer.totalCount).toBe(1);
+  });
 });
 
 describe("competitionPlaces", () => {

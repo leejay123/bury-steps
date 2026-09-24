@@ -81,7 +81,7 @@ describe("subscribeToNewsletter", () => {
     expect(prismaMock.newsletterSubscriber.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { email: "jane@example.com" },
-        create: { email: "jane@example.com" },
+        create: { email: "jane@example.com", unsubscribeToken: expect.any(String) },
         update: { unsubscribedAt: null },
       }),
     );

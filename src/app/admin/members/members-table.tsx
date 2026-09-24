@@ -230,7 +230,7 @@ function MemberListRow({
     }
   }
 
-  if (!member.isYou && !member.isOwner) {
+  if (!member.isYou && !member.isOwner && viewerIsOwner) {
     const deleteRef: { current: HTMLButtonElement | null } = { current: null };
     actions.push({
       key: "delete",
