@@ -7,6 +7,10 @@ const {
   sendNewsletterSubscribedEmail,
   syncContactSubscribed,
   syncContactUnsubscribed,
+  getOrCreateAudienceId,
+  getResendClient,
+  requireAdmin,
+  broadcastsCreate,
 } = vi.hoisted(() => ({
   checkRateLimit: vi.fn((): RateLimitResult => ({ ok: true })),
   prismaMock: {
@@ -15,32 +19,57 @@ const {
       updateMany: vi.fn(),
       update: vi.fn(),
       findUnique: vi.fn(),
+      findMany: vi.fn(),
+    },
+    user: {
+      findMany: vi.fn(),
     },
   },
   sendNewsletterSubscribedEmail: vi.fn(async () => {}),
   syncContactSubscribed: vi.fn(async () => {}),
   syncContactUnsubscribed: vi.fn(async () => {}),
+  getOrCreateAudienceId: vi.fn(async () => "aud-1"),
+  getResendClient: vi.fn(),
+  requireAdmin: vi.fn(),
+  broadcastsCreate: vi.fn(async () => ({ error: null })),
 }));
 
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
 vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
 vi.mock("@/lib/email/mailer", () => ({ sendNewsletterSubscribedEmail }));
-// Real syncing hits Resend and the DB-cached audience id — out of scope for
-// these tests, which only care that the subscriber row itself is saved.
 vi.mock("@/lib/email/resend-audience", () => ({
   syncContactSubscribed,
   syncContactUnsubscribed,
-  getOrCreateAudienceId: vi.fn(async () => null),
+  getOrCreateAudienceId,
+}));
+vi.mock("@/lib/email/client", () => ({
+  getResendClient,
+  fromAddress: () => "newsletter@example.com",
+}));
+vi.mock("@/lib/email/brand", () => ({
+  getEmailBrand: vi.fn(async () => ({
+    siteName: "Bury Steps",
+    primaryColor: "#000",
+    logoUrl: null,
+  })),
 }));
 vi.mock("@/lib/email/newsletter-opt-out", () => ({
   optOutNewsletterEverywhere: vi.fn(async () => {}),
   optInNewsletterEverywhere: vi.fn(async () => {}),
 }));
+vi.mock("@/lib/auth", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
+  return { ...actual, requireAdmin };
+});
 vi.mock("next/headers", () => ({
   headers: vi.fn(async () => new Headers({ "x-forwarded-for": "203.0.113.1" })),
 }));
 
-import { subscribeToNewsletter, unsubscribeFromNewsletter } from "./newsletter";
+import {
+  sendNewsletterCampaign,
+  subscribeToNewsletter,
+  unsubscribeFromNewsletter,
+} from "./newsletter";
 import { optInNewsletterEverywhere, optOutNewsletterEverywhere } from "@/lib/email/newsletter-opt-out";
 
 function form(fields: Record<string, string>): FormData {
@@ -49,9 +78,33 @@ function form(fields: Record<string, string>): FormData {
   return formData;
 }
 
+const ADMIN = {
+  id: "admin-1",
+  permSubscribers: true,
+};
+
+/** loadCampaignRecipients hits findMany three times (active footer, members, opted-out footer). */
+function mockCampaignLists(opts: {
+  activeFooter?: { email: string }[];
+  members?: { email: string; firstName: string | null }[];
+  optedOutFooter?: { email: string }[];
+}) {
+  const activeFooter = opts.activeFooter ?? [];
+  const members = opts.members ?? [];
+  const optedOutFooter = opts.optedOutFooter ?? [];
+  prismaMock.newsletterSubscriber.findMany
+    .mockResolvedValueOnce(activeFooter)
+    .mockResolvedValueOnce(optedOutFooter);
+  prismaMock.user.findMany.mockResolvedValueOnce(members);
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   checkRateLimit.mockReturnValue({ ok: true });
+  requireAdmin.mockResolvedValue(ADMIN);
+  getOrCreateAudienceId.mockResolvedValue("aud-1");
+  getResendClient.mockReturnValue({ broadcasts: { create: broadcastsCreate } });
+  broadcastsCreate.mockResolvedValue({ error: null });
   prismaMock.newsletterSubscriber.create.mockResolvedValue({
     email: "jane@example.com",
     unsubscribeToken: "tok123",
@@ -168,5 +221,103 @@ describe("unsubscribeFromNewsletter", () => {
     prismaMock.newsletterSubscriber.findUnique.mockResolvedValueOnce(null);
     const ok = await unsubscribeFromNewsletter("does-not-exist");
     expect(ok).toBe(false);
+  });
+});
+
+describe("sendNewsletterCampaign", () => {
+  it("includes footer subscribers even when their User.emailNewsletter is default-off", async () => {
+    // Initial load + per-chunk refresh + final purge load.
+    mockCampaignLists({
+      activeFooter: [{ email: "footer@example.com" }],
+      members: [],
+      optedOutFooter: [],
+    });
+    mockCampaignLists({
+      activeFooter: [{ email: "footer@example.com" }],
+      members: [],
+      optedOutFooter: [],
+    });
+    mockCampaignLists({
+      activeFooter: [{ email: "footer@example.com" }],
+      members: [],
+      optedOutFooter: [],
+    });
+
+    const result = await sendNewsletterCampaign(
+      null,
+      form({ subject: "Hello", body: "News" }),
+    );
+
+    expect(result).toEqual({ ok: true, message: "Newsletter sent." });
+    expect(syncContactSubscribed).toHaveBeenCalledWith("footer@example.com", null);
+    expect(syncContactUnsubscribed).not.toHaveBeenCalled();
+    expect(broadcastsCreate).toHaveBeenCalled();
+  });
+
+  it("does not treat default-off member prefs as a block on a dual-listed footer address", async () => {
+    // Same email on active footer; member toggle is false so they are absent
+    // from the members query — must still sync from the footer list.
+    mockCampaignLists({
+      activeFooter: [{ email: "both@example.com" }],
+      members: [],
+      optedOutFooter: [],
+    });
+    mockCampaignLists({
+      activeFooter: [{ email: "both@example.com" }],
+      members: [],
+      optedOutFooter: [],
+    });
+    mockCampaignLists({
+      activeFooter: [{ email: "both@example.com" }],
+      members: [],
+      optedOutFooter: [],
+    });
+
+    await sendNewsletterCampaign(null, form({ subject: "Hello", body: "News" }));
+
+    expect(syncContactSubscribed).toHaveBeenCalledWith("both@example.com", null);
+  });
+
+  it("skips force-subscribe and purges Resend when a recipient opted out mid-send", async () => {
+    mockCampaignLists({
+      activeFooter: [{ email: "gone@example.com" }],
+      members: [],
+      optedOutFooter: [],
+    });
+    // Chunk refresh: they unsubscribed between snapshot and sync.
+    mockCampaignLists({
+      activeFooter: [],
+      members: [],
+      optedOutFooter: [{ email: "gone@example.com" }],
+    });
+    // Final purge load.
+    mockCampaignLists({
+      activeFooter: [],
+      members: [],
+      optedOutFooter: [{ email: "gone@example.com" }],
+    });
+
+    await sendNewsletterCampaign(null, form({ subject: "Hello", body: "News" }));
+
+    expect(syncContactSubscribed).not.toHaveBeenCalled();
+    expect(syncContactUnsubscribed).toHaveBeenCalledWith("gone@example.com");
+  });
+
+  it("skips members whose footer row is unsubscribed (mirror-lag defense)", async () => {
+    mockCampaignLists({
+      activeFooter: [],
+      members: [{ email: "stale@example.com", firstName: "Sam" }],
+      optedOutFooter: [{ email: "stale@example.com" }],
+    });
+    mockCampaignLists({
+      activeFooter: [],
+      members: [{ email: "stale@example.com", firstName: "Sam" }],
+      optedOutFooter: [{ email: "stale@example.com" }],
+    });
+
+    await sendNewsletterCampaign(null, form({ subject: "Hello", body: "News" }));
+
+    expect(syncContactSubscribed).not.toHaveBeenCalled();
+    expect(syncContactUnsubscribed).toHaveBeenCalledWith("stale@example.com");
   });
 });

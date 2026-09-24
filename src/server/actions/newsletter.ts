@@ -91,6 +91,48 @@ export async function subscribeToNewsletter(
  * doing them one-by-one made sending to even a handful of people feel
  * slow for no real benefit.
  */
+async function loadCampaignRecipients(): Promise<{
+  recipients: Map<string, string | null>;
+  footerUnsubscribed: Set<string>;
+}> {
+  const [footerSubscribers, newsletterMembers, optedOutFooter] = await Promise.all([
+    prisma.newsletterSubscriber.findMany({
+      where: { unsubscribedAt: null },
+      select: { email: true },
+    }),
+    prisma.user.findMany({
+      where: { emailNewsletter: true },
+      select: { email: true, firstName: true },
+    }),
+    // Real unsubscribe signal only — User.emailNewsletter defaults to false
+    // for every account, which is "never opted into the member toggle", not
+    // "opted out of newsletter". Treating default-off as blocked would skip
+    // active footer subscribers who also have a User row.
+    prisma.newsletterSubscriber.findMany({
+      where: { unsubscribedAt: { not: null } },
+      select: { email: true },
+    }),
+  ]);
+
+  const footerUnsubscribed = new Set(
+    optedOutFooter.map((row) => row.email.toLowerCase()),
+  );
+  // Keyed by lowercased email so an old case-variant duplicate (e.g. from
+  // before parseContactEmail lowercased on the way in) is only synced
+  // once, not sent the campaign twice under two different-cased contacts.
+  const recipients = new Map<string, string | null>();
+  for (const subscriber of footerSubscribers) {
+    recipients.set(subscriber.email.toLowerCase(), null);
+  }
+  for (const member of newsletterMembers) {
+    const key = member.email.toLowerCase();
+    // Mirror-lag defense: footer unsubscribe wins over a stale member toggle.
+    if (footerUnsubscribed.has(key)) continue;
+    recipients.set(key, member.firstName);
+  }
+  return { recipients, footerUnsubscribed };
+}
+
 export async function sendNewsletterCampaign(
   _prev: ActionResult | null,
   formData: FormData,
@@ -114,46 +156,7 @@ export async function sendNewsletterCampaign(
   if (!audienceId) return { ok: false, error: "Could not reach Resend to set up the newsletter audience." };
 
   try {
-    const [footerSubscribers, newsletterMembers, optedOutFooter, optedOutMembers] =
-      await Promise.all([
-        prisma.newsletterSubscriber.findMany({
-          where: { unsubscribedAt: null },
-          select: { email: true },
-        }),
-        prisma.user.findMany({
-          where: { emailNewsletter: true },
-          select: { email: true, firstName: true },
-        }),
-        // Defense in depth: an address opted out on either list must not be
-        // re-synced from the other (mirroring should already have cleared both).
-        prisma.newsletterSubscriber.findMany({
-          where: { unsubscribedAt: { not: null } },
-          select: { email: true },
-        }),
-        prisma.user.findMany({
-          where: { emailNewsletter: false },
-          select: { email: true },
-        }),
-      ]);
-
-    const blocked = new Set<string>();
-    for (const row of optedOutFooter) blocked.add(row.email.toLowerCase());
-    for (const row of optedOutMembers) blocked.add(row.email.toLowerCase());
-
-    // Keyed by lowercased email so an old case-variant duplicate (e.g. from
-    // before parseContactEmail lowercased on the way in) is only synced
-    // once, not sent the campaign twice under two different-cased contacts.
-    const uniqueByEmail = new Map<string, string | null>();
-    for (const subscriber of footerSubscribers) {
-      const key = subscriber.email.toLowerCase();
-      if (blocked.has(key)) continue;
-      uniqueByEmail.set(key, null);
-    }
-    for (const member of newsletterMembers) {
-      const key = member.email.toLowerCase();
-      if (blocked.has(key)) continue;
-      uniqueByEmail.set(key, member.firstName);
-    }
+    const initial = await loadCampaignRecipients();
     // Resend's Contacts API has no batch/bulk endpoint (unlike /emails/batch
     // — see sendEmailBatch in lib/email/client.ts), so this stays one
     // request per contact. A small chunk of concurrent requests at a time,
@@ -161,15 +164,24 @@ export async function sendNewsletterCampaign(
     // keeps a large subscriber list from bursting well past Resend's
     // ~10-requests/second rate limit (https://resend.com/docs/api-reference/rate-limit).
     const CONTACT_SYNC_CHUNK_SIZE = 10;
-    const contacts = [...uniqueByEmail];
+    const contacts = [...initial.recipients];
     for (let i = 0; i < contacts.length; i += CONTACT_SYNC_CHUNK_SIZE) {
       const chunk = contacts.slice(i, i + CONTACT_SYNC_CHUNK_SIZE);
-      await Promise.all(chunk.map(([email, firstName]) => syncContactSubscribed(email, firstName)));
+      // Fresh read per chunk — a concurrent opt-out after the snapshot must
+      // not be force-subscribed back into Resend before the broadcast.
+      const fresh = await loadCampaignRecipients();
+      await Promise.all(
+        chunk.map(([email, firstName]) => {
+          if (!fresh.recipients.has(email)) return syncContactUnsubscribed(email);
+          return syncContactSubscribed(email, fresh.recipients.get(email) ?? firstName);
+        }),
+      );
     }
-    // Drop anyone opted out on either store from the Resend segment before
-    // broadcasting — skipping re-sync alone leaves a stale contact that
-    // still receives the campaign.
-    const blockedEmails = [...blocked];
+
+    // Drop anyone with a real footer unsubscribe from the Resend segment
+    // before broadcasting — a stale contact would still get the campaign.
+    const final = await loadCampaignRecipients();
+    const blockedEmails = [...final.footerUnsubscribed];
     for (let i = 0; i < blockedEmails.length; i += CONTACT_SYNC_CHUNK_SIZE) {
       const chunk = blockedEmails.slice(i, i + CONTACT_SYNC_CHUNK_SIZE);
       await Promise.all(chunk.map((email) => syncContactUnsubscribed(email)));
