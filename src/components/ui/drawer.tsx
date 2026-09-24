@@ -260,8 +260,30 @@ function DrawerContent({
       });
     }
 
+    // The keyboard finishes opening (and the page finishes shrinking to
+    // make room for it) *after* focus lands, so the scroll above can run
+    // against the old, taller panel and leave the field hidden again. Once
+    // the viewport settles, bring whichever field is being typed in back
+    // into view.
+    const viewport = window.visualViewport;
+    let settleFrame = 0;
+    function onViewportResize() {
+      window.cancelAnimationFrame(settleFrame);
+      settleFrame = window.requestAnimationFrame(() => {
+        const active = document.activeElement;
+        if (!(active instanceof HTMLElement) || !root?.contains(active)) return;
+        if (active.tagName !== "INPUT" && active.tagName !== "TEXTAREA") return;
+        active.scrollIntoView({ block: "nearest" });
+      });
+    }
+
     root.addEventListener("focusin", onFocusIn);
-    return () => root.removeEventListener("focusin", onFocusIn);
+    viewport?.addEventListener("resize", onViewportResize);
+    return () => {
+      root.removeEventListener("focusin", onFocusIn);
+      viewport?.removeEventListener("resize", onViewportResize);
+      window.cancelAnimationFrame(settleFrame);
+    };
   }, [open, root]);
 
   if (!shouldRender) return null;

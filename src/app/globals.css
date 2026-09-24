@@ -162,6 +162,29 @@ body {
   }
 }
 
+/*
+ * Keyboard open on a phone (Android shrinks the page to the space above it,
+ * see interactive-widget in generateViewport): a form drawer's header and
+ * footer keep their full height, so a long description could leave the
+ * scrolling fields only a line or two tall. On a short screen, drop the
+ * description and tighten both bars so the field being typed in gets the
+ * room. Also covers phones in landscape, which are just as short.
+ */
+@media (max-width: 639px) and (max-height: 560px),
+  (max-height: 430px) {
+  [data-slot="drawer-content"][data-drawer-variant="form"] [data-slot="drawer-description"] {
+    display: none;
+  }
+  [data-slot="drawer-content"][data-drawer-variant="form"] [data-slot="drawer-header"] {
+    padding-top: 0.75rem;
+    padding-bottom: 0.5rem;
+  }
+  [data-slot="drawer-content"][data-drawer-variant="form"] [data-slot="drawer-footer"] {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
 .cl-modalBackdrop {
   backdrop-filter: blur(16px) saturate(1.15);
   -webkit-backdrop-filter: blur(16px) saturate(1.15);

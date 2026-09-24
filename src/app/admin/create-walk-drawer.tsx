@@ -66,9 +66,8 @@ export function CreateWalkDrawer() {
           <DrawerHeader className="shrink-0">
             <DrawerTitle>Create a walk</DrawerTitle>
             <DrawerDescription>
-              A share link is generated automatically. People must be signed in to clock in. If
-              they do not have an account yet, they create one first. If they already have one,
-              they sign in. The link brings them back to this walk afterwards.
+              You&apos;ll get a share link for members. Anyone without an account is asked to
+              join or sign in first, then brought straight back to the walk.
             </DrawerDescription>
           </DrawerHeader>
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain px-4 pb-2">

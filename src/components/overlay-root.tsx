@@ -301,6 +301,15 @@ export function UnlockPageOnNavigate() {
     // visualViewport.height, so innerHeight − vv.height ≈ 0 and the drawer
     // never lifts. Measuring against this baseline still sees the keyboard.
     let baselineHeight = Math.round(viewport.height);
+    // The accessory-bar nudge below is an iOS Safari fix only. Android Chrome
+    // (with interactive-widget=resizes-content, see generateViewport) shrinks
+    // the layout viewport to sit above the keyboard too — the same
+    // "fromInner ≈ 0, fromBaseline large" shape — but has no accessory bar,
+    // so nudging there just lifted form drawers 44px clear of the keyboard,
+    // squeezing their fields into a sliver with a strip of overlay below.
+    const isIos =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
     function sync() {
       const style = viewportStyleRef.current;
@@ -317,7 +326,7 @@ export function UnlockPageOnNavigate() {
       let keyboard = 0;
       if (fromInner > 120) {
         keyboard = Math.round(fromInner) + 12;
-      } else if (fromBaseline > 120) {
+      } else if (isIos && fromBaseline > 120) {
         keyboard = 44;
       }
       // iOS can fire visualViewport "scroll" repeatedly during momentum
