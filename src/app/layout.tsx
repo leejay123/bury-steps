@@ -154,16 +154,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </Suspense>
               <div className="relative">
                 {/*
-                  minmax(0,auto), not a plain auto, on the middle nav
-                  column: a plain `auto` track's automatic minimum is its
-                  content's own max-content size, so at a narrow desktop
-                  width (nav links + Settings dropdown wider than the room
-                  left after the logo and bell/avatar columns) it refused
-                  to shrink below that and spilled into the avatar column
-                  instead of letting the nav's own overflow-x-auto scroll
-                  it — this floor of 0 is what lets that scroll kick in.
+                  auto on the outer (logo, bell/avatar) columns, not 1fr —
+                  those should never be asked to shrink; only the middle
+                  nav-links column should give up space, since it already
+                  has its own overflow-x-auto scroller to fall back on
+                  (SiteNavLinks). A plain `auto` track's automatic minimum
+                  is otherwise its content's own max-content size, so this
+                  middle column still needs minmax(0,1fr) — the 0 floor
+                  lets it shrink past that and actually scroll instead of
+                  forcing the logo/avatar columns to shrink (or the nav to
+                  spill over them) once the window is too narrow for
+                  everything to fit at its natural size. 1fr instead of
+                  auto for its own max: this column should claim all
+                  left-over space once there's room to (so its own
+                  justify-center still centers the links), not stop
+                  growing at exactly the links' own content width the way
+                  the previous auto-based track did.
                 */}
-                <div className={`flex h-14 items-center justify-between gap-3 ${PAGE_X} md:grid md:grid-cols-[1fr_minmax(0,auto)_1fr]`}>
+                <div className={`flex h-14 items-center justify-between gap-3 ${PAGE_X} md:grid md:grid-cols-[auto_minmax(0,1fr)_auto]`}>
                   <Suspense
                     fallback={
                       <div className="flex h-8 min-w-0 items-center justify-self-start">

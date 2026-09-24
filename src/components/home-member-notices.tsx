@@ -127,7 +127,23 @@ export function HomeMemberNoticesSection({
             plugins={showControls ? [plugin] : []}
             setApi={setApi}
           >
-            <CarouselContent className="-ml-0 items-stretch">
+            {/*
+              !ml-0, not a plain -ml-0: CarouselContent's own default
+              (-ml-4, paired with each CarouselItem's default pl-4 to
+              create the usual gap) is the same property at the same
+              specificity, and Tailwind doesn't guarantee a caller's
+              override wins there based on class order in the source —
+              whichever utility happens to generate later in the build's
+              stylesheet wins regardless. This carousel wants adjoining
+              cards (the border between them *is* the gap, no padding —
+              see noticeCardClassName's border-r and pl-0 below), so it
+              needs the negative margin gone for real, not "usually".
+              Without this the leftover -ml-4 offset every card's real
+              boundary from where Embla's snap position expects it, which
+              is what showed up as a doubled border when the arrows moved
+              the track.
+            */}
+            <CarouselContent className="!ml-0 items-stretch">
               {notices.map((notice) => (
                 <CarouselItem
                   key={notice.id}
