@@ -3,6 +3,7 @@ import { getSiteTheme } from "@/lib/site-theme";
 import { SettingsPage, SettingsSectionGroup } from "../settings-page";
 import { HomepageSectionsSettings } from "./homepage-sections-settings";
 import { CarouselToggle } from "./carousel-toggle";
+import { MemberNoticesToggle } from "./member-notices-toggle";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ export default async function HomepageLayoutSettingsPage() {
       >
         <HomepageSectionsSettings sectionOrder={theme.homepageSectionOrder} />
         <CarouselToggle enabled={theme.carouselEnabled} />
+        <MemberNoticesToggle enabled={theme.memberNoticesEnabled} />
       </SettingsSectionGroup>
     </SettingsPage>
   );

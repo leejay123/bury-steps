@@ -53,6 +53,10 @@ import {
 
 export type SiteTheme = {
   carouselEnabled: boolean;
+  /** Site-wide switch for the homepage's "Latest notices" section (see
+   * updateMemberNoticesEnabled) — off hides it even when there are notices
+   * a signed-in member would otherwise see there. */
+  memberNoticesEnabled: boolean;
   scrollToTopEnabled: boolean;
   cookieConsentVariant: CookieConsentVariant;
   siteName: string;
@@ -104,6 +108,7 @@ const DEFAULT_FAVICON_SRC = "/default-favicon.png";
 function defaultTheme(): SiteTheme {
   return {
     carouselEnabled: true,
+    memberNoticesEnabled: true,
     scrollToTopEnabled: true,
     cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
     siteName: DEFAULT_SITE_NAME,
@@ -148,6 +153,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     where: { id: SITE_SETTING_ID },
     select: {
       carouselEnabled: true,
+      memberNoticesEnabled: true,
       scrollToTopEnabled: true,
       cookieConsentVariant: true,
       siteName: true,
@@ -189,6 +195,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
 
   return {
     carouselEnabled: row?.carouselEnabled ?? true,
+    memberNoticesEnabled: row?.memberNoticesEnabled ?? true,
     scrollToTopEnabled: row?.scrollToTopEnabled ?? true,
     cookieConsentVariant:
       parseCookieConsentVariant(row?.cookieConsentVariant ?? "") ??
@@ -252,7 +259,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v14"], {
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v15"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });

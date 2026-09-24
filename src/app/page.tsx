@@ -56,6 +56,7 @@ export default async function Home() {
         howThisStartedTitle={theme.howThisStartedTitle}
         isSignedIn={user !== null}
         memberNotices={memberNotices}
+        memberNoticesEnabled={theme.memberNoticesEnabled}
         progressEnabled={progressEnabled}
         testimonials={testimonials}
         testimonialsSectionEyebrow={theme.testimonialsSectionEyebrow}

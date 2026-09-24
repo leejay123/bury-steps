@@ -76,6 +76,43 @@ export async function updateCarouselEnabled(
   return { ok: true, message: enabled ? "You have turned the carousel on." : "You have turned the carousel off." };
 }
 
+/** Site-wide switch for the homepage's "Latest notices" section — off
+ * hides it for every signed-in member, even when there are notices they'd
+ * otherwise see there (see SiteTheme.memberNoticesEnabled). */
+export async function updateMemberNoticesEnabled(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  const enabled = String(formData.get("memberNoticesEnabled") ?? "") === "on";
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        memberNoticesEnabled: enabled,
+      },
+      update: { memberNoticesEnabled: enabled },
+    });
+  } catch (err) {
+    return logActionError("updateMemberNoticesEnabled", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/homepage-layout");
+  return {
+    ok: true,
+    message: enabled
+      ? "Latest notices will show on the homepage again."
+      : "Latest notices is now hidden from the homepage.",
+  };
+}
+
 /** Site-wide switch for /progress (see getProgressEnabled) — off 404s the
  * page for everyone, organisers included, not just members. */
 export async function updateProgressEnabled(

@@ -56,6 +56,7 @@ export function HomeWelcome({
   howThisStartedTitle,
   isSignedIn,
   memberNotices,
+  memberNoticesEnabled,
   progressEnabled,
   testimonials,
   testimonialsSectionEyebrow,
@@ -85,6 +86,9 @@ export function HomeWelcome({
    * useful once someone's actually joined. */
   isSignedIn: boolean;
   memberNotices: HomepageNoticeSlide[];
+  /** Site-wide switch (Settings → Homepage layout → Latest notices) — hides
+   * the section entirely when off, even if there are notices. */
+  memberNoticesEnabled: boolean;
   /** Site-wide switch (Settings → Display → Site chrome) — hides the
    * "Track your progress" tile when off. */
   progressEnabled: boolean;
@@ -127,7 +131,7 @@ export function HomeWelcome({
       </section>
     ),
     memberNotices:
-      memberNotices.length > 0 ? (
+      memberNoticesEnabled && memberNotices.length > 0 ? (
         <HomeMemberNoticesSection notices={memberNotices} />
       ) : null,
     testimonials:
