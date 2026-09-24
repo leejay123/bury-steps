@@ -4,25 +4,21 @@ import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { getOptionalUser } from "@/lib/auth";
-import { formatDate, formatTime, formatWalkDate } from "@/lib/dates";
-import { accountPortalHref, appUrl } from "@/lib/urls";
+import { formatWalkDate } from "@/lib/dates";
+import { appUrl } from "@/lib/urls";
 import { meetingPointLabel } from "@/lib/geocode";
 import { What3wordsLink } from "@/components/what3words-link";
 import { walkShareUrl } from "@/lib/walk-slug";
 import { ensureWalkSlug } from "@/lib/walk-slug-server";
-import { canAddWalkToCalendar, walkOpensAt, walkStatus, windowState } from "@/lib/walk-window";
-import { WalkFacts } from "@/components/walk-facts";
+import { walkStatus } from "@/lib/walk-window";
 import { WalkMapSection } from "@/components/walk-map-section";
 import { WalkJourneyDrawer } from "@/components/walk-journey-drawer";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { HowWalksWork } from "@/components/how-walks-work";
 import { getWalkMemberNames } from "@/lib/walk-members";
 import { getSiteTheme } from "@/lib/site-theme";
-import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { WalkLivePanel } from "./walk-live-panel";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { WalkShareStatusChrome, WalkShareWhileOpen } from "./walk-share-status";
 
 export const dynamic = "force-dynamic";
 
@@ -118,26 +114,20 @@ export default async function WalkLinkPage({
   }
 
   const walkUrl = walkShareUrl(appUrl(), { token: walk.token, slug });
-  const completed = status === "completed";
 
-  const alreadyIn = user
+  const myAttendance = user
     ? await prisma.attendance.findFirst({
-        where: { walkId: walk.id, userId: user.id, clockedOutAt: null },
-        select: { clockedInAt: true },
+        where: { walkId: walk.id, userId: user.id },
+        select: { clockedInAt: true, clockedOutAt: true },
       })
     : null;
+  const attended = Boolean(myAttendance);
 
   // Names only once this member has clocked in — privacy for guests and
   // people who have not joined yet. WalkMembers paginates at 20, so a
-  // thousand names on one walk stay usable.
-  const memberNames = alreadyIn ? await getWalkMemberNames(walk.id) : [];
-  const windowStateNow = windowState(walk.startsAt, walk.durationMins, new Date(), walk.endedAt);
-  const tooEarly = windowStateNow === "too-early";
-  // A signed-in member who never clocked in and the window has now closed —
-  // this used to only show at the very bottom of the page (inside
-  // WalkLivePanel), easy to miss under the walk details and map above it.
-  const closedNoClockIn = Boolean(user) && !alreadyIn && windowStateNow === "closed";
-  const opensAt = walkOpensAt(walk.startsAt);
+  // thousand names on one walk stay usable. Clocking out does not revoke
+  // that — they were on the walk.
+  const memberNames = attended ? await getWalkMemberNames(walk.id) : [];
   const meeting = meetingPointLabel(walk.location, walk.postcode);
   const walksHref = user?.role === "ADMIN" ? "/admin" : "/walks";
   const journeyEvents = walk.journeyEvents.map((event) => ({
@@ -146,6 +136,9 @@ export default async function WalkLinkPage({
     body: event.body,
     happenedAt: event.happenedAt.toISOString(),
   }));
+  const cancelledAtIso = walk.cancelledAt?.toISOString() ?? null;
+  const endedAtIso = walk.endedAt?.toISOString() ?? null;
+  const startsAtIso = walk.startsAt.toISOString();
 
   return (
     <div className="flex flex-col gap-6">
@@ -159,88 +152,20 @@ export default async function WalkLinkPage({
         <WalkJourneyDrawer events={journeyEvents} />
       </div>
 
-      {status === "cancelled" ? (
-        <Alert variant="destructive">
-          <AlertTitle>This walk has been cancelled</AlertTitle>
-          <AlertDescription>Check the walks list for the next one.</AlertDescription>
-        </Alert>
-      ) : completed && !user ? (
-        <Alert variant="info">
-          <AlertTitle>This walk has finished</AlertTitle>
-          <AlertDescription>
-            Clock-in is closed. Details and the journey below are still here to look back on.
-          </AlertDescription>
-        </Alert>
-      ) : user && !alreadyIn && tooEarly ? (
-        <Alert variant="info">
-          <AlertTitle>Clock-in is not open yet</AlertTitle>
-          <AlertDescription>
-            It opens an hour before the walk starts, at {formatTime(opensAt)} on{" "}
-            {formatDate(opensAt)}. Come back on the day and this page will be ready.
-          </AlertDescription>
-        </Alert>
-      ) : closedNoClockIn ? (
-        <Alert variant="info">
-          <AlertTitle>This walk has finished</AlertTitle>
-          <AlertDescription>
-            Clock-in is closed. If you were there, speak to an organiser — they can add you to the
-            list.
-          </AlertDescription>
-        </Alert>
-      ) : !user ? (
-        <div className="space-y-4 rounded-lg border bg-muted/40 p-5">
-          <div className="space-y-1">
-            <p className="font-medium">You need to sign in to join this walk</p>
-            <p className="text-sm text-muted-foreground">
-              Clock-in is only for signed-in members. If you do not have an account yet, create one
-              first. If you already have an account, sign in. You will come back to this walk
-              afterwards.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button asChild size="sm">
-              <a href={accountPortalHref("sign-up", walkUrl)}>Create an account</a>
-            </Button>
-            <Button asChild size="sm" variant="outline">
-              <a href={accountPortalHref("sign-in", walkUrl)}>Sign in</a>
-            </Button>
-          </div>
-        </div>
-      ) : null}
-
-      <Card className="gap-4">
-        <CardHeader>
-          <div className="flex items-start justify-between gap-3">
-            <CardTitle className="text-xl">{walk.title}</CardTitle>
-            <WalkStatusBadge
-              cancelledAt={walk.cancelledAt?.toISOString() ?? null}
-              durationMins={walk.durationMins}
-              endedAt={walk.endedAt?.toISOString() ?? null}
-              startsAt={walk.startsAt.toISOString()}
-            />
-          </div>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <WalkFacts
-            durationMins={walk.durationMins}
-            location={walk.location}
-            postcode={walk.postcode}
-            startsAt={walk.startsAt}
-          />
-          {walk.description ? (
-            <p className="text-sm leading-relaxed">{walk.description}</p>
-          ) : null}
-          {canAddWalkToCalendar(walk) ? (
-            <div>
-              <Button asChild size="sm" variant="outline">
-                <a download href={`/w/${slug}/ics`}>
-                  Add to calendar
-                </a>
-              </Button>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
+      <WalkShareStatusChrome
+        attended={attended}
+        cancelledAt={cancelledAtIso}
+        description={walk.description}
+        durationMins={walk.durationMins}
+        endedAt={endedAtIso}
+        icsHref={`/w/${slug}/ics`}
+        location={walk.location}
+        postcode={walk.postcode}
+        signedIn={Boolean(user)}
+        startsAt={startsAtIso}
+        title={walk.title}
+        walkUrl={walkUrl}
+      />
 
       {meeting ? <WalkMapSection location={meeting} walk={walk} /> : null}
 
@@ -248,20 +173,26 @@ export default async function WalkLinkPage({
 
       {status === "cancelled" ? null : user ? (
         <WalkLivePanel
-          alreadyClockedInAt={alreadyIn?.clockedInAt.toISOString() ?? null}
+          alreadyClockedInAt={myAttendance?.clockedInAt.toISOString() ?? null}
           beforeYouSetOffTips={theme.beforeYouSetOffTips}
+          clockedOutAt={myAttendance?.clockedOutAt?.toISOString() ?? null}
           durationMins={walk.durationMins}
-          endedAt={walk.endedAt?.toISOString() ?? null}
+          endedAt={endedAtIso}
           memberNames={memberNames}
-          startsAt={walk.startsAt.toISOString()}
+          startsAt={startsAtIso}
           token={walk.token}
           walksHref={walksHref}
         />
-      ) : completed ? null : (
-        <>
+      ) : (
+        <WalkShareWhileOpen
+          cancelledAt={cancelledAtIso}
+          durationMins={walk.durationMins}
+          endedAt={endedAtIso}
+          startsAt={startsAtIso}
+        >
           <BeforeYouSetOff tips={theme.beforeYouSetOffTips} />
           <HowWalksWork steps={theme.howWalksWorkSteps} />
-        </>
+        </WalkShareWhileOpen>
       )}
     </div>
   );

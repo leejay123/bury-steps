@@ -4,6 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { clerkClient } from "@clerk/nextjs/server";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { actorStillOwner } from "@/lib/site-owner";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { WELCOME_NOTICE_SYSTEM_KEY } from "@/lib/notices";
 import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR } from "@/lib/theme";
@@ -23,9 +24,13 @@ import { DEFAULT_FAQ_SECTION_INTRO, DEFAULT_FAQ_SECTION_TITLE } from "@/lib/faqs
 import { DEFAULT_HOMEPAGE_SECTION_ORDER_TEXT } from "@/lib/homepage-sections";
 import {
   DEFAULT_ABOUT_EXPECT_TEXT,
+  DEFAULT_ABOUT_EXPECT_HEADING,
   DEFAULT_ABOUT_GOALS_TEXT,
+  DEFAULT_ABOUT_GOALS_HEADING,
   DEFAULT_ABOUT_PLACES_TEXT,
+  DEFAULT_ABOUT_PLACES_HEADING,
   DEFAULT_ABOUT_RULES_TEXT,
+  DEFAULT_ABOUT_RULES_HEADING,
   DEFAULT_HOW_THIS_STARTED_BODY,
   DEFAULT_HOW_THIS_STARTED_EYEBROW,
   DEFAULT_HOW_THIS_STARTED_TEASER,
@@ -39,7 +44,15 @@ import {
   DEFAULT_WELCOME_NOTICE,
 } from "@/lib/site-defaults";
 import { isResetConfirmWord } from "@/lib/site-reset";
-import { type ActionResult, isNotFoundStatus, logActionError, permissionDenied } from "./shared";
+import { DEFAULT_CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
+import { clearAudienceCache } from "@/lib/email/resend-audience";
+import {
+  type ActionResult,
+  isNotFoundStatus,
+  logActionError,
+  ownerDenied,
+  permissionDenied,
+} from "./shared";
 
 export async function clearSiteCache(
   _prev: ActionResult | null,
@@ -72,13 +85,24 @@ export async function resetSiteToDefault(
 
   const limited = checkRateLimit(`${admin.id}:resetSiteToDefault`, 3, 10 * 60_000);
   if (!limited.ok) return { ok: false, error: "Try again in a few minutes." };
+  // Fresh read — concurrent removeOwner must not leave a wipe past a
+  // stale React-cached owner flag from requireAdmin earlier in the request.
+  if (!(await actorStillOwner(admin.id))) return ownerDenied("reset the site");
 
   try {
     await prisma.$transaction(async (tx) => {
+      if (!(await actorStillOwner(admin.id, tx))) throw new Error("NOT_OWNER");
       await tx.accidentReport.deleteMany();
       await tx.walk.deleteMany();
       await tx.siteNotice.deleteMany();
       await tx.siteNoticeCategory.deleteMany();
+      await tx.contactMessage.deleteMany();
+      await tx.newsletterSubscriber.deleteMany();
+      await tx.emailTemplateOverride.deleteMany();
+      await tx.emailEvent.deleteMany();
+      // Denormalized admin/target emails would otherwise survive the wipe
+      // and still show under Members → Sign-in log.
+      await tx.impersonationEvent.deleteMany();
       await tx.siteNoticeCategory.create({
         data: {
           id: "noticecat_general",
@@ -118,6 +142,7 @@ export async function resetSiteToDefault(
           siteTagline: DEFAULT_SITE_TAGLINE,
           facebookGroupUrl: DEFAULT_FACEBOOK_GROUP_URL,
           testimonialsEnabled: true,
+          testimonialsSectionEyebrow: "",
           testimonialsSectionTitle: DEFAULT_TESTIMONIALS_SECTION_TITLE,
           testimonialsSectionIntro: DEFAULT_TESTIMONIALS_SECTION_INTRO,
           faqsEnabled: true,
@@ -132,12 +157,28 @@ export async function resetSiteToDefault(
           aboutPlaces: DEFAULT_ABOUT_PLACES_TEXT,
           aboutExpect: DEFAULT_ABOUT_EXPECT_TEXT,
           aboutRules: DEFAULT_ABOUT_RULES_TEXT,
+          aboutGoalsHeading: DEFAULT_ABOUT_GOALS_HEADING,
+          aboutPlacesHeading: DEFAULT_ABOUT_PLACES_HEADING,
+          aboutExpectHeading: DEFAULT_ABOUT_EXPECT_HEADING,
+          aboutRulesHeading: DEFAULT_ABOUT_RULES_HEADING,
           homepageSectionOrder: DEFAULT_HOMEPAGE_SECTION_ORDER_TEXT,
           memberNoticesEnabled: true,
           howWalksWorkEnabled: true,
           howWalksWorkSteps: "",
           beforeYouSetOffTips: "",
           monthlyClockInGoal: null,
+          progressEnabled: true,
+          logoMime: null,
+          logoData: null,
+          faviconMime: null,
+          faviconData: null,
+          reportBannerMime: null,
+          reportBannerData: null,
+          resendAudienceId: null,
+          contactMessagesOwnerId: null,
+          organiserInviteRequired: false,
+          cancelledWalkRetentionDays: DEFAULT_CANCELLED_WALK_RETENTION_DAYS,
+          accidentReportRetentionDays: null,
         },
         update: {
           primaryColor: DEFAULT_PRIMARY_COLOR,
@@ -148,6 +189,7 @@ export async function resetSiteToDefault(
           siteTagline: DEFAULT_SITE_TAGLINE,
           facebookGroupUrl: DEFAULT_FACEBOOK_GROUP_URL,
           testimonialsEnabled: true,
+          testimonialsSectionEyebrow: "",
           testimonialsSectionTitle: DEFAULT_TESTIMONIALS_SECTION_TITLE,
           testimonialsSectionIntro: DEFAULT_TESTIMONIALS_SECTION_INTRO,
           faqsEnabled: true,
@@ -162,12 +204,28 @@ export async function resetSiteToDefault(
           aboutPlaces: DEFAULT_ABOUT_PLACES_TEXT,
           aboutExpect: DEFAULT_ABOUT_EXPECT_TEXT,
           aboutRules: DEFAULT_ABOUT_RULES_TEXT,
+          aboutGoalsHeading: DEFAULT_ABOUT_GOALS_HEADING,
+          aboutPlacesHeading: DEFAULT_ABOUT_PLACES_HEADING,
+          aboutExpectHeading: DEFAULT_ABOUT_EXPECT_HEADING,
+          aboutRulesHeading: DEFAULT_ABOUT_RULES_HEADING,
           homepageSectionOrder: DEFAULT_HOMEPAGE_SECTION_ORDER_TEXT,
           memberNoticesEnabled: true,
           howWalksWorkEnabled: true,
           howWalksWorkSteps: "",
           beforeYouSetOffTips: "",
           monthlyClockInGoal: null,
+          progressEnabled: true,
+          logoMime: null,
+          logoData: null,
+          faviconMime: null,
+          faviconData: null,
+          reportBannerMime: null,
+          reportBannerData: null,
+          resendAudienceId: null,
+          contactMessagesOwnerId: null,
+          organiserInviteRequired: false,
+          cancelledWalkRetentionDays: DEFAULT_CANCELLED_WALK_RETENTION_DAYS,
+          accidentReportRetentionDays: null,
         },
       });
       await tx.homepageFaqCategory.createMany({
@@ -206,8 +264,15 @@ export async function resetSiteToDefault(
       });
     });
   } catch (err) {
+    if (err instanceof Error && err.message === "NOT_OWNER") {
+      return ownerDenied("reset the site");
+    }
     return logActionError("resetSiteToDefault", err, "Could not reset the site. Try again.");
   }
+
+  // SiteSetting.resendAudienceId was cleared above — drop the in-process
+  // cache so the next campaign doesn't keep mailing the pre-wipe segment.
+  clearAudienceCache();
 
   // List Clerk after the DB wipe so anyone who signed up during the wipe is
   // still revoked — do not trust a pre-transaction snapshot (TOCTOU).
@@ -248,11 +313,17 @@ export async function resetSiteToDefault(
   revalidatePath("/home");
   revalidatePath("/admin");
   revalidatePath("/admin/members");
+  revalidatePath("/admin/messages");
   revalidatePath("/admin/reports");
   revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/subscribers");
+  revalidatePath("/admin/settings/emails");
+  revalidatePath("/admin/settings/retention");
+  revalidatePath("/admin/settings/branding");
   revalidatePath("/walks");
   revalidatePath("/progress");
   revalidatePath("/history");
+  revalidatePath("/admin/guide");
 
   if (clerkFailed > 0) {
     return {

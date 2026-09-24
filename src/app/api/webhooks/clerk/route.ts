@@ -42,20 +42,26 @@ export async function POST(req: NextRequest) {
   }
 
   if (evt.type === "user.deleted" && evt.data.id) {
-    // Same reassignment + last-organiser guard as admin "remove member", under
-    // the same advisory lock so concurrent demote/delete cannot wipe the last
-    // organiser. Journey events Restrict on creator — must reassign too.
+    // Same reassignment + last-organiser / last-owner guards as admin
+    // "remove member", under the same advisory locks so concurrent
+    // demote/delete cannot wipe the last organiser or last owner. Journey
+    // events Restrict on creator — must reassign too.
     try {
-      await prisma.$transaction(async (tx) => {
+      const removedEmail = await prisma.$transaction(async (tx) => {
         await tx.$executeRawUnsafe(
           `SELECT pg_advisory_xact_lock(${COUNT_LIMIT_LOCK_KEYS.lastAdmin})`,
+        );
+        await tx.$executeRawUnsafe(
+          `SELECT pg_advisory_xact_lock(${COUNT_LIMIT_LOCK_KEYS.lastOwner})`,
         );
 
         const target = await tx.user.findUnique({
           where: { clerkId: evt.data.id },
           select: {
             id: true,
+            email: true,
             role: true,
+            isOwner: true,
             _count: {
               select: {
                 walksCreated: true,
@@ -72,6 +78,16 @@ export async function POST(req: NextRequest) {
           if (adminCount <= 1) {
             console.error(
               "clerk webhook: refused to delete last organiser after Clerk user.deleted",
+            );
+            return;
+          }
+        }
+
+        if (target.isOwner) {
+          const ownerCount = await tx.user.count({ where: { isOwner: true } });
+          if (ownerCount <= 1) {
+            console.error(
+              "clerk webhook: refused to delete last owner after Clerk user.deleted",
             );
             return;
           }
@@ -116,7 +132,14 @@ export async function POST(req: NextRequest) {
         }
 
         await tx.user.delete({ where: { id: target.id } });
+        return target.email;
       });
+      if (typeof removedEmail === "string" && removedEmail) {
+        const { syncContactUnsubscribed } = await import("@/lib/email/resend-audience");
+        await syncContactUnsubscribed(removedEmail).catch((err) => {
+          console.error("clerk webhook: failed to remove deleted user from newsletter audience", err);
+        });
+      }
     } catch (err) {
       console.error("clerk webhook: failed to remove local user after Clerk deletion", err);
     }

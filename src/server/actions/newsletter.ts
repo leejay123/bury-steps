@@ -1,23 +1,23 @@
 "use server";
 
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { requesterIpKey } from "@/lib/requester-ip";
 import { parseContactEmail } from "@/lib/contact";
 import { getEmailBrand } from "@/lib/email/brand";
 import { getResendClient, fromAddress } from "@/lib/email/client";
 import { sendNewsletterSubscribedEmail } from "@/lib/email/mailer";
 import { paragraphsFrom } from "@/lib/email/render-template";
 import { getOrCreateAudienceId, syncContactSubscribed, syncContactUnsubscribed } from "@/lib/email/resend-audience";
+import {
+  optInNewsletterEverywhere,
+  optOutNewsletterEverywhere,
+} from "@/lib/email/newsletter-opt-out";
 import { NewsletterCampaignEmail } from "@/lib/email/templates/newsletter-campaign";
+import { makeCapabilityToken } from "@/lib/email/unsubscribe";
 import { type ActionResult, isPrismaCode, logActionError, permissionDenied } from "./shared";
-
-async function requesterKey(): Promise<string> {
-  const h = await headers();
-  return h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
-}
 
 export async function subscribeToNewsletter(
   _prev: ActionResult | null,
@@ -29,7 +29,7 @@ export async function subscribeToNewsletter(
     return { ok: true, message: "Thanks — we'll be in touch." };
   }
 
-  const key = await requesterKey();
+  const key = await requesterIpKey();
   const limited = checkRateLimit(`${key}:subscribeToNewsletter`, 5, 10 * 60_000);
   if (!limited.ok) {
     return { ok: false, error: "Too many attempts. Try again in a few minutes." };
@@ -39,30 +39,39 @@ export async function subscribeToNewsletter(
   if (email === "invalid") return { ok: false, error: "Enter a valid email address." };
 
   try {
-    const existing = await prisma.newsletterSubscriber.findUnique({
-      where: { email },
-      select: { unsubscribedAt: true },
-    });
-    // Already an active subscriber — say so instead of quietly re-sending
-    // the same confirmation email every time they submit the form again.
-    if (existing && !existing.unsubscribedAt) {
-      return { ok: true, message: "You're already subscribed — thanks!" };
+    // Create-first avoids the old findUnique→upsert race: two concurrent
+    // new signups for the same address used to both "update" and rotate the
+    // active unsubscribe token (breaking the first confirmation email).
+    const token = makeCapabilityToken();
+    let subscriber: { email: string; unsubscribeToken: string };
+    try {
+      subscriber = await prisma.newsletterSubscriber.create({
+        data: { email, unsubscribeToken: token },
+        select: { email: true, unsubscribeToken: true },
+      });
+    } catch (err) {
+      if (!isPrismaCode(err, "P2002")) throw err;
+      // Row already exists — only reactivate if they had unsubscribed.
+      // updateMany keyed on unsubscribedAt means a double-click on an
+      // already-active address is a no-op (no second confirmation email).
+      const newToken = makeCapabilityToken();
+      const reactivated = await prisma.newsletterSubscriber.updateMany({
+        where: { email, unsubscribedAt: { not: null } },
+        data: { unsubscribedAt: null, unsubscribeToken: newToken },
+      });
+      if (reactivated.count === 0) {
+        return { ok: true, message: "You're already subscribed — thanks!" };
+      }
+      subscriber = { email, unsubscribeToken: newToken };
     }
-
-    // Upsert rather than create: resubscribing after a previous unsubscribe
-    // should just clear unsubscribedAt, not fail on the unique email index.
-    const subscriber = await prisma.newsletterSubscriber.upsert({
-      where: { email },
-      create: { email },
-      update: { unsubscribedAt: null },
-      select: { email: true, unsubscribeToken: true },
-    });
 
     await Promise.all([
       sendNewsletterSubscribedEmail(subscriber).catch((err) => {
         console.error("subscribeToNewsletter: failed to send confirmation email", err);
       }),
-      syncContactSubscribed(subscriber.email),
+      // Mirror into User.emailNewsletter + Resend — footer-only opt-in must
+      // not leave a member preference stuck off (or the reverse on opt-out).
+      optInNewsletterEverywhere(subscriber.email),
     ]);
   } catch (err) {
     return logActionError("subscribeToNewsletter", err, "Could not subscribe. Try again.");
@@ -82,6 +91,48 @@ export async function subscribeToNewsletter(
  * doing them one-by-one made sending to even a handful of people feel
  * slow for no real benefit.
  */
+async function loadCampaignRecipients(): Promise<{
+  recipients: Map<string, string | null>;
+  footerUnsubscribed: Set<string>;
+}> {
+  const [footerSubscribers, newsletterMembers, optedOutFooter] = await Promise.all([
+    prisma.newsletterSubscriber.findMany({
+      where: { unsubscribedAt: null },
+      select: { email: true },
+    }),
+    prisma.user.findMany({
+      where: { emailNewsletter: true },
+      select: { email: true, firstName: true },
+    }),
+    // Real unsubscribe signal only — User.emailNewsletter defaults to false
+    // for every account, which is "never opted into the member toggle", not
+    // "opted out of newsletter". Treating default-off as blocked would skip
+    // active footer subscribers who also have a User row.
+    prisma.newsletterSubscriber.findMany({
+      where: { unsubscribedAt: { not: null } },
+      select: { email: true },
+    }),
+  ]);
+
+  const footerUnsubscribed = new Set(
+    optedOutFooter.map((row) => row.email.toLowerCase()),
+  );
+  // Keyed by lowercased email so an old case-variant duplicate (e.g. from
+  // before parseContactEmail lowercased on the way in) is only synced
+  // once, not sent the campaign twice under two different-cased contacts.
+  const recipients = new Map<string, string | null>();
+  for (const subscriber of footerSubscribers) {
+    recipients.set(subscriber.email.toLowerCase(), null);
+  }
+  for (const member of newsletterMembers) {
+    const key = member.email.toLowerCase();
+    // Mirror-lag defense: footer unsubscribe wins over a stale member toggle.
+    if (footerUnsubscribed.has(key)) continue;
+    recipients.set(key, member.firstName);
+  }
+  return { recipients, footerUnsubscribed };
+}
+
 export async function sendNewsletterCampaign(
   _prev: ActionResult | null,
   formData: FormData,
@@ -105,27 +156,7 @@ export async function sendNewsletterCampaign(
   if (!audienceId) return { ok: false, error: "Could not reach Resend to set up the newsletter audience." };
 
   try {
-    const [footerSubscribers, newsletterMembers] = await Promise.all([
-      prisma.newsletterSubscriber.findMany({
-        where: { unsubscribedAt: null },
-        select: { email: true },
-      }),
-      prisma.user.findMany({
-        where: { emailNewsletter: true },
-        select: { email: true, firstName: true },
-      }),
-    ]);
-
-    // Keyed by lowercased email so an old case-variant duplicate (e.g. from
-    // before parseContactEmail lowercased on the way in) is only synced
-    // once, not sent the campaign twice under two different-cased contacts.
-    const uniqueByEmail = new Map<string, string | null>();
-    for (const subscriber of footerSubscribers) {
-      uniqueByEmail.set(subscriber.email.toLowerCase(), null);
-    }
-    for (const member of newsletterMembers) {
-      uniqueByEmail.set(member.email.toLowerCase(), member.firstName);
-    }
+    const initial = await loadCampaignRecipients();
     // Resend's Contacts API has no batch/bulk endpoint (unlike /emails/batch
     // — see sendEmailBatch in lib/email/client.ts), so this stays one
     // request per contact. A small chunk of concurrent requests at a time,
@@ -133,10 +164,27 @@ export async function sendNewsletterCampaign(
     // keeps a large subscriber list from bursting well past Resend's
     // ~10-requests/second rate limit (https://resend.com/docs/api-reference/rate-limit).
     const CONTACT_SYNC_CHUNK_SIZE = 10;
-    const contacts = [...uniqueByEmail];
+    const contacts = [...initial.recipients];
     for (let i = 0; i < contacts.length; i += CONTACT_SYNC_CHUNK_SIZE) {
       const chunk = contacts.slice(i, i + CONTACT_SYNC_CHUNK_SIZE);
-      await Promise.all(chunk.map(([email, firstName]) => syncContactSubscribed(email, firstName)));
+      // Fresh read per chunk — a concurrent opt-out after the snapshot must
+      // not be force-subscribed back into Resend before the broadcast.
+      const fresh = await loadCampaignRecipients();
+      await Promise.all(
+        chunk.map(([email, firstName]) => {
+          if (!fresh.recipients.has(email)) return syncContactUnsubscribed(email);
+          return syncContactSubscribed(email, fresh.recipients.get(email) ?? firstName);
+        }),
+      );
+    }
+
+    // Drop anyone with a real footer unsubscribe from the Resend segment
+    // before broadcasting — a stale contact would still get the campaign.
+    const final = await loadCampaignRecipients();
+    const blockedEmails = [...final.footerUnsubscribed];
+    for (let i = 0; i < blockedEmails.length; i += CONTACT_SYNC_CHUNK_SIZE) {
+      const chunk = blockedEmails.slice(i, i + CONTACT_SYNC_CHUNK_SIZE);
+      await Promise.all(chunk.map((email) => syncContactUnsubscribed(email)));
     }
 
     const brand = await getEmailBrand();
@@ -177,7 +225,7 @@ export async function removeNewsletterSubscriber(
       where: { id },
       select: { email: true },
     });
-    await syncContactUnsubscribed(subscriber.email);
+    await optOutNewsletterEverywhere(subscriber.email);
   } catch (err) {
     if (isPrismaCode(err, "P2025")) return { ok: true, message: "Already removed." };
     return logActionError("removeNewsletterSubscriber", err, "Could not remove that subscriber. Try again.");
@@ -187,17 +235,54 @@ export async function removeNewsletterSubscriber(
   return { ok: true, message: "Subscriber removed." };
 }
 
-/** Powers the one-click unsubscribe link in every newsletter email's footer. */
+/** Powers the one-click unsubscribe link in every newsletter email's footer.
+ * Prefer {@link confirmNewsletterUnsubscribe} from the confirm page so Safe
+ * Links scanners cannot unsubscribe someone on a mere GET. */
 export async function unsubscribeFromNewsletter(token: string): Promise<boolean> {
+  if (!token) return false;
+  const limited = checkRateLimit(`newsletterUnsub:${token}`, 20, 60_000);
+  if (!limited.ok) return false;
+
   try {
-    const subscriber = await prisma.newsletterSubscriber.update({
-      where: { unsubscribeToken: token },
+    // Only the first call wins — a double Safe Links prefetch must not keep
+    // rewriting unsubscribedAt, and a second confirm should still succeed
+    // idempotently once they are already off the list.
+    const claimed = await prisma.newsletterSubscriber.updateMany({
+      where: { unsubscribeToken: token, unsubscribedAt: null },
       data: { unsubscribedAt: new Date() },
-      select: { email: true },
     });
-    await syncContactUnsubscribed(subscriber.email);
-    return true;
+    if (claimed.count === 1) {
+      const subscriber = await prisma.newsletterSubscriber.findUnique({
+        where: { unsubscribeToken: token },
+        select: { email: true },
+      });
+      if (subscriber) await optOutNewsletterEverywhere(subscriber.email);
+      return true;
+    }
+    const existing = await prisma.newsletterSubscriber.findUnique({
+      where: { unsubscribeToken: token },
+      select: { email: true, unsubscribedAt: true },
+    });
+    if (existing?.unsubscribedAt) {
+      // Idempotent confirm — still mirror in case a prior run only cleared
+      // the footer row before crashing.
+      await optOutNewsletterEverywhere(existing.email);
+      return true;
+    }
+    return false;
   } catch {
     return false;
   }
+}
+
+/** Form action for the public confirm-unsubscribe page. */
+export async function confirmNewsletterUnsubscribe(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const token = String(formData.get("token") ?? "");
+  if (!token) return { ok: false, error: "This link is missing its token." };
+  const ok = await unsubscribeFromNewsletter(token);
+  if (!ok) return { ok: false, error: "This unsubscribe link is invalid or has already been used." };
+  return { ok: true, message: "You've been unsubscribed." };
 }

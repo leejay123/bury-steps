@@ -1,10 +1,9 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const { prismaMock, requireUser, syncContactSubscribed, syncContactUnsubscribed } = vi.hoisted(() => ({
+const { prismaMock, requireUser, syncNewsletterAudienceToPreference } = vi.hoisted(() => ({
   prismaMock: { user: { update: vi.fn(), findUnique: vi.fn() } },
   requireUser: vi.fn(),
-  syncContactSubscribed: vi.fn(),
-  syncContactUnsubscribed: vi.fn(),
+  syncNewsletterAudienceToPreference: vi.fn(async () => {}),
 }));
 
 vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
@@ -12,9 +11,9 @@ vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
   return { ...actual, requireUser };
 });
-// Real syncing hits Resend and the DB-cached audience id — out of scope for
-// these tests, which only care that the preferences row itself is saved.
-vi.mock("@/lib/email/resend-audience", () => ({ syncContactSubscribed, syncContactUnsubscribed }));
+vi.mock("@/lib/email/newsletter-opt-out", () => ({
+  syncNewsletterAudienceToPreference,
+}));
 
 import { updateMemberEmailPreferences, updateMyEmailPreferences } from "./email-preferences";
 
@@ -36,7 +35,7 @@ describe("updateMemberEmailPreferences", () => {
   });
 
   it("saves checked boxes as true and omitted ones as false", async () => {
-    prismaMock.user.findUnique.mockResolvedValueOnce({ emailNewsletter: false });
+    prismaMock.user.findUnique.mockResolvedValueOnce({ role: "MEMBER" });
     prismaMock.user.update.mockResolvedValueOnce({ email: "a@example.com", firstName: null });
 
     const result = await updateMemberEmailPreferences(
@@ -59,12 +58,11 @@ describe("updateMemberEmailPreferences", () => {
       },
       select: { email: true, firstName: true },
     });
+    expect(syncNewsletterAudienceToPreference).toHaveBeenCalledWith("a@example.com", null);
     expect(result).toEqual({ ok: true, message: "Your email preferences have been saved." });
   });
 
   it("reports an invalid link for an unknown token instead of a generic error", async () => {
-    // No matching row — findUnique resolves null, so the update below is
-    // never reached at all.
     prismaMock.user.findUnique.mockResolvedValueOnce(null);
     const result = await updateMemberEmailPreferences(null, form({ token: "does-not-exist" }));
     expect(result).toEqual({ ok: false, error: "This link is invalid or has expired." });
@@ -72,14 +70,14 @@ describe("updateMemberEmailPreferences", () => {
   });
 
   it("reports an invalid link if the row disappears between the check and the save", async () => {
-    prismaMock.user.findUnique.mockResolvedValueOnce({ emailNewsletter: false });
+    prismaMock.user.findUnique.mockResolvedValueOnce({ role: "MEMBER" });
     prismaMock.user.update.mockRejectedValueOnce({ code: "P2025" });
     const result = await updateMemberEmailPreferences(null, form({ token: "tok123" }));
     expect(result).toEqual({ ok: false, error: "This link is invalid or has expired." });
   });
 
   it("saves an organiser's accident-alert preference independently", async () => {
-    prismaMock.user.findUnique.mockResolvedValueOnce({ emailNewsletter: false, role: "ADMIN" });
+    prismaMock.user.findUnique.mockResolvedValueOnce({ role: "ADMIN" });
     prismaMock.user.update.mockResolvedValueOnce({ email: "a@example.com", firstName: null });
 
     await updateMemberEmailPreferences(
@@ -95,7 +93,7 @@ describe("updateMemberEmailPreferences", () => {
   });
 
   it("leaves a plain member's accident-alert default alone, so it survives a later promotion", async () => {
-    prismaMock.user.findUnique.mockResolvedValueOnce({ emailNewsletter: false, role: "MEMBER" });
+    prismaMock.user.findUnique.mockResolvedValueOnce({ role: "MEMBER" });
     prismaMock.user.update.mockResolvedValueOnce({ email: "a@example.com", firstName: null });
 
     await updateMemberEmailPreferences(null, form({ token: "tok123" }));
@@ -104,23 +102,26 @@ describe("updateMemberEmailPreferences", () => {
     expect(data).not.toHaveProperty("emailAccidentAlerts");
   });
 
-  it("finishes removing an unsubscribed member from the newsletter audience before returning", async () => {
-    prismaMock.user.findUnique.mockResolvedValueOnce({ emailNewsletter: true, role: "MEMBER" });
-    prismaMock.user.update.mockResolvedValueOnce({ email: "a@example.com", firstName: null });
+  it("always aligns Resend to the saved preference, including newsletter opt-in", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({ role: "MEMBER" });
+    prismaMock.user.update.mockResolvedValueOnce({ email: "a@example.com", firstName: "Ada" });
 
-    await updateMemberEmailPreferences(null, form({ token: "tok123" }));
+    await updateMemberEmailPreferences(
+      null,
+      form({ token: "tok123", emailNewsletter: "on" }),
+    );
 
-    expect(syncContactUnsubscribed).toHaveBeenCalledWith("a@example.com");
+    expect(syncNewsletterAudienceToPreference).toHaveBeenCalledWith("a@example.com", "Ada");
   });
 });
 
 describe("updateMyEmailPreferences", () => {
   beforeEach(() => {
-    requireUser.mockResolvedValue({ id: "user-1", role: "MEMBER" });
+    requireUser.mockResolvedValue({ id: "user-1", role: "MEMBER", email: "a@example.com", firstName: null });
   });
 
   it("saves preferences for the signed-in user, no token needed", async () => {
-    prismaMock.user.update.mockResolvedValueOnce({});
+    prismaMock.user.update.mockResolvedValueOnce({ email: "a@example.com", firstName: null });
 
     const result = await updateMyEmailPreferences(
       null,
@@ -135,7 +136,9 @@ describe("updateMyEmailPreferences", () => {
         emailProgress: false,
         emailNewsletter: true,
       },
+      select: { email: true, firstName: true },
     });
+    expect(syncNewsletterAudienceToPreference).toHaveBeenCalledWith("a@example.com", null);
     expect(result).toEqual({ ok: true, message: "Your email preferences have been saved." });
   });
 

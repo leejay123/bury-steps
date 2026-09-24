@@ -4,12 +4,23 @@ import { Badge } from "@/components/ui/badge";
 import { ReportRetentionToggle } from "./report-retention-toggle";
 import type { ReportView } from "./types";
 
-export function ReportReadView({ report }: { report: ReportView }) {
+export function ReportReadView({
+  canEdit,
+  canViewMembers = false,
+  report,
+}: {
+  canEdit: boolean;
+  /** permMembersView — member name badges link to their page only when true. */
+  canViewMembers?: boolean;
+  report: ReportView;
+}) {
   const at = new Date(report.happenedAt);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain px-4">
-      <ReportRetentionToggle locked={report.retentionLocked} reportId={report.id} />
+      {canEdit ? (
+        <ReportRetentionToggle locked={report.retentionLocked} reportId={report.id} />
+      ) : null}
       <div className="flex flex-col gap-1">
         <p className="text-xs font-medium text-muted-foreground">When</p>
         <p className="text-sm">
@@ -30,11 +41,17 @@ export function ReportReadView({ report }: { report: ReportView }) {
         <p className="text-xs font-medium text-muted-foreground">Who was involved</p>
         {report.involvedMembers.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
-            {report.involvedMembers.map((member) => (
-              <Badge asChild key={member.id} variant="secondary">
-                <Link href={`/admin/members/${member.id}`}>{member.name}</Link>
-              </Badge>
-            ))}
+            {report.involvedMembers.map((member) =>
+              canViewMembers ? (
+                <Badge asChild key={member.id} variant="secondary">
+                  <Link href={`/admin/members/${member.id}`}>{member.name}</Link>
+                </Badge>
+              ) : (
+                <Badge key={member.id} variant="secondary">
+                  {member.name}
+                </Badge>
+              ),
+            )}
           </div>
         ) : null}
         {report.whoInvolved ? (

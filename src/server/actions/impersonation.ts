@@ -3,7 +3,8 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { requireAdmin, displayName } from "@/lib/auth";
-import { isOwner } from "@/lib/site-owner";
+import { isTrustedClerkActorUrl } from "@/lib/clerk-actor-url";
+import { isOwner, actorStillOwner } from "@/lib/site-owner";
 import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { type ActionResult, logActionError, ownerDenied } from "./shared";
@@ -47,8 +48,27 @@ export async function startImpersonation(
 
   try {
     const clerk = await clerkClient();
+    // Re-check owner + role immediately before minting — concurrent
+    // removeOwner / promote must not leave an actor token behind.
+    const fresh = await prisma.user.findUnique({
+      where: { id: target.id },
+      select: {
+        id: true,
+        clerkId: true,
+        role: true,
+        isOwner: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+      },
+    });
+    if (!(await actorStillOwner(admin.id))) return ownerDenied("log in as a member");
+    if (!fresh || fresh.role !== "MEMBER") {
+      return { ok: false, error: "You can only log in as a member, not another organiser." };
+    }
+
     const actorToken = await clerk.actorTokens.create({
-      userId: target.clerkId,
+      userId: fresh.clerkId,
       actor: { sub: admin.clerkId },
       // Short-lived on purpose — this is a one-time sign-in link, not a
       // standing credential.
@@ -60,16 +80,20 @@ export async function startImpersonation(
         adminId: admin.id,
         adminName: displayName(admin),
         adminEmail: admin.email,
-        targetId: target.id,
-        targetName: displayName(target),
-        targetEmail: target.email,
+        targetId: fresh.id,
+        targetName: displayName(fresh),
+        targetEmail: fresh.email,
       },
     });
 
     if (!actorToken.url) return { ok: false, error: "Clerk did not return a sign-in link. Try again." };
+    if (!isTrustedClerkActorUrl(actorToken.url)) {
+      console.error("startImpersonation: unexpected actor token host", actorToken.url);
+      return { ok: false, error: "Could not start that sign-in. Try again." };
+    }
     return {
       ok: true,
-      message: `Signed in as ${displayName(target)}.`,
+      message: `Signed in as ${displayName(fresh)}.`,
       href: actorToken.url,
     };
   } catch (err) {

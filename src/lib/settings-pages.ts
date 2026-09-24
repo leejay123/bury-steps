@@ -178,8 +178,8 @@ export const SETTINGS_PAGE_GROUPS: SettingsPageGroup[] = [
       {
         href: "/admin/settings/reset",
         title: "Reset the site",
-        description: "Delete every walk, member and homepage change, and start again from scratch. This can't be undone.",
-        keywords: "wipe delete everything start over",
+        description: "Delete every walk, member, message, subscriber and homepage change, and start again from scratch. This can't be undone.",
+        keywords: "wipe delete everything start over messages subscribers",
         permission: "permCacheReset",
         danger: true,
       },

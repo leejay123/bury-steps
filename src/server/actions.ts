@@ -134,6 +134,7 @@ export {
 export {
   subscribeToNewsletter,
   unsubscribeFromNewsletter,
+  confirmNewsletterUnsubscribe,
   sendNewsletterCampaign,
   removeNewsletterSubscriber,
 } from "./actions/newsletter";

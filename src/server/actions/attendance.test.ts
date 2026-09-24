@@ -48,11 +48,15 @@ const {
 vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("@/lib/db", () => ({ prisma: { ...prismaMock, $transaction: transaction } }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
-vi.mock("@/lib/walk-window", () => ({
-  canOrganiserAddAttendance,
-  organiserRecordedClockInAt,
-  windowState,
-}));
+vi.mock("@/lib/walk-window", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/walk-window")>("@/lib/walk-window");
+  return {
+    ...actual,
+    canOrganiserAddAttendance,
+    organiserRecordedClockInAt,
+    windowState,
+  };
+});
 vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
   return { ...actual, requireAdmin, requireUser };
@@ -356,12 +360,37 @@ describe("adminClockIn", () => {
 
     await adminClockIn(
       null,
-      adminClockInForm({ clockedInAt: "2026-01-05T14:05", clockedOutAt: "2026-01-05T15:35" }),
+      adminClockInForm({ clockedInAt: "2026-01-05T14:05", clockedOutAt: "2026-01-05T14:45" }),
     );
 
     const data = prismaMock.attendance.create.mock.calls[0][0].data;
     expect(data.clockedInAt.toISOString()).toBe("2026-01-05T14:05:00.000Z");
-    expect(data.clockedOutAt.toISOString()).toBe("2026-01-05T15:35:00.000Z");
+    expect(data.clockedOutAt.toISOString()).toBe("2026-01-05T14:45:00.000Z");
+  });
+
+  it("rejects a clock-in or clock-out time outside the walk's open window", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce(member);
+    queryRaw.mockResolvedValueOnce([lockedWalkRow()]);
+
+    const tooEarly = await adminClockIn(
+      null,
+      adminClockInForm({ clockedInAt: "2026-01-05T12:00" }),
+    );
+    expect(tooEarly).toEqual({
+      ok: false,
+      error: "Clock-in time must fall between when clock-in opens and when the walk finishes.",
+    });
+
+    prismaMock.user.findUnique.mockResolvedValueOnce(member);
+    queryRaw.mockResolvedValueOnce([lockedWalkRow()]);
+    const outAfterEnd = await adminClockIn(
+      null,
+      adminClockInForm({ clockedInAt: "2026-01-05T14:30", clockedOutAt: "2026-01-05T16:00" }),
+    );
+    expect(outAfterEnd).toEqual({
+      ok: false,
+      error: "Clock-out time can't be after the walk finished.",
+    });
   });
 
   it("leaves clockedOutAt null when no clock-out time is given", async () => {

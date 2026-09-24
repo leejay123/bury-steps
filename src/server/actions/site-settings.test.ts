@@ -1,8 +1,9 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const { requireAdmin, prismaMock } = vi.hoisted(() => ({
+const { requireAdmin, prismaMock, actorStillOwner } = vi.hoisted(() => ({
   requireAdmin: vi.fn(),
   prismaMock: { siteSetting: { upsert: vi.fn() }, user: { findUnique: vi.fn() } },
+  actorStillOwner: vi.fn(async () => true),
 }));
 
 vi.mock("next/cache", () => ({
@@ -11,6 +12,7 @@ vi.mock("next/cache", () => ({
   unstable_cache: (fn: unknown) => fn,
 }));
 vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
+vi.mock("@/lib/site-owner", () => ({ actorStillOwner }));
 vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
   return { ...actual, requireAdmin };
@@ -65,6 +67,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   requireAdmin.mockResolvedValue(ADMIN);
   prismaMock.siteSetting.upsert.mockResolvedValue({});
+  actorStillOwner.mockResolvedValue(true);
 });
 
 describe("Site settings permission guard", () => {
@@ -89,6 +92,32 @@ describe("Site settings permission guard", () => {
     requireAdmin.mockResolvedValueOnce({ ...ADMIN, permProgress: false });
     const result = await updateMonthlyClockInGoal(null, form({ monthlyClockInGoal: "150" }));
     expect(result).toEqual({ ok: false, error: "You do not have permission to manage the progress goal." });
+    expect(prismaMock.siteSetting.upsert).not.toHaveBeenCalled();
+  });
+
+  it("rejects updateCancelledWalkRetentionDays for an organiser without the Cache & reset permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permCacheReset: false });
+    const result = await updateCancelledWalkRetentionDays(
+      null,
+      form({ cancelledWalkRetentionDays: "30" }),
+    );
+    expect(result).toEqual({
+      ok: false,
+      error: "You do not have permission to manage the site cache and reset.",
+    });
+    expect(prismaMock.siteSetting.upsert).not.toHaveBeenCalled();
+  });
+
+  it("rejects updateAccidentReportRetentionDays for an organiser without the Cache & reset permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permCacheReset: false });
+    const result = await updateAccidentReportRetentionDays(
+      null,
+      form({ accidentReportRetentionDays: "90" }),
+    );
+    expect(result).toEqual({
+      ok: false,
+      error: "You do not have permission to manage the site cache and reset.",
+    });
     expect(prismaMock.siteSetting.upsert).not.toHaveBeenCalled();
   });
 });

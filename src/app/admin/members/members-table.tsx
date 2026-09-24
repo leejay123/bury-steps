@@ -122,20 +122,24 @@ function MemberListRow({
   }[] = [];
 
   if (member.pendingInvite) {
-    actions.push({
-      key: "resend",
-      menuItem: <ResendInviteButton asMenuItem key="resend" onDone={onChanged} userId={member.id} />,
-    });
-    actions.push({
-      key: "cancel",
-      menuItem: <CancelInviteButton asMenuItem key="cancel" onDone={onChanged} userId={member.id} />,
-    });
+    // Resend/cancel are owner-only on the server — hide the menu items for
+    // plain organisers so a stale UI does not advertise actions that fail.
+    if (viewerIsOwner) {
+      actions.push({
+        key: "resend",
+        menuItem: <ResendInviteButton asMenuItem key="resend" onDone={onChanged} userId={member.id} />,
+      });
+      actions.push({
+        key: "cancel",
+        menuItem: <CancelInviteButton asMenuItem key="cancel" onDone={onChanged} userId={member.id} />,
+      });
+    }
   } else if (
     // Changing your own role here would be easy to hit by
     // mistake and immediately cost you organiser access to
     // fix it — same reasoning as hiding your own Remove
     // action below. Another organiser can change it for you
-    // instead. Promoting/demoting/editing permissions is
+    // instead. Promoting/demoting and managing owner access is
     // also owner-only regardless of whose row this is.
     !member.isYou &&
     viewerIsOwner
@@ -230,7 +234,7 @@ function MemberListRow({
     }
   }
 
-  if (!member.isYou && !member.isOwner) {
+  if (!member.isYou && !member.isOwner && viewerIsOwner) {
     const deleteRef: { current: HTMLButtonElement | null } = { current: null };
     actions.push({
       key: "delete",

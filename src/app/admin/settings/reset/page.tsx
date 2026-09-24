@@ -9,7 +9,7 @@ export default async function ResetSiteSettingsPage() {
 
   return (
     <SettingsPage
-      description="Wipe walks, members, and homepage edits, and put the starter content back. You stay the organiser."
+      description="Wipe walks, members, messages, subscribers, and homepage edits, and put the starter content back. You stay the organiser."
       title="Reset the site"
     >
       <ResetSiteForm />

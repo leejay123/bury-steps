@@ -11,8 +11,9 @@ export function PrivacySiteSection() {
         <AccordionContent>
           <GuideBody>
             <p>
-              Health notes from the pre-walk check are only for organisers. Members never see each
-              other’s notes or clock-out reasons.
+              Health notes from the pre-walk check are only for site owners. Plain organisers
+              and members never see each other’s notes. Clock-out reasons on the roster are
+              visible to organisers with attendance access.
             </p>
             <p>
               Those notes are deleted automatically <strong>90 days</strong> after the walk. The

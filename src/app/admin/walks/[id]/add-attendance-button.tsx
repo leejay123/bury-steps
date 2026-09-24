@@ -171,7 +171,9 @@ function AddAttendanceDialogForm({
                 <Label htmlFor={`add-clocked-out-${walkId}`}>Clocked out</Label>
                 <DateTimePicker id={`add-clocked-out-${walkId}`} name="clockedOutAt" />
                 <p className="text-xs text-muted-foreground">
-                  Leave blank if they’re still on the walk.
+                  {walkCompleted
+                    ? "Leave blank if they stayed to the end."
+                    : "Leave blank if they’re still on the walk."}
                 </p>
               </div>
             </div>
