@@ -55,11 +55,8 @@ export async function generateViewport(): Promise<Viewport> {
     themeColor: "#111111",
     width: "device-width",
     initialScale: 1,
-    // No maximumScale / userScalable:false — blocking pinch-zoom fails WCAG
-    // 1.4.4 (people with low vision rely on it), and Android honours it
-    // outright. It was only ever here to stop iOS zooming into a focused
-    // field, which 16px form text prevents instead (see the touch-screen
-    // font-size rule in globals.css).
+    maximumScale: 1,
+    userScalable: false,
     viewportFit: "cover",
     // Chrome/Android: resize the layout with the keyboard instead of
     // overlaying it (that overlay is what feels like a zoom/jump).

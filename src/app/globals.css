@@ -230,21 +230,6 @@ body {
   }
 }
 
-/*
- * Touch screens: every text field at least 16px. iOS Safari zooms the
- * page into any focused field smaller than that — our own Input/Textarea
- * are already 16px below md, but this also covers fields we don't style
- * (Clerk's account pop-up, the browser's own date/number pickers), which
- * is what lets the viewport allow pinch-zoom again (see generateViewport).
- */
-@media (pointer: coarse) {
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
-  select,
-  textarea {
-    font-size: max(16px, 1em);
-  }
-}
-
 .cl-modalBackdrop {
   backdrop-filter: blur(16px) saturate(1.15);
   -webkit-backdrop-filter: blur(16px) saturate(1.15);
