@@ -67,6 +67,25 @@ describe("syncLocalUser", () => {
     expect(optOutNewsletterEverywhere).not.toHaveBeenCalled();
   });
 
+  it("ignores a blank Clerk email instead of clearing the local address", async () => {
+    const existing = {
+      id: "user-1",
+      clerkId: INPUT.clerkId,
+      email: "kept@example.com",
+      role: "MEMBER",
+    };
+    prismaMock.user.findUnique.mockResolvedValueOnce(existing);
+    prismaMock.user.update.mockResolvedValueOnce(existing);
+
+    await syncLocalUser({ ...INPUT, email: "   " });
+
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { clerkId: INPUT.clerkId },
+      data: { firstName: INPUT.firstName, lastName: INPUT.lastName },
+    });
+    expect(optOutNewsletterEverywhere).not.toHaveBeenCalled();
+  });
+
   it("opts the old address out of newsletter and syncs the new one when email changes", async () => {
     const existing = {
       id: "user-1",

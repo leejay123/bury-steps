@@ -1015,11 +1015,29 @@ describe("setMemberRole — organiser invite required", () => {
       "invite-token-123",
       ORGANISER_PERMISSIONS,
     );
-    expect(transaction).not.toHaveBeenCalled();
+    expect(transaction).toHaveBeenCalled();
     expect(result).toEqual({
       ok: true,
       message: "Invite sent to Jo Bloggs. They'll become an organiser once they accept it.",
     });
+  });
+
+  it("refuses to mint an invite when ownership is revoked under the lock", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce(target);
+    prismaMock.siteSetting.findUnique.mockResolvedValueOnce({ organiserInviteRequired: true });
+    actorStillOwner.mockResolvedValueOnce(false);
+
+    const result = await setMemberRole(
+      null,
+      roleForm({ userId: target.id, role: "ADMIN", confirm: "confirm" }),
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Only a site owner can change an organiser's role.",
+    });
+    expect(prismaMock.user.updateMany).not.toHaveBeenCalled();
+    expect(sendOrganiserInviteEmail).not.toHaveBeenCalled();
   });
 
   it("still promotes immediately when the setting is off", async () => {

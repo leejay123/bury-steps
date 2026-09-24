@@ -37,19 +37,25 @@ export async function syncLocalUser(input: {
     const existing = await tx.user.findUnique({ where: { clerkId: input.clerkId } });
     if (existing) {
       const nextEmail = input.email.trim();
-      if (
-        nextEmail &&
-        existing.email.trim().toLowerCase() !== nextEmail.toLowerCase()
-      ) {
-        previousEmail = existing.email;
+      // Blank Clerk email must not wipe a known address (and skip newsletter
+      // opt-out of the old one). Treat empty as "no email change".
+      const data: {
+        email?: string;
+        firstName: string | null;
+        lastName: string | null;
+      } = {
+        firstName: input.firstName,
+        lastName: input.lastName,
+      };
+      if (nextEmail) {
+        if (existing.email.trim().toLowerCase() !== nextEmail.toLowerCase()) {
+          previousEmail = existing.email;
+        }
+        data.email = nextEmail;
       }
       return tx.user.update({
         where: { clerkId: input.clerkId },
-        data: {
-          email: input.email,
-          firstName: input.firstName,
-          lastName: input.lastName,
-        },
+        data,
       });
     }
 

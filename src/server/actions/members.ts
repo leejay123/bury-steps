@@ -426,10 +426,7 @@ export async function setMemberRole(
       select: { organiserInviteRequired: true },
     });
     if (setting?.organiserInviteRequired) {
-      if (!(await actorStillOwner(admin.id))) {
-        return ownerDenied("change an organiser's role");
-      }
-      return sendOrganiserInvite(target);
+      return sendOrganiserInvite(admin.id, target);
     }
   }
 
@@ -708,33 +705,48 @@ export async function removeOwner(
 /** Issues (or reissues) an organiser invite — shared by setMemberRole's
  * promote branch and resendOrganiserInvite. Role stays MEMBER; only
  * acceptOrganiserInvite ever flips it to ADMIN. */
-async function sendOrganiserInvite(target: {
-  id: string;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-}): Promise<ActionResult> {
+async function sendOrganiserInvite(
+  adminId: string,
+  target: {
+    id: string;
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+  },
+  ownerAction = "change an organiser's role",
+): Promise<ActionResult> {
   const token = makeOrganiserInviteToken();
   const expiresAt = organiserInviteExpiresAt();
 
   try {
-    // Only a still-MEMBER row can hold an invite — a concurrent accept or
-    // direct promote must not be overwritten with a fresh unused token.
-    const claimed = await prisma.user.updateMany({
-      where: { id: target.id, role: "MEMBER" },
-      data: {
-        organiserInviteToken: token,
-        organiserInviteSentAt: new Date(),
-        organiserInviteExpiresAt: expiresAt,
-      },
+    // Same owner locks as direct promote — a concurrent removeOwner after
+    // the caller's pre-check must not still mint an invite that escalates
+    // to ADMIN.
+    await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.lastAdmin, async (tx) => {
+      await tx.$executeRawUnsafe(`SELECT pg_advisory_xact_lock(${COUNT_LIMIT_LOCK_KEYS.lastOwner})`);
+      if (!(await actorStillOwner(adminId, tx))) throw new Error("NOT_OWNER");
+      // Only a still-MEMBER row can hold an invite — a concurrent accept or
+      // direct promote must not be overwritten with a fresh unused token.
+      const claimed = await tx.user.updateMany({
+        where: { id: target.id, role: "MEMBER" },
+        data: {
+          organiserInviteToken: token,
+          organiserInviteSentAt: new Date(),
+          organiserInviteExpiresAt: expiresAt,
+        },
+      });
+      if (claimed.count !== 1) throw new Error("INVITE_INELIGIBLE");
     });
-    if (claimed.count !== 1) {
+  } catch (err) {
+    if (err instanceof Error && err.message === "NOT_OWNER") {
+      return ownerDenied(ownerAction);
+    }
+    if (err instanceof Error && err.message === "INVITE_INELIGIBLE") {
       return {
         ok: false,
         error: "That member is no longer eligible for an organiser invite.",
       };
     }
-  } catch (err) {
     return logActionError("setMemberRole", err, "Could not send the invite. Try again.");
   }
 
@@ -776,9 +788,8 @@ export async function resendOrganiserInvite(
   if (target.role !== "MEMBER" || !target.organiserInviteToken) {
     return { ok: false, error: "There is no pending invite for this person." };
   }
-  if (!(await actorStillOwner(admin.id))) return ownerDenied("resend an organiser invite");
 
-  return sendOrganiserInvite(target);
+  return sendOrganiserInvite(admin.id, target, "resend an organiser invite");
 }
 
 export async function cancelOrganiserInvite(
