@@ -168,6 +168,8 @@ export function WalksSection({
               "Auto-delete for cancelled walks is currently off, so a cancelled walk is kept until it's reopened or removed by hand."
             )}{" "}
             Set the number of days, or turn auto-delete off, in Settings → Data retention.
+            On a cancelled walk, owners can flag it to keep it past that window; reopening
+            the walk clears the flag so a later cancel uses the normal schedule again.
           </p>
           <p>
             Open the walk from the list. <strong>Attendance</strong> is names and clock-in time

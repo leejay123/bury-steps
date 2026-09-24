@@ -29,12 +29,20 @@ export async function syncLocalUser(input: {
   lastName: string | null;
 }): Promise<User> {
   let isNewUser = false;
+  let previousEmail: string | null = null;
 
   const user = await prisma.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(847291)`;
 
     const existing = await tx.user.findUnique({ where: { clerkId: input.clerkId } });
     if (existing) {
+      const nextEmail = input.email.trim();
+      if (
+        nextEmail &&
+        existing.email.trim().toLowerCase() !== nextEmail.toLowerCase()
+      ) {
+        previousEmail = existing.email;
+      }
       return tx.user.update({
         where: { clerkId: input.clerkId },
         data: {
@@ -116,6 +124,21 @@ export async function syncLocalUser(input: {
     const { sendWelcomeEmail } = await import("./email/mailer");
     await sendWelcomeEmail(user).catch((err) => {
       console.error("[local-user] Failed to send welcome email", err);
+    });
+  }
+
+  // Clerk email change: clear the old address from footer + Resend so
+  // campaigns do not keep mailing a vacated inbox, then align the new
+  // address with the saved member newsletter preference.
+  if (previousEmail) {
+    const { optOutNewsletterEverywhere, syncNewsletterAudienceToPreference } = await import(
+      "./email/newsletter-opt-out"
+    );
+    await optOutNewsletterEverywhere(previousEmail).catch((err) => {
+      console.error("[local-user] Failed to opt old email out of newsletter after change", err);
+    });
+    await syncNewsletterAudienceToPreference(user.email, user.firstName).catch((err) => {
+      console.error("[local-user] Failed to sync newsletter after email change", err);
     });
   }
 

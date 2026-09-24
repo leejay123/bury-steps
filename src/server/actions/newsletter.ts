@@ -14,11 +14,13 @@ import { getOrCreateAudienceId, syncContactSubscribed, syncContactUnsubscribed }
 import { optOutNewsletterEverywhere } from "@/lib/email/newsletter-opt-out";
 import { NewsletterCampaignEmail } from "@/lib/email/templates/newsletter-campaign";
 import { makeCapabilityToken } from "@/lib/email/unsubscribe";
+import { actorStillOwner } from "@/lib/site-owner";
 import {
   type ActionResult,
   ensureStillOwner,
   isPrismaCode,
   logActionError,
+  ownerDenied,
   permissionDenied,
 } from "./shared";
 
@@ -175,6 +177,9 @@ export async function sendNewsletterCampaign(
     const CONTACT_SYNC_CHUNK_SIZE = 10;
     const contacts = [...initial.recipients];
     for (let i = 0; i < contacts.length; i += CONTACT_SYNC_CHUNK_SIZE) {
+      if (!(await actorStillOwner(admin.id))) {
+        return ownerDenied("send a newsletter campaign");
+      }
       const chunk = contacts.slice(i, i + CONTACT_SYNC_CHUNK_SIZE);
       // Fresh read per chunk — a concurrent opt-out after the snapshot must
       // not be force-subscribed back into Resend before the broadcast.
@@ -204,6 +209,12 @@ export async function sendNewsletterCampaign(
     for (let i = 0; i < blockedList.length; i += CONTACT_SYNC_CHUNK_SIZE) {
       const chunk = blockedList.slice(i, i + CONTACT_SYNC_CHUNK_SIZE);
       await Promise.all(chunk.map((email) => syncContactUnsubscribed(email)));
+    }
+
+    // Ownership can be revoked during a long contact sync — abort before
+    // the irreversible broadcast if the actor is no longer an owner.
+    if (!(await actorStillOwner(admin.id))) {
+      return ownerDenied("send a newsletter campaign");
     }
 
     const brand = await getEmailBrand();

@@ -67,8 +67,8 @@ vi.mock("@/lib/email/mailer", () => ({
   sendAdminDemotedEmail: vi.fn(async () => {}),
   sendOrganiserInviteEmail: vi.fn(async () => {}),
 }));
-vi.mock("@/lib/email/resend-audience", () => ({
-  syncContactUnsubscribed: vi.fn(async () => {}),
+vi.mock("@/lib/email/newsletter-opt-out", () => ({
+  optOutNewsletterEverywhere: vi.fn(async () => {}),
 }));
 vi.mock("@/lib/organiser-invite", () => ({
   makeOrganiserInviteToken: vi.fn(() => "invite-token-123"),

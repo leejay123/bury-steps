@@ -42,10 +42,11 @@ export async function POST(req: NextRequest) {
   }
 
   if (evt.type === "user.deleted" && evt.data.id) {
-    // Same reassignment + last-organiser / last-owner guards as admin
-    // "remove member", under the same advisory locks so concurrent
-    // demote/delete cannot wipe the last organiser or last owner. Journey
-    // events Restrict on creator — must reassign too.
+    // Clerk has already revoked auth — refusing the local delete would leave
+    // an unusable zombie (isOwner / ADMIN with no sign-in). Always remove
+    // the row. Last-owner / last-organiser guards stay on admin-initiated
+    // deleteMember only. Reassign content under the same advisory locks as
+    // deleteMember so concurrent demote/delete cannot race on ownership.
     try {
       const removedEmail = await prisma.$transaction(async (tx) => {
         await tx.$executeRawUnsafe(
@@ -73,61 +74,73 @@ export async function POST(req: NextRequest) {
         });
         if (!target) return;
 
-        if (target.role === "ADMIN") {
-          const adminCount = await tx.user.count({ where: { role: "ADMIN" } });
-          if (adminCount <= 1) {
-            console.error(
-              "clerk webhook: refused to delete last organiser after Clerk user.deleted",
-            );
-            return;
-          }
-        }
-
-        if (target.isOwner) {
-          const ownerCount = await tx.user.count({ where: { isOwner: true } });
-          if (ownerCount <= 1) {
-            console.error(
-              "clerk webhook: refused to delete last owner after Clerk user.deleted",
-            );
-            return;
-          }
-        }
-
         const fallbackAdmin = await tx.user.findFirst({
           where: { role: "ADMIN", id: { not: target.id } },
           select: { id: true },
         });
+        // Prefer another organiser for reassignment; otherwise any remaining
+        // account (Restrict FKs on walks/reports/journey still need a target).
+        const reassignTo =
+          fallbackAdmin ??
+          (await tx.user.findFirst({
+            where: { id: { not: target.id } },
+            select: { id: true },
+          }));
 
-        if (
-          !fallbackAdmin &&
-          (target._count.walksCreated > 0 ||
-            target._count.accidentReports > 0 ||
-            target._count.journeyEvents > 0)
-        ) {
-          console.error(
-            "clerk webhook: no fallback organiser to reassign walks/reports/journey",
-          );
-          return;
+        if (target.isOwner) {
+          const ownerCount = await tx.user.count({ where: { isOwner: true } });
+          if (ownerCount <= 1) {
+            if (fallbackAdmin) {
+              await tx.user.update({
+                where: { id: fallbackAdmin.id },
+                data: { isOwner: true },
+              });
+            } else {
+              console.error(
+                "CRITICAL: clerk webhook deleted last owner with no remaining organiser to inherit ownership — manual repair required",
+              );
+            }
+          }
         }
 
-        if (fallbackAdmin) {
+        if (target.role === "ADMIN") {
+          const adminCount = await tx.user.count({ where: { role: "ADMIN" } });
+          if (adminCount <= 1) {
+            console.error(
+              "CRITICAL: clerk webhook deleting last organiser — site has no usable admin until manual repair / INITIAL_ADMIN_EMAIL after wipe",
+            );
+          }
+        }
+
+        if (reassignTo) {
           if (target._count.walksCreated > 0) {
             await tx.walk.updateMany({
               where: { createdById: target.id },
-              data: { createdById: fallbackAdmin.id },
+              data: { createdById: reassignTo.id },
             });
           }
           if (target._count.accidentReports > 0) {
             await tx.accidentReport.updateMany({
               where: { createdById: target.id },
-              data: { createdById: fallbackAdmin.id },
+              data: { createdById: reassignTo.id },
             });
           }
           if (target._count.journeyEvents > 0) {
             await tx.walkJourneyEvent.updateMany({
               where: { createdById: target.id },
-              data: { createdById: fallbackAdmin.id },
+              data: { createdById: reassignTo.id },
             });
+          }
+        } else {
+          // Sole remaining account — drop Restrict dependents so the row can go.
+          if (target._count.journeyEvents > 0) {
+            await tx.walkJourneyEvent.deleteMany({ where: { createdById: target.id } });
+          }
+          if (target._count.accidentReports > 0) {
+            await tx.accidentReport.deleteMany({ where: { createdById: target.id } });
+          }
+          if (target._count.walksCreated > 0) {
+            await tx.walk.deleteMany({ where: { createdById: target.id } });
           }
         }
 
@@ -135,9 +148,9 @@ export async function POST(req: NextRequest) {
         return target.email;
       });
       if (typeof removedEmail === "string" && removedEmail) {
-        const { syncContactUnsubscribed } = await import("@/lib/email/resend-audience");
-        await syncContactUnsubscribed(removedEmail).catch((err) => {
-          console.error("clerk webhook: failed to remove deleted user from newsletter audience", err);
+        const { optOutNewsletterEverywhere } = await import("@/lib/email/newsletter-opt-out");
+        await optOutNewsletterEverywhere(removedEmail).catch((err) => {
+          console.error("clerk webhook: failed to opt deleted user out of newsletter", err);
         });
       }
     } catch (err) {

@@ -435,7 +435,10 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
     // clear an already-open walk or fan out "back on" email twice.
     const cleared = await prisma.walk.updateMany({
       where: { id, cancelledAt: { not: null } },
-      data: { cancelledAt: null, cancelledReason: null },
+      // Clear retentionLocked too — the flag only applies while cancelled,
+      // and leaving it true would silently block later auto-delete after a
+      // future cancel (the UI toggle is hidden once the walk is open).
+      data: { cancelledAt: null, cancelledReason: null, retentionLocked: false },
     });
     if (cleared.count === 0) {
       return { ok: false, error: "This walk is already open." };
@@ -696,7 +699,9 @@ export async function updateWalk(
             longitude: pin.longitude,
             what3words: what3words.value,
             slug,
-            ...(shouldReopen ? { cancelledAt: null, cancelledReason: null } : {}),
+            ...(shouldReopen
+              ? { cancelledAt: null, cancelledReason: null, retentionLocked: false }
+              : {}),
           },
           select: { token: true, slug: true },
         });

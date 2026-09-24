@@ -438,7 +438,7 @@ describe("reopenWalk", () => {
     expect(prismaMock.walk.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: "walk-1", cancelledAt: { not: null } },
-        data: { cancelledAt: null, cancelledReason: null },
+        data: { cancelledAt: null, cancelledReason: null, retentionLocked: false },
       }),
     );
     expect(result.ok).toBe(true);
