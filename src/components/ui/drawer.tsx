@@ -125,6 +125,13 @@ function Drawer({
                 {...props}
                 direction={resolvedDirection}
                 dismissible={!closeDisabled}
+                // Form drawers can't be swiped shut — one stray sideways swipe
+                // would throw away everything typed so far. They close only
+                // from the close button, Cancel, or Escape. handleOnly (not
+                // dismissible={false}, which would block those too) limits
+                // dragging to a drag handle, and form drawers don't render
+                // one. Bottom sheets keep swipe-to-close.
+                handleOnly={variant === "form" || props.handleOnly}
                 modal
                 // Do not let Vaul apply position:fixed on <body> — that is what
                 // dragged the sticky header off-screen under the blur on every
@@ -339,7 +346,9 @@ function DrawerContent({
           onCloseAutoFocus?.(event);
         }}
         onPointerDownOutside={(event) => {
-          if (closeDisabled) event.preventDefault();
+          // Same reasoning as handleOnly above: a tap on the dimmed page
+          // beside a form drawer mustn't discard what's been typed.
+          if (closeDisabled || variant === "form") event.preventDefault();
           onPointerDownOutside?.(event);
         }}
         ref={setRoot}
