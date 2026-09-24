@@ -220,6 +220,12 @@ export function londonMonthKey(at: DateInput): string {
   return `${year}-${pad2(month)}`;
 }
 
+/** UK calendar day as `YYYY-MM-DD` — for download filenames, not UTC. */
+export function londonDateKey(at: DateInput): string {
+  const { year, month, day } = londonYmd(at);
+  return `${year}-${pad2(month)}-${pad2(day)}`;
+}
+
 export function londonYmd(at: DateInput): { day: number; month: number; year: number } {
   const date = toDate(at);
   if (!isValidDate(date)) {

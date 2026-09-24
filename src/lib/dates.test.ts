@@ -4,6 +4,7 @@ import {
   formatMembershipAge,
   formatRelativeDays,
   formatWalkLength,
+  londonDateKey,
   londonMonthKey,
   londonWallClockToUtc,
   londonWeekStartKey,
@@ -186,5 +187,13 @@ describe("londonMonthKey", () => {
   it("uses the UK calendar month of the instant", () => {
     expect(londonMonthKey(londonWallClockToUtc("2026-08-30T14:00"))).toBe("2026-08");
     expect(londonMonthKey(new Date("2026-07-31T23:30:00.000Z"))).toBe("2026-08");
+  });
+});
+
+describe("londonDateKey", () => {
+  it("uses the UK calendar day of the instant", () => {
+    expect(londonDateKey(londonWallClockToUtc("2026-08-30T14:00"))).toBe("2026-08-30");
+    // 00:30 BST = previous UTC calendar day.
+    expect(londonDateKey(new Date("2026-08-29T23:30:00.000Z"))).toBe("2026-08-30");
   });
 });

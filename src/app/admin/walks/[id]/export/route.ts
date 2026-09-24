@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission, displayName } from "@/lib/auth";
-import { formatDateTime } from "@/lib/dates";
+import { formatDateTime, londonDateKey } from "@/lib/dates";
 
 function csvCell(value: string | null): string {
   const v = value ?? "";
@@ -61,7 +61,7 @@ export async function GET(
   ];
 
   const csv = rows.map((r) => r.map((c) => csvCell(c)).join(",")).join("\r\n");
-  const filename = `bury-steps-${walk.startsAt.toISOString().slice(0, 10)}.csv`;
+  const filename = `bury-steps-${londonDateKey(walk.startsAt)}.csv`;
 
   return new NextResponse(`\uFEFF${csv}`, {
     headers: {
