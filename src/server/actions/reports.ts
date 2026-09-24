@@ -19,7 +19,8 @@ export async function getWalkAttendeesForReportForm(
   walkId: string,
 ): Promise<{ id: string; name: string }[]> {
   const admin = await requireAdmin();
-  if (!admin.permReportsCreate) return [];
+  // Create and edit forms both load this checklist — either permission is enough.
+  if (!admin.permReportsCreate && !admin.permReportsEdit) return [];
   if (!walkId) return [];
   return getWalkAttendeesForReport(walkId);
 }
