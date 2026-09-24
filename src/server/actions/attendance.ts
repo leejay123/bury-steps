@@ -257,6 +257,18 @@ export async function adminClockIn(
     return { ok: false, error: "Clock-out time must be after clock-in time." };
   }
 
+  const now = Date.now();
+  // Small skew so an organiser whose phone is a minute ahead is not blocked;
+  // a future clock-in on a live walk would otherwise show them on the roster
+  // early and can block ending the walk.
+  const FUTURE_SKEW_MS = 2 * 60_000;
+  if (recordedClockedInAt.getTime() > now + FUTURE_SKEW_MS) {
+    return { ok: false, error: "Clock-in time can't be in the future." };
+  }
+  if (recordedClockedOutAt && recordedClockedOutAt.getTime() > now + FUTURE_SKEW_MS) {
+    return { ok: false, error: "Clock-out time can't be in the future." };
+  }
+
   const member = await prisma.user.findUnique({
     where: { id: parsed.data.userId },
     select: {

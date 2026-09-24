@@ -220,10 +220,11 @@ export function WalksSection({
             those rows one by one.
           </p>
           <p>
-            Download roster (CSV) gives you names, emails, times, and clock-out reasons — and,
-            for owners, any health notes for that walk. On a phone, the action buttons under the
-            map (roster, calendar, Duplicate, Cancel or End walk, Edit, Remove) scroll sideways
-            in one row.
+            Download roster (CSV) gives you names, emails, times, and clock-out reasons.
+            Organisers get that roster without health notes; owners (with Health notes) also get
+            medical acknowledgement and reported conditions on the same download. On a phone, the
+            action buttons under the map (roster, calendar, Duplicate, Cancel or End walk, Edit,
+            Remove) scroll sideways in one row.
           </p>
         </GuideBody>
       </AccordionContent>

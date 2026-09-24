@@ -5,7 +5,7 @@ import { customAlphabet } from "nanoid";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
-import { formatWalkDate, formatWalkLength, londonWallClockToUtc } from "@/lib/dates";
+import { formatWalkDate, formatWalkLength, londonWallClockToUtc, addLondonCalendarDays } from "@/lib/dates";
 import {
   geocodeFields,
   meetingPointLabel,
@@ -242,10 +242,10 @@ export async function duplicateWalk(
   });
   if (!source) return { ok: false, error: "That walk is no longer there." };
 
-  let startsAt = new Date(source.startsAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+  let startsAt = addLondonCalendarDays(source.startsAt, 7);
   // Keep bumping a week until the copy is still in the future (old History walks).
   while (isWalkStartInThePast(startsAt)) {
-    startsAt = new Date(startsAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+    startsAt = addLondonCalendarDays(startsAt, 7);
   }
 
   let walk: { id: string; title: string; token: string; slug: string | null } | null = null;
@@ -455,10 +455,11 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
   revalidatePath("/history");
   revalidateWalkShare(walk);
 
-  // Reopening a walk whose time has already passed just restores the
-  // record — telling every member it's "back on" would be wrong.
-  const finished = walkStatus({ ...walk, cancelledAt: null }) === "completed";
-  if (!finished) {
+  // Reopening a walk that has already started (or finished) just restores
+  // the record — telling every member it's "back on" / clock-in from an hour
+  // before would be wrong once the meet time has passed.
+  const status = walkStatus({ ...walk, cancelledAt: null });
+  if (status === "upcoming") {
     await notifyMembersOfWalkReopened({
       title: walk.title,
       whenText: formatWalkDate(walk.startsAt),
@@ -471,9 +472,12 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
 
   return {
     ok: true,
-    message: finished
-      ? "Walk reopened in the record. Its time has already passed, so clock-in stays closed."
-      : "Walk reopened. Members can clock in again if the window is still open.",
+    message:
+      status === "completed"
+        ? "Walk reopened in the record. Its time has already passed, so clock-in stays closed."
+        : status === "in-progress"
+          ? "Walk reopened. Clock-in is already open for this walk — no email was sent."
+          : "Walk reopened. Members can clock in again if the window is still open.",
   };
 }
 
@@ -758,16 +762,15 @@ export async function updateWalk(
   revalidateWalkShare(walk);
 
   // Only notify when this edit actually brought a cancelled walk back — not
-  // on every ordinary edit, and not if it was already open.
-  // Also not for a walk that has already finished — see reopenWalk.
-  const finished =
-    walkStatus({
-      cancelledAt: null,
-      startsAt: appliedStartsAt,
-      durationMins: appliedDurationMins,
-      endedAt: existing.endedAt,
-    }) === "completed";
-  if (existing.cancelledAt !== null && shouldReopen && !finished) {
+  // on every ordinary edit, and not if it was already open. Skip once the
+  // meet time has passed (in-progress or completed) — see reopenWalk.
+  const reopenStatus = walkStatus({
+    cancelledAt: null,
+    startsAt: appliedStartsAt,
+    durationMins: appliedDurationMins,
+    endedAt: existing.endedAt,
+  });
+  if (existing.cancelledAt !== null && shouldReopen && reopenStatus === "upcoming") {
     await notifyMembersOfWalkReopened({
       title: parsed.data.title,
       whenText: formatWalkDate(appliedStartsAt),
@@ -781,9 +784,11 @@ export async function updateWalk(
   return {
     ok: true,
     message: wasCancelled
-      ? finished
+      ? reopenStatus === "completed"
         ? "Walk updated and reopened in the record. Its time has already passed, so clock-in stays closed."
-        : "Walk updated and put back on the diary."
+        : reopenStatus === "in-progress"
+          ? "Walk updated and reopened. Clock-in is already open — no email was sent."
+          : "Walk updated and put back on the diary."
       : "Walk updated.",
   };
 }

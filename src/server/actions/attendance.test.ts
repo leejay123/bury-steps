@@ -408,6 +408,15 @@ describe("adminClockIn", () => {
     });
   });
 
+  it("rejects a clock-in time in the future", async () => {
+    const result = await adminClockIn(
+      null,
+      adminClockInForm({ clockedInAt: "2099-01-05T14:30" }),
+    );
+    expect(result).toEqual({ ok: false, error: "Clock-in time can't be in the future." });
+    expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+  });
+
   it("leaves clockedOutAt null when no clock-out time is given", async () => {
     prismaMock.user.findUnique.mockResolvedValueOnce(member);
     queryRaw.mockResolvedValueOnce([lockedWalkRow()]);

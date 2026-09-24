@@ -209,6 +209,7 @@ describe("duplicateWalk", () => {
 
     const createCall = prismaMock.walk.create.mock.calls[0][0];
     expect(createCall.data.title).toBe(source.title);
+    // January — no DST transition in the week, so same as +7×24h UTC.
     expect(createCall.data.startsAt.getTime()).toBe(
       source.startsAt.getTime() + 7 * 24 * 60 * 60 * 1000,
     );
@@ -502,6 +503,32 @@ describe("reopenWalk", () => {
       ok: true,
       message:
         "Walk reopened in the record. Its time has already passed, so clock-in stays closed.",
+    });
+  });
+
+  it("does not email members when reopening a walk that is already in progress", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({
+      id: "walk-1",
+      token: "tok-1",
+      slug: "sunday-stroll",
+      cancelledAt: new Date(),
+      title: "Sunday stroll",
+      location: null,
+      postcode: null,
+      what3words: null,
+      startsAt: new Date(Date.now() - 30 * 60_000),
+      durationMins: 60,
+      endedAt: null,
+    });
+    prismaMock.walk.updateMany.mockResolvedValueOnce({ count: 1 });
+    walkStatus.mockReturnValueOnce("in-progress");
+
+    const result = await reopenWalk(null, form({ walkId: "walk-1" }));
+
+    expect(sendEmailBatch).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      ok: true,
+      message: "Walk reopened. Clock-in is already open for this walk — no email was sent.",
     });
   });
 });
