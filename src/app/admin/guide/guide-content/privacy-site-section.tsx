@@ -66,7 +66,9 @@ export function PrivacySiteSection() {
               Get directions into Google Maps or Apple Maps. The browser tab and bookmark icon
               use the same walking-boot mark. On a phone,
               “Add to Home Screen” (Safari) or “Install app”
-              (Chrome) adds a Bury Steps icon that opens straight to Walks.
+              (Chrome) adds a Bury Steps icon that opens straight to Walks. The newsletter
+              subscribe form in the footer (Home, Privacy Policy, Terms of Service) is for
+              signed-in members only — visitors do not see it.
             </p>
             <p>
               Text, tables, and forms line up with the logo and nav. Photo and quote grids, and

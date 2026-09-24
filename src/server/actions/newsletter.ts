@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, getOptionalUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { requesterIpKey } from "@/lib/requester-ip";
@@ -32,6 +32,13 @@ export async function subscribeToNewsletter(
   // visitor never sees or fills in.
   if (String(formData.get("company") ?? "").trim().length > 0) {
     return { ok: true, message: "Thanks — we'll be in touch." };
+  }
+
+  // Footer form is members-only (see SiteFooter). Reject anonymous posts
+  // even if someone crafts a request without the UI.
+  const member = await getOptionalUser();
+  if (!member) {
+    return { ok: false, error: "Sign in to subscribe to the newsletter." };
   }
 
   const key = await requesterIpKey();

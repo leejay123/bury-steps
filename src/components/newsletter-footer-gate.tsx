@@ -10,8 +10,8 @@ const NEWSLETTER_PATHS = new Set(["/", "/terms-of-service", "/privacy-policy"]);
  * Shows the newsletter card only on the homepage, Terms of Service, and
  * Privacy Policy — everywhere else (Notices, Progress, admin pages, Contact,
  * walk share links, …) it would just be clutter between the page's own
- * content and the footer's links. Applies to every visitor alike, signed in
- * or not.
+ * content and the footer's links. The parent footer only mounts this for
+ * signed-in members; visitors never see the form.
  */
 export function NewsletterFooterGate() {
   const pathname = usePathname();

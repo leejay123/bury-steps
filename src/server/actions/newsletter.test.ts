@@ -10,6 +10,7 @@ const {
   getOrCreateAudienceId,
   getResendClient,
   requireAdmin,
+  getOptionalUser,
   broadcastsCreate,
 } = vi.hoisted(() => ({
   checkRateLimit: vi.fn((): RateLimitResult => ({ ok: true })),
@@ -31,6 +32,7 @@ const {
   getOrCreateAudienceId: vi.fn(async () => "aud-1"),
   getResendClient: vi.fn(),
   requireAdmin: vi.fn(),
+  getOptionalUser: vi.fn(),
   broadcastsCreate: vi.fn(async () => ({ error: null })),
 }));
 
@@ -60,7 +62,7 @@ vi.mock("@/lib/email/newsletter-opt-out", () => ({
 }));
 vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
-  return { ...actual, requireAdmin };
+  return { ...actual, requireAdmin, getOptionalUser };
 });
 vi.mock("next/headers", () => ({
   headers: vi.fn(async () => new Headers({ "x-forwarded-for": "203.0.113.1" })),
@@ -110,6 +112,7 @@ beforeEach(() => {
   prismaMock.user.findMany.mockReset();
   checkRateLimit.mockReturnValue({ ok: true });
   requireAdmin.mockResolvedValue(ADMIN);
+  getOptionalUser.mockResolvedValue({ id: "member-1", email: "jane@example.com" });
   getOrCreateAudienceId.mockResolvedValue("aud-1");
   getResendClient.mockReturnValue({ broadcasts: { create: broadcastsCreate } });
   broadcastsCreate.mockResolvedValue({ error: null });
@@ -121,6 +124,13 @@ beforeEach(() => {
 });
 
 describe("subscribeToNewsletter", () => {
+  it("rejects when nobody is signed in", async () => {
+    getOptionalUser.mockResolvedValueOnce(null);
+    const result = await subscribeToNewsletter(null, form({ email: "jane@example.com" }));
+    expect(result).toEqual({ ok: false, error: "Sign in to subscribe to the newsletter." });
+    expect(prismaMock.newsletterSubscriber.create).not.toHaveBeenCalled();
+  });
+
   it("rejects an invalid email without touching the database", async () => {
     const result = await subscribeToNewsletter(null, form({ email: "not-an-email" }));
     expect(result).toEqual({ ok: false, error: "Enter a valid email address." });

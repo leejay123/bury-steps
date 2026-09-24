@@ -87,7 +87,7 @@ export default async function AdminSubscribersSettingsPage() {
       <SendNewsletterForm recipientCount={newsletterRecipientCount} />
 
       <SettingsSection
-        description={`${newsletterRecipientCount} people currently opted in (${unsubscribedFooterCount} have unsubscribed via the footer form over time). Includes a name where the subscriber is also a member — everyone's own account emails also stays counted under "Notices"/"Walk announcements"/"Progress" above regardless of their newsletter choice.`}
+        description={`${newsletterRecipientCount} people currently opted in (${unsubscribedFooterCount} have unsubscribed via the footer form over time). Includes a name where the subscriber is also a member — the footer signup itself is only shown to signed-in members. Everyone's own account emails also stays counted under "Notices"/"Walk announcements"/"Progress" above regardless of their newsletter choice.`}
         flush
         title="Newsletter list"
       >

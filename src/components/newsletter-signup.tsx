@@ -21,7 +21,7 @@ function SubmitButton() {
   );
 }
 
-/** Footer newsletter signup, backed by NewsletterSubscriber via Resend. */
+/** Footer newsletter signup for signed-in members, backed by NewsletterSubscriber via Resend. */
 export function NewsletterSignup() {
   const inputId = useId();
   const formRef = useRef<HTMLFormElement>(null);

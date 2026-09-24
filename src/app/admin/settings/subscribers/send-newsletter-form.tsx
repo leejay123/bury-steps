@@ -36,7 +36,7 @@ export function SendNewsletterForm({ recipientCount }: { recipientCount: number 
 
   return (
     <SettingsSection
-      description="Sends one email, right now, to everyone currently opted into the newsletter — both footer signups and members. There's no draft or schedule; double-check the wording before sending."
+      description="Sends one email, right now, to everyone currently opted into the newsletter — both member footer signups and members who turned the newsletter on in preferences. There's no draft or schedule; double-check the wording before sending."
       title="Send a newsletter"
     >
       <Drawer
