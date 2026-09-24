@@ -138,20 +138,32 @@ body {
 }
 
 /*
- * Form editors on phones: a near-full card instead of a short bottom sheet, so
- * the keyboard does not race a slide-up lift. --keyboard-inset shrinks the
- * bottom edge into the visible viewport; fields scroll inside the panel.
+ * Form editors on phones: a near-full card instead of a short bottom sheet.
+ * Pinned to the *visible* area — its top (--vv-top) and height
+ * (--vv-height), both live from window.visualViewport in overlay-root —
+ * rather than to the screen edges, so it always fills exactly the space
+ * above the keyboard on both platforms:
+ *  - Android Chrome shrinks the page above the keyboard
+ *    (interactive-widget=resizes-content), so this is just the page.
+ *  - iOS Safari (no interactive-widget support yet) keeps the page full
+ *    height under the keyboard and scrolls the visible area to reach the
+ *    focused field; anchoring to the screen edges let that scroll drag the
+ *    drawer's header up behind the address bar. visualViewport.height
+ *    already excludes the keyboard's AutoFill/arrows bar, so no extra
+ *    allowance for it is needed.
+ * Fields scroll inside the panel.
  */
 @media (max-width: 639px) {
   [data-slot="drawer-content"][data-drawer-variant="form"][data-vaul-drawer-direction="right"],
   [data-slot="drawer-content"][data-drawer-variant="form"][data-vaul-drawer-direction="left"] {
-    top: max(0.5rem, env(safe-area-inset-top));
+    --drawer-gap-top: max(0.5rem, env(safe-area-inset-top));
+    top: calc(var(--vv-top, 0px) + var(--drawer-gap-top));
     right: 0.75rem;
     left: 0.75rem;
-    bottom: max(0.5rem, calc(0.5rem + var(--keyboard-inset, 0px)));
+    bottom: auto;
     width: auto;
     max-width: none;
-    height: auto;
+    height: calc(var(--vv-height, 100dvh) - var(--drawer-gap-top) - 0.5rem);
     border-radius: 0.75rem;
     border-width: 1px;
     border-style: solid;
@@ -182,6 +194,39 @@ body {
   [data-slot="drawer-content"][data-drawer-variant="form"] [data-slot="drawer-footer"] {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
+  }
+}
+
+/* Same, for iOS: Safari keeps the page full height under the keyboard, so
+   the media query above never fires there — overlay-root flags the
+   keyboard on <html> instead. */
+@media (max-width: 639px) {
+  html[data-keyboard-open] [data-slot="drawer-content"][data-drawer-variant="form"] [data-slot="drawer-description"] {
+    display: none;
+  }
+  html[data-keyboard-open] [data-slot="drawer-content"][data-drawer-variant="form"] [data-slot="drawer-header"] {
+    padding-top: 0.75rem;
+    padding-bottom: 0.5rem;
+  }
+  html[data-keyboard-open] [data-slot="drawer-content"][data-drawer-variant="form"] [data-slot="drawer-footer"] {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
+/*
+ * Dialogs with fields (e.g. Edit walk) are centred on the visible area
+ * already (useVisualViewportCenterY), but their height was capped in dvh —
+ * which iOS Safari does not shrink for the keyboard — so a tall one ran
+ * off the top and bottom of what's visible while typing. Cap them to the
+ * visible height instead while the keyboard is up, and let them scroll.
+ */
+@media (max-width: 639px) {
+  html[data-keyboard-open] [data-slot="dialog-content"],
+  html[data-keyboard-open] [data-slot="alert-dialog-content"] {
+    max-height: calc(var(--vv-height, 100dvh) - 1.5rem);
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
   }
 }
 

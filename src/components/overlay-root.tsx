@@ -296,6 +296,7 @@ export function UnlockPageOnNavigate() {
 
     let lastKeyboard = -1;
     let lastHeight = -1;
+    let lastTop = -1;
     // Largest visual-viewport height this session (approx. full screen). When
     // the keyboard opens, recent iOS often shrinks *both* innerHeight and
     // visualViewport.height, so innerHeight − vv.height ≈ 0 and the drawer
@@ -334,10 +335,25 @@ export function UnlockPageOnNavigate() {
       // tag's textContent forces the browser to reparse that CSS text, so
       // skip it when the values are unchanged to avoid adding avoidable
       // main-thread work in the middle of a scroll gesture.
-      if (keyboard === lastKeyboard && height === lastHeight) return;
+      // Keyboard up by either measure — Android shrinks innerHeight along
+      // with the visual viewport (so only the baseline sees it); iOS keeps
+      // innerHeight tall. Used to compact form drawers (see globals.css),
+      // since on iOS no height media query ever sees the keyboard.
+      const keyboardOpen = fromInner > 120 || fromBaseline > 120;
+      // Where the visible area starts inside the layout viewport. iOS
+      // Safari scrolls (pans) the visual viewport to reach a focused field
+      // while position:fixed stays put, which dragged the top of form
+      // drawers up behind the address bar — they're positioned from this
+      // instead. Only trusted while the keyboard is up: iOS 26 can leave a
+      // stale non-zero offsetTop after the keyboard closes (WebKit bug
+      // 297779), which would otherwise push the drawer down for good.
+      const top = keyboardOpen ? Math.max(0, Math.round(viewport.offsetTop)) : 0;
+      document.documentElement.toggleAttribute("data-keyboard-open", keyboardOpen);
+      if (keyboard === lastKeyboard && height === lastHeight && top === lastTop) return;
       lastKeyboard = keyboard;
       lastHeight = height;
-      style.textContent = `:root{--keyboard-inset:${keyboard}px;--vv-height:${height}px;}`;
+      lastTop = top;
+      style.textContent = `:root{--keyboard-inset:${keyboard}px;--vv-height:${height}px;--vv-top:${top}px;}`;
     }
 
     function onOrientationChange() {
