@@ -4,7 +4,7 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { requireAdmin, displayName } from "@/lib/auth";
 import { isTrustedClerkActorUrl } from "@/lib/clerk-actor-url";
-import { isOwner } from "@/lib/site-owner";
+import { isOwner, actorStillOwner } from "@/lib/site-owner";
 import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { type ActionResult, logActionError, ownerDenied } from "./shared";
@@ -48,12 +48,21 @@ export async function startImpersonation(
 
   try {
     const clerk = await clerkClient();
-    // Re-check role immediately before minting — a concurrent promote must
-    // not leave an actor token for a brand-new organiser.
+    // Re-check owner + role immediately before minting — concurrent
+    // removeOwner / promote must not leave an actor token behind.
     const fresh = await prisma.user.findUnique({
       where: { id: target.id },
-      select: { id: true, clerkId: true, role: true, firstName: true, lastName: true, email: true },
+      select: {
+        id: true,
+        clerkId: true,
+        role: true,
+        isOwner: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+      },
     });
+    if (!(await actorStillOwner(admin.id))) return ownerDenied("log in as a member");
     if (!fresh || fresh.role !== "MEMBER") {
       return { ok: false, error: "You can only log in as a member, not another organiser." };
     }

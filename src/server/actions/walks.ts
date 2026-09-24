@@ -45,7 +45,7 @@ import {
   revalidateWalkShare,
   withCountLimitLock,
 } from "./shared";
-import { isOwner } from "@/lib/site-owner";
+import { isOwner, actorStillOwner } from "@/lib/site-owner";
 
 /** Stable unguessable id for clock-in forms. Old /w/<token> links still work. */
 const makeToken = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 12);
@@ -790,6 +790,9 @@ export async function deleteWalk(_prev: ActionResult | null, formData: FormData)
   if (!(await isOwner(admin.id))) return ownerDenied("delete a walk");
   const id = String(formData.get("walkId") ?? "");
   if (!id) return { ok: false, error: "No walk selected." };
+  // Fresh read — concurrent removeOwner must not leave a delete past a
+  // stale React-cached isOwner from earlier in the request.
+  if (!(await actorStillOwner(admin.id))) return ownerDenied("delete a walk");
 
   let walk: { token: string; slug: string | null; title: string };
   try {

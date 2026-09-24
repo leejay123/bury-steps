@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const { requireAdmin, prismaMock, sendAccidentReportAlertEmail, isOwner } = vi.hoisted(() => ({
+const { requireAdmin, prismaMock, sendAccidentReportAlertEmail, isOwner, actorStillOwner } = vi.hoisted(() => ({
   requireAdmin: vi.fn(),
   prismaMock: {
     accidentReport: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
@@ -12,11 +12,12 @@ const { requireAdmin, prismaMock, sendAccidentReportAlertEmail, isOwner } = vi.h
   // Owner by default — deleting a report is owner-only regardless of the
   // Reports permissions. See the "not the owner" test below.
   isOwner: vi.fn(async (userId: string) => userId === "admin-1"),
+  actorStillOwner: vi.fn(async (userId: string) => userId === "admin-1"),
 }));
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
-vi.mock("@/lib/site-owner", () => ({ isOwner }));
+vi.mock("@/lib/site-owner", () => ({ isOwner, actorStillOwner }));
 vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
   return { ...actual, requireAdmin };
@@ -71,6 +72,8 @@ function reportForm(fields: Record<string, string> = {}): FormData {
 beforeEach(() => {
   vi.clearAllMocks();
   requireAdmin.mockResolvedValue(ADMIN);
+  isOwner.mockImplementation(async (userId: string) => userId === "admin-1");
+  actorStillOwner.mockImplementation(async (userId: string) => userId === "admin-1");
 });
 
 describe("addAccidentReport", () => {
@@ -280,6 +283,18 @@ describe("deleteAccidentReport", () => {
   it("requires a report to be selected", async () => {
     const result = await deleteAccidentReport(null, new FormData());
     expect(result).toEqual({ ok: false, error: "No report selected." });
+  });
+
+  it("refuses if the acting admin lost ownership before the delete", async () => {
+    actorStillOwner.mockResolvedValueOnce(false);
+    const formData = new FormData();
+    formData.set("reportId", "report-1");
+    const result = await deleteAccidentReport(null, formData);
+    expect(result).toEqual({
+      ok: false,
+      error: "Only a site owner can delete an accident report.",
+    });
+    expect(prismaMock.accidentReport.delete).not.toHaveBeenCalled();
   });
 
   it("removes the report", async () => {

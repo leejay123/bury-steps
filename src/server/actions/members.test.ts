@@ -15,6 +15,7 @@ const {
   transaction,
   getOwnerIds,
   isOwner,
+  actorStillOwner,
 } = vi.hoisted(() => {
   const prismaMock: Record<string, Record<string, ReturnType<typeof vi.fn>>> = {
     user: { findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn(), update: vi.fn(), updateMany: vi.fn(), delete: vi.fn() },
@@ -46,13 +47,14 @@ const {
     // that lookup's queued mock value or vice versa.
     getOwnerIds: vi.fn(async (): Promise<string[]> => ["admin-1"]),
     isOwner: vi.fn(async (userId: string): Promise<boolean> => userId === "admin-1"),
+    actorStillOwner: vi.fn(async (userId: string): Promise<boolean> => userId === "admin-1"),
   };
 });
 
 vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("@/lib/db", () => ({ prisma: { ...prismaMock, $transaction: transaction } }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
-vi.mock("@/lib/site-owner", () => ({ getOwnerIds, isOwner }));
+vi.mock("@/lib/site-owner", () => ({ getOwnerIds, isOwner, actorStillOwner }));
 vi.mock("@clerk/nextjs/server", () => ({
   clerkClient: vi.fn(async () => ({ users: { deleteUser } })),
 }));
@@ -132,6 +134,7 @@ beforeEach(() => {
   // describe block below for the opposite case.
   getOwnerIds.mockResolvedValue([OWNER_ID]);
   isOwner.mockImplementation(async (userId: string) => userId === OWNER_ID);
+  actorStillOwner.mockImplementation(async (userId: string) => userId === OWNER_ID);
 });
 
 describe("deleteMember", () => {
@@ -1118,7 +1121,6 @@ describe("transferOwnership", () => {
     const target = { id: "admin-2", role: "ADMIN", firstName: "Sam", lastName: "Lee", email: "sam@example.com" };
     prismaMock.user.findUnique
       .mockResolvedValueOnce(target)
-      .mockResolvedValueOnce({ isOwner: true })
       .mockResolvedValueOnce({ id: target.id, role: "ADMIN" });
     prismaMock.user.update.mockResolvedValue({});
 
@@ -1195,7 +1197,6 @@ describe("addOwner", () => {
     };
     prismaMock.user.findUnique
       .mockResolvedValueOnce(target)
-      .mockResolvedValueOnce({ isOwner: true })
       .mockResolvedValueOnce({ id: "admin-2", role: "ADMIN", isOwner: false });
     prismaMock.user.update.mockResolvedValueOnce({});
 

@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { ClerkAPIResponseError } from "@clerk/nextjs/errors";
 import type { RateLimitResult } from "@/lib/rate-limit";
 
-const { requireAdmin, checkRateLimit, actorTokensCreate, prismaMock, isOwner } = vi.hoisted(() => ({
+const { requireAdmin, checkRateLimit, actorTokensCreate, prismaMock, isOwner, actorStillOwner } = vi.hoisted(() => ({
   requireAdmin: vi.fn(),
   checkRateLimit: vi.fn((): RateLimitResult => ({ ok: true })),
   actorTokensCreate: vi.fn(),
@@ -13,11 +13,12 @@ const { requireAdmin, checkRateLimit, actorTokensCreate, prismaMock, isOwner } =
   // Owner by default — impersonation is owner-only. See the "not the
   // owner" test below.
   isOwner: vi.fn(async (userId: string) => userId === "admin-1"),
+  actorStillOwner: vi.fn(async (userId: string) => userId === "admin-1"),
 }));
 
 vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
-vi.mock("@/lib/site-owner", () => ({ isOwner }));
+vi.mock("@/lib/site-owner", () => ({ isOwner, actorStillOwner }));
 vi.mock("@clerk/nextjs/server", () => ({
   clerkClient: vi.fn(async () => ({ actorTokens: { create: actorTokensCreate } })),
 }));
@@ -74,6 +75,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   checkRateLimit.mockReturnValue({ ok: true });
   requireAdmin.mockResolvedValue(ADMIN);
+  isOwner.mockImplementation(async (userId: string) => userId === "admin-1");
+  actorStillOwner.mockImplementation(async (userId: string) => userId === "admin-1");
 });
 
 describe("startImpersonation", () => {
@@ -159,6 +162,16 @@ describe("startImpersonation", () => {
       ok: false,
       error: "You can only log in as a member, not another organiser.",
     });
+    expect(actorTokensCreate).not.toHaveBeenCalled();
+  });
+
+  it("refuses if the acting admin lost ownership before the token is minted", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce(MEMBER).mockResolvedValueOnce(MEMBER);
+    actorStillOwner.mockResolvedValueOnce(false);
+
+    const result = await startImpersonation(null, form({ targetId: MEMBER.id }));
+
+    expect(result).toEqual({ ok: false, error: "Only a site owner can log in as a member." });
     expect(actorTokensCreate).not.toHaveBeenCalled();
   });
 

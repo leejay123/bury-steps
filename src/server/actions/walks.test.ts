@@ -20,6 +20,7 @@ const {
   buildWalkReopenedEmail,
   sendEmailBatch,
   isOwner,
+  actorStillOwner,
 } = vi.hoisted(() => {
   const queryRaw = vi.fn();
   const prismaMock: Record<string, Record<string, ReturnType<typeof vi.fn>>> = {
@@ -72,13 +73,14 @@ const {
     // Owner by default — deleting a walk is owner-only regardless of the
     // Walks permissions. See the "not the owner" test below.
     isOwner: vi.fn(async (userId: string) => userId === "admin-1"),
+    actorStillOwner: vi.fn(async (userId: string) => userId === "admin-1"),
   };
 });
 
 vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("@/lib/db", () => ({ prisma: { ...prismaMock, $transaction: transaction } }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
-vi.mock("@/lib/site-owner", () => ({ isOwner }));
+vi.mock("@/lib/site-owner", () => ({ isOwner, actorStillOwner }));
 vi.mock("@/lib/walk-slug", () => ({ walkShareUrl: vi.fn(() => "https://example.com/w/test") }));
 vi.mock("@/lib/walk-slug-server", () => ({ allocateWalkSlug }));
 // Real email sending pulls in site-theme.ts (next/cache's unstable_cache,
@@ -154,6 +156,8 @@ beforeEach(() => {
   isWalkScheduleLocked.mockReturnValue(false);
   isWalkStartInThePast.mockReturnValue(false);
   walkStatus.mockReturnValue("upcoming");
+  isOwner.mockImplementation(async (userId: string) => userId === "admin-1");
+  actorStillOwner.mockImplementation(async (userId: string) => userId === "admin-1");
 });
 
 describe("Walks permission guard", () => {
@@ -794,6 +798,13 @@ describe("deleteWalk", () => {
   it("requires a walk to be selected", async () => {
     const result = await deleteWalk(null, form({}));
     expect(result).toEqual({ ok: false, error: "No walk selected." });
+  });
+
+  it("refuses if the acting admin lost ownership before the delete", async () => {
+    actorStillOwner.mockResolvedValueOnce(false);
+    const result = await deleteWalk(null, form({ walkId: "walk-1" }));
+    expect(result).toEqual({ ok: false, error: "Only a site owner can delete a walk." });
+    expect(prismaMock.walk.delete).not.toHaveBeenCalled();
   });
 
   it("reports the walk as already gone (P2025) rather than a generic failure", async () => {

@@ -9,7 +9,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { SITE_SETTING_ID } from "@/lib/theme";
-import { getOwnerIds, isOwner } from "@/lib/site-owner";
+import { getOwnerIds, isOwner, actorStillOwner } from "@/lib/site-owner";
 import { safeAppPath } from "@/lib/urls";
 import {
   makeOrganiserInviteToken,
@@ -248,6 +248,7 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
       // lastOwner — so concurrent owner+admin deletes cannot deadlock or
       // wipe the last owner while another organiser still exists.
       await tx.$executeRawUnsafe(`SELECT pg_advisory_xact_lock(${COUNT_LIMIT_LOCK_KEYS.lastOwner})`);
+      if (!(await actorStillOwner(admin.id, tx))) throw new Error("NOT_OWNER");
       const fresh = await tx.user.findUnique({
         where: { id: target.id },
         select: {
@@ -296,6 +297,11 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
     });
   } catch (err) {
     if (err instanceof LimitReachedError) return { ok: false, error: err.message };
+    if (err instanceof Error && err.message === "NOT_OWNER") {
+      return ownerDenied(
+        target.role === "ADMIN" ? "remove an organiser's account" : "remove a member's account",
+      );
+    }
     if (err instanceof Error && err.message === "MEMBER_GONE") {
       return { ok: false, error: "That member is no longer in the group." };
     }
@@ -418,12 +424,17 @@ export async function setMemberRole(
       select: { organiserInviteRequired: true },
     });
     if (setting?.organiserInviteRequired) {
+      if (!(await actorStillOwner(admin.id))) {
+        return ownerDenied("change an organiser's role");
+      }
       return sendOrganiserInvite(target);
     }
   }
 
   try {
     await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.lastAdmin, async (tx) => {
+      await tx.$executeRawUnsafe(`SELECT pg_advisory_xact_lock(${COUNT_LIMIT_LOCK_KEYS.lastOwner})`);
+      if (!(await actorStillOwner(admin.id, tx))) throw new Error("NOT_OWNER");
       const fresh = await tx.user.findUnique({ where: { id: target.id } });
       if (!fresh) throw new Error("MEMBER_GONE");
       if (fresh.role === role) return;
@@ -460,6 +471,9 @@ export async function setMemberRole(
     });
   } catch (err) {
     if (err instanceof LimitReachedError) return { ok: false, error: err.message };
+    if (err instanceof Error && err.message === "NOT_OWNER") {
+      return ownerDenied("change an organiser's role");
+    }
     if (err instanceof Error && err.message === "MEMBER_GONE") {
       return { ok: false, error: "That member is no longer in the group." };
     }
@@ -531,11 +545,7 @@ export async function transferOwnership(
 
   try {
     await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.lastOwner, async (tx) => {
-      const actor = await tx.user.findUnique({
-        where: { id: admin.id },
-        select: { isOwner: true },
-      });
-      if (!actor?.isOwner) throw new Error("NOT_OWNER");
+      if (!(await actorStillOwner(admin.id, tx))) throw new Error("NOT_OWNER");
       const fresh = await tx.user.findUnique({
         where: { id: target.id },
         select: { id: true, role: true },
@@ -597,11 +607,7 @@ export async function addOwner(_prev: ActionResult | null, formData: FormData): 
 
   try {
     await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.lastOwner, async (tx) => {
-      const actor = await tx.user.findUnique({
-        where: { id: admin.id },
-        select: { isOwner: true },
-      });
-      if (!actor?.isOwner) throw new Error("NOT_OWNER");
+      if (!(await actorStillOwner(admin.id, tx))) throw new Error("NOT_OWNER");
       const fresh = await tx.user.findUnique({
         where: { id: target.id },
         select: { id: true, role: true, isOwner: true },
@@ -660,6 +666,7 @@ export async function removeOwner(
 
   try {
     await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.lastOwner, async (tx) => {
+      if (!(await actorStillOwner(admin.id, tx))) throw new Error("NOT_OWNER");
       const fresh = await tx.user.findUnique({ where: { id: target.id } });
       if (!fresh) throw new Error("MEMBER_GONE");
       if (!fresh.isOwner) return;
@@ -671,6 +678,9 @@ export async function removeOwner(
     });
   } catch (err) {
     if (err instanceof LimitReachedError) return { ok: false, error: err.message };
+    if (err instanceof Error && err.message === "NOT_OWNER") {
+      return ownerDenied("remove another owner");
+    }
     if (err instanceof Error && err.message === "MEMBER_GONE") {
       return { ok: false, error: "That member is no longer in the group." };
     }
@@ -755,6 +765,7 @@ export async function resendOrganiserInvite(
   if (target.role !== "MEMBER" || !target.organiserInviteToken) {
     return { ok: false, error: "There is no pending invite for this person." };
   }
+  if (!(await actorStillOwner(admin.id))) return ownerDenied("resend an organiser invite");
 
   return sendOrganiserInvite(target);
 }
@@ -774,6 +785,7 @@ export async function cancelOrganiserInvite(
   if (target.role !== "MEMBER" || !target.organiserInviteToken) {
     return { ok: false, error: "There is no pending invite for this person." };
   }
+  if (!(await actorStillOwner(admin.id))) return ownerDenied("cancel an organiser invite");
 
   try {
     // Claim-clear: if they already accepted (or another cancel won), count

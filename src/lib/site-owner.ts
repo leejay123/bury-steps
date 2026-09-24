@@ -1,4 +1,5 @@
 import { cache } from "react";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 
 /**
@@ -26,6 +27,19 @@ export const isOwner = cache(async (userId: string): Promise<boolean> => {
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { isOwner: true } });
   return user?.isOwner ?? false;
 });
+
+/**
+ * Fresh DB read of `User.isOwner` — bypasses the React-cached {@link isOwner}
+ * so a concurrent removeOwner of the actor cannot slip past an earlier gate
+ * inside the same request or after the optimistic check.
+ */
+export async function actorStillOwner(
+  userId: string,
+  db: Prisma.TransactionClient | typeof prisma = prisma,
+): Promise<boolean> {
+  const user = await db.user.findUnique({ where: { id: userId }, select: { isOwner: true } });
+  return user?.isOwner ?? false;
+}
 
 /** Every current owner's id — used where a page needs to mark more than
  * one row as "Owner" at once (the members list, a member's own page)

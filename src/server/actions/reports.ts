@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin, displayName } from "@/lib/auth";
-import { isOwner } from "@/lib/site-owner";
+import { isOwner, actorStillOwner } from "@/lib/site-owner";
 import { prisma } from "@/lib/db";
 import { formatDateTime, londonWallClockToUtc } from "@/lib/dates";
 import { sendAccidentReportAlertEmail } from "@/lib/email/mailer";
@@ -260,6 +260,9 @@ export async function deleteAccidentReport(
   if (!(await isOwner(admin.id))) return ownerDenied("delete an accident report");
   const id = String(formData.get("reportId") ?? "");
   if (!id) return { ok: false, error: "No report selected." };
+  // Fresh read — concurrent removeOwner must not leave a delete past a
+  // stale React-cached isOwner from earlier in the request.
+  if (!(await actorStillOwner(admin.id))) return ownerDenied("delete an accident report");
 
   try {
     await prisma.accidentReport.delete({ where: { id } });
