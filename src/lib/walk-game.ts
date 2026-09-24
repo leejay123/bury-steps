@@ -1,5 +1,5 @@
 import { londonMonthKey, londonWeekStartKey, londonYear } from "./dates";
-import { walkStatus } from "./walk-window";
+import { effectiveEndsAt, walkStatus } from "./walk-window";
 
 const COMEBACK_MISSED_WEEKS = 3;
 const ALL_MONTH_MIN_WALKS = 2;
@@ -274,7 +274,14 @@ export function buildWalkGame({
     current.weeks.add(row.item.weekKey);
     if (row.item.monthKey === thisMonth) current.months += 1;
     if (row.item.year === thisYear) current.years += 1;
-    if (!row.clockedOutAt) current.stayed = true;
+    // Out at (or after) the effective end counts as stayed — same rule as
+    // leaving the field blank when an organiser adds someone who finished.
+    if (
+      !row.clockedOutAt ||
+      row.clockedOutAt.getTime() >= effectiveEndsAt(row.item.walk).getTime()
+    ) {
+      current.stayed = true;
+    }
     byUser.set(row.userId, current);
   }
 

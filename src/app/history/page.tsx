@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
-import { isWalkHistoryReady, walkStatus } from "@/lib/walk-window";
+import { isWalkHistoryReady, walkStatus, effectiveEndsAt } from "@/lib/walk-window";
 import { AttendanceHistory } from "@/components/attendance-history";
 import { walkSharePath } from "@/lib/walk-slug";
 
@@ -68,10 +68,10 @@ export default async function WalkHistoryPage() {
         <h1 className="text-lg font-semibold tracking-tight">Your walk history</h1>
         <p className="text-sm text-muted-foreground">
           {count === 0
-            ? "Every walk you clock in to will be kept here, once it's finished."
+            ? "Every walk you clock in to will be kept here, once it's finished or cancelled."
             : count === 1
-              ? "You have clocked in to 1 walk."
-              : `You have clocked in to ${count} walks.`}
+              ? "You have 1 finished or cancelled walk in your history."
+              : `You have ${count} finished or cancelled walks in your history.`}
         </p>
         {historyReady.length < count ? (
           <p className="text-xs text-muted-foreground">
@@ -91,6 +91,7 @@ export default async function WalkHistoryPage() {
           clockedInAt: attendance.clockedInAt.toISOString(),
           clockedOutAt: attendance.clockedOutAt?.toISOString() ?? null,
           clockedOutReason: attendance.clockedOutReason,
+          endsAt: effectiveEndsAt(attendance.walk).toISOString(),
           completed: walkStatus(attendance.walk) === "completed",
           href: attendance.walk.cancelledAt ? undefined : walkSharePath(attendance.walk),
         }))}

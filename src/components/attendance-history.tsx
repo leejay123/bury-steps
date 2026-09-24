@@ -29,6 +29,8 @@ export type AttendanceHistoryRow = {
   clockedInAt: string;
   clockedOutAt: string | null;
   clockedOutReason?: string | null;
+  /** Effective walk end (ISO) — used so out-at-finish is not "left early". */
+  endsAt?: string | null;
   /** True once the walk's own clock-in window has fully closed. */
   completed?: boolean;
   href?: string;
@@ -36,14 +38,22 @@ export type AttendanceHistoryRow = {
 
 type StatusFilter = "all" | "full" | "left-early" | "cancelled";
 
+function leftEarly(row: AttendanceHistoryRow): boolean {
+  if (!row.clockedOutAt || row.cancelledAt) return false;
+  if (row.endsAt && new Date(row.clockedOutAt).getTime() >= new Date(row.endsAt).getTime()) {
+    return false;
+  }
+  return true;
+}
+
 function matchesStatus(row: AttendanceHistoryRow, status: StatusFilter): boolean {
   if (status === "all") return true;
   if (status === "cancelled") return Boolean(row.cancelledAt);
-  if (status === "left-early") return Boolean(row.clockedOutAt) && !row.cancelledAt;
+  if (status === "left-early") return leftEarly(row);
   // full: finished the walk without leaving early, and not cancelled.
   // Require `completed` so an in-progress row (if ever passed) is not
   // counted as "stayed for the whole walk" before the window closes.
-  return Boolean(row.completed) && !row.cancelledAt && !row.clockedOutAt;
+  return Boolean(row.completed) && !row.cancelledAt && !leftEarly(row);
 }
 
 export function AttendanceHistory({

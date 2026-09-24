@@ -31,6 +31,7 @@ import {
   serializeAboutRules,
 } from "@/lib/homepage-copy";
 import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR } from "@/lib/theme";
+import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
 import {
   DEFAULT_COOKIE_CONSENT_VARIANT,
@@ -336,16 +337,36 @@ export async function updateContactMessagesOwner(
   }
 
   try {
-    await prisma.siteSetting.upsert({
-      where: { id: SITE_SETTING_ID },
-      create: {
-        id: SITE_SETTING_ID,
-        primaryColor: DEFAULT_PRIMARY_COLOR,
-        contactMessagesOwnerId: userId || null,
-      },
-      update: { contactMessagesOwnerId: userId || null },
+    // Same lastAdmin lock as demote — a concurrent setMemberRole must not
+    // clear contactMessagesOwnerId then lose to this write putting a MEMBER back.
+    await prisma.$transaction(async (tx) => {
+      await tx.$executeRawUnsafe(
+        `SELECT pg_advisory_xact_lock(${COUNT_LIMIT_LOCK_KEYS.lastAdmin})`,
+      );
+      if (userId) {
+        const fresh = await tx.user.findUnique({
+          where: { id: userId },
+          select: { role: true, firstName: true, lastName: true, email: true },
+        });
+        if (!fresh || fresh.role !== "ADMIN") {
+          throw new Error("NOT_ADMIN");
+        }
+        owner = fresh;
+      }
+      await tx.siteSetting.upsert({
+        where: { id: SITE_SETTING_ID },
+        create: {
+          id: SITE_SETTING_ID,
+          primaryColor: DEFAULT_PRIMARY_COLOR,
+          contactMessagesOwnerId: userId || null,
+        },
+        update: { contactMessagesOwnerId: userId || null },
+      });
     });
   } catch (err) {
+    if (err instanceof Error && err.message === "NOT_ADMIN") {
+      return { ok: false, error: "Choose a current organiser." };
+    }
     return logActionError(
       "updateContactMessagesOwner",
       err,

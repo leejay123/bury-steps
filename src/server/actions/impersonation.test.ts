@@ -175,13 +175,14 @@ describe("startImpersonation", () => {
     expect(actorTokensCreate).not.toHaveBeenCalled();
   });
 
-  it("reports an error if Clerk doesn't return a sign-in url", async () => {
+  it("does not write an audit row when Clerk returns no sign-in url", async () => {
     prismaMock.user.findUnique.mockResolvedValueOnce(MEMBER).mockResolvedValueOnce(MEMBER);
     actorTokensCreate.mockResolvedValueOnce({ url: null });
 
     const result = await startImpersonation(null, form({ targetId: MEMBER.id }));
 
     expect(result).toEqual({ ok: false, error: "Clerk did not return a sign-in link. Try again." });
+    expect(prismaMock.impersonationEvent.create).not.toHaveBeenCalled();
   });
 
   it("reports a generic failure if Clerk's API call throws", async () => {

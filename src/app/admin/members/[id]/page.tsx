@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { getMemberHistory } from "@/server/actions";
 import { formatDate, formatMembershipAge, formatRelativeDays } from "@/lib/dates";
 import { initials } from "@/lib/names";
-import { walkStatus } from "@/lib/walk-window";
+import { walkStatus, effectiveEndsAt } from "@/lib/walk-window";
 import { isOwner } from "@/lib/site-owner";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { AttendanceHistory } from "@/components/attendance-history";
@@ -126,28 +126,31 @@ export default async function MemberDetailPage({
           </p>
         ) : null}
         <AttendanceHistory
-          rows={member.items.map((item) => ({
-            id: item.id,
-            title: item.walkTitle,
-            location: item.location,
-            startsAt: item.startsAt,
-            durationMins: item.durationMins,
-            cancelledAt: item.cancelledAt,
-            clockedInAt: item.clockedInAt,
-            clockedOutAt: item.clockedOutAt,
-            clockedOutReason: item.clockedOutReason,
-            completed:
-              walkStatus({
-                cancelledAt: item.cancelledAt ? new Date(item.cancelledAt) : null,
-                startsAt: new Date(item.startsAt),
-                durationMins: item.durationMins,
-                endedAt: item.endedAt ? new Date(item.endedAt) : null,
-              }) === "completed",
-            href:
-              item.cancelledAt && !viewerCanOpenCancelledWalk
-                ? undefined
-                : `/admin/walks/${item.walkId}`,
-          }))}
+          rows={member.items.map((item) => {
+            const walk = {
+              cancelledAt: item.cancelledAt ? new Date(item.cancelledAt) : null,
+              startsAt: new Date(item.startsAt),
+              durationMins: item.durationMins,
+              endedAt: item.endedAt ? new Date(item.endedAt) : null,
+            };
+            return {
+              id: item.id,
+              title: item.walkTitle,
+              location: item.location,
+              startsAt: item.startsAt,
+              durationMins: item.durationMins,
+              cancelledAt: item.cancelledAt,
+              clockedInAt: item.clockedInAt,
+              clockedOutAt: item.clockedOutAt,
+              clockedOutReason: item.clockedOutReason,
+              endsAt: effectiveEndsAt(walk).toISOString(),
+              completed: walkStatus(walk) === "completed",
+              href:
+                item.cancelledAt && !viewerCanOpenCancelledWalk
+                  ? undefined
+                  : `/admin/walks/${item.walkId}`,
+            };
+          })}
         />
       </section>
     </div>

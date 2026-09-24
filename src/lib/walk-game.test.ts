@@ -233,6 +233,23 @@ describe("buildWalkGame", () => {
     expect(ids).toContain("all-month");
   });
 
+  it("treats a clock-out at the scheduled finish as stayed, not left early", () => {
+    const game = buildWalkGame({
+      now: NOW,
+      viewerId: "alice",
+      monthlyClockInGoal: null,
+      walks: [walk("w2", "2026-08-02")],
+      attendances: [
+        attendance("w2", "alice", ALICE, {
+          // 14:00 + 90 mins = 15:30
+          clockedOutAt: londonWallClockToUtc("2026-08-02T15:30"),
+        }),
+      ],
+    });
+
+    expect(game.viewer.badges.map((badge) => badge.id)).toContain("stayed");
+  });
+
   it("does not treat an early clock-out as staying for the whole walk", () => {
     const game = buildWalkGame({
       now: NOW,

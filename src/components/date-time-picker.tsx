@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { combineLondonDateAndTime, LONDON, londonWallClockToUtc } from "@/lib/dates";
+import { combineLondonDateAndTime, LONDON, londonWallClockToUtc, londonYmd } from "@/lib/dates";
 
 const HOURS = Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, "0"));
 const MINUTES = Array.from({ length: 12 }, (_, index) => String(index * 5).padStart(2, "0"));
@@ -88,16 +88,14 @@ export function DateTimePicker({
     : "Choose date and time";
 
   const todayLondon = useMemo(() => {
-    const parts = new Intl.DateTimeFormat("en-GB", {
-      timeZone: LONDON,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).formatToParts(new Date());
-    const year = Number(parts.find((part) => part.type === "year")?.value);
-    const month = Number(parts.find((part) => part.type === "month")?.value);
-    const day = Number(parts.find((part) => part.type === "day")?.value);
-    return new Date(year, month - 1, day);
+    // Calendar uses timeZone={LONDON}; "today" must be that calendar day as a
+    // real London wall-clock instant — not `new Date(y, m-1, d)` (browser-local
+    // midnight), which can leave yesterday selectable when the organiser is
+    // ahead of the UK.
+    const { year, month, day } = londonYmd(new Date());
+    return londonWallClockToUtc(
+      `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}T12:00`,
+    );
   }, []);
 
   const nowLondon = useMemo(() => {
@@ -113,11 +111,15 @@ export function DateTimePicker({
     };
   }, []);
 
-  const isSelectedToday =
-    Boolean(date) &&
-    date!.getFullYear() === todayLondon.getFullYear() &&
-    date!.getMonth() === todayLondon.getMonth() &&
-    date!.getDate() === todayLondon.getDate();
+  const isSelectedToday = Boolean(date) && (() => {
+    const selected = londonYmd(date!);
+    const today = londonYmd(todayLondon);
+    return (
+      selected.year === today.year &&
+      selected.month === today.month &&
+      selected.day === today.day
+    );
+  })();
 
   const hours = useMemo(() => {
     if (!disablePast || !isSelectedToday) return HOURS;
@@ -190,10 +192,12 @@ export function DateTimePicker({
               onSelect={(next) => {
                 setDate(next);
                 if (!disablePast || !next) return;
+                const selected = londonYmd(next);
+                const today = londonYmd(todayLondon);
                 const sameDay =
-                  next.getFullYear() === todayLondon.getFullYear() &&
-                  next.getMonth() === todayLondon.getMonth() &&
-                  next.getDate() === todayLondon.getDate();
+                  selected.year === today.year &&
+                  selected.month === today.month &&
+                  selected.day === today.day;
                 if (!sameDay) return;
                 if (Number(hour) < nowLondon.hour) {
                   setHour(String(nowLondon.hour).padStart(2, "0"));

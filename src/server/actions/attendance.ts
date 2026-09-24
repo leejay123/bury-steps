@@ -324,11 +324,12 @@ export async function adminClockIn(
       }
       if (
         recordedClockedOutAt &&
-        recordedClockedOutAt.getTime() > endsAt.getTime()
+        recordedClockedOutAt.getTime() >= endsAt.getTime()
       ) {
         return {
           ok: false as const,
-          error: "Clock-out time can't be after the walk finished.",
+          error:
+            "Leave clock-out blank if they stayed to the end — or pick a time before the walk finished.",
         };
       }
 

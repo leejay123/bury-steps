@@ -18,9 +18,10 @@ import { type ActionResult, logActionError, ownerDenied } from "./shared";
  * there is no silent, unbannered path into someone else's account.
  *
  * Restricted to MEMBER targets only: one admin should not be able to sign
- * in as another organiser. Every use is logged to ImpersonationEvent
- * (who, who-as, when) before the redirect happens, so the log is written
- * even if the admin never actually completes the sign-in.
+ * in as another organiser. Every successful use is logged to
+ * ImpersonationEvent (who, who-as, when) after the actor URL is validated
+ * and before the redirect, so a failed start does not leave a false audit
+ * row — and the log still lands even if the admin never completes sign-in.
  */
 export async function startImpersonation(
   _prev: ActionResult | null,
@@ -75,6 +76,14 @@ export async function startImpersonation(
       expiresInSeconds: 5 * 60,
     });
 
+    // Validate before writing the audit row — a failed start must not leave
+    // a false-positive ImpersonationEvent (or redirect to an untrusted host).
+    if (!actorToken.url) return { ok: false, error: "Clerk did not return a sign-in link. Try again." };
+    if (!isTrustedClerkActorUrl(actorToken.url)) {
+      console.error("startImpersonation: unexpected actor token host", actorToken.url);
+      return { ok: false, error: "Could not start that sign-in. Try again." };
+    }
+
     await prisma.impersonationEvent.create({
       data: {
         adminId: admin.id,
@@ -86,11 +95,6 @@ export async function startImpersonation(
       },
     });
 
-    if (!actorToken.url) return { ok: false, error: "Clerk did not return a sign-in link. Try again." };
-    if (!isTrustedClerkActorUrl(actorToken.url)) {
-      console.error("startImpersonation: unexpected actor token host", actorToken.url);
-      return { ok: false, error: "Could not start that sign-in. Try again." };
-    }
     return {
       ok: true,
       message: `Signed in as ${displayName(fresh)}.`,

@@ -82,7 +82,8 @@ export function ProgressClockInSection() {
               and their walk history on their own member page in Members both show the clock-out
               time when they have left, not the clock-in time again. A member who never clocked
               out shows as “Still on the walk” while it’s open, and “Stayed for the whole walk”
-              once it’s Completed.
+              once it’s Completed. History counts finished and cancelled walks; Progress cups
+              and badges only count finished walks that were not cancelled.
             </p>
             <p>
               After clocking out, they can clock in again on the same walk if the window is still

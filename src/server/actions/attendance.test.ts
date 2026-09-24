@@ -389,7 +389,22 @@ describe("adminClockIn", () => {
     );
     expect(outAfterEnd).toEqual({
       ok: false,
-      error: "Clock-out time can't be after the walk finished.",
+      error:
+        "Leave clock-out blank if they stayed to the end — or pick a time before the walk finished.",
+    });
+  });
+
+  it("rejects a clock-out time exactly at the walk finish (leave blank if they stayed)", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce(member);
+    queryRaw.mockResolvedValueOnce([lockedWalkRow()]);
+    const outAtEnd = await adminClockIn(
+      null,
+      adminClockInForm({ clockedInAt: "2026-01-05T14:30", clockedOutAt: "2026-01-05T15:00" }),
+    );
+    expect(outAtEnd).toEqual({
+      ok: false,
+      error:
+        "Leave clock-out blank if they stayed to the end — or pick a time before the walk finished.",
     });
   });
 
