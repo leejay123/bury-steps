@@ -9,6 +9,7 @@ import { formatDateTime, londonWallClockToUtc } from "@/lib/dates";
 import { sendAccidentReportAlertEmail } from "@/lib/email/mailer";
 import { involvedSummaryText } from "@/lib/accident-reports";
 import { getWalkAttendeesForReport } from "@/lib/walk-members";
+import { walkStatus } from "@/lib/walk-window";
 import { type ActionResult, isPrismaCode, logActionError, ownerDenied, permissionDenied } from "./shared";
 
 /** Powers the member checklist on the report form once a walk is picked —
@@ -55,6 +56,35 @@ function readInvolvedMemberIds(formData: FormData): string[] {
   return [...new Set(formData.getAll("involvedMemberIds").map(String).filter(Boolean))];
 }
 
+/**
+ * The UI only offers completed walks for linking. Enforce the same on the
+ * server so a tampered walkId cannot attach a report to an upcoming,
+ * in-progress, or cancelled walk.
+ */
+async function assertLinkableWalkId(
+  walkId: string | undefined,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!walkId) return { ok: true };
+  const walk = await prisma.walk.findUnique({
+    where: { id: walkId },
+    select: {
+      id: true,
+      cancelledAt: true,
+      startsAt: true,
+      durationMins: true,
+      endedAt: true,
+    },
+  });
+  if (!walk) return { ok: false, error: "That walk is no longer there." };
+  if (walkStatus(walk) !== "completed") {
+    return {
+      ok: false,
+      error: "Link the report to a walk that has already finished, or leave it unlinked.",
+    };
+  }
+  return { ok: true };
+}
+
 
 export async function addAccidentReport(
   _prev: ActionResult | null,
@@ -76,6 +106,9 @@ export async function addAccidentReport(
   } catch {
     return { ok: false, error: "That date and time could not be read. Try again." };
   }
+
+  const linkable = await assertLinkableWalkId(parsed.data.walkId);
+  if (!linkable.ok) return linkable;
 
   let walkTitle: string | null;
   let involvedSummary: string;
@@ -159,6 +192,9 @@ export async function updateAccidentReport(
   } catch {
     return { ok: false, error: "That date and time could not be read. Try again." };
   }
+
+  const linkable = await assertLinkableWalkId(parsed.data.walkId);
+  if (!linkable.ok) return linkable;
 
   try {
     await prisma.accidentReport.update({

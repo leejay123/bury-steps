@@ -4,6 +4,7 @@ const { requireAdmin, prismaMock, sendAccidentReportAlertEmail, isOwner } = vi.h
   requireAdmin: vi.fn(),
   prismaMock: {
     accidentReport: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    walk: { findUnique: vi.fn() },
     user: { findMany: vi.fn(async (): Promise<{ email: string }[]> => []) },
   },
   sendAccidentReportAlertEmail: vi.fn(async () => {}),
@@ -165,6 +166,49 @@ describe("addAccidentReport", () => {
       expect.objectContaining({
         data: expect.objectContaining({ involvedMembers: { create: [{ userId: "member-1" }] } }),
       }),
+    );
+  });
+
+  it("rejects linking to a walk that has not finished yet", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({
+      id: "walk-1",
+      cancelledAt: null,
+      startsAt: new Date(Date.now() + 60_000),
+      durationMins: 90,
+      endedAt: null,
+    });
+
+    const result = await addAccidentReport(null, reportForm({ walkId: "walk-1" }));
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Link the report to a walk that has already finished, or leave it unlinked.",
+    });
+    expect(prismaMock.accidentReport.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects linking to a walk that no longer exists", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce(null);
+    const result = await addAccidentReport(null, reportForm({ walkId: "gone" }));
+    expect(result).toEqual({ ok: false, error: "That walk is no longer there." });
+    expect(prismaMock.accidentReport.create).not.toHaveBeenCalled();
+  });
+
+  it("allows linking to a completed walk", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({
+      id: "walk-1",
+      cancelledAt: null,
+      startsAt: new Date(Date.now() - 3 * 60 * 60_000),
+      durationMins: 60,
+      endedAt: null,
+    });
+    prismaMock.accidentReport.create.mockResolvedValueOnce({ involvedMembers: [] });
+
+    const result = await addAccidentReport(null, reportForm({ walkId: "walk-1" }));
+
+    expect(result).toEqual({ ok: true, message: "Accident report saved." });
+    expect(prismaMock.accidentReport.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ walkId: "walk-1" }) }),
     );
   });
 });
