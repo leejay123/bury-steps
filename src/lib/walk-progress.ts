@@ -98,10 +98,17 @@ export async function loadWalkGameData(now = new Date()): Promise<WalkGameLoaded
   };
 }
 
+/**
+ * @param olderOutsideWindowCount Attendances on non-cancelled walks whose
+ * `startsAt` is older than the {@link HISTORY_YEARS} window loaded into
+ * `data`. Added to the in-window completed total — never a full-lifetime
+ * count of every started walk, which would credit an in-progress walk
+ * (and unlock First walk / 5 walks badges) before it finishes.
+ */
 export function walkGameFromLoadedData(
   viewerId: string,
   data: WalkGameLoadedData,
-  lifetimeCount?: number,
+  olderOutsideWindowCount?: number,
 ): WalkGameView {
   const game = buildWalkGame({
     now: data.now,
@@ -119,11 +126,9 @@ export function walkGameFromLoadedData(
     ),
   });
 
-  if (lifetimeCount === undefined) return game;
+  if (olderOutsideWindowCount === undefined || olderOutsideWindowCount <= 0) return game;
 
-  const totalCount = Math.max(lifetimeCount, game.viewer.totalCount);
-  if (totalCount === game.viewer.totalCount) return game;
-
+  const totalCount = game.viewer.totalCount + olderOutsideWindowCount;
   return {
     ...game,
     viewer: {
@@ -141,17 +146,21 @@ export function walkGameFromLoadedData(
 }
 
 export async function loadWalkGame(viewerId: string, now = new Date()): Promise<WalkGameView> {
-  const [data, lifetimeCount] = await Promise.all([
+  const historyFrom = new Date(now.getTime() - HISTORY_YEARS * 365 * 24 * 60 * 60 * 1000);
+  const [data, olderOutsideWindowCount] = await Promise.all([
     loadWalkGameData(now),
+    // Only walks older than the Progress scan window — those are certainly
+    // completed, and buildWalkGame never sees them. Do not count every
+    // attendance with startsAt < now: that includes the walk you're still on.
     prisma.attendance.count({
       where: {
         userId: viewerId,
-        walk: { cancelledAt: null, startsAt: { lt: now } },
+        walk: { cancelledAt: null, startsAt: { lt: historyFrom } },
       },
     }),
   ]);
 
-  return walkGameFromLoadedData(viewerId, data, lifetimeCount);
+  return walkGameFromLoadedData(viewerId, data, olderOutsideWindowCount);
 }
 
 export async function getMonthlyClockInGoal(): Promise<number | null> {

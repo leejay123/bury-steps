@@ -182,7 +182,9 @@ function attendedEveryWalkInAMonth(
 
 function monthLabel(monthKey: string): string {
   const [year, month] = monthKey.split("-").map(Number);
-  return new Intl.DateTimeFormat("en-GB", { month: "long" }).format(
+  // Force UTC: without a timeZone, a US-hosted Node process formats
+  // Date.UTC(y, 0, 1) as December (local evening of the 31st).
+  return new Intl.DateTimeFormat("en-GB", { month: "long", timeZone: "UTC" }).format(
     new Date(Date.UTC(year, month - 1, 1)),
   );
 }

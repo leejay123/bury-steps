@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronRight, Footprints, Search } from "lucide-react";
 import { formatWalkDay, formatTime } from "@/lib/dates";
 import { walkStatus, type WalkStatus } from "@/lib/walk-window";
@@ -71,6 +72,29 @@ export function AdminWalkTable({
   const listRef = useRef<HTMLDivElement>(null);
   const statusOptions = scope === "upcoming" ? UPCOMING_STATUS_OPTIONS : PAST_STATUS_OPTIONS;
   const now = useLiveNow();
+  const router = useRouter();
+
+  // Upcoming is SSR-split from History. Dropping a finished walk client-side
+  // alone would hide it from both tabs until the next navigation — refresh
+  // so it reappears under History and the tab counts stay honest.
+  const upcomingNeedsServerSplit =
+    scope === "upcoming" &&
+    walks.some((walk) => {
+      const status = walkStatus(
+        {
+          cancelledAt: walk.cancelledAt ? new Date(walk.cancelledAt) : null,
+          startsAt: new Date(walk.startsAt),
+          durationMins: walk.durationMins,
+          endedAt: walk.endedAt ? new Date(walk.endedAt) : null,
+        },
+        now,
+      );
+      return status === "completed";
+    });
+
+  useEffect(() => {
+    if (upcomingNeedsServerSplit) router.refresh();
+  }, [upcomingNeedsServerSplit, router]);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -84,8 +108,8 @@ export function AdminWalkTable({
         },
         now,
       );
-      // Upcoming tab is SSR-split, but a page left open past finish should
-      // drop completed walks rather than leave them under Upcoming.
+      // Hide finished rows under Upcoming until refresh lands; avoids a
+      // Completed badge lingering on the wrong tab for up to one tick.
       if (scope === "upcoming" && status === "completed") return false;
       if (statusFilter !== "all" && status !== statusFilter) return false;
       if (!needle) return true;

@@ -1,7 +1,8 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CalendarDays, ChevronRight, Clock, MapPin, Search, SearchX } from "lucide-react";
 import { formatDateTime, formatWalkDate } from "@/lib/dates";
 import { walkSharePath } from "@/lib/walk-slug";
@@ -164,6 +165,16 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const deferredSearchTerm = useDeferredValue(searchTerm);
   const now = useLiveNow();
+  const router = useRouter();
+
+  // Keep the SSR tab count in sync once a walk finishes on an open page.
+  const needsRefresh = walks.some((walk) => {
+    const endedAt = walk.endedAt ? new Date(walk.endedAt) : null;
+    return windowState(new Date(walk.startsAt), walk.durationMins, now, endedAt) === "closed";
+  });
+  useEffect(() => {
+    if (needsRefresh) router.refresh();
+  }, [needsRefresh, router]);
 
   const filtered = useMemo(() => {
     const query = deferredSearchTerm.trim().toLowerCase();
