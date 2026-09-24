@@ -24,6 +24,7 @@ const {
     },
     user: {
       findMany: vi.fn(),
+      updateMany: vi.fn(async () => ({ count: 0 })),
     },
     siteSetting: {
       findUnique: vi.fn(),
@@ -186,6 +187,10 @@ describe("subscribeToNewsletter", () => {
       unsubscribeToken: "tok123",
     });
     expect(syncContactSubscribed).toHaveBeenCalledWith("jane@example.com");
+    expect(prismaMock.user.updateMany).toHaveBeenCalledWith({
+      where: { id: "member-1", emailNewsletter: false },
+      data: { emailNewsletter: true },
+    });
     expect(optInNewsletterEverywhere).not.toHaveBeenCalled();
     expect(result.ok).toBe(true);
   });
@@ -212,6 +217,10 @@ describe("subscribeToNewsletter", () => {
         where: { email: "jane@example.com", unsubscribedAt: { not: null } },
       }),
     );
+    expect(prismaMock.user.updateMany).toHaveBeenCalledWith({
+      where: { id: "member-1", emailNewsletter: false },
+      data: { emailNewsletter: true },
+    });
     expect(sendNewsletterSubscribedEmail).not.toHaveBeenCalled();
   });
 

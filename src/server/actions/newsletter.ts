@@ -77,6 +77,12 @@ export async function subscribeToNewsletter(
         data: { unsubscribedAt: null, unsubscribeToken: newToken },
       });
       if (reactivated.count === 0) {
+        // Already on the footer list — still align the prefs toggle so they
+        // can turn Newsletter off later without an on→off dance.
+        await prisma.user.updateMany({
+          where: { id: member.id, emailNewsletter: false },
+          data: { emailNewsletter: true },
+        });
         // Same success copy as a new signup — do not reveal whether the
         // address was already on the list (email enumeration).
         return { ok: true, message: "Thanks — we'll be in touch once there's news to share." };
@@ -88,11 +94,14 @@ export async function subscribeToNewsletter(
       sendNewsletterSubscribedEmail(subscriber).catch((err) => {
         console.error("subscribeToNewsletter: failed to send confirmation email", err);
       }),
-      // Footer list + Resend only — do not flip User.emailNewsletter. The
-      // form is members-only and bound to their account email, but prefs
-      // remain the intentional toggle for the member store; campaigns already
-      // union active footer subscribers with opted-in members.
       syncContactSubscribed(subscriber.email),
+      // Members-only + session email: flip the prefs toggle on so Email
+      // preferences matches the footer signup and true→false can opt out
+      // everywhere. Safe — we never write another member’s preference.
+      prisma.user.updateMany({
+        where: { id: member.id, emailNewsletter: false },
+        data: { emailNewsletter: true },
+      }),
     ]);
   } catch (err) {
     return logActionError("subscribeToNewsletter", err, "Could not subscribe. Try again.");

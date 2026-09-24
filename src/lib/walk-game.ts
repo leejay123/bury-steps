@@ -226,8 +226,12 @@ export function buildWalkGame({
   now: Date;
   monthlyClockInGoal: number | null;
 }): WalkGameView {
+  // A completed walk with nobody on the roster is not a real group meet —
+  // counting it would break streaks / block “every walk in a month” after
+  // reopen-cleared attendances (or a walk that simply had no clock-ins).
+  const attendedWalkIds = new Set(attendances.map((row) => row.walkId));
   const qualifying = walks
-    .filter((walk) => isQualifyingWalk(walk, now))
+    .filter((walk) => isQualifyingWalk(walk, now) && attendedWalkIds.has(walk.id))
     .map((walk) => ({
       walk,
       weekKey: londonWeekStartKey(walk.startsAt),

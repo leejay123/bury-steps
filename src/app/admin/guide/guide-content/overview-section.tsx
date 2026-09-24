@@ -54,8 +54,9 @@ export function OverviewSection({
               look back over every walk they have clocked in to, see Progress — this month’s
               clock-ins together, not a race — and subscribe to the newsletter from the footer
               on Home, Privacy Policy, and Terms of Service using their account email (you must
-              be a signed-in member to see that form; visitors do not). Turning Newsletter off
-              in email preferences also stops a footer signup for the same address.
+              be a signed-in member to see that form; visitors do not). That also turns on
+              Newsletter in email preferences, so turning it off there stops both the prefs
+              toggle and the footer signup for the same address.
             </p>
             <p>
               <Badge>Organisers</Badge> get Walks tools and Reports in the top menu, plus this

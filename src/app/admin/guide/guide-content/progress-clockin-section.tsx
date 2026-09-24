@@ -22,7 +22,8 @@ export function ProgressClockInSection() {
             <p>
               Each person sees their own month, year, and streak (consecutive UK weeks with at
               least one finished walk). A week with no completed group walk does not break a
-              streak. Badges mark first walk, 5 / 10 / 25 walks, staying for a whole walk, every
+              streak — and a finished walk with nobody on the roster does not count as a group
+              walk either. Badges mark first walk, 5 / 10 / 25 walks, staying for a whole walk, every
               walk in a month (when that month had at least two), a streak of two weeks or more,
               and a comeback after missing three or more weeks that did have walks.
             </p>

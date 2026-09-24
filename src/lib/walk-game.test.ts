@@ -111,6 +111,9 @@ describe("buildWalkGame", () => {
       attendances: [
         attendance("w2", "alice", ALICE),
         attendance("w9", "alice", ALICE),
+        // Someone else walked the weeks Alice skipped — those weeks still count.
+        attendance("w16", "bob", BOB),
+        attendance("w23", "bob", BOB),
         attendance("w30", "alice", ALICE),
       ],
     });
@@ -140,7 +143,13 @@ describe("buildWalkGame", () => {
       viewerId: "alice",
       monthlyClockInGoal: null,
       walks: AUGUST_SUNDAYS,
-      attendances: [attendance("w2", "alice", ALICE), attendance("w30", "alice", ALICE)],
+      attendances: [
+        attendance("w2", "alice", ALICE),
+        attendance("w9", "bob", BOB),
+        attendance("w16", "bob", BOB),
+        attendance("w23", "bob", BOB),
+        attendance("w30", "alice", ALICE),
+      ],
     });
 
     expect(game.viewer.badges.map((badge) => badge.id)).toContain("comeback");
@@ -155,6 +164,8 @@ describe("buildWalkGame", () => {
       attendances: [
         attendance("w2", "alice", ALICE),
         attendance("w9", "alice", ALICE),
+        attendance("w16", "bob", BOB),
+        attendance("w23", "bob", BOB),
         attendance("w30", "alice", ALICE),
       ],
     });
@@ -277,6 +288,34 @@ describe("buildWalkGame", () => {
     });
 
     expect(game.viewer.badges.map((badge) => badge.id)).not.toContain("all-month");
+  });
+
+  it("ignores completed walks with nobody on the roster for streaks and all-month", () => {
+    // e.g. reopen-cleared attendances after a cancelled window finished —
+    // an empty completed walk must not break Alice’s streak or block the
+    // all-walks-in-a-month badge for the walks she did attend.
+    const game = buildWalkGame({
+      now: NOW,
+      viewerId: "alice",
+      monthlyClockInGoal: null,
+      walks: [
+        walk("w2", "2026-08-02"),
+        walk("empty", "2026-08-09"),
+        walk("w16", "2026-08-16"),
+        walk("w23", "2026-08-23"),
+        walk("w30", "2026-08-30"),
+      ],
+      attendances: [
+        attendance("w2", "alice", ALICE),
+        attendance("w16", "alice", ALICE),
+        attendance("w23", "alice", ALICE),
+        attendance("w30", "alice", ALICE),
+      ],
+    });
+
+    expect(game.viewer.streakWeeks).toBe(4);
+    expect(game.viewer.badges.map((badge) => badge.id)).toContain("all-month");
+    expect(game.viewer.monthCount).toBe(4);
   });
 
   it("counts an early-ended walk as completed once endedAt has passed", () => {
