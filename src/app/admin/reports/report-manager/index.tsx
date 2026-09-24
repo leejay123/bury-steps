@@ -237,7 +237,7 @@ export function AccidentReportManager({
           ) : null}
           {viewing ? (
             <div className="flex min-h-0 flex-1 flex-col">
-              <ReportReadView report={viewing} />
+              <ReportReadView canEdit={canEdit} report={viewing} />
               <DrawerFooter>
                 <Button asChild variant="outline">
                   <a
