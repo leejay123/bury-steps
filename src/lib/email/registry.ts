@@ -85,7 +85,7 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
     ],
     defaultSubject: "You're now an organiser of {siteName}",
     defaultBody:
-      "Hi {firstName}, another organiser has given you organiser access on {siteName}. You can now create and edit walks, manage members, and see who's coming on each walk.\n\nDidn't expect this? Let another organiser know.",
+      "Hi {firstName}, another organiser has given you organiser access on {siteName}. You can now create and edit walks, manage attendance, and record accident reports.\n\nDidn't expect this? Let another organiser know.",
   },
   {
     key: "adminDemoted",
@@ -99,7 +99,7 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
     ],
     defaultSubject: "You're now a member of {siteName}",
     defaultBody:
-      "Hi {firstName}, another organiser has moved you back to a regular member on {siteName}. You'll still see and clock in to walks as before, but you can no longer create walks or manage members.\n\nDidn't expect this? Let another organiser know.",
+      "Hi {firstName}, another organiser has moved you back to a regular member on {siteName}. You'll still see and clock in to walks as before, but you can no longer create or edit walks or accident reports.\n\nDidn't expect this? Let another organiser know.",
   },
   {
     key: "organiserInvite",
@@ -114,7 +114,7 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
       {
         token: "permissionsList",
         description:
-          "What this invite actually grants (only the areas switched on for them — see the permissions drawer when you invite or promote someone)",
+          "Plain-English list of what organisers can do (walks and accident reports)",
       },
     ],
     defaultSubject: "You've been invited to become an organiser of {siteName}",
