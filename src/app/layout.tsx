@@ -137,13 +137,33 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               scrolls under a sticky bar is expensive on Safari and caused
               visible lag on MacBooks; an opaque bar stays crisp and cheap.
               [transform:translateZ(0)] keeps it on its own compositor layer.
+
+              z-[66], above the Settings sidebar's z-[65] (see
+              settings-sidebar.tsx): that sidebar is sticky within a much
+              taller page and, once you scroll past where it can still
+              stick, settles into normal flow further down — at that point
+              its own box can still spatially reach back up into this
+              header's own screen region (position: sticky reverting to
+              static, not clamped to never re-enter where it started). With
+              a lower z-index than the sidebar it painted over this header
+              there; this keeps the header always on top when that happens.
             */}
-            <header className="sticky top-0 z-[55] touch-manipulation bg-background [transform:translateZ(0)]">
+            <header className="sticky top-0 z-[66] touch-manipulation bg-background [transform:translateZ(0)]">
               <Suspense fallback={null}>
                 <ImpersonationBannerSlot />
               </Suspense>
               <div className="relative">
-                <div className={`flex h-14 items-center justify-between gap-3 ${PAGE_X} md:grid md:grid-cols-[1fr_auto_1fr]`}>
+                {/*
+                  minmax(0,auto), not a plain auto, on the middle nav
+                  column: a plain `auto` track's automatic minimum is its
+                  content's own max-content size, so at a narrow desktop
+                  width (nav links + Settings dropdown wider than the room
+                  left after the logo and bell/avatar columns) it refused
+                  to shrink below that and spilled into the avatar column
+                  instead of letting the nav's own overflow-x-auto scroll
+                  it — this floor of 0 is what lets that scroll kick in.
+                */}
+                <div className={`flex h-14 items-center justify-between gap-3 ${PAGE_X} md:grid md:grid-cols-[1fr_minmax(0,auto)_1fr]`}>
                   <Suspense
                     fallback={
                       <div className="flex h-8 min-w-0 items-center justify-self-start">
