@@ -14,6 +14,7 @@ const {
       create: vi.fn(),
       updateMany: vi.fn(),
       update: vi.fn(),
+      findUnique: vi.fn(),
     },
   },
   sendNewsletterSubscribedEmail: vi.fn(async () => {}),
@@ -132,19 +133,33 @@ describe("subscribeToNewsletter", () => {
 
 describe("unsubscribeFromNewsletter", () => {
   it("returns true once the row is marked unsubscribed", async () => {
-    prismaMock.newsletterSubscriber.update.mockResolvedValueOnce({ email: "jane@example.com" });
+    prismaMock.newsletterSubscriber.updateMany.mockReset();
+    prismaMock.newsletterSubscriber.updateMany.mockResolvedValueOnce({ count: 1 });
+    prismaMock.newsletterSubscriber.findUnique.mockResolvedValueOnce({ email: "jane@example.com" });
     const ok = await unsubscribeFromNewsletter("tok123");
     expect(ok).toBe(true);
-    expect(prismaMock.newsletterSubscriber.update).toHaveBeenCalledWith({
-      where: { unsubscribeToken: "tok123" },
+    expect(prismaMock.newsletterSubscriber.updateMany).toHaveBeenCalledWith({
+      where: { unsubscribeToken: "tok123", unsubscribedAt: null },
       data: { unsubscribedAt: expect.any(Date) },
-      select: { email: true },
     });
     expect(syncContactUnsubscribed).toHaveBeenCalledWith("jane@example.com");
   });
 
+  it("returns true idempotently when already unsubscribed", async () => {
+    prismaMock.newsletterSubscriber.updateMany.mockReset();
+    prismaMock.newsletterSubscriber.updateMany.mockResolvedValueOnce({ count: 0 });
+    prismaMock.newsletterSubscriber.findUnique.mockResolvedValueOnce({
+      unsubscribedAt: new Date(),
+    });
+    const ok = await unsubscribeFromNewsletter("tok123");
+    expect(ok).toBe(true);
+    expect(syncContactUnsubscribed).not.toHaveBeenCalled();
+  });
+
   it("returns false for an unknown token instead of throwing", async () => {
-    prismaMock.newsletterSubscriber.update.mockRejectedValueOnce(new Error("not found"));
+    prismaMock.newsletterSubscriber.updateMany.mockReset();
+    prismaMock.newsletterSubscriber.updateMany.mockResolvedValueOnce({ count: 0 });
+    prismaMock.newsletterSubscriber.findUnique.mockResolvedValueOnce(null);
     const ok = await unsubscribeFromNewsletter("does-not-exist");
     expect(ok).toBe(false);
   });

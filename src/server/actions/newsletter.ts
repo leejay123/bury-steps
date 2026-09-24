@@ -199,13 +199,26 @@ export async function unsubscribeFromNewsletter(token: string): Promise<boolean>
   if (!limited.ok) return false;
 
   try {
-    const subscriber = await prisma.newsletterSubscriber.update({
-      where: { unsubscribeToken: token },
+    // Only the first call wins — a double Safe Links prefetch must not keep
+    // rewriting unsubscribedAt, and a second confirm should still succeed
+    // idempotently once they are already off the list.
+    const claimed = await prisma.newsletterSubscriber.updateMany({
+      where: { unsubscribeToken: token, unsubscribedAt: null },
       data: { unsubscribedAt: new Date() },
-      select: { email: true },
     });
-    await syncContactUnsubscribed(subscriber.email);
-    return true;
+    if (claimed.count === 1) {
+      const subscriber = await prisma.newsletterSubscriber.findUnique({
+        where: { unsubscribeToken: token },
+        select: { email: true },
+      });
+      if (subscriber) await syncContactUnsubscribed(subscriber.email);
+      return true;
+    }
+    const existing = await prisma.newsletterSubscriber.findUnique({
+      where: { unsubscribeToken: token },
+      select: { unsubscribedAt: true },
+    });
+    return Boolean(existing?.unsubscribedAt);
   } catch {
     return false;
   }
