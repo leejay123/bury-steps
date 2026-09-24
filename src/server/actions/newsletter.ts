@@ -11,13 +11,16 @@ import { getResendClient, fromAddress } from "@/lib/email/client";
 import { sendNewsletterSubscribedEmail } from "@/lib/email/mailer";
 import { paragraphsFrom } from "@/lib/email/render-template";
 import { getOrCreateAudienceId, syncContactSubscribed, syncContactUnsubscribed } from "@/lib/email/resend-audience";
-import {
-  optInNewsletterEverywhere,
-  optOutNewsletterEverywhere,
-} from "@/lib/email/newsletter-opt-out";
+import { optOutNewsletterEverywhere } from "@/lib/email/newsletter-opt-out";
 import { NewsletterCampaignEmail } from "@/lib/email/templates/newsletter-campaign";
 import { makeCapabilityToken } from "@/lib/email/unsubscribe";
-import { type ActionResult, isPrismaCode, logActionError, permissionDenied } from "./shared";
+import {
+  type ActionResult,
+  ensureStillOwner,
+  isPrismaCode,
+  logActionError,
+  permissionDenied,
+} from "./shared";
 
 export async function subscribeToNewsletter(
   _prev: ActionResult | null,
@@ -69,9 +72,11 @@ export async function subscribeToNewsletter(
       sendNewsletterSubscribedEmail(subscriber).catch((err) => {
         console.error("subscribeToNewsletter: failed to send confirmation email", err);
       }),
-      // Mirror into User.emailNewsletter + Resend — footer-only opt-in must
-      // not leave a member preference stuck off (or the reverse on opt-out).
-      optInNewsletterEverywhere(subscriber.email),
+      // Footer list + Resend only — do not flip User.emailNewsletter. Anyone
+      // who knows a member's email could otherwise force their signed-in
+      // preference on via this public form. Campaigns already union active
+      // footer subscribers with opted-in members.
+      syncContactSubscribed(subscriber.email),
     ]);
   } catch (err) {
     return logActionError("subscribeToNewsletter", err, "Could not subscribe. Try again.");
@@ -139,6 +144,8 @@ export async function sendNewsletterCampaign(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permSubscribers) return permissionDenied("permSubscribers");
+  const lostOwner = await ensureStillOwner(admin.id, "send a newsletter campaign");
+  if (lostOwner) return lostOwner;
   const limited = checkRateLimit(`${admin.id}:sendNewsletterCampaign`, 5, 60 * 60_000);
   if (!limited.ok) {
     return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
@@ -217,6 +224,8 @@ export async function removeNewsletterSubscriber(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permSubscribers) return permissionDenied("permSubscribers");
+  const lostOwner = await ensureStillOwner(admin.id, "remove a newsletter subscriber");
+  if (lostOwner) return lostOwner;
   const id = String(formData.get("id") ?? "");
   if (!id) return { ok: false, error: "No subscriber selected." };
 

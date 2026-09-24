@@ -47,6 +47,7 @@ import {
   permissionDenied,
   readOptionalImage,
   revalidateHomepage,
+  ensureStillOwner,
 } from "./shared";
 
 export async function updateCarouselEnabled(
@@ -55,6 +56,10 @@ export async function updateCarouselEnabled(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "change site display settings");
+    if (lostOwner) return lostOwner;
+  }
   const enabled = String(formData.get("carouselEnabled") ?? "") === "on";
 
   try {
@@ -87,6 +92,10 @@ export async function updateMemberNoticesEnabled(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "change site display settings");
+    if (lostOwner) return lostOwner;
+  }
   const enabled = String(formData.get("memberNoticesEnabled") ?? "") === "on";
 
   try {
@@ -123,6 +132,10 @@ export async function updateProgressEnabled(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "change site display settings");
+    if (lostOwner) return lostOwner;
+  }
   const enabled = String(formData.get("progressEnabled") ?? "") === "on";
 
   try {
@@ -158,6 +171,10 @@ export async function updateOrganiserInviteRequired(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "change site display settings");
+    if (lostOwner) return lostOwner;
+  }
   const enabled = String(formData.get("organiserInviteRequired") ?? "") === "on";
 
   try {
@@ -300,6 +317,10 @@ export async function updateContactMessagesOwner(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "change site display settings");
+    if (lostOwner) return lostOwner;
+  }
   const userId = String(formData.get("contactMessagesOwnerId") ?? "").trim();
 
   let owner: { firstName: string | null; lastName: string | null; email: string; role: string } | null =
@@ -349,6 +370,10 @@ export async function updateScrollToTopEnabled(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "change site display settings");
+    if (lostOwner) return lostOwner;
+  }
   const enabled = String(formData.get("scrollToTopEnabled") ?? "") === "on";
 
   try {
@@ -379,6 +404,10 @@ export async function updateCookieConsentVariant(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "change site display settings");
+    if (lostOwner) return lostOwner;
+  }
   const variant = parseCookieConsentVariant(String(formData.get("cookieConsentVariant") ?? ""));
   if (!variant) {
     return { ok: false, error: "Choose a cookie notice layout." };
@@ -421,6 +450,10 @@ export async function updateSiteBranding(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "change site display settings");
+    if (lostOwner) return lostOwner;
+  }
   const siteName = parseSiteName(String(formData.get("siteName") ?? ""));
   const siteTagline = parseSiteTagline(String(formData.get("siteTagline") ?? ""));
   if (siteName === "invalid") {
@@ -462,6 +495,10 @@ export async function updateFacebookGroupUrl(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "change site display settings");
+    if (lostOwner) return lostOwner;
+  }
   const facebookGroupUrl = parseFacebookGroupUrl(String(formData.get("facebookGroupUrl") ?? ""));
   if (facebookGroupUrl === "invalid") {
     return {
@@ -503,6 +540,10 @@ export async function updateFacebookGroupUrl(
 export async function reorderHomepageSections(ids: HomepageSectionId[]): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "change site display settings");
+    if (lostOwner) return lostOwner;
+  }
   const order = parseHomepageSectionOrder(serializeHomepageSectionOrder(ids));
   if (order === "invalid") {
     return { ok: false, error: "Could not save that order. Try again." };
@@ -538,6 +579,10 @@ export async function updateFaqSectionCopy(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "change site display settings");
+    if (lostOwner) return lostOwner;
+  }
   const faqSectionTitle = parseFaqSectionTitle(String(formData.get("faqSectionTitle") ?? ""));
   const faqSectionIntro = parseFaqSectionIntro(String(formData.get("faqSectionIntro") ?? ""));
   if (faqSectionTitle === "invalid") {
@@ -578,6 +623,10 @@ export async function updateTestimonialsSectionCopy(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "change site display settings");
+    if (lostOwner) return lostOwner;
+  }
   const testimonialsSectionEyebrow = parseTestimonialsSectionEyebrow(
     String(formData.get("testimonialsSectionEyebrow") ?? ""),
   );
@@ -633,6 +682,10 @@ export async function updateHowThisStartedCopy(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "change site display settings");
+    if (lostOwner) return lostOwner;
+  }
   const howThisStartedTitle = parseHowThisStartedTitle(
     String(formData.get("howThisStartedTitle") ?? ""),
   );
@@ -700,6 +753,10 @@ export async function updateAboutLists(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "change site display settings");
+    if (lostOwner) return lostOwner;
+  }
   const aboutGoals = parseAboutList(String(formData.get("aboutGoals") ?? ""));
   const aboutPlaces = parseAboutList(String(formData.get("aboutPlaces") ?? ""));
   const aboutExpect = parseAboutList(String(formData.get("aboutExpect") ?? ""));
@@ -801,6 +858,10 @@ export async function updateWalkPageCopy(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "change site display settings");
+    if (lostOwner) return lostOwner;
+  }
 
   const tips = parseAboutList(String(formData.get("beforeYouSetOffTips") ?? ""));
   const steps = parseAboutRules(String(formData.get("howWalksWorkSteps") ?? ""));
@@ -863,6 +924,10 @@ export async function updateMonthlyClockInGoal(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permProgress) return permissionDenied("permProgress");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "change progress settings");
+    if (lostOwner) return lostOwner;
+  }
   const parsed = parseMonthlyClockInGoal(String(formData.get("monthlyClockInGoal") ?? ""));
   if (parsed === "invalid") {
     return {
@@ -903,6 +968,10 @@ export async function updateSiteLogo(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "change site display settings");
+    if (lostOwner) return lostOwner;
+  }
   const image = await readOptionalImage(formData);
   if (image && "error" in image) return { ok: false, error: image.error };
   const removing = !image && formData.get("removeImage") === "on";
@@ -934,6 +1003,10 @@ export async function updateSiteFavicon(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "change site display settings");
+    if (lostOwner) return lostOwner;
+  }
   const image = await readOptionalImage(formData);
   if (image && "error" in image) return { ok: false, error: image.error };
   const removing = !image && formData.get("removeImage") === "on";
@@ -982,6 +1055,10 @@ export async function updateReportBanner(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "change site display settings");
+    if (lostOwner) return lostOwner;
+  }
   const image = await readOptionalImage(formData);
   if (image && "error" in image) return { ok: false, error: image.error };
   const removing = !image && formData.get("removeImage") === "on";

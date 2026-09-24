@@ -1401,6 +1401,7 @@ describe("acceptOrganiserInvite", () => {
         id: target.id,
         role: "MEMBER",
         organiserInviteToken: "tok",
+        organiserInviteExpiresAt: { gt: expect.any(Date) },
       },
       data: {
         role: "ADMIN",

@@ -15,6 +15,7 @@ import {
   revalidateHomepage,
   validateReorderIds,
   withCountLimitLock,
+  ensureStillOwner,
 } from "./shared";
 
 function readTestimonialCopy(
@@ -37,6 +38,10 @@ export async function addHomepageTestimonial(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permHomepage) return permissionDenied("permHomepage");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage testimonials");
+    if (lostOwner) return lostOwner;
+  }
 
   const copy = readTestimonialCopy(formData);
   if ("error" in copy) return { ok: false, error: copy.error };
@@ -77,6 +82,10 @@ export async function updateHomepageTestimonial(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permHomepage) return permissionDenied("permHomepage");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage testimonials");
+    if (lostOwner) return lostOwner;
+  }
   const id = String(formData.get("testimonialId") ?? "");
   if (!id) return { ok: false, error: "No testimonial selected." };
 
@@ -115,6 +124,10 @@ export async function deleteHomepageTestimonial(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permHomepage) return permissionDenied("permHomepage");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage testimonials");
+    if (lostOwner) return lostOwner;
+  }
   const id = String(formData.get("testimonialId") ?? "");
   if (!id) return { ok: false, error: "No testimonial selected." };
 
@@ -146,6 +159,10 @@ export async function deleteHomepageTestimonial(
 export async function reorderHomepageTestimonials(ids: string[]): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permHomepage) return permissionDenied("permHomepage");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage testimonials");
+    if (lostOwner) return lostOwner;
+  }
   const validated = validateReorderIds(ids, MAX_HOMEPAGE_TESTIMONIALS * 2);
   if ("error" in validated) return { ok: false, error: validated.error };
   try {

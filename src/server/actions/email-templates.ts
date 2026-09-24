@@ -12,7 +12,9 @@ import {
 import { MAX_EMAIL_TEMPLATE_BODY, MAX_EMAIL_TEMPLATE_SUBJECT } from "@/lib/email/template-limits";
 import { sendTestEmail } from "@/lib/email/test-send";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { type ActionResult, logActionError, permissionDenied } from "./shared";
+import { type ActionResult, logActionError, permissionDenied,
+  ensureStillOwner,
+} from "./shared";
 
 /**
  * Every template's saved override, keyed for the admin page — a template
@@ -47,6 +49,10 @@ export async function updateEmailTemplate(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permEmails) return permissionDenied("permEmails");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage email templates");
+    if (lostOwner) return lostOwner;
+  }
   const key = String(formData.get("key") ?? "");
   if (!isEmailTemplateKey(key)) return { ok: false, error: "Unknown email." };
 
@@ -89,6 +95,10 @@ export async function sendTestEmailTemplate(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permEmails) return permissionDenied("permEmails");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage email templates");
+    if (lostOwner) return lostOwner;
+  }
   const key = String(formData.get("key") ?? "");
   if (!isEmailTemplateKey(key)) return { ok: false, error: "Unknown email." };
 
@@ -112,6 +122,10 @@ export async function resetEmailTemplate(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permEmails) return permissionDenied("permEmails");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage email templates");
+    if (lostOwner) return lostOwner;
+  }
   const key = String(formData.get("key") ?? "");
   if (!isEmailTemplateKey(key)) return { ok: false, error: "Unknown email." };
 

@@ -30,10 +30,11 @@ export async function optOutNewsletterEverywhere(email: string): Promise<void> {
 }
 
 /**
- * Mirror of {@link optOutNewsletterEverywhere}: clear a footer unsubscribe,
- * turn the member newsletter toggle back on when a matching User exists, and
- * re-add them to the Resend audience. Does not create a new footer row —
- * callers that need one (public subscribe) create/reactivate first.
+ * Mirror of {@link optOutNewsletterEverywhere} for authenticated preference
+ * flows that intentionally turn the member newsletter toggle on. Clears a
+ * footer unsubscribe, sets matching `User.emailNewsletter = true`, and
+ * re-adds them to Resend. Public footer signup must NOT call this — it would
+ * let anyone force-write a member preference by email alone.
  */
 export async function optInNewsletterEverywhere(
   email: string,

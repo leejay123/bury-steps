@@ -862,6 +862,9 @@ export async function acceptOrganiserInvite(
         id: target.id,
         role: "MEMBER",
         organiserInviteToken: token,
+        // Claim must enforce expiry too — an in-memory check above can race
+        // the clock and still promote an invite that expired mid-request.
+        organiserInviteExpiresAt: { gt: new Date() },
       },
       data: {
         role: "ADMIN",
@@ -871,6 +874,8 @@ export async function acceptOrganiserInvite(
       },
     });
     if (accepted.count === 0) {
+      // Distinguishing "expired" vs "already used" here would need another
+      // read; treat both as invalid/used so the accept page stays simple.
       return { ok: false, error: "This invite link is invalid or has already been used." };
     }
   } catch (err) {

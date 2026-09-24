@@ -10,6 +10,7 @@ import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
 import { isAllowedImageMime, sniffImageMime } from "@/lib/image-bytes";
 import { stripImageMetadata } from "@/lib/strip-image-metadata";
 import type { OrganiserPermissions } from "@/lib/organiser-permissions";
+import { actorStillOwner } from "@/lib/site-owner";
 
 export type ActionResult =
   | { ok: true; message?: string; href?: string }
@@ -66,6 +67,19 @@ export function permissionDenied(permission: keyof OrganiserPermissions): { ok: 
  */
 export function ownerDenied(action: string): { ok: false; error: string } {
   return { ok: false, error: `Only a site owner can ${action}.` };
+}
+
+/**
+ * Fresh `User.isOwner` check for Settings / campaigns / other owner-gated
+ * mutations — bypasses the React-cached row behind requireAdmin so a
+ * concurrent removeOwner cannot leave an in-flight write authorized.
+ */
+export async function ensureStillOwner(
+  adminId: string,
+  action: string,
+): Promise<{ ok: false; error: string } | null> {
+  if (!(await actorStillOwner(adminId))) return ownerDenied(action);
+  return null;
 }
 
 /** Thrown by a locked count-check to signal "this would exceed the

@@ -31,6 +31,7 @@ import {
   permissionDenied,
   validateReorderIds,
   withCountLimitLock,
+  ensureStillOwner,
 } from "./shared";
 
 const slugSuffix = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 6);
@@ -149,6 +150,10 @@ export async function addSiteNotice(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permNotices) return permissionDenied("permNotices");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage notices");
+    if (lostOwner) return lostOwner;
+  }
 
   const copy = readNoticeCopy(formData);
   if ("error" in copy) return { ok: false, error: copy.error };
@@ -207,6 +212,10 @@ export async function updateSiteNotice(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permNotices) return permissionDenied("permNotices");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage notices");
+    if (lostOwner) return lostOwner;
+  }
   const id = String(formData.get("noticeId") ?? "");
   if (!id) return { ok: false, error: "No notice selected." };
 
@@ -287,6 +296,10 @@ export async function deleteSiteNotice(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permNotices) return permissionDenied("permNotices");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage notices");
+    if (lostOwner) return lostOwner;
+  }
   const id = String(formData.get("noticeId") ?? "");
   if (!id) return { ok: false, error: "No notice selected." };
 
@@ -315,6 +328,10 @@ export async function setSiteNoticeEnabled(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permNotices) return permissionDenied("permNotices");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage notices");
+    if (lostOwner) return lostOwner;
+  }
   const id = String(formData.get("noticeId") ?? "");
   if (!id) return { ok: false, error: "No notice selected." };
 
@@ -428,6 +445,10 @@ export async function addSiteNoticeCategory(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permNotices) return permissionDenied("permNotices");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage notices");
+    if (lostOwner) return lostOwner;
+  }
   const copy = readNoticeCategoryLabel(formData);
   if ("error" in copy) return { ok: false, error: copy.error };
 
@@ -460,6 +481,10 @@ export async function updateSiteNoticeCategory(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permNotices) return permissionDenied("permNotices");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage notices");
+    if (lostOwner) return lostOwner;
+  }
   const id = String(formData.get("categoryId") ?? "");
   if (!id) return { ok: false, error: "No category selected." };
   const copy = readNoticeCategoryLabel(formData);
@@ -485,6 +510,10 @@ export async function deleteSiteNoticeCategory(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permNotices) return permissionDenied("permNotices");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage notices");
+    if (lostOwner) return lostOwner;
+  }
   const id = String(formData.get("categoryId") ?? "");
   if (!id) return { ok: false, error: "No category selected." };
 
@@ -532,6 +561,10 @@ export async function deleteSiteNoticeCategory(
 export async function reorderSiteNoticeCategories(ids: string[]): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permNotices) return permissionDenied("permNotices");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage notices");
+    if (lostOwner) return lostOwner;
+  }
   const validated = validateReorderIds(ids, MAX_NOTICE_CATEGORIES * 2);
   if ("error" in validated) return { ok: false, error: validated.error };
 

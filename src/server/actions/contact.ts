@@ -13,7 +13,9 @@ import {
   parseContactPhone,
 } from "@/lib/contact";
 import { sendContactMessageAdminAlertEmail, sendContactMessageReceivedEmail } from "@/lib/email/mailer";
-import { type ActionResult, isPrismaCode, logActionError, permissionDenied } from "./shared";
+import { type ActionResult, isPrismaCode, logActionError, permissionDenied,
+  ensureStillOwner,
+} from "./shared";
 
 export async function submitContactMessage(
   _prev: ActionResult | null,
@@ -93,6 +95,10 @@ export async function markContactMessageRead(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permMessages) return permissionDenied("permMessages");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage contact messages");
+    if (lostOwner) return lostOwner;
+  }
   const id = String(formData.get("messageId") ?? "");
   if (!id) return { ok: false, error: "No message selected." };
 
@@ -113,6 +119,10 @@ export async function deleteContactMessage(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permMessages) return permissionDenied("permMessages");
+  {
+    const lostOwner = await ensureStillOwner(admin.id, "manage contact messages");
+    if (lostOwner) return lostOwner;
+  }
   const id = String(formData.get("messageId") ?? "");
   if (!id) return { ok: false, error: "No message selected." };
 

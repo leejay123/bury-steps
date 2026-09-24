@@ -19,6 +19,7 @@ const {
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
+vi.mock("@/lib/site-owner", () => ({ actorStillOwner: vi.fn(async () => true) }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
 vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");

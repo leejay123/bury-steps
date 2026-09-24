@@ -26,6 +26,7 @@ vi.mock("next/cache", () => ({
   unstable_cache: (fn: unknown) => fn,
 }));
 vi.mock("@/lib/db", () => ({ prisma: { ...prismaMock, $transaction: transaction } }));
+vi.mock("@/lib/site-owner", () => ({ actorStillOwner: vi.fn(async () => true) }));
 vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
   return { ...actual, requireAdmin };

@@ -36,6 +36,7 @@ const {
 
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
 vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
+vi.mock("@/lib/site-owner", () => ({ actorStillOwner: vi.fn(async () => true) }));
 vi.mock("@/lib/email/mailer", () => ({ sendNewsletterSubscribedEmail }));
 vi.mock("@/lib/email/resend-audience", () => ({
   syncContactSubscribed,
@@ -146,7 +147,8 @@ describe("subscribeToNewsletter", () => {
       email: "jane@example.com",
       unsubscribeToken: "tok123",
     });
-    expect(optInNewsletterEverywhere).toHaveBeenCalledWith("jane@example.com");
+    expect(syncContactSubscribed).toHaveBeenCalledWith("jane@example.com");
+    expect(optInNewsletterEverywhere).not.toHaveBeenCalled();
     expect(result.ok).toBe(true);
   });
 
