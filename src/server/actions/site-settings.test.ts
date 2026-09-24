@@ -91,6 +91,32 @@ describe("Site settings permission guard", () => {
     expect(result).toEqual({ ok: false, error: "You do not have permission to manage the progress goal." });
     expect(prismaMock.siteSetting.upsert).not.toHaveBeenCalled();
   });
+
+  it("rejects updateCancelledWalkRetentionDays for an organiser without the Cache & reset permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permCacheReset: false });
+    const result = await updateCancelledWalkRetentionDays(
+      null,
+      form({ cancelledWalkRetentionDays: "30" }),
+    );
+    expect(result).toEqual({
+      ok: false,
+      error: "You do not have permission to manage the site cache and reset.",
+    });
+    expect(prismaMock.siteSetting.upsert).not.toHaveBeenCalled();
+  });
+
+  it("rejects updateAccidentReportRetentionDays for an organiser without the Cache & reset permission", async () => {
+    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permCacheReset: false });
+    const result = await updateAccidentReportRetentionDays(
+      null,
+      form({ accidentReportRetentionDays: "90" }),
+    );
+    expect(result).toEqual({
+      ok: false,
+      error: "You do not have permission to manage the site cache and reset.",
+    });
+    expect(prismaMock.siteSetting.upsert).not.toHaveBeenCalled();
+  });
 });
 
 describe("updateSiteBranding", () => {

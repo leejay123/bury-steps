@@ -120,23 +120,27 @@ export default async function WalkLinkPage({
   const walkUrl = walkShareUrl(appUrl(), { token: walk.token, slug });
   const completed = status === "completed";
 
-  const alreadyIn = user
+  const myAttendance = user
     ? await prisma.attendance.findFirst({
-        where: { walkId: walk.id, userId: user.id, clockedOutAt: null },
-        select: { clockedInAt: true },
+        where: { walkId: walk.id, userId: user.id },
+        select: { clockedInAt: true, clockedOutAt: true },
       })
     : null;
+  const attended = Boolean(myAttendance);
 
   // Names only once this member has clocked in — privacy for guests and
   // people who have not joined yet. WalkMembers paginates at 20, so a
-  // thousand names on one walk stay usable.
-  const memberNames = alreadyIn ? await getWalkMemberNames(walk.id) : [];
+  // thousand names on one walk stay usable. Clocking out does not revoke
+  // that — they were on the walk.
+  const memberNames = attended ? await getWalkMemberNames(walk.id) : [];
   const windowStateNow = windowState(walk.startsAt, walk.durationMins, new Date(), walk.endedAt);
   const tooEarly = windowStateNow === "too-early";
   // A signed-in member who never clocked in and the window has now closed —
   // this used to only show at the very bottom of the page (inside
   // WalkLivePanel), easy to miss under the walk details and map above it.
-  const closedNoClockIn = Boolean(user) && !alreadyIn && windowStateNow === "closed";
+  // Someone who clocked out early still "attended", so they must not see
+  // the "speak to an organiser" copy meant for people who missed the walk.
+  const closedNoClockIn = Boolean(user) && !attended && windowStateNow === "closed";
   const opensAt = walkOpensAt(walk.startsAt);
   const meeting = meetingPointLabel(walk.location, walk.postcode);
   const walksHref = user?.role === "ADMIN" ? "/admin" : "/walks";
@@ -171,7 +175,7 @@ export default async function WalkLinkPage({
             Clock-in is closed. Details and the journey below are still here to look back on.
           </AlertDescription>
         </Alert>
-      ) : user && !alreadyIn && tooEarly ? (
+      ) : user && !attended && tooEarly ? (
         <Alert variant="info">
           <AlertTitle>Clock-in is not open yet</AlertTitle>
           <AlertDescription>
@@ -248,8 +252,9 @@ export default async function WalkLinkPage({
 
       {status === "cancelled" ? null : user ? (
         <WalkLivePanel
-          alreadyClockedInAt={alreadyIn?.clockedInAt.toISOString() ?? null}
+          alreadyClockedInAt={myAttendance?.clockedInAt.toISOString() ?? null}
           beforeYouSetOffTips={theme.beforeYouSetOffTips}
+          clockedOutAt={myAttendance?.clockedOutAt?.toISOString() ?? null}
           durationMins={walk.durationMins}
           endedAt={walk.endedAt?.toISOString() ?? null}
           memberNames={memberNames}

@@ -194,7 +194,10 @@ export async function updateCancelledWalkRetentionDays(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  // Same gate as the Data retention settings page (permCacheReset) — not
+  // Display. An organiser with branding access alone must not change
+  // auto-delete windows.
+  if (!admin.permCacheReset) return permissionDenied("permCacheReset");
   const parsed = parseRetentionDays(String(formData.get("cancelledWalkRetentionDays") ?? ""));
   if (parsed === "invalid") {
     return {
@@ -242,7 +245,10 @@ export async function updateAccidentReportRetentionDays(
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  // Same gate as the Data retention settings page (permCacheReset) — not
+  // Display. An organiser with branding access alone must not change
+  // auto-delete windows.
+  if (!admin.permCacheReset) return permissionDenied("permCacheReset");
   const parsed = parseRetentionDays(String(formData.get("accidentReportRetentionDays") ?? ""));
   if (parsed === "invalid") {
     return {

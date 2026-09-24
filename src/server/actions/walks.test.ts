@@ -14,21 +14,33 @@ const {
   walkStatus,
   prismaMock,
   transaction,
+  queryRaw,
   buildWalkAnnouncedEmail,
   buildWalkCancelledEmail,
   buildWalkReopenedEmail,
   sendEmailBatch,
   isOwner,
 } = vi.hoisted(() => {
+  const queryRaw = vi.fn();
   const prismaMock: Record<string, Record<string, ReturnType<typeof vi.fn>>> = {
-    walk: { create: vi.fn(), update: vi.fn(), delete: vi.fn(), findUnique: vi.fn() },
+    walk: {
+      create: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+      delete: vi.fn(),
+      findUnique: vi.fn(),
+    },
     user: { findMany: vi.fn(async () => []) },
   };
   const transaction = vi.fn(async (arg: unknown) => {
     if (Array.isArray(arg)) return Promise.all(arg);
-    // cancelWalk uses withCountLimitLock, which locks via $executeRawUnsafe
-    // before invoking the callback.
-    return (arg as (tx: unknown) => unknown)({ $executeRawUnsafe: vi.fn(), ...prismaMock });
+    // cancelWalk uses withCountLimitLock ($executeRawUnsafe); endWalkEarly
+    // locks the walk row with $queryRaw FOR UPDATE.
+    return (arg as (tx: unknown) => unknown)({
+      $executeRawUnsafe: vi.fn(),
+      $queryRaw: queryRaw,
+      ...prismaMock,
+    });
   });
   return {
     revalidatePath: vi.fn(),
@@ -42,6 +54,7 @@ const {
     walkStatus: vi.fn(() => "upcoming"),
     prismaMock,
     transaction,
+    queryRaw,
     // buildWalkXEmail normally returns the SendEmailInput it would send;
     // the walk-notification fan-outs hand an array of these to
     // sendEmailBatch, which is what these tests assert on instead of a
@@ -193,7 +206,7 @@ describe("duplicateWalk", () => {
     );
     expect(result).toEqual({
       ok: true,
-      message: "“Sunday stroll” duplicated for next week. Check the date before you share it.",
+      message: "“Sunday stroll” duplicated for Sun 11 Jan, 14:00. Check the date before you share it.",
       href: "/admin/walks/walk-2",
     });
   });
@@ -478,47 +491,48 @@ describe("endWalkEarly", () => {
   it("requires a walk id", async () => {
     const result = await endWalkEarly(null, form({}));
     expect(result).toEqual({ ok: false, error: "No walk selected." });
-    expect(prismaMock.walk.findUnique).not.toHaveBeenCalled();
+    expect(transaction).not.toHaveBeenCalled();
   });
 
   it("reports the walk as gone if it no longer exists", async () => {
-    prismaMock.walk.findUnique.mockResolvedValueOnce(null);
+    queryRaw.mockResolvedValueOnce([]);
     const result = await endWalkEarly(null, form({ walkId: "walk-1" }));
     expect(result).toEqual({ ok: false, error: "That walk is no longer there." });
   });
 
   it("refuses when it's already been ended early", async () => {
-    prismaMock.walk.findUnique.mockResolvedValueOnce(inProgressWalk({ endedAt: new Date() }));
+    queryRaw.mockResolvedValueOnce([inProgressWalk({ endedAt: new Date() })]);
     const result = await endWalkEarly(null, form({ walkId: "walk-1" }));
     expect(result).toEqual({ ok: false, error: "This walk has already been ended early." });
-    expect(prismaMock.walk.update).not.toHaveBeenCalled();
+    expect(prismaMock.walk.updateMany).not.toHaveBeenCalled();
   });
 
   it("refuses when the walk isn't currently in progress", async () => {
     walkStatus.mockReturnValueOnce("upcoming");
-    prismaMock.walk.findUnique.mockResolvedValueOnce(inProgressWalk());
+    queryRaw.mockResolvedValueOnce([inProgressWalk()]);
     const result = await endWalkEarly(null, form({ walkId: "walk-1" }));
     expect(result).toEqual({
       ok: false,
       error: "This walk isn't in progress right now, so there's nothing to end.",
     });
-    expect(prismaMock.walk.update).not.toHaveBeenCalled();
+    expect(prismaMock.walk.updateMany).not.toHaveBeenCalled();
   });
 
   it("ends the walk right now by default", async () => {
     walkStatus.mockReturnValueOnce("in-progress");
-    prismaMock.walk.findUnique.mockResolvedValueOnce(inProgressWalk());
-    prismaMock.walk.update.mockResolvedValueOnce({});
+    queryRaw.mockResolvedValueOnce([inProgressWalk()]);
+    prismaMock.walk.updateMany.mockResolvedValueOnce({ count: 1 });
 
     const before = Date.now();
     const result = await endWalkEarly(null, form({ walkId: "walk-1" }));
     const after = Date.now();
 
-    expect(prismaMock.walk.update).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: "walk-1" } }),
+    expect(prismaMock.walk.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "walk-1", endedAt: null } }),
     );
-    const endedAt = (prismaMock.walk.update.mock.calls[0][0] as { data: { endedAt: Date } }).data
-      .endedAt;
+    const endedAt = (
+      prismaMock.walk.updateMany.mock.calls[0][0] as { data: { endedAt: Date } }
+    ).data.endedAt;
     expect(endedAt.getTime()).toBeGreaterThanOrEqual(before);
     expect(endedAt.getTime()).toBeLessThanOrEqual(after);
     expect(result).toEqual({ ok: true, message: "Walk ended. Clock-in is now closed." });
@@ -526,13 +540,14 @@ describe("endWalkEarly", () => {
 
   it("backdates the end when minutesAgo is a valid preset", async () => {
     walkStatus.mockReturnValueOnce("in-progress");
-    prismaMock.walk.findUnique.mockResolvedValueOnce(inProgressWalk());
-    prismaMock.walk.update.mockResolvedValueOnce({});
+    queryRaw.mockResolvedValueOnce([inProgressWalk()]);
+    prismaMock.walk.updateMany.mockResolvedValueOnce({ count: 1 });
 
     const result = await endWalkEarly(null, form({ walkId: "walk-1", minutesAgo: "15" }));
 
-    const endedAt = (prismaMock.walk.update.mock.calls[0][0] as { data: { endedAt: Date } }).data
-      .endedAt;
+    const endedAt = (
+      prismaMock.walk.updateMany.mock.calls[0][0] as { data: { endedAt: Date } }
+    ).data.endedAt;
     expect(endedAt.getTime()).toBeLessThanOrEqual(Date.now() - 15 * 60_000 + 1000);
     expect(endedAt.getTime()).toBeGreaterThanOrEqual(Date.now() - 15 * 60_000 - 1000);
     expect(result).toEqual({
@@ -543,13 +558,14 @@ describe("endWalkEarly", () => {
 
   it("falls back to now for a minutesAgo value that isn't one of the offered presets", async () => {
     walkStatus.mockReturnValueOnce("in-progress");
-    prismaMock.walk.findUnique.mockResolvedValueOnce(inProgressWalk());
-    prismaMock.walk.update.mockResolvedValueOnce({});
+    queryRaw.mockResolvedValueOnce([inProgressWalk()]);
+    prismaMock.walk.updateMany.mockResolvedValueOnce({ count: 1 });
 
     const result = await endWalkEarly(null, form({ walkId: "walk-1", minutesAgo: "999" }));
 
-    const endedAt = (prismaMock.walk.update.mock.calls[0][0] as { data: { endedAt: Date } }).data
-      .endedAt;
+    const endedAt = (
+      prismaMock.walk.updateMany.mock.calls[0][0] as { data: { endedAt: Date } }
+    ).data.endedAt;
     expect(endedAt.getTime()).toBeGreaterThanOrEqual(Date.now() - 1000);
     expect(result).toEqual({ ok: true, message: "Walk ended. Clock-in is now closed." });
   });
@@ -557,14 +573,14 @@ describe("endWalkEarly", () => {
   it("refuses a minutesAgo that would put the end before the walk even started", async () => {
     walkStatus.mockReturnValueOnce("in-progress");
     // Walk only started 5 minutes ago — "60 minutes ago" isn't possible.
-    prismaMock.walk.findUnique.mockResolvedValueOnce(
+    queryRaw.mockResolvedValueOnce([
       inProgressWalk({ startsAt: new Date(Date.now() - 5 * 60_000) }),
-    );
+    ]);
 
     const result = await endWalkEarly(null, form({ walkId: "walk-1", minutesAgo: "60" }));
 
     expect(result).toEqual({ ok: false, error: "That's before this walk even started." });
-    expect(prismaMock.walk.update).not.toHaveBeenCalled();
+    expect(prismaMock.walk.updateMany).not.toHaveBeenCalled();
   });
 });
 

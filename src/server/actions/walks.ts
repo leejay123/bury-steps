@@ -284,7 +284,7 @@ export async function duplicateWalk(
   revalidateWalkShare(walk);
   return {
     ok: true,
-    message: `“${walk.title}” duplicated for next week. Check the date before you share it.`,
+    message: `“${walk.title}” duplicated for ${formatWalkDate(startsAt)}. Check the date before you share it.`,
     href: `/admin/walks/${walk.id}`,
   };
 }
@@ -482,36 +482,52 @@ export async function endWalkEarly(
     ? minutesAgoRaw
     : 0;
 
-  const walk = await prisma.walk.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      token: true,
-      slug: true,
-      title: true,
-      startsAt: true,
-      durationMins: true,
-      endedAt: true,
-      cancelledAt: true,
-    },
-  });
-  if (!walk) return { ok: false, error: "That walk is no longer there." };
-  if (walk.endedAt) return { ok: false, error: "This walk has already been ended early." };
-  if (walkStatus(walk) !== "in-progress") {
-    return {
-      ok: false,
-      error: "This walk isn't in progress right now, so there's nothing to end.",
-    };
-  }
-
   const endedAt = new Date(Date.now() - minutesAgo * 60_000);
-  if (endedAt.getTime() <= walk.startsAt.getTime()) {
-    return { ok: false, error: "That's before this walk even started." };
-  }
 
+  let walk: { token: string; slug: string | null };
   try {
-    await prisma.walk.update({ where: { id }, data: { endedAt } });
+    walk = await prisma.$transaction(async (tx) => {
+      const rows = await tx.$queryRaw<
+        Array<{
+          id: string;
+          token: string;
+          slug: string | null;
+          startsAt: Date;
+          durationMins: number;
+          endedAt: Date | null;
+          cancelledAt: Date | null;
+        }>
+      >`SELECT id, token, slug, "startsAt", "durationMins", "endedAt", "cancelledAt"
+        FROM "Walk" WHERE id = ${id} FOR UPDATE`;
+      const locked = rows[0];
+      if (!locked) throw new Error("WALK_GONE");
+      if (locked.endedAt) {
+        throw new LimitReachedError("This walk has already been ended early.");
+      }
+      if (walkStatus(locked) !== "in-progress") {
+        throw new LimitReachedError(
+          "This walk isn't in progress right now, so there's nothing to end.",
+        );
+      }
+      if (endedAt.getTime() <= locked.startsAt.getTime()) {
+        throw new LimitReachedError("That's before this walk even started.");
+      }
+
+      const updated = await tx.walk.updateMany({
+        where: { id: locked.id, endedAt: null },
+        data: { endedAt },
+      });
+      if (updated.count === 0) {
+        throw new LimitReachedError("This walk has already been ended early.");
+      }
+
+      return { token: locked.token, slug: locked.slug };
+    });
   } catch (err) {
+    if (err instanceof LimitReachedError) return { ok: false, error: err.message };
+    if (err instanceof Error && err.message === "WALK_GONE") {
+      return { ok: false, error: "That walk is no longer there." };
+    }
     if (isPrismaCode(err, "P2025")) return { ok: false, error: "That walk is no longer there." };
     return logActionError("endWalkEarly", err, "Could not end this walk. Try again.");
   }

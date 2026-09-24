@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ClipboardList, CalendarPlus, Download } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireAnyPermission, displayName } from "@/lib/auth";
 import { formatWalkDate, utcToLondonWallClock } from "@/lib/dates";
-import { canOrganiserAddAttendance, canOrganiserEditJourney, canAddWalkToCalendar, isWalkScheduleLocked, walkStatus } from "@/lib/walk-window";
+import { canOrganiserAddAttendance, canOrganiserEditJourney, walkStatus } from "@/lib/walk-window";
 import { appUrl } from "@/lib/urls";
 import { initials } from "@/lib/names";
 import { ShareLink } from "@/components/share-link";
@@ -15,17 +15,12 @@ import { meetingPointLabel } from "@/lib/geocode";
 import { What3wordsLink } from "@/components/what3words-link";
 import { walkShareUrl } from "@/lib/walk-slug";
 import { ensureWalkSlug } from "@/lib/walk-slug-server";
-import { CancelWalkButton } from "./cancel-walk-button";
-import { DuplicateWalkButton } from "./duplicate-walk-button";
-import { EditWalkButton } from "./edit-walk-button";
-import { EndWalkButton } from "./end-walk-button";
 import { AddAttendanceButton } from "./add-attendance-button";
-import { ReopenWalkButton } from "./reopen-walk-button";
 import { RetentionLockToggle } from "./retention-lock-toggle";
-import { DeleteWalkButton } from "./delete-walk-button";
+import { WalkCompletedNotice } from "./walk-completed-notice";
+import { WalkDetailActions } from "./walk-detail-actions";
 import { WalkJourneyManager } from "./walk-journey";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { WalkAttendanceTable, type WalkAttendanceRow } from "./walk-attendance";
@@ -139,10 +134,8 @@ export default async function WalkDetailPage({
   const canSeeAttendance = admin.permWalksAttendance || viewerAttended;
   const status = walkStatus(walk);
   const isCompleted = status === "completed";
-  const scheduleLocked = isWalkScheduleLocked(walk.startsAt);
   const canAddAttendance = canOrganiserAddAttendance(walk);
   const canEditJourney = canOrganiserEditJourney(walk);
-  const showCalendar = canAddWalkToCalendar(walk);
   const journeyDefaultAt = utcToLondonWallClock(
     status === "in-progress" ? new Date() : walk.startsAt,
   );
@@ -179,15 +172,15 @@ export default async function WalkDetailPage({
           organiser without any of Edit/Cancel/Attendance can't act on any
           of what this mentions, so it stays silent for them rather than
           describing tools they don't have (the status badge above already
-          says "Completed"). */}
-      {isCompleted && (admin.permWalksEdit || admin.permWalksCancel || admin.permWalksAttendance) ? (
-        <Alert variant="info">
-          <AlertDescription>
-            This walk has finished, so it can no longer be cancelled or edited. If someone was
-            there but forgot to clock in, add them under Attendance.
-          </AlertDescription>
-        </Alert>
-      ) : null}
+          says "Completed"). Live with the walk clock so a page left open
+          still picks up the finished state. */}
+      <WalkCompletedNotice
+        cancelledAt={walk.cancelledAt?.toISOString() ?? null}
+        durationMins={walk.durationMins}
+        endedAt={walk.endedAt?.toISOString() ?? null}
+        show={admin.permWalksEdit || admin.permWalksCancel || admin.permWalksAttendance}
+        startsAt={walk.startsAt.toISOString()}
+      />
 
       <Card>
         <CardHeader className="flex flex-col gap-1.5">
@@ -230,67 +223,29 @@ export default async function WalkDetailPage({
 
       {walk.what3words ? <What3wordsLink address={walk.what3words} /> : null}
 
-      <div className="-mx-4 flex flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain px-4 [scrollbar-width:none] [-ms-overflow-style:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden [&>*]:shrink-0">
-        {showCalendar ? (
-          <Button asChild size="sm" variant="outline">
-            <a download href={`/w/${slug}/ics`}>
-              <CalendarPlus data-icon="inline-start" />
-              Add to calendar
-            </a>
-          </Button>
-        ) : null}
-        {admin.permWalksExport && admin.permWalksHealth ? (
-          <Button asChild size="sm" variant="outline">
-            <a href={`/admin/walks/${walk.id}/export`}>
-              <Download data-icon="inline-start" />
-              Download roster (CSV)
-            </a>
-          </Button>
-        ) : null}
-        {admin.permWalksCreate ? <DuplicateWalkButton walkId={walk.id} /> : null}
-        {/*
-          Cancel only ever applies to a walk that hasn't started yet —
-          "cancelled" means it never happened, which stops being true the
-          moment people are out on it. Once it's in progress, End walk is
-          the equivalent action instead (marks it finished early rather
-          than un-happening it); once it's completed, neither applies.
-        */}
-        {admin.permWalksCancel && !walk.cancelledAt && (status === "upcoming" || status === "starting-soon") && (
-          <CancelWalkButton walkId={walk.id} attendanceCount={stillIn.length} />
-        )}
-        {/* Only makes sense while the walk is actually under way — before
-            that there's nothing to cut short, and after it's already
-            completed (naturally or via this same button) there's nothing
-            left to end. */}
-        {admin.permWalksCancel && status === "in-progress" && <EndWalkButton walkId={walk.id} />}
-        {/*
-          Edit for a completed walk would silently rewrite history rather
-          than change a plan, so it stays hidden the moment the clock-in
-          window has fully closed; Delete and the CSV export remain below,
-          since a completed walk is still a real record that might need
-          correcting or removing.
-        */}
-        {admin.permWalksEdit && !isCompleted && (
-          <EditWalkButton
-            cancelled={Boolean(walk.cancelledAt)}
-            description={walk.description}
-            durationMins={walk.durationMins}
-            latitude={walk.latitude}
-            location={walk.location}
-            longitude={walk.longitude}
-            postcode={walk.postcode}
-            scheduleLocked={scheduleLocked}
-            startsAt={walk.startsAt.toISOString()}
-            title={walk.title}
-            walkId={walk.id}
-            what3words={walk.what3words}
-          />
-        )}
-        {admin.permWalksCancel && walk.cancelledAt ? <ReopenWalkButton walkId={walk.id} /> : null}
-        {viewerIsOwner ? (
-          <DeleteWalkButton attendanceCount={walk.attendances.length} walkId={walk.id} />
-        ) : null}
-      </div>
+      <WalkDetailActions
+        attendanceCount={stillIn.length}
+        cancelledAt={walk.cancelledAt?.toISOString() ?? null}
+        canCancel={admin.permWalksCancel}
+        canCreate={admin.permWalksCreate}
+        canEdit={admin.permWalksEdit}
+        canExportRoster={admin.permWalksExport && admin.permWalksHealth}
+        description={walk.description}
+        durationMins={walk.durationMins}
+        endedAt={walk.endedAt?.toISOString() ?? null}
+        icsHref={`/w/${slug}/ics`}
+        latitude={walk.latitude}
+        location={walk.location}
+        longitude={walk.longitude}
+        postcode={walk.postcode}
+        rosterHref={`/admin/walks/${walk.id}/export`}
+        startsAt={walk.startsAt.toISOString()}
+        title={walk.title}
+        totalAttendanceCount={walk.attendances.length}
+        viewerIsOwner={viewerIsOwner}
+        walkId={walk.id}
+        what3words={walk.what3words}
+      />
 
       {walk.cancelledAt && admin.permWalksExport ? (
         <RetentionLockToggle locked={walk.retentionLocked} walkId={walk.id} />
