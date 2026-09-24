@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { prisma } from "./db";
 
 /**
@@ -16,11 +17,15 @@ import { prisma } from "./db";
  * bootstrapped (see syncLocalUser in src/lib/local-user.ts); changed after
  * that via addOwner/removeOwner/transferOwnership in
  * src/server/actions/members.ts.
+ *
+ * Cached per request so nav + requireAdmin + page checks share one lookup
+ * when they only have a user id (prefer `user.isOwner` when the row is
+ * already loaded).
  */
-export async function isOwner(userId: string): Promise<boolean> {
+export const isOwner = cache(async (userId: string): Promise<boolean> => {
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { isOwner: true } });
   return user?.isOwner ?? false;
-}
+});
 
 /** Every current owner's id — used where a page needs to mark more than
  * one row as "Owner" at once (the members list, a member's own page)

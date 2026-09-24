@@ -11,6 +11,7 @@ import { meetingPointLabel } from "@/lib/geocode";
 import { walkShareUrl } from "@/lib/walk-slug";
 import { appUrl } from "@/lib/urls";
 import { sendAddedToWalkEmail } from "@/lib/email/mailer";
+import { conditionsPurgeAfterFromStartsAt } from "@/lib/conditions-retention";
 import {
   type ActionResult,
   LimitReachedError,
@@ -19,9 +20,6 @@ import {
   permissionDenied,
   revalidateWalkShare,
 } from "./shared";
-
-/** How long health information is kept after the walk, in days. */
-const CONDITIONS_RETENTION_DAYS = 90;
 
 const clockInSchema = z.object({
   token: z.string().min(1),
@@ -97,9 +95,7 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
         };
       }
 
-      const purgeAfter = new Date(
-        locked.startsAt.getTime() + CONDITIONS_RETENTION_DAYS * 24 * 60 * 60 * 1000,
-      );
+      const purgeAfter = conditionsPurgeAfterFromStartsAt(locked.startsAt);
       const attendanceData = {
         medicalAckAt: new Date(),
         conditions: parsed.data.hasConditions === "yes" ? parsed.data.conditions! : null,
@@ -352,29 +348,31 @@ export async function adminClockIn(
       }
 
       const now = new Date();
-      const purgeAfter = new Date(
-        locked.startsAt.getTime() + CONDITIONS_RETENTION_DAYS * 24 * 60 * 60 * 1000,
-      );
-      const attendanceData = {
-        clockedInAt: recordedClockedInAt,
-        medicalAckAt: now,
-        conditions: null,
-        conditionsPurgeAfter: purgeAfter,
-        clockedOutAt: recordedClockedOutAt,
-        clockedOutReason: null,
-      };
-
+      const purgeAfter = conditionsPurgeAfterFromStartsAt(locked.startsAt);
+      // Re-adding someone who left early must not wipe medical notes they
+      // already gave — only a brand-new attendance row starts with null.
       if (existingAttendance) {
         await tx.attendance.update({
           where: { id: existingAttendance.id },
-          data: attendanceData,
+          data: {
+            clockedInAt: recordedClockedInAt,
+            medicalAckAt: now,
+            conditionsPurgeAfter: purgeAfter,
+            clockedOutAt: recordedClockedOutAt,
+            clockedOutReason: null,
+          },
         });
       } else {
         await tx.attendance.create({
           data: {
             walkId: locked.id,
             userId: member.id,
-            ...attendanceData,
+            clockedInAt: recordedClockedInAt,
+            medicalAckAt: now,
+            conditions: null,
+            conditionsPurgeAfter: purgeAfter,
+            clockedOutAt: recordedClockedOutAt,
+            clockedOutReason: null,
           },
         });
       }

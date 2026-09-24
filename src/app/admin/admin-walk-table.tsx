@@ -179,11 +179,23 @@ export function AdminWalkTable({
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState
-          description="Try a different search, status, or sort."
-          icon={Search}
-          title="No matching walks"
-        />
+        query.trim() || statusFilter !== "all" ? (
+          <EmptyState
+            description="Try a different search, status, or sort."
+            icon={Search}
+            title="No matching walks"
+          />
+        ) : (
+          <EmptyState
+            description={
+              upcomingNeedsServerSplit
+                ? "Moving finished walks to History…"
+                : emptyDescription
+            }
+            icon={Footprints}
+            title={upcomingNeedsServerSplit ? "Updating upcoming walks…" : emptyTitle}
+          />
+        )
       ) : (
         <>
           <DataList>

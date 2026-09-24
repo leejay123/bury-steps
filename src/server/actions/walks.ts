@@ -21,6 +21,7 @@ import {
   isWalkStartInThePast,
   walkStatus,
 } from "@/lib/walk-window";
+import { conditionsPurgeAfterFromStartsAt } from "@/lib/conditions-retention";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { walkShareUrl } from "@/lib/walk-slug";
 import { allocateWalkSlug } from "@/lib/walk-slug-server";
@@ -684,6 +685,16 @@ export async function updateWalk(
           select: { token: true, slug: true },
         });
 
+        // Clock-in may already have opened in the hour before start while
+        // the schedule was still editable — keep Art.9 purge dates aligned
+        // with the published start so rescheduling cannot expire notes early.
+        if (nextStartsAt.getTime() !== locked.startsAt.getTime()) {
+          await tx.attendance.updateMany({
+            where: { walkId: id, conditions: { not: null } },
+            data: { conditionsPurgeAfter: conditionsPurgeAfterFromStartsAt(nextStartsAt) },
+          });
+        }
+
         return {
           existing: {
             cancelledAt: locked.cancelledAt,
@@ -748,7 +759,11 @@ export async function updateWalk(
 
   return {
     ok: true,
-    message: wasCancelled ? "Walk updated and put back on the diary." : "Walk updated.",
+    message: wasCancelled
+      ? finished
+        ? "Walk updated and reopened in the record. Its time has already passed, so clock-in stays closed."
+        : "Walk updated and put back on the diary."
+      : "Walk updated.",
   };
 }
 

@@ -18,13 +18,21 @@ export async function getOrCreateUserUnsubscribeToken(
 ): Promise<string> {
   if (existing) return existing;
   const token = makeCapabilityToken();
-  const updated = await prisma.user.update({
-    where: { id: userId },
+  // Only the first concurrent mint wins — a plain update would overwrite
+  // another email's just-sent prefs link with a different token.
+  const claimed = await prisma.user.updateMany({
+    where: { id: userId, unsubscribeToken: null },
     data: { unsubscribeToken: token },
+  });
+  if (claimed.count === 1) return token;
+  const row = await prisma.user.findUnique({
+    where: { id: userId },
     select: { unsubscribeToken: true },
   });
-  // Non-null: we just set it in this same call.
-  return updated.unsubscribeToken as string;
+  if (row?.unsubscribeToken) return row.unsubscribeToken;
+  // Extremely unlikely: row gone between claim and read. Fall back to our
+  // minted token rather than throwing mid-send.
+  return token;
 }
 
 export function memberPreferencesUrl(token: string): string {

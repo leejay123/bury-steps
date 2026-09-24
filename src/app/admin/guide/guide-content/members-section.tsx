@@ -33,9 +33,10 @@ export function MembersSection() {
             walk history below, grouped by year. Search by walk or meeting point, and filter by
             status (stayed for the walk, left early, or cancelled) or year if the list is long.
             Previous and Next appear if they have more than 20 walks. Each walk shows the date,
-            meeting point, and in/out times — including whether they stayed for the whole walk.
-            Click a walk name to open that walk. This is a full page rather than a drawer, so it
-            stays readable even for someone who has been on hundreds of walks.
+            meeting point, and in/out times — including whether they stayed for the whole walk,
+            and the reason if they left early. Click a walk name to open that walk. This is a
+            full page rather than a drawer, so it stays readable even for someone who has been
+            on hundreds of walks.
           </p>
           <p className="font-medium text-foreground">Make organiser or member</p>
           <p>

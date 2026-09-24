@@ -213,6 +213,8 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
     setStatusFilter("all");
   }
 
+  const hasActiveFilters = deferredSearchTerm.trim() !== "" || statusFilter !== "all";
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -257,20 +259,33 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <Empty className="border">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Search />
-            </EmptyMedia>
-            <EmptyTitle>No walks match your search</EmptyTitle>
-          </EmptyHeader>
-          <EmptyContent>
-            <Button onClick={clearFilters} type="button" variant="outline">
-              <SearchX data-icon="inline-start" />
-              Clear search
-            </Button>
-          </EmptyContent>
-        </Empty>
+        hasActiveFilters ? (
+          <Empty className="border">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Search />
+              </EmptyMedia>
+              <EmptyTitle>No walks match your search</EmptyTitle>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button onClick={clearFilters} type="button" variant="outline">
+                <SearchX data-icon="inline-start" />
+                Clear search
+              </Button>
+            </EmptyContent>
+          </Empty>
+        ) : (
+          <Empty className="border">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <CalendarDays />
+              </EmptyMedia>
+              <EmptyTitle>
+                {needsRefresh ? "Updating upcoming walks…" : "No walks scheduled"}
+              </EmptyTitle>
+            </EmptyHeader>
+          </Empty>
+        )
       ) : (
         filtered.map((walk) => <UpcomingWalkCardRow key={walk.id} walk={walk} />)
       )}

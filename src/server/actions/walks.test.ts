@@ -31,6 +31,7 @@ const {
       findUnique: vi.fn(),
     },
     user: { findMany: vi.fn(async () => []) },
+    attendance: { updateMany: vi.fn(async () => ({ count: 0 })) },
   };
   const transaction = vi.fn(async (arg: unknown) => {
     if (Array.isArray(arg)) return Promise.all(arg);
@@ -682,6 +683,50 @@ describe("updateWalk", () => {
     const updateCall = prismaMock.walk.update.mock.calls[0][0];
     expect(updateCall.data.cancelledAt).toBeNull();
     expect(result).toEqual({ ok: true, message: "Walk updated and put back on the diary." });
+  });
+
+  it("bumps conditions purge dates when the published start changes", async () => {
+    const original = new Date("2026-06-01T14:00:00Z");
+    queryRaw.mockResolvedValueOnce([lockedWalk({ startsAt: original, durationMins: 60 })]);
+    isWalkScheduleLocked.mockReturnValueOnce(false);
+    isWalkStartInThePast.mockReturnValueOnce(false);
+    prismaMock.walk.update.mockResolvedValueOnce({ token: "tok-1", slug: "sunday-stroll" });
+
+    await updateWalk(null, updateForm({ startsAt: "2026-07-01T14:00", durationMins: "60" }));
+
+    expect(prismaMock.attendance.updateMany).toHaveBeenCalledWith({
+      where: { walkId: "walk-1", conditions: { not: null } },
+      data: { conditionsPurgeAfter: expect.any(Date) },
+    });
+    const purgeAfter = prismaMock.attendance.updateMany.mock.calls[0][0].data
+      .conditionsPurgeAfter as Date;
+    // ~90 days after the new published start (London wall-clock → UTC).
+    expect(purgeAfter.getTime()).toBeGreaterThan(Date.parse("2026-09-28T00:00:00Z"));
+    expect(purgeAfter.getTime()).toBeLessThan(Date.parse("2026-10-02T00:00:00Z"));
+  });
+
+  it("explains that clock-in stays closed when reopening a walk whose time has already passed", async () => {
+    queryRaw.mockResolvedValueOnce([
+      lockedWalk({
+        cancelledAt: new Date(),
+        startsAt: new Date("2020-01-01T14:00:00Z"),
+        durationMins: 60,
+      }),
+    ]);
+    // Schedule locked so the posted future start is ignored; walkStatus sees
+    // a finished window once cancelledAt is cleared for the message check.
+    isWalkScheduleLocked.mockReturnValueOnce(true);
+    walkStatus.mockReturnValueOnce("cancelled").mockReturnValueOnce("completed");
+    prismaMock.walk.update.mockResolvedValueOnce({ token: "tok-1", slug: "sunday-stroll" });
+
+    const result = await updateWalk(null, updateForm({ wasCancelled: "on" }));
+
+    expect(result).toEqual({
+      ok: true,
+      message:
+        "Walk updated and reopened in the record. Its time has already passed, so clock-in stays closed.",
+    });
+    expect(sendEmailBatch).not.toHaveBeenCalled();
   });
 
   it("notifies opted-in members when an edit brings a cancelled walk back", async () => {

@@ -243,11 +243,16 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
   // concurrent deletes cannot leave the group with zero admins.
   try {
     await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.lastAdmin, async (tx) => {
+      // Same order as removeOwner / transferOwnership — lastAdmin then
+      // lastOwner — so concurrent owner+admin deletes cannot deadlock or
+      // wipe the last owner while another organiser still exists.
+      await tx.$executeRawUnsafe(`SELECT pg_advisory_xact_lock(${COUNT_LIMIT_LOCK_KEYS.lastOwner})`);
       const fresh = await tx.user.findUnique({
         where: { id: target.id },
         select: {
           id: true,
           role: true,
+          isOwner: true,
           _count: {
             select: {
               walksCreated: true,
@@ -261,6 +266,12 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
       if (fresh.role === "ADMIN") {
         const adminCount = await tx.user.count({ where: { role: "ADMIN" } });
         if (adminCount <= 1) throw new LimitReachedError("You cannot delete the last organiser.");
+      }
+      if (fresh.isOwner) {
+        const ownerCount = await tx.user.count({ where: { isOwner: true } });
+        if (ownerCount <= 1) {
+          throw new LimitReachedError("You cannot delete the group's last owner.");
+        }
       }
       if (fresh._count.walksCreated > 0) {
         await tx.walk.updateMany({
@@ -312,6 +323,8 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
       console.error("deleteMember: Clerk login removal failed after database removal", err);
       revalidatePath("/admin");
       revalidatePath("/admin/members");
+      revalidatePath("/admin/messages");
+      revalidatePath("/admin/settings");
       revalidatePath("/walks");
       return {
         ok: true,
@@ -323,6 +336,10 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
 
   revalidatePath("/admin");
   revalidatePath("/admin/members");
+  // contactMessagesOwnerId SetNulls on delete — refresh messages + settings
+  // so a stale "messages go to …" label does not linger.
+  revalidatePath("/admin/messages");
+  revalidatePath("/admin/settings");
   revalidatePath("/walks");
 
   return {
@@ -507,11 +524,27 @@ export async function transferOwnership(
   }
 
   try {
-    await prisma.$transaction([
-      prisma.user.update({ where: { id: target.id }, data: { isOwner: true } }),
-      prisma.user.update({ where: { id: admin.id }, data: { isOwner: false } }),
-    ]);
+    await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.lastOwner, async (tx) => {
+      const actor = await tx.user.findUnique({
+        where: { id: admin.id },
+        select: { isOwner: true },
+      });
+      if (!actor?.isOwner) throw new Error("NOT_OWNER");
+      const fresh = await tx.user.findUnique({
+        where: { id: target.id },
+        select: { id: true, role: true },
+      });
+      if (!fresh || fresh.role !== "ADMIN") throw new Error("NOT_ADMIN");
+      await tx.user.update({ where: { id: fresh.id }, data: { isOwner: true } });
+      await tx.user.update({ where: { id: admin.id }, data: { isOwner: false } });
+    });
   } catch (err) {
+    if (err instanceof Error && err.message === "NOT_OWNER") {
+      return ownerDenied("transfer ownership");
+    }
+    if (err instanceof Error && err.message === "NOT_ADMIN") {
+      return { ok: false, error: "Choose an existing organiser to hand ownership to." };
+    }
     return logActionError("transferOwnership", err, "Could not transfer ownership. Try again.");
   }
 
@@ -555,8 +588,27 @@ export async function addOwner(_prev: ActionResult | null, formData: FormData): 
   }
 
   try {
-    await prisma.user.update({ where: { id: target.id }, data: { isOwner: true } });
+    await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.lastOwner, async (tx) => {
+      const actor = await tx.user.findUnique({
+        where: { id: admin.id },
+        select: { isOwner: true },
+      });
+      if (!actor?.isOwner) throw new Error("NOT_OWNER");
+      const fresh = await tx.user.findUnique({
+        where: { id: target.id },
+        select: { id: true, role: true, isOwner: true },
+      });
+      if (!fresh || fresh.role !== "ADMIN") throw new Error("NOT_ADMIN");
+      if (fresh.isOwner) return;
+      await tx.user.update({ where: { id: fresh.id }, data: { isOwner: true } });
+    });
   } catch (err) {
+    if (err instanceof Error && err.message === "NOT_OWNER") {
+      return ownerDenied("add another owner");
+    }
+    if (err instanceof Error && err.message === "NOT_ADMIN") {
+      return { ok: false, error: "Choose an existing organiser to make a co-owner." };
+    }
     return logActionError("addOwner", err, "Could not add them as an owner. Try again.");
   }
 
@@ -635,14 +687,22 @@ async function sendOrganiserInvite(target: {
   const expiresAt = organiserInviteExpiresAt();
 
   try {
-    await prisma.user.update({
-      where: { id: target.id },
+    // Only a still-MEMBER row can hold an invite — a concurrent accept or
+    // direct promote must not be overwritten with a fresh unused token.
+    const claimed = await prisma.user.updateMany({
+      where: { id: target.id, role: "MEMBER" },
       data: {
         organiserInviteToken: token,
         organiserInviteSentAt: new Date(),
         organiserInviteExpiresAt: expiresAt,
       },
     });
+    if (claimed.count !== 1) {
+      return {
+        ok: false,
+        error: "That member is no longer eligible for an organiser invite.",
+      };
+    }
   } catch (err) {
     return logActionError("setMemberRole", err, "Could not send the invite. Try again.");
   }
@@ -706,10 +766,19 @@ export async function cancelOrganiserInvite(
   }
 
   try {
-    await prisma.user.update({
-      where: { id },
-      data: { organiserInviteToken: null, organiserInviteSentAt: null, organiserInviteExpiresAt: null },
+    // Claim-clear: if they already accepted (or another cancel won), count
+    // is 0 — do not report success for a token that was already consumed.
+    const cleared = await prisma.user.updateMany({
+      where: { id, role: "MEMBER", organiserInviteToken: { not: null } },
+      data: {
+        organiserInviteToken: null,
+        organiserInviteSentAt: null,
+        organiserInviteExpiresAt: null,
+      },
     });
+    if (cleared.count !== 1) {
+      return { ok: false, error: "There is no pending invite for this person." };
+    }
   } catch (err) {
     return logActionError("cancelOrganiserInvite", err, "Could not cancel the invite. Try again.");
   }
