@@ -2,7 +2,10 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 
 const { prismaMock, syncContactUnsubscribed, syncContactSubscribed } = vi.hoisted(() => ({
   prismaMock: {
-    newsletterSubscriber: { updateMany: vi.fn(async () => ({ count: 0 })) },
+    newsletterSubscriber: {
+      updateMany: vi.fn(async () => ({ count: 0 })),
+      findFirst: vi.fn(),
+    },
     user: {
       updateMany: vi.fn(async () => ({ count: 0 })),
       findFirst: vi.fn(),
@@ -23,6 +26,12 @@ import {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  prismaMock.newsletterSubscriber.findFirst.mockReset();
+  prismaMock.newsletterSubscriber.updateMany.mockReset();
+  prismaMock.newsletterSubscriber.updateMany.mockResolvedValue({ count: 0 });
+  prismaMock.user.findFirst.mockReset();
+  prismaMock.user.updateMany.mockReset();
+  prismaMock.user.updateMany.mockResolvedValue({ count: 0 });
 });
 
 describe("optOutNewsletterEverywhere", () => {
@@ -75,15 +84,24 @@ describe("optInNewsletterEverywhere", () => {
 describe("syncNewsletterAudienceToPreference", () => {
   const emailMatch = { equals: "a@example.com", mode: "insensitive" };
 
-  it("opts Resend and footer out when the saved preference is off", async () => {
+  it("leaves an active footer signup alone when the member toggle is off", async () => {
     prismaMock.user.findFirst.mockResolvedValueOnce({ emailNewsletter: false });
+    prismaMock.newsletterSubscriber.findFirst.mockResolvedValueOnce({ id: "sub-1" });
+
+    await syncNewsletterAudienceToPreference("a@example.com", "Ada");
+
+    expect(prismaMock.newsletterSubscriber.updateMany).not.toHaveBeenCalled();
+    expect(syncContactSubscribed).toHaveBeenCalledWith("a@example.com", "Ada");
+    expect(syncContactUnsubscribed).not.toHaveBeenCalled();
+  });
+
+  it("opts Resend out when the member toggle is off and there is no active footer row", async () => {
+    prismaMock.user.findFirst.mockResolvedValueOnce({ emailNewsletter: false });
+    prismaMock.newsletterSubscriber.findFirst.mockResolvedValueOnce(null);
 
     await syncNewsletterAudienceToPreference("a@example.com");
 
-    expect(prismaMock.newsletterSubscriber.updateMany).toHaveBeenCalledWith({
-      where: { email: emailMatch, unsubscribedAt: null },
-      data: { unsubscribedAt: expect.any(Date) },
-    });
+    expect(prismaMock.newsletterSubscriber.updateMany).not.toHaveBeenCalled();
     expect(syncContactUnsubscribed).toHaveBeenCalledWith("a@example.com");
     expect(syncContactSubscribed).not.toHaveBeenCalled();
     expect(prismaMock.user.updateMany).not.toHaveBeenCalled();

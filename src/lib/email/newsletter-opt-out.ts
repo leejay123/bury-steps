@@ -57,9 +57,16 @@ export async function optInNewsletterEverywhere(
 }
 
 /**
- * Align footer + Resend with an already-saved `User.emailNewsletter` value.
- * Re-reads the user row so a concurrent preferences save cannot leave Resend
- * subscribed after the DB ends opted out. Does not flip `User.emailNewsletter`.
+ * Align Resend (and, on opt-in, a prior footer unsubscribe) with an
+ * already-saved `User.emailNewsletter` value. Re-reads the user row so a
+ * concurrent preferences save cannot leave Resend subscribed after the DB
+ * ends opted out. Does not flip `User.emailNewsletter`.
+ *
+ * When the member toggle is off, an independent public footer signup must
+ * stay active — campaigns already union footer ∪ opted-in members, and
+ * wiping the footer on every prefs save (newsletter often left unchecked)
+ * would undo a footer subscribe. Resend stays subscribed iff an active
+ * footer row remains.
  */
 export async function syncNewsletterAudienceToPreference(
   email: string,
@@ -75,10 +82,14 @@ export async function syncNewsletterAudienceToPreference(
   if (!user) return;
 
   if (!user.emailNewsletter) {
-    await prisma.newsletterSubscriber.updateMany({
+    const activeFooter = await prisma.newsletterSubscriber.findFirst({
       where: { email: match, unsubscribedAt: null },
-      data: { unsubscribedAt: new Date() },
+      select: { id: true },
     });
+    if (activeFooter) {
+      await syncContactSubscribed(normalised, firstName);
+      return;
+    }
     await syncContactUnsubscribed(normalised);
     return;
   }
