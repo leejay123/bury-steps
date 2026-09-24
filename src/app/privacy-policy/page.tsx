@@ -93,7 +93,7 @@ export default function PrivacyPolicyPage() {
                 <strong>Vercel</strong> hosts the website and provides Vercel Analytics, which
                 counts page views without cookies or a per-person ID. Views of invite,
                 email-preferences, and walk-share links (URLs that contain a private token) are
-                not sent to Analytics.
+                not sent to Analytics or Speed Insights.
               </li>
               <li>
                 <strong>OpenStreetMap</strong> looks up the meeting point (and postcode, if the

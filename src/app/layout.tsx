@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import Script from "next/script";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/themes";
 import { Toaster } from "@/components/ui/sonner";
@@ -217,12 +216,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           performance samples use a request-time hash, not a client-side
           identifier — so they need no entry in the cookie notice and work the
           same whether someone accepts or declines it. Capability-token URLs
-          (invite / email-preferences / walk share) are dropped before send —
-          see SiteAnalytics. See the "Cookies" section of the privacy policy
-          for the full explanation.
+          (invite / email-preferences / walk share) are dropped before send on
+          both scripts — see SiteAnalytics. See the "Cookies" section of the
+          privacy policy for the full explanation.
         */}
         <SiteAnalytics />
-        <SpeedInsights />
       </body>
     </html>
   );

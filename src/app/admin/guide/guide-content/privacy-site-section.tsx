@@ -54,7 +54,7 @@ export function PrivacySiteSection() {
               Analytics counts page views to show which pages are popular, without a cookie or a
               per-person ID, so it is not affected by Accept or Decline. Views of invite,
               email-preferences, and walk-share links (URLs that contain a private token) are
-              not sent to Analytics. The notice links to the{" "}
+              not sent to Analytics or Speed Insights. The notice links to the{" "}
               <Link href="/privacy-policy">Privacy Policy</Link>. The Facebook group link on the
               site is also set under <Link href="/admin/settings/branding">Branding</Link>.
             </p>
