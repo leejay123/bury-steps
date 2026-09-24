@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { CalendarIcon } from "lucide-react";
 import { enGB } from "react-day-picker/locale";
 import { Calendar } from "@/components/ui/calendar";
@@ -101,19 +101,6 @@ export function DateTimePicker({
     return [...MINUTES, minute].sort();
   }, [minute]);
 
-  const value = date ? combineLondonDateAndTime(date, Number(hour), Number(minute)) : "";
-  const label = date
-    ? new Intl.DateTimeFormat("en-GB", {
-        timeZone: LONDON,
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      }).format(londonWallClockToUtc(value))
-    : "Choose date and time";
-
   const todayLondon = useMemo(() => {
     // Calendar uses timeZone={LONDON}; "today" must be that calendar day as a
     // real London wall-clock instant — not `new Date(y, m-1, d)` (browser-local
@@ -148,6 +135,29 @@ export function DateTimePicker({
     );
   })();
 
+  // Derive a non-past wall clock for today — do not sync via useEffect
+  // (react-hooks/set-state-in-effect). The Select may still show a fallback
+  // option; the hidden form value always uses this snapped pair.
+  const { hour: effectiveHour, minute: effectiveMinute } = useMemo(() => {
+    if (!disablePast || !isSelectedToday) return { hour, minute };
+    return snapPastTime(hour, minute, nowLondon.hour, nowLondon.minute);
+  }, [disablePast, hour, isSelectedToday, minute, nowLondon.hour, nowLondon.minute]);
+
+  const value = date
+    ? combineLondonDateAndTime(date, Number(effectiveHour), Number(effectiveMinute))
+    : "";
+  const label = date
+    ? new Intl.DateTimeFormat("en-GB", {
+        timeZone: LONDON,
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(londonWallClockToUtc(value))
+    : "Choose date and time";
+
   const hours = useMemo(() => {
     if (!disablePast || !isSelectedToday) return HOURS;
     const currentHourHasFutureMinute = Boolean(nextMinuteAfter(nowLondon.minute));
@@ -161,18 +171,11 @@ export function DateTimePicker({
 
   const selectableMinutes = useMemo(() => {
     const base = minutes;
-    if (!disablePast || !isSelectedToday || Number(hour) !== nowLondon.hour) return base;
+    if (!disablePast || !isSelectedToday || Number(effectiveHour) !== nowLondon.hour) {
+      return base;
+    }
     return base.filter((item) => Number(item) > nowLondon.minute);
-  }, [disablePast, hour, isSelectedToday, minutes, nowLondon.hour, nowLondon.minute]);
-
-  // Keep React state in sync with the filtered options — the Select can show a
-  // fallback value while the hidden form input still carried a past time.
-  useEffect(() => {
-    if (!disablePast || !isSelectedToday) return;
-    const snapped = snapPastTime(hour, minute, nowLondon.hour, nowLondon.minute);
-    if (snapped.hour !== hour) setHour(snapped.hour);
-    if (snapped.minute !== minute) setMinute(snapped.minute);
-  }, [disablePast, hour, isSelectedToday, minute, nowLondon.hour, nowLondon.minute]);
+  }, [disablePast, effectiveHour, isSelectedToday, minutes, nowLondon.hour, nowLondon.minute]);
 
   return (
     <div className="flex flex-col gap-2">
@@ -266,7 +269,7 @@ export function DateTimePicker({
                     }
                     setHour(next);
                   }}
-                  value={hours.includes(hour) ? hour : (hours[0] ?? hour)}
+                  value={hours.includes(effectiveHour) ? effectiveHour : (hours[0] ?? effectiveHour)}
                 >
                   <SelectTrigger id={`${id}-hour`}>
                     <SelectValue />
@@ -285,9 +288,9 @@ export function DateTimePicker({
                 <Select
                   onValueChange={setMinute}
                   value={
-                    selectableMinutes.includes(minute)
-                      ? minute
-                      : (selectableMinutes[0] ?? minute)
+                    selectableMinutes.includes(effectiveMinute)
+                      ? effectiveMinute
+                      : (selectableMinutes[0] ?? effectiveMinute)
                   }
                 >
                   <SelectTrigger id={`${id}-minute`}>
