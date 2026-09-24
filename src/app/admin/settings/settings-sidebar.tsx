@@ -168,7 +168,9 @@ function SettingsNavTree({ onNavigate, pathname }: { onNavigate?: () => void; pa
                         <Link
                           className={cn(
                             "rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors",
-                            childActive ? "bg-accent font-medium text-foreground" : "hover:bg-accent/60",
+                            childActive
+                              ? "font-medium text-foreground"
+                              : "hover:bg-accent/60",
                           )}
                           href={child.href}
                           key={child.href}
