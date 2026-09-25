@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { SettingsBackLink, SettingsSubPageTabs } from "./settings-page-nav";
 
-/** Same width for every settings page, header and body alike, so forms
- * don't stretch edge to edge on a wide screen and every page's left edge
- * lines up with the next. */
-const SETTINGS_WIDTH = "mx-auto w-full max-w-4xl";
+/** Same width for every settings page, header and body alike, so every
+ * page's left edge lines up with the next — full width, matching the
+ * rest of the admin section. */
+const SETTINGS_WIDTH = "w-full";
 
 /**
  * Shared shell for every Settings page, the card-table home included —
