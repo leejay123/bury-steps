@@ -1,7 +1,6 @@
-import { HeroSection } from "@/components/hero";
+import { HeroCinematic } from "@/components/hero-cinematic";
 import { HomeWelcome } from "@/components/home-welcome";
 import { getOptionalUser } from "@/lib/auth";
-import { getHomepageSlides } from "@/lib/homepage-slides";
 import { getHomepageTestimonials } from "@/lib/homepage-testimonials";
 import { getHomepageFaqData } from "@/lib/homepage-faqs";
 import { getHomepageMemberNotices } from "@/lib/site-notices";
@@ -16,8 +15,7 @@ export const revalidate = 120;
 export default async function Home() {
   const origin = appUrl();
   const user = await getOptionalUser();
-  const [slides, testimonials, faqData, theme, memberNotices, progressEnabled] = await Promise.all([
-    getHomepageSlides(),
+  const [testimonials, faqData, theme, memberNotices, progressEnabled] = await Promise.all([
     getHomepageTestimonials(),
     getHomepageFaqData(),
     getSiteTheme(),
@@ -27,13 +25,11 @@ export default async function Home() {
 
   return (
     <div className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
-      <HeroSection
-        carouselEnabled={theme.carouselEnabled}
+      <HeroCinematic
         signInHref={accountPortalHref("sign-in", `${origin}${AFTER_AUTH_PATH}`)}
         signUpHref={accountPortalHref("sign-up", `${origin}${AFTER_AUTH_PATH}`)}
         siteName={theme.siteName}
         siteTagline={theme.siteTagline}
-        slides={slides}
       />
       <HomeWelcome
         aboutExpect={theme.aboutExpect}
