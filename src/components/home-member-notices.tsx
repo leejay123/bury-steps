@@ -120,9 +120,9 @@ export function HomeMemberNoticesSection({
       </HeroCopy>
       <div className="relative">
         <FullWidthDivider position="top" />
-        <div className="grid w-full grid-cols-1 gap-px bg-border">
+        <div className="grid w-full grid-cols-1">
           <Carousel
-            className={cn("group/carousel w-full bg-background", showControls && "pb-px")}
+            className="group/carousel w-full bg-background"
             opts={{ loop: showControls, align: "start" }}
             plugins={showControls ? [plugin] : []}
             setApi={setApi}
