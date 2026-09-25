@@ -42,7 +42,7 @@ export default clerkMiddleware(
 
 export const config = {
   matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico)).*)",
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|mp4|webm|mov)).*)",
     "/(api|trpc)(.*)",
     "/__clerk/:path*",
   ],
