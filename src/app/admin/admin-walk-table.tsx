@@ -70,9 +70,41 @@ export function AdminWalkTable({
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sortOrder, setSortOrder] = useState<SortOrder>(scope === "past" ? "desc" : "asc");
   const listRef = useRef<HTMLDivElement>(null);
-  const statusOptions = scope === "upcoming" ? UPCOMING_STATUS_OPTIONS : PAST_STATUS_OPTIONS;
+  const allStatusOptions = scope === "upcoming" ? UPCOMING_STATUS_OPTIONS : PAST_STATUS_OPTIONS;
   const now = useLiveNow();
   const router = useRouter();
+
+  // Only offer statuses that at least one walk on this tab actually has —
+  // no picking "Cancelled" when nothing's cancelled.
+  const statusOptions = useMemo(() => {
+    const present = new Set(
+      walks
+        .map((walk) =>
+          walkStatus(
+            {
+              cancelledAt: walk.cancelledAt ? new Date(walk.cancelledAt) : null,
+              startsAt: new Date(walk.startsAt),
+              durationMins: walk.durationMins,
+              endedAt: walk.endedAt ? new Date(walk.endedAt) : null,
+            },
+            now,
+          ),
+        )
+        // Completed rows are hidden from Upcoming until the server-side
+        // split lands (see upcomingNeedsServerSplit below), so don't offer
+        // "Completed" as a filter there either.
+        .filter((status) => !(scope === "upcoming" && status === "completed")),
+    );
+    return allStatusOptions.filter(
+      (option) => option.value === "all" || present.has(option.value as WalkStatus),
+    );
+  }, [allStatusOptions, now, scope, walks]);
+
+  useEffect(() => {
+    if (statusFilter !== "all" && !statusOptions.some((option) => option.value === statusFilter)) {
+      setStatusFilter("all");
+    }
+  }, [statusFilter, statusOptions]);
 
   // Upcoming is SSR-split from History. Dropping a finished walk client-side
   // alone would hide it from both tabs until the next navigation — refresh
