@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/auth";
+import { getOptionalUser, requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { requesterIpKey } from "@/lib/requester-ip";
@@ -27,6 +27,14 @@ export async function subscribeToNewsletter(
   // visitor never sees or fills in.
   if (String(formData.get("company") ?? "").trim().length > 0) {
     return { ok: true, message: "Thanks — we'll be in touch." };
+  }
+
+  // Newsletter signup is members-only — the footer UI is already hidden
+  // from logged-out visitors (see NewsletterFooterGate), but gate here too
+  // so the action can't be called directly while signed out.
+  const user = await getOptionalUser();
+  if (!user) {
+    return { ok: false, error: "Sign in to subscribe to the newsletter." };
   }
 
   const key = await requesterIpKey();
