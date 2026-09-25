@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Footprints, Search } from "lucide-react";
 import { formatDate, formatTime, londonYear } from "@/lib/dates";
@@ -48,6 +48,15 @@ export function AllWalksList({ rows }: { rows: AllWalksRow[] }) {
     for (const row of rows) years.add(londonYear(new Date(row.startsAt)));
     return [...years].sort((a, b) => b - a);
   }, [rows]);
+
+  // Only offer "Completed"/"Cancelled" when a row actually has that status.
+  const hasCompleted = useMemo(() => rows.some((row) => !row.cancelledAt), [rows]);
+  const hasCancelled = useMemo(() => rows.some((row) => row.cancelledAt), [rows]);
+
+  useEffect(() => {
+    if (statusFilter === "completed" && !hasCompleted) setStatusFilter("all");
+    if (statusFilter === "cancelled" && !hasCancelled) setStatusFilter("all");
+  }, [statusFilter, hasCompleted, hasCancelled]);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -97,8 +106,8 @@ export function AllWalksList({ rows }: { rows: AllWalksRow[] }) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
+              {hasCompleted ? <SelectItem value="completed">Completed</SelectItem> : null}
+              {hasCancelled ? <SelectItem value="cancelled">Cancelled</SelectItem> : null}
             </SelectContent>
           </Select>
         </div>

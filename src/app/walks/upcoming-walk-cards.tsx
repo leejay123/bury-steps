@@ -24,7 +24,7 @@ import { useWalkClock } from "@/hooks/use-walk-clock";
 type StatusFilter = "all" | Exclude<WalkStatus, "cancelled" | "completed">;
 type SortOrder = "asc" | "desc";
 
-const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
+const ALL_STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "all", label: "All statuses" },
   { value: "upcoming", label: "Upcoming" },
   { value: "starting-soon", label: "Starting soon" },
@@ -167,6 +167,33 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
   const now = useLiveNow();
   const router = useRouter();
 
+  // Only offer statuses at least one walk currently has — no picking
+  // "Starting soon" when nothing's starting soon.
+  const statusOptions = useMemo(() => {
+    const present = new Set(
+      walks.map((walk) =>
+        walkStatus(
+          {
+            cancelledAt: null,
+            startsAt: new Date(walk.startsAt),
+            durationMins: walk.durationMins,
+            endedAt: walk.endedAt ? new Date(walk.endedAt) : null,
+          },
+          now,
+        ),
+      ),
+    );
+    return ALL_STATUS_OPTIONS.filter(
+      (option) => option.value === "all" || present.has(option.value),
+    );
+  }, [now, walks]);
+
+  useEffect(() => {
+    if (statusFilter !== "all" && !statusOptions.some((option) => option.value === statusFilter)) {
+      setStatusFilter("all");
+    }
+  }, [statusFilter, statusOptions]);
+
   // Keep the SSR tab count in sync once a walk finishes on an open page.
   const needsRefresh = walks.some((walk) => {
     const endedAt = walk.endedAt ? new Date(walk.endedAt) : null;
@@ -215,6 +242,19 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
 
   const hasActiveFilters = deferredSearchTerm.trim() !== "" || statusFilter !== "all";
 
+  if (walks.length === 0) {
+    return (
+      <Empty className="border">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <CalendarDays />
+          </EmptyMedia>
+          <EmptyTitle>No walks scheduled</EmptyTitle>
+        </EmptyHeader>
+      </Empty>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -236,7 +276,7 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {STATUS_OPTIONS.map((option) => (
+              {statusOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
