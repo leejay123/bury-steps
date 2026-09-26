@@ -19,9 +19,9 @@ export function HomepageNoticesSection() {
               All of this lives under <Link href="/admin/settings">Settings</Link>. Hero photos,
               testimonials, FAQs, and notices use a list: tap a row to edit. Remove is the small
               button on the row, not in the drawer. Drawers are for adding and editing. The
-              notice bell and About slide up from the bottom and span the full width
-              of the screen. Journey and the editors
-              open the floating card. On a phone that card sits in the middle and fills
+              notice bell and About slide up from the bottom on a phone and span the
+              full width of the screen. On a wider screen they use the floating card,
+              like Journey and the editors. On a phone that card sits in the middle and fills
               most of the screen. It does not swipe away — close it with the button. On a
               wider screen the same card slides in from the right. Edit forms stay that
               card. On a phone the card keeps its size while you type, and the fields

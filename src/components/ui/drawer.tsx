@@ -77,8 +77,9 @@ function Drawer({
    */
   variant?: "sheet" | "form";
 }) {
-  const swipeDirection = toSwipeDirection(direction ?? "right");
   const phone = useIsPhone();
+  // Bottom sheets are a phone layout. On a wider screen they use the side card.
+  const swipeDirection = toSwipeDirection(direction === "bottom" && !phone ? "right" : (direction ?? "right"));
   const triggerRef = React.useRef<HTMLElement | null>(null);
   const pointerOutsideRef = React.useRef<((event: Event) => void) | null>(null);
   const unlockBackgroundScrollRef = React.useRef<(() => void) | null>(null);
