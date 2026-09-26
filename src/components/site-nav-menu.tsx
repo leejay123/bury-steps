@@ -121,6 +121,35 @@ function ScrollEdgeFade({ side, visible }: { side: "left" | "right"; visible: bo
   );
 }
 
+/** Lets a plain vertical mouse wheel scroll this horizontal row — without
+ * this, a desktop mouse (no trackpad, no touch) has no way to reach content
+ * past either edge once the row overflows: the scrollbar is hidden (by
+ * design, to match the rest of the site's horizontal scrollers) and a
+ * bare wheel event only moves the page vertically, never this row. Only
+ * takes over when the gesture is mostly vertical and the row actually has
+ * somewhere to go, so a normal trackpad horizontal swipe (deltaX already
+ * doing the work) and page scrolling elsewhere are both left alone. */
+function useWheelScroll(scrollerRef: RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+
+    function onWheel(event: WheelEvent) {
+      if (!scroller || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+      const { scrollLeft, scrollWidth, clientWidth } = scroller;
+      const canScroll =
+        (event.deltaY < 0 && scrollLeft > 0) ||
+        (event.deltaY > 0 && scrollLeft < scrollWidth - clientWidth);
+      if (!canScroll) return;
+      event.preventDefault();
+      scroller.scrollLeft += event.deltaY;
+    }
+
+    scroller.addEventListener("wheel", onWheel, { passive: false });
+    return () => scroller.removeEventListener("wheel", onWheel);
+  }, [scrollerRef]);
+}
+
 function scrollNavItemIntoView(scroller: HTMLElement, item: HTMLElement) {
   const scrollerBox = scroller.getBoundingClientRect();
   const itemBox = item.getBoundingClientRect();
@@ -146,6 +175,8 @@ export function SiteNavLinks({
 }) {
   const pathname = usePathname();
   const scrollerRef = useRef<HTMLElement>(null);
+  const edges = useScrollEdges(scrollerRef);
+  useWheelScroll(scrollerRef);
 
   useEffect(() => {
     const scroller = scrollerRef.current;
@@ -154,27 +185,31 @@ export function SiteNavLinks({
   }, [pathname]);
 
   return (
-    <nav
-      className="hidden max-w-full items-center justify-center gap-1 overflow-x-auto overscroll-x-contain text-sm [scrollbar-width:none] [-ms-overflow-style:none] md:flex [&::-webkit-scrollbar]:hidden"
-      ref={scrollerRef}
-    >
-      {navItems(isAdmin, walksHref, permissions, progressEnabled).map((item) => {
-        const active = isNavItemActive(pathname, item.href);
-        return (
-          <NavLink
-            active={active}
-            className="shrink-0"
-            href={item.href}
-            key={item.href}
-            label={item.label}
-            onSelect={(el) => {
-              const scroller = scrollerRef.current;
-              if (scroller) scrollNavItemIntoView(scroller, el);
-            }}
-          />
-        );
-      })}
-    </nav>
+    <div className="relative hidden min-w-0 md:block">
+      <ScrollEdgeFade side="left" visible={edges.start} />
+      <nav
+        className="flex max-w-full items-center justify-center gap-1 overflow-x-auto overscroll-x-contain text-sm [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        ref={scrollerRef}
+      >
+        {navItems(isAdmin, walksHref, permissions, progressEnabled).map((item) => {
+          const active = isNavItemActive(pathname, item.href);
+          return (
+            <NavLink
+              active={active}
+              className="shrink-0"
+              href={item.href}
+              key={item.href}
+              label={item.label}
+              onSelect={(el) => {
+                const scroller = scrollerRef.current;
+                if (scroller) scrollNavItemIntoView(scroller, el);
+              }}
+            />
+          );
+        })}
+      </nav>
+      <ScrollEdgeFade side="right" visible={edges.end} />
+    </div>
   );
 }
 
@@ -194,6 +229,7 @@ export function SiteMobileNavBar({
   const pathname = usePathname();
   const scrollerRef = useRef<HTMLDivElement>(null);
   const edges = useScrollEdges(scrollerRef);
+  useWheelScroll(scrollerRef);
 
   useEffect(() => {
     const scroller = scrollerRef.current;
