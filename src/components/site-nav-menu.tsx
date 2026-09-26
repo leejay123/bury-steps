@@ -7,12 +7,12 @@ import {
   Bell,
   BookOpen,
   ChartColumn,
-  ClipboardList,
+  FileBarChart,
   Footprints,
   History,
   House,
-  Mail,
-  Settings,
+  MessageSquare,
+  SlidersHorizontal,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -28,9 +28,9 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   Progress: ChartColumn,
   History: History,
   Members: Users,
-  Messages: Mail,
-  Reports: ClipboardList,
-  Settings: Settings,
+  Messages: MessageSquare,
+  Reports: FileBarChart,
+  Settings: SlidersHorizontal,
   Guide: BookOpen,
 };
 
