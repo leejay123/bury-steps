@@ -13,16 +13,17 @@ export function parseHeroStyle(raw: string | null | undefined): HeroStyle {
 export type HeroVideoOption = {
   key: string;
   label: string;
+  poster: string;
   src: string;
 };
 
 /** Bundled video choices for the cinematic hero — add a file under
  * public/hero-videos and a matching entry here to offer another one. */
 export const HERO_VIDEO_OPTIONS: HeroVideoOption[] = [
-  { key: "hero-1", label: "Video 1", src: "/hero-videos/hero-1.mp4" },
-  { key: "hero-2", label: "Video 2", src: "/hero-videos/hero-2.mp4" },
-  { key: "hero-3", label: "Video 3", src: "/hero-videos/hero-3.mp4" },
-  { key: "hero-4", label: "Video 4", src: "/hero-videos/hero-4.mp4" },
+  { key: "hero-1", label: "Video 1", poster: "/hero-videos/hero-1.jpg", src: "/hero-videos/hero-1.mp4" },
+  { key: "hero-2", label: "Video 2", poster: "/hero-videos/hero-2.jpg", src: "/hero-videos/hero-2.mp4" },
+  { key: "hero-3", label: "Video 3", poster: "/hero-videos/hero-3.jpg", src: "/hero-videos/hero-3.mp4" },
+  { key: "hero-4", label: "Video 4", poster: "/hero-videos/hero-4.jpg", src: "/hero-videos/hero-4.mp4" },
 ];
 
 export const DEFAULT_HERO_VIDEO_KEY = HERO_VIDEO_OPTIONS[0].key;
@@ -35,6 +36,11 @@ export function parseHeroVideoKey(raw: string | null | undefined): string {
 
 export function heroVideoSrc(key: string): string {
   return HERO_VIDEO_OPTIONS.find((option) => option.key === key)?.src ?? HERO_VIDEO_OPTIONS[0].src;
+}
+
+/** First frame of the chosen video, shown while the file itself starts. */
+export function heroVideoPoster(key: string): string {
+  return HERO_VIDEO_OPTIONS.find((option) => option.key === key)?.poster ?? HERO_VIDEO_OPTIONS[0].poster;
 }
 
 export const DEFAULT_HERO_OVERLAY_OPACITY = 55;

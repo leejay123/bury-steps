@@ -17,6 +17,7 @@ export function HeroCinematic({
   siteName,
   siteTagline,
   textColor,
+  videoPoster,
   videoSrc,
 }: {
   /** 0-100 — darkness of the gradient over the video. */
@@ -27,20 +28,26 @@ export function HeroCinematic({
   siteTagline: string;
   /** Hex color for the eyebrow/title/tagline text. */
   textColor: string;
+  /** First frame, painted before the video file has decoded. */
+  videoPoster: string;
   videoSrc: string;
 }) {
   return (
     <section className="relative isolate flex min-h-[50svh] items-center justify-center overflow-hidden bg-[#0a0a0c] text-center">
+      <link as="image" fetchPriority="high" href={videoPoster} rel="preload" />
+      <link as="video" fetchPriority="high" href={videoSrc} rel="preload" />
       <video
         autoPlay
         className="absolute inset-0 -z-20 h-full w-full object-cover"
+        fetchPriority="high"
         key={videoSrc}
         loop
         muted
         playsInline
-      >
-        <source src={videoSrc} type="video/mp4" />
-      </video>
+        poster={videoPoster}
+        preload="auto"
+        src={videoSrc}
+      />
       <div
         className="absolute inset-0 -z-10"
         style={{

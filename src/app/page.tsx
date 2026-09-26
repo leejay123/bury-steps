@@ -7,7 +7,7 @@ import { getHomepageTestimonials } from "@/lib/homepage-testimonials";
 import { getHomepageFaqData } from "@/lib/homepage-faqs";
 import { getHomepageMemberNotices } from "@/lib/site-notices";
 import { getProgressEnabled } from "@/lib/progress-settings";
-import { heroVideoSrc } from "@/lib/hero-style";
+import { heroVideoPoster, heroVideoSrc } from "@/lib/hero-style";
 import { PAGE_X_BLEED } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
@@ -39,6 +39,7 @@ export default async function Home() {
           siteName={theme.siteName}
           siteTagline={theme.siteTagline}
           textColor={theme.heroTextColor}
+          videoPoster={heroVideoPoster(theme.heroVideoKey)}
           videoSrc={heroVideoSrc(theme.heroVideoKey)}
         />
       ) : (
