@@ -267,30 +267,47 @@ function DrawerContent({
 
   React.useEffect(() => {
     if (!root) return;
-    function onFocusIn(event: FocusEvent) {
-      const target = event.target;
-      if (!(target instanceof HTMLElement)) return;
-      if (target.tagName !== "INPUT" && target.tagName !== "TEXTAREA") return;
-      window.requestAnimationFrame(() => {
-        target.scrollIntoView({ block: "center", behavior: "smooth" });
-      });
-    }
+    const panel = root;
     const viewport = window.visualViewport;
     let settleFrame = 0;
-    function onViewportResize() {
+    // Scroll the field inside the drawer's own scroller. scrollIntoView also
+    // pans the page, and on iOS that pan is what shrank the card to the
+    // footer and slid the rest off the top of the screen.
+    function scrollFieldIntoPanel(field: HTMLElement) {
+      let scroller: HTMLElement | null = field.parentElement;
+      while (scroller && panel.contains(scroller)) {
+        const style = window.getComputedStyle(scroller);
+        const scrolls = style.overflowY === "auto" || style.overflowY === "scroll";
+        if (scrolls && scroller.scrollHeight > scroller.clientHeight + 1) {
+          const fieldRect = field.getBoundingClientRect();
+          const box = scroller.getBoundingClientRect();
+          const margin = 16;
+          if (fieldRect.bottom > box.bottom - margin) {
+            scroller.scrollTop += fieldRect.bottom - (box.bottom - margin);
+          } else if (fieldRect.top < box.top + margin) {
+            scroller.scrollTop -= box.top + margin - fieldRect.top;
+          }
+          return;
+        }
+        scroller = scroller.parentElement;
+      }
+    }
+    function alignFocusedField() {
       window.cancelAnimationFrame(settleFrame);
       settleFrame = window.requestAnimationFrame(() => {
         const active = document.activeElement;
-        if (!(active instanceof HTMLElement) || !root?.contains(active)) return;
-        if (active.tagName !== "INPUT" && active.tagName !== "TEXTAREA") return;
-        active.scrollIntoView({ block: "nearest" });
+        if (!(active instanceof HTMLElement) || !panel.contains(active)) return;
+        if (active.tagName !== "INPUT" && active.tagName !== "TEXTAREA" && active.tagName !== "SELECT") {
+          return;
+        }
+        scrollFieldIntoPanel(active);
       });
     }
-    root.addEventListener("focusin", onFocusIn);
-    viewport?.addEventListener("resize", onViewportResize);
+    panel.addEventListener("focusin", alignFocusedField);
+    viewport?.addEventListener("resize", alignFocusedField);
     return () => {
-      root.removeEventListener("focusin", onFocusIn);
-      viewport?.removeEventListener("resize", onViewportResize);
+      panel.removeEventListener("focusin", alignFocusedField);
+      viewport?.removeEventListener("resize", alignFocusedField);
       window.cancelAnimationFrame(settleFrame);
     };
   }, [root]);

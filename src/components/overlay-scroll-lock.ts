@@ -113,6 +113,11 @@ function eventTargetInsideOpenOverlay(target: EventTarget | null) {
   );
 }
 
+function eventTargetInsideDrawer(target: EventTarget | null) {
+  if (!(target instanceof Element)) return false;
+  return Boolean(target.closest('[data-slot="drawer-content"]'));
+}
+
 const SCROLL_KEYS = new Set(["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "]);
 
 /**
@@ -145,12 +150,13 @@ export function lockBackgroundScroll() {
   body.style.touchAction = "none";
 
   const freezeScroll = () => {
-    // iOS still needs to shift the page to lift a focused input above the
-    // keyboard, even with the background locked — fighting that (snapping
-    // back while the keyboard is up) is what left dialog content sitting
-    // half under the keyboard's own accessory bar. Only re-pin once focus
-    // isn't inside the overlay any more.
-    if (eventTargetInsideOpenOverlay(document.activeElement)) return;
+    // Dialogs still let iOS pan a focused field above the keyboard —
+    // snapping the page back left dialog content under the accessory bar.
+    // A drawer is sized to the visible area itself, so that same pan
+    // shoves the card off the top of the screen. Keep the page pinned
+    // while a drawer field is focused.
+    const active = document.activeElement;
+    if (eventTargetInsideOpenOverlay(active) && !eventTargetInsideDrawer(active)) return;
     if (window.scrollX !== lockedX || window.scrollY !== lockedY) {
       window.scrollTo(lockedX, lockedY);
     }

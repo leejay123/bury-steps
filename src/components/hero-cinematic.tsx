@@ -39,7 +39,6 @@ export function HeroCinematic({
       <video
         autoPlay
         className="absolute inset-0 -z-20 h-full w-full object-cover"
-        fetchPriority="high"
         key={videoSrc}
         loop
         muted

@@ -22,7 +22,9 @@ export function HomepageNoticesSection() {
               notice bell, About, Journey, and the editors all open the same floating card.
               On a phone the card sits in the middle and fills most of the screen. It does not
               swipe away — close it with the button. On a wider screen the same card slides in
-              from the right. Edit forms stay that card and sit above the keyboard.
+              from the right. Edit forms stay that card. On a phone, while you are
+              typing, the card stays the size of the screen above the keyboard: the
+              fields scroll, and Cancel and Save stay on the card.
               Every drawer sits in from the screen edges: rounded corners and a shadow, with a
               gap around it.
               Add buttons stretch full width.
