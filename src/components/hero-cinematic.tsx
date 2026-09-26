@@ -44,13 +44,12 @@ export function HeroCinematic({
       <div
         className="absolute inset-0 -z-10"
         style={{
-          // `ellipse`, not `circle` — a forced circle on a section this
-          // much wider than it is tall reaches its dark stops long before
-          // the left/right edges but barely darkens the top/bottom, showing
-          // up as a bright circular "window" flanked by near-solid bars.
-          // `ellipse` (the default, made explicit here) scales independently
-          // on each axis to match the box's own aspect ratio instead.
-          background: `radial-gradient(ellipse at 50% 35%, transparent 20%, rgba(10,10,12,${overlayOpacity / 100}) 60%, #0a0a0c 100%)`,
+          // Flat, not a radial gradient — a vignette shape (circle or
+          // ellipse) always darkens unevenly by design, which fights an
+          // "overlay darkness" slider meant to control one uniform amount.
+          // A plain wash darkens the whole video by exactly the slider's
+          // percentage everywhere, with no shape artifacts to fight.
+          backgroundColor: `rgba(10,10,12,${overlayOpacity / 100})`,
         }}
       />
 
