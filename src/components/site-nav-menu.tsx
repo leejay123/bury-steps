@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type RefObject } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Bell,
   BookOpen,
@@ -61,6 +61,8 @@ function NavLink({
   label: string;
   onSelect?: (el: HTMLAnchorElement) => void;
 }) {
+  const router = useRouter();
+  const pushedOnPress = useRef(false);
   return (
     <Link
       aria-current={active ? "page" : undefined}
@@ -76,9 +78,17 @@ function NavLink({
       onClick={(event) => {
         unlockIdleDocument();
         onSelect?.(event.currentTarget);
+        if (pushedOnPress.current) {
+          event.preventDefault();
+          pushedOnPress.current = false;
+        }
       }}
-      onPointerDown={() => {
+      onPointerDown={(event) => {
         unlockIdleDocument();
+        if (active || event.button !== 0) return;
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        pushedOnPress.current = true;
+        router.push(href);
       }}
     >
       {active ? <span className="absolute inset-0 rounded-md bg-muted" /> : null}

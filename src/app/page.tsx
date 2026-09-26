@@ -17,14 +17,23 @@ export const revalidate = 120;
 
 export default async function Home() {
   const origin = appUrl();
-  const user = await getOptionalUser();
+  // Auth and the homepage queries do not depend on each other. Starting
+  // them together means the page is not stuck waiting for sign-in before
+  // the hero, FAQs, and quotes even begin.
+  const userPromise = getOptionalUser();
+  const slidesPromise = getHomepageSlides();
+  const testimonialsPromise = getHomepageTestimonials();
+  const faqPromise = getHomepageFaqData();
+  const themePromise = getSiteTheme();
+  const progressPromise = getProgressEnabled();
+  const user = await userPromise;
   const [slides, testimonials, faqData, theme, memberNotices, progressEnabled] = await Promise.all([
-    getHomepageSlides(),
-    getHomepageTestimonials(),
-    getHomepageFaqData(),
-    getSiteTheme(),
+    slidesPromise,
+    testimonialsPromise,
+    faqPromise,
+    themePromise,
     user ? getHomepageMemberNotices(user.id, user.firstName) : Promise.resolve([]),
-    getProgressEnabled(),
+    progressPromise,
   ]);
   const signInHref = accountPortalHref("sign-in", `${origin}${AFTER_AUTH_PATH}`);
   const signUpHref = accountPortalHref("sign-up", `${origin}${AFTER_AUTH_PATH}`);
