@@ -3,17 +3,49 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  Bell,
+  BookOpen,
+  ChartColumn,
+  ClipboardList,
+  Footprints,
+  History,
+  House,
+  Mail,
+  Settings,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { unlockIdleDocument } from "@/components/overlay-root";
 import { isNavItemActive, navItems } from "@/components/site-nav-items";
 import type { OrganiserPermissions } from "@/lib/organiser-permissions";
 
+const NAV_ICONS: Record<string, LucideIcon> = {
+  Home: House,
+  Walks: Footprints,
+  Notices: Bell,
+  Progress: ChartColumn,
+  History: History,
+  Members: Users,
+  Messages: Mail,
+  Reports: ClipboardList,
+  Settings: Settings,
+  Guide: BookOpen,
+};
+
 function navLinkClass(active: boolean) {
   return cn(
-    "relative rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground",
+    "relative inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground",
     !active && "hover:bg-muted",
     active && "font-medium text-foreground",
   );
+}
+
+function NavIcon({ label }: { label: string }) {
+  const Icon = NAV_ICONS[label];
+  if (!Icon) return null;
+  return <Icon aria-hidden="true" className="size-4 shrink-0" />;
 }
 
 function NavLink({
@@ -49,7 +81,10 @@ function NavLink({
       }}
     >
       {active ? <span className="absolute inset-0 rounded-md bg-muted" /> : null}
-      <span className="relative z-10">{label}</span>
+      <span className="relative z-10 inline-flex items-center gap-1.5">
+        <NavIcon label={label} />
+        {label}
+      </span>
     </Link>
   );
 }
