@@ -22,8 +22,8 @@ export function HomepageNoticesSection() {
               On a phone every drawer, including a message, slides up from the bottom,
               full width. It closes downward. It does not swipe away — close it with the
               button. On a wider screen the same drawer slides a short way in from the
-              right, and slides back out the same way. It fades in as it arrives and fades
-              out as it leaves. On a phone, an edit form fills the screen, with
+              right, and slides back out the same way. A mask on that edge uncovers it
+              as it arrives and covers it as it leaves. On a phone, an edit form fills the screen, with
               rounded corners only at the top. While you type, that sheet shortens to
               the space above the keyboard: the title stays put, the fields scroll, and
               Cancel and Save sit just above the keys.
