@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DescriptionText } from "@/components/description-text";
+import { DescriptionText, InlineDescriptionText } from "@/components/description-text";
 
 const COLLAPSED_LINE_CLAMP = "line-clamp-6";
 /** Rough character count past which a description is worth collapsing —
@@ -19,10 +19,10 @@ const THIN_SCROLLBAR_CLASSNAME =
  * What3Words, …) used to render as one uncapped paragraph — on a walk with a
  * lot of copy that pushed everything else on the page down below the fold.
  * Collapses to a few lines with a Read more toggle; expanded state scrolls
- * within itself instead of growing the page. Collapsed preview stays plain
- * text (line-clamp truncates raw text more predictably than paragraph
- * markup); expanded view renders **bold** and real paragraph breaks via
- * DescriptionText. */
+ * within itself instead of growing the page. Collapsed preview still renders
+ * **bold** (via InlineDescriptionText, no paragraph splitting — line-clamp
+ * needs one continuous inline flow to count lines correctly); expanded view
+ * gets real paragraph breaks too, via DescriptionText. */
 export function WalkDescription({ description }: { description: string }) {
   const [expanded, setExpanded] = useState(false);
   const isLong = description.length > LONG_DESCRIPTION_THRESHOLD;
@@ -35,7 +35,9 @@ export function WalkDescription({ description }: { description: string }) {
           text={description}
         />
       ) : (
-        <p className={cn("whitespace-pre-line", isLong && COLLAPSED_LINE_CLAMP)}>{description}</p>
+        <p className={cn(isLong && COLLAPSED_LINE_CLAMP)}>
+          <InlineDescriptionText text={description} />
+        </p>
       )}
       {isLong ? (
         // Plain text + chevron, no button chrome — only the chevron animates

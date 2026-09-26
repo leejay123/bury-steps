@@ -19,6 +19,15 @@ export function DescriptionText({ text, className }: { text: string; className?:
   );
 }
 
+/** Same **bold** formatting as DescriptionText, but no paragraph splitting —
+ * for a line-clamped preview, where the text needs to stay one continuous
+ * inline flow for the clamp to count lines correctly. Line breaks (single
+ * \n) still become <br>, so a preview reads the same as the full text up to
+ * where it gets cut off, just without literal ** markup showing through. */
+export function InlineDescriptionText({ text, className }: { text: string; className?: string }) {
+  return <span className={className}>{formatParagraph(text)}</span>;
+}
+
 function formatParagraph(paragraph: string): ReactNode[] {
   return paragraph.split("\n").flatMap((line, lineIndex, lines) => {
     const nodes: ReactNode[] = boldify(line, lineIndex);

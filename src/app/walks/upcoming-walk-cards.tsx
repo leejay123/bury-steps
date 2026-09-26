@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CalendarDays, ChevronRight, Clock, MapPin, Search, SearchX } from "lucide-react";
 import { formatDateTime, formatWalkDate } from "@/lib/dates";
+import { InlineDescriptionText } from "@/components/description-text";
 import { walkSharePath } from "@/lib/walk-slug";
 import { cn } from "@/lib/utils";
 import { walkStatus, windowState, type WalkStatus, type WindowState } from "@/lib/walk-window";
@@ -124,7 +125,7 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
       <CardContent className="flex flex-col gap-4">
         {walk.description ? (
           <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">
-            {walk.description}
+            <InlineDescriptionText text={walk.description} />
           </p>
         ) : null}
         {!walk.clockedInAt && state !== "closed" ? (
