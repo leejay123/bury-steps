@@ -69,7 +69,7 @@ export function HomeAboutDrawer({
   const facebookUrl = facebookGroupUrl.trim();
   const storyParagraphs = howThisStartedParagraphs(howThisStartedBody);
   return (
-    <Drawer>
+    <Drawer direction="bottom">
       <DrawerTrigger asChild>
         {trigger ?? <Button variant="outline">Read more</Button>}
       </DrawerTrigger>

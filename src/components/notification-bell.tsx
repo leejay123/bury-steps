@@ -120,7 +120,7 @@ export function NotificationBell({
   }
 
   return (
-    <Drawer onOpenChange={setOpen} open={open}>
+    <Drawer direction="bottom" onOpenChange={setOpen} open={open}>
       <DrawerTrigger asChild>
         <NoticeBellButton
           className="border-transparent bg-transparent shadow-none hover:bg-accent"

@@ -145,40 +145,36 @@ body {
 }
 
 /*
- * Form editors on a phone fill the space above the keyboard. Top and bottom
- * are both set and height stays auto, so the card is the stretch between
- * them — a calculated height let the flex column collapse to the footer
- * (Cancel / Create walk alone, with the fields clipped off the page).
- *
- * --keyboard-inset (overlay-root) is only the part of the layout viewport
- * the keyboard still covers:
- *  - Classic iOS paints the keyboard over a full-height page, so the inset
- *    is the keyboard and the card lifts clear of it.
- *  - Android (interactive-widget=resizes-content) and recent iOS already
- *    shrink the page, so the inset is 0 — or 44px on iOS for the AutoFill
- *    bar — and the card just fills that shorter page.
- * Do not also offset by --vv-top. iOS pans position:fixed with the visual
- * viewport, and adding offsetTop on top of that shoved the card off the top.
+ * Read more and Notices slide up from the bottom. The shell stays content
+ * sized and capped, centered, and clear of the home indicator. Do not pin
+ * these with the side-drawer width or move them when the keyboard opens —
+ * they have no fields. The inner card still floats (its own margin).
  */
-@media (max-width: 639px) {
-  [data-slot="drawer-popup"][data-drawer-variant="form"] {
-    --drawer-gap-top: max(0.75rem, env(safe-area-inset-top));
-    top: var(--drawer-gap-top) !important;
-    right: 0;
-    bottom: calc(var(--keyboard-inset, 0px) + 0.75rem) !important;
-    left: 0;
-    flex-direction: column !important;
-    height: auto !important;
-    max-height: none !important;
-    overflow: hidden;
-  }
+[data-slot="drawer-popup"][data-swipe-direction="down"] {
+  top: auto;
+  right: 0;
+  bottom: env(safe-area-inset-bottom, 0px);
+  left: 0;
+  width: min(32rem, calc(100vw - 2rem));
+  max-width: min(32rem, calc(100vw - 2rem));
+  height: auto;
+  max-height: calc(100dvh - 6rem);
+  margin-inline: auto;
+  flex-direction: column;
+  overflow: hidden;
+}
 
-  [data-slot="drawer-popup"][data-drawer-variant="form"] > [data-slot="drawer-content"] {
-    flex: 1 1 auto;
-    align-self: stretch;
-    height: auto;
-    min-height: 0;
-    overflow: hidden;
+[data-slot="drawer-popup"][data-swipe-direction="down"] > [data-slot="drawer-content"] {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  max-height: 100%;
+}
+
+@media (max-width: 639px) {
+  [data-slot="drawer-popup"][data-swipe-direction="down"] {
+    width: 100%;
+    max-width: 100%;
   }
 }
 
