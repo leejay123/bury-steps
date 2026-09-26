@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Show } from "@clerk/nextjs";
-import { ArrowRightIcon } from "lucide-react";
+import { ArrowRightIcon, Footprints } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FadeIn } from "@/components/motion";
 
@@ -50,7 +50,7 @@ export function HeroCinematic({
           </p>
         </FadeIn>
         <FadeIn delay={0.1}>
-          <h1 className="text-[clamp(2.25rem,6vw,4rem)] font-bold leading-[0.95] drop-shadow-[0_2px_20px_rgba(0,0,0,0.8)]">
+          <h1 className="text-[clamp(1.75rem,4.5vw,2.75rem)] font-bold leading-[1.05] drop-shadow-[0_2px_20px_rgba(0,0,0,0.8)]">
             {siteName}
           </h1>
         </FadeIn>
@@ -61,18 +61,21 @@ export function HeroCinematic({
         </FadeIn>
         <FadeIn className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center" delay={0.3}>
           <Show when="signed-in">
-            <Button asChild className={heroWhiteButtonClassName}>
-              <Link href="/walks">Your walks</Link>
+            <Button asChild className={heroWhiteButtonClassName} size="sm">
+              <Link href="/walks">
+                <Footprints data-icon="inline-start" />
+                Your walks
+              </Link>
             </Button>
           </Show>
           <Show when="signed-out">
-            <Button asChild className={heroWhiteButtonClassName}>
+            <Button asChild className={heroWhiteButtonClassName} size="sm">
               <a href={signUpHref}>
                 Join the group
                 <ArrowRightIcon data-icon="inline-end" />
               </a>
             </Button>
-            <Button asChild className="border-white/40 bg-transparent text-white hover:bg-white/10" variant="outline">
+            <Button asChild size="sm" variant="outline">
               <a href={signInHref}>Sign in</a>
             </Button>
           </Show>
