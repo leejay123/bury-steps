@@ -19,14 +19,15 @@ export function HomepageNoticesSection() {
               All of this lives under <Link href="/admin/settings">Settings</Link>. Hero photos,
               testimonials, FAQs, and notices use a list: tap a row to edit. Remove is the small
               button on the row, not in the drawer. Drawers are for adding and editing. The
-              notice bell and About slide up from the bottom. Journey and the editors
+              notice bell and About slide up from the bottom and span the full width
+              of the screen. Journey and the editors
               open the floating card. On a phone that card sits in the middle and fills
               most of the screen. It does not swipe away — close it with the button. On a
               wider screen the same card slides in from the right. Edit forms stay that
               card. On a phone the card keeps its size while you type, and the fields
               scroll inside it.
-              Every drawer sits in from the screen edges: rounded corners and a shadow, with a
-              gap around it.
+              The other drawers sit in from the screen edges: rounded corners and a shadow, with a
+              gap around them.
               Add buttons stretch full width.
               While a drawer is open the page behind — including the site header — stays where it
               is, dimmed under a full-screen blur. A breadcrumb at the top of each settings page
