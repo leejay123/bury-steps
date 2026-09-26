@@ -84,7 +84,7 @@ export function HeroCopy({
       <motion.div variants={item}>
         <Title
           className={cn(
-            "max-w-3xl text-balance text-center text-3xl text-foreground md:text-5xl lg:text-6xl",
+            "max-w-3xl text-balance text-center text-2xl text-foreground sm:text-3xl md:text-5xl lg:text-6xl",
           )}
         >
           {title}
