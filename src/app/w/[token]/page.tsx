@@ -32,6 +32,10 @@ const getWalkByShareKey = cache((key: string) =>
       slug: true,
       title: true,
       description: true,
+      distance: true,
+      grade: true,
+      walkLeader: true,
+      backMarker: true,
       location: true,
       postcode: true,
       latitude: true,
@@ -154,16 +158,20 @@ export default async function WalkLinkPage({
 
       <WalkShareStatusChrome
         attended={attended}
+        backMarker={walk.backMarker}
         cancelledAt={cancelledAtIso}
         description={walk.description}
+        distance={walk.distance}
         durationMins={walk.durationMins}
         endedAt={endedAtIso}
+        grade={walk.grade}
         icsHref={`/w/${slug}/ics`}
         location={walk.location}
         postcode={walk.postcode}
         signedIn={Boolean(user)}
         startsAt={startsAtIso}
         title={walk.title}
+        walkLeader={walk.walkLeader}
         walkUrl={walkUrl}
       />
 

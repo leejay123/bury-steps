@@ -23,29 +23,37 @@ import { WalkFacts } from "@/components/walk-facts";
  */
 export function WalkShareStatusChrome({
   attended,
+  backMarker,
   cancelledAt,
   description,
+  distance,
   durationMins,
   endedAt,
+  grade,
   icsHref,
   location,
   postcode,
   signedIn,
   startsAt,
   title,
+  walkLeader,
   walkUrl,
 }: {
   attended: boolean;
+  backMarker: string | null;
   cancelledAt: string | null;
   description: string | null;
+  distance: string | null;
   durationMins: number;
   endedAt: string | null;
+  grade: string | null;
   icsHref: string;
   location: string | null;
   postcode: string | null;
   signedIn: boolean;
   startsAt: string;
   title: string;
+  walkLeader: string | null;
   walkUrl: string;
 }) {
   const now = useWalkClock({ cancelledAt, durationMins, endedAt, startsAt });
@@ -128,10 +136,14 @@ export function WalkShareStatusChrome({
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <WalkFacts
+            backMarker={backMarker}
+            distance={distance}
             durationMins={durationMins}
+            grade={grade}
             location={location}
             postcode={postcode}
             startsAt={new Date(startsAt)}
+            walkLeader={walkLeader}
           />
           {description ? <DescriptionText className="text-sm leading-relaxed" text={description} /> : null}
           {showCalendar ? (

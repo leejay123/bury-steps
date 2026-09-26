@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 
 const WALK_LENGTH_OPTIONS = [30, 45, 60, 90, 120, 150, 180, 240];
+const WALK_GRADE_OPTIONS = ["Easy", "Moderate", "Hard"];
 
 function walkLengthLabel(mins: number): string {
   return mins < 60 ? `${mins} minutes` : `${mins / 60} ${mins === 60 ? "hour" : "hours"}`;
@@ -27,6 +28,10 @@ export type WalkFormDefaults = {
   startsAt: string;
   durationMins: number;
   description: string | null;
+  distance: string | null;
+  grade: string | null;
+  walkLeader: string | null;
+  backMarker: string | null;
   location: string | null;
   postcode: string | null;
   latitude: number | null;
@@ -125,6 +130,50 @@ export function WalkFormFields({
       </FormSection>
 
       <FormSection title="Details">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor={id("distance")}>Distance</Label>
+            <Input
+              defaultValue={defaults?.distance ?? ""}
+              id={id("distance")}
+              name="distance"
+              placeholder="4 to 5 miles"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor={id("grade")}>Grade</Label>
+            <Select defaultValue={defaults?.grade ?? undefined} name="grade">
+              <SelectTrigger id={id("grade")}>
+                <SelectValue placeholder="Not specified" />
+              </SelectTrigger>
+              <SelectContent>
+                {WALK_GRADE_OPTIONS.map((grade) => (
+                  <SelectItem key={grade} value={grade}>
+                    {grade}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor={id("walkLeader")}>Walk leader</Label>
+            <Input
+              defaultValue={defaults?.walkLeader ?? ""}
+              id={id("walkLeader")}
+              name="walkLeader"
+              placeholder="Glyn Beckwith"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor={id("backMarker")}>Back marker</Label>
+            <Input
+              defaultValue={defaults?.backMarker ?? ""}
+              id={id("backMarker")}
+              name="backMarker"
+              placeholder="TBA"
+            />
+          </div>
+        </div>
         <WalkDescriptionField defaultValue={defaults?.description ?? ""} id={id("description")} />
       </FormSection>
     </div>

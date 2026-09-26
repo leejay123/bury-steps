@@ -50,6 +50,10 @@ export default async function WalkDetailPage({
       slug: true,
       title: true,
       description: true,
+      distance: true,
+      grade: true,
+      walkLeader: true,
+      backMarker: true,
       location: true,
       postcode: true,
       latitude: true,
@@ -203,8 +207,30 @@ export default async function WalkDetailPage({
             />
           </div>
         </CardHeader>
-        {walk.description || (walk.cancelledAt && walk.cancelledReason) ? (
+        {walk.description ||
+        walk.distance ||
+        walk.grade ||
+        walk.walkLeader ||
+        walk.backMarker ||
+        (walk.cancelledAt && walk.cancelledReason) ? (
           <CardContent className="flex flex-col gap-2">
+            {[
+              walk.distance,
+              walk.grade,
+              walk.walkLeader ? `Walk leader: ${walk.walkLeader}` : null,
+              walk.backMarker ? `Back marker: ${walk.backMarker}` : null,
+            ].some(Boolean) ? (
+              <p className="text-sm text-muted-foreground">
+                {[
+                  walk.distance,
+                  walk.grade,
+                  walk.walkLeader ? `Walk leader: ${walk.walkLeader}` : null,
+                  walk.backMarker ? `Back marker: ${walk.backMarker}` : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            ) : null}
             {walk.description ? <WalkDescription description={walk.description} /> : null}
             {walk.cancelledAt && walk.cancelledReason ? (
               <p className="text-sm text-destructive">Cancelled: {walk.cancelledReason}</p>
@@ -221,14 +247,17 @@ export default async function WalkDetailPage({
 
       <WalkDetailActions
         attendanceCount={walk.attendances.length}
+        backMarker={walk.backMarker}
         cancelledAt={walk.cancelledAt?.toISOString() ?? null}
         canCancel={admin.permWalksCancel}
         canCreate={admin.permWalksCreate}
         canEdit={admin.permWalksEdit}
         canExportRoster={admin.permWalksExport && admin.permWalksHealth}
         description={walk.description}
+        distance={walk.distance}
         durationMins={walk.durationMins}
         endedAt={walk.endedAt?.toISOString() ?? null}
+        grade={walk.grade}
         icsHref={`/w/${slug}/ics`}
         latitude={walk.latitude}
         location={walk.location}
@@ -240,6 +269,7 @@ export default async function WalkDetailPage({
         totalAttendanceCount={walk.attendances.length}
         viewerIsOwner={viewerIsOwner}
         walkId={walk.id}
+        walkLeader={walk.walkLeader}
         what3words={walk.what3words}
       />
 

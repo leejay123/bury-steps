@@ -73,9 +73,12 @@ function EditWalkForm({
 /** Same drawer and fields as Create a walk (WalkFormFields), filled in
  * with this walk. */
 export function EditWalkButton({
+  backMarker,
   cancelled,
   description,
+  distance,
   durationMins,
+  grade,
   latitude,
   location,
   longitude,
@@ -84,11 +87,15 @@ export function EditWalkButton({
   startsAt,
   title,
   walkId,
+  walkLeader,
   what3words,
 }: {
+  backMarker: string | null;
   cancelled: boolean;
   description: string | null;
+  distance: string | null;
   durationMins: number;
+  grade: string | null;
   latitude: number | null;
   location: string | null;
   longitude: number | null;
@@ -97,6 +104,7 @@ export function EditWalkButton({
   startsAt: string;
   title: string;
   walkId: string;
+  walkLeader: string | null;
   what3words: string | null;
 }) {
   const [open, setOpen] = useState(false);
@@ -125,14 +133,18 @@ export function EditWalkButton({
         <EditWalkForm
           cancelled={cancelled}
           defaults={{
+            backMarker,
             description,
+            distance,
             durationMins,
+            grade,
             latitude,
             location,
             longitude,
             postcode,
             startsAt,
             title,
+            walkLeader,
             what3words,
           }}
           key={session}

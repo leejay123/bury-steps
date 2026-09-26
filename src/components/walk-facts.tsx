@@ -1,17 +1,25 @@
-import { CalendarDays, Clock, MapPin, Timer } from "lucide-react";
+import { CalendarDays, Clock, Footprints, MapPin, TrendingUp, Timer, UserRound, UsersRound } from "lucide-react";
 import { formatTime, formatWalkDay, formatWalkLength } from "@/lib/dates";
 import { meetingPointLabel } from "@/lib/geocode";
 
 export function WalkFacts({
+  backMarker,
+  distance,
   durationMins,
+  grade,
   location,
   postcode,
   startsAt,
+  walkLeader,
 }: {
+  backMarker?: string | null;
+  distance?: string | null;
   durationMins: number;
+  grade?: string | null;
   location: string | null;
   postcode?: string | null;
   startsAt: Date;
+  walkLeader?: string | null;
 }) {
   const meeting = meetingPointLabel(location, postcode);
   const rows = [
@@ -19,6 +27,10 @@ export function WalkFacts({
     { icon: Clock, label: "Start time", value: formatTime(startsAt) },
     { icon: Timer, label: "Expected length", value: formatWalkLength(durationMins) },
     ...(meeting ? [{ icon: MapPin, label: "Meeting point", value: meeting }] : []),
+    ...(distance ? [{ icon: Footprints, label: "Distance", value: distance }] : []),
+    ...(grade ? [{ icon: TrendingUp, label: "Grade", value: grade }] : []),
+    ...(walkLeader ? [{ icon: UserRound, label: "Walk leader", value: walkLeader }] : []),
+    ...(backMarker ? [{ icon: UsersRound, label: "Back marker", value: backMarker }] : []),
   ];
 
   return (

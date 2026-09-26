@@ -84,6 +84,13 @@ model Walk {
   slug            String?   @unique
   title           String
   description     String?
+  /// Free text, e.g. "4 to 5 miles" — varies too much for a numeric field.
+  distance        String?
+  /// Free text, e.g. "Moderate" — a select in the form, but stored as text
+  /// so a future custom grade never needs a migration.
+  grade           String?
+  walkLeader      String?
+  backMarker      String?
   location        String?
   /// Optional UK postcode used to place the map pin. Members still see `location`.
   postcode        String?

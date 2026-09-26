@@ -23,14 +23,17 @@ import { ReopenWalkButton } from "./reopen-walk-button";
  */
 export function WalkDetailActions({
   attendanceCount,
+  backMarker,
   cancelledAt,
   canCancel,
   canCreate,
   canEdit,
   canExportRoster,
   description,
+  distance,
   durationMins,
   endedAt,
+  grade,
   icsHref,
   latitude,
   location,
@@ -42,17 +45,21 @@ export function WalkDetailActions({
   totalAttendanceCount,
   viewerIsOwner,
   walkId,
+  walkLeader,
   what3words,
 }: {
   attendanceCount: number;
+  backMarker: string | null;
   cancelledAt: string | null;
   canCancel: boolean;
   canCreate: boolean;
   canEdit: boolean;
   canExportRoster: boolean;
   description: string | null;
+  distance: string | null;
   durationMins: number;
   endedAt: string | null;
+  grade: string | null;
   icsHref: string;
   latitude: number | null;
   location: string | null;
@@ -64,6 +71,7 @@ export function WalkDetailActions({
   totalAttendanceCount: number;
   viewerIsOwner: boolean;
   walkId: string;
+  walkLeader: string | null;
   what3words: string | null;
 }) {
   const now = useWalkClock({ cancelledAt, durationMins, endedAt, startsAt });
@@ -124,9 +132,12 @@ export function WalkDetailActions({
       */}
       {canEdit && !isCompleted ? (
         <EditWalkButton
+          backMarker={backMarker}
           cancelled={Boolean(walk.cancelledAt)}
           description={description}
+          distance={distance}
           durationMins={durationMins}
+          grade={grade}
           latitude={latitude}
           location={location}
           longitude={longitude}
@@ -135,6 +146,7 @@ export function WalkDetailActions({
           startsAt={startsAt}
           title={title}
           walkId={walkId}
+          walkLeader={walkLeader}
           what3words={what3words}
         />
       ) : null}
