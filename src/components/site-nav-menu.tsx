@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type RefObject } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   Bell,
   BookOpen,
@@ -46,25 +46,6 @@ function NavIcon({ label }: { label: string }) {
   const Icon = NAV_ICONS[label];
   if (!Icon) return null;
   return <Icon aria-hidden="true" className="size-4 shrink-0" />;
-}
-
-function usePrefetchNav(hrefs: string[]) {
-  const router = useRouter();
-  const key = hrefs.join("\n");
-
-  useEffect(() => {
-    const destinations = key.split("\n").filter(Boolean);
-    // The default link prefetch stops at the loading skeleton for these
-    // pages, so a tap still waits on the server. A full prefetch loads the
-    // page itself. Off-screen items in the phone row are included too.
-    const warm = () => {
-      for (const href of destinations) {
-        router.prefetch(href, { kind: "full" });
-      }
-    };
-    const id = window.setTimeout(warm, 150);
-    return () => window.clearTimeout(id);
-  }, [router, key]);
 }
 
 function NavLink({
@@ -231,7 +212,6 @@ export function SiteNavLinks({
   const pathname = usePathname();
   const scrollerRef = useRef<HTMLElement>(null);
   const items = navItems(isAdmin, walksHref, permissions, progressEnabled);
-  usePrefetchNav(items.map((item) => item.href));
   const edges = useScrollEdges(scrollerRef);
   useWheelScroll(scrollerRef);
 
@@ -286,7 +266,6 @@ export function SiteMobileNavBar({
   const pathname = usePathname();
   const scrollerRef = useRef<HTMLDivElement>(null);
   const items = navItems(isAdmin, walksHref, permissions, progressEnabled);
-  usePrefetchNav(items.map((item) => item.href));
   const edges = useScrollEdges(scrollerRef);
   useWheelScroll(scrollerRef);
 
