@@ -23,6 +23,13 @@ import {
   type HomepageSectionId,
 } from "@/lib/homepage-sections";
 import {
+  DEFAULT_HERO_STYLE,
+  DEFAULT_HERO_VIDEO_KEY,
+  parseHeroStyle,
+  parseHeroVideoKey,
+  type HeroStyle,
+} from "@/lib/hero-style";
+import {
   DEFAULT_ABOUT_EXPECT,
   DEFAULT_ABOUT_EXPECT_HEADING,
   DEFAULT_ABOUT_EXPECT_TEXT,
@@ -52,6 +59,8 @@ import {
 } from "@/lib/homepage-copy";
 
 export type SiteTheme = {
+  heroStyle: HeroStyle;
+  heroVideoKey: string;
   carouselEnabled: boolean;
   /** Site-wide switch for the homepage's "Latest notices" section (see
    * updateMemberNoticesEnabled) — off hides it even when there are notices
@@ -107,6 +116,8 @@ const DEFAULT_FAVICON_SRC = "/default-favicon.png";
 
 function defaultTheme(): SiteTheme {
   return {
+    heroStyle: DEFAULT_HERO_STYLE,
+    heroVideoKey: DEFAULT_HERO_VIDEO_KEY,
     carouselEnabled: true,
     memberNoticesEnabled: true,
     scrollToTopEnabled: true,
@@ -152,6 +163,8 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   const row = await prisma.siteSetting.findUnique({
     where: { id: SITE_SETTING_ID },
     select: {
+      heroStyle: true,
+      heroVideoKey: true,
       carouselEnabled: true,
       memberNoticesEnabled: true,
       scrollToTopEnabled: true,
@@ -194,6 +207,8 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   const howWalksWorkSteps = howWalksWorkStepsFromStored(row?.howWalksWorkSteps);
 
   return {
+    heroStyle: parseHeroStyle(row?.heroStyle),
+    heroVideoKey: parseHeroVideoKey(row?.heroVideoKey),
     carouselEnabled: row?.carouselEnabled ?? true,
     memberNoticesEnabled: row?.memberNoticesEnabled ?? true,
     scrollToTopEnabled: row?.scrollToTopEnabled ?? true,
@@ -259,7 +274,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v15"], {
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v16"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });

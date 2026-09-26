@@ -90,6 +90,7 @@ export {
 } from "./actions/notices";
 
 export {
+  updateHeroStyle,
   updateCarouselEnabled,
   updateMemberNoticesEnabled,
   updateProgressEnabled,

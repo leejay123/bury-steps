@@ -1,10 +1,13 @@
+import { HeroSection } from "@/components/hero";
 import { HeroCinematic } from "@/components/hero-cinematic";
 import { HomeWelcome } from "@/components/home-welcome";
 import { getOptionalUser } from "@/lib/auth";
+import { getHomepageSlides } from "@/lib/homepage-slides";
 import { getHomepageTestimonials } from "@/lib/homepage-testimonials";
 import { getHomepageFaqData } from "@/lib/homepage-faqs";
 import { getHomepageMemberNotices } from "@/lib/site-notices";
 import { getProgressEnabled } from "@/lib/progress-settings";
+import { heroVideoSrc } from "@/lib/hero-style";
 import { PAGE_X_BLEED } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
@@ -15,22 +18,37 @@ export const revalidate = 120;
 export default async function Home() {
   const origin = appUrl();
   const user = await getOptionalUser();
-  const [testimonials, faqData, theme, memberNotices, progressEnabled] = await Promise.all([
+  const [slides, testimonials, faqData, theme, memberNotices, progressEnabled] = await Promise.all([
+    getHomepageSlides(),
     getHomepageTestimonials(),
     getHomepageFaqData(),
     getSiteTheme(),
     user ? getHomepageMemberNotices(user.id, user.firstName) : Promise.resolve([]),
     getProgressEnabled(),
   ]);
+  const signInHref = accountPortalHref("sign-in", `${origin}${AFTER_AUTH_PATH}`);
+  const signUpHref = accountPortalHref("sign-up", `${origin}${AFTER_AUTH_PATH}`);
 
   return (
     <div className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
-      <HeroCinematic
-        signInHref={accountPortalHref("sign-in", `${origin}${AFTER_AUTH_PATH}`)}
-        signUpHref={accountPortalHref("sign-up", `${origin}${AFTER_AUTH_PATH}`)}
-        siteName={theme.siteName}
-        siteTagline={theme.siteTagline}
-      />
+      {theme.heroStyle === "cinematic" ? (
+        <HeroCinematic
+          signInHref={signInHref}
+          signUpHref={signUpHref}
+          siteName={theme.siteName}
+          siteTagline={theme.siteTagline}
+          videoSrc={heroVideoSrc(theme.heroVideoKey)}
+        />
+      ) : (
+        <HeroSection
+          carouselEnabled={theme.carouselEnabled}
+          signInHref={signInHref}
+          signUpHref={signUpHref}
+          siteName={theme.siteName}
+          siteTagline={theme.siteTagline}
+          slides={slides}
+        />
+      )}
       <HomeWelcome
         aboutExpect={theme.aboutExpect}
         aboutExpectHeading={theme.aboutExpectHeading}

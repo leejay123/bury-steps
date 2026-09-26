@@ -31,6 +31,7 @@ import {
   serializeAboutRules,
 } from "@/lib/homepage-copy";
 import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR } from "@/lib/theme";
+import { HERO_VIDEO_OPTIONS, parseHeroStyle, parseHeroVideoKey } from "@/lib/hero-style";
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
 import {
   DEFAULT_COOKIE_CONSENT_VARIANT,
@@ -76,6 +77,48 @@ export async function updateCarouselEnabled(
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/hero-photos");
   return { ok: true, message: enabled ? "You have turned the carousel on." : "You have turned the carousel off." };
+}
+
+/** Homepage hero style: the usual light hero, or a full-bleed video hero
+ * (see HeroCinematic) using one of the bundled HERO_VIDEO_OPTIONS. */
+export async function updateHeroStyle(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+
+  const heroStyle = parseHeroStyle(String(formData.get("heroStyle") ?? ""));
+  const rawVideoKey = String(formData.get("heroVideoKey") ?? "");
+  if (heroStyle === "cinematic" && !HERO_VIDEO_OPTIONS.some((option) => option.key === rawVideoKey)) {
+    return { ok: false, error: "Choose a video." };
+  }
+  const heroVideoKey = parseHeroVideoKey(rawVideoKey);
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        heroStyle,
+        heroVideoKey,
+      },
+      update: { heroStyle, heroVideoKey },
+    });
+  } catch (err) {
+    return logActionError("updateHeroStyle", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/hero-photos");
+  return {
+    ok: true,
+    message:
+      heroStyle === "cinematic" ? "Switched the homepage to the video hero." : "Switched the homepage to the default hero.",
+  };
 }
 
 /** Site-wide switch for the homepage's "Latest notices" section — off
