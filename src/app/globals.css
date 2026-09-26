@@ -261,6 +261,38 @@ body {
   background-color: rgba(18, 28, 22, 0.42) !important;
 }
 
+/*
+ * Vaul's drawer stylesheet hard-codes a 0.5s slide. On close we used to
+ * also set visibility:hidden the instant data-state flipped to closed, so
+ * that slide never painted and the page just sat locked until the timer
+ * finished. Keep the slide (and the overlay fade) visible, hold the end
+ * position so the panel doesn't snap back, and finish quicker than 0.5s.
+ * DRAWER_CLOSE_ANIMATION_MS in drawer.tsx must stay a little longer than this.
+ */
+[data-slot="drawer-content"][data-vaul-drawer],
+[data-slot="drawer-overlay"][data-vaul-overlay] {
+  animation-duration: 280ms !important;
+  transition-duration: 280ms !important;
+}
+[data-slot="drawer-content"][data-state="closed"],
+[data-slot="drawer-overlay"][data-state="closed"] {
+  animation-fill-mode: forwards !important;
+}
+/* Fading opacity while backdrop-filter is still on is what made closes feel
+   stuck. Drop the blur as soon as the drawer starts closing; the dim layer
+   can fade cheaply, and the panel still slides out. */
+[data-slot="drawer-overlay"][data-state="closed"] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="drawer-content"][data-vaul-drawer],
+  [data-slot="drawer-overlay"][data-vaul-overlay] {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}
+
 /* Sticky header must not steal taps from drawers/dialogs while they are open —
    the full-screen blur overlay sits above it (header z-55, overlay z-60+). */
 html:has([data-slot="drawer-content"][data-state="open"]) header,

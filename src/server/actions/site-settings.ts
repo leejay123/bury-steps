@@ -884,6 +884,58 @@ export async function updateAboutLists(
   return { ok: true, message: "About lists saved." };
 }
 
+/** Show or hide one of the two cards on a walk's own page. */
+async function updateWalkPageCardEnabled(
+  column: "beforeYouSetOffEnabled" | "howWalksWorkEnabled",
+  formKey: string,
+  formData: FormData,
+  copy: { on: string; off: string },
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  const enabled = String(formData.get(formKey) ?? "") === "on";
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        [column]: enabled,
+      },
+      update: { [column]: enabled },
+    });
+  } catch (err) {
+    return logActionError("updateWalkPageCardEnabled", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/site-wording/walk-page-cards");
+  return { ok: true, message: enabled ? copy.on : copy.off };
+}
+
+export async function updateBeforeYouSetOffEnabled(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  return updateWalkPageCardEnabled("beforeYouSetOffEnabled", "beforeYouSetOffEnabled", formData, {
+    on: "Before you set off will show on walk pages again.",
+    off: "Before you set off is now hidden on walk pages.",
+  });
+}
+
+export async function updateHowWalksWorkEnabled(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  return updateWalkPageCardEnabled("howWalksWorkEnabled", "howWalksWorkEnabled", formData, {
+    on: "How this group works will show on walk pages again.",
+    off: "How this group works is now hidden on walk pages.",
+  });
+}
+
 /** The walk-page "Before you set off" and "How this group works" cards —
  * same list/rule format as the About lists above, so it reuses their
  * parse/serialize helpers. */
@@ -934,6 +986,7 @@ export async function updateWalkPageCopy(
   }
 
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/site-wording/walk-page-cards");
   return { ok: true, message: "Walk page copy saved." };

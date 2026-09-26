@@ -59,7 +59,7 @@ export const SITE_WORDING_PAGES: SettingsPageLink[] = [
   {
     href: "/admin/settings/site-wording/walk-page-cards",
     title: "Walk page cards",
-    description: "The Before you set off tips and How this group works steps on each walk's page.",
+    description: "Edit or hide the Before you set off and How this group works cards on each walk's page.",
     keywords: "tips steps before you set off how walks work",
   },
 ];

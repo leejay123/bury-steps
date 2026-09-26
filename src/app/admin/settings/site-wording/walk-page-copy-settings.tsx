@@ -36,7 +36,7 @@ export function WalkPageCopySettings({
 
   return (
     <SettingsSection
-      description="The two cards shown on a walk's own page — before someone clocks in, and while waiting for clock-in to open. Not shown on the homepage."
+      description="How this group works sits under the walk details. Before you set off shows while clock-in is still closed. Not shown on the homepage."
       title="Walk page cards"
     >
       <form action={action} className="flex flex-col gap-6">

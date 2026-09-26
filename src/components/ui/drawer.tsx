@@ -28,13 +28,11 @@ const DrawerTriggerRefContext = React.createContext<React.MutableRefObject<HTMLE
 
 const DESKTOP_QUERY = "(min-width: 640px)";
 
-// Vaul's own stylesheet (node_modules/vaul) animates [data-vaul-drawer] with
-// `transition: transform .5s ...` / `animation-duration: .5s` for the close
-// keyframes (slideToBottom/Top/Left/Right) — unmounting any sooner than that
-// cuts the slide-out off mid-flight, which looked like "closes instantly,
-// no animation" even though vaul was still mid-transition. A little past
-// 500ms so a slow frame doesn't clip the last few pixels.
-const DRAWER_CLOSE_ANIMATION_MS = 520;
+// Matches the close duration in globals.css (vaul's own default is 0.5s,
+// which felt sluggish, and visibility:hidden on data-state=closed hid the
+// slide entirely). Stay mounted a little past that so a slow frame doesn't
+// clip the last few pixels.
+const DRAWER_CLOSE_ANIMATION_MS = 340;
 
 function subscribeToDesktopQuery(onChange: () => void) {
   const media = window.matchMedia(DESKTOP_QUERY);
@@ -150,8 +148,7 @@ function Drawer({
                   } else {
                     // Pointer-events / inert cleanup after the close animation —
                     // not in the same turn as dismiss (that race flashed). Same
-                    // duration as useOverlayPresence above, for the same reason:
-                    // vaul's own close transition is .5s.
+                    // duration as useOverlayPresence above.
                     closeCleanupTimerRef.current = window.setTimeout(() => {
                       unlockIdleDocument();
                     }, DRAWER_CLOSE_ANIMATION_MS);
@@ -222,8 +219,13 @@ function DrawerOverlay({
         // GPU — Safari renders backdrop-blur on a full-viewport element on
         // the CPU otherwise, which is what caused the delayed click / the
         // drawer's own slide-in animation getting skipped on desktop Safari.
-        "fixed inset-0 z-[60] [transform:translateZ(0)] [-webkit-transform:translateZ(0)] will-change-transform bg-black/30 backdrop-blur-sm data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
-        dismissed && "invisible !pointer-events-none",
+        // Do not set visibility:hidden on close. That fired in the same
+        // frame as vaul's slide-out, so the panel vanished and the leftover
+        // lock just felt sluggish. Pointer-events drop immediately; the
+        // fade itself is vaul's fadeOut (held with animation-fill-mode in
+        // globals.css).
+        "fixed inset-0 z-[60] [transform:translateZ(0)] [-webkit-transform:translateZ(0)] will-change-transform bg-black/30 backdrop-blur-sm data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
+        dismissed && "!pointer-events-none",
         className,
       )}
       {...props}
@@ -309,16 +311,15 @@ function DrawerContent({
           // Nothing inside needs *this* element's own outline; close/inputs
           // keep their own focus-visible rings.
           // Vaul animates *this* element's transform for the open/close
-          // slide — the overlay above gets translateZ(0)/will-change for the
-          // same GPU-compositing reason, but the panel that's actually doing
-          // the sliding never got the same hint, leaving its transition to
-          // fall back to main-thread compositing on lower-end devices (the
-          // stutter this fixes). `contain: layout` (via the arbitrary
-          // `[contain:layout]` utility) also stops the panel's own internal
-          // layout (e.g. a form field resizing, an image loading) from
-          // forcing a reflow of the page behind it mid-animation.
-          "group/drawer-content fixed z-[60] flex h-auto flex-col overflow-hidden bg-background outline-hidden touch-pan-y [contain:layout] [transform:translateZ(0)] [-webkit-transform:translateZ(0)] will-change-transform data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
-          dismissed && "invisible !pointer-events-none",
+          // slide. will-change promotes that layer; a static translateZ(0)
+          // on the same property fought the close keyframe and snapped the
+          // panel back on screen when the animation ended. `contain: layout`
+          // stops the panel's own internal layout (a form field resizing, an
+          // image loading) from forcing a reflow of the page behind it
+          // mid-animation. visibility:hidden on close is intentionally
+          // absent — it cancelled the slide-out.
+          "group/drawer-content fixed z-[60] flex h-auto flex-col overflow-hidden bg-background outline-hidden touch-pan-y [contain:layout] will-change-transform data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
+          dismissed && "!pointer-events-none",
           // Drawers portal straight to <body>, outside the shell that already
           // handles the Dynamic Island's left/right safe area, so each side
           // that sits flush against a screen edge needs its own inset here.

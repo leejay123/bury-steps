@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 
 export function WalkLivePanel({
   alreadyClockedInAt,
+  beforeYouSetOffEnabled,
   beforeYouSetOffTips,
   clockedOutAt = null,
   durationMins,
@@ -22,6 +23,8 @@ export function WalkLivePanel({
   walksHref,
 }: {
   alreadyClockedInAt: string | null;
+  /** Settings → Site wording → Walk page cards. Off hides the card. */
+  beforeYouSetOffEnabled: boolean;
   /** Editable in Settings → Site wording → Walk page cards — see @/lib/homepage-copy. */
   beforeYouSetOffTips: readonly string[];
   /** Set when the member left early — see clockOut. */
@@ -109,7 +112,7 @@ export function WalkLivePanel({
   // The "clock-in isn't open yet" notice itself is shown at the top of the
   // page (page.tsx) — this just adds what to do while waiting.
   if (state === "too-early") {
-    return <BeforeYouSetOff tips={beforeYouSetOffTips} />;
+    return beforeYouSetOffEnabled ? <BeforeYouSetOff tips={beforeYouSetOffTips} /> : null;
   }
 
   // The "this walk has finished, clock-in is closed" notice itself is also

@@ -27,6 +27,7 @@ export function HeroCopy({
   bgPattern?: SectionBgPattern;
 }) {
   const reduce = useReducedMotion();
+  const sectionHeading = Title === "h2";
   // Recreated (and thus new-by-reference) object literals here would make
   // every motion.div below re-evaluate its animation on every render of this
   // component — including every keystroke when the `after` slot is a
@@ -54,7 +55,13 @@ export function HeroCopy({
   return (
     <motion.div
       animate="show"
-      className="relative flex flex-col items-center justify-center gap-5 px-4 py-12 md:px-6 md:py-20 lg:py-24"
+      className={cn(
+        "relative flex flex-col items-center justify-center gap-5 px-4 md:px-6",
+        // The homepage hero (h1) stays large. Section headings — How this
+        // started, FAQs, testimonials, notices — used the same scale and
+        // read as a second hero on desktop.
+        sectionHeading ? "py-10 md:py-14" : "py-12 md:py-20 lg:py-24",
+      )}
       initial="hidden"
       variants={containerVariants}
     >
@@ -84,7 +91,10 @@ export function HeroCopy({
       <motion.div variants={item}>
         <Title
           className={cn(
-            "max-w-3xl text-balance text-center text-2xl text-foreground sm:text-3xl md:text-5xl lg:text-6xl",
+            "max-w-3xl text-balance text-center text-foreground",
+            sectionHeading
+              ? "text-2xl font-semibold tracking-tight sm:text-3xl md:text-4xl"
+              : "text-2xl sm:text-3xl md:text-5xl lg:text-6xl",
           )}
         >
           {title}

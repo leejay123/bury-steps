@@ -12,7 +12,7 @@ import { accountPortalHref } from "@/lib/urls";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DescriptionText } from "@/components/description-text";
+import { WalkDescription } from "@/components/walk-description";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { WalkFacts } from "@/components/walk-facts";
 
@@ -145,7 +145,7 @@ export function WalkShareStatusChrome({
             startsAt={new Date(startsAt)}
             walkLeader={walkLeader}
           />
-          {description ? <DescriptionText className="text-sm leading-relaxed" text={description} /> : null}
+          {description ? <WalkDescription description={description} /> : null}
           {showCalendar ? (
             <div>
               <Button asChild size="sm" variant="outline">

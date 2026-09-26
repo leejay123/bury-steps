@@ -175,6 +175,17 @@ export default async function WalkLinkPage({
         walkUrl={walkUrl}
       />
 
+      {status === "cancelled" || !theme.howWalksWorkEnabled ? null : (
+        <WalkShareWhileOpen
+          cancelledAt={cancelledAtIso}
+          durationMins={walk.durationMins}
+          endedAt={endedAtIso}
+          startsAt={startsAtIso}
+        >
+          <HowWalksWork steps={theme.howWalksWorkSteps} />
+        </WalkShareWhileOpen>
+      )}
+
       {meeting ? <WalkMapSection location={meeting} walk={walk} /> : null}
 
       {walk.what3words ? <What3wordsLink address={walk.what3words} /> : null}
@@ -182,6 +193,7 @@ export default async function WalkLinkPage({
       {status === "cancelled" ? null : user ? (
         <WalkLivePanel
           alreadyClockedInAt={myAttendance?.clockedInAt.toISOString() ?? null}
+          beforeYouSetOffEnabled={theme.beforeYouSetOffEnabled}
           beforeYouSetOffTips={theme.beforeYouSetOffTips}
           clockedOutAt={myAttendance?.clockedOutAt?.toISOString() ?? null}
           durationMins={walk.durationMins}
@@ -198,8 +210,9 @@ export default async function WalkLinkPage({
           endedAt={endedAtIso}
           startsAt={startsAtIso}
         >
-          <BeforeYouSetOff tips={theme.beforeYouSetOffTips} />
-          <HowWalksWork steps={theme.howWalksWorkSteps} />
+          {theme.beforeYouSetOffEnabled ? (
+            <BeforeYouSetOff tips={theme.beforeYouSetOffTips} />
+          ) : null}
         </WalkShareWhileOpen>
       )}
     </div>

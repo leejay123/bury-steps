@@ -109,6 +109,8 @@ export {
   updateHowThisStartedCopy,
   updateAboutLists,
   updateWalkPageCopy,
+  updateBeforeYouSetOffEnabled,
+  updateHowWalksWorkEnabled,
   updateMonthlyClockInGoal,
   updateSiteLogo,
   updateSiteFavicon,

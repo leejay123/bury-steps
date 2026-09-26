@@ -82,7 +82,9 @@ export function ReportsDisplaySection() {
               <strong>How this started</strong> heading, blurb, and full story (the story opens in a
               drawer), the About drawer <strong>goals / places / expect / rules</strong> lists (each
               opens in a drawer), the <strong>Testimonials</strong> heading and intro, the{" "}
-              <strong>FAQ</strong> heading and intro, and the walk-page cards. Signed-in members see
+              <strong>FAQ</strong> heading and intro, and the walk-page cards (
+              <strong>Before you set off</strong> and <strong>How this group works</strong> — edit
+              the wording, or turn either card off). Signed-in members see
               up to {HOMEPAGE_MEMBER_NOTICES_LIMIT} of the newest notices in the{" "}
               <strong>Latest notices</strong> carousel (not the pinned welcome — that stays in the
               bell only; each card shows a short teaser). Tap a bell-only notice to open it in the

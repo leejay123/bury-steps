@@ -108,8 +108,10 @@ export type SiteTheme = {
   aboutExpectHeading: string;
   aboutRulesHeading: string;
   /** Walk-page cards. */
+  beforeYouSetOffEnabled: boolean;
   beforeYouSetOffTips: string[];
   beforeYouSetOffTipsText: string;
+  howWalksWorkEnabled: boolean;
   howWalksWorkSteps: AboutRule[];
   howWalksWorkStepsText: string;
   homepageSectionOrder: HomepageSectionId[];
@@ -165,8 +167,10 @@ function defaultTheme(): SiteTheme {
     aboutPlacesHeading: DEFAULT_ABOUT_PLACES_HEADING,
     aboutExpectHeading: DEFAULT_ABOUT_EXPECT_HEADING,
     aboutRulesHeading: DEFAULT_ABOUT_RULES_HEADING,
+    beforeYouSetOffEnabled: true,
     beforeYouSetOffTips: [...DEFAULT_BEFORE_YOU_SET_OFF_TIPS],
     beforeYouSetOffTipsText: DEFAULT_BEFORE_YOU_SET_OFF_TIPS_TEXT,
+    howWalksWorkEnabled: true,
     howWalksWorkSteps: DEFAULT_HOW_WALKS_WORK_STEPS.map((step) => ({ ...step })),
     howWalksWorkStepsText: DEFAULT_HOW_WALKS_WORK_STEPS_TEXT,
     homepageSectionOrder: normalizeHomepageSectionOrder(null),
@@ -215,7 +219,9 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       aboutPlacesHeading: true,
       aboutExpectHeading: true,
       aboutRulesHeading: true,
+      beforeYouSetOffEnabled: true,
       beforeYouSetOffTips: true,
+      howWalksWorkEnabled: true,
       howWalksWorkSteps: true,
       homepageSectionOrder: true,
       logoMime: true,
@@ -293,10 +299,12 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     aboutPlacesHeading: row?.aboutPlacesHeading?.trim() || DEFAULT_ABOUT_PLACES_HEADING,
     aboutExpectHeading: row?.aboutExpectHeading?.trim() || DEFAULT_ABOUT_EXPECT_HEADING,
     aboutRulesHeading: row?.aboutRulesHeading?.trim() || DEFAULT_ABOUT_RULES_HEADING,
+    beforeYouSetOffEnabled: row?.beforeYouSetOffEnabled ?? true,
     beforeYouSetOffTips,
     beforeYouSetOffTipsText: row?.beforeYouSetOffTips?.trim()
       ? serializeAboutList(beforeYouSetOffTips)
       : DEFAULT_BEFORE_YOU_SET_OFF_TIPS_TEXT,
+    howWalksWorkEnabled: row?.howWalksWorkEnabled ?? true,
     howWalksWorkSteps,
     howWalksWorkStepsText: row?.howWalksWorkSteps?.trim()
       ? serializeAboutRules(howWalksWorkSteps)
@@ -316,7 +324,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v18"], {
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v19"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });

@@ -19,7 +19,7 @@ import { RetentionLockToggle } from "./retention-lock-toggle";
 import { WalkAttendanceSection } from "./walk-attendance-section";
 import { WalkCompletedNotice } from "./walk-completed-notice";
 import { WalkDetailActions } from "./walk-detail-actions";
-import { WalkDescription } from "./walk-description";
+import { WalkDescription } from "@/components/walk-description";
 import { WalkJourneyManager } from "./walk-journey";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

@@ -356,12 +356,14 @@ model SiteSetting {
   homepageSectionOrder        String   @default("howWalksWork,howThisStarted,memberNotices,testimonials,faqs")
   /// Signed-in members: latest notices carousel on the homepage.
   memberNoticesEnabled        Boolean  @default(true)
-  /// Homepage “how it works” strip and walk-page “How this group works” card.
+  /// Walk-page “How this group works” card. Off hides that card on every walk.
   howWalksWorkEnabled         Boolean  @default(true)
   /// Walk-page "How this group works" card — one "Title | Body" step per
   /// line. Empty uses the built-in three-step default. Icons are assigned
   /// by position, not stored.
   howWalksWorkSteps           String   @default("")
+  /// Walk-page "Before you set off" card. Off hides that card on every walk.
+  beforeYouSetOffEnabled      Boolean  @default(true)
   /// Walk-page "Before you set off" card — one tip per line. Empty uses
   /// the built-in default.
   beforeYouSetOffTips         String   @default("")
