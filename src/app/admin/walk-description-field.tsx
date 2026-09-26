@@ -1,19 +1,48 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Sparkles } from "lucide-react";
+import { BoldIcon, ItalicIcon, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { summarizeWalkDescription } from "@/server/actions";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Toggle } from "@/components/ui/toggle";
 
-/** Description Textarea plus a Summarize button (Google Gemini Flash, via a
- * direct API key — not Vercel AI Gateway — to stay on Google's own free
- * tier). Textarea stays uncontrolled (matches the rest of this form); the
- * button reads its live value through the ref and, on success, shows the
- * summary for the organiser to accept or dismiss rather than silently
- * overwriting what they typed. */
+/** Wraps (or, if already wrapped, unwraps) the textarea's current selection
+ * in `marker` — the same ** and single-* syntax DescriptionText renders as
+ * bold/italic. "Already wrapped" is judged by what's immediately outside the
+ * selection, not inside it (so selecting just the word inside **word** and
+ * clicking Bold again removes those markers instead of adding a second,
+ * redundant pair inside them). */
+function toggleMarker(value: string, start: number, end: number, marker: string) {
+  const before = value.slice(0, start);
+  const selected = value.slice(start, end);
+  const after = value.slice(end);
+  const len = marker.length;
+
+  if (before.endsWith(marker) && after.startsWith(marker)) {
+    return {
+      value: before.slice(0, -len) + selected + after.slice(len),
+      start: start - len,
+      end: end - len,
+    };
+  }
+  return {
+    value: `${before}${marker}${selected}${marker}${after}`,
+    start: start + len,
+    end: end + len,
+  };
+}
+
+/** Description Textarea with a Bold/Italic toolbar (wraps the current
+ * selection in bold/italic markers — see DescriptionText, which renders them) and
+ * a Summarize button (Google Gemini Flash, via a direct API key — not
+ * Vercel AI Gateway — to stay on Google's own free tier). Textarea stays
+ * uncontrolled (matches the rest of this form); both the toolbar and the
+ * Summarize result write to it through the ref rather than through React
+ * state. Summarize shows its result for the organiser to accept or dismiss
+ * rather than silently overwriting what they typed. */
 export function WalkDescriptionField({
   defaultValue,
   id,
@@ -26,6 +55,20 @@ export function WalkDescriptionField({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  function applyMarker(marker: string) {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const { value, start, end } = toggleMarker(
+      textarea.value,
+      textarea.selectionStart,
+      textarea.selectionEnd,
+      marker,
+    );
+    textarea.value = value;
+    textarea.setSelectionRange(start, end);
+    textarea.focus();
+  }
 
   function onSummarize() {
     const text = textareaRef.current?.value ?? "";
@@ -54,6 +97,26 @@ export function WalkDescriptionField({
           {isPending ? "Summarizing…" : "Summarize"}
         </Button>
       </div>
+      <div className="flex items-center gap-1">
+        <Toggle
+          aria-label="Bold selected text"
+          onPressedChange={() => applyMarker("**")}
+          pressed={false}
+          size="sm"
+          variant="outline"
+        >
+          <BoldIcon />
+        </Toggle>
+        <Toggle
+          aria-label="Italicize selected text"
+          onPressedChange={() => applyMarker("*")}
+          pressed={false}
+          size="sm"
+          variant="outline"
+        >
+          <ItalicIcon />
+        </Toggle>
+      </div>
       <Textarea
         defaultValue={defaultValue}
         id={id}
@@ -63,7 +126,7 @@ export function WalkDescriptionField({
         rows={3}
       />
       <p className="text-xs text-muted-foreground">
-        Wrap words in **double asterisks** for bold. Leave one blank line between paragraphs.
+        Select text and use the Bold/Italic buttons above. Leave one blank line between paragraphs.
       </p>
       {summary ? (
         <div className="flex flex-col gap-2 rounded-md border bg-muted/40 p-3">

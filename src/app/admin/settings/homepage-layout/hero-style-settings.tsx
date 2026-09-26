@@ -7,6 +7,7 @@ import { updateHeroStyle, type ActionResult } from "@/server/actions";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { HERO_VIDEO_OPTIONS, type HeroStyle } from "@/lib/hero-style";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import {
   Select,
   SelectContent,
@@ -171,14 +172,13 @@ export function HeroStyleSettings({
 
             <div className="flex w-full flex-col gap-2">
               <Label htmlFor="hero-overlay-opacity">Overlay darkness — {overlayOpacity}%</Label>
-              <input
-                className="w-full accent-foreground"
+              <Slider
                 id="hero-overlay-opacity"
                 max={100}
                 min={0}
-                onChange={(event) => onOverlayOpacityChange(Number(event.target.value))}
-                type="range"
-                value={overlayOpacity}
+                onValueChange={([next]) => onOverlayOpacityChange(next)}
+                step={1}
+                value={[overlayOpacity]}
               />
               <p className="text-xs text-muted-foreground">
                 How dark the gradient over the video is — higher makes the text easier to read but the video less

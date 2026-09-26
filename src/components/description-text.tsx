@@ -37,10 +37,23 @@ function formatParagraph(paragraph: string): ReactNode[] {
 }
 
 function boldify(line: string, lineIndex: number): ReactNode[] {
+  // Bold split first, then italic within whatever's left over — so
+  // **bold** never gets mistaken for two *italic* markers by the second
+  // pass (it's already been carved out into its own array element by then).
   const parts = line.split(/(\*\*[^*]+\*\*)/g).filter((part) => part !== "");
-  return parts.map((part, partIndex) => {
+  return parts.flatMap((part, partIndex): ReactNode[] => {
     if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
-      return <strong key={`${lineIndex}-${partIndex}`}>{part.slice(2, -2)}</strong>;
+      return [<strong key={`${lineIndex}-${partIndex}`}>{part.slice(2, -2)}</strong>];
+    }
+    return italicize(part, `${lineIndex}-${partIndex}`);
+  });
+}
+
+function italicize(text: string, keyPrefix: string): ReactNode[] {
+  const parts = text.split(/(\*[^*]+\*)/g).filter((part) => part !== "");
+  return parts.map((part, partIndex) => {
+    if (part.startsWith("*") && part.endsWith("*") && part.length > 2) {
+      return <em key={`${keyPrefix}-${partIndex}`}>{part.slice(1, -1)}</em>;
     }
     return part;
   });
