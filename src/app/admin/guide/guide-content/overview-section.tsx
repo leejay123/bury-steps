@@ -80,7 +80,7 @@ export function OverviewSection({
             <p>
               Sign in and join happen on the account pages at accounts.burysteps-walkinggroup.co.uk.
               After signing in, members land on Walks. Organisers are sent to Walks in Organiser
-              tools. Walks, Members, Reports, Settings, and this Guide stay in the top menu, each with an icon beside the name — there is no
+              tools. Walks, Members, Reports, Settings, and this Guide stay in the top menu, each with an icon beside the name. The menu loads those pages in the background, so a tap opens the page that is already ready. There is no
               second row of tabs.
             </p>
             <p>

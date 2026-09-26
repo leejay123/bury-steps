@@ -3,6 +3,7 @@ import { Show } from "@clerk/nextjs";
 import { ArrowRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FadeIn } from "@/components/motion";
+import { HeroVideo } from "@/components/hero-video";
 
 // Optional alternative to the usual light HeroSection — a dark, video-backed
 // hero, picked in Settings → Homepage layout → Hero style. Title uses the
@@ -36,17 +37,7 @@ export function HeroCinematic({
     <section className="relative isolate flex min-h-[50svh] items-center justify-center overflow-hidden bg-[#0a0a0c] text-center">
       <link as="image" fetchPriority="high" href={videoPoster} rel="preload" />
       <link as="video" fetchPriority="high" href={videoSrc} rel="preload" />
-      <video
-        autoPlay
-        className="absolute inset-0 -z-20 h-full w-full object-cover"
-        key={videoSrc}
-        loop
-        muted
-        playsInline
-        poster={videoPoster}
-        preload="auto"
-        src={videoSrc}
-      />
+      <HeroVideo key={videoSrc} poster={videoPoster} src={videoSrc} />
       <div
         className="absolute inset-0 -z-10"
         style={{

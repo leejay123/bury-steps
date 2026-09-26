@@ -99,6 +99,7 @@ function LinkRow({ page }: { page: SettingsHubPage }) {
         aria-label={page.title}
         className="absolute inset-0 rounded-[inherit] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
         href={page.href}
+        prefetch={true}
         onClick={navigate}
       />
     </DataListItem>
@@ -148,6 +149,7 @@ function ExpandableRow({
                 <Link
                   className="group flex items-center gap-3 rounded-md py-2 pr-4 hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   href={child.href}
+                  prefetch={true}
                   onClick={navigate}
                 >
                   <span className="min-w-0 flex-1">
@@ -202,7 +204,7 @@ export function SettingsHub({ groups }: { groups: SettingsHubGroup[] }) {
             <ul className="mt-1 flex list-disc flex-col gap-0.5 pl-4">
               {needsAttention.map((page) => (
                 <li key={page.href}>
-                  <Link className="font-medium underline underline-offset-2" href={page.href} onClick={navigate}>
+                  <Link className="font-medium underline underline-offset-2" href={page.href} onClick={navigate} prefetch={true}>
                     {page.title}
                   </Link>
                   : {page.attention}

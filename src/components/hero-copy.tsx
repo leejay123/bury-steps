@@ -71,7 +71,6 @@ export function HeroCopy({
             className={cn(
               "absolute -inset-x-20 inset-y-0 z-0 rounded-full",
               "bg-[radial-gradient(ellipse_at_center,theme(--color-foreground/.08),transparent,transparent)]",
-              "blur-[50px]",
             )}
           />
         ) : (

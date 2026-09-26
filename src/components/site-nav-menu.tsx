@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type RefObject } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Bell,
   BookOpen,
@@ -48,6 +48,25 @@ function NavIcon({ label }: { label: string }) {
   return <Icon aria-hidden="true" className="size-4 shrink-0" />;
 }
 
+function usePrefetchNav(hrefs: string[]) {
+  const router = useRouter();
+  const key = hrefs.join("\n");
+
+  useEffect(() => {
+    const destinations = key.split("\n").filter(Boolean);
+    // The default link prefetch stops at the loading skeleton for these
+    // pages, so a tap still waits on the server. A full prefetch loads the
+    // page itself. Off-screen items in the phone row are included too.
+    const warm = () => {
+      for (const href of destinations) {
+        router.prefetch(href, { kind: "full" });
+      }
+    };
+    const id = window.setTimeout(warm, 150);
+    return () => window.clearTimeout(id);
+  }, [router, key]);
+}
+
 function NavLink({
   active,
   className,
@@ -66,6 +85,7 @@ function NavLink({
       aria-current={active ? "page" : undefined}
       className={cn(navLinkClass(active), className)}
       href={href}
+      prefetch={true}
       // No prefetch restriction needed here: SiteNavLinks/SiteMobileNavBar
       // (this component's only callers, see site-nav.tsx) render exclusively
       // for already-signed-in users, so a link to a sign-in-required route
@@ -210,6 +230,8 @@ export function SiteNavLinks({
 }) {
   const pathname = usePathname();
   const scrollerRef = useRef<HTMLElement>(null);
+  const items = navItems(isAdmin, walksHref, permissions, progressEnabled);
+  usePrefetchNav(items.map((item) => item.href));
   const edges = useScrollEdges(scrollerRef);
   useWheelScroll(scrollerRef);
 
@@ -226,7 +248,7 @@ export function SiteNavLinks({
         className="flex max-w-full items-center justify-center gap-1 overflow-x-auto overscroll-x-contain text-sm [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         ref={scrollerRef}
       >
-        {navItems(isAdmin, walksHref, permissions, progressEnabled).map((item) => {
+        {items.map((item) => {
           const active = isNavItemActive(pathname, item.href);
           return (
             <NavLink
@@ -263,6 +285,8 @@ export function SiteMobileNavBar({
 }) {
   const pathname = usePathname();
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const items = navItems(isAdmin, walksHref, permissions, progressEnabled);
+  usePrefetchNav(items.map((item) => item.href));
   const edges = useScrollEdges(scrollerRef);
   useWheelScroll(scrollerRef);
 
@@ -279,7 +303,7 @@ export function SiteMobileNavBar({
         className="flex gap-1 overflow-x-auto overscroll-x-contain px-3 py-1.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         ref={scrollerRef}
       >
-        {navItems(isAdmin, walksHref, permissions, progressEnabled).map((item) => {
+        {items.map((item) => {
           const active = isNavItemActive(pathname, item.href);
           return (
             <NavLink
