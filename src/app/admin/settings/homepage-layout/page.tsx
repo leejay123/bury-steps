@@ -4,6 +4,7 @@ import { SettingsPage, SettingsSectionGroup } from "../settings-page";
 import { HomepageSectionsSettings } from "./homepage-sections-settings";
 import { CarouselToggle } from "./carousel-toggle";
 import { MemberNoticesToggle } from "./member-notices-toggle";
+import { HeroStyleSettings } from "./hero-style-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,7 @@ export default async function HomepageLayoutSettingsPage() {
       previewHref="/"
       title="Homepage layout"
     >
+      <HeroStyleSettings heroStyle={theme.heroStyle} heroVideoKey={theme.heroVideoKey} />
       <HomepageSectionsSettings sectionOrder={theme.homepageSectionOrder} />
       <SettingsSectionGroup title="Show or hide">
         <CarouselToggle enabled={theme.carouselEnabled} />
