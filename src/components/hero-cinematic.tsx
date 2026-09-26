@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Show } from "@clerk/nextjs";
-import { ArrowRightIcon, Footprints } from "lucide-react";
+import { ArrowRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FadeIn } from "@/components/motion";
 
@@ -75,10 +75,7 @@ export function HeroCinematic({
         <FadeIn className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center" delay={0.3}>
           <Show when="signed-in">
             <Button asChild className={heroWhiteButtonClassName} size="sm">
-              <Link href="/walks">
-                <Footprints data-icon="inline-start" />
-                Your walks
-              </Link>
+              <Link href="/walks">Your walks</Link>
             </Button>
           </Show>
           <Show when="signed-out">
