@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { BoldIcon, ItalicIcon, Sparkles } from "lucide-react";
+import { BoldIcon, ItalicIcon, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { summarizeWalkDescription } from "@/server/actions";
 import { Button } from "@/components/ui/button";
@@ -93,13 +93,14 @@ export function WalkDescriptionField({
       <div className="flex items-center justify-between gap-2">
         <Label htmlFor={id}>Description</Label>
         <Button disabled={isPending} onClick={onSummarize} size="sm" type="button" variant="ghost">
-          <Sparkles className={isPending ? "animate-pulse" : undefined} data-icon="inline-start" />
+          {isPending ? <Loader2 className="animate-spin" data-icon="inline-start" /> : <Sparkles data-icon="inline-start" />}
           {isPending ? "Summarizing…" : "Summarize"}
         </Button>
       </div>
       <div className="flex items-center gap-1">
         <Toggle
           aria-label="Bold selected text"
+          disabled={isPending}
           onPressedChange={() => applyMarker("**")}
           pressed={false}
           size="sm"
@@ -109,6 +110,7 @@ export function WalkDescriptionField({
         </Toggle>
         <Toggle
           aria-label="Italicize selected text"
+          disabled={isPending}
           onPressedChange={() => applyMarker("*")}
           pressed={false}
           size="sm"
@@ -119,6 +121,7 @@ export function WalkDescriptionField({
       </div>
       <Textarea
         defaultValue={defaultValue}
+        disabled={isPending}
         id={id}
         name={name}
         placeholder="Roughly 4 miles, one steady climb. Boots recommended after rain."
@@ -128,6 +131,12 @@ export function WalkDescriptionField({
       <p className="text-xs text-muted-foreground">
         Select text and use the Bold/Italic buttons above. Leave one blank line between paragraphs.
       </p>
+      {isPending ? (
+        <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" />
+          Summarizing — this can take a few seconds…
+        </div>
+      ) : null}
       {summary ? (
         <div className="flex flex-col gap-2 rounded-md border bg-muted/40 p-3">
           <p className="text-sm leading-relaxed">{summary}</p>
