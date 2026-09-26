@@ -293,7 +293,7 @@ function DrawerContent({
             // One size for every drawer. The shell is 39.125rem from the sm
             // breakpoint (full width on a phone). The visible card is the
             // inner content, inset by 1rem, so notices and editors match.
-            "m-0 border-0 bg-transparent shadow-none [--drawer-bleed-background:transparent] [--drawer-inset:0px] [--drawer-content-width:100%] sm:[--drawer-content-width:39.125rem]",
+            "m-0 border-0 bg-transparent shadow-none [--drawer-bleed-background:transparent] [--drawer-inset:0px] [--drawer-content-width:min(39.125rem,calc(100vw-2rem))]",
             className,
           )}
           finalFocus={() => triggerRef?.current ?? true}
@@ -309,7 +309,7 @@ function DrawerContent({
             data-drawer-variant={variant}
             data-slot="drawer-content"
             data-state="open"
-            className="flex min-h-0 w-full flex-1 flex-col overflow-hidden overscroll-contain rounded-2xl border bg-popover text-popover-foreground shadow-2xl m-4 select-text transition-opacity duration-300 ease-[cubic-bezier(0.45,1.005,0,1.005)] group-data-nested-drawer-open/drawer-popup:opacity-0 group-data-nested-drawer-swiping/drawer-popup:opacity-100 group-data-swiping/drawer-popup:select-none"
+            className="relative m-4 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden overscroll-contain rounded-2xl border bg-popover text-popover-foreground shadow-2xl select-text transition-opacity duration-300 ease-[cubic-bezier(0.45,1.005,0,1.005)] group-data-nested-drawer-open/drawer-popup:opacity-0 group-data-nested-drawer-swiping/drawer-popup:opacity-100 group-data-swiping/drawer-popup:select-none"
             ref={setRoot}
           >
             <OverlayRootContext.Provider value={root}>

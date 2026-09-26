@@ -119,19 +119,16 @@ body {
 }
 
 /*
- * Every drawer shell is the same width as the reference cart panel.
- * Unlayered so a utility class cannot make one drawer wider than another.
- * The visible card is the inner content, which already has a 1rem margin.
+ * The sliding shell is the cart panel's width, never the full window.
+ * A 100% shell made the card fill the screen and left the close button
+ * in the corner of the page instead of on the card.
  */
 [data-slot="drawer-popup"] {
   --drawer-inset: 0px;
   --drawer-bleed-background: transparent;
-  --drawer-content-width: 100%;
-}
-@media (min-width: 640px) {
-  [data-slot="drawer-popup"][data-swipe-axis="x"] {
-    --drawer-content-width: 39.125rem;
-  }
+  --drawer-content-width: min(39.125rem, calc(100vw - 2rem));
+  width: min(39.125rem, calc(100vw - 2rem));
+  max-width: min(39.125rem, calc(100vw - 2rem));
 }
 
 /*
