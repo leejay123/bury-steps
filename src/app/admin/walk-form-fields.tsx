@@ -134,6 +134,9 @@ export function WalkFormFields({
             placeholder="Roughly 4 miles, one steady climb. Boots recommended after rain."
             rows={3}
           />
+          <p className="text-xs text-muted-foreground">
+            Wrap words in **double asterisks** for bold. Leave one blank line between paragraphs.
+          </p>
         </div>
       </FormSection>
     </div>

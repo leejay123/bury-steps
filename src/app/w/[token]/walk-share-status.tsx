@@ -12,6 +12,7 @@ import { accountPortalHref } from "@/lib/urls";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DescriptionText } from "@/components/description-text";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { WalkFacts } from "@/components/walk-facts";
 
@@ -132,9 +133,7 @@ export function WalkShareStatusChrome({
             postcode={postcode}
             startsAt={new Date(startsAt)}
           />
-          {description ? (
-            <p className="text-sm leading-relaxed whitespace-pre-line">{description}</p>
-          ) : null}
+          {description ? <DescriptionText className="text-sm leading-relaxed" text={description} /> : null}
           {showCalendar ? (
             <div>
               <Button asChild size="sm" variant="outline">

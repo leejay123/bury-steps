@@ -45,7 +45,7 @@ export function HeroCinematic({
 
       <div className="relative mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-4 py-14 md:px-6">
         <FadeIn>
-          <p className="text-xs font-medium uppercase tracking-[0.35em] text-white/80 drop-shadow-[0_1px_8px_rgba(0,0,0,0.8)]">
+          <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-white/80 drop-shadow-[0_1px_8px_rgba(0,0,0,0.8)] sm:text-xs sm:tracking-[0.35em]">
             Support · Together · Empathy · Pace · Steps
           </p>
         </FadeIn>
@@ -55,7 +55,7 @@ export function HeroCinematic({
           </h1>
         </FadeIn>
         <FadeIn delay={0.2}>
-          <p className="max-w-xl text-lg font-light leading-relaxed text-white/70 drop-shadow-[0_1px_10px_rgba(0,0,0,0.8)]">
+          <p className="max-w-xl text-sm font-light leading-relaxed text-white/70 drop-shadow-[0_1px_10px_rgba(0,0,0,0.8)] sm:text-lg">
             {siteTagline}
           </p>
         </FadeIn>
@@ -75,7 +75,7 @@ export function HeroCinematic({
                 <ArrowRightIcon data-icon="inline-end" />
               </a>
             </Button>
-            <Button asChild size="sm" variant="outline">
+            <Button asChild size="sm">
               <a href={signInHref}>Sign in</a>
             </Button>
           </Show>
