@@ -36,6 +36,7 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonReveal } from "@/components/spectrumui/skeleton-reveal";
 import {
   Select,
   SelectContent,
@@ -551,30 +552,43 @@ export function MembersTable({
           icon={Search}
           title="No matching members"
         />
+      ) : rows.length === 0 ? (
+        <DataList>
+          {Array.from({ length: 5 }, (_, i) => (
+            <MemberRowSkeleton key={i} />
+          ))}
+        </DataList>
       ) : (
         <>
-          <DataList>
-            {isPending
-              ? Array.from({ length: Math.min(rows.length || 5, LIST_PAGE_SIZE) }, (_, i) => (
+          <SkeletonReveal
+            loading={isPending}
+            skeleton={
+              <DataList>
+                {Array.from({ length: Math.min(rows.length, LIST_PAGE_SIZE) }, (_, i) => (
                   <MemberRowSkeleton key={i} />
-                ))
-              : groupedRows.map((group) => (
-                  <Fragment key={group.key}>
-                    {showGroupHeaders ? (
-                      <DataListGroupHeader count={group.members.length} label={group.label} />
-                    ) : null}
-                    {group.members.map((member) => (
-                      <MemberListRow
-                        inviteRequired={inviteRequired}
-                        key={member.id}
-                        member={member}
-                        onChanged={refetch}
-                        viewerIsOwner={viewerIsOwner}
-                      />
-                    ))}
-                  </Fragment>
                 ))}
-          </DataList>
+              </DataList>
+            }
+          >
+            <DataList>
+              {groupedRows.map((group) => (
+                <Fragment key={group.key}>
+                  {showGroupHeaders ? (
+                    <DataListGroupHeader count={group.members.length} label={group.label} />
+                  ) : null}
+                  {group.members.map((member) => (
+                    <MemberListRow
+                      inviteRequired={inviteRequired}
+                      key={member.id}
+                      member={member}
+                      onChanged={refetch}
+                      viewerIsOwner={viewerIsOwner}
+                    />
+                  ))}
+                </Fragment>
+              ))}
+            </DataList>
+          </SkeletonReveal>
           <ListPagination
             noun="members"
             onPageChange={setPage}

@@ -234,17 +234,81 @@ function DrawerOverlay({
   );
 }
 
+/**
+ * Trial of the Spectrum animated drawer: the panel springs to the height of
+ * its content (capped so a long list still scrolls) instead of filling the
+ * screen. Vaul still slides the outer panel; this only animates height.
+ */
+function AnimatedDrawerHeight({ children }: { children: React.ReactNode }) {
+  const reduce = useReducedMotion();
+  const ref = React.useRef<HTMLDivElement>(null);
+  // Start near the Spectrum drawer's resting size, then spring to the content.
+  const [height, setHeight] = React.useState(256);
+
+  React.useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || reduce) return;
+
+    const measure = () => {
+      const cap = Math.round(window.innerHeight * 0.85);
+      let total = 0;
+      for (const child of el.children) {
+        const node = child as HTMLElement;
+        if (node.dataset.slot === "drawer-close") continue;
+        total += node.scrollHeight;
+      }
+      if (total > 0) setHeight(Math.min(total, cap));
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    for (const child of el.children) observer.observe(child);
+    window.addEventListener("resize", measure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [reduce]);
+
+  if (reduce) {
+    return (
+      <div className="flex max-h-[min(85dvh,calc(100dvh-2rem))] min-h-0 flex-col">{children}</div>
+    );
+  }
+
+  return (
+    <motion.div
+      animate={{ height }}
+      className="overflow-hidden"
+      initial={{ height: 256 }}
+      transition={{ type: "spring", stiffness: 380, damping: 36 }}
+    >
+      <div
+        className="flex h-full max-h-[min(85dvh,calc(100dvh-2rem))] min-h-0 flex-col"
+        ref={ref}
+      >
+        {children}
+      </div>
+    </motion.div>
+  );
+}
+
 function DrawerContent({
   className,
   children,
   onEscapeKeyDown,
   onPointerDownOutside,
   showCloseButton = true,
+  animatedHeight = false,
   style,
   onOpenAutoFocus,
   onCloseAutoFocus,
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Content> & { showCloseButton?: boolean }) {
+}: React.ComponentProps<typeof DrawerPrimitive.Content> & {
+  showCloseButton?: boolean;
+  /** Spring the panel to its content height. Used as a trial on the notices drawer. */
+  animatedHeight?: boolean;
+}) {
   const [root, setRoot] = React.useState<HTMLElement | null>(null);
   const open = React.useContext(DrawerOpenContext);
   const shouldRender = React.useContext(DrawerShouldRenderContext);
@@ -328,7 +392,9 @@ function DrawerContent({
           // positioned child's offsets are measured from its ancestor's
           // padding edge.
           "data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:rounded-b-lg data-[vaul-drawer-direction=top]:border-b data-[vaul-drawer-direction=top]:pt-[env(safe-area-inset-top)] data-[vaul-drawer-direction=top]:pl-[env(safe-area-inset-left)] data-[vaul-drawer-direction=top]:pr-[env(safe-area-inset-right)]",
-          "data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:rounded-t-lg data-[vaul-drawer-direction=bottom]:border-t data-[vaul-drawer-direction=bottom]:pl-[env(safe-area-inset-left)] data-[vaul-drawer-direction=bottom]:pr-[env(safe-area-inset-right)]",
+          animatedHeight
+            ? "data-[vaul-drawer-direction=bottom]:inset-x-4 data-[vaul-drawer-direction=bottom]:bottom-[max(1rem,env(safe-area-inset-bottom))] data-[vaul-drawer-direction=bottom]:mx-auto data-[vaul-drawer-direction=bottom]:w-full data-[vaul-drawer-direction=bottom]:max-w-[420px] data-[vaul-drawer-direction=bottom]:rounded-[28px] data-[vaul-drawer-direction=bottom]:border data-[vaul-drawer-direction=bottom]:shadow-lg"
+            : "data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:rounded-t-lg data-[vaul-drawer-direction=bottom]:border-t data-[vaul-drawer-direction=bottom]:pl-[env(safe-area-inset-left)] data-[vaul-drawer-direction=bottom]:pr-[env(safe-area-inset-right)]",
           "data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:h-full data-[vaul-drawer-direction=right]:w-[calc(100%-1.25rem)] data-[vaul-drawer-direction=right]:border-l data-[vaul-drawer-direction=right]:pt-[env(safe-area-inset-top)] data-[vaul-drawer-direction=right]:pr-[env(safe-area-inset-right)] data-[vaul-drawer-direction=right]:sm:max-w-lg",
           "data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:h-full data-[vaul-drawer-direction=left]:w-[calc(100%-1.25rem)] data-[vaul-drawer-direction=left]:border-r data-[vaul-drawer-direction=left]:pt-[env(safe-area-inset-top)] data-[vaul-drawer-direction=left]:pl-[env(safe-area-inset-left)] data-[vaul-drawer-direction=left]:sm:max-w-lg",
           className,
@@ -367,7 +433,7 @@ function DrawerContent({
       >
         <OverlayRootContext.Provider value={root}>
           <motion.div
-            className="flex min-h-0 flex-1 flex-col"
+            className={animatedHeight ? "flex min-h-0 flex-col" : "flex min-h-0 flex-1 flex-col"}
             {...(reduce
               ? {}
               : {
@@ -376,19 +442,38 @@ function DrawerContent({
                   transition: overlayMotionTransition,
                 })}
           >
-            <div className="mx-auto mt-4 hidden h-2 w-[100px] shrink-0 rounded-full bg-muted group-data-[vaul-drawer-direction=bottom]/drawer-content:block" />
-            {children}
-            {showCloseButton ? (
-              <DrawerPrimitive.Close
-                aria-label="Close"
-                className={overlayCloseClassName}
-                data-slot="drawer-close"
-                disabled={closeDisabled}
-              >
-                <X />
-                <span className="sr-only">Close</span>
-              </DrawerPrimitive.Close>
-            ) : null}
+            {animatedHeight ? (
+              <AnimatedDrawerHeight>
+                {children}
+                {showCloseButton ? (
+                  <DrawerPrimitive.Close
+                    aria-label="Close"
+                    className={overlayCloseClassName}
+                    data-slot="drawer-close"
+                    disabled={closeDisabled}
+                  >
+                    <X />
+                    <span className="sr-only">Close</span>
+                  </DrawerPrimitive.Close>
+                ) : null}
+              </AnimatedDrawerHeight>
+            ) : (
+              <>
+                <div className="mx-auto mt-4 hidden h-2 w-[100px] shrink-0 rounded-full bg-muted group-data-[vaul-drawer-direction=bottom]/drawer-content:block" />
+                {children}
+                {showCloseButton ? (
+                  <DrawerPrimitive.Close
+                    aria-label="Close"
+                    className={overlayCloseClassName}
+                    data-slot="drawer-close"
+                    disabled={closeDisabled}
+                  >
+                    <X />
+                    <span className="sr-only">Close</span>
+                  </DrawerPrimitive.Close>
+                ) : null}
+              </>
+            )}
           </motion.div>
         </OverlayRootContext.Provider>
       </DrawerPrimitive.Content>

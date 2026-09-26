@@ -123,12 +123,14 @@ export function HomepageNoticesSection() {
                 text — that is what members see after <strong>Read full notice</strong>.
               </li>
               <li>
-                Members see a count on the bell for unread notices and a <strong>New</strong>{" "}
-                or <strong>Updated</strong> badge on each unread row (Updated after you edit a
-                notice they had already seen). In the drawer, ordinary notices stay short; full-page
-                teasers end with … and say <strong>Read full notice</strong>. Tapping a row marks
-                that notice read. <strong>Mark all as read</strong> clears everything. Opening
-                the bell does not clear them on its own.
+                Members see a count on the bell for unread notices. The bell swings when a
+                new one arrives, and the number rolls. Opening it uses a floating panel that
+                grows to fit the notices. Each unread row has a <strong>New</strong> or{" "}
+                <strong>Updated</strong> badge (Updated after you edit a notice they had already
+                seen). In the drawer, ordinary notices stay short; full-page teasers end with …
+                and say <strong>Read full notice</strong>. Tapping a row marks that notice read.{" "}
+                <strong>Mark all as read</strong> clears everything. Opening the bell does not
+                clear them on its own.
               </li>
             </Steps>
             <p>

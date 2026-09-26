@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, CheckCheck, ChevronRight } from "lucide-react";
+import { CheckCheck, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { markSiteNoticeRead, markSiteNoticesRead } from "@/server/actions";
 import { noticeBodyForBellDrawer, noticeDateLabel, noticeUnreadBadgeLabel, type NoticeView } from "@/lib/notices";
@@ -14,6 +14,7 @@ import {
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { NotificationBell as NoticeBellButton } from "@/components/spectrumui/notification-bell";
 import {
   Drawer,
   DrawerContent,
@@ -119,23 +120,17 @@ export function NotificationBell({
   }
 
   return (
-    <Drawer onOpenChange={setOpen} open={open}>
+    <Drawer direction="bottom" onOpenChange={setOpen} open={open}>
       <DrawerTrigger asChild>
-        <Button
-          aria-label={unreadCount > 0 ? `${unreadCount} unread notices` : "Notices"}
-          className="relative"
-          size="icon"
-          variant="ghost"
-        >
-          <Bell />
-          {unreadCount > 0 ? (
-            <span className="pointer-events-none absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-white tabular-nums ring-2 ring-background">
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </span>
-          ) : null}
-        </Button>
+        <NoticeBellButton
+          className="border-transparent bg-transparent shadow-none hover:bg-accent"
+          count={unreadCount}
+          max={9}
+          ringOnMount={unreadCount > 0}
+          size="sm"
+        />
       </DrawerTrigger>
-      <DrawerContent className="sm:max-w-md">
+      <DrawerContent animatedHeight>
         <DrawerHeader className="border-b px-5 pb-4 pr-14 pt-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
