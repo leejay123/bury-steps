@@ -35,7 +35,7 @@ export function HeroCinematic({
 }) {
   return (
     <section
-      className={`${heroSerif.variable} ${heroSans.variable} relative isolate flex min-h-[85svh] items-center justify-center overflow-hidden bg-[#0a0a0c] text-center text-slate-50`}
+      className={`${heroSerif.variable} ${heroSans.variable} relative isolate flex min-h-[50svh] items-center justify-center overflow-hidden bg-[#0a0a0c] text-center text-slate-50`}
       style={{ fontFamily: "var(--font-hero-sans)" }}
     >
       <video
@@ -56,7 +56,7 @@ export function HeroCinematic({
         }}
       />
 
-      <div className="relative mx-auto flex w-full max-w-3xl flex-col items-center gap-8 px-4 py-24 md:px-6">
+      <div className="relative mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-4 py-14 md:px-6">
         <FadeIn>
           <p className="text-xs font-medium uppercase tracking-[0.35em] text-[#ffb7c5]">
             Support · Together · Empathy · Pace · Steps
@@ -64,7 +64,7 @@ export function HeroCinematic({
         </FadeIn>
         <FadeIn delay={0.1}>
           <h1
-            className="text-[clamp(2.75rem,8vw,5.5rem)] font-bold italic leading-[0.95] drop-shadow-[0_2px_20px_rgba(0,0,0,0.8)]"
+            className="text-[clamp(2.25rem,6vw,4rem)] font-bold italic leading-[0.95] drop-shadow-[0_2px_20px_rgba(0,0,0,0.8)]"
             style={{ fontFamily: "var(--font-hero-serif)" }}
           >
             {siteName}
