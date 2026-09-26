@@ -8,7 +8,6 @@ import {
   OverlayRootContext,
   restorePagePointerEvents,
   unlockIdleDocument,
-  useOverlayPresence,
 } from "@/components/overlay-root";
 import { lockBackgroundScroll } from "@/components/overlay-scroll-lock";
 import { mergeRefs } from "@/lib/merge-refs";
@@ -24,8 +23,7 @@ const overlayCloseClassName =
 const POPUP_MOTION =
   "pointer-events-auto fixed z-[60] m-[var(--drawer-inset,0px)] flex h-[var(--drawer-content-height)] max-h-[var(--drawer-content-max-height,none)] min-h-0 w-[var(--drawer-content-width,auto)] transform-[translate3d(var(--translate-x,0px),var(--translate-y,0px),0)_scale(var(--stack-scale))] flex-col transition-[transform,opacity,filter] duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none select-none [interpolate-size:allow-keywords] data-nested-drawer-open:overflow-hidden data-nested-drawer-open:brightness-95 after:pointer-events-none after:absolute after:bg-[var(--drawer-bleed-background,var(--color-popover))] data-[swipe-axis=x]:after:inset-y-0 data-[swipe-axis=x]:after:w-[var(--bleed)] data-[swipe-axis=y]:after:inset-x-0 data-[swipe-axis=y]:after:h-[var(--bleed)] data-[swipe-direction=down]:after:top-full data-[swipe-direction=left]:after:right-full data-[swipe-direction=right]:after:left-full data-[swipe-direction=up]:after:bottom-full [--drawer-content-height:var(--drawer-height,auto)] data-[swipe-axis=y]:[--drawer-content-max-height:calc(100dvh-6rem)] data-[swipe-axis=y]:data-snap-points:[--drawer-content-height:100dvh] [--bleed:3rem] [--peek:1rem] [--stack-height:var(--drawer-frontmost-height,var(--drawer-height,0px))] [--stack-peek-offset:max(0px,calc((var(--nested-drawers)-var(--stack-progress))*var(--peek)))] [--stack-progress:clamp(0,var(--drawer-swipe-progress),1)] [--stack-scale-base:max(0,calc(1-(var(--nested-drawers)*var(--stack-step))))] [--stack-scale:clamp(0,calc(var(--stack-scale-base)+(var(--stack-step)*var(--stack-progress))),1)] [--stack-shrink:calc(1-var(--stack-scale))] [--stack-step:0.05] data-ending-style:transform-[var(--closed-transform)] data-ending-style:opacity-[0.9999] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-nested-drawer-swiping:duration-0 data-ending-style:data-nested-drawer-swiping:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-starting-style:transform-[var(--closed-transform)] data-swiping:duration-0 data-ending-style:data-swiping:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-[swipe-axis=y]:inset-x-0 data-[swipe-axis=y]:data-nested-drawer-open:h-[var(--stack-height)] data-[swipe-axis=x]:inset-y-0 data-[swipe-axis=x]:flex-row data-[swipe-direction=down]:bottom-0 data-[swipe-direction=down]:origin-bottom data-[swipe-direction=down]:[--closed-transform:translate3d(0,calc(100%+var(--drawer-inset,0px)+2px),0)] data-[swipe-direction=down]:[--translate-y:calc(var(--drawer-snap-point-offset,0px)+var(--drawer-swipe-movement-y)-var(--stack-peek-offset)-(var(--stack-shrink)*var(--stack-height)))] data-[swipe-direction=up]:top-0 data-[swipe-direction=up]:origin-top data-[swipe-direction=up]:[--closed-transform:translate3d(0,calc(-100%-var(--drawer-inset,0px)-2px),0)] data-[swipe-direction=up]:[--translate-y:calc(var(--drawer-snap-point-offset,0px)+var(--drawer-swipe-movement-y)+var(--stack-peek-offset)+(var(--stack-shrink)*var(--stack-height)))] data-[swipe-direction=left]:left-0 data-[swipe-direction=left]:origin-left data-[swipe-direction=left]:[--closed-transform:translate3d(calc(-100%-var(--drawer-inset,0px)-2px),0,0)] data-[swipe-direction=left]:[--translate-x:calc(var(--drawer-swipe-movement-x)+var(--stack-peek-offset)+(var(--stack-shrink)*100%))] data-[swipe-direction=right]:right-0 data-[swipe-direction=right]:origin-right data-[swipe-direction=right]:[--closed-transform:translate3d(calc(100%+var(--drawer-inset,0px)+2px),0,0)] data-[swipe-direction=right]:[--translate-x:calc(var(--drawer-swipe-movement-x)-var(--stack-peek-offset)-(var(--stack-shrink)*100%))]";
 
-const DrawerOpenContext = React.createContext<boolean | undefined>(undefined);
-const DrawerShouldRenderContext = React.createContext(true);
+const DrawerOpenContext = React.createContext(false);
 const DrawerCloseDisabledContext = React.createContext(false);
 const DrawerVariantContext = React.createContext<"sheet" | "form">("sheet");
 const DrawerTriggerRefContext = React.createContext<React.MutableRefObject<HTMLElement | null> | null>(
@@ -66,7 +64,6 @@ function Drawer({
    */
   variant?: "sheet" | "form";
 }) {
-  const shouldRender = useOverlayPresence(open, DRAWER_CLOSE_ANIMATION_MS);
   const swipeDirection = toSwipeDirection(direction ?? "right");
   const triggerRef = React.useRef<HTMLElement | null>(null);
   const pointerOutsideRef = React.useRef<((event: Event) => void) | null>(null);
@@ -99,8 +96,7 @@ function Drawer({
   }, []);
 
   return (
-    <DrawerOpenContext.Provider value={open}>
-      <DrawerShouldRenderContext.Provider value={shouldRender}>
+    <DrawerOpenContext.Provider value={resolvedOpen}>
         <DrawerCloseDisabledContext.Provider value={closeDisabled}>
           <DrawerVariantContext.Provider value={variant}>
             <DrawerTriggerRefContext.Provider value={triggerRef}>
@@ -154,7 +150,6 @@ function Drawer({
             </DrawerTriggerRefContext.Provider>
           </DrawerVariantContext.Provider>
         </DrawerCloseDisabledContext.Provider>
-      </DrawerShouldRenderContext.Provider>
     </DrawerOpenContext.Provider>
   );
 }
@@ -203,14 +198,17 @@ function DrawerClose({
 }
 
 function DrawerOverlay({ className, ...props }: React.ComponentProps<typeof DrawerPrimitive.Backdrop>) {
+  const open = React.useContext(DrawerOpenContext);
   return (
     <DrawerPrimitive.Backdrop
       data-slot="drawer-overlay"
-      data-state="open"
+      data-state={open ? "open" : "closed"}
       className={cn(
         // Same full-screen blur as dialogs. Do not fade this layer's opacity:
-        // animating a backdrop-filter is what made the slide stutter.
-        "fixed inset-0 z-[60] min-h-dvh bg-black/30 backdrop-blur-sm [transform:translateZ(0)] will-change-transform select-none data-ending-style:pointer-events-none supports-[-webkit-touch-callout:none]:absolute",
+        // animating a backdrop-filter is what made the slide stutter. Hide it
+        // as soon as the drawer closes so the blur cannot stay after the panel
+        // has slid away.
+        "fixed inset-0 z-[60] min-h-dvh bg-black/30 backdrop-blur-sm [transform:translateZ(0)] will-change-transform select-none data-[state=closed]:invisible data-[state=closed]:pointer-events-none data-[state=closed]:backdrop-blur-none supports-[-webkit-touch-callout:none]:absolute",
         className,
       )}
       {...props}
@@ -230,7 +228,7 @@ function DrawerContent({
 }) {
   const [root, setRoot] = React.useState<HTMLElement | null>(null);
   const popupRef = React.useRef<HTMLDivElement | null>(null);
-  const shouldRender = React.useContext(DrawerShouldRenderContext);
+  const open = React.useContext(DrawerOpenContext);
   const closeDisabled = React.useContext(DrawerCloseDisabledContext);
   const variant = React.useContext(DrawerVariantContext);
   const triggerRef = React.useContext(DrawerTriggerRefContext);
@@ -276,8 +274,6 @@ function DrawerContent({
     };
   }, [root]);
 
-  if (!shouldRender) return null;
-
   return (
     <DrawerPortal>
       <DrawerOverlay />
@@ -292,10 +288,9 @@ function DrawerContent({
           className={cn(
             "group/drawer-popup",
             POPUP_MOTION,
-            // One size for every drawer. The shell is 39.125rem from the sm
-            // breakpoint (full width on a phone). The visible card is the
-            // inner content, inset by 1rem, so notices and editors match.
-            "m-0 border-0 bg-transparent shadow-none [--drawer-bleed-background:transparent] [--drawer-inset:0px] [--drawer-content-width:min(39.125rem,calc(100vw-2rem))]",
+            // One size for every drawer. The visible card is the inner content,
+            // inset by 1rem, so notices and editors match.
+            "m-0 border-0 bg-transparent shadow-none [--drawer-bleed-background:transparent] [--drawer-inset:0px] [--drawer-content-width:min(32rem,calc(100vw-2rem))]",
             className,
           )}
           finalFocus={() => triggerRef?.current ?? true}
@@ -310,7 +305,7 @@ function DrawerContent({
             data-base-ui-swipe-ignore={variant === "form" ? "" : undefined}
             data-drawer-variant={variant}
             data-slot="drawer-content"
-            data-state="open"
+            data-state={open ? "open" : "closed"}
             className="relative m-4 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden overscroll-contain rounded-2xl border bg-popover text-popover-foreground shadow-2xl select-text transition-opacity duration-300 ease-[cubic-bezier(0.45,1.005,0,1.005)] group-data-nested-drawer-open/drawer-popup:opacity-0 group-data-nested-drawer-swiping/drawer-popup:opacity-100 group-data-swiping/drawer-popup:select-none"
             ref={setRoot}
           >
