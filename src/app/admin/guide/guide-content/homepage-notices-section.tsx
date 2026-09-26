@@ -23,9 +23,10 @@ export function HomepageNoticesSection() {
               full width of the screen. On a wider screen they use the floating card,
               like Journey and the editors. On a phone that card sits in the middle and fills
               most of the screen. It does not swipe away — close it with the button. On a
-              wider screen the same card slides in from the right. Edit forms stay that
-              card. On a phone the card keeps its size while you type, and the fields
-              scroll inside it.
+              wider screen the same card slides in from the right. On a phone, an edit
+              form fills the screen, with rounded corners only at the top. While you
+              type, that sheet shortens to the space above the keyboard: the title
+              stays put, the fields scroll, and Cancel and Save sit just above the keys.
               The other drawers sit in from the screen edges: rounded corners and a shadow, with a
               gap around them.
               Add buttons stretch full width.

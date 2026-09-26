@@ -279,18 +279,20 @@ function DrawerContent({
       while (scroller && panel.contains(scroller)) {
         const style = window.getComputedStyle(scroller);
         const scrolls = style.overflowY === "auto" || style.overflowY === "scroll";
-        if (scrolls && scroller.scrollHeight > scroller.clientHeight + 1) {
-          const fieldRect = field.getBoundingClientRect();
-          const box = scroller.getBoundingClientRect();
-          const margin = 16;
-          if (fieldRect.bottom > box.bottom - margin) {
-            scroller.scrollTop += fieldRect.bottom - (box.bottom - margin);
-          } else if (fieldRect.top < box.top + margin) {
-            scroller.scrollTop -= box.top + margin - fieldRect.top;
-          }
-          return;
+        if (!scrolls) {
+          scroller = scroller.parentElement;
+          continue;
         }
-        scroller = scroller.parentElement;
+        const viewportBottom = viewport ? viewport.height - 8 : window.innerHeight - 8;
+        const box = scroller.getBoundingClientRect();
+        const fieldRect = field.getBoundingClientRect();
+        const limit = Math.min(box.bottom - 16, viewportBottom);
+        if (fieldRect.bottom > limit) {
+          scroller.scrollTop += fieldRect.bottom - limit;
+        } else if (fieldRect.top < box.top + 16) {
+          scroller.scrollTop -= box.top + 16 - fieldRect.top;
+        }
+        return;
       }
     }
     function alignFocusedField() {
