@@ -119,61 +119,19 @@ body {
 }
 
 /*
- * Follow the visual viewport so a bottom sheet sits above the iOS keyboard
- * instead of behind it. --keyboard-inset / --vv-height are set from
- * window.visualViewport in overlay-root (ignored when the inset is just the
- * URL bar showing/hiding).
+ * Every drawer shell is the same width as the reference cart panel.
+ * Unlayered so a utility class cannot make one drawer wider than another.
+ * The visible card is the inner content, which already has a 1rem margin.
  */
-[data-slot="drawer-content"][data-vaul-drawer-direction="bottom"] {
-  right: max(1rem, env(safe-area-inset-right));
-  left: max(1rem, env(safe-area-inset-left));
-  bottom: max(1rem, env(safe-area-inset-bottom));
-  width: auto;
-  margin-bottom: var(--keyboard-inset, 0px);
-  /* Prefer the live visual viewport when the keyboard is open, and keep the
-     card inset so it doesn't sit flush against the screen. */
-  max-height: min(85dvh, calc(var(--vv-height, 100dvh) - 2rem));
-  padding-bottom: 0;
-  border-radius: 1rem;
+[data-slot="drawer-popup"] {
+  --drawer-inset: 0px;
+  --drawer-bleed-background: transparent;
+  --drawer-content-width: 100%;
 }
-
-[data-slot="drawer-content"][data-vaul-drawer-direction="top"] {
-  max-height: min(80dvh, calc(var(--vv-height, 100dvh) * 0.8));
-}
-
-/*
- * Every side drawer is one card: 39.125rem wide (the same width as the
- * reference cart panel), inset 1rem, full height of the screen minus that
- * gap. These sit outside Tailwind's layers so a caller's max-w-* cannot
- * make one drawer narrower than another. Vaul paints a ::after that
- * stretches the panel background past the edge it slides from; that slab
- * fills the gap and the card looks flush. Keep the pseudo for the drag,
- * but don't paint it.
- */
-[data-slot="drawer-content"][data-vaul-drawer-direction="right"],
-[data-slot="drawer-content"][data-vaul-drawer-direction="left"] {
-  top: max(1rem, env(safe-area-inset-top));
-  bottom: max(1rem, env(safe-area-inset-bottom));
-  height: auto;
-  width: min(39.125rem, calc(100% - 2rem));
-  max-width: min(39.125rem, calc(100% - 2rem));
-  border-radius: 1rem;
-  border-width: 1px;
-  border-style: solid;
-  border-color: var(--border);
-  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
-}
-[data-slot="drawer-content"][data-vaul-drawer-direction="right"] {
-  right: max(1rem, env(safe-area-inset-right));
-  left: auto;
-}
-[data-slot="drawer-content"][data-vaul-drawer-direction="left"] {
-  left: max(1rem, env(safe-area-inset-left));
-  right: auto;
-}
-[data-slot="drawer-content"][data-vaul-drawer]::after {
-  background: transparent;
-  background-color: transparent;
+@media (min-width: 640px) {
+  [data-slot="drawer-popup"][data-swipe-axis="x"] {
+    --drawer-content-width: 39.125rem;
+  }
 }
 
 /*
@@ -193,21 +151,11 @@ body {
  * Fields scroll inside the panel.
  */
 @media (max-width: 639px) {
-  [data-slot="drawer-content"][data-drawer-variant="form"][data-vaul-drawer-direction="right"],
-  [data-slot="drawer-content"][data-drawer-variant="form"][data-vaul-drawer-direction="left"] {
+  [data-slot="drawer-popup"][data-drawer-variant="form"] {
     --drawer-gap-top: max(1rem, env(safe-area-inset-top));
     top: calc(var(--vv-top, 0px) + var(--drawer-gap-top));
-    right: max(1rem, env(safe-area-inset-right));
     bottom: auto;
     height: calc(var(--vv-height, 100dvh) - var(--drawer-gap-top) - 1rem);
-    border-radius: 1rem;
-    border-width: 1px;
-    border-style: solid;
-    border-color: var(--border);
-    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
-    padding-top: 0;
-    padding-right: 0;
-    padding-left: 0;
   }
 }
 
@@ -298,35 +246,9 @@ body {
   background-color: rgba(18, 28, 22, 0.42) !important;
 }
 
-/*
- * Open and close use Vaul's slide keyframes (cubic-bezier .32, .72, 0, 1).
- * Do not set transition-duration here: while a finger is down Vaul turns
- * the transition off so the card tracks the pointer, then eases from
- * wherever you let go. Forcing a duration kept that ease on during the
- * drag, so the card lagged behind the finger. The keyframe is only the
- * click-to-open / click-to-close. DRAWER_CLOSE_ANIMATION_MS in drawer.tsx
- * must stay a little longer than this.
- */
-[data-slot="drawer-content"][data-vaul-drawer],
-[data-slot="drawer-overlay"][data-vaul-overlay] {
-  animation-duration: 450ms;
-  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
-}
-[data-slot="drawer-content"][data-state="closed"],
-[data-slot="drawer-overlay"][data-state="closed"] {
-  animation-fill-mode: forwards !important;
-}
-/* Fading opacity while backdrop-filter is still on is what made closes feel
-   stuck. Drop the blur as soon as the drawer starts closing; the dim layer
-   can fade cheaply, and the panel still slides out. */
-[data-slot="drawer-overlay"][data-state="closed"] {
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
-}
 @media (prefers-reduced-motion: reduce) {
-  [data-slot="drawer-content"][data-vaul-drawer],
-  [data-slot="drawer-overlay"][data-vaul-overlay] {
-    animation-duration: 1ms !important;
+  [data-slot="drawer-popup"],
+  [data-slot="drawer-overlay"] {
     transition-duration: 1ms !important;
   }
 }

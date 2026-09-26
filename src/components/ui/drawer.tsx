@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer";
 import { X } from "lucide-react";
-import { Drawer as DrawerPrimitive } from "vaul";
 import { cn } from "@/lib/utils";
 import {
   OverlayRootContext,
@@ -16,6 +16,14 @@ import { mergeRefs } from "@/lib/merge-refs";
 const overlayCloseClassName =
   "absolute top-2 right-2 z-20 flex size-11 cursor-pointer items-center justify-center rounded-md opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
 
+/**
+ * Same motion as the shadcn Base UI drawer (the cart panel): 450ms,
+ * cubic-bezier(0.22, 1, 0.36, 1), no transition while a finger is down,
+ * and a close that speeds up with the swipe. Do not shorten these.
+ */
+const POPUP_MOTION =
+  "pointer-events-auto fixed z-[60] m-[var(--drawer-inset,0px)] flex h-[var(--drawer-content-height)] max-h-[var(--drawer-content-max-height,none)] min-h-0 w-[var(--drawer-content-width,auto)] transform-[translate3d(var(--translate-x,0px),var(--translate-y,0px),0)_scale(var(--stack-scale))] flex-col transition-[transform,height,opacity,filter] duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none select-none [interpolate-size:allow-keywords] data-nested-drawer-open:overflow-hidden data-nested-drawer-open:brightness-95 after:pointer-events-none after:absolute after:bg-[var(--drawer-bleed-background,var(--color-popover))] data-[swipe-axis=x]:after:inset-y-0 data-[swipe-axis=x]:after:w-[var(--bleed)] data-[swipe-axis=y]:after:inset-x-0 data-[swipe-axis=y]:after:h-[var(--bleed)] data-[swipe-direction=down]:after:top-full data-[swipe-direction=left]:after:right-full data-[swipe-direction=right]:after:left-full data-[swipe-direction=up]:after:bottom-full [--drawer-content-height:var(--drawer-height,auto)] data-[swipe-axis=y]:[--drawer-content-max-height:calc(100dvh-6rem)] data-[swipe-axis=y]:data-snap-points:[--drawer-content-height:100dvh] [--bleed:3rem] [--peek:1rem] [--stack-height:var(--drawer-frontmost-height,var(--drawer-height,0px))] [--stack-peek-offset:max(0px,calc((var(--nested-drawers)-var(--stack-progress))*var(--peek)))] [--stack-progress:clamp(0,var(--drawer-swipe-progress),1)] [--stack-scale-base:max(0,calc(1-(var(--nested-drawers)*var(--stack-step))))] [--stack-scale:clamp(0,calc(var(--stack-scale-base)+(var(--stack-step)*var(--stack-progress))),1)] [--stack-shrink:calc(1-var(--stack-scale))] [--stack-step:0.05] data-ending-style:transform-[var(--closed-transform)] data-ending-style:opacity-[0.9999] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-nested-drawer-swiping:duration-0 data-ending-style:data-nested-drawer-swiping:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-starting-style:transform-[var(--closed-transform)] data-swiping:duration-0 data-ending-style:data-swiping:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-[swipe-axis=y]:inset-x-0 data-[swipe-axis=y]:data-nested-drawer-open:h-[var(--stack-height)] data-[swipe-axis=x]:inset-y-0 data-[swipe-axis=x]:flex-row data-[swipe-direction=down]:bottom-0 data-[swipe-direction=down]:origin-bottom data-[swipe-direction=down]:[--closed-transform:translate3d(0,calc(100%+var(--drawer-inset,0px)+2px),0)] data-[swipe-direction=down]:[--translate-y:calc(var(--drawer-snap-point-offset,0px)+var(--drawer-swipe-movement-y)-var(--stack-peek-offset)-(var(--stack-shrink)*var(--stack-height)))] data-[swipe-direction=up]:top-0 data-[swipe-direction=up]:origin-top data-[swipe-direction=up]:[--closed-transform:translate3d(0,calc(-100%-var(--drawer-inset,0px)-2px),0)] data-[swipe-direction=up]:[--translate-y:calc(var(--drawer-snap-point-offset,0px)+var(--drawer-swipe-movement-y)+var(--stack-peek-offset)+(var(--stack-shrink)*var(--stack-height)))] data-[swipe-direction=left]:left-0 data-[swipe-direction=left]:origin-left data-[swipe-direction=left]:[--closed-transform:translate3d(calc(-100%-var(--drawer-inset,0px)-2px),0,0)] data-[swipe-direction=left]:[--translate-x:calc(var(--drawer-swipe-movement-x)+var(--stack-peek-offset)+(var(--stack-shrink)*100%))] data-[swipe-direction=right]:right-0 data-[swipe-direction=right]:origin-right data-[swipe-direction=right]:[--closed-transform:translate3d(calc(100%+var(--drawer-inset,0px)+2px),0,0)] data-[swipe-direction=right]:[--translate-x:calc(var(--drawer-swipe-movement-x)-var(--stack-peek-offset)-(var(--stack-shrink)*100%))]";
+
 const DrawerOpenContext = React.createContext<boolean | undefined>(undefined);
 const DrawerShouldRenderContext = React.createContext(true);
 const DrawerCloseDisabledContext = React.createContext(false);
@@ -23,10 +31,21 @@ const DrawerVariantContext = React.createContext<"sheet" | "form">("sheet");
 const DrawerTriggerRefContext = React.createContext<React.MutableRefObject<HTMLElement | null> | null>(
   null,
 );
+const DrawerPointerOutsideRefContext = React.createContext<React.MutableRefObject<
+  ((event: Event) => void) | null
+> | null>(null);
+const DrawerSwipeDirectionContext = React.createContext<"up" | "right" | "down" | "left">("right");
 
-// Matches the close duration in globals.css. Stay mounted a little past
-// that so a slow frame doesn't clip the last few pixels.
+// A click-to-close is 450ms. A fast swipe shortens that (strength × 400ms).
+// Stay mounted a little past the longer of the two.
 const DRAWER_CLOSE_ANIMATION_MS = 500;
+
+function toSwipeDirection(direction: "top" | "right" | "bottom" | "left" | undefined) {
+  if (direction === "left") return "left" as const;
+  if (direction === "bottom") return "down" as const;
+  if (direction === "top") return "up" as const;
+  return "right" as const;
+}
 
 function Drawer({
   children,
@@ -34,38 +53,28 @@ function Drawer({
   direction,
   onOpenChange,
   open,
-  repositionInputs = false,
-  /**
-   * `sheet` — the shared floating card (notices, About, Journey, read-only).
-   * `form` — same card, but it cannot be swiped shut and on a phone it tracks
-   * the keyboard so a field is not hidden.
-   */
   variant = "sheet",
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Root> & {
+}: Omit<React.ComponentProps<typeof DrawerPrimitive.Root>, "onOpenChange" | "swipeDirection"> & {
   closeDisabled?: boolean;
+  direction?: "top" | "right" | "bottom" | "left";
+  onOpenChange?: (open: boolean) => void;
+  /**
+   * `sheet` — the shared card (notices, About, Journey).
+   * `form` — the same card and the same slide, but a swipe or a tap on the
+   * page does not throw away what has been typed.
+   */
   variant?: "sheet" | "form";
 }) {
-  // Only DrawerContent needs to stay mounted through the close animation
-  // (see DrawerShouldRenderContext below). Gating `children` here as a whole
-  // would also hide DrawerTrigger while `open` starts false and has never
-  // been true, making the trigger permanently unclickable.
   const shouldRender = useOverlayPresence(open, DRAWER_CLOSE_ANIMATION_MS);
-  // One panel for every drawer, including the notice bell. A phone used to
-  // turn short lists into a bottom sheet, so notices looked like a different
-  // component from the editors.
-  const resolvedDirection = direction ?? "right";
+  const swipeDirection = toSwipeDirection(direction ?? "right");
   const triggerRef = React.useRef<HTMLElement | null>(null);
+  const pointerOutsideRef = React.useRef<((event: Event) => void) | null>(null);
   const unlockBackgroundScrollRef = React.useRef<(() => void) | null>(null);
   const closeCleanupTimerRef = React.useRef(0);
-  // Uncontrolled drawers (e.g. homepage Read more) never pass `open`. Track
-  // Vaul's open state so the header pin still runs for them.
   const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
   const resolvedOpen = open ?? uncontrolledOpen;
 
-  // Pin from the open flag itself — admin drawers often open with setState
-  // (setMode) and never fire onOpenChange(true), which used to skip the pin.
-  // useLayoutEffect so the pin lands before paint (less flash than useEffect).
   React.useLayoutEffect(() => {
     if (!resolvedOpen) {
       unlockBackgroundScrollRef.current?.();
@@ -95,58 +104,53 @@ function Drawer({
         <DrawerCloseDisabledContext.Provider value={closeDisabled}>
           <DrawerVariantContext.Provider value={variant}>
             <DrawerTriggerRefContext.Provider value={triggerRef}>
-              <DrawerPrimitive.Root
-                data-slot="drawer"
-                {...props}
-                direction={resolvedDirection}
-                dismissible={!closeDisabled}
-                // Form drawers can't be swiped shut — one stray sideways swipe
-                // would throw away everything typed so far. They close only
-                // from the close button, Cancel, or Escape. handleOnly (not
-                // dismissible={false}, which would block those too) limits
-                // dragging to a drag handle, and form drawers don't render
-                // one. Bottom sheets keep swipe-to-close.
-                handleOnly={variant === "form" || props.handleOnly}
-                modal
-                // Do not let Vaul apply position:fixed on <body> — that is what
-                // dragged the sticky header off-screen under the blur on every
-                // Safari/iOS path. RemoveScroll still locks overflow.
-                noBodyStyles
-                onOpenChange={(next) => {
-                  if (closeDisabled && !next) return;
-                  window.clearTimeout(closeCleanupTimerRef.current);
+              <DrawerSwipeDirectionContext.Provider value={swipeDirection}>
+              <DrawerPointerOutsideRefContext.Provider value={pointerOutsideRef}>
+                <DrawerPrimitive.Root
+                  data-slot="drawer"
+                  disablePointerDismissal={closeDisabled || variant === "form"}
+                  modal
+                  onOpenChange={(next, eventDetails) => {
+                    if (!next) {
+                      const reason = eventDetails.reason;
+                      if (closeDisabled) {
+                        eventDetails.cancel();
+                        return;
+                      }
+                      if (variant === "form" && (reason === "swipe" || reason === "outside-press")) {
+                        eventDetails.cancel();
+                        return;
+                      }
+                      if (reason === "outside-press" && pointerOutsideRef.current) {
+                        const event = new Event("pointerdown", { cancelable: true });
+                        pointerOutsideRef.current(event);
+                        if (event.defaultPrevented) {
+                          eventDetails.cancel();
+                          return;
+                        }
+                      }
+                    }
 
-                  if (open === undefined) setUncontrolledOpen(next);
-
-                  if (next) {
-                    const active = document.activeElement;
-                    triggerRef.current =
-                      active instanceof HTMLElement ? active : triggerRef.current;
-                  } else {
-                    // Pointer-events / inert cleanup after the close animation —
-                    // not in the same turn as dismiss (that race flashed). Same
-                    // duration as useOverlayPresence above.
-                    closeCleanupTimerRef.current = window.setTimeout(() => {
-                      unlockIdleDocument();
-                    }, DRAWER_CLOSE_ANIMATION_MS);
-                  }
-                  onOpenChange?.(next);
-                }}
-                open={open}
-                // Scaling the page behind the sheet looks like a zoom on iPhone.
-                shouldScaleBackground={false}
-                // Vaul's built-in keyboard/input repositioning has long-standing bugs
-                // on iOS Safari (emilkowalski/vaul#619, #503, #514): the drawer can
-                // get stuck mid-reposition — its content and overlay rendered in the
-                // wrong place, or the overlay missing entirely — until the user taps
-                // the screen again and forces a repaint. Disabling it and letting the
-                // browser handle the on-screen keyboard natively (it still scrolls a
-                // focused input into view) trades a slightly less polished animation
-                // for a layout that never gets stuck.
-                repositionInputs={repositionInputs}
-              >
-                {children}
-              </DrawerPrimitive.Root>
+                    window.clearTimeout(closeCleanupTimerRef.current);
+                    if (open === undefined) setUncontrolledOpen(next);
+                    if (next) {
+                      const active = document.activeElement;
+                      triggerRef.current = active instanceof HTMLElement ? active : triggerRef.current;
+                    } else {
+                      closeCleanupTimerRef.current = window.setTimeout(() => {
+                        unlockIdleDocument();
+                      }, DRAWER_CLOSE_ANIMATION_MS);
+                    }
+                    onOpenChange?.(next);
+                  }}
+                  open={resolvedOpen}
+                  swipeDirection={swipeDirection}
+                  {...props}
+                >
+                  {children}
+                </DrawerPrimitive.Root>
+              </DrawerPointerOutsideRefContext.Provider>
+              </DrawerSwipeDirectionContext.Provider>
             </DrawerTriggerRefContext.Provider>
           </DrawerVariantContext.Provider>
         </DrawerCloseDisabledContext.Provider>
@@ -156,16 +160,26 @@ function Drawer({
 }
 
 function DrawerTrigger({
+  asChild,
+  children,
   ref,
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Trigger>) {
+}: React.ComponentProps<typeof DrawerPrimitive.Trigger> & { asChild?: boolean }) {
   const triggerRef = React.useContext(DrawerTriggerRefContext);
+  if (asChild && React.isValidElement(children)) {
+    return (
+      <DrawerPrimitive.Trigger
+        data-slot="drawer-trigger"
+        ref={mergeRefs(triggerRef, ref)}
+        render={children}
+        {...props}
+      />
+    );
+  }
   return (
-    <DrawerPrimitive.Trigger
-      data-slot="drawer-trigger"
-      {...props}
-      ref={mergeRefs(triggerRef, ref)}
-    />
+    <DrawerPrimitive.Trigger data-slot="drawer-trigger" ref={mergeRefs(triggerRef, ref)} {...props}>
+      {children}
+    </DrawerPrimitive.Trigger>
   );
 }
 
@@ -173,40 +187,31 @@ function DrawerPortal({ ...props }: React.ComponentProps<typeof DrawerPrimitive.
   return <DrawerPrimitive.Portal data-slot="drawer-portal" {...props} />;
 }
 
-function DrawerClose({ ...props }: React.ComponentProps<typeof DrawerPrimitive.Close>) {
-  return <DrawerPrimitive.Close data-slot="drawer-close" {...props} />;
+function DrawerClose({
+  asChild,
+  children,
+  ...props
+}: React.ComponentProps<typeof DrawerPrimitive.Close> & { asChild?: boolean }) {
+  if (asChild && React.isValidElement(children)) {
+    return <DrawerPrimitive.Close data-slot="drawer-close" render={children} {...props} />;
+  }
+  return (
+    <DrawerPrimitive.Close data-slot="drawer-close" {...props}>
+      {children}
+    </DrawerPrimitive.Close>
+  );
 }
 
-function DrawerOverlay({
-  className,
-  style,
-  ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Overlay>) {
-  const open = React.useContext(DrawerOpenContext);
-  const dismissed = open === false;
-
+function DrawerOverlay({ className, ...props }: React.ComponentProps<typeof DrawerPrimitive.Backdrop>) {
   return (
-    <DrawerPrimitive.Overlay
+    <DrawerPrimitive.Backdrop
       data-slot="drawer-overlay"
+      data-state="open"
       className={cn(
-        // Full-viewport blur: page and header stay put underneath; nothing
-        // peeks above the dim layer. Blur is applied immediately — fading
-        // opacity on a backdrop-filter layer is what lagged on every browser.
-        // `translateZ(0)` + `will-change-transform` push this layer onto the
-        // GPU — Safari renders backdrop-blur on a full-viewport element on
-        // the CPU otherwise, which is what caused the delayed click / the
-        // drawer's own slide-in animation getting skipped on desktop Safari.
-        // Do not set visibility:hidden on close. That fired in the same
-        // frame as vaul's slide-out, so the panel vanished and the leftover
-        // lock just felt sluggish. Pointer-events drop immediately; the
-        // fade itself is vaul's fadeOut (held with animation-fill-mode in
-        // globals.css).
-        "fixed inset-0 z-[60] [transform:translateZ(0)] [-webkit-transform:translateZ(0)] will-change-transform bg-black/30 backdrop-blur-sm data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
-        dismissed && "!pointer-events-none",
+        "fixed inset-0 z-[60] min-h-dvh bg-black/10 opacity-[max(var(--drawer-overlay-min-opacity,0),calc(1-var(--drawer-swipe-progress)))] transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] select-none data-ending-style:pointer-events-none data-ending-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-starting-style:opacity-0 data-swiping:duration-0 supports-[-webkit-touch-callout:none]:absolute",
         className,
       )}
       {...props}
-      style={dismissed ? { ...style, pointerEvents: "none" } : { ...style, pointerEvents: "auto" }}
     />
   );
 }
@@ -214,28 +219,33 @@ function DrawerOverlay({
 function DrawerContent({
   className,
   children,
-  onEscapeKeyDown,
   onPointerDownOutside,
   showCloseButton = true,
-  style,
-  onOpenAutoFocus,
-  onCloseAutoFocus,
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Content> & { showCloseButton?: boolean }) {
+}: React.ComponentProps<typeof DrawerPrimitive.Popup> & {
+  onPointerDownOutside?: (event: Event) => void;
+  showCloseButton?: boolean;
+}) {
   const [root, setRoot] = React.useState<HTMLElement | null>(null);
-  const open = React.useContext(DrawerOpenContext);
+  const popupRef = React.useRef<HTMLDivElement | null>(null);
   const shouldRender = React.useContext(DrawerShouldRenderContext);
   const closeDisabled = React.useContext(DrawerCloseDisabledContext);
   const variant = React.useContext(DrawerVariantContext);
   const triggerRef = React.useContext(DrawerTriggerRefContext);
-  const dismissed = open === false;
+  const pointerOutsideRef = React.useContext(DrawerPointerOutsideRefContext);
+  const swipeDirection = React.useContext(DrawerSwipeDirectionContext);
+  const swipeAxis = swipeDirection === "down" || swipeDirection === "up" ? "y" : "x";
 
   React.useEffect(() => {
-    if (!root || open !== true) return;
-    root.style.removeProperty("pointer-events");
+    if (!pointerOutsideRef) return;
+    pointerOutsideRef.current = onPointerDownOutside ?? null;
+    return () => {
+      pointerOutsideRef.current = null;
+    };
+  }, [onPointerDownOutside, pointerOutsideRef]);
 
-    // When a field is focused, scroll it into the sheet's scrollport so it
-    // isn't hidden under the sticky footer or clipped by the keyboard.
+  React.useEffect(() => {
+    if (!root) return;
     function onFocusIn(event: FocusEvent) {
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
@@ -244,12 +254,6 @@ function DrawerContent({
         target.scrollIntoView({ block: "center", behavior: "smooth" });
       });
     }
-
-    // The keyboard finishes opening (and the page finishes shrinking to
-    // make room for it) *after* focus lands, so the scroll above can run
-    // against the old, taller panel and leave the field hidden again. Once
-    // the viewport settles, bring whichever field is being typed in back
-    // into view.
     const viewport = window.visualViewport;
     let settleFrame = 0;
     function onViewportResize() {
@@ -261,7 +265,6 @@ function DrawerContent({
         active.scrollIntoView({ block: "nearest" });
       });
     }
-
     root.addEventListener("focusin", onFocusIn);
     viewport?.addEventListener("resize", onViewportResize);
     return () => {
@@ -269,92 +272,63 @@ function DrawerContent({
       viewport?.removeEventListener("resize", onViewportResize);
       window.cancelAnimationFrame(settleFrame);
     };
-  }, [open, root]);
+  }, [root]);
 
   if (!shouldRender) return null;
 
   return (
     <DrawerPortal>
       <DrawerOverlay />
-      <DrawerPrimitive.Content
-        data-drawer-variant={variant}
-        data-slot="drawer-content"
-        className={cn(
-          // Vaul focuses this panel itself when it opens (there's no natural
-          // first focusable element to land on otherwise), which makes
-          // Safari draw its default blue focus ring around the whole sheet —
-          // that's the "blue border" along the drawer's edge on iPhone.
-          // Nothing inside needs *this* element's own outline; close/inputs
-          // keep their own focus-visible rings.
-          // Vaul animates *this* element's transform for the open/close
-          // slide. will-change promotes that layer; a static translateZ(0)
-          // on the same property fought the close keyframe and snapped the
-          // panel back on screen when the animation ended. `contain: layout`
-          // stops the panel's own internal layout (a form field resizing, an
-          // image loading) from forcing a reflow of the page behind it
-          // mid-animation. visibility:hidden on close is intentionally
-          // absent — it cancelled the slide-out.
-          "group/drawer-content fixed z-[60] flex h-auto flex-col overflow-hidden border bg-popover text-popover-foreground shadow-2xl outline-hidden touch-pan-y [contain:layout] will-change-transform data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
-          dismissed && "!pointer-events-none",
-          // Floating card, inset from the screen edge (the shadcn-space drawer
-          // look). Safe-area is included in the inset so a notch doesn't sit
-          // under the rounded corner. Vaul still slides this element.
-          "data-[vaul-drawer-direction=top]:inset-x-4 data-[vaul-drawer-direction=top]:top-[max(1rem,env(safe-area-inset-top))] data-[vaul-drawer-direction=top]:max-h-[min(85dvh,calc(100dvh-2rem))] data-[vaul-drawer-direction=top]:rounded-2xl",
-          "data-[vaul-drawer-direction=bottom]:inset-x-4 data-[vaul-drawer-direction=bottom]:bottom-[max(1rem,env(safe-area-inset-bottom))] data-[vaul-drawer-direction=bottom]:max-h-[min(85dvh,calc(100dvh-2rem))] data-[vaul-drawer-direction=bottom]:rounded-2xl",
-          "data-[vaul-drawer-direction=right]:top-4 data-[vaul-drawer-direction=right]:right-[max(1rem,env(safe-area-inset-right))] data-[vaul-drawer-direction=right]:bottom-4 data-[vaul-drawer-direction=right]:rounded-2xl",
-          "data-[vaul-drawer-direction=left]:top-4 data-[vaul-drawer-direction=left]:bottom-4 data-[vaul-drawer-direction=left]:left-[max(1rem,env(safe-area-inset-left))] data-[vaul-drawer-direction=left]:rounded-2xl",
-          className,
-        )}
-        onEscapeKeyDown={(event) => {
-          if (closeDisabled) event.preventDefault();
-          onEscapeKeyDown?.(event);
-        }}
-        onOpenAutoFocus={(event) => {
-          // Don't land focus on an input as the sheet opens: on iPhone that
-          // pops the keyboard during the enter animation and the drawer can
-          // paint in the wrong place until the next tap.
-          event.preventDefault();
-          const panel = event.currentTarget;
-          if (panel instanceof HTMLElement) panel.focus({ preventScroll: true });
-          onOpenAutoFocus?.(event);
-        }}
-        onCloseAutoFocus={(event) => {
-          // Safari's default focus restore scrolls the trigger into view.
-          // Keep focus without moving the page; scroll was already restored
-          // synchronously when the drawer began closing.
-          event.preventDefault();
-          const trigger = triggerRef?.current;
-          if (trigger?.isConnected) trigger.focus({ preventScroll: true });
-          onCloseAutoFocus?.(event);
-        }}
-        onPointerDownOutside={(event) => {
-          // Same reasoning as handleOnly above: a tap on the dimmed page
-          // beside a form drawer mustn't discard what's been typed.
-          if (closeDisabled || variant === "form") event.preventDefault();
-          onPointerDownOutside?.(event);
-        }}
-        ref={setRoot}
-        {...props}
-        style={dismissed ? { ...style, pointerEvents: "none" } : { ...style, pointerEvents: "auto" }}
+      <DrawerPrimitive.Viewport
+        data-slot="drawer-viewport"
+        className="pointer-events-none fixed inset-0 z-[60] select-none data-[modal=true]:pointer-events-auto"
       >
-        <OverlayRootContext.Provider value={root}>
-          <div className="flex min-h-0 flex-1 flex-col">
-            <div className="mx-auto mt-4 hidden h-2 w-[100px] shrink-0 rounded-full bg-muted group-data-[vaul-drawer-direction=bottom]/drawer-content:block" />
-            {children}
-            {showCloseButton ? (
-              <DrawerPrimitive.Close
-                aria-label="Close"
-                className={overlayCloseClassName}
-                data-slot="drawer-close"
-                disabled={closeDisabled}
-              >
-                <X />
-                <span className="sr-only">Close</span>
-              </DrawerPrimitive.Close>
-            ) : null}
-          </div>
-        </OverlayRootContext.Provider>
-      </DrawerPrimitive.Content>
+        <DrawerPrimitive.Popup
+          data-drawer-variant={variant}
+          data-slot="drawer-popup"
+          data-swipe-axis={swipeAxis}
+          className={cn(
+            "group/drawer-popup",
+            POPUP_MOTION,
+            // One size for every drawer. The shell is 39.125rem from the sm
+            // breakpoint (full width on a phone). The visible card is the
+            // inner content, inset by 1rem, so notices and editors match.
+            "m-0 border-0 bg-transparent shadow-none [--drawer-bleed-background:transparent] [--drawer-inset:0px] [--drawer-content-width:100%] sm:[--drawer-content-width:39.125rem]",
+            className,
+          )}
+          finalFocus={() => triggerRef?.current ?? true}
+          initialFocus={() => {
+            popupRef.current?.focus({ preventScroll: true });
+            return popupRef.current;
+          }}
+          ref={popupRef}
+          {...props}
+        >
+          <DrawerPrimitive.Content
+            data-base-ui-swipe-ignore={variant === "form" ? "" : undefined}
+            data-drawer-variant={variant}
+            data-slot="drawer-content"
+            data-state="open"
+            className="flex min-h-0 w-full flex-1 flex-col overflow-hidden overscroll-contain rounded-2xl border bg-popover text-popover-foreground shadow-2xl m-4 select-text transition-opacity duration-300 ease-[cubic-bezier(0.45,1.005,0,1.005)] group-data-nested-drawer-open/drawer-popup:opacity-0 group-data-nested-drawer-swiping/drawer-popup:opacity-100 group-data-swiping/drawer-popup:select-none"
+            ref={setRoot}
+          >
+            <OverlayRootContext.Provider value={root}>
+              {children}
+              {showCloseButton ? (
+                <DrawerPrimitive.Close
+                  aria-label="Close"
+                  className={overlayCloseClassName}
+                  data-slot="drawer-close"
+                  disabled={closeDisabled}
+                >
+                  <X />
+                  <span className="sr-only">Close</span>
+                </DrawerPrimitive.Close>
+              ) : null}
+            </OverlayRootContext.Provider>
+          </DrawerPrimitive.Content>
+        </DrawerPrimitive.Popup>
+      </DrawerPrimitive.Viewport>
     </DrawerPortal>
   );
 }
@@ -363,10 +337,7 @@ function DrawerHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="drawer-header"
-      className={cn(
-        "flex flex-col gap-0.5 p-4 pr-12 group-data-[vaul-drawer-direction=bottom]/drawer-content:text-center group-data-[vaul-drawer-direction=top]/drawer-content:text-center md:gap-1.5 md:text-left",
-        className,
-      )}
+      className={cn("flex shrink-0 flex-col gap-0.5 p-4 pr-12 md:gap-1.5", className)}
       {...props}
     />
   );
