@@ -1,6 +1,6 @@
+import type { CSSProperties } from "react";
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
-import { Inter } from "next/font/google";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -20,11 +20,10 @@ import { SiteCookieConsentGate } from "@/components/site-cookie-consent-gate";
 import { StaleDeployReload } from "@/components/stale-deploy-reload";
 import { ImpersonationBannerSlot } from "@/components/impersonation-banner-slot";
 import { getSiteTheme } from "@/lib/site-theme";
+import { siteFontById } from "@/lib/site-font";
+import { siteFontFace, siteFontVariableClassName } from "@/app/fonts";
 import { DEFAULT_SITE_NAME, siteMetaDescription } from "@/lib/site-branding";
 import "./globals.css";
-
-// Self-hosted, no external font request. Site-wide.
-const siteFont = Inter({ subsets: ["latin"], display: "swap" });
 
 export async function generateMetadata(): Promise<Metadata> {
   const theme = await getSiteTheme();
@@ -67,16 +66,24 @@ export async function generateViewport(): Promise<Viewport> {
   };
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Preview only. The live domain uses Clerk's CNAME. Production unique
   // *.vercel.app URLs (Vercel screenshots) must not set this — there is no
   // proxy URL registered on the Clerk instance, so /__clerk returns 400.
   const useVercelAppProxy = process.env.VERCEL_ENV === "preview";
+  const theme = await getSiteTheme();
+  const font = siteFontById(theme.siteFont);
+  const face = siteFontFace(theme.siteFont);
 
   return (
-    <html lang="en-GB" suppressHydrationWarning>
+    <html
+      className={siteFontVariableClassName}
+      lang="en-GB"
+      style={{ "--font-site": `var(${font.cssVariable})` } as CSSProperties}
+      suppressHydrationWarning
+    >
       <body
-        className={`${siteFont.className} min-h-dvh overflow-x-clip touch-manipulation bg-background text-foreground antialiased`}
+        className={`${face.className} min-h-dvh overflow-x-clip touch-manipulation bg-background text-foreground antialiased`}
       >
         {/*
           The browser's own scroll-restoration-on-refresh fights this app's
@@ -100,6 +107,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               colorPrimary: "#111111",
               colorModalBackdrop: "rgba(17, 17, 17, 0.4)",
               colorInput: "var(--background)",
+              fontFamily: "var(--font-site), sans-serif",
             },
             elements: {
               modalBackdrop: "backdrop-blur-md",

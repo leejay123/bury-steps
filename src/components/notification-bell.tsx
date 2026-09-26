@@ -120,7 +120,7 @@ export function NotificationBell({
   }
 
   return (
-    <Drawer direction="bottom" onOpenChange={setOpen} open={open}>
+    <Drawer onOpenChange={setOpen} open={open}>
       <DrawerTrigger asChild>
         <NoticeBellButton
           className="border-transparent bg-transparent shadow-none hover:bg-accent"
@@ -130,7 +130,7 @@ export function NotificationBell({
           size="sm"
         />
       </DrawerTrigger>
-      <DrawerContent animatedHeight>
+      <DrawerContent>
         <DrawerHeader className="border-b px-5 pb-4 pr-14 pt-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">

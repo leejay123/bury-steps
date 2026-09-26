@@ -11,6 +11,7 @@ import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR } from "@/lib/theme";
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
 import { NOTICES_CACHE_TAG } from "@/lib/site-notices";
 import { DEFAULT_COOKIE_CONSENT_VARIANT } from "@/lib/cookie-consent-variant";
+import { DEFAULT_SITE_FONT } from "@/lib/site-font";
 import {
   DEFAULT_FACEBOOK_GROUP_URL,
   DEFAULT_SITE_NAME,
@@ -138,6 +139,7 @@ export async function resetSiteToDefault(
           carouselEnabled: true,
           scrollToTopEnabled: true,
           cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
+          siteFont: DEFAULT_SITE_FONT,
           siteName: DEFAULT_SITE_NAME,
           siteTagline: DEFAULT_SITE_TAGLINE,
           facebookGroupUrl: DEFAULT_FACEBOOK_GROUP_URL,
@@ -186,6 +188,7 @@ export async function resetSiteToDefault(
           carouselEnabled: true,
           scrollToTopEnabled: true,
           cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
+          siteFont: DEFAULT_SITE_FONT,
           siteName: DEFAULT_SITE_NAME,
           siteTagline: DEFAULT_SITE_TAGLINE,
           facebookGroupUrl: DEFAULT_FACEBOOK_GROUP_URL,

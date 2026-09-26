@@ -125,12 +125,16 @@ body {
  * URL bar showing/hiding).
  */
 [data-slot="drawer-content"][data-vaul-drawer-direction="bottom"] {
-  bottom: 0;
+  right: max(1rem, env(safe-area-inset-right));
+  left: max(1rem, env(safe-area-inset-left));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  width: auto;
   margin-bottom: var(--keyboard-inset, 0px);
-  /* Prefer the live visual viewport when the keyboard is open; fall back to
-     80dvh so a tall form still leaves room to drag-dismiss above. */
-  max-height: min(90dvh, calc(var(--vv-height, 100dvh) * 0.92));
-  padding-bottom: env(safe-area-inset-bottom);
+  /* Prefer the live visual viewport when the keyboard is open, and keep the
+     card inset so it doesn't sit flush against the screen. */
+  max-height: min(85dvh, calc(var(--vv-height, 100dvh) - 2rem));
+  padding-bottom: 0;
+  border-radius: 1rem;
 }
 
 [data-slot="drawer-content"][data-vaul-drawer-direction="top"] {
@@ -156,18 +160,19 @@ body {
 @media (max-width: 639px) {
   [data-slot="drawer-content"][data-drawer-variant="form"][data-vaul-drawer-direction="right"],
   [data-slot="drawer-content"][data-drawer-variant="form"][data-vaul-drawer-direction="left"] {
-    --drawer-gap-top: max(0.5rem, env(safe-area-inset-top));
+    --drawer-gap-top: max(1rem, env(safe-area-inset-top));
     top: calc(var(--vv-top, 0px) + var(--drawer-gap-top));
-    right: 0.75rem;
-    left: 0.75rem;
+    right: max(1rem, env(safe-area-inset-right));
+    left: max(1rem, env(safe-area-inset-left));
     bottom: auto;
     width: auto;
     max-width: none;
-    height: calc(var(--vv-height, 100dvh) - var(--drawer-gap-top) - 0.5rem);
-    border-radius: 0.75rem;
+    height: calc(var(--vv-height, 100dvh) - var(--drawer-gap-top) - 1rem);
+    border-radius: 1rem;
     border-width: 1px;
     border-style: solid;
     border-color: var(--border);
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
     padding-top: 0;
     padding-right: 0;
     padding-left: 0;
@@ -386,6 +391,7 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: var(--font-site), ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {

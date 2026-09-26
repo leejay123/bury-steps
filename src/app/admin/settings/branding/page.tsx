@@ -6,6 +6,7 @@ import { SiteLogoSettings } from "./site-logo-settings";
 import { SiteFaviconSettings } from "./site-favicon-settings";
 import { ReportBannerSettings } from "./report-banner-settings";
 import { FacebookGroupSettings } from "./facebook-group-settings";
+import { SiteFontSettings } from "./site-font-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ export default async function BrandingSettingsPage() {
 
   return (
     <SettingsPage
-      description="How the site introduces itself — name, tagline, logo, favicon, and the Facebook link."
+      description="How the site introduces itself — name, tagline, font, logo, favicon, and the Facebook link."
       previewHref="/"
       title="Branding"
     >
@@ -24,6 +25,7 @@ export default async function BrandingSettingsPage() {
         title="Identity"
       >
         <SiteBrandingSettings siteName={theme.siteName} siteTagline={theme.siteTagline} />
+        <SiteFontSettings font={theme.siteFont} />
         <SiteLogoSettings hasCustomLogo={theme.hasCustomLogo} logoSrc={theme.logoSrc} />
         <SiteFaviconSettings
           faviconSrc={theme.faviconSrc}

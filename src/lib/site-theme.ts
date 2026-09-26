@@ -8,6 +8,7 @@ import {
   parseCookieConsentVariant,
   type CookieConsentVariant,
 } from "@/lib/cookie-consent-variant";
+import { DEFAULT_SITE_FONT, parseSiteFont, type SiteFontId } from "@/lib/site-font";
 import {
   DEFAULT_FACEBOOK_GROUP_URL,
   DEFAULT_SITE_NAME,
@@ -80,6 +81,7 @@ export type SiteTheme = {
   memberNoticesEnabled: boolean;
   scrollToTopEnabled: boolean;
   cookieConsentVariant: CookieConsentVariant;
+  siteFont: SiteFontId;
   siteName: string;
   siteTagline: string;
   facebookGroupUrl: string;
@@ -143,6 +145,7 @@ function defaultTheme(): SiteTheme {
     memberNoticesEnabled: true,
     scrollToTopEnabled: true,
     cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
+    siteFont: DEFAULT_SITE_FONT,
     siteName: DEFAULT_SITE_NAME,
     siteTagline: DEFAULT_SITE_TAGLINE,
     facebookGroupUrl: DEFAULT_FACEBOOK_GROUP_URL,
@@ -199,6 +202,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       memberNoticesEnabled: true,
       scrollToTopEnabled: true,
       cookieConsentVariant: true,
+      siteFont: true,
       siteName: true,
       siteTagline: true,
       facebookGroupUrl: true,
@@ -263,6 +267,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     cookieConsentVariant:
       parseCookieConsentVariant(row?.cookieConsentVariant ?? "") ??
       DEFAULT_COOKIE_CONSENT_VARIANT,
+    siteFont: parseSiteFont(row?.siteFont ?? "") ?? DEFAULT_SITE_FONT,
     siteName: row?.siteName?.trim() || DEFAULT_SITE_NAME,
     siteTagline: row?.siteTagline?.trim() || DEFAULT_SITE_TAGLINE,
     facebookGroupUrl: row?.facebookGroupUrl ?? DEFAULT_FACEBOOK_GROUP_URL,
@@ -324,7 +329,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v19"], {
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v20"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });

@@ -26,6 +26,7 @@ import {
   updateContactMessagesOwner,
   updateCookieConsentVariant,
   updateFacebookGroupUrl,
+  updateSiteFont,
   updateMonthlyClockInGoal,
   updateOrganiserInviteRequired,
   updateSiteBranding,
@@ -159,6 +160,25 @@ describe("updateFacebookGroupUrl", () => {
       form({ facebookGroupUrl: "https://facebook.com/groups/burysteps" }),
     );
     expect(result).toEqual({ ok: true, message: "Facebook group link saved." });
+  });
+});
+
+describe("updateSiteFont", () => {
+  it("rejects an unknown font", async () => {
+    const result = await updateSiteFont(null, form({ siteFont: "comic-sans" }));
+    expect(result).toEqual({ ok: false, error: "Choose a site font." });
+    expect(prismaMock.siteSetting.upsert).not.toHaveBeenCalled();
+  });
+
+  it("saves a known font", async () => {
+    const result = await updateSiteFont(null, form({ siteFont: "fraunces" }));
+    expect(result).toEqual({
+      ok: true,
+      message: "Site font saved. The whole website is using it now.",
+    });
+    expect(prismaMock.siteSetting.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ update: { siteFont: "fraunces" } }),
+    );
   });
 });
 

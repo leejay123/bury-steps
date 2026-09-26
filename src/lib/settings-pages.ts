@@ -71,8 +71,8 @@ export const SETTINGS_PAGE_GROUPS: SettingsPageGroup[] = [
       {
         href: "/admin/settings/branding",
         title: "Branding",
-        description: "The site's name, tagline, logo, browser-tab icon and Facebook link.",
-        keywords: "logo favicon icon name tagline facebook report banner",
+        description: "The site's name, tagline, font, logo, browser-tab icon and Facebook link.",
+        keywords: "logo favicon icon name tagline font typeface facebook report banner",
         permission: "permDisplay",
       },
       {

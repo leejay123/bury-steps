@@ -20,8 +20,10 @@ export function HomepageNoticesSection() {
               testimonials, FAQs, and notices use a list: tap a row to edit. Remove is the small
               button on the row, not in the drawer. Drawers are for adding and editing. On a
               phone, short lists (bell, About, Journey) still slide up from the bottom; long edit
-              forms open as a near-full panel so the keyboard does not shove the sheet. Add
-              buttons stretch full width. On a wider screen editors slide in from the side.
+              forms open as a tall card so the keyboard does not shove the sheet. Every drawer
+              sits in from the screen edges: rounded corners and a shadow, with a gap around it.
+              Add buttons stretch full width. On a wider screen editors slide in from the side
+              as the same kind of card.
               While a drawer is open the page behind — including the site header — stays where it
               is, dimmed under a full-screen blur. A breadcrumb at the top of each settings page
               goes back to Settings — it greys when you hover it.
@@ -124,8 +126,8 @@ export function HomepageNoticesSection() {
               </li>
               <li>
                 Members see a count on the bell for unread notices. The bell swings when a
-                new one arrives, and the number rolls. Opening it uses a floating panel that
-                grows to fit the notices. Each unread row has a <strong>New</strong> or{" "}
+                new one arrives, and the number rolls. Opening it uses the same floating card
+                as the other drawers. Each unread row has a <strong>New</strong> or{" "}
                 <strong>Updated</strong> badge (Updated after you edit a notice they had already
                 seen). In the drawer, ordinary notices stay short; full-page teasers end with …
                 and say <strong>Read full notice</strong>. Tapping a row marks that notice read.{" "}

@@ -314,6 +314,8 @@ model SiteSetting {
   scrollToTopEnabled          Boolean  @default(true)
   /// Cookie banner layout: default, small, or mini.
   cookieConsentVariant        String   @default("small")
+  /// Public site typeface. One of the ids in src/lib/site-font.ts.
+  siteFont                    String   @default("inter")
   /// Public site name — header logo alt, homepage hero, tab titles, share cards.
   siteName                    String   @default("Bury Steps Walking Group")
   /// Homepage hero subtitle (also used for share/meta description when short enough).

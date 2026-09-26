@@ -101,6 +101,7 @@ export {
   updateOrganiserInviteRequired,
   updateScrollToTopEnabled,
   updateCookieConsentVariant,
+  updateSiteFont,
   updateSiteBranding,
   updateFacebookGroupUrl,
   reorderHomepageSections,

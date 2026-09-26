@@ -31,6 +31,7 @@ import {
   serializeAboutRules,
 } from "@/lib/homepage-copy";
 import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR } from "@/lib/theme";
+import { parseSiteFont } from "@/lib/site-font";
 import {
   HERO_VIDEO_OPTIONS,
   parseHeroOverlayOpacity,
@@ -463,6 +464,40 @@ export async function updateScrollToTopEnabled(
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/behaviour");
   return { ok: true, message: enabled ? "Back to top is on." : "Back to top is off." };
+}
+
+export async function updateSiteFont(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  const font = parseSiteFont(String(formData.get("siteFont") ?? ""));
+  if (!font) {
+    return { ok: false, error: "Choose a site font." };
+  }
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        carouselEnabled: true,
+        scrollToTopEnabled: true,
+        siteFont: font,
+      },
+      update: { siteFont: font },
+    });
+  } catch (err) {
+    return logActionError("updateSiteFont", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/branding");
+  return { ok: true, message: "Site font saved. The whole website is using it now." };
 }
 
 export async function updateCookieConsentVariant(
