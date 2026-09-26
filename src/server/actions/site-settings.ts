@@ -31,7 +31,13 @@ import {
   serializeAboutRules,
 } from "@/lib/homepage-copy";
 import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR } from "@/lib/theme";
-import { HERO_VIDEO_OPTIONS, parseHeroStyle, parseHeroVideoKey } from "@/lib/hero-style";
+import {
+  HERO_VIDEO_OPTIONS,
+  parseHeroOverlayOpacity,
+  parseHeroStyle,
+  parseHeroTextColor,
+  parseHeroVideoKey,
+} from "@/lib/hero-style";
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
 import {
   DEFAULT_COOKIE_CONSENT_VARIANT,
@@ -94,6 +100,8 @@ export async function updateHeroStyle(
     return { ok: false, error: "Choose a video." };
   }
   const heroVideoKey = parseHeroVideoKey(rawVideoKey);
+  const heroOverlayOpacity = parseHeroOverlayOpacity(Number(formData.get("heroOverlayOpacity")));
+  const heroTextColor = parseHeroTextColor(String(formData.get("heroTextColor") ?? ""));
 
   try {
     await prisma.siteSetting.upsert({
@@ -103,8 +111,10 @@ export async function updateHeroStyle(
         primaryColor: DEFAULT_PRIMARY_COLOR,
         heroStyle,
         heroVideoKey,
+        heroOverlayOpacity,
+        heroTextColor,
       },
-      update: { heroStyle, heroVideoKey },
+      update: { heroStyle, heroVideoKey, heroOverlayOpacity, heroTextColor },
     });
   } catch (err) {
     return logActionError("updateHeroStyle", err, "Could not save that setting. Try again.");

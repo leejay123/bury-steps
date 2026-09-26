@@ -33,10 +33,12 @@ export default async function Home() {
     <div className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
       {theme.heroStyle === "cinematic" ? (
         <HeroCinematic
+          overlayOpacity={theme.heroOverlayOpacity}
           signInHref={signInHref}
           signUpHref={signUpHref}
           siteName={theme.siteName}
           siteTagline={theme.siteTagline}
+          textColor={theme.heroTextColor}
           videoSrc={heroVideoSrc(theme.heroVideoKey)}
         />
       ) : (

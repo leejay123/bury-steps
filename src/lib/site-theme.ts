@@ -23,9 +23,13 @@ import {
   type HomepageSectionId,
 } from "@/lib/homepage-sections";
 import {
+  DEFAULT_HERO_OVERLAY_OPACITY,
   DEFAULT_HERO_STYLE,
+  DEFAULT_HERO_TEXT_COLOR,
   DEFAULT_HERO_VIDEO_KEY,
+  parseHeroOverlayOpacity,
   parseHeroStyle,
+  parseHeroTextColor,
   parseHeroVideoKey,
   type HeroStyle,
 } from "@/lib/hero-style";
@@ -61,6 +65,8 @@ import {
 export type SiteTheme = {
   heroStyle: HeroStyle;
   heroVideoKey: string;
+  heroOverlayOpacity: number;
+  heroTextColor: string;
   carouselEnabled: boolean;
   /** Site-wide switch for the homepage's "Latest notices" section (see
    * updateMemberNoticesEnabled) — off hides it even when there are notices
@@ -118,6 +124,8 @@ function defaultTheme(): SiteTheme {
   return {
     heroStyle: DEFAULT_HERO_STYLE,
     heroVideoKey: DEFAULT_HERO_VIDEO_KEY,
+    heroOverlayOpacity: DEFAULT_HERO_OVERLAY_OPACITY,
+    heroTextColor: DEFAULT_HERO_TEXT_COLOR,
     carouselEnabled: true,
     memberNoticesEnabled: true,
     scrollToTopEnabled: true,
@@ -165,6 +173,8 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     select: {
       heroStyle: true,
       heroVideoKey: true,
+      heroOverlayOpacity: true,
+      heroTextColor: true,
       carouselEnabled: true,
       memberNoticesEnabled: true,
       scrollToTopEnabled: true,
@@ -209,6 +219,8 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   return {
     heroStyle: parseHeroStyle(row?.heroStyle),
     heroVideoKey: parseHeroVideoKey(row?.heroVideoKey),
+    heroOverlayOpacity: parseHeroOverlayOpacity(row?.heroOverlayOpacity),
+    heroTextColor: parseHeroTextColor(row?.heroTextColor),
     carouselEnabled: row?.carouselEnabled ?? true,
     memberNoticesEnabled: row?.memberNoticesEnabled ?? true,
     scrollToTopEnabled: row?.scrollToTopEnabled ?? true,
@@ -274,7 +286,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v16"], {
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v17"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });

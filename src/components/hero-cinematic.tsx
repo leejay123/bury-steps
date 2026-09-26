@@ -11,20 +11,26 @@ import { FadeIn } from "@/components/motion";
 const heroWhiteButtonClassName = "bg-white text-black hover:bg-white/90";
 
 export function HeroCinematic({
+  overlayOpacity,
   signInHref,
   signUpHref,
   siteName,
   siteTagline,
+  textColor,
   videoSrc,
 }: {
+  /** 0-100 — darkness of the gradient over the video. */
+  overlayOpacity: number;
   signInHref: string;
   signUpHref: string;
   siteName: string;
   siteTagline: string;
+  /** Hex color for the eyebrow/title/tagline text. */
+  textColor: string;
   videoSrc: string;
 }) {
   return (
-    <section className="relative isolate flex min-h-[50svh] items-center justify-center overflow-hidden bg-[#0a0a0c] text-center text-slate-50">
+    <section className="relative isolate flex min-h-[50svh] items-center justify-center overflow-hidden bg-[#0a0a0c] text-center">
       <video
         autoPlay
         className="absolute inset-0 -z-20 h-full w-full object-cover"
@@ -38,14 +44,16 @@ export function HeroCinematic({
       <div
         className="absolute inset-0 -z-10"
         style={{
-          background:
-            "radial-gradient(circle at 50% 35%, transparent 20%, rgba(10,10,12,0.55) 60%, #0a0a0c 100%)",
+          background: `radial-gradient(circle at 50% 35%, transparent 20%, rgba(10,10,12,${overlayOpacity / 100}) 60%, #0a0a0c 100%)`,
         }}
       />
 
-      <div className="relative mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-4 py-14 md:px-6">
+      <div
+        className="relative mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-4 py-14 md:px-6"
+        style={{ color: textColor }}
+      >
         <FadeIn>
-          <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-white/80 drop-shadow-[0_1px_8px_rgba(0,0,0,0.8)] sm:text-xs sm:tracking-[0.35em]">
+          <p className="text-[10px] font-medium uppercase tracking-[0.25em] opacity-80 drop-shadow-[0_1px_8px_rgba(0,0,0,0.8)] sm:text-xs sm:tracking-[0.35em]">
             Support · Together · Empathy · Pace · Steps
           </p>
         </FadeIn>
@@ -55,7 +63,7 @@ export function HeroCinematic({
           </h1>
         </FadeIn>
         <FadeIn delay={0.2}>
-          <p className="max-w-xl text-sm font-light leading-relaxed text-white/70 drop-shadow-[0_1px_10px_rgba(0,0,0,0.8)] sm:text-lg">
+          <p className="max-w-xl text-sm font-light leading-relaxed opacity-70 drop-shadow-[0_1px_10px_rgba(0,0,0,0.8)] sm:text-lg">
             {siteTagline}
           </p>
         </FadeIn>

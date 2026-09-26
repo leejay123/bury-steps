@@ -36,3 +36,20 @@ export function parseHeroVideoKey(raw: string | null | undefined): string {
 export function heroVideoSrc(key: string): string {
   return HERO_VIDEO_OPTIONS.find((option) => option.key === key)?.src ?? HERO_VIDEO_OPTIONS[0].src;
 }
+
+export const DEFAULT_HERO_OVERLAY_OPACITY = 55;
+
+/** Clamps to a whole 0-100 — anything else (bad input, corrupt row) falls
+ * back to the default rather than rendering a broken gradient. */
+export function parseHeroOverlayOpacity(raw: number | null | undefined): number {
+  if (raw === null || raw === undefined || !Number.isFinite(raw)) return DEFAULT_HERO_OVERLAY_OPACITY;
+  return Math.min(100, Math.max(0, Math.round(raw)));
+}
+
+export const DEFAULT_HERO_TEXT_COLOR = "#ffffff";
+
+const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
+
+export function parseHeroTextColor(raw: string | null | undefined): string {
+  return raw && HEX_COLOR_PATTERN.test(raw) ? raw : DEFAULT_HERO_TEXT_COLOR;
+}

@@ -18,7 +18,12 @@ export default async function HomepageLayoutSettingsPage() {
       previewHref="/"
       title="Homepage layout"
     >
-      <HeroStyleSettings heroStyle={theme.heroStyle} heroVideoKey={theme.heroVideoKey} />
+      <HeroStyleSettings
+        heroOverlayOpacity={theme.heroOverlayOpacity}
+        heroStyle={theme.heroStyle}
+        heroTextColor={theme.heroTextColor}
+        heroVideoKey={theme.heroVideoKey}
+      />
       <HomepageSectionsSettings sectionOrder={theme.homepageSectionOrder} />
       <SettingsSectionGroup title="Show or hide">
         <CarouselToggle enabled={theme.carouselEnabled} />
