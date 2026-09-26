@@ -3,8 +3,6 @@ import { prisma } from "@/lib/db";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { sniffImageMime } from "@/lib/image-bytes";
 
-export const preferredRegion = ["lhr1"];
-
 export async function GET() {
   const setting = await prisma.siteSetting.findUnique({
     where: { id: SITE_SETTING_ID },

@@ -52,8 +52,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export const preferredRegion = ["lhr1"];
-
 export async function generateViewport(): Promise<Viewport> {
   return {
     themeColor: "#111111",
