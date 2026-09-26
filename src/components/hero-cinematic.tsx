@@ -72,7 +72,7 @@ export function HeroCinematic({
             {siteTagline}
           </p>
         </FadeIn>
-        <FadeIn className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center" delay={0.3}>
+        <FadeIn className="flex flex-row flex-wrap items-center justify-center gap-3" delay={0.3}>
           <Show when="signed-in">
             <Button asChild className={heroWhiteButtonClassName} size="sm">
               <Link href="/walks">Your walks</Link>
