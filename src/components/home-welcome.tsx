@@ -15,12 +15,16 @@ import type { TestimonialView } from "@/lib/testimonials";
 import type { FaqCategoryView, FaqView } from "@/lib/faqs";
 import type { AboutRule } from "@/lib/homepage-copy";
 import type { HomepageSectionId } from "@/lib/homepage-sections";
+import { SectionBackground } from "@/components/section-background";
+import type { SectionBgPattern } from "@/lib/section-background";
 
 function SectionShell({
+  bgPattern = "none",
   children,
   id,
   showDividerAfter,
 }: {
+  bgPattern?: SectionBgPattern;
   children: ReactNode;
   id: HomepageSectionId;
   showDividerAfter: boolean;
@@ -29,7 +33,12 @@ function SectionShell({
     // scroll-mt clears the sticky header so a footer anchor link (e.g.
     // /#faqs) doesn't land with the section's top edge hidden behind it.
     <div className="relative scroll-mt-20" id={id}>
-      {children}
+      {bgPattern !== "none" ? (
+        <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
+          <SectionBackground pattern={bgPattern} />
+        </div>
+      ) : null}
+      <div className="relative">{children}</div>
       {showDividerAfter ? <FullWidthDivider position="bottom" /> : null}
     </div>
   );
@@ -58,6 +67,7 @@ export function HomeWelcome({
   memberNotices,
   memberNoticesEnabled,
   progressEnabled,
+  sectionBgPatterns,
   testimonials,
   testimonialsSectionEyebrow,
   testimonialsSectionIntro,
@@ -92,6 +102,10 @@ export function HomeWelcome({
   /** Site-wide switch (Settings → Site behaviour) — hides the
    * "Track your progress" tile when off. */
   progressEnabled: boolean;
+  /** Settings → Homepage layout → Background patterns — per-section choice
+   * for howThisStarted/testimonials/memberNotices/faqs (hero has its own,
+   * see HeroSection's bgPattern prop). */
+  sectionBgPatterns: Record<"howThisStarted" | "testimonials" | "memberNotices" | "faqs", SectionBgPattern>;
   testimonials: TestimonialView[];
   testimonialsSectionEyebrow: string;
   testimonialsSectionIntro: string;
@@ -106,6 +120,7 @@ export function HomeWelcome({
     howThisStarted: (
       <section>
         <HeroCopy
+          bgPattern={sectionBgPatterns.howThisStarted}
           actions={
             <HomeAboutDrawer
               aboutExpect={aboutExpect}
@@ -156,12 +171,21 @@ export function HomeWelcome({
   };
 
   const visible = homepageSectionOrder.filter((id) => sections[id] != null);
+  // howWalksWork has no background pattern picker (not asked for) — always
+  // none. howThisStarted's pattern is drawn by HeroCopy itself above (its
+  // own internal background slot), not this shared overlay — applying both
+  // would double-layer the pattern.
+  const bgPatterns: Record<HomepageSectionId, SectionBgPattern> = {
+    howWalksWork: "none",
+    ...sectionBgPatterns,
+    howThisStarted: "none",
+  };
 
   return (
     <>
       {visible.map((id, index) => (
         <Fragment key={id}>
-          <SectionShell id={id} showDividerAfter={index < visible.length - 1}>
+          <SectionShell bgPattern={bgPatterns[id]} id={id} showDividerAfter={index < visible.length - 1}>
             {sections[id]}
           </SectionShell>
         </Fragment>

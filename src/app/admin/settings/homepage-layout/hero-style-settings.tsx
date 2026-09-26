@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { updateHeroStyle, type ActionResult } from "@/server/actions";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { HERO_VIDEO_OPTIONS, type HeroStyle } from "@/lib/hero-style";
+import type { SectionBgPattern } from "@/lib/section-background";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -16,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SettingsSection } from "../settings-page";
+import { SectionBgPatternSelect } from "./section-bg-pattern-select";
 
 const HERO_STYLE_LABELS: Record<HeroStyle, string> = {
   default: "Default (light hero + photo carousel)",
@@ -28,11 +30,13 @@ const HERO_STYLE_LABELS: Record<HeroStyle, string> = {
 const COMMIT_DEBOUNCE_MS = 400;
 
 export function HeroStyleSettings({
+  heroBgPattern,
   heroOverlayOpacity,
   heroStyle,
   heroTextColor,
   heroVideoKey,
 }: {
+  heroBgPattern: SectionBgPattern;
   heroOverlayOpacity: number;
   heroStyle: HeroStyle;
   heroTextColor: string;
@@ -151,6 +155,10 @@ export function HeroStyleSettings({
             </SelectContent>
           </Select>
         </div>
+
+        {style === "default" ? (
+          <SectionBgPatternSelect pattern={heroBgPattern} section="hero" />
+        ) : null}
 
         {style === "cinematic" ? (
           <>

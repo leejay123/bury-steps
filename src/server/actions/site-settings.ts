@@ -38,6 +38,12 @@ import {
   parseHeroTextColor,
   parseHeroVideoKey,
 } from "@/lib/hero-style";
+import {
+  SECTION_BG_COLUMNS,
+  SECTION_BG_KEYS,
+  parseSectionBgPattern,
+  type SectionBgKey,
+} from "@/lib/section-background";
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
 import {
   DEFAULT_COOKIE_CONSENT_VARIANT,
@@ -129,6 +135,39 @@ export async function updateHeroStyle(
     message:
       heroStyle === "cinematic" ? "Switched the homepage to the video hero." : "Switched the homepage to the default hero.",
   };
+}
+
+/** Background pattern (none/dots/stripes — see src/lib/section-background.ts)
+ * behind one homepage section. One action for all five sections: which
+ * SiteSetting column it writes depends on `section`. */
+export async function updateSectionBgPattern(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+
+  const section = String(formData.get("section") ?? "") as SectionBgKey;
+  if (!SECTION_BG_KEYS.includes(section)) {
+    return { ok: false, error: "Unknown section." };
+  }
+  const pattern = parseSectionBgPattern(String(formData.get("pattern") ?? ""));
+  const column = SECTION_BG_COLUMNS[section];
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, [column]: pattern },
+      update: { [column]: pattern },
+    });
+  } catch (err) {
+    return logActionError("updateSectionBgPattern", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings");
+  return { ok: true, message: "Background pattern updated." };
 }
 
 /** Site-wide switch for the homepage's "Latest notices" section — off

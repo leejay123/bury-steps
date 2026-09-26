@@ -43,6 +43,7 @@ export default async function Home() {
         />
       ) : (
         <HeroSection
+          bgPattern={theme.heroBgPattern}
           carouselEnabled={theme.carouselEnabled}
           signInHref={signInHref}
           signUpHref={signUpHref}
@@ -74,6 +75,12 @@ export default async function Home() {
         memberNotices={memberNotices}
         memberNoticesEnabled={theme.memberNoticesEnabled}
         progressEnabled={progressEnabled}
+        sectionBgPatterns={{
+          howThisStarted: theme.howThisStartedBgPattern,
+          testimonials: theme.testimonialsBgPattern,
+          memberNotices: theme.memberNoticesBgPattern,
+          faqs: theme.faqsBgPattern,
+        }}
         testimonials={testimonials}
         testimonialsSectionEyebrow={theme.testimonialsSectionEyebrow}
         testimonialsSectionIntro={theme.testimonialsSectionIntro}

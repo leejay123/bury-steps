@@ -8,11 +8,13 @@ import { HomeCarousel } from "@/components/home-carousel";
 import { HeroCopy } from "@/components/hero-copy";
 import { FadeIn } from "@/components/motion";
 import type { SlideView } from "@/lib/slides";
+import type { SectionBgPattern } from "@/lib/section-background";
 
 export function HeroSection({
   slides,
   signInHref,
   signUpHref,
+  bgPattern = "dots",
   carouselEnabled = true,
   siteName,
   siteTagline,
@@ -20,6 +22,7 @@ export function HeroSection({
   slides: SlideView[];
   signInHref: string;
   signUpHref: string;
+  bgPattern?: SectionBgPattern;
   carouselEnabled?: boolean;
   siteName: string;
   siteTagline: string;
@@ -43,7 +46,7 @@ export function HeroSection({
           </>
         ) : null}
         <HeroCopy
-          dotPattern
+          bgPattern={bgPattern}
           actions={
             <>
               <Show when="signed-in">

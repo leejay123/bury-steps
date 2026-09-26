@@ -33,6 +33,7 @@ import {
   parseHeroVideoKey,
   type HeroStyle,
 } from "@/lib/hero-style";
+import { SECTION_BG_DEFAULTS, parseSectionBgPattern, type SectionBgPattern } from "@/lib/section-background";
 import {
   DEFAULT_ABOUT_EXPECT,
   DEFAULT_ABOUT_EXPECT_HEADING,
@@ -67,6 +68,11 @@ export type SiteTheme = {
   heroVideoKey: string;
   heroOverlayOpacity: number;
   heroTextColor: string;
+  heroBgPattern: SectionBgPattern;
+  howThisStartedBgPattern: SectionBgPattern;
+  testimonialsBgPattern: SectionBgPattern;
+  memberNoticesBgPattern: SectionBgPattern;
+  faqsBgPattern: SectionBgPattern;
   carouselEnabled: boolean;
   /** Site-wide switch for the homepage's "Latest notices" section (see
    * updateMemberNoticesEnabled) — off hides it even when there are notices
@@ -126,6 +132,11 @@ function defaultTheme(): SiteTheme {
     heroVideoKey: DEFAULT_HERO_VIDEO_KEY,
     heroOverlayOpacity: DEFAULT_HERO_OVERLAY_OPACITY,
     heroTextColor: DEFAULT_HERO_TEXT_COLOR,
+    heroBgPattern: SECTION_BG_DEFAULTS.hero,
+    howThisStartedBgPattern: SECTION_BG_DEFAULTS.howThisStarted,
+    testimonialsBgPattern: SECTION_BG_DEFAULTS.testimonials,
+    memberNoticesBgPattern: SECTION_BG_DEFAULTS.memberNotices,
+    faqsBgPattern: SECTION_BG_DEFAULTS.faqs,
     carouselEnabled: true,
     memberNoticesEnabled: true,
     scrollToTopEnabled: true,
@@ -175,6 +186,11 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       heroVideoKey: true,
       heroOverlayOpacity: true,
       heroTextColor: true,
+      heroBgPattern: true,
+      howThisStartedBgPattern: true,
+      testimonialsBgPattern: true,
+      memberNoticesBgPattern: true,
+      faqsBgPattern: true,
       carouselEnabled: true,
       memberNoticesEnabled: true,
       scrollToTopEnabled: true,
@@ -221,6 +237,20 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     heroVideoKey: parseHeroVideoKey(row?.heroVideoKey),
     heroOverlayOpacity: parseHeroOverlayOpacity(row?.heroOverlayOpacity),
     heroTextColor: parseHeroTextColor(row?.heroTextColor),
+    heroBgPattern: parseSectionBgPattern(row?.heroBgPattern, SECTION_BG_DEFAULTS.hero),
+    howThisStartedBgPattern: parseSectionBgPattern(
+      row?.howThisStartedBgPattern,
+      SECTION_BG_DEFAULTS.howThisStarted,
+    ),
+    testimonialsBgPattern: parseSectionBgPattern(
+      row?.testimonialsBgPattern,
+      SECTION_BG_DEFAULTS.testimonials,
+    ),
+    memberNoticesBgPattern: parseSectionBgPattern(
+      row?.memberNoticesBgPattern,
+      SECTION_BG_DEFAULTS.memberNotices,
+    ),
+    faqsBgPattern: parseSectionBgPattern(row?.faqsBgPattern, SECTION_BG_DEFAULTS.faqs),
     carouselEnabled: row?.carouselEnabled ?? true,
     memberNoticesEnabled: row?.memberNoticesEnabled ?? true,
     scrollToTopEnabled: row?.scrollToTopEnabled ?? true,
@@ -286,7 +316,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v17"], {
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v18"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });

@@ -91,6 +91,7 @@ export {
 
 export {
   updateHeroStyle,
+  updateSectionBgPattern,
   updateCarouselEnabled,
   updateMemberNoticesEnabled,
   updateProgressEnabled,

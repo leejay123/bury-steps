@@ -381,6 +381,15 @@ model SiteSetting {
   heroOverlayOpacity          Int      @default(55)
   /// Cinematic hero only: hex color for the eyebrow/title/tagline text.
   heroTextColor               String   @default("#ffffff")
+  /// Background pattern behind each homepage section — "none", "dots", or
+  /// "stripes". See src/lib/section-background.ts. Hero defaults to "dots"
+  /// (it always showed a dot grid before this setting existed); every other
+  /// section defaults to "none" (no pattern, as before).
+  heroBgPattern                String   @default("dots")
+  howThisStartedBgPattern      String   @default("none")
+  testimonialsBgPattern        String   @default("none")
+  memberNoticesBgPattern       String   @default("none")
+  faqsBgPattern                String   @default("none")
   /// Uploaded site logo (header, print reports). Null uses the bundled default.
   logoMime                    String?
   logoData                    Bytes?

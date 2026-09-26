@@ -4,7 +4,8 @@ import { useMemo, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { motionEase } from "@/components/motion";
-import { DotPattern } from "@/components/ui/dot-pattern";
+import { SectionBackground } from "@/components/section-background";
+import type { SectionBgPattern } from "@/lib/section-background";
 
 export function HeroCopy({
   eyebrow = "Support · Together · Empathy · Pace · Steps",
@@ -13,7 +14,7 @@ export function HeroCopy({
   children,
   actions,
   after,
-  dotPattern = false,
+  bgPattern = "none",
 }: {
   eyebrow?: string | null;
   title: string;
@@ -21,7 +22,9 @@ export function HeroCopy({
   children: ReactNode;
   actions?: ReactNode;
   after?: ReactNode;
-  dotPattern?: boolean;
+  /** "none" keeps this section's original look — a soft ambient glow, not
+   * literally nothing (see the fallback div below). */
+  bgPattern?: SectionBgPattern;
 }) {
   const reduce = useReducedMotion();
   // Recreated (and thus new-by-reference) object literals here would make
@@ -56,9 +59,7 @@ export function HeroCopy({
       variants={containerVariants}
     >
       <div aria-hidden="true" className="absolute inset-0 -z-1 size-full overflow-hidden">
-        {dotPattern ? (
-          <DotPattern className="[mask-image:radial-gradient(ellipse_at_center,white,transparent)]" />
-        ) : (
+        {bgPattern === "none" ? (
           <div
             className={cn(
               "absolute -inset-x-20 inset-y-0 z-0 rounded-full",
@@ -66,6 +67,8 @@ export function HeroCopy({
               "blur-[50px]",
             )}
           />
+        ) : (
+          <SectionBackground pattern={bgPattern} />
         )}
       </div>
 

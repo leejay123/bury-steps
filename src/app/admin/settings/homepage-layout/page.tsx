@@ -1,10 +1,11 @@
 import { requirePermission } from "@/lib/auth";
 import { getSiteTheme } from "@/lib/site-theme";
-import { SettingsPage, SettingsSectionGroup } from "../settings-page";
+import { SettingsPage, SettingsSection, SettingsSectionGroup } from "../settings-page";
 import { HomepageSectionsSettings } from "./homepage-sections-settings";
 import { CarouselToggle } from "./carousel-toggle";
 import { MemberNoticesToggle } from "./member-notices-toggle";
 import { HeroStyleSettings } from "./hero-style-settings";
+import { SectionBgPatternSelect } from "./section-bg-pattern-select";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,7 @@ export default async function HomepageLayoutSettingsPage() {
       title="Homepage layout"
     >
       <HeroStyleSettings
+        heroBgPattern={theme.heroBgPattern}
         heroOverlayOpacity={theme.heroOverlayOpacity}
         heroStyle={theme.heroStyle}
         heroTextColor={theme.heroTextColor}
@@ -29,6 +31,25 @@ export default async function HomepageLayoutSettingsPage() {
         <CarouselToggle enabled={theme.carouselEnabled} />
         <MemberNoticesToggle enabled={theme.memberNoticesEnabled} />
       </SettingsSectionGroup>
+      <SettingsSection
+        description="An optional decorative pattern behind each section's content — None leaves it exactly as it looks today."
+        title="Background patterns"
+      >
+        <div className="grid w-full gap-4 sm:grid-cols-2">
+          <SectionBgPatternSelect
+            label="How this started"
+            pattern={theme.howThisStartedBgPattern}
+            section="howThisStarted"
+          />
+          <SectionBgPatternSelect label="Testimonials" pattern={theme.testimonialsBgPattern} section="testimonials" />
+          <SectionBgPatternSelect
+            label="Latest notices"
+            pattern={theme.memberNoticesBgPattern}
+            section="memberNotices"
+          />
+          <SectionBgPatternSelect label="FAQs" pattern={theme.faqsBgPattern} section="faqs" />
+        </div>
+      </SettingsSection>
     </SettingsPage>
   );
 }
