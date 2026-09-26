@@ -3,12 +3,16 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 
 const COLLAPSED_LINE_CLAMP = "line-clamp-6";
 /** Rough character count past which a description is worth collapsing —
  * below this, line-clamp-6 wouldn't kick in on most screens anyway. */
 const LONG_DESCRIPTION_THRESHOLD = 400;
+
+/** Thin, unobtrusive scrollbar for the expanded description box — Firefox
+ * via `scrollbar-width`, WebKit/Blink via the `::-webkit-scrollbar` pseudo. */
+const THIN_SCROLLBAR_CLASSNAME =
+  "[scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border";
 
 /** Long walk descriptions (start point, duration, leader, full route notes,
  * What3Words, …) used to render as one uncapped paragraph — on a walk with a
@@ -25,23 +29,23 @@ export function WalkDescription({ description }: { description: string }) {
         className={cn(
           "text-sm leading-relaxed whitespace-pre-line",
           !expanded && isLong && COLLAPSED_LINE_CLAMP,
-          expanded && "max-h-72 overflow-y-auto pr-1",
+          expanded && cn("max-h-72 overflow-y-auto pr-2", THIN_SCROLLBAR_CLASSNAME),
         )}
       >
         {description}
       </p>
       {isLong ? (
-        <Button
+        // Plain text + chevron, no button chrome — only the chevron animates
+        // on toggle, no hover background/color change.
+        <button
           aria-expanded={expanded}
-          className="w-fit"
+          className="flex w-fit cursor-pointer items-center gap-1 text-sm font-medium text-muted-foreground"
           onClick={() => setExpanded((prev) => !prev)}
-          size="sm"
           type="button"
-          variant="ghost"
         >
           {expanded ? "Show less" : "Read more"}
-          <ChevronDown className={cn("size-4 transition-transform", expanded && "rotate-180")} />
-        </Button>
+          <ChevronDown className={cn("size-4 transition-transform duration-200", expanded && "rotate-180")} />
+        </button>
       ) : null}
     </div>
   );

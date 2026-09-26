@@ -132,7 +132,9 @@ export function WalkShareStatusChrome({
             postcode={postcode}
             startsAt={new Date(startsAt)}
           />
-          {description ? <p className="text-sm leading-relaxed">{description}</p> : null}
+          {description ? (
+            <p className="text-sm leading-relaxed whitespace-pre-line">{description}</p>
+          ) : null}
           {showCalendar ? (
             <div>
               <Button asChild size="sm" variant="outline">
