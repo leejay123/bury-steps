@@ -26,29 +26,11 @@ const DrawerTriggerRefContext = React.createContext<React.MutableRefObject<HTMLE
   null,
 );
 
-const DESKTOP_QUERY = "(min-width: 640px)";
-
 // Matches the close duration in globals.css (vaul's own default is 0.5s,
 // which felt sluggish, and visibility:hidden on data-state=closed hid the
 // slide entirely). Stay mounted a little past that so a slow frame doesn't
 // clip the last few pixels.
 const DRAWER_CLOSE_ANIMATION_MS = 340;
-
-function subscribeToDesktopQuery(onChange: () => void) {
-  const media = window.matchMedia(DESKTOP_QUERY);
-  media.addEventListener("change", onChange);
-  return () => media.removeEventListener("change", onChange);
-}
-
-/** Bottom sheet on phones, side panel from the sm breakpoint up. */
-function useIsDesktop() {
-  return React.useSyncExternalStore(
-    subscribeToDesktopQuery,
-    () => window.matchMedia(DESKTOP_QUERY).matches,
-    // No matchMedia on the server — match the old default so hydration agrees.
-    () => true,
-  );
-}
 
 function Drawer({
   children,
@@ -58,9 +40,9 @@ function Drawer({
   open,
   repositionInputs = false,
   /**
-   * `sheet` — bottom sheet on phones (lists, confirms, read-only).
-   * `form` — full-height panel on phones too, so the keyboard does not fight a
-   * short bottom sheet (notices, reports, homepage editors).
+   * `sheet` — the shared floating card (notices, About, Journey, read-only).
+   * `form` — same card, but it cannot be swiped shut and on a phone it tracks
+   * the keyboard so a field is not hidden.
    */
   variant = "sheet",
   ...props
@@ -73,11 +55,10 @@ function Drawer({
   // would also hide DrawerTrigger while `open` starts false and has never
   // been true, making the trigger permanently unclickable.
   const shouldRender = useOverlayPresence(open, DRAWER_CLOSE_ANIMATION_MS);
-  const isDesktop = useIsDesktop();
-  // Form editors stay a side/full panel on every width. Short sheets still
-  // rise from the bottom on phones.
-  const resolvedDirection =
-    direction ?? (variant === "form" || isDesktop ? "right" : "bottom");
+  // One panel for every drawer, including the notice bell. A phone used to
+  // turn short lists into a bottom sheet, so notices looked like a different
+  // component from the editors.
+  const resolvedDirection = direction ?? "right";
   const triggerRef = React.useRef<HTMLElement | null>(null);
   const unlockBackgroundScrollRef = React.useRef<(() => void) | null>(null);
   const closeCleanupTimerRef = React.useRef(0);
