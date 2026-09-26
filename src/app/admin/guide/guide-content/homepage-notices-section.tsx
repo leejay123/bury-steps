@@ -27,6 +27,7 @@ export function HomepageNoticesSection() {
               form fills the screen, with rounded corners only at the top. While you
               type, that sheet shortens to the space above the keyboard: the title
               stays put, the fields scroll, and Cancel and Save sit just above the keys.
+              Every drawer, including a message, uses that same slide.
               The other drawers sit in from the screen edges: rounded corners and a shadow, with a
               gap around them.
               Add buttons stretch full width.

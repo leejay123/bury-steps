@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { updateAboutLists } from "@/server/actions";
 import { useNotifyActionState } from "@/hooks/use-action-toast";
@@ -177,51 +177,69 @@ function AboutListDrawer({
     },
   );
 
-  if (!active) return null;
+  // Stay mounted while closed so the open and close slide can play.
+  const retained = useRef(active);
+  if (active) retained.current = active;
+  const shown = active ?? retained.current;
+
+  if (!shown) {
+    return (
+      <Drawer
+        closeDisabled={isPending}
+        onOpenChange={(next) => {
+          if (!next) onClose();
+        }}
+        open={false}
+        variant="form"
+      >
+        <DrawerContent onPointerDownOutside={onPointerDownOutside} />
+      </Drawer>
+    );
+  }
 
   const draftValue =
-    active.id === "goals"
+    shown.id === "goals"
       ? draftGoals
-      : active.id === "places"
+      : shown.id === "places"
         ? draftPlaces
-        : active.id === "expect"
+        : shown.id === "expect"
           ? draftExpect
           : draftRules;
   const savedValue =
-    active.id === "goals"
+    shown.id === "goals"
       ? savedGoals
-      : active.id === "places"
+      : shown.id === "places"
         ? savedPlaces
-        : active.id === "expect"
+        : shown.id === "expect"
           ? savedExpect
           : savedRules;
   const draftHeading =
-    active.id === "goals"
+    shown.id === "goals"
       ? draftGoalsHeading
-      : active.id === "places"
+      : shown.id === "places"
         ? draftPlacesHeading
-        : active.id === "expect"
+        : shown.id === "expect"
           ? draftExpectHeading
           : draftRulesHeading;
   const savedHeading =
-    active.id === "goals"
+    shown.id === "goals"
       ? savedGoalsHeading
-      : active.id === "places"
+      : shown.id === "places"
         ? savedPlacesHeading
-        : active.id === "expect"
+        : shown.id === "expect"
           ? savedExpectHeading
           : savedRulesHeading;
 
   const setDraftValue = (value: string) => {
-    if (active.id === "goals") setDraftGoals(value);
-    else if (active.id === "places") setDraftPlaces(value);
-    else if (active.id === "expect") setDraftExpect(value);
+    if (shown.id === "goals") setDraftGoals(value);
+    else if (shown.id === "places") setDraftPlaces(value);
+    else if (shown.id === "expect") setDraftExpect(value);
     else setDraftRules(value);
   };
   const setDraftHeading = (value: string) => {
-    if (active.id === "goals") setDraftGoalsHeading(value);
-    else if (active.id === "places") setDraftPlacesHeading(value);
-    else if (active.id === "expect") setDraftExpectHeading(value);
+    if (shown.id === "goals") setDraftGoalsHeading(value);
+    else if (shown.id === "places") setDraftPlacesHeading(value);
+    else if (shown.id === "expect") setDraftExpectHeading(value);
     else setDraftRulesHeading(value);
   };
 
@@ -238,8 +256,8 @@ function AboutListDrawer({
     >
       <DrawerContent onPointerDownOutside={onPointerDownOutside}>
         <DrawerHeader>
-          <DrawerTitle>{active.label}</DrawerTitle>
-          <DrawerDescription>{active.description}</DrawerDescription>
+          <DrawerTitle>{shown.label}</DrawerTitle>
+          <DrawerDescription>{shown.description}</DrawerDescription>
         </DrawerHeader>
         <form action={action} className="flex min-h-0 flex-1 flex-col">
           <input name="aboutGoals" type="hidden" value={draftGoals} />
@@ -252,9 +270,9 @@ function AboutListDrawer({
           <input name="aboutRulesHeading" type="hidden" value={draftRulesHeading} />
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain px-4 pb-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor={`about-${active.id}-heading`}>Heading shown on the site</Label>
+              <Label htmlFor={`about-${shown.id}-heading`}>Heading shown on the site</Label>
               <Input
-                id={`about-${active.id}-heading`}
+                id={`about-${shown.id}-heading`}
                 maxLength={MAX_ABOUT_SECTION_HEADING}
                 onChange={(event) => setDraftHeading(event.target.value)}
                 required
@@ -262,16 +280,16 @@ function AboutListDrawer({
               />
             </div>
             <div className="flex min-h-0 flex-1 flex-col gap-2">
-              <Label htmlFor={`about-${active.id}`}>{active.label}</Label>
+              <Label htmlFor={`about-${shown.id}`}>{shown.label}</Label>
               <Textarea
                 className="min-h-64 flex-1 font-mono text-sm"
-                id={`about-${active.id}`}
+                id={`about-${shown.id}`}
                 onChange={(event) => setDraftValue(event.target.value)}
                 required
-                rows={active.rows}
+                rows={shown.rows}
                 value={draftValue}
               />
-              {active.hint ? <p className="text-xs text-muted-foreground">{active.hint}</p> : null}
+              {shown.hint ? <p className="text-xs text-muted-foreground">{shown.hint}</p> : null}
             </div>
             <FormError message={state && !state.ok ? state.error : null} />
           </div>

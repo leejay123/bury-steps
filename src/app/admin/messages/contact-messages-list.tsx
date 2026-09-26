@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Mail, MailOpen, Search } from "lucide-react";
 import { deleteContactMessage, markContactMessageRead } from "@/server/actions";
 import { useNotifyActionState } from "@/hooks/use-action-toast";
@@ -104,33 +104,41 @@ function MessageDrawer({
   onPointerDownOutside: (event: Event) => void;
   open: boolean;
 }) {
-  if (!message) return null;
+  // Stay mounted while closed. Mounting only once a message is chosen skips
+  // the slide, because the drawer appears already open.
+  const retained = useRef(message);
+  if (message) retained.current = message;
+  const shown = message ?? retained.current;
 
   return (
     <Drawer
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
-      open={open}
+      open={open && message !== null}
       variant="form"
     >
       <DrawerContent onPointerDownOutside={onPointerDownOutside}>
-        <DrawerHeader className="text-left">
-          <DrawerTitle>{message.name}</DrawerTitle>
-          <DrawerDescription>
-            {message.email}
-            {message.phone ? ` · ${message.phone}` : ""} · {formatDateTime(message.createdAt)}
-          </DrawerDescription>
-        </DrawerHeader>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4">
-          <p className="text-sm wrap-break-word whitespace-pre-wrap">{message.message}</p>
-        </div>
-        <DrawerFooter className="flex-row flex-wrap gap-2">
-          {!message.read ? (
-            <MarkReadButton messageId={message.id} onDone={onClose} />
-          ) : null}
-          <RemoveButton messageId={message.id} onDone={onClose} />
-        </DrawerFooter>
+        {shown ? (
+          <>
+            <DrawerHeader className="text-left">
+              <DrawerTitle>{shown.name}</DrawerTitle>
+              <DrawerDescription>
+                {shown.email}
+                {shown.phone ? ` · ${shown.phone}` : ""} · {formatDateTime(shown.createdAt)}
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4">
+              <p className="text-sm wrap-break-word whitespace-pre-wrap">{shown.message}</p>
+            </div>
+            <DrawerFooter className="flex-row flex-wrap gap-2">
+              {!shown.read ? (
+                <MarkReadButton messageId={shown.id} onDone={onClose} />
+              ) : null}
+              <RemoveButton messageId={shown.id} onDone={onClose} />
+            </DrawerFooter>
+          </>
+        ) : null}
       </DrawerContent>
     </Drawer>
   );
