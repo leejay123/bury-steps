@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
+import { Manrope } from "next/font/google";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -21,6 +22,10 @@ import { ImpersonationBannerSlot } from "@/components/impersonation-banner-slot"
 import { getSiteTheme } from "@/lib/site-theme";
 import { DEFAULT_SITE_NAME, siteMetaDescription } from "@/lib/site-branding";
 import "./globals.css";
+
+// Self-hosted, no external font request. Site-wide — was the plain browser
+// default sans stack before, with no character of its own.
+const manrope = Manrope({ subsets: ["latin"], display: "swap" });
 
 export async function generateMetadata(): Promise<Metadata> {
   const theme = await getSiteTheme();
@@ -73,7 +78,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en-GB" suppressHydrationWarning>
-      <body className="min-h-dvh overflow-x-clip touch-manipulation bg-background text-foreground antialiased">
+      <body
+        className={`${manrope.className} min-h-dvh overflow-x-clip touch-manipulation bg-background text-foreground antialiased`}
+      >
         {/*
           The browser's own scroll-restoration-on-refresh fights this app's
           progressively-loading content (images, carousels, the FAQ
