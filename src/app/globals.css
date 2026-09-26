@@ -131,6 +131,19 @@ body {
   max-width: min(32rem, calc(100vw - 2rem));
 }
 
+/* Phones: a centered card that fills the screen, with the same 1rem gap the
+   inner margin already leaves. The side pin (right: 0) is what shoved it
+   against the right edge. */
+@media (max-width: 639px) {
+  [data-slot="drawer-popup"] {
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    --drawer-content-width: 100%;
+  }
+}
+
 /*
  * Form editors on phones: a near-full card instead of a short bottom sheet.
  * Pinned to the *visible* area — its top (--vv-top) and height

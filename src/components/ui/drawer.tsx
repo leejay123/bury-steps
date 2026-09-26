@@ -33,6 +33,19 @@ const DrawerPointerOutsideRefContext = React.createContext<React.MutableRefObjec
   ((event: Event) => void) | null
 > | null>(null);
 const DrawerSwipeDirectionContext = React.createContext<"up" | "right" | "down" | "left">("right");
+const DrawerPhoneContext = React.createContext(false);
+
+function useIsPhone() {
+  const [phone, setPhone] = React.useState(false);
+  React.useEffect(() => {
+    const query = window.matchMedia("(max-width: 639px)");
+    const update = () => setPhone(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  return phone;
+}
 
 // A click-to-close is 450ms. A fast swipe shortens that (strength × 400ms).
 // Stay mounted a little past the longer of the two.
@@ -65,6 +78,7 @@ function Drawer({
   variant?: "sheet" | "form";
 }) {
   const swipeDirection = toSwipeDirection(direction ?? "right");
+  const phone = useIsPhone();
   const triggerRef = React.useRef<HTMLElement | null>(null);
   const pointerOutsideRef = React.useRef<((event: Event) => void) | null>(null);
   const unlockBackgroundScrollRef = React.useRef<(() => void) | null>(null);
@@ -101,6 +115,7 @@ function Drawer({
           <DrawerVariantContext.Provider value={variant}>
             <DrawerTriggerRefContext.Provider value={triggerRef}>
               <DrawerSwipeDirectionContext.Provider value={swipeDirection}>
+              <DrawerPhoneContext.Provider value={phone}>
               <DrawerPointerOutsideRefContext.Provider value={pointerOutsideRef}>
                 <DrawerPrimitive.Root
                   data-slot="drawer"
@@ -110,6 +125,10 @@ function Drawer({
                     if (!next) {
                       const reason = eventDetails.reason;
                       if (closeDisabled) {
+                        eventDetails.cancel();
+                        return;
+                      }
+                      if (phone && reason === "swipe") {
                         eventDetails.cancel();
                         return;
                       }
@@ -146,6 +165,7 @@ function Drawer({
                   {children}
                 </DrawerPrimitive.Root>
               </DrawerPointerOutsideRefContext.Provider>
+              </DrawerPhoneContext.Provider>
               </DrawerSwipeDirectionContext.Provider>
             </DrawerTriggerRefContext.Provider>
           </DrawerVariantContext.Provider>
@@ -234,6 +254,7 @@ function DrawerContent({
   const triggerRef = React.useContext(DrawerTriggerRefContext);
   const pointerOutsideRef = React.useContext(DrawerPointerOutsideRefContext);
   const swipeDirection = React.useContext(DrawerSwipeDirectionContext);
+  const phone = React.useContext(DrawerPhoneContext);
   const swipeAxis = swipeDirection === "down" || swipeDirection === "up" ? "y" : "x";
 
   React.useEffect(() => {
@@ -282,6 +303,7 @@ function DrawerContent({
         className="pointer-events-none fixed inset-0 z-[60] select-none data-[modal=true]:pointer-events-auto"
       >
         <DrawerPrimitive.Popup
+          data-base-ui-swipe-ignore={phone ? "" : undefined}
           data-drawer-variant={variant}
           data-slot="drawer-popup"
           data-swipe-axis={swipeAxis}
