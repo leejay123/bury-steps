@@ -28,8 +28,9 @@ export function WalksSection({
             <strong>Starting soon</strong> (the hour before start — the badge shows a live
             countdown to the published start), <strong>In progress</strong> (until the
             scheduled end), <strong>Completed</strong> (from the scheduled end — self clock-in
-            is closed), or <strong>Cancelled</strong>. The walk’s own page shows the same
-            status next to its title.
+            is closed),             or <strong>Cancelled</strong>. The walk’s own page shows the same
+            status next to its title, then the date, start time, length, and meeting
+            point on their own lines. Who created the walk sits under the title.
           </p>
           <p className="font-medium text-foreground">Create a walk</p>
           <Steps>

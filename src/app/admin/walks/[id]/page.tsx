@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { ClipboardList } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireAnyPermission, displayName } from "@/lib/auth";
-import { formatWalkDate, utcToLondonWallClock } from "@/lib/dates";
+import { utcToLondonWallClock } from "@/lib/dates";
+import { WalkFacts } from "@/components/walk-facts";
 import { walkStatus } from "@/lib/walk-window";
 import { appUrl } from "@/lib/urls";
 import { initials } from "@/lib/names";
@@ -22,7 +23,7 @@ import { WalkDetailActions } from "./walk-detail-actions";
 import { WalkDescription } from "@/components/walk-description";
 import { WalkJourneyManager } from "./walk-journey";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { WalkAttendanceRow } from "./walk-attendance";
 
@@ -110,13 +111,18 @@ export default async function WalkDetailPage({
             {walk.cancelledReason || "Check with an organiser who has Walks access for details."}
           </AlertDescription>
         </Alert>
-        <Card>
-          <CardHeader className="flex flex-col gap-1.5">
+        <Card className="gap-4">
+          <CardHeader>
             <CardTitle className="text-2xl">{walk.title}</CardTitle>
-            <CardDescription>
-              {formatWalkDate(walk.startsAt)} · {walk.durationMins} min
-            </CardDescription>
           </CardHeader>
+          <CardContent>
+            <WalkFacts
+              durationMins={walk.durationMins}
+              location={walk.location}
+              postcode={walk.postcode}
+              startsAt={walk.startsAt}
+            />
+          </CardContent>
         </Card>
       </div>
     );
@@ -184,21 +190,16 @@ export default async function WalkDetailPage({
         startsAt={walk.startsAt.toISOString()}
       />
 
-      <Card>
-        <CardHeader className="flex flex-col gap-1.5">
-          <CardTitle className="text-2xl">{walk.title}</CardTitle>
-          <CardDescription>
-            {formatWalkDate(walk.startsAt)}
-            {meeting ? ` · ${meeting}` : ""} · {walk.durationMins} min
-          </CardDescription>
-          {/* Organiser/owner-only — members never see who created a walk. */}
-          <p className="text-xs text-muted-foreground">
-            Created by {displayName(walk.createdBy)} ({creatorIsOwner ? "Owner" : "Organiser"})
-          </p>
-          {/* Below the schedule line, not beside the title — the countdown
-              ("In progress · 23 min left") reads as a comment on how much
-              of that length is left, not as a label for the walk itself. */}
-          <div>
+      <Card className="gap-4">
+        <CardHeader>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <CardTitle className="text-2xl">{walk.title}</CardTitle>
+              {/* Organiser/owner-only — members never see who created a walk. */}
+              <p className="text-xs text-muted-foreground">
+                Created by {displayName(walk.createdBy)} ({creatorIsOwner ? "Owner" : "Organiser"})
+              </p>
+            </div>
             <WalkStatusBadge
               cancelledAt={walk.cancelledAt?.toISOString() ?? null}
               durationMins={walk.durationMins}
@@ -207,36 +208,22 @@ export default async function WalkDetailPage({
             />
           </div>
         </CardHeader>
-        {walk.description ||
-        walk.distance ||
-        walk.grade ||
-        walk.walkLeader ||
-        walk.backMarker ||
-        (walk.cancelledAt && walk.cancelledReason) ? (
-          <CardContent className="flex flex-col gap-2">
-            {[
-              walk.distance,
-              walk.grade,
-              walk.walkLeader ? `Walk leader: ${walk.walkLeader}` : null,
-              walk.backMarker ? `Back marker: ${walk.backMarker}` : null,
-            ].some(Boolean) ? (
-              <p className="text-sm text-muted-foreground">
-                {[
-                  walk.distance,
-                  walk.grade,
-                  walk.walkLeader ? `Walk leader: ${walk.walkLeader}` : null,
-                  walk.backMarker ? `Back marker: ${walk.backMarker}` : null,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
-            ) : null}
-            {walk.description ? <WalkDescription description={walk.description} /> : null}
-            {walk.cancelledAt && walk.cancelledReason ? (
-              <p className="text-sm text-destructive">Cancelled: {walk.cancelledReason}</p>
-            ) : null}
-          </CardContent>
-        ) : null}
+        <CardContent className="flex flex-col gap-4">
+          <WalkFacts
+            backMarker={walk.backMarker}
+            distance={walk.distance}
+            durationMins={walk.durationMins}
+            grade={walk.grade}
+            location={walk.location}
+            postcode={walk.postcode}
+            startsAt={walk.startsAt}
+            walkLeader={walk.walkLeader}
+          />
+          {walk.description ? <WalkDescription description={walk.description} /> : null}
+          {walk.cancelledAt && walk.cancelledReason ? (
+            <p className="text-sm text-destructive">Cancelled: {walk.cancelledReason}</p>
+          ) : null}
+        </CardContent>
       </Card>
 
       <ShareLink url={walkShareUrl(appUrl(), { token: walk.token, slug })} />
