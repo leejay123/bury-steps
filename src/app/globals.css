@@ -145,9 +145,9 @@ body {
 }
 
 /*
- * Read more and Notices are a full-width bottom sheet: edge to edge, sitting
- * on the bottom of the screen, rounded only on the top. The 32rem card width
- * and the inner 1rem margin are for the side drawers only.
+ * On a phone every drawer is this sheet: full width, on the bottom edge,
+ * rounded only on the top, so the slide is up and down. The 32rem card is
+ * for a wider screen.
  */
 [data-slot="drawer-popup"][data-swipe-direction="down"] {
   top: auto !important;

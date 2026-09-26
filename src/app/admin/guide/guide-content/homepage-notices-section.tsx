@@ -18,18 +18,16 @@ export function HomepageNoticesSection() {
             <p>
               All of this lives under <Link href="/admin/settings">Settings</Link>. Hero photos,
               testimonials, FAQs, and notices use a list: tap a row to edit. Remove is the small
-              button on the row, not in the drawer. Drawers are for adding and editing. The
-              notice bell and About slide up from the bottom on a phone and span the
-              full width of the screen. On a wider screen they use the floating card,
-              like Journey and the editors. On a phone that card sits in the middle and fills
-              most of the screen. It does not swipe away — close it with the button. On a
-              wider screen the same card slides in from the right. On a phone, an edit
-              form fills the screen, with rounded corners only at the top. While you
-              type, that sheet shortens to the space above the keyboard: the title
-              stays put, the fields scroll, and Cancel and Save sit just above the keys.
-              Every drawer, including a message, uses that same slide.
-              The other drawers sit in from the screen edges: rounded corners and a shadow, with a
-              gap around them.
+              button on the row, not in the drawer. Drawers are for adding and editing.
+              On a phone every drawer, including a message, slides up from the bottom
+              and spans the full width of the screen. It closes downward. It does not
+              swipe away — close it with the button. On a wider screen the same drawer
+              slides in from the right. On a phone, an edit form fills the screen, with
+              rounded corners only at the top. While you type, that sheet shortens to
+              the space above the keyboard: the title stays put, the fields scroll, and
+              Cancel and Save sit just above the keys.
+              On a wider screen the drawers sit in from the screen edges: rounded corners
+              and a shadow, with a gap around them.
               Add buttons stretch full width.
               While a drawer is open the page behind — including the site header — stays where it
               is, dimmed under a full-screen blur. A breadcrumb at the top of each settings page
