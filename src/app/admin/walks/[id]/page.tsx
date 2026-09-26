@@ -19,6 +19,7 @@ import { RetentionLockToggle } from "./retention-lock-toggle";
 import { WalkAttendanceSection } from "./walk-attendance-section";
 import { WalkCompletedNotice } from "./walk-completed-notice";
 import { WalkDetailActions } from "./walk-detail-actions";
+import { WalkDescription } from "./walk-description";
 import { WalkJourneyManager } from "./walk-journey";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -204,9 +205,7 @@ export default async function WalkDetailPage({
         </CardHeader>
         {walk.description || (walk.cancelledAt && walk.cancelledReason) ? (
           <CardContent className="flex flex-col gap-2">
-            {walk.description ? (
-              <p className="text-sm leading-relaxed">{walk.description}</p>
-            ) : null}
+            {walk.description ? <WalkDescription description={walk.description} /> : null}
             {walk.cancelledAt && walk.cancelledReason ? (
               <p className="text-sm text-destructive">Cancelled: {walk.cancelledReason}</p>
             ) : null}
