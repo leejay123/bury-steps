@@ -308,7 +308,16 @@ function DrawerContent({
           // that's the "blue border" along the drawer's edge on iPhone.
           // Nothing inside needs *this* element's own outline; close/inputs
           // keep their own focus-visible rings.
-          "group/drawer-content fixed z-[60] flex h-auto flex-col overflow-hidden bg-background outline-hidden touch-pan-y data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
+          // Vaul animates *this* element's transform for the open/close
+          // slide — the overlay above gets translateZ(0)/will-change for the
+          // same GPU-compositing reason, but the panel that's actually doing
+          // the sliding never got the same hint, leaving its transition to
+          // fall back to main-thread compositing on lower-end devices (the
+          // stutter this fixes). `contain: layout` (via the arbitrary
+          // `[contain:layout]` utility) also stops the panel's own internal
+          // layout (e.g. a form field resizing, an image loading) from
+          // forcing a reflow of the page behind it mid-animation.
+          "group/drawer-content fixed z-[60] flex h-auto flex-col overflow-hidden bg-background outline-hidden touch-pan-y [contain:layout] [transform:translateZ(0)] [-webkit-transform:translateZ(0)] will-change-transform data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:pointer-events-auto",
           dismissed && "invisible !pointer-events-none",
           // Drawers portal straight to <body>, outside the shell that already
           // handles the Dynamic Island's left/right safe area, so each side
