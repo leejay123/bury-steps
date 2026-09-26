@@ -4,9 +4,9 @@ import { utcToLondonWallClock } from "@/lib/dates";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { MeetingPointFields } from "@/components/meeting-point-fields";
 import { FieldHint, FormSection } from "@/components/drawer-form";
+import { WalkDescriptionField } from "./walk-description-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -125,19 +125,7 @@ export function WalkFormFields({
       </FormSection>
 
       <FormSection title="Details">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor={id("description")}>Description</Label>
-          <Textarea
-            defaultValue={defaults?.description ?? ""}
-            id={id("description")}
-            name="description"
-            placeholder="Roughly 4 miles, one steady climb. Boots recommended after rain."
-            rows={3}
-          />
-          <p className="text-xs text-muted-foreground">
-            Wrap words in **double asterisks** for bold. Leave one blank line between paragraphs.
-          </p>
-        </div>
+        <WalkDescriptionField defaultValue={defaults?.description ?? ""} id={id("description")} />
       </FormSection>
     </div>
   );

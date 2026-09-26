@@ -114,6 +114,8 @@ export {
   updateReportBanner,
 } from "./actions/site-settings";
 
+export { summarizeWalkDescription } from "./actions/walk-summarize";
+
 export {
   addAccidentReport,
   updateAccidentReport,
