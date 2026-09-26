@@ -16,9 +16,13 @@ const MIN_LENGTH_TO_SUMMARIZE = 200;
 // usage billing layered on top.
 const SUMMARIZE_MODEL = "gemini-3.8-flash";
 
-/** Shortens a walk description into 2-3 plain-text sentences for someone
- * deciding whether to join — used by the Summarize button next to the
- * description field in the admin walk form. */
+/** Tidies a walk description into flowing prose for someone deciding
+ * whether to join — used by the Summarize button next to the description
+ * field in the admin walk form. Trims filler and repeated labels, but keeps
+ * every practical detail (start point, distance, duration, meeting time,
+ * grade, what to bring, …) rather than compressing to a headline — an
+ * earlier version forced "2-3 sentences" and lost exactly the details a
+ * member actually needs before turning up. */
 export async function summarizeWalkDescription(description: string): Promise<SummarizeResult> {
   const admin = await requireAdmin();
   if (!admin.permWalksCreate && !admin.permWalksEdit) return permissionDenied("permWalksEdit");
@@ -36,7 +40,7 @@ export async function summarizeWalkDescription(description: string): Promise<Sum
   try {
     const { text } = await generateText({
       model: google(SUMMARIZE_MODEL),
-      prompt: `Summarize the following walking-group walk description in 2-3 short, plain sentences for a member deciding whether to join. Plain text only — no markdown, no headings, no bullet points.\n\n${trimmed}`,
+      prompt: `Rewrite the following walking-group walk description as tidy, easy-to-read prose for a member deciding whether to join and what to bring. Keep every practical detail — start point/address, distance, duration, grade, meeting time, walk leader, what to bring, and any safety notes — just cut repeated labels and filler wording. Aim for roughly half the original length, not a one-line summary. Plain text only — no markdown, no headings, no bullet points.\n\n${trimmed}`,
     });
     const summary = text.trim();
     if (!summary) return { ok: false, error: "Could not summarize that. Try again." };
