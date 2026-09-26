@@ -51,7 +51,7 @@ export function SendNewsletterForm({ recipientCount }: { recipientCount: number 
             Send a newsletter
           </Button>
         </DrawerTrigger>
-        <DrawerContent className="min-h-0 sm:max-w-lg">
+        <DrawerContent className="min-h-0">
           <form action={action} className="flex min-h-0 flex-1 flex-col">
             <DrawerHeader className="shrink-0">
               <DrawerTitle>Send a newsletter</DrawerTitle>

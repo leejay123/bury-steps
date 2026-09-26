@@ -114,7 +114,7 @@ function MessageDrawer({
       open={open}
       variant="form"
     >
-      <DrawerContent className="sm:max-w-lg" onPointerDownOutside={onPointerDownOutside}>
+      <DrawerContent onPointerDownOutside={onPointerDownOutside}>
         <DrawerHeader className="text-left">
           <DrawerTitle>{message.name}</DrawerTitle>
           <DrawerDescription>

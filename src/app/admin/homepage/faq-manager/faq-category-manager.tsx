@@ -119,7 +119,7 @@ function CategoryDrawer({
       open={mode !== null}
       variant="form"
     >
-      <DrawerContent className="sm:max-w-md">
+      <DrawerContent>
         <DrawerHeader>
           <DrawerTitle>{mode?.type === "edit" ? "Edit category" : "Add a category"}</DrawerTitle>
           <DrawerDescription>This name shows as a filter on the public FAQ.</DrawerDescription>

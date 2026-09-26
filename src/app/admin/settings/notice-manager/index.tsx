@@ -159,7 +159,7 @@ export function SiteNoticeManager({
         open={mode !== null}
         variant="form"
       >
-        <DrawerContent className="sm:max-w-md">
+        <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>{editing ? "Edit notice" : "Add a notice"}</DrawerTitle>
             <DrawerDescription>

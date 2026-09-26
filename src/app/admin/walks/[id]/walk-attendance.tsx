@@ -151,7 +151,7 @@ export function WalkAttendanceTable({
         }}
         open={openId !== null}
       >
-        <DrawerContent className="data-[vaul-drawer-direction=right]:sm:max-w-lg">
+        <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>{selected?.name ?? "Member"}</DrawerTitle>
             <DrawerDescription>

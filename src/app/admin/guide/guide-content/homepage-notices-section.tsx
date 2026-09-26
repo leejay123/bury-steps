@@ -20,7 +20,7 @@ export function HomepageNoticesSection() {
               testimonials, FAQs, and notices use a list: tap a row to edit. Remove is the small
               button on the row, not in the drawer. Drawers are for adding and editing. The
               notice bell, About, Journey, and the editors all open the same floating card,
-              including on a phone. Edit forms stay that card and sit above the keyboard.
+              the same width, including on a phone. Edit forms stay that card and sit above the keyboard.
               Every drawer sits in from the screen edges: rounded corners and a shadow, with a
               gap around it.
               Add buttons stretch full width. On a wider screen editors slide in from the side

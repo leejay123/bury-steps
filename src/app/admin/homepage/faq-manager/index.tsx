@@ -143,7 +143,7 @@ export function HomepageFaqManager({
         open={mode !== null}
         variant="form"
       >
-        <DrawerContent className="sm:max-w-md">
+        <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>{editing ? `FAQ ${editing.index + 1}` : "Add an FAQ"}</DrawerTitle>
             <DrawerDescription>

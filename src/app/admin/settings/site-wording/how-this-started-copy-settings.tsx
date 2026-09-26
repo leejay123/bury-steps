@@ -92,7 +92,7 @@ function FullStoryDrawer({
       open={open}
       variant="form"
     >
-      <DrawerContent className="sm:max-w-lg" onPointerDownOutside={onPointerDownOutside}>
+      <DrawerContent onPointerDownOutside={onPointerDownOutside}>
         <DrawerHeader>
           <DrawerTitle>Full story</DrawerTitle>
           <DrawerDescription>Leave a blank line between paragraphs.</DrawerDescription>

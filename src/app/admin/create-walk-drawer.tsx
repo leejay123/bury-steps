@@ -41,7 +41,7 @@ export function CreateWalkDrawer() {
           Create a walk
         </Button>
       </DrawerTrigger>
-      <DrawerContent className="min-h-0 sm:max-w-lg">
+      <DrawerContent className="min-h-0">
         <form action={action} className="flex min-h-0 flex-1 flex-col" ref={formRef}>
           <DrawerHeader className="shrink-0">
             <DrawerTitle>Create a walk</DrawerTitle>

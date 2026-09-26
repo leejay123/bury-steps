@@ -3,9 +3,7 @@
 import * as React from "react";
 import { X } from "lucide-react";
 import { Drawer as DrawerPrimitive } from "vaul";
-import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { overlayMotionTransition } from "@/components/motion";
 import {
   OverlayRootContext,
   restorePagePointerEvents,
@@ -26,11 +24,9 @@ const DrawerTriggerRefContext = React.createContext<React.MutableRefObject<HTMLE
   null,
 );
 
-// Matches the close duration in globals.css (vaul's own default is 0.5s,
-// which felt sluggish, and visibility:hidden on data-state=closed hid the
-// slide entirely). Stay mounted a little past that so a slow frame doesn't
-// clip the last few pixels.
-const DRAWER_CLOSE_ANIMATION_MS = 340;
+// Matches the close duration in globals.css. Stay mounted a little past
+// that so a slow frame doesn't clip the last few pixels.
+const DRAWER_CLOSE_ANIMATION_MS = 500;
 
 function Drawer({
   children,
@@ -233,7 +229,6 @@ function DrawerContent({
   const variant = React.useContext(DrawerVariantContext);
   const triggerRef = React.useContext(DrawerTriggerRefContext);
   const dismissed = open === false;
-  const reduce = useReducedMotion();
 
   React.useEffect(() => {
     if (!root || open !== true) return;
@@ -306,8 +301,8 @@ function DrawerContent({
           // under the rounded corner. Vaul still slides this element.
           "data-[vaul-drawer-direction=top]:inset-x-4 data-[vaul-drawer-direction=top]:top-[max(1rem,env(safe-area-inset-top))] data-[vaul-drawer-direction=top]:max-h-[min(85dvh,calc(100dvh-2rem))] data-[vaul-drawer-direction=top]:rounded-2xl",
           "data-[vaul-drawer-direction=bottom]:inset-x-4 data-[vaul-drawer-direction=bottom]:bottom-[max(1rem,env(safe-area-inset-bottom))] data-[vaul-drawer-direction=bottom]:max-h-[min(85dvh,calc(100dvh-2rem))] data-[vaul-drawer-direction=bottom]:rounded-2xl",
-          "data-[vaul-drawer-direction=right]:top-4 data-[vaul-drawer-direction=right]:right-[max(1rem,env(safe-area-inset-right))] data-[vaul-drawer-direction=right]:bottom-4 data-[vaul-drawer-direction=right]:w-[min(39.125rem,calc(100%-2rem))] data-[vaul-drawer-direction=right]:rounded-2xl",
-          "data-[vaul-drawer-direction=left]:top-4 data-[vaul-drawer-direction=left]:bottom-4 data-[vaul-drawer-direction=left]:left-[max(1rem,env(safe-area-inset-left))] data-[vaul-drawer-direction=left]:w-[min(39.125rem,calc(100%-2rem))] data-[vaul-drawer-direction=left]:rounded-2xl",
+          "data-[vaul-drawer-direction=right]:top-4 data-[vaul-drawer-direction=right]:right-[max(1rem,env(safe-area-inset-right))] data-[vaul-drawer-direction=right]:bottom-4 data-[vaul-drawer-direction=right]:rounded-2xl",
+          "data-[vaul-drawer-direction=left]:top-4 data-[vaul-drawer-direction=left]:bottom-4 data-[vaul-drawer-direction=left]:left-[max(1rem,env(safe-area-inset-left))] data-[vaul-drawer-direction=left]:rounded-2xl",
           className,
         )}
         onEscapeKeyDown={(event) => {
@@ -343,16 +338,7 @@ function DrawerContent({
         style={dismissed ? { ...style, pointerEvents: "none" } : { ...style, pointerEvents: "auto" }}
       >
         <OverlayRootContext.Provider value={root}>
-          <motion.div
-            className="flex min-h-0 flex-1 flex-col"
-            {...(reduce
-              ? {}
-              : {
-                  initial: { opacity: 0 },
-                  animate: { opacity: 1 },
-                  transition: overlayMotionTransition,
-                })}
-          >
+          <div className="flex min-h-0 flex-1 flex-col">
             <div className="mx-auto mt-4 hidden h-2 w-[100px] shrink-0 rounded-full bg-muted group-data-[vaul-drawer-direction=bottom]/drawer-content:block" />
             {children}
             {showCloseButton ? (
@@ -366,7 +352,7 @@ function DrawerContent({
                 <span className="sr-only">Close</span>
               </DrawerPrimitive.Close>
             ) : null}
-          </motion.div>
+          </div>
         </OverlayRootContext.Provider>
       </DrawerPrimitive.Content>
     </DrawerPortal>

@@ -142,50 +142,34 @@ body {
 }
 
 /*
- * Side panels (homepage Read more, notices, editors on a wide screen) are
- * the same floating card. These sit outside Tailwind's layers so they win
- * over Vaul's own positioning. Vaul paints a ::after that stretches the
- * panel background past the edge it slides from; that slab fills the gap
- * and the card looks flush. Keep the pseudo for the drag, but don't paint it.
+ * Every side drawer is one card: 39.125rem wide (the same width as the
+ * reference cart panel), inset 1rem, full height of the screen minus that
+ * gap. These sit outside Tailwind's layers so a caller's max-w-* cannot
+ * make one drawer narrower than another. Vaul paints a ::after that
+ * stretches the panel background past the edge it slides from; that slab
+ * fills the gap and the card looks flush. Keep the pseudo for the drag,
+ * but don't paint it.
  */
-[data-slot="drawer-content"][data-vaul-drawer-direction="right"]:not([data-drawer-variant="form"]),
-[data-slot="drawer-content"][data-vaul-drawer-direction="left"]:not([data-drawer-variant="form"]) {
+[data-slot="drawer-content"][data-vaul-drawer-direction="right"],
+[data-slot="drawer-content"][data-vaul-drawer-direction="left"] {
   top: max(1rem, env(safe-area-inset-top));
   bottom: max(1rem, env(safe-area-inset-bottom));
   height: auto;
+  width: min(39.125rem, calc(100% - 2rem));
+  max-width: min(39.125rem, calc(100% - 2rem));
   border-radius: 1rem;
   border-width: 1px;
   border-style: solid;
   border-color: var(--border);
   box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
 }
-[data-slot="drawer-content"][data-vaul-drawer-direction="right"]:not([data-drawer-variant="form"]) {
+[data-slot="drawer-content"][data-vaul-drawer-direction="right"] {
   right: max(1rem, env(safe-area-inset-right));
   left: auto;
-  width: min(42rem, calc(100% - 2rem));
 }
-[data-slot="drawer-content"][data-vaul-drawer-direction="left"]:not([data-drawer-variant="form"]) {
+[data-slot="drawer-content"][data-vaul-drawer-direction="left"] {
   left: max(1rem, env(safe-area-inset-left));
   right: auto;
-  width: min(42rem, calc(100% - 2rem));
-}
-@media (min-width: 640px) {
-  [data-slot="drawer-content"][data-drawer-variant="form"][data-vaul-drawer-direction="right"],
-  [data-slot="drawer-content"][data-drawer-variant="form"][data-vaul-drawer-direction="left"] {
-    top: max(1rem, env(safe-area-inset-top));
-    bottom: max(1rem, env(safe-area-inset-bottom));
-    height: auto;
-    border-radius: 1rem;
-    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
-  }
-  [data-slot="drawer-content"][data-drawer-variant="form"][data-vaul-drawer-direction="right"] {
-    right: max(1rem, env(safe-area-inset-right));
-    left: auto;
-  }
-  [data-slot="drawer-content"][data-drawer-variant="form"][data-vaul-drawer-direction="left"] {
-    left: max(1rem, env(safe-area-inset-left));
-    right: auto;
-  }
 }
 [data-slot="drawer-content"][data-vaul-drawer]::after {
   background: transparent;
@@ -214,10 +198,7 @@ body {
     --drawer-gap-top: max(1rem, env(safe-area-inset-top));
     top: calc(var(--vv-top, 0px) + var(--drawer-gap-top));
     right: max(1rem, env(safe-area-inset-right));
-    left: max(1rem, env(safe-area-inset-left));
     bottom: auto;
-    width: auto;
-    max-width: none;
     height: calc(var(--vv-height, 100dvh) - var(--drawer-gap-top) - 1rem);
     border-radius: 1rem;
     border-width: 1px;
@@ -318,17 +299,18 @@ body {
 }
 
 /*
- * Vaul's drawer stylesheet hard-codes a 0.5s slide. On close we used to
- * also set visibility:hidden the instant data-state flipped to closed, so
- * that slide never painted and the page just sat locked until the timer
- * finished. Keep the slide (and the overlay fade) visible, hold the end
- * position so the panel doesn't snap back, and finish quicker than 0.5s.
- * DRAWER_CLOSE_ANIMATION_MS in drawer.tsx must stay a little longer than this.
+ * Open and close use Vaul's slide keyframes (cubic-bezier .32, .72, 0, 1).
+ * Do not set transition-duration here: while a finger is down Vaul turns
+ * the transition off so the card tracks the pointer, then eases from
+ * wherever you let go. Forcing a duration kept that ease on during the
+ * drag, so the card lagged behind the finger. The keyframe is only the
+ * click-to-open / click-to-close. DRAWER_CLOSE_ANIMATION_MS in drawer.tsx
+ * must stay a little longer than this.
  */
 [data-slot="drawer-content"][data-vaul-drawer],
 [data-slot="drawer-overlay"][data-vaul-overlay] {
-  animation-duration: 280ms !important;
-  transition-duration: 280ms !important;
+  animation-duration: 450ms;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
 }
 [data-slot="drawer-content"][data-state="closed"],
 [data-slot="drawer-overlay"][data-state="closed"] {

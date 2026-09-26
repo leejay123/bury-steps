@@ -129,7 +129,7 @@ export function EditWalkButton({
           Edit
         </Button>
       </DrawerTrigger>
-      <DrawerContent className="min-h-0 sm:max-w-lg">
+      <DrawerContent className="min-h-0">
         <EditWalkForm
           cancelled={cancelled}
           defaults={{

@@ -236,7 +236,7 @@ function AboutListDrawer({
       open={open}
       variant="form"
     >
-      <DrawerContent className="sm:max-w-lg" onPointerDownOutside={onPointerDownOutside}>
+      <DrawerContent onPointerDownOutside={onPointerDownOutside}>
         <DrawerHeader>
           <DrawerTitle>{active.label}</DrawerTitle>
           <DrawerDescription>{active.description}</DrawerDescription>

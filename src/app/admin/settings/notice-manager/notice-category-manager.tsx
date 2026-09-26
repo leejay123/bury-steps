@@ -114,7 +114,7 @@ function CategoryDrawer({
       open={open}
       variant="form"
     >
-      <DrawerContent className="sm:max-w-md">
+      <DrawerContent>
         <DrawerHeader>
           <DrawerTitle>{mode?.type === "edit" ? "Edit category" : "Add a category"}</DrawerTitle>
           <DrawerDescription>

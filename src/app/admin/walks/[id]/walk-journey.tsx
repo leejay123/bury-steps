@@ -278,7 +278,7 @@ export function WalkJourneyManager({
         open={mode !== null}
         variant="form"
       >
-        <DrawerContent className="sm:max-w-md">
+        <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>{editing ? "Edit event" : "Add event"}</DrawerTitle>
             <DrawerDescription>What happened, and when (UK time).</DrawerDescription>

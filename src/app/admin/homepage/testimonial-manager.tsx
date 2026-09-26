@@ -358,7 +358,7 @@ export function HomepageTestimonialManager({
         open={mode !== null}
         variant="form"
       >
-        <DrawerContent className="sm:max-w-md">
+        <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>
               {editing ? `Testimonial ${editing.index + 1}` : "Add a testimonial"}

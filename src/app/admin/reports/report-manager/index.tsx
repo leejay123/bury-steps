@@ -213,7 +213,7 @@ export function AccidentReportManager({
         open={mode !== null}
         variant="form"
       >
-        <DrawerContent className="min-h-0 sm:max-w-lg">
+        <DrawerContent className="min-h-0">
           <DrawerHeader className="shrink-0">
             <DrawerTitle>
               {mode?.type === "edit"

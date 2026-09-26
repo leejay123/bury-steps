@@ -309,7 +309,7 @@ export function HomepageSlideManager({
         open={mode !== null}
         variant="form"
       >
-        <DrawerContent className="sm:max-w-md">
+        <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>{editing ? `Slide ${editing.index + 1}` : "Add a slide"}</DrawerTitle>
             <DrawerDescription>

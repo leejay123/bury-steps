@@ -73,7 +73,7 @@ export function HomeAboutDrawer({
       <DrawerTrigger asChild>
         {trigger ?? <Button variant="outline">Read more</Button>}
       </DrawerTrigger>
-      <DrawerContent className="sm:max-w-2xl">
+      <DrawerContent>
         <DrawerHeader className="shrink-0 border-b text-left">
           <DrawerTitle>About Bury Steps</DrawerTitle>
           <DrawerDescription>

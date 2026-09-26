@@ -34,7 +34,7 @@ export function WalkJourneyDrawer({
           View journey
         </Button>
       </DrawerTrigger>
-      <DrawerContent className="sm:max-w-2xl">
+      <DrawerContent>
         <DrawerHeader className="shrink-0 border-b text-left">
           <DrawerTitle>Journey</DrawerTitle>
           <DrawerDescription>What happened on this walk.</DrawerDescription>
