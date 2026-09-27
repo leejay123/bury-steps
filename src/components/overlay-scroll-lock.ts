@@ -136,6 +136,11 @@ export function lockBackgroundScroll() {
   // skip the measure/pin/spacer work (it forces a layout right as the
   // opening transition starts, which is what made the animation stutter).
   const headerPin = lockedX || lockedY ? pinSiteHeaderInPlace() : null;
+  // The header is z-66; the blur overlay is z-60. Drop it under the overlay
+  // even when it isn't pinned.
+  const siteHeader = headerPin ? null : document.querySelector<HTMLElement>("header");
+  const prevHeaderZ = siteHeader?.style.zIndex ?? "";
+  if (siteHeader) siteHeader.style.zIndex = "55";
   const html = document.documentElement;
   const { body } = document;
 
@@ -205,5 +210,6 @@ export function lockBackgroundScroll() {
     clearBodyPositionFixedLock();
     window.scrollTo(lockedX, lockedY);
     unpinSiteHeaderWhenScrollUnlocks(headerPin);
+    if (siteHeader) siteHeader.style.zIndex = prevHeaderZ;
   };
 }
