@@ -348,6 +348,8 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --font-sans: var(--font-site), ui-sans-serif, system-ui, sans-serif;
+  /* Geist Mono for code-style text, matching the typeset-docs preset. */
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 @layer base {
