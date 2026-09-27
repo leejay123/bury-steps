@@ -27,6 +27,8 @@ import {
   CommandShortcut,
 } from "@/components/ui/command";
 import { Kbd } from "@/components/ui/kbd";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonReveal } from "@/components/spectrumui/skeleton-reveal";
 import type { SiteSearchGroup, SiteSearchKind } from "@/lib/site-search";
 
 const OPEN_EVENT = "site-search:open";
@@ -161,9 +163,12 @@ export function SiteSearchDialog() {
       <Command shouldFilter={false}>
         <CommandInput onValueChange={setQuery} placeholder="Search pages, walks, notices…" value={query} />
         <CommandList>
-          <CommandEmpty>
-            {failed ? "Search couldn’t load. Try again." : groups ? "No results found." : "Loading…"}
-          </CommandEmpty>
+          {groups || failed ? (
+            <CommandEmpty>{failed && !groups ? "Search couldn’t load. Try again." : "No results found."}</CommandEmpty>
+          ) : null}
+          {/* Spectrum UI's skeleton reveal: pulses until the results arrive,
+              then cross-fades and un-blurs into them. */}
+          <SkeletonReveal className={groups ? undefined : "min-h-48"} loading={!groups && !failed} skeleton={<SearchSkeleton />}>
           {visibleGroups.map((group, index) => {
             const Icon = GROUP_ICONS[group.kind];
             return (
@@ -185,6 +190,7 @@ export function SiteSearchDialog() {
               </React.Fragment>
             );
           })}
+          </SkeletonReveal>
         </CommandList>
         <CommandSeparator />
         <div className="hidden flex-wrap items-center gap-4 p-3 text-xs text-muted-foreground sm:flex">
@@ -210,5 +216,19 @@ export function SiteSearchDialog() {
         </div>
       </Command>
     </CommandDialog>
+  );
+}
+
+function SearchSkeleton() {
+  return (
+    <div aria-hidden className="flex flex-col gap-3 p-3">
+      <Skeleton className="h-3 w-16" />
+      {Array.from({ length: 4 }, (_, index) => (
+        <div className="flex items-center gap-2" key={index}>
+          <Skeleton className="size-4 rounded-sm" />
+          <Skeleton className="h-3.5" style={{ width: `${[45, 30, 55, 38][index]}%` }} />
+        </div>
+      ))}
+    </div>
   );
 }
