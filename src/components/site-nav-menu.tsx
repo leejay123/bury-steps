@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { menuFont } from "@/app/fonts";
+import { lockBackgroundScroll } from "@/components/overlay-scroll-lock";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { unlockIdleDocument } from "@/components/overlay-root";
@@ -267,6 +268,12 @@ export function SiteNavLinks({
 export function SiteMobileMenu({ items }: { items: { href: string; label: string }[] }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
+
+  // shadcn's menu leaves the page scrollable underneath; ours doesn't.
+  useEffect(() => {
+    if (!open) return;
+    return lockBackgroundScroll();
+  }, [open]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
