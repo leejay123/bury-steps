@@ -110,9 +110,9 @@ describe("addHomepageTestimonial", () => {
   });
 
   it("blocks adding once the testimonial cap is reached", async () => {
-    prismaMock.homepageTestimonial.count.mockResolvedValueOnce(12);
+    prismaMock.homepageTestimonial.count.mockResolvedValueOnce(6);
     const result = await addHomepageTestimonial(null, baseForm());
-    expect(result).toEqual({ ok: false, error: "You can have up to 12 testimonials." });
+    expect(result).toEqual({ ok: false, error: "You can have up to 6 testimonials." });
   });
 
   it("adds a testimonial without requiring a photo", async () => {

@@ -48,7 +48,7 @@ export async function addHomepageTestimonial(
     await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.homepageTestimonial, async (tx) => {
       const count = await tx.homepageTestimonial.count();
       if (count >= MAX_HOMEPAGE_TESTIMONIALS) {
-        throw new LimitReachedError("You can have up to 12 testimonials.");
+        throw new LimitReachedError(`You can have up to ${MAX_HOMEPAGE_TESTIMONIALS} testimonials.`);
       }
       await tx.homepageTestimonial.create({
         data: {
