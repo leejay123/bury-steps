@@ -27,11 +27,11 @@ import {
   CommandShortcut,
 } from "@/components/ui/command";
 import { Kbd } from "@/components/ui/kbd";
-import type { SiteSearchGroup } from "@/lib/site-search";
+import type { SiteSearchGroup, SiteSearchKind } from "@/lib/site-search";
 
 const OPEN_EVENT = "site-search:open";
 const MAX_PER_GROUP = 5;
-const GROUP_ICONS: Record<SiteSearchGroup["id"], LucideIcon> = {
+const GROUP_ICONS: Record<SiteSearchKind, LucideIcon> = {
   pages: FileTextIcon,
   walks: FootprintsIcon,
   notices: BellIcon,
@@ -44,12 +44,14 @@ export function openSiteSearch() {
   window.dispatchEvent(new Event(OPEN_EVENT));
 }
 
-/** A search-bar-shaped button (not just an icon) that opens the search. */
+/** A search icon on phones; a search-bar-shaped button from md up. */
 export function SiteSearchBar({ className, onOpen }: { className?: string; onOpen?: () => void }) {
   return (
     <button
+      aria-label="Search the site"
       className={cn(
-        "flex h-8 w-full min-w-0 cursor-pointer items-center gap-2 rounded-md border bg-background px-2.5 text-sm text-muted-foreground shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground",
+        "flex size-8 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
+        "md:w-44 md:justify-start md:border md:bg-background md:px-2.5 md:shadow-xs lg:w-60",
         className,
       )}
       onClick={() => {
@@ -58,11 +60,8 @@ export function SiteSearchBar({ className, onOpen }: { className?: string; onOpe
       }}
       type="button"
     >
-      <SearchIcon aria-hidden className="size-4 shrink-0" />
-      <span className="truncate">
-        <span className="sm:hidden">Search</span>
-        <span className="max-sm:hidden">Search the site…</span>
-      </span>
+      <SearchIcon aria-hidden className="size-4 shrink-0 max-md:text-foreground" />
+      <span className="truncate max-md:hidden">Search the site…</span>
       <Kbd className="ml-auto hidden lg:inline-flex">⌘K</Kbd>
     </button>
   );
@@ -94,24 +93,35 @@ export function SiteSearchDialog() {
     };
   }, []);
 
-  React.useEffect(() => {
-    if (!open || Date.now() - loadedAt.current < 60_000) return;
-    let cancelled = false;
+  const loading = React.useRef(false);
+  const load = React.useCallback(() => {
+    if (loading.current || Date.now() - loadedAt.current < 60_000) return;
+    loading.current = true;
     fetch("/api/site-search", { cache: "no-store" })
       .then((response) => (response.ok ? response.json() : Promise.reject(response.status)))
       .then((data: { groups: SiteSearchGroup[] }) => {
-        if (cancelled) return;
         loadedAt.current = Date.now();
         setGroups(data.groups);
         setFailed(false);
       })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
+      .catch(() => setFailed(true))
+      .finally(() => {
+        loading.current = false;
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [open]);
+  }, []);
+
+  // Fetch quietly once the page is idle, so opening search is instant.
+  React.useEffect(() => {
+    const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500));
+    const cancel = window.cancelIdleCallback ?? window.clearTimeout;
+    const handle = idle(() => load());
+    return () => cancel(handle);
+  }, [load]);
+
+  // Refresh in the background on open if it's a minute old (old results stay shown).
+  React.useEffect(() => {
+    if (open) load();
+  }, [open, load]);
 
   function go(href: string) {
     setOpen(false);
@@ -123,7 +133,7 @@ export function SiteSearchDialog() {
   const visibleGroups = React.useMemo(() => {
     if (!groups) return [];
     const term = query.trim().toLowerCase();
-    if (!term) return groups.filter((group) => group.id === "pages");
+    if (!term) return groups.filter((group) => group.kind === "pages");
     return groups
       .map((group) => ({
         ...group,
@@ -153,7 +163,7 @@ export function SiteSearchDialog() {
             {failed ? "Search couldn’t load. Try again." : groups ? "No results found." : "Loading…"}
           </CommandEmpty>
           {visibleGroups.map((group, index) => {
-            const Icon = GROUP_ICONS[group.id];
+            const Icon = GROUP_ICONS[group.kind];
             return (
               <React.Fragment key={group.id}>
                 {index > 0 ? <CommandSeparator /> : null}

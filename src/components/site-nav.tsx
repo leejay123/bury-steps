@@ -1,4 +1,4 @@
-import { Show } from "@clerk/nextjs";
+import { Suspense } from "react";
 import { getOptionalUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
@@ -12,7 +12,6 @@ import { SiteSearchBar, SiteSearchDialog } from "@/components/site-search";
 import { getSiteNoticeState } from "@/lib/site-notices";
 import { getProgressEnabled } from "@/lib/progress-settings";
 import { FULL_ORGANISER_PERMISSIONS, ORGANISER_PERMISSIONS } from "@/lib/organiser-permissions";
-import { isOwner } from "@/lib/site-owner";
 
 export function SiteNavFallback() {
   return (
@@ -26,45 +25,53 @@ export function SiteNavFallback() {
   );
 }
 
+// The bell's notices load separately so they never hold up the rest of the
+// header (links, search, avatar), which render as soon as the user is known.
+async function SiteNavBell({ firstName, userId }: { firstName: string | null; userId: string }) {
+  const { notices, unreadIds } = await getSiteNoticeState(userId, firstName);
+  return <NotificationBell notices={notices} unreadIds={unreadIds} />;
+}
+
 export async function SiteNav() {
   const afterAuth = `${appUrl()}${AFTER_AUTH_PATH}`;
-  const user = await getOptionalUser();
+  const [user, progressEnabled] = await Promise.all([getOptionalUser(), getProgressEnabled()]);
   const isAdmin = user?.role === "ADMIN";
-
   const walksHref = isAdmin ? "/admin" : "/walks";
-  const [{ notices, unreadIds }, progressEnabled, permissions] = await Promise.all([
-    user ? getSiteNoticeState(user.id, user.firstName) : Promise.resolve({ notices: [], unreadIds: [] as string[] }),
-    getProgressEnabled(),
-    isAdmin && user
-      ? isOwner(user.id).then((owner) => (owner ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS))
-      : Promise.resolve(undefined),
-  ]);
+  // user.isOwner is already on the row — no second lookup.
+  const permissions = isAdmin && user ? (user.isOwner ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS) : undefined;
 
+  // Signed-in state comes from the server here (not Clerk's client <Show>),
+  // so nothing waits for Clerk's browser bundle before appearing.
   return (
     <>
       <div className="hidden min-w-0 items-center justify-center md:flex">
-        <Show when="signed-in">
+        {user ? (
           <SiteNavLinks
             isAdmin={isAdmin}
             permissions={permissions}
             progressEnabled={progressEnabled}
             walksHref={walksHref}
           />
-        </Show>
+        ) : null}
       </div>
-      <div className="flex min-w-0 items-center justify-end gap-2 justify-self-end max-md:flex-1 sm:gap-3">
-        <Show when="signed-out">
-          <Button variant="outline" size="sm" asChild>
-            <a href={accountPortalHref("sign-in", afterAuth)}>Sign in</a>
-          </Button>
-          <JoinGroupButton href={accountPortalHref("sign-up", afterAuth)} />
-        </Show>
-        <Show when="signed-in">
-          <SiteSearchBar className="min-w-0 flex-1 md:w-44 md:flex-none lg:w-60" />
-          <SiteSearchDialog />
-          <NotificationBell notices={notices} unreadIds={unreadIds} />
-          <SiteUserButton progressEnabled={progressEnabled} />
-        </Show>
+      <div className="flex min-w-0 items-center justify-end gap-2 justify-self-end sm:gap-3">
+        {user ? (
+          <>
+            <SiteSearchBar />
+            <SiteSearchDialog />
+            <Suspense fallback={<div aria-hidden className="size-8 shrink-0" />}>
+              <SiteNavBell firstName={user.firstName} userId={user.id} />
+            </Suspense>
+            <SiteUserButton initial={(user.firstName || user.email || "?").charAt(0)} progressEnabled={progressEnabled} />
+          </>
+        ) : (
+          <>
+            <Button variant="outline" size="sm" asChild>
+              <a href={accountPortalHref("sign-in", afterAuth)}>Sign in</a>
+            </Button>
+            <JoinGroupButton href={accountPortalHref("sign-up", afterAuth)} />
+          </>
+        )}
       </div>
     </>
   );
@@ -103,15 +110,12 @@ export async function SiteMobileNav() {
   }
 
   const isAdmin = user.role === "ADMIN";
-  const [progressEnabled, permissions, { unreadIds }] = await Promise.all([
-    getProgressEnabled(),
-    isAdmin
-      ? isOwner(user.id).then((owner) => (owner ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS))
-      : Promise.resolve(undefined),
-    getSiteNoticeState(user.id, user.firstName),
-  ]);
-  const items = navItems(isAdmin, isAdmin ? "/admin" : "/walks", permissions, progressEnabled).map(
-    (item) => (item.href === "/notices" && unreadIds.length ? { ...item, dot: true } : item),
+  const progressEnabled = await getProgressEnabled();
+  const permissions = isAdmin ? (user.isOwner ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS) : undefined;
+  // Not awaited: the menu renders now and the Notices dot fills in later.
+  const noticesUnread = getSiteNoticeState(user.id, user.firstName).then(({ unreadIds }) => unreadIds.length > 0);
+  const items = navItems(isAdmin, isAdmin ? "/admin" : "/walks", permissions, progressEnabled).map((item) =>
+    item.href === "/notices" ? { ...item, dot: noticesUnread } : item,
   );
   const organiserItems = items.filter((item) => item.href.startsWith("/admin/"));
 

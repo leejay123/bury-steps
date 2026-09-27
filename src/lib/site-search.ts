@@ -17,8 +17,12 @@ export type SiteSearchItem = {
   hint?: string;
 };
 
+export type SiteSearchKind = "pages" | "walks" | "notices" | "faqs" | "settings";
+
 export type SiteSearchGroup = {
-  id: "pages" | "walks" | "notices" | "faqs" | "settings";
+  id: string;
+  /** Picks the icon, and "pages" groups are what shows before you type. */
+  kind: SiteSearchKind;
   heading: string;
   items: SiteSearchItem[];
 };
@@ -46,24 +50,40 @@ export async function buildSiteSearchIndex(user: User): Promise<SiteSearchGroup[
     }),
   ]);
 
-  const pages: SiteSearchItem[] = [
-    ...navItems(isAdmin, isAdmin ? "/admin" : "/walks", perms, progressEnabled).map((item) => ({
-      label: item.label,
-      href: item.href,
-    })),
+  const mainPages: SiteSearchItem[] = navItems(isAdmin, isAdmin ? "/admin" : "/walks", perms, progressEnabled)
+    .filter((item) => !item.href.startsWith("/admin/"))
+    .map((item) => ({ label: item.label, href: item.href }));
+  const managePages: SiteSearchItem[] = navItems(isAdmin, "/admin", perms, progressEnabled)
+    .filter((item) => item.href.startsWith("/admin/"))
+    .map((item) => ({ label: item.label, href: item.href }));
+  const accountPages: SiteSearchItem[] = [
     ...(isAdmin ? [{ label: "History", href: "/history" }] : []),
     { label: "Email preferences", href: "/email-preferences", keywords: ["unsubscribe", "emails"] },
+  ];
+  const helpPages: SiteSearchItem[] = [
     { label: "Contact us", href: "/contact", keywords: ["message", "help"] },
     { label: "Privacy Policy", href: "/privacy-policy" },
     { label: "Terms of Service", href: "/terms-of-service" },
   ];
 
-  const settings: SiteSearchItem[] = perms
-    ? SETTINGS_PAGE_GROUPS.flatMap((group) =>
-        group.pages
+  const now = Date.now();
+  const walkItem = (walk: (typeof walks)[number]): SiteSearchItem => ({
+    label: walk.title,
+    href: canAdminWalks ? `/admin/walks/${walk.id}` : walkSharePath(walk),
+    hint: formatWalkDate(walk.startsAt),
+    keywords: [walk.location ?? ""],
+  });
+
+  // Settings split by the hub's own groups (Homepage, Members…).
+  const settingsGroups: SiteSearchGroup[] = perms
+    ? SETTINGS_PAGE_GROUPS.map((group) => ({
+        id: `settings:${group.label}`,
+        kind: "settings" as const,
+        heading: `Settings · ${group.label}`,
+        items: group.pages
           .filter((page) => perms[page.permission])
           .flatMap((page) => [
-            { label: page.title, href: page.href, hint: group.label, keywords: [page.description, page.keywords ?? ""] },
+            { label: page.title, href: page.href, keywords: [page.description, page.keywords ?? ""] },
             ...(page.children ?? []).map((child) => ({
               label: child.title,
               href: child.href,
@@ -71,40 +91,52 @@ export async function buildSiteSearchIndex(user: User): Promise<SiteSearchGroup[
               keywords: [child.description, child.keywords ?? ""],
             })),
           ]),
-      )
+      }))
     : [];
 
+  // FAQs split by their own categories.
+  const faqCategories = [...new Set(faqData.faqs.map((faq) => faq.categoryLabel))];
+
   const groups: SiteSearchGroup[] = [
-    { id: "pages", heading: "Pages", items: pages },
+    { id: "main", kind: "pages", heading: "Pages", items: mainPages },
+    { id: "manage", kind: "pages", heading: "Manage", items: managePages },
+    { id: "account", kind: "pages", heading: "Your account", items: accountPages },
+    { id: "help", kind: "pages", heading: "Help & info", items: helpPages },
     {
-      id: "walks",
-      heading: "Walks",
-      items: walks.map((walk) => ({
-        label: walk.title,
-        href: canAdminWalks ? `/admin/walks/${walk.id}` : walkSharePath(walk),
-        hint: formatWalkDate(walk.startsAt),
-        keywords: [walk.location ?? ""],
-      })),
+      id: "walks-upcoming",
+      kind: "walks",
+      heading: "Upcoming walks",
+      items: walks.filter((walk) => walk.startsAt.getTime() >= now).map(walkItem),
+    },
+    {
+      id: "walks-past",
+      kind: "walks",
+      heading: "Recent walks",
+      items: walks
+        .filter((walk) => walk.startsAt.getTime() < now)
+        .reverse()
+        .map(walkItem),
     },
     {
       id: "notices",
+      kind: "notices",
       heading: "Notices",
       items: notices.map((notice) => ({
         label: notice.title,
         href: notice.slug ? `/notices/${notice.slug}` : "/notices",
+        hint: notice.categoryLabel ?? undefined,
         keywords: [notice.categoryLabel ?? "", notice.body.slice(0, 200)],
       })),
     },
-    {
-      id: "faqs",
-      heading: "FAQs",
-      items: faqData.faqs.map((faq) => ({
-        label: faq.question,
-        href: "/#faqs",
-        keywords: [faq.categoryLabel, faq.answer.slice(0, 200)],
-      })),
-    },
-    { id: "settings", heading: "Settings", items: settings },
+    ...faqCategories.map((category) => ({
+      id: `faqs:${category}`,
+      kind: "faqs" as const,
+      heading: faqCategories.length > 1 ? `FAQs · ${category}` : "FAQs",
+      items: faqData.faqs
+        .filter((faq) => faq.categoryLabel === category)
+        .map((faq) => ({ label: faq.question, href: "/#faqs", keywords: [faq.answer.slice(0, 200)] })),
+    })),
+    ...settingsGroups,
   ];
 
   return groups.filter((group) => group.items.length > 0);

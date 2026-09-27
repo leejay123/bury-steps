@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { Suspense, use, useEffect, useRef, useState, type RefObject } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -268,8 +268,13 @@ export function SiteNavLinks({
 // Mirrors shadcn-ui/ui apps/v4/components/mobile-nav.tsx.
 export type MobileMenuGroup = {
   label: string;
-  items: { href: string; label: string; newTab?: boolean; dot?: boolean }[];
+  /** dot: a promise so the menu icon never waits on the notices lookup. */
+  items: { href: string; label: string; newTab?: boolean; dot?: Promise<boolean> }[];
 };
+
+function UnreadDot({ unread }: { unread: Promise<boolean> }) {
+  return use(unread) ? <span className="flex size-2 rounded-full bg-blue-500" title="New" /> : null;
+}
 
 export function SiteMobileMenu({ groups, showSearch = false }: { groups: MobileMenuGroup[]; showSearch?: boolean }) {
   const [open, setOpen] = useState(false);
@@ -339,7 +344,9 @@ export function SiteMobileMenu({ groups, showSearch = false }: { groups: MobileM
                     >
                       {item.label}
                       {item.dot ? (
-                        <span className="flex size-2 rounded-full bg-blue-500" title="New" />
+                        <Suspense fallback={null}>
+                          <UnreadDot unread={item.dot} />
+                        </Suspense>
                       ) : null}
                     </Link>
                   ) : (
