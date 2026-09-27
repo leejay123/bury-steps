@@ -187,7 +187,12 @@ function SelectContent({
   return (
     <PopoverContent
       align="start"
-      className={cn("max-h-72 w-auto overflow-y-auto overscroll-y-contain p-1", className)}
+      className={cn(
+        "max-h-72 w-auto overflow-y-auto overscroll-y-contain p-1",
+        // Slide-in from shadcn studio's Combobox 13: rises into place instead of zooming.
+        "duration-400 data-[side=bottom]:slide-in-from-bottom-10! data-[state=open]:zoom-in-100",
+        className,
+      )}
       data-select-dropdown=""
       style={{
         minWidth: triggerWidth ? `${triggerWidth}px` : "8rem",
