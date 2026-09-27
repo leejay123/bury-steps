@@ -4,7 +4,6 @@ import { SectionBackground } from "@/components/section-background";
 import type { SectionBgPattern } from "@/lib/section-background";
 
 export function HeroCopy({
-  announcement,
   eyebrow = "Support · Together · Empathy · Pace · Steps",
   title,
   titleAs: Title = "h1",
@@ -13,10 +12,8 @@ export function HeroCopy({
   after,
   bgPattern = "none",
 }: {
-  /** Pill shown above the eyebrow (the homepage's next-walk link). */
-  announcement?: ReactNode;
   eyebrow?: string | null;
-  title: ReactNode;
+  title: string;
   titleAs?: "h1" | "h2";
   children: ReactNode;
   actions?: ReactNode;
@@ -50,8 +47,6 @@ export function HeroCopy({
         )}
       </div>
 
-      {announcement}
-
       {eyebrow ? (
         <p className="text-center text-xs font-medium tracking-[0.18em] text-primary uppercase">{eyebrow}</p>
       ) : null}
@@ -61,7 +56,7 @@ export function HeroCopy({
           "max-w-3xl text-balance text-center text-foreground",
           sectionHeading
             ? "text-2xl font-semibold tracking-tight sm:text-3xl md:text-4xl"
-            : "text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl",
+            : "text-2xl sm:text-3xl md:text-5xl lg:text-6xl",
         )}
       >
         {title}

@@ -14,6 +14,7 @@ import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/comp
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { FACEBOOK_GROUP_URL as DEFAULT_FACEBOOK_GROUP_URL } from "@/lib/urls";
 import type { FaqCategoryView, FaqView } from "@/lib/faqs";
+import { HeroCopy } from "@/components/hero-copy";
 import { centerInScrollStrip } from "@/lib/scroll-strip";
 
 export function FaqsSection({
@@ -36,85 +37,68 @@ export function FaqsSection({
   const facebookUrl = facebookGroupUrl.trim();
 
   return (
-    <section className="grid gap-8 px-4 py-10 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:gap-12 md:px-6 md:py-14">
+    <section>
       <FaqIntro
-        facebookGroupUrl={facebookUrl}
         intro={intro}
         onSearchChange={setSearchTerm}
         searchTerm={searchTerm}
         title={title}
       />
-      <div className="flex min-w-0 flex-col gap-4">
-        <FaqBrowser
-          categories={categories}
-          faqs={faqs}
-          onClearSearch={() => setSearchTerm("")}
-          searchTerm={searchTerm}
-        />
-      </div>
+      <FaqBrowser
+        categories={categories}
+        facebookGroupUrl={facebookUrl}
+        faqs={faqs}
+        onClearSearch={() => setSearchTerm("")}
+        searchTerm={searchTerm}
+      />
     </section>
   );
 }
 
 const FaqIntro = memo(function FaqIntro({
-  facebookGroupUrl,
   intro,
   searchTerm,
   onSearchChange,
   title,
 }: {
-  facebookGroupUrl: string;
   intro: string;
   searchTerm: string;
   onSearchChange: (value: string) => void;
   title: string;
 }) {
   return (
-    <div className="flex flex-col items-start gap-4 md:sticky md:top-24 md:self-start">
-      <h2 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">{title}</h2>
-      <p className="text-muted-foreground">
-        {intro}{" "}
-        {facebookGroupUrl ? (
-          <>
-            Can’t find what you’re looking for?{" "}
-            <a
-              className="font-medium text-foreground underline underline-offset-4"
-              href={facebookGroupUrl}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              Ask in the Facebook group
-            </a>{" "}
-            or{" "}
-            <a className="font-medium text-foreground underline underline-offset-4" href="/contact">
-              contact us
-            </a>
-            .
-          </>
-        ) : null}
-      </p>
-      <InputGroup className="w-full">
-        <InputGroupInput
-          aria-label="Search FAQs"
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Search FAQs…"
-          value={searchTerm}
-        />
-        <InputGroupAddon>
-          <Search data-icon="inline-start" />
-        </InputGroupAddon>
-      </InputGroup>
-    </div>
+    <HeroCopy
+      after={
+        <InputGroup className="w-full">
+          <InputGroupInput
+            aria-label="Search FAQs"
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder="Search FAQs…"
+            value={searchTerm}
+          />
+          <InputGroupAddon>
+            <Search data-icon="inline-start" />
+          </InputGroupAddon>
+        </InputGroup>
+      }
+      eyebrow={null}
+      title={title}
+      titleAs="h2"
+    >
+      <p>{intro}</p>
+    </HeroCopy>
   );
 });
 
 function FaqBrowser({
   categories,
+  facebookGroupUrl,
   faqs,
   searchTerm,
   onClearSearch,
 }: {
   categories: FaqCategoryView[];
+  facebookGroupUrl: string;
   faqs: FaqView[];
   searchTerm: string;
   onClearSearch: () => void;
@@ -154,7 +138,7 @@ function FaqBrowser({
   return (
     <>
       <div
-        className="flex gap-2 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [-ms-overflow-style:none] sm:flex-wrap sm:overflow-visible [&::-webkit-scrollbar]:hidden"
+        className="flex gap-2 overflow-x-auto overscroll-x-contain border-y px-4 [scrollbar-width:none] [-ms-overflow-style:none] sm:flex-wrap sm:overflow-visible md:px-6 [&::-webkit-scrollbar]:hidden"
       >
         {filters.map((category) => {
           const active = activeCategory === category.id;
@@ -162,10 +146,10 @@ function FaqBrowser({
             <button
               aria-pressed={active}
               className={cn(
-                "shrink-0 rounded-full border px-3.5 py-1.5 text-sm transition-colors",
+                "shrink-0 border-b-2 px-3 py-3 text-base md:px-4 md:py-3.5 md:text-lg",
                 active
-                  ? "border-foreground bg-foreground text-background"
-                  : "bg-background text-muted-foreground hover:text-foreground",
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-primary",
               )}
               key={category.id}
               onClick={(event) => selectCategory(category.id, event.currentTarget)}
@@ -177,9 +161,9 @@ function FaqBrowser({
         })}
       </div>
 
-      <Accordion className="flex flex-col overflow-hidden rounded-xl border" collapsible type="single">
+      <Accordion className="flex flex-col gap-2 border-0 px-4 pt-6 pb-0 md:px-6" collapsible type="single">
         {filtered.map((faq) => (
-          <AccordionItem className="border-b bg-background px-4 last:border-b-0" key={faq.id} value={faq.id}>
+          <AccordionItem className="rounded-lg border last:border-b px-4 shadow-xs" key={faq.id} value={faq.id}>
             <AccordionTrigger>{faq.question}</AccordionTrigger>
             <AccordionContent className="text-muted-foreground">{faq.answer}</AccordionContent>
           </AccordionItem>
@@ -187,7 +171,7 @@ function FaqBrowser({
       </Accordion>
 
       {filtered.length === 0 ? (
-        <Empty className="border">
+        <Empty className={cn("mx-4 border md:mx-6", !facebookGroupUrl && "mb-6")}>
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <Search />
@@ -201,6 +185,20 @@ function FaqBrowser({
             </Button>
           </EmptyContent>
         </Empty>
+      ) : null}
+
+      {facebookGroupUrl ? (
+        <p className="px-4 py-6 text-center text-sm text-muted-foreground md:px-6">
+          Can’t find what you’re looking for?{" "}
+          <a
+            className="font-medium text-foreground underline-offset-4 hover:underline"
+            href={facebookGroupUrl}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Ask in the Facebook group
+          </a>
+        </p>
       ) : null}
     </>
   );

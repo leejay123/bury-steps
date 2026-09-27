@@ -2,6 +2,7 @@ import { Fragment, type ReactNode } from "react";
 import { HomeAboutDrawer } from "@/components/home-about-drawer";
 import { FeatureSection } from "@/components/feature-section";
 import { MemberFeatureSection } from "@/components/member-feature-section";
+import { HeroCopy } from "@/components/hero-copy";
 import { TestimonialsSection } from "@/components/testimonials-section";
 import { FaqsSection } from "@/components/faqs-section";
 import {
@@ -9,7 +10,6 @@ import {
   type HomepageNoticeSlide,
 } from "@/components/home-member-notices";
 import { FullWidthDivider } from "@/components/full-width-divider";
-import { HomeCta } from "@/components/home-cta";
 import { Button } from "@/components/ui/button";
 import type { TestimonialView } from "@/lib/testimonials";
 import type { FaqCategoryView, FaqView } from "@/lib/faqs";
@@ -68,8 +68,6 @@ export function HomeWelcome({
   memberNoticesEnabled,
   progressEnabled,
   sectionBgPatterns,
-  signInHref,
-  signUpHref,
   testimonials,
   testimonialsSectionEyebrow,
   testimonialsSectionIntro,
@@ -108,8 +106,6 @@ export function HomeWelcome({
    * for howThisStarted/testimonials/memberNotices/faqs (hero has its own,
    * see HeroSection's bgPattern prop). */
   sectionBgPatterns: Record<"howThisStarted" | "testimonials" | "memberNotices" | "faqs", SectionBgPattern>;
-  signInHref: string;
-  signUpHref: string;
   testimonials: TestimonialView[];
   testimonialsSectionEyebrow: string;
   testimonialsSectionIntro: string;
@@ -122,47 +118,31 @@ export function HomeWelcome({
       <FeatureSection />
     ),
     howThisStarted: (
-      <section className="grid gap-10 px-4 py-10 md:grid-cols-2 md:px-6 md:py-14">
-        <div className="flex flex-col items-start gap-4">
-          {howThisStartedEyebrow ? (
-            <p className="text-xs font-medium tracking-[0.18em] text-primary uppercase">
-              {howThisStartedEyebrow}
-            </p>
-          ) : null}
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
-            {howThisStartedTitle}
-          </h2>
-          <p className="text-muted-foreground md:text-lg">{howThisStartedTeaser}</p>
-          <HomeAboutDrawer
-            aboutExpect={aboutExpect}
-            aboutExpectHeading={aboutExpectHeading}
-            aboutGoals={aboutGoals}
-            aboutGoalsHeading={aboutGoalsHeading}
-            aboutPlaces={aboutPlaces}
-            aboutPlacesHeading={aboutPlacesHeading}
-            aboutRules={aboutRules}
-            aboutRulesHeading={aboutRulesHeading}
-            facebookGroupUrl={facebookGroupUrl}
-            howThisStartedBody={howThisStartedBody}
-            howThisStartedTitle={howThisStartedTitle}
-            trigger={<Button variant="outline">Read more</Button>}
-          />
-        </div>
-        {aboutExpect.length > 0 ? (
-          <div className="flex flex-col gap-4">
-            <p className="text-sm font-medium text-muted-foreground">{aboutExpectHeading}</p>
-            <ol className="relative flex flex-col gap-5 before:absolute before:top-2 before:bottom-2 before:left-[15px] before:w-px before:bg-border">
-              {aboutExpect.map((item, index) => (
-                <li className="relative flex items-start gap-4" key={item}>
-                  <span className="z-10 flex size-8 shrink-0 items-center justify-center rounded-full border bg-background text-xs font-medium text-foreground shadow-xs">
-                    {index + 1}
-                  </span>
-                  <span className="pt-1 text-foreground">{item}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
-        ) : null}
+      <section>
+        <HeroCopy
+          bgPattern={sectionBgPatterns.howThisStarted}
+          actions={
+            <HomeAboutDrawer
+              aboutExpect={aboutExpect}
+              aboutExpectHeading={aboutExpectHeading}
+              aboutGoals={aboutGoals}
+              aboutGoalsHeading={aboutGoalsHeading}
+              aboutPlaces={aboutPlaces}
+              aboutPlacesHeading={aboutPlacesHeading}
+              aboutRules={aboutRules}
+              aboutRulesHeading={aboutRulesHeading}
+              facebookGroupUrl={facebookGroupUrl}
+              howThisStartedBody={howThisStartedBody}
+              howThisStartedTitle={howThisStartedTitle}
+              trigger={<Button variant="outline">Read more</Button>}
+            />
+          }
+          eyebrow={howThisStartedEyebrow || null}
+          title={howThisStartedTitle}
+          titleAs="h2"
+        >
+          <p>{howThisStartedTeaser}</p>
+        </HeroCopy>
       </section>
     ),
     memberNotices:
@@ -205,12 +185,11 @@ export function HomeWelcome({
     <>
       {visible.map((id, index) => (
         <Fragment key={id}>
-          <SectionShell bgPattern={bgPatterns[id]} id={id} showDividerAfter={index < visible.length}>
+          <SectionShell bgPattern={bgPatterns[id]} id={id} showDividerAfter={index < visible.length - 1}>
             {sections[id]}
           </SectionShell>
         </Fragment>
       ))}
-      <HomeCta isSignedIn={isSignedIn} signInHref={signInHref} signUpHref={signUpHref} />
     </>
   );
 }
