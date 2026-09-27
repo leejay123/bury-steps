@@ -5,6 +5,7 @@ import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
 import { SiteNavLinks, SiteMobileMenu, type MobileMenuGroup } from "@/components/site-nav-menu";
 import { getSiteTheme } from "@/lib/site-theme";
 import { SiteUserButton } from "@/components/site-user-button";
+import { JoinGroupButton } from "@/components/join-group-button";
 import { navItems } from "@/components/site-nav-items";
 import { NotificationBell } from "@/components/notification-bell";
 import { getSiteNoticeState } from "@/lib/site-notices";
@@ -55,9 +56,7 @@ export async function SiteNav() {
           <Button variant="outline" size="sm" asChild>
             <a href={accountPortalHref("sign-in", afterAuth)}>Sign in</a>
           </Button>
-          <Button size="sm" asChild>
-            <a href={accountPortalHref("sign-up", afterAuth)}>Join the group</a>
-          </Button>
+          <JoinGroupButton href={accountPortalHref("sign-up", afterAuth)} />
         </Show>
         <Show when="signed-in">
           <NotificationBell notices={notices} unreadIds={unreadIds} />
