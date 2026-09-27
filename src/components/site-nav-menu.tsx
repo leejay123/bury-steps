@@ -17,6 +17,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { unlockIdleDocument } from "@/components/overlay-root";
 import { isNavItemActive, navItems } from "@/components/site-nav-items";
 import type { OrganiserPermissions } from "@/lib/organiser-permissions";
@@ -260,7 +262,8 @@ export function SiteNavLinks({
   );
 }
 
-export function SiteMobileNavBar({
+// Mirrors shadcn-ui/ui apps/v4/components/mobile-nav.tsx.
+export function SiteMobileMenu({
   isAdmin,
   permissions,
   progressEnabled,
@@ -273,43 +276,66 @@ export function SiteMobileNavBar({
   progressEnabled?: boolean;
   walksHref: string;
 }) {
-  const pathname = usePathname();
-  const scrollerRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const router = useRouter();
   const items = navItems(isAdmin, walksHref, permissions, progressEnabled);
-  const edges = useScrollEdges(scrollerRef);
-  useWheelScroll(scrollerRef);
-
-  useEffect(() => {
-    const scroller = scrollerRef.current;
-    const active = scroller?.querySelector<HTMLElement>("[aria-current='page']");
-    if (scroller && active) scrollNavItemIntoView(scroller, active);
-  }, [pathname]);
 
   return (
-    <nav aria-label="Site" className="relative border-t md:hidden">
-      <ScrollEdgeFade side="left" visible={edges.start} />
-      <div
-        className="flex gap-1 overflow-x-auto overscroll-x-contain px-3 py-1.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-        ref={scrollerRef}
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          data-mobile-nav=""
+          variant="ghost"
+          className="relative h-8 touch-manipulation items-center justify-start gap-2.5 p-0! hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 active:bg-transparent pointer-coarse:after:absolute pointer-coarse:after:-inset-2 md:hidden dark:hover:bg-transparent"
+        >
+          <div className="relative flex h-8 w-4 items-center justify-center">
+            <div className="relative size-4">
+              <span
+                className={cn(
+                  "absolute left-0 block h-0.5 w-4 bg-foreground transition-all duration-100",
+                  open ? "top-[0.4rem] -rotate-45" : "top-1",
+                )}
+              />
+              <span
+                className={cn(
+                  "absolute left-0 block h-0.5 w-4 bg-foreground transition-all duration-100",
+                  open ? "top-[0.4rem] rotate-45" : "top-2.5",
+                )}
+              />
+            </div>
+            <span className="sr-only">Toggle Menu</span>
+          </div>
+          <span className="flex h-8 items-center text-lg leading-none font-medium">Menu</span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="h-(--radix-popper-available-height) w-(--radix-popper-available-width) overflow-y-auto rounded-none border-none bg-background/90 p-0 shadow-none backdrop-blur duration-100 [scrollbar-width:none] data-[state=open]:animate-none! [&::-webkit-scrollbar]:hidden"
+        align="start"
+        side="bottom"
+        alignOffset={-16}
+        sideOffset={14}
       >
-        {items.map((item) => {
-          const active = isNavItemActive(pathname, item.href);
-          return (
-            <NavLink
-              active={active}
-              className="shrink-0"
-              href={item.href}
-              key={item.href}
-              label={item.label}
-              onSelect={(el) => {
-                const scroller = scrollerRef.current;
-                if (scroller) scrollNavItemIntoView(scroller, el);
-              }}
-            />
-          );
-        })}
-      </div>
-      <ScrollEdgeFade side="right" visible={edges.end} />
-    </nav>
+        <div className="flex flex-col gap-12 overflow-auto px-6 py-6">
+          <div className="flex flex-col gap-4">
+            <div className="text-sm font-medium text-muted-foreground">Menu</div>
+            <div className="flex flex-col gap-3">
+              {items.map((item) => (
+                <Link
+                  className="flex items-center gap-2 text-2xl font-medium"
+                  href={item.href}
+                  key={item.href}
+                  onClick={() => {
+                    router.push(item.href);
+                    setOpen(false);
+                  }}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

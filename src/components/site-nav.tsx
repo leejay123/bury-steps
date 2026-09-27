@@ -2,7 +2,7 @@ import { Show } from "@clerk/nextjs";
 import { getOptionalUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
-import { SiteNavLinks, SiteMobileNavBar } from "@/components/site-nav-menu";
+import { SiteNavLinks, SiteMobileMenu } from "@/components/site-nav-menu";
 import { SiteUserButton } from "@/components/site-user-button";
 import { NotificationBell } from "@/components/notification-bell";
 import { getSiteNoticeState } from "@/lib/site-notices";
@@ -79,7 +79,7 @@ export async function SiteMobileNav() {
   ]);
 
   return (
-    <SiteMobileNavBar
+    <SiteMobileMenu
       isAdmin={isAdmin}
       permissions={permissions}
       progressEnabled={progressEnabled}
