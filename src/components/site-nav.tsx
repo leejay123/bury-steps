@@ -54,7 +54,7 @@ export async function SiteNav() {
           />
         ) : null}
       </div>
-      <div className="flex min-w-0 items-center justify-end gap-2 justify-self-end sm:gap-3">
+      <div className="flex min-w-0 items-center justify-end gap-0.5 justify-self-end md:gap-3">
         {user ? (
           <>
             <SiteSearchBar />

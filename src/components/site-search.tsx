@@ -50,8 +50,9 @@ export function SiteSearchBar({ className, onOpen }: { className?: string; onOpe
     <button
       aria-label="Search the site"
       className={cn(
-        "flex size-8 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
-        "md:w-44 md:justify-start md:border md:bg-background md:px-2.5 md:shadow-xs lg:w-60",
+        "flex size-9 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
+        // Same round hover as the bell on phones; a bordered bar from md up.
+        "md:h-8 md:w-44 md:justify-start md:rounded-md md:border md:bg-background md:px-2.5 md:shadow-xs lg:w-60",
         className,
       )}
       onClick={() => {

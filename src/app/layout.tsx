@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { ButtonRipple } from "@/components/button-ripple";
+import { HeaderScrollShadow } from "@/components/header-scroll-shadow";
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import Script from "next/script";
@@ -154,7 +155,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               z-[66] keeps the header above any sticky or raised page content
               scrolling underneath it.
             */}
-            <header className="sticky top-0 z-[66] touch-manipulation bg-background [transform:translateZ(0)]">
+            <header
+              className="sticky top-0 z-[66] touch-manipulation bg-background transition-shadow duration-200 [transform:translateZ(0)] data-scrolled:shadow-[0_4px_12px_-6px_rgb(0_0_0/0.12)]"
+              data-site-header=""
+            >
               <Suspense fallback={null}>
                 <ImpersonationBannerSlot />
               </Suspense>
@@ -221,6 +225,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </div>
           <Toaster duration={2800} position="bottom-left" />
           <ButtonRipple />
+          <HeaderScrollShadow />
           <Suspense fallback={null}>
             <SiteCookieConsentGate />
           </Suspense>
