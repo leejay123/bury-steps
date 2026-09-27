@@ -287,6 +287,7 @@ export function SiteMobileMenu({ groups, showSearch = false }: { groups: MobileM
       <PopoverTrigger asChild>
         <Button
           data-mobile-nav=""
+          data-ripple="off"
           variant="ghost"
           className="relative h-8 touch-manipulation items-center justify-start gap-2.5 p-0! hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 active:bg-transparent pointer-coarse:after:absolute pointer-coarse:after:-inset-2 md:hidden dark:hover:bg-transparent"
         >
