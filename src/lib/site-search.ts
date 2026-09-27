@@ -18,7 +18,7 @@ export type SiteSearchItem = {
 };
 
 export type SiteSearchGroup = {
-  id: "pages" | "walks" | "notices" | "faqs" | "members" | "settings";
+  id: "pages" | "walks" | "notices" | "faqs" | "settings";
   heading: string;
   items: SiteSearchItem[];
 };
@@ -26,14 +26,15 @@ export type SiteSearchGroup = {
 /**
  * Everything the header search can jump to, limited to what this person may
  * open: members get member pages, organisers only the admin pages their
- * permissions allow (the pages themselves still re-check on load).
+ * permissions allow (the pages themselves still re-check on load). Members
+ * aren't listed one by one — the Members page link covers that.
  */
 export async function buildSiteSearchIndex(user: User): Promise<SiteSearchGroup[]> {
   const isAdmin = user.role === "ADMIN";
   const perms = isAdmin ? (user.isOwner ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS) : undefined;
   const canAdminWalks = Boolean(perms && (perms.permWalksView || perms.permWalksCreate));
 
-  const [progressEnabled, { notices }, faqData, walks, members] = await Promise.all([
+  const [progressEnabled, { notices }, faqData, walks] = await Promise.all([
     getProgressEnabled(),
     getSiteNoticeState(user.id, user.firstName),
     getHomepageFaqData().catch(() => ({ faqs: [], categories: [] })),
@@ -43,13 +44,6 @@ export async function buildSiteSearchIndex(user: User): Promise<SiteSearchGroup[
       select: { id: true, slug: true, token: true, title: true, startsAt: true, location: true },
       take: 40,
     }),
-    perms?.permMembersView
-      ? prisma.user.findMany({
-          orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
-          select: { id: true, firstName: true, lastName: true },
-          take: 500,
-        })
-      : Promise.resolve([]),
   ]);
 
   const pages: SiteSearchItem[] = [
@@ -108,14 +102,6 @@ export async function buildSiteSearchIndex(user: User): Promise<SiteSearchGroup[
         label: faq.question,
         href: "/#faqs",
         keywords: [faq.categoryLabel, faq.answer.slice(0, 200)],
-      })),
-    },
-    {
-      id: "members",
-      heading: "Members",
-      items: members.map((member) => ({
-        label: [member.firstName, member.lastName].filter(Boolean).join(" ") || "Unnamed member",
-        href: `/admin/members/${member.id}`,
       })),
     },
     { id: "settings", heading: "Settings", items: settings },

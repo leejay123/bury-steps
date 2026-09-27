@@ -12,7 +12,6 @@ import {
   SearchIcon,
   SlidersHorizontalIcon,
   Undo2Icon,
-  UserIcon,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -31,12 +30,12 @@ import { Kbd } from "@/components/ui/kbd";
 import type { SiteSearchGroup } from "@/lib/site-search";
 
 const OPEN_EVENT = "site-search:open";
+const MAX_PER_GROUP = 5;
 const GROUP_ICONS: Record<SiteSearchGroup["id"], LucideIcon> = {
   pages: FileTextIcon,
   walks: FootprintsIcon,
   notices: BellIcon,
   faqs: CircleHelpIcon,
-  members: UserIcon,
   settings: SlidersHorizontalIcon,
 };
 
@@ -76,6 +75,7 @@ export function SiteSearchDialog() {
   const [open, setOpen] = React.useState(false);
   const [groups, setGroups] = React.useState<SiteSearchGroup[] | null>(null);
   const [failed, setFailed] = React.useState(false);
+  const [query, setQuery] = React.useState("");
   const loadedAt = React.useRef(0);
 
   React.useEffect(() => {
@@ -118,15 +118,41 @@ export function SiteSearchDialog() {
     router.push(href);
   }
 
+  // Kept deliberately short: just Pages until you type, then only matches,
+  // at most MAX_PER_GROUP per section.
+  const visibleGroups = React.useMemo(() => {
+    if (!groups) return [];
+    const term = query.trim().toLowerCase();
+    if (!term) return groups.filter((group) => group.id === "pages");
+    return groups
+      .map((group) => ({
+        ...group,
+        items: group.items
+          .filter((item) =>
+            [item.label, item.hint ?? "", ...(item.keywords ?? [])].join(" ").toLowerCase().includes(term),
+          )
+          .slice(0, MAX_PER_GROUP),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [groups, query]);
+
   return (
-    <CommandDialog className="w-full sm:max-w-lg" description="Search pages, walks, notices and more" onOpenChange={setOpen} open={open}>
-      <Command>
-        <CommandInput placeholder="Search pages, walks, notices…" />
+    <CommandDialog
+      className="w-full sm:max-w-lg"
+      description="Search pages, walks, notices and more"
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setQuery("");
+      }}
+      open={open}
+    >
+      <Command shouldFilter={false}>
+        <CommandInput onValueChange={setQuery} placeholder="Search pages, walks, notices…" value={query} />
         <CommandList>
           <CommandEmpty>
             {failed ? "Search couldn’t load. Try again." : groups ? "No results found." : "Loading…"}
           </CommandEmpty>
-          {(groups ?? []).map((group, index) => {
+          {visibleGroups.map((group, index) => {
             const Icon = GROUP_ICONS[group.id];
             return (
               <React.Fragment key={group.id}>
@@ -135,7 +161,6 @@ export function SiteSearchDialog() {
                   {group.items.map((item) => (
                     <CommandItem
                       key={`${group.id}:${item.href}:${item.label}`}
-                      keywords={item.keywords}
                       onSelect={() => go(item.href)}
                       value={`${group.id} ${item.label} ${item.hint ?? ""}`}
                     >

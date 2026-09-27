@@ -80,8 +80,8 @@ export function PrivacySiteSection() {
               in a large list over a frosted screen, and the page behind stays still until you
               close it or pick a page. Signed-in people also get a <strong>search bar</strong> in the
               header, next to the bell (or press ⌘K / Ctrl+K on a computer), that finds
-              pages, walks, notices and FAQs — organisers also find members and the settings their
-              permissions allow. The page you’re on is underlined, and a blue dot beside
+              pages, walks, notices and FAQs — organisers also find the settings their permissions
+              allow. It opens on the main pages; type to see up to five matches per section. The page you’re on is underlined, and a blue dot beside
               Notices means there’s one you haven’t read. The list is split under small labels:
               Menu for the main pages, Manage for the admin pages (owners and organisers only),
               Account for History and
