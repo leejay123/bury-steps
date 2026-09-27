@@ -115,7 +115,7 @@ function eventTargetInsideOpenOverlay(target: EventTarget | null) {
 
 function eventTargetInsideDrawer(target: EventTarget | null) {
   if (!(target instanceof Element)) return false;
-  return Boolean(target.closest('[data-slot="drawer-content"]'));
+  return Boolean(target.closest('[data-slot="drawer-content"], [data-slot="popover-content"]'));
 }
 
 const SCROLL_KEYS = new Set(["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "]);
