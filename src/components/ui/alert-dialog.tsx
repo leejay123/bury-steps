@@ -88,7 +88,7 @@ function AlertDialogOverlay({
     <AlertDialogPrimitive.Overlay
       data-slot="alert-dialog-overlay"
       className={cn(
-        "fixed inset-0 z-[70] bg-black/30 backdrop-blur-sm supports-[-webkit-touch-callout:none]:absolute data-[state=closed]:invisible data-[state=closed]:!pointer-events-none",
+        "fixed inset-0 z-[70] bg-black/30 backdrop-blur-sm supports-[-webkit-touch-callout:none]:absolute data-[state=closed]:invisible data-[state=closed]:!pointer-events-none data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:duration-300",
         className,
       )}
       {...props}
@@ -132,7 +132,7 @@ function AlertDialogContent({
           // dropdown can pop outside the card — that's not the same bug).
           // minmax(0, 1fr) pins the track's minimum to 0 so children truncate
           // inside the card instead.
-          "bg-background outline-hidden data-[state=closed]:invisible data-[state=closed]:!pointer-events-none fixed top-[50%] left-[50%] z-[70] grid grid-cols-[minmax(0,1fr)] w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-visible rounded-lg border p-6 shadow-lg sm:max-w-lg",
+          "bg-background outline-hidden data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-20 data-[state=open]:duration-600 data-[state=closed]:invisible data-[state=closed]:!pointer-events-none fixed top-[50%] left-[50%] z-[70] grid grid-cols-[minmax(0,1fr)] w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-visible rounded-lg border p-6 shadow-lg sm:max-w-lg",
           className,
         )}
         onEscapeKeyDown={(event) => {
