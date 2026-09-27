@@ -2,6 +2,7 @@
 
 import { UserButton } from "@clerk/nextjs";
 import { Bell, History, LineChart, Mail } from "lucide-react";
+import { openEmailPreferences } from "@/components/email-preferences-drawer";
 
 /**
  * Shortcuts into the same avatar menu Clerk already renders ("Manage
@@ -39,10 +40,10 @@ export function SiteUserButton({
           <UserButton.Link href="/progress" label="Progress" labelIcon={<LineChart className="size-4" />} />
         ) : null}
         <UserButton.Link href="/history" label="History" labelIcon={<History className="size-4" />} />
-        <UserButton.Link
-          href="/email-preferences"
+        <UserButton.Action
           label="Email preferences"
           labelIcon={<Bell className="size-4" />}
+          onClick={openEmailPreferences}
         />
         <UserButton.Link href="/contact" label="Contact us" labelIcon={<Mail className="size-4" />} />
       </UserButton.MenuItems>

@@ -9,6 +9,7 @@ import { JoinGroupButton } from "@/components/join-group-button";
 import { navItems } from "@/components/site-nav-items";
 import { NotificationBell } from "@/components/notification-bell";
 import { SiteSearchBar, SiteSearchDialog } from "@/components/site-search";
+import { EmailPreferencesDrawer } from "@/components/email-preferences-drawer";
 import { getSiteNoticeState } from "@/lib/site-notices";
 import { getProgressEnabled } from "@/lib/progress-settings";
 import { FULL_ORGANISER_PERMISSIONS, ORGANISER_PERMISSIONS } from "@/lib/organiser-permissions";
@@ -63,6 +64,17 @@ export async function SiteNav() {
               <SiteNavBell firstName={user.firstName} userId={user.id} />
             </Suspense>
             <SiteUserButton initial={(user.firstName || user.email || "?").charAt(0)} progressEnabled={progressEnabled} />
+            <EmailPreferencesDrawer
+              email={user.email}
+              isAdmin={isAdmin}
+              preferences={{
+                emailAccidentAlerts: user.emailAccidentAlerts,
+                emailNewsletter: user.emailNewsletter,
+                emailNotices: user.emailNotices,
+                emailProgress: user.emailProgress,
+                emailWalkAnnouncements: user.emailWalkAnnouncements,
+              }}
+            />
           </>
         ) : (
           <>

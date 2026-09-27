@@ -49,6 +49,7 @@ export function SiteSearchBar({ className, onOpen }: { className?: string; onOpe
   return (
     <button
       aria-label="Search the site"
+      data-site-search=""
       className={cn(
         "flex size-9 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
         // Same round hover as the bell on phones; a bordered bar from md up.
