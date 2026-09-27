@@ -18,7 +18,8 @@ export function ButtonRipple() {
       // data-variant). Toggle-like controls and opt-outs are skipped.
       const button = target?.closest<HTMLElement>('button, a[data-variant], [role="button"]');
       if (!button || button.dataset.variant === "link") return;
-      if (button.closest("[data-ripple='off']")) return;
+      // Not on choices inside dropdowns, menus or search results.
+      if (button.closest("[data-ripple='off'], [role='listbox'], [role='menu'], [role='option'], [cmdk-list]")) return;
       if (button.matches('[role="checkbox"], [role="switch"], [role="radio"], [role="slider"], [role="menuitemcheckbox"], [role="menuitemradio"]')) return;
       if (button.matches(":disabled, [aria-disabled='true']")) return;
 
