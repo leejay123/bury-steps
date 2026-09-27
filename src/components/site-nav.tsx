@@ -8,6 +8,7 @@ import { SiteUserButton } from "@/components/site-user-button";
 import { JoinGroupButton } from "@/components/join-group-button";
 import { navItems } from "@/components/site-nav-items";
 import { NotificationBell } from "@/components/notification-bell";
+import { SiteSearchBar, SiteSearchDialog } from "@/components/site-search";
 import { getSiteNoticeState } from "@/lib/site-notices";
 import { getProgressEnabled } from "@/lib/progress-settings";
 import { FULL_ORGANISER_PERMISSIONS, ORGANISER_PERMISSIONS } from "@/lib/organiser-permissions";
@@ -59,6 +60,8 @@ export async function SiteNav() {
           <JoinGroupButton href={accountPortalHref("sign-up", afterAuth)} />
         </Show>
         <Show when="signed-in">
+          <SiteSearchBar className="hidden w-44 md:flex lg:w-60" />
+          <SiteSearchDialog />
           <NotificationBell notices={notices} unreadIds={unreadIds} />
           <SiteUserButton progressEnabled={progressEnabled} />
         </Show>
@@ -114,6 +117,7 @@ export async function SiteMobileNav() {
 
   return (
     <SiteMobileMenu
+      showSearch
       groups={[
         { label: "Menu", items: items.filter((item) => !item.href.startsWith("/admin/")) },
         ...(organiserItems.length ? [{ label: "Manage", items: organiserItems }] : []),

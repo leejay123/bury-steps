@@ -78,7 +78,10 @@ export function PrivacySiteSection() {
               Date and time sit on the same line. FAQ category chips on a phone scroll themselves
               so the one you tap stays in view. On a phone, Menu at the top left opens every page
               in a large list over a frosted screen, and the page behind stays still until you
-              close it or pick a page. The page you’re on is underlined, and a blue dot beside
+              close it or pick a page. Signed-in people also get a <strong>search bar</strong> (in
+              the header on a computer, at the top of Menu on a phone, or ⌘K / Ctrl+K) that finds
+              pages, walks, notices and FAQs — organisers also find members and the settings their
+              permissions allow. The page you’re on is underlined, and a blue dot beside
               Notices means there’s one you haven’t read. The list is split under small labels:
               Menu for the main pages, Manage for the admin pages (owners and organisers only),
               Account for History and

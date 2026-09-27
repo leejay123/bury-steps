@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { menuFont } from "@/app/fonts";
 import { lockBackgroundScroll } from "@/components/overlay-scroll-lock";
+import { SiteSearchBar } from "@/components/site-search";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { unlockIdleDocument } from "@/components/overlay-root";
@@ -270,7 +271,7 @@ export type MobileMenuGroup = {
   items: { href: string; label: string; newTab?: boolean; dot?: boolean }[];
 };
 
-export function SiteMobileMenu({ groups }: { groups: MobileMenuGroup[] }) {
+export function SiteMobileMenu({ groups, showSearch = false }: { groups: MobileMenuGroup[]; showSearch?: boolean }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -319,6 +320,7 @@ export function SiteMobileMenu({ groups }: { groups: MobileMenuGroup[] }) {
         sideOffset={14}
       >
         <div className="flex flex-col gap-12 overflow-auto px-6 py-6">
+          {showSearch ? <SiteSearchBar className="-mb-6 h-10 text-base" onOpen={() => setOpen(false)} /> : null}
           {groups.map((group) => (
             <div className="flex flex-col gap-4" key={group.label}>
               <div className="text-sm font-medium text-[oklch(0.556_0_0)] dark:text-[oklch(0.708_0_0)]">
