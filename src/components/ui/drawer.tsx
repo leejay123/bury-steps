@@ -16,14 +16,12 @@ const overlayCloseClassName =
   "absolute top-2 right-2 z-20 flex size-11 cursor-pointer items-center justify-center rounded-md opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
 
 /**
- * Phone sheets slide the full height, 500ms, settle a few pixels past rest,
- * and close by playing that same small settle in reverse. On a wide screen
- * the way in is the short slide: past rest, then it settles. The panel jumps
- * off on close. A 100ms step-start keeps it mounted so the frost behind it
- * can fade. No fade on the panel, no clip. No transition while a finger is down.
+ * The panel slides fully on and fully off. Open is 450ms, close is 400ms,
+ * cubic-bezier(0.22, 1, 0.36, 1). The panel stays opaque. The overlay fades.
+ * No transition while a finger is down.
  */
 const POPUP_MOTION =
-  "pointer-events-auto fixed z-[60] m-[var(--drawer-inset,0px)] flex h-[var(--drawer-content-height)] max-h-[var(--drawer-content-max-height,none)] min-h-0 w-[var(--drawer-content-width,auto)] transform-[translate3d(var(--translate-x,0px),var(--translate-y,0px),0)_scale(var(--stack-scale))] flex-col transition-transform duration-[500ms] data-[swipe-axis=x]:ease-[cubic-bezier(0.34,1.4,0.64,1)] data-[swipe-axis=y]:ease-[cubic-bezier(0.34,1.2,0.64,1)] data-starting-style:will-change-transform data-ending-style:will-change-transform data-ending-style:data-[swipe-axis=x]:duration-100 data-ending-style:data-[swipe-axis=x]:ease-[step-start] data-ending-style:data-[swipe-axis=y]:ease-[cubic-bezier(0.36,0,0.66,-0.2)] data-swiping:will-change-transform outline-none select-none [interpolate-size:allow-keywords] data-nested-drawer-open:overflow-hidden data-nested-drawer-open:brightness-95 after:pointer-events-none after:absolute after:bg-[var(--drawer-bleed-background,var(--color-popover))] data-[swipe-axis=x]:after:inset-y-0 data-[swipe-axis=x]:after:w-[var(--bleed)] data-[swipe-axis=y]:after:inset-x-0 data-[swipe-axis=y]:after:h-[var(--bleed)] data-[swipe-direction=down]:after:top-full data-[swipe-direction=left]:after:right-full data-[swipe-direction=right]:after:left-full data-[swipe-direction=up]:after:bottom-full [--drawer-content-height:var(--drawer-height,auto)] data-[swipe-axis=y]:[--drawer-content-max-height:calc(100dvh-6rem)] data-[swipe-axis=y]:data-snap-points:[--drawer-content-height:100dvh] [--bleed:3rem] [--peek:1rem] [--stack-height:var(--drawer-frontmost-height,var(--drawer-height,0px))] [--stack-peek-offset:max(0px,calc((var(--nested-drawers)-var(--stack-progress))*var(--peek)))] [--stack-progress:clamp(0,var(--drawer-swipe-progress),1)] [--stack-scale-base:max(0,calc(1-(var(--nested-drawers)*var(--stack-step))))] [--stack-scale:clamp(0,calc(var(--stack-scale-base)+(var(--stack-step)*var(--stack-progress))),1)] [--stack-shrink:calc(1-var(--stack-scale))] [--stack-step:0.05] data-ending-style:transform-[var(--enter-transform)] data-ending-style:data-[swipe-axis=x]:transform-[var(--closed-transform)] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*500ms)] data-nested-drawer-swiping:duration-0 data-ending-style:data-nested-drawer-swiping:duration-[calc(var(--drawer-swipe-strength)*500ms)] data-starting-style:transform-[var(--enter-transform)] data-swiping:duration-0 data-ending-style:data-swiping:duration-[calc(var(--drawer-swipe-strength)*500ms)] data-[swipe-axis=y]:inset-x-0 data-[swipe-axis=y]:data-nested-drawer-open:h-[var(--stack-height)] data-[swipe-axis=x]:inset-y-0 data-[swipe-axis=x]:flex-row data-[swipe-direction=down]:bottom-0 data-[swipe-direction=down]:origin-bottom data-[swipe-direction=down]:[--closed-transform:translate3d(0,calc(100%+var(--drawer-inset,0px)+2px),0)] data-[swipe-direction=down]:[--enter-transform:translate3d(0,calc(100%+var(--drawer-inset,0px)+2px),0)] data-[swipe-direction=down]:[--translate-y:calc(var(--drawer-snap-point-offset,0px)+var(--drawer-swipe-movement-y)-var(--stack-peek-offset)-(var(--stack-shrink)*var(--stack-height)))] data-[swipe-direction=up]:top-0 data-[swipe-direction=up]:origin-top data-[swipe-direction=up]:[--closed-transform:translate3d(0,calc(-100%-var(--drawer-inset,0px)-2px),0)] data-[swipe-direction=up]:[--enter-transform:translate3d(0,calc(-100%-var(--drawer-inset,0px)-2px),0)] data-[swipe-direction=up]:[--translate-y:calc(var(--drawer-snap-point-offset,0px)+var(--drawer-swipe-movement-y)+var(--stack-peek-offset)+(var(--stack-shrink)*var(--stack-height)))] data-[swipe-direction=left]:left-0 data-[swipe-direction=left]:origin-left data-[swipe-direction=left]:[--closed-transform:translate3d(calc(-100%-var(--drawer-inset,0px)-2px),0,0)] data-[swipe-direction=left]:[--enter-transform:translate3d(-33.333%,0,0)] data-[swipe-direction=left]:[--translate-x:calc(var(--drawer-swipe-movement-x)+var(--stack-peek-offset)+(var(--stack-shrink)*100%))] data-[swipe-direction=right]:right-0 data-[swipe-direction=right]:origin-right data-[swipe-direction=right]:[--closed-transform:translate3d(calc(100%+var(--drawer-inset,0px)+2px),0,0)] data-[swipe-direction=right]:[--enter-transform:translate3d(33.333%,0,0)] data-[swipe-direction=right]:[--translate-x:calc(var(--drawer-swipe-movement-x)-var(--stack-peek-offset)-(var(--stack-shrink)*100%))]";
+  "pointer-events-auto fixed z-[60] m-[var(--drawer-inset,0px)] flex h-[var(--drawer-content-height)] max-h-[var(--drawer-content-max-height,none)] min-h-0 w-[var(--drawer-content-width,auto)] transform-[translate3d(var(--translate-x,0px),var(--translate-y,0px),0)_scale(var(--stack-scale))] flex-col transition-[transform,opacity] duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] data-starting-style:will-change-transform data-ending-style:will-change-transform data-ending-style:opacity-[0.9999] data-swiping:will-change-transform outline-none select-none [interpolate-size:allow-keywords] data-nested-drawer-open:overflow-hidden data-nested-drawer-open:brightness-95 after:pointer-events-none after:absolute after:bg-[var(--drawer-bleed-background,var(--color-popover))] data-[swipe-axis=x]:after:inset-y-0 data-[swipe-axis=x]:after:w-[var(--bleed)] data-[swipe-axis=y]:after:inset-x-0 data-[swipe-axis=y]:after:h-[var(--bleed)] data-[swipe-direction=down]:after:top-full data-[swipe-direction=left]:after:right-full data-[swipe-direction=right]:after:left-full data-[swipe-direction=up]:after:bottom-full [--drawer-content-height:var(--drawer-height,auto)] data-[swipe-axis=y]:[--drawer-content-max-height:calc(100dvh-6rem)] data-[swipe-axis=y]:data-snap-points:[--drawer-content-height:100dvh] [--bleed:3rem] [--peek:1rem] [--stack-height:var(--drawer-frontmost-height,var(--drawer-height,0px))] [--stack-peek-offset:max(0px,calc((var(--nested-drawers)-var(--stack-progress))*var(--peek)))] [--stack-progress:clamp(0,var(--drawer-swipe-progress),1)] [--stack-scale-base:max(0,calc(1-(var(--nested-drawers)*var(--stack-step))))] [--stack-scale:clamp(0,calc(var(--stack-scale-base)+(var(--stack-step)*var(--stack-progress))),1)] [--stack-shrink:calc(1-var(--stack-scale))] [--stack-step:0.05] data-ending-style:transform-[var(--closed-transform)] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-nested-drawer-swiping:duration-0 data-ending-style:data-nested-drawer-swiping:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-starting-style:transform-[var(--closed-transform)] data-swiping:duration-0 data-ending-style:data-swiping:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-[swipe-axis=y]:inset-x-0 data-[swipe-axis=y]:data-nested-drawer-open:h-[var(--stack-height)] data-[swipe-axis=x]:inset-y-0 data-[swipe-axis=x]:flex-row data-[swipe-direction=down]:bottom-0 data-[swipe-direction=down]:origin-bottom data-[swipe-direction=down]:[--closed-transform:translate3d(0,calc(100%+var(--drawer-inset,0px)+2px),0)] data-[swipe-direction=down]:[--translate-y:calc(var(--drawer-snap-point-offset,0px)+var(--drawer-swipe-movement-y)-var(--stack-peek-offset)-(var(--stack-shrink)*var(--stack-height)))] data-[swipe-direction=up]:top-0 data-[swipe-direction=up]:origin-top data-[swipe-direction=up]:[--closed-transform:translate3d(0,calc(-100%-var(--drawer-inset,0px)-2px),0)] data-[swipe-direction=up]:[--translate-y:calc(var(--drawer-snap-point-offset,0px)+var(--drawer-swipe-movement-y)+var(--stack-peek-offset)+(var(--stack-shrink)*var(--stack-height)))] data-[swipe-direction=left]:left-0 data-[swipe-direction=left]:origin-left data-[swipe-direction=left]:[--closed-transform:translate3d(calc(-100%-var(--drawer-inset,0px)-2px),0,0)] data-[swipe-direction=left]:[--translate-x:calc(var(--drawer-swipe-movement-x)+var(--stack-peek-offset)+(var(--stack-shrink)*100%))] data-[swipe-direction=right]:right-0 data-[swipe-direction=right]:origin-right data-[swipe-direction=right]:[--closed-transform:translate3d(calc(100%+var(--drawer-inset,0px)+2px),0,0)] data-[swipe-direction=right]:[--translate-x:calc(var(--drawer-swipe-movement-x)-var(--stack-peek-offset)-(var(--stack-shrink)*100%))]";
 
 const DrawerOpenContext = React.createContext(false);
 const DrawerCloseDisabledContext = React.createContext(false);
@@ -49,11 +47,9 @@ function useIsPhone() {
   return phone;
 }
 
-// Phone open and close are both 500ms. A fast swipe shortens the close
-// (strength × 500ms). Stay mounted a little past that. A wide screen panel
-// jumps off, then stays mounted 100ms so the frost can fade.
-const DRAWER_CLOSE_ANIMATION_MS = 600;
-const DRAWER_DESKTOP_CLOSE_MS = 100;
+// Open is 450ms. Close is 400ms, shorter on a fast swipe. Stay mounted
+// a little past the close so it is not cut off.
+const DRAWER_CLOSE_ANIMATION_MS = 500;
 
 function toSwipeDirection(direction: "top" | "right" | "bottom" | "left" | undefined) {
   if (direction === "left") return "left" as const;
@@ -161,7 +157,7 @@ function Drawer({
                     } else {
                       closeCleanupTimerRef.current = window.setTimeout(() => {
                         unlockIdleDocument();
-                      }, phone ? DRAWER_CLOSE_ANIMATION_MS : DRAWER_DESKTOP_CLOSE_MS);
+                      }, DRAWER_CLOSE_ANIMATION_MS);
                     }
                     onOpenChange?.(next);
                   }}
@@ -231,23 +227,15 @@ function DrawerOverlay({ className, ...props }: React.ComponentProps<typeof Draw
       data-slot="drawer-overlay"
       data-state={open ? "open" : "closed"}
       className={cn(
-        // Stay position:fixed, with no opacity and no transform on this
-        // element. Either one drops backdrop-filter in Safari. The frost is
-        // a child: a light tint plus a small fixed blur, faded by opacity
-        // only, over 100ms.
-        "fixed inset-0 z-[60] min-h-dvh select-none data-[state=closed]:pointer-events-none",
+        // Fixed everywhere except iOS, where the backdrop must be absolute
+        // to cover the screen under the browser chrome. A transform on this
+        // layer drops the blur. Opacity fades the dim and the blur together:
+        // 450ms in, 400ms out. The blur radius does not change.
+        "fixed inset-0 z-[60] min-h-dvh bg-black/30 opacity-[max(var(--drawer-overlay-min-opacity,0),calc(1-var(--drawer-swipe-progress)))] backdrop-blur-sm transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] select-none supports-[-webkit-touch-callout:none]:absolute data-starting-style:opacity-0 data-ending-style:pointer-events-none data-ending-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-swiping:duration-0",
         className,
       )}
       {...props}
-    >
-      <div
-        aria-hidden
-        data-drawer-frost
-        data-open={open ? "" : undefined}
-        data-closed={open ? undefined : ""}
-        className="pointer-events-none fixed inset-0 bg-black/10 backdrop-blur-xs"
-      />
-    </DrawerPrimitive.Backdrop>
+    />
   );
 }
 

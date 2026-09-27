@@ -20,11 +20,9 @@ export function HomepageNoticesSection() {
               testimonials, FAQs, and notices use a list: tap a row to edit. Remove is the small
               button on the row, not in the drawer. Drawers are for adding and editing.
               On a phone every drawer, including a message, slides up from the bottom,
-              full width, goes a little past where it rests, then settles. It closes
-              downward the same way. It does not swipe away — close it with the
-              button. On a wider screen the same drawer slides a short way in from the
-              right, goes a little past its resting place, then settles. It closes
-              straight away, with no animation. On a phone, an edit form fills the screen, with
+              full width, and slides back down the same way. It does not swipe away —
+              close it with the button. On a wider screen the same drawer slides in
+              from the right and slides back out the same way. On a phone, an edit form fills the screen, with
               rounded corners only at the top. While you type, that sheet shortens to
               the space above the keyboard: the title stays put, the fields scroll, and
               Cancel and Save sit just above the keys.
@@ -32,7 +30,7 @@ export function HomepageNoticesSection() {
               and a shadow, with a gap around them.
               Add buttons stretch full width.
               While a drawer is open the page behind — including the site header — stays where it
-              is, under a light blur. That layer fades away when the drawer closes. A breadcrumb at the top of each settings page
+              is, dimmed under a blur. That dim fades away as the drawer leaves. A breadcrumb at the top of each settings page
               goes back to Settings — it greys when you hover it.
             </p>
             <p>

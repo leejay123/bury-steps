@@ -80,7 +80,7 @@ function DialogOverlay({
       className={cn(
         // Full-viewport blur over the frozen page (including the sticky header).
         // No opacity fade on backdrop-blur — that lag showed up on every browser.
-        "fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm data-[state=closed]:invisible data-[state=closed]:!pointer-events-none",
+        "fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm supports-[-webkit-touch-callout:none]:absolute data-[state=closed]:invisible data-[state=closed]:!pointer-events-none",
         className,
       )}
       {...props}

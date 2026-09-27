@@ -88,7 +88,7 @@ function AlertDialogOverlay({
     <AlertDialogPrimitive.Overlay
       data-slot="alert-dialog-overlay"
       className={cn(
-        "fixed inset-0 z-[70] bg-black/30 backdrop-blur-sm data-[state=closed]:invisible data-[state=closed]:!pointer-events-none",
+        "fixed inset-0 z-[70] bg-black/30 backdrop-blur-sm supports-[-webkit-touch-callout:none]:absolute data-[state=closed]:invisible data-[state=closed]:!pointer-events-none",
         className,
       )}
       {...props}
