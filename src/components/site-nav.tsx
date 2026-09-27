@@ -2,7 +2,8 @@ import { Show } from "@clerk/nextjs";
 import { getOptionalUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
-import { SiteNavLinks, SiteMobileMenu } from "@/components/site-nav-menu";
+import { SiteNavLinks, SiteMobileMenu, type MobileMenuGroup } from "@/components/site-nav-menu";
+import { getSiteTheme } from "@/lib/site-theme";
 import { SiteUserButton } from "@/components/site-user-button";
 import { navItems } from "@/components/site-nav-items";
 import { NotificationBell } from "@/components/notification-bell";
@@ -68,16 +69,32 @@ export async function SiteNav() {
 }
 
 export async function SiteMobileNav() {
-  const user = await getOptionalUser();
+  const [user, theme] = await Promise.all([getOptionalUser(), getSiteTheme()]);
+  const facebookUrl = theme.facebookGroupUrl.trim();
+  const more: MobileMenuGroup = {
+    label: "More",
+    items: [
+      { href: "/contact", label: "Contact Us" },
+      ...(facebookUrl ? [{ href: facebookUrl, label: "Facebook group", newTab: true }] : []),
+      { href: "/privacy-policy", label: "Privacy Policy" },
+      { href: "/terms-of-service", label: "Terms of Service" },
+    ],
+  };
+
   if (!user) {
     const afterAuth = `${appUrl()}${AFTER_AUTH_PATH}`;
     return (
       <SiteMobileMenu
-        items={[
-          { href: "/", label: "Home" },
-          { href: "/contact", label: "Contact" },
-          { href: accountPortalHref("sign-in", afterAuth), label: "Sign in" },
-          { href: accountPortalHref("sign-up", afterAuth), label: "Join the group" },
+        groups={[
+          { label: "Menu", items: [{ href: "/", label: "Home" }] },
+          {
+            label: "Account",
+            items: [
+              { href: accountPortalHref("sign-in", afterAuth), label: "Sign in" },
+              { href: accountPortalHref("sign-up", afterAuth), label: "Join the group" },
+            ],
+          },
+          more,
         ]}
       />
     );
@@ -90,10 +107,23 @@ export async function SiteMobileNav() {
       ? isOwner(user.id).then((owner) => (owner ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS))
       : Promise.resolve(undefined),
   ]);
+  const items = navItems(isAdmin, isAdmin ? "/admin" : "/walks", permissions, progressEnabled);
+  const organiserItems = items.filter((item) => item.href.startsWith("/admin/"));
 
   return (
     <SiteMobileMenu
-      items={navItems(isAdmin, isAdmin ? "/admin" : "/walks", permissions, progressEnabled)}
+      groups={[
+        { label: "Menu", items: items.filter((item) => !item.href.startsWith("/admin/")) },
+        ...(organiserItems.length ? [{ label: "Organisers", items: organiserItems }] : []),
+        {
+          label: "Account",
+          items: [
+            ...(isAdmin ? [{ href: "/history", label: "History" }] : []),
+            { href: "/email-preferences", label: "Email preferences" },
+          ],
+        },
+        more,
+      ]}
     />
   );
 }

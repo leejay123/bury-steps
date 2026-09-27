@@ -265,7 +265,12 @@ export function SiteNavLinks({
 }
 
 // Mirrors shadcn-ui/ui apps/v4/components/mobile-nav.tsx.
-export function SiteMobileMenu({ items }: { items: { href: string; label: string }[] }) {
+export type MobileMenuGroup = {
+  label: string;
+  items: { href: string; label: string; newTab?: boolean }[];
+};
+
+export function SiteMobileMenu({ groups }: { groups: MobileMenuGroup[] }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
@@ -313,34 +318,39 @@ export function SiteMobileMenu({ items }: { items: { href: string; label: string
         sideOffset={14}
       >
         <div className="flex flex-col gap-12 overflow-auto px-6 py-6">
-          <div className="flex flex-col gap-4">
-            <div className="text-sm font-medium text-[oklch(0.556_0_0)] dark:text-[oklch(0.708_0_0)]">Menu</div>
-            <div className="flex flex-col gap-3">
-              {items.map((item) =>
-                item.href.startsWith("/") ? (
-                  <Link
-                    className="flex items-center gap-2 text-2xl font-medium text-black dark:text-white"
-                    href={item.href}
-                    key={item.href}
-                    onClick={() => {
-                      router.push(item.href);
-                      setOpen(false);
-                    }}
-                  >
-                    {item.label}
-                  </Link>
-                ) : (
-                  <a
-                    className="flex items-center gap-2 text-2xl font-medium text-black dark:text-white"
-                    href={item.href}
-                    key={item.href}
-                  >
-                    {item.label}
-                  </a>
-                ),
-              )}
+          {groups.map((group) => (
+            <div className="flex flex-col gap-4" key={group.label}>
+              <div className="text-sm font-medium text-[oklch(0.556_0_0)] dark:text-[oklch(0.708_0_0)]">
+                {group.label}
+              </div>
+              <div className="flex flex-col gap-3">
+                {group.items.map((item) =>
+                  item.href.startsWith("/") ? (
+                    <Link
+                      className="flex items-center gap-2 text-2xl font-medium text-black dark:text-white"
+                      href={item.href}
+                      key={item.href}
+                      onClick={() => {
+                        router.push(item.href);
+                        setOpen(false);
+                      }}
+                    >
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <a
+                      className="flex items-center gap-2 text-2xl font-medium text-black dark:text-white"
+                      href={item.href}
+                      key={item.href}
+                      {...(item.newTab ? { rel: "noopener noreferrer", target: "_blank" } : {})}
+                    >
+                      {item.label}
+                    </a>
+                  ),
+                )}
+              </div>
             </div>
-          </div>
+          ))}
         </div>
       </PopoverContent>
     </Popover>
