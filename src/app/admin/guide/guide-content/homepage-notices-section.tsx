@@ -61,7 +61,9 @@ export function HomepageNoticesSection() {
               cross on it to take the photo off before you save. The section{" "}
               <strong>heading</strong> and <strong>intro</strong> are edited under Site wording →{" "}
               <Link href="/admin/settings/site-wording/testimonials">Testimonials heading</Link>.
-              Hidden on the homepage if you have none.
+              Hidden on the homepage if you have none. The homepage shows the first three; with
+              more than three, the rest fade out under a <strong>See more</strong> button that
+              opens the full list.
             </p>
             <p className="font-medium text-foreground">FAQs</p>
             <p>
