@@ -289,7 +289,7 @@ export function SiteMobileMenu({ groups, showSearch = false }: { groups: MobileM
           data-mobile-nav=""
           data-ripple="off"
           variant="ghost"
-          className="relative h-8 touch-manipulation items-center justify-start gap-2.5 p-0! hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 active:bg-transparent pointer-coarse:after:absolute pointer-coarse:after:-inset-2 md:hidden dark:hover:bg-transparent"
+          className="relative size-8 touch-manipulation items-center justify-center gap-2.5 p-0! hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 active:bg-transparent pointer-coarse:after:absolute pointer-coarse:after:-inset-2 md:hidden dark:hover:bg-transparent"
         >
           <div className="relative flex h-8 w-4 items-center justify-center">
             <div className="relative size-4">
@@ -308,9 +308,6 @@ export function SiteMobileMenu({ groups, showSearch = false }: { groups: MobileM
             </div>
             <span className="sr-only">Toggle Menu</span>
           </div>
-          <span className={cn(menuFont.className, "flex h-8 items-center text-lg leading-none font-medium text-black dark:text-white")}>
-            Menu
-          </span>
         </Button>
       </PopoverTrigger>
       <PopoverContent

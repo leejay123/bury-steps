@@ -71,12 +71,12 @@ export function HeroCinematic({
         </FadeIn>
         <FadeIn className="flex flex-row flex-wrap items-center justify-center gap-3" delay={0.3}>
           <Show when="signed-in">
-            <Button asChild className={heroWhiteButtonClassName} size="sm">
+            <Button asChild className={heroWhiteButtonClassName} data-ripple="off" size="sm">
               <Link href="/walks">Your walks</Link>
             </Button>
           </Show>
           <Show when="signed-out">
-            <Button asChild className={heroWhiteButtonClassName} size="sm">
+            <Button asChild className={heroWhiteButtonClassName} data-ripple="off" size="sm">
               <a href={signUpHref}>
                 Join the group
                 <ArrowRightIcon data-icon="inline-end" />

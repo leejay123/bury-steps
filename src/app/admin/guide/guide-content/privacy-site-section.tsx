@@ -76,7 +76,7 @@ export function PrivacySiteSection() {
             <p>
               Walk lists keep the title, date, and meeting point on one card so they fit a phone.
               Date and time sit on the same line. FAQ category chips on a phone scroll themselves
-              so the one you tap stays in view. On a phone, Menu at the top left opens every page
+              so the one you tap stays in view. On a phone, the menu icon (two lines) at the top left opens every page
               in a large list over a frosted screen, and the page behind stays still until you
               close it or pick a page. Signed-in people also get a <strong>search bar</strong> in the
               header, next to the bell (or press ⌘K / Ctrl+K on a computer), that finds

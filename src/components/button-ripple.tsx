@@ -2,10 +2,10 @@
 
 import { useEffect } from "react";
 
-// Site-wide version of shadcn studio's RippleButton (Button 39): a circle of
-// the button's text colour grows from the tap point and fades over 600ms.
-// Done with one delegated listener so every button on the site — including
-// asChild links and server-rendered ones — gets it without changing call sites.
+// Site-wide version of shadcn studio's RippleButton (Button 39) for the black
+// and red Buttons: a circle of the text colour grows from the tap point and
+// fades over 600ms. One delegated listener, so asChild links and
+// server-rendered Buttons get it without changing call sites.
 export function ButtonRipple() {
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -13,11 +13,10 @@ export function ButtonRipple() {
     function onPointerDown(event: PointerEvent) {
       if (event.button !== 0) return;
       const target = event.target instanceof Element ? event.target : null;
-      // Any real button (Radix triggers replace a Button's data-slot, so
-      // match the element), plus Button-styled links (they carry
-      // data-variant). Toggle-like controls and opt-outs are skipped.
-      const button = target?.closest<HTMLElement>('button, a[data-variant], [role="button"]');
-      if (!button || button.dataset.variant === "link") return;
+      // Only the solid black (default) and red (destructive) Buttons ripple.
+      // data-variant survives Radix triggers replacing the Button's data-slot.
+      const button = target?.closest<HTMLElement>('[data-variant="default"], [data-variant="destructive"]');
+      if (!button) return;
       // Not on tabs, or choices inside dropdowns, menus or search results.
       if (button.closest("[data-ripple='off'], [role='tablist'], [role='tab'], [role='listbox'], [role='menu'], [role='option'], [cmdk-list]")) return;
       if (button.matches('[role="checkbox"], [role="switch"], [role="radio"], [role="slider"], [role="menuitemcheckbox"], [role="menuitemradio"]')) return;
