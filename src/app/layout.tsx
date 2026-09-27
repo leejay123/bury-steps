@@ -22,7 +22,7 @@ import { StaleDeployReload } from "@/components/stale-deploy-reload";
 import { ImpersonationBannerSlot } from "@/components/impersonation-banner-slot";
 import { getSiteTheme } from "@/lib/site-theme";
 import { siteFontById } from "@/lib/site-font";
-import { siteFontFace, siteFontVariableClassName } from "@/app/fonts";
+import { siteFontFace, siteFontVariableClassName, typesetFontVariables } from "@/app/fonts";
 import { DEFAULT_SITE_NAME, siteMetaDescription } from "@/lib/site-branding";
 import "./globals.css";
 
@@ -78,7 +78,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html
-      className={siteFontVariableClassName}
+      className={`${siteFontVariableClassName} ${typesetFontVariables}`}
       lang="en-GB"
       style={{ "--font-site": `var(${font.cssVariable})` } as CSSProperties}
       suppressHydrationWarning

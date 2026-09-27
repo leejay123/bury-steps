@@ -1,4 +1,4 @@
-import { Figtree, Fraunces, Geist, Inter, Manrope, Outfit, Source_Serif_4 } from "next/font/google";
+import { Figtree, Fraunces, Geist, Geist_Mono, Inter, Manrope, Outfit, Source_Serif_4 } from "next/font/google";
 import { SITE_FONTS, type SiteFontId } from "@/lib/site-font";
 
 /**
@@ -44,12 +44,22 @@ const fraunces = Fraunces({
   variable: "--font-fraunces",
 });
 
-// shadcn's docs site font, used only by the mobile menu.
+// shadcn's docs site font: the mobile menu, and shadcn/typeset's .typeset-docs.
 export const menuFont = Geist({
   subsets: ["latin"],
   display: "swap",
   preload: false,
+  variable: "--font-geist",
 });
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  display: "swap",
+  preload: false,
+  variable: "--font-geist-mono",
+});
+
+/** --font-geist and --font-geist-mono for shadcn/typeset. */
+export const typesetFontVariables = `${menuFont.variable} ${geistMono.variable}`;
 
 export const siteFontFaces = {
   inter,
