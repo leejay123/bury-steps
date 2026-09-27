@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { motion } from "motion/react";
+import { LayoutGroup, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { unlockIdleDocument } from "@/components/overlay-root";
 import { findSettingsPage } from "@/lib/settings-pages";
@@ -96,6 +96,9 @@ export function SettingsSubPageTabs() {
     >
       {/* Styled after shadcn studio's Tabs 27: a spring-animated pill slides
           to the tapped tab (these are page links, so no sliding content). */}
+      {/* Scoped per page: the pill slides on tap, and the next page's strip
+          starts with it already in place instead of replaying the slide. */}
+      <LayoutGroup id={`settings-subpage-tabs:${pathname}`}>
       <ul className="inline-flex h-10 min-w-max items-center rounded-lg bg-muted p-1">
         {siblings.map((child) => {
           const active = child.href === currentHref;
@@ -128,6 +131,7 @@ export function SettingsSubPageTabs() {
           );
         })}
       </ul>
+      </LayoutGroup>
     </nav>
   );
 }
