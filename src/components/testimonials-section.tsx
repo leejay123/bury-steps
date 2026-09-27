@@ -31,7 +31,7 @@ export function TestimonialsSection({
   const gridRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
   const [expanded, setExpanded] = useState(false);
-  const [heights, setHeights] = useState<{ collapsed: number; full: number } | null>(null);
+  const [collapsedHeight, setCollapsedHeight] = useState<number | null>(null);
   const collapsible = testimonials.length > INITIALLY_SHOWN;
 
   useEffect(() => {
@@ -40,9 +40,8 @@ export function TestimonialsSection({
     const measure = () => {
       const last = grid.children[INITIALLY_SHOWN - 1] as HTMLElement | undefined;
       if (!last) return;
-      const full = grid.scrollHeight;
       const lastBottom = last.getBoundingClientRect().bottom - grid.getBoundingClientRect().top;
-      setHeights({ collapsed: Math.min(full, Math.round(lastBottom + PEEK_PX)), full });
+      setCollapsedHeight(Math.min(grid.scrollHeight, Math.round(lastBottom + PEEK_PX)));
     };
     measure();
     const observer = new ResizeObserver(measure);
@@ -52,13 +51,8 @@ export function TestimonialsSection({
 
   if (testimonials.length === 0) return null;
   const clipped = collapsible && !expanded;
-  const height = !collapsible
-    ? "auto"
-    : heights
-      ? expanded
-        ? heights.full
-        : heights.collapsed
-      : "28rem";
+  // Open to "auto" so the height is always the grid's real size.
+  const height = !collapsible || expanded ? "auto" : (collapsedHeight ?? "28rem");
 
   return (
     <section>
