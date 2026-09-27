@@ -17,6 +17,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { menuFont } from "@/app/fonts";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { unlockIdleDocument } from "@/components/overlay-root";
@@ -279,24 +280,26 @@ export function SiteMobileMenu({ items }: { items: { href: string; label: string
             <div className="relative size-4">
               <span
                 className={cn(
-                  "absolute left-0 block h-0.5 w-4 bg-foreground transition-all duration-100",
+                  "absolute left-0 block h-0.5 w-4 bg-black transition-all duration-100 dark:bg-white",
                   open ? "top-[0.4rem] -rotate-45" : "top-1",
                 )}
               />
               <span
                 className={cn(
-                  "absolute left-0 block h-0.5 w-4 bg-foreground transition-all duration-100",
+                  "absolute left-0 block h-0.5 w-4 bg-black transition-all duration-100 dark:bg-white",
                   open ? "top-[0.4rem] rotate-45" : "top-2.5",
                 )}
               />
             </div>
             <span className="sr-only">Toggle Menu</span>
           </div>
-          <span className="flex h-8 items-center text-lg leading-none font-medium">Menu</span>
+          <span className={cn(menuFont.className, "flex h-8 items-center text-lg leading-none font-medium text-black dark:text-white")}>
+            Menu
+          </span>
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="h-(--radix-popper-available-height) w-(--radix-popper-available-width) overflow-y-auto rounded-none border-none bg-background/90 p-0 shadow-none backdrop-blur duration-100 [scrollbar-width:none] data-[state=open]:animate-none! [&::-webkit-scrollbar]:hidden"
+        className={cn(menuFont.className, "h-(--radix-popper-available-height) w-(--radix-popper-available-width) overflow-y-auto rounded-none border-none bg-background/90 p-0 shadow-none backdrop-blur duration-100 [scrollbar-width:none] data-[state=open]:animate-none! [&::-webkit-scrollbar]:hidden")}
         align="start"
         side="bottom"
         alignOffset={-16}
@@ -304,12 +307,12 @@ export function SiteMobileMenu({ items }: { items: { href: string; label: string
       >
         <div className="flex flex-col gap-12 overflow-auto px-6 py-6">
           <div className="flex flex-col gap-4">
-            <div className="text-sm font-medium text-muted-foreground">Menu</div>
+            <div className="text-sm font-medium text-[oklch(0.556_0_0)] dark:text-[oklch(0.708_0_0)]">Menu</div>
             <div className="flex flex-col gap-3">
               {items.map((item) =>
                 item.href.startsWith("/") ? (
                   <Link
-                    className="flex items-center gap-2 text-2xl font-medium"
+                    className="flex items-center gap-2 text-2xl font-medium text-black dark:text-white"
                     href={item.href}
                     key={item.href}
                     onClick={() => {
@@ -321,7 +324,7 @@ export function SiteMobileMenu({ items }: { items: { href: string; label: string
                   </Link>
                 ) : (
                   <a
-                    className="flex items-center gap-2 text-2xl font-medium"
+                    className="flex items-center gap-2 text-2xl font-medium text-black dark:text-white"
                     href={item.href}
                     key={item.href}
                   >
