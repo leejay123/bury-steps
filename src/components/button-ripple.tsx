@@ -22,6 +22,8 @@ export function ButtonRipple() {
       if (button.closest("[data-ripple='off'], [role='tablist'], [role='tab'], [role='listbox'], [role='menu'], [role='option'], [cmdk-list]")) return;
       if (button.matches('[role="checkbox"], [role="switch"], [role="radio"], [role="slider"], [role="menuitemcheckbox"], [role="menuitemradio"]')) return;
       if (button.matches(":disabled, [aria-disabled='true']")) return;
+      // Not on the X close buttons in drawers and dialogs.
+      if (button.matches("[aria-label='Close']")) return;
 
       const rect = button.getBoundingClientRect();
       // Its own clipped layer, so the button itself never needs overflow:hidden
