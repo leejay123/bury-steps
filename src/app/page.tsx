@@ -7,6 +7,7 @@ import { getHomepageTestimonials } from "@/lib/homepage-testimonials";
 import { getHomepageFaqData } from "@/lib/homepage-faqs";
 import { getHomepageMemberNotices } from "@/lib/site-notices";
 import { getProgressEnabled } from "@/lib/progress-settings";
+import { getNextWalk } from "@/lib/next-walk";
 import { heroVideoPoster, heroVideoSrc } from "@/lib/hero-style";
 import { PAGE_X_BLEED } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
@@ -26,14 +27,16 @@ export default async function Home() {
   const faqPromise = getHomepageFaqData();
   const themePromise = getSiteTheme();
   const progressPromise = getProgressEnabled();
+  const nextWalkPromise = getNextWalk();
   const user = await userPromise;
-  const [slides, testimonials, faqData, theme, memberNotices, progressEnabled] = await Promise.all([
+  const [slides, testimonials, faqData, theme, memberNotices, progressEnabled, nextWalk] = await Promise.all([
     slidesPromise,
     testimonialsPromise,
     faqPromise,
     themePromise,
     user ? getHomepageMemberNotices(user.id, user.firstName) : Promise.resolve([]),
     progressPromise,
+    nextWalkPromise,
   ]);
   const signInHref = accountPortalHref("sign-in", `${origin}${AFTER_AUTH_PATH}`);
   const signUpHref = accountPortalHref("sign-up", `${origin}${AFTER_AUTH_PATH}`);
@@ -55,6 +58,8 @@ export default async function Home() {
         <HeroSection
           bgPattern={theme.heroBgPattern}
           carouselEnabled={theme.carouselEnabled}
+          logoSrc={theme.logoSrc}
+          nextWalk={nextWalk}
           signInHref={signInHref}
           signUpHref={signUpHref}
           siteName={theme.siteName}
@@ -85,6 +90,8 @@ export default async function Home() {
         memberNotices={memberNotices}
         memberNoticesEnabled={theme.memberNoticesEnabled}
         progressEnabled={progressEnabled}
+        signInHref={signInHref}
+        signUpHref={signUpHref}
         sectionBgPatterns={{
           howThisStarted: theme.howThisStartedBgPattern,
           testimonials: theme.testimonialsBgPattern,
