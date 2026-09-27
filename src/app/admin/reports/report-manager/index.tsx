@@ -132,7 +132,7 @@ export function AccidentReportManager({
           </div>
         ) : null}
         {canCreate ? (
-          <Button className="w-full shrink-0 sm:w-auto" onClick={() => setMode({ type: "add" })} size="sm">
+          <Button className="w-full shrink-0 sm:w-auto" onClick={() => setMode({ type: "add" })}>
             Add report
           </Button>
         ) : null}
