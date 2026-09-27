@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 
 export function JoinGroupButton({ href }: { href: string }) {
   return (
-    <MetalFx preset="chromatic" strength={0.9}>
-      <Button asChild className="hover:bg-primary" size="sm">
+    <MetalFx preset="silver" strength={0.9} theme="dark">
+      <Button asChild className="bg-black text-white hover:bg-black" size="sm">
         <a href={href}>Join the group</a>
       </Button>
     </MetalFx>
