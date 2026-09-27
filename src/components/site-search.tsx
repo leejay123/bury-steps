@@ -60,7 +60,10 @@ export function SiteSearchBar({ className, onOpen }: { className?: string; onOpe
       type="button"
     >
       <SearchIcon aria-hidden className="size-4 shrink-0" />
-      <span className="truncate">Search the site…</span>
+      <span className="truncate">
+        <span className="sm:hidden">Search</span>
+        <span className="max-sm:hidden">Search the site…</span>
+      </span>
       <Kbd className="ml-auto hidden lg:inline-flex">⌘K</Kbd>
     </button>
   );

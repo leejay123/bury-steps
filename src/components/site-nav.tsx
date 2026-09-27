@@ -52,7 +52,7 @@ export async function SiteNav() {
           />
         </Show>
       </div>
-      <div className="flex min-w-0 items-center justify-end gap-2 justify-self-end sm:gap-3">
+      <div className="flex min-w-0 items-center justify-end gap-2 justify-self-end max-md:flex-1 sm:gap-3">
         <Show when="signed-out">
           <Button variant="outline" size="sm" asChild>
             <a href={accountPortalHref("sign-in", afterAuth)}>Sign in</a>
@@ -60,7 +60,7 @@ export async function SiteNav() {
           <JoinGroupButton href={accountPortalHref("sign-up", afterAuth)} />
         </Show>
         <Show when="signed-in">
-          <SiteSearchBar className="hidden w-44 md:flex lg:w-60" />
+          <SiteSearchBar className="min-w-0 flex-1 md:w-44 md:flex-none lg:w-60" />
           <SiteSearchDialog />
           <NotificationBell notices={notices} unreadIds={unreadIds} />
           <SiteUserButton progressEnabled={progressEnabled} />
@@ -117,7 +117,6 @@ export async function SiteMobileNav() {
 
   return (
     <SiteMobileMenu
-      showSearch
       groups={[
         { label: "Menu", items: items.filter((item) => !item.href.startsWith("/admin/")) },
         ...(organiserItems.length ? [{ label: "Manage", items: organiserItems }] : []),
