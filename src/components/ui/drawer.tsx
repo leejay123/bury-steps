@@ -62,6 +62,7 @@ function Drawer({
   closeDisabled = false,
   direction,
   onOpenChange,
+  onOpenChangeComplete,
   open,
   variant = "sheet",
   ...props
@@ -88,18 +89,12 @@ function Drawer({
   const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
   const resolvedOpen = open ?? uncontrolledOpen;
 
+  // Unlock in onOpenChangeComplete, not here: releasing overflow mid-close
+  // brings the scrollbar back and reflows the page under the sliding panel.
   React.useLayoutEffect(() => {
-    if (!resolvedOpen) {
-      unlockBackgroundScrollRef.current?.();
-      unlockBackgroundScrollRef.current = null;
-      return;
-    }
+    if (!resolvedOpen) return;
     unlockBackgroundScrollRef.current?.();
     unlockBackgroundScrollRef.current = lockBackgroundScroll();
-    return () => {
-      unlockBackgroundScrollRef.current?.();
-      unlockBackgroundScrollRef.current = null;
-    };
   }, [resolvedOpen]);
 
   React.useEffect(() => {
@@ -154,6 +149,13 @@ function Drawer({
                       }, DRAWER_CLOSE_ANIMATION_MS);
                     }
                     onOpenChange?.(next);
+                  }}
+                  onOpenChangeComplete={(next) => {
+                    if (!next) {
+                      unlockBackgroundScrollRef.current?.();
+                      unlockBackgroundScrollRef.current = null;
+                    }
+                    onOpenChangeComplete?.(next);
                   }}
                   open={resolvedOpen}
                   swipeDirection={swipeDirection}
