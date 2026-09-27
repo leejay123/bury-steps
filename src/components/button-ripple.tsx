@@ -4,8 +4,8 @@ import { useEffect } from "react";
 
 // Site-wide version of shadcn studio's RippleButton (Button 39): a circle of
 // the button's text colour grows from the tap point and fades over 600ms.
-// Done with one delegated listener so every Button — including asChild links
-// and server-rendered ones — gets it without changing each call site.
+// Done with one delegated listener so every button on the site — including
+// asChild links and server-rendered ones — gets it without changing call sites.
 export function ButtonRipple() {
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -13,8 +13,13 @@ export function ButtonRipple() {
     function onPointerDown(event: PointerEvent) {
       if (event.button !== 0) return;
       const target = event.target instanceof Element ? event.target : null;
-      const button = target?.closest<HTMLElement>('[data-slot="button"]');
+      // Any real button (Radix triggers replace a Button's data-slot, so
+      // match the element), plus Button-styled links (they carry
+      // data-variant). Toggle-like controls and opt-outs are skipped.
+      const button = target?.closest<HTMLElement>('button, a[data-variant], [role="button"]');
       if (!button || button.dataset.variant === "link") return;
+      if (button.closest("[data-ripple='off']")) return;
+      if (button.matches('[role="checkbox"], [role="switch"], [role="radio"], [role="slider"], [role="menuitemcheckbox"], [role="menuitemradio"]')) return;
       if (button.matches(":disabled, [aria-disabled='true']")) return;
 
       const rect = button.getBoundingClientRect();
