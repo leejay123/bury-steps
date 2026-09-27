@@ -10,10 +10,13 @@ export function ShareLink({ url }: { url: string }) {
         {url}
       </code>
       <CopyButton
-        className="h-8 w-full gap-1.5 px-3 text-sm font-medium sm:w-auto sm:shrink-0"
+        className="h-8 w-full gap-1.5 px-3 text-sm font-medium sm:w-26 sm:shrink-0"
         content={url}
         copiedLabel="Copied"
         delay={2000}
+        // No grow on hover/tap, and a fixed width, so it never outgrows the link box.
+        hoverScale={1}
+        tapScale={1}
         label="Copy"
         onCopiedChange={(copied) => {
           if (copied) toast.success("Link copied.");
