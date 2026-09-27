@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { FullWidthDivider } from "@/components/full-width-divider";
 import { ButtonRipple } from "@/components/button-ripple";
 import { HeaderScrollShadow } from "@/components/header-scroll-shadow";
 import type { Metadata, Viewport } from "next";
@@ -155,7 +156,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               scrolling underneath it.
             */}
             <header
-              className="sticky top-0 z-[66] touch-manipulation bg-background transition-shadow duration-200 [transform:translateZ(0)] data-scrolled:shadow-[0_4px_12px_-6px_rgb(0_0_0/0.12)]"
+              className="group/site-header sticky top-0 z-[66] touch-manipulation bg-background transition-shadow duration-200 [transform:translateZ(0)] data-scrolled:shadow-[0_4px_12px_-6px_rgb(0_0_0/0.12)]"
               data-site-header=""
             >
               <Suspense fallback={null}>
@@ -199,6 +200,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     <SiteNav />
                   </Suspense>
                 </div>
+                {/* Line at the top of the page; the stuck header's shadow takes over once scrolled. */}
+                <FullWidthDivider
+                  className="transition-opacity duration-200 group-data-scrolled/site-header:opacity-0"
+                  position="bottom"
+                />
               </div>
             </header>
             {/*
