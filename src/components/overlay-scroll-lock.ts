@@ -127,7 +127,31 @@ const SCROLL_KEYS = new Set(["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home
  * scroll keys outside the open panel — the panel itself sets touch-pan-y so
  * it can still scroll/drag.
  */
+// Overlays overlap (a drawer still sliding away while a dialog opens, the
+// phone menu closing as search opens). Each lock used to snapshot the page's
+// styles and restore them on release, so an out-of-order release put back
+// "overflow: hidden" and left the page stuck. Count holders instead: the
+// first lock applies, the last release restores.
+let lockHolders = 0;
+let releaseSharedLock: (() => void) | null = null;
+
 export function lockBackgroundScroll() {
+  lockHolders += 1;
+  if (lockHolders === 1) releaseSharedLock = applyBackgroundScrollLock();
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    lockHolders = Math.max(0, lockHolders - 1);
+    if (lockHolders === 0) {
+      const release = releaseSharedLock;
+      releaseSharedLock = null;
+      release?.();
+    }
+  };
+}
+
+function applyBackgroundScrollLock() {
   const lockedX = window.scrollX;
   const lockedY = window.scrollY;
   // The sticky-header jump this guards against only happens once the page
