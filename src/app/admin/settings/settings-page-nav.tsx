@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { unlockIdleDocument } from "@/components/overlay-root";
 import { findSettingsPage } from "@/lib/settings-pages";
@@ -93,18 +94,26 @@ export function SettingsSubPageTabs() {
       className="-mx-1 overflow-x-auto overscroll-x-contain px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       ref={scrollerRef}
     >
-      <ul className="inline-flex min-w-max items-center gap-1 rounded-lg bg-muted p-1">
+      {/* Styled after shadcn studio's Tabs 27: a spring-animated pill slides
+          to the tapped tab (these are page links, so no sliding content). */}
+      <ul className="inline-flex h-10 min-w-max items-center rounded-lg bg-muted p-1">
         {siblings.map((child) => {
           const active = child.href === currentHref;
           return (
-            <li key={child.href}>
+            <li className="relative h-full" key={child.href}>
+              {active ? (
+                <motion.span
+                  aria-hidden
+                  className="absolute inset-0 rounded-sm bg-background shadow-sm"
+                  layoutId="settings-subpage-tab"
+                  transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                />
+              ) : null}
               <Link
                 aria-current={child.href === pathname ? "page" : undefined}
                 className={cn(
-                  "block touch-manipulation rounded-md px-3 py-1.5 text-sm whitespace-nowrap transition-colors",
-                  active
-                    ? "bg-background font-medium text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
+                  "relative z-1 flex h-full touch-manipulation items-center rounded-sm px-3 text-sm font-medium whitespace-nowrap transition-colors",
+                  active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
                 href={child.href}
                 onClick={() => {
