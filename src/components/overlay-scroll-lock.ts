@@ -128,10 +128,14 @@ const SCROLL_KEYS = new Set(["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home
  * it can still scroll/drag.
  */
 export function lockBackgroundScroll() {
-  // Pin while sticky is still active (before overflow:hidden lands).
-  const headerPin = pinSiteHeaderInPlace();
   const lockedX = window.scrollX;
   const lockedY = window.scrollY;
+  // The sticky-header jump this guards against only happens once the page
+  // has actually scrolled the header out of its in-flow position. At the
+  // top of the page a sticky header already sits where it always sits, so
+  // skip the measure/pin/spacer work (it forces a layout right as the
+  // opening transition starts, which is what made the animation stutter).
+  const headerPin = lockedX || lockedY ? pinSiteHeaderInPlace() : null;
   const html = document.documentElement;
   const { body } = document;
 
