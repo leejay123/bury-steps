@@ -327,7 +327,7 @@ function DrawerContent({
           className={cn(
             "group/drawer-popup",
             POPUP_MOTION,
-            "bg-popover text-popover-foreground rounded-[24px] border border-border text-sm shadow-xl [--drawer-bleed-background:transparent] [--drawer-inset:0.5rem] max-sm:rounded-b-none max-sm:[--drawer-bleed-background:var(--color-popover)] max-sm:[--drawer-inset:0px]",
+            "bg-popover text-popover-foreground rounded-[24px] text-sm shadow-xl [--drawer-bleed-background:transparent] [--drawer-inset:0.5rem] max-sm:rounded-b-none max-sm:[--drawer-bleed-background:var(--color-popover)] max-sm:[--drawer-inset:0px]",
             className,
           )}
           finalFocus={() => triggerRef?.current ?? true}
