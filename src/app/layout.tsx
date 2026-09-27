@@ -176,23 +176,25 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   growing at exactly the links' own content width the way
                   the previous auto-based track did.
                 */}
-                <div className={`flex h-14 items-center justify-between gap-3 ${PAGE_X} md:grid md:grid-cols-[auto_minmax(0,1fr)_auto]`}>
-                  <Suspense
-                    fallback={
-                      <div className="flex h-8 min-w-0 items-center justify-self-start">
-                        <SiteLogo alt={DEFAULT_SITE_NAME} />
-                      </div>
-                    }
-                  >
-                    <SiteBrandLink />
+                <div className={`group/header-row flex h-14 items-center justify-between gap-3 ${PAGE_X} md:grid md:grid-cols-[auto_minmax(0,1fr)_auto]`}>
+                  <Suspense fallback={null}>
+                    <SiteMobileNav />
                   </Suspense>
+                  <div className="contents group-has-[[data-mobile-nav]]/header-row:max-md:hidden">
+                    <Suspense
+                      fallback={
+                        <div className="flex h-8 min-w-0 items-center justify-self-start">
+                          <SiteLogo alt={DEFAULT_SITE_NAME} />
+                        </div>
+                      }
+                    >
+                      <SiteBrandLink />
+                    </Suspense>
+                  </div>
                   <Suspense fallback={<SiteNavFallback />}>
                     <SiteNav />
                   </Suspense>
                 </div>
-                <Suspense fallback={null}>
-                  <SiteMobileNav />
-                </Suspense>
                 <FullWidthDivider position="bottom" />
               </div>
             </header>

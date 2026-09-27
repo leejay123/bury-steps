@@ -76,8 +76,10 @@ export function PrivacySiteSection() {
             <p>
               Walk lists keep the title, date, and meeting point on one card so they fit a phone.
               Date and time sit on the same line. FAQ category chips on a phone scroll themselves
-              so the one you tap stays in view. The menu under the logo does the same: tap a page
-              and it slides into the middle.
+              so the one you tap stays in view. On a phone, Menu at the top left opens every page
+              in a large list over a frosted screen, and the page behind stays still until you
+              close it or pick a page. Visitors who aren’t signed in see Home, Contact, Sign in,
+              and Join the group.
             </p>
             <p>
               Members open Walks from the menu. Progress is next to it: this month’s clock-ins
