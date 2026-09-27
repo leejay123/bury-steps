@@ -127,6 +127,9 @@ export function LiquidMetalButton({
               u_shape: 1,
               u_offsetX: 0.1,
               u_offsetY: -0.1,
+              // In @paper-design/shaders 0.0.81, scale zooms in and the circle shape
+              // stretches across a wide, short button; shape 0 traces the box edges.
+              ...(sm ? { u_scale: 1, u_shape: 0, u_offsetX: 0, u_offsetY: 0 } : {}),
               // Newer @paper-design/shaders adds these; transparent back + zero-alpha tint keeps the original look.
               u_colorBack: [0, 0, 0, 0],
               u_colorTint: [1, 1, 1, 0],
@@ -148,7 +151,7 @@ export function LiquidMetalButton({
         shaderMount.current = null;
       }
     };
-  }, []);
+  }, [sm]);
 
   const handleMouseEnter = () => {
     if (sm) return;
