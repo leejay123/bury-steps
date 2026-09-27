@@ -20,10 +20,11 @@ export function HomepageNoticesSection() {
               testimonials, FAQs, and notices use a list: tap a row to edit. Remove is the small
               button on the row, not in the drawer. Drawers are for adding and editing.
               On a phone every drawer, including a message, slides up from the bottom,
-              full width. It closes downward. It does not swipe away — close it with the
+              full width, goes a little past where it rests, then settles. It closes
+              downward the same way. It does not swipe away — close it with the
               button. On a wider screen the same drawer slides a short way in from the
-              right, and slides back out the same way. A mask on that edge uncovers it
-              as it arrives and covers it as it leaves. On a phone, an edit form fills the screen, with
+              right, goes a little past its resting place, then settles. It leaves by
+              pulling back that same amount, then sliding out. On a phone, an edit form fills the screen, with
               rounded corners only at the top. While you type, that sheet shortens to
               the space above the keyboard: the title stays put, the fields scroll, and
               Cancel and Save sit just above the keys.
