@@ -63,6 +63,7 @@ export const typesetFontVariables = `${menuFont.variable} ${geistMono.variable}`
 
 export const siteFontFaces = {
   inter,
+  geist: menuFont,
   manrope,
   figtree,
   outfit,

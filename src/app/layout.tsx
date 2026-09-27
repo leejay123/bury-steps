@@ -15,7 +15,6 @@ import { SiteMobileNav, SiteNav, SiteNavFallback } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteBrandLink } from "@/components/site-brand-link";
 import { SiteLogo } from "@/components/site-logo";
-import { FullWidthDivider } from "@/components/full-width-divider";
 import { BackToTopGate } from "@/components/back-to-top-gate";
 import { UnlockPageOnNavigate } from "@/components/overlay-root";
 import { SiteCookieConsentGate } from "@/components/site-cookie-consent-gate";
@@ -185,7 +184,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <Suspense fallback={null}>
                     <SiteMobileNav />
                   </Suspense>
-                  <div className="contents max-md:group-has-[[data-site-search]]/header-row:absolute max-md:group-has-[[data-site-search]]/header-row:inset-y-0 max-md:group-has-[[data-site-search]]/header-row:left-1/2 max-md:group-has-[[data-site-search]]/header-row:flex max-md:group-has-[[data-site-search]]/header-row:-translate-x-1/2 max-md:group-has-[[data-site-search]]/header-row:items-center">
+                  <div className="contents max-md:absolute max-md:inset-y-0 max-md:left-1/2 max-md:flex max-md:-translate-x-1/2 max-md:items-center">
                     <Suspense
                       fallback={
                         <div className="flex h-8 min-w-0 items-center justify-self-start">
@@ -200,7 +199,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     <SiteNav />
                   </Suspense>
                 </div>
-                <FullWidthDivider position="bottom" />
               </div>
             </header>
             {/*

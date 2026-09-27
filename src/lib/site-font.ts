@@ -5,6 +5,7 @@
  */
 export const SITE_FONTS = [
   { id: "inter", label: "Inter", note: "Clean sans", cssVariable: "--font-inter" },
+  { id: "geist", label: "Geist", note: "shadcn's sans", cssVariable: "--font-geist" },
   { id: "manrope", label: "Manrope", note: "Geometric sans", cssVariable: "--font-manrope" },
   { id: "figtree", label: "Figtree", note: "Friendly sans", cssVariable: "--font-figtree" },
   { id: "outfit", label: "Outfit", note: "Modern sans", cssVariable: "--font-outfit" },

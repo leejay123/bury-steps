@@ -78,7 +78,8 @@ export async function SiteNav() {
           </>
         ) : (
           <>
-            <Button variant="outline" size="sm" asChild>
+            {/* On phones Sign in lives in the menu, leaving room to centre the logo. */}
+            <Button asChild className="max-md:hidden" size="sm" variant="outline">
               <a href={accountPortalHref("sign-in", afterAuth)}>Sign in</a>
             </Button>
             <JoinGroupButton href={accountPortalHref("sign-up", afterAuth)} />
