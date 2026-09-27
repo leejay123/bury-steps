@@ -2,19 +2,27 @@
 
 import { Sparkles } from "lucide-react";
 import type React from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 interface LiquidMetalButtonProps {
   label?: string;
   onClick?: () => void;
   viewMode?: "text" | "icon";
+  /** `sm` matches the shadcn `sm` Button: 32px tall, --radius-md corners, white text, no hover or shadow. */
+  size?: "default" | "sm";
 }
 
 export function LiquidMetalButton({
   label = "Get Started",
   onClick,
   viewMode = "text",
+  size = "default",
 }: LiquidMetalButtonProps) {
+  const sm = size === "sm";
+  const labelRef = useRef<HTMLSpanElement>(null);
+  const [labelWidth, setLabelWidth] = useState(0);
+  const outerRadius = sm ? "var(--radius-md)" : "100px";
+  const innerRadius = sm ? "calc(var(--radius-md) - 2px)" : "100px";
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   const [ripples, setRipples] = useState<
@@ -26,7 +34,23 @@ export function LiquidMetalButton({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const rippleId = useRef(0);
 
+  useLayoutEffect(() => {
+    if (sm && labelRef.current) setLabelWidth(labelRef.current.offsetWidth);
+  }, [sm, label]);
+
   const dimensions = useMemo(() => {
+    if (sm && viewMode === "text") {
+      // px-3 either side, like the Sign in button.
+      const width = (labelWidth || 100) + 24;
+      return {
+        width,
+        height: 32,
+        innerWidth: width - 4,
+        innerHeight: 28,
+        shaderWidth: width,
+        shaderHeight: 32,
+      };
+    }
     if (viewMode === "icon") {
       return {
         width: 46,
@@ -46,7 +70,7 @@ export function LiquidMetalButton({
         shaderHeight: 46,
       };
     }
-  }, [viewMode]);
+  }, [viewMode, sm, labelWidth]);
 
   useEffect(() => {
     const styleId = "shader-canvas-style-exploded";
@@ -61,7 +85,7 @@ export function LiquidMetalButton({
           position: absolute !important;
           top: 0 !important;
           left: 0 !important;
-          border-radius: 100px !important;
+          border-radius: inherit !important;
         }
         @keyframes ripple-animation {
           0% {
@@ -127,6 +151,7 @@ export function LiquidMetalButton({
   }, []);
 
   const handleMouseEnter = () => {
+    if (sm) return;
     setIsHovered(true);
     shaderMount.current?.setSpeed?.(1);
   };
@@ -134,7 +159,7 @@ export function LiquidMetalButton({
   const handleMouseLeave = () => {
     setIsHovered(false);
     setIsPressed(false);
-    shaderMount.current?.setSpeed?.(0.6);
+    if (!sm) shaderMount.current?.setSpeed?.(0.6);
   };
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -215,11 +240,12 @@ export function LiquidMetalButton({
             )}
             {viewMode === "text" && (
               <span
+                ref={labelRef}
                 style={{
                   fontSize: "14px",
-                  color: "#666666",
-                  fontWeight: 400,
-                  textShadow: "0px 1px 2px rgba(0, 0, 0, 0.5)",
+                  color: sm ? "#ffffff" : "#666666",
+                  fontWeight: sm ? 500 : 400,
+                  textShadow: sm ? "none" : "0px 1px 2px rgba(0, 0, 0, 0.5)",
                   transition: "all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
                   transform: "scale(1)",
                   whiteSpace: "nowrap",
@@ -249,11 +275,12 @@ export function LiquidMetalButton({
                 width: `${dimensions.innerWidth}px`,
                 height: `${dimensions.innerHeight}px`,
                 margin: "2px",
-                borderRadius: "100px",
+                borderRadius: innerRadius,
                 background: "linear-gradient(180deg, #202020 0%, #000000 100%)",
-                boxShadow: isPressed
-                  ? "inset 0px 2px 4px rgba(0, 0, 0, 0.4), inset 0px 1px 2px rgba(0, 0, 0, 0.3)"
-                  : "none",
+                boxShadow:
+                  isPressed && !sm
+                    ? "inset 0px 2px 4px rgba(0, 0, 0, 0.4), inset 0px 1px 2px rgba(0, 0, 0, 0.3)"
+                    : "none",
                 transition:
                   "all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.4s ease, height 0.4s ease, box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
               }}
@@ -278,8 +305,10 @@ export function LiquidMetalButton({
               style={{
                 height: `${dimensions.height}px`,
                 width: `${dimensions.width}px`,
-                borderRadius: "100px",
-                boxShadow: isPressed
+                borderRadius: outerRadius,
+                boxShadow: sm
+                  ? "none"
+                  : isPressed
                   ? "0px 0px 0px 1px rgba(0, 0, 0, 0.5), 0px 1px 2px 0px rgba(0, 0, 0, 0.3)"
                   : isHovered
                     ? "0px 0px 0px 1px rgba(0, 0, 0, 0.4), 0px 12px 6px 0px rgba(0, 0, 0, 0.05), 0px 8px 5px 0px rgba(0, 0, 0, 0.1), 0px 4px 4px 0px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.2)"
@@ -293,7 +322,7 @@ export function LiquidMetalButton({
                 ref={shaderRef}
                 className="shader-container-exploded"
                 style={{
-                  borderRadius: "100px",
+                  borderRadius: outerRadius,
                   overflow: "hidden",
                   position: "relative",
                   width: `${dimensions.shaderWidth}px`,
@@ -328,7 +357,7 @@ export function LiquidMetalButton({
               transition:
                 "all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.4s ease, height 0.4s ease",
               overflow: "hidden",
-              borderRadius: "100px",
+              borderRadius: outerRadius,
             }}
             aria-label={label}
           >
