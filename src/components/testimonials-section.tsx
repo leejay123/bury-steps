@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { ChevronDownIcon } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { GridPattern } from "@/components/ui/grid-pattern";
@@ -11,8 +12,10 @@ import { GridFiller } from "@/components/grid-filler";
 import { HeroCopy } from "@/components/hero-copy";
 import type { TestimonialView } from "@/lib/testimonials";
 
-// Roughly two rows of cards on desktop before the fade kicks in.
-const COLLAPSED_HEIGHT_PX = 420;
+// Efferd's wall of love: the first few cards plus a faded peek of the next.
+const INITIALLY_SHOWN = 3;
+const PEEK_PX = 72;
+const FADE_MASK = "linear-gradient(to bottom, black 70%, transparent)";
 
 export function TestimonialsSection({
   eyebrow,
@@ -26,23 +29,36 @@ export function TestimonialsSection({
   title: string;
 }) {
   const gridRef = useRef<HTMLDivElement>(null);
+  const reduceMotion = useReducedMotion();
   const [expanded, setExpanded] = useState(false);
-  const [overflows, setOverflows] = useState(false);
+  const [heights, setHeights] = useState<{ collapsed: number; full: number } | null>(null);
+  const collapsible = testimonials.length > INITIALLY_SHOWN;
 
-  // Efferd-style "See more": clip by height, and only offer the button when
-  // there's actually something hidden at the current screen width.
   useEffect(() => {
     const grid = gridRef.current;
-    if (!grid) return;
-    const measure = () => setOverflows(grid.scrollHeight > COLLAPSED_HEIGHT_PX + 1);
+    if (!grid || !collapsible) return;
+    const measure = () => {
+      const last = grid.children[INITIALLY_SHOWN - 1] as HTMLElement | undefined;
+      if (!last) return;
+      const full = grid.scrollHeight;
+      const lastBottom = last.getBoundingClientRect().bottom - grid.getBoundingClientRect().top;
+      setHeights({ collapsed: Math.min(full, Math.round(lastBottom + PEEK_PX)), full });
+    };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(grid);
     return () => observer.disconnect();
-  }, []);
+  }, [collapsible]);
 
   if (testimonials.length === 0) return null;
-  const clipped = overflows && !expanded;
+  const clipped = collapsible && !expanded;
+  const height = !collapsible
+    ? "auto"
+    : heights
+      ? expanded
+        ? heights.full
+        : heights.collapsed
+      : "28rem";
 
   return (
     <section>
@@ -51,26 +67,30 @@ export function TestimonialsSection({
       </HeroCopy>
       <div className="relative">
         <FullWidthDivider position="top" />
-        <div
-          className="grid w-full grid-cols-1 gap-px overflow-hidden bg-border sm:grid-cols-2 lg:grid-cols-3"
-          ref={gridRef}
-          style={clipped ? { maxHeight: COLLAPSED_HEIGHT_PX } : undefined}
+        <motion.div
+          animate={{ height }}
+          className="overflow-hidden"
+          initial={false}
+          style={clipped ? { maskImage: FADE_MASK, WebkitMaskImage: FADE_MASK } : undefined}
+          transition={reduceMotion ? { duration: 0 } : { duration: 0.45, ease: [0.32, 0.72, 0, 1] }}
         >
-          {testimonials.map((testimonial) => (
-            <TestimonialsCard className="h-full" key={testimonial.id} testimonial={testimonial} />
-          ))}
-          <GridFiller
-            className="bg-background"
-            lgColumns={3}
-            smColumns={2}
-            totalItems={testimonials.length}
-          />
-        </div>
-        {clipped ? (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
-        ) : null}
+          <div
+            className="grid w-full grid-cols-1 gap-px bg-border sm:grid-cols-2 lg:grid-cols-3"
+            ref={gridRef}
+          >
+            {testimonials.map((testimonial) => (
+              <TestimonialsCard className="h-full" key={testimonial.id} testimonial={testimonial} />
+            ))}
+            <GridFiller
+              className="bg-background"
+              lgColumns={3}
+              smColumns={2}
+              totalItems={testimonials.length}
+            />
+          </div>
+        </motion.div>
       </div>
-      {overflows ? (
+      {collapsible ? (
         <div className="relative flex justify-center py-3">
           <FullWidthDivider position="top" />
           <button
@@ -79,8 +99,11 @@ export function TestimonialsSection({
             onClick={() => setExpanded((open) => !open)}
             type="button"
           >
-            {expanded ? "Show less" : "See more"}
-            <ChevronDownIcon aria-hidden className={cn("size-4 transition-transform", expanded && "rotate-180")} />
+            {expanded ? "See less" : "See more"}
+            <ChevronDownIcon
+              aria-hidden
+              className={cn("size-4 transition-transform duration-300", expanded && "rotate-180")}
+            />
           </button>
         </div>
       ) : null}
