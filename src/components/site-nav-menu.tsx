@@ -239,7 +239,7 @@ export function SiteNavLinks({
     <div className="relative hidden min-w-0 md:block">
       <ScrollEdgeFade side="left" visible={edges.start} />
       <nav
-        className="flex max-w-full items-center justify-center gap-1 overflow-x-auto overscroll-x-contain text-sm [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        className="flex max-w-full items-center justify-center-safe gap-1 overflow-x-auto overscroll-x-contain text-sm [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         ref={scrollerRef}
       >
         {items.map((item) => {
