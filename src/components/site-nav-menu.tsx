@@ -263,22 +263,9 @@ export function SiteNavLinks({
 }
 
 // Mirrors shadcn-ui/ui apps/v4/components/mobile-nav.tsx.
-export function SiteMobileMenu({
-  isAdmin,
-  permissions,
-  progressEnabled,
-  walksHref,
-}: {
-  isAdmin: boolean;
-  /** Omitted defaults to full access — see navItems. */
-  permissions?: OrganiserPermissions;
-  /** Omitted defaults to true — see navItems. */
-  progressEnabled?: boolean;
-  walksHref: string;
-}) {
+export function SiteMobileMenu({ items }: { items: { href: string; label: string }[] }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
-  const items = navItems(isAdmin, walksHref, permissions, progressEnabled);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -319,19 +306,29 @@ export function SiteMobileMenu({
           <div className="flex flex-col gap-4">
             <div className="text-sm font-medium text-muted-foreground">Menu</div>
             <div className="flex flex-col gap-3">
-              {items.map((item) => (
-                <Link
-                  className="flex items-center gap-2 text-2xl font-medium"
-                  href={item.href}
-                  key={item.href}
-                  onClick={() => {
-                    router.push(item.href);
-                    setOpen(false);
-                  }}
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {items.map((item) =>
+                item.href.startsWith("/") ? (
+                  <Link
+                    className="flex items-center gap-2 text-2xl font-medium"
+                    href={item.href}
+                    key={item.href}
+                    onClick={() => {
+                      router.push(item.href);
+                      setOpen(false);
+                    }}
+                  >
+                    {item.label}
+                  </Link>
+                ) : (
+                  <a
+                    className="flex items-center gap-2 text-2xl font-medium"
+                    href={item.href}
+                    key={item.href}
+                  >
+                    {item.label}
+                  </a>
+                ),
+              )}
             </div>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
 import { SiteNavLinks, SiteMobileMenu } from "@/components/site-nav-menu";
 import { SiteUserButton } from "@/components/site-user-button";
+import { navItems } from "@/components/site-nav-items";
 import { NotificationBell } from "@/components/notification-bell";
 import { getSiteNoticeState } from "@/lib/site-notices";
 import { getProgressEnabled } from "@/lib/progress-settings";
@@ -68,7 +69,19 @@ export async function SiteNav() {
 
 export async function SiteMobileNav() {
   const user = await getOptionalUser();
-  if (!user) return null;
+  if (!user) {
+    const afterAuth = `${appUrl()}${AFTER_AUTH_PATH}`;
+    return (
+      <SiteMobileMenu
+        items={[
+          { href: "/", label: "Home" },
+          { href: "/contact", label: "Contact" },
+          { href: accountPortalHref("sign-in", afterAuth), label: "Sign in" },
+          { href: accountPortalHref("sign-up", afterAuth), label: "Join the group" },
+        ]}
+      />
+    );
+  }
 
   const isAdmin = user.role === "ADMIN";
   const [progressEnabled, permissions] = await Promise.all([
@@ -80,10 +93,7 @@ export async function SiteMobileNav() {
 
   return (
     <SiteMobileMenu
-      isAdmin={isAdmin}
-      permissions={permissions}
-      progressEnabled={progressEnabled}
-      walksHref={isAdmin ? "/admin" : "/walks"}
+      items={navItems(isAdmin, isAdmin ? "/admin" : "/walks", permissions, progressEnabled)}
     />
   );
 }
