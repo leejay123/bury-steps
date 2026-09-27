@@ -218,7 +218,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <SiteFooter />
             </Suspense>
           </div>
-          <Toaster duration={2800} position="top-center" />
+          <Toaster duration={2800} position="bottom-left" />
           <Suspense fallback={null}>
             <SiteCookieConsentGate />
           </Suspense>
