@@ -1,6 +1,7 @@
 "use client";
 
-import type { ComponentProps } from "react";
+import { useEffect, useRef, useState, type ComponentProps } from "react";
+import { ChevronDownIcon } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { GridPattern } from "@/components/ui/grid-pattern";
@@ -9,6 +10,9 @@ import { FullWidthDivider } from "@/components/full-width-divider";
 import { GridFiller } from "@/components/grid-filler";
 import { HeroCopy } from "@/components/hero-copy";
 import type { TestimonialView } from "@/lib/testimonials";
+
+// Roughly two rows of cards on desktop before the fade kicks in.
+const COLLAPSED_HEIGHT_PX = 420;
 
 export function TestimonialsSection({
   eyebrow,
@@ -21,7 +25,24 @@ export function TestimonialsSection({
   testimonials: TestimonialView[];
   title: string;
 }) {
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+
+  // Efferd-style "See more": clip by height, and only offer the button when
+  // there's actually something hidden at the current screen width.
+  useEffect(() => {
+    const grid = gridRef.current;
+    if (!grid) return;
+    const measure = () => setOverflows(grid.scrollHeight > COLLAPSED_HEIGHT_PX + 1);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(grid);
+    return () => observer.disconnect();
+  }, []);
+
   if (testimonials.length === 0) return null;
+  const clipped = overflows && !expanded;
 
   return (
     <section>
@@ -30,7 +51,11 @@ export function TestimonialsSection({
       </HeroCopy>
       <div className="relative">
         <FullWidthDivider position="top" />
-        <div className="grid w-full grid-cols-1 gap-px bg-border sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          className="grid w-full grid-cols-1 gap-px overflow-hidden bg-border sm:grid-cols-2 lg:grid-cols-3"
+          ref={gridRef}
+          style={clipped ? { maxHeight: COLLAPSED_HEIGHT_PX } : undefined}
+        >
           {testimonials.map((testimonial) => (
             <TestimonialsCard className="h-full" key={testimonial.id} testimonial={testimonial} />
           ))}
@@ -41,7 +66,24 @@ export function TestimonialsSection({
             totalItems={testimonials.length}
           />
         </div>
+        {clipped ? (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
+        ) : null}
       </div>
+      {overflows ? (
+        <div className="relative flex justify-center py-3">
+          <FullWidthDivider position="top" />
+          <button
+            aria-expanded={expanded}
+            className="inline-flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            onClick={() => setExpanded((open) => !open)}
+            type="button"
+          >
+            {expanded ? "Show less" : "See more"}
+            <ChevronDownIcon aria-hidden className={cn("size-4 transition-transform", expanded && "rotate-180")} />
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }
