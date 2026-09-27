@@ -119,68 +119,6 @@ body {
 }
 
 /*
- * The sliding shell is the cart panel's width, never the full window.
- * A 100% shell made the card fill the screen and left the close button
- * in the corner of the page instead of on the card.
- */
-[data-slot="drawer-popup"] {
-  --drawer-inset: 0px;
-  --drawer-bleed-background: transparent;
-  --drawer-content-width: min(32rem, calc(100vw - 2rem));
-  width: min(32rem, calc(100vw - 2rem));
-  max-width: min(32rem, calc(100vw - 2rem));
-}
-
-/* Phones: a centered card that fills the screen, with the same 1rem gap the
-   inner margin already leaves. The side pin (right: 0) is what shoved it
-   against the right edge. */
-@media (max-width: 639px) {
-  [data-slot="drawer-popup"] {
-    left: 0;
-    right: 0;
-    width: 100%;
-    max-width: 100%;
-    --drawer-content-width: 100%;
-  }
-}
-
-/*
- * On a phone every drawer is this sheet: full width, on the bottom edge,
- * rounded only on the top, so the slide is up and down. The 32rem card is
- * for a wider screen.
- */
-[data-slot="drawer-popup"][data-swipe-direction="down"] {
-  top: auto !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  max-width: none !important;
-  --drawer-content-width: 100%;
-  height: auto;
-  max-height: calc(100dvh - 6rem);
-  margin: 0 !important;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-[data-slot="drawer-popup"][data-swipe-direction="down"] > [data-slot="drawer-content"] {
-  flex: 1 1 auto;
-  width: 100% !important;
-  max-width: none !important;
-  height: auto;
-  min-height: 0;
-  max-height: 100%;
-  margin: 0 !important;
-  border-right-width: 0;
-  border-bottom-width: 0;
-  border-left-width: 0;
-  border-bottom-right-radius: 0;
-  border-bottom-left-radius: 0;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-/*
  * Edit drawers on a phone are a sheet: full width, a small gap and rounded
  * corners only at the top. bottom uses --keyboard-inset, which is the
  * keyboard height on iOS (the page stays full height) and 0 on Android

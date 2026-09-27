@@ -16,12 +16,12 @@ const overlayCloseClassName =
   "absolute top-2 right-2 z-20 flex size-11 cursor-pointer items-center justify-center rounded-md opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
 
 /**
- * The panel slides fully on and fully off. Open is 450ms, close is 400ms,
- * cubic-bezier(0.22, 1, 0.36, 1). The panel stays opaque. The overlay fades.
- * No transition while a finger is down.
+ * Same motion as the Base UI drawer: the panel stays on its own layer, slides
+ * fully on and fully off (450ms open, 400ms close), and the overlay opacity
+ * follows the finger. The panel itself does not fade.
  */
 const POPUP_MOTION =
-  "pointer-events-auto fixed z-[60] m-[var(--drawer-inset,0px)] flex h-[var(--drawer-content-height)] max-h-[var(--drawer-content-max-height,none)] min-h-0 w-[var(--drawer-content-width,auto)] transform-[translate3d(var(--translate-x,0px),var(--translate-y,0px),0)_scale(var(--stack-scale))] flex-col transition-[transform,opacity] duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] data-starting-style:will-change-transform data-ending-style:will-change-transform data-ending-style:opacity-[0.9999] data-swiping:will-change-transform outline-none select-none [interpolate-size:allow-keywords] data-nested-drawer-open:overflow-hidden data-nested-drawer-open:brightness-95 after:pointer-events-none after:absolute after:bg-[var(--drawer-bleed-background,var(--color-popover))] data-[swipe-axis=x]:after:inset-y-0 data-[swipe-axis=x]:after:w-[var(--bleed)] data-[swipe-axis=y]:after:inset-x-0 data-[swipe-axis=y]:after:h-[var(--bleed)] data-[swipe-direction=down]:after:top-full data-[swipe-direction=left]:after:right-full data-[swipe-direction=right]:after:left-full data-[swipe-direction=up]:after:bottom-full [--drawer-content-height:var(--drawer-height,auto)] data-[swipe-axis=y]:[--drawer-content-max-height:calc(100dvh-6rem)] data-[swipe-axis=y]:data-snap-points:[--drawer-content-height:100dvh] [--bleed:3rem] [--peek:1rem] [--stack-height:var(--drawer-frontmost-height,var(--drawer-height,0px))] [--stack-peek-offset:max(0px,calc((var(--nested-drawers)-var(--stack-progress))*var(--peek)))] [--stack-progress:clamp(0,var(--drawer-swipe-progress),1)] [--stack-scale-base:max(0,calc(1-(var(--nested-drawers)*var(--stack-step))))] [--stack-scale:clamp(0,calc(var(--stack-scale-base)+(var(--stack-step)*var(--stack-progress))),1)] [--stack-shrink:calc(1-var(--stack-scale))] [--stack-step:0.05] data-ending-style:transform-[var(--closed-transform)] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-nested-drawer-swiping:duration-0 data-ending-style:data-nested-drawer-swiping:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-starting-style:transform-[var(--closed-transform)] data-swiping:duration-0 data-ending-style:data-swiping:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-[swipe-axis=y]:inset-x-0 data-[swipe-axis=y]:data-nested-drawer-open:h-[var(--stack-height)] data-[swipe-axis=x]:inset-y-0 data-[swipe-axis=x]:flex-row data-[swipe-direction=down]:bottom-0 data-[swipe-direction=down]:origin-bottom data-[swipe-direction=down]:[--closed-transform:translate3d(0,calc(100%+var(--drawer-inset,0px)+2px),0)] data-[swipe-direction=down]:[--translate-y:calc(var(--drawer-snap-point-offset,0px)+var(--drawer-swipe-movement-y)-var(--stack-peek-offset)-(var(--stack-shrink)*var(--stack-height)))] data-[swipe-direction=up]:top-0 data-[swipe-direction=up]:origin-top data-[swipe-direction=up]:[--closed-transform:translate3d(0,calc(-100%-var(--drawer-inset,0px)-2px),0)] data-[swipe-direction=up]:[--translate-y:calc(var(--drawer-snap-point-offset,0px)+var(--drawer-swipe-movement-y)+var(--stack-peek-offset)+(var(--stack-shrink)*var(--stack-height)))] data-[swipe-direction=left]:left-0 data-[swipe-direction=left]:origin-left data-[swipe-direction=left]:[--closed-transform:translate3d(calc(-100%-var(--drawer-inset,0px)-2px),0,0)] data-[swipe-direction=left]:[--translate-x:calc(var(--drawer-swipe-movement-x)+var(--stack-peek-offset)+(var(--stack-shrink)*100%))] data-[swipe-direction=right]:right-0 data-[swipe-direction=right]:origin-right data-[swipe-direction=right]:[--closed-transform:translate3d(calc(100%+var(--drawer-inset,0px)+2px),0,0)] data-[swipe-direction=right]:[--translate-x:calc(var(--drawer-swipe-movement-x)-var(--stack-peek-offset)-(var(--stack-shrink)*100%))]";
+  "pointer-events-auto fixed z-[60] m-[var(--drawer-inset,0px)] flex h-[var(--drawer-content-height)] max-h-[var(--drawer-content-max-height,none)] min-h-0 w-[var(--drawer-content-width,auto)] transform-[translate3d(var(--translate-x,0px),var(--translate-y,0px),0)_scale(var(--stack-scale))] flex-col transition-[transform,height,opacity,filter] duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none select-none [interpolate-size:allow-keywords] data-nested-drawer-open:overflow-hidden data-nested-drawer-open:brightness-95 after:pointer-events-none after:absolute after:bg-[var(--drawer-bleed-background,var(--color-popover))] data-[swipe-axis=x]:after:inset-y-0 data-[swipe-axis=x]:after:w-[var(--bleed)] data-[swipe-axis=y]:after:inset-x-0 data-[swipe-axis=y]:after:h-[var(--bleed)] data-[swipe-direction=down]:after:top-full data-[swipe-direction=left]:after:right-full data-[swipe-direction=right]:after:left-full data-[swipe-direction=up]:after:bottom-full [--drawer-content-height:var(--drawer-height,auto)] data-[swipe-axis=x]:[--drawer-content-width:75%] data-[swipe-axis=x]:sm:[--drawer-content-width:24rem] data-[swipe-axis=y]:[--drawer-content-max-height:calc(100dvh-6rem)] data-[swipe-axis=y]:data-snap-points:[--drawer-content-height:100dvh] [--bleed:3rem] [--peek:1rem] [--stack-height:var(--drawer-frontmost-height,var(--drawer-height,0px))] [--stack-peek-offset:max(0px,calc((var(--nested-drawers)-var(--stack-progress))*var(--peek)))] [--stack-progress:clamp(0,var(--drawer-swipe-progress),1)] [--stack-scale-base:max(0,calc(1-(var(--nested-drawers)*var(--stack-step))))] [--stack-scale:clamp(0,calc(var(--stack-scale-base)+(var(--stack-step)*var(--stack-progress))),1)] [--stack-shrink:calc(1-var(--stack-scale))] [--stack-step:0.05] data-ending-style:transform-[var(--closed-transform)] data-ending-style:opacity-[0.9999] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-nested-drawer-swiping:duration-0 data-ending-style:data-nested-drawer-swiping:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-starting-style:transform-[var(--closed-transform)] data-swiping:duration-0 data-ending-style:data-swiping:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-[swipe-axis=y]:inset-x-0 data-[swipe-axis=y]:data-nested-drawer-open:h-[var(--stack-height)] data-[swipe-axis=x]:inset-y-0 data-[swipe-axis=x]:flex-row data-[swipe-direction=down]:bottom-0 data-[swipe-direction=down]:origin-bottom data-[swipe-direction=down]:[--closed-transform:translate3d(0,calc(100%+var(--drawer-inset,0px)+2px),0)] data-[swipe-direction=down]:[--translate-y:calc(var(--drawer-snap-point-offset,0px)+var(--drawer-swipe-movement-y)-var(--stack-peek-offset)-(var(--stack-shrink)*var(--stack-height)))] data-[swipe-direction=up]:top-0 data-[swipe-direction=up]:origin-top data-[swipe-direction=up]:[--closed-transform:translate3d(0,calc(-100%-var(--drawer-inset,0px)-2px),0)] data-[swipe-direction=up]:[--translate-y:calc(var(--drawer-snap-point-offset,0px)+var(--drawer-swipe-movement-y)+var(--stack-peek-offset)+(var(--stack-shrink)*var(--stack-height)))] data-[swipe-direction=left]:left-0 data-[swipe-direction=left]:origin-left data-[swipe-direction=left]:[--closed-transform:translate3d(calc(-100%-var(--drawer-inset,0px)-2px),0,0)] data-[swipe-direction=left]:[--translate-x:calc(var(--drawer-swipe-movement-x)+var(--stack-peek-offset)+(var(--stack-shrink)*100%))] data-[swipe-direction=right]:right-0 data-[swipe-direction=right]:origin-right data-[swipe-direction=right]:[--closed-transform:translate3d(calc(100%+var(--drawer-inset,0px)+2px),0,0)] data-[swipe-direction=right]:[--translate-x:calc(var(--drawer-swipe-movement-x)-var(--stack-peek-offset)-(var(--stack-shrink)*100%))]";
 
 const DrawerOpenContext = React.createContext(false);
 const DrawerCloseDisabledContext = React.createContext(false);
@@ -33,7 +33,6 @@ const DrawerPointerOutsideRefContext = React.createContext<React.MutableRefObjec
   ((event: Event) => void) | null
 > | null>(null);
 const DrawerSwipeDirectionContext = React.createContext<"up" | "right" | "down" | "left">("right");
-const DrawerPhoneContext = React.createContext(false);
 
 function useIsPhone() {
   const [phone, setPhone] = React.useState(false);
@@ -118,7 +117,6 @@ function Drawer({
           <DrawerVariantContext.Provider value={variant}>
             <DrawerTriggerRefContext.Provider value={triggerRef}>
               <DrawerSwipeDirectionContext.Provider value={swipeDirection}>
-              <DrawerPhoneContext.Provider value={phone}>
               <DrawerPointerOutsideRefContext.Provider value={pointerOutsideRef}>
                 <DrawerPrimitive.Root
                   data-slot="drawer"
@@ -128,10 +126,6 @@ function Drawer({
                     if (!next) {
                       const reason = eventDetails.reason;
                       if (closeDisabled) {
-                        eventDetails.cancel();
-                        return;
-                      }
-                      if (phone && reason === "swipe") {
                         eventDetails.cancel();
                         return;
                       }
@@ -168,7 +162,6 @@ function Drawer({
                   {children}
                 </DrawerPrimitive.Root>
               </DrawerPointerOutsideRefContext.Provider>
-              </DrawerPhoneContext.Provider>
               </DrawerSwipeDirectionContext.Provider>
             </DrawerTriggerRefContext.Provider>
           </DrawerVariantContext.Provider>
@@ -227,11 +220,12 @@ function DrawerOverlay({ className, ...props }: React.ComponentProps<typeof Draw
       data-slot="drawer-overlay"
       data-state={open ? "open" : "closed"}
       className={cn(
-        // Fixed everywhere except iOS, where the backdrop must be absolute
-        // to cover the screen under the browser chrome. A transform on this
-        // layer drops the blur. Opacity fades the dim and the blur together:
-        // 450ms in, 400ms out. The blur radius does not change.
-        "fixed inset-0 z-[60] min-h-dvh bg-black/30 opacity-[max(var(--drawer-overlay-min-opacity,0),calc(1-var(--drawer-swipe-progress)))] backdrop-blur-sm transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] select-none supports-[-webkit-touch-callout:none]:absolute data-starting-style:opacity-0 data-ending-style:pointer-events-none data-ending-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-swiping:duration-0",
+        // Same backdrop as the Base UI drawer: black/30 plus an 8px blur,
+        // opacity only, so the blur fades with the dim. Fixed everywhere
+        // except iOS, where it must be absolute to cover the browser chrome.
+        // No transform on this layer — that drops the blur. z-60 sits above
+        // the site header.
+        "fixed inset-0 z-[60] min-h-dvh bg-black/30 opacity-[max(var(--drawer-overlay-min-opacity,0),calc(1-var(--drawer-swipe-progress)))] transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] select-none supports-backdrop-filter:backdrop-blur-sm supports-[-webkit-touch-callout:none]:absolute data-ending-style:pointer-events-none data-ending-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-snap-points:[--drawer-overlay-min-opacity:0.5] data-starting-style:opacity-0 data-swiping:duration-0",
         className,
       )}
       {...props}
@@ -257,7 +251,6 @@ function DrawerContent({
   const triggerRef = React.useContext(DrawerTriggerRefContext);
   const pointerOutsideRef = React.useContext(DrawerPointerOutsideRefContext);
   const swipeDirection = React.useContext(DrawerSwipeDirectionContext);
-  const phone = React.useContext(DrawerPhoneContext);
   const swipeAxis = swipeDirection === "down" || swipeDirection === "up" ? "y" : "x";
 
   React.useEffect(() => {
@@ -321,20 +314,18 @@ function DrawerContent({
     <DrawerPortal>
       <DrawerOverlay />
       <DrawerPrimitive.Viewport
+        data-modal="true"
         data-slot="drawer-viewport"
         className="pointer-events-none fixed inset-0 z-[60] select-none data-[modal=true]:pointer-events-auto"
       >
         <DrawerPrimitive.Popup
-          data-base-ui-swipe-ignore={phone ? "" : undefined}
           data-drawer-variant={variant}
           data-slot="drawer-popup"
           data-swipe-axis={swipeAxis}
           className={cn(
             "group/drawer-popup",
             POPUP_MOTION,
-            // One size for every drawer. The visible card is the inner content,
-            // inset by 1rem, so notices and editors match.
-            "m-0 border-0 bg-transparent shadow-none [--drawer-bleed-background:transparent] [--drawer-inset:0px] [--drawer-content-width:min(32rem,calc(100vw-2rem))]",
+            "bg-popover text-popover-foreground rounded-[24px] border border-border text-sm shadow-xl [--drawer-bleed-background:transparent] [--drawer-inset:0.5rem]",
             className,
           )}
           finalFocus={() => triggerRef?.current ?? true}
@@ -350,7 +341,7 @@ function DrawerContent({
             data-drawer-variant={variant}
             data-slot="drawer-content"
             data-state={open ? "open" : "closed"}
-            className="relative m-4 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden overscroll-contain rounded-2xl border bg-popover text-popover-foreground shadow-2xl select-text transition-opacity duration-300 ease-[cubic-bezier(0.45,1.005,0,1.005)] group-data-nested-drawer-open/drawer-popup:opacity-0 group-data-nested-drawer-swiping/drawer-popup:opacity-100 group-data-swiping/drawer-popup:select-none"
+            className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden overscroll-contain rounded-[inherit] select-text transition-opacity duration-300 ease-[cubic-bezier(0.45,1.005,0,1.005)] group-data-nested-drawer-open/drawer-popup:opacity-0 group-data-nested-drawer-swiping/drawer-popup:opacity-100 group-data-swiping/drawer-popup:select-none"
             ref={setRoot}
           >
             <OverlayRootContext.Provider value={root}>

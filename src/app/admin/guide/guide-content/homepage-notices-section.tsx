@@ -19,15 +19,17 @@ export function HomepageNoticesSection() {
               All of this lives under <Link href="/admin/settings">Settings</Link>. Hero photos,
               testimonials, FAQs, and notices use a list: tap a row to edit. Remove is the small
               button on the row, not in the drawer. Drawers are for adding and editing.
-              On a phone every drawer, including a message, slides up from the bottom,
-              full width, and slides back down the same way. It does not swipe away —
-              close it with the button. On a wider screen the same drawer slides in
-              from the right and slides back out the same way. On a phone, an edit form fills the screen, with
-              rounded corners only at the top. While you type, that sheet shortens to
+              On a phone every drawer, including a message, slides up from the bottom
+              and slides back down the same way. You can drag it down to close it, or
+              use the button. On a wider screen the same drawer slides in from the
+              right and slides back out the same way, and you can drag it off to the
+              right. On a phone, an edit form fills the screen, with
+              rounded corners only at the top. It does not swipe away — close it with
+              the button, so what you have typed is not thrown away. While you type, that sheet shortens to
               the space above the keyboard: the title stays put, the fields scroll, and
               Cancel and Save sit just above the keys.
-              On a wider screen the drawers sit in from the screen edges: rounded corners
-              and a shadow, with a gap around them.
+              Drawers sit in from the screen edges: rounded corners
+              and a shadow, with a small gap around them.
               Add buttons stretch full width.
               While a drawer is open the page behind — including the site header — stays where it
               is, dimmed under a blur. That dim fades away as the drawer leaves. A breadcrumb at the top of each settings page
