@@ -267,12 +267,13 @@ export function SiteNavLinks({
 // Mirrors shadcn-ui/ui apps/v4/components/mobile-nav.tsx.
 export type MobileMenuGroup = {
   label: string;
-  items: { href: string; label: string; newTab?: boolean }[];
+  items: { href: string; label: string; newTab?: boolean; dot?: boolean }[];
 };
 
 export function SiteMobileMenu({ groups }: { groups: MobileMenuGroup[] }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   // shadcn's menu leaves the page scrollable underneath; ours doesn't.
   useEffect(() => {
@@ -327,7 +328,8 @@ export function SiteMobileMenu({ groups }: { groups: MobileMenuGroup[] }) {
                 {group.items.map((item) =>
                   item.href.startsWith("/") ? (
                     <Link
-                      className="flex items-center gap-2 text-2xl font-medium text-black dark:text-white"
+                      aria-current={isNavItemActive(pathname, item.href) ? "page" : undefined}
+                      className="flex items-center gap-2 text-2xl font-medium text-black decoration-2 underline-offset-[6px] aria-[current=page]:underline dark:text-white"
                       href={item.href}
                       key={item.href}
                       onClick={() => {
@@ -336,6 +338,9 @@ export function SiteMobileMenu({ groups }: { groups: MobileMenuGroup[] }) {
                       }}
                     >
                       {item.label}
+                      {item.dot ? (
+                        <span className="flex size-2 rounded-full bg-blue-500" title="New" />
+                      ) : null}
                     </Link>
                   ) : (
                     <a

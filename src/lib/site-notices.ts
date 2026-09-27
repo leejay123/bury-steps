@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import {
@@ -161,7 +162,9 @@ export async function getPageNotices(): Promise<NoticeView[]> {
 }
 
 /** Notices shown in the member bell (welcome + rolling window). */
-export async function getSiteNoticeState(
+export const getSiteNoticeState = cache(loadSiteNoticeState);
+
+async function loadSiteNoticeState(
   userId: string,
   firstName?: string | null,
 ): Promise<{

@@ -101,20 +101,23 @@ export async function SiteMobileNav() {
   }
 
   const isAdmin = user.role === "ADMIN";
-  const [progressEnabled, permissions] = await Promise.all([
+  const [progressEnabled, permissions, { unreadIds }] = await Promise.all([
     getProgressEnabled(),
     isAdmin
       ? isOwner(user.id).then((owner) => (owner ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS))
       : Promise.resolve(undefined),
+    getSiteNoticeState(user.id, user.firstName),
   ]);
-  const items = navItems(isAdmin, isAdmin ? "/admin" : "/walks", permissions, progressEnabled);
+  const items = navItems(isAdmin, isAdmin ? "/admin" : "/walks", permissions, progressEnabled).map(
+    (item) => (item.href === "/notices" && unreadIds.length ? { ...item, dot: true } : item),
+  );
   const organiserItems = items.filter((item) => item.href.startsWith("/admin/"));
 
   return (
     <SiteMobileMenu
       groups={[
         { label: "Menu", items: items.filter((item) => !item.href.startsWith("/admin/")) },
-        ...(organiserItems.length ? [{ label: "Organisers", items: organiserItems }] : []),
+        ...(organiserItems.length ? [{ label: "Manage", items: organiserItems }] : []),
         {
           label: "Account",
           items: [

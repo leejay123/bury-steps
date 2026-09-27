@@ -78,8 +78,10 @@ export function PrivacySiteSection() {
               Date and time sit on the same line. FAQ category chips on a phone scroll themselves
               so the one you tap stays in view. On a phone, Menu at the top left opens every page
               in a large list over a frosted screen, and the page behind stays still until you
-              close it or pick a page. The list is split under small labels: Menu for the main
-              pages, Organisers for the admin pages (organisers only), Account for History and
+              close it or pick a page. The page you’re on is underlined, and a blue dot beside
+              Notices means there’s one you haven’t read. The list is split under small labels:
+              Menu for the main pages, Manage for the admin pages (owners and organisers only),
+              Account for History and
               email preferences, and More for Contact Us, the Facebook group, the Privacy Policy,
               and the Terms of Service. Visitors who aren’t signed in see Home, Sign in, Join the
               group, and the More links.
