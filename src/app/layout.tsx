@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { ButtonRipple } from "@/components/button-ripple";
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import Script from "next/script";
@@ -219,6 +220,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </Suspense>
           </div>
           <Toaster duration={2800} position="bottom-left" />
+          <ButtonRipple />
           <Suspense fallback={null}>
             <SiteCookieConsentGate />
           </Suspense>
