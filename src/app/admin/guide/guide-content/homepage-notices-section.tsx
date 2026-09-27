@@ -23,8 +23,8 @@ export function HomepageNoticesSection() {
               full width, goes a little past where it rests, then settles. It closes
               downward the same way. It does not swipe away — close it with the
               button. On a wider screen the same drawer slides a short way in from the
-              right, goes a little past its resting place, then settles. It closes by
-              sliding fully off the screen. On a phone, an edit form fills the screen, with
+              right, goes a little past its resting place, then settles. It closes
+              straight away, with no animation. On a phone, an edit form fills the screen, with
               rounded corners only at the top. While you type, that sheet shortens to
               the space above the keyboard: the title stays put, the fields scroll, and
               Cancel and Save sit just above the keys.
