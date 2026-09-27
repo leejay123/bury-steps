@@ -32,8 +32,7 @@ export function HomepageNoticesSection() {
               and a shadow, with a gap around them.
               Add buttons stretch full width.
               While a drawer is open the page behind — including the site header — stays where it
-              is, dimmed under a full-screen blur. When the drawer closes, the blur lifts and
-              that dim fades away. A breadcrumb at the top of each settings page
+              is, under a light blur. That layer fades away when the drawer closes. A breadcrumb at the top of each settings page
               goes back to Settings — it greys when you hover it.
             </p>
             <p>

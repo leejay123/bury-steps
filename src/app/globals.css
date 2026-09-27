@@ -308,10 +308,31 @@ body {
   background-color: rgba(18, 28, 22, 0.42) !important;
 }
 
+/* Opacity only. A transform on this layer drops the blur in Safari. */
+@keyframes drawer-frost-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes drawer-frost-out {
+  to {
+    opacity: 0;
+  }
+}
+[data-drawer-frost][data-open] {
+  animation: drawer-frost-in 100ms ease-out backwards;
+}
+[data-drawer-frost][data-closed] {
+  animation: drawer-frost-out 100ms ease-out forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   [data-slot="drawer-popup"],
   [data-slot="drawer-overlay"] {
     transition-duration: 1ms !important;
+  }
+  [data-drawer-frost] {
+    animation-duration: 1ms !important;
   }
 }
 
