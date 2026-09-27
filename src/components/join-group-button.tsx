@@ -1,7 +1,14 @@
 "use client";
 
-import { LiquidMetalButton } from "@/components/ui/liquid-metal-button";
+import { MetalFx } from "metal-fx";
+import { Button } from "@/components/ui/button";
 
 export function JoinGroupButton({ href }: { href: string }) {
-  return <LiquidMetalButton label="Join the group" size="sm" onClick={() => window.location.assign(href)} />;
+  return (
+    <MetalFx preset="chromatic" strength={0.9}>
+      <Button asChild className="hover:bg-primary" size="sm">
+        <a href={href}>Join the group</a>
+      </Button>
+    </MetalFx>
+  );
 }
