@@ -31,7 +31,7 @@ export function WalkDescription({ description }: { description: string }) {
     <div className="flex flex-col gap-2 text-sm leading-relaxed">
       {expanded ? (
         <DescriptionText
-          className={cn("max-h-72 overflow-y-auto pr-2", THIN_SCROLLBAR_CLASSNAME)}
+          className={cn("typeset typeset-docs block max-h-72 overflow-y-auto pr-2", THIN_SCROLLBAR_CLASSNAME)}
           text={description}
         />
       ) : (

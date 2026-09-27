@@ -1,5 +1,6 @@
 "use client";
 
+import { DescriptionText } from "@/components/description-text";
 import { useRef, useState } from "react";
 import { Mail, MailOpen, Search } from "lucide-react";
 import { deleteContactMessage, markContactMessageRead } from "@/server/actions";
@@ -129,7 +130,7 @@ function MessageDrawer({
               </DrawerDescription>
             </DrawerHeader>
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4">
-              <p className="text-sm wrap-break-word whitespace-pre-wrap">{shown.message}</p>
+              <DescriptionText className="typeset typeset-docs block wrap-break-word" text={shown.message} />
             </div>
             <DrawerFooter className="flex-row flex-wrap gap-2">
               {!shown.read ? (

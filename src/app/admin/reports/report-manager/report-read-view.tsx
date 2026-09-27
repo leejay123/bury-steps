@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DescriptionText } from "@/components/description-text";
 import { formatWalkDay, formatTime } from "@/lib/dates";
 import { Badge } from "@/components/ui/badge";
 import { ReportRetentionToggle } from "./report-retention-toggle";
@@ -33,9 +34,7 @@ export function ReportReadView({
       </div>
       <div className="flex flex-col gap-1">
         <p className="text-xs font-medium text-muted-foreground">What happened</p>
-        <p className="whitespace-pre-wrap text-sm leading-relaxed wrap-break-word">
-          {report.whatHappened}
-        </p>
+        <DescriptionText className="typeset typeset-docs block wrap-break-word" text={report.whatHappened} />
       </div>
       <div className="flex flex-col gap-1.5">
         <p className="text-xs font-medium text-muted-foreground">Who was involved</p>
@@ -55,23 +54,17 @@ export function ReportReadView({
           </div>
         ) : null}
         {report.whoInvolved ? (
-          <p className="whitespace-pre-wrap text-sm leading-relaxed wrap-break-word">
-            {report.whoInvolved}
-          </p>
+          <DescriptionText className="typeset typeset-docs block wrap-break-word" text={report.whoInvolved} />
         ) : null}
       </div>
       <div className="flex flex-col gap-1">
         <p className="text-xs font-medium text-muted-foreground">What we did</p>
-        <p className="whitespace-pre-wrap text-sm leading-relaxed wrap-break-word">
-          {report.whatWeDid}
-        </p>
+        <DescriptionText className="typeset typeset-docs block wrap-break-word" text={report.whatWeDid} />
       </div>
       {report.organiserNotes ? (
         <div className="flex flex-col gap-1">
           <p className="text-xs font-medium text-muted-foreground">Organiser notes</p>
-          <p className="whitespace-pre-wrap text-sm leading-relaxed wrap-break-word">
-            {report.organiserNotes}
-          </p>
+          <DescriptionText className="typeset typeset-docs block wrap-break-word" text={report.organiserNotes} />
         </div>
       ) : null}
     </div>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { DescriptionText } from "@/components/description-text";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
@@ -52,7 +53,7 @@ export default async function NoticeDetailPage({
           <p className="text-lg text-muted-foreground">{notice.body}</p>
         ) : null}
       </header>
-      <div className="whitespace-pre-wrap text-base leading-relaxed">{notice.pageBody}</div>
+      <DescriptionText className="typeset typeset-docs block max-w-[42em]" text={notice.pageBody} />
     </article>
   );
 }
