@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { textSizeCssVars } from "@/lib/text-sizes";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { ButtonRipple } from "@/components/button-ripple";
 import { HeaderScrollShadow } from "@/components/header-scroll-shadow";
@@ -81,7 +82,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html
       className={`${siteFontVariableClassName} ${typesetFontVariables}`}
       lang="en-GB"
-      style={{ "--font-site": `var(${font.cssVariable})` } as CSSProperties}
+      style={{ "--font-site": `var(${font.cssVariable})`, ...textSizeCssVars(theme.textSizes) } as CSSProperties}
       suppressHydrationWarning
     >
       <body

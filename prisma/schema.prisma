@@ -316,6 +316,11 @@ model SiteSetting {
   cookieConsentVariant        String   @default("small")
   /// Public site typeface. One of the ids in src/lib/site-font.ts.
   siteFont                    String   @default("inter")
+  /// Desktop px sizes from Settings → Branding → Text sizes (see src/lib/text-sizes.ts).
+  textHeadlinePx              Int      @default(60)
+  textSectionPx               Int      @default(36)
+  textIntroPx                 Int      @default(16)
+  textBodyPx                  Int      @default(14)
   /// Public site name — header logo alt, homepage hero, tab titles, share cards.
   siteName                    String   @default("Bury Steps Walking Group")
   /// Homepage hero subtitle (also used for share/meta description when short enough).

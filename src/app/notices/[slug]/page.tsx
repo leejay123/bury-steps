@@ -50,7 +50,7 @@ export default async function NoticeDetailPage({
         </div>
         <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{notice.title}</h1>
         {notice.body ? (
-          <p className="text-base text-muted-foreground">{notice.body}</p>
+          <p className="text-intro text-muted-foreground">{notice.body}</p>
         ) : null}
       </header>
       <DescriptionText className="typeset typeset-docs block max-w-[90ch]" text={notice.pageBody} />

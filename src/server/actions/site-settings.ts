@@ -1,5 +1,6 @@
 "use server";
 
+import { parseTextSize } from "@/lib/text-sizes";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -498,6 +499,44 @@ export async function updateSiteFont(
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/branding");
   return { ok: true, message: "Site font saved. The whole website is using it now." };
+}
+
+export async function updateTextSizes(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  const headline = parseTextSize("headline", formData.get("headline"));
+  const section = parseTextSize("section", formData.get("section"));
+  const intro = parseTextSize("intro", formData.get("intro"));
+  const body = parseTextSize("body", formData.get("body"));
+  if (headline === null || section === null || intro === null || body === null) {
+    return { ok: false, error: "Choose a size for each option." };
+  }
+  const sizes = { textHeadlinePx: headline, textSectionPx: section, textIntroPx: intro, textBodyPx: body };
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        carouselEnabled: true,
+        scrollToTopEnabled: true,
+        ...sizes,
+      },
+      update: sizes,
+    });
+  } catch (err) {
+    return logActionError("updateTextSizes", err, "Could not save text sizes. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/branding");
+  return { ok: true, message: "Text sizes saved. The whole website is using them now." };
 }
 
 export async function updateCookieConsentVariant(

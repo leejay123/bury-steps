@@ -65,7 +65,9 @@ export function ReportsDisplaySection() {
               Open <Link href="/admin/settings/branding">Branding</Link> to set the public{" "}
               <strong>site name</strong> and <strong>homepage tagline</strong> (also used in browser
               tabs and share previews), the <strong>site font</strong> (it changes the typeface
-              across the whole website), the logo and favicon, the accident-report banner, and the{" "}
+              across the whole website), <strong>text sizes</strong> (the homepage headline, section
+              headings, intro lines, and everyday body text — set for computers, with phones getting
+              smaller headings automatically), the logo and favicon, the accident-report banner, and the{" "}
               <strong>Facebook group</strong> link (leave blank to hide it).
             </p>
             <p className="font-medium text-foreground">Homepage layout</p>

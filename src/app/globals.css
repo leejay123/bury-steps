@@ -348,6 +348,8 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --font-sans: var(--font-site), ui-sans-serif, system-ui, sans-serif;
+  /* Everyday text size from Settings → Branding → Text sizes (see src/lib/text-sizes.ts). */
+  --text-sm: calc(var(--text-body-n, 14) * 1px);
   /* Code-style text uses Geist too, matching the typeset-docs preset (Mono: Geist). */
   --font-mono: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
 }
@@ -470,4 +472,37 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
   --typeset-size: 15px;
   --typeset-leading: 1.6;
   --typeset-flow: 1em;
+}
+
+/*
+ * Text sizes from Settings → Branding → Text sizes. --text-*-n are unitless
+ * desktop px values set on <html> (src/lib/text-sizes.ts). Headings scale
+ * linearly from a phone-width 390px screen (60% / 70% of the desktop size)
+ * up to full size at 1024px; intro lines are 1px smaller on phones, never
+ * under 14px.
+ */
+@utility text-headline {
+  font-size: clamp(
+    calc(var(--text-headline-n, 60) * 0.6px),
+    calc(var(--text-headline-n, 60) * 0.6px + var(--text-headline-n, 60) * 0.4 * (100vw - 390px) / 634),
+    calc(var(--text-headline-n, 60) * 1px)
+  );
+  line-height: 1.1;
+}
+
+@utility text-section-heading {
+  font-size: clamp(
+    calc(var(--text-section-n, 36) * 0.7px),
+    calc(var(--text-section-n, 36) * 0.7px + var(--text-section-n, 36) * 0.3 * (100vw - 390px) / 634),
+    calc(var(--text-section-n, 36) * 1px)
+  );
+  line-height: 1.2;
+}
+
+@utility text-intro {
+  font-size: max(14px, calc(var(--text-intro-n, 16) * 1px - 1px));
+  line-height: 1.5;
+  @media (width >= 48rem) {
+    font-size: calc(var(--text-intro-n, 16) * 1px);
+  }
 }

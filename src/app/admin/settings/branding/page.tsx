@@ -7,6 +7,7 @@ import { SiteFaviconSettings } from "./site-favicon-settings";
 import { ReportBannerSettings } from "./report-banner-settings";
 import { FacebookGroupSettings } from "./facebook-group-settings";
 import { SiteFontSettings } from "./site-font-settings";
+import { TextSizeSettings } from "./text-size-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export default async function BrandingSettingsPage() {
       >
         <SiteBrandingSettings siteName={theme.siteName} siteTagline={theme.siteTagline} />
         <SiteFontSettings font={theme.siteFont} />
+        <TextSizeSettings sizes={theme.textSizes} />
         <SiteLogoSettings hasCustomLogo={theme.hasCustomLogo} logoSrc={theme.logoSrc} />
         <SiteFaviconSettings
           faviconSrc={theme.faviconSrc}

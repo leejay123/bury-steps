@@ -27,6 +27,7 @@ import {
   updateCookieConsentVariant,
   updateFacebookGroupUrl,
   updateSiteFont,
+  updateTextSizes,
   updateMonthlyClockInGoal,
   updateOrganiserInviteRequired,
   updateSiteBranding,
@@ -178,6 +179,24 @@ describe("updateSiteFont", () => {
     });
     expect(prismaMock.siteSetting.upsert).toHaveBeenCalledWith(
       expect.objectContaining({ update: { siteFont: "fraunces" } }),
+    );
+  });
+});
+
+describe("updateTextSizes", () => {
+  it("rejects a size that isn't one of the options", async () => {
+    const result = await updateTextSizes(null, form({ headline: "61", section: "36", intro: "16", body: "14" }));
+    expect(result).toEqual({ ok: false, error: "Choose a size for each option." });
+    expect(prismaMock.siteSetting.upsert).not.toHaveBeenCalled();
+  });
+
+  it("saves all four sizes", async () => {
+    const result = await updateTextSizes(null, form({ headline: "48", section: "32", intro: "15", body: "15" }));
+    expect(result).toEqual({ ok: true, message: "Text sizes saved. The whole website is using them now." });
+    expect(prismaMock.siteSetting.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        update: { textHeadlinePx: 48, textSectionPx: 32, textIntroPx: 15, textBodyPx: 15 },
+      }),
     );
   });
 });

@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { DEFAULT_TEXT_SIZES, parseTextSize, type TextSizes } from "@/lib/text-sizes";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { HOMEPAGE_CACHE_TAG, HOMEPAGE_REVALIDATE_SECONDS } from "@/lib/homepage-cache";
@@ -82,6 +83,7 @@ export type SiteTheme = {
   scrollToTopEnabled: boolean;
   cookieConsentVariant: CookieConsentVariant;
   siteFont: SiteFontId;
+  textSizes: TextSizes;
   siteName: string;
   siteTagline: string;
   facebookGroupUrl: string;
@@ -146,6 +148,7 @@ function defaultTheme(): SiteTheme {
     scrollToTopEnabled: true,
     cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
     siteFont: DEFAULT_SITE_FONT,
+    textSizes: DEFAULT_TEXT_SIZES,
     siteName: DEFAULT_SITE_NAME,
     siteTagline: DEFAULT_SITE_TAGLINE,
     facebookGroupUrl: DEFAULT_FACEBOOK_GROUP_URL,
@@ -203,6 +206,10 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       scrollToTopEnabled: true,
       cookieConsentVariant: true,
       siteFont: true,
+      textHeadlinePx: true,
+      textSectionPx: true,
+      textIntroPx: true,
+      textBodyPx: true,
       siteName: true,
       siteTagline: true,
       facebookGroupUrl: true,
@@ -268,6 +275,12 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       parseCookieConsentVariant(row?.cookieConsentVariant ?? "") ??
       DEFAULT_COOKIE_CONSENT_VARIANT,
     siteFont: parseSiteFont(row?.siteFont ?? "") ?? DEFAULT_SITE_FONT,
+    textSizes: {
+      headline: parseTextSize("headline", row?.textHeadlinePx) ?? DEFAULT_TEXT_SIZES.headline,
+      section: parseTextSize("section", row?.textSectionPx) ?? DEFAULT_TEXT_SIZES.section,
+      intro: parseTextSize("intro", row?.textIntroPx) ?? DEFAULT_TEXT_SIZES.intro,
+      body: parseTextSize("body", row?.textBodyPx) ?? DEFAULT_TEXT_SIZES.body,
+    },
     siteName: row?.siteName?.trim() || DEFAULT_SITE_NAME,
     siteTagline: row?.siteTagline?.trim() || DEFAULT_SITE_TAGLINE,
     facebookGroupUrl: row?.facebookGroupUrl ?? DEFAULT_FACEBOOK_GROUP_URL,

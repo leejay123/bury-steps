@@ -102,6 +102,7 @@ export {
   updateScrollToTopEnabled,
   updateCookieConsentVariant,
   updateSiteFont,
+  updateTextSizes,
   updateSiteBranding,
   updateFacebookGroupUrl,
   reorderHomepageSections,
