@@ -4,6 +4,7 @@ import { FullWidthDivider } from "@/components/full-width-divider";
 import { NewsletterFooterGate } from "@/components/newsletter-footer-gate";
 import { SiteLogo } from "@/components/site-logo";
 import { shouldPrefetchNavLink } from "@/components/site-nav-items";
+import { TextHoverEffect } from "@/components/velora/text-hover-effect";
 import { getOptionalUser } from "@/lib/auth";
 import { PAGE_X } from "@/lib/page-x";
 import { getProgressEnabled } from "@/lib/progress-settings";
@@ -82,6 +83,13 @@ export async function SiteFooter() {
         >
           © {new Date().getFullYear()} {theme.siteName}
         </p>
+      </div>
+      <div aria-hidden className={`overflow-hidden ${PAGE_X}`}>
+        <TextHoverEffect
+          className="mx-auto -mb-[2%] max-w-6xl font-black tracking-tight"
+          strokeWidth={0.6}
+          text="Bury Steps"
+        />
       </div>
     </footer>
   );

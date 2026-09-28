@@ -13,12 +13,20 @@ import { BURY, type HomepageGlobeData } from "@/lib/homepage-globe";
  * Decorative: walks are all too close to Bury for a line to show on a whole
  * globe, so the lines sweep out to world cities instead, like Velora's demo.
  */
+// Unnamed on purpose: they're decoration, not places the group goes. A few
+// long ones sweep across the globe; the rest fan out close around Bury.
 const WORLD: GlobeMarker[] = [
-  { lat: 40.71, lng: -74.01, label: "New York" },
-  { lat: -23.55, lng: -46.63, label: "São Paulo" },
-  { lat: 6.52, lng: 3.38, label: "Lagos" },
-  { lat: 25.2, lng: 55.27, label: "Dubai" },
-  { lat: 64.15, lng: -21.94, label: "Reykjavík" },
+  { lat: 40.71, lng: -74.01 },
+  { lat: -23.55, lng: -46.63 },
+  { lat: 6.52, lng: 3.38 },
+  { lat: 25.2, lng: 55.27 },
+  { lat: 64.15, lng: -21.94 },
+  { lat: 60.4, lng: 5.3 },
+  { lat: 48.9, lng: 2.35 },
+  { lat: 43.3, lng: -8.4 },
+  { lat: 52.4, lng: 13.4 },
+  { lat: 57.5, lng: -13.5 },
+  { lat: 46.2, lng: 9.0 },
 ];
 
 /**
