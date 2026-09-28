@@ -21,7 +21,7 @@ import { menuFont } from "@/app/fonts";
 import { lockBackgroundScroll } from "@/components/overlay-scroll-lock";
 import { SiteSearchBar } from "@/components/site-search";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { unlockIdleDocument } from "@/components/overlay-root";
 import { isNavItemActive, navItems } from "@/components/site-nav-items";
 import type { OrganiserPermissions } from "@/lib/organiser-permissions";
@@ -287,8 +287,17 @@ export function SiteMobileMenu({ groups, showSearch = false }: { groups: MobileM
     return lockBackgroundScroll();
   }, [open]);
 
+  // Hang the panel off the header's bottom edge rather than the burger icon,
+  // so it always meets the header exactly (the icon's distance from the
+  // header's edge changed with what sat beside it and left a gap).
+  const headerAnchor = useRef({
+    getBoundingClientRect: () =>
+      document.querySelector("header[data-site-header]")?.getBoundingClientRect() ?? new DOMRect(),
+  });
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
+      <PopoverAnchor virtualRef={headerAnchor} />
       <PopoverTrigger asChild>
         <Button
           data-mobile-nav=""
@@ -319,8 +328,7 @@ export function SiteMobileMenu({ groups, showSearch = false }: { groups: MobileM
         className={cn(menuFont.className, "h-(--radix-popper-available-height) w-(--radix-popper-available-width) overflow-y-auto rounded-none border-none bg-background/90 p-0 shadow-none backdrop-blur duration-100 [scrollbar-width:none] data-[state=open]:animate-none! [&::-webkit-scrollbar]:hidden")}
         align="start"
         side="bottom"
-        alignOffset={-16}
-        sideOffset={14}
+        avoidCollisions={false}
       >
         <div className="flex flex-col gap-12 overflow-auto px-6 py-6">
           {showSearch ? <SiteSearchBar className="-mb-6 h-10 text-base" onOpen={() => setOpen(false)} /> : null}

@@ -182,11 +182,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   growing at exactly the links' own content width the way
                   the previous auto-based track did.
                 */}
-                <div className={`group/header-row flex h-14 items-center justify-between gap-3 ${PAGE_X} md:grid md:grid-cols-[auto_minmax(0,1fr)_auto]`}>
+                {/*
+                  Phones: equal 1fr side columns put the logo in the true
+                  middle of the screen. A 1fr track never shrinks below its
+                  content, so when Sign in + Join the group are wider than
+                  half the space the logo moves left rather than overlapping.
+                */}
+                <div className={`group/header-row grid h-14 grid-cols-[1fr_auto_1fr] items-center gap-3 ${PAGE_X} md:grid-cols-[auto_minmax(0,1fr)_auto]`}>
                   <Suspense fallback={null}>
                     <SiteMobileNav />
                   </Suspense>
-                  <div className="contents max-md:flex max-md:min-w-0 max-md:flex-1 max-md:justify-center">
+                  <div className="contents max-md:col-start-2 max-md:flex max-md:justify-center">
                     <Suspense
                       fallback={
                         <div className="flex h-8 min-w-0 items-center justify-self-start">
