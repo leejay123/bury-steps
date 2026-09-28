@@ -29,14 +29,14 @@ export function HeroGlobe({
   siteName: string;
   siteTagline: string;
 }) {
+  // Walks in and around Bury would sit on top of its dot and pile into a
+  // blob, so only spots further out get their own dot and line.
+  const away = data.points.filter((point) => Math.hypot(point.lat - BURY[0], (point.lng - BURY[1]) * 0.6) > 0.15);
   const markers: GlobeMarker[] = [
     { lat: BURY[0], lng: BURY[1], label: "Bury Steps" },
-    // Only Bury is named on the globe: nearby walks sit too close to label,
-    // so their names show as tags beside it instead.
-    ...data.points.map(({ lat, lng }) => ({ lat, lng })),
+    ...away.map(({ lat, lng }) => ({ lat, lng })),
   ];
-  const arcs: GlobeArc[] = data.points.map((point) => ({ from: BURY, to: [point.lat, point.lng] }));
-  const places = [...new Set(data.points.flatMap((point) => point.label ?? []))].slice(0, 8);
+  const arcs: GlobeArc[] = away.map((point) => ({ from: BURY, to: [point.lat, point.lng] }));
   const stats = [
     { value: data.upcomingWalks, label: "walks coming up" },
     { value: data.members, label: "members" },
@@ -52,7 +52,7 @@ export function HeroGlobe({
       <section className="relative isolate overflow-hidden px-4 pt-16 pb-10 sm:px-6 sm:pt-20 sm:pb-12 lg:px-8">
         <div
           aria-hidden
-          className="absolute inset-y-0 right-0 -z-10 w-full bg-radial-[at_75%_50%] from-primary/10 to-transparent to-60% lg:w-2/3"
+          className="absolute inset-y-0 right-0 -z-10 w-full bg-radial-[at_75%_50%] from-[oklch(0.55_0.13_160)]/10 to-transparent to-60% lg:w-2/3"
         />
 
         <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-2 lg:gap-8">
@@ -103,32 +103,20 @@ export function HeroGlobe({
                 ))}
               </dl>
             </BlurFade>
-
-            {places.length > 0 ? (
-              <BlurFade delay={0.5}>
-                <div className="mt-6">
-                  <p className="text-sm text-muted-foreground">Places we&apos;ve walked</p>
-                  <ul className="mt-2 flex flex-wrap gap-2">
-                    {places.map((place) => (
-                      <li className="rounded-full border px-3 py-1 text-sm" key={place}>
-                        {place}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </BlurFade>
-            ) : null}
           </div>
 
           <BlurFade className="relative flex justify-center" delay={0.2} direction="none">
             <Globe
-              accentColor="var(--primary)"
+              accentColor="oklch(0.55 0.13 160)"
               arcs={arcs}
-              center={[52, -2.5]}
+              center={[54, -3]}
               className="w-full max-w-[min(100%,30rem)]"
               label="Globe showing where Bury Steps walks meet"
               markers={markers}
-              samples={20000}
+              // Zoomed in on Britain: walks are all within a few hundred miles
+              // of Bury, too close together to see on a whole-planet view.
+              samples={90000}
+              zoom={2.5}
               speed={0}
             />
           </BlurFade>

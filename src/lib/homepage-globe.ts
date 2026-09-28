@@ -17,33 +17,31 @@ export async function getHomepageGlobeData(now = new Date()): Promise<HomepageGl
   const [placed, upcomingWalks, members, walksThisYear] = await Promise.all([
     prisma.walk.findMany({
       where: { cancelledAt: null, latitude: { not: null }, longitude: { not: null } },
-      select: { latitude: true, longitude: true, location: true },
+      select: { latitude: true, longitude: true },
       orderBy: { startsAt: "desc" },
-      take: 200,
+      take: 50,
     }),
     prisma.walk.count({ where: { cancelledAt: null, startsAt: { gte: now } } }),
     prisma.user.count(),
     prisma.walk.count({ where: { cancelledAt: null, startsAt: { gte: startOfYear, lt: now } } }),
   ]);
 
-  // Walks often reuse a meeting point; one dot per spot (to ~1km).
+  // The 5 most recent meeting spots; walks often reuse one, so one dot per
+  // spot (to ~1km).
   const seen = new Set<string>();
   const points: GlobePoint[] = [];
-  for (const walk of [...placed.map((w) => ({ lat: w.latitude!, lng: w.longitude!, label: placeName(w.location) })), ...PREVIEW_SAMPLE_WALKS]) {
+  for (const walk of placed.map((w) => ({ lat: w.latitude!, lng: w.longitude! }))) {
     const key = `${walk.lat.toFixed(2)},${walk.lng.toFixed(2)}`;
     if (seen.has(key)) continue;
     seen.add(key);
     points.push(walk);
-    if (points.length === 40) break;
+    if (points.length === RECENT_WALKS) break;
   }
 
-  return { points, upcomingWalks, members, walksThisYear };
+  return { points: [...points, ...PREVIEW_SAMPLE_WALKS], upcomingWalks, members, walksThisYear };
 }
 
-/** "Lido Carpark, Bury, BL9 0AA" → "Lido Carpark": the first part reads best as a tag. */
-function placeName(location: string | null) {
-  return location?.split(",")[0]?.trim() || undefined;
-}
+const RECENT_WALKS = 5;
 
 // PREVIEW ONLY — pretend finished walks so the globe can be tried with
 // spots far enough apart to see. Never saved to the database (previews
