@@ -1,4 +1,4 @@
-const HERO_STYLES = ["default", "cinematic"] as const;
+const HERO_STYLES = ["default", "cinematic", "globe"] as const;
 
 export type HeroStyle = (typeof HERO_STYLES)[number];
 

@@ -114,20 +114,20 @@ export function HeroGlobe({
               {/* Same hairline grid and corner crosses as the homepage's feature
                   row, so the numbers read as part of the site's grid. Runs to
                   the page edges on phones, like the other full-width rows. */}
-              <div className="relative -mx-4 mt-10 border-y sm:-mx-6 lg:mx-0 lg:border-x">
+              <div className="relative -mx-4 mt-10 border-y sm:-mx-6 lg:mx-0 lg:max-w-md lg:border-x">
                 <DecorIcon className="size-4" position="top-left" />
                 <DecorIcon className="size-4" position="top-right" />
                 <DecorIcon className="size-4" position="bottom-left" />
                 <DecorIcon className="size-4" position="bottom-right" />
                 <dl className="grid grid-cols-3 gap-px bg-border">
                   {stats.map(({ Icon, ...stat }) => (
-                    <div className="flex flex-col-reverse justify-end gap-1 bg-background p-4 sm:p-5 lg:px-4 lg:py-3" key={stat.label}>
-                      <dt className="text-xs text-muted-foreground sm:text-sm">{stat.label}</dt>
-                      <dd className="text-2xl font-medium tracking-tight sm:text-3xl lg:text-2xl">
+                    <div className="flex flex-col-reverse justify-end gap-1 bg-background p-4 sm:p-5 lg:px-3 lg:py-2.5" key={stat.label}>
+                      <dt className="text-xs text-muted-foreground sm:text-sm lg:text-xs">{stat.label}</dt>
+                      <dd className="text-2xl font-medium tracking-tight sm:text-3xl lg:text-xl">
                         <NumberTicker value={stat.value} />
                       </dd>
                       {/* Same blue as the globe's lines. */}
-                      <Icon aria-hidden className="mb-3 size-5 text-[oklch(0.55_0.2_262)] lg:mb-2 lg:size-4" />
+                      <Icon aria-hidden className="mb-3 size-5 text-[oklch(0.55_0.2_262)] lg:mb-1.5 lg:size-4" />
                     </div>
                   ))}
                 </dl>

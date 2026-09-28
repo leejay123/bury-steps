@@ -135,7 +135,11 @@ export async function updateHeroStyle(
   return {
     ok: true,
     message:
-      heroStyle === "cinematic" ? "Switched the homepage to the video hero." : "Switched the homepage to the default hero.",
+      heroStyle === "cinematic"
+        ? "Switched the homepage to the video hero."
+        : heroStyle === "globe"
+          ? "Switched the homepage to the globe hero."
+          : "Switched the homepage to the default hero.",
   };
 }
 

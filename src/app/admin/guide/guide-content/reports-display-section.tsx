@@ -82,6 +82,13 @@ export function ReportsDisplaySection() {
               <strong>Stars</strong>, which drift slowly upwards, or <strong>Retro grid</strong>, a
               grid that scrolls slowly towards the horizon.
             </p>
+            <p>
+              <strong>Hero style</strong> on the same page picks the top of the homepage:{" "}
+              <strong>Default</strong> (light hero with the photo slider), <strong>Video</strong>{" "}
+              (full-bleed dark hero), or <strong>Globe</strong> (live numbers beside a globe with
+              moving lines, then the photo slider underneath; phones skip the globe). The photo
+              slider uses the pictures from <strong>Homepage photos</strong>.
+            </p>
             <p className="font-medium text-foreground">Site wording</p>
             <p>
               Open <Link href="/admin/settings/site-wording">Site wording</Link> to edit the{" "}

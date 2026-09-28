@@ -1,3 +1,5 @@
+import { HeroSection } from "@/components/hero";
+import { HeroCinematic } from "@/components/hero-cinematic";
 import { HeroGlobe } from "@/components/hero-globe";
 import { HomePhotoSlider } from "@/components/home-photo-slider";
 import { HomeWelcome } from "@/components/home-welcome";
@@ -8,6 +10,7 @@ import { getHomepageFaqData } from "@/lib/homepage-faqs";
 import { getHomepageMemberNotices } from "@/lib/site-notices";
 import { getProgressEnabled } from "@/lib/progress-settings";
 import { getHomepageGlobeData } from "@/lib/homepage-globe";
+import { heroVideoPoster, heroVideoSrc } from "@/lib/hero-style";
 import { PAGE_X_BLEED } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
@@ -42,15 +45,40 @@ export default async function Home() {
 
   return (
     <div className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
-      <HeroGlobe
-        data={globe}
-        isSignedIn={user !== null}
-        signInHref={signInHref}
-        signUpHref={signUpHref}
-        siteName={theme.siteName}
-        siteTagline={theme.siteTagline}
-      />
-      <HomePhotoSlider enabled={theme.carouselEnabled} slides={slides} />
+      {theme.heroStyle === "cinematic" ? (
+        <HeroCinematic
+          overlayOpacity={theme.heroOverlayOpacity}
+          signInHref={signInHref}
+          signUpHref={signUpHref}
+          siteName={theme.siteName}
+          siteTagline={theme.siteTagline}
+          textColor={theme.heroTextColor}
+          videoPoster={heroVideoPoster(theme.heroVideoKey)}
+          videoSrc={heroVideoSrc(theme.heroVideoKey)}
+        />
+      ) : theme.heroStyle === "globe" ? (
+        <>
+          <HeroGlobe
+            data={globe}
+            isSignedIn={user !== null}
+            signInHref={signInHref}
+            signUpHref={signUpHref}
+            siteName={theme.siteName}
+            siteTagline={theme.siteTagline}
+          />
+          <HomePhotoSlider enabled={theme.carouselEnabled} slides={slides} />
+        </>
+      ) : (
+        <HeroSection
+          bgPattern={theme.heroBgPattern}
+          carouselEnabled={theme.carouselEnabled}
+          signInHref={signInHref}
+          signUpHref={signUpHref}
+          siteName={theme.siteName}
+          siteTagline={theme.siteTagline}
+          slides={slides}
+        />
+      )}
       <HomeWelcome
         aboutExpect={theme.aboutExpect}
         aboutExpectHeading={theme.aboutExpectHeading}

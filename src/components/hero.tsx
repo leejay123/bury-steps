@@ -4,7 +4,7 @@ import { ArrowRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DecorIcon } from "@/components/decor-icon";
 import { FullWidthDivider } from "@/components/full-width-divider";
-import { HomeCarousel } from "@/components/home-carousel";
+import { WalkPhotoSlider } from "@/components/home-photo-slider";
 import { HeroCopy } from "@/components/hero-copy";
 import { FadeIn } from "@/components/motion";
 import type { SlideView } from "@/lib/slides";
@@ -83,7 +83,7 @@ export function HeroSection({
           <FullWidthDivider position="top" />
           <div className="overflow-hidden bg-muted">
             <FadeIn>
-              <HomeCarousel framed slides={slides} />
+              <WalkPhotoSlider slides={slides} />
             </FadeIn>
           </div>
           <FullWidthDivider position="bottom" />
