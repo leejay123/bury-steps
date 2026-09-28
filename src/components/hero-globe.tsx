@@ -10,6 +10,18 @@ import { NumberTicker } from "@/components/velora/number-ticker";
 import { BURY, type HomepageGlobeData } from "@/lib/homepage-globe";
 
 /**
+ * Decorative: walks are all too close to Bury for a line to show on a whole
+ * globe, so the lines sweep out to world cities instead, like Velora's demo.
+ */
+const WORLD: GlobeMarker[] = [
+  { lat: 40.71, lng: -74.01, label: "New York" },
+  { lat: -23.55, lng: -46.63, label: "São Paulo" },
+  { lat: 6.52, lng: 3.38, label: "Lagos" },
+  { lat: 25.2, lng: 55.27, label: "Dubai" },
+  { lat: 64.15, lng: -21.94, label: "Reykjavík" },
+];
+
+/**
  * Velora's "Globe split hero": words, buttons and live numbers on the left,
  * a spinning dotted globe on the right with a dot on every walk's meeting
  * point and a line out to it from Bury. Stacks with the globe below on phones.
@@ -29,14 +41,8 @@ export function HeroGlobe({
   siteName: string;
   siteTagline: string;
 }) {
-  // Walks in and around Bury would sit on top of its dot and pile into a
-  // blob, so only spots further out get their own dot and line.
-  const away = data.points.filter((point) => Math.hypot(point.lat - BURY[0], (point.lng - BURY[1]) * 0.6) > 0.15);
-  const markers: GlobeMarker[] = [
-    { lat: BURY[0], lng: BURY[1], label: "Bury Steps" },
-    ...away.map(({ lat, lng }) => ({ lat, lng })),
-  ];
-  const arcs: GlobeArc[] = away.map((point) => ({ from: BURY, to: [point.lat, point.lng] }));
+  const markers: GlobeMarker[] = [{ lat: BURY[0], lng: BURY[1], label: "Bury Steps" }, ...WORLD];
+  const arcs: GlobeArc[] = WORLD.map((city) => ({ from: BURY, to: [city.lat, city.lng] }));
   const stats = [
     { value: data.upcomingWalks, label: "walks coming up" },
     { value: data.members, label: "members" },
@@ -52,7 +58,7 @@ export function HeroGlobe({
       <section className="relative isolate overflow-hidden px-4 pt-16 pb-10 sm:px-6 sm:pt-20 sm:pb-12 lg:px-8">
         <div
           aria-hidden
-          className="absolute inset-y-0 right-0 -z-10 w-full bg-radial-[at_75%_50%] from-[oklch(0.55_0.13_160)]/10 to-transparent to-60% lg:w-2/3"
+          className="absolute inset-y-0 right-0 -z-10 w-full bg-radial-[at_75%_50%] from-[oklch(0.62_0.19_259)]/10 to-transparent to-60% lg:w-2/3"
         />
 
         <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-2 lg:gap-8">
@@ -107,16 +113,13 @@ export function HeroGlobe({
 
           <BlurFade className="relative flex justify-center" delay={0.2} direction="none">
             <Globe
-              accentColor="oklch(0.55 0.13 160)"
+              accentColor="oklch(0.62 0.19 259)"
               arcs={arcs}
-              center={[54, -3]}
+              center={[35, -15]}
               className="w-full max-w-[min(100%,30rem)]"
-              label="Globe showing where Bury Steps walks meet"
+              label="Globe with lines from Bury out to cities around the world"
               markers={markers}
-              // Zoomed in on Britain: walks are all within a few hundred miles
-              // of Bury, too close together to see on a whole-planet view.
-              samples={90000}
-              zoom={2.5}
+              samples={20000}
               speed={0}
             />
           </BlurFade>

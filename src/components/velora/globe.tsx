@@ -60,8 +60,6 @@ interface GlobeProps extends React.HTMLAttributes<HTMLDivElement> {
   accentColor?: string;
   /** Accessible name; generated from marker labels when omitted */
   label?: string;
-  /** Magnification; above 1 the globe is drawn larger and cropped to its disc */
-  zoom?: number;
 }
 
 /**
@@ -78,7 +76,6 @@ export function Globe({
   dotColor = "var(--muted-foreground)",
   accentColor = "var(--brand)",
   label,
-  zoom = 1,
   className,
   ...props
 }: GlobeProps) {
@@ -119,7 +116,7 @@ export function Globe({
       return pts;
     });
 
-    let w = 0, h = 0, R = 0, R0 = 0, raf = 0, last = 0;
+    let w = 0, h = 0, R = 0, raf = 0, last = 0;
     let inView = true, hover = false, focus = false;
     let drag: { x: number; y: number } | null = null;
     let dot = "", accent = "", text = "", font = "";
@@ -148,12 +145,8 @@ export function Globe({
         ctx.arc(cx + x * R, cy - y * R, r, 0, 7);
       };
       ctx.clearRect(0, 0, w, h);
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(cx, cy, R0 * (zoom > 1 ? 1 : 2), 0, 7);
-      ctx.clip();
       ctx.fillStyle = dot;
-      const r = Math.max(0.8, R0 / 130);
+      const r = Math.max(0.8, R / 130);
       for (let i = 0; i < dots.length; i += 3) {
         const [x, y, z] = proj(dots[i], dots[i + 1], dots[i + 2]);
         if (z <= 0) continue;
@@ -216,7 +209,6 @@ export function Globe({
         }
       });
       ctx.globalAlpha = 1;
-      ctx.restore();
     };
 
     const moving = () => drag || Math.abs(v.vx) + Math.abs(v.vy) > 0.01;
@@ -245,8 +237,7 @@ export function Globe({
       const dpr = Math.min(devicePixelRatio || 1, 2);
       w = root.clientWidth;
       h = root.clientHeight;
-      R0 = Math.min(w, h) * 0.42;
-      R = R0 * zoom;
+      R = Math.min(w, h) * 0.42;
       canvas.width = w * dpr;
       canvas.height = h * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -328,7 +319,7 @@ export function Globe({
       io.disconnect();
       mo.disconnect();
     };
-  }, [markers, arcs, samples, speed, dotColor, accentColor, lat0, lng0, zoom]);
+  }, [markers, arcs, samples, speed, dotColor, accentColor, lat0, lng0]);
 
   const names = markers.flatMap((m) => m.label ?? []);
 
