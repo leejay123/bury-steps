@@ -31,9 +31,9 @@ export function HeroGlobe({
 }) {
   const markers: GlobeMarker[] = [
     { lat: BURY[0], lng: BURY[1], label: "Bury Steps" },
-    ...data.points.map(([lat, lng]) => ({ lat, lng })),
+    ...data.points,
   ];
-  const arcs: GlobeArc[] = data.points.map((point) => ({ from: BURY, to: point }));
+  const arcs: GlobeArc[] = data.points.map((point) => ({ from: BURY, to: [point.lat, point.lng] }));
   const stats = [
     { value: data.upcomingWalks, label: "walks coming up" },
     { value: data.members, label: "members" },
@@ -46,7 +46,7 @@ export function HeroGlobe({
       <DecorIcon className="size-4" position="bottom-left" />
       <DecorIcon className="size-4" position="bottom-right" />
       <FullWidthDivider position="bottom" />
-      <section className="relative isolate overflow-hidden px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+      <section className="relative isolate overflow-hidden px-4 pt-16 pb-10 sm:px-6 sm:pt-20 sm:pb-12 lg:px-8">
         <div
           aria-hidden
           className="absolute inset-y-0 right-0 -z-10 w-full bg-radial-[at_75%_50%] from-primary/10 to-transparent to-60% lg:w-2/3"
@@ -89,7 +89,7 @@ export function HeroGlobe({
             </BlurFade>
 
             <BlurFade delay={0.4}>
-              <dl className="mt-14 grid grid-cols-3 gap-6 border-t pt-8">
+              <dl className="mt-10 grid grid-cols-3 gap-6 border-t pt-6">
                 {stats.map((stat) => (
                   <div className="flex flex-col-reverse justify-end gap-1" key={stat.label}>
                     <dt className="text-xs text-muted-foreground sm:text-sm">{stat.label}</dt>
@@ -106,12 +106,12 @@ export function HeroGlobe({
             <Globe
               accentColor="var(--primary)"
               arcs={arcs}
-              center={[50, -2]}
-              className="w-full max-w-[min(100%,34rem)]"
+              center={[52, -2.5]}
+              className="w-full max-w-[min(100%,30rem)]"
               label="Globe showing where Bury Steps walks meet"
               markers={markers}
               samples={20000}
-            speed={0}
+              speed={0}
             />
           </BlurFade>
         </div>

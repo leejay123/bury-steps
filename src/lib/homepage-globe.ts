@@ -3,8 +3,10 @@ import { prisma } from "@/lib/db";
 /** Bury town centre, where every walk line on the globe starts. */
 export const BURY: [number, number] = [53.593, -2.298];
 
+export type GlobePoint = { lat: number; lng: number; label?: string };
+
 export type HomepageGlobeData = {
-  points: [number, number][];
+  points: GlobePoint[];
   upcomingWalks: number;
   members: number;
   walksThisYear: number;
@@ -26,15 +28,26 @@ export async function getHomepageGlobeData(now = new Date()): Promise<HomepageGl
 
   // Walks often reuse a meeting point; one dot per spot (to ~1km).
   const seen = new Set<string>();
-  const points: [number, number][] = [];
-  for (const walk of placed) {
-    const point: [number, number] = [walk.latitude!, walk.longitude!];
-    const key = point.map((n) => n.toFixed(2)).join(",");
+  const points: GlobePoint[] = [];
+  for (const walk of [...placed.map((w) => ({ lat: w.latitude!, lng: w.longitude! })), ...PREVIEW_SAMPLE_WALKS]) {
+    const key = `${walk.lat.toFixed(2)},${walk.lng.toFixed(2)}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    points.push(point);
+    points.push(walk);
     if (points.length === 40) break;
   }
 
   return { points, upcomingWalks, members, walksThisYear };
 }
+
+// PREVIEW ONLY — pretend finished walks so the globe can be tried with
+// spots far enough apart to see. Never saved to the database (previews
+// share the live one). Remove before this goes live.
+const PREVIEW_SAMPLE_WALKS: GlobePoint[] = [
+  { lat: 54.46, lng: -3.09, label: "Lake District" },
+  { lat: 53.07, lng: -4.08, label: "Snowdonia" },
+  { lat: 53.35, lng: -1.81, label: "Peak District" },
+  { lat: 54.22, lng: -2.1, label: "Yorkshire Dales" },
+  { lat: 56.8, lng: -5.0, label: "Ben Nevis" },
+  { lat: 55.95, lng: -3.19, label: "Edinburgh" },
+];
