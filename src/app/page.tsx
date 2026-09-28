@@ -1,13 +1,11 @@
-import { HeroSection } from "@/components/hero";
-import { HeroCinematic } from "@/components/hero-cinematic";
+import { HeroGlobe } from "@/components/hero-globe";
 import { HomeWelcome } from "@/components/home-welcome";
 import { getOptionalUser } from "@/lib/auth";
-import { getHomepageSlides } from "@/lib/homepage-slides";
 import { getHomepageTestimonials } from "@/lib/homepage-testimonials";
 import { getHomepageFaqData } from "@/lib/homepage-faqs";
 import { getHomepageMemberNotices } from "@/lib/site-notices";
 import { getProgressEnabled } from "@/lib/progress-settings";
-import { heroVideoPoster, heroVideoSrc } from "@/lib/hero-style";
+import { getHomepageGlobeData } from "@/lib/homepage-globe";
 import { PAGE_X_BLEED } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
@@ -21,14 +19,14 @@ export default async function Home() {
   // them together means the page is not stuck waiting for sign-in before
   // the hero, FAQs, and quotes even begin.
   const userPromise = getOptionalUser();
-  const slidesPromise = getHomepageSlides();
+  const globePromise = getHomepageGlobeData();
   const testimonialsPromise = getHomepageTestimonials();
   const faqPromise = getHomepageFaqData();
   const themePromise = getSiteTheme();
   const progressPromise = getProgressEnabled();
   const user = await userPromise;
-  const [slides, testimonials, faqData, theme, memberNotices, progressEnabled] = await Promise.all([
-    slidesPromise,
+  const [globe, testimonials, faqData, theme, memberNotices, progressEnabled] = await Promise.all([
+    globePromise,
     testimonialsPromise,
     faqPromise,
     themePromise,
@@ -40,28 +38,14 @@ export default async function Home() {
 
   return (
     <div className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
-      {theme.heroStyle === "cinematic" ? (
-        <HeroCinematic
-          overlayOpacity={theme.heroOverlayOpacity}
-          signInHref={signInHref}
-          signUpHref={signUpHref}
-          siteName={theme.siteName}
-          siteTagline={theme.siteTagline}
-          textColor={theme.heroTextColor}
-          videoPoster={heroVideoPoster(theme.heroVideoKey)}
-          videoSrc={heroVideoSrc(theme.heroVideoKey)}
-        />
-      ) : (
-        <HeroSection
-          bgPattern={theme.heroBgPattern}
-          carouselEnabled={theme.carouselEnabled}
-          signInHref={signInHref}
-          signUpHref={signUpHref}
-          siteName={theme.siteName}
-          siteTagline={theme.siteTagline}
-          slides={slides}
-        />
-      )}
+      <HeroGlobe
+        data={globe}
+        isSignedIn={user !== null}
+        signInHref={signInHref}
+        signUpHref={signUpHref}
+        siteName={theme.siteName}
+        siteTagline={theme.siteTagline}
+      />
       <HomeWelcome
         aboutExpect={theme.aboutExpect}
         aboutExpectHeading={theme.aboutExpectHeading}
