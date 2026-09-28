@@ -17,7 +17,7 @@ export async function getHomepageGlobeData(now = new Date()): Promise<HomepageGl
   const [placed, upcomingWalks, members, walksThisYear] = await Promise.all([
     prisma.walk.findMany({
       where: { cancelledAt: null, latitude: { not: null }, longitude: { not: null } },
-      select: { latitude: true, longitude: true },
+      select: { latitude: true, longitude: true, location: true },
       orderBy: { startsAt: "desc" },
       take: 200,
     }),
@@ -29,7 +29,7 @@ export async function getHomepageGlobeData(now = new Date()): Promise<HomepageGl
   // Walks often reuse a meeting point; one dot per spot (to ~1km).
   const seen = new Set<string>();
   const points: GlobePoint[] = [];
-  for (const walk of [...placed.map((w) => ({ lat: w.latitude!, lng: w.longitude! })), ...PREVIEW_SAMPLE_WALKS]) {
+  for (const walk of [...placed.map((w) => ({ lat: w.latitude!, lng: w.longitude!, label: placeName(w.location) })), ...PREVIEW_SAMPLE_WALKS]) {
     const key = `${walk.lat.toFixed(2)},${walk.lng.toFixed(2)}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -38,6 +38,11 @@ export async function getHomepageGlobeData(now = new Date()): Promise<HomepageGl
   }
 
   return { points, upcomingWalks, members, walksThisYear };
+}
+
+/** "Lido Carpark, Bury, BL9 0AA" → "Lido Carpark": the first part reads best as a tag. */
+function placeName(location: string | null) {
+  return location?.split(",")[0]?.trim() || undefined;
 }
 
 // PREVIEW ONLY — pretend finished walks so the globe can be tried with
