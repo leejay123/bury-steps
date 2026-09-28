@@ -325,6 +325,7 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
 }
 
 @theme inline {
+  --animate-retro-grid: retro-grid 18s linear infinite;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -504,5 +505,15 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
   line-height: 1.5;
   @media (width >= 48rem) {
     font-size: calc(var(--text-intro-n, 16) * 1px);
+  }
+}
+
+/* Velora Retro Grid background (Settings → Homepage layout → background pattern). */
+@keyframes retro-grid {
+  from {
+    transform: translateY(-50%);
+  }
+  to {
+    transform: translateY(0);
   }
 }

@@ -79,7 +79,8 @@ export function ReportsDisplaySection() {
               and whether the <strong>hero photo carousel</strong> and{" "}
               <strong>Latest notices</strong> show. <strong>Background patterns</strong> sets a
               backdrop for each section: dot grid, grid lines, crosses, diagonal lines, or{" "}
-              <strong>Stars</strong>, which drift slowly upwards.
+              <strong>Stars</strong>, which drift slowly upwards, or <strong>Retro grid</strong>, a
+              grid that scrolls slowly towards the horizon.
             </p>
             <p className="font-medium text-foreground">Site wording</p>
             <p>

@@ -1,6 +1,8 @@
 import { HeroGlobe } from "@/components/hero-globe";
+import { HomePhotoSlider } from "@/components/home-photo-slider";
 import { HomeWelcome } from "@/components/home-welcome";
 import { getOptionalUser } from "@/lib/auth";
+import { getHomepageSlides } from "@/lib/homepage-slides";
 import { getHomepageTestimonials } from "@/lib/homepage-testimonials";
 import { getHomepageFaqData } from "@/lib/homepage-faqs";
 import { getHomepageMemberNotices } from "@/lib/site-notices";
@@ -20,13 +22,15 @@ export default async function Home() {
   // the hero, FAQs, and quotes even begin.
   const userPromise = getOptionalUser();
   const globePromise = getHomepageGlobeData();
+  const slidesPromise = getHomepageSlides();
   const testimonialsPromise = getHomepageTestimonials();
   const faqPromise = getHomepageFaqData();
   const themePromise = getSiteTheme();
   const progressPromise = getProgressEnabled();
   const user = await userPromise;
-  const [globe, testimonials, faqData, theme, memberNotices, progressEnabled] = await Promise.all([
+  const [globe, slides, testimonials, faqData, theme, memberNotices, progressEnabled] = await Promise.all([
     globePromise,
+    slidesPromise,
     testimonialsPromise,
     faqPromise,
     themePromise,
@@ -46,6 +50,7 @@ export default async function Home() {
         siteName={theme.siteName}
         siteTagline={theme.siteTagline}
       />
+      <HomePhotoSlider enabled={theme.carouselEnabled} slides={slides} />
       <HomeWelcome
         aboutExpect={theme.aboutExpect}
         aboutExpectHeading={theme.aboutExpectHeading}

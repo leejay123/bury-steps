@@ -1,4 +1,4 @@
-const SECTION_BG_PATTERNS = ["none", "dots", "grid", "cross", "diagonal", "stars"] as const;
+const SECTION_BG_PATTERNS = ["none", "dots", "grid", "cross", "diagonal", "stars", "retro"] as const;
 
 export type SectionBgPattern = (typeof SECTION_BG_PATTERNS)[number];
 
@@ -9,6 +9,7 @@ export const SECTION_BG_PATTERN_LABELS: Record<SectionBgPattern, string> = {
   cross: "Crosses",
   diagonal: "Diagonal lines",
   stars: "Stars (slowly drifting)",
+  retro: "Retro grid (moving)",
 };
 
 export function parseSectionBgPattern(

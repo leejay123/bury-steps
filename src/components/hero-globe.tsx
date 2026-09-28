@@ -111,23 +111,26 @@ export function HeroGlobe({
             </BlurFade>
 
             <BlurFade delay={0.4}>
-              <dl className="mt-10 grid grid-cols-3 gap-2 sm:gap-3">
-                {stats.map(({ Icon, ...stat }) => (
-                  <div
-                    className="flex flex-col-reverse justify-end gap-1 rounded-xl border bg-card/80 p-3 shadow-xs backdrop-blur sm:p-4"
-                    key={stat.label}
-                  >
-                    <dt className="text-xs text-muted-foreground sm:text-sm">{stat.label}</dt>
-                    <dd className="text-2xl font-medium tracking-tight sm:text-3xl">
-                      <NumberTicker value={stat.value} />
-                    </dd>
-                    {/* Same blue as the globe's lines, so the cards and globe read as one. */}
-                    <span className="mb-2 flex size-8 items-center justify-center rounded-lg bg-[oklch(0.62_0.19_259)]/10 text-[oklch(0.55_0.2_262)]">
-                      <Icon aria-hidden className="size-4" />
-                    </span>
-                  </div>
-                ))}
-              </dl>
+              {/* Same hairline grid and corner crosses as the homepage's feature
+                  row, so the numbers read as part of the site's grid. */}
+              <div className="relative mt-10 border">
+                <DecorIcon className="size-4" position="top-left" />
+                <DecorIcon className="size-4" position="top-right" />
+                <DecorIcon className="size-4" position="bottom-left" />
+                <DecorIcon className="size-4" position="bottom-right" />
+                <dl className="grid grid-cols-3 gap-px bg-border">
+                  {stats.map(({ Icon, ...stat }) => (
+                    <div className="flex flex-col-reverse justify-end gap-1 bg-background p-3 sm:p-5" key={stat.label}>
+                      <dt className="text-xs text-muted-foreground sm:text-sm">{stat.label}</dt>
+                      <dd className="text-2xl font-medium tracking-tight sm:text-3xl">
+                        <NumberTicker value={stat.value} />
+                      </dd>
+                      {/* Same blue as the globe's lines. */}
+                      <Icon aria-hidden className="mb-3 size-5 text-[oklch(0.55_0.2_262)]" />
+                    </div>
+                  ))}
+                </dl>
+              </div>
             </BlurFade>
           </div>
 
