@@ -53,7 +53,7 @@ export default async function NoticeDetailPage({
           <p className="text-lg text-muted-foreground">{notice.body}</p>
         ) : null}
       </header>
-      <DescriptionText className="typeset typeset-docs block max-w-[42em]" text={notice.pageBody} />
+      <DescriptionText className="typeset typeset-docs block max-w-[90ch]" text={notice.pageBody} />
     </article>
   );
 }

@@ -348,8 +348,8 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --font-sans: var(--font-site), ui-sans-serif, system-ui, sans-serif;
-  /* Geist Mono for code-style text, matching the typeset-docs preset. */
-  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Code-style text uses Geist too, matching the typeset-docs preset (Mono: Geist). */
+  --font-mono: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
@@ -466,7 +466,7 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
 .typeset-docs {
   --typeset-font-body: var(--font-geist);
   --typeset-font-heading: var(--font-geist);
-  --typeset-font-mono: var(--font-geist-mono);
+  --typeset-font-mono: var(--font-geist);
   --typeset-size: 15px;
   --typeset-leading: 1.6;
   --typeset-flow: 1em;

@@ -14,7 +14,7 @@ export type LegalSection = {
 
 function LegalBody({ children }: { children: ReactNode }) {
   return (
-    <div className="typeset typeset-docs max-w-[42em]">
+    <div className="typeset typeset-docs max-w-[90ch]">
       {children}
     </div>
   );
@@ -87,7 +87,7 @@ export function LegalPageSkeleton() {
         {[4, 3, 5, 3].map((lines, index) => (
           <div className="border-b px-4 md:px-6" key={index}>
             <Skeleton className="mt-6 mb-3 h-4 w-36" />
-            <div className="flex max-w-[42em] flex-col gap-2 pb-7">
+            <div className="flex max-w-[90ch] flex-col gap-2 pb-7">
               {Array.from({ length: lines }, (_, line) => (
                 <Skeleton className={line === lines - 1 ? "h-3.5 w-2/3" : "h-3.5 w-full"} key={line} />
               ))}
