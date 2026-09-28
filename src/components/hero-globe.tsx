@@ -68,7 +68,7 @@ export function HeroGlobe({
       <DecorIcon className="size-4" position="bottom-left" />
       <DecorIcon className="size-4" position="bottom-right" />
       <FullWidthDivider position="bottom" />
-      <section className="relative isolate overflow-hidden px-4 pt-16 pb-10 sm:px-6 sm:pt-20 sm:pb-12 lg:px-8">
+      <section className="relative isolate overflow-hidden px-4 pt-8 pb-10 sm:px-6 sm:pt-10 sm:pb-12 lg:px-8">
         <div
           aria-hidden
           className="absolute inset-y-0 right-0 -z-10 w-full bg-radial-[at_75%_50%] from-[oklch(0.62_0.19_259)]/10 to-transparent to-60% lg:w-2/3"
