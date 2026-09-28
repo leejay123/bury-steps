@@ -3,7 +3,7 @@ import { requireAnyPermission } from "@/lib/auth";
 import { CreateWalkDrawer } from "./create-walk-drawer";
 import { AdminPageIntro } from "./admin-page-intro";
 import { AdminWalkTable } from "./admin-walk-table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsContents, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { upcomingListLookbackFrom, walkStatus } from "@/lib/walk-window";
 
 export const dynamic = "force-dynamic";
@@ -116,27 +116,25 @@ export default async function AdminPage() {
               <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
               <TabsTrigger value="past">History ({past.length})</TabsTrigger>
             </TabsList>
-            <TabsContent
-              className="mt-4 data-[state=inactive]:hidden"
-              forceMount
-              value="upcoming"
-            >
-              <AdminWalkTable
-                attendanceLabel="On the walk"
-                emptyDescription="Create one and it will show here."
-                emptyTitle="No walks scheduled"
-                scope="upcoming"
-                walks={upcoming}
-              />
-            </TabsContent>
-            <TabsContent className="mt-4" value="past">
-              <AdminWalkTable
-                emptyDescription="Finished walks will show here."
-                emptyTitle="No past walks yet"
-                scope="past"
-                walks={past}
-              />
-            </TabsContent>
+            <TabsContents>
+              <TabsContent className="mt-4" value="upcoming">
+                <AdminWalkTable
+                  attendanceLabel="On the walk"
+                  emptyDescription="Create one and it will show here."
+                  emptyTitle="No walks scheduled"
+                  scope="upcoming"
+                  walks={upcoming}
+                />
+              </TabsContent>
+              <TabsContent className="mt-4" value="past">
+                <AdminWalkTable
+                  emptyDescription="Finished walks will show here."
+                  emptyTitle="No past walks yet"
+                  scope="past"
+                  walks={past}
+                />
+              </TabsContent>
+            </TabsContents>
           </Tabs>
         </section>
       ) : admin.permWalksCreate ? (
