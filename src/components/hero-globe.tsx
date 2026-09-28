@@ -5,28 +5,35 @@ import { DecorIcon } from "@/components/decor-icon";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { JoinGroupButton } from "@/components/join-group-button";
 import { BlurFade } from "@/components/velora/blur-fade";
-import { Globe, type GlobeArc, type GlobeMarker } from "@/components/velora/globe";
+import { Globe, type GlobeArc } from "@/components/velora/globe";
 import { NumberTicker } from "@/components/velora/number-ticker";
 import { BURY, type HomepageGlobeData } from "@/lib/homepage-globe";
 
 /**
- * Decorative: walks are all too close to Bury for a line to show on a whole
- * globe, so the lines sweep out to world cities instead, like Velora's demo.
+ * Decorative lines only: no pins, no names. Walks are all too close to Bury
+ * for a line to show on a whole globe, so these sweep out from Bury, plus a
+ * few crossing other parts of the world, like Velora's demo.
  */
-// Unnamed on purpose: they're decoration, not places the group goes. A few
-// long ones sweep across the globe; the rest fan out close around Bury.
-const WORLD: GlobeMarker[] = [
-  { lat: 40.71, lng: -74.01 },
-  { lat: -23.55, lng: -46.63 },
-  { lat: 6.52, lng: 3.38 },
-  { lat: 25.2, lng: 55.27 },
-  { lat: 64.15, lng: -21.94 },
-  { lat: 60.4, lng: 5.3 },
-  { lat: 48.9, lng: 2.35 },
-  { lat: 43.3, lng: -8.4 },
-  { lat: 52.4, lng: 13.4 },
-  { lat: 57.5, lng: -13.5 },
-  { lat: 46.2, lng: 9.0 },
+const LINES: GlobeArc[] = [
+  ...[
+    [40.71, -74.01],
+    [-23.55, -46.63],
+    [6.52, 3.38],
+    [25.2, 55.27],
+    [64.15, -21.94],
+    [60.4, 5.3],
+    [48.9, 2.35],
+    [43.3, -8.4],
+    [52.4, 13.4],
+    [57.5, -13.5],
+    [46.2, 9.0],
+  ].map(([lat, lng]) => ({ from: BURY, to: [lat, lng] as [number, number] })),
+  { from: [40.71, -74.01], to: [-23.55, -46.63] },
+  { from: [-23.55, -46.63], to: [6.52, 3.38] },
+  { from: [6.52, 3.38], to: [25.2, 55.27] },
+  { from: [34.05, -118.24], to: [40.71, -74.01] },
+  { from: [30.04, 31.24], to: [-33.92, 18.42] },
+  { from: [19.43, -99.13], to: [4.71, -74.07] },
 ];
 
 /**
@@ -49,8 +56,6 @@ export function HeroGlobe({
   siteName: string;
   siteTagline: string;
 }) {
-  const markers: GlobeMarker[] = [{ lat: BURY[0], lng: BURY[1], label: "Bury Steps" }, ...WORLD];
-  const arcs: GlobeArc[] = WORLD.map((city) => ({ from: BURY, to: [city.lat, city.lng] }));
   const stats = [
     { value: data.upcomingWalks, label: "walks coming up" },
     { value: data.members, label: "members" },
@@ -122,11 +127,10 @@ export function HeroGlobe({
           <BlurFade className="relative flex justify-center" delay={0.2} direction="none">
             <Globe
               accentColor="oklch(0.62 0.19 259)"
-              arcs={arcs}
+              arcs={LINES}
               center={[35, -15]}
               className="w-full max-w-[min(100%,30rem)]"
-              label="Globe with lines from Bury out to cities around the world"
-              markers={markers}
+              label="Globe with animated lines around the world"
               samples={20000}
               speed={0}
             />

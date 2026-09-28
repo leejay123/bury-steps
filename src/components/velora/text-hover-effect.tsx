@@ -94,8 +94,8 @@ export function TextHoverEffect({
     </text>
   );
 
-  // This site has no --brand-* tokens; the fallbacks run blue (the globe's
-  // accent) into green.
+  // This site has no --brand-* tokens; the fallbacks are shades of the
+  // globe's blue so the two match.
   return (
     <svg
       role="img"
@@ -114,9 +114,9 @@ export function TextHoverEffect({
     >
       <defs>
         <linearGradient id={`${id}-ink`} x1="0" x2="1" y1="0" y2="0">
-          <stop offset="0%" style={{ stopColor: "var(--brand-from, oklch(0.62 0.19 259))" }} />
-          <stop offset="50%" style={{ stopColor: "var(--brand-via, oklch(0.7 0.14 220))" }} />
-          <stop offset="100%" style={{ stopColor: "var(--brand-to, oklch(0.62 0.13 160))" }} />
+          <stop offset="0%" style={{ stopColor: "var(--brand-from, oklch(0.55 0.2 262))" }} />
+          <stop offset="50%" style={{ stopColor: "var(--brand-via, oklch(0.62 0.19 259))" }} />
+          <stop offset="100%" style={{ stopColor: "var(--brand-to, oklch(0.7 0.15 250))" }} />
         </linearGradient>
         <motion.radialGradient
           id={`${id}-spot`}

@@ -84,13 +84,15 @@ export async function SiteFooter() {
           © {new Date().getFullYear()} {theme.siteName}
         </p>
       </div>
-      <div aria-hidden className={`overflow-hidden ${PAGE_X}`}>
-        <TextHoverEffect
-          className="mx-auto -mb-[2%] max-w-6xl font-black tracking-tight"
-          strokeWidth={0.6}
-          text="Bury Steps"
-        />
-      </div>
+      {theme.footerWordmarkEnabled ? (
+        <div aria-hidden className={`overflow-hidden ${PAGE_X}`}>
+          <TextHoverEffect
+            className="mx-auto -mb-[2%] max-w-2xl font-black tracking-tight"
+            strokeWidth={0.6}
+            text="Bury Steps"
+          />
+        </div>
+      ) : null}
     </footer>
   );
 }

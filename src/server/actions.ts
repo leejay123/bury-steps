@@ -100,6 +100,7 @@ export {
   updateContactMessagesOwner,
   updateOrganiserInviteRequired,
   updateScrollToTopEnabled,
+  updateFooterWordmarkEnabled,
   updateCookieConsentVariant,
   updateSiteFont,
   updateTextSizes,

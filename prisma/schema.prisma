@@ -312,6 +312,8 @@ model SiteSetting {
   carouselEnabled             Boolean  @default(true)
   /// When false, the floating back-to-top button is hidden.
   scrollToTopEnabled          Boolean  @default(true)
+  /// When false, the giant outlined site name at the foot of every page is hidden.
+  footerWordmarkEnabled       Boolean  @default(true)
   /// Cookie banner layout: default, small, or mini.
   cookieConsentVariant        String   @default("small")
   /// Public site typeface. One of the ids in src/lib/site-font.ts.

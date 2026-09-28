@@ -4,7 +4,7 @@ import { getSiteTheme } from "@/lib/site-theme";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { SettingsPage, SettingsSectionGroup } from "../settings-page";
 import { CookieConsentSettings } from "./cookie-consent-settings";
-import { DisplaySettings } from "./display-form";
+import { DisplaySettings, FooterWordmarkSettings } from "./display-form";
 import { ProgressToggle } from "./progress-toggle";
 import { OrganiserInviteToggle } from "./organiser-invite-toggle";
 import { ContactMessagesOwnerSettings } from "./contact-messages-owner-settings";
@@ -28,12 +28,13 @@ export default async function SiteBehaviourSettingsPage() {
 
   return (
     <SettingsPage
-      description="Sitewide behaviour that isn't part of the homepage story — cookie notice, back to top, Progress, organiser invites, and the contact form."
+      description="Sitewide behaviour that isn't part of the homepage story — cookie notice, back to top, the footer name, Progress, organiser invites, and the contact form."
       title="Site behaviour"
     >
       <SettingsSectionGroup description="Behaviour that applies across the whole site." title="Site chrome">
         <CookieConsentSettings variant={theme.cookieConsentVariant} />
         <DisplaySettings scrollToTopEnabled={theme.scrollToTopEnabled} />
+        <FooterWordmarkSettings enabled={theme.footerWordmarkEnabled} />
         <ProgressToggle enabled={settings?.progressEnabled ?? true} />
       </SettingsSectionGroup>
 

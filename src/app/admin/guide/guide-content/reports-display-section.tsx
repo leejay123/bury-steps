@@ -102,6 +102,7 @@ export function ReportsDisplaySection() {
               Open <Link href="/admin/settings/behaviour">Site behaviour</Link> to set how the
               cookie notice looks (<strong>Default</strong>, <strong>Small</strong>, or{" "}
               <strong>Mini</strong>), whether <strong>Back to top</strong> appears after you scroll,
+              whether the big outlined name shows at the bottom of every page,
               whether new organisers need an invite, and who gets emailed about contact form
               messages.
             </p>

@@ -187,6 +187,7 @@ export async function resetSiteToDefault(
           primaryColor: DEFAULT_PRIMARY_COLOR,
           carouselEnabled: true,
           scrollToTopEnabled: true,
+          footerWordmarkEnabled: true,
           cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
           siteFont: DEFAULT_SITE_FONT,
           siteName: DEFAULT_SITE_NAME,

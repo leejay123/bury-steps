@@ -81,6 +81,8 @@ export type SiteTheme = {
    * a signed-in member would otherwise see there. */
   memberNoticesEnabled: boolean;
   scrollToTopEnabled: boolean;
+  /** Giant outlined site name at the foot of every page (see updateFooterWordmarkEnabled). */
+  footerWordmarkEnabled: boolean;
   cookieConsentVariant: CookieConsentVariant;
   siteFont: SiteFontId;
   textSizes: TextSizes;
@@ -146,6 +148,7 @@ function defaultTheme(): SiteTheme {
     carouselEnabled: true,
     memberNoticesEnabled: true,
     scrollToTopEnabled: true,
+    footerWordmarkEnabled: true,
     cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
     siteFont: DEFAULT_SITE_FONT,
     textSizes: DEFAULT_TEXT_SIZES,
@@ -204,6 +207,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       carouselEnabled: true,
       memberNoticesEnabled: true,
       scrollToTopEnabled: true,
+      footerWordmarkEnabled: true,
       cookieConsentVariant: true,
       siteFont: true,
       textHeadlinePx: true,
@@ -271,6 +275,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     carouselEnabled: row?.carouselEnabled ?? true,
     memberNoticesEnabled: row?.memberNoticesEnabled ?? true,
     scrollToTopEnabled: row?.scrollToTopEnabled ?? true,
+    footerWordmarkEnabled: row?.footerWordmarkEnabled ?? true,
     cookieConsentVariant:
       parseCookieConsentVariant(row?.cookieConsentVariant ?? "") ??
       DEFAULT_COOKIE_CONSENT_VARIANT,

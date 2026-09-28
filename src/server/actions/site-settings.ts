@@ -467,6 +467,36 @@ export async function updateScrollToTopEnabled(
   return { ok: true, message: enabled ? "Back to top is on." : "Back to top is off." };
 }
 
+export async function updateFooterWordmarkEnabled(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  const enabled = String(formData.get("footerWordmarkEnabled") ?? "") === "on";
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        carouselEnabled: true,
+        footerWordmarkEnabled: enabled,
+      },
+      update: { footerWordmarkEnabled: enabled },
+    });
+  } catch (err) {
+    return logActionError("updateFooterWordmarkEnabled", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/behaviour");
+  return { ok: true, message: enabled ? "Footer name is on." : "Footer name is off." };
+}
+
 export async function updateSiteFont(
   _prev: ActionResult | null,
   formData: FormData,
