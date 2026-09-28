@@ -49,7 +49,7 @@ export function HeroGlobe({
       <section className="relative isolate overflow-hidden px-4 pt-16 pb-10 sm:px-6 sm:pt-20 sm:pb-12 lg:px-8">
         <div
           aria-hidden
-          className="absolute inset-y-0 right-0 -z-10 w-full bg-radial-[at_75%_50%] from-primary/10 to-transparent to-60% lg:w-2/3"
+          className="absolute inset-y-0 right-0 -z-10 w-full bg-radial-[at_75%_50%] from-[oklch(0.55_0.13_160)]/10 to-transparent to-60% lg:w-2/3"
         />
 
         <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-2 lg:gap-8">
@@ -104,7 +104,7 @@ export function HeroGlobe({
 
           <BlurFade className="relative flex justify-center" delay={0.2} direction="none">
             <Globe
-              accentColor="var(--primary)"
+              accentColor="oklch(0.55 0.13 160)"
               arcs={arcs}
               center={[52, -2.5]}
               className="w-full max-w-[min(100%,30rem)]"

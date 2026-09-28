@@ -336,6 +336,9 @@ export function Globe({
       }
       {...props}
       data-slot="globe"
+      // The halo and rim below follow the accent colour (Velora uses a
+      // --brand token this site doesn't have).
+      style={{ "--globe-accent": accentColor, ...props.style } as React.CSSProperties}
       className={cn(
         "relative aspect-square w-full max-w-md cursor-grab touch-pan-y select-none rounded-full outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         className
@@ -343,11 +346,11 @@ export function Globe({
     >
       <div
         aria-hidden
-        className="absolute inset-[8%] rounded-full bg-background bg-radial-[at_30%_25%] from-brand/12 to-transparent to-75% shadow-[0_0_70px_-12px_color-mix(in_oklab,var(--brand)_45%,transparent)] ring-1 ring-brand/15"
+        className="absolute inset-[8%] rounded-full bg-background bg-radial-[at_30%_25%] from-(--globe-accent)/12 to-transparent to-75% shadow-[0_0_70px_-12px_color-mix(in_oklab,var(--globe-accent)_45%,transparent)] ring-1 ring-(--globe-accent)/15"
       />
       <div
         aria-hidden
-        className="absolute inset-[8%] rounded-full bg-radial from-transparent from-70% to-brand/20"
+        className="absolute inset-[8%] rounded-full bg-radial from-transparent from-70% to-(--globe-accent)/20"
       />
       <canvas ref={canvasRef} aria-hidden className="absolute inset-0 size-full" />
     </div>
