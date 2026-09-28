@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRightIcon } from "lucide-react";
+import { ArrowRightIcon, CalendarDaysIcon, FootprintsIcon, UsersIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DecorIcon } from "@/components/decor-icon";
 import { FullWidthDivider } from "@/components/full-width-divider";
@@ -37,9 +37,9 @@ const LINES: GlobeArc[] = [
 ];
 
 /**
- * Velora's "Globe split hero": words, buttons and live numbers on the left,
- * a spinning dotted globe on the right with a dot on every walk's meeting
- * point and a line out to it from Bury. Stacks with the globe below on phones.
+ * Velora's "Globe split hero": words, buttons and live numbers (as cards) on
+ * the left, a dotted globe with animated lines on the right. Phones get the
+ * words and cards only; the globe is hidden below the lg breakpoint.
  */
 export function HeroGlobe({
   data,
@@ -57,9 +57,9 @@ export function HeroGlobe({
   siteTagline: string;
 }) {
   const stats = [
-    { value: data.upcomingWalks, label: "walks coming up" },
-    { value: data.members, label: "members" },
-    { value: data.walksThisYear, label: `walks so far in ${new Date().getFullYear()}` },
+    { value: data.upcomingWalks, label: "walks coming up", Icon: CalendarDaysIcon },
+    { value: data.members, label: "members", Icon: UsersIcon },
+    { value: data.walksThisYear, label: `walks so far in ${new Date().getFullYear()}`, Icon: FootprintsIcon },
   ];
 
   return (
@@ -111,20 +111,27 @@ export function HeroGlobe({
             </BlurFade>
 
             <BlurFade delay={0.4}>
-              <dl className="mt-10 grid grid-cols-3 gap-6 border-t pt-6">
-                {stats.map((stat) => (
-                  <div className="flex flex-col-reverse justify-end gap-1" key={stat.label}>
+              <dl className="mt-10 grid grid-cols-3 gap-2 sm:gap-3">
+                {stats.map(({ Icon, ...stat }) => (
+                  <div
+                    className="flex flex-col-reverse justify-end gap-1 rounded-xl border bg-card/80 p-3 shadow-xs backdrop-blur sm:p-4"
+                    key={stat.label}
+                  >
                     <dt className="text-xs text-muted-foreground sm:text-sm">{stat.label}</dt>
                     <dd className="text-2xl font-medium tracking-tight sm:text-3xl">
                       <NumberTicker value={stat.value} />
                     </dd>
+                    {/* Same blue as the globe's lines, so the cards and globe read as one. */}
+                    <span className="mb-2 flex size-8 items-center justify-center rounded-lg bg-[oklch(0.62_0.19_259)]/10 text-[oklch(0.55_0.2_262)]">
+                      <Icon aria-hidden className="size-4" />
+                    </span>
                   </div>
                 ))}
               </dl>
             </BlurFade>
           </div>
 
-          <BlurFade className="relative flex justify-center" delay={0.2} direction="none">
+          <BlurFade className="relative hidden justify-center lg:flex" delay={0.2} direction="none">
             <Globe
               accentColor="oklch(0.62 0.19 259)"
               arcs={LINES}

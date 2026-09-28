@@ -87,7 +87,7 @@ export async function SiteFooter() {
       {theme.footerWordmarkEnabled ? (
         <div aria-hidden className={`overflow-hidden ${PAGE_X}`}>
           <TextHoverEffect
-            className="mx-auto -mb-[2%] max-w-2xl font-black tracking-tight"
+            className="mx-auto -mb-[2%] max-w-6xl font-black tracking-tight"
             strokeWidth={0.6}
             text="Bury Steps"
           />
