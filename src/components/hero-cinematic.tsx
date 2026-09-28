@@ -65,7 +65,7 @@ export function HeroCinematic({
           </h1>
         </FadeIn>
         <FadeIn delay={0.2}>
-          <p className="max-w-xl text-sm font-light leading-relaxed opacity-70 drop-shadow-[0_1px_10px_rgba(0,0,0,0.8)] sm:text-lg">
+          <p className="max-w-xl text-sm font-light leading-relaxed opacity-70 drop-shadow-[0_1px_10px_rgba(0,0,0,0.8)] sm:text-base">
             {siteTagline}
           </p>
         </FadeIn>

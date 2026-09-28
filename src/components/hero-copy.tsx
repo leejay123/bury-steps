@@ -55,14 +55,14 @@ export function HeroCopy({
         className={cn(
           "max-w-3xl text-balance text-center text-foreground",
           sectionHeading
-            ? "text-2xl font-semibold tracking-tight sm:text-3xl md:text-4xl"
+            ? "text-2xl font-medium tracking-tight sm:text-3xl md:text-4xl"
             : "text-2xl sm:text-3xl md:text-5xl lg:text-6xl",
         )}
       >
         {title}
       </Title>
 
-      <div className="max-w-2xl text-center text-muted-foreground text-sm tracking-wide sm:text-lg">{children}</div>
+      <div className="max-w-2xl text-center text-muted-foreground text-sm tracking-wide sm:text-base">{children}</div>
 
       {actions ? (
         <div className="flex w-fit flex-wrap items-center justify-center gap-3 pt-2">{actions}</div>

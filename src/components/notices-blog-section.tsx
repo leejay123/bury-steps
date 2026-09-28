@@ -84,7 +84,7 @@ export function NoticesBlogSection({
               <button
                 aria-pressed={active}
                 className={cn(
-                  "shrink-0 border-b-2 px-3 py-3 text-base md:px-4 md:py-3.5 md:text-lg",
+                  "shrink-0 border-b-2 px-3 py-3 text-base md:px-4 md:py-3.5",
                   active
                     ? "border-primary text-primary"
                     : "border-transparent text-muted-foreground hover:text-primary",
