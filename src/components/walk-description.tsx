@@ -22,7 +22,8 @@ const THIN_SCROLLBAR_CLASSNAME =
  * within itself instead of growing the page. Collapsed preview still renders
  * **bold** (via InlineDescriptionText, no paragraph splitting — line-clamp
  * needs one continuous inline flow to count lines correctly); expanded view
- * gets real paragraph breaks too, via DescriptionText. */
+ * gets real paragraph breaks too, via DescriptionText — at the same text size
+ * as the preview (no `typeset` class, which bumps text up to 1.125em). */
 export function WalkDescription({ description }: { description: string }) {
   const [expanded, setExpanded] = useState(false);
   const isLong = description.length > LONG_DESCRIPTION_THRESHOLD;
@@ -31,7 +32,7 @@ export function WalkDescription({ description }: { description: string }) {
     <div className="flex flex-col gap-2 text-sm leading-relaxed">
       {expanded ? (
         <DescriptionText
-          className={cn("typeset typeset-docs block max-h-72 overflow-y-auto pr-2", THIN_SCROLLBAR_CLASSNAME)}
+          className={cn("max-h-72 overflow-y-auto pr-2", THIN_SCROLLBAR_CLASSNAME)}
           text={description}
         />
       ) : (

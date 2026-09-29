@@ -86,7 +86,8 @@ export function WalksSection({
               Someone who is not signed in sees a prompt to create an account or sign in first
               while the walk is still open, then the date, time, length, meeting point (and
               postcode if you added one). A long description collapses to a few lines with{" "}
-              <strong>Read more</strong>. Under the walk details is{" "}
+              <strong>Read more</strong>, which opens the rest at the same text size. Under the
+              walk details is{" "}
               <strong>How this group works</strong>, then the map with Get directions, then{" "}
               <strong>Before you set off</strong> while clock-in is still closed. Both cards are
               edited, or turned off, under Settings → Site wording → Walk page cards. Once the
