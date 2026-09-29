@@ -1,6 +1,7 @@
 "use client";
 
 import { startTransition, useActionState, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { updateHeroStyle, type ActionResult } from "@/server/actions";
@@ -135,7 +136,7 @@ export function HeroStyleSettings({
 
   return (
     <SettingsSection
-      description="The banner at the very top of the public homepage. The video option plays on loop behind the site name and tagline instead of the usual light banner and photo carousel."
+      description="The top of the public homepage: the light Default banner, a looping Video, the Globe, or one of the photo heroes — Parallax, 3D Marquee and Photo slider — which use your Hero photos."
       title="Hero style"
     >
       <div className="flex w-full flex-col gap-4">
@@ -162,6 +163,20 @@ export function HeroStyleSettings({
 
         {style === "default" ? (
           <SectionBgPatternSelect pattern={heroBgPattern} section="hero" />
+        ) : null}
+
+        {style === "parallax" || style === "marquee" || style === "slider" ? (
+          <p className="text-sm text-muted-foreground">
+            {style === "parallax"
+              ? "Shows 12 photos"
+              : style === "marquee"
+                ? "Shows 15 photos"
+                : "Shows all your photos"}{" "}
+            from Hero photos; any gaps use sample walking photos until you add your own.{" "}
+            <Link className="font-medium text-foreground underline underline-offset-4" href="/admin/settings/hero-photos">
+              Change these photos
+            </Link>
+          </p>
         ) : null}
 
         {style === "cinematic" ? (
