@@ -34,6 +34,8 @@ const getWalkByShareKey = cache((key: string) =>
       description: true,
       distance: true,
       grade: true,
+      elevationGain: true,
+      essentials: true,
       walkLeader: true,
       backMarker: true,
       location: true,
@@ -164,6 +166,8 @@ export default async function WalkLinkPage({
         distance={walk.distance}
         durationMins={walk.durationMins}
         endedAt={endedAtIso}
+        elevationGain={walk.elevationGain}
+        essentials={walk.essentials}
         grade={walk.grade}
         icsHref={`/w/${slug}/ics`}
         location={walk.location}

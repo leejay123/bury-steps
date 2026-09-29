@@ -78,6 +78,8 @@ export function EditWalkButton({
   description,
   distance,
   durationMins,
+  elevationGain,
+  essentials,
   grade,
   latitude,
   location,
@@ -95,6 +97,8 @@ export function EditWalkButton({
   description: string | null;
   distance: string | null;
   durationMins: number;
+  elevationGain: string | null;
+  essentials: string[];
   grade: string | null;
   latitude: number | null;
   location: string | null;
@@ -137,6 +141,8 @@ export function EditWalkButton({
             description,
             distance,
             durationMins,
+            elevationGain,
+            essentials,
             grade,
             latitude,
             location,

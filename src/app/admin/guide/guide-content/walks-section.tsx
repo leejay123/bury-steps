@@ -55,6 +55,14 @@ export function WalksSection({
               a pin. The map uses free OpenStreetMap — no extra account is needed.
             </li>
             <li>
+              Under <strong>Details</strong>, fill in what you know: <strong>Distance</strong>{" "}
+              (for example “8.8 km (5.5 miles)”), <strong>Elevation gain</strong> (for example
+              “213 m”), grade, walk leader and back marker. Tick any <strong>Essentials</strong>{" "}
+              — toilets, parking, café, dog friendly, step-free, near public transport, boots
+              recommended, stiles. Each shows on the walk page as its own line or tag, so the
+              description can stay for the story of the walk.
+            </li>
+            <li>
               Most walks need nothing more for the location. For a what3words address or exact
               map coordinates, open <strong>More location options</strong> under the postcode.
               It opens by itself when you edit a walk that already has a what3words address.

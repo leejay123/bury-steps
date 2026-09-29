@@ -46,6 +46,7 @@ import {
   withCountLimitLock,
 } from "./shared";
 import { isOwner, actorStillOwner } from "@/lib/site-owner";
+import { parseWalkEssentials } from "@/lib/walk-essentials";
 
 /** Stable unguessable id for clock-in forms. Old /w/<token> links still work. */
 const makeToken = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 12);
@@ -55,6 +56,7 @@ const walkDetailsSchema = z.object({
   description: z.string().trim().max(2000).optional(),
   distance: z.string().trim().max(60).optional(),
   grade: z.string().trim().max(60).optional(),
+  elevationGain: z.string().trim().max(60).optional(),
   walkLeader: z.string().trim().max(100).optional(),
   backMarker: z.string().trim().max(100).optional(),
   location: z.string().trim().max(200).optional(),
@@ -149,6 +151,7 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
     description: formData.get("description") || undefined,
     distance: formData.get("distance") || undefined,
     grade: formData.get("grade") || undefined,
+    elevationGain: formData.get("elevationGain") || undefined,
     walkLeader: formData.get("walkLeader") || undefined,
     backMarker: formData.get("backMarker") || undefined,
     location: formData.get("location") || undefined,
@@ -189,6 +192,8 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
           description: parsed.data.description ?? null,
           distance: parsed.data.distance ?? null,
           grade: parsed.data.grade ?? null,
+          elevationGain: parsed.data.elevationGain ?? null,
+          essentials: parseWalkEssentials(formData.getAll("essentials")),
           walkLeader: parsed.data.walkLeader ?? null,
           backMarker: parsed.data.backMarker ?? null,
           location: parsed.data.location ?? null,
@@ -245,6 +250,8 @@ export async function duplicateWalk(
       description: true,
       distance: true,
       grade: true,
+      elevationGain: true,
+      essentials: true,
       walkLeader: true,
       backMarker: true,
       location: true,
@@ -276,6 +283,8 @@ export async function duplicateWalk(
           description: source.description,
           distance: source.distance,
           grade: source.grade,
+          elevationGain: source.elevationGain,
+          essentials: source.essentials,
           walkLeader: source.walkLeader,
           backMarker: source.backMarker,
           location: source.location,
@@ -622,6 +631,7 @@ export async function updateWalk(
       description: formData.get("description") || undefined,
       distance: formData.get("distance") || undefined,
       grade: formData.get("grade") || undefined,
+      elevationGain: formData.get("elevationGain") || undefined,
       walkLeader: formData.get("walkLeader") || undefined,
       backMarker: formData.get("backMarker") || undefined,
       location: formData.get("location") || undefined,
@@ -714,6 +724,8 @@ export async function updateWalk(
             description: parsed.data.description ?? null,
             distance: parsed.data.distance ?? null,
             grade: parsed.data.grade ?? null,
+            elevationGain: parsed.data.elevationGain ?? null,
+            essentials: parseWalkEssentials(formData.getAll("essentials")),
             walkLeader: parsed.data.walkLeader ?? null,
             backMarker: parsed.data.backMarker ?? null,
             startsAt: nextStartsAt,

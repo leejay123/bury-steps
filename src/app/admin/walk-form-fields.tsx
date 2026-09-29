@@ -4,7 +4,9 @@ import { utcToLondonWallClock } from "@/lib/dates";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { MeetingPointFields } from "@/components/meeting-point-fields";
 import { FieldHint, FormSection } from "@/components/drawer-form";
+import { WALK_ESSENTIALS } from "@/lib/walk-essentials";
 import { WalkDescriptionField } from "./walk-description-field";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -30,6 +32,8 @@ export type WalkFormDefaults = {
   description: string | null;
   distance: string | null;
   grade: string | null;
+  elevationGain: string | null;
+  essentials: string[];
   walkLeader: string | null;
   backMarker: string | null;
   location: string | null;
@@ -137,7 +141,16 @@ export function WalkFormFields({
               defaultValue={defaults?.distance ?? ""}
               id={id("distance")}
               name="distance"
-              placeholder="4 to 5 miles"
+              placeholder="8.8 km (5.5 miles)"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor={id("elevationGain")}>Elevation gain</Label>
+            <Input
+              defaultValue={defaults?.elevationGain ?? ""}
+              id={id("elevationGain")}
+              name="elevationGain"
+              placeholder="213 m"
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -174,6 +187,25 @@ export function WalkFormFields({
             />
           </div>
         </div>
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-1 text-sm font-medium">Essentials</legend>
+          <FieldHint>Tick what&apos;s there. Only ticked items show on the walk page.</FieldHint>
+          <div className="grid gap-2.5 sm:grid-cols-2">
+            {WALK_ESSENTIALS.map((item) => (
+              <div className="flex items-center gap-2" key={item.key}>
+                <Checkbox
+                  defaultChecked={defaults?.essentials.includes(item.key) ?? false}
+                  id={id(`essential-${item.key}`)}
+                  name="essentials"
+                  value={item.key}
+                />
+                <Label className="font-normal" htmlFor={id(`essential-${item.key}`)}>
+                  <span aria-hidden="true">{item.emoji}</span> {item.label}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </fieldset>
         <WalkDescriptionField defaultValue={defaults?.description ?? ""} id={id("description")} />
       </FormSection>
     </div>

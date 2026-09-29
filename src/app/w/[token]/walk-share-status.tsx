@@ -29,6 +29,8 @@ export function WalkShareStatusChrome({
   distance,
   durationMins,
   endedAt,
+  elevationGain,
+  essentials,
   grade,
   icsHref,
   location,
@@ -46,6 +48,8 @@ export function WalkShareStatusChrome({
   distance: string | null;
   durationMins: number;
   endedAt: string | null;
+  elevationGain: string | null;
+  essentials: string[];
   grade: string | null;
   icsHref: string;
   location: string | null;
@@ -139,6 +143,8 @@ export function WalkShareStatusChrome({
             backMarker={backMarker}
             distance={distance}
             durationMins={durationMins}
+            elevationGain={elevationGain}
+            essentials={essentials}
             grade={grade}
             location={location}
             postcode={postcode}

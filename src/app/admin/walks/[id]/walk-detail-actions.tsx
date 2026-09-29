@@ -33,6 +33,8 @@ export function WalkDetailActions({
   distance,
   durationMins,
   endedAt,
+  elevationGain,
+  essentials,
   grade,
   icsHref,
   latitude,
@@ -59,6 +61,8 @@ export function WalkDetailActions({
   distance: string | null;
   durationMins: number;
   endedAt: string | null;
+  elevationGain: string | null;
+  essentials: string[];
   grade: string | null;
   icsHref: string;
   latitude: number | null;
@@ -137,6 +141,8 @@ export function WalkDetailActions({
           description={description}
           distance={distance}
           durationMins={durationMins}
+          elevationGain={elevationGain}
+          essentials={essentials}
           grade={grade}
           latitude={latitude}
           location={location}

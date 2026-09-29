@@ -53,6 +53,8 @@ export default async function WalkDetailPage({
       description: true,
       distance: true,
       grade: true,
+      elevationGain: true,
+      essentials: true,
       walkLeader: true,
       backMarker: true,
       location: true,
@@ -213,6 +215,8 @@ export default async function WalkDetailPage({
             backMarker={walk.backMarker}
             distance={walk.distance}
             durationMins={walk.durationMins}
+            elevationGain={walk.elevationGain}
+            essentials={walk.essentials}
             grade={walk.grade}
             location={walk.location}
             postcode={walk.postcode}
@@ -244,6 +248,8 @@ export default async function WalkDetailPage({
         distance={walk.distance}
         durationMins={walk.durationMins}
         endedAt={walk.endedAt?.toISOString() ?? null}
+        elevationGain={walk.elevationGain}
+        essentials={walk.essentials}
         grade={walk.grade}
         icsHref={`/w/${slug}/ics`}
         latitude={walk.latitude}

@@ -32,6 +32,8 @@ interface HeroParallaxProps extends React.HTMLAttributes<HTMLDivElement> {
   cardClassName?: string;
   /** Scrollable element to track instead of the window */
   container?: React.RefObject<HTMLElement | null>;
+  /** Extra classes for the copy block above the rows, e.g. to change its padding */
+  copyClassName?: string;
 }
 
 /**
@@ -47,6 +49,7 @@ export function HeroParallax({
   drift = 480,
   cardClassName,
   container,
+  copyClassName,
   className,
   ...props
 }: HeroParallaxProps) {
@@ -76,7 +79,7 @@ export function HeroParallax({
       {...props}
     >
       {children && (
-        <div className="relative z-10 mx-auto max-w-4xl px-6 pt-[14cqh] pb-[10cqh]">
+        <div className={cn("relative z-10 mx-auto max-w-4xl px-6 pt-[14cqh] pb-[10cqh]", copyClassName)}>
           {children}
         </div>
       )}

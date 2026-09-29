@@ -1,0 +1,2 @@
+ALTER TABLE "Walk" ADD COLUMN "elevationGain" TEXT;
+ALTER TABLE "Walk" ADD COLUMN "essentials" TEXT[] DEFAULT ARRAY[]::TEXT[];

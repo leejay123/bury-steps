@@ -89,6 +89,11 @@ model Walk {
   /// Free text, e.g. "Moderate" — a select in the form, but stored as text
   /// so a future custom grade never needs a migration.
   grade           String?
+  /// Free text, e.g. "213 m" — like distance, organisers write it their way.
+  elevationGain   String?
+  /// Tick-box facilities (toilets, parking, …) as keys from
+  /// src/lib/walk-essentials.ts.
+  essentials      String[]  @default([])
   walkLeader      String?
   backMarker      String?
   location        String?

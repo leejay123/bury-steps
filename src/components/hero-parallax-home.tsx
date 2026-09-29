@@ -58,7 +58,9 @@ export function HeroParallaxHome({
       <DecorIcon className="size-4" position="bottom-left" />
       <DecorIcon className="size-4" position="bottom-right" />
       <FullWidthDivider position="bottom" />
-      <HeroParallax products={cards}>
+      {/* Tighter than Velora's full-screen defaults: less air above the
+          name and below the last row of cards. */}
+      <HeroParallax className="pb-10 sm:pb-12" copyClassName="pt-10 pb-10 sm:pt-14" products={cards}>
         <h1 className="text-headline font-medium tracking-tight text-balance">{siteName}</h1>
         {siteTagline ? <p className="mt-6 max-w-xl text-intro text-pretty text-muted-foreground">{siteTagline}</p> : null}
         <div className="mt-8 flex flex-wrap items-center gap-3">
