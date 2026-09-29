@@ -17,10 +17,13 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     display: "standalone",
     background_color: "#ffffff",
     theme_color: "#111111",
+    // New file names (not /icon-192.png) on purpose: the old "B" placeholders
+    // at those URLs were served with a one-year immutable cache, so phones
+    // that fetched them would keep showing the "B".
     icons: [
-      { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: "/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: "/icons/bury-steps-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icons/bury-steps-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/icons/bury-steps-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }
