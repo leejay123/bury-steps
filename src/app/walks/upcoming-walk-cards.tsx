@@ -4,12 +4,12 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CalendarDays, ChevronRight, Clock, MapPin, Search, SearchX } from "lucide-react";
-import { formatDateTime, formatWalkDate } from "@/lib/dates";
+import { formatDateTime, formatTime } from "@/lib/dates";
 import { InlineDescriptionText } from "@/components/description-text";
 import { walkSharePath } from "@/lib/walk-slug";
 import { cn } from "@/lib/utils";
 import { walkStatus, windowState, type WalkStatus, type WindowState } from "@/lib/walk-window";
-import { WalkStatusBadge } from "@/components/walk-status-badge";
+import { WalkStatusHeader } from "@/components/walk-status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
@@ -77,7 +77,15 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
   );
 
   return (
-    <Card className="relative gap-3 transition-colors hover:bg-muted/40">
+    <Card className="relative gap-3 overflow-hidden pt-0 transition-colors hover:bg-muted/40">
+      {/* Status and day as the card's header strip (see WalkStatusHeader). */}
+      <WalkStatusHeader
+        cancelledAt={null}
+        className="mb-1 px-6"
+        durationMins={walk.durationMins}
+        endedAt={walk.endedAt}
+        startsAt={walk.startsAt}
+      />
       {/*
         A single real link stretched over the whole card (rather than a
         clickable `role="button"` wrapper around a *second*, separately
@@ -95,20 +103,10 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
       <CardHeader className="flex flex-row items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1.5">
           <CardTitle className="text-base">{walk.title}</CardTitle>
-          <WalkStatusBadge
-            cancelledAt={null}
-            durationMins={walk.durationMins}
-            endedAt={walk.endedAt}
-            startsAt={walk.startsAt}
-          />
           <CardDescription className="flex flex-col gap-1">
             <span className="inline-flex items-center gap-1.5">
-              <CalendarDays aria-hidden="true" className="size-3.5" />
-              {formatWalkDate(new Date(walk.startsAt))}
-            </span>
-            <span className="inline-flex items-center gap-1.5">
               <Clock aria-hidden="true" className="size-3.5" />
-              {walk.durationMins} min
+              {formatTime(new Date(walk.startsAt))} · {walk.durationMins} min
             </span>
             {walk.location ? (
               <span className="inline-flex items-center gap-1.5">

@@ -90,8 +90,11 @@ export function PrivacySiteSection() {
               allow. It opens on the main pages; type to see up to five matches per section, split into
               upcoming and recent walks, notices, FAQs by category, and settings by area. Walks show
               just their name and are found by their name only — not by date, time or meeting point. Moving between pages gently crossfades the page (the header stays still), and a
-              page’s loading placeholders crossfade into its content. On walk cards the status
-              label (Upcoming, Starting soon…) is a small tag, not a full-width bar. The page you’re on is underlined, and a blue dot beside
+              page’s loading placeholders crossfade into its content. Walk cards (Manage walks,
+              and Upcoming and All walks on Walks) open with a thin header strip showing the status
+              (Upcoming, Starting soon…) on the left and the day on the right — tinted amber when a
+              walk is starting soon, green while it’s in progress and red when cancelled — with the
+              time and meeting point underneath. The page you’re on is underlined, and a blue dot beside
               Notices means there’s one you haven’t read. The list is split under small labels:
               Menu for the main pages, Manage for the admin pages (owners and organisers only),
               Account for History and

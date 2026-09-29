@@ -3,11 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Footprints, Search } from "lucide-react";
-import { formatDate, formatTime, londonYear } from "@/lib/dates";
+import { formatTime, londonYear } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/empty-state";
 import { ListPagination } from "@/components/list-pagination";
-import { WalkStatusBadge } from "@/components/walk-status-badge";
+import { WalkStatusHeader } from "@/components/walk-status-badge";
 import { usePagedList } from "@/hooks/use-paged-list";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
@@ -139,58 +139,56 @@ export function AllWalksList({ rows }: { rows: AllWalksRow[] }) {
         />
       ) : (
         <>
-          <div className="flex flex-col divide-y rounded-xl border">
+          <div className="flex flex-col divide-y overflow-hidden rounded-xl border">
             {paging.paged.map((row) => {
               const startsAt = new Date(row.startsAt);
               return (
                 <div
-                  className={cn(
-                    "relative flex flex-col gap-2 p-4",
-                    row.href ? "hover:bg-muted/50" : "opacity-70",
-                  )}
+                  className={cn("relative flex flex-col", row.href ? "hover:bg-muted/50" : "opacity-70")}
                   key={row.id}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <p className={cn("font-medium", !row.href && "text-muted-foreground")}>
+                  {/* Status and day as the card's header strip (see WalkStatusHeader). */}
+                  <WalkStatusHeader
+                    cancelledAt={row.cancelledAt}
+                    durationMins={row.durationMins}
+                    endedAt={row.endedAt}
+                    startsAt={row.startsAt}
+                  />
+                  <div className="flex flex-col gap-2 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className={cn("font-medium", !row.href && "text-muted-foreground")}>
+                        {row.href ? (
+                          <Link className="after:absolute after:inset-0" href={row.href}>
+                            {row.title}
+                          </Link>
+                        ) : (
+                          row.title
+                        )}
+                      </p>
                       {row.href ? (
-                        <Link className="after:absolute after:inset-0" href={row.href}>
-                          {row.title}
-                        </Link>
-                      ) : (
-                        row.title
-                      )}
+                        <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                      ) : null}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {formatTime(startsAt)} · {row.durationMins} min
+                      {row.location ? ` · ${row.location}` : ""}
                     </p>
-                    {row.href ? (
-                      <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                    ) : null}
+                    {row.cancelledAt
+                      ? row.attendanceCount > 0 && (
+                          <p className="text-sm text-muted-foreground">
+                            {row.attendanceCount === 1
+                              ? "1 person had clocked in before it was cancelled"
+                              : `${row.attendanceCount} people had clocked in before it was cancelled`}
+                          </p>
+                        )
+                      : (
+                          <p className="text-sm text-muted-foreground">
+                            {row.attendanceCount === 1
+                              ? "1 person attended"
+                              : `${row.attendanceCount} people attended`}
+                          </p>
+                        )}
                   </div>
-                  <div className="relative z-10 w-fit">
-                    <WalkStatusBadge
-                      cancelledAt={row.cancelledAt}
-                      durationMins={row.durationMins}
-                      endedAt={row.endedAt}
-                      startsAt={row.startsAt}
-                    />
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {formatDate(startsAt)} · {formatTime(startsAt)} · {row.durationMins} min
-                    {row.location ? ` · ${row.location}` : ""}
-                  </p>
-                  {row.cancelledAt
-                    ? row.attendanceCount > 0 && (
-                        <p className="text-sm text-muted-foreground">
-                          {row.attendanceCount === 1
-                            ? "1 person had clocked in before it was cancelled"
-                            : `${row.attendanceCount} people had clocked in before it was cancelled`}
-                        </p>
-                      )
-                    : (
-                        <p className="text-sm text-muted-foreground">
-                          {row.attendanceCount === 1
-                            ? "1 person attended"
-                            : `${row.attendanceCount} people attended`}
-                        </p>
-                      )}
                 </div>
               );
             })}

@@ -4,15 +4,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Footprints, Search } from "lucide-react";
-import { formatWalkDay, formatTime } from "@/lib/dates";
+import { formatTime } from "@/lib/dates";
 import { walkStatus, type WalkStatus } from "@/lib/walk-window";
-import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/empty-state";
-import { DataList, DataListBody, DataListItem, DataListItemMain, dataListItemStackClassName } from "@/components/data-list";
+import { DataList, DataListBody, DataListItem, DataListItemMain } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
 import { usePagedList } from "@/hooks/use-paged-list";
 import { useLiveNow } from "@/hooks/use-live-now";
-import { WalkStatusBadge } from "@/components/walk-status-badge";
+import { WalkStatusHeader } from "@/components/walk-status-badge";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import {
@@ -232,8 +231,15 @@ export function AdminWalkTable({
         <>
           <DataList>
             {paging.paged.map((walk) => (
-              <DataListItem className={cn("relative", dataListItemStackClassName)} key={walk.id}>
-                <DataListItemMain>
+              <DataListItem className="relative flex-col items-stretch gap-0 p-0" key={walk.id}>
+                {/* Status and day as the card's header strip (see WalkStatusHeader). */}
+                <WalkStatusHeader
+                  cancelledAt={walk.cancelledAt}
+                  durationMins={walk.durationMins}
+                  endedAt={walk.endedAt}
+                  startsAt={walk.startsAt}
+                />
+                <DataListItemMain className="items-center p-3">
                   <DataListBody>
                     <p className="font-medium">
                       <Link className="after:absolute after:inset-0" href={`/admin/walks/${walk.id}`}>
@@ -241,19 +247,13 @@ export function AdminWalkTable({
                       </Link>
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {formatWalkDay(new Date(walk.startsAt))} · {formatTime(new Date(walk.startsAt))}
+                      {formatTime(new Date(walk.startsAt))}
                       {walk.location ? ` · ${walk.location}` : ""}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {walk.attendanceCount} {attendanceLabel.toLowerCase()}
                     </p>
                   </DataListBody>
-                  <WalkStatusBadge
-                    cancelledAt={walk.cancelledAt}
-                    durationMins={walk.durationMins}
-                    endedAt={walk.endedAt}
-                    startsAt={walk.startsAt}
-                  />
                   <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                 </DataListItemMain>
               </DataListItem>

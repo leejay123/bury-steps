@@ -7,8 +7,12 @@ export default function Loading() {
       <Skeleton className="h-4 w-80 max-w-full" />
       <div className="flex flex-col divide-y overflow-hidden rounded-xl border">
         {[0, 1, 2, 3].map((i) => (
-          <div className="p-3" key={i}>
-            <Skeleton className="h-10 w-full" />
+          <div key={i}>
+            {/* The walk card's status header strip. */}
+            <div className="h-7 border-b bg-muted/60" />
+            <div className="p-3">
+              <Skeleton className="h-10 w-full" />
+            </div>
           </div>
         ))}
       </div>
