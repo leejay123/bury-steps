@@ -546,3 +546,52 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
 html[data-announcement-hide] [data-slot="sticky-banner"] {
   display: none;
 }
+
+/* Page transitions (transition-kit.space "Fade"): the page content fades
+   out and in on navigation — see the <ViewTransition default="page-fade">
+   around <main>'s children in layout.tsx. The header is its own named
+   group so it stays perfectly still instead of fading with the page. */
+::view-transition-old(.page-fade) {
+  animation: page-fade-out 300ms ease-in-out both;
+}
+::view-transition-new(.page-fade) {
+  animation: page-fade-in 300ms ease-in-out both;
+}
+@keyframes page-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(site-header) {
+  display: none;
+}
+::view-transition-new(site-header) {
+  animation: none;
+}
+/* Clicks during the fade reach the new page instead of being swallowed. */
+::view-transition {
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

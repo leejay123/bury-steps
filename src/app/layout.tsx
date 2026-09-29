@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { ViewTransition, type CSSProperties } from "react";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 import { textSizeCssVars } from "@/lib/text-sizes";
 import { FullWidthDivider } from "@/components/full-width-divider";
@@ -160,6 +160,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <header
               className="group/site-header sticky top-0 z-[66] touch-manipulation bg-background transition-shadow duration-200 [transform:translateZ(0)] data-scrolled:shadow-[0_4px_12px_-6px_rgb(0_0_0/0.12)]"
               data-site-header=""
+              style={{ viewTransitionName: "site-header" }}
             >
               {theme.announcementEnabled && theme.announcementText ? (
                 <AnnouncementBanner
@@ -236,7 +237,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               its own looks identical either way.
             */}
             <main className={`flex flex-1 flex-col ${PAGE_Y} ${PAGE_X}`} id="main-content">
-              {children}
+              {/* Page content fades between routes (globals.css, .page-fade);
+                  the header is named site-header there so it stays put. */}
+              <ViewTransition default="page-fade">{children}</ViewTransition>
             </main>
             <Suspense fallback={null}>
               <SiteFooter />
