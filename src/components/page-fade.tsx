@@ -69,9 +69,16 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
       event.stopPropagation();
       leaving.current = true;
       const href = url.pathname + url.search + url.hash;
-      animate(el, { opacity: 0, x: -direction * DISTANCE }, { duration: DURATION, ease: EASE }).then(() =>
-        router.push(href),
-      );
+      let gone = false;
+      const go = () => {
+        if (gone) return;
+        gone = true;
+        router.push(href);
+      };
+      animate(el, { opacity: 0, x: -direction * DISTANCE }, { duration: DURATION, ease: EASE }).then(go, go);
+      // Safety net: never leave someone stuck if the animation can't finish
+      // (a background tab pauses animations).
+      window.setTimeout(go, 400);
     };
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);
