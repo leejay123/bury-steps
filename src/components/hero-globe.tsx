@@ -68,7 +68,7 @@ export function HeroGlobe({
       <DecorIcon className="size-4" position="bottom-left" />
       <DecorIcon className="size-4" position="bottom-right" />
       <FullWidthDivider position="bottom" />
-      <section className="relative isolate overflow-hidden px-4 pt-8 pb-10 sm:px-6 sm:pt-10 sm:pb-12 lg:px-8">
+      <section className="relative isolate overflow-hidden px-4 pt-8 sm:px-6 sm:pt-10 lg:px-8 lg:pb-12">
         <div
           aria-hidden
           className="absolute inset-y-0 right-0 -z-10 w-full bg-radial-[at_75%_50%] from-[oklch(0.62_0.19_259)]/10 to-transparent to-60% lg:w-2/3"
@@ -113,8 +113,10 @@ export function HeroGlobe({
             <BlurFade delay={0.4}>
               {/* Same hairline grid and corner crosses as the homepage's feature
                   row, so the numbers read as part of the site's grid. Runs to
-                  the page edges on phones, like the other full-width rows. */}
-              <div className="relative -mx-4 mt-10 border-y sm:-mx-6 lg:mx-0 lg:max-w-md lg:border-x">
+                  the page edges on phones, like the other full-width rows, and
+                  sits flush on the hero's bottom line (no gap, no double line)
+                  so the next homepage section joins straight on. */}
+              <div className="relative -mx-4 mt-10 border-t sm:-mx-6 lg:mx-0 lg:max-w-md lg:border">
                 <DecorIcon className="size-4" position="top-left" />
                 <DecorIcon className="size-4" position="top-right" />
                 <DecorIcon className="size-4" position="bottom-left" />
