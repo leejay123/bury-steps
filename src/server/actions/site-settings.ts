@@ -1,5 +1,6 @@
 "use server";
 
+import { serializeAnnouncementPages } from "@/lib/announcement-pages";
 import { parseTextSize } from "@/lib/text-sizes";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
@@ -498,10 +499,17 @@ export async function updateAnnouncementBanner(
   const enabled = String(formData.get("announcementEnabled") ?? "") === "on";
   const text = String(formData.get("announcementText") ?? "").trim();
   const link = parseAnnouncementLink(String(formData.get("announcementLink") ?? ""));
+  const pages = serializeAnnouncementPages(
+    String(formData.get("announcementScope") ?? "all"),
+    String(formData.get("announcementPaths") ?? ""),
+  );
   if (text.length > 160) return { ok: false, error: "Keep the announcement to 160 characters or fewer." };
   if (enabled && !text) return { ok: false, error: "Write the announcement before turning it on." };
   if (link === null) {
     return { ok: false, error: "The link must be a page on this site (like /walks) or start with https://." };
+  }
+  if (pages === null) {
+    return { ok: false, error: "List the pages to show it on, separated by commas — for example /walks, /notices." };
   }
 
   try {
@@ -514,8 +522,9 @@ export async function updateAnnouncementBanner(
         announcementEnabled: enabled,
         announcementText: text,
         announcementLink: link,
+        announcementPages: pages,
       },
-      update: { announcementEnabled: enabled, announcementText: text, announcementLink: link },
+      update: { announcementEnabled: enabled, announcementText: text, announcementLink: link, announcementPages: pages },
     });
   } catch (err) {
     return logActionError("updateAnnouncementBanner", err, "Could not save the announcement. Try again.");

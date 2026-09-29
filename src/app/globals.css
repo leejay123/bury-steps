@@ -540,3 +540,9 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
     transform: translateY(calc(-100% - var(--gap)));
   }
 }
+
+/* Announcement bar: hidden before first paint when the pre-paint script
+   says this page or visitor shouldn't see it (see announcement-banner.tsx). */
+html[data-announcement-hide] [data-slot="sticky-banner"] {
+  display: none;
+}

@@ -89,6 +89,7 @@ export type SiteTheme = {
   announcementEnabled: boolean;
   announcementText: string;
   announcementLink: string;
+  announcementPages: string;
   cookieConsentVariant: CookieConsentVariant;
   siteFont: SiteFontId;
   textSizes: TextSizes;
@@ -159,6 +160,7 @@ function defaultTheme(): SiteTheme {
     announcementEnabled: false,
     announcementText: "",
     announcementLink: "",
+    announcementPages: "all",
     cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
     siteFont: DEFAULT_SITE_FONT,
     textSizes: DEFAULT_TEXT_SIZES,
@@ -222,6 +224,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       announcementEnabled: true,
       announcementText: true,
       announcementLink: true,
+      announcementPages: true,
       cookieConsentVariant: true,
       siteFont: true,
       textHeadlinePx: true,
@@ -294,6 +297,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     announcementEnabled: row?.announcementEnabled ?? false,
     announcementText: row?.announcementText ?? "",
     announcementLink: row?.announcementLink ?? "",
+    announcementPages: row?.announcementPages ?? "all",
     cookieConsentVariant:
       parseCookieConsentVariant(row?.cookieConsentVariant ?? "") ??
       DEFAULT_COOKIE_CONSENT_VARIANT,
@@ -365,7 +369,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v23"], {
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v24"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });

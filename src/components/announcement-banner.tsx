@@ -1,13 +1,17 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ArrowRightIcon } from "lucide-react";
 import { StickyBanner } from "@/components/velora/sticky-banner";
+import { ANNOUNCEMENT_MATCH_JS, announcementShowsOn } from "@/lib/announcement-pages";
 
 /** localStorage: { id, until } — which wording was closed, and when to show it again. */
 const KEY = "announcement-dismissed";
 const HIDE_FOR_MS = 24 * 60 * 60 * 1000;
+/** Set on <html> by the pre-paint script; globals.css hides the bar while it's there. */
+const HIDE_ATTR = "data-announcement-hide";
 
 /** Short, CSS-safe id for one wording of the announcement (djb2, base 36). */
 export function announcementId(text: string): string {
@@ -20,11 +24,15 @@ export function announcementId(text: string): string {
  * A plain inline script placed just before the bar in the server-rendered
  * page, so the browser runs it while reading the page — before anything is
  * drawn. (Next's <Script beforeInteractive> is queued until after the first
- * paint, which is what let the closed bar flash up.) The page is built on the
- * server, which can't know this visitor closed the bar, so this hides the
- * closed wording with a style rule for the rest of its day.
+ * paint, which is what let a closed bar flash up.) It hides the bar when
+ * this page isn't one it's meant for, or this visitor closed this wording
+ * within the last day. Once React takes over it decides for itself and
+ * lifts the flag (see the effect below).
  */
-export const ANNOUNCEMENT_PREPAINT_SCRIPT = `try{var d=JSON.parse(localStorage.getItem(${JSON.stringify(KEY)})||"null");if(d&&d.until>Date.now()&&/^[a-z0-9]+$/.test(d.id)){var s=document.createElement("style");s.textContent='[data-announcement-id="'+d.id+'"]{display:none!important}';document.head.appendChild(s)}}catch(e){}`;
+function prepaintScript(id: string, pages: string): string {
+  const json = (value: string) => JSON.stringify(value).replace(/</g, "\\u003c");
+  return `(function(){try{var m=${ANNOUNCEMENT_MATCH_JS};var hide=!m(${json(pages)},location.pathname);if(!hide){var d=JSON.parse(localStorage.getItem(${json(KEY)})||"null");hide=!!(d&&d.until>Date.now()&&d.id===${json(id)})}if(hide)document.documentElement.setAttribute(${json(HIDE_ATTR)},"")}catch(e){}})()`;
+}
 
 function readDismissed(): string | null {
   try {
@@ -40,29 +48,39 @@ function readDismissed(): string | null {
 
 const noopSubscribe = () => () => {};
 
+function rememberDismissed(id: string) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify({ id, until: Date.now() + HIDE_FOR_MS }));
+  } catch {
+    // Private browsing: it just shows again on the next page.
+  }
+}
+
 /**
  * The organisers' announcement (Settings → Site behaviour) as Velora's
  * sticky banner, inside the sticky header so the two stay pinned together.
- * Closing it hides it for a day in this browser; new wording shows again
- * straight away, since the dismissal is remembered against that wording's id.
+ * Shows only on the pages chosen in settings. Closing it hides it for a day
+ * in this browser; new wording shows again straight away, since the
+ * dismissal is remembered against that wording's id.
  */
-export function AnnouncementBanner({ text, link }: { text: string; link: string }) {
+export function AnnouncementBanner({ text, link, pages }: { text: string; link: string; pages: string }) {
   const id = announcementId(text);
+  const pathname = usePathname();
   const dismissed = useSyncExternalStore(noopSubscribe, readDismissed, () => null) === id;
-  if (dismissed) return null;
 
-  const onDismiss = () => {
-    try {
-      localStorage.setItem(KEY, JSON.stringify({ id, until: Date.now() + HIDE_FOR_MS }));
-    } catch {
-      // Private browsing: it just shows again on the next page.
-    }
-  };
+  // React now decides whether the bar shows; the pre-paint flag has done its job.
+  useEffect(() => {
+    document.documentElement.removeAttribute(HIDE_ATTR);
+  }, []);
+
+  if (dismissed || !announcementShowsOn(pages, pathname)) {
+    return <script dangerouslySetInnerHTML={{ __html: prepaintScript(id, pages) }} />;
+  }
 
   return (
     <>
-      <script dangerouslySetInnerHTML={{ __html: ANNOUNCEMENT_PREPAINT_SCRIPT }} />
-      <StickyBanner className="static" data-announcement-id={id} onDismiss={onDismiss}>
+      <script dangerouslySetInnerHTML={{ __html: prepaintScript(id, pages) }} />
+      <StickyBanner className="static" data-announcement-id={id} onDismiss={() => rememberDismissed(id)}>
         {link ? (
           <Link className="inline-flex items-center gap-1.5 font-medium underline-offset-4 hover:underline" href={link}>
             {text}

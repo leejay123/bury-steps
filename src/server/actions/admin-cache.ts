@@ -192,6 +192,7 @@ export async function resetSiteToDefault(
           announcementEnabled: false,
           announcementText: "",
           announcementLink: "",
+          announcementPages: "all",
           cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
           siteFont: DEFAULT_SITE_FONT,
           siteName: DEFAULT_SITE_NAME,

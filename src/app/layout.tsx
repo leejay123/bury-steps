@@ -162,7 +162,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               data-site-header=""
             >
               {theme.announcementEnabled && theme.announcementText ? (
-                <AnnouncementBanner link={theme.announcementLink} text={theme.announcementText} />
+                <AnnouncementBanner
+                  link={theme.announcementLink}
+                  pages={theme.announcementPages}
+                  text={theme.announcementText}
+                />
               ) : null}
               <Suspense fallback={null}>
                 <ImpersonationBannerSlot />

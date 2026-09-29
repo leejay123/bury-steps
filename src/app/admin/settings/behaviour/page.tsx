@@ -36,6 +36,7 @@ export default async function SiteBehaviourSettingsPage() {
         <AnnouncementSettings
           enabled={theme.announcementEnabled}
           link={theme.announcementLink}
+          pages={theme.announcementPages}
           text={theme.announcementText}
         />
       </SettingsSectionGroup>
