@@ -4,47 +4,31 @@ import { ArrowRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DecorIcon } from "@/components/decor-icon";
 import { FullWidthDivider } from "@/components/full-width-divider";
-import { WalkPhotoSlider } from "@/components/home-photo-slider";
 import { HeroCopy } from "@/components/hero-copy";
-import { FadeIn } from "@/components/motion";
-import type { SlideView } from "@/lib/slides";
 import type { SectionBgPattern } from "@/lib/section-background";
 
 export function HeroSection({
-  slides,
   signInHref,
   signUpHref,
   bgPattern = "dots",
-  carouselEnabled = true,
   siteName,
   siteTagline,
 }: {
-  slides: SlideView[];
   signInHref: string;
   signUpHref: string;
   bgPattern?: SectionBgPattern;
-  carouselEnabled?: boolean;
   siteName: string;
   siteTagline: string;
 }) {
-  // Turned on in settings is necessary but not sufficient — with zero
-  // slides there's nothing for the carousel to show, so treat that the same
-  // as turned off rather than rendering an empty grey strip.
-  const showCarousel = carouselEnabled && slides.length > 0;
-
   return (
     <section>
       <div className="relative">
-        {!showCarousel ? (
-          <>
-            <DecorIcon className="size-4" position="top-left" />
-            <DecorIcon className="size-4" position="top-right" />
-            <DecorIcon className="size-4" position="bottom-left" />
-            <DecorIcon className="size-4" position="bottom-right" />
-            <FullWidthDivider position="top" />
-            <FullWidthDivider position="bottom" />
-          </>
-        ) : null}
+        <DecorIcon className="size-4" position="top-left" />
+        <DecorIcon className="size-4" position="top-right" />
+        <DecorIcon className="size-4" position="bottom-left" />
+        <DecorIcon className="size-4" position="bottom-right" />
+        <FullWidthDivider position="top" />
+        <FullWidthDivider position="bottom" />
         <HeroCopy
           bgPattern={bgPattern}
           actions={
@@ -74,21 +58,6 @@ export function HeroSection({
         </HeroCopy>
       </div>
 
-      {showCarousel ? (
-        <div className="relative">
-          <DecorIcon className="size-4" position="top-left" />
-          <DecorIcon className="size-4" position="top-right" />
-          <DecorIcon className="size-4" position="bottom-left" />
-          <DecorIcon className="size-4" position="bottom-right" />
-          <FullWidthDivider position="top" />
-          <div className="overflow-hidden bg-muted">
-            <FadeIn>
-              <WalkPhotoSlider slides={slides} />
-            </FadeIn>
-          </div>
-          <FullWidthDivider position="bottom" />
-        </div>
-      ) : null}
     </section>
   );
 }

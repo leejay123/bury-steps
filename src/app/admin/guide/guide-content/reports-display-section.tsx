@@ -74,9 +74,10 @@ export function ReportsDisplaySection() {
             <p>
               Open <Link href="/admin/settings/homepage-layout">Homepage layout</Link> to set the{" "}
               <strong>homepage section order</strong> (blocks below the hero —{" "}
-              <strong>How walks work</strong>, <strong>How this started</strong>,{" "}
-              <strong>Latest notices</strong>, <strong>Testimonials</strong>, <strong>FAQs</strong>)
-              and whether the <strong>hero photo carousel</strong> and{" "}
+              <strong>Photo slider</strong>, <strong>How walks work</strong>,{" "}
+              <strong>How this started</strong>, <strong>Latest notices</strong>,{" "}
+              <strong>Testimonials</strong>, <strong>FAQs</strong>) and whether the{" "}
+              <strong>photo slider</strong> and{" "}
               <strong>Latest notices</strong> show. <strong>Background patterns</strong> sets a
               backdrop for each section: dot grid, grid lines, crosses, diagonal lines, or{" "}
               <strong>Stars</strong>, which drift slowly upwards, or <strong>Retro grid</strong>, a
@@ -84,9 +85,9 @@ export function ReportsDisplaySection() {
             </p>
             <p>
               <strong>Hero style</strong> on the same page picks the top of the homepage:{" "}
-              <strong>Default</strong> (light hero with the photo slider), <strong>Video</strong>{" "}
-              (full-bleed dark hero), or <strong>Globe</strong> (live numbers beside a globe with
-              moving lines, then the photo slider underneath; phones skip the globe), or{" "}
+              <strong>Default</strong> (light hero), <strong>Video</strong> (full-bleed dark
+              hero), <strong>Globe</strong> (live numbers beside a globe with moving lines; phones
+              skip the globe), or{" "}
               <strong>Parallax</strong> (rows of photo cards that tilt and slide apart as you
               scroll), or <strong>3D Marquee</strong> (a tilted wall of photos scrolling up and
               down behind the name). The photo slider, the Parallax cards and the 3D Marquee all

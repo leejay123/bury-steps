@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_HOMEPAGE_SECTION_ORDER,
+  normalizeHomepageSectionOrder,
   parseHomepageSectionOrder,
   serializeHomepageSectionOrder,
 } from "./homepage-sections";
@@ -13,11 +14,28 @@ describe("parseHomepageSectionOrder", () => {
   });
 
   it("rejects duplicates or unknown ids", () => {
-    expect(parseHomepageSectionOrder("howWalksWork,howWalksWork,memberNotices,testimonials,faqs")).toBe(
+    expect(parseHomepageSectionOrder("photos,howWalksWork,howWalksWork,memberNotices,testimonials,faqs")).toBe(
       "invalid",
     );
-    expect(parseHomepageSectionOrder("hero,howWalksWork,howThisStarted,memberNotices,testimonials")).toBe(
+    expect(parseHomepageSectionOrder("hero,photos,howWalksWork,howThisStarted,memberNotices,testimonials")).toBe(
       "invalid",
     );
+  });
+});
+
+describe("normalizeHomepageSectionOrder", () => {
+  it("puts the photo slider first in an order saved before it was a section", () => {
+    expect(normalizeHomepageSectionOrder("faqs,howWalksWork,howThisStarted,memberNotices,testimonials")).toEqual([
+      "photos",
+      "faqs",
+      "howWalksWork",
+      "howThisStarted",
+      "memberNotices",
+      "testimonials",
+    ]);
+  });
+
+  it("falls back to the default for rubbish", () => {
+    expect(normalizeHomepageSectionOrder("nope")).toEqual(DEFAULT_HOMEPAGE_SECTION_ORDER);
   });
 });

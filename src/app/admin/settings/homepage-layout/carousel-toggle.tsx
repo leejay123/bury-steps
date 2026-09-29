@@ -14,11 +14,11 @@ export function CarouselToggle({ enabled }: { enabled: boolean }) {
   return (
     <SettingsSwitchSection
       checked={on}
-      description="The rotating photos at the top of the homepage. Turning this off hides them without deleting any."
+      description="The Photo slider section of the homepage (move it with Section order). Turning this off hides it without deleting any photos."
       id="carousel-enabled"
       onCheckedChange={toggle}
       pending={isPending}
-      title="Show the photo carousel"
+      title="Show the photo slider"
     />
   );
 }

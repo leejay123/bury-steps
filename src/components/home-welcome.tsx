@@ -17,6 +17,8 @@ import type { AboutRule } from "@/lib/homepage-copy";
 import type { HomepageSectionId } from "@/lib/homepage-sections";
 import { SectionBackground } from "@/components/section-background";
 import type { SectionBgPattern } from "@/lib/section-background";
+import type { SlideView } from "@/lib/slides";
+import { WalkPhotoSlider } from "@/components/home-photo-slider";
 
 function SectionShell({
   bgPattern = "none",
@@ -68,6 +70,8 @@ export function HomeWelcome({
   memberNoticesEnabled,
   progressEnabled,
   sectionBgPatterns,
+  photos,
+  photosEnabled,
   testimonials,
   testimonialsSectionEyebrow,
   testimonialsSectionIntro,
@@ -106,12 +110,17 @@ export function HomeWelcome({
    * for howThisStarted/testimonials/memberNotices/faqs (hero has its own,
    * see HeroSection's bgPattern prop). */
   sectionBgPatterns: Record<"howThisStarted" | "testimonials" | "memberNotices" | "faqs", SectionBgPattern>;
+  /** Homepage photos for the photo slider section. */
+  photos: SlideView[];
+  /** Settings → Homepage layout carousel switch — off hides the slider. */
+  photosEnabled: boolean;
   testimonials: TestimonialView[];
   testimonialsSectionEyebrow: string;
   testimonialsSectionIntro: string;
   testimonialsSectionTitle: string;
 }) {
   const sections: Record<HomepageSectionId, ReactNode | null> = {
+    photos: photosEnabled && photos.length > 0 ? <WalkPhotoSlider slides={photos} /> : null,
     howWalksWork: isSignedIn ? (
       <MemberFeatureSection progressEnabled={progressEnabled} />
     ) : (
@@ -177,6 +186,7 @@ export function HomeWelcome({
   // would double-layer the pattern.
   const bgPatterns: Record<HomepageSectionId, SectionBgPattern> = {
     howWalksWork: "none",
+    photos: "none",
     ...sectionBgPatterns,
     howThisStarted: "none",
   };

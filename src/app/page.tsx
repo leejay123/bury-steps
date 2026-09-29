@@ -3,7 +3,6 @@ import { HeroCinematic } from "@/components/hero-cinematic";
 import { HeroGlobe } from "@/components/hero-globe";
 import { HeroMarqueeHome } from "@/components/hero-marquee-home";
 import { HeroParallaxHome } from "@/components/hero-parallax-home";
-import { HomePhotoSlider } from "@/components/home-photo-slider";
 import { HomeWelcome } from "@/components/home-welcome";
 import { getOptionalUser } from "@/lib/auth";
 import { getHomepageSlides } from "@/lib/homepage-slides";
@@ -59,17 +58,14 @@ export default async function Home() {
           videoSrc={heroVideoSrc(theme.heroVideoKey)}
         />
       ) : theme.heroStyle === "globe" ? (
-        <>
-          <HeroGlobe
-            data={globe}
-            isSignedIn={user !== null}
-            signInHref={signInHref}
-            signUpHref={signUpHref}
-            siteName={theme.siteName}
-            siteTagline={theme.siteTagline}
-          />
-          <HomePhotoSlider enabled={theme.carouselEnabled} slides={slides} />
-        </>
+        <HeroGlobe
+          data={globe}
+          isSignedIn={user !== null}
+          signInHref={signInHref}
+          signUpHref={signUpHref}
+          siteName={theme.siteName}
+          siteTagline={theme.siteTagline}
+        />
       ) : theme.heroStyle === "parallax" ? (
         <HeroParallaxHome
           isSignedIn={user !== null}
@@ -91,12 +87,10 @@ export default async function Home() {
       ) : (
         <HeroSection
           bgPattern={theme.heroBgPattern}
-          carouselEnabled={theme.carouselEnabled}
           signInHref={signInHref}
           signUpHref={signUpHref}
           siteName={theme.siteName}
           siteTagline={theme.siteTagline}
-          slides={slides}
         />
       )}
       <HomeWelcome
@@ -121,6 +115,8 @@ export default async function Home() {
         isSignedIn={user !== null}
         memberNotices={memberNotices}
         memberNoticesEnabled={theme.memberNoticesEnabled}
+        photos={slides}
+        photosEnabled={theme.carouselEnabled}
         progressEnabled={progressEnabled}
         sectionBgPatterns={{
           howThisStarted: theme.howThisStartedBgPattern,
