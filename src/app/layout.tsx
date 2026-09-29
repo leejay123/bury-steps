@@ -1,4 +1,5 @@
-import { ViewTransition, type CSSProperties } from "react";
+import type { CSSProperties } from "react";
+import { PageFade } from "@/components/page-fade";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 import { textSizeCssVars } from "@/lib/text-sizes";
 import { FullWidthDivider } from "@/components/full-width-divider";
@@ -237,9 +238,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               its own looks identical either way.
             */}
             <main className={`flex flex-1 flex-col ${PAGE_Y} ${PAGE_X}`} id="main-content">
-              {/* Page content fades between routes (globals.css, .page-fade);
-                  the header is named site-header there so it stays put. */}
-              <ViewTransition default="page-fade">{children}</ViewTransition>
+              {/* Page content fades on page changes only (globals.css,
+                  .page-fade); the header is named site-header so it stays put. */}
+              <PageFade>{children}</PageFade>
             </main>
             <Suspense fallback={null}>
               <SiteFooter />
