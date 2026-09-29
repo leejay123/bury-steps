@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ExternalLink, Loader2 } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { Button } from "@/components/ui/button";
@@ -185,17 +185,17 @@ export function SettingsSwitchSection({
           {description}
         </p>
       </div>
+      {/* The switch itself is the feedback: it flips straight away (the
+          toggle hooks are optimistic) and flips back with a toast if saving
+          fails, so no spinner swaps in over it while it saves. */}
       <div className="flex h-6 w-9 shrink-0 items-center justify-center">
-        {pending ? (
-          <Loader2 aria-label="Saving" className="size-4 animate-spin text-muted-foreground" role="status" />
-        ) : (
-          <Switch
-            aria-describedby={`${id}-description`}
-            checked={checked}
-            id={id}
-            onCheckedChange={onCheckedChange}
-          />
-        )}
+        <Switch
+          aria-busy={pending || undefined}
+          aria-describedby={`${id}-description`}
+          checked={checked}
+          id={id}
+          onCheckedChange={onCheckedChange}
+        />
       </div>
     </section>
   );
