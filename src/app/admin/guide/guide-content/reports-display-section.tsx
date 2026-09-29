@@ -86,8 +86,12 @@ export function ReportsDisplaySection() {
               <strong>Hero style</strong> on the same page picks the top of the homepage:{" "}
               <strong>Default</strong> (light hero with the photo slider), <strong>Video</strong>{" "}
               (full-bleed dark hero), or <strong>Globe</strong> (live numbers beside a globe with
-              moving lines, then the photo slider underneath; phones skip the globe). The photo
-              slider uses the pictures from <strong>Homepage photos</strong>.
+              moving lines, then the photo slider underneath; phones skip the globe), or{" "}
+              <strong>Parallax</strong> (rows of photo cards that tilt and slide apart as you
+              scroll). The photo slider and the Parallax cards both use the pictures from{" "}
+              <strong>Homepage photos</strong>. Parallax needs 12 cards, so until there are 12
+              photos it fills the gaps with sample walking photos; each photo you add replaces
+              one, and the photo&apos;s description is the caption on its card.
             </p>
             <p className="font-medium text-foreground">Site wording</p>
             <p>

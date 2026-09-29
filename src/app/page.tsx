@@ -1,6 +1,7 @@
 import { HeroSection } from "@/components/hero";
 import { HeroCinematic } from "@/components/hero-cinematic";
 import { HeroGlobe } from "@/components/hero-globe";
+import { HeroParallaxHome } from "@/components/hero-parallax-home";
 import { HomePhotoSlider } from "@/components/home-photo-slider";
 import { HomeWelcome } from "@/components/home-welcome";
 import { getOptionalUser } from "@/lib/auth";
@@ -68,6 +69,15 @@ export default async function Home() {
           />
           <HomePhotoSlider enabled={theme.carouselEnabled} slides={slides} />
         </>
+      ) : theme.heroStyle === "parallax" ? (
+        <HeroParallaxHome
+          isSignedIn={user !== null}
+          signInHref={signInHref}
+          signUpHref={signUpHref}
+          siteName={theme.siteName}
+          siteTagline={theme.siteTagline}
+          slides={slides}
+        />
       ) : (
         <HeroSection
           bgPattern={theme.heroBgPattern}

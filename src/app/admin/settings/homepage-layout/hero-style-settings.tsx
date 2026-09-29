@@ -23,6 +23,7 @@ const HERO_STYLE_LABELS: Record<HeroStyle, string> = {
   default: "Default (light hero + photo carousel)",
   cinematic: "Video (full-bleed dark hero)",
   globe: "Globe (live numbers + photo slider)",
+  parallax: "Parallax (photo cards that slide as you scroll)",
 };
 
 /** How long to wait after the last drag/typing tick before saving the
