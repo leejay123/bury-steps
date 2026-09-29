@@ -118,7 +118,8 @@ export function ReportsDisplaySection() {
               Open <Link href="/admin/settings/behaviour">Site behaviour</Link> to turn on the{" "}
               <strong>Announcement bar</strong> — a blue bar across the top of every page with your
               own message and an optional link (for example a changed meeting point). Visitors can
-              close it; new wording shows it to them again. The same page sets how the
+              close it, and it stays closed on their device for a day; new wording shows it to
+              them again straight away. The same page sets how the
               cookie notice looks (<strong>Default</strong>, <strong>Small</strong>, or{" "}
               <strong>Mini</strong>), whether <strong>Back to top</strong> appears after you scroll,
               whether the big outlined name shows at the bottom of the homepage,

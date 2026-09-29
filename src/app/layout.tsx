@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { ANNOUNCEMENT_PREPAINT_SCRIPT, AnnouncementBanner } from "@/components/announcement-banner";
+import { AnnouncementBanner } from "@/components/announcement-banner";
 import { textSizeCssVars } from "@/lib/text-sizes";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { ButtonRipple } from "@/components/button-ripple";
@@ -102,11 +102,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Script id="scroll-restoration" strategy="beforeInteractive">
           {`try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch {}`}
         </Script>
-        {theme.announcementEnabled && theme.announcementText ? (
-          <Script id="announcement-prepaint" strategy="beforeInteractive">
-            {ANNOUNCEMENT_PREPAINT_SCRIPT}
-          </Script>
-        ) : null}
         <StaleDeployReload />
         <ClerkProvider
           {...(useVercelAppProxy ? { proxyUrl: "/__clerk" } : {})}

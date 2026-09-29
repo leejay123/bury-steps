@@ -45,7 +45,7 @@ export function AnnouncementSettings({
 
   return (
     <SettingsSection
-      description="A coloured bar across the very top of every page, above the menu — for news like a changed meeting point or a special walk. Visitors can close it; changing the wording shows it to them again."
+      description="A coloured bar across the very top of every page, above the menu — for news like a changed meeting point or a special walk. Visitors can close it for a day; changing the wording shows it to them again straight away."
       title="Announcement bar"
     >
       {/* Submitted by hand rather than <form action>: React resets a form
