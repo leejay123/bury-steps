@@ -43,7 +43,7 @@ export function WalkFacts({
 
   return (
     <div className="flex flex-col gap-3">
-      <ul className="grid grid-cols-1 gap-x-10 gap-y-2.5 sm:grid-cols-2">
+      <ul className="flex flex-col gap-2">
         {rows.map((row) => (
           <li className="flex items-start gap-2.5 text-sm" key={row.label}>
             <row.icon aria-hidden="true" className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
