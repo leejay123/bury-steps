@@ -325,6 +325,7 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
 }
 
 @theme inline {
+  --animate-marquee-vertical: marquee-vertical var(--duration, 40s) linear infinite;
   --animate-retro-grid: retro-grid 18s linear infinite;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -515,5 +516,15 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
   }
   to {
     transform: translateY(0);
+  }
+}
+
+/* Velora 3D Marquee hero (Settings → Homepage layout → Hero style). */
+@keyframes marquee-vertical {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(-100% - var(--gap)));
   }
 }

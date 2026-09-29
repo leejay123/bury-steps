@@ -141,7 +141,9 @@ export async function updateHeroStyle(
           ? "Switched the homepage to the globe hero."
           : heroStyle === "parallax"
             ? "Switched the homepage to the parallax hero."
-            : "Switched the homepage to the default hero.",
+            : heroStyle === "marquee"
+              ? "Switched the homepage to the 3D marquee hero."
+              : "Switched the homepage to the default hero.",
   };
 }
 
