@@ -192,16 +192,30 @@ export default async function WalkDetailPage({
         startsAt={walk.startsAt.toISOString()}
       />
 
+      {walk.cancelledAt ? (
+        <Alert variant="destructive">
+          <AlertTitle>This walk has been cancelled</AlertTitle>
+          <AlertDescription>
+            {walk.cancelledReason ? `Reason: ${walk.cancelledReason}. ` : ""}
+            Members see it as cancelled and can no longer clock in.
+            {admin.permWalksEdit ? " To run it after all, use Edit and choose Save and reopen." : ""}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       <Card className="gap-4">
         <CardHeader>
           <div className="flex min-w-0 flex-col items-start gap-1.5">
-            <CardTitle className="text-2xl">{walk.title}</CardTitle>
-            <WalkStatusBadge
-              cancelledAt={walk.cancelledAt?.toISOString() ?? null}
-              durationMins={walk.durationMins}
-              endedAt={walk.endedAt?.toISOString() ?? null}
-              startsAt={walk.startsAt.toISOString()}
-            />
+            {/* Label above the title on phones, to its right from sm up. */}
+            <div className="flex w-full min-w-0 flex-col-reverse items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              <CardTitle className="min-w-0 text-2xl">{walk.title}</CardTitle>
+              <WalkStatusBadge
+                cancelledAt={walk.cancelledAt?.toISOString() ?? null}
+                durationMins={walk.durationMins}
+                endedAt={walk.endedAt?.toISOString() ?? null}
+                startsAt={walk.startsAt.toISOString()}
+              />
+            </div>
             {/* Organiser/owner-only — members never see who created a walk. */}
             <p className="text-xs text-muted-foreground">
               Created by {displayName(walk.createdBy)} ({creatorIsOwner ? "Owner" : "Organiser"})
@@ -222,9 +236,6 @@ export default async function WalkDetailPage({
             walkLeader={walk.walkLeader}
           />
           {walk.description ? <WalkDescription description={walk.description} /> : null}
-          {walk.cancelledAt && walk.cancelledReason ? (
-            <p className="text-sm text-destructive">Cancelled: {walk.cancelledReason}</p>
-          ) : null}
         </CardContent>
       </Card>
 
