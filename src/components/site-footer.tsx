@@ -84,7 +84,7 @@ export async function SiteFooter() {
           © {new Date().getFullYear()} {theme.siteName}
         </p>
       </div>
-      {theme.footerWordmarkEnabled ? <FooterWordmark /> : null}
+      {theme.footerWordmarkEnabled ? <FooterWordmark showOnPhones={theme.footerWordmarkMobile} /> : null}
     </footer>
   );
 }

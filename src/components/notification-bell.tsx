@@ -131,7 +131,9 @@ export function NotificationBell({
         />
       </DrawerTrigger>
       <DrawerContent>
-        <DrawerHeader className="border-b px-5 pb-4 pr-14 pt-5">
+        {/* mb-0: the header's default bottom margin left a white strip above
+            the first notice, visible when it's hovered. */}
+        <DrawerHeader className="mb-0 border-b px-5 pb-4 pr-14 pt-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <DrawerTitle>Notices</DrawerTitle>

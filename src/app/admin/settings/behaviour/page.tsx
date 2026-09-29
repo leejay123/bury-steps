@@ -5,7 +5,7 @@ import { SITE_SETTING_ID } from "@/lib/theme";
 import { SettingsPage, SettingsSectionGroup } from "../settings-page";
 import { AnnouncementSettings } from "./announcement-settings";
 import { CookieConsentSettings } from "./cookie-consent-settings";
-import { DisplaySettings, FooterWordmarkSettings } from "./display-form";
+import { DisplaySettings, FooterWordmarkMobileSettings, FooterWordmarkSettings } from "./display-form";
 import { ProgressToggle } from "./progress-toggle";
 import { OrganiserInviteToggle } from "./organiser-invite-toggle";
 import { ContactMessagesOwnerSettings } from "./contact-messages-owner-settings";
@@ -45,6 +45,7 @@ export default async function SiteBehaviourSettingsPage() {
         <CookieConsentSettings variant={theme.cookieConsentVariant} />
         <DisplaySettings scrollToTopEnabled={theme.scrollToTopEnabled} />
         <FooterWordmarkSettings enabled={theme.footerWordmarkEnabled} />
+        {theme.footerWordmarkEnabled ? <FooterWordmarkMobileSettings enabled={theme.footerWordmarkMobile} /> : null}
         <ProgressToggle enabled={settings?.progressEnabled ?? true} />
       </SettingsSectionGroup>
 

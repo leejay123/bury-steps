@@ -595,6 +595,30 @@ export async function updateTitleRevealEnabled(
   return { ok: true, message: enabled ? "Section titles now animate in." : "Section titles are plain again." };
 }
 
+export async function updateFooterWordmarkMobile(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  const enabled = String(formData.get("footerWordmarkMobile") ?? "") === "on";
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, carouselEnabled: true, footerWordmarkMobile: enabled },
+      update: { footerWordmarkMobile: enabled },
+    });
+  } catch (err) {
+    return logActionError("updateFooterWordmarkMobile", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings/behaviour");
+  return { ok: true, message: enabled ? "Footer name shows on phones too." : "Footer name is hidden on phones." };
+}
+
 export async function updateFooterWordmarkEnabled(
   _prev: ActionResult | null,
   formData: FormData,

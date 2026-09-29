@@ -6,11 +6,11 @@ import { PAGE_X } from "@/lib/page-x";
 
 /** Giant outlined site name at the foot of the homepage only (the footer
  * itself is shared by every page, so the path decides). */
-export function FooterWordmark() {
+export function FooterWordmark({ showOnPhones }: { showOnPhones: boolean }) {
   if (usePathname() !== "/") return null;
 
   return (
-    <div aria-hidden className={`overflow-hidden ${PAGE_X}`}>
+    <div aria-hidden className={`overflow-hidden ${PAGE_X} ${showOnPhones ? "" : "max-sm:hidden"}`}>
       <TextHoverEffect
         className="mx-auto -mb-[2%] max-w-6xl font-black tracking-tight"
         strokeWidth={0.6}

@@ -101,6 +101,7 @@ export {
   updateOrganiserInviteRequired,
   updateScrollToTopEnabled,
   updateFooterWordmarkEnabled,
+  updateFooterWordmarkMobile,
   updateAnnouncementBanner,
   updateTitleRevealEnabled,
   updateSliderHeroWords,

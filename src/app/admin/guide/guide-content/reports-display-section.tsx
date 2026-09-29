@@ -129,7 +129,7 @@ export function ReportsDisplaySection() {
               them again straight away. The same page sets how the
               cookie notice looks (<strong>Default</strong>, <strong>Small</strong>, or{" "}
               <strong>Mini</strong>), whether <strong>Back to top</strong> appears after you scroll,
-              whether the big outlined name shows at the bottom of the homepage,
+              whether the big outlined name shows at the bottom of the homepage (and whether it also shows on phones),
               whether new organisers need an invite, and who gets emailed about contact form
               messages.
             </p>

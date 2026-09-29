@@ -323,6 +323,8 @@ model SiteSetting {
   scrollToTopEnabled          Boolean  @default(true)
   /// When false, the giant outlined site name at the foot of every page is hidden.
   footerWordmarkEnabled       Boolean  @default(true)
+  /// When false, the footer name is hidden on phones (still shows on wider screens).
+  footerWordmarkMobile        Boolean  @default(true)
   /// Words on the Photo slider hero: "site" (site name + tagline on every
   /// photo), "slides" (each photo's own heading/caption), or "none".
   sliderHeroWords             String   @default("site")

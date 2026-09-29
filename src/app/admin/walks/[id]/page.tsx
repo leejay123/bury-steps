@@ -198,7 +198,9 @@ export default async function WalkDetailPage({
           <AlertDescription>
             {walk.cancelledReason ? `Reason: ${walk.cancelledReason}. ` : ""}
             Members see it as cancelled and can no longer clock in.
-            {admin.permWalksEdit ? " To run it after all, use Edit and choose Save and reopen." : ""}
+            {admin.permWalksEdit
+              ? " If it's going ahead after all, press Edit and save — the walk becomes upcoming again and members can join it."
+              : ""}
           </AlertDescription>
         </Alert>
       ) : null}

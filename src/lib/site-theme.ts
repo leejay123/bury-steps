@@ -84,6 +84,8 @@ export type SiteTheme = {
   scrollToTopEnabled: boolean;
   /** Giant outlined site name at the foot of every page (see updateFooterWordmarkEnabled). */
   footerWordmarkEnabled: boolean;
+  /** Footer name also on phones (updateFooterWordmarkMobile). */
+  footerWordmarkMobile: boolean;
   /** Words on the Photo slider hero (updateSliderHeroWords). */
   sliderHeroWords: SliderHeroWords;
   /** Word-by-word reveal on homepage section titles (updateTitleRevealEnabled). */
@@ -159,6 +161,7 @@ function defaultTheme(): SiteTheme {
     memberNoticesEnabled: true,
     scrollToTopEnabled: true,
     footerWordmarkEnabled: true,
+    footerWordmarkMobile: true,
     sliderHeroWords: "site",
     titleRevealEnabled: true,
     announcementEnabled: false,
@@ -224,6 +227,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       memberNoticesEnabled: true,
       scrollToTopEnabled: true,
       footerWordmarkEnabled: true,
+      footerWordmarkMobile: true,
       sliderHeroWords: true,
       titleRevealEnabled: true,
       announcementEnabled: true,
@@ -298,6 +302,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     memberNoticesEnabled: row?.memberNoticesEnabled ?? true,
     scrollToTopEnabled: row?.scrollToTopEnabled ?? true,
     footerWordmarkEnabled: row?.footerWordmarkEnabled ?? true,
+    footerWordmarkMobile: row?.footerWordmarkMobile ?? true,
     sliderHeroWords: parseSliderHeroWords(row?.sliderHeroWords),
     titleRevealEnabled: row?.titleRevealEnabled ?? true,
     announcementEnabled: row?.announcementEnabled ?? false,
@@ -375,7 +380,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v25"], {
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v26"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });
