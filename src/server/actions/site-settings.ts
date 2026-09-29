@@ -567,7 +567,7 @@ export async function updatePageTransition(
       mode === "fade"
         ? "Pages now fade in."
         : mode === "slide"
-          ? "Walks now slide in and out; other pages fade."
+          ? "Pages now slide in and out when you open something and go back."
           : "Page changes are now instant.",
   };
 }

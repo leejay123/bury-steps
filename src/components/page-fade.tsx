@@ -3,23 +3,13 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { animate, stagger } from "motion";
-import type { PageTransition } from "@/lib/page-transition";
-
-/** A single walk's page — organiser (/admin/walks/<id>) or member (/w/<slug>). */
-const isWalkPage = (path: string) => /^\/(admin\/walks|w)\/[^/]+$/.test(path);
+import { slideDirection, type PageTransition } from "@/lib/page-transition";
 
 // Same feel as the returns portal's orders ↔ order detail swap
 // (iblaze-returns dashboard-client.tsx: 18px, 0.22s, this curve).
 const EASE = [0.25, 0.1, 0.25, 1] as const;
 const DISTANCE = 18;
 const DURATION = 0.22;
-
-/** +1 opening a walk from elsewhere, -1 leaving a walk, 0 anything else. */
-function walkDirection(from: string, to: string): -1 | 0 | 1 {
-  if (!isWalkPage(from) && isWalkPage(to)) return 1;
-  if (isWalkPage(from) && !isWalkPage(to)) return -1;
-  return 0;
-}
 
 function reducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -29,13 +19,14 @@ function reducedMotion() {
  * Animates the page content when the page changes (Settings → Site
  * behaviour → Page transitions):
  *   "fade"  — a quick fade-in
- *   "slide" — like the returns portal: opening a walk, the current page
- *             slides left and fades out, then the walk slides in from the
- *             right; going back, the walk slides out to the right and the
- *             list slides in from the left. Out first, then in (Motion's
- *             AnimatePresence mode="wait", done across real page changes
- *             so walks keep their own shareable addresses). Walk cards
- *             marked data-stagger-item cascade in. Every other change fades.
+ *   "slide" — like the returns portal: going deeper (opening a walk, a
+ *             notice, a settings page…), the current page slides left and
+ *             fades out, then the new one slides in from the right; coming
+ *             back, it slides out to the right and the list slides in from
+ *             the left. Out first, then in (Motion's AnimatePresence
+ *             mode="wait", done across real page changes so every page keeps
+ *             its own shareable address). Cards marked data-stagger-item
+ *             cascade in. Sideways moves just fade.
  *   "none"  — no animation
  * No View Transitions: they snapshot the page and faded through white on
  * phones. Skipped on first load (except the card cascade) and for people
@@ -48,7 +39,7 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
   const previous = useRef<string | null>(null);
   const leaving = useRef(false);
 
-  // Out first: catch clicks on links that open or leave a walk, slide the
+  // Out first: catch clicks on links that go deeper or come back, slide the
   // current page out, then navigate. Capture phase on document runs before
   // Next's own <Link> handler, which then never sees the click.
   useEffect(() => {
@@ -61,7 +52,7 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
       if ((link.target && link.target !== "_self") || link.hasAttribute("download")) return;
       const url = new URL(link.href, location.href);
       if (url.origin !== location.origin || url.pathname === location.pathname) return;
-      const direction = walkDirection(location.pathname, url.pathname);
+      const direction = slideDirection(location.pathname, url.pathname);
       const el = ref.current;
       if (!direction || !el || reducedMotion() || leaving.current) return;
 
@@ -115,7 +106,7 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
     }
 
     if (from !== null && from !== pathname) {
-      const direction = mode === "slide" ? walkDirection(from, pathname) : 0;
+      const direction = mode === "slide" ? slideDirection(from, pathname) : 0;
       const run = direction
         ? animate(
             el,
