@@ -75,7 +75,9 @@ export function HeroGlobe({
         />
 
         <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-2 lg:gap-8">
-          <div className="max-w-xl">
+          {/* Only capped beside the globe: without it (phones, incl. landscape)
+              the stat grid stretches the full width. */}
+          <div className="lg:max-w-xl">
             <BlurFade>
               <Link
                 className="inline-flex items-center gap-2 rounded-full border bg-background/60 py-1 pr-3 pl-1 text-sm text-muted-foreground backdrop-blur transition-colors hover:text-foreground"
@@ -89,7 +91,7 @@ export function HeroGlobe({
 
             <h1 className="mt-8 text-headline font-medium tracking-tight text-balance">{siteName}</h1>
 
-            {siteTagline ? <p className="mt-6 text-intro text-pretty text-muted-foreground">{siteTagline}</p> : null}
+            {siteTagline ? <p className="mt-6 max-w-xl text-intro text-pretty text-muted-foreground">{siteTagline}</p> : null}
 
             <BlurFade delay={0.3}>
               <div className="mt-10 flex flex-wrap items-center gap-3">
