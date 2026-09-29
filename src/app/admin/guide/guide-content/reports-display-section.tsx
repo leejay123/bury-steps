@@ -90,8 +90,10 @@ export function ReportsDisplaySection() {
               hero), <strong>Globe</strong> (live numbers beside a globe with moving lines; phones
               skip the globe), or{" "}
               <strong>Parallax</strong> (rows of photo cards that tilt and slide apart as you
-              scroll), or <strong>3D Marquee</strong> (a tilted wall of photos scrolling up and
-              down behind the name). The photo slider, the Parallax cards and the 3D Marquee all
+              scroll), <strong>3D Marquee</strong> (a tilted wall of photos scrolling up and
+              down behind the name), or <strong>Photo slider</strong> (your photos full width
+              with the name and buttons on top; the separate Photo slider section then hides so
+              the photos don&apos;t show twice). The photo slider, the Parallax cards and the 3D Marquee all
               use the pictures from <strong>Homepage photos</strong>. Parallax needs 12 photos
               and 3D Marquee 15, so until there are enough they fill the gaps with sample walking
               photos; each photo you add replaces one. On Parallax, the photo&apos;s description

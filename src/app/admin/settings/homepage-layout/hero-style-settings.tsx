@@ -25,6 +25,7 @@ const HERO_STYLE_LABELS: Record<HeroStyle, string> = {
   globe: "Globe (live numbers + photo slider)",
   parallax: "Parallax (photo cards that slide as you scroll)",
   marquee: "3D Marquee (tilted wall of scrolling photos)",
+  slider: "Photo slider (your photos full width, words on top)",
 };
 
 /** How long to wait after the last drag/typing tick before saving the

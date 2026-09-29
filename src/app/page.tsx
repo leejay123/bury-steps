@@ -3,6 +3,7 @@ import { HeroCinematic } from "@/components/hero-cinematic";
 import { HeroGlobe } from "@/components/hero-globe";
 import { HeroMarqueeHome } from "@/components/hero-marquee-home";
 import { HeroParallaxHome } from "@/components/hero-parallax-home";
+import { HeroSliderHome } from "@/components/hero-slider-home";
 import { HomeWelcome } from "@/components/home-welcome";
 import { getOptionalUser } from "@/lib/auth";
 import { getHomepageSlides } from "@/lib/homepage-slides";
@@ -84,6 +85,15 @@ export default async function Home() {
           siteTagline={theme.siteTagline}
           slides={slides}
         />
+      ) : theme.heroStyle === "slider" ? (
+        <HeroSliderHome
+          isSignedIn={user !== null}
+          signInHref={signInHref}
+          signUpHref={signUpHref}
+          siteName={theme.siteName}
+          siteTagline={theme.siteTagline}
+          slides={slides}
+        />
       ) : (
         <HeroSection
           bgPattern={theme.heroBgPattern}
@@ -116,7 +126,8 @@ export default async function Home() {
         memberNotices={memberNotices}
         memberNoticesEnabled={theme.memberNoticesEnabled}
         photos={slides}
-        photosEnabled={theme.carouselEnabled}
+        // The Photo slider hero already shows these photos — don't repeat them below.
+        photosEnabled={theme.carouselEnabled && theme.heroStyle !== "slider"}
         titleRevealEnabled={theme.titleRevealEnabled}
         progressEnabled={progressEnabled}
         sectionBgPatterns={{
