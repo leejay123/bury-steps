@@ -1,5 +1,6 @@
 "use server";
 
+import { parsePageTransition } from "@/lib/page-transition";
 import { serializeAnnouncementPages } from "@/lib/announcement-pages";
 import { parseTextSize } from "@/lib/text-sizes";
 import { revalidatePath, revalidateTag } from "next/cache";
@@ -537,6 +538,38 @@ export async function updateAnnouncementBanner(
   revalidatePath("/", "layout");
   revalidatePath("/admin/settings/behaviour");
   return { ok: true, message: enabled ? "Announcement is showing." : "Announcement saved and hidden." };
+}
+
+export async function updatePageTransition(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  const mode = parsePageTransition(String(formData.get("pageTransition") ?? ""));
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, carouselEnabled: true, pageTransition: mode },
+      update: { pageTransition: mode },
+    });
+  } catch (err) {
+    return logActionError("updatePageTransition", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings/behaviour");
+  return {
+    ok: true,
+    message:
+      mode === "fade"
+        ? "Pages now fade in."
+        : mode === "slide"
+          ? "Walks now slide in and out; other pages fade."
+          : "Page changes are now instant.",
+  };
 }
 
 export async function updateSliderHeroWords(

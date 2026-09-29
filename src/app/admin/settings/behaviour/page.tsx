@@ -5,6 +5,7 @@ import { SITE_SETTING_ID } from "@/lib/theme";
 import { SettingsPage, SettingsSectionGroup } from "../settings-page";
 import { AnnouncementSettings } from "./announcement-settings";
 import { CookieConsentSettings } from "./cookie-consent-settings";
+import { PageTransitionSettings } from "./page-transition-settings";
 import { DisplaySettings, FooterWordmarkMobileSettings, FooterWordmarkSettings } from "./display-form";
 import { ProgressToggle } from "./progress-toggle";
 import { OrganiserInviteToggle } from "./organiser-invite-toggle";
@@ -43,6 +44,7 @@ export default async function SiteBehaviourSettingsPage() {
 
       <SettingsSectionGroup description="Behaviour that applies across the whole site." title="Site chrome">
         <CookieConsentSettings variant={theme.cookieConsentVariant} />
+        <PageTransitionSettings mode={theme.pageTransition} />
         <DisplaySettings scrollToTopEnabled={theme.scrollToTopEnabled} />
         <FooterWordmarkSettings enabled={theme.footerWordmarkEnabled} />
         {theme.footerWordmarkEnabled ? <FooterWordmarkMobileSettings enabled={theme.footerWordmarkMobile} /> : null}

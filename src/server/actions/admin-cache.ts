@@ -190,6 +190,7 @@ export async function resetSiteToDefault(
           footerWordmarkEnabled: true,
           footerWordmarkMobile: true,
           sliderHeroWords: "site",
+          pageTransition: "fade",
           titleRevealEnabled: true,
           announcementEnabled: false,
           announcementText: "",

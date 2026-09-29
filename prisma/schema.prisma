@@ -328,6 +328,8 @@ model SiteSetting {
   /// Words on the Photo slider hero: "site" (site name + tagline on every
   /// photo), "slides" (each photo's own heading/caption), or "none".
   sliderHeroWords             String   @default("site")
+  /// Page change animation: "fade", "slide" (walks slide in/out, rest fade) or "none".
+  pageTransition              String   @default("fade")
   /// Word-by-word reveal on the homepage section titles (Homepage layout).
   titleRevealEnabled          Boolean  @default(true)
   /// Announcement bar pinned above the header on every page (Site behaviour).

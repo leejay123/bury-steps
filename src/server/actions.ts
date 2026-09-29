@@ -105,6 +105,7 @@ export {
   updateAnnouncementBanner,
   updateTitleRevealEnabled,
   updateSliderHeroWords,
+  updatePageTransition,
   updateCookieConsentVariant,
   updateSiteFont,
   updateTextSizes,
