@@ -95,8 +95,10 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
       <CardHeader className="flex flex-row items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1.5">
           <CardTitle className="text-base">{walk.title}</CardTitle>
+          {/* Phones: the label moves full width under the details (below). */}
           <WalkStatusBadge
             cancelledAt={null}
+            className="max-sm:hidden"
             durationMins={walk.durationMins}
             endedAt={walk.endedAt}
             startsAt={walk.startsAt}
@@ -117,6 +119,13 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
               </span>
             ) : null}
           </CardDescription>
+          <WalkStatusBadge
+            cancelledAt={null}
+            className="mt-1 w-full justify-center py-1 sm:hidden"
+            durationMins={walk.durationMins}
+            endedAt={walk.endedAt}
+            startsAt={walk.startsAt}
+          />
         </div>
         <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />
       </CardHeader>

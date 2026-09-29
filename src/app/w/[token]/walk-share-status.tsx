@@ -128,11 +128,12 @@ export function WalkShareStatusChrome({
 
       <Card className="gap-4">
         <CardHeader>
-          {/* Label above the title on phones, to its right from sm up. */}
-          <div className="flex w-full min-w-0 flex-col-reverse items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          {/* Label beside the title from sm up; full width under it on phones. */}
+          <div className="flex w-full min-w-0 flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <CardTitle className="min-w-0 text-xl">{title}</CardTitle>
             <WalkStatusBadge
               cancelledAt={cancelledAt}
+              className="max-sm:w-full max-sm:justify-center max-sm:py-1"
               durationMins={durationMins}
               endedAt={endedAt}
               startsAt={startsAt}

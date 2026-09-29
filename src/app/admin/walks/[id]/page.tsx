@@ -206,11 +206,13 @@ export default async function WalkDetailPage({
       <Card className="gap-4">
         <CardHeader>
           <div className="flex min-w-0 flex-col items-start gap-1.5">
-            {/* Label above the title on phones, to its right from sm up. */}
-            <div className="flex w-full min-w-0 flex-col-reverse items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+            {/* Status label: beside the title from sm up; on phones it sits
+                full width under "Created by" instead (see below). */}
+            <div className="flex w-full min-w-0 items-center justify-between gap-4">
               <CardTitle className="min-w-0 text-2xl">{walk.title}</CardTitle>
               <WalkStatusBadge
                 cancelledAt={walk.cancelledAt?.toISOString() ?? null}
+                className="max-sm:hidden"
                 durationMins={walk.durationMins}
                 endedAt={walk.endedAt?.toISOString() ?? null}
                 startsAt={walk.startsAt.toISOString()}
@@ -220,6 +222,13 @@ export default async function WalkDetailPage({
             <p className="text-xs text-muted-foreground">
               Created by {displayName(walk.createdBy)} ({creatorIsOwner ? "Owner" : "Organiser"})
             </p>
+            <WalkStatusBadge
+              cancelledAt={walk.cancelledAt?.toISOString() ?? null}
+              className="mt-1 w-full justify-center py-1 sm:hidden"
+              durationMins={walk.durationMins}
+              endedAt={walk.endedAt?.toISOString() ?? null}
+              startsAt={walk.startsAt.toISOString()}
+            />
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">

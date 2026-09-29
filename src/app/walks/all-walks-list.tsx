@@ -164,7 +164,8 @@ export function AllWalksList({ rows }: { rows: AllWalksRow[] }) {
                       <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                     ) : null}
                   </div>
-                  <div className="relative z-10 w-fit">
+                  {/* Phones: the label moves full width under the details (below). */}
+                  <div className="relative z-10 w-fit max-sm:hidden">
                     <WalkStatusBadge
                       cancelledAt={row.cancelledAt}
                       durationMins={row.durationMins}
@@ -176,6 +177,15 @@ export function AllWalksList({ rows }: { rows: AllWalksRow[] }) {
                     {formatDate(startsAt)} · {formatTime(startsAt)} · {row.durationMins} min
                     {row.location ? ` · ${row.location}` : ""}
                   </p>
+                  <div className="relative z-10 sm:hidden">
+                    <WalkStatusBadge
+                      cancelledAt={row.cancelledAt}
+                      className="w-full justify-center py-1"
+                      durationMins={row.durationMins}
+                      endedAt={row.endedAt}
+                      startsAt={row.startsAt}
+                    />
+                  </div>
                   {row.cancelledAt
                     ? row.attendanceCount > 0 && (
                         <p className="text-sm text-muted-foreground">

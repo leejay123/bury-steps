@@ -39,7 +39,9 @@ export function WalkStatusBadge({
   durationMins,
   endedAt = null,
   startsAt,
+  className,
 }: {
+  className?: string;
   cancelledAt: string | null;
   durationMins: number;
   /** Set once an organiser ends the walk early — see endWalkEarly. */
@@ -66,5 +68,9 @@ export function WalkStatusBadge({
     ? `${LABEL[status]} · ${status === "in-progress" ? `${countdown} left` : countdown}`
     : LABEL[status];
 
-  return <Badge variant={VARIANT[status]}>{label}</Badge>;
+  return (
+    <Badge className={className} variant={VARIANT[status]}>
+      {label}
+    </Badge>
+  );
 }
