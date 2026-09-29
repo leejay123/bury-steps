@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import { animate } from "motion";
 import type { PageTransition } from "@/lib/page-transition";
 
 /** A single walk's page — organiser (/admin/walks/<id>) or member (/w/<slug>). */
@@ -12,7 +13,8 @@ const isWalkPage = (path: string) => /^\/(admin\/walks|w)\/[^/]+$/.test(path);
  * behaviour → Page transitions):
  *   "fade"  — a quick fade-in
  *   "slide" — opening a walk slides it in from the right, leaving it slides
- *             the list back in from the left; every other change fades
+ *             the list back in from the left (a Motion spring); every other
+ *             change fades
  *   "none"  — no animation
  * The old page stays fully on screen until the new one is ready, and the new
  * one starts part-visible (not from blank), so there's never a white gap
@@ -38,17 +40,27 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
           ? -1
           : 0;
 
-    if (direction) {
-      ref.current?.animate(
-        [
-          { opacity: 0.3, transform: `translateX(${direction * 32}px)` },
-          { opacity: 1, transform: "translateX(0)" },
-        ],
-        { duration: 260, easing: "cubic-bezier(0.2, 0.7, 0.2, 1)" },
-      );
-    } else {
-      ref.current?.animate([{ opacity: 0.4 }, { opacity: 1 }], { duration: 180, easing: "ease-out" });
-    }
+    const el = ref.current;
+    if (!el) return;
+    // Motion (Framer Motion): a gentle spring for the walk slide, so it
+    // settles into place rather than following a fixed curve.
+    const run = direction
+      ? animate(
+          el,
+          { opacity: [0.3, 1], x: [direction * 40, 0] },
+          { type: "spring", visualDuration: 0.35, bounce: 0.15 },
+        )
+      : animate(el, { opacity: [0.4, 1] }, { duration: 0.18, ease: "easeOut" });
+    // Clear what Motion leaves inline: a lingering transform would make this
+    // wrapper the containing block for any position:fixed content inside.
+    const clear = () => {
+      el.style.transform = "";
+      el.style.opacity = "";
+    };
+    run.then(clear, clear);
+    // Cut short (another page change, or the setting flipped): jump to the
+    // end rather than freezing half-faded.
+    return () => run.complete();
   }, [pathname, mode]);
 
   return (
