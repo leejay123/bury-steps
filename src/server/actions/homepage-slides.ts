@@ -34,7 +34,7 @@ export async function addHomepageSlide(
     await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.homepageSlide, async (tx) => {
       const count = await tx.homepageSlide.count();
       if (count >= MAX_HOMEPAGE_SLIDES) {
-        throw new LimitReachedError("You can have up to 3 slides.");
+        throw new LimitReachedError(`You can have up to ${MAX_HOMEPAGE_SLIDES} slides.`);
       }
       await tx.homepageSlide.create({
         data: {

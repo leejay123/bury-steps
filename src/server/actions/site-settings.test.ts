@@ -222,6 +222,7 @@ describe("reorderHomepageSections", () => {
 
   it("saves a valid section order", async () => {
     const result = await reorderHomepageSections([
+      "photos",
       "howWalksWork",
       "howThisStarted",
       "memberNotices",

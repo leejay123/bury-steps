@@ -28,6 +28,7 @@ vi.mock("@/lib/auth", async () => {
   return { ...actual, requireAdmin };
 });
 
+import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { addHomepageSlide, deleteHomepageSlide, replaceHomepageSlideImage, reorderHomepageSlides } from "./homepage-slides";
 
 // Full access by default so existing tests exercise the authorized path —
@@ -99,9 +100,9 @@ describe("addHomepageSlide", () => {
   });
 
   it("blocks adding once the slide cap is reached", async () => {
-    prismaMock.homepageSlide.count.mockResolvedValueOnce(3);
+    prismaMock.homepageSlide.count.mockResolvedValueOnce(MAX_HOMEPAGE_SLIDES);
     const result = await addHomepageSlide(null, formWithImage());
-    expect(result).toEqual({ ok: false, error: "You can have up to 3 slides." });
+    expect(result).toEqual({ ok: false, error: `You can have up to ${MAX_HOMEPAGE_SLIDES} slides.` });
     expect(prismaMock.homepageSlide.create).not.toHaveBeenCalled();
   });
 
