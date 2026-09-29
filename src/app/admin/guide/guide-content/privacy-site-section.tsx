@@ -81,8 +81,9 @@ export function PrivacySiteSection() {
               Walk lists keep the title, date, and meeting point on one card so they fit a phone.
               Date and time sit on the same line. FAQ category chips on a phone scroll themselves
               so the one you tap stays in view. On a phone, the menu icon (two lines) at the top left opens every page
-              in a large list on a solid screen that starts right under the header (nothing of the
-              page shows through), and the page behind stays still until you
+              in a large list on a frosted white screen that starts right under the header (the page
+              behind shows through faintly blurred, with its colours toned down so photos and
+              coloured sections don’t muddy it), and the page behind stays still until you
               close it or pick a page. Signed-in people also get a <strong>search</strong> next to the
               bell (a search bar on a computer, a magnifying-glass icon on a phone, or ⌘K /
               Ctrl+K), that finds
