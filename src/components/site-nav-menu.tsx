@@ -333,6 +333,8 @@ export function SiteMobileMenu({ groups, showSearch = false }: { groups: MobileM
         className={cn(menuFont.className, "h-(--radix-popper-available-height) w-(--radix-popper-available-width) overflow-y-auto rounded-none border-none bg-background p-0 shadow-none duration-100 [scrollbar-width:none] data-[state=open]:animate-none! [&::-webkit-scrollbar]:hidden")}
         align="start"
         side="bottom"
+        // PopoverContent defaults to a 4px gap; the page showed through it.
+        sideOffset={0}
         avoidCollisions={false}
       >
         <div className="flex flex-col gap-12 overflow-auto px-6 py-6">
