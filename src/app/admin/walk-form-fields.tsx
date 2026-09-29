@@ -200,7 +200,8 @@ export function WalkFormFields({
                   value={item.key}
                 />
                 <Label className="font-normal" htmlFor={id(`essential-${item.key}`)}>
-                  <span aria-hidden="true">{item.emoji}</span> {item.label}
+                  <item.icon aria-hidden="true" className="size-4 text-muted-foreground" />
+                  {item.label}
                 </Label>
               </div>
             ))}

@@ -57,10 +57,15 @@ export function WalkFacts({
       {essentialItems.length > 0 ? (
         <div className="flex flex-col gap-1.5">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Essentials</p>
-          <ul className="flex flex-wrap gap-1.5">
+          {/* One row that scrolls sideways rather than wrapping onto several lines. */}
+          <ul className="flex gap-1.5 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {essentialItems.map((item) => (
-              <li className="rounded-full border px-2.5 py-1 text-xs" key={item.key}>
-                <span aria-hidden="true">{item.emoji}</span> {item.label}
+              <li
+                className="flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs whitespace-nowrap"
+                key={item.key}
+              >
+                <item.icon aria-hidden="true" className="size-3.5 text-muted-foreground" />
+                {item.label}
               </li>
             ))}
           </ul>
