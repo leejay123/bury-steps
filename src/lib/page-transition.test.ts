@@ -11,11 +11,17 @@ describe("slideDirection", () => {
     ["/admin/settings/branding", "/admin/settings", -1],
     ["/notices", "/notices/welcome", 1],
     ["/admin/members/abc", "/admin/members", -1],
-    // Sideways: main sections, and sibling settings pages.
-    ["/admin", "/admin/settings", 0],
-    ["/", "/walks", 0],
+    // Main sections: like tabs, by menu order.
+    ["/admin", "/admin/settings", 1],
+    ["/", "/walks", 1],
+    ["/walks", "/notices", 1],
+    ["/admin/reports", "/notices", -1],
+    ["/admin/members", "/progress", -1],
+    ["/admin/settings/branding", "/admin/guide", 1],
+    // Sideways within a section, and pages outside the menu: fade.
     ["/admin/settings/branding", "/admin/settings/behaviour", 0],
-    ["/walks", "/notices", 0],
+    ["/contact", "/privacy-policy", 0],
+    ["/contact", "/notices", 0],
   ] as const)("%s → %s is %i", (from, to, expected) => {
     expect(slideDirection(from, to)).toBe(expected);
   });

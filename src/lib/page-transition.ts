@@ -27,5 +27,42 @@ export function slideDirection(from: string, to: string): -1 | 0 | 1 {
   if (isWalkPage(from) && !isWalkPage(to)) return -1;
   if (isInside(to, from)) return 1;
   if (isInside(from, to)) return -1;
+  // Between main sections: like tabs, by their order in the menu bar.
+  const a = sectionIndex(from);
+  const b = sectionIndex(to);
+  if (a >= 0 && b >= 0 && a !== b) return b > a ? 1 : -1;
   return 0;
+}
+
+/**
+ * The menu bar's sections in order (src/components/site-nav-items.ts).
+ * Organisers' Walks is /admin, members' is /walks — both sit at Walks.
+ */
+const SECTIONS: string[][] = [
+  ["/"],
+  ["/walks", "/admin", "/w"],
+  ["/notices"],
+  ["/progress"],
+  ["/history"],
+  ["/admin/members"],
+  ["/admin/messages"],
+  ["/admin/reports"],
+  ["/admin/settings"],
+  ["/admin/guide"],
+];
+
+/** Which menu section a page belongs to (longest matching address), or -1. */
+function sectionIndex(path: string): number {
+  let best = -1;
+  let bestLength = -1;
+  SECTIONS.forEach((roots, index) => {
+    for (const root of roots) {
+      const matches = root === "/" ? path === "/" : path === root || path.startsWith(`${root}/`);
+      if (matches && root.length > bestLength) {
+        best = index;
+        bestLength = root.length;
+      }
+    }
+  });
+  return best;
 }

@@ -95,7 +95,8 @@ export function PrivacySiteSection() {
               switches this: Quick fade; Slide in and out of pages (like the returns portal: opening
               something — a walk, a notice, a member, a settings page — the list slides away then
               the page slides in from the right, and back again, with walk cards cascading in;
-              moving between main sections just fades); or No transition. Walk cards (Manage walks,
+              moving between main sections slides like tabs, following the order of the menu bar);
+              or No transition. Walk cards (Manage walks,
               and Upcoming and All walks on Walks) open with a thin header strip showing the status
               (Upcoming, Starting soon…) on the left and the day on the right — tinted amber when a
               walk is starting soon, green while it’s in progress and red when cancelled — with the
