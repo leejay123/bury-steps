@@ -161,7 +161,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <header
               className="group/site-header sticky top-0 z-[66] touch-manipulation bg-background transition-shadow duration-200 [transform:translateZ(0)] data-scrolled:shadow-[0_4px_12px_-6px_rgb(0_0_0/0.12)]"
               data-site-header=""
-              style={{ viewTransitionName: "site-header" }}
             >
               {theme.announcementEnabled && theme.announcementText ? (
                 <AnnouncementBanner
@@ -238,8 +237,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               its own looks identical either way.
             */}
             <main className={`flex flex-1 flex-col ${PAGE_Y} ${PAGE_X}`} id="main-content">
-              {/* Page content crossfades on navigation (page-fade.tsx); the
-                  header is named site-header so it stays put. */}
+              {/* Page content fades in quickly on navigation (page-fade.tsx);
+                  the header is outside, so it stays put. */}
               <PageFade>{children}</PageFade>
             </main>
             <Suspense fallback={null}>

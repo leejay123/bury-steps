@@ -547,29 +547,3 @@ html[data-announcement-hide] [data-slot="sticky-banner"] {
   display: none;
 }
 
-/* Page transitions: a plain crossfade of the page content (browser
-   default timing) — see page-fade.tsx, around <main>'s children in
-   layout.tsx. The header is its own named group so it stays perfectly still
-   instead of fading with the page. */
-::view-transition-group(site-header) {
-  animation: none;
-  z-index: 100;
-}
-::view-transition-old(site-header) {
-  display: none;
-}
-::view-transition-new(site-header) {
-  animation: none;
-}
-/* Clicks during the fade reach the new page instead of being swallowed. */
-::view-transition {
-  pointer-events: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(*),
-  ::view-transition-new(*),
-  ::view-transition-group(*) {
-    animation-duration: 0s !important;
-    animation-delay: 0s !important;
-  }
-}

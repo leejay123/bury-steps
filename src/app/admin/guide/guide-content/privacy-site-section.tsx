@@ -89,8 +89,9 @@ export function PrivacySiteSection() {
               pages, walks, notices and FAQs — organisers also find the settings their permissions
               allow. It opens on the main pages; type to see up to five matches per section, split into
               upcoming and recent walks, notices, FAQs by category, and settings by area. Walks show
-              just their name and are found by their name only — not by date, time or meeting point. Moving between pages gently crossfades the page (the header stays still), and a
-              page’s loading placeholders crossfade into its content. Walk cards (Manage walks,
+              just their name and are found by their name only — not by date, time or meeting point. Moving between pages, the new page fades in quickly (under a fifth of a second)
+              while the header stays still — the old page stays up until the new one is ready, so
+              there’s no white flash in between. Walk cards (Manage walks,
               and Upcoming and All walks on Walks) open with a thin header strip showing the status
               (Upcoming, Starting soon…) on the left and the day on the right — tinted amber when a
               walk is starting soon, green while it’s in progress and red when cancelled — with the
