@@ -194,20 +194,18 @@ export default async function WalkDetailPage({
 
       <Card className="gap-4">
         <CardHeader>
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <CardTitle className="text-2xl">{walk.title}</CardTitle>
-              {/* Organiser/owner-only — members never see who created a walk. */}
-              <p className="text-xs text-muted-foreground">
-                Created by {displayName(walk.createdBy)} ({creatorIsOwner ? "Owner" : "Organiser"})
-              </p>
-            </div>
+          <div className="flex min-w-0 flex-col items-start gap-1.5">
+            <CardTitle className="text-2xl">{walk.title}</CardTitle>
             <WalkStatusBadge
               cancelledAt={walk.cancelledAt?.toISOString() ?? null}
               durationMins={walk.durationMins}
               endedAt={walk.endedAt?.toISOString() ?? null}
               startsAt={walk.startsAt.toISOString()}
             />
+            {/* Organiser/owner-only — members never see who created a walk. */}
+            <p className="text-xs text-muted-foreground">
+              Created by {displayName(walk.createdBy)} ({creatorIsOwner ? "Owner" : "Organiser"})
+            </p>
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">

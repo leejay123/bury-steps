@@ -160,17 +160,17 @@ export function AllWalksList({ rows }: { rows: AllWalksRow[] }) {
                         row.title
                       )}
                     </p>
-                    <div className="relative z-10 flex shrink-0 items-center gap-2">
-                      <WalkStatusBadge
-                        cancelledAt={row.cancelledAt}
-                        durationMins={row.durationMins}
-                        endedAt={row.endedAt}
-                        startsAt={row.startsAt}
-                      />
-                      {row.href ? (
-                        <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                      ) : null}
-                    </div>
+                    {row.href ? (
+                      <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                    ) : null}
+                  </div>
+                  <div className="relative z-10 w-fit">
+                    <WalkStatusBadge
+                      cancelledAt={row.cancelledAt}
+                      durationMins={row.durationMins}
+                      endedAt={row.endedAt}
+                      startsAt={row.startsAt}
+                    />
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {formatDate(startsAt)} · {formatTime(startsAt)} · {row.durationMins} min

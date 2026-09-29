@@ -29,7 +29,7 @@ export function WalksSection({
             countdown to the published start), <strong>In progress</strong> (until the
             scheduled end), <strong>Completed</strong> (from the scheduled end — self clock-in
             is closed),             or <strong>Cancelled</strong>. The walk’s own page shows the same
-            status next to its title, then the date, start time, length, and meeting
+            status just under its title, then the date, start time, length, and meeting
             point on their own lines. Who created the walk sits under the title.
           </p>
           <p className="font-medium text-foreground">Create a walk</p>
@@ -101,7 +101,7 @@ export function WalksSection({
           </p>
           <p>
             You can publish more than one walk in a week. Each walk has its own day, time,
-            meeting point, and share link. Members see every upcoming walk on their Walks page.
+            meeting point, and share link. Members see every upcoming walk on their Walks page, with its status just under the title.
           </p>
           <p className="font-medium text-foreground">Cancel, end early, edit, reopen, duplicate, or remove</p>
           <ul className="list-disc pl-5">

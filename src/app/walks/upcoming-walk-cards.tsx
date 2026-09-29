@@ -95,6 +95,12 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
       <CardHeader className="flex flex-row items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1.5">
           <CardTitle className="text-base">{walk.title}</CardTitle>
+          <WalkStatusBadge
+            cancelledAt={null}
+            durationMins={walk.durationMins}
+            endedAt={walk.endedAt}
+            startsAt={walk.startsAt}
+          />
           <CardDescription className="flex flex-col gap-1">
             <span className="inline-flex items-center gap-1.5">
               <CalendarDays aria-hidden="true" className="size-3.5" />
@@ -112,15 +118,7 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
             ) : null}
           </CardDescription>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <WalkStatusBadge
-            cancelledAt={null}
-            durationMins={walk.durationMins}
-            endedAt={walk.endedAt}
-            startsAt={walk.startsAt}
-          />
-          <ChevronRight aria-hidden className="size-4 text-muted-foreground" />
-        </div>
+        <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {walk.description ? (
