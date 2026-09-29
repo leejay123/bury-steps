@@ -185,25 +185,30 @@ export function WalkFormFields({
               name="backMarker"
               placeholder="TBA"
             />
+            <FieldHint>Walks at the back of the group so nobody gets left behind.</FieldHint>
           </div>
         </div>
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 text-sm font-medium">Essentials</legend>
           <FieldHint>Tick what&apos;s there. Only ticked items show on the walk page.</FieldHint>
-          <div className="grid gap-2.5 sm:grid-cols-2">
+          {/* Each item is a whole tappable row with room to breathe, rather
+              than a tick box squeezed beside wrapped text. */}
+          <div className="grid gap-2">
             {WALK_ESSENTIALS.map((item) => (
-              <div className="flex items-center gap-2" key={item.key}>
+              <Label
+                className="flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 font-normal transition-colors has-[[data-state=checked]]:border-foreground/40 has-[[data-state=checked]]:bg-muted/60"
+                htmlFor={id(`essential-${item.key}`)}
+                key={item.key}
+              >
+                <item.icon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+                <span className="flex-1">{item.label}</span>
                 <Checkbox
                   defaultChecked={defaults?.essentials.includes(item.key) ?? false}
                   id={id(`essential-${item.key}`)}
                   name="essentials"
                   value={item.key}
                 />
-                <Label className="font-normal" htmlFor={id(`essential-${item.key}`)}>
-                  <item.icon aria-hidden="true" className="size-4 text-muted-foreground" />
-                  {item.label}
-                </Label>
-              </div>
+              </Label>
             ))}
           </div>
         </fieldset>

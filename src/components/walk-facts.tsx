@@ -33,7 +33,7 @@ export function WalkFacts({
     { icon: Timer, label: "Expected length", value: formatWalkLength(durationMins) },
     ...(meeting ? [{ icon: MapPin, label: "Meeting point", value: meeting }] : []),
     ...(distance ? [{ icon: Footprints, label: "Distance", value: distance }] : []),
-    ...(elevationGain ? [{ icon: Mountain, label: "Elevation gain", value: `${elevationGain} elevation gain` }] : []),
+    ...(elevationGain ? [{ icon: Mountain, label: "Elevation gain", value: elevationGain }] : []),
     ...(grade ? [{ icon: TrendingUp, label: "Grade", value: grade }] : []),
     ...(walkLeader ? [{ icon: UserRound, label: "Walk leader", value: walkLeader }] : []),
     ...(backMarker ? [{ icon: UsersRound, label: "Back marker", value: backMarker }] : []),
@@ -47,9 +47,10 @@ export function WalkFacts({
         {rows.map((row) => (
           <li className="flex items-start gap-2.5 text-sm" key={row.label}>
             <row.icon aria-hidden="true" className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+            {/* The label is spelled out (bold) so a bare name like "leejay"
+                reads as the walk leader, not just a person. */}
             <span>
-              <span className="sr-only">{row.label}: </span>
-              {row.value}
+              <span className="font-medium">{row.label}:</span> {row.value}
             </span>
           </li>
         ))}
