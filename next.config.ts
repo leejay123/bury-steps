@@ -4,6 +4,21 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Parent lockfiles made Next treat ~ as the app root and bundle the wrong Prisma client.
   outputFileTracingRoot: path.join(__dirname),
+  images: {
+    // Next 16 refuses to resize a local image whose address has a query
+    // string unless it's listed here — and every uploaded picture is served
+    // with a "?v=<last saved>" tag so browsers fetch the new one after an
+    // edit. Without these, uploaded Hero photos showed as broken images.
+    // Listing patterns also blocks everything else, so the last entry keeps
+    // ordinary site files (no query string) working.
+    localPatterns: [
+      { pathname: "/api/slides/**" },
+      { pathname: "/api/site-logo" },
+      { pathname: "/api/report-banner" },
+      { pathname: "/icon.png" },
+      { pathname: "/**", search: "" },
+    ],
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: "4mb",
