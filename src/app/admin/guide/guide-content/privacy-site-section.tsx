@@ -88,7 +88,9 @@ export function PrivacySiteSection() {
               Ctrl+K), that finds
               pages, walks, notices and FAQs — organisers also find the settings their permissions
               allow. It opens on the main pages; type to see up to five matches per section, split into
-              upcoming and recent walks, notices, FAQs by category, and settings by area. The page you’re on is underlined, and a blue dot beside
+              upcoming and recent walks, notices, FAQs by category, and settings by area. Walks show
+              just their name (no date or time, to keep it tidy), but typing a date like “4 Oct”
+              still finds them. The page you’re on is underlined, and a blue dot beside
               Notices means there’s one you haven’t read. The list is split under small labels:
               Menu for the main pages, Manage for the admin pages (owners and organisers only),
               Account for History and

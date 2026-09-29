@@ -70,8 +70,8 @@ export async function buildSiteSearchIndex(user: User): Promise<SiteSearchGroup[
   const walkItem = (walk: (typeof walks)[number]): SiteSearchItem => ({
     label: walk.title,
     href: canAdminWalks ? `/admin/walks/${walk.id}` : walkSharePath(walk),
-    hint: formatWalkDate(walk.startsAt),
-    keywords: [walk.location ?? ""],
+    // Date is searchable but not shown — it wrapped and cluttered the list on phones.
+    keywords: [walk.location ?? "", formatWalkDate(walk.startsAt)],
   });
 
   // Settings split by the hub's own groups (Homepage, Members…).
