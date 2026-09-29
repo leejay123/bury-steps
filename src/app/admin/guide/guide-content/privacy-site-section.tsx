@@ -89,7 +89,9 @@ export function PrivacySiteSection() {
               pages, walks, notices and FAQs — organisers also find the settings their permissions
               allow. It opens on the main pages; type to see up to five matches per section, split into
               upcoming and recent walks, notices, FAQs by category, and settings by area. Walks show
-              just their name and are found by their name only — not by date, time or meeting point. The page you’re on is underlined, and a blue dot beside
+              just their name and are found by their name only — not by date, time or meeting point. Moving between pages gently crossfades the page (the header stays still), and a
+              page’s loading placeholders crossfade into its content. On walk cards the status
+              label (Upcoming, Starting soon…) is a small tag, not a full-width bar. The page you’re on is underlined, and a blue dot beside
               Notices means there’s one you haven’t read. The list is split under small labels:
               Menu for the main pages, Manage for the admin pages (owners and organisers only),
               Account for History and

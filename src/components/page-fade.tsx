@@ -1,20 +1,14 @@
 "use client";
 
 import { ViewTransition, type ReactNode } from "react";
-import { usePathname } from "next/navigation";
 
 /**
- * Fades the page content when the page changes, and only then. Keyed by
- * the path, so moving to another page is an exit + enter (animated with the
- * page-fade class in globals.css) while updates within the same page —
- * sections finishing loading, a list filtering — are plain updates, which
- * default="none" leaves un-animated.
+ * Crossfades the page content on navigation — the browser's own view
+ * transition crossfade, no custom timing. The old and new page blend in one
+ * layer rather than one fading out and the other fading in separately
+ * (which left a blank flash between them). Skeletons crossfade into the
+ * loaded content the same way. The header sits outside and stays still.
  */
 export function PageFade({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  return (
-    <ViewTransition default="none" enter="page-fade" exit="page-fade" key={pathname}>
-      {children}
-    </ViewTransition>
-  );
+  return <ViewTransition>{children}</ViewTransition>;
 }

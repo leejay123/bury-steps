@@ -247,18 +247,9 @@ export function AdminWalkTable({
                     <p className="text-xs text-muted-foreground">
                       {walk.attendanceCount} {attendanceLabel.toLowerCase()}
                     </p>
-                    {/* Phones: full width under the details; wider: on the right. */}
-                    <WalkStatusBadge
-                      cancelledAt={walk.cancelledAt}
-                      className="mt-1 w-full justify-center py-1 sm:hidden"
-                      durationMins={walk.durationMins}
-                      endedAt={walk.endedAt}
-                      startsAt={walk.startsAt}
-                    />
                   </DataListBody>
                   <WalkStatusBadge
                     cancelledAt={walk.cancelledAt}
-                    className="max-sm:hidden"
                     durationMins={walk.durationMins}
                     endedAt={walk.endedAt}
                     startsAt={walk.startsAt}

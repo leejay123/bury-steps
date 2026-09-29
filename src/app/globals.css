@@ -547,40 +547,10 @@ html[data-announcement-hide] [data-slot="sticky-banner"] {
   display: none;
 }
 
-/* Page transitions (transition-kit.space "Fade"): the page content fades
-   out and in on navigation — see the <ViewTransition default="page-fade">
-   around <main>'s children in layout.tsx. The header is its own named
-   group so it stays perfectly still instead of fading with the page. */
-/* 250ms ease-in, on both the whole page (root) and the page content's own
-   layer (.page-fade) — the content is animated separately from root, so
-   styling root alone would leave it on different timing. Only runs on a
-   page change (see page-fade.tsx). */
-/* The old page leaves fast (120ms, ease-out = quickest at the start) so
-   its buttons don't linger over the new page while it fades in. */
-::view-transition-old(root),
-::view-transition-old(.page-fade) {
-  animation: page-fade-out 120ms ease-out both;
-}
-::view-transition-new(root),
-::view-transition-new(.page-fade) {
-  animation: page-fade-in 250ms ease-in both;
-}
-@keyframes page-fade-out {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-@keyframes page-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
+/* Page transitions: a plain crossfade of the page content (browser
+   default timing) — see page-fade.tsx, around <main>'s children in
+   layout.tsx. The header is its own named group so it stays perfectly still
+   instead of fading with the page. */
 ::view-transition-group(site-header) {
   animation: none;
   z-index: 100;

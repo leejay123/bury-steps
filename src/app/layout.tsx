@@ -238,8 +238,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               its own looks identical either way.
             */}
             <main className={`flex flex-1 flex-col ${PAGE_Y} ${PAGE_X}`} id="main-content">
-              {/* Page content fades on page changes only (globals.css,
-                  .page-fade); the header is named site-header so it stays put. */}
+              {/* Page content crossfades on navigation (page-fade.tsx); the
+                  header is named site-header so it stays put. */}
               <PageFade>{children}</PageFade>
             </main>
             <Suspense fallback={null}>
