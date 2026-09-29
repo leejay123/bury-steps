@@ -330,7 +330,9 @@ export function SiteMobileMenu({ groups, showSearch = false }: { groups: MobileM
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className={cn(menuFont.className, "h-(--radix-popper-available-height) w-(--radix-popper-available-width) overflow-y-auto rounded-none border-none bg-background p-0 shadow-none duration-100 [scrollbar-width:none] data-[state=open]:animate-none! [&::-webkit-scrollbar]:hidden")}
+        // Frosted glass: the page's colours show through, but blurred far
+        // enough (40px) that no text behind the menu can be read.
+        className={cn(menuFont.className, "h-(--radix-popper-available-height) w-(--radix-popper-available-width) overflow-y-auto rounded-none border-none bg-background/75 p-0 shadow-none backdrop-blur-2xl backdrop-saturate-150 duration-100 [scrollbar-width:none] data-[state=open]:animate-none! [&::-webkit-scrollbar]:hidden")}
         align="start"
         side="bottom"
         // PopoverContent defaults to a 4px gap; the page showed through it.
