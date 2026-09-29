@@ -10,17 +10,13 @@ const COLLAPSED_LINE_CLAMP = "line-clamp-6";
  * below this, line-clamp-6 wouldn't kick in on most screens anyway. */
 const LONG_DESCRIPTION_THRESHOLD = 400;
 
-/** Thin, unobtrusive scrollbar for the expanded description box — Firefox
- * via `scrollbar-width`, WebKit/Blink via the `::-webkit-scrollbar` pseudo. */
-const THIN_SCROLLBAR_CLASSNAME =
-  "[scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border";
-
 /** Long walk descriptions (start point, duration, leader, full route notes,
  * What3Words, …) used to render as one uncapped paragraph — on a walk with a
  * lot of copy that pushed everything else on the page down below the fold.
- * Collapses to a few lines with a Read more toggle; expanded state scrolls
- * within itself instead of growing the page. Collapsed preview still renders
- * **bold** (via InlineDescriptionText, no paragraph splitting — line-clamp
+ * Collapses to a few lines with a Read more toggle; expanded shows it all.
+ * (It used to scroll inside a fixed-height box, but phones hide that
+ * scrollbar, so the last visible line just looked cut in half.) Collapsed
+ * preview still renders **bold** (via InlineDescriptionText, no paragraph splitting — line-clamp
  * needs one continuous inline flow to count lines correctly); expanded view
  * gets real paragraph breaks too, via DescriptionText — at the same text size
  * as the preview (no `typeset` class, which bumps text up to 1.125em). */
@@ -31,10 +27,7 @@ export function WalkDescription({ description }: { description: string }) {
   return (
     <div className="flex flex-col gap-2 text-sm leading-relaxed">
       {expanded ? (
-        <DescriptionText
-          className={cn("max-h-72 overflow-y-auto pr-2", THIN_SCROLLBAR_CLASSNAME)}
-          text={description}
-        />
+        <DescriptionText text={description} />
       ) : (
         <p className={cn(isLong && COLLAPSED_LINE_CLAMP)}>
           <InlineDescriptionText text={description} />
