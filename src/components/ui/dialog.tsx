@@ -92,9 +92,14 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  closeButtonClassName,
   style,
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content> & { showCloseButton?: boolean }) {
+}: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  showCloseButton?: boolean;
+  /** Nudge the close button, e.g. to line it up with a search row. */
+  closeButtonClassName?: string;
+}) {
   const [root, setRoot] = React.useState<HTMLElement | null>(null);
   const centerY = useVisualViewportCenterY();
 
@@ -134,7 +139,10 @@ function DialogContent({
             <DialogPrimitive.Close
               data-slot="dialog-close"
               aria-label="Close"
-              className="absolute top-3.5 right-3.5 z-10 flex size-8 cursor-pointer after:absolute after:-inset-1.5 items-center justify-center rounded-full opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+              className={cn(
+                "absolute top-3.5 right-3.5 z-10 flex size-8 cursor-pointer after:absolute after:-inset-1.5 items-center justify-center rounded-full opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+                closeButtonClassName,
+              )}
             >
               <X />
               <span className="sr-only">Close</span>

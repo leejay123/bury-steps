@@ -40,7 +40,12 @@ function CommandDialog({
 }) {
   return (
     <Dialog {...props}>
-      <DialogContent className={cn("overflow-hidden p-0", className)} showCloseButton={false}>
+      {/* Same close button as every other dialog, centred on the 48px
+          search row (the input leaves room for it on the right). */}
+      <DialogContent
+        className={cn("overflow-hidden p-0 **:data-[slot=command-input-wrapper]:pr-12", className)}
+        closeButtonClassName="top-2 right-2"
+      >
         <DialogHeader className="sr-only">
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
