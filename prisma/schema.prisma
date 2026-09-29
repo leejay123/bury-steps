@@ -319,6 +319,11 @@ model SiteSetting {
   scrollToTopEnabled          Boolean  @default(true)
   /// When false, the giant outlined site name at the foot of every page is hidden.
   footerWordmarkEnabled       Boolean  @default(true)
+  /// Announcement bar pinned above the header on every page (Site behaviour).
+  announcementEnabled         Boolean  @default(false)
+  announcementText            String   @default("")
+  /// Optional: tapping the bar goes here ("/walks" or a full https:// link).
+  announcementLink            String   @default("")
   /// Cookie banner layout: default, small, or mini.
   cookieConsentVariant        String   @default("small")
   /// Public site typeface. One of the ids in src/lib/site-font.ts.

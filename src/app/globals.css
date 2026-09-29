@@ -297,6 +297,13 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
 
 :root {
   --radius: 0.5rem;
+  /* Velora's brand gradient (announcement bar, footer name glow): the
+     homepage globe's blue. */
+  --brand: oklch(0.55 0.2 262);
+  --brand-from: oklch(0.55 0.2 262);
+  --brand-via: oklch(0.62 0.19 259);
+  --brand-to: oklch(0.7 0.15 250);
+  --brand-foreground: oklch(1 0 0);
   --background: oklch(1 0 0);
   --foreground: oklch(0.15 0 0);
   --card: oklch(1 0 0);
@@ -325,6 +332,11 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
 }
 
 @theme inline {
+  --color-brand: var(--brand);
+  --color-brand-from: var(--brand-from);
+  --color-brand-via: var(--brand-via);
+  --color-brand-to: var(--brand-to);
+  --color-brand-foreground: var(--brand-foreground);
   --animate-marquee-vertical: marquee-vertical var(--duration, 40s) linear infinite;
   --animate-retro-grid: retro-grid 18s linear infinite;
   --color-background: var(--background);

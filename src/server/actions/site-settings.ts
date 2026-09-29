@@ -475,6 +475,58 @@ export async function updateScrollToTopEnabled(
   return { ok: true, message: enabled ? "Back to top is on." : "Back to top is off." };
 }
 
+/** Links the announcement bar may point at: a page on this site ("/walks")
+ * or a full https:// address. Anything else is refused rather than guessed. */
+function parseAnnouncementLink(raw: string): string | null {
+  const link = raw.trim();
+  if (!link) return "";
+  if (link.startsWith("/") && !link.startsWith("//")) return link;
+  try {
+    const url = new URL(link);
+    return url.protocol === "https:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function updateAnnouncementBanner(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  const enabled = String(formData.get("announcementEnabled") ?? "") === "on";
+  const text = String(formData.get("announcementText") ?? "").trim();
+  const link = parseAnnouncementLink(String(formData.get("announcementLink") ?? ""));
+  if (text.length > 160) return { ok: false, error: "Keep the announcement to 160 characters or fewer." };
+  if (enabled && !text) return { ok: false, error: "Write the announcement before turning it on." };
+  if (link === null) {
+    return { ok: false, error: "The link must be a page on this site (like /walks) or start with https://." };
+  }
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        carouselEnabled: true,
+        announcementEnabled: enabled,
+        announcementText: text,
+        announcementLink: link,
+      },
+      update: { announcementEnabled: enabled, announcementText: text, announcementLink: link },
+    });
+  } catch (err) {
+    return logActionError("updateAnnouncementBanner", err, "Could not save the announcement. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings/behaviour");
+  return { ok: true, message: enabled ? "Announcement is showing." : "Announcement saved and hidden." };
+}
+
 export async function updateFooterWordmarkEnabled(
   _prev: ActionResult | null,
   formData: FormData,

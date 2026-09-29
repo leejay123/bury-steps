@@ -3,6 +3,7 @@ import { requirePermission, displayName } from "@/lib/auth";
 import { getSiteTheme } from "@/lib/site-theme";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { SettingsPage, SettingsSectionGroup } from "../settings-page";
+import { AnnouncementSettings } from "./announcement-settings";
 import { CookieConsentSettings } from "./cookie-consent-settings";
 import { DisplaySettings, FooterWordmarkSettings } from "./display-form";
 import { ProgressToggle } from "./progress-toggle";
@@ -28,9 +29,17 @@ export default async function SiteBehaviourSettingsPage() {
 
   return (
     <SettingsPage
-      description="Sitewide behaviour that isn't part of the homepage story — cookie notice, back to top, the footer name, Progress, organiser invites, and the contact form."
+      description="Sitewide behaviour that isn't part of the homepage story — announcement bar, cookie notice, back to top, the footer name, Progress, organiser invites, and the contact form."
       title="Site behaviour"
     >
+      <SettingsSectionGroup description="A message across the top of every page." title="Announcement">
+        <AnnouncementSettings
+          enabled={theme.announcementEnabled}
+          link={theme.announcementLink}
+          text={theme.announcementText}
+        />
+      </SettingsSectionGroup>
+
       <SettingsSectionGroup description="Behaviour that applies across the whole site." title="Site chrome">
         <CookieConsentSettings variant={theme.cookieConsentVariant} />
         <DisplaySettings scrollToTopEnabled={theme.scrollToTopEnabled} />

@@ -83,6 +83,10 @@ export type SiteTheme = {
   scrollToTopEnabled: boolean;
   /** Giant outlined site name at the foot of every page (see updateFooterWordmarkEnabled). */
   footerWordmarkEnabled: boolean;
+  /** Announcement bar above the header (see updateAnnouncementBanner). */
+  announcementEnabled: boolean;
+  announcementText: string;
+  announcementLink: string;
   cookieConsentVariant: CookieConsentVariant;
   siteFont: SiteFontId;
   textSizes: TextSizes;
@@ -149,6 +153,9 @@ function defaultTheme(): SiteTheme {
     memberNoticesEnabled: true,
     scrollToTopEnabled: true,
     footerWordmarkEnabled: true,
+    announcementEnabled: false,
+    announcementText: "",
+    announcementLink: "",
     cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
     siteFont: DEFAULT_SITE_FONT,
     textSizes: DEFAULT_TEXT_SIZES,
@@ -208,6 +215,9 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       memberNoticesEnabled: true,
       scrollToTopEnabled: true,
       footerWordmarkEnabled: true,
+      announcementEnabled: true,
+      announcementText: true,
+      announcementLink: true,
       cookieConsentVariant: true,
       siteFont: true,
       textHeadlinePx: true,
@@ -276,6 +286,9 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     memberNoticesEnabled: row?.memberNoticesEnabled ?? true,
     scrollToTopEnabled: row?.scrollToTopEnabled ?? true,
     footerWordmarkEnabled: row?.footerWordmarkEnabled ?? true,
+    announcementEnabled: row?.announcementEnabled ?? false,
+    announcementText: row?.announcementText ?? "",
+    announcementLink: row?.announcementLink ?? "",
     cookieConsentVariant:
       parseCookieConsentVariant(row?.cookieConsentVariant ?? "") ??
       DEFAULT_COOKIE_CONSENT_VARIANT,
@@ -347,7 +360,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v21"], {
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v22"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });

@@ -101,6 +101,7 @@ export {
   updateOrganiserInviteRequired,
   updateScrollToTopEnabled,
   updateFooterWordmarkEnabled,
+  updateAnnouncementBanner,
   updateCookieConsentVariant,
   updateSiteFont,
   updateTextSizes,

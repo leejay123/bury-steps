@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { AnnouncementBanner } from "@/components/announcement-banner";
 import { textSizeCssVars } from "@/lib/text-sizes";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { ButtonRipple } from "@/components/button-ripple";
@@ -160,6 +161,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               className="group/site-header sticky top-0 z-[66] touch-manipulation bg-background transition-shadow duration-200 [transform:translateZ(0)] data-scrolled:shadow-[0_4px_12px_-6px_rgb(0_0_0/0.12)]"
               data-site-header=""
             >
+              {theme.announcementEnabled && theme.announcementText ? (
+                <AnnouncementBanner link={theme.announcementLink} text={theme.announcementText} />
+              ) : null}
               <Suspense fallback={null}>
                 <ImpersonationBannerSlot />
               </Suspense>
