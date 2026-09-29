@@ -77,7 +77,7 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
   );
 
   return (
-    <Card className="relative gap-3 overflow-hidden pt-0 transition-colors hover:bg-muted/40">
+    <Card className="relative gap-3 overflow-hidden pt-0 transition-colors hover:bg-muted/40" data-stagger-item="">
       {/* Status and day as the card's header strip (see WalkStatusHeader). */}
       <WalkStatusHeader
         cancelledAt={null}

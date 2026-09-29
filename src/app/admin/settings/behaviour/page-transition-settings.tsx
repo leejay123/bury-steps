@@ -40,7 +40,7 @@ export function PageTransitionSettings({ mode }: { mode: PageTransition }) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="fade">Quick fade</SelectItem>
-            <SelectItem value="slide">Quick fade, walks slide in and out</SelectItem>
+            <SelectItem value="slide">Walks slide in and out (like the returns portal)</SelectItem>
             <SelectItem value="none">No transition (instant)</SelectItem>
           </SelectContent>
         </Select>

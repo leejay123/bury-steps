@@ -231,7 +231,7 @@ export function AdminWalkTable({
         <>
           <DataList>
             {paging.paged.map((walk) => (
-              <DataListItem className="relative flex-col items-stretch gap-0 p-0" key={walk.id}>
+              <DataListItem className="relative flex-col items-stretch gap-0 p-0" data-stagger-item="" key={walk.id}>
                 {/* Status and day as the card's header strip (see WalkStatusHeader). */}
                 <WalkStatusHeader
                   cancelledAt={walk.cancelledAt}

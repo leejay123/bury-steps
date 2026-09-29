@@ -1,66 +1,129 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
-import { usePathname } from "next/navigation";
-import { animate } from "motion";
+import { usePathname, useRouter } from "next/navigation";
+import { animate, stagger } from "motion";
 import type { PageTransition } from "@/lib/page-transition";
 
 /** A single walk's page — organiser (/admin/walks/<id>) or member (/w/<slug>). */
 const isWalkPage = (path: string) => /^\/(admin\/walks|w)\/[^/]+$/.test(path);
 
+// Same feel as the returns portal's orders ↔ order detail swap
+// (iblaze-returns dashboard-client.tsx: 18px, 0.22s, this curve).
+const EASE = [0.25, 0.1, 0.25, 1] as const;
+const DISTANCE = 18;
+const DURATION = 0.22;
+
+/** +1 opening a walk from elsewhere, -1 leaving a walk, 0 anything else. */
+function walkDirection(from: string, to: string): -1 | 0 | 1 {
+  if (!isWalkPage(from) && isWalkPage(to)) return 1;
+  if (isWalkPage(from) && !isWalkPage(to)) return -1;
+  return 0;
+}
+
+function reducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 /**
  * Animates the page content when the page changes (Settings → Site
  * behaviour → Page transitions):
  *   "fade"  — a quick fade-in
- *   "slide" — opening a walk slides it in from the right, leaving it slides
- *             the list back in from the left (a Motion spring); every other
- *             change fades
+ *   "slide" — like the returns portal: opening a walk, the current page
+ *             slides left and fades out, then the walk slides in from the
+ *             right; going back, the walk slides out to the right and the
+ *             list slides in from the left. Out first, then in (Motion's
+ *             AnimatePresence mode="wait", done across real page changes
+ *             so walks keep their own shareable addresses). Walk cards
+ *             marked data-stagger-item cascade in. Every other change fades.
  *   "none"  — no animation
- * The old page stays fully on screen until the new one is ready, and the new
- * one starts part-visible (not from blank), so there's never a white gap
- * between pages. No View Transitions: they snapshot the page and faded
- * through white on phones. Skipped on first load and for people who prefer
- * reduced motion.
+ * No View Transitions: they snapshot the page and faded through white on
+ * phones. Skipped on first load (except the card cascade) and for people
+ * who prefer reduced motion.
  */
 export function PageFade({ children, mode = "fade" }: { children: ReactNode; mode?: PageTransition }) {
   const pathname = usePathname();
+  const router = useRouter();
   const ref = useRef<HTMLDivElement>(null);
   const previous = useRef<string | null>(null);
+  const leaving = useRef(false);
 
+  // Out first: catch clicks on links that open or leave a walk, slide the
+  // current page out, then navigate. Capture phase on document runs before
+  // Next's own <Link> handler, which then never sees the click.
+  useEffect(() => {
+    if (mode !== "slide") return;
+    const onClick = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const link = (event.target as Element | null)?.closest?.("a[href]");
+      if (!(link instanceof HTMLAnchorElement)) return;
+      if ((link.target && link.target !== "_self") || link.hasAttribute("download")) return;
+      const url = new URL(link.href, location.href);
+      if (url.origin !== location.origin || url.pathname === location.pathname) return;
+      const direction = walkDirection(location.pathname, url.pathname);
+      const el = ref.current;
+      if (!direction || !el || reducedMotion() || leaving.current) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      leaving.current = true;
+      const href = url.pathname + url.search + url.hash;
+      animate(el, { opacity: 0, x: -direction * DISTANCE }, { duration: DURATION, ease: EASE }).then(() =>
+        router.push(href),
+      );
+    };
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
+  }, [mode, router]);
+
+  // Then in, once the new page is showing.
   useEffect(() => {
     const from = previous.current;
     previous.current = pathname;
-    if (from === null || from === pathname || mode === "none") return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    const direction =
-      mode === "slide" && !isWalkPage(from) && isWalkPage(pathname)
-        ? 1
-        : mode === "slide" && isWalkPage(from) && !isWalkPage(pathname)
-          ? -1
-          : 0;
-
+    const wasLeaving = leaving.current;
+    leaving.current = false;
     const el = ref.current;
     if (!el) return;
-    // Motion (Framer Motion): a gentle spring for the walk slide, so it
-    // settles into place rather than following a fixed curve.
-    const run = direction
-      ? animate(
-          el,
-          { opacity: [0.3, 1], x: [direction * 40, 0] },
-          { type: "spring", visualDuration: 0.35, bounce: 0.15 },
-        )
-      : animate(el, { opacity: [0.4, 1] }, { duration: 0.18, ease: "easeOut" });
-    // Clear what Motion leaves inline: a lingering transform would make this
-    // wrapper the containing block for any position:fixed content inside.
+
     const clear = () => {
+      // A lingering transform would make this wrapper the containing block
+      // for any position:fixed content inside.
       el.style.transform = "";
       el.style.opacity = "";
     };
-    run.then(clear, clear);
+    if (mode === "none" || reducedMotion()) {
+      clear();
+      return;
+    }
+
+    const runs: { complete: () => void }[] = [];
+    if (mode === "slide") {
+      const items = el.querySelectorAll("[data-stagger-item]");
+      if (items.length) {
+        runs.push(
+          animate(items, { opacity: [0, 1], y: [14, 0] }, { duration: 0.28, delay: stagger(0.055), ease: EASE }),
+        );
+      }
+    }
+
+    if (from !== null && from !== pathname) {
+      const direction = mode === "slide" ? walkDirection(from, pathname) : 0;
+      const run = direction
+        ? animate(
+            el,
+            { opacity: [wasLeaving ? 0 : 0.3, 1], x: [direction * DISTANCE, 0] },
+            { duration: DURATION, ease: EASE },
+          )
+        : animate(el, { opacity: [0.4, 1] }, { duration: 0.18, ease: "easeOut" });
+      run.then(clear, clear);
+      runs.push(run);
+    } else {
+      clear();
+    }
     // Cut short (another page change, or the setting flipped): jump to the
     // end rather than freezing half-faded.
-    return () => run.complete();
+    return () => runs.forEach((run) => run.complete());
   }, [pathname, mode]);
 
   return (

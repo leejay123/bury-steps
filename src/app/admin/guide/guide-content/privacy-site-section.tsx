@@ -92,8 +92,9 @@ export function PrivacySiteSection() {
               just their name and are found by their name only — not by date, time or meeting point. Moving between pages, the new page fades in quickly (under a fifth of a second)
               while the header stays still — the old page stays up until the new one is ready, so
               there’s no white flash in between. <strong>Page transitions</strong> in Site behaviour
-              switches this: Quick fade, Quick fade with walks sliding in from the right (and back
-              out when you return to the list), or No transition. Walk cards (Manage walks,
+              switches this: Quick fade; Walks slide in and out (like the returns portal: opening a walk,
+              the list slides away then the walk slides in from the right, and back again, with
+              walk cards cascading in); or No transition. Walk cards (Manage walks,
               and Upcoming and All walks on Walks) open with a thin header strip showing the status
               (Upcoming, Starting soon…) on the left and the day on the right — tinted amber when a
               walk is starting soon, green while it’s in progress and red when cancelled — with the

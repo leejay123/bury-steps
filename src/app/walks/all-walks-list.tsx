@@ -145,6 +145,7 @@ export function AllWalksList({ rows }: { rows: AllWalksRow[] }) {
               return (
                 <div
                   className={cn("relative flex flex-col", row.href ? "hover:bg-muted/50" : "opacity-70")}
+                  data-stagger-item=""
                   key={row.id}
                 >
                   {/* Status and day as the card's header strip (see WalkStatusHeader). */}
