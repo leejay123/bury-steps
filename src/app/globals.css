@@ -555,9 +555,11 @@ html[data-announcement-hide] [data-slot="sticky-banner"] {
    layer (.page-fade) — the content is animated separately from root, so
    styling root alone would leave it on different timing. Only runs on a
    page change (see page-fade.tsx). */
+/* The old page leaves fast (120ms, ease-out = quickest at the start) so
+   its buttons don't linger over the new page while it fades in. */
 ::view-transition-old(root),
 ::view-transition-old(.page-fade) {
-  animation: page-fade-out 250ms ease-in both;
+  animation: page-fade-out 120ms ease-out both;
 }
 ::view-transition-new(root),
 ::view-transition-new(.page-fade) {
