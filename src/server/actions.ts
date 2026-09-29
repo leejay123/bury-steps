@@ -102,6 +102,7 @@ export {
   updateScrollToTopEnabled,
   updateFooterWordmarkEnabled,
   updateAnnouncementBanner,
+  updateTitleRevealEnabled,
   updateCookieConsentVariant,
   updateSiteFont,
   updateTextSizes,

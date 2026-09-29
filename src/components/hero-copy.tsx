@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { SectionBackground } from "@/components/section-background";
+import { SectionTitle } from "@/components/section-title";
 import type { SectionBgPattern } from "@/lib/section-background";
 
 export function HeroCopy({
@@ -51,16 +52,14 @@ export function HeroCopy({
         <p className="text-center text-xs font-medium tracking-[0.18em] text-primary uppercase">{eyebrow}</p>
       ) : null}
 
-      <Title
-        className={cn(
-          "max-w-3xl text-balance text-center text-foreground",
-          sectionHeading
-            ? "text-section-heading font-medium tracking-tight"
-            : "text-headline",
-        )}
-      >
-        {title}
-      </Title>
+      {sectionHeading ? (
+        <SectionTitle
+          className="max-w-3xl text-balance text-center text-foreground text-section-heading font-medium tracking-tight"
+          text={title}
+        />
+      ) : (
+        <Title className="max-w-3xl text-balance text-center text-foreground text-headline">{title}</Title>
+      )}
 
       <div className="max-w-2xl text-center text-muted-foreground text-intro tracking-wide">{children}</div>
 

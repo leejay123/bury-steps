@@ -19,6 +19,7 @@ import { SectionBackground } from "@/components/section-background";
 import type { SectionBgPattern } from "@/lib/section-background";
 import type { SlideView } from "@/lib/slides";
 import { WalkPhotoSlider } from "@/components/home-photo-slider";
+import { TitleRevealProvider } from "@/components/section-title";
 
 function SectionShell({
   bgPattern = "none",
@@ -72,6 +73,7 @@ export function HomeWelcome({
   sectionBgPatterns,
   photos,
   photosEnabled,
+  titleRevealEnabled,
   testimonials,
   testimonialsSectionEyebrow,
   testimonialsSectionIntro,
@@ -114,6 +116,8 @@ export function HomeWelcome({
   photos: SlideView[];
   /** Settings → Homepage layout carousel switch — off hides the slider. */
   photosEnabled: boolean;
+  /** Settings → Homepage layout — word-by-word reveal on section titles. */
+  titleRevealEnabled: boolean;
   testimonials: TestimonialView[];
   testimonialsSectionEyebrow: string;
   testimonialsSectionIntro: string;
@@ -192,7 +196,7 @@ export function HomeWelcome({
   };
 
   return (
-    <>
+    <TitleRevealProvider enabled={titleRevealEnabled}>
       {visible.map((id, index) => (
         <Fragment key={id}>
           <SectionShell bgPattern={bgPatterns[id]} id={id} showDividerAfter={index < visible.length - 1}>
@@ -200,6 +204,6 @@ export function HomeWelcome({
           </SectionShell>
         </Fragment>
       ))}
-    </>
+    </TitleRevealProvider>
   );
 }

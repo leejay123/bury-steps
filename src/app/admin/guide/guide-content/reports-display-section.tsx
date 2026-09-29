@@ -77,7 +77,8 @@ export function ReportsDisplaySection() {
               <strong>Photo slider</strong>, <strong>How walks work</strong>,{" "}
               <strong>How this started</strong>, <strong>Latest notices</strong>,{" "}
               <strong>Testimonials</strong>, <strong>FAQs</strong>) and whether the{" "}
-              <strong>photo slider</strong> and{" "}
+              <strong>photo slider</strong>, <strong>Animate section titles</strong> (section
+              headings fade in word by word as you scroll) and{" "}
               <strong>Latest notices</strong> show. <strong>Background patterns</strong> sets a
               backdrop for each section: dot grid, grid lines, crosses, diagonal lines, or{" "}
               <strong>Stars</strong>, which drift slowly upwards, or <strong>Retro grid</strong>, a

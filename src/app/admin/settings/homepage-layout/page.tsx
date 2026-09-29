@@ -3,6 +3,7 @@ import { getSiteTheme } from "@/lib/site-theme";
 import { SettingsPage, SettingsSection, SettingsSectionGroup } from "../settings-page";
 import { HomepageSectionsSettings } from "./homepage-sections-settings";
 import { CarouselToggle } from "./carousel-toggle";
+import { TitleRevealToggle } from "./title-reveal-toggle";
 import { MemberNoticesToggle } from "./member-notices-toggle";
 import { HeroStyleSettings } from "./hero-style-settings";
 import { SectionBgPatternSelect } from "./section-bg-pattern-select";
@@ -29,6 +30,7 @@ export default async function HomepageLayoutSettingsPage() {
       <HomepageSectionsSettings sectionOrder={theme.homepageSectionOrder} />
       <SettingsSectionGroup title="Show or hide">
         <CarouselToggle enabled={theme.carouselEnabled} />
+        <TitleRevealToggle enabled={theme.titleRevealEnabled} />
         <MemberNoticesToggle enabled={theme.memberNoticesEnabled} />
       </SettingsSectionGroup>
       <SettingsSection

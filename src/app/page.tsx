@@ -117,6 +117,7 @@ export default async function Home() {
         memberNoticesEnabled={theme.memberNoticesEnabled}
         photos={slides}
         photosEnabled={theme.carouselEnabled}
+        titleRevealEnabled={theme.titleRevealEnabled}
         progressEnabled={progressEnabled}
         sectionBgPatterns={{
           howThisStarted: theme.howThisStartedBgPattern,
