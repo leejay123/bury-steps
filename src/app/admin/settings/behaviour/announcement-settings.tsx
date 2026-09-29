@@ -1,7 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { useFormStatus } from "react-dom";
+import { startTransition, useActionState, useState } from "react";
 import { updateAnnouncementBanner, type ActionResult } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
@@ -13,8 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { SettingsSection } from "../settings-page";
 
-function Submit({ disabled }: { disabled: boolean }) {
-  const { pending } = useFormStatus();
+function Submit({ disabled, pending }: { disabled: boolean; pending: boolean }) {
   return (
     <Button disabled={disabled || pending} type="submit">
       {pending ? "Saving…" : "Save"}
@@ -34,7 +32,7 @@ export function AnnouncementSettings({
   const [on, setOn] = useState(enabled);
   const [message, setMessage] = useState(text);
   const [href, setHref] = useState(link);
-  const [state, action] = useActionState<ActionResult | null, FormData>(updateAnnouncementBanner, null);
+  const [state, action, pending] = useActionState<ActionResult | null, FormData>(updateAnnouncementBanner, null);
   useActionToast(state);
 
   useResetOnChange([enabled, text, link], () => {
@@ -50,7 +48,18 @@ export function AnnouncementSettings({
       description="A coloured bar across the very top of every page, above the menu — for news like a changed meeting point or a special walk. Visitors can close it; changing the wording shows it to them again."
       title="Announcement bar"
     >
-      <form action={action} className="flex w-full flex-col gap-4">
+      {/* Submitted by hand rather than <form action>: React resets a form
+          after an action runs, and the switch follows that reset back to
+          its first-loaded value — so a just-saved "on" showed as off until
+          the page was refreshed. */}
+      <form
+        className="flex w-full flex-col gap-4"
+        onSubmit={(event) => {
+          event.preventDefault();
+          const formData = new FormData(event.currentTarget);
+          startTransition(() => action(formData));
+        }}
+      >
         <div className="flex items-center gap-3">
           <Switch checked={on} id="announcement-enabled" name="announcementEnabled" onCheckedChange={setOn} />
           <Label htmlFor="announcement-enabled">Show the announcement</Label>
@@ -79,7 +88,7 @@ export function AnnouncementSettings({
         </div>
         <FormError message={state && !state.ok ? state.error : null} />
         <div className="flex flex-wrap gap-2">
-          <Submit disabled={!dirty} />
+          <Submit disabled={!dirty} pending={pending} />
           {dirty ? (
             <Button
               onClick={() => {
