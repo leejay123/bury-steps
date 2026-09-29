@@ -63,8 +63,12 @@ export function PrivacySiteSection() {
               shows the meeting point on a map (and the postcode if the organiser added one), with
               Get directions into Google Maps or Apple Maps. The browser tab and bookmark icon
               use the same walking-boot mark. On a phone,
-              “Add to Home Screen” (Safari) or “Install app”
-              (Chrome) adds a Bury Steps icon that opens straight to Walks.
+              “Add to Home Screen” (Safari) or “Install app” / “Add to Home screen”
+              (Chrome and other Android browsers) adds the full Bury Steps logo as the icon on
+              iPhone and Android alike, and it opens straight to Walks. This home-screen icon is
+              the built-in logo — uploading a new favicon under Branding changes the browser tab
+              only. Anyone who saved the site before this was fixed and sees a plain “B” can
+              remove the shortcut and add it again to pick up the logo.
             </p>
             <p>
               Text, tables, and forms line up with the logo and nav. Photo and quote grids, and
