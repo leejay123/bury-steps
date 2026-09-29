@@ -81,17 +81,15 @@ export function PrivacySiteSection() {
               Walk lists keep the title, date, and meeting point on one card so they fit a phone.
               Date and time sit on the same line. FAQ category chips on a phone scroll themselves
               so the one you tap stays in view. On a phone, the menu icon (two lines) at the top left opens every page
-              in a large list on a frosted white screen that starts right under the header (the page
-              behind shows through faintly blurred, with its colours toned down so photos and
-              coloured sections don’t muddy it), and the page behind stays still until you
+              in a large list that starts right under the header, over a heavy blur of the page
+              behind (no white tint), and the page behind stays still until you
               close it or pick a page. Signed-in people also get a <strong>search</strong> next to the
               bell (a search bar on a computer, a magnifying-glass icon on a phone, or ⌘K /
               Ctrl+K), that finds
               pages, walks, notices and FAQs — organisers also find the settings their permissions
               allow. It opens on the main pages; type to see up to five matches per section, split into
               upcoming and recent walks, notices, FAQs by category, and settings by area. Walks show
-              just their name (no date or time, to keep it tidy), but typing a date like “4 Oct”
-              still finds them. The page you’re on is underlined, and a blue dot beside
+              just their name and are found by their name only — not by date, time or meeting point. The page you’re on is underlined, and a blue dot beside
               Notices means there’s one you haven’t read. The list is split under small labels:
               Menu for the main pages, Manage for the admin pages (owners and organisers only),
               Account for History and

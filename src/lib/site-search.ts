@@ -1,6 +1,5 @@
 import type { User } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { formatWalkDate } from "@/lib/dates";
 import { getHomepageFaqData } from "@/lib/homepage-faqs";
 import { FULL_ORGANISER_PERMISSIONS, ORGANISER_PERMISSIONS } from "@/lib/organiser-permissions";
 import { getProgressEnabled } from "@/lib/progress-settings";
@@ -70,8 +69,6 @@ export async function buildSiteSearchIndex(user: User): Promise<SiteSearchGroup[
   const walkItem = (walk: (typeof walks)[number]): SiteSearchItem => ({
     label: walk.title,
     href: canAdminWalks ? `/admin/walks/${walk.id}` : walkSharePath(walk),
-    // Date is searchable but not shown — it wrapped and cluttered the list on phones.
-    keywords: [walk.location ?? "", formatWalkDate(walk.startsAt)],
   });
 
   // Settings split by the hub's own groups (Homepage, Members…).
