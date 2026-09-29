@@ -1,4 +1,5 @@
-export const MAX_HOMEPAGE_SLIDES = 3;
+/** 15 fills the 3D Marquee hero (Parallax uses 12) without any sample photos. */
+export const MAX_HOMEPAGE_SLIDES = 15;
 export const DEFAULT_HERO_PATH = "/slides/bury-steps-hero.jpg";
 
 export type SlideView = {

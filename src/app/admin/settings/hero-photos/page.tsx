@@ -13,7 +13,7 @@ export default async function HeroPhotosSettingsPage() {
 
   return (
     <SettingsPage
-      description={`The carousel at the top of the public homepage. You can keep up to ${MAX_HOMEPAGE_SLIDES} slides, change each picture, and drag them into the order visitors will see. With two or more, they rotate automatically. Show or hide them under Homepage layout.`}
+      description={`The homepage's pictures: the Photo slider section, and the Photo slider, Parallax and 3D Marquee heroes. Keep up to ${MAX_HOMEPAGE_SLIDES}, change each picture, and drag them into the order visitors will see. Parallax shows 12 and 3D Marquee 15 — any gaps are filled with sample walking photos until you add your own.`}
       previewHref="/"
       title="Hero photos"
     >

@@ -43,9 +43,11 @@ export function HomepageNoticesSection() {
             </p>
             <p className="font-medium text-foreground">Hero photos</p>
             <p>
-              Up to {MAX_HOMEPAGE_SLIDES} photos in the carousel. JPEG, PNG, or WebP, up to
-              4&nbsp;MB. Add a short description for each. With two or more, they rotate on their
-              own.
+              Up to {MAX_HOMEPAGE_SLIDES} photos. They feed the Photo slider section and the Photo
+              slider, Parallax (12 cards) and 3D Marquee (15 tiles) heroes; any gaps show sample
+              walking photos until you add your own. JPEG, PNG, or WebP, up to 4&nbsp;MB. Add a
+              short description for each (on Parallax it&apos;s the card&apos;s caption). With two or
+              more, the slider rotates on its own.
             </p>
             <p>
               On <Link href="/admin/settings/hero-photos">Hero photos</Link> you add and reorder
