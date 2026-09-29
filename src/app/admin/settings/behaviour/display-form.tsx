@@ -33,7 +33,7 @@ export function FooterWordmarkSettings({ enabled }: { enabled: boolean }) {
   return (
     <SettingsSwitchSection
       checked={on}
-      description="A giant outlined site name at the very bottom of every public page, which lights up under the pointer."
+      description="A giant outlined site name at the very bottom of the homepage, which lights up under the pointer."
       id="footer-wordmark"
       onCheckedChange={toggle}
       pending={isPending}
