@@ -42,19 +42,21 @@ export function WalkFacts({
   const essentialItems = walkEssentialItems(essentials);
 
   return (
-    <div className="flex flex-col gap-3">
-      <ul className="flex flex-col gap-2">
+    <div className="@container flex flex-col gap-3">
+      {/* Soft tiles, no border (a border read as a box inside the card).
+          Each spells out its label so a bare name like "leejay" reads as
+          the walk leader, not just a person. */}
+      <dl className="grid grid-cols-2 gap-2 @lg:grid-cols-3 @3xl:grid-cols-4">
         {rows.map((row) => (
-          <li className="flex items-start gap-2.5 text-sm" key={row.label}>
-            <row.icon aria-hidden="true" className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-            {/* The label is spelled out (bold) so a bare name like "leejay"
-                reads as the walk leader, not just a person. */}
-            <span>
-              <span className="font-medium">{row.label}:</span> {row.value}
-            </span>
-          </li>
+          <div className="flex min-w-0 flex-col gap-1 rounded-lg bg-muted/60 px-3 py-2.5" key={row.label}>
+            <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <row.icon aria-hidden="true" className="size-3.5 shrink-0" />
+              {row.label}
+            </dt>
+            <dd className="text-sm font-medium break-words">{row.value}</dd>
+          </div>
         ))}
-      </ul>
+      </dl>
       {essentialItems.length > 0 ? (
         <div className="flex flex-col gap-1.5">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Essentials</p>

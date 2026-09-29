@@ -39,11 +39,16 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   Guide: BookOpen,
 };
 
+// A fixed 14px, not text-sm: text-sm follows Settings → Branding → Text
+// sizes → Body, and a bigger body size made the desktop menu too large.
+// The current page keeps the same weight as the rest (only colour and the
+// grey pill change) — bolder text is wider, so it looked like the item grew
+// and nudged its neighbours when clicked.
 function navLinkClass(active: boolean) {
   return cn(
-    "relative inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground",
+    "relative inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[14px] text-muted-foreground transition-colors hover:text-foreground",
     !active && "hover:bg-muted",
-    active && "font-medium text-foreground",
+    active && "text-foreground",
   );
 }
 
@@ -240,7 +245,7 @@ export function SiteNavLinks({
     <div className="relative hidden min-w-0 md:block">
       <ScrollEdgeFade side="left" visible={edges.start} />
       <nav
-        className="flex max-w-full items-center justify-center-safe gap-1 overflow-x-auto overscroll-x-contain text-sm [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        className="flex max-w-full items-center justify-center-safe gap-1 overflow-x-auto overscroll-x-contain text-[14px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         ref={scrollerRef}
       >
         {items.map((item) => {
