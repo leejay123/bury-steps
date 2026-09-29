@@ -188,6 +188,7 @@ export async function resetSiteToDefault(
           carouselEnabled: true,
           scrollToTopEnabled: true,
           footerWordmarkEnabled: true,
+          sliderHeroWords: "site",
           titleRevealEnabled: true,
           announcementEnabled: false,
           announcementText: "",

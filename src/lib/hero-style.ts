@@ -59,3 +59,11 @@ const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
 export function parseHeroTextColor(raw: string | null | undefined): string {
   return raw && HEX_COLOR_PATTERN.test(raw) ? raw : DEFAULT_HERO_TEXT_COLOR;
 }
+
+/** What the Photo slider hero writes over the photos. */
+const SLIDER_HERO_WORDS = ["site", "slides", "none"] as const;
+export type SliderHeroWords = (typeof SLIDER_HERO_WORDS)[number];
+
+export function parseSliderHeroWords(raw: string | null | undefined): SliderHeroWords {
+  return (SLIDER_HERO_WORDS as readonly string[]).includes(raw ?? "") ? (raw as SliderHeroWords) : "site";
+}

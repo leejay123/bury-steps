@@ -29,6 +29,8 @@ export async function addHomepageSlide(
   if ("error" in image) return { ok: false, error: image.error };
 
   const alt = String(formData.get("alt") ?? "").trim().slice(0, 200) || "Bury Steps Walking Group";
+  const heading = String(formData.get("heading") ?? "").trim().slice(0, 120);
+  const caption = String(formData.get("caption") ?? "").trim().slice(0, 240);
 
   try {
     await withCountLimitLock(COUNT_LIMIT_LOCK_KEYS.homepageSlide, async (tx) => {
@@ -40,6 +42,8 @@ export async function addHomepageSlide(
         data: {
           sortOrder: count,
           alt,
+          heading,
+          caption,
           imagePath: null,
           imageMime: image.mime,
           imageData: image.data,
@@ -68,12 +72,16 @@ export async function replaceHomepageSlideImage(
   if (image && "error" in image) return { ok: false, error: image.error };
 
   const alt = String(formData.get("alt") ?? "").trim().slice(0, 200) || "Bury Steps Walking Group";
+  const heading = String(formData.get("heading") ?? "").trim().slice(0, 120);
+  const caption = String(formData.get("caption") ?? "").trim().slice(0, 240);
 
   try {
     await prisma.homepageSlide.update({
       where: { id },
       data: {
         alt,
+        heading,
+        caption,
         ...(image
           ? { imagePath: null, imageMime: image.mime, imageData: image.data }
           : {}),

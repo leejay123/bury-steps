@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { parseSliderHeroWords, type SliderHeroWords } from "@/lib/hero-style";
 import { DEFAULT_TEXT_SIZES, parseTextSize, type TextSizes } from "@/lib/text-sizes";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
@@ -83,6 +84,8 @@ export type SiteTheme = {
   scrollToTopEnabled: boolean;
   /** Giant outlined site name at the foot of every page (see updateFooterWordmarkEnabled). */
   footerWordmarkEnabled: boolean;
+  /** Words on the Photo slider hero (updateSliderHeroWords). */
+  sliderHeroWords: SliderHeroWords;
   /** Word-by-word reveal on homepage section titles (updateTitleRevealEnabled). */
   titleRevealEnabled: boolean;
   /** Announcement bar above the header (see updateAnnouncementBanner). */
@@ -156,6 +159,7 @@ function defaultTheme(): SiteTheme {
     memberNoticesEnabled: true,
     scrollToTopEnabled: true,
     footerWordmarkEnabled: true,
+    sliderHeroWords: "site",
     titleRevealEnabled: true,
     announcementEnabled: false,
     announcementText: "",
@@ -220,6 +224,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       memberNoticesEnabled: true,
       scrollToTopEnabled: true,
       footerWordmarkEnabled: true,
+      sliderHeroWords: true,
       titleRevealEnabled: true,
       announcementEnabled: true,
       announcementText: true,
@@ -293,6 +298,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     memberNoticesEnabled: row?.memberNoticesEnabled ?? true,
     scrollToTopEnabled: row?.scrollToTopEnabled ?? true,
     footerWordmarkEnabled: row?.footerWordmarkEnabled ?? true,
+    sliderHeroWords: parseSliderHeroWords(row?.sliderHeroWords),
     titleRevealEnabled: row?.titleRevealEnabled ?? true,
     announcementEnabled: row?.announcementEnabled ?? false,
     announcementText: row?.announcementText ?? "",
@@ -369,7 +375,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v24"], {
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v25"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });

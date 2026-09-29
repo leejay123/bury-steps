@@ -7,6 +7,9 @@ export type SlideView = {
   sortOrder: number;
   alt: string;
   src: string;
+  /** Optional words for the Photo slider hero ("Each photo's own words"). */
+  heading: string;
+  caption: string;
 };
 
 export function slideSrc(slide: {

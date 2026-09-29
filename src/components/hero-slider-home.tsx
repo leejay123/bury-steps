@@ -5,17 +5,22 @@ import { DecorIcon } from "@/components/decor-icon";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { JoinGroupButton } from "@/components/join-group-button";
 import { ImageSlider } from "@/components/velora/image-slider";
+import type { SliderHeroWords } from "@/lib/hero-style";
 import { SAMPLE_WALK_PHOTOS } from "@/lib/sample-walk-photos";
 import type { SlideView } from "@/lib/slides";
 
 /**
- * The photo slider as the hero: Homepage photos edge to edge, darkened
- * (the slider's scrim) so the site name, tagline and buttons read in white
- * on top. Falls back to the sample walking photos until photos are added.
- * Framed like the other heroes: bottom hairline and corner crosses.
+ * The photo slider as the hero: Homepage photos edge to edge. What's
+ * written over them is an organiser choice (Homepage layout → "Words on the
+ * photos"): the site name and tagline on every photo, each photo's own
+ * heading and text (blank photos show just the picture), or no words at
+ * all. The Join / Sign in buttons only appear alongside words. Falls back
+ * to the sample walking photos until photos are added. Framed like the
+ * other heroes: bottom hairline and corner crosses.
  */
 export function HeroSliderHome({
   slides,
+  words,
   isSignedIn,
   signInHref,
   signUpHref,
@@ -23,6 +28,7 @@ export function HeroSliderHome({
   siteTagline,
 }: {
   slides: SlideView[];
+  words: SliderHeroWords;
   isSignedIn: boolean;
   signInHref: string;
   signUpHref: string;
@@ -31,45 +37,68 @@ export function HeroSliderHome({
 }) {
   const images = slides.length > 0 ? slides.map((slide) => ({ src: slide.src, alt: slide.alt })) : SAMPLE_WALK_PHOTOS;
 
+  const actions = isSignedIn ? (
+    <Button asChild className="bg-white text-black hover:bg-white/90">
+      <Link href="/walks">
+        See the walks <ArrowRightIcon />
+      </Link>
+    </Button>
+  ) : (
+    <>
+      <JoinGroupButton href={signUpHref} />
+      <Button
+        asChild
+        className="border-white/60 bg-transparent text-white hover:bg-white/10 hover:text-white"
+        size="sm"
+        variant="outline"
+      >
+        <a href={signInHref}>Sign in</a>
+      </Button>
+    </>
+  );
+
+  // Bottom-left, clear of the arrows (mid-height) and dots (bottom centre).
+  // With the site name on every photo it's the page's h1; a photo's own
+  // heading is a p, since the (visually hidden) site name is the h1 then.
+  const overlay = (heading: string, text: string, asHeading: boolean) => {
+    const Heading = asHeading ? "h1" : "p";
+    return (
+      <div className="flex size-full flex-col justify-end px-6 pt-16 pb-16 sm:px-12 sm:pb-20">
+        {heading ? (
+          <Heading className="max-w-3xl text-headline font-medium tracking-tight text-balance text-white">
+            {heading}
+          </Heading>
+        ) : null}
+        {text ? <p className="mt-4 max-w-xl text-intro text-pretty text-white/85">{text}</p> : null}
+        <div className="mt-7 flex flex-wrap items-center gap-3">{actions}</div>
+      </div>
+    );
+  };
+
+  const perSlide =
+    words === "slides"
+      ? slides.map((slide) =>
+          slide.heading || slide.caption ? overlay(slide.heading, slide.caption, false) : null,
+        )
+      : undefined;
+
   return (
     <div className="relative">
       <DecorIcon className="size-4" position="bottom-left" />
       <DecorIcon className="size-4" position="bottom-right" />
       <FullWidthDivider position="bottom" />
+      {/* The page still needs a main heading when the photos carry none of their own. */}
+      {words !== "site" ? <h1 className="sr-only">{siteName}</h1> : null}
       <ImageSlider
         className="h-[70svh] min-h-[28rem] max-h-[44rem]"
         images={images}
         interval={5500}
         label="Photos from our walks"
+        // The darkening is only there to keep words readable.
+        scrim={words !== "none"}
+        slideChildren={words === "none" ? [] : perSlide}
       >
-        {/* Bottom-left, clear of the arrows (mid-height) and dots (bottom centre). */}
-        <div className="flex size-full flex-col justify-end px-6 pt-16 pb-16 sm:px-12 sm:pb-20">
-          <h1 className="max-w-3xl text-headline font-medium tracking-tight text-balance text-white">{siteName}</h1>
-          {siteTagline ? (
-            <p className="mt-4 max-w-xl text-intro text-pretty text-white/85">{siteTagline}</p>
-          ) : null}
-          <div className="mt-7 flex flex-wrap items-center gap-3">
-            {isSignedIn ? (
-              <Button asChild className="bg-white text-black hover:bg-white/90">
-                <Link href="/walks">
-                  See the walks <ArrowRightIcon />
-                </Link>
-              </Button>
-            ) : (
-              <>
-                <JoinGroupButton href={signUpHref} />
-                <Button
-                  asChild
-                  className="border-white/60 bg-transparent text-white hover:bg-white/10 hover:text-white"
-                  size="sm"
-                  variant="outline"
-                >
-                  <a href={signInHref}>Sign in</a>
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
+        {words === "site" ? overlay(siteName, siteTagline, true) : null}
       </ImageSlider>
     </div>
   );

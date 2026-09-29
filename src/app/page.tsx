@@ -88,6 +88,7 @@ export default async function Home() {
       ) : theme.heroStyle === "slider" ? (
         <HeroSliderHome
           isSignedIn={user !== null}
+          words={theme.sliderHeroWords}
           signInHref={signInHref}
           signUpHref={signUpHref}
           siteName={theme.siteName}

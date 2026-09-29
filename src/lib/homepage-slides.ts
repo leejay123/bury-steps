@@ -9,6 +9,8 @@ const FALLBACK_SLIDES: SlideView[] = [
     sortOrder: 0,
     alt: "Bury Steps Walking Group",
     src: DEFAULT_HERO_PATH,
+    heading: "",
+    caption: "",
   },
 ];
 
@@ -33,7 +35,7 @@ export async function ensureDefaultHomepageSlide() {
 async function loadHomepageSlides(): Promise<SlideView[]> {
   const rows = await prisma.homepageSlide.findMany({
     orderBy: { sortOrder: "asc" },
-    select: { id: true, sortOrder: true, alt: true, imagePath: true, updatedAt: true },
+    select: { id: true, sortOrder: true, alt: true, heading: true, caption: true, imagePath: true, updatedAt: true },
   });
 
   if (rows.length === 0) return FALLBACK_SLIDES;
@@ -43,10 +45,12 @@ async function loadHomepageSlides(): Promise<SlideView[]> {
     sortOrder: row.sortOrder,
     alt: row.alt,
     src: slideSrc(row),
+    heading: row.heading,
+    caption: row.caption,
   }));
 }
 
-const getCachedHomepageSlides = unstable_cache(loadHomepageSlides, ["homepage-slides"], {
+const getCachedHomepageSlides = unstable_cache(loadHomepageSlides, ["homepage-slides", "v2"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });

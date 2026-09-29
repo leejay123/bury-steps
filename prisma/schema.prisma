@@ -181,6 +181,10 @@ model HomepageSlide {
   id        String   @id @default(cuid())
   sortOrder Int
   alt       String   @default("Bury Steps Walking Group")
+  /// Optional words shown on this photo by the Photo slider hero when it's
+  /// set to "Each photo's own words" (SiteSetting.sliderHeroWords).
+  heading   String   @default("")
+  caption   String   @default("")
   /// Bundled file such as /slides/bury-steps-hero.jpg. Null once an upload is stored.
   imagePath String?
   imageMime String?
@@ -319,6 +323,9 @@ model SiteSetting {
   scrollToTopEnabled          Boolean  @default(true)
   /// When false, the giant outlined site name at the foot of every page is hidden.
   footerWordmarkEnabled       Boolean  @default(true)
+  /// Words on the Photo slider hero: "site" (site name + tagline on every
+  /// photo), "slides" (each photo's own heading/caption), or "none".
+  sliderHeroWords             String   @default("site")
   /// Word-by-word reveal on the homepage section titles (Homepage layout).
   titleRevealEnabled          Boolean  @default(true)
   /// Announcement bar pinned above the header on every page (Site behaviour).

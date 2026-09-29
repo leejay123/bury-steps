@@ -6,6 +6,7 @@ import { CarouselToggle } from "./carousel-toggle";
 import { TitleRevealToggle } from "./title-reveal-toggle";
 import { MemberNoticesToggle } from "./member-notices-toggle";
 import { HeroStyleSettings } from "./hero-style-settings";
+import { SliderHeroWordsSettings } from "./slider-hero-words-settings";
 import { SectionBgPatternSelect } from "./section-bg-pattern-select";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +28,7 @@ export default async function HomepageLayoutSettingsPage() {
         heroTextColor={theme.heroTextColor}
         heroVideoKey={theme.heroVideoKey}
       />
+      {theme.heroStyle === "slider" ? <SliderHeroWordsSettings words={theme.sliderHeroWords} /> : null}
       <HomepageSectionsSettings sectionOrder={theme.homepageSectionOrder} />
       <SettingsSectionGroup title="Show or hide">
         <CarouselToggle enabled={theme.carouselEnabled} />

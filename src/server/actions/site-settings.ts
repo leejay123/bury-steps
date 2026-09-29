@@ -38,6 +38,7 @@ import {
   HERO_VIDEO_OPTIONS,
   parseHeroOverlayOpacity,
   parseHeroStyle,
+  parseSliderHeroWords,
   parseHeroTextColor,
   parseHeroVideoKey,
 } from "@/lib/hero-style";
@@ -536,6 +537,38 @@ export async function updateAnnouncementBanner(
   revalidatePath("/", "layout");
   revalidatePath("/admin/settings/behaviour");
   return { ok: true, message: enabled ? "Announcement is showing." : "Announcement saved and hidden." };
+}
+
+export async function updateSliderHeroWords(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  const words = parseSliderHeroWords(String(formData.get("sliderHeroWords") ?? ""));
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, carouselEnabled: true, sliderHeroWords: words },
+      update: { sliderHeroWords: words },
+    });
+  } catch (err) {
+    return logActionError("updateSliderHeroWords", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings/homepage-layout");
+  return {
+    ok: true,
+    message:
+      words === "site"
+        ? "The site name now shows on every photo."
+        : words === "slides"
+          ? "Each photo now shows its own words."
+          : "The photos now show without words.",
+  };
 }
 
 export async function updateTitleRevealEnabled(

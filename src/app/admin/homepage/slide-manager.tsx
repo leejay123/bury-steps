@@ -39,7 +39,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { SettingsListHeader } from "../settings/settings-page";
-import { DrawerFormFooter } from "@/components/drawer-form";
+import { DrawerFormFooter, FieldHint } from "@/components/drawer-form";
 
 type DrawerMode = { type: "add" } | { type: "edit"; slide: SlideView; index: number };
 
@@ -77,6 +77,32 @@ function SlideFields({
           name="alt"
           placeholder="Walkers on a path near Bury"
         />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={`${prefix}-heading`}>Heading (optional)</Label>
+        <Input
+          defaultValue={slide?.heading}
+          disabled={disabled}
+          id={`${prefix}-heading`}
+          maxLength={120}
+          name="heading"
+          placeholder="Sunday walks for everyone"
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={`${prefix}-caption`}>Text (optional)</Label>
+        <Input
+          defaultValue={slide?.caption}
+          disabled={disabled}
+          id={`${prefix}-caption`}
+          maxLength={240}
+          name="caption"
+          placeholder="Gentle routes around Bury, every week"
+        />
+        <FieldHint>
+          Shown on this photo when the Photo slider hero is set to &ldquo;Each photo&apos;s own words&rdquo;
+          (Homepage layout). Leave both empty for just the picture.
+        </FieldHint>
       </div>
     </div>
   );

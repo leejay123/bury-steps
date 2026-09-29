@@ -93,7 +93,10 @@ export function ReportsDisplaySection() {
               scroll), <strong>3D Marquee</strong> (a tilted wall of photos scrolling up and
               down behind the name), or <strong>Photo slider</strong> (your photos full width
               with the name and buttons on top; the separate Photo slider section then hides so
-              the photos don&apos;t show twice). The photo slider, the Parallax cards and the 3D Marquee all
+              the photos don&apos;t show twice). With Photo slider chosen, <strong>Words on the
+              photo slider hero</strong> appears: the site name on every photo, each photo&apos;s
+              own heading and text (set in Hero photos; blank photos show just the picture), or no
+              words at all. The photo slider, the Parallax cards and the 3D Marquee all
               use the pictures from <strong>Homepage photos</strong>. Parallax needs 12 photos
               and 3D Marquee 15, so until there are enough they fill the gaps with sample walking
               photos; each photo you add replaces one. On Parallax, the photo&apos;s description

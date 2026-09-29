@@ -25,6 +25,9 @@ interface ImageSliderProps extends React.HTMLAttributes<HTMLElement> {
   images: SliderImage[];
   /** Content layered above the images (headline, call-to-action…) */
   children?: React.ReactNode;
+  /** Per-slide content shown instead of `children` while that slide is on
+   * screen (index-matched to `images`; a missing or null entry shows nothing) */
+  slideChildren?: React.ReactNode[];
   /** Advance automatically (never starts on its own under reduced motion) */
   autoplay?: boolean;
   /** ms each slide stays on screen while autoplaying */
@@ -46,6 +49,7 @@ const button =
 export function ImageSlider({
   images,
   children,
+  slideChildren,
   autoplay = true,
   interval = 5000,
   scrim = true,
@@ -169,7 +173,7 @@ export function ImageSlider({
           <div aria-hidden className="pointer-events-none absolute inset-0 z-2 bg-linear-to-t from-black/70 via-black/25 to-black/10" />
         )}
 
-        <div className="relative z-10 size-full">{children}</div>
+        <div className="relative z-10 size-full">{slideChildren ? (slideChildren[index] ?? null) : children}</div>
 
         {n > 1 && (
           <>

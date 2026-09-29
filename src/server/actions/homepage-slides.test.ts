@@ -129,13 +129,14 @@ describe("replaceHomepageSlideImage", () => {
     const formData = new FormData();
     formData.set("slideId", "slide-1");
     formData.set("alt", "New caption");
+    formData.set("heading", "  Sunday walks  ");
     prismaMock.homepageSlide.update.mockResolvedValueOnce({});
 
     const result = await replaceHomepageSlideImage(null, formData);
 
     expect(prismaMock.homepageSlide.update).toHaveBeenCalledWith({
       where: { id: "slide-1" },
-      data: { alt: "New caption" },
+      data: { alt: "New caption", heading: "Sunday walks", caption: "" },
     });
     expect(result.ok).toBe(true);
   });

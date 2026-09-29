@@ -1,0 +1,3 @@
+ALTER TABLE "HomepageSlide" ADD COLUMN "heading" TEXT NOT NULL DEFAULT '';
+ALTER TABLE "HomepageSlide" ADD COLUMN "caption" TEXT NOT NULL DEFAULT '';
+ALTER TABLE "SiteSetting" ADD COLUMN "sliderHeroWords" TEXT NOT NULL DEFAULT 'site';

@@ -103,6 +103,7 @@ export {
   updateFooterWordmarkEnabled,
   updateAnnouncementBanner,
   updateTitleRevealEnabled,
+  updateSliderHeroWords,
   updateCookieConsentVariant,
   updateSiteFont,
   updateTextSizes,
