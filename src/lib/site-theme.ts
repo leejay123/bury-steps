@@ -89,6 +89,8 @@ export type SiteTheme = {
   footerWordmarkMobile: boolean;
   /** Page change animation (updatePageTransition). */
   pageTransition: PageTransition;
+  /** Phone navigation style (updateMobileNav). */
+  mobileNav: "bottom" | "menu";
   /** Words on the Photo slider hero (updateSliderHeroWords). */
   sliderHeroWords: SliderHeroWords;
   /** Word-by-word reveal on homepage section titles (updateTitleRevealEnabled). */
@@ -167,6 +169,7 @@ function defaultTheme(): SiteTheme {
     footerWordmarkMobile: true,
     sliderHeroWords: "site",
     pageTransition: "fade",
+    mobileNav: "bottom",
     titleRevealEnabled: true,
     announcementEnabled: false,
     announcementText: "",
@@ -234,6 +237,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       footerWordmarkMobile: true,
       sliderHeroWords: true,
       pageTransition: true,
+      mobileNav: true,
       titleRevealEnabled: true,
       announcementEnabled: true,
       announcementText: true,
@@ -310,6 +314,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     footerWordmarkMobile: row?.footerWordmarkMobile ?? true,
     sliderHeroWords: parseSliderHeroWords(row?.sliderHeroWords),
     pageTransition: parsePageTransition(row?.pageTransition),
+    mobileNav: row?.mobileNav === "menu" ? "menu" : "bottom",
     titleRevealEnabled: row?.titleRevealEnabled ?? true,
     announcementEnabled: row?.announcementEnabled ?? false,
     announcementText: row?.announcementText ?? "",
@@ -386,7 +391,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v27"], {
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v28"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });

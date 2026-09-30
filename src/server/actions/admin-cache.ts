@@ -191,6 +191,7 @@ export async function resetSiteToDefault(
           footerWordmarkMobile: true,
           sliderHeroWords: "site",
           pageTransition: "fade",
+          mobileNav: "bottom",
           titleRevealEnabled: true,
           announcementEnabled: false,
           announcementText: "",

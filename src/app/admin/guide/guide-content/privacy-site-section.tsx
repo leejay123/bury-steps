@@ -98,8 +98,9 @@ export function PrivacySiteSection() {
               moving between main sections slides like tabs, following the order of the menu bar;
               pages opened from the phone menu just appear, since the menu closing is already the
               change; the homepage always just appears, with no slide or fade); Rise up, where each page rises gently into place like the walk cards; or No transition. With Slide, the next page starts loading the moment you
-              tap, while the old one slides away, so it’s usually ready as soon as the slide ends. On phones, signed-in people get a <strong>bottom bar</strong> instead of the ☰
-              menu: four main pages plus <strong>More</strong>, which slides up everything else. On a
+              tap, while the old one slides away, so it’s usually ready as soon as the slide ends. <strong>Phone menu</strong> in Site behaviour chooses how signed-in people get around on
+              phones: the original ☰ menu (logo in the middle), or a <strong>bottom bar</strong> (logo on the
+              left) with four main pages plus <strong>More</strong>, which slides up everything else. On a
               walk day, from when clock-in opens until the walk ends, a round <strong>Clock in</strong>
               button sits in the middle (it disappears once you've clocked in). The bar steps aside
               while you type, so the keyboard doesn't push it over the form. Walk cards (Manage walks,

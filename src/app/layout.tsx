@@ -201,7 +201,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <Suspense fallback={null}>
                     <SiteMobileNav />
                   </Suspense>
-                  <div className="contents max-md:col-start-2 max-md:flex max-md:justify-center">
+                  <div className="contents max-md:col-start-2 max-md:flex max-md:justify-center" data-site-logo-cell="">
                     <Suspense
                       fallback={
                         <div className="flex h-8 min-w-0 items-center justify-self-start">

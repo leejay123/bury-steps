@@ -159,13 +159,10 @@ export async function SiteMobileNav() {
  * in / Join.
  */
 export async function SiteBottomNav() {
-  const user = await getOptionalUser();
-  if (!user) return null;
-  const [theme, progressEnabled, clockIn] = await Promise.all([
-    getSiteTheme(),
-    getProgressEnabled(),
-    getClockInWalk(user.id),
-  ]);
+  const [user, theme] = await Promise.all([getOptionalUser(), getSiteTheme()]);
+  // Settings → Site behaviour → Phone menu: "menu" keeps the ☰ menu instead.
+  if (!user || theme.mobileNav !== "bottom") return null;
+  const [progressEnabled, clockIn] = await Promise.all([getProgressEnabled(), getClockInWalk(user.id)]);
   const isAdmin = user.role === "ADMIN";
   const permissions = isAdmin ? (user.isOwner ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS) : undefined;
   const noticesUnread = getSiteNoticeState(user.id, user.firstName).then(({ unreadIds }) => unreadIds.length > 0);

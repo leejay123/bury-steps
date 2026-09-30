@@ -558,9 +558,14 @@ html[data-announcement-hide] [data-slot="sticky-banner"] {
 }
 
 /* With the bottom bar's More tab on phones, the ☰ menu button would be a
-   second copy of the same pages — hide it there. */
+   second copy of the same pages — hide it there, and move the logo into its
+   place on the left (Settings → Site behaviour → Phone menu). */
 @media (width < 48rem) {
   html:has([data-bottom-nav]) [data-mobile-nav] {
     display: none;
+  }
+  html:has([data-bottom-nav]) [data-site-logo-cell] {
+    grid-column-start: 1;
+    justify-content: flex-start;
   }
 }

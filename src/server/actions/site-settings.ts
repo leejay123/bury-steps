@@ -540,6 +540,33 @@ export async function updateAnnouncementBanner(
   return { ok: true, message: enabled ? "Announcement is showing." : "Announcement saved and hidden." };
 }
 
+export async function updateMobileNav(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  const style = String(formData.get("mobileNav") ?? "") === "menu" ? "menu" : "bottom";
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, carouselEnabled: true, mobileNav: style },
+      update: { mobileNav: style },
+    });
+  } catch (err) {
+    return logActionError("updateMobileNav", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings/behaviour");
+  return {
+    ok: true,
+    message: style === "menu" ? "Phones now use the ☰ menu." : "Phones now use the bottom bar.",
+  };
+}
+
 export async function updatePageTransition(
   _prev: ActionResult | null,
   formData: FormData,
