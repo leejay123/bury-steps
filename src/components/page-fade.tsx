@@ -12,11 +12,24 @@ const DISTANCE = 18;
 const DURATION = 0.22;
 
 /**
- * What moves: the page's own data-page-motion part if it has one (the
- * contact page's card — its heading stays still), otherwise the whole page.
+ * What moves on a page change: only the content, never the page's heading.
+ * A page can name its moving parts with data-page-motion (the contact
+ * card); otherwise it's everything after the heading block (the <h1> and
+ * the lines beside it), and pages without an <h1> move as a whole.
  */
-function moving(el: HTMLElement) {
-  return el.querySelector<HTMLElement>("[data-page-motion]") ?? el;
+function moving(page: HTMLElement): HTMLElement[] {
+  const marked = [...page.querySelectorAll<HTMLElement>("[data-page-motion]")];
+  if (marked.length) return marked;
+  const heading = page.querySelector("h1")?.parentElement;
+  if (!heading || heading === page || !page.contains(heading)) return [page];
+  const parts: HTMLElement[] = [];
+  // Everything after the heading block, at each level up to the page.
+  for (let node: HTMLElement | null = heading; node && node !== page; node = node.parentElement) {
+    for (let next = node.nextElementSibling; next; next = next.nextElementSibling) {
+      if (next instanceof HTMLElement) parts.push(next);
+    }
+  }
+  return parts.length ? parts : [page];
 }
 
 function reducedMotion() {
@@ -146,7 +159,7 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
     const clear = () => {
       // A lingering transform would make this wrapper the containing block
       // for any position:fixed content inside.
-      for (const node of new Set([page, el])) {
+      for (const node of new Set([page, ...el])) {
         node.style.transform = "";
         node.style.opacity = "";
       }

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { ClipboardList } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireAnyPermission, displayName } from "@/lib/auth";
@@ -90,7 +90,10 @@ export default async function WalkDetailPage({
     },
   });
 
-  if (!walk) notFound();
+  // A walk that's gone (just removed, or an old link) goes back to the
+  // walks list. Removing a walk redraws this page before moving on, and a
+  // "not found" page flashed up in between.
+  if (!walk) redirect("/admin");
 
   const viewerIsOwner = admin.isOwner;
   const creatorIsOwner = walk.createdBy.isOwner;
