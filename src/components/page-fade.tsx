@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
+// Not re-exported from next/navigation; the same enum Link uses for prefetch={true}.
+import { PrefetchKind } from "next/dist/client/components/router-reducer/router-reducer-types";
 import { animate, stagger } from "motion";
 import { slideDirection, type PageTransition } from "@/lib/page-transition";
 
@@ -44,45 +46,76 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
   // current page out, then navigate. Capture phase on document runs before
   // Next's own <Link> handler, which then never sees the click.
   useEffect(() => {
-    const onClick = (event: MouseEvent) => {
-      if (event.defaultPrevented || event.button !== 0) return;
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    // The in-app link a plain press or click lands on, if any.
+    const plainLink = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0) return null;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return null;
       const link = (event.target as Element | null)?.closest?.("a[href]");
-      if (!(link instanceof HTMLAnchorElement)) return;
-      if ((link.target && link.target !== "_self") || link.hasAttribute("download")) return;
+      if (!(link instanceof HTMLAnchorElement)) return null;
+      if ((link.target && link.target !== "_self") || link.hasAttribute("download")) return null;
+      return link;
+    };
+    // Where that link slides to, or null when it's left to Next's own <Link>.
+    const slideTarget = (link: HTMLAnchorElement | null) => {
+      // Header, dialogs and the phone menu handle their own clicks (desktop
+      // nav starts navigating on press) — leave them alone.
+      if (!link || mode !== "slide" || link.closest("header, [data-slot='dialog-content'], [data-slot='popover-content']")) {
+        return null;
+      }
+      const url = new URL(link.href, location.href);
+      if (url.origin !== location.origin || url.pathname === location.pathname) return null;
+      const direction = slideDirection(location.pathname, url.pathname);
+      if (!direction || reducedMotion()) return null;
+      return { direction, href: url.pathname + url.search + url.hash };
+    };
+
+    // Start loading the new page the moment it's asked for, so it arrives
+    // while the old one slides out instead of only after. A full prefetch
+    // (like the menu links) brings the page's actual content, not just its
+    // loading skeleton; a mouse press gets it going before the click lands.
+    // Next skips a prefetch it already has, so a press then a click fetches once.
+    const prefetch = (href: string) => router.prefetch(href, { kind: PrefetchKind.FULL });
+    const onPointerDown = (event: PointerEvent) => {
+      // Not on touch: a finger landing on a card is as often the start of a
+      // scroll as a tap, and each one would fetch a whole page.
+      if (event.pointerType !== "mouse") return;
+      const target = slideTarget(plainLink(event));
+      if (target) prefetch(target.href);
+    };
+
+    const onClick = (event: MouseEvent) => {
+      const link = plainLink(event);
       // Pages opened from the phone menu just appear: the menu closing is
       // already the change people see, and a slide under it looked messy.
-      if (link.closest("[data-slot='popover-content']")) {
+      if (link?.closest("[data-slot='popover-content']")) {
         fromMenu.current = true;
         return;
       }
-      // Header and dialogs handle their own clicks (desktop nav starts
-      // navigating on press), so leave them alone — the new page still
-      // slides in from the right side.
-      if (mode !== "slide" || link.closest("header, [data-slot='dialog-content']")) return;
-      const url = new URL(link.href, location.href);
-      if (url.origin !== location.origin || url.pathname === location.pathname) return;
-      const direction = slideDirection(location.pathname, url.pathname);
+      const target = slideTarget(link);
       const el = ref.current;
-      if (!direction || !el || reducedMotion() || leaving.current) return;
+      if (!target || !el || leaving.current) return;
 
       event.preventDefault();
       event.stopPropagation();
       leaving.current = true;
-      const href = url.pathname + url.search + url.hash;
+      prefetch(target.href);
       let gone = false;
       const go = () => {
         if (gone) return;
         gone = true;
-        router.push(href);
+        router.push(target.href);
       };
-      animate(el, { opacity: 0, x: -direction * DISTANCE }, { duration: DURATION, ease: EASE }).then(go, go);
+      animate(el, { opacity: 0, x: -target.direction * DISTANCE }, { duration: DURATION, ease: EASE }).then(go, go);
       // Safety net: never leave someone stuck if the animation can't finish
       // (a background tab pauses animations).
       window.setTimeout(go, 400);
     };
+    document.addEventListener("pointerdown", onPointerDown, true);
     document.addEventListener("click", onClick, true);
-    return () => document.removeEventListener("click", onClick, true);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown, true);
+      document.removeEventListener("click", onClick, true);
+    };
   }, [mode, router]);
 
   // Then in, once the new page is showing.
