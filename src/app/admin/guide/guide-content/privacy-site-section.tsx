@@ -97,7 +97,7 @@ export function PrivacySiteSection() {
               the page slides in from the right, and back again, with walk cards cascading in;
               moving between main sections slides like tabs, following the order of the menu bar;
               pages opened from the phone menu just appear, since the menu closing is already the
-              change; the homepage always just appears, with no slide or fade); Rise up, where each page rises gently into place like the walk cards; or No transition. With Slide, the next page starts loading the moment you
+              change; the homepage always just appears, with no slide or fade); Rise up, where each page rises gently into place like the walk cards; or No transition. On the Contact page only the contact card moves — its heading stays still. Tapping the phone bottom bar, the cards slide in sideways with the page rather than rising. With Slide, the next page starts loading the moment you
               tap, while the old one slides away, so it’s usually ready as soon as the slide ends. <strong>Phone menu</strong> in Site behaviour chooses how signed-in people get around on
               phones: the original ☰ menu (logo in the middle), or a <strong>bottom bar</strong> (logo on the
               left) with four main pages plus <strong>More</strong>, which slides up everything else. Signed-out visitors get their own bar — Home, Contact, the Facebook group

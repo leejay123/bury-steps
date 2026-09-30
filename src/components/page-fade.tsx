@@ -11,6 +11,14 @@ const EASE = [0.25, 0.1, 0.25, 1] as const;
 const DISTANCE = 18;
 const DURATION = 0.22;
 
+/**
+ * What moves: the page's own data-page-motion part if it has one (the
+ * contact page's card — its heading stays still), otherwise the whole page.
+ */
+function moving(el: HTMLElement) {
+  return el.querySelector<HTMLElement>("[data-page-motion]") ?? el;
+}
+
 function reducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
@@ -108,7 +116,7 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
         gone = true;
         router.push(target.href);
       };
-      animate(el, { opacity: 0, x: -target.direction * DISTANCE }, { duration: DURATION, ease: EASE }).then(go, go);
+      animate(moving(el), { opacity: 0, x: -target.direction * DISTANCE }, { duration: DURATION, ease: EASE }).then(go, go);
       // Safety net: never leave someone stuck if the animation can't finish
       // (a background tab pauses animations).
       window.setTimeout(go, 400);
@@ -131,14 +139,17 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
     fromMenu.current = false;
     const openedFromBottomBar = fromBottomBar.current;
     fromBottomBar.current = false;
-    const el = ref.current;
-    if (!el) return;
+    const page = ref.current;
+    if (!page) return;
+    const el = moving(page);
 
     const clear = () => {
       // A lingering transform would make this wrapper the containing block
       // for any position:fixed content inside.
-      el.style.transform = "";
-      el.style.opacity = "";
+      for (const node of new Set([page, el])) {
+        node.style.transform = "";
+        node.style.opacity = "";
+      }
     };
     // The homepage just appears — no slide, fade or card cascade — so its
     // hero is simply there when you come back.
@@ -158,7 +169,7 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
       // moment after the page shows, behind skeleton rows, so keep watching
       // briefly and cascade rows that arrive late too. Each row only once.
       const cascade = () => {
-        const fresh = [...el.querySelectorAll<HTMLElement>("[data-stagger-item]:not([data-staggered])")];
+        const fresh = [...page.querySelectorAll<HTMLElement>("[data-stagger-item]:not([data-staggered])")];
         if (!fresh.length) return;
         for (const item of fresh) item.dataset.staggered = "";
         runs.push(
@@ -171,7 +182,7 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
       };
       cascade();
       watcher = new MutationObserver(cascade);
-      watcher.observe(el, { childList: true, subtree: true });
+      watcher.observe(page, { childList: true, subtree: true });
       window.setTimeout(() => watcher?.disconnect(), 2500);
     }
 

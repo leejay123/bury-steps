@@ -23,7 +23,8 @@ export default async function ContactPage() {
         </p>
       </div>
 
-      <Card className="overflow-hidden p-0">
+      {/* Only the card animates on a page change; the heading stays still. */}
+      <Card className="overflow-hidden p-0" data-page-motion="">
         <CardContent className="flex flex-col gap-6 p-6 md:p-8">
           <div className="flex flex-col gap-6">
             <div className="flex items-start gap-3 rounded-md p-2 -m-2">

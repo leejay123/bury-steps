@@ -9,7 +9,7 @@ export default function Loading() {
         <Skeleton className="h-6 w-32" />
         <Skeleton className="h-4 w-full max-w-lg" />
       </div>
-      <Card className="overflow-hidden p-0">
+      <Card className="overflow-hidden p-0" data-page-motion="">
         <CardContent className="flex flex-col gap-6 p-6 md:p-8">
           {[0, 1].map((row) => (
             <div className="flex items-start gap-3" key={row}>
