@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ArrowDown, ArrowUp, ChevronDown, Plus, Search, Trash2 } from "lucide-react";
 import { updateWalkEssentials, type ActionResult } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
@@ -10,18 +11,81 @@ import {
   ESSENTIAL_ICONS,
   MAX_WALK_ESSENTIALS,
   MAX_WALK_ESSENTIAL_LABEL,
-  essentialIcon,
   type EssentialItem,
 } from "@/lib/walk-essentials";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SettingsSection } from "../settings-page";
 
 /** A fresh key for an item someone adds — never reused, so an old walk's
  * tick can't land on a different, newer item. */
 const newKey = () => `c${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+
+/** Every icon as a labelled tile in a searchable grid — easier to scan
+ * than a narrow list, and you see the icon you're picking. */
+function IconPicker({ label, onChange, value }: { label: string; onChange: (icon: string) => void; value: string }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const current = ESSENTIAL_ICONS[value] ?? ESSENTIAL_ICONS.info;
+  const q = query.trim().toLowerCase();
+  const options = Object.entries(ESSENTIAL_ICONS).filter(
+    ([name, option]) => !q || option.label.toLowerCase().includes(q) || name.includes(q),
+  );
+
+  return (
+    <Popover
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setQuery("");
+      }}
+      open={open}
+    >
+      <PopoverTrigger asChild>
+        <Button aria-label={`Icon for ${label || "this item"}`} className="shrink-0 gap-1.5" type="button" variant="outline">
+          <current.icon aria-hidden className="size-4" />
+          <ChevronDown aria-hidden className="size-3.5 text-muted-foreground" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="flex w-[min(22rem,calc(100vw-2rem))] flex-col gap-3 p-3">
+        <div className="relative">
+          <Search aria-hidden className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            aria-label="Search icons"
+            className="pl-8"
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search icons…"
+            value={query}
+          />
+        </div>
+        <div className="grid max-h-72 grid-cols-4 gap-1 overflow-y-auto overscroll-contain">
+          {options.map(([name, option]) => (
+            <button
+              aria-pressed={name === value}
+              className={cn(
+                "flex flex-col items-center gap-1 rounded-md px-1 py-2 text-center text-[11px] leading-tight text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                name === value && "bg-muted text-foreground ring-1 ring-foreground/30",
+              )}
+              key={name}
+              onClick={() => {
+                onChange(name);
+                setOpen(false);
+              }}
+              type="button"
+            >
+              <option.icon aria-hidden className="size-5" />
+              <span className="line-clamp-2">{option.label}</span>
+            </button>
+          ))}
+          {options.length === 0 ? (
+            <p className="col-span-4 py-4 text-center text-sm text-muted-foreground">No icons match.</p>
+          ) : null}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 /**
  * Rename, re-icon, reorder, add and remove the Essentials tick boxes.
@@ -57,24 +121,13 @@ export function WalkEssentialsEditor({ items: saved }: { items: EssentialItem[] 
         ) : (
           <ul className="flex flex-col gap-2">
             {items.map((item, index) => {
-              const Icon = essentialIcon(item.icon);
               return (
                 <li className="flex flex-wrap items-center gap-2 rounded-lg border p-2 sm:flex-nowrap" key={item.key}>
-                  <Select onValueChange={(icon) => update(index, { icon })} value={item.icon}>
-                    <SelectTrigger aria-label={`Icon for ${item.label || "this item"}`} className="w-auto shrink-0">
-                      <Icon aria-hidden className="size-4" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(ESSENTIAL_ICONS).map(([name, option]) => (
-                        <SelectItem key={name} value={name}>
-                          <span className="flex items-center gap-2">
-                            <option.icon aria-hidden className="size-4" />
-                            {option.label}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <IconPicker
+                    label={item.label}
+                    onChange={(icon) => update(index, { icon })}
+                    value={item.icon}
+                  />
                   <Input
                     aria-label="Name"
                     className="min-w-0 flex-1"
