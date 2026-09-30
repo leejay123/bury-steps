@@ -8,13 +8,18 @@ import {
   Bell,
   BookOpen,
   ChartColumn,
+  Facebook,
+  FileText,
   FileBarChart,
   Footprints,
   History,
   House,
   LogIn,
+  Mail,
   Menu,
+  MessageCircle,
   MessageSquare,
+  ShieldCheck,
   SlidersHorizontal,
   Users,
   type LucideIcon,
@@ -40,6 +45,12 @@ const ICONS: Record<string, LucideIcon> = {
   Reports: FileBarChart,
   Settings: SlidersHorizontal,
   Guide: BookOpen,
+  // The More sheet's account and site links.
+  "Email preferences": Mail,
+  "Contact Us": MessageCircle,
+  "Facebook group": Facebook,
+  "Privacy Policy": ShieldCheck,
+  "Terms of Service": FileText,
 };
 
 export type BottomNavItem = { href: string; label: string; dot?: Promise<boolean>; newTab?: boolean };
