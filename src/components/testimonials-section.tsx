@@ -9,6 +9,7 @@ import { GridPattern } from "@/components/ui/grid-pattern";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { GridFiller } from "@/components/grid-filler";
+import type { SectionBgPattern } from "@/lib/section-background";
 import { HeroCopy } from "@/components/hero-copy";
 import type { TestimonialView } from "@/lib/testimonials";
 
@@ -18,11 +19,15 @@ const PEEK_PX = 72;
 const FADE_MASK = "linear-gradient(to bottom, black 70%, transparent)";
 
 export function TestimonialsSection({
+  bgPattern = "none",
   eyebrow,
   intro,
   testimonials,
   title,
 }: {
+  /** Settings → Homepage layout → Background patterns. Drawn behind the
+   * heading only: the cards below are solid and would hide it. */
+  bgPattern?: SectionBgPattern;
   eyebrow: string;
   intro: string;
   testimonials: TestimonialView[];
@@ -56,7 +61,7 @@ export function TestimonialsSection({
 
   return (
     <section>
-      <HeroCopy eyebrow={eyebrow || null} title={title} titleAs="h2">
+      <HeroCopy bgPattern={bgPattern} eyebrow={eyebrow || null} title={title} titleAs="h2">
         <p>{intro}</p>
       </HeroCopy>
       <div className="relative">

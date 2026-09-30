@@ -165,6 +165,7 @@ export function HomeWelcome({
     testimonials:
       testimonials.length > 0 ? (
         <TestimonialsSection
+          bgPattern={sectionBgPatterns.testimonials}
           eyebrow={testimonialsSectionEyebrow}
           intro={testimonialsSectionIntro}
           testimonials={testimonials}
@@ -174,6 +175,7 @@ export function HomeWelcome({
     faqs:
       faqs.length > 0 ? (
         <FaqsSection
+          bgPattern={sectionBgPatterns.faqs}
           categories={faqCategories}
           facebookGroupUrl={facebookGroupUrl}
           faqs={faqs}
@@ -185,14 +187,17 @@ export function HomeWelcome({
 
   const visible = homepageSectionOrder.filter((id) => sections[id] != null);
   // howWalksWork has no background pattern picker (not asked for) — always
-  // none. howThisStarted's pattern is drawn by HeroCopy itself above (its
-  // own internal background slot), not this shared overlay — applying both
-  // would double-layer the pattern.
+  // none. howThisStarted, testimonials and FAQs draw their pattern behind
+  // their heading (HeroCopy's own background slot), not across the whole
+  // section: the testimonial cards covered it, and on FAQs it belongs
+  // behind the intro, not the questions.
   const bgPatterns: Record<HomepageSectionId, SectionBgPattern> = {
     howWalksWork: "none",
     photos: "none",
     ...sectionBgPatterns,
     howThisStarted: "none",
+    testimonials: "none",
+    faqs: "none",
   };
 
   return (

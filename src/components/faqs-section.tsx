@@ -15,15 +15,20 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { FACEBOOK_GROUP_URL as DEFAULT_FACEBOOK_GROUP_URL } from "@/lib/urls";
 import type { FaqCategoryView, FaqView } from "@/lib/faqs";
 import { HeroCopy } from "@/components/hero-copy";
+import type { SectionBgPattern } from "@/lib/section-background";
 import { centerInScrollStrip } from "@/lib/scroll-strip";
 
 export function FaqsSection({
+  bgPattern = "none",
   categories,
   facebookGroupUrl = DEFAULT_FACEBOOK_GROUP_URL,
   faqs,
   intro,
   title,
 }: {
+  /** Settings → Homepage layout → Background patterns. Drawn behind the
+   * heading, intro and search only, not the questions. */
+  bgPattern?: SectionBgPattern;
   categories: FaqCategoryView[];
   facebookGroupUrl?: string;
   faqs: FaqView[];
@@ -39,6 +44,7 @@ export function FaqsSection({
   return (
     <section>
       <FaqIntro
+        bgPattern={bgPattern}
         intro={intro}
         onSearchChange={setSearchTerm}
         searchTerm={searchTerm}
@@ -56,11 +62,13 @@ export function FaqsSection({
 }
 
 const FaqIntro = memo(function FaqIntro({
+  bgPattern,
   intro,
   searchTerm,
   onSearchChange,
   title,
 }: {
+  bgPattern: SectionBgPattern;
   intro: string;
   searchTerm: string;
   onSearchChange: (value: string) => void;
@@ -81,6 +89,7 @@ const FaqIntro = memo(function FaqIntro({
           </InputGroupAddon>
         </InputGroup>
       }
+      bgPattern={bgPattern}
       eyebrow={null}
       title={title}
       titleAs="h2"
