@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import { createWalk } from "@/server/actions";
 import { FormError } from "@/components/form-error";
-import { DrawerFormFooter } from "@/components/drawer-form";
+import { DrawerFormFooter, useKeepFormOnError } from "@/components/drawer-form";
 import { useNotifyActionState } from "@/hooks/use-action-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,6 +32,8 @@ export function CreateWalkDrawer() {
     setFormKey((key) => key + 1);
     setOpen(false);
   });
+  // Keeps everything typed if creating the walk comes back with a problem.
+  const submit = useKeepFormOnError(action);
 
   return (
     <Drawer closeDisabled={isPending} onOpenChange={setOpen} open={open} variant="form">
@@ -42,7 +44,7 @@ export function CreateWalkDrawer() {
         </Button>
       </DrawerTrigger>
       <DrawerContent className="min-h-0">
-        <form action={action} className="flex min-h-0 flex-1 flex-col" ref={formRef}>
+        <form className="flex min-h-0 flex-1 flex-col" onSubmit={submit} ref={formRef}>
           <DrawerHeader className="shrink-0">
             <DrawerTitle>Create a walk</DrawerTitle>
             <DrawerDescription>
@@ -53,7 +55,7 @@ export function CreateWalkDrawer() {
             <WalkFormFields idPrefix="create-walk" key={formKey} />
             <FormError message={state && !state.ok ? state.error : null} />
           </div>
-          <DrawerFormFooter label="Create walk" pendingLabel="Creating…" />
+          <DrawerFormFooter label="Create walk" pending={isPending} pendingLabel="Creating…" />
         </form>
       </DrawerContent>
     </Drawer>

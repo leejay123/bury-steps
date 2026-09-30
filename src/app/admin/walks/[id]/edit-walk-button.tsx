@@ -5,7 +5,7 @@ import { Pencil } from "lucide-react";
 import { updateWalk, type ActionResult } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
-import { DrawerFormFooter } from "@/components/drawer-form";
+import { DrawerFormFooter, useKeepFormOnError } from "@/components/drawer-form";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -36,6 +36,8 @@ function EditWalkForm({
     updateWalk,
     null,
   );
+  // Keeps everything typed if saving comes back with a problem.
+  const submit = useKeepFormOnError(action);
   useActionToast(state, onClose);
 
   useEffect(() => {
@@ -43,7 +45,7 @@ function EditWalkForm({
   }, [isPending, onPendingChange]);
 
   return (
-    <form action={action} className="flex min-h-0 flex-1 flex-col">
+    <form className="flex min-h-0 flex-1 flex-col" onSubmit={submit}>
       <DrawerHeader className="shrink-0">
         <DrawerTitle>Edit walk</DrawerTitle>
         <DrawerDescription>
@@ -63,6 +65,7 @@ function EditWalkForm({
         <FormError message={state && !state.ok ? state.error : null} />
       </div>
       <DrawerFormFooter
+        pending={isPending}
         label={cancelled ? "Save and reopen" : "Save changes"}
         pendingLabel="Saving…"
       />

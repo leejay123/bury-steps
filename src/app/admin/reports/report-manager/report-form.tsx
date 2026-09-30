@@ -18,7 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { InvolvedMember, ReportView, WalkOption } from "./types";
-import { DrawerFormFooter } from "@/components/drawer-form";
+import { DrawerFormFooter, useKeepFormOnError } from "@/components/drawer-form";
 
 /** A form-section label: icon + text, consistent across every field here. */
 function FieldLabel({
@@ -198,6 +198,7 @@ function ReportFields({
           className="min-h-24"
           defaultValue={report?.whatHappened}
           id={`${prefix}-what`}
+          minLength={3}
           name="whatHappened"
           placeholder="Slipped on a wet tree root near the bridge and twisted their ankle."
           required
@@ -230,6 +231,7 @@ function ReportFields({
           className="min-h-24"
           defaultValue={report?.whatWeDid}
           id={`${prefix}-did`}
+          minLength={3}
           name="whatWeDid"
           placeholder="Sat them down, checked the ankle, waited 10 minutes, then walked back slowly with support."
           required
@@ -268,11 +270,13 @@ export function AddForm({
   );
   useActionToast(state, onSaved);
   useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
+  // Keeps everything typed if the save comes back with a problem.
+  const submit = useKeepFormOnError(action);
   return (
-    <form action={action} className="flex min-h-0 flex-1 flex-col">
+    <form className="flex min-h-0 flex-1 flex-col" onSubmit={submit}>
       <ReportFields prefix="add" walks={walks} />
       <FormError message={state && !state.ok ? state.error : null} />
-      <DrawerFormFooter label="Save report" pendingLabel="Saving…" />
+      <DrawerFormFooter label="Save report" pending={isPending} pendingLabel="Saving…" />
     </form>
   );
 }
@@ -296,11 +300,13 @@ export function EditForm({
   );
   useActionToast(state, onSaved);
   useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
+  // Keeps everything typed if the save comes back with a problem.
+  const submit = useKeepFormOnError(action);
   return (
-    <form action={action} className="flex min-h-0 flex-1 flex-col">
+    <form className="flex min-h-0 flex-1 flex-col" onSubmit={submit}>
       <ReportFields prefix="edit" report={report} walks={walks} />
       <FormError message={state && !state.ok ? state.error : null} />
-      <DrawerFormFooter label="Save changes" onCancel={onCancel} pendingLabel="Saving…" />
+      <DrawerFormFooter label="Save changes" onCancel={onCancel} pending={isPending} pendingLabel="Saving…" />
     </form>
   );
 }

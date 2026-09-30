@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { startTransition, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -28,9 +28,13 @@ export function DrawerFormFooter({
   disabled,
   label,
   onCancel,
+  pending: pendingProp,
   pendingLabel,
 }: {
   cancelLabel?: string;
+  /** For forms submitted by hand (see useKeepFormOnError) — useFormStatus
+   * only sees <form action> submissions. */
+  pending?: boolean;
   disabled?: boolean;
   label: string;
   /** Cancel does this instead of closing the drawer — e.g. going back
@@ -38,7 +42,8 @@ export function DrawerFormFooter({
   onCancel?: () => void;
   pendingLabel: string;
 }) {
-  const { pending } = useFormStatus();
+  const formStatus = useFormStatus();
+  const pending = pendingProp ?? formStatus.pending;
   const cancel = (
     <Button disabled={pending} onClick={onCancel} type="button" variant="outline">
       {cancelLabel}
@@ -124,4 +129,18 @@ export function MoreOptions({
       <div className="flex flex-col gap-4 pt-3">{children}</div>
     </details>
   );
+}
+
+/**
+ * Submit a form to a server action without React's automatic reset. With
+ * <form action={…}>, React clears every field once the action finishes —
+ * including when it comes back with an error — so one missing answer wiped
+ * everything someone had typed. Use as <form onSubmit={submit}>.
+ */
+export function useKeepFormOnError(action: (formData: FormData) => void) {
+  return (event: { preventDefault: () => void; currentTarget: HTMLFormElement }) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    startTransition(() => action(formData));
+  };
 }
