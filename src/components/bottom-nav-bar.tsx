@@ -178,8 +178,12 @@ export function BottomNavBar({
             </Tab>
           </Link>
         ) : (
-          // Sign in / Join go to the account site — a plain link, not Next's.
-          <a className={tabClass(false)} href={item.href}>
+          // Another site (e.g. the Facebook group) — a plain link, not Next's.
+          <a
+            className={tabClass(false)}
+            href={item.href}
+            {...(item.newTab ? { rel: "noopener noreferrer", target: "_blank" } : {})}
+          >
             <Tab active={false} icon={ICONS[item.label] ?? House} label={item.label} />
           </a>
         )}

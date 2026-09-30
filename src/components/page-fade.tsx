@@ -41,6 +41,7 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
   const previous = useRef<string | null>(null);
   const leaving = useRef(false);
   const fromMenu = useRef(false);
+  const fromBottomBar = useRef(false);
 
   // Out first: catch clicks on links that go deeper or come back, slide the
   // current page out, then navigate. Capture phase on document runs before
@@ -86,6 +87,7 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
 
     const onClick = (event: MouseEvent) => {
       const link = plainLink(event);
+      fromBottomBar.current = Boolean(link?.closest("[data-bottom-nav]"));
       // Pages opened from the phone menu just appear: the menu closing is
       // already the change people see, and a slide under it looked messy.
       if (link?.closest("[data-slot='popover-content'], [data-bottom-nav-sheet]")) {
@@ -127,6 +129,8 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
     leaving.current = false;
     const openedFromMenu = fromMenu.current;
     fromMenu.current = false;
+    const openedFromBottomBar = fromBottomBar.current;
+    fromBottomBar.current = false;
     const el = ref.current;
     if (!el) return;
 
@@ -143,6 +147,10 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
       return;
     }
 
+    const direction = mode === "slide" && from !== null ? slideDirection(from, pathname) : 0;
+    // Bottom bar tabs are like switching tabs in an app: the cards come in
+    // sideways with the page, not rising up (which looked like a jump).
+    const cardsSideways = mode === "slide" && openedFromBottomBar;
     const runs: { complete: () => void }[] = [];
     let watcher: MutationObserver | null = null;
     if (mode === "slide" || mode === "rise") {
@@ -154,7 +162,11 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
         if (!fresh.length) return;
         for (const item of fresh) item.dataset.staggered = "";
         runs.push(
-          animate(fresh, { opacity: [0, 1], y: [14, 0] }, { duration: 0.28, delay: stagger(0.055), ease: EASE }),
+          animate(
+            fresh,
+            cardsSideways ? { opacity: [0, 1], x: [direction * DISTANCE, 0] } : { opacity: [0, 1], y: [14, 0] },
+            { duration: 0.28, delay: stagger(0.055), ease: EASE },
+          ),
         );
       };
       cascade();
@@ -164,7 +176,6 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
     }
 
     if (from !== null && from !== pathname) {
-      const direction = mode === "slide" ? slideDirection(from, pathname) : 0;
       const run = mode === "rise"
         ? // Like the walk cards: rise 14px into place while fading in.
           animate(el, { opacity: [0, 1], y: [14, 0] }, { duration: 0.28, ease: EASE })

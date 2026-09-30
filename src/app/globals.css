@@ -568,7 +568,4 @@ html[data-announcement-hide] [data-slot="sticky-banner"] {
     grid-column-start: 1;
     justify-content: flex-start;
   }
-  html:has([data-bottom-nav]) [data-guest-auth-buttons] {
-    display: none;
-  }
 }

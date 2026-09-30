@@ -79,14 +79,12 @@ export async function SiteNav() {
             />
           </>
         ) : (
-          // Hidden on phones when the bottom bar is on — it has Sign in and
-          // Join itself (globals.css, [data-guest-auth-buttons]).
-          <div className="contents" data-guest-auth-buttons="">
+          <>
             <Button asChild size="sm" variant="outline">
               <a href={accountPortalHref("sign-in", afterAuth)}>Sign in</a>
             </Button>
             <JoinGroupButton href={accountPortalHref("sign-up", afterAuth)} />
-          </div>
+          </>
         )}
       </div>
     </>
@@ -166,10 +164,9 @@ export async function SiteBottomNav() {
   if (theme.mobileNav !== "bottom") return null;
   const facebookUrl = theme.facebookGroupUrl.trim();
 
-  // Signed-out visitors: only the pages they can actually open, plus Sign
-  // in and Join where a thumb reaches them.
+  // Signed-out visitors: only the pages they can actually open. Sign in and
+  // Join stay as buttons in the header.
   if (!user) {
-    const afterAuth = `${appUrl()}${AFTER_AUTH_PATH}`;
     return (
       <BottomNavBar
         clockIn={null}
@@ -177,7 +174,6 @@ export async function SiteBottomNav() {
           {
             label: "More",
             items: [
-              ...(facebookUrl ? [{ href: facebookUrl, label: "Facebook group", newTab: true }] : []),
               { href: "/privacy-policy", label: "Privacy Policy" },
               { href: "/terms-of-service", label: "Terms of Service" },
             ],
@@ -186,8 +182,7 @@ export async function SiteBottomNav() {
         tabs={[
           { href: "/", label: "Home" },
           { href: "/contact", label: "Contact Us" },
-          { href: accountPortalHref("sign-in", afterAuth), label: "Sign in" },
-          { href: accountPortalHref("sign-up", afterAuth), label: "Join" },
+          ...(facebookUrl ? [{ href: facebookUrl, label: "Facebook group", newTab: true }] : []),
         ]}
       />
     );
