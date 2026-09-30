@@ -6,7 +6,6 @@ import { HeroParallaxHome } from "@/components/hero-parallax-home";
 import { HeroSliderHome } from "@/components/hero-slider-home";
 import {
   HeroAccordionHome,
-  HeroColumnsHome,
   HeroDiagonalHome,
   HeroStripHome,
   HeroTilesHome,
@@ -28,8 +27,7 @@ import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
 export const revalidate = 120;
 
 /** The photo heroes picked from the Parallax design options. */
-const PHOTO_HEROES: Partial<Record<HeroStyle, typeof HeroColumnsHome>> = {
-  columns: HeroColumnsHome,
+const PHOTO_HEROES: Partial<Record<HeroStyle, typeof HeroStripHome>> = {
   strip: HeroStripHome,
   tiles: HeroTilesHome,
   diagonal: HeroDiagonalHome,

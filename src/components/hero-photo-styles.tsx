@@ -22,9 +22,9 @@ import type { SlideView } from "@/lib/slides";
 import { cn } from "@/lib/utils";
 
 /**
- * Five photo heroes (Settings → Homepage layout → Hero style), picked from
- * the Parallax design options: Drifting columns, Sideways strip, Tiles fall
- * into place, Diagonal rows and Accordion panels. All use the Hero photos,
+ * Four photo heroes (Settings → Homepage layout → Hero style), picked from
+ * the Parallax design options: Sideways strip, Tiles fall into place,
+ * Diagonal rows and Accordion panels. All use the Hero photos,
  * topped up with sample walking photos, and keep the name and buttons close
  * to the pictures — no tall empty stretches. Scroll effects run while the
  * hero scrolls away, so nothing has to be pinned in place.
@@ -109,72 +109,6 @@ function useHeroProgress(ref: React.RefObject<HTMLElement | null>) {
 }
 
 const copyPadding = "px-4 pt-10 sm:px-6 sm:pt-12";
-
-/* ------------------------------------------------------------------ */
-/* Drifting columns                                                    */
-
-function DriftColumn({
-  photos,
-  progress,
-  start,
-  speed,
-  className,
-}: {
-  photos: Photo[];
-  progress: MotionValue<number>;
-  start: number;
-  speed: number;
-  className?: string;
-}) {
-  const y = useTransform(progress, [0, 1], [start, start - speed * 320]);
-  return (
-    <motion.div className={cn("flex flex-col gap-3 will-change-transform", className)} style={{ y }}>
-      {photos.map((photo, i) => (
-        <div className="aspect-[3/4] shrink-0 overflow-hidden rounded-xl bg-muted" key={i}>
-          <PhotoImg photo={photo} />
-        </div>
-      ))}
-    </motion.div>
-  );
-}
-
-/** A wall of photo columns drifting up at different speeds behind a frosted panel. */
-export function HeroColumnsHome({ slides, ...copy }: PhotoHeroProps) {
-  const ref = useRef<HTMLElement>(null);
-  const progress = useHeroProgress(ref);
-  const photos = heroPhotos(slides, 16);
-  const columns = [0, 1, 2, 3].map((c) => [0, 1, 2, 3, 4].map((k) => photos[(c * 4 + k) % photos.length]));
-  const starts = [-40, -170, -90, -130];
-  const speeds = [0.55, 1, 0.7, 0.9];
-
-  return (
-    <div className="relative">
-      <DecorIcon className="size-4" position="bottom-left" />
-      <DecorIcon className="size-4" position="bottom-right" />
-      <FullWidthDivider position="bottom" />
-      <section className="relative h-[27rem] overflow-hidden sm:h-[31rem]" ref={ref}>
-        <div aria-hidden className="absolute inset-x-0 top-0 grid grid-cols-3 gap-3 px-3 md:grid-cols-4">
-          {columns.map((column, c) => (
-            <DriftColumn
-              className={c === 3 ? "hidden md:flex" : undefined}
-              key={c}
-              photos={column}
-              progress={progress}
-              speed={speeds[c]}
-              start={starts[c]}
-            />
-          ))}
-        </div>
-        <div className="absolute inset-0 flex items-center justify-center p-4">
-          <HeroCopy
-            {...copy}
-            className="w-full max-w-md rounded-2xl border bg-background/80 p-6 shadow-lg backdrop-blur-md sm:p-8"
-          />
-        </div>
-      </section>
-    </div>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /* Sideways strip                                                      */

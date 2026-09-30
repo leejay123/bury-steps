@@ -5,7 +5,6 @@ const HERO_STYLES = [
   "parallax",
   "marquee",
   "slider",
-  "columns",
   "strip",
   "tiles",
   "diagonal",

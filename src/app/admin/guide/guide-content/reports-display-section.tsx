@@ -93,8 +93,7 @@ export function ReportsDisplaySection() {
               scroll), <strong>3D Marquee</strong> (a tilted wall of photos scrolling up and
               down behind the name), or <strong>Photo slider</strong> (your photos full width
               with the name and buttons on top; the separate Photo slider section then hides so
-              the photos don&apos;t show twice). Five more photo heroes: <strong>Drifting
-              columns</strong> (a wall of photos drifting up behind a frosted panel with the name),{" "}
+              the photos don&apos;t show twice). Four more photo heroes:{" "}
               <strong>Sideways strip</strong> (a row of tall photos that slides along as you scroll),{" "}
               <strong>Tiles fall into place</strong> (photos settle into a grid when the page opens),{" "}
               <strong>Diagonal rows</strong> (slanted rows sliding opposite ways behind the name) and{" "}
