@@ -48,9 +48,12 @@ function SendTestButton({ disabled }: { disabled: boolean }) {
 
 export function EmailTemplateEditor({
   meta,
+  off = false,
   override,
 }: {
   meta: EmailTemplateMeta;
+  /** Switched off in "Which emails are sent" — noted in the description. */
+  off?: boolean;
   override: { subject: string | null; body: string | null };
 }) {
   const savedSubject = override.subject ?? meta.defaultSubject;
@@ -74,7 +77,10 @@ export function EmailTemplateEditor({
   const dirty = subject !== savedSubject || body !== savedBody;
 
   return (
-    <SettingsSection description={meta.trigger} title={meta.label}>
+    <SettingsSection
+      description={off ? `Switched off — not being sent. ${meta.trigger}` : meta.trigger}
+      title={meta.label}
+    >
       <form action={saveAction} className="flex flex-col gap-3">
         <input name="key" type="hidden" value={meta.key} />
         <div className="flex flex-col gap-2">

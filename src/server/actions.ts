@@ -164,4 +164,5 @@ export {
   updateEmailTemplate,
   resetEmailTemplate,
   sendTestEmailTemplate,
+  setEmailEnabled,
 } from "./actions/email-templates";

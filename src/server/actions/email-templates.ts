@@ -13,6 +13,7 @@ import {
 import { MAX_EMAIL_TEMPLATE_BODY, MAX_EMAIL_TEMPLATE_SUBJECT } from "@/lib/email/template-limits";
 import { sendTestEmail } from "@/lib/email/test-send";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { actorStillOwner } from "@/lib/site-owner";
 import { type ActionResult, logActionError, permissionDenied } from "./shared";
 
 /**
@@ -137,4 +138,37 @@ export async function resetEmailTemplate(
 
   revalidatePath("/admin/settings/emails");
   return { ok: true, message: "Reset to the default wording." };
+}
+
+/**
+ * The owner's on/off switch for one email (Settings → Emails → Which emails
+ * are sent). Off stops that email going to anyone until it's switched back
+ * on; test sends still work. Owner-only, like other site-wide choices that
+ * affect every member.
+ */
+export async function setEmailEnabled(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!(await actorStillOwner(admin.id))) {
+    return { ok: false, error: "Only the site owner can switch emails on or off." };
+  }
+  const key = String(formData.get("key") ?? "");
+  if (!isEmailTemplateKey(key)) return { ok: false, error: "Unknown email." };
+  const enabled = formData.get("enabled") === "on";
+
+  try {
+    if (enabled) {
+      await prisma.disabledEmail.deleteMany({ where: { key } });
+    } else {
+      await prisma.disabledEmail.upsert({ where: { key }, create: { key }, update: {} });
+    }
+  } catch (err) {
+    return logActionError("setEmailEnabled", err, "Could not change this email. Try again.");
+  }
+
+  revalidatePath("/admin/settings/emails");
+  const label = getEmailTemplateMeta(key).label;
+  return { ok: true, message: enabled ? `“${label}” emails are on.` : `“${label}” emails are off.` };
 }

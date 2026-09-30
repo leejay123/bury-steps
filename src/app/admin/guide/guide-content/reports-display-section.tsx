@@ -156,6 +156,13 @@ export function ReportsDisplaySection() {
               changes until they press the button, because some email systems open links
               automatically to check them.
             </p>
+            <p>
+              <strong>Settings → Emails → Which emails are sent</strong> has an on/off switch for
+              every email the site sends (welcome, new walk, walk cancelled, new notice, monthly
+              progress, contact alerts and so on). Only the owner can change them. An email that&apos;s
+              off isn&apos;t sent to anyone until it&apos;s switched back on; &ldquo;Send test to me&rdquo; still
+              works so you can check the wording first. Newsletters aren&apos;t affected.
+            </p>
           </GuideBody>
         </AccordionContent>
       </AccordionItem>

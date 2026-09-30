@@ -571,6 +571,13 @@ model NewsletterSubscriber {
 /// text. Only the subject line and the main prose paragraph(s) are
 /// editable; the shared layout (logo, button, footer, any data-driven
 /// facts like a walk's time/place) is not stored here at all.
+/// An email the owner has switched off (Settings → Emails → Which emails
+/// are sent). A row here means that email is never sent; no row, it is.
+model DisabledEmail {
+  key       String   @id
+  createdAt DateTime @default(now())
+}
+
 model EmailTemplateOverride {
   key       String   @id
   subject   String?

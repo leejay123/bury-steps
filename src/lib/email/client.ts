@@ -1,5 +1,7 @@
 import { Resend } from "resend";
 import type { ReactElement } from "react";
+import type { EmailTemplateKey } from "./registry";
+import { getDisabledEmailKeys } from "./switches";
 
 let cachedClient: Resend | null | undefined;
 
@@ -51,6 +53,12 @@ export type SendEmailInput = {
    * sends where a duplicate isn't a real risk.
    */
   idempotencyKey?: string;
+  /**
+   * Which of the site's emails this is. Set on every system email so the
+   * owner's on/off switches (Settings → Emails) apply; left out for test
+   * sends and newsletters, which always go.
+   */
+  template?: EmailTemplateKey;
 };
 
 /**
@@ -63,6 +71,11 @@ export type SendEmailInput = {
 export async function sendEmail(input: SendEmailInput): Promise<void> {
   const resend = getClient();
   const recipients = Array.isArray(input.to) ? input.to : [input.to];
+
+  if (input.template && (await getDisabledEmailKeys()).has(input.template)) {
+    console.info(`[email] "${input.template}" is switched off in Settings — skipped "${input.subject}".`);
+    return;
+  }
 
   if (!resend) {
     console.warn(
@@ -132,6 +145,14 @@ export async function sendEmailBatch(
   inputs: SendEmailInput[],
   options?: { idempotencyKeyPrefix?: string },
 ): Promise<BatchSendResult> {
+  if (inputs.some((input) => input.template)) {
+    const off = await getDisabledEmailKeys();
+    const skipped = inputs.filter((input) => input.template && off.has(input.template));
+    if (skipped.length) {
+      console.info(`[email] Skipped ${skipped.length} emails switched off in Settings (${skipped[0].template}).`);
+      inputs = inputs.filter((input) => !skipped.includes(input));
+    }
+  }
   if (inputs.length === 0) return { sent: 0, failed: 0 };
 
   const resend = getClient();

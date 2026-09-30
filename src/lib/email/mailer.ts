@@ -57,6 +57,7 @@ export async function sendWelcomeEmail(member: MemberLike): Promise<void> {
   });
   await sendEmail({
     to: member.email,
+    template: "welcome",
     subject: copy.subject,
     react: WelcomeEmail({
       ...brand,
@@ -79,6 +80,7 @@ export async function sendAccountDeletedEmail(member: {
   });
   await sendEmail({
     to: member.email,
+    template: "accountDeleted",
     subject: copy.subject,
     react: AccountDeletedEmail({ ...brand, bodyParagraphs: copy.bodyParagraphs }),
   });
@@ -94,6 +96,7 @@ export async function sendAdminPromotedEmail(member: MemberLike): Promise<void> 
   });
   await sendEmail({
     to: member.email,
+    template: "adminPromoted",
     subject: copy.subject,
     react: AdminPromotedEmail({ ...brand, preferencesUrl, bodyParagraphs: copy.bodyParagraphs }),
   });
@@ -117,6 +120,7 @@ export async function sendOrganiserInviteEmail(
   });
   await sendEmail({
     to: member.email,
+    template: "organiserInvite",
     subject: copy.subject,
     react: OrganiserInviteEmail({
       ...brand,
@@ -136,6 +140,7 @@ export async function sendAdminDemotedEmail(member: MemberLike): Promise<void> {
   });
   await sendEmail({
     to: member.email,
+    template: "adminDemoted",
     subject: copy.subject,
     react: AdminDemotedEmail({ ...brand, preferencesUrl, bodyParagraphs: copy.bodyParagraphs }),
   });
@@ -156,6 +161,7 @@ export async function sendContactMessageReceivedEmail(submission: {
   });
   await sendEmail({
     to: submission.email,
+    template: "contactReceived",
     subject: copy.subject,
     react: ContactMessageReceivedEmail({
       ...brand,
@@ -180,6 +186,7 @@ export async function sendContactMessageAdminAlertEmail(
   });
   await sendEmail({
     to: adminEmails,
+    template: "contactAdminAlert",
     subject: copy.subject,
     react: ContactMessageAdminAlertEmail({ ...brand, ...submission, bodyParagraphs: copy.bodyParagraphs }),
     replyTo: submission.email,
@@ -195,6 +202,7 @@ export async function sendNewsletterSubscribedEmail(subscriber: {
   const copy = await resolveEmailCopy("newsletterSubscribed", { siteName: brand.siteName });
   await sendEmail({
     to: subscriber.email,
+    template: "newsletterSubscribed",
     subject: copy.subject,
     react: NewsletterSubscribedEmail({
       ...brand,
@@ -229,6 +237,7 @@ export async function buildWalkAnnouncedEmail(
   });
   return {
     to: member.email,
+    template: "walkAnnounced",
     subject: copy.subject,
     react: WalkAnnouncedEmail({
       ...brand,
@@ -269,6 +278,7 @@ export async function buildWalkCancelledEmail(
   });
   return {
     to: member.email,
+    template: "walkCancelled",
     subject: copy.subject,
     react: WalkCancelledEmail({
       ...brand,
@@ -305,6 +315,7 @@ export async function buildWalkReopenedEmail(
   });
   return {
     to: member.email,
+    template: "walkReopened",
     subject: copy.subject,
     react: WalkReopenedEmail({
       ...brand,
@@ -342,6 +353,7 @@ export async function sendAddedToWalkEmail(
   });
   await sendEmail({
     to: member.email,
+    template: "addedToWalk",
     subject: copy.subject,
     react: AddedToWalkEmail({
       ...brand,
@@ -370,6 +382,7 @@ export async function buildNoticePostedEmail(
   });
   return {
     to: member.email,
+    template: "noticePosted",
     subject: copy.subject,
     react: NoticePostedEmail({
       ...brand,
@@ -413,6 +426,7 @@ export async function buildProgressSummaryEmail(
   });
   return {
     to: member.email,
+    template: "progressSummary",
     subject: copy.subject,
     react: ProgressSummaryEmail({
       ...brand,
@@ -446,6 +460,7 @@ export async function sendAccidentReportAlertEmail(
   await sendEmailBatch(
     adminEmails.map((to) => ({
       to,
+      template: "accidentReportAlert",
       subject: copy.subject,
       react: AccidentReportAlertEmail({ ...brand, ...report, bodyParagraphs: copy.bodyParagraphs }),
     })),
