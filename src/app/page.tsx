@@ -114,6 +114,7 @@ export default async function Home() {
           const PhotoHero = PHOTO_HEROES[theme.heroStyle]!;
           return (
             <PhotoHero
+              bgPattern={theme.heroBgPattern}
               isSignedIn={user !== null}
               signInHref={signInHref}
               signUpHref={signUpHref}

@@ -19,6 +19,8 @@ import { FullWidthDivider } from "@/components/full-width-divider";
 import { JoinGroupButton } from "@/components/join-group-button";
 import { SAMPLE_WALK_PHOTOS } from "@/lib/sample-walk-photos";
 import type { SlideView } from "@/lib/slides";
+import type { SectionBgPattern } from "@/lib/section-background";
+import { SectionBackground } from "@/components/section-background";
 import { cn } from "@/lib/utils";
 
 /**
@@ -31,6 +33,9 @@ import { cn } from "@/lib/utils";
  */
 
 export type PhotoHeroProps = {
+  /** Settings → Homepage layout → Hero style → Background (Sideways strip,
+   * Tiles and Accordion; Diagonal rows is all photos, so it has none). */
+  bgPattern?: SectionBgPattern;
   slides: SlideView[];
   isSignedIn: boolean;
   signInHref: string;
@@ -65,7 +70,7 @@ function HeroCopy({
   siteName,
   siteTagline,
   className,
-}: Omit<PhotoHeroProps, "slides"> & { className?: string }) {
+}: Omit<PhotoHeroProps, "slides" | "bgPattern"> & { className?: string }) {
   return (
     <div className={cn("flex flex-col gap-4", className)}>
       <h1 className="text-headline font-medium tracking-tight text-balance">{siteName}</h1>
@@ -90,6 +95,16 @@ function HeroCopy({
   );
 }
 
+/** The chosen pattern behind the whole hero, under the name and photos. */
+function HeroPattern({ pattern }: { pattern?: SectionBgPattern }) {
+  if (!pattern || pattern === "none") return null;
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      <SectionBackground pattern={pattern} />
+    </div>
+  );
+}
+
 /** Framed like the other heroes: bottom hairline and corner crosses. */
 function HeroFrame({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -97,7 +112,7 @@ function HeroFrame({ children, className }: { children: React.ReactNode; classNa
       <DecorIcon className="size-4" position="bottom-left" />
       <DecorIcon className="size-4" position="bottom-right" />
       <FullWidthDivider position="bottom" />
-      <section className={cn("relative overflow-hidden", className)}>{children}</section>
+      <section className={cn("relative isolate overflow-hidden", className)}>{children}</section>
     </div>
   );
 }
@@ -114,7 +129,7 @@ const copyPadding = "px-4 pt-10 sm:px-6 sm:pt-12";
 /* Sideways strip                                                      */
 
 /** The name and buttons above one row of tall photos that slides sideways as you scroll. */
-export function HeroStripHome({ slides, ...copy }: PhotoHeroProps) {
+export function HeroStripHome({ bgPattern, slides, ...copy }: PhotoHeroProps) {
   const ref = useRef<HTMLElement>(null);
   const progress = useHeroProgress(ref);
   const x = useTransform(progress, [0, 1], ["0%", "-32%"]);
@@ -125,7 +140,8 @@ export function HeroStripHome({ slides, ...copy }: PhotoHeroProps) {
       <DecorIcon className="size-4" position="bottom-left" />
       <DecorIcon className="size-4" position="bottom-right" />
       <FullWidthDivider position="bottom" />
-      <section className="relative overflow-hidden pb-8 sm:pb-10" ref={ref}>
+      <section className="relative isolate overflow-hidden pb-8 sm:pb-10" ref={ref}>
+        <HeroPattern pattern={bgPattern} />
         <HeroCopy {...copy} className={copyPadding} />
         <motion.ul aria-hidden className="mt-8 flex w-max gap-4 px-4 will-change-transform sm:px-6" style={{ x }}>
           {photos.map((photo, i) => (
@@ -148,12 +164,13 @@ export function HeroStripHome({ slides, ...copy }: PhotoHeroProps) {
 /* Tiles fall into place                                               */
 
 /** Photos start tossed about and settle one by one into a tidy grid under the name. */
-export function HeroTilesHome({ slides, ...copy }: PhotoHeroProps) {
+export function HeroTilesHome({ bgPattern, slides, ...copy }: PhotoHeroProps) {
   const reduce = useReducedMotion();
   const photos = heroPhotos(slides, 8).slice(0, 8);
 
   return (
     <HeroFrame className="pb-8 sm:pb-10">
+      <HeroPattern pattern={bgPattern} />
       <HeroCopy {...copy} className={copyPadding} />
       <ul aria-hidden className="mt-8 grid grid-cols-3 gap-3 px-4 sm:grid-cols-4 sm:px-6">
         {photos.map((photo, i) => (
@@ -193,7 +210,7 @@ function DiagonalRow({ photos, progress, direction }: { photos: Photo[]; progres
 }
 
 /** Slanted rows of photos sliding opposite ways behind a clean panel with the name. */
-export function HeroDiagonalHome({ slides, ...copy }: PhotoHeroProps) {
+export function HeroDiagonalHome({ bgPattern: _bgPattern, slides, ...copy }: PhotoHeroProps) {
   const ref = useRef<HTMLElement>(null);
   const progress = useHeroProgress(ref);
   const photos = heroPhotos(slides, 12);
@@ -259,7 +276,7 @@ function AccordionPanel({
 
 /** Tall photo strips side by side; one opens wide at a time — in turn as you
  * scroll, or the one you point at or tap. */
-export function HeroAccordionHome({ slides, ...copy }: PhotoHeroProps) {
+export function HeroAccordionHome({ bgPattern, slides, ...copy }: PhotoHeroProps) {
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const photos = heroPhotos(slides, 5).slice(0, 5);
@@ -282,7 +299,8 @@ export function HeroAccordionHome({ slides, ...copy }: PhotoHeroProps) {
       <DecorIcon className="size-4" position="bottom-left" />
       <DecorIcon className="size-4" position="bottom-right" />
       <FullWidthDivider position="bottom" />
-      <section className="relative overflow-hidden pb-8 sm:pb-10" ref={ref}>
+      <section className="relative isolate overflow-hidden pb-8 sm:pb-10" ref={ref}>
+        <HeroPattern pattern={bgPattern} />
         <HeroCopy {...copy} className={copyPadding} />
         <div className="mt-8 flex h-64 gap-2 px-4 sm:h-80 sm:px-6 md:h-96" onMouseLeave={() => pick(null)}>
           {photos.map((photo, i) => (

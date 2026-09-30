@@ -33,6 +33,10 @@ const HERO_STYLE_LABELS: Record<HeroStyle, string> = {
   accordion: "Accordion panels (photo strips that open one at a time)",
 };
 
+/** Hero styles with open space behind the name for a background pattern
+ * (the others fill it with a video, globe or photos). */
+const HEROES_WITH_BACKGROUND: HeroStyle[] = ["default", "strip", "tiles", "accordion"];
+
 /** How many Hero photos each photo hero shows. */
 const HERO_PHOTO_COUNTS: Partial<Record<HeroStyle, string>> = {
   parallax: "Shows 12 photos",
@@ -176,7 +180,7 @@ export function HeroStyleSettings({
           </Select>
         </div>
 
-        {style === "default" ? (
+        {HEROES_WITH_BACKGROUND.includes(style) ? (
           <SectionBgPatternSelect pattern={heroBgPattern} section="hero" />
         ) : null}
 
