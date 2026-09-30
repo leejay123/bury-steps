@@ -41,6 +41,7 @@ export function PageTransitionSettings({ mode }: { mode: PageTransition }) {
           <SelectContent>
             <SelectItem value="fade">Quick fade</SelectItem>
             <SelectItem value="slide">Slide in and out of pages (like the returns portal)</SelectItem>
+            <SelectItem value="rise">Rise up (like the walk cards)</SelectItem>
             <SelectItem value="none">No transition (instant)</SelectItem>
           </SelectContent>
         </Select>

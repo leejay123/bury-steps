@@ -27,6 +27,8 @@ function reducedMotion() {
  *             mode="wait", done across real page changes so every page keeps
  *             its own shareable address). Cards marked data-stagger-item
  *             cascade in. Sideways moves just fade.
+ *   "rise"  — every page rises 14px into place as it fades in, like the
+ *             walk cards (which still cascade)
  *   "none"  — no animation
  * No View Transitions: they snapshot the page and faded through white on
  * phones. Skipped on first load (except the card cascade) and for people
@@ -142,7 +144,7 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
     }
 
     const runs: { complete: () => void }[] = [];
-    if (mode === "slide") {
+    if (mode === "slide" || mode === "rise") {
       const items = el.querySelectorAll("[data-stagger-item]");
       if (items.length) {
         runs.push(
@@ -153,7 +155,10 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
 
     if (from !== null && from !== pathname) {
       const direction = mode === "slide" ? slideDirection(from, pathname) : 0;
-      const run = direction
+      const run = mode === "rise"
+        ? // Like the walk cards: rise 14px into place while fading in.
+          animate(el, { opacity: [0, 1], y: [14, 0] }, { duration: 0.28, ease: EASE })
+        : direction
         ? animate(
             el,
             { opacity: [wasLeaving ? 0 : 0.3, 1], x: [direction * DISTANCE, 0] },

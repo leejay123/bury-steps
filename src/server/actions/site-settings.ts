@@ -568,6 +568,8 @@ export async function updatePageTransition(
         ? "Pages now fade in."
         : mode === "slide"
           ? "Pages now slide in and out when you open something and go back."
+          : mode === "rise"
+            ? "Pages now rise into place, like the walk cards."
           : "Page changes are now instant.",
   };
 }
