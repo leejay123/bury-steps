@@ -120,7 +120,12 @@ export function HomeMemberNoticesSection({
       </HeroCopy>
       <div className="relative">
         <FullWidthDivider position="top" />
-        <div className="grid w-full grid-cols-1">
+        <div className="relative grid w-full grid-cols-1">
+          {/* The page's edge lines, redrawn above the cards: homepage
+              sections reach right to those lines, so a card sliding past
+              the edge covered them mid-slide. */}
+          <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 z-10 w-px bg-border" />
+          <span aria-hidden className="pointer-events-none absolute inset-y-0 right-0 z-10 w-px bg-border" />
           {/*
             The lines between cards are 1px gaps showing the border colour
             (each card's pl-px over a border-coloured slide), with the track
