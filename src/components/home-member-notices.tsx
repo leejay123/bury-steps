@@ -121,8 +121,15 @@ export function HomeMemberNoticesSection({
       <div className="relative">
         <FullWidthDivider position="top" />
         <div className="grid w-full grid-cols-1">
+          {/*
+            1px wider than the section: every card draws its own right-hand
+            line, so the card that stops at the section's right edge put its
+            line right beside the page's border — a double line after the
+            arrows moved the row. Reaching 1px into that border lays the two
+            lines on top of each other instead.
+          */}
           <Carousel
-            className="group/carousel w-full bg-background"
+            className="group/carousel w-[calc(100%+1px)] bg-background"
             opts={{ loop: showControls, align: "start" }}
             plugins={showControls ? [plugin] : []}
             setApi={setApi}
