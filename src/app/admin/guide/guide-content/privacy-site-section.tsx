@@ -103,8 +103,8 @@ export function PrivacySiteSection() {
               left) with four main pages plus <strong>More</strong>, which slides up everything else. Signed-out visitors get their own bar — Home, Contact, the Facebook group
               and More — with Sign in and Join staying at the top. On a
               walk day, from when clock-in opens until the walk ends, a round <strong>Clock in</strong>
-              button sits in the middle (it disappears once you've clocked in). The bar steps aside
-              while you type, so the keyboard doesn't push it over the form. Walk cards (Manage walks,
+              button sits in the middle (it disappears once you&apos;ve clocked in). The bar steps aside
+              while you type, so the keyboard doesn&apos;t push it over the form. Walk cards (Manage walks,
               and Upcoming and All walks on Walks) open with a thin header strip showing the status
               (Upcoming, Starting soon…) on the left and the day on the right — tinted amber when a
               walk is starting soon, green while it’s in progress and red when cancelled — with the
