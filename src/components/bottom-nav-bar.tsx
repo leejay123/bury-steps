@@ -66,9 +66,15 @@ function UnreadDot({ unread }: { unread: Promise<boolean> }) {
   ) : null;
 }
 
-/** A text field (not a tick box or button) — the bar steps aside while one has focus. */
+/**
+ * A text field (not a tick box or button) on the page itself — the bar
+ * steps aside while one has focus. Fields inside a pop-up or drawer (search,
+ * forms) don't count: the bar is already behind that overlay's blur, like
+ * the rest of the page, so hiding it just made it vanish for no reason.
+ */
 function isTypingTarget(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false;
+  if (target.closest("[role='dialog'], [role='alertdialog'], [data-slot$='-content']")) return false;
   if (target.isContentEditable || target instanceof HTMLTextAreaElement) return true;
   if (target instanceof HTMLInputElement) {
     return !["checkbox", "radio", "button", "submit", "reset", "range", "color", "file"].includes(target.type);
