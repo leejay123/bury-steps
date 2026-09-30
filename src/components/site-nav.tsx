@@ -79,12 +79,14 @@ export async function SiteNav() {
             />
           </>
         ) : (
-          <>
+          // Hidden on phones when the bottom bar is on — it has Sign in and
+          // Join itself (globals.css, [data-guest-auth-buttons]).
+          <div className="contents" data-guest-auth-buttons="">
             <Button asChild size="sm" variant="outline">
               <a href={accountPortalHref("sign-in", afterAuth)}>Sign in</a>
             </Button>
             <JoinGroupButton href={accountPortalHref("sign-up", afterAuth)} />
-          </>
+          </div>
         )}
       </div>
     </>
@@ -161,7 +163,35 @@ export async function SiteMobileNav() {
 export async function SiteBottomNav() {
   const [user, theme] = await Promise.all([getOptionalUser(), getSiteTheme()]);
   // Settings → Site behaviour → Phone menu: "menu" keeps the ☰ menu instead.
-  if (!user || theme.mobileNav !== "bottom") return null;
+  if (theme.mobileNav !== "bottom") return null;
+  const facebookUrl = theme.facebookGroupUrl.trim();
+
+  // Signed-out visitors: only the pages they can actually open, plus Sign
+  // in and Join where a thumb reaches them.
+  if (!user) {
+    const afterAuth = `${appUrl()}${AFTER_AUTH_PATH}`;
+    return (
+      <BottomNavBar
+        clockIn={null}
+        more={[
+          {
+            label: "More",
+            items: [
+              ...(facebookUrl ? [{ href: facebookUrl, label: "Facebook group", newTab: true }] : []),
+              { href: "/privacy-policy", label: "Privacy Policy" },
+              { href: "/terms-of-service", label: "Terms of Service" },
+            ],
+          },
+        ]}
+        tabs={[
+          { href: "/", label: "Home" },
+          { href: "/contact", label: "Contact Us" },
+          { href: accountPortalHref("sign-in", afterAuth), label: "Sign in" },
+          { href: accountPortalHref("sign-up", afterAuth), label: "Join" },
+        ]}
+      />
+    );
+  }
   const [progressEnabled, clockIn] = await Promise.all([getProgressEnabled(), getClockInWalk(user.id)]);
   const isAdmin = user.role === "ADMIN";
   const permissions = isAdmin ? (user.isOwner ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS) : undefined;
@@ -173,8 +203,6 @@ export async function SiteBottomNav() {
   const tabCount = clockIn ? 3 : 4;
   const tabs = items.slice(0, tabCount);
   const rest = items.slice(tabCount);
-  const facebookUrl = theme.facebookGroupUrl.trim();
-
   return (
     <BottomNavBar
       clockIn={clockIn}

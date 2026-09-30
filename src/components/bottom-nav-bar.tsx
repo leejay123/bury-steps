@@ -21,6 +21,7 @@ import {
   MessageSquare,
   ShieldCheck,
   SlidersHorizontal,
+  UserPlus,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -51,6 +52,9 @@ const ICONS: Record<string, LucideIcon> = {
   "Facebook group": Facebook,
   "Privacy Policy": ShieldCheck,
   "Terms of Service": FileText,
+  // Signed-out visitors' tabs.
+  "Sign in": LogIn,
+  Join: UserPlus,
 };
 
 export type BottomNavItem = { href: string; label: string; dot?: Promise<boolean>; newTab?: boolean };
@@ -154,15 +158,22 @@ export function BottomNavBar({
     const active = isNavItemActive(pathname, item.href);
     return (
       <li className="flex" key={item.href}>
-        <Link aria-current={active ? "page" : undefined} className={tabClass(active)} href={item.href}>
-          <Tab active={active} icon={ICONS[item.label] ?? House} label={item.label}>
-            {item.dot ? (
-              <Suspense fallback={null}>
-                <UnreadDot unread={item.dot} />
-              </Suspense>
-            ) : null}
-          </Tab>
-        </Link>
+        {item.href.startsWith("/") ? (
+          <Link aria-current={active ? "page" : undefined} className={tabClass(active)} href={item.href}>
+            <Tab active={active} icon={ICONS[item.label] ?? House} label={item.label}>
+              {item.dot ? (
+                <Suspense fallback={null}>
+                  <UnreadDot unread={item.dot} />
+                </Suspense>
+              ) : null}
+            </Tab>
+          </Link>
+        ) : (
+          // Sign in / Join go to the account site — a plain link, not Next's.
+          <a className={tabClass(false)} href={item.href}>
+            <Tab active={false} icon={ICONS[item.label] ?? House} label={item.label} />
+          </a>
+        )}
       </li>
     );
   };
