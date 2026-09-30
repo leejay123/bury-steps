@@ -160,7 +160,10 @@ const CookieConsent = React.forwardRef<HTMLDivElement, CookieConsentProps>(
       className: cn(
         containerClasses,
         "inset-x-0",
-        variant === "mini" ? "bottom-4" : "bottom-0 pb-[env(safe-area-inset-bottom)] sm:bottom-4 sm:pb-0",
+        // --bottom-nav-offset lifts it above the phone bottom bar when there is one.
+        variant === "mini"
+          ? "bottom-[calc(1rem+var(--bottom-nav-offset,0px))]"
+          : "bottom-[var(--bottom-nav-offset,0px)] pb-[env(safe-area-inset-bottom)] sm:bottom-4 sm:pb-0",
       ),
       "data-slot": "cookie-consent",
       ref: setRefs,

@@ -547,3 +547,12 @@ html[data-announcement-hide] [data-slot="sticky-banner"] {
   display: none;
 }
 
+
+/* Phone bottom navigation (bottom-nav-bar.tsx): its height, including the
+   iPhone home indicator, so the page spacer, back-to-top button, cookie
+   banner and toasts all sit above it. Zero when there's no bar. */
+@media (width < 48rem) {
+  html:has([data-bottom-nav]) {
+    --bottom-nav-offset: calc(3.75rem + env(safe-area-inset-bottom));
+  }
+}

@@ -258,6 +258,7 @@ export function ContactMessagesList({ messages }: { messages: ContactMessageRow[
           {filtered.map((message) => (
             <DataListItem
               className={dataListItemStackClassName}
+              data-stagger-item=""
               key={message.id}
               onClick={() => openSoon(() => setActiveId(message.id))}
             >

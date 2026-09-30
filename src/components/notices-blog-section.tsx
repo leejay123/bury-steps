@@ -134,6 +134,7 @@ export function NoticesBlogSection({
               {paging.paged.map((notice) => (
                 <Link
                   className="group relative flex flex-col gap-2 p-4 hover:bg-muted/50"
+                  data-stagger-item=""
                   href={`/notices/${notice.slug}`}
                   key={notice.id}
                 >

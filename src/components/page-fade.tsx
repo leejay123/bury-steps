@@ -59,7 +59,7 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
     const slideTarget = (link: HTMLAnchorElement | null) => {
       // Header, dialogs and the phone menu handle their own clicks (desktop
       // nav starts navigating on press) — leave them alone.
-      if (!link || mode !== "slide" || link.closest("header, [data-slot='dialog-content'], [data-slot='popover-content']")) {
+      if (!link || mode !== "slide" || link.closest("header, [data-bottom-nav], [data-slot='dialog-content'], [data-slot='popover-content']")) {
         return null;
       }
       const url = new URL(link.href, location.href);
@@ -144,13 +144,23 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
     }
 
     const runs: { complete: () => void }[] = [];
+    let watcher: MutationObserver | null = null;
     if (mode === "slide" || mode === "rise") {
-      const items = el.querySelectorAll("[data-stagger-item]");
-      if (items.length) {
+      // Cascade the list rows in. Some lists (Members, Messages…) load a
+      // moment after the page shows, behind skeleton rows, so keep watching
+      // briefly and cascade rows that arrive late too. Each row only once.
+      const cascade = () => {
+        const fresh = [...el.querySelectorAll<HTMLElement>("[data-stagger-item]:not([data-staggered])")];
+        if (!fresh.length) return;
+        for (const item of fresh) item.dataset.staggered = "";
         runs.push(
-          animate(items, { opacity: [0, 1], y: [14, 0] }, { duration: 0.28, delay: stagger(0.055), ease: EASE }),
+          animate(fresh, { opacity: [0, 1], y: [14, 0] }, { duration: 0.28, delay: stagger(0.055), ease: EASE }),
         );
-      }
+      };
+      cascade();
+      watcher = new MutationObserver(cascade);
+      watcher.observe(el, { childList: true, subtree: true });
+      window.setTimeout(() => watcher?.disconnect(), 2500);
     }
 
     if (from !== null && from !== pathname) {
@@ -172,7 +182,10 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
     }
     // Cut short (another page change, or the setting flipped): jump to the
     // end rather than freezing half-faded.
-    return () => runs.forEach((run) => run.complete());
+    return () => {
+      watcher?.disconnect();
+      runs.forEach((run) => run.complete());
+    };
   }, [pathname, mode]);
 
   return (

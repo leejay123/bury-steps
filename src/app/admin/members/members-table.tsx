@@ -260,7 +260,10 @@ function MemberListRow({
   }
 
   return (
-    <DataListItem className={cn("relative", member.isYou && "bg-muted/40", dataListItemStackClassName)}>
+    <DataListItem
+      className={cn("relative", member.isYou && "bg-muted/40", dataListItemStackClassName)}
+      data-stagger-item=""
+    >
       <DataListItemMain>
         <Avatar className="size-9 shrink-0">
           <AvatarFallback className="text-xs">{initials(member.name)}</AvatarFallback>

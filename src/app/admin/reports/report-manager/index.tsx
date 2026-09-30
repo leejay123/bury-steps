@@ -170,6 +170,7 @@ export function AccidentReportManager({
               return (
                 <DataListItem
                   className={dataListItemStackClassName}
+                  data-stagger-item=""
                   key={report.id}
                   onClick={() => setMode({ type: "view", report })}
                 >

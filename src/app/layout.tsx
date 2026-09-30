@@ -15,7 +15,7 @@ import { shadcn } from "@clerk/themes";
 import { Toaster } from "@/components/ui/sonner";
 import { AFTER_AUTH_PATH, appUrl, SIGN_IN_URL, SIGN_UP_URL } from "@/lib/urls";
 import { PAGE_X, PAGE_Y } from "@/lib/page-x";
-import { SiteMobileNav, SiteNav, SiteNavFallback } from "@/components/site-nav";
+import { SiteMobileNav, SiteNav, SiteNavFallback, SiteBottomNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteBrandLink } from "@/components/site-brand-link";
 import { SiteLogo } from "@/components/site-logo";
@@ -244,8 +244,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <Suspense fallback={null}>
               <SiteFooter />
             </Suspense>
+            <Suspense fallback={null}>
+              <SiteBottomNav />
+            </Suspense>
           </div>
-          <Toaster duration={2800} position="bottom-left" />
+          <Toaster
+            duration={2800}
+            // Above the phone bottom bar when it's there (globals.css sets the var).
+            mobileOffset={{ bottom: "calc(16px + var(--bottom-nav-offset, 0px))" }}
+            position="bottom-left"
+          />
           <ButtonRipple />
           <HeaderScrollShadow />
           <Suspense fallback={null}>
