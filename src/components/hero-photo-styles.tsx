@@ -51,8 +51,10 @@ function heroPhotos(slides: SlideView[], count: number): Photo[] {
 
 function PhotoImg({ photo, className }: { photo: Photo; className?: string }) {
   return (
+    // Not lazy: these are at the top of the page, and lazy-loading pictures
+    // inside moving rows left them blank until something nudged them.
     // eslint-disable-next-line @next/next/no-img-element
-    <img alt="" className={cn("size-full object-cover", className)} decoding="async" loading="lazy" src={photo.src} />
+    <img alt="" className={cn("size-full object-cover", className)} decoding="async" src={photo.src} />
   );
 }
 
