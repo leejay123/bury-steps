@@ -27,6 +27,23 @@ const HERO_STYLE_LABELS: Record<HeroStyle, string> = {
   parallax: "Parallax (photo cards that slide as you scroll)",
   marquee: "3D Marquee (tilted wall of scrolling photos)",
   slider: "Photo slider (your photos full width, words on top)",
+  columns: "Drifting columns (photo wall behind a frosted panel)",
+  strip: "Sideways strip (a row of photos that slides as you scroll)",
+  tiles: "Tiles fall into place (photos settle into a grid)",
+  diagonal: "Diagonal rows (slanted rows of photos sliding past)",
+  accordion: "Accordion panels (photo strips that open one at a time)",
+};
+
+/** How many Hero photos each photo hero shows. */
+const HERO_PHOTO_COUNTS: Partial<Record<HeroStyle, string>> = {
+  parallax: "Shows 12 photos",
+  marquee: "Shows 15 photos",
+  slider: "Shows all your photos",
+  columns: "Shows 16 photos",
+  strip: "Shows 10 photos",
+  tiles: "Shows 8 photos",
+  diagonal: "Shows 12 photos",
+  accordion: "Shows 5 photos",
 };
 
 /** How long to wait after the last drag/typing tick before saving the
@@ -165,13 +182,9 @@ export function HeroStyleSettings({
           <SectionBgPatternSelect pattern={heroBgPattern} section="hero" />
         ) : null}
 
-        {style === "parallax" || style === "marquee" || style === "slider" ? (
+        {HERO_PHOTO_COUNTS[style] ? (
           <p className="text-sm text-muted-foreground">
-            {style === "parallax"
-              ? "Shows 12 photos"
-              : style === "marquee"
-                ? "Shows 15 photos"
-                : "Shows all your photos"}{" "}
+            {HERO_PHOTO_COUNTS[style]}{" "}
             from Hero photos; any gaps use sample walking photos until you add your own.{" "}
             <Link className="font-medium text-foreground underline underline-offset-4" href="/admin/settings/hero-photos">
               Change these photos

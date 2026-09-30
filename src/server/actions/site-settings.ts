@@ -148,7 +148,9 @@ export async function updateHeroStyle(
               ? "Switched the homepage to the 3D marquee hero."
               : heroStyle === "slider"
                 ? "Switched the homepage to the photo slider hero."
-                : "Switched the homepage to the default hero.",
+                : heroStyle === "default"
+                  ? "Switched the homepage to the default hero."
+                  : "Switched the homepage hero.",
   };
 }
 

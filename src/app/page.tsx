@@ -4,6 +4,13 @@ import { HeroGlobe } from "@/components/hero-globe";
 import { HeroMarqueeHome } from "@/components/hero-marquee-home";
 import { HeroParallaxHome } from "@/components/hero-parallax-home";
 import { HeroSliderHome } from "@/components/hero-slider-home";
+import {
+  HeroAccordionHome,
+  HeroColumnsHome,
+  HeroDiagonalHome,
+  HeroStripHome,
+  HeroTilesHome,
+} from "@/components/hero-photo-styles";
 import { HomeWelcome } from "@/components/home-welcome";
 import { getOptionalUser } from "@/lib/auth";
 import { getHomepageSlides } from "@/lib/homepage-slides";
@@ -12,13 +19,22 @@ import { getHomepageFaqData } from "@/lib/homepage-faqs";
 import { getHomepageMemberNotices } from "@/lib/site-notices";
 import { getProgressEnabled } from "@/lib/progress-settings";
 import { getHomepageGlobeData } from "@/lib/homepage-globe";
-import { heroVideoPoster, heroVideoSrc } from "@/lib/hero-style";
+import { heroVideoPoster, heroVideoSrc, type HeroStyle } from "@/lib/hero-style";
 import { PAGE_X_BLEED } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
 
 // Must be a numeric literal so Next can statically detect ISR.
 export const revalidate = 120;
+
+/** The photo heroes picked from the Parallax design options. */
+const PHOTO_HEROES: Partial<Record<HeroStyle, typeof HeroColumnsHome>> = {
+  columns: HeroColumnsHome,
+  strip: HeroStripHome,
+  tiles: HeroTilesHome,
+  diagonal: HeroDiagonalHome,
+  accordion: HeroAccordionHome,
+};
 
 export default async function Home() {
   const origin = appUrl();
@@ -95,6 +111,20 @@ export default async function Home() {
           siteTagline={theme.siteTagline}
           slides={slides}
         />
+      ) : PHOTO_HEROES[theme.heroStyle] ? (
+        (() => {
+          const PhotoHero = PHOTO_HEROES[theme.heroStyle]!;
+          return (
+            <PhotoHero
+              isSignedIn={user !== null}
+              signInHref={signInHref}
+              signUpHref={signUpHref}
+              siteName={theme.siteName}
+              siteTagline={theme.siteTagline}
+              slides={slides}
+            />
+          );
+        })()
       ) : (
         <HeroSection
           bgPattern={theme.heroBgPattern}
