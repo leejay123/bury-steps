@@ -74,7 +74,10 @@ function UnreadDot({ unread }: { unread: Promise<boolean> }) {
  */
 function isTypingTarget(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false;
-  if (target.closest("[role='dialog'], [role='alertdialog'], [data-slot$='-content']")) return false;
+  const overlay =
+    "[role='dialog'], [role='alertdialog'], [data-slot='dialog-content'], [data-slot='alert-dialog-content'], " +
+    "[data-slot='drawer-popup'], [data-slot='drawer-content'], [data-slot='popover-content']";
+  if (target.closest(overlay)) return false;
   if (target.isContentEditable || target instanceof HTMLTextAreaElement) return true;
   if (target instanceof HTMLInputElement) {
     return !["checkbox", "radio", "button", "submit", "reset", "range", "color", "file"].includes(target.type);
