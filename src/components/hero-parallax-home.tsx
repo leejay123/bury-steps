@@ -3,7 +3,7 @@ import { ArrowRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DecorIcon } from "@/components/decor-icon";
 import { FullWidthDivider } from "@/components/full-width-divider";
-import { JoinGroupButton } from "@/components/join-group-button";
+import { HeroGuestActions } from "@/components/hero-guest-actions";
 import { HeroParallax } from "@/components/velora/hero-parallax";
 import { SAMPLE_WALK_PHOTOS } from "@/lib/sample-walk-photos";
 import type { SlideView } from "@/lib/slides";
@@ -21,15 +21,11 @@ const CARD_COUNT = 12;
 export function HeroParallaxHome({
   slides,
   isSignedIn,
-  signInHref,
-  signUpHref,
   siteName,
   siteTagline,
 }: {
   slides: SlideView[];
   isSignedIn: boolean;
-  signInHref: string;
-  signUpHref: string;
   siteName: string;
   siteTagline: string;
 }) {
@@ -55,12 +51,7 @@ export function HeroParallaxHome({
               </Link>
             </Button>
           ) : (
-            <>
-              <JoinGroupButton href={signUpHref} />
-              <Button asChild size="sm" variant="outline">
-                <a href={signInHref}>Sign in</a>
-              </Button>
-            </>
+            <HeroGuestActions className="contents" />
           )}
         </div>
       </HeroParallax>

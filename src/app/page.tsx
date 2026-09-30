@@ -21,7 +21,6 @@ import { getHomepageGlobeData } from "@/lib/homepage-globe";
 import { heroVideoPoster, heroVideoSrc, type HeroStyle } from "@/lib/hero-style";
 import { PAGE_X_BLEED } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
-import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
 
 // Must be a numeric literal so Next can statically detect ISR.
 export const revalidate = 120;
@@ -35,7 +34,6 @@ const PHOTO_HEROES: Partial<Record<HeroStyle, typeof HeroStripHome>> = {
 };
 
 export default async function Home() {
-  const origin = appUrl();
   // Auth and the homepage queries do not depend on each other. Starting
   // them together means the page is not stuck waiting for sign-in before
   // the hero, FAQs, and quotes even begin.
@@ -56,16 +54,12 @@ export default async function Home() {
     user ? getHomepageMemberNotices(user.id, user.firstName) : Promise.resolve([]),
     progressPromise,
   ]);
-  const signInHref = accountPortalHref("sign-in", `${origin}${AFTER_AUTH_PATH}`);
-  const signUpHref = accountPortalHref("sign-up", `${origin}${AFTER_AUTH_PATH}`);
 
   return (
     <div className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
       {theme.heroStyle === "cinematic" ? (
         <HeroCinematic
           overlayOpacity={theme.heroOverlayOpacity}
-          signInHref={signInHref}
-          signUpHref={signUpHref}
           siteName={theme.siteName}
           siteTagline={theme.siteTagline}
           textColor={theme.heroTextColor}
@@ -76,16 +70,12 @@ export default async function Home() {
         <HeroGlobe
           data={globe}
           isSignedIn={user !== null}
-          signInHref={signInHref}
-          signUpHref={signUpHref}
           siteName={theme.siteName}
           siteTagline={theme.siteTagline}
         />
       ) : theme.heroStyle === "parallax" ? (
         <HeroParallaxHome
           isSignedIn={user !== null}
-          signInHref={signInHref}
-          signUpHref={signUpHref}
           siteName={theme.siteName}
           siteTagline={theme.siteTagline}
           slides={slides}
@@ -93,8 +83,6 @@ export default async function Home() {
       ) : theme.heroStyle === "marquee" ? (
         <HeroMarqueeHome
           isSignedIn={user !== null}
-          signInHref={signInHref}
-          signUpHref={signUpHref}
           siteName={theme.siteName}
           siteTagline={theme.siteTagline}
           slides={slides}
@@ -103,8 +91,6 @@ export default async function Home() {
         <HeroSliderHome
           isSignedIn={user !== null}
           words={theme.sliderHeroWords}
-          signInHref={signInHref}
-          signUpHref={signUpHref}
           siteName={theme.siteName}
           siteTagline={theme.siteTagline}
           slides={slides}
@@ -116,8 +102,6 @@ export default async function Home() {
             <PhotoHero
               bgPattern={theme.heroBgPattern}
               isSignedIn={user !== null}
-              signInHref={signInHref}
-              signUpHref={signUpHref}
               siteName={theme.siteName}
               siteTagline={theme.siteTagline}
               slides={slides}
@@ -127,8 +111,6 @@ export default async function Home() {
       ) : (
         <HeroSection
           bgPattern={theme.heroBgPattern}
-          signInHref={signInHref}
-          signUpHref={signUpHref}
           siteName={theme.siteName}
           siteTagline={theme.siteTagline}
         />

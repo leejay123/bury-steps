@@ -3,7 +3,7 @@ import { ArrowRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DecorIcon } from "@/components/decor-icon";
 import { FullWidthDivider } from "@/components/full-width-divider";
-import { JoinGroupButton } from "@/components/join-group-button";
+import { HeroGuestActions } from "@/components/hero-guest-actions";
 import { ImageSlider } from "@/components/velora/image-slider";
 import type { SliderHeroWords } from "@/lib/hero-style";
 import { SAMPLE_WALK_PHOTOS } from "@/lib/sample-walk-photos";
@@ -22,16 +22,12 @@ export function HeroSliderHome({
   slides,
   words,
   isSignedIn,
-  signInHref,
-  signUpHref,
   siteName,
   siteTagline,
 }: {
   slides: SlideView[];
   words: SliderHeroWords;
   isSignedIn: boolean;
-  signInHref: string;
-  signUpHref: string;
   siteName: string;
   siteTagline: string;
 }) {
@@ -44,17 +40,7 @@ export function HeroSliderHome({
       </Link>
     </Button>
   ) : (
-    <>
-      <JoinGroupButton href={signUpHref} />
-      <Button
-        asChild
-        className="border-white/60 bg-transparent text-white hover:bg-white/10 hover:text-white"
-        size="sm"
-        variant="outline"
-      >
-        <a href={signInHref}>Sign in</a>
-      </Button>
-    </>
+    <HeroGuestActions className="contents" tone="dark" />
   );
 
   // Bottom-left, clear of the arrows (mid-height) and dots (bottom centre).

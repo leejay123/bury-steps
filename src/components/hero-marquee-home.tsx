@@ -3,7 +3,7 @@ import { ArrowRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DecorIcon } from "@/components/decor-icon";
 import { FullWidthDivider } from "@/components/full-width-divider";
-import { JoinGroupButton } from "@/components/join-group-button";
+import { HeroGuestActions } from "@/components/hero-guest-actions";
 import { Marquee3D } from "@/components/velora/3d-marquee";
 import { SAMPLE_WALK_PHOTOS } from "@/lib/sample-walk-photos";
 import type { SlideView } from "@/lib/slides";
@@ -20,15 +20,11 @@ const TILE_COUNT = 15;
 export function HeroMarqueeHome({
   slides,
   isSignedIn,
-  signInHref,
-  signUpHref,
   siteName,
   siteTagline,
 }: {
   slides: SlideView[];
   isSignedIn: boolean;
-  signInHref: string;
-  signUpHref: string;
   siteName: string;
   siteTagline: string;
 }) {
@@ -66,12 +62,7 @@ export function HeroMarqueeHome({
                 </Link>
               </Button>
             ) : (
-              <>
-                <JoinGroupButton href={signUpHref} />
-                <Button asChild size="sm" variant="outline">
-                  <a href={signInHref}>Sign in</a>
-                </Button>
-              </>
+              <HeroGuestActions className="contents" />
             )}
           </div>
         </div>

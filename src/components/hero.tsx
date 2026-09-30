@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Show } from "@clerk/nextjs";
-import { ArrowRightIcon } from "lucide-react";
+import { HeroGuestActions } from "@/components/hero-guest-actions";
 import { Button } from "@/components/ui/button";
 import { DecorIcon } from "@/components/decor-icon";
 import { FullWidthDivider } from "@/components/full-width-divider";
@@ -8,14 +8,10 @@ import { HeroCopy } from "@/components/hero-copy";
 import type { SectionBgPattern } from "@/lib/section-background";
 
 export function HeroSection({
-  signInHref,
-  signUpHref,
   bgPattern = "dots",
   siteName,
   siteTagline,
 }: {
-  signInHref: string;
-  signUpHref: string;
   bgPattern?: SectionBgPattern;
   siteName: string;
   siteTagline: string;
@@ -39,15 +35,7 @@ export function HeroSection({
                 </Button>
               </Show>
               <Show when="signed-out">
-                <Button asChild>
-                  <a href={signUpHref}>
-                    Join the group
-                    <ArrowRightIcon data-icon="inline-end" />
-                  </a>
-                </Button>
-                <Button asChild variant="outline">
-                  <a href={signInHref}>Sign in</a>
-                </Button>
+                <HeroGuestActions className="contents" />
               </Show>
             </>
           }

@@ -85,6 +85,9 @@ export function ReportsDisplaySection() {
               grid that scrolls slowly towards the horizon.
             </p>
             <p>
+              Signed-out visitors see <strong>How it works</strong> (jumps down to how the walks
+              work) and <strong>Contact us</strong> in the hero, since Sign in and Join the group
+              are already in the header; signed-in members see a button to their walks.{" "}
               <strong>Hero style</strong> on the same page picks the top of the homepage:{" "}
               <strong>Default</strong> (light hero), <strong>Video</strong> (full-bleed dark
               hero), <strong>Globe</strong> (live numbers beside a globe with moving lines; phones

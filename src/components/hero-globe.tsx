@@ -3,7 +3,7 @@ import { ArrowRightIcon, CalendarDaysIcon, FootprintsIcon, UsersIcon } from "luc
 import { Button } from "@/components/ui/button";
 import { DecorIcon } from "@/components/decor-icon";
 import { FullWidthDivider } from "@/components/full-width-divider";
-import { JoinGroupButton } from "@/components/join-group-button";
+import { HeroGuestActions } from "@/components/hero-guest-actions";
 import { BlurFade } from "@/components/velora/blur-fade";
 import { Globe, type GlobeArc } from "@/components/velora/globe";
 import { NumberTicker } from "@/components/velora/number-ticker";
@@ -44,15 +44,11 @@ const LINES: GlobeArc[] = [
 export function HeroGlobe({
   data,
   isSignedIn,
-  signInHref,
-  signUpHref,
   siteName,
   siteTagline,
 }: {
   data: HomepageGlobeData;
   isSignedIn: boolean;
-  signInHref: string;
-  signUpHref: string;
   siteName: string;
   siteTagline: string;
 }) {
@@ -102,12 +98,7 @@ export function HeroGlobe({
                     </Link>
                   </Button>
                 ) : (
-                  <>
-                    <JoinGroupButton href={signUpHref} />
-                    <Button asChild size="sm" variant="outline">
-                      <a href={signInHref}>Sign in</a>
-                    </Button>
-                  </>
+                  <HeroGuestActions className="contents" />
                 )}
               </div>
             </BlurFade>

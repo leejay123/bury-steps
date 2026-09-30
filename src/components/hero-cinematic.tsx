@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { preload } from "react-dom";
 import { Show } from "@clerk/nextjs";
-import { ArrowRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FadeIn } from "@/components/motion";
 import { HeroVideo } from "@/components/hero-video";
+import { HeroGuestActions } from "@/components/hero-guest-actions";
 
 // Optional alternative to the usual light HeroSection — a dark, video-backed
 // hero, picked in Settings → Homepage layout → Hero style. Title uses the
@@ -14,8 +14,6 @@ const heroWhiteButtonClassName = "bg-white text-black hover:bg-white/90";
 
 export function HeroCinematic({
   overlayOpacity,
-  signInHref,
-  signUpHref,
   siteName,
   siteTagline,
   textColor,
@@ -24,8 +22,6 @@ export function HeroCinematic({
 }: {
   /** 0-100 — darkness of the gradient over the video. */
   overlayOpacity: number;
-  signInHref: string;
-  signUpHref: string;
   siteName: string;
   siteTagline: string;
   /** Hex color for the eyebrow/title/tagline text. */
@@ -80,15 +76,7 @@ export function HeroCinematic({
             </Button>
           </Show>
           <Show when="signed-out">
-            <Button asChild className={heroWhiteButtonClassName} data-ripple="off" size="sm">
-              <a href={signUpHref}>
-                Join the group
-                <ArrowRightIcon data-icon="inline-end" />
-              </a>
-            </Button>
-            <Button asChild size="sm">
-              <a href={signInHref}>Sign in</a>
-            </Button>
+            <HeroGuestActions className="contents" tone="dark" />
           </Show>
         </FadeIn>
       </div>

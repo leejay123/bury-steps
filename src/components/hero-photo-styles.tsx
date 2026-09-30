@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { DecorIcon } from "@/components/decor-icon";
 import { FullWidthDivider } from "@/components/full-width-divider";
-import { JoinGroupButton } from "@/components/join-group-button";
+import { HeroGuestActions } from "@/components/hero-guest-actions";
 import { SAMPLE_WALK_PHOTOS } from "@/lib/sample-walk-photos";
 import type { SlideView } from "@/lib/slides";
 import type { SectionBgPattern } from "@/lib/section-background";
@@ -38,8 +38,6 @@ export type PhotoHeroProps = {
   bgPattern?: SectionBgPattern;
   slides: SlideView[];
   isSignedIn: boolean;
-  signInHref: string;
-  signUpHref: string;
   siteName: string;
   siteTagline: string;
 };
@@ -65,8 +63,6 @@ function PhotoImg({ photo, className }: { photo: Photo; className?: string }) {
 
 function HeroCopy({
   isSignedIn,
-  signInHref,
-  signUpHref,
   siteName,
   siteTagline,
   className,
@@ -83,12 +79,7 @@ function HeroCopy({
             </Link>
           </Button>
         ) : (
-          <>
-            <JoinGroupButton href={signUpHref} />
-            <Button asChild size="sm" variant="outline">
-              <a href={signInHref}>Sign in</a>
-            </Button>
-          </>
+          <HeroGuestActions className="contents" />
         )}
       </div>
     </div>
