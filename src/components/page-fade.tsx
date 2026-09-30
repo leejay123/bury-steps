@@ -50,6 +50,10 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
       const link = (event.target as Element | null)?.closest?.("a[href]");
       if (!(link instanceof HTMLAnchorElement)) return;
       if ((link.target && link.target !== "_self") || link.hasAttribute("download")) return;
+      // Header and menus handle their own clicks (the mobile menu closes
+      // itself in its onClick; desktop nav starts navigating on press), so
+      // leave them alone — the new page still slides in from the right side.
+      if (link.closest("header, [data-slot='popover-content'], [data-slot='dialog-content']")) return;
       const url = new URL(link.href, location.href);
       if (url.origin !== location.origin || url.pathname === location.pathname) return;
       const direction = slideDirection(location.pathname, url.pathname);
