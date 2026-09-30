@@ -152,7 +152,7 @@ export function HeroStripHome({ bgPattern, slides, ...copy }: PhotoHeroProps) {
         <motion.ul aria-hidden className="mt-8 flex w-max gap-4 px-4 will-change-transform sm:px-6" style={{ x }}>
           {photos.map((photo, i) => (
             <li className="relative aspect-[3/4] w-44 shrink-0 overflow-hidden rounded-2xl bg-muted sm:w-56" key={i}>
-              <PhotoImg photo={photo} />
+              <PhotoImg photo={photo} priority={i < 2} />
               {photo.title ? (
                 <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent px-3 pt-8 pb-2.5 text-xs font-medium text-white">
                   {photo.title}
@@ -191,7 +191,7 @@ export function HeroTilesHome({ bgPattern, slides, ...copy }: PhotoHeroProps) {
             key={i}
             transition={{ delay: 0.15 + i * 0.08, type: "spring", stiffness: 120, damping: 16 }}
           >
-            <PhotoImg photo={photo} />
+            <PhotoImg photo={photo} priority={i < 2} />
           </motion.li>
         ))}
       </ul>
@@ -267,7 +267,7 @@ function AccordionPanel({
       style={{ flexGrow }}
       type="button"
     >
-      <PhotoImg photo={photo} sizes="(max-width: 640px) 90vw, 800px" />
+      <PhotoImg photo={photo} priority={index === 0} sizes="(max-width: 640px) 90vw, 800px" />
       {photo.title ? (
         <motion.span
           className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/65 to-transparent px-3 pt-8 pb-2.5 text-left text-xs font-medium text-white"
