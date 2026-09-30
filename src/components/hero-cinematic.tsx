@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { preload } from "react-dom";
 import { Show } from "@clerk/nextjs";
 import { ArrowRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,10 +34,13 @@ export function HeroCinematic({
   videoPoster: string;
   videoSrc: string;
 }) {
+  // Start fetching the poster and film straight away. Done through React,
+  // not <link> tags inside the section: those made the page the server sent
+  // differ from the one the browser built (React error #418).
+  preload(videoPoster, { as: "image", fetchPriority: "high" });
+  preload(videoSrc, { as: "video", fetchPriority: "high" });
   return (
     <section className="relative isolate flex min-h-[50svh] items-center justify-center overflow-hidden bg-[#0a0a0c] text-center">
-      <link as="image" fetchPriority="high" href={videoPoster} rel="preload" />
-      <link as="video" fetchPriority="high" href={videoSrc} rel="preload" />
       <HeroVideo key={videoSrc} poster={videoPoster} src={videoSrc} />
       <div
         className="absolute inset-0 -z-10"
