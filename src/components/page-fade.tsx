@@ -26,7 +26,8 @@ function moving(page: HTMLElement): HTMLElement[] {
   // Everything after the heading block, at each level up to the page.
   for (let node: HTMLElement | null = heading; node && node !== page; node = node.parentElement) {
     for (let next = node.nextElementSibling; next; next = next.nextElementSibling) {
-      if (next instanceof HTMLElement) parts.push(next);
+      // Divider lines drawn under the heading stay with it.
+      if (next instanceof HTMLElement && getComputedStyle(next).position !== "absolute") parts.push(next);
     }
   }
   return parts.length ? parts : [page];
