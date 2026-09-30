@@ -38,7 +38,7 @@ const carouselControlClassName =
   "left-3 border-0 bg-background/80 text-foreground shadow-sm hover:bg-background opacity-100 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/carousel:opacity-100 [@media(hover:hover)]:group-has-[:focus-visible]/carousel:opacity-100 focus-visible:opacity-100";
 
 const noticeCardClassName =
-  "flex h-44 w-full flex-col gap-3 bg-background p-6 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:h-48 md:p-8";
+  "flex h-44 w-full flex-col gap-3 bg-background p-6 text-left transition-colors hover:bg-[color-mix(in_oklab,var(--muted)_40%,var(--background))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:h-48 md:p-8";
 
 function NoticeCarouselCard({ notice }: { notice: HomepageNoticeSlide }) {
   const content = (
