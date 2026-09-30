@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
 import { SiteNavLinks, SiteMobileMenu, type MobileMenuGroup } from "@/components/site-nav-menu";
 import { BottomNavBar } from "@/components/bottom-nav-bar";
+import { getClockInWalk } from "@/lib/clock-in-walk";
 import { getSiteTheme } from "@/lib/site-theme";
 import { SiteUserButton } from "@/components/site-user-button";
 import { JoinGroupButton } from "@/components/join-group-button";
@@ -151,20 +152,55 @@ export async function SiteMobileNav() {
 }
 
 /**
- * Phone bottom bar: the first five pages of the signed-in person's menu
- * (members: Home, Walks, Notices, Progress, History; organisers: Home,
- * Walks, Notices, Progress, Members). Everything else stays in the ☰ menu.
- * Signed-out visitors don't get one — the header has Sign in / Join.
+ * Phone bottom bar for signed-in people: four main pages + More (a sheet
+ * with the rest — the ☰ menu's pages, account and site links), and on a
+ * walk day a Clock in button in the middle (members: Home, Walks, Clock in,
+ * Notices, More). Signed-out visitors don't get one — the header has Sign
+ * in / Join.
  */
 export async function SiteBottomNav() {
   const user = await getOptionalUser();
   if (!user) return null;
+  const [theme, progressEnabled, clockIn] = await Promise.all([
+    getSiteTheme(),
+    getProgressEnabled(),
+    getClockInWalk(user.id),
+  ]);
   const isAdmin = user.role === "ADMIN";
-  const progressEnabled = await getProgressEnabled();
   const permissions = isAdmin ? (user.isOwner ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS) : undefined;
   const noticesUnread = getSiteNoticeState(user.id, user.firstName).then(({ unreadIds }) => unreadIds.length > 0);
-  const items = navItems(isAdmin, isAdmin ? "/admin" : "/walks", permissions, progressEnabled)
-    .slice(0, 5)
-    .map((item) => (item.href === "/notices" ? { ...item, dot: noticesUnread } : item));
-  return <BottomNavBar items={items} />;
+  const items = navItems(isAdmin, isAdmin ? "/admin" : "/walks", permissions, progressEnabled).map((item) =>
+    item.href === "/notices" ? { ...item, dot: noticesUnread } : item,
+  );
+  // Clock in takes a tab's spot on walk days; whatever doesn't fit goes in More.
+  const tabCount = clockIn ? 3 : 4;
+  const tabs = items.slice(0, tabCount);
+  const rest = items.slice(tabCount);
+  const facebookUrl = theme.facebookGroupUrl.trim();
+
+  return (
+    <BottomNavBar
+      clockIn={clockIn}
+      more={[
+        { label: "Pages", items: rest },
+        {
+          label: "Account",
+          items: [
+            ...(isAdmin && !rest.some((item) => item.href === "/history") ? [{ href: "/history", label: "History" }] : []),
+            { href: "/email-preferences", label: "Email preferences" },
+          ],
+        },
+        {
+          label: "More",
+          items: [
+            { href: "/contact", label: "Contact Us" },
+            ...(facebookUrl ? [{ href: facebookUrl, label: "Facebook group", newTab: true }] : []),
+            { href: "/privacy-policy", label: "Privacy Policy" },
+            { href: "/terms-of-service", label: "Terms of Service" },
+          ],
+        },
+      ]}
+      tabs={tabs}
+    />
+  );
 }

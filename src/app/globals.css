@@ -556,3 +556,11 @@ html[data-announcement-hide] [data-slot="sticky-banner"] {
     --bottom-nav-offset: calc(3.75rem + env(safe-area-inset-bottom));
   }
 }
+
+/* With the bottom bar's More tab on phones, the ☰ menu button would be a
+   second copy of the same pages — hide it there. */
+@media (width < 48rem) {
+  html:has([data-bottom-nav]) [data-mobile-nav] {
+    display: none;
+  }
+}

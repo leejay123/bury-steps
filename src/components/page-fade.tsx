@@ -88,7 +88,7 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
       const link = plainLink(event);
       // Pages opened from the phone menu just appear: the menu closing is
       // already the change people see, and a slide under it looked messy.
-      if (link?.closest("[data-slot='popover-content']")) {
+      if (link?.closest("[data-slot='popover-content'], [data-bottom-nav-sheet]")) {
         fromMenu.current = true;
         return;
       }
