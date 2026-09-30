@@ -30,7 +30,7 @@ import {
   dataListItemStackClassName,
 } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
@@ -266,6 +266,7 @@ function MemberListRow({
     >
       <DataListItemMain>
         <Avatar className="size-9 shrink-0">
+          {member.imageUrl ? <AvatarImage alt="" src={member.imageUrl} /> : null}
           <AvatarFallback className="text-xs">{initials(member.name)}</AvatarFallback>
         </Avatar>
         <DataListBody>

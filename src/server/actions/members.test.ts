@@ -51,6 +51,10 @@ const {
   };
 });
 
+vi.mock("@/lib/member-photos", () => ({
+  withMemberPhotos: vi.fn(async (rows: { id: string; imageUrl?: string | null }[]) => new Map(rows.map((row) => [row.id, row.imageUrl ?? null]))),
+  clerkPhoto: vi.fn(() => null),
+}));
 vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("@/lib/db", () => ({ prisma: { ...prismaMock, $transaction: transaction } }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
@@ -785,6 +789,7 @@ describe("searchMembers", () => {
         id: "member-1",
         name: "Jo Bloggs",
         email: "jo@example.com",
+        imageUrl: null,
         role: "MEMBER",
         createdAt: "2026-01-05T00:00:00.000Z",
         attendanceCount: 2,

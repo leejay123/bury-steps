@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { clerkPhoto } from "@/lib/member-photos";
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import { prisma } from "@/lib/db";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (evt.type === "user.created" || evt.type === "user.updated") {
-    const { id, email_addresses, primary_email_address_id, first_name, last_name } = evt.data;
+    const { id, email_addresses, primary_email_address_id, first_name, last_name, has_image, image_url } = evt.data;
     const email =
       email_addresses.find((e: { id: string; email_address: string }) => e.id === primary_email_address_id)?.email_address ??
       email_addresses[0]?.email_address ??
@@ -32,6 +33,7 @@ export async function POST(req: NextRequest) {
         email,
         firstName: first_name,
         lastName: last_name,
+        imageUrl: clerkPhoto({ hasImage: has_image, imageUrl: image_url }),
       });
     } catch (err) {
       // requireUser() will create/refresh this same row on their next visit

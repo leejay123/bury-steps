@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { clerkPhoto } from "@/lib/member-photos";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "./db";
@@ -63,6 +64,7 @@ export const getOptionalUser = cache(async (): Promise<User | null> => {
       email,
       firstName: clerkUser?.firstName ?? null,
       lastName: clerkUser?.lastName ?? null,
+      imageUrl: clerkPhoto(clerkUser),
     });
   } catch {
     return prisma.user.findUnique({ where: { clerkId: userId } });

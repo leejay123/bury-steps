@@ -5,6 +5,7 @@ import { clerkClient } from "@clerk/nextjs/server";
 import type { Prisma } from "@prisma/client";
 import { requireAdmin, displayName, getOptionalUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { withMemberPhotos } from "@/lib/member-photos";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
@@ -36,6 +37,8 @@ export type MemberRow = {
   id: string;
   name: string;
   email: string;
+  /** Their own profile photo from Clerk, or null (initials show). */
+  imageUrl: string | null;
   role: "ADMIN" | "MEMBER";
   createdAt: string;
   attendanceCount: number;
@@ -151,6 +154,9 @@ export async function searchMembers({
       take: LIST_PAGE_SIZE,
       select: {
         id: true,
+        clerkId: true,
+        imageUrl: true,
+        imageCheckedAt: true,
         firstName: true,
         lastName: true,
         email: true,
@@ -165,6 +171,7 @@ export async function searchMembers({
     getOwnerIds(),
   ]);
   const ownerIdSet = new Set(ownerIds);
+  const photos = await withMemberPhotos(members);
 
   const nowMs = now.getTime();
   return {
@@ -176,6 +183,7 @@ export async function searchMembers({
         id: member.id,
         name: displayName(member),
         email: member.email,
+        imageUrl: photos.get(member.id) ?? null,
         role: member.role,
         createdAt: member.createdAt.toISOString(),
         attendanceCount: member._count.attendances,

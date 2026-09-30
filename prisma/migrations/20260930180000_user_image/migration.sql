@@ -1,0 +1,2 @@
+ALTER TABLE "User" ADD COLUMN "imageUrl" TEXT;
+ALTER TABLE "User" ADD COLUMN "imageCheckedAt" TIMESTAMP(3);

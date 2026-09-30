@@ -27,7 +27,11 @@ export async function syncLocalUser(input: {
   email: string;
   firstName: string | null;
   lastName: string | null;
+  /** Their own photo (see clerkPhoto); left out when not known. */
+  imageUrl?: string | null;
 }): Promise<User> {
+  const photo =
+    input.imageUrl === undefined ? {} : { imageUrl: input.imageUrl, imageCheckedAt: new Date() };
   let isNewUser = false;
 
   const user = await prisma.$transaction(async (tx) => {
@@ -41,6 +45,7 @@ export async function syncLocalUser(input: {
           email: input.email,
           firstName: input.firstName,
           lastName: input.lastName,
+          ...photo,
         },
       });
     }
@@ -79,6 +84,7 @@ export async function syncLocalUser(input: {
         email: input.email,
         firstName: input.firstName,
         lastName: input.lastName,
+        ...photo,
         role: bootstrapAsAdmin ? "ADMIN" : "MEMBER",
         // The first organiser is also the site's first owner — see
         // src/lib/site-owner.ts. Plain field on this row now, not a

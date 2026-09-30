@@ -20,6 +20,11 @@ model User {
   lastName  String?
   role      Role     @default(MEMBER)
   createdAt DateTime @default(now())
+  /// Their own profile photo from Clerk, or null when they haven't added
+  /// one (Clerk's default picture isn't copied). See src/lib/member-photos.ts.
+  imageUrl       String?
+  /// When imageUrl was last fetched from Clerk.
+  imageCheckedAt DateTime?
 
   /// Walk created/updated/cancelled notices. Default on — organiser-run
   /// content, not marketing.
