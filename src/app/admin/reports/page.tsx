@@ -3,7 +3,6 @@ import { memberDisplayName, requirePermission } from "@/lib/auth";
 import { isOwner } from "@/lib/site-owner";
 import { prisma } from "@/lib/db";
 import { walkStatus } from "@/lib/walk-window";
-import { AdminPageIntro } from "../admin-page-intro";
 import { AccidentReportManager } from "./report-manager";
 
 type LinkFilter = "all" | "linked" | "unlinked";
@@ -82,11 +81,12 @@ export default async function AccidentReportsPage({
 
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
-      <AdminPageIntro
-        description="Record what happened, who was involved, and what you did. Filter by linked walk, sort by date, or search. Open a report to read the full write-up, then edit it or print a PDF."
-        title="Accident reports"
-      />
       <AccidentReportManager
+        intro={{
+          title: "Accident reports",
+          description:
+            "Record what happened, who was involved, and what you did. Filter by linked walk, sort by date, or search. Open a report to read the full write-up, then edit it or print a PDF.",
+        }}
         canCreate={admin.permReportsCreate}
         canDelete={canDelete}
         canEdit={admin.permReportsEdit}
