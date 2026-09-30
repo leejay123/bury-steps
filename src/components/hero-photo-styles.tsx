@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import {
@@ -52,12 +53,26 @@ function heroPhotos(slides: SlideView[], count: number): Photo[] {
   return Array.from({ length: Math.max(count, own.length) }, (_, i) => pool[i % pool.length]);
 }
 
-function PhotoImg({ photo, className }: { photo: Photo; className?: string }) {
+function PhotoImg({ photo, className, sizes = "(max-width: 640px) 45vw, 280px", priority = false }: {
+  photo: Photo;
+  className?: string;
+  sizes?: string;
+  priority?: boolean;
+}) {
+  // Through Next's image service: each card gets a copy sized for it (and
+  // WebP/AVIF), not the full 2000px upload. Not lazy: these are at the top
+  // of the page, and lazy pictures inside moving rows stayed blank.
   return (
-    // Not lazy: these are at the top of the page, and lazy-loading pictures
-    // inside moving rows left them blank until something nudged them.
-    // eslint-disable-next-line @next/next/no-img-element
-    <img alt="" className={cn("size-full object-cover", className)} decoding="async" src={photo.src} />
+    <Image
+      alt=""
+      className={cn("size-full object-cover", className)}
+      height={480}
+      loading="eager"
+      priority={priority}
+      sizes={sizes}
+      src={photo.src}
+      width={640}
+    />
   );
 }
 
@@ -252,7 +267,7 @@ function AccordionPanel({
       style={{ flexGrow }}
       type="button"
     >
-      <PhotoImg photo={photo} />
+      <PhotoImg photo={photo} sizes="(max-width: 640px) 90vw, 800px" />
       {photo.title ? (
         <motion.span
           className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/65 to-transparent px-3 pt-8 pb-2.5 text-left text-xs font-medium text-white"

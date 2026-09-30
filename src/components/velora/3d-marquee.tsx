@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef } from "react";
 
 import { cn } from "@/lib/utils";
@@ -94,10 +95,13 @@ export function Marquee3D({
                     const image = images[i % n];
                     const { src, alt = "" } = typeof image === "string" ? { src: image } : image;
                     return (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      // Next's image service: a tile-sized copy, not the full upload.
+                      <Image
+                        height={300}
                         key={k}
+                        sizes="(max-width: 640px) 40vw, 260px"
                         src={src}
+                        width={400}
                         // Each image's alt is read once; repeats are decorative
                         alt={copy || i >= n ? "" : alt}
                         // Eager: this is a hero at the top of the page. Lazy

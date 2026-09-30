@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
     // edit. Without these, uploaded Hero photos showed as broken images.
     // Listing patterns also blocks everything else, so the last entry keeps
     // ordinary site files (no query string) working.
+    // Sample walking photos (src/lib/sample-walk-photos.ts) fill the photo
+    // heroes until there are enough Hero photos; resized here like the rest.
+    remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com" }],
     localPatterns: [
       { pathname: "/api/slides/**" },
       { pathname: "/api/site-logo" },

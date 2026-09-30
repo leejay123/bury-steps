@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRef } from "react";
 import {
   motion,
@@ -151,11 +152,13 @@ function Row({
                 cardClassName
               )}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={item.image}
                 alt=""
-                loading="lazy"
+                height={360}
+                loading="eager"
+                sizes="(max-width: 640px) 240px, 288px"
+                width={480}
                 className="size-full object-cover transition-transform duration-500 ease-out motion-safe:group-hover/hero-card:scale-105"
               />
               <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-4 pt-10 pb-3 text-sm font-medium text-white">

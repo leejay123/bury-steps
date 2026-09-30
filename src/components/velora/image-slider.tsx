@@ -1,5 +1,6 @@
 "use client";
 
+import Image, { getImageProps } from "next/image";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
@@ -95,9 +96,14 @@ export function ImageSlider({
     return () => clearTimeout(timer);
   }, [running, index, interval, n]);
 
-  // Preload the next image
+  // Preload the next image — the same resized copy the slide will ask for.
   useEffect(() => {
-    if (n > 1) new Image().src = images[(index + 1) % n].src;
+    if (n < 2) return;
+    const { props } = getImageProps({ alt: "", fill: true, sizes: "100vw", src: images[(index + 1) % n].src });
+    const next = new window.Image();
+    if (props.sizes) next.sizes = props.sizes;
+    if (props.srcSet) next.srcset = props.srcSet;
+    next.src = props.src;
   }, [index, images, n]);
 
   const image = images[index];
@@ -162,8 +168,15 @@ export function ImageSlider({
                 }
                 className="absolute inset-0"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={image.src} alt={image.alt} draggable={false} className="size-full object-cover" />
+                <Image
+                  alt={image.alt}
+                  className="size-full object-cover"
+                  draggable={false}
+                  fill
+                  priority={index === 0}
+                  sizes="100vw"
+                  src={image.src}
+                />
               </motion.div>
             )}
           </AnimatePresence>
