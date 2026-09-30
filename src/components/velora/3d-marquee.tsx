@@ -100,7 +100,10 @@ export function Marquee3D({
                         src={src}
                         // Each image's alt is read once; repeats are decorative
                         alt={copy || i >= n ? "" : alt}
-                        loading="lazy"
+                        // Eager: this is a hero at the top of the page. Lazy
+                        // tiles on a 3D-tilted plane popped in blank after
+                        // coming back to the homepage.
+                        loading="eager"
                         draggable={false}
                         className={cn(
                           "aspect-4/3 w-full rounded-xl bg-muted object-cover shadow-lg ring-1 ring-border",

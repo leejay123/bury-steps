@@ -97,7 +97,7 @@ export function PrivacySiteSection() {
               the page slides in from the right, and back again, with walk cards cascading in;
               moving between main sections slides like tabs, following the order of the menu bar;
               pages opened from the phone menu just appear, since the menu closing is already the
-              change); or No transition. With Slide, the next page starts loading the moment you
+              change; the homepage always just appears, with no slide or fade); or No transition. With Slide, the next page starts loading the moment you
               tap, while the old one slides away, so it’s usually ready as soon as the slide ends. Walk cards (Manage walks,
               and Upcoming and All walks on Walks) open with a thin header strip showing the status
               (Upcoming, Starting soon…) on the left and the day on the right — tinted amber when a

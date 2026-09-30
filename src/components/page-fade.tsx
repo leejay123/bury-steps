@@ -2,8 +2,6 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
-// Not re-exported from next/navigation; the same enum Link uses for prefetch={true}.
-import { PrefetchKind } from "next/dist/client/components/router-reducer/router-reducer-types";
 import { animate, stagger } from "motion";
 import { slideDirection, type PageTransition } from "@/lib/page-transition";
 
@@ -64,17 +62,18 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
       }
       const url = new URL(link.href, location.href);
       if (url.origin !== location.origin || url.pathname === location.pathname) return null;
+      // The homepage never slides: it should just be there.
+      if (url.pathname === "/") return null;
       const direction = slideDirection(location.pathname, url.pathname);
       if (!direction || reducedMotion()) return null;
       return { direction, href: url.pathname + url.search + url.hash };
     };
 
     // Start loading the new page the moment it's asked for, so it arrives
-    // while the old one slides out instead of only after. A full prefetch
-    // (like the menu links) brings the page's actual content, not just its
-    // loading skeleton; a mouse press gets it going before the click lands.
-    // Next skips a prefetch it already has, so a press then a click fetches once.
-    const prefetch = (href: string) => router.prefetch(href, { kind: PrefetchKind.FULL });
+    // while the old one slides out instead of only after. Next's standard,
+    // documented prefetch — it skips one it already has, so a press then a
+    // click fetches once.
+    const prefetch = (href: string) => router.prefetch(href);
     const onPointerDown = (event: PointerEvent) => {
       // Not on touch: a finger landing on a card is as often the start of a
       // scroll as a tap, and each one would fetch a whole page.
@@ -135,7 +134,9 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
       el.style.transform = "";
       el.style.opacity = "";
     };
-    if (mode === "none" || openedFromMenu || reducedMotion()) {
+    // The homepage just appears — no slide, fade or card cascade — so its
+    // hero is simply there when you come back.
+    if (mode === "none" || openedFromMenu || pathname === "/" || reducedMotion()) {
       clear();
       return;
     }
