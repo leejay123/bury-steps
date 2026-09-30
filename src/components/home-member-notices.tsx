@@ -38,7 +38,7 @@ const carouselControlClassName =
   "left-3 border-0 bg-background/80 text-foreground shadow-sm hover:bg-background opacity-100 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/carousel:opacity-100 [@media(hover:hover)]:group-has-[:focus-visible]/carousel:opacity-100 focus-visible:opacity-100";
 
 const noticeCardClassName =
-  "flex h-44 w-full flex-col gap-3 bg-background p-6 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:h-48 sm:border-r sm:border-border md:p-8";
+  "flex h-44 w-full flex-col gap-3 bg-background p-6 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:h-48 md:p-8";
 
 function NoticeCarouselCard({ notice }: { notice: HomepageNoticeSlide }) {
   const content = (
@@ -122,39 +122,31 @@ export function HomeMemberNoticesSection({
         <FullWidthDivider position="top" />
         <div className="grid w-full grid-cols-1">
           {/*
-            1px wider than the section: every card draws its own right-hand
-            line, so the card that stops at the section's right edge put its
-            line right beside the page's border — a double line after the
-            arrows moved the row. Reaching 1px into that border lays the two
-            lines on top of each other instead.
+            The lines between cards are 1px gaps showing the border colour
+            (each card's pl-px over a border-coloured slide), with the track
+            pulled 1px left so the first card's gap sits hidden past the
+            left edge. The carousel stays inside the section: it used to
+            reach 1px into the page's right-hand line and painted over it
+            while the cards slid.
           */}
           <Carousel
-            className="group/carousel w-[calc(100%+1px)] bg-background"
+            className="group/carousel w-full"
             opts={{ loop: showControls, align: "start" }}
             plugins={showControls ? [plugin] : []}
             setApi={setApi}
           >
             {/*
-              !ml-0, not a plain -ml-0: CarouselContent's own default
-              (-ml-4, paired with each CarouselItem's default pl-4 to
-              create the usual gap) is the same property at the same
-              specificity, and Tailwind doesn't guarantee a caller's
-              override wins there based on class order in the source —
-              whichever utility happens to generate later in the build's
-              stylesheet wins regardless. This carousel wants adjoining
-              cards (the border between them *is* the gap, no padding —
-              see noticeCardClassName's border-r and pl-0 below), so it
-              needs the negative margin gone for real, not "usually".
-              Without this the leftover -ml-4 offset every card's real
-              boundary from where Embla's snap position expects it, which
-              is what showed up as a doubled border when the arrows moved
-              the track.
+              Important (!) margins and padding: CarouselContent's default
+              -ml-4 and CarouselItem's pl-4 are the same properties at the
+              same specificity, and Tailwind doesn't promise a caller's
+              class wins by source order. Leftover defaults put the cards
+              off Embla's snap points, which showed as doubled lines.
             */}
-            <CarouselContent className="!ml-0 items-stretch">
+            <CarouselContent className="!-ml-px items-stretch">
               {notices.map((notice) => (
                 <CarouselItem
                   key={notice.id}
-                  className="flex basis-full pl-0 sm:basis-1/2 lg:basis-1/3"
+                  className="flex basis-full bg-border !pl-px sm:basis-1/2 lg:basis-1/3"
                 >
                   <NoticeCarouselCard notice={notice} />
                 </CarouselItem>
