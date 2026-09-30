@@ -10,6 +10,7 @@ import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
 import { isAllowedImageMime, sniffImageMime } from "@/lib/image-bytes";
 import { stripImageMetadata } from "@/lib/strip-image-metadata";
 import type { OrganiserPermissions } from "@/lib/organiser-permissions";
+import { optimisePhoto } from "@/lib/optimise-photo";
 
 export type ActionResult =
   | { ok: true; message?: string; href?: string }
@@ -194,11 +195,18 @@ export async function readSlideImage(
   if (!mime || !isAllowedImageMime(mime)) {
     return { error: "Use a JPEG, PNG or WebP image." };
   }
-  // These are public-facing photos — strip EXIF/XMP metadata (which on a
-  // phone photo usually includes exact GPS coordinates) before it's ever
-  // written to the database.
-  const data = stripImageMetadata(raw, mime) as Uint8Array<ArrayBuffer>;
-  return { data, mime };
+  // Shrunk to a web-sized WebP (at most 2000px, never over 500 KB) so up
+  // to 15 homepage photos don't slow the page down. Re-encoding also drops
+  // EXIF/XMP metadata, which on a phone photo usually includes exact GPS
+  // coordinates. If the image can't be re-encoded, fall back to keeping it
+  // as it is minus that metadata.
+  try {
+    return { data: await optimisePhoto(raw), mime: "image/webp" };
+  } catch (err) {
+    console.error("readSlideImage: could not shrink the photo, storing it as uploaded", err);
+    const data = stripImageMetadata(raw, mime) as Uint8Array<ArrayBuffer>;
+    return { data, mime };
+  }
 }
 
 /** Same as `readSlideImage`, but treats a not-yet-chosen file as "keep the

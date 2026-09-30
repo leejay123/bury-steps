@@ -48,7 +48,10 @@ export function LimitsSection({
               clock-ins this month
             </li>
             <li>
-              <strong>Photo uploads</strong> — 4 MB
+              <strong>Photo uploads</strong> — 4 MB. Homepage and testimonial photos are then
+              shrunk automatically to a web-sized WebP (at most 2000 pixels, never over 500 KB) so
+              the homepage stays quick; photos uploaded before this are shrunk the first time
+              they&apos;re shown
             </li>
             <li>
               <strong>Clock-in window</strong> — 1 hour before start, until the walk’s

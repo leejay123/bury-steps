@@ -341,7 +341,7 @@ export function HomepageSlideManager({
             <DrawerDescription>
               {editing
                 ? "Change the photo or the short description. Save when you are done."
-                : "Add a photo for the homepage carousel. JPEG, PNG or WebP, under 4 MB."}
+                : "Add a photo for the homepage carousel. JPEG, PNG or WebP, under 4 MB — it's shrunk automatically for the web."}
             </DrawerDescription>
           </DrawerHeader>
           {mode?.type === "add" ? (
