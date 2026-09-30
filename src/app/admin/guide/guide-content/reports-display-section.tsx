@@ -93,7 +93,14 @@ export function ReportsDisplaySection() {
               scroll), <strong>3D Marquee</strong> (a tilted wall of photos scrolling up and
               down behind the name), or <strong>Photo slider</strong> (your photos full width
               with the name and buttons on top; the separate Photo slider section then hides so
-              the photos don&apos;t show twice). With Photo slider chosen, <strong>Words on the
+              the photos don&apos;t show twice). Five more photo heroes: <strong>Drifting
+              columns</strong> (a wall of photos drifting up behind a frosted panel with the name),{" "}
+              <strong>Sideways strip</strong> (a row of tall photos that slides along as you scroll),{" "}
+              <strong>Tiles fall into place</strong> (photos settle into a grid when the page opens),{" "}
+              <strong>Diagonal rows</strong> (slanted rows sliding opposite ways behind the name) and{" "}
+              <strong>Accordion panels</strong> (photo strips that open one at a time as you scroll,
+              or when pointed at or tapped). They use Hero photos too, with samples filling any gaps.
+              With Photo slider chosen, <strong>Words on the
               photo slider hero</strong> appears: the site name on every photo, each photo&apos;s
               own heading and text (set in Hero photos; blank photos show just the picture), or no
               words at all. The photo slider, the Parallax cards and the 3D Marquee all
