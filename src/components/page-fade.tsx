@@ -38,22 +38,28 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
   const ref = useRef<HTMLDivElement>(null);
   const previous = useRef<string | null>(null);
   const leaving = useRef(false);
+  const fromMenu = useRef(false);
 
   // Out first: catch clicks on links that go deeper or come back, slide the
   // current page out, then navigate. Capture phase on document runs before
   // Next's own <Link> handler, which then never sees the click.
   useEffect(() => {
-    if (mode !== "slide") return;
     const onClick = (event: MouseEvent) => {
       if (event.defaultPrevented || event.button !== 0) return;
       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const link = (event.target as Element | null)?.closest?.("a[href]");
       if (!(link instanceof HTMLAnchorElement)) return;
       if ((link.target && link.target !== "_self") || link.hasAttribute("download")) return;
-      // Header and menus handle their own clicks (the mobile menu closes
-      // itself in its onClick; desktop nav starts navigating on press), so
-      // leave them alone — the new page still slides in from the right side.
-      if (link.closest("header, [data-slot='popover-content'], [data-slot='dialog-content']")) return;
+      // Pages opened from the phone menu just appear: the menu closing is
+      // already the change people see, and a slide under it looked messy.
+      if (link.closest("[data-slot='popover-content']")) {
+        fromMenu.current = true;
+        return;
+      }
+      // Header and dialogs handle their own clicks (desktop nav starts
+      // navigating on press), so leave them alone — the new page still
+      // slides in from the right side.
+      if (mode !== "slide" || link.closest("header, [data-slot='dialog-content']")) return;
       const url = new URL(link.href, location.href);
       if (url.origin !== location.origin || url.pathname === location.pathname) return;
       const direction = slideDirection(location.pathname, url.pathname);
@@ -85,6 +91,8 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
     previous.current = pathname;
     const wasLeaving = leaving.current;
     leaving.current = false;
+    const openedFromMenu = fromMenu.current;
+    fromMenu.current = false;
     const el = ref.current;
     if (!el) return;
 
@@ -94,7 +102,7 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
       el.style.transform = "";
       el.style.opacity = "";
     };
-    if (mode === "none" || reducedMotion()) {
+    if (mode === "none" || openedFromMenu || reducedMotion()) {
       clear();
       return;
     }
