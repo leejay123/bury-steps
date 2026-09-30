@@ -21,7 +21,7 @@ import { SettingsSection } from "../settings-page";
 import { SectionBgPatternSelect } from "./section-bg-pattern-select";
 
 const HERO_STYLE_LABELS: Record<HeroStyle, string> = {
-  default: "Default (light hero + photo carousel)",
+  default: "Default (light hero)",
   cinematic: "Video (full-bleed dark hero)",
   globe: "Globe (live numbers + photo slider)",
   parallax: "Parallax (photo cards that slide as you scroll)",
