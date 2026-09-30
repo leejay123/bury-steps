@@ -150,6 +150,13 @@ export const SETTINGS_PAGE_GROUPS: SettingsPageGroup[] = [
     label: "How the site works",
     pages: [
       {
+        href: "/admin/settings/walk-essentials",
+        title: "Walk essentials",
+        description: "The tick boxes under Essentials on each walk — rename them, change icons, add or remove.",
+        keywords: "toilets parking cafe dogs facilities amenities stiles boots",
+        permission: "permWalksEdit",
+      },
+      {
         href: "/admin/settings/behaviour",
         title: "Site behaviour",
         description: "Cookie notice, back-to-top button, the Progress page, organiser invites and who gets contact messages.",

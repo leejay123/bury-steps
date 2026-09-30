@@ -3,6 +3,7 @@ import { parsePageTransition, type PageTransition } from "@/lib/page-transition"
 import { parseSliderHeroWords, type SliderHeroWords } from "@/lib/hero-style";
 import { DEFAULT_TEXT_SIZES, parseTextSize, type TextSizes } from "@/lib/text-sizes";
 import { unstable_cache } from "next/cache";
+import { DEFAULT_WALK_ESSENTIALS, parseEssentialList, type EssentialItem } from "@/lib/walk-essentials";
 import { prisma } from "@/lib/db";
 import { HOMEPAGE_CACHE_TAG, HOMEPAGE_REVALIDATE_SECONDS } from "@/lib/homepage-cache";
 import { SITE_SETTING_ID } from "@/lib/theme";
@@ -106,6 +107,8 @@ export type SiteTheme = {
   siteName: string;
   siteTagline: string;
   facebookGroupUrl: string;
+  /** Settings → Walk essentials — the tick-box list on walks. */
+  walkEssentials: EssentialItem[];
   /** Empty hides the eyebrow — unlike the title/intro, blank is a valid value here, not "unset". */
   testimonialsSectionEyebrow: string;
   testimonialsSectionTitle: string;
@@ -181,6 +184,7 @@ function defaultTheme(): SiteTheme {
     siteName: DEFAULT_SITE_NAME,
     siteTagline: DEFAULT_SITE_TAGLINE,
     facebookGroupUrl: DEFAULT_FACEBOOK_GROUP_URL,
+    walkEssentials: DEFAULT_WALK_ESSENTIALS,
     testimonialsSectionEyebrow: "",
     testimonialsSectionTitle: DEFAULT_TESTIMONIALS_SECTION_TITLE,
     testimonialsSectionIntro: DEFAULT_TESTIMONIALS_SECTION_INTRO,
@@ -252,6 +256,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       siteName: true,
       siteTagline: true,
       facebookGroupUrl: true,
+      walkEssentials: true,
       testimonialsSectionEyebrow: true,
       testimonialsSectionTitle: true,
       testimonialsSectionIntro: true,
@@ -333,6 +338,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     siteName: row?.siteName?.trim() || DEFAULT_SITE_NAME,
     siteTagline: row?.siteTagline?.trim() || DEFAULT_SITE_TAGLINE,
     facebookGroupUrl: row?.facebookGroupUrl ?? DEFAULT_FACEBOOK_GROUP_URL,
+    walkEssentials: parseEssentialList(row?.walkEssentials ?? null),
     testimonialsSectionEyebrow: row?.testimonialsSectionEyebrow?.trim() ?? "",
     testimonialsSectionTitle:
       row?.testimonialsSectionTitle?.trim() || DEFAULT_TESTIMONIALS_SECTION_TITLE,
@@ -391,7 +397,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v28"], {
+const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v29"], {
   tags: [HOMEPAGE_CACHE_TAG],
   revalidate: HOMEPAGE_REVALIDATE_SECONDS,
 });

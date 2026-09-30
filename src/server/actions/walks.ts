@@ -47,6 +47,7 @@ import {
 } from "./shared";
 import { isOwner, actorStillOwner } from "@/lib/site-owner";
 import { parseWalkEssentials } from "@/lib/walk-essentials";
+import { getSiteTheme } from "@/lib/site-theme";
 
 /** Stable unguessable id for clock-in forms. Old /w/<token> links still work. */
 const makeToken = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 12);
@@ -193,7 +194,7 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
           distance: parsed.data.distance ?? null,
           grade: parsed.data.grade ?? null,
           elevationGain: parsed.data.elevationGain ?? null,
-          essentials: parseWalkEssentials(formData.getAll("essentials")),
+          essentials: parseWalkEssentials(formData.getAll("essentials"), (await getSiteTheme()).walkEssentials),
           walkLeader: parsed.data.walkLeader ?? null,
           backMarker: parsed.data.backMarker ?? null,
           location: parsed.data.location ?? null,
@@ -725,7 +726,7 @@ export async function updateWalk(
             distance: parsed.data.distance ?? null,
             grade: parsed.data.grade ?? null,
             elevationGain: parsed.data.elevationGain ?? null,
-            essentials: parseWalkEssentials(formData.getAll("essentials")),
+            essentials: parseWalkEssentials(formData.getAll("essentials"), (await getSiteTheme()).walkEssentials),
             walkLeader: parsed.data.walkLeader ?? null,
             backMarker: parsed.data.backMarker ?? null,
             startsAt: nextStartsAt,

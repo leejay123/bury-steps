@@ -4,7 +4,8 @@ import { utcToLondonWallClock } from "@/lib/dates";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { MeetingPointFields } from "@/components/meeting-point-fields";
 import { FieldHint, FormSection } from "@/components/drawer-form";
-import { WALK_ESSENTIALS } from "@/lib/walk-essentials";
+import { essentialIcon } from "@/lib/walk-essentials";
+import { useWalkEssentials } from "@/components/walk-essentials-context";
 import { WalkDescriptionField } from "./walk-description-field";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -61,6 +62,7 @@ export function WalkFormFields({
   scheduleLocked?: boolean;
 }) {
   const id = (name: string) => `${idPrefix}-${name}`;
+  const essentials = useWalkEssentials();
 
   return (
     <div className="flex flex-col gap-6">
@@ -194,13 +196,15 @@ export function WalkFormFields({
           {/* Each item is a whole tappable row with room to breathe, rather
               than a tick box squeezed beside wrapped text. */}
           <div className="grid gap-2">
-            {WALK_ESSENTIALS.map((item) => (
+            {essentials.map((item) => {
+              const Icon = essentialIcon(item.icon);
+              return (
               <Label
                 className="flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 font-normal transition-colors has-[[data-state=checked]]:border-foreground/40 has-[[data-state=checked]]:bg-muted/60"
                 htmlFor={id(`essential-${item.key}`)}
                 key={item.key}
               >
-                <item.icon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+                <Icon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
                 <span className="flex-1">{item.label}</span>
                 <Checkbox
                   defaultChecked={defaults?.essentials.includes(item.key) ?? false}
@@ -209,7 +213,8 @@ export function WalkFormFields({
                   value={item.key}
                 />
               </Label>
-            ))}
+              );
+            })}
           </div>
         </fieldset>
         <WalkDescriptionField defaultValue={defaults?.description ?? ""} id={id("description")} />

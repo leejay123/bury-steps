@@ -1,7 +1,7 @@
 import { CalendarDays, Clock, Footprints, MapPin, Mountain, TrendingUp, Timer, UserRound, UsersRound } from "lucide-react";
 import { formatTime, formatWalkDay, formatWalkLength } from "@/lib/dates";
 import { meetingPointLabel } from "@/lib/geocode";
-import { walkEssentialItems } from "@/lib/walk-essentials";
+import { WalkEssentialPills } from "@/components/walk-essentials-context";
 
 export function WalkFacts({
   backMarker,
@@ -39,7 +39,6 @@ export function WalkFacts({
     ...(backMarker ? [{ icon: UsersRound, label: "Back marker", value: backMarker }] : []),
   ];
 
-  const essentialItems = walkEssentialItems(essentials);
 
   return (
     <div className="@container flex flex-col gap-3">
@@ -57,23 +56,7 @@ export function WalkFacts({
           </div>
         ))}
       </dl>
-      {essentialItems.length > 0 ? (
-        <div className="flex flex-col gap-1.5">
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Essentials</p>
-          {/* One row that scrolls sideways rather than wrapping onto several lines. */}
-          <ul className="flex gap-1.5 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {essentialItems.map((item) => (
-              <li
-                className="flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs whitespace-nowrap"
-                key={item.key}
-              >
-                <item.icon aria-hidden="true" className="size-3.5 text-muted-foreground" />
-                {item.label}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      <WalkEssentialPills keys={essentials} />
     </div>
   );
 }

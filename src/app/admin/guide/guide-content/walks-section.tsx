@@ -60,7 +60,9 @@ export function WalksSection({
               “213 m”), grade, walk leader and back marker. Tick any <strong>Essentials</strong>{" "}
               — toilets, parking, café, dog friendly, step-free, near public transport, boots
               recommended, stiles. Each shows on the walk page as its own line or tag, so the
-              description can stay for the story of the walk.
+              description can stay for the story of the walk. To rename these, change their
+              icons, reorder them, add your own or remove ones you don&apos;t use, go to{" "}
+              <strong>Settings → Walk essentials</strong>; changes show on every walk straight away.
             </li>
             <li>
               Most walks need nothing more for the location. For a what3words address or exact

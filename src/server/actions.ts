@@ -124,6 +124,7 @@ export {
   updateSiteLogo,
   updateSiteFavicon,
   updateReportBanner,
+  updateWalkEssentials,
 } from "./actions/site-settings";
 
 export { summarizeWalkDescription } from "./actions/walk-summarize";

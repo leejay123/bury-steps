@@ -80,6 +80,10 @@ const {
 vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("@/lib/db", () => ({ prisma: { ...prismaMock, $transaction: transaction } }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
+vi.mock("@/lib/site-theme", async () => {
+  const { DEFAULT_WALK_ESSENTIALS } = await vi.importActual<typeof import("@/lib/walk-essentials")>("@/lib/walk-essentials");
+  return { getSiteTheme: vi.fn(async () => ({ walkEssentials: DEFAULT_WALK_ESSENTIALS })) };
+});
 vi.mock("@/lib/site-owner", () => ({ isOwner, actorStillOwner }));
 vi.mock("@/lib/walk-slug", () => ({ walkShareUrl: vi.fn(() => "https://example.com/w/test") }));
 vi.mock("@/lib/walk-slug-server", () => ({ allocateWalkSlug }));

@@ -58,6 +58,7 @@ import { parseFacebookGroupUrl, parseSiteName, parseSiteTagline } from "@/lib/si
 import { MAX_MONTHLY_CLOCK_IN_GOAL } from "@/lib/walk-game";
 import { MAX_RETENTION_DAYS, parseRetentionDays } from "@/lib/walk-retention";
 import { readImageDimensions } from "@/lib/image-dimensions";
+import { MAX_WALK_ESSENTIALS, parseEssentialList } from "@/lib/walk-essentials";
 import {
   type ActionResult,
   logActionError,
@@ -1474,4 +1475,46 @@ export async function updateReportBanner(
     ok: true,
     message: removing ? "Report banner removed." : "Report banner updated.",
   };
+}
+
+/**
+ * Settings → Walk essentials: the whole tick-box list at once, as JSON
+ * [{ key, label, icon }]. Removing an item takes it off every walk's page;
+ * walks keep the key, so putting it back brings their ticks back too.
+ */
+export async function updateWalkEssentials(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permWalksEdit) return permissionDenied("permWalksEdit");
+
+  let raw: unknown;
+  try {
+    raw = JSON.parse(String(formData.get("items") ?? "[]"));
+  } catch {
+    return { ok: false, error: "Could not read the list. Try again." };
+  }
+  if (!Array.isArray(raw)) return { ok: false, error: "Could not read the list. Try again." };
+  if (raw.length > MAX_WALK_ESSENTIALS) {
+    return { ok: false, error: `Keep the list to ${MAX_WALK_ESSENTIALS} items or fewer.` };
+  }
+  if (raw.some((item) => !item || typeof item.label !== "string" || !item.label.trim())) {
+    return { ok: false, error: "Give every item a name, or remove it." };
+  }
+  const items = parseEssentialList(raw);
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, carouselEnabled: true, walkEssentials: items },
+      update: { walkEssentials: items },
+    });
+  } catch (err) {
+    return logActionError("updateWalkEssentials", err, "Could not save the list. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
+  return { ok: true, message: "Walk essentials saved." };
 }

@@ -357,6 +357,9 @@ model SiteSetting {
   siteTagline                 String   @default("Sunday afternoons, Bury and the surrounding countryside. No winners, no losers — just people walking together.")
   /// Facebook group link. Empty string hides Facebook CTAs.
   facebookGroupUrl            String   @default("https://www.facebook.com/groups/burysteps")
+  /// Settings → Walk essentials: [{ key, label, icon }]. Null until first
+  /// saved, meaning the built-in list (src/lib/walk-essentials.ts).
+  walkEssentials              Json?
   /// Homepage testimonials block.
   testimonialsEnabled         Boolean  @default(true)
   /// Optional small label above the testimonials heading. Empty hides it.
