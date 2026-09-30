@@ -1,9 +1,8 @@
 import { requirePermission } from "@/lib/auth";
 import { getEmailTemplateOverrides } from "@/server/actions";
 import { EMAIL_TEMPLATES, type EmailTemplateMeta } from "@/lib/email/registry";
-import { SettingsPage, SettingsSectionGroup } from "../settings-page";
-import { EmailTemplateEditor } from "./email-template-editor";
-import { EmailSwitches } from "./email-switches";
+import { SettingsPage } from "../settings-page";
+import { EmailList } from "./email-list";
 import { getDisabledEmailKeys } from "@/lib/email/switches";
 import { isOwner } from "@/lib/site-owner";
 
@@ -32,32 +31,17 @@ export default async function AdminEmailsSettingsPage() {
 
   return (
     <SettingsPage
-      description="Edit the subject line and intro wording for each email the site sends. The logo, layout, buttons, and any walk/message details stay fixed — only the prose is yours to change."
+      description="Every email the site sends. Tap one to edit its subject line and intro wording (the logo, layout, buttons and walk or message details stay fixed) or send yourself a test."
       title="Emails"
     >
       <section className="flex flex-col gap-3" id="sending">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Which emails are sent</h2>
-          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            {owner
-              ? "Switch any email off to stop it going to anyone. \"Send test to me\" still works for emails that are off."
-              : "Only the site owner can switch emails on or off."}
-          </p>
-        </div>
-        <EmailSwitches canEdit={owner} disabled={[...disabled]} groups={groups} />
+        <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          {owner
+            ? "The switch beside each email turns it on or off for everyone. \"Send test to me\" still works for emails that are off."
+            : "Only the site owner can switch emails on or off."}
+        </p>
+        <EmailList canSwitch={owner} disabled={[...disabled]} groups={groups} overrides={overrides} />
       </section>
-      {groups.map(({ category, templates }) => (
-        <SettingsSectionGroup key={category} title={category}>
-          {templates.map((meta) => (
-            <EmailTemplateEditor
-              key={meta.key}
-              meta={meta}
-              off={disabled.has(meta.key)}
-              override={overrides[meta.key]}
-            />
-          ))}
-        </SettingsSectionGroup>
-      ))}
     </SettingsPage>
   );
 }

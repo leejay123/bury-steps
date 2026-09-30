@@ -164,7 +164,7 @@ export function ReportsDisplaySection() {
               automatically to check them.
             </p>
             <p>
-              <strong>Settings → Emails → Which emails are sent</strong> has an on/off switch for
+              <strong>Settings → Emails</strong> lists every email; tap one to edit its wording or send yourself a test in a drawer. Each has an on/off switch for
               every email the site sends (welcome, new walk, walk cancelled, new notice, monthly
               progress, contact alerts and so on). Only the owner can change them. An email that&apos;s
               off isn&apos;t sent to anyone until it&apos;s switched back on; &ldquo;Send test to me&rdquo; still
