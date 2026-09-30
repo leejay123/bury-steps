@@ -19,7 +19,7 @@ export function SettingsBackLink() {
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
       <Link
-        className="inline-flex items-center gap-1.5 font-medium text-muted-foreground hover:text-foreground"
+        className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
         href="/admin/settings"
         onClick={() => unlockIdleDocument()}
       >
