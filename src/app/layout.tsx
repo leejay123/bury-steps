@@ -62,8 +62,8 @@ export async function generateViewport(): Promise<Viewport> {
     themeColor: "#111111",
     width: "device-width",
     initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
+    // Pinch-to-zoom stays allowed (accessibility: plenty of members want
+    // bigger text). Form fields are 16px+, so iOS doesn't zoom on focus.
     viewportFit: "cover",
     // Chrome/Android: resize the layout with the keyboard instead of
     // overlaying it (that overlay is what feels like a zoom/jump).

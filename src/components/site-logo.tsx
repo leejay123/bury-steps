@@ -7,11 +7,14 @@ export function SiteLogo({
   alt = "Bury Steps Walking Group",
   className,
   src = DEFAULT_LOGO_SRC,
+  sizes = "64px",
 }: {
   alt?: string;
   className?: string;
   /** Pass the admin-uploaded logo's URL (from `SiteTheme.logoSrc`) to override the bundled default. */
   src?: string;
+  /** How wide the logo shows — the header's is about 32px, the printed report's 56px. */
+  sizes?: string;
 }) {
   return (
     <Image
@@ -19,6 +22,7 @@ export function SiteLogo({
       className={cn("h-8 w-auto object-contain object-left", className)}
       height={448}
       priority
+      sizes={sizes}
       src={src}
       width={419}
     />

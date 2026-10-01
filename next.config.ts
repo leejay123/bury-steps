@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
     // ordinary site files (no query string) working.
     // Sample walking photos (src/lib/sample-walk-photos.ts) fill the photo
     // heroes until there are enough Hero photos; resized here like the rest.
+    // Resized photos are kept a month (default: a day). Each upload's
+    // address carries a ?v= tag that changes when it's replaced, so a new
+    // photo is never hidden behind an old copy.
+    minimumCacheTTL: 2678400,
     remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com" }],
     localPatterns: [
       { pathname: "/api/slides/**" },

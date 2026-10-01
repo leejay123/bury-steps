@@ -86,7 +86,7 @@ export function PrintReport({
           <p className="text-xs tracking-[0.18em] uppercase">Bury Steps Walking Group</p>
           <h1 className="text-2xl font-semibold">Accident report</h1>
         </div>
-        <SiteLogo className="h-12 w-auto shrink-0 print:h-14" src={logoSrc} />
+        <SiteLogo className="h-12 w-auto shrink-0 print:h-14" sizes="160px" src={logoSrc} />
       </div>
 
       <dl className="grid grid-cols-[7.5rem_1fr] gap-x-4 gap-y-1.5 text-sm">

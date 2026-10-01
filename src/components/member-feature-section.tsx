@@ -66,6 +66,8 @@ export function MemberFeatureSection({ progressEnabled = true }: { progressEnabl
   }
   return (
     <div className="relative w-full">
+      {/* Screen-reader heading so the cards' h3s follow an h2, not the hero's h1. */}
+      <h2 className="sr-only">Your walking group</h2>
       <DecorIcon className="size-4" position="bottom-left" />
       <DecorIcon className="size-4" position="bottom-right" />
       <div className="grid w-full grid-cols-1 gap-px bg-border sm:grid-cols-3">
