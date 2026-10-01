@@ -12,16 +12,5 @@
       "path": "/api/cron/monthly-progress",
       "schedule": "0 6 1 * *"
     }
-  ],
-  "headers": [
-    {
-      "source": "/:id([0-9a-f]{16})/script.js",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=15552000, stale-while-revalidate=86400"
-        }
-      ]
-    }
   ]
 }
