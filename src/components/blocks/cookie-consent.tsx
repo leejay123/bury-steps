@@ -72,6 +72,11 @@ interface CookieConsentProps extends React.HTMLAttributes<HTMLDivElement> {
   onDeclineCallback?: () => void;
   description?: string;
   learnMoreHref?: string;
+  /** The server already knows there's no consent cookie: show the banner in
+   * the first HTML, rather than only once the page's code has loaded. On
+   * phones a banner that popped in late was the "largest paint" PageSpeed
+   * waited for, which made the whole page score as slow. */
+  initiallyOpen?: boolean;
 }
 
 const CookieConsent = React.forwardRef<HTMLDivElement, CookieConsentProps>(
@@ -84,14 +89,15 @@ const CookieConsent = React.forwardRef<HTMLDivElement, CookieConsentProps>(
       className,
       description = "We use cookies to ensure you get the best experience on our website. For more information on how we use cookies, please see our cookie policy.",
       learnMoreHref = "#",
+      initiallyOpen = false,
       ...props
     },
     ref,
   ) => {
     const titleId = React.useId();
     const localRef = React.useRef<HTMLDivElement | null>(null);
-    const [isOpen, setIsOpen] = React.useState(false);
-    const [hide, setHide] = React.useState(true);
+    const [isOpen, setIsOpen] = React.useState(initiallyOpen);
+    const [hide, setHide] = React.useState(!initiallyOpen);
 
     const setRefs = React.useCallback(
       (node: HTMLDivElement | null) => {

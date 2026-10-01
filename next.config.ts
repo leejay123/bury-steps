@@ -17,6 +17,9 @@ const nextConfig: NextConfig = {
     // address carries a ?v= tag that changes when it's replaced, so a new
     // photo is never hidden behind an old copy.
     minimumCacheTTL: 2678400,
+    // Hero photos ask for 70 (smaller files, no visible difference); 75 is
+    // Next's default for everything else.
+    qualities: [70, 75],
     remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com" }],
     localPatterns: [
       { pathname: "/api/slides/**" },
@@ -27,6 +30,10 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
+    // The site's styles (about 30 KB) go inside each page instead of a
+    // separate file the phone has to fetch before it can draw anything —
+    // PageSpeed's "render-blocking requests", ~0.75 s on a slow phone.
+    inlineCss: true,
     serverActions: {
       bodySizeLimit: "4mb",
     },

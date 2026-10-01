@@ -69,6 +69,7 @@ function PhotoImg({ photo, className, sizes = "(max-width: 640px) 45vw, 280px", 
       height={480}
       loading="eager"
       priority={priority}
+      quality={70}
       sizes={sizes}
       src={photo.src}
       width={640}
@@ -191,7 +192,7 @@ export function HeroTilesHome({ bgPattern, slides, ...copy }: PhotoHeroProps) {
             key={i}
             transition={{ delay: 0.15 + i * 0.08, type: "spring", stiffness: 120, damping: 16 }}
           >
-            <PhotoImg photo={photo} priority={i < 2} />
+            <PhotoImg photo={photo} priority={i < 2} sizes="(max-width: 640px) 31vw, 300px" />
           </motion.li>
         ))}
       </ul>
