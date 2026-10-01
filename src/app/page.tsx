@@ -59,6 +59,7 @@ export default async function Home() {
     <div className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
       {theme.heroStyle === "cinematic" ? (
         <HeroCinematic
+          isSignedIn={user !== null}
           overlayOpacity={theme.heroOverlayOpacity}
           siteName={theme.siteName}
           siteTagline={theme.siteTagline}
@@ -110,6 +111,7 @@ export default async function Home() {
         })()
       ) : (
         <HeroSection
+          isSignedIn={user !== null}
           bgPattern={theme.heroBgPattern}
           siteName={theme.siteName}
           siteTagline={theme.siteTagline}

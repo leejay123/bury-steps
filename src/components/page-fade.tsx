@@ -172,10 +172,13 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
       return;
     }
 
-    const direction = mode === "slide" && from !== null ? slideDirection(from, pathname) : 0;
-    // Bottom bar tabs are like switching tabs in an app: the cards come in
-    // sideways with the page, not rising up (which looked like a jump).
-    const cardsSideways = mode === "slide" && openedFromBottomBar;
+    // Bottom bar tabs are like switching tabs in an app: the page and its
+    // cards slide in sideways, towards the tab you tapped, whichever page
+    // transition is chosen (with Rise up, the first tap rose instead and
+    // looked wrong next to the sliding tab pill).
+    const tabSwitch = openedFromBottomBar && from !== null;
+    const direction = (mode === "slide" || tabSwitch) && from !== null ? slideDirection(from, pathname) : 0;
+    const cardsSideways = tabSwitch && direction !== 0;
     const runs: { complete: () => void }[] = [];
     let watcher: MutationObserver | null = null;
     if (mode === "slide" || mode === "rise") {
@@ -201,7 +204,9 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
     }
 
     if (from !== null && from !== pathname) {
-      const run = mode === "rise"
+      const run = cardsSideways
+        ? animate(el, { opacity: [0.3, 1], x: [direction * DISTANCE, 0] }, { duration: DURATION, ease: EASE })
+        : mode === "rise"
         ? // Like the walk cards: rise 14px into place while fading in.
           animate(el, { opacity: [0, 1], y: [14, 0] }, { duration: 0.28, ease: EASE })
         : direction

@@ -12,6 +12,7 @@ import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { shadcn } from "@clerk/themes";
 import { Toaster } from "@/components/ui/sonner";
 import { AFTER_AUTH_PATH, appUrl, SIGN_IN_URL, SIGN_UP_URL } from "@/lib/urls";
@@ -72,12 +73,40 @@ export async function generateViewport(): Promise<Viewport> {
   };
 }
 
+/** Signed in or not, from the server — no browser code needed. */
+async function isSignedIn() {
+  try {
+    return Boolean((await auth()).userId);
+  } catch {
+    // Pages outside the middleware (a missing static file's 404) have no
+    // auth context — treat them as signed out.
+    return false;
+  }
+}
+
+/**
+ * Clerk's browser code (about 200 KB, and some of the longest start-up
+ * work on a phone) is only needed by signed-in people — their account
+ * menu, sign out, impersonation. Signed-out visitors get plain Sign in /
+ * Join links to the account site, so for them it's left out entirely;
+ * signing in on the account site brings them back signed in, and the
+ * server (Clerk's middleware) picks the session up from there.
+ */
+function ClerkWhenSignedIn({
+  children,
+  signedIn,
+  ...props
+}: React.ComponentProps<typeof ClerkProvider> & { signedIn: boolean }) {
+  if (!signedIn) return <>{children}</>;
+  return <ClerkProvider {...props}>{children}</ClerkProvider>;
+}
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Preview only. The live domain uses Clerk's CNAME. Production unique
   // *.vercel.app URLs (Vercel screenshots) must not set this — there is no
   // proxy URL registered on the Clerk instance, so /__clerk returns 400.
   const useVercelAppProxy = process.env.VERCEL_ENV === "preview";
-  const theme = await getSiteTheme();
+  const [theme, signedIn] = await Promise.all([getSiteTheme(), isSignedIn()]);
   const font = siteFontById(theme.siteFont);
   const face = siteFontFace(theme.siteFont);
 
@@ -105,7 +134,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {`try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch {}`}
         </Script>
         <StaleDeployReload />
-        <ClerkProvider
+        <ClerkWhenSignedIn
+          signedIn={signedIn}
           {...(useVercelAppProxy ? { proxyUrl: "/__clerk" } : {})}
           appearance={{
             theme: shadcn,
@@ -265,7 +295,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Suspense fallback={null}>
             <BackToTopGate />
           </Suspense>
-        </ClerkProvider>
+        </ClerkWhenSignedIn>
         {/*
           Vercel Analytics and Speed Insights are cookieless — page views and
           performance samples use a request-time hash, not a client-side

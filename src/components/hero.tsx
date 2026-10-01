@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Show } from "@clerk/nextjs";
 import { HeroGuestActions } from "@/components/hero-guest-actions";
 import { Button } from "@/components/ui/button";
 import { DecorIcon } from "@/components/decor-icon";
@@ -9,10 +8,12 @@ import type { SectionBgPattern } from "@/lib/section-background";
 
 export function HeroSection({
   bgPattern = "dots",
+  isSignedIn,
   siteName,
   siteTagline,
 }: {
   bgPattern?: SectionBgPattern;
+  isSignedIn: boolean;
   siteName: string;
   siteTagline: string;
 }) {
@@ -28,16 +29,13 @@ export function HeroSection({
         <HeroCopy
           bgPattern={bgPattern}
           actions={
-            <>
-              <Show when="signed-in">
-                <Button asChild variant="outline">
-                  <Link href="/walks">Your walks</Link>
-                </Button>
-              </Show>
-              <Show when="signed-out">
-                <HeroGuestActions className="contents" />
-              </Show>
-            </>
+            isSignedIn ? (
+              <Button asChild variant="outline">
+                <Link href="/walks">Your walks</Link>
+              </Button>
+            ) : (
+              <HeroGuestActions className="contents" />
+            )
           }
           title={siteName}
           titleAs="h1"
