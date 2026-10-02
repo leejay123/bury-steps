@@ -1,7 +1,12 @@
 import { redirect } from "next/navigation";
 import { SITE_WORDING_PAGES } from "@/lib/settings-pages";
 
-export const dynamic = "force-dynamic";
+
+// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
+// Remove this opt-out after verifying the segment passes validation without it.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 
 /**
  * Site wording is five short pages (see SITE_WORDING_PAGES), reached from

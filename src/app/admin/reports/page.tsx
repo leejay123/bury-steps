@@ -5,6 +5,11 @@ import { prisma } from "@/lib/db";
 import { walkStatus } from "@/lib/walk-window";
 import { AccidentReportManager } from "./report-manager";
 
+// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
+// Remove this opt-out after verifying the segment passes validation without it.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 type LinkFilter = "all" | "linked" | "unlinked";
 type SortOrder = "desc" | "asc";
 
@@ -26,7 +31,6 @@ function buildWhere(link: LinkFilter): Prisma.AccidentReportWhereInput | undefin
   return undefined;
 }
 
-export const dynamic = "force-dynamic";
 
 export default async function AccidentReportsPage({
   searchParams,

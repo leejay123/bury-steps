@@ -11,7 +11,12 @@ import { SETTINGS_PAGE_GROUPS, SITE_WORDING_PAGES } from "@/lib/settings-pages";
 import { SettingsPage } from "./settings-page";
 import { SettingsHub, type SettingsHubGroup, type SettingsRowState } from "./settings-hub";
 
-export const dynamic = "force-dynamic";
+
+// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
+// Remove this opt-out after verifying the segment passes validation without it.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 
 function isSet(name: string): boolean {
   return Boolean(process.env[name]?.trim());

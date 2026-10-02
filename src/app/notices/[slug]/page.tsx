@@ -8,7 +8,12 @@ import { getPageNoticeBySlug } from "@/lib/site-notices";
 import { Badge } from "@/components/ui/badge";
 import { MarkNoticeReadOnView } from "./mark-notice-read-on-view";
 
-export const dynamic = "force-dynamic";
+
+// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
+// Remove this opt-out after verifying the segment passes validation without it.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 
 export async function generateMetadata({
   params,

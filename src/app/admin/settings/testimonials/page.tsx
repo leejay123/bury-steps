@@ -4,7 +4,12 @@ import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { HomepageTestimonialManager } from "../../homepage/testimonial-manager";
 import { SettingsPage } from "../settings-page";
 
-export const dynamic = "force-dynamic";
+
+// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
+// Remove this opt-out after verifying the segment passes validation without it.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 
 export default async function TestimonialsSettingsPage() {
   await requirePermission("permHomepage");
