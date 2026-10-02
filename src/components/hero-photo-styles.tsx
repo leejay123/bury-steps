@@ -8,7 +8,6 @@ import {
   motion,
   useMotionValue,
   useMotionValueEvent,
-  useReducedMotion,
   useScroll,
   useSpring,
   useTransform,
@@ -170,9 +169,13 @@ export function HeroStripHome({ bgPattern, slides, ...copy }: PhotoHeroProps) {
 /* ------------------------------------------------------------------ */
 /* Tiles fall into place                                               */
 
-/** Photos start tossed about and settle one by one into a tidy grid under the name. */
+/**
+ * Photos start tossed about and settle one by one into a tidy grid under the
+ * name — on computers only (CSS, sm and up, and not for reduced motion). On
+ * phones the tiles are simply there from the first paint: the animation
+ * delayed the page's main picture and cost start-up time on slower phones.
+ */
 export function HeroTilesHome({ bgPattern, slides, ...copy }: PhotoHeroProps) {
-  const reduce = useReducedMotion();
   const photos = heroPhotos(slides, 8).slice(0, 8);
 
   return (
@@ -181,19 +184,23 @@ export function HeroTilesHome({ bgPattern, slides, ...copy }: PhotoHeroProps) {
       <HeroCopy {...copy} className={copyPadding} />
       <ul aria-hidden className="mt-8 grid grid-cols-3 gap-3 px-4 sm:grid-cols-4 sm:px-6">
         {photos.map((photo, i) => (
-          <motion.li
-            animate={{ opacity: 1, x: 0, y: 0, rotate: 0, scale: 1 }}
-            className={cn("aspect-[4/3] overflow-hidden rounded-xl bg-muted", i >= 6 && "hidden sm:block")}
-            initial={
-              reduce
-                ? false
-                : { opacity: 0, x: ((i * 73) % 160) - 80, y: 90 + ((i * 41) % 90), rotate: ((i * 37) % 40) - 20, scale: 0.85 }
-            }
+          <li
+            className={cn(
+              "aspect-[4/3] overflow-hidden rounded-xl bg-muted sm:motion-safe:animate-tile-settle",
+              i >= 6 && "hidden sm:block",
+            )}
             key={i}
-            transition={{ delay: 0.15 + i * 0.08, type: "spring", stiffness: 120, damping: 16 }}
+            style={
+              {
+                "--tile-x": `${((i * 73) % 160) - 80}px`,
+                "--tile-y": `${90 + ((i * 41) % 90)}px`,
+                "--tile-rotate": `${((i * 37) % 40) - 20}deg`,
+                animationDelay: `${150 + i * 80}ms`,
+              } as React.CSSProperties
+            }
           >
             <PhotoImg photo={photo} priority={i < 2} sizes="(max-width: 640px) 31vw, 300px" />
-          </motion.li>
+          </li>
         ))}
       </ul>
     </HeroFrame>
