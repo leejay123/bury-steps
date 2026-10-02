@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { HeroSection } from "@/components/hero";
 import { HeroCinematic } from "@/components/hero-cinematic";
 import { HeroGlobe } from "@/components/hero-globe";
@@ -34,26 +35,11 @@ const PHOTO_HEROES: Partial<Record<HeroStyle, typeof HeroStripHome>> = {
 };
 
 export default async function Home() {
-  // Auth and the homepage queries do not depend on each other. Starting
-  // them together means the page is not stuck waiting for sign-in before
-  // the hero, FAQs, and quotes even begin.
-  const userPromise = getOptionalUser();
-  const globePromise = getHomepageGlobeData();
-  const slidesPromise = getHomepageSlides();
-  const testimonialsPromise = getHomepageTestimonials();
-  const faqPromise = getHomepageFaqData();
-  const themePromise = getSiteTheme();
-  const progressPromise = getProgressEnabled();
-  const user = await userPromise;
-  const [globe, slides, testimonials, faqData, theme, memberNotices, progressEnabled] = await Promise.all([
-    globePromise,
-    slidesPromise,
-    testimonialsPromise,
-    faqPromise,
-    themePromise,
-    user ? getHomepageMemberNotices(user.id, user.firstName) : Promise.resolve([]),
-    progressPromise,
-  ]);
+  // Only what the hero needs is awaited here, so the hero — in whichever
+  // style is chosen — is part of the first paint, never a guessed skeleton.
+  // The sections below stream in behind their own Suspense boundary.
+  const [user, theme, slides] = await Promise.all([getOptionalUser(), getSiteTheme(), getHomepageSlides()]);
+  const globe = theme.heroStyle === "globe" ? await getHomepageGlobeData() : null;
 
   return (
     <div className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
@@ -67,7 +53,7 @@ export default async function Home() {
           videoPoster={heroVideoPoster(theme.heroVideoKey)}
           videoSrc={heroVideoSrc(theme.heroVideoKey)}
         />
-      ) : theme.heroStyle === "globe" ? (
+      ) : theme.heroStyle === "globe" && globe ? (
         <HeroGlobe
           data={globe}
           isSignedIn={user !== null}
@@ -117,44 +103,69 @@ export default async function Home() {
           siteTagline={theme.siteTagline}
         />
       )}
-      <HomeWelcome
-        aboutExpect={theme.aboutExpect}
-        aboutExpectHeading={theme.aboutExpectHeading}
-        aboutGoals={theme.aboutGoals}
-        aboutGoalsHeading={theme.aboutGoalsHeading}
-        aboutPlaces={theme.aboutPlaces}
-        aboutPlacesHeading={theme.aboutPlacesHeading}
-        aboutRules={theme.aboutRules}
-        aboutRulesHeading={theme.aboutRulesHeading}
-        facebookGroupUrl={theme.facebookGroupUrl}
-        faqCategories={faqData.categories}
-        faqSectionIntro={theme.faqSectionIntro}
-        faqSectionTitle={theme.faqSectionTitle}
-        faqs={faqData.faqs}
-        homepageSectionOrder={theme.homepageSectionOrder}
-        howThisStartedBody={theme.howThisStartedBody}
-        howThisStartedEyebrow={theme.howThisStartedEyebrow}
-        howThisStartedTeaser={theme.howThisStartedTeaser}
-        howThisStartedTitle={theme.howThisStartedTitle}
-        isSignedIn={user !== null}
-        memberNotices={memberNotices}
-        memberNoticesEnabled={theme.memberNoticesEnabled}
-        photos={slides}
-        // The Photo slider hero already shows these photos — don't repeat them below.
-        photosEnabled={theme.carouselEnabled && theme.heroStyle !== "slider"}
-        titleRevealEnabled={theme.titleRevealEnabled}
-        progressEnabled={progressEnabled}
-        sectionBgPatterns={{
-          howThisStarted: theme.howThisStartedBgPattern,
-          testimonials: theme.testimonialsBgPattern,
-          memberNotices: theme.memberNoticesBgPattern,
-          faqs: theme.faqsBgPattern,
-        }}
-        testimonials={testimonials}
-        testimonialsSectionEyebrow={theme.testimonialsSectionEyebrow}
-        testimonialsSectionIntro={theme.testimonialsSectionIntro}
-        testimonialsSectionTitle={theme.testimonialsSectionTitle}
-      />
+      <Suspense fallback={<div aria-hidden className="min-h-[60vh]" />}>
+        <HomeSections slides={slides} theme={theme} user={user} />
+      </Suspense>
     </div>
+  );
+}
+
+/** Everything below the hero. Streams in after the hero has painted; its
+ * data is cached, so it's normally there a moment later. */
+async function HomeSections({
+  slides,
+  theme,
+  user,
+}: {
+  slides: Awaited<ReturnType<typeof getHomepageSlides>>;
+  theme: Awaited<ReturnType<typeof getSiteTheme>>;
+  user: Awaited<ReturnType<typeof getOptionalUser>>;
+}) {
+  const [testimonials, faqData, memberNotices, progressEnabled] = await Promise.all([
+    getHomepageTestimonials(),
+    getHomepageFaqData(),
+    user ? getHomepageMemberNotices(user.id, user.firstName) : Promise.resolve([]),
+    getProgressEnabled(),
+  ]);
+
+  return (
+    <HomeWelcome
+      aboutExpect={theme.aboutExpect}
+      aboutExpectHeading={theme.aboutExpectHeading}
+      aboutGoals={theme.aboutGoals}
+      aboutGoalsHeading={theme.aboutGoalsHeading}
+      aboutPlaces={theme.aboutPlaces}
+      aboutPlacesHeading={theme.aboutPlacesHeading}
+      aboutRules={theme.aboutRules}
+      aboutRulesHeading={theme.aboutRulesHeading}
+      facebookGroupUrl={theme.facebookGroupUrl}
+      faqCategories={faqData.categories}
+      faqSectionIntro={theme.faqSectionIntro}
+      faqSectionTitle={theme.faqSectionTitle}
+      faqs={faqData.faqs}
+      homepageSectionOrder={theme.homepageSectionOrder}
+      howThisStartedBody={theme.howThisStartedBody}
+      howThisStartedEyebrow={theme.howThisStartedEyebrow}
+      howThisStartedTeaser={theme.howThisStartedTeaser}
+      howThisStartedTitle={theme.howThisStartedTitle}
+      isSignedIn={user !== null}
+      memberNotices={memberNotices}
+      memberNoticesEnabled={theme.memberNoticesEnabled}
+      photos={slides}
+      // The Photo slider hero already shows these photos — don't repeat them below.
+      photosEnabled={theme.carouselEnabled && theme.heroStyle !== "slider"}
+      titleRevealEnabled={theme.titleRevealEnabled}
+      progressEnabled={progressEnabled}
+      sectionBgPatterns={{
+        howThisStarted: theme.howThisStartedBgPattern,
+        testimonials: theme.testimonialsBgPattern,
+        memberNotices: theme.memberNoticesBgPattern,
+        faqs: theme.faqsBgPattern,
+      }}
+      testimonials={testimonials}
+      testimonialsSectionEyebrow={theme.testimonialsSectionEyebrow}
+      testimonialsSectionIntro={theme.testimonialsSectionIntro}
+      testimonialsSectionTitle={theme.testimonialsSectionTitle}
+    />
   );
 }
