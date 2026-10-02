@@ -10,7 +10,6 @@ import {
   type HomepageNoticeSlide,
 } from "@/components/home-member-notices";
 import { FullWidthDivider } from "@/components/full-width-divider";
-import { Button } from "@/components/ui/button";
 import type { TestimonialView } from "@/lib/testimonials";
 import type { FaqCategoryView, FaqView } from "@/lib/faqs";
 import type { AboutRule } from "@/lib/homepage-copy";
@@ -147,7 +146,6 @@ export function HomeWelcome({
               facebookGroupUrl={facebookGroupUrl}
               howThisStartedBody={howThisStartedBody}
               howThisStartedTitle={howThisStartedTitle}
-              trigger={<Button variant="outline">Read more</Button>}
             />
           }
           eyebrow={howThisStartedEyebrow || null}
