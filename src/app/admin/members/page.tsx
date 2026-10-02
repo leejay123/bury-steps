@@ -12,11 +12,6 @@ import { AdminPageIntro } from "../admin-page-intro";
 import { EmptyState } from "@/components/empty-state";
 import { DataList, DataListBody, DataListItem } from "@/components/data-list";
 
-// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
-// Remove this opt-out after verifying the segment passes validation without it.
-// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
-export const instant = false;
-
 function parseRoleFilter(raw: string | undefined): MemberRoleFilter {
   if (raw === "ADMIN" || raw === "MEMBER") return raw;
   return "all";

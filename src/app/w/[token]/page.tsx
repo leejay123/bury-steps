@@ -21,11 +21,6 @@ import { WalkLivePanel } from "./walk-live-panel";
 import { WalkShareStatusChrome, WalkShareWhileOpen } from "./walk-share-status";
 
 
-// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
-// Remove this opt-out after verifying the segment passes validation without it.
-// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
-export const instant = false;
-
 
 // Cached per request so generateMetadata and the page body share one lookup.
 const getWalkByShareKey = cache((key: string) =>

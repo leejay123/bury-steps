@@ -13,11 +13,6 @@ import { OrganiserInviteToggle } from "./organiser-invite-toggle";
 import { ContactMessagesOwnerSettings } from "./contact-messages-owner-settings";
 
 
-// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
-// Remove this opt-out after verifying the segment passes validation without it.
-// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
-export const instant = false;
-
 
 export default async function SiteBehaviourSettingsPage() {
   await requirePermission("permDisplay");

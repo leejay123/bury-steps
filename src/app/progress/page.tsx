@@ -10,11 +10,6 @@ import { EmptyState } from "@/components/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { ProgressBoard } from "./progress-board";
 
-// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
-// Remove this opt-out after verifying the segment passes validation without it.
-// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
-export const instant = false;
-
 export const metadata: Metadata = {
   title: "Progress",
   robots: { index: false, follow: false },
@@ -36,13 +31,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default async function ProgressPage() {
-  const user = await requireUser();
-  // Site-wide switch (Settings → Site behaviour) — off 404s the
-  // page for every signed-in account, organisers included, same as any
-  // other gated page (see requirePermission's own doc comment for why
-  // a plain 404 rather than a distinguishable "disabled" message).
-  if (!(await getProgressEnabled())) notFound();
+export default function ProgressPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-1.5">
@@ -54,10 +43,20 @@ export default async function ProgressPage() {
       </div>
       {/* The heading shows straight away; only the numbers wait. */}
       <Suspense fallback={<ProgressSkeleton />}>
-        <ProgressBody userId={user.id} />
+        <ProgressForMember />
       </Suspense>
     </div>
   );
+}
+
+async function ProgressForMember() {
+  const user = await requireUser();
+  // Site-wide switch (Settings → Site behaviour) — off 404s the
+  // page for every signed-in account, organisers included, same as any
+  // other gated page (see requirePermission's own doc comment for why
+  // a plain 404 rather than a distinguishable "disabled" message).
+  if (!(await getProgressEnabled())) notFound();
+  return <ProgressBody userId={user.id} />;
 }
 
 async function ProgressBody({ userId }: { userId: string }) {

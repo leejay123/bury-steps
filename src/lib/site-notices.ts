@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { unstable_cache } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { prisma } from "@/lib/db";
 import {
   personalizeNotice,
@@ -99,19 +99,23 @@ async function loadSiteNoticeCategories(): Promise<CachedCategory[]> {
   }));
 }
 
-const getCachedSiteNotices = unstable_cache(loadSiteNotices, ["site-notices", "v10"], {
-  tags: [NOTICES_CACHE_TAG],
-  revalidate: HOMEPAGE_REVALIDATE_SECONDS,
-});
+/** Saved copy (Next.js "use cache"): refreshed every HOMEPAGE_REVALIDATE_SECONDS, and at once
+ * when a setting is saved (revalidateTag on its tag). */
+async function getCachedSiteNotices() {
+  "use cache";
+  cacheTag(NOTICES_CACHE_TAG);
+  cacheLife({ revalidate: HOMEPAGE_REVALIDATE_SECONDS });
+  return loadSiteNotices();
+}
 
-const getCachedSiteNoticeCategories = unstable_cache(
-  loadSiteNoticeCategories,
-  ["site-notice-categories", "v1"],
-  {
-    tags: [NOTICES_CACHE_TAG],
-    revalidate: HOMEPAGE_REVALIDATE_SECONDS,
-  },
-);
+/** Saved copy (Next.js "use cache"): refreshed every HOMEPAGE_REVALIDATE_SECONDS, and at once
+ * when a setting is saved (revalidateTag on its tag). */
+async function getCachedSiteNoticeCategories() {
+  "use cache";
+  cacheTag(NOTICES_CACHE_TAG);
+  cacheLife({ revalidate: HOMEPAGE_REVALIDATE_SECONDS });
+  return loadSiteNoticeCategories();
+}
 
 function reviveNotices(rows: CachedNotice[]): NoticeView[] {
   return sortNoticesNewestFirst(
@@ -126,16 +130,25 @@ function reviveNotices(rows: CachedNotice[]): NoticeView[] {
 /** All notices for organiser settings (welcome first, then newest).
  * Re-attaches pageBody for PAGE notices so the edit form still has the
  * full article text — the shared cache stays lean for the bell/homepage. */
+/** Full-page notices' article text — a saved copy like the list itself,
+ * refreshed when a notice is saved. */
+async function getCachedPageBodies(ids: string[]) {
+  "use cache";
+  cacheTag(NOTICES_CACHE_TAG);
+  cacheLife({ revalidate: HOMEPAGE_REVALIDATE_SECONDS });
+  return prisma.siteNotice.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, pageBody: true },
+  });
+}
+
 export async function getSiteNotices(): Promise<NoticeView[]> {
   try {
     const notices = sortNoticesForAdmin(reviveNotices(await getCachedSiteNotices()));
     const pageIds = notices.filter((notice) => notice.kind === "PAGE").map((notice) => notice.id);
     if (pageIds.length === 0) return notices;
 
-    const bodies = await prisma.siteNotice.findMany({
-      where: { id: { in: pageIds } },
-      select: { id: true, pageBody: true },
-    });
+    const bodies = await getCachedPageBodies(pageIds);
     const byId = new Map(bodies.map((row) => [row.id, row.pageBody]));
     return notices.map((notice) =>
       notice.kind === "PAGE" ? { ...notice, pageBody: byId.get(notice.id) ?? null } : notice,
