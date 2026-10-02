@@ -183,7 +183,12 @@ export function HeroTilesHome({ bgPattern, slides, ...copy }: PhotoHeroProps) {
         {photos.map((photo, i) => (
           <motion.li
             animate={{ opacity: 1, x: 0, y: 0, rotate: 0, scale: 1 }}
-            className={cn("aspect-[4/3] overflow-hidden rounded-xl bg-muted", i >= 6 && "hidden sm:block")}
+            // Phones: no fall-into-place — the tiles just sit in place
+            // (overrides the animation's own styles below the sm breakpoint).
+            className={cn(
+              "aspect-[4/3] overflow-hidden rounded-xl bg-muted max-sm:!transform-none max-sm:!opacity-100",
+              i >= 6 && "hidden sm:block",
+            )}
             initial={
               reduce
                 ? false
