@@ -923,6 +923,8 @@ export type MemberHistoryItem = {
 export async function getMemberHistory(userId: string): Promise<{
   name: string;
   email: string;
+  /** Their own profile photo from Clerk, or null (initials show). */
+  imageUrl: string | null;
   role: "ADMIN" | "MEMBER";
   createdAt: string;
   walkCount: number;
@@ -971,10 +973,12 @@ export async function getMemberHistory(userId: string): Promise<{
     prisma.attendance.count({ where: { userId } }),
   ]);
   if (!member) return null;
+  const photos = await withMemberPhotos([member]);
 
   return {
     name: displayName(member),
     email: member.email,
+    imageUrl: photos.get(member.id) ?? null,
     role: member.role,
     createdAt: member.createdAt.toISOString(),
     walkCount: member._count.walksCreated,

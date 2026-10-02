@@ -10,7 +10,7 @@ import { walkStatus } from "@/lib/walk-window";
 import { isOwner } from "@/lib/site-owner";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { AttendanceHistory } from "@/components/attendance-history";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MemberDetailActions } from "./member-detail-actions";
@@ -53,6 +53,7 @@ export default async function MemberDetailPage({
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 gap-3">
             <Avatar className="size-12 shrink-0">
+              {member.imageUrl ? <AvatarImage alt="" src={member.imageUrl} /> : null}
               <AvatarFallback>{initials(member.name)}</AvatarFallback>
             </Avatar>
             <div className="flex min-w-0 flex-col gap-1.5">
