@@ -76,13 +76,16 @@ export function ReportsDisplaySection() {
               <strong>homepage section order</strong> (blocks below the hero —{" "}
               <strong>Photo slider</strong>, <strong>How walks work</strong>,{" "}
               <strong>How this started</strong>, <strong>Latest notices</strong>,{" "}
-              <strong>Testimonials</strong>, <strong>FAQs</strong>) and whether the{" "}
+              <strong>Testimonials</strong>, <strong>Apps for our walks</strong>,{" "}
+              <strong>FAQs</strong>) and whether the{" "}
               <strong>photo slider</strong>, <strong>Animate section titles</strong> (section
               headings fade in word by word as you scroll) and{" "}
               <strong>Latest notices</strong> show. <strong>Background patterns</strong> sets a
               backdrop for each section: dot grid, grid lines, crosses, diagonal lines, or{" "}
               <strong>Stars</strong>, which drift slowly upwards, or <strong>Retro grid</strong>, a
-              grid that scrolls slowly towards the horizon.
+              grid that scrolls slowly towards the horizon. <strong>Apps for our walks</strong>{" "}
+              links to what3words (exact meeting points) and HiiKER (hiking maps) on the App
+              Store and Google Play; it sits just above the FAQs to begin with.
             </p>
             <p>
               Signed-out visitors see <strong>How it works</strong> (jumps down to how the walks

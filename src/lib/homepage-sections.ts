@@ -4,6 +4,7 @@ const HOMEPAGE_SECTION_IDS = [
   "howThisStarted",
   "memberNotices",
   "testimonials",
+  "walkApps",
   "faqs",
 ] as const;
 
@@ -17,6 +18,7 @@ export const HOMEPAGE_SECTION_LABELS: Record<HomepageSectionId, string> = {
   howThisStarted: "How this started",
   memberNotices: "Latest notices (members)",
   testimonials: "Testimonials",
+  walkApps: "Apps for our walks",
   faqs: "FAQs",
 };
 
@@ -38,14 +40,20 @@ export function parseHomepageSectionOrder(raw: string): HomepageSectionId[] | "i
 
 /** Sections added after an order was saved go first, so the page they were
  * on before (the photo slider sat straight under the hero) doesn't change
- * until an organiser moves them. */
+ * until an organiser moves them — except Apps for our walks, which goes
+ * just above the FAQs (or last), not straight under the hero. */
 export function normalizeHomepageSectionOrder(raw: string | null | undefined): HomepageSectionId[] {
   const text = raw?.trim() ?? "";
   const parsed = parseHomepageSectionOrder(text);
   if (parsed !== "invalid") return parsed;
   const saved = text.split(",").map((part) => part.trim()).filter(Boolean);
-  const missing = HOMEPAGE_SECTION_IDS.filter((id) => !saved.includes(id));
-  const upgraded = parseHomepageSectionOrder([...missing, ...saved].join(","));
+  const missing = HOMEPAGE_SECTION_IDS.filter((id) => !saved.includes(id) && id !== "walkApps");
+  const merged = [...missing, ...saved];
+  if (!saved.includes("walkApps")) {
+    const faqs = merged.indexOf("faqs");
+    merged.splice(faqs === -1 ? merged.length : faqs, 0, "walkApps");
+  }
+  const upgraded = parseHomepageSectionOrder(merged.join(","));
   return upgraded === "invalid" ? DEFAULT_HOMEPAGE_SECTION_ORDER : upgraded;
 }
 

@@ -27,12 +27,19 @@ describe("normalizeHomepageSectionOrder", () => {
   it("puts the photo slider first in an order saved before it was a section", () => {
     expect(normalizeHomepageSectionOrder("faqs,howWalksWork,howThisStarted,memberNotices,testimonials")).toEqual([
       "photos",
+      "walkApps",
       "faqs",
       "howWalksWork",
       "howThisStarted",
       "memberNotices",
       "testimonials",
     ]);
+  });
+
+  it("puts Apps for our walks just above the FAQs in an order saved before it existed", () => {
+    expect(
+      normalizeHomepageSectionOrder("photos,howWalksWork,howThisStarted,memberNotices,testimonials,faqs"),
+    ).toEqual(["photos", "howWalksWork", "howThisStarted", "memberNotices", "testimonials", "walkApps", "faqs"]);
   });
 
   it("falls back to the default for rubbish", () => {
