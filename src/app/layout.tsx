@@ -11,7 +11,7 @@ import { Suspense } from "react";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { ClerkProvider } from "@clerk/nextjs";
+import { LazyClerkProvider } from "@/components/clerk-lazy";
 import { auth } from "@clerk/nextjs/server";
 import { shadcn } from "@clerk/themes";
 import { Toaster } from "@/components/ui/sonner";
@@ -96,9 +96,9 @@ function ClerkWhenSignedIn({
   children,
   signedIn,
   ...props
-}: React.ComponentProps<typeof ClerkProvider> & { signedIn: boolean }) {
+}: React.ComponentProps<typeof LazyClerkProvider> & { signedIn: boolean }) {
   if (!signedIn) return <>{children}</>;
-  return <ClerkProvider {...props}>{children}</ClerkProvider>;
+  return <LazyClerkProvider {...props}>{children}</LazyClerkProvider>;
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
