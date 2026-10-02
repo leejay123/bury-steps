@@ -33,6 +33,11 @@ const PHOTO_HEROES: Partial<Record<HeroStyle, typeof HeroStripHome>> = {
   accordion: HeroAccordionHome,
 };
 
+// Still blocks on the session for now: the hero's buttons depend on who's
+// signed in. Converting means moving those buttons behind their own
+// Suspense in every hero style.
+export const instant = false;
+
 export default async function Home() {
   // Only what the hero needs is awaited here, so the hero — in whichever
   // style is chosen — is part of the first paint, never a guessed skeleton.

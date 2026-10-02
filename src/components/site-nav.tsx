@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { getOptionalUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
@@ -189,6 +190,8 @@ export async function SiteBottomNav() {
       />
     );
   }
+  // The Clock in button depends on today's time — worked out per visit.
+  await connection();
   const [progressEnabled, clockIn] = await Promise.all([getProgressEnabled(), getClockInWalk(user.id)]);
   const isAdmin = user.role === "ADMIN";
   const permissions = isAdmin ? (user.isOwner ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS) : undefined;
