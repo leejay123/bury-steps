@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { prisma } from "@/lib/db";
 import { requireAnyPermission } from "@/lib/auth";
 import { CreateWalkDrawer } from "./create-walk-drawer";
@@ -39,69 +41,6 @@ export default async function AdminPage() {
   // don't need their own way into this page.
   const admin = await requireAnyPermission(["permWalksView", "permWalksCreate"]);
 
-  // A Create-only organiser (no View) never sees the list below at all —
-  // no need to even query it for them.
-  let upcoming: ReturnType<typeof toRow>[] = [];
-  let past: ReturnType<typeof toRow>[] = [];
-  if (admin.permWalksView) {
-    const lookback = upcomingListLookbackFrom();
-    const base = {
-      id: true,
-      title: true,
-      location: true,
-      startsAt: true,
-      durationMins: true,
-      endedAt: true,
-      cancelledAt: true,
-    } as const;
-
-    const [recent, older] = await Promise.all([
-      prisma.walk.findMany({
-        where: { startsAt: { gte: lookback } },
-        orderBy: { startsAt: "asc" },
-        take: 200,
-        select: {
-          ...base,
-          // Full clock-in count for History; still-on-walk for Upcoming's
-          // "On the walk" label (early leavers stay in History totals).
-          _count: { select: { attendances: true } },
-          attendances: {
-            where: { clockedOutAt: null },
-            select: { id: true },
-          },
-        },
-      }),
-      prisma.walk.findMany({
-        where: { startsAt: { lt: lookback } },
-        orderBy: { startsAt: "desc" },
-        // A weekly walk never missed would take ~19 years to reach this —
-        // comfortably past the lifetime of this app — so it never trims a
-        // realistic History tab. It exists purely as a backstop against an
-        // unbounded query if the group's data ever grows in an unexpected way.
-        take: 1000,
-        select: {
-          ...base,
-          _count: { select: { attendances: true } },
-        },
-      }),
-    ]);
-
-    upcoming = recent
-      .filter((walk) => walkStatus(walk) !== "completed")
-      .map((walk) =>
-        toRow({
-          ...walk,
-          _count: { attendances: walk.attendances.length },
-        }),
-      );
-    past = [
-      ...recent.filter((walk) => walkStatus(walk) === "completed"),
-      ...older,
-    ]
-      .sort((a, b) => b.startsAt.getTime() - a.startsAt.getTime())
-      .map(toRow);
-  }
-
   return (
     <div className="flex flex-col gap-8 px-4 py-6 md:px-6">
       {admin.permWalksView ? (
@@ -111,33 +50,10 @@ export default async function AdminPage() {
             description="Upcoming walks, and every finished walk. Filter by status, sort by date, or search. Open a walk to share the link, cancel it, reopen it, or remove it. Long walks stay under Upcoming until clock-in closes."
             title="Walks"
           />
-          <Tabs className="w-full" defaultValue="upcoming">
-            <TabsList>
-              <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
-              <TabsTrigger value="past">History ({past.length})</TabsTrigger>
-            </TabsList>
-            <TabsContent
-              className="mt-4 data-[state=inactive]:hidden"
-              forceMount
-              value="upcoming"
-            >
-              <AdminWalkTable
-                attendanceLabel="On the walk"
-                emptyDescription="Create one and it will show here."
-                emptyTitle="No walks scheduled"
-                scope="upcoming"
-                walks={upcoming}
-              />
-            </TabsContent>
-            <TabsContent className="mt-4" value="past">
-              <AdminWalkTable
-                emptyDescription="Finished walks will show here."
-                emptyTitle="No past walks yet"
-                scope="past"
-                walks={past}
-              />
-            </TabsContent>
-          </Tabs>
+          {/* The heading and Create button show straight away; only the list waits. */}
+          <Suspense fallback={<AdminWalksSkeleton />}>
+            <AdminWalksTabs />
+          </Suspense>
         </section>
       ) : admin.permWalksCreate ? (
         // Create without View: no list to attach the button to (see the
@@ -151,6 +67,117 @@ export default async function AdminPage() {
           />
         </section>
       ) : null}
+    </div>
+  );
+}
+
+/** The Upcoming / History tabs — the part of the page that waits for data. */
+async function AdminWalksTabs() {
+  // A Create-only organiser (no View) never sees the list below at all —
+  // no need to even query it for them.
+  const lookback = upcomingListLookbackFrom();
+  const base = {
+    id: true,
+    title: true,
+    location: true,
+    startsAt: true,
+    durationMins: true,
+    endedAt: true,
+    cancelledAt: true,
+  } as const;
+
+  const [recent, older] = await Promise.all([
+    prisma.walk.findMany({
+      where: { startsAt: { gte: lookback } },
+      orderBy: { startsAt: "asc" },
+      take: 200,
+      select: {
+        ...base,
+        // Full clock-in count for History; still-on-walk for Upcoming's
+        // "On the walk" label (early leavers stay in History totals).
+        _count: { select: { attendances: true } },
+        attendances: {
+          where: { clockedOutAt: null },
+          select: { id: true },
+        },
+      },
+    }),
+    prisma.walk.findMany({
+      where: { startsAt: { lt: lookback } },
+      orderBy: { startsAt: "desc" },
+      // A weekly walk never missed would take ~19 years to reach this —
+      // comfortably past the lifetime of this app — so it never trims a
+      // realistic History tab. It exists purely as a backstop against an
+      // unbounded query if the group's data ever grows in an unexpected way.
+      take: 1000,
+      select: {
+        ...base,
+        _count: { select: { attendances: true } },
+      },
+    }),
+  ]);
+
+  const upcoming = recent
+    .filter((walk) => walkStatus(walk) !== "completed")
+    .map((walk) =>
+      toRow({
+        ...walk,
+        _count: { attendances: walk.attendances.length },
+      }),
+    );
+  const past = [
+    ...recent.filter((walk) => walkStatus(walk) === "completed"),
+    ...older,
+  ]
+    .sort((a, b) => b.startsAt.getTime() - a.startsAt.getTime())
+    .map(toRow);
+
+  return (
+    <Tabs className="w-full" defaultValue="upcoming">
+      <TabsList>
+        <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
+        <TabsTrigger value="past">History ({past.length})</TabsTrigger>
+      </TabsList>
+      <TabsContent
+        className="mt-4 data-[state=inactive]:hidden"
+        forceMount
+        value="upcoming"
+      >
+        <AdminWalkTable
+          attendanceLabel="On the walk"
+          emptyDescription="Create one and it will show here."
+          emptyTitle="No walks scheduled"
+          scope="upcoming"
+          walks={upcoming}
+        />
+      </TabsContent>
+      <TabsContent className="mt-4" value="past">
+        <AdminWalkTable
+          emptyDescription="Finished walks will show here."
+          emptyTitle="No past walks yet"
+          scope="past"
+          walks={past}
+        />
+      </TabsContent>
+    </Tabs>
+  );
+}
+
+/** Same shape as the tabs and walk cards that replace it. */
+function AdminWalksSkeleton() {
+  return (
+    <div className="flex flex-col gap-4">
+      <Skeleton className="h-9 w-56 rounded-lg" />
+      <div className="flex flex-col divide-y overflow-hidden rounded-xl border">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i}>
+            <div className="h-7 border-b bg-muted/60" />
+            <div className="p-3">
+              <Skeleton className="h-10 w-full" />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

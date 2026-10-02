@@ -9,13 +9,10 @@ function StatSkeleton() {
   );
 }
 
-export default function Loading() {
+/** Same shape as the stats, badges, Together and This month sections. */
+export function ProgressSkeleton() {
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-1.5">
-        <Skeleton className="h-8 w-32" />
-        <Skeleton className="h-4 w-full max-w-lg" />
-      </div>
+    <>
 
       {/* Mirrors the This month/This year/Weeks stat row. */}
       <section className="overflow-hidden rounded-xl border">
@@ -62,6 +59,6 @@ export default function Loading() {
           ))}
         </div>
       </section>
-    </div>
+    </>
   );
 }

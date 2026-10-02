@@ -1,4 +1,7 @@
+import { Suspense } from "react";
 import Link from "next/link";
+import type { User } from "@prisma/client";
+import { Skeleton } from "@/components/ui/skeleton";
 import { redirect } from "next/navigation";
 import { Footprints } from "lucide-react";
 import { prisma } from "@/lib/db";
@@ -27,6 +30,25 @@ export default async function DashboardPage() {
     redirect("/admin");
   }
 
+  return (
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-1.5">
+        <h1 className="text-lg font-semibold tracking-tight">Walks</h1>
+        <p className="text-sm text-muted-foreground">
+          Member since {formatDate(user.createdAt)} · {formatMembershipAge(user.createdAt)}. Upcoming
+          walks you can clock in to. Cancelled walks are in All walks, alongside completed ones.
+          Past walks you attended are in History.
+        </p>
+      </div>
+      {/* The heading shows straight away; only the walks wait for data. */}
+      <Suspense fallback={<WalksListSkeleton />}>
+        <WalksBody user={user} />
+      </Suspense>
+    </div>
+  );
+}
+
+async function WalksBody({ user }: { user: User }) {
   // Reaching this far means the viewer is a plain member (the owner, like
   // any admin, was already redirected away above) — so a cancelled walk
   // stays non-clickable here. Cancelled walks aren't hidden entirely, just
@@ -115,20 +137,12 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <div className="flex flex-col gap-8">
+    <>
       <MemberWelcomeDialog
         firstName={user.firstName}
         hasNoWalks={totalAttendanceCount === 0}
         userId={user.id}
       />
-      <div className="flex flex-col gap-1.5">
-        <h1 className="text-lg font-semibold tracking-tight">Walks</h1>
-        <p className="text-sm text-muted-foreground">
-          Member since {formatDate(user.createdAt)} · {formatMembershipAge(user.createdAt)}. Upcoming
-          walks you can clock in to. Cancelled walks are in All walks, alongside completed ones.
-          Past walks you attended are in History.
-        </p>
-      </div>
 
       <Tabs defaultValue="upcoming">
         <TabsList>
@@ -210,6 +224,25 @@ export default async function DashboardPage() {
           />
         </section>
       ) : null}
+    </>
+  );
+}
+
+/** Same shape as the Tabs bar and walk cards that replace it. */
+function WalksListSkeleton() {
+  return (
+    <div className="flex flex-col gap-4">
+      <Skeleton className="h-9 w-56 rounded-lg" />
+      {[0, 1, 2].map((i) => (
+        <div className="overflow-hidden rounded-xl border" key={i}>
+          <div className="h-7 border-b bg-muted/60" />
+          <div className="space-y-3 p-4">
+            <Skeleton className="h-5 w-2/3" />
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-9 w-28" />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

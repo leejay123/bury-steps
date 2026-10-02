@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
+import { ProgressSkeleton } from "./progress-skeleton";
 import { notFound } from "next/navigation";
 import { Footprints } from "lucide-react";
 import { requireUser } from "@/lib/auth";
@@ -37,12 +39,6 @@ export default async function ProgressPage() {
   // other gated page (see requirePermission's own doc comment for why
   // a plain 404 rather than a distinguishable "disabled" message).
   if (!(await getProgressEnabled())) notFound();
-  const game = await loadWalkGame(user.id);
-
-  const togetherPct = game.together
-    ? Math.min(100, Math.round((game.together.count / game.together.goal) * 100))
-    : 0;
-
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-1.5">
@@ -52,6 +48,23 @@ export default async function ProgressPage() {
           Only signed-in members see this.
         </p>
       </div>
+      {/* The heading shows straight away; only the numbers wait. */}
+      <Suspense fallback={<ProgressSkeleton />}>
+        <ProgressBody userId={user.id} />
+      </Suspense>
+    </div>
+  );
+}
+
+async function ProgressBody({ userId }: { userId: string }) {
+  const game = await loadWalkGame(userId);
+
+  const togetherPct = game.together
+    ? Math.min(100, Math.round((game.together.count / game.together.goal) * 100))
+    : 0;
+
+  return (
+    <>
 
       <section className="overflow-hidden rounded-xl border">
         <div className="grid grid-cols-1 sm:grid-cols-3">
@@ -129,6 +142,6 @@ export default async function ProgressPage() {
           <ProgressBoard board={game.board} />
         )}
       </section>
-    </div>
+    </>
   );
 }
