@@ -45,7 +45,9 @@ export async function GET(
   return new NextResponse(Buffer.from(bytes), {
     headers: {
       "Content-Type": type,
-      "Cache-Control": "public, max-age=86400, s-maxage=86400, immutable",
+      // A year: every link to a photo carries ?v=<last saved>, so a
+      // replaced photo gets a new address and is never served stale.
+      "Cache-Control": "public, max-age=31536000, s-maxage=31536000, immutable",
       "X-Content-Type-Options": "nosniff",
     },
   });
