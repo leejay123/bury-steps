@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { Skeleton } from "@/components/ui/skeleton";
 import { prisma } from "@/lib/db";
 import { requireAnyPermission } from "@/lib/auth";
@@ -78,6 +79,8 @@ export default async function AdminPage() {
 
 /** The Upcoming / History tabs — the part of the page that waits for data. */
 async function AdminWalksTabs() {
+  // Upcoming vs History depends on the time now — worked out per visit.
+  await connection();
   // A Create-only organiser (no View) never sees the list below at all —
   // no need to even query it for them.
   const lookback = upcomingListLookbackFrom();
