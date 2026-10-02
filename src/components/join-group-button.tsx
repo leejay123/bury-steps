@@ -12,15 +12,17 @@ const loadMetalFx = () => (metalFxPromise ??= import("metal-fx").then((mod) => m
 
 export function JoinGroupButton({ href }: { href: string }) {
   // The silver shimmer is a WebGL effect — a large script and a shader to
-  // compile (about a second of work on a slow phone). The plain black
-  // button shows first; the shimmer is added on the visitor's first move,
-  // scroll, tap or key press, so it never competes with the page loading
-  // (and speed tests, which never touch the page, don't count it).
+  // compile. Computers only (a mouse and hover): it's added on the first
+  // mouse move or key press, after the page has loaded. Phones keep the
+  // plain black button — preparing the effect on the first touch froze the
+  // page for about a second, so the tap that triggered it seemed to do
+  // nothing (and it costs battery).
   const [MetalFx, setMetalFx] = useState<MetalFxComponent | null>(null);
 
   useEffect(() => {
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
     let cancelled = false;
-    const events = ["pointermove", "pointerdown", "scroll", "keydown", "touchstart"] as const;
+    const events = ["mousemove", "keydown"] as const;
     const start = () => {
       for (const name of events) window.removeEventListener(name, start);
       void loadMetalFx().then((component) => {

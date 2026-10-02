@@ -21,6 +21,7 @@ import {
   MessageSquare,
   ShieldCheck,
   SlidersHorizontal,
+  Smartphone,
   UserPlus,
   Users,
   type LucideIcon,
@@ -50,6 +51,7 @@ const ICONS: Record<string, LucideIcon> = {
   "Email preferences": Mail,
   "Contact Us": MessageCircle,
   "Facebook group": Facebook,
+  "Walking apps": Smartphone,
   "Privacy Policy": ShieldCheck,
   "Terms of Service": FileText,
   // Signed-out visitors' tabs.
@@ -168,7 +170,12 @@ export function BottomNavBar({
     return (
       <li className="flex" key={item.href}>
         {item.href.startsWith("/") ? (
-          <Link aria-current={active ? "page" : undefined} className={tabClass(active)} href={item.href}>
+          // Full prefetch: these pages are dynamic, and by default Next only
+          // loads them up to their loading skeleton — so the first tap slid
+          // in a grey outline that the real page then snapped over (the
+          // "jump"). With the whole page loaded ahead, every tap slides in
+          // the real thing. Only the few tabs on the bar are fetched.
+          <Link aria-current={active ? "page" : undefined} className={tabClass(active)} href={item.href} prefetch>
             <Tab active={active} icon={ICONS[item.label] ?? House} label={item.label}>
               {item.dot ? (
                 <Suspense fallback={null}>

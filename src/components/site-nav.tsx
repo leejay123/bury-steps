@@ -98,6 +98,7 @@ export async function SiteMobileNav() {
     label: "More",
     items: [
       { href: "/contact", label: "Contact Us" },
+      { href: "/apps", label: "Walking apps" },
       ...(facebookUrl ? [{ href: facebookUrl, label: "Facebook group", newTab: true }] : []),
       { href: "/privacy-policy", label: "Privacy Policy" },
       { href: "/terms-of-service", label: "Terms of Service" },
@@ -174,6 +175,7 @@ export async function SiteBottomNav() {
           {
             label: "More",
             items: [
+              { href: "/apps", label: "Walking apps" },
               { href: "/privacy-policy", label: "Privacy Policy" },
               { href: "/terms-of-service", label: "Terms of Service" },
             ],
@@ -214,6 +216,7 @@ export async function SiteBottomNav() {
           label: "More",
           items: [
             { href: "/contact", label: "Contact Us" },
+            { href: "/apps", label: "Walking apps" },
             ...(facebookUrl ? [{ href: facebookUrl, label: "Facebook group", newTab: true }] : []),
             { href: "/privacy-policy", label: "Privacy Policy" },
             { href: "/terms-of-service", label: "Terms of Service" },

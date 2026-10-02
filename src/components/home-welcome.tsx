@@ -1,5 +1,4 @@
 import { Fragment, type ReactNode } from "react";
-import { WalkAppsSection } from "@/components/walk-apps-section";
 import { HomeAboutDrawer } from "@/components/home-about-drawer";
 import { FeatureSection } from "@/components/feature-section";
 import { MemberFeatureSection } from "@/components/member-feature-section";
@@ -173,7 +172,6 @@ export function HomeWelcome({
           title={testimonialsSectionTitle}
         />
       ) : null,
-    walkApps: <WalkAppsSection />,
     faqs:
       faqs.length > 0 ? (
         <FaqsSection
@@ -196,7 +194,6 @@ export function HomeWelcome({
   const bgPatterns: Record<HomepageSectionId, SectionBgPattern> = {
     howWalksWork: "none",
     photos: "none",
-    walkApps: "none",
     ...sectionBgPatterns,
     howThisStarted: "none",
     testimonials: "none",

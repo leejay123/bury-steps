@@ -30,14 +30,14 @@ const WALK_APPS: WalkApp[] = [
 ];
 
 /**
- * Homepage section (Settings → Homepage layout → Apps for our walks): the
- * two free apps the group uses, each with App Store and Google Play links
- * that open the store on the visitor's phone.
+ * The Walking apps page (/apps, linked from the footer and the phone
+ * menu's More): the two free apps the group uses, each with App Store and
+ * Google Play links.
  */
 export function WalkAppsSection() {
   return (
     <section>
-      <HeroCopy eyebrow={null} title="Apps for our walks" titleAs="h2">
+      <HeroCopy eyebrow={null} title="Apps for our walks" titleAs="h1">
         <p>Two free apps that make walking with us easier. Download them before your first walk.</p>
       </HeroCopy>
       <div className="relative w-full">

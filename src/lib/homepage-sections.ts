@@ -4,7 +4,6 @@ const HOMEPAGE_SECTION_IDS = [
   "howThisStarted",
   "memberNotices",
   "testimonials",
-  "walkApps",
   "faqs",
 ] as const;
 
@@ -18,7 +17,6 @@ export const HOMEPAGE_SECTION_LABELS: Record<HomepageSectionId, string> = {
   howThisStarted: "How this started",
   memberNotices: "Latest notices (members)",
   testimonials: "Testimonials",
-  walkApps: "Apps for our walks",
   faqs: "FAQs",
 };
 
@@ -40,20 +38,17 @@ export function parseHomepageSectionOrder(raw: string): HomepageSectionId[] | "i
 
 /** Sections added after an order was saved go first, so the page they were
  * on before (the photo slider sat straight under the hero) doesn't change
- * until an organiser moves them — except Apps for our walks, which goes
- * just above the FAQs (or last), not straight under the hero. */
+ * until an organiser moves them. */
 export function normalizeHomepageSectionOrder(raw: string | null | undefined): HomepageSectionId[] {
   const text = raw?.trim() ?? "";
   const parsed = parseHomepageSectionOrder(text);
   if (parsed !== "invalid") return parsed;
   const saved = text.split(",").map((part) => part.trim()).filter(Boolean);
-  const missing = HOMEPAGE_SECTION_IDS.filter((id) => !saved.includes(id) && id !== "walkApps");
-  const merged = [...missing, ...saved];
-  if (!saved.includes("walkApps")) {
-    const faqs = merged.indexOf("faqs");
-    merged.splice(faqs === -1 ? merged.length : faqs, 0, "walkApps");
-  }
-  const upgraded = parseHomepageSectionOrder(merged.join(","));
+  // Sections that no longer exist (e.g. Apps for our walks, now its own
+  // page) are dropped rather than invalidating the whole saved order.
+  const known = saved.filter((id) => (HOMEPAGE_SECTION_IDS as readonly string[]).includes(id));
+  const missing = HOMEPAGE_SECTION_IDS.filter((id) => !known.includes(id));
+  const upgraded = parseHomepageSectionOrder([...missing, ...known].join(","));
   return upgraded === "invalid" ? DEFAULT_HOMEPAGE_SECTION_ORDER : upgraded;
 }
 

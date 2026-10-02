@@ -63,7 +63,9 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
   const previous = useRef<string | null>(null);
   const leaving = useRef(false);
   const fromMenu = useRef(false);
-  const fromBottomBar = useRef(false);
+  // Set when a bottom bar tab is tapped: which way to slide (+1 = the tab
+  // is to the right of the current one), or 0 when it's not a tab tap.
+  const fromBottomBar = useRef<-1 | 0 | 1>(0);
 
   // Out first: catch clicks on links that go deeper or come back, slide the
   // current page out, then navigate. Capture phase on document runs before
@@ -109,7 +111,18 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
 
     const onClick = (event: MouseEvent) => {
       const link = plainLink(event);
-      fromBottomBar.current = Boolean(link?.closest("[data-bottom-nav]"));
+      const bar = link?.closest("[data-bottom-nav]");
+      if (bar && link) {
+        // Like an app's tab bar: slide towards the tapped tab, worked out
+        // from the tabs' order in the bar (not the menu's sections — Contact
+        // Us isn't one, so it used to rise instead of slide).
+        const tabs = [...bar.querySelectorAll("a[href], button")];
+        const current = tabs.findIndex((tab) => tab.getAttribute("aria-current") === "page");
+        const tapped = tabs.indexOf(link);
+        fromBottomBar.current = current === -1 || tapped > current ? 1 : -1;
+      } else {
+        fromBottomBar.current = 0;
+      }
       // Pages opened from the phone menu just appear: the menu closing is
       // already the change people see, and a slide under it looked messy.
       if (link?.closest("[data-slot='popover-content'], [data-bottom-nav-sheet]")) {
@@ -151,8 +164,8 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
     leaving.current = false;
     const openedFromMenu = fromMenu.current;
     fromMenu.current = false;
-    const openedFromBottomBar = fromBottomBar.current;
-    fromBottomBar.current = false;
+    const barDirection = fromBottomBar.current;
+    fromBottomBar.current = 0;
     const page = ref.current;
     if (!page) return;
     const el = moving(page);
@@ -176,9 +189,9 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
     // cards slide in sideways, towards the tab you tapped, whichever page
     // transition is chosen (with Rise up, the first tap rose instead and
     // looked wrong next to the sliding tab pill).
-    const tabSwitch = openedFromBottomBar && from !== null;
-    const direction = (mode === "slide" || tabSwitch) && from !== null ? slideDirection(from, pathname) : 0;
-    const cardsSideways = tabSwitch && direction !== 0;
+    const tabSwitch = barDirection !== 0 && from !== null;
+    const direction = tabSwitch ? barDirection : mode === "slide" && from !== null ? slideDirection(from, pathname) : 0;
+    const cardsSideways = tabSwitch;
     const runs: { complete: () => void }[] = [];
     let watcher: MutationObserver | null = null;
     if (mode === "slide" || mode === "rise") {

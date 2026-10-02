@@ -15,6 +15,7 @@ export const PUBLIC_ROUTE_PATTERNS = [
   "/privacy-policy",
   "/terms-of-service",
   "/contact",
+  "/apps",
   // Email footer links — members manage preferences / unsubscribe without
   // signing in. The token itself is the credential (see
   // src/lib/email/unsubscribe.ts).
