@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import WalkDetailLoading from "./loading";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ClipboardList } from "lucide-react";
@@ -29,7 +31,7 @@ import type { WalkAttendanceRow } from "./walk-attendance";
 
 
 
-export default async function WalkDetailPage({
+async function WalkDetailPageContent({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -361,5 +363,15 @@ export default async function WalkDetailPage({
         walkId={walk.id}
       />
     </div>
+  );
+}
+
+/** Everything here depends on who's asking and on live data, so the page
+ * shows a matching placeholder for an instant while it loads. */
+export default function WalkDetailPage(props: Parameters<typeof WalkDetailPageContent>[0]) {
+  return (
+    <Suspense fallback={<WalkDetailLoading />}>
+      <WalkDetailPageContent {...props} />
+    </Suspense>
   );
 }

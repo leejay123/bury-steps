@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { Download } from "lucide-react";
 import { requirePermission } from "@/lib/auth";
@@ -6,7 +7,7 @@ import { displayName } from "@/lib/auth";
 import { formatDate } from "@/lib/dates";
 import { Button } from "@/components/ui/button";
 import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
-import { SettingsPage, SettingsSection } from "../settings-page";
+import { SettingsContentSkeleton, SettingsPage, SettingsSection } from "../settings-page";
 import { RemoveSubscriberButton } from "./remove-subscriber-button";
 import { SendNewsletterForm } from "./send-newsletter-form";
 
@@ -21,7 +22,22 @@ function StatTile({ label, value }: { label: string; value: number }) {
   );
 }
 
-export default async function AdminSubscribersSettingsPage() {
+export default function AdminSubscribersSettingsPage() {
+  // Title and description are part of the ready-made page; the settings
+  // themselves (and the access check) fill in just after.
+  return (
+    <SettingsPage
+      description="Who's opted into which emails. Every newsletter subscriber below is kept in sync with a Resend audience automatically — send a real campaign to all of them without leaving this page."
+      title="Subscribers"
+    >
+      <Suspense fallback={<SettingsContentSkeleton />}>
+        <AdminSubscribersSettingsPageContent />
+      </Suspense>
+    </SettingsPage>
+  );
+}
+
+async function AdminSubscribersSettingsPageContent() {
   await requirePermission("permSubscribers");
 
   const [
@@ -72,10 +88,7 @@ export default async function AdminSubscribersSettingsPage() {
   const newsletterRecipientCount = recipientEmails.size;
 
   return (
-    <SettingsPage
-      description="Who's opted into which emails. Every newsletter subscriber below is kept in sync with a Resend audience automatically — send a real campaign to all of them without leaving this page."
-      title="Subscribers"
-    >
+    <>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
         <StatTile label="Newsletter (footer)" value={activeFooterCount} />
         <StatTile label="Newsletter (members)" value={newsletterMemberCount} />
@@ -137,6 +150,6 @@ export default async function AdminSubscribersSettingsPage() {
           ) : null}
         </DataList>
       </SettingsSection>
-    </SettingsPage>
+    </>
   );
 }

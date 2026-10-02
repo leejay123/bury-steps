@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { PageFade } from "@/components/page-fade";
 import { WalkEssentialsProvider } from "@/components/walk-essentials-context";
+import { SignedInProvider } from "@/components/signed-in-context";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 import { textSizeCssVars } from "@/lib/text-sizes";
 import { FullWidthDivider } from "@/components/full-width-divider";
@@ -281,7 +282,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               {/* Page content fades in quickly on navigation (page-fade.tsx);
                   the header is outside, so it stays put. */}
               <PageFade mode={theme.pageTransition}>
-                <WalkEssentialsProvider items={theme.walkEssentials}>{children}</WalkEssentialsProvider>
+                <WalkEssentialsProvider items={theme.walkEssentials}>
+                  <SignedInProvider signedIn={signedIn}>{children}</SignedInProvider>
+                </WalkEssentialsProvider>
               </PageFade>
             </main>
             <Suspense fallback={null}>

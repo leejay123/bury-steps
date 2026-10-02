@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
 import { Prisma } from "@prisma/client";
 import { memberDisplayName, requirePermission } from "@/lib/auth";
 import { isOwner } from "@/lib/site-owner";
@@ -27,7 +29,7 @@ function buildWhere(link: LinkFilter): Prisma.AccidentReportWhereInput | undefin
 }
 
 
-export default async function AccidentReportsPage({
+async function AccidentReportsPageContent({
   searchParams,
 }: {
   searchParams: Promise<{ link?: string; sort?: string }>;
@@ -116,5 +118,15 @@ export default async function AccidentReportsPage({
         }))}
       />
     </div>
+  );
+}
+
+/** Everything here depends on who's asking and on live data, so the page
+ * shows a matching placeholder for an instant while it loads. */
+export default function AccidentReportsPage(props: Parameters<typeof AccidentReportsPageContent>[0]) {
+  return (
+    <Suspense fallback={<AdminPageFallback title="Accident reports" />}>
+      <AccidentReportsPageContent {...props} />
+    </Suspense>
   );
 }

@@ -1,3 +1,4 @@
+import { AuthSwitch } from "@/components/signed-in-context";
 import Link from "next/link";
 import { preload } from "react-dom";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,6 @@ import { HeroGuestActions } from "@/components/hero-guest-actions";
 const heroWhiteButtonClassName = "bg-white text-black hover:bg-white/90";
 
 export function HeroCinematic({
-  isSignedIn,
   overlayOpacity,
   siteName,
   siteTagline,
@@ -20,7 +20,6 @@ export function HeroCinematic({
   videoPoster,
   videoSrc,
 }: {
-  isSignedIn: boolean;
   /** 0-100 — darkness of the gradient over the video. */
   overlayOpacity: number;
   siteName: string;
@@ -71,13 +70,9 @@ export function HeroCinematic({
           </p>
         </FadeIn>
         <FadeIn className="flex flex-row flex-wrap items-center justify-center gap-3" delay={0.3}>
-          {isSignedIn ? (
-            <Button asChild className={heroWhiteButtonClassName} data-ripple="off" size="sm">
+          {<AuthSwitch signedIn={<><Button asChild className={heroWhiteButtonClassName} data-ripple="off" size="sm">
               <Link href="/walks">Your walks</Link>
-            </Button>
-          ) : (
-            <HeroGuestActions className="contents" tone="dark" />
-          )}
+            </Button></>} signedOut={<><HeroGuestActions className="contents" tone="dark" /></>} />}
         </FadeIn>
       </div>
     </section>

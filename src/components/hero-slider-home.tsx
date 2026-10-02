@@ -1,3 +1,4 @@
+import { AuthSwitch } from "@/components/signed-in-context";
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,27 +22,21 @@ import type { SlideView } from "@/lib/slides";
 export function HeroSliderHome({
   slides,
   words,
-  isSignedIn,
   siteName,
   siteTagline,
 }: {
   slides: SlideView[];
   words: SliderHeroWords;
-  isSignedIn: boolean;
   siteName: string;
   siteTagline: string;
 }) {
   const images = slides.length > 0 ? slides.map((slide) => ({ src: slide.src, alt: slide.alt })) : SAMPLE_WALK_PHOTOS;
 
-  const actions = isSignedIn ? (
-    <Button asChild className="bg-white text-black hover:bg-white/90">
+  const actions = <AuthSwitch signedIn={<><Button asChild className="bg-white text-black hover:bg-white/90">
       <Link href="/walks">
         See the walks <ArrowRightIcon />
       </Link>
-    </Button>
-  ) : (
-    <HeroGuestActions className="contents" tone="dark" />
-  );
+    </Button></>} signedOut={<><HeroGuestActions className="contents" tone="dark" /></>} />;
 
   // Bottom-left, clear of the arrows (mid-height) and dots (bottom centre).
   // With the site name on every photo it's the page's h1; a photo's own

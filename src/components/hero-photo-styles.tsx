@@ -1,5 +1,6 @@
 "use client";
 
+import { AuthSwitch } from "@/components/signed-in-context";
 import { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -38,7 +39,6 @@ export type PhotoHeroProps = {
    * Tiles and Accordion; Diagonal rows is all photos, so it has none). */
   bgPattern?: SectionBgPattern;
   slides: SlideView[];
-  isSignedIn: boolean;
   siteName: string;
   siteTagline: string;
 };
@@ -78,7 +78,6 @@ function PhotoImg({ photo, className, sizes = "(max-width: 640px) 45vw, 280px", 
 }
 
 function HeroCopy({
-  isSignedIn,
   siteName,
   siteTagline,
   className,
@@ -88,15 +87,11 @@ function HeroCopy({
       <h1 className="text-headline font-medium tracking-tight text-balance">{siteName}</h1>
       {siteTagline ? <p className="max-w-xl text-intro text-pretty text-muted-foreground">{siteTagline}</p> : null}
       <div className="mt-2 flex flex-wrap items-center gap-3">
-        {isSignedIn ? (
-          <Button asChild>
+        {<AuthSwitch signedIn={<><Button asChild>
             <Link href="/walks">
               See the walks <ArrowRightIcon />
             </Link>
-          </Button>
-        ) : (
-          <HeroGuestActions className="contents" />
-        )}
+          </Button></>} signedOut={<><HeroGuestActions className="contents" /></>} />}
       </div>
     </div>
   );

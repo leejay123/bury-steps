@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { PageFallback } from "@/components/page-fallback";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
@@ -27,7 +29,7 @@ export const metadata: Metadata = {
  * member — promoting someone already implies an account), and a browser
  * signed in as someone other than the invitee is shown a clear notice
  * rather than silently accepting on the wrong account. */
-export default async function OrganiserInvitePage({
+async function OrganiserInvitePageContent({
   params,
 }: {
   params: Promise<{ token: string }>;
@@ -107,5 +109,15 @@ export default async function OrganiserInvitePage({
         </>
       )}
     </div>
+  );
+}
+
+/** Everything here depends on who's asking and on live data, so the page
+ * shows a matching placeholder for an instant while it loads. */
+export default function OrganiserInvitePage(props: Parameters<typeof OrganiserInvitePageContent>[0]) {
+  return (
+    <Suspense fallback={<PageFallback />}>
+      <OrganiserInvitePageContent {...props} />
+    </Suspense>
   );
 }

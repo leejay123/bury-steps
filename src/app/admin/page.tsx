@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
 import { connection } from "next/server";
 import { Skeleton } from "@/components/ui/skeleton";
 import { prisma } from "@/lib/db";
@@ -33,7 +34,7 @@ function toRow(walk: {
   };
 }
 
-export default async function AdminPage() {
+async function AdminPageContent() {
   // View and Create are meaningfully independent: View is the schedule/
   // history/cancelled-walk detail, Create is the blank "start a new one"
   // form — an organiser with only Create doesn't need to browse anything
@@ -182,5 +183,15 @@ function AdminWalksSkeleton() {
         ))}
       </div>
     </div>
+  );
+}
+
+/** Everything here depends on who's asking and on live data, so the page
+ * shows a matching placeholder for an instant while it loads. */
+export default function AdminPage() {
+  return (
+    <Suspense fallback={<AdminPageFallback title="Walks" />}>
+      <AdminPageContent />
+    </Suspense>
   );
 }

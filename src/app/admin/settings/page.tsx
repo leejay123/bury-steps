@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { requireAnySettingsPermission, displayName } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SITE_SETTING_ID } from "@/lib/theme";
@@ -8,7 +9,7 @@ import { MAX_HOMEPAGE_FAQS } from "@/lib/faqs";
 import { EMAIL_TEMPLATES } from "@/lib/email/registry";
 import { DEFAULT_CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { SETTINGS_PAGE_GROUPS, SITE_WORDING_PAGES } from "@/lib/settings-pages";
-import { SettingsPage } from "./settings-page";
+import { SettingsContentSkeleton, SettingsPage } from "./settings-page";
 import { SettingsHub, type SettingsHubGroup, type SettingsRowState } from "./settings-hub";
 
 
@@ -32,7 +33,23 @@ function keptFor(days: number | null): string {
  * table) — so whoever runs the site can see at a glance whether anything
  * is unfinished or broken, without opening every page to check.
  */
-export default async function AdminSettingsPage() {
+export default function AdminSettingsPage() {
+  // Title and description are part of the ready-made page; the settings
+  // themselves (and the access check) fill in just after.
+  return (
+    <SettingsPage
+      description="Everything about how the site looks and works. Each row shows where that setting stands now — open one to change it."
+      showBackLink={false}
+      title="Settings"
+    >
+      <Suspense fallback={<SettingsContentSkeleton />}>
+        <AdminSettingsPageContent />
+      </Suspense>
+    </SettingsPage>
+  );
+}
+
+async function AdminSettingsPageContent() {
   const admin = await requireAnySettingsPermission();
 
   const [
@@ -138,12 +155,8 @@ export default async function AdminSettingsPage() {
   })).filter((group) => group.pages.length > 0);
 
   return (
-    <SettingsPage
-      description="Everything about how the site looks and works. Each row shows where that setting stands now — open one to change it."
-      showBackLink={false}
-      title="Settings"
-    >
+    <>
       <SettingsHub groups={groups} />
-    </SettingsPage>
+    </>
   );
 }
