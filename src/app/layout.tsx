@@ -13,6 +13,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { LazyClerkProvider } from "@/components/clerk-lazy";
 import { auth } from "@clerk/nextjs/server";
+import { isClerkMiddlewareMissingError } from "@/lib/auth";
 import { shadcn } from "@clerk/themes";
 import { Toaster } from "@/components/ui/sonner";
 import { AFTER_AUTH_PATH, appUrl, SIGN_IN_URL, SIGN_UP_URL } from "@/lib/urls";
@@ -82,10 +83,14 @@ export async function generateViewport(): Promise<Viewport> {
 async function isSignedIn() {
   try {
     return Boolean((await auth()).userId);
-  } catch {
+  } catch (error) {
     // Pages outside the middleware (a missing static file's 404) have no
-    // auth context — treat them as signed out.
-    return false;
+    // auth context — treat them as signed out. Anything else must be
+    // rethrown: with Cache Components, reading the session throws on
+    // purpose while the shared shell is built, and swallowing that built
+    // the shell as signed-out for everyone.
+    if (isClerkMiddlewareMissingError(error)) return false;
+    throw error;
   }
 }
 

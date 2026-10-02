@@ -1,3 +1,4 @@
+import { cacheLife } from "next/cache";
 import Link from "next/link";
 import { Facebook } from "lucide-react";
 import { FooterWordmark } from "@/components/footer-wordmark";
@@ -84,10 +85,18 @@ export async function SiteFooter() {
         <p
           className={`${PAGE_X} py-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-center text-xs text-muted-foreground`}
         >
-          © {new Date().getFullYear()} {theme.siteName}
+          © {await copyrightYear()} {theme.siteName}
         </p>
       </div>
       {theme.footerWordmarkEnabled ? <FooterWordmark showOnPhones={theme.footerWordmarkMobile} /> : null}
     </footer>
   );
+}
+
+/** The year for the © line — worked out ahead of time and refreshed daily,
+ * so it can be part of the ready-made page (Cache Components). */
+async function copyrightYear() {
+  "use cache";
+  cacheLife("days");
+  return new Date().getFullYear();
 }

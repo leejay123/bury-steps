@@ -1,11 +1,6 @@
 import type { Metadata } from "next";
 import { LEGAL_LAST_UPDATED, LegalPage } from "@/components/legal-page";
 
-// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
-// Remove this opt-out after verifying the segment passes validation without it.
-// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
-export const instant = false;
-
 export const metadata: Metadata = {
   title: "Terms of Service",
   description: "Terms for using the Bury Steps Walking Group website and taking part in walks.",
