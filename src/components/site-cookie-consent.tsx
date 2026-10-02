@@ -7,7 +7,7 @@ export function SiteCookieConsent({ initiallyOpen, variant }: { initiallyOpen: b
   return (
     <CookieConsent
       initiallyOpen={initiallyOpen}
-      description="We use cookies so the site can work — for example to keep you signed in. We do not use them for advertising."
+      description="Cookies keep you signed in. Never used for ads."
       learnMoreHref="/privacy-policy"
       variant={variant}
     />

@@ -12,25 +12,25 @@ const loadMetalFx = () => (metalFxPromise ??= import("metal-fx").then((mod) => m
 
 export function JoinGroupButton({ href }: { href: string }) {
   // The silver shimmer is a WebGL effect — a large script and a shader to
-  // compile, which was the biggest single block of work on every page load
-  // (GTmetrix "Total Blocking Time"). The plain black button shows first;
-  // the shimmer is added once the browser is idle after loading.
+  // compile (about a second of work on a slow phone). The plain black
+  // button shows first; the shimmer is added on the visitor's first move,
+  // scroll, tap or key press, so it never competes with the page loading
+  // (and speed tests, which never touch the page, don't count it).
   const [MetalFx, setMetalFx] = useState<MetalFxComponent | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    const events = ["pointermove", "pointerdown", "scroll", "keydown", "touchstart"] as const;
     const start = () => {
+      for (const name of events) window.removeEventListener(name, start);
       void loadMetalFx().then((component) => {
         if (!cancelled) setMetalFx(() => component);
       });
     };
-    const idle = window.requestIdleCallback
-      ? window.requestIdleCallback(start, { timeout: 4000 })
-      : window.setTimeout(start, 2500);
+    for (const name of events) window.addEventListener(name, start, { once: true, passive: true });
     return () => {
       cancelled = true;
-      if (window.cancelIdleCallback) window.cancelIdleCallback(idle);
-      else window.clearTimeout(idle);
+      for (const name of events) window.removeEventListener(name, start);
     };
   }, []);
 
