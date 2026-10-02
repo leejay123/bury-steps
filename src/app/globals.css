@@ -569,20 +569,3 @@ html[data-announcement-hide] [data-slot="sticky-banner"] {
     justify-content: flex-start;
   }
 }
-
-/* Tiles hero (hero-photo-styles.tsx): each tile drops in from its own
- * tossed position (--tile-x/-y/-rotate) and settles with a slight bounce.
- * Applied from the sm breakpoint only; phones show the tiles in place. */
-@keyframes tile-settle {
-  from {
-    opacity: 0;
-    transform: translate(var(--tile-x, 0), var(--tile-y, 60px)) rotate(var(--tile-rotate, 0)) scale(0.85);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@theme {
-  --animate-tile-settle: tile-settle 0.75s cubic-bezier(0.34, 1.4, 0.64, 1) both;
-}
