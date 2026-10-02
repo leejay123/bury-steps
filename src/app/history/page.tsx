@@ -6,11 +6,15 @@ import { isWalkHistoryReady, walkStatus } from "@/lib/walk-window";
 import { AttendanceHistory } from "@/components/attendance-history";
 import { walkSharePath } from "@/lib/walk-slug";
 
+// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
+// Remove this opt-out after verifying the segment passes validation without it.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 export const metadata: Metadata = {
   title: "Walk history",
 };
 
-export const dynamic = "force-dynamic";
 
 export default async function WalkHistoryPage() {
   // This is about the viewer's own clock-ins, not an admin capability — an

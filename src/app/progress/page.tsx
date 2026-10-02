@@ -10,12 +10,16 @@ import { EmptyState } from "@/components/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { ProgressBoard } from "./progress-board";
 
+// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
+// Remove this opt-out after verifying the segment passes validation without it.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 export const metadata: Metadata = {
   title: "Progress",
   robots: { index: false, follow: false },
 };
 
-export const dynamic = "force-dynamic";
 
 function formatNameList(names: string[]): string {
   if (names.length === 1) return names[0];

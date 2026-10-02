@@ -7,7 +7,12 @@ import { AdminPageIntro } from "../admin-page-intro";
 import { GUIDE_LAST_UPDATED, OrganiserGuide } from "./guide-content";
 import { FullWidthDivider } from "@/components/full-width-divider";
 
-export const dynamic = "force-dynamic";
+
+// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
+// Remove this opt-out after verifying the segment passes validation without it.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 
 export default async function OrganiserGuidePage() {
   await requireAdmin();

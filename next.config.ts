@@ -2,6 +2,12 @@ import path from "path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Next.js 16 "Cache Components" + "Partial Prefetching": pages keep a
+  // ready-made shell (heading, layout, cached content) that shows the
+  // instant you tap; only per-person or live parts stream in after. See
+  // node_modules/next/dist/docs/01-app/02-guides/instant-navigation.md.
+  cacheComponents: true,
+  partialPrefetching: true,
   // Parent lockfiles made Next treat ~ as the app root and bundle the wrong Prisma client.
   outputFileTracingRoot: path.join(__dirname),
   images: {

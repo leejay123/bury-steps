@@ -9,7 +9,12 @@ import { HeroStyleSettings } from "./hero-style-settings";
 import { SliderHeroWordsSettings } from "./slider-hero-words-settings";
 import { SectionBgPatternSelect } from "./section-bg-pattern-select";
 
-export const dynamic = "force-dynamic";
+
+// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
+// Remove this opt-out after verifying the segment passes validation without it.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 
 export default async function HomepageLayoutSettingsPage() {
   await requirePermission("permDisplay");

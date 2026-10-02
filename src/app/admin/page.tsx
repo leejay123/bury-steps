@@ -8,7 +8,12 @@ import { AdminWalkTable } from "./admin-walk-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { upcomingListLookbackFrom, walkStatus } from "@/lib/walk-window";
 
-export const dynamic = "force-dynamic";
+
+// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
+// Remove this opt-out after verifying the segment passes validation without it.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 
 function toRow(walk: {
   id: string;

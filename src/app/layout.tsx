@@ -32,6 +32,11 @@ import { siteFontFace, siteFontVariableClassName, typesetFontVariables } from "@
 import { DEFAULT_SITE_NAME, siteMetaDescription } from "@/lib/site-branding";
 import "./globals.css";
 
+// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
+// Remove this opt-out after verifying the segment passes validation without it.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 export async function generateMetadata(): Promise<Metadata> {
   const theme = await getSiteTheme();
   const description = siteMetaDescription(theme.siteTagline);

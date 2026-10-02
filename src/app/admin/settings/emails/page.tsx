@@ -6,7 +6,12 @@ import { EmailList } from "./email-list";
 import { getDisabledEmailKeys } from "@/lib/email/switches";
 import { isOwner } from "@/lib/site-owner";
 
-export const dynamic = "force-dynamic";
+
+// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
+// Remove this opt-out after verifying the segment passes validation without it.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 
 const CATEGORY_ORDER: EmailTemplateMeta["category"][] = [
   "Member lifecycle",

@@ -23,8 +23,12 @@ import { heroVideoPoster, heroVideoSrc, type HeroStyle } from "@/lib/hero-style"
 import { PAGE_X_BLEED } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 
-// Must be a numeric literal so Next can statically detect ISR.
-export const revalidate = 120;
+
+// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
+// Remove this opt-out after verifying the segment passes validation without it.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 
 /** The photo heroes picked from the Parallax design options. */
 const PHOTO_HEROES: Partial<Record<HeroStyle, typeof HeroStripHome>> = {
