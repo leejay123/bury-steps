@@ -1,9 +1,8 @@
 "use client";
 
-import { Suspense, use, useEffect, useState } from "react";
+import { Suspense, use, useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "motion/react";
 import {
   Bell,
   BookOpen,
@@ -87,6 +86,35 @@ function isTypingTarget(target: EventTarget | null) {
   return false;
 }
 
+/** Which tab the pill was last on, so the next one can slide from there. */
+let lastPillTab: number | null = null;
+
+/**
+ * The grey pill behind the current tab. When the tab changes it slides
+ * sideways from the tab it was on — only ever sideways. (Motion's shared
+ * layout animation measured the pill against the page, and the page
+ * scrolling back to the top during the change made it fly in from above.)
+ * Uses the browser's own animation, which leaves nothing behind.
+ */
+function TabPill() {
+  const ref = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const pill = ref.current;
+    const tab = pill?.closest("li");
+    if (!pill || !tab?.parentElement) return;
+    const index = [...tab.parentElement.children].indexOf(tab);
+    const from = lastPillTab;
+    lastPillTab = index;
+    if (from === null || from === index || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    pill.animate(
+      [{ transform: `translateX(${(from - index) * tab.offsetWidth}px)` }, { transform: "translateX(0)" }],
+      // A small overshoot, like the spring it replaces.
+      { duration: 320, easing: "cubic-bezier(0.3, 1.25, 0.5, 1)" },
+    );
+  }, []);
+  return <span className="absolute inset-0 rounded-full bg-muted" ref={ref} />;
+}
+
 function Tab({
   active,
   children,
@@ -102,11 +130,7 @@ function Tab({
     <>
       <span className="relative flex h-7 w-14 items-center justify-center">
         {active ? (
-          <motion.span
-            className="absolute inset-0 rounded-full bg-muted"
-            layoutId="bottom-nav-pill"
-            transition={{ type: "spring", visualDuration: 0.3, bounce: 0.2 }}
-          />
+          <TabPill />
         ) : null}
         <span className="relative">
           <Icon aria-hidden className="size-5" strokeWidth={active ? 2.25 : 1.75} />

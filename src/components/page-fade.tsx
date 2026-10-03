@@ -3,12 +3,11 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useClientPathname } from "@/components/client-pathname";
-import { animate, stagger } from "motion";
 import { slideDirection, type PageTransition } from "@/lib/page-transition";
 
 // Same feel as the returns portal's orders ↔ order detail swap
 // (iblaze-returns dashboard-client.tsx: 18px, 0.22s, this curve).
-const EASE = [0.25, 0.1, 0.25, 1] as const;
+const EASE = "cubic-bezier(0.25, 0.1, 0.25, 1)";
 const DISTANCE = 18;
 const DURATION = 0.22;
 
@@ -38,12 +37,40 @@ function moving(page: HTMLElement): HTMLElement[] {
   return parts.length ? parts : [page];
 }
 
-/** Puts elements back exactly as they were before an animation moved them. */
-function resetMotion(nodes: HTMLElement[]) {
-  for (const node of nodes) {
-    node.style.transform = "";
-    node.style.opacity = "";
-  }
+type Run = { complete: () => void; cancel: () => void };
+
+/**
+ * Plays an entrance or exit with the browser's own animations (Web
+ * Animations API). They never write into the element's style, so nothing
+ * can be left behind: when one ends — or is cut short because Next hid the
+ * page in the background or swapped content in — the element is simply back
+ * to normal. (Motion's animate() kept the end values as inline styles, and
+ * an interrupted run left whole pages faded.)
+ */
+function play(
+  nodes: HTMLElement[],
+  from: { opacity?: number; x?: number; y?: number },
+  to: { opacity?: number; x?: number; y?: number },
+  options: { duration: number; easing?: string; delay?: (index: number) => number; hold?: boolean },
+): Run {
+  const frame = (f: { opacity?: number; x?: number; y?: number }) => ({
+    opacity: f.opacity ?? 1,
+    transform: `translate(${f.x ?? 0}px, ${f.y ?? 0}px)`,
+  });
+  const animations = nodes.map((node, index) =>
+    node.animate([frame(from), frame(to)], {
+      duration: options.duration * 1000,
+      easing: options.easing ?? EASE,
+      delay: options.delay ? options.delay(index) * 1000 : 0,
+      // Entrances show their first frame while waiting their turn, then let
+      // go entirely; an exit holds its last frame until it's cancelled.
+      fill: options.hold ? "forwards" : "backwards",
+    }),
+  );
+  return {
+    complete: () => animations.forEach((animation) => animation.finish()),
+    cancel: () => animations.forEach((animation) => animation.cancel()),
+  };
 }
 
 function reducedMotion() {
@@ -77,11 +104,9 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
   const previous = useRef<string | null>(null);
   const leaving = useRef(false);
   const fromMenu = useRef(false);
-  // What the last slide-out moved, so it can be put back on the next page.
-  const slidOut = useRef<HTMLElement[]>([]);
-  // The slide-out itself, which can still be running when the new page
-  // arrives (it's requested at the same moment) — stopped before resetting.
-  const slideOutRun = useRef<{ stop: () => void } | null>(null);
+  // The slide-out, which holds the old page out of sight until the new one
+  // shows — cancelled then, so a page kept for Back is never left hidden.
+  const slideOutRun = useRef<Run | null>(null);
   // Set when a bottom bar tab is tapped: which way to slide (+1 = the tab
   // is to the right of the current one), or 0 when it's not a tab tap.
   const fromBottomBar = useRef<-1 | 0 | 1>(0);
@@ -111,7 +136,9 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
       // The homepage never slides: it should just be there.
       if (url.pathname === "/") return null;
       const direction = slideDirection(location.pathname, url.pathname);
-      if (!direction || reducedMotion()) return null;
+      // Going back (← All notices, ← All members…) doesn't slide the page
+      // out — the list just slides back in, like ← All settings.
+      if (!direction || direction < 0 || reducedMotion()) return null;
       return { direction, href: url.pathname + url.search + url.hash };
     };
 
@@ -159,9 +186,8 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
       // the wait for it overlaps the slide instead of following it. Next
       // keeps this page on screen until the new one is ready, so it's
       // still out first, then in — just without a gap in the middle.
-      const outgoing = moving(el);
-      slidOut.current = outgoing;
-      slideOutRun.current = animate(outgoing, { opacity: 0, x: -target.direction * DISTANCE }, { duration: DURATION, ease: EASE });
+      slideOutRun.current?.cancel();
+      slideOutRun.current = play(moving(el), {}, { opacity: 0, x: -target.direction * DISTANCE }, { duration: DURATION, hold: true });
       router.push(target.href);
     };
     document.addEventListener("pointerdown", onPointerDown, true);
@@ -187,10 +213,8 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
     if (!page) return;
     // A page the slide-out moved may be shown again as it was (Back
     // restores the previous page) — never leave it faded or shifted.
-    slideOutRun.current?.stop();
+    slideOutRun.current?.cancel();
     slideOutRun.current = null;
-    const stale = slidOut.current.splice(0);
-    resetMotion(stale);
     const el = moving(page);
 
     const clear = () => {
@@ -215,7 +239,7 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
     const tabSwitch = barDirection !== 0 && from !== null;
     const direction = tabSwitch ? barDirection : mode === "slide" && from !== null ? slideDirection(from, pathname) : 0;
     const cardsSideways = tabSwitch;
-    const runs: { complete: () => void }[] = [];
+    const runs: Run[] = [];
     let watcher: MutationObserver | null = null;
     if (mode === "slide" || mode === "rise") {
       // Cascade the list rows in. Some lists (Members, Messages…) load a
@@ -226,11 +250,10 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
         if (!fresh.length) return;
         for (const item of fresh) item.dataset.staggered = "";
         runs.push(
-          animate(
-            fresh,
-            cardsSideways ? { opacity: [0, 1], x: [direction * DISTANCE, 0] } : { opacity: [0, 1], y: [14, 0] },
-            { duration: 0.28, delay: stagger(0.055), ease: EASE },
-          ),
+          play(fresh, cardsSideways ? { opacity: 0, x: direction * DISTANCE } : { opacity: 0, y: 14 }, {}, {
+            duration: 0.28,
+            delay: (index) => index * 0.055,
+          }),
         );
       };
       cascade();
@@ -243,17 +266,13 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
     // arrives a moment later — see below).
     const enter = (nodes: HTMLElement[], fromHidden: boolean) =>
       cardsSideways
-        ? animate(nodes, { opacity: [0.3, 1], x: [direction * DISTANCE, 0] }, { duration: DURATION, ease: EASE })
+        ? play(nodes, { opacity: 0.3, x: direction * DISTANCE }, {}, { duration: DURATION })
         : mode === "rise"
         ? // Like the walk cards: rise 14px into place while fading in.
-          animate(nodes, { opacity: [0, 1], y: [14, 0] }, { duration: 0.28, ease: EASE })
+          play(nodes, { opacity: 0, y: 14 }, {}, { duration: 0.28 })
         : direction
-        ? animate(
-            nodes,
-            { opacity: [fromHidden ? 0 : 0.3, 1], x: [direction * DISTANCE, 0] },
-            { duration: DURATION, ease: EASE },
-          )
-        : animate(nodes, { opacity: [0.4, 1] }, { duration: 0.18, ease: "easeOut" });
+        ? play(nodes, { opacity: fromHidden ? 0 : 0.3, x: direction * DISTANCE }, {}, { duration: DURATION })
+        : play(nodes, { opacity: 0.4 }, {}, { duration: 0.18, easing: "ease-out" });
 
     let arrivals: MutationObserver | null = null;
     if (from !== null && from !== pathname) {
@@ -266,9 +285,8 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
       if (placeholder) {
         clear();
       } else {
-        const run = enter(el, wasLeaving);
-        run.then(clear, clear);
-        runs.push(run);
+        clear();
+        runs.push(enter(el, wasLeaving));
       }
 
       // Pages that show your own details (Notices, Walks, Members…) open
@@ -287,15 +305,7 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
         // Only the outermost new parts; their insides move with them.
         const outer = [...added].filter((node) => ![...added].some((other) => other !== node && other.contains(node)));
         if (!outer.length) return;
-        const late = enter(outer, true);
-        const reset = () => {
-          for (const node of outer) {
-            node.style.transform = "";
-            node.style.opacity = "";
-          }
-        };
-        late.then(reset, reset);
-        runs.push(late);
+        runs.push(enter(outer, true));
       });
       arrivals.observe(page, { childList: true, subtree: true });
       // Up to 3s: long enough for a slow phone connection, short enough not
