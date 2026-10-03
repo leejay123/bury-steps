@@ -44,19 +44,15 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "4mb",
     },
-    // Every dynamic page here (Home, Walks, Notices, Messages, Reports, …)
-    // has a loading.tsx, and by default Next never caches a dynamic page's
-    // actual data client-side (staleTimes.dynamic is 0/off) — so literally
-    // every navigation to one, even a prefetched one, refetches from
-    // scratch and shows its skeleton for however long that takes. This
-    // gives repeat visits within 30s a cached, instant render instead
-    // (e.g. clicking Home → Notices → Home again). It does not risk stale
-    // data: every mutation in this app (adding a walk, a notice, a message,
-    // …) calls revalidatePath, which busts this cache immediately
-    // regardless of the 30s window — the only thing this affects is a
-    // plain re-visit where nothing changed.
+    // How long the browser remembers a page someone has already opened that
+    // shows personal details (Notices, Walks, Members, …). Within this time,
+    // going back or opening it again is instant — no placeholder — instead
+    // of refetching it every time (Next's default is 0). 30s made the same
+    // notice sometimes instant and sometimes not. Your own saves refresh it
+    // at once (revalidatePath); someone else's change shows up on your next
+    // visit after this time, or on a refresh.
     staleTimes: {
-      dynamic: 30,
+      dynamic: 300,
     },
   },
   async redirects() {
