@@ -38,14 +38,13 @@ type Run = { complete: () => void; cancel: () => void };
  */
 function play(
   nodes: HTMLElement[],
-  from: { opacity?: number; x?: number; y?: number; blur?: number },
-  to: { opacity?: number; x?: number; y?: number; blur?: number },
+  from: { opacity?: number; x?: number; y?: number },
+  to: { opacity?: number; x?: number; y?: number },
   options: { duration: number; easing?: string; delay?: (index: number) => number; hold?: boolean },
 ): Run {
-  const frame = (f: { opacity?: number; x?: number; y?: number; blur?: number }) => ({
+  const frame = (f: { opacity?: number; x?: number; y?: number }) => ({
     opacity: f.opacity ?? 1,
     transform: `translate(${f.x ?? 0}px, ${f.y ?? 0}px)`,
-    filter: `blur(${f.blur ?? 0}px)`,
   });
   const animations = nodes.map((node, index) =>
     node.animate([frame(from), frame(to)], {
@@ -79,8 +78,6 @@ function reducedMotion() {
  *             mode="wait", done across real page changes so every page keeps
  *             its own shareable address). The whole page moves as one;
  *             nothing inside it slides on its own. Sideways moves just fade.
- *   "reveal" — every page fades in from a soft 2px blur, in place, like the
- *             Members list's skeleton reveal — on every visit
  *   "rise"  — every page rises 14px into place as it fades in, like the
  *             walk cards (which still cascade)
  *   "none"  — no animation
@@ -217,10 +214,6 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
         : mode === "rise"
         ? // Like the walk cards: rise 14px into place while fading in.
           play(nodes, { opacity: 0, y: 14 }, {}, { duration: 0.28 })
-        : mode === "reveal"
-        ? // Like the Members list's SkeletonReveal: fade in from a soft blur,
-          // in place — every time, even when the page was ready instantly.
-          play(nodes, { opacity: 0, blur: 2 }, {}, { duration: 0.4, easing: "ease-in-out" })
         : direction
         ? play(nodes, { opacity: fromHidden ? 0 : 0.3, x: direction * DISTANCE }, {}, { duration: DURATION })
         : play(nodes, { opacity: 0.4 }, {}, { duration: 0.18, easing: "ease-out" });

@@ -1,5 +1,5 @@
 /** How the page content animates on a page change (Site behaviour). */
-const PAGE_TRANSITIONS = ["fade", "slide", "rise", "reveal", "none"] as const;
+const PAGE_TRANSITIONS = ["fade", "slide", "rise", "none"] as const;
 export type PageTransition = (typeof PAGE_TRANSITIONS)[number];
 
 export function parsePageTransition(raw: string | null | undefined): PageTransition {

@@ -42,7 +42,6 @@ export function PageTransitionSettings({ mode }: { mode: PageTransition }) {
             <SelectItem value="fade">Quick fade</SelectItem>
             <SelectItem value="slide">Slide in and out of pages</SelectItem>
             <SelectItem value="rise">Rise up (like the walk cards)</SelectItem>
-            <SelectItem value="reveal">Reveal (fades in from a soft blur, like the Members list)</SelectItem>
             <SelectItem value="none">No transition (instant)</SelectItem>
           </SelectContent>
         </Select>
