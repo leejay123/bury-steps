@@ -98,7 +98,7 @@ export function PrivacySiteSection() {
               moving between main sections slides like tabs, following the order of the menu bar;
               pages opened from the phone menu just appear, since the menu closing is already the
               change; the homepage always just appears, with no slide or fade); Rise up, where each page rises gently into place like the walk cards; or No transition. On the Contact page only the contact card moves — its heading stays still. Tapping the phone bottom bar, the page slides in sideways towards the tab you tapped. With Slide, the next page starts loading the moment you
-              tap, while the old one slides away, so it’s usually ready as soon as the slide ends. Notices shown on the Notices page (and the latest ones on the homepage) are loaded in the background while they&apos;re on screen, so opening one is instant. <strong>Phone menu</strong> in Site behaviour chooses how signed-in people get around on
+              tap, while the old one slides away, so it’s usually ready as soon as the slide ends. Pages you&apos;ve already opened in the last five minutes open instantly, and open pages update themselves within about half a minute when someone saves a change. <strong>Phone menu</strong> in Site behaviour chooses how signed-in people get around on
               phones: the original ☰ menu (logo in the middle), or a <strong>bottom bar</strong> (logo on the
               left) with four main pages plus <strong>More</strong>, which slides up everything else. Signed-out visitors get their own bar — Home, Contact, the Facebook group
               and More — with Sign in and Join staying at the top. On a

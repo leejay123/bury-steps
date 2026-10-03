@@ -42,10 +42,12 @@ async function WalkDetailPageContent({
   // actual capability below (edit, cancel, delete, attendance, health
   // notes, journey, export, …) is now its own permission, checked
   // individually — see the nine permWalks* fields in organiser-permissions.ts.
-  const admin = await requireAnyPermission(["permWalksView", "permMembersView"]);
+  // The permission check and the walk are fetched at the same time (they
+  // used to run one after the other, making this the slowest page to open).
   const { id } = await params;
-
-  const walk = await prisma.walk.findUnique({
+  const [admin, walkWithNotes] = await Promise.all([
+    requireAnyPermission(["permWalksView", "permMembersView"]),
+    prisma.walk.findUnique({
     where: { id },
     select: {
       id: true,
@@ -79,9 +81,9 @@ async function WalkDetailPageContent({
           clockedInAt: true,
           clockedOutAt: true,
           clockedOutReason: true,
-          // Never select health notes unless this viewer may see them —
-          // UI-hiding alone still ships the text in the RSC payload.
-          ...(admin.permWalksHealth ? { conditions: true } : {}),
+          // Health notes are removed below for anyone without permission,
+          // before anything is rendered or sent to the browser.
+          conditions: true,
           user: { select: { firstName: true, lastName: true, email: true } },
         },
       },
@@ -90,7 +92,17 @@ async function WalkDetailPageContent({
         select: { id: true, title: true, body: true, happenedAt: true },
       },
     },
-  });
+    }),
+  ]);
+  // Never keep health notes for a viewer who may not see them — UI-hiding
+  // alone would still ship the text to their browser.
+  const walk =
+    walkWithNotes && !admin.permWalksHealth
+      ? {
+          ...walkWithNotes,
+          attendances: walkWithNotes.attendances.map((attendance) => ({ ...attendance, conditions: null })),
+        }
+      : walkWithNotes;
 
   // A walk that's gone (just removed, or an old link) goes back to the
   // walks list. Removing a walk redraws this page before moving on, and a

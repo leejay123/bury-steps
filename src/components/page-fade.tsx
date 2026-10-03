@@ -100,9 +100,8 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
   // is to the right of the current one), or 0 when it's not a tab tap.
   const fromBottomBar = useRef<-1 | 0 | 1>(0);
 
-  // Out first: catch clicks on links that go deeper or come back, slide the
-  // current page out, then navigate. Capture phase on document runs before
-  // Next's own <Link> handler, which then never sees the click.
+  // Notes how a page change was started (bottom-bar tab, phone menu) so the
+  // new page comes in the right way.
   useEffect(() => {
     // The in-app link a plain press or click lands on, if any.
     const plainLink = (event: MouseEvent) => {
@@ -113,37 +112,6 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
       if ((link.target && link.target !== "_self") || link.hasAttribute("download")) return null;
       return link;
     };
-    // Where that link slides to, or null when it's left to Next's own <Link>.
-    const slideTarget = (link: HTMLAnchorElement | null) => {
-      // Header, dialogs and the phone menu handle their own clicks (desktop
-      // nav starts navigating on press) — leave them alone.
-      if (!link || mode !== "slide" || link.closest("header, [data-bottom-nav], [data-slot='dialog-content'], [data-slot='popover-content']")) {
-        return null;
-      }
-      const url = new URL(link.href, location.href);
-      if (url.origin !== location.origin || url.pathname === location.pathname) return null;
-      // The homepage never slides: it should just be there.
-      if (url.pathname === "/") return null;
-      const direction = slideDirection(location.pathname, url.pathname);
-      // Going back (← All notices, ← All members…) doesn't slide the page
-      // out — the list just slides back in, like ← All settings.
-      if (!direction || direction < 0 || reducedMotion()) return null;
-      return { direction, href: url.pathname + url.search + url.hash };
-    };
-
-    // Start loading the new page the moment it's asked for, so it arrives
-    // while the old one slides out instead of only after. Next's standard,
-    // documented prefetch — it skips one it already has, so a press then a
-    // click fetches once.
-    const prefetch = (href: string) => router.prefetch(href);
-    const onPointerDown = (event: PointerEvent) => {
-      // Not on touch: a finger landing on a card is as often the start of a
-      // scroll as a tap, and each one would fetch a whole page.
-      if (event.pointerType !== "mouse") return;
-      const target = slideTarget(plainLink(event));
-      if (target) prefetch(target.href);
-    };
-
     const onClick = (event: MouseEvent) => {
       const link = plainLink(event);
       const bar = link?.closest("[data-bottom-nav]");
@@ -168,10 +136,8 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
       // one is ready, then that one slides in. Sliding this one out first
       // left a blank page for as long as the next one took to arrive.
     };
-    document.addEventListener("pointerdown", onPointerDown, true);
     document.addEventListener("click", onClick, true);
     return () => {
-      document.removeEventListener("pointerdown", onPointerDown, true);
       document.removeEventListener("click", onClick, true);
     };
   }, [mode, router]);
