@@ -113,8 +113,8 @@ export function PrivacySiteSection() {
               and More — with Sign in and Join staying at the top. The bar steps aside
               while you type, so the keyboard doesn&apos;t push it over the form. Walk cards (Manage walks,
               and Upcoming and All walks on Walks) open with a thin header strip showing the status
-              (Upcoming, Starting soon…) on the left and the day on the right — tinted amber when a
-              walk is starting soon, green while it’s in progress and red when cancelled — with the
+              (Upcoming, Starting soon…) on the left and the day on the right, in the same plain grey as
+              the Members list&apos;s group headings, with the
               time and meeting point underneath. The page you’re on is underlined, and a blue dot beside
               Notices means there’s one you haven’t read. The list is split under small labels:
               Menu for the main pages, Manage for the admin pages (owners and organisers only),

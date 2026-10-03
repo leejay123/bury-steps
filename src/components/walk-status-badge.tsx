@@ -79,26 +79,18 @@ export function WalkStatusBadge({ className, ...walk }: WalkStatusInput & { clas
   );
 }
 
-const HEADER_TONE: Record<WalkStatus, string> = {
-  cancelled: "bg-destructive/10 text-destructive",
-  upcoming: "bg-muted/60 text-muted-foreground",
-  "starting-soon": "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300",
-  "in-progress": "bg-green-50 text-green-800 dark:bg-green-950/40 dark:text-green-300",
-  completed: "bg-muted/60 text-muted-foreground",
-};
-
 /**
  * The status as a walk card's header strip: status on the left, the day on
- * the right, tinted when it matters (starting soon, in progress, cancelled)
- * and plain grey otherwise. Sits edge to edge across the top of the card.
+ * the right. Plain grey for every status — the same as the Members list's
+ * group headings; the words say what's happening (no coloured strips).
+ * Sits edge to edge across the top of the card.
  */
 export function WalkStatusHeader({ className, ...walk }: WalkStatusInput & { className?: string }) {
-  const { status, label } = useWalkStatusLabel(walk);
+  const { label } = useWalkStatusLabel(walk);
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-3 border-b px-3 py-1.5 text-xs font-semibold tracking-wide uppercase",
-        HEADER_TONE[status],
+        "flex items-center justify-between gap-3 border-b bg-muted/50 px-3 py-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase",
         className,
       )}
     >
