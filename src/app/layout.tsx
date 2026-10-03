@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { PageFade } from "@/components/page-fade";
 import { ClientPathnameProvider } from "@/components/client-pathname";
+import { SiteMotionConfig } from "@/components/site-motion-config";
 import { WalkEssentialsProvider } from "@/components/walk-essentials-context";
 import { SignedInProvider } from "@/components/signed-in-context";
 import { AnnouncementBanner } from "@/components/announcement-banner";
@@ -123,6 +124,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </Script>
         <StaleDeployReload />
         <ClientPathnameProvider>
+        <SiteMotionConfig>
           {/*
             iPhones with a Dynamic Island report it as a safe-area inset on
             whichever side it lands on after a landscape rotation (left or
@@ -263,6 +265,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Suspense fallback={null}>
             <BackToTopGate />
           </Suspense>
+        </SiteMotionConfig>
         </ClientPathnameProvider>
         {/*
           Vercel Analytics and Speed Insights are cookieless — page views and
