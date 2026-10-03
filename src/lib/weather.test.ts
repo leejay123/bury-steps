@@ -6,6 +6,7 @@ function day(date: string): ForecastDay {
     date,
     weekday: "Mon",
     dayNum: date.slice(8, 10),
+    dateLabel: date.slice(8, 10),
     tempMax: 12,
     tempMin: 6,
     weatherCode: 2,
@@ -13,6 +14,10 @@ function day(date: string): ForecastDay {
     condition: "Partly cloudy",
     windMph: 8,
     rainChance: 20,
+    humidity: 55,
+    sunrise: "06:42",
+    sunset: "19:18",
+    hours: [],
   };
 }
 
@@ -39,6 +44,11 @@ describe("mapOpenMeteoDaily", () => {
       condition: "Partly cloudy",
       windMph: 11,
       rainChance: 30,
+      humidity: null,
+      sunrise: null,
+      sunset: null,
+      hours: [],
+      dateLabel: "3 Oct",
     });
   });
 });

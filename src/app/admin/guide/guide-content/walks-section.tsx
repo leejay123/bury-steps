@@ -103,11 +103,12 @@ export function WalksSection({
           </p>
           <p>
             Under the map, while the walk is still going ahead, there is a 7-day forecast for
-            the meeting point. The day of this walk is marked on the strip, whichever day of
-            the week it is. Walks can be on any day. Temperatures are in Celsius. The card is
-            hidden once the walk is completed or cancelled, and it does not appear if the walk
-            has no map pin. If the walk is more than 16 days away, the card says the forecast
-            is not available yet. The forecast comes from Open-Meteo.
+            the meeting point. Tap a day to see that day’s temperature, conditions, wind,
+            humidity, sunrise and sunset, and the hours through the day. The walk’s own day
+            starts selected, whichever day of the week it is. Temperatures are in Celsius. The
+            card is hidden once the walk is completed or cancelled, and it does not appear if
+            the walk has no map pin. If the walk is more than 16 days away, the card says the
+            forecast is not available yet. The forecast comes from Open-Meteo.
           </p>
           <p>
             You can publish more than one walk in a week. Each walk has its own day, time,

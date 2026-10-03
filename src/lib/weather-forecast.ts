@@ -29,8 +29,9 @@ export async function loadDailyForecast(
   url.searchParams.set("longitude", String(lon));
   url.searchParams.set(
     "daily",
-    "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max",
+    "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,relative_humidity_2m_mean,sunrise,sunset",
   );
+  url.searchParams.set("hourly", "temperature_2m,weather_code");
   url.searchParams.set("timezone", "Europe/London");
   url.searchParams.set("forecast_days", "16");
   url.searchParams.set("wind_speed_unit", "mph");

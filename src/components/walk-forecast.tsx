@@ -85,6 +85,7 @@ async function WalkForecastLoaded({
     <WalkForecastCard
       days={window.days}
       place={place}
+      today={londonDateKey(new Date())}
       walkDate={window.walkDateInWindow ? walkDate : null}
     />
   );

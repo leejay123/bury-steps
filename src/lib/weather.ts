@@ -11,6 +11,14 @@ export type WeatherKind =
   | "snow"
   | "storm";
 
+export type ForecastHour = {
+  /** UK wall time, `HH:mm`. */
+  time: string;
+  temp: number;
+  kind: WeatherKind;
+  condition: string;
+};
+
 export type ForecastDay = {
   /** UK calendar date, `YYYY-MM-DD`. */
   date: string;
@@ -18,6 +26,8 @@ export type ForecastDay = {
   weekday: string;
   /** Day of the month, e.g. "3". */
   dayNum: string;
+  /** UK date under the weekday, e.g. "3 Oct". */
+  dateLabel: string;
   tempMax: number;
   tempMin: number;
   weatherCode: number;
@@ -27,6 +37,14 @@ export type ForecastDay = {
   windMph: number;
   /** 0–100, or null when the forecast has no rain figure. */
   rainChance: number | null;
+  /** 0–100 mean humidity, or null. */
+  humidity: number | null;
+  /** `HH:mm`, or null. */
+  sunrise: string | null;
+  /** `HH:mm`, or null. */
+  sunset: string | null;
+  /** Daytime hours for the detail strip. */
+  hours: ForecastHour[];
 };
 
 export type ForecastWindow = {
@@ -109,6 +127,55 @@ function numList(value: unknown): unknown[] {
   return Array.isArray(value) ? value : [];
 }
 
+function clockLabel(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const match = value.match(/T(\d{2}:\d{2})/);
+  return match?.[1] ?? null;
+}
+
+function dateLabelOf(ymd: string): string {
+  const [year, month, day] = ymd.split("-").map(Number);
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
+    day: "numeric",
+    month: "short",
+  }).format(new Date(Date.UTC(year, month - 1, day, 12)));
+}
+
+/** One line under the big temperature. */
+export function forecastSummary(day: Pick<ForecastDay, "condition" | "windMph" | "rainChance">): string {
+  const details: string[] = [];
+  if (day.windMph > 0) details.push(`${day.windMph} mph winds`);
+  if (day.rainChance !== null && day.rainChance > 0) details.push(`a ${day.rainChance}% chance of rain`);
+  if (details.length === 0) return `${day.condition} through the day.`;
+  return `${day.condition} through the day, with ${details.join(" and ")}.`;
+}
+
+function hoursForDate(date: string, hourly: Record<string, unknown> | null): ForecastHour[] {
+  if (!hourly) return [];
+  const times = numList(hourly.time);
+  const temps = numList(hourly.temperature_2m);
+  const codes = numList(hourly.weather_code);
+  const hours: ForecastHour[] = [];
+  for (let i = 0; i < times.length; i++) {
+    const stamp = times[i];
+    if (typeof stamp !== "string" || !stamp.startsWith(`${date}T`)) continue;
+    const time = clockLabel(stamp);
+    const hour = time ? Number(time.slice(0, 2)) : NaN;
+    if (!time || hour < 6 || hour > 21) continue;
+    const temp = num(temps[i]);
+    const code = num(codes[i]);
+    if (temp === null || code === null) continue;
+    hours.push({
+      time,
+      temp: Math.round(temp),
+      kind: weatherKind(code),
+      condition: weatherCondition(code),
+    });
+  }
+  return hours;
+}
+
 /** Open-Meteo `daily` block → one row per date. Skips days missing a temperature. */
 export function mapOpenMeteoDaily(payload: unknown): ForecastDay[] {
   if (!payload || typeof payload !== "object") return [];
@@ -121,6 +188,12 @@ export function mapOpenMeteoDaily(payload: unknown): ForecastDay[] {
   const mins = numList(block.temperature_2m_min);
   const winds = numList(block.wind_speed_10m_max);
   const rain = numList(block.precipitation_probability_max);
+  const humidity = numList(block.relative_humidity_2m_mean);
+  const sunrises = numList(block.sunrise);
+  const sunsets = numList(block.sunset);
+  const hourlyRaw = (payload as { hourly?: unknown }).hourly;
+  const hourly =
+    hourlyRaw && typeof hourlyRaw === "object" ? (hourlyRaw as Record<string, unknown>) : null;
 
   const days: ForecastDay[] = [];
   for (let i = 0; i < time.length; i++) {
@@ -132,10 +205,12 @@ export function mapOpenMeteoDaily(payload: unknown): ForecastDay[] {
     if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) continue;
     if (tempMax === null || tempMin === null || code === null) continue;
     const rainChance = num(rain[i]);
+    const humidityValue = num(humidity[i]);
     days.push({
       date,
       weekday: weekdayShort(date),
       dayNum: String(Number(date.slice(8, 10))),
+      dateLabel: dateLabelOf(date),
       tempMax: Math.round(tempMax),
       tempMin: Math.round(tempMin),
       weatherCode: code,
@@ -143,6 +218,10 @@ export function mapOpenMeteoDaily(payload: unknown): ForecastDay[] {
       condition: weatherCondition(code),
       windMph: wind === null ? 0 : Math.round(wind),
       rainChance: rainChance === null ? null : Math.round(rainChance),
+      humidity: humidityValue === null ? null : Math.round(humidityValue),
+      sunrise: clockLabel(sunrises[i]),
+      sunset: clockLabel(sunsets[i]),
+      hours: hoursForDate(date, hourly),
     });
   }
   return days;
