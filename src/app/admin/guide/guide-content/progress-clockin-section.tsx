@@ -102,9 +102,11 @@ export function ProgressClockInSection() {
               person who is not on Members.
             </p>
             <p>
-              The first time a member reaches their Walks page before they have been on any
-              walk, they see a short pop-up walking through these steps. It only shows once —
-              after their first walk, or once they dismiss it, it does not come back.
+              The first time a new member opens Walks, before they have been on any walk,
+              they see a short pop-up walking through these steps. Tapping Got it saves that
+              on their account, so it does not come back on another phone or the next visit.
+              Their first clock-in does the same. Members who already had an account are not
+              shown it.
             </p>
           </GuideBody>
         </AccordionContent>

@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { dismissMemberWelcome } from "@/server/actions";
 
 const SEEN_KEY_PREFIX = "bs_welcome_seen:";
 
@@ -73,13 +74,12 @@ function MemberWelcomeDialogContent({
 }
 
 /**
- * Shown once, the first time a member with no walks yet reaches the
- * dashboard. Gated on both "no attendances" (so returning members never see
- * it) and a localStorage flag (so dismissing it sticks even before their
- * first walk). No DB flag needed — once they clock in once, `hasNoWalks`
- * alone would already stop this from showing again.
+ * Shown once, the first time a new member with no walks yet opens Walks.
+ * Dismissing it is saved on the account (`welcomeSeenAt`), so it does not
+ * come back on another phone or the next visit. localStorage is only a
+ * same-browser backup for the moment before that save lands.
  *
- * The flag is keyed by `userId`, not a single fixed key — otherwise
+ * The browser flag is keyed by `userId`, not a single fixed key — otherwise
  * dismissing it once in a browser would hide it forever for every future
  * account signed into that same browser, including a brand-new account
  * created after the original one was deleted (a real case on a shared/test
@@ -115,8 +115,9 @@ export function MemberWelcomeDialog({
     try {
       window.localStorage.setItem(seenKey, "1");
     } catch {
-      // Ignore — worst case it shows again next visit.
+      // Ignore — the account flag below is what actually sticks.
     }
+    void dismissMemberWelcome();
   }
 
   return (

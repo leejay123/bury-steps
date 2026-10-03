@@ -27,6 +27,7 @@ export { createJourneyEvent, updateJourneyEvent, deleteJourneyEvent } from "./ac
 
 export {
   clockIn,
+  dismissMemberWelcome,
   searchAddableMembers,
   adminClockIn,
   adminRemoveAttendance,

@@ -71,6 +71,11 @@ model User {
   /// to organisers only, never to other members.
   emergencyContactName     String?
   emergencyContactPhone    String?
+  /// Set when they dismiss the first-visit clock-in pop-up, or on their
+  /// first clock-in. Null only for an account that has never been shown it.
+  /// Existing accounts are backfilled so the pop-up does not start appearing
+  /// for people who are already members.
+  welcomeSeenAt            DateTime?
 
   walksCreated            Walk[]                 @relation("WalkCreator")
   attendances             Attendance[]

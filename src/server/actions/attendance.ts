@@ -137,6 +137,7 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
         data: {
           emergencyContactName: contact.name,
           emergencyContactPhone: contact.phone,
+          welcomeSeenAt: new Date(),
         },
       });
 
@@ -167,6 +168,21 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
   revalidatePath("/progress");
   revalidatePath(`/admin/walks/${walk.id}`);
   return { ok: true, message: "Clocked in. Enjoy the walk." };
+}
+
+/** Marks the first-visit clock-in pop-up as seen, on the account. */
+export async function dismissMemberWelcome(): Promise<void> {
+  const user = await requireUser();
+  try {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { welcomeSeenAt: new Date() },
+    });
+  } catch (err) {
+    logActionError("dismissMemberWelcome", err, "Could not save that.");
+    return;
+  }
+  revalidatePath("/walks");
 }
 
 const adminClockInSchema = z.object({

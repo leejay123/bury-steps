@@ -153,7 +153,7 @@ async function WalksBody({ user }: { user: User }) {
     <>
       <MemberWelcomeDialog
         firstName={user.firstName}
-        hasNoWalks={totalAttendanceCount === 0}
+        hasNoWalks={totalAttendanceCount === 0 && user.welcomeSeenAt == null}
         userId={user.id}
       />
 

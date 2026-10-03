@@ -66,7 +66,14 @@ vi.mock("@/lib/auth", async () => {
 // not mocked above) and hits the network — out of scope for these tests.
 vi.mock("@/lib/email/mailer", () => ({ sendAddedToWalkEmail }));
 
-import { adminClockIn, adminRemoveAttendance, clockIn, clockOut, searchAddableMembers } from "./attendance";
+import {
+  adminClockIn,
+  adminRemoveAttendance,
+  clockIn,
+  clockOut,
+  dismissMemberWelcome,
+  searchAddableMembers,
+} from "./attendance";
 
 const USER = { id: "user-1" };
 // Full access by default so existing tests exercise the authorized path —
@@ -127,6 +134,17 @@ beforeEach(() => {
   organiserRecordedClockInAt.mockImplementation((_walk, now = new Date()) => now);
   prismaMock.siteSetting.findUnique.mockResolvedValue({ emergencyContactRequired: false });
   prismaMock.user.update.mockResolvedValue({});
+});
+
+describe("dismissMemberWelcome", () => {
+  it("saves the pop-up as seen on the signed-in account", async () => {
+    prismaMock.user.update.mockResolvedValueOnce({});
+    await dismissMemberWelcome();
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: USER.id },
+      data: { welcomeSeenAt: expect.any(Date) },
+    });
+  });
 });
 
 describe("clockIn", () => {
@@ -219,7 +237,11 @@ describe("clockIn", () => {
     expect(result.ok).toBe(true);
     expect(prismaMock.user.update).toHaveBeenCalledWith({
       where: { id: USER.id },
-      data: { emergencyContactName: "Alex Stone", emergencyContactPhone: "07700 900123" },
+      data: {
+        emergencyContactName: "Alex Stone",
+        emergencyContactPhone: "07700 900123",
+        welcomeSeenAt: expect.any(Date),
+      },
     });
   });
 
