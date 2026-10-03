@@ -1,6 +1,7 @@
 /**
  * Grey placeholders never just flash. If one appears and the real content
- * replaces it within HOLD ms, the content is kept under matching grey shapes
+ * replaces it within HOLD ms, the content's lists and tables (only — headings,
+ * buttons, tabs and filters show at once) are kept under matching grey shapes
  * (one bar per line of text, the right size for pictures, avatars, fields
  * and buttons) until HOLD is up, then the grey fades into the content from
  * a soft blur — the Members list's look. Placeholders shown longer than
@@ -53,11 +54,27 @@ function reveal(nodes,hold){
   }
   nodes.forEach(function(n){n.animate([{opacity:0,filter:BLUR},{opacity:1,filter:"blur(0)"}],{duration:REVEAL,easing:"ease-in-out"});});
 }
+function keep(gone,list,hold){
+  var src=null;
+  var LISTISH="ul,ol,table,[data-reveal-list],.divide-y,.rounded-xl.border";
+  for(var i=0;i<gone.length&&!src;i++){var g=gone[i];src=g.matches(LISTISH)?g:g.querySelector(LISTISH);}
+  if(!src)return false;
+  var r=list.getBoundingClientRect();if(r.width<2||r.height<2)return false;
+  var layer=document.createElement("div");layer.setAttribute("aria-hidden","true");
+  layer.style.cssText="position:absolute;left:"+(r.left+window.scrollX)+"px;top:"+(r.top+window.scrollY)+"px;width:"+r.width+"px;height:"+r.height+"px;overflow:hidden;pointer-events:none;z-index:40;background:var(--background)";
+  var copy=src.cloneNode(true);copy.style.width="100%";copy.style.margin="0";
+  layer.appendChild(copy);document.body.appendChild(layer);
+  var total=hold+REVEAL,h=hold/total;
+  list.animate([{opacity:0,filter:BLUR,offset:0},{opacity:0,filter:BLUR,offset:h},{opacity:1,filter:"blur(0)",offset:1}],{duration:total,easing:"ease-in-out"});
+  layer.animate([{opacity:1,filter:"blur(0)",offset:0},{opacity:1,filter:"blur(0)",offset:h},{opacity:0,filter:BLUR,offset:1}],{duration:total,easing:"ease-in-out",fill:"forwards"});
+  setTimeout(function(){layer.remove();},total+60);
+  return true;
+}
 new MutationObserver(function(records){
-  var removedSkel=false,addedSkel=false,added=[];
+  var removedSkel=false,addedSkel=false,added=[],gone=[];
   records.forEach(function(rec){
     if(!inMain(rec.target))return;
-    [].forEach.call(rec.removedNodes,function(n){if(isSkel(n))removedSkel=true;});
+    [].forEach.call(rec.removedNodes,function(n){if(isSkel(n)){removedSkel=true;gone.push(n);}});
     [].forEach.call(rec.addedNodes,function(n){
       if(n.nodeType!==1||n.matches("script,style,template"))return;
       if(isSkel(n)){addedSkel=true;return;}
@@ -68,8 +85,28 @@ new MutationObserver(function(records){
   if(!removedSkel||!added.length)return;
   var outer=added.filter(function(n){return n.isConnected&&!added.some(function(o){return o!==n&&o.contains(n);});});
   if(!outer.length)return;
+  // Only lists and tables are held and revealed (the shared list, History,
+  // any list of data-stagger-item rows, real tables) — headings, buttons,
+  // tabs and filters show straight away. Lists with their own reveal
+  // (Members, .t-skel) are left alone.
+  var lists=[];
+  outer.forEach(function(n){
+    var found=[].slice.call(n.querySelectorAll("[data-reveal-list],table"));
+    if(n.matches("[data-reveal-list],table"))found.push(n);
+    [].forEach.call(n.querySelectorAll("[data-stagger-item]"),function(row){if(row.parentElement)found.push(row.parentElement);});
+    found.forEach(function(el){if(lists.indexOf(el)<0&&el.getClientRects().length&&!el.closest(".t-skel"))lists.push(el);});
+  });
+  lists=lists.filter(function(el){return !lists.some(function(o){return o!==el&&o.contains(el);});});
+  if(!lists.length)return;
   var wait=Math.max(0,HOLD-(performance.now()-shownAt));
-  reveal(outer,wait);
+  // Keep the page's own placeholder on screen (a copy, over the new list)
+  // rather than swapping to different grey shapes — one placeholder that
+  // never changes shape, then a fade into the real list.
+  if(wait>30&&gone.length&&keep(gone,lists[0],wait)){
+    if(lists.length>1)reveal(lists.slice(1),0);
+    return;
+  }
+  reveal(lists,wait);
 }).observe(document.documentElement,{childList:true,subtree:true});
 }catch(e){}})();`;
 
