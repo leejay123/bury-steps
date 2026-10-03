@@ -19,16 +19,20 @@ const DURATION = 0.22;
  * the lines beside it), and pages without an <h1> move as a whole.
  */
 function moving(page: HTMLElement): HTMLElement[] {
-  const marked = [...page.querySelectorAll<HTMLElement>("[data-page-motion]")];
+  // Pages kept in the background (Next.js holds the last page hidden so Back
+  // is instant) are still inside this wrapper: only ever pick what's on
+  // screen, or the hidden page gets slid out and comes back invisible.
+  const shown = (node: Element) => node.getClientRects().length > 0;
+  const marked = [...page.querySelectorAll<HTMLElement>("[data-page-motion]")].filter(shown);
   if (marked.length) return marked;
-  const heading = page.querySelector("h1")?.parentElement;
+  const heading = [...page.querySelectorAll("h1")].find(shown)?.parentElement;
   if (!heading || heading === page || !page.contains(heading)) return [page];
   const parts: HTMLElement[] = [];
   // Everything after the heading block, at each level up to the page.
   for (let node: HTMLElement | null = heading; node && node !== page; node = node.parentElement) {
     for (let next = node.nextElementSibling; next; next = next.nextElementSibling) {
       // Divider lines drawn under the heading stay with it.
-      if (next instanceof HTMLElement && getComputedStyle(next).position !== "absolute") parts.push(next);
+      if (next instanceof HTMLElement && shown(next) && getComputedStyle(next).position !== "absolute") parts.push(next);
     }
   }
   return parts.length ? parts : [page];
@@ -65,6 +69,8 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
   const previous = useRef<string | null>(null);
   const leaving = useRef(false);
   const fromMenu = useRef(false);
+  // What the last slide-out moved, so it can be put back on the next page.
+  const slidOut = useRef<HTMLElement[]>([]);
   // Set when a bottom bar tab is tapped: which way to slide (+1 = the tab
   // is to the right of the current one), or 0 when it's not a tab tap.
   const fromBottomBar = useRef<-1 | 0 | 1>(0);
@@ -145,7 +151,9 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
         gone = true;
         router.push(target.href);
       };
-      animate(moving(el), { opacity: 0, x: -target.direction * DISTANCE }, { duration: DURATION, ease: EASE }).then(go, go);
+      const outgoing = moving(el);
+      slidOut.current = outgoing;
+      animate(outgoing, { opacity: 0, x: -target.direction * DISTANCE }, { duration: DURATION, ease: EASE }).then(go, go);
       // Safety net: never leave someone stuck if the animation can't finish
       // (a background tab pauses animations).
       window.setTimeout(go, 400);
@@ -171,6 +179,13 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
     fromBottomBar.current = 0;
     const page = ref.current;
     if (!page) return;
+    // A page the slide-out moved may be shown again as it was (Back
+    // restores the previous page) — never leave it faded or shifted.
+    for (const node of slidOut.current) {
+      node.style.transform = "";
+      node.style.opacity = "";
+    }
+    slidOut.current = [];
     const el = moving(page);
 
     const clear = () => {
