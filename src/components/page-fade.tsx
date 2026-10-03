@@ -12,29 +12,18 @@ const DISTANCE = 18;
 const DURATION = 0.22;
 
 /**
- * What moves on a page change: only the content, never the page's heading.
- * A page can name its moving parts with data-page-motion (the contact
- * card); otherwise it's everything after the heading block (the <h1> and
- * the lines beside it), and pages without an <h1> move as a whole.
+ * What moves on a page change: the whole page, as one — never pieces of
+ * its content separately (that made text and cards slide about on their
+ * own). A page can still name a single part to move instead with
+ * data-page-motion (the contact card).
  */
 function moving(page: HTMLElement): HTMLElement[] {
   // Pages kept in the background (Next.js holds the last page hidden so Back
-  // is instant) are still inside this wrapper: only ever pick what's on
-  // screen, or the hidden page gets slid out and comes back invisible.
-  const shown = (node: Element) => node.getClientRects().length > 0;
-  const marked = [...page.querySelectorAll<HTMLElement>("[data-page-motion]")].filter(shown);
-  if (marked.length) return marked;
-  const heading = [...page.querySelectorAll("h1")].find(shown)?.parentElement;
-  if (!heading || heading === page || !page.contains(heading)) return [page];
-  const parts: HTMLElement[] = [];
-  // Everything after the heading block, at each level up to the page.
-  for (let node: HTMLElement | null = heading; node && node !== page; node = node.parentElement) {
-    for (let next = node.nextElementSibling; next; next = next.nextElementSibling) {
-      // Divider lines drawn under the heading stay with it.
-      if (next instanceof HTMLElement && shown(next) && getComputedStyle(next).position !== "absolute") parts.push(next);
-    }
-  }
-  return parts.length ? parts : [page];
+  // is instant) are still inside this wrapper: only pick what's on screen.
+  const marked = [...page.querySelectorAll<HTMLElement>("[data-page-motion]")].filter(
+    (node) => node.getClientRects().length > 0,
+  );
+  return marked.length ? marked : [page];
 }
 
 type Run = { complete: () => void; cancel: () => void };
@@ -87,8 +76,8 @@ function reducedMotion() {
  *             back, it slides out to the right and the list slides in from
  *             the left. Out first, then in (Motion's AnimatePresence
  *             mode="wait", done across real page changes so every page keeps
- *             its own shareable address). Cards marked data-stagger-item
- *             cascade in. Sideways moves just fade.
+ *             its own shareable address). The whole page moves as one;
+ *             nothing inside it slides on its own. Sideways moves just fade.
  *   "rise"  — every page rises 14px into place as it fades in, like the
  *             walk cards (which still cascade)
  *   "none"  — no animation
@@ -175,20 +164,9 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
         fromMenu.current = true;
         return;
       }
-      const target = slideTarget(link);
-      const el = ref.current;
-      if (!target || !el || leaving.current) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-      leaving.current = true;
-      // Ask for the new page straight away, while this one slides out:
-      // the wait for it overlaps the slide instead of following it. Next
-      // keeps this page on screen until the new one is ready, so it's
-      // still out first, then in — just without a gap in the middle.
-      slideOutRun.current?.cancel();
-      slideOutRun.current = play(moving(el), {}, { opacity: 0, x: -target.direction * DISTANCE }, { duration: DURATION, hold: true });
-      router.push(target.href);
+      // No slide-out: the current page stays where it is until the next
+      // one is ready, then that one slides in. Sliding this one out first
+      // left a blank page for as long as the next one took to arrive.
     };
     document.addEventListener("pointerdown", onPointerDown, true);
     document.addEventListener("click", onClick, true);
@@ -241,7 +219,7 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
     const cardsSideways = tabSwitch;
     const runs: Run[] = [];
     let watcher: MutationObserver | null = null;
-    if (mode === "slide" || mode === "rise") {
+    if (mode === "rise" && !tabSwitch) {
       // Cascade the list rows in. Some lists (Members, Messages…) load a
       // moment after the page shows, behind skeleton rows, so keep watching
       // briefly and cascade rows that arrive late too. Each row only once.
@@ -274,43 +252,11 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
         ? play(nodes, { opacity: fromHidden ? 0 : 0.3, x: direction * DISTANCE }, {}, { duration: DURATION })
         : play(nodes, { opacity: 0.4 }, {}, { duration: 0.18, easing: "ease-out" });
 
-    let arrivals: MutationObserver | null = null;
     if (from !== null && from !== pathname) {
-      // Still a grey placeholder (the page's own details are loading)?
-      // Don't animate that — the real content gets the one entrance when it
-      // arrives (below). Animating both looked like a stutter.
-      const placeholder = el.some(
-        (node) => node.matches('[aria-busy="true"], [data-slot="skeleton"]') || !!node.querySelector('[aria-busy="true"], [data-slot="skeleton"]'),
-      );
-      if (placeholder) {
-        clear();
-      } else {
-        clear();
-        runs.push(enter(el, wasLeaving));
-      }
-
-      // Pages that show your own details (Notices, Walks, Members…) open
-      // with a placeholder and swap in the real list a moment later. That
-      // list arrives after the animation above has run on the placeholder,
-      // so give whatever arrives in the next moment the same entrance.
-      arrivals = new MutationObserver((records) => {
-        const added = new Set<HTMLElement>();
-        for (const record of records) {
-          for (const node of record.addedNodes) {
-            if (!(node instanceof HTMLElement) || node.matches("script, style, template")) continue;
-            if (getComputedStyle(node).position === "absolute" || getComputedStyle(node).position === "fixed") continue;
-            added.add(node);
-          }
-        }
-        // Only the outermost new parts; their insides move with them.
-        const outer = [...added].filter((node) => ![...added].some((other) => other !== node && other.contains(node)));
-        if (!outer.length) return;
-        runs.push(enter(outer, true));
-      });
-      arrivals.observe(page, { childList: true, subtree: true });
-      // Up to 3s: long enough for a slow phone connection, short enough not
-      // to animate something that changes later for another reason.
-      window.setTimeout(() => arrivals?.disconnect(), 3000);
+      clear();
+      // The page moves as one. If its details are still loading, the
+      // placeholder moves with it and the content then appears in place.
+      runs.push(enter(el, wasLeaving));
     } else {
       clear();
     }
@@ -318,7 +264,6 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
     // end rather than freezing half-faded.
     return () => {
       watcher?.disconnect();
-      arrivals?.disconnect();
       runs.forEach((run) => run.complete());
     };
   }, [pathname, mode]);
