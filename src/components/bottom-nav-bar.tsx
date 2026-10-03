@@ -195,12 +195,9 @@ export function BottomNavBar({
     return (
       <li className="flex" key={item.href}>
         {item.href.startsWith("/") ? (
-          // Full prefetch: these pages are dynamic, and by default Next only
-          // loads them up to their loading skeleton — so the first tap slid
-          // in a grey outline that the real page then snapped over (the
-          // "jump"). With the whole page loaded ahead, every tap slides in
-          // the real thing. Only the few tabs on the bar are fetched.
-          <Link aria-current={active ? "page" : undefined} className={tabClass(active)} href={item.href} prefetch>
+          // Default prefetch (the page's outline only) — see the note on
+          // the header links in site-nav-menu.tsx.
+          <Link aria-current={active ? "page" : undefined} className={tabClass(active)} href={item.href}>
             <Tab active={active} icon={ICONS[item.label] ?? House} label={item.label}>
               {item.dot ? (
                 <Suspense fallback={null}>

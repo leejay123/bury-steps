@@ -59,11 +59,11 @@ export async function SiteFooter() {
           <Link className={linkClassName} href="/">
             Home
           </Link>
-          <Link className={linkClassName} href="/notices" prefetch={shouldPrefetchNavLink("/notices")}>
+          <Link className={linkClassName} href="/notices" prefetch={shouldPrefetchNavLink("/notices") ? undefined : false}>
             Notices
           </Link>
           {progressEnabled ? (
-            <Link className={linkClassName} href="/progress" prefetch={shouldPrefetchNavLink("/progress")}>
+            <Link className={linkClassName} href="/progress" prefetch={shouldPrefetchNavLink("/progress") ? undefined : false}>
               Progress
             </Link>
           ) : null}

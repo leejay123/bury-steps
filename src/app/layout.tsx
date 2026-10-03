@@ -3,6 +3,8 @@ import { PageFade } from "@/components/page-fade";
 import { ClientPathnameProvider } from "@/components/client-pathname";
 import { SiteMotionConfig } from "@/components/site-motion-config";
 import { LiveUpdates } from "@/components/live-updates";
+import { SkeletonRevealEverywhere } from "@/components/skeleton-reveal-everywhere";
+import { KeepFormInputOnError } from "@/components/keep-form-input-on-error";
 import { WalkEssentialsProvider } from "@/components/walk-essentials-context";
 import { SignedInProvider } from "@/components/signed-in-context";
 import { AnnouncementBanner } from "@/components/announcement-banner";
@@ -138,6 +140,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <div className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
             <UnlockPageOnNavigate />
             <LiveUpdates />
+            <SkeletonRevealEverywhere />
+            <KeepFormInputOnError />
             {/*
               Off-screen until focused, so a keyboard/screen-reader user's
               very first tab stop jumps straight past the header and nav —

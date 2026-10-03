@@ -79,13 +79,10 @@ function NavLink({
       aria-current={active ? "page" : undefined}
       className={cn(navLinkClass(active), className)}
       href={href}
-      prefetch={true}
-      // No prefetch restriction needed here: SiteNavLinks/SiteMobileNavBar
-      // (this component's only callers, see site-nav.tsx) render exclusively
-      // for already-signed-in users, so a link to a sign-in-required route
-      // never hits the redirect-to-sign-in path that caused the Clerk CORS
-      // error for signed-out visitors — that only happens via the footer,
-      // which shows these links to everyone. See shouldPrefetchNavLink.
+      // Default prefetch: only the page's ready-made outline, which comes
+      // from the CDN at no cost. Loading every menu page in full on every
+      // page view (and again whenever anything was saved) was ~8 database
+      // renders per open tab — too much load for a small database.
       onClick={(event) => {
         unlockIdleDocument();
         onSelect?.(event.currentTarget);

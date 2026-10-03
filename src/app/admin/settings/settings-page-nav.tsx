@@ -46,11 +46,8 @@ export function SettingsBackLink() {
  * Renders nothing on an ordinary page.
  *
  * Kept quick on phones:
- *  - prefetch={true}: these pages are dynamic, and by default Next.js only
- *    prefetches a dynamic route up to its loading.js — so each tap waited
- *    on the server and flashed the whole-page Settings skeleton (tabs and
- *    all) first. Full prefetch loads all five up front; there are only five
- *    and they're small.
+ *  - Default prefetch (each page's outline only). Loading every tab's page
+ *    in full ahead of time was dropped site-wide to keep database load down.
  *  - The tapped tab highlights straight away (pendingHref) instead of only
  *    once the new page has arrived.
  *  - The current tab is brought into view by scrolling the tab strip
@@ -123,7 +120,6 @@ export function SettingsSubPageTabs() {
                   unlockIdleDocument();
                   if (child.href !== pathname) setPending({ href: child.href, from: pathname });
                 }}
-                prefetch
               >
                 {child.title}
               </Link>
