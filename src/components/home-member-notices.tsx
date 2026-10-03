@@ -59,7 +59,7 @@ function NoticeCarouselCard({ notice }: { notice: HomepageNoticeSlide }) {
 
   if (notice.kind === "PAGE" && notice.slug) {
     return (
-      <Link className={noticeCardClassName} href={`/notices/${notice.slug}`}>
+      <Link className={noticeCardClassName} href={`/notices/${notice.slug}`} prefetch>
         {content}
       </Link>
     );

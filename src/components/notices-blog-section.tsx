@@ -137,6 +137,12 @@ export function NoticesBlogSection({
                   data-stagger-item=""
                   href={`/notices/${notice.slug}`}
                   key={notice.id}
+                  // Loads the whole notice for this member as soon as the
+                  // card is on screen (after the member check), so opening
+                  // it is instant — like a settings page — instead of
+                  // waiting for it after the tap. One small request per
+                  // card on this page of the list.
+                  prefetch
                 >
                   <p className="text-xs font-medium text-muted-foreground">
                     {notice.categoryLabel ?? "Notice"}

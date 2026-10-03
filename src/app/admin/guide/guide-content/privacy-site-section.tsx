@@ -92,13 +92,13 @@ export function PrivacySiteSection() {
               just their name and are found by their name only — not by date, time or meeting point. Moving between pages, the new page fades in quickly (under a fifth of a second)
               while the header stays still — the old page stays up until the new one is ready, so
               there’s no white flash in between. <strong>Page transitions</strong> in Site behaviour
-              switches this: Quick fade; Slide in and out of pages (like the returns portal: opening
+              switches this: Quick fade; Slide in and out of pages (opening
               something — a walk, a notice, a member, a settings page — the list slides away then
               the page slides in from the right, and back again, with walk cards cascading in;
               moving between main sections slides like tabs, following the order of the menu bar;
               pages opened from the phone menu just appear, since the menu closing is already the
               change; the homepage always just appears, with no slide or fade); Rise up, where each page rises gently into place like the walk cards; or No transition. On the Contact page only the contact card moves — its heading stays still. Tapping the phone bottom bar, the cards slide in sideways with the page rather than rising. With Slide, the next page starts loading the moment you
-              tap, while the old one slides away, so it’s usually ready as soon as the slide ends. <strong>Phone menu</strong> in Site behaviour chooses how signed-in people get around on
+              tap, while the old one slides away, so it’s usually ready as soon as the slide ends. Notices shown on the Notices page (and the latest ones on the homepage) are loaded in the background while they&apos;re on screen, so opening one is instant. <strong>Phone menu</strong> in Site behaviour chooses how signed-in people get around on
               phones: the original ☰ menu (logo in the middle), or a <strong>bottom bar</strong> (logo on the
               left) with four main pages plus <strong>More</strong>, which slides up everything else. Signed-out visitors get their own bar — Home, Contact, the Facebook group
               and More — with Sign in and Join staying at the top. On a
