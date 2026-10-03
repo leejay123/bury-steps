@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { loadDailyForecast } from "@/lib/weather-forecast";
+import { loadDailyForecast, loadForecastPlaceName } from "@/lib/weather-forecast";
 import { forecastWindow, londonDateKey } from "@/lib/weather";
 import { formatWalkDay } from "@/lib/dates";
 import { walkStatus } from "@/lib/walk-window";
@@ -51,12 +51,18 @@ async function WalkForecastLoaded({
   startsAt: Date;
 }) {
   const walkDate = londonDateKey(startsAt);
+  let area = place;
+  try {
+    area = (await loadForecastPlaceName(latitude, longitude)) || place;
+  } catch {
+    area = place;
+  }
   let days;
   try {
     days = await loadDailyForecast(latitude, longitude);
   } catch {
     return (
-      <ForecastFrame place={place}>
+      <ForecastFrame place={area}>
         <p className="text-sm text-muted-foreground">The forecast couldn’t be loaded just now.</p>
       </ForecastFrame>
     );
@@ -65,7 +71,7 @@ async function WalkForecastLoaded({
   const window = forecastWindow(days, walkDate);
   if (window.availableLater) {
     return (
-      <ForecastFrame place={place}>
+      <ForecastFrame place={area}>
         <p className="text-sm text-muted-foreground">
           The forecast for {formatWalkDay(startsAt)} isn’t available yet. It appears here in the 16
           days before the walk.
@@ -75,7 +81,7 @@ async function WalkForecastLoaded({
   }
   if (window.days.length === 0) {
     return (
-      <ForecastFrame place={place}>
+      <ForecastFrame place={area}>
         <p className="text-sm text-muted-foreground">The forecast couldn’t be loaded just now.</p>
       </ForecastFrame>
     );
@@ -84,7 +90,7 @@ async function WalkForecastLoaded({
   return (
     <WalkForecastCard
       days={window.days}
-      place={place}
+      place={area}
       today={londonDateKey(new Date())}
       walkDate={window.walkDateInWindow ? walkDate : null}
     />

@@ -8,6 +8,7 @@ export type PlaceHit = {
 };
 
 const NOMINATIM_SEARCH = "https://nominatim.openstreetmap.org/search";
+const NOMINATIM_REVERSE = "https://nominatim.openstreetmap.org/reverse";
 const USER_AGENT =
   "BuryStepsWalkingGroup/1.0 (https://burysteps-walkinggroup.co.uk; walking group website)";
 
@@ -156,6 +157,60 @@ export async function searchPlaces(
     if (merged.length > 0) return merged;
   }
   return merged;
+}
+
+function addressPart(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+/**
+ * A short place for the forecast pin: the town, then the wider area when it
+ * adds something. "Failsworth, Greater Manchester", "Bury, Greater Manchester".
+ * A tiny neighbourhood is only used when there is no town or city.
+ */
+export function forecastPlaceName(address: {
+  suburb?: unknown;
+  village?: unknown;
+  town?: unknown;
+  city?: unknown;
+  state_district?: unknown;
+} | null | undefined): string | null {
+  if (!address) return null;
+  const local =
+    addressPart(address.town) ??
+    addressPart(address.village) ??
+    addressPart(address.city) ??
+    addressPart(address.suburb);
+  if (!local) return null;
+  const region = addressPart(address.state_district);
+  if (region && region.toLowerCase() !== local.toLowerCase()) return `${local}, ${region}`;
+  return local;
+}
+
+/** Town name for a map pin. No API key. Returns null on miss or failure. */
+export async function reverseForecastPlace(latitude: number, longitude: number): Promise<string | null> {
+  const url = new URL(NOMINATIM_REVERSE);
+  url.searchParams.set("lat", String(latitude));
+  url.searchParams.set("lon", String(longitude));
+  url.searchParams.set("format", "jsonv2");
+  url.searchParams.set("addressdetails", "1");
+  url.searchParams.set("zoom", "12");
+
+  const res = await fetch(url, {
+    headers: {
+      Accept: "application/json",
+      "Accept-Language": "en-GB",
+      "User-Agent": USER_AGENT,
+    },
+    cache: "no-store",
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!res.ok) return null;
+  const data: unknown = await res.json();
+  if (!data || typeof data !== "object") return null;
+  const address = (data as { address?: unknown }).address;
+  if (!address || typeof address !== "object") return null;
+  return forecastPlaceName(address);
 }
 
 /** Look up a meeting point. No API key. Returns null on miss or failure. */

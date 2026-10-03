@@ -102,8 +102,9 @@ export default function PrivacyPolicyPage() {
               </li>
               <li>
                 <strong>OpenStreetMap</strong> looks up the meeting point (and postcode, if the
-                organiser added one) so the walk page can show a map. That lookup is the place
-                name and postcode only, not your account. If you tap Get directions, Google Maps or
+                organiser added one) so the walk page can show a map, and names the town from the
+                map pin on the forecast. Those lookups are the place name, postcode, or map
+                location only, not your account. If you tap Get directions, Google Maps or
                 Apple Maps opens with that place.
               </li>
               <li>

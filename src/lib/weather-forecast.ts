@@ -1,4 +1,5 @@
 import { cacheLife } from "next/cache";
+import { reverseForecastPlace } from "@/lib/geocode";
 import { mapOpenMeteoDaily, type ForecastDay } from "@/lib/weather";
 
 /** About 1 km. Nearby walks share one saved forecast. */
@@ -47,4 +48,18 @@ export async function loadDailyForecast(
     throw new Error(`Open-Meteo responded ${response.status}`);
   }
   return mapOpenMeteoDaily(await response.json());
+}
+
+/**
+ * Town for the forecast card, from the same pin as the weather. Saved for a
+ * day — the name of a place does not change between visits.
+ */
+export async function loadForecastPlaceName(latitude: number, longitude: number): Promise<string | null> {
+  "use cache";
+  cacheLife({ revalidate: 60 * 60 * 24 });
+
+  const lat = roundedCoordinate(latitude);
+  const lon = roundedCoordinate(longitude);
+  if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
+  return reverseForecastPlace(lat, lon);
 }

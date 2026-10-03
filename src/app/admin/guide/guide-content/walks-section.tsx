@@ -103,7 +103,8 @@ export function WalksSection({
           </p>
           <p>
             Under the map, while the walk is still going ahead, there is a 7-day forecast for
-            the meeting point. Tap a day to see that day’s temperature, conditions, wind,
+            the meeting point. The name on the card is the town for that pin, such as Failsworth
+            or Bury, Greater Manchester, rather than the wording you typed. Tap a day to see that day’s temperature, conditions, wind,
             humidity, sunrise and sunset, and the hours through the day. The walk’s own day
             starts selected, whichever day of the week it is. Temperatures are in Celsius. The
             card is hidden once the walk is completed or cancelled, and it does not appear if

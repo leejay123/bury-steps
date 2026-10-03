@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  forecastPlaceName,
   geocodeLocation,
   geocodeQueries,
   geocodeQuery,
@@ -20,6 +21,33 @@ describe("meetingPointLabel", () => {
     expect(meetingPointLabel("Burrs", "")).toBe("Burrs");
     expect(meetingPointLabel(null, "BL8 1DA")).toBe("BL8 1DA");
     expect(meetingPointLabel("  ", null)).toBe("");
+  });
+});
+
+describe("forecastPlaceName", () => {
+  it("names the town and the wider area", () => {
+    expect(
+      forecastPlaceName({
+        suburb: "White Gate",
+        town: "Failsworth",
+        city: "Oldham",
+        state_district: "Greater Manchester",
+      }),
+    ).toBe("Failsworth, Greater Manchester");
+    expect(forecastPlaceName({ town: "Bury", city: "Bury", state_district: "Greater Manchester" })).toBe(
+      "Bury, Greater Manchester",
+    );
+  });
+
+  it("uses the city when there is no town", () => {
+    expect(forecastPlaceName({ city: "Manchester", state_district: "Greater Manchester" })).toBe(
+      "Manchester, Greater Manchester",
+    );
+  });
+
+  it("returns null when the lookup has no place", () => {
+    expect(forecastPlaceName(null)).toBeNull();
+    expect(forecastPlaceName({})).toBeNull();
   });
 });
 
