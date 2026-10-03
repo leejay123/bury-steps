@@ -8,7 +8,9 @@
 export const PUBLIC_ROUTE_PATTERNS = [
   "/",
   "/home",
-  "/w(.*)",
+  // Shared walk links (/w/<token>) only — "/w(.*)" also matched /walks,
+  // making the members' Walks page skip the sign-in check here.
+  "/w/(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/privacy",

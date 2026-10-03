@@ -1,8 +1,9 @@
+import { Suspense } from "react";
 import { prisma } from "@/lib/db";
 import { requirePermission, displayName } from "@/lib/auth";
 import { getSiteTheme } from "@/lib/site-theme";
 import { SITE_SETTING_ID } from "@/lib/theme";
-import { SettingsPage, SettingsSectionGroup } from "../settings-page";
+import { SettingsContentSkeleton, SettingsPage, SettingsSectionGroup } from "../settings-page";
 import { AnnouncementSettings } from "./announcement-settings";
 import { CookieConsentSettings } from "./cookie-consent-settings";
 import { PageTransitionSettings } from "./page-transition-settings";
@@ -12,9 +13,24 @@ import { ProgressToggle } from "./progress-toggle";
 import { OrganiserInviteToggle } from "./organiser-invite-toggle";
 import { ContactMessagesOwnerSettings } from "./contact-messages-owner-settings";
 
-export const dynamic = "force-dynamic";
 
-export default async function SiteBehaviourSettingsPage() {
+
+export default function SiteBehaviourSettingsPage() {
+  // Title and description are part of the ready-made page; the settings
+  // themselves (and the access check) fill in just after.
+  return (
+    <SettingsPage
+      description="Sitewide behaviour that isn't part of the homepage story — announcement bar, cookie notice, back to top, the footer name, Progress, organiser invites, and the contact form."
+      title="Site behaviour"
+    >
+      <Suspense fallback={<SettingsContentSkeleton />}>
+        <SiteBehaviourSettingsPageContent />
+      </Suspense>
+    </SettingsPage>
+  );
+}
+
+async function SiteBehaviourSettingsPageContent() {
   await requirePermission("permDisplay");
   const [theme, organisers, settings] = await Promise.all([
     getSiteTheme(),
@@ -30,10 +46,7 @@ export default async function SiteBehaviourSettingsPage() {
   ]);
 
   return (
-    <SettingsPage
-      description="Sitewide behaviour that isn't part of the homepage story — announcement bar, cookie notice, back to top, the footer name, Progress, organiser invites, and the contact form."
-      title="Site behaviour"
-    >
+    <>
       <SettingsSectionGroup description="A message across the top of every page." title="Announcement">
         <AnnouncementSettings
           enabled={theme.announcementEnabled}
@@ -67,6 +80,6 @@ export default async function SiteBehaviourSettingsPage() {
           organisers={organisers.map((organiser) => ({ id: organiser.id, name: displayName(organiser) }))}
         />
       </SettingsSectionGroup>
-    </SettingsPage>
+    </>
   );
 }

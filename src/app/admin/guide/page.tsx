@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
 import { requireAdmin } from "@/lib/auth";
 import {
   getAccidentReportRetentionDays,
@@ -7,9 +9,9 @@ import { AdminPageIntro } from "../admin-page-intro";
 import { GUIDE_LAST_UPDATED, OrganiserGuide } from "./guide-content";
 import { FullWidthDivider } from "@/components/full-width-divider";
 
-export const dynamic = "force-dynamic";
 
-export default async function OrganiserGuidePage() {
+
+async function OrganiserGuidePageContent() {
   await requireAdmin();
   const [cancelledWalkRetentionDays, accidentReportRetentionDays] = await Promise.all([
     getCancelledWalkRetentionDays(),
@@ -30,5 +32,15 @@ export default async function OrganiserGuidePage() {
         cancelledWalkRetentionDays={cancelledWalkRetentionDays}
       />
     </div>
+  );
+}
+
+/** Everything here depends on who's asking and on live data, so the page
+ * shows a matching placeholder for an instant while it loads. */
+export default function OrganiserGuidePage() {
+  return (
+    <Suspense fallback={<AdminPageFallback title="Guide" rows={8} />}>
+      <OrganiserGuidePageContent />
+    </Suspense>
   );
 }

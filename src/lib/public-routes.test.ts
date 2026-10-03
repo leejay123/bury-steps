@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { createRouteMatcher } from "@clerk/nextjs/server";
+import { NextRequest } from "next/server";
 import { PUBLIC_ROUTE_PATTERNS, isTokenPublicPath } from "./public-routes";
 
 describe("PUBLIC_ROUTE_PATTERNS", () => {
@@ -13,6 +15,23 @@ describe("PUBLIC_ROUTE_PATTERNS", () => {
     // are public.
     expect(PUBLIC_ROUTE_PATTERNS).not.toContain("/email-preferences");
     expect(PUBLIC_ROUTE_PATTERNS).not.toContain("/email-preferences(.*)");
+  });
+});
+
+describe("public route matching", () => {
+  const isPublic = createRouteMatcher([...PUBLIC_ROUTE_PATTERNS]);
+  const at = (path: string) => isPublic(new NextRequest(`https://example.com${path}`));
+
+  it("keeps shared walk links public", () => {
+    expect(at("/w/abc123")).toBe(true);
+    expect(at("/w/abc123/ics")).toBe(true);
+  });
+
+  it("keeps members-only pages behind sign-in", () => {
+    expect(at("/walks")).toBe(false);
+    expect(at("/notices")).toBe(false);
+    expect(at("/progress")).toBe(false);
+    expect(at("/history")).toBe(false);
   });
 });
 

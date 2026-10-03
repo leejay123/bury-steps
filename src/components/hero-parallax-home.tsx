@@ -1,3 +1,4 @@
+import { AuthSwitch } from "@/components/signed-in-context";
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,12 +21,10 @@ const CARD_COUNT = 12;
  */
 export function HeroParallaxHome({
   slides,
-  isSignedIn,
   siteName,
   siteTagline,
 }: {
   slides: SlideView[];
-  isSignedIn: boolean;
   siteName: string;
   siteTagline: string;
 }) {
@@ -44,15 +43,11 @@ export function HeroParallaxHome({
         <h1 className="text-headline font-medium tracking-tight text-balance">{siteName}</h1>
         {siteTagline ? <p className="mt-6 max-w-xl text-intro text-pretty text-muted-foreground">{siteTagline}</p> : null}
         <div className="mt-8 flex flex-wrap items-center gap-3">
-          {isSignedIn ? (
-            <Button asChild>
+          {<AuthSwitch signedIn={<><Button asChild>
               <Link href="/walks">
                 See the walks <ArrowRightIcon />
               </Link>
-            </Button>
-          ) : (
-            <HeroGuestActions className="contents" />
-          )}
+            </Button></>} signedOut={<><HeroGuestActions className="contents" /></>} />}
         </div>
       </HeroParallax>
     </div>

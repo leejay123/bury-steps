@@ -2,7 +2,7 @@ import { cache } from "react";
 import { parsePageTransition, type PageTransition } from "@/lib/page-transition";
 import { parseSliderHeroWords, type SliderHeroWords } from "@/lib/hero-style";
 import { DEFAULT_TEXT_SIZES, parseTextSize, type TextSizes } from "@/lib/text-sizes";
-import { unstable_cache } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { DEFAULT_WALK_ESSENTIALS, parseEssentialList, type EssentialItem } from "@/lib/walk-essentials";
 import { prisma } from "@/lib/db";
 import { HOMEPAGE_CACHE_TAG, HOMEPAGE_REVALIDATE_SECONDS } from "@/lib/homepage-cache";
@@ -397,10 +397,14 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   };
 }
 
-const getCachedSiteTheme = unstable_cache(loadSiteTheme, ["site-theme", "v29"], {
-  tags: [HOMEPAGE_CACHE_TAG],
-  revalidate: HOMEPAGE_REVALIDATE_SECONDS,
-});
+/** Saved copy (Next.js "use cache"): refreshed every HOMEPAGE_REVALIDATE_SECONDS, and at once
+ * when a setting is saved (revalidateTag on its tag). */
+async function getCachedSiteTheme() {
+  "use cache";
+  cacheTag(HOMEPAGE_CACHE_TAG);
+  cacheLife({ revalidate: HOMEPAGE_REVALIDATE_SECONDS });
+  return loadSiteTheme();
+}
 
 export const getSiteTheme = cache(async (): Promise<SiteTheme> => {
   try {

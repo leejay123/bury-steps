@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { prisma } from "@/lib/db";
 import { HOMEPAGE_CACHE_TAG, HOMEPAGE_REVALIDATE_SECONDS } from "@/lib/homepage-cache";
 import {
@@ -78,10 +78,14 @@ export async function loadHomepageFaqData(): Promise<HomepageFaqData> {
   };
 }
 
-const getCachedHomepageFaqData = unstable_cache(loadHomepageFaqData, ["homepage-faq-data", "v2"], {
-  tags: [HOMEPAGE_CACHE_TAG],
-  revalidate: HOMEPAGE_REVALIDATE_SECONDS,
-});
+/** Saved copy (Next.js "use cache"): refreshed every HOMEPAGE_REVALIDATE_SECONDS, and at once
+ * when a setting is saved (revalidateTag on its tag). */
+async function getCachedHomepageFaqData() {
+  "use cache";
+  cacheTag(HOMEPAGE_CACHE_TAG);
+  cacheLife({ revalidate: HOMEPAGE_REVALIDATE_SECONDS });
+  return loadHomepageFaqData();
+}
 
 export async function getHomepageFaqData(): Promise<HomepageFaqData> {
   try {

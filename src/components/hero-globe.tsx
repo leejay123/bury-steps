@@ -1,3 +1,4 @@
+import { AuthSwitch } from "@/components/signed-in-context";
 import Link from "next/link";
 import { ArrowRightIcon, CalendarDaysIcon, FootprintsIcon, UsersIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,12 +44,10 @@ const LINES: GlobeArc[] = [
  */
 export function HeroGlobe({
   data,
-  isSignedIn,
   siteName,
   siteTagline,
 }: {
   data: HomepageGlobeData;
-  isSignedIn: boolean;
   siteName: string;
   siteTagline: string;
 }) {
@@ -91,15 +90,11 @@ export function HeroGlobe({
 
             <BlurFade delay={0.3}>
               <div className="mt-10 flex flex-wrap items-center gap-3">
-                {isSignedIn ? (
-                  <Button asChild>
+                {<AuthSwitch signedIn={<><Button asChild>
                     <Link href="/walks">
                       See the walks <ArrowRightIcon />
                     </Link>
-                  </Button>
-                ) : (
-                  <HeroGuestActions className="contents" />
-                )}
+                  </Button></>} signedOut={<><HeroGuestActions className="contents" /></>} />}
               </div>
             </BlurFade>
 

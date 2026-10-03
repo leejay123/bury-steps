@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useClientPathname } from "@/components/client-pathname";
 import { animate, stagger } from "motion";
 import { slideDirection, type PageTransition } from "@/lib/page-transition";
 
@@ -57,7 +58,8 @@ function reducedMotion() {
  * who prefer reduced motion.
  */
 export function PageFade({ children, mode = "fade" }: { children: ReactNode; mode?: PageTransition }) {
-  const pathname = usePathname();
+  // null until known in the browser (see client-pathname.tsx).
+  const pathname = useClientPathname();
   const router = useRouter();
   const ref = useRef<HTMLDivElement>(null);
   const previous = useRef<string | null>(null);
@@ -158,6 +160,7 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
 
   // Then in, once the new page is showing.
   useEffect(() => {
+    if (pathname === null) return;
     const from = previous.current;
     previous.current = pathname;
     const wasLeaving = leaving.current;

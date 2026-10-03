@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
 import Link from "next/link";
 import { Crown } from "lucide-react";
 import { notFound } from "next/navigation";
@@ -15,9 +17,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MemberDetailActions } from "./member-detail-actions";
 
-export const dynamic = "force-dynamic";
 
-export default async function MemberDetailPage({
+
+async function MemberDetailPageContent({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -163,5 +165,15 @@ function StatCard({ label, value }: { label: string; value: number }) {
         <CardDescription>{label}</CardDescription>
       </CardHeader>
     </Card>
+  );
+}
+
+/** Everything here depends on who's asking and on live data, so the page
+ * shows a matching placeholder for an instant while it loads. */
+export default function MemberDetailPage(props: Parameters<typeof MemberDetailPageContent>[0]) {
+  return (
+    <Suspense fallback={<AdminPageFallback rows={6} />}>
+      <MemberDetailPageContent {...props} />
+    </Suspense>
   );
 }

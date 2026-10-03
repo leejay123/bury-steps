@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getSiteTheme } from "@/lib/site-theme";
 import { ContactForm } from "./contact-form";
 
-export const dynamic = "force-dynamic";
+
 
 export const metadata: Metadata = {
   title: "Contact us",

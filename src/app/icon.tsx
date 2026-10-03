@@ -17,7 +17,6 @@ import { sniffImageMime } from "@/lib/image-bytes";
  * An admin-uploaded favicon (stored on `SiteSetting`) wins; otherwise this
  * falls back to the bundled default in `public/default-favicon.png`.
  */
-export const dynamic = "force-dynamic";
 export const contentType = "image/png";
 
 /** A browser tab shows the icon at 16–32px; 64px covers sharp screens. The

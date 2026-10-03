@@ -7,7 +7,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export const dynamic = "force-dynamic";
 
 /** Reached from the account menu (SiteUserButton) — works for members and
  * organisers alike, acting on whichever account is signed in. The

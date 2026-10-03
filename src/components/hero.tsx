@@ -1,3 +1,4 @@
+import { AuthSwitch } from "@/components/signed-in-context";
 import Link from "next/link";
 import { HeroGuestActions } from "@/components/hero-guest-actions";
 import { Button } from "@/components/ui/button";
@@ -8,12 +9,10 @@ import type { SectionBgPattern } from "@/lib/section-background";
 
 export function HeroSection({
   bgPattern = "dots",
-  isSignedIn,
   siteName,
   siteTagline,
 }: {
   bgPattern?: SectionBgPattern;
-  isSignedIn: boolean;
   siteName: string;
   siteTagline: string;
 }) {
@@ -29,13 +28,9 @@ export function HeroSection({
         <HeroCopy
           bgPattern={bgPattern}
           actions={
-            isSignedIn ? (
-              <Button asChild variant="outline">
+            <AuthSwitch signedIn={<><Button asChild variant="outline">
                 <Link href="/walks">Your walks</Link>
-              </Button>
-            ) : (
-              <HeroGuestActions className="contents" />
-            )
+              </Button></>} signedOut={<><HeroGuestActions className="contents" /></>} />
           }
           title={siteName}
           titleAs="h1"

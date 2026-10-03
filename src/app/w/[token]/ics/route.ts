@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 import { buildWalkIcs, walkIcsFilename } from "@/lib/walk-ics";
 import { canAddWalkToCalendar } from "@/lib/walk-window";
 
-export const dynamic = "force-dynamic";
 
 export async function GET(
   _req: Request,

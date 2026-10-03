@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { usePathname } from "next/navigation";
+import { useClientPathname } from "@/components/client-pathname";
 import Link from "next/link";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 
@@ -237,10 +237,12 @@ export function UnlockingLink({
 }
 
 export function UnlockPageOnNavigate() {
-  const pathname = usePathname();
+  // null until known in the browser (see client-pathname.tsx).
+  const pathname = useClientPathname();
   const viewportStyleRef = useRef<HTMLStyleElement>(null);
 
   useEffect(() => {
+    if (pathname === null) return;
     // Next's own "scroll to top on navigation" defers entirely to the
     // browser's native history.scrollRestoration when it's "manual" — which
     // the scroll-restoration script in layout.tsx deliberately sets, to stop

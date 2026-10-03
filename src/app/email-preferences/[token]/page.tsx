@@ -1,16 +1,18 @@
+import { Suspense } from "react";
+import { PageFallback } from "@/components/page-fallback";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { EmailPreferencesForm } from "./email-preferences-form";
 
-export const dynamic = "force-dynamic";
+
 
 export const metadata: Metadata = {
   title: "Email preferences",
   robots: { index: false, follow: false },
 };
 
-export default async function EmailPreferencesPage({
+async function EmailPreferencesPageContent({
   params,
 }: {
   params: Promise<{ token: string }>;
@@ -46,5 +48,15 @@ export default async function EmailPreferencesPage({
         token={token}
       />
     </div>
+  );
+}
+
+/** Everything here depends on who's asking and on live data, so the page
+ * shows a matching placeholder for an instant while it loads. */
+export default function EmailPreferencesPage(props: Parameters<typeof EmailPreferencesPageContent>[0]) {
+  return (
+    <Suspense fallback={<PageFallback />}>
+      <EmailPreferencesPageContent {...props} />
+    </Suspense>
   );
 }

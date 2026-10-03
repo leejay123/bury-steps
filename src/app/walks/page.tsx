@@ -18,34 +18,47 @@ import { UpcomingWalkCards } from "./upcoming-walk-cards";
 import { AllWalksList } from "./all-walks-list";
 import { RecentWalksCarousel } from "./recent-walks-carousel";
 
-export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
-  const user = await requireUser();
 
-  // Organisers use the admin Walks tools at /admin — this page is the
-  // ordinary member experience (browse walks, clock in), so an admin is
-  // always sent there instead.
-  if (user.role === "ADMIN") {
-    redirect("/admin");
-  }
-
+export default function DashboardPage() {
+  // Heading and description are the same for everyone, so they're part of
+  // the ready-made page; who you are and your walks fill in just after.
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-1.5">
         <h1 className="text-lg font-semibold tracking-tight">Walks</h1>
         <p className="text-sm text-muted-foreground">
-          Member since {formatDate(user.createdAt)} · {formatMembershipAge(user.createdAt)}. Upcoming
-          walks you can clock in to. Cancelled walks are in All walks, alongside completed ones.
-          Past walks you attended are in History.
+          Upcoming walks you can clock in to. Cancelled walks are in All walks, alongside completed
+          ones. Past walks you attended are in History.
+          <Suspense fallback={null}>
+            <MemberSince />
+          </Suspense>
         </p>
       </div>
-      {/* The heading shows straight away; only the walks wait for data. */}
       <Suspense fallback={<WalksListSkeleton />}>
-        <WalksBody user={user} />
+        <WalksForMember />
       </Suspense>
     </div>
   );
+}
+
+async function MemberSince() {
+  const user = await requireUser();
+  return (
+    <>
+      {" "}
+      Member since {formatDate(user.createdAt)} · {formatMembershipAge(user.createdAt)}.
+    </>
+  );
+}
+
+async function WalksForMember() {
+  const user = await requireUser();
+  // Organisers use the admin Walks tools at /admin — this page is the
+  // ordinary member experience (browse walks, clock in), so an admin is
+  // always sent there instead.
+  if (user.role === "ADMIN") redirect("/admin");
+  return <WalksBody user={user} />;
 }
 
 async function WalksBody({ user }: { user: User }) {

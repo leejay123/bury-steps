@@ -23,8 +23,7 @@ import { heroVideoPoster, heroVideoSrc, type HeroStyle } from "@/lib/hero-style"
 import { PAGE_X_BLEED } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 
-// Must be a numeric literal so Next can statically detect ISR.
-export const revalidate = 120;
+
 
 /** The photo heroes picked from the Parallax design options. */
 const PHOTO_HEROES: Partial<Record<HeroStyle, typeof HeroStripHome>> = {
@@ -38,14 +37,13 @@ export default async function Home() {
   // Only what the hero needs is awaited here, so the hero — in whichever
   // style is chosen — is part of the first paint, never a guessed skeleton.
   // The sections below stream in behind their own Suspense boundary.
-  const [user, theme, slides] = await Promise.all([getOptionalUser(), getSiteTheme(), getHomepageSlides()]);
+  const [theme, slides] = await Promise.all([getSiteTheme(), getHomepageSlides()]);
   const globe = theme.heroStyle === "globe" ? await getHomepageGlobeData() : null;
 
   return (
     <div className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
       {theme.heroStyle === "cinematic" ? (
         <HeroCinematic
-          isSignedIn={user !== null}
           overlayOpacity={theme.heroOverlayOpacity}
           siteName={theme.siteName}
           siteTagline={theme.siteTagline}
@@ -56,27 +54,23 @@ export default async function Home() {
       ) : theme.heroStyle === "globe" && globe ? (
         <HeroGlobe
           data={globe}
-          isSignedIn={user !== null}
           siteName={theme.siteName}
           siteTagline={theme.siteTagline}
         />
       ) : theme.heroStyle === "parallax" ? (
         <HeroParallaxHome
-          isSignedIn={user !== null}
           siteName={theme.siteName}
           siteTagline={theme.siteTagline}
           slides={slides}
         />
       ) : theme.heroStyle === "marquee" ? (
         <HeroMarqueeHome
-          isSignedIn={user !== null}
           siteName={theme.siteName}
           siteTagline={theme.siteTagline}
           slides={slides}
         />
       ) : theme.heroStyle === "slider" ? (
         <HeroSliderHome
-          isSignedIn={user !== null}
           words={theme.sliderHeroWords}
           siteName={theme.siteName}
           siteTagline={theme.siteTagline}
@@ -88,7 +82,6 @@ export default async function Home() {
           return (
             <PhotoHero
               bgPattern={theme.heroBgPattern}
-              isSignedIn={user !== null}
               siteName={theme.siteName}
               siteTagline={theme.siteTagline}
               slides={slides}
@@ -97,14 +90,13 @@ export default async function Home() {
         })()
       ) : (
         <HeroSection
-          isSignedIn={user !== null}
           bgPattern={theme.heroBgPattern}
           siteName={theme.siteName}
           siteTagline={theme.siteTagline}
         />
       )}
       <Suspense fallback={<div aria-hidden className="min-h-[60vh]" />}>
-        <HomeSections slides={slides} theme={theme} user={user} />
+        <HomeSections slides={slides} theme={theme} />
       </Suspense>
     </div>
   );
@@ -115,12 +107,13 @@ export default async function Home() {
 async function HomeSections({
   slides,
   theme,
-  user,
 }: {
   slides: Awaited<ReturnType<typeof getHomepageSlides>>;
   theme: Awaited<ReturnType<typeof getSiteTheme>>;
-  user: Awaited<ReturnType<typeof getOptionalUser>>;
 }) {
+  // Who's signed in only matters from here down (member notices, the
+  // How walks work tiles), so the hero above never waits for it.
+  const user = await getOptionalUser();
   const [testimonials, faqData, memberNotices, progressEnabled] = await Promise.all([
     getHomepageTestimonials(),
     getHomepageFaqData(),

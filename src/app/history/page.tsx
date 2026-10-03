@@ -10,7 +10,6 @@ export const metadata: Metadata = {
   title: "Walk history",
 };
 
-export const dynamic = "force-dynamic";
 
 export default async function WalkHistoryPage() {
   // This is about the viewer's own clock-ins, not an admin capability — an

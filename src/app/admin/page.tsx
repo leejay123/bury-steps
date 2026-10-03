@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
+import { connection } from "next/server";
 import { Skeleton } from "@/components/ui/skeleton";
 import { prisma } from "@/lib/db";
 import { requireAnyPermission } from "@/lib/auth";
@@ -8,7 +10,7 @@ import { AdminWalkTable } from "./admin-walk-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { upcomingListLookbackFrom, walkStatus } from "@/lib/walk-window";
 
-export const dynamic = "force-dynamic";
+
 
 function toRow(walk: {
   id: string;
@@ -32,7 +34,7 @@ function toRow(walk: {
   };
 }
 
-export default async function AdminPage() {
+async function AdminPageContent() {
   // View and Create are meaningfully independent: View is the schedule/
   // history/cancelled-walk detail, Create is the blank "start a new one"
   // form — an organiser with only Create doesn't need to browse anything
@@ -73,6 +75,8 @@ export default async function AdminPage() {
 
 /** The Upcoming / History tabs — the part of the page that waits for data. */
 async function AdminWalksTabs() {
+  // Upcoming vs History depends on the time now — worked out per visit.
+  await connection();
   // A Create-only organiser (no View) never sees the list below at all —
   // no need to even query it for them.
   const lookback = upcomingListLookbackFrom();
@@ -179,5 +183,15 @@ function AdminWalksSkeleton() {
         ))}
       </div>
     </div>
+  );
+}
+
+/** Everything here depends on who's asking and on live data, so the page
+ * shows a matching placeholder for an instant while it loads. */
+export default function AdminPage() {
+  return (
+    <Suspense fallback={<AdminPageFallback title="Walks" />}>
+      <AdminPageContent />
+    </Suspense>
   );
 }

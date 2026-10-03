@@ -1,3 +1,4 @@
+import { AuthSwitch } from "@/components/signed-in-context";
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,12 +20,10 @@ const TILE_COUNT = 15;
  */
 export function HeroMarqueeHome({
   slides,
-  isSignedIn,
   siteName,
   siteTagline,
 }: {
   slides: SlideView[];
-  isSignedIn: boolean;
   siteName: string;
   siteTagline: string;
 }) {
@@ -55,15 +54,11 @@ export function HeroMarqueeHome({
             <p className="mt-5 max-w-xl text-intro text-pretty text-muted-foreground">{siteTagline}</p>
           ) : null}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            {isSignedIn ? (
-              <Button asChild>
+            {<AuthSwitch signedIn={<><Button asChild>
                 <Link href="/walks">
                   See the walks <ArrowRightIcon />
                 </Link>
-              </Button>
-            ) : (
-              <HeroGuestActions className="contents" />
-            )}
+              </Button></>} signedOut={<><HeroGuestActions className="contents" /></>} />}
           </div>
         </div>
       </section>

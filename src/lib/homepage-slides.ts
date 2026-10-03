@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { prisma } from "@/lib/db";
 import { HOMEPAGE_CACHE_TAG, HOMEPAGE_REVALIDATE_SECONDS } from "@/lib/homepage-cache";
 import { DEFAULT_HERO_PATH, slideSrc, type SlideView } from "@/lib/slides";
@@ -50,10 +50,14 @@ async function loadHomepageSlides(): Promise<SlideView[]> {
   }));
 }
 
-const getCachedHomepageSlides = unstable_cache(loadHomepageSlides, ["homepage-slides", "v2"], {
-  tags: [HOMEPAGE_CACHE_TAG],
-  revalidate: HOMEPAGE_REVALIDATE_SECONDS,
-});
+/** Saved copy (Next.js "use cache"): refreshed every HOMEPAGE_REVALIDATE_SECONDS, and at once
+ * when a setting is saved (revalidateTag on its tag). */
+async function getCachedHomepageSlides() {
+  "use cache";
+  cacheTag(HOMEPAGE_CACHE_TAG);
+  cacheLife({ revalidate: HOMEPAGE_REVALIDATE_SECONDS });
+  return loadHomepageSlides();
+}
 
 export async function getHomepageSlides(): Promise<SlideView[]> {
   try {

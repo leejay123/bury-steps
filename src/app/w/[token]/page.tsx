@@ -20,7 +20,7 @@ import { getSiteTheme } from "@/lib/site-theme";
 import { WalkLivePanel } from "./walk-live-panel";
 import { WalkShareStatusChrome, WalkShareWhileOpen } from "./walk-share-status";
 
-export const dynamic = "force-dynamic";
+
 
 // Cached per request so generateMetadata and the page body share one lookup.
 const getWalkByShareKey = cache((key: string) =>

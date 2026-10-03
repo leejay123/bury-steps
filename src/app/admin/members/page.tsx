@@ -17,17 +17,12 @@ function parseRoleFilter(raw: string | undefined): MemberRoleFilter {
   return "all";
 }
 
-export const dynamic = "force-dynamic";
 
-export default async function MembersPage({
+export default function MembersPage({
   searchParams,
 }: {
   searchParams: Promise<{ role?: string }>;
 }) {
-  const admin = await requirePermission("permMembersView");
-  const params = await searchParams;
-  const role = parseRoleFilter(params.role);
-
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
       <AdminPageIntro
@@ -36,10 +31,16 @@ export default async function MembersPage({
       />
       {/* The heading shows straight away; only the list waits for data. */}
       <Suspense fallback={<MembersListSkeleton />}>
-        <MembersBody adminId={admin.id} role={role} />
+        <MembersForViewer searchParams={searchParams} />
       </Suspense>
     </div>
   );
+}
+
+async function MembersForViewer({ searchParams }: { searchParams: Promise<{ role?: string }> }) {
+  const admin = await requirePermission("permMembersView");
+  const role = parseRoleFilter((await searchParams).role);
+  return <MembersBody adminId={admin.id} role={role} />;
 }
 
 async function MembersBody({ adminId, role }: { adminId: string; role: MemberRoleFilter }) {

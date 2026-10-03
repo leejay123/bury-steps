@@ -1,6 +1,7 @@
+import { Suspense } from "react";
 import { requirePermission } from "@/lib/auth";
 import { getSiteTheme } from "@/lib/site-theme";
-import { SettingsPage, SettingsSection, SettingsSectionGroup } from "../settings-page";
+import { SettingsContentSkeleton, SettingsPage, SettingsSection, SettingsSectionGroup } from "../settings-page";
 import { HomepageSectionsSettings } from "./homepage-sections-settings";
 import { CarouselToggle } from "./carousel-toggle";
 import { TitleRevealToggle } from "./title-reveal-toggle";
@@ -9,18 +10,30 @@ import { HeroStyleSettings } from "./hero-style-settings";
 import { SliderHeroWordsSettings } from "./slider-hero-words-settings";
 import { SectionBgPatternSelect } from "./section-bg-pattern-select";
 
-export const dynamic = "force-dynamic";
 
-export default async function HomepageLayoutSettingsPage() {
-  await requirePermission("permDisplay");
-  const theme = await getSiteTheme();
 
+export default function HomepageLayoutSettingsPage() {
+  // Title and description are part of the ready-made page; the settings
+  // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
       description="The site name and tagline always stay at the top. Choose the order of the sections below them, and whether the photos and latest notices show."
       previewHref="/"
       title="Homepage layout"
     >
+      <Suspense fallback={<SettingsContentSkeleton />}>
+        <HomepageLayoutSettingsPageContent />
+      </Suspense>
+    </SettingsPage>
+  );
+}
+
+async function HomepageLayoutSettingsPageContent() {
+  await requirePermission("permDisplay");
+  const theme = await getSiteTheme();
+
+  return (
+    <>
       <HeroStyleSettings
         heroBgPattern={theme.heroBgPattern}
         heroOverlayOpacity={theme.heroOverlayOpacity}
@@ -54,6 +67,6 @@ export default async function HomepageLayoutSettingsPage() {
           <SectionBgPatternSelect label="FAQs" pattern={theme.faqsBgPattern} section="faqs" />
         </div>
       </SettingsSection>
-    </SettingsPage>
+    </>
   );
 }

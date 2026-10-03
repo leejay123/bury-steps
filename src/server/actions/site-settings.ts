@@ -344,7 +344,7 @@ export async function updateCancelledWalkRetentionDays(
   return {
     ok: true,
     message: parsed
-      ? `Cancelled walks are deleted automatically after ${parsed.toLocaleString("en-GB")} days.`
+      ? `Cancelled walks are deleted automatically after ${parsed.toLocaleString("en-GB")} ${parsed === 1 ? "day" : "days"}.`
       : "Cancelled walks are no longer deleted automatically.",
   };
 }
@@ -396,7 +396,7 @@ export async function updateAccidentReportRetentionDays(
   return {
     ok: true,
     message: parsed
-      ? `Accident reports are deleted automatically ${parsed.toLocaleString("en-GB")} days after they're logged.`
+      ? `Accident reports are deleted automatically ${parsed.toLocaleString("en-GB")} ${parsed === 1 ? "day" : "days"} after they're logged.`
       : "Accident reports are no longer deleted automatically.",
   };
 }
@@ -1358,7 +1358,7 @@ export async function updateMonthlyClockInGoal(
   return {
     ok: true,
     message: parsed
-      ? `Together goal is ${parsed.toLocaleString("en-GB")} clock-ins this month.`
+      ? `Together goal is ${parsed.toLocaleString("en-GB")} ${parsed === 1 ? "clock-in" : "clock-ins"} this month.`
       : "Together goal is off.",
   };
 }

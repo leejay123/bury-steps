@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requirePermission, displayName } from "@/lib/auth";
@@ -7,13 +9,13 @@ import { involvedSummaryText } from "@/lib/accident-reports";
 import { getSiteTheme } from "@/lib/site-theme";
 import { PrintReport } from "./print-report";
 
-export const dynamic = "force-dynamic";
+
 
 export const metadata: Metadata = {
   title: "Accident report",
 };
 
-export default async function PrintAccidentReportPage({
+async function PrintAccidentReportPageContent({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -50,5 +52,15 @@ export default async function PrintAccidentReportPage({
       whatWeDid={report.whatWeDid}
       whoInvolved={involvedSummaryText(report.whoInvolved, report.involvedMembers)}
     />
+  );
+}
+
+/** Everything here depends on who's asking and on live data, so the page
+ * shows a matching placeholder for an instant while it loads. */
+export default function PrintAccidentReportPage(props: Parameters<typeof PrintAccidentReportPageContent>[0]) {
+  return (
+    <Suspense fallback={<AdminPageFallback rows={4} />}>
+      <PrintAccidentReportPageContent {...props} />
+    </Suspense>
   );
 }

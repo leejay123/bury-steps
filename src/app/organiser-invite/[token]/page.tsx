@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { PageFallback } from "@/components/page-fallback";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
@@ -7,8 +9,9 @@ import { appUrl, accountPortalHref } from "@/lib/urls";
 import { ORGANISER_PERMISSION_OPTIONS, ORGANISER_PERMISSIONS } from "@/lib/organiser-permissions";
 import { AcceptInviteForm } from "./accept-invite-form";
 import { WrongAccountNotice } from "./wrong-account-notice";
+import { ClerkIsland } from "@/components/clerk-island";
 
-export const dynamic = "force-dynamic";
+
 
 export const metadata: Metadata = {
   title: "Organiser invite",
@@ -27,7 +30,7 @@ export const metadata: Metadata = {
  * member — promoting someone already implies an account), and a browser
  * signed in as someone other than the invitee is shown a clear notice
  * rather than silently accepting on the wrong account. */
-export default async function OrganiserInvitePage({
+async function OrganiserInvitePageContent({
   params,
 }: {
   params: Promise<{ token: string }>;
@@ -83,7 +86,9 @@ export default async function OrganiserInvitePage({
             and sign back in with the email address the invite was sent to, then open the link
             again.
           </p>
-          <WrongAccountNotice signInHref={signInHref} />
+          <ClerkIsland>
+            <WrongAccountNotice signInHref={signInHref} />
+          </ClerkIsland>
         </>
       ) : (
         <>
@@ -107,5 +112,15 @@ export default async function OrganiserInvitePage({
         </>
       )}
     </div>
+  );
+}
+
+/** Everything here depends on who's asking and on live data, so the page
+ * shows a matching placeholder for an instant while it loads. */
+export default function OrganiserInvitePage(props: Parameters<typeof OrganiserInvitePageContent>[0]) {
+  return (
+    <Suspense fallback={<PageFallback />}>
+      <OrganiserInvitePageContent {...props} />
+    </Suspense>
   );
 }

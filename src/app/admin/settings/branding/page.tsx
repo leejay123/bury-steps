@@ -1,6 +1,7 @@
+import { Suspense } from "react";
 import { requirePermission } from "@/lib/auth";
 import { getSiteTheme } from "@/lib/site-theme";
-import { SettingsPage, SettingsSectionGroup } from "../settings-page";
+import { SettingsContentSkeleton, SettingsPage, SettingsSectionGroup } from "../settings-page";
 import { SiteBrandingSettings } from "./site-branding-settings";
 import { SiteLogoSettings } from "./site-logo-settings";
 import { SiteFaviconSettings } from "./site-favicon-settings";
@@ -9,18 +10,30 @@ import { FacebookGroupSettings } from "./facebook-group-settings";
 import { SiteFontSettings } from "./site-font-settings";
 import { TextSizeSettings } from "./text-size-settings";
 
-export const dynamic = "force-dynamic";
 
-export default async function BrandingSettingsPage() {
-  await requirePermission("permDisplay");
-  const theme = await getSiteTheme();
 
+export default function BrandingSettingsPage() {
+  // Title and description are part of the ready-made page; the settings
+  // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
       description="How the site introduces itself — name, tagline, font, logo, favicon, and the Facebook link."
       previewHref="/"
       title="Branding"
     >
+      <Suspense fallback={<SettingsContentSkeleton />}>
+        <BrandingSettingsPageContent />
+      </Suspense>
+    </SettingsPage>
+  );
+}
+
+async function BrandingSettingsPageContent() {
+  await requirePermission("permDisplay");
+  const theme = await getSiteTheme();
+
+  return (
+    <>
       <SettingsSectionGroup
         description="How the site introduces itself in the hero, tabs, and share previews."
         title="Identity"
@@ -36,6 +49,6 @@ export default async function BrandingSettingsPage() {
         <ReportBannerSettings reportBannerSrc={theme.reportBannerSrc} />
         <FacebookGroupSettings facebookGroupUrl={theme.facebookGroupUrl} />
       </SettingsSectionGroup>
-    </SettingsPage>
+    </>
   );
 }
