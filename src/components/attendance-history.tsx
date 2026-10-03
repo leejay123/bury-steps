@@ -180,7 +180,7 @@ export function AttendanceHistory({
 
 function HistoryList({ rows }: { rows: AttendanceHistoryRow[] }) {
   return (
-    <div className="flex flex-col divide-y rounded-xl border">
+    <div className="flex flex-col divide-y rounded-xl border" data-reveal-list="">
       {rows.map((row) => {
         const startsAt = new Date(row.startsAt);
         return (

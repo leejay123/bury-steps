@@ -13,6 +13,8 @@ export const dataListActionsStackClassName =
 export function DataList({ className, ...props }: React.ComponentProps<"ul">) {
   return (
     <ul
+      // Lists and tables get the Members-style reveal (content-reveal.tsx).
+      data-reveal-list=""
       className={cn("flex flex-col overflow-hidden rounded-xl border bg-card", className)}
       {...props}
     />
