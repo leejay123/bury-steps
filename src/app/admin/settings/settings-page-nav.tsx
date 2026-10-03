@@ -46,8 +46,10 @@ export function SettingsBackLink() {
  * Renders nothing on an ordinary page.
  *
  * Kept quick on phones:
- *  - Default prefetch (each page's outline only). Loading every tab's page
- *    in full ahead of time was dropped site-wide to keep database load down.
+ *  - prefetch={true}: these pages wait for the organiser check, so without
+ *    loading them ahead each tap froze on the old page until the server
+ *    answered, then jumped. Full prefetch loads the handful of tabs up
+ *    front — only here, where they're shown, not site-wide menus.
  *  - The tapped tab highlights straight away (pendingHref) instead of only
  *    once the new page has arrived.
  *  - The current tab is brought into view by scrolling the tab strip
@@ -120,6 +122,7 @@ export function SettingsSubPageTabs() {
                   unlockIdleDocument();
                   if (child.href !== pathname) setPending({ href: child.href, from: pathname });
                 }}
+                prefetch
               >
                 {child.title}
               </Link>

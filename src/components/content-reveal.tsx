@@ -99,7 +99,7 @@ function skeletonFor(part: HTMLElement, budget: { left: number }): { layer: HTML
  * then the real rows fade in from a soft blur as the grey fades away.
  * Headings, search boxes, filters and buttons outside the list stay still. Pages that
  * are genuinely still loading show their own placeholders instead (and
- * SkeletonRevealEverywhere reveals them when they arrive).
+ * SkeletonHoldScript reveals them when they arrive).
  *
  * Not on the homepage (which should simply be there), not on the very first
  * load (the page is already on screen by then — greying it would flicker),
