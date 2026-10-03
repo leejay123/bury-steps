@@ -569,28 +569,3 @@ html[data-announcement-hide] [data-slot="sticky-banner"] {
     justify-content: flex-start;
   }
 }
-
-/*
- * Grey placeholders only show when loading is actually slow. They stay
- * invisible for the first 0.3s, so a page that arrives quickly just
- * appears, with no grey flash; a slow one still shows them (and then
- * pulses). Unlayered, so it wins over Tailwind's animate-pulse utility.
- */
-@keyframes skeleton-appear {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-[data-slot="skeleton"] {
-  animation:
-    skeleton-appear 0.2s ease-out 0.3s both,
-    pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 0.5s infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  [data-slot="skeleton"] {
-    animation: skeleton-appear 0s linear 0.3s both;
-  }
-}
