@@ -9,6 +9,7 @@ import { appUrl, accountPortalHref } from "@/lib/urls";
 import { ORGANISER_PERMISSION_OPTIONS, ORGANISER_PERMISSIONS } from "@/lib/organiser-permissions";
 import { AcceptInviteForm } from "./accept-invite-form";
 import { WrongAccountNotice } from "./wrong-account-notice";
+import { ClerkIsland } from "@/components/clerk-island";
 
 
 
@@ -85,7 +86,9 @@ async function OrganiserInvitePageContent({
             and sign back in with the email address the invite was sent to, then open the link
             again.
           </p>
-          <WrongAccountNotice signInHref={signInHref} />
+          <ClerkIsland>
+            <WrongAccountNotice signInHref={signInHref} />
+          </ClerkIsland>
         </>
       ) : (
         <>

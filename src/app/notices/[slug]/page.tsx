@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { DescriptionText } from "@/components/description-text";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireUser } from "@/lib/auth";
+import { getOptionalUser, requireUser } from "@/lib/auth";
 import { noticeDateLabel } from "@/lib/notices";
 import { getPageNoticeBySlug } from "@/lib/site-notices";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,8 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
+  // The tab title is the notice's own heading, so only for members.
+  if (!(await getOptionalUser())) return { title: "Notice", robots: { index: false, follow: false } };
   const { slug } = await params;
   const notice = await getPageNoticeBySlug(slug);
   if (!notice) return { title: "Notice not found" };

@@ -1,5 +1,6 @@
 import { getImpersonationInfo } from "@/lib/auth";
 import { LazyImpersonationBanner } from "./clerk-lazy";
+import { ClerkIsland } from "./clerk-island";
 
 /**
  * A separate server component (rather than calling getImpersonationInfo
@@ -11,5 +12,9 @@ import { LazyImpersonationBanner } from "./clerk-lazy";
 export async function ImpersonationBannerSlot() {
   const impersonation = await getImpersonationInfo();
   if (!impersonation) return null;
-  return <LazyImpersonationBanner adminName={impersonation.adminName} targetName={impersonation.targetName} />;
+  return (
+    <ClerkIsland>
+      <LazyImpersonationBanner adminName={impersonation.adminName} targetName={impersonation.targetName} />
+    </ClerkIsland>
+  );
 }

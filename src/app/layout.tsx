@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { PageFade } from "@/components/page-fade";
+import { ClientPathnameProvider } from "@/components/client-pathname";
 import { WalkEssentialsProvider } from "@/components/walk-essentials-context";
 import { SignedInProvider } from "@/components/signed-in-context";
 import { AnnouncementBanner } from "@/components/announcement-banner";
@@ -12,12 +13,10 @@ import { Suspense } from "react";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { LazyClerkProvider } from "@/components/clerk-lazy";
 import { auth } from "@clerk/nextjs/server";
 import { isClerkMiddlewareMissingError } from "@/lib/auth";
-import { shadcn } from "@clerk/themes";
 import { Toaster } from "@/components/ui/sonner";
-import { AFTER_AUTH_PATH, appUrl, SIGN_IN_URL, SIGN_UP_URL } from "@/lib/urls";
+import { appUrl } from "@/lib/urls";
 import { PAGE_X, PAGE_Y } from "@/lib/page-x";
 import { SiteMobileNav, SiteNav, SiteNavFallback, SiteBottomNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
@@ -33,11 +32,6 @@ import { siteFontById } from "@/lib/site-font";
 import { siteFontFace, siteFontVariableClassName, typesetFontVariables } from "@/app/fonts";
 import { DEFAULT_SITE_NAME, siteMetaDescription } from "@/lib/site-branding";
 import "./globals.css";
-
-// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
-// Remove this opt-out after verifying the segment passes validation without it.
-// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
-export const instant = false;
 
 export async function generateMetadata(): Promise<Metadata> {
   const theme = await getSiteTheme();
@@ -95,29 +89,12 @@ async function isSignedIn() {
   }
 }
 
-/**
- * Clerk's browser code (about 200 KB, and some of the longest start-up
- * work on a phone) is only needed by signed-in people — their account
- * menu, sign out, impersonation. Signed-out visitors get plain Sign in /
- * Join links to the account site, so for them it's left out entirely;
- * signing in on the account site brings them back signed in, and the
- * server (Clerk's middleware) picks the session up from there.
- */
-function ClerkWhenSignedIn({
-  children,
-  signedIn,
-  ...props
-}: React.ComponentProps<typeof LazyClerkProvider> & { signedIn: boolean }) {
-  if (!signedIn) return <>{children}</>;
-  return <LazyClerkProvider {...props}>{children}</LazyClerkProvider>;
-}
-
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  // Preview only. The live domain uses Clerk's CNAME. Production unique
-  // *.vercel.app URLs (Vercel screenshots) must not set this — there is no
-  // proxy URL registered on the Clerk instance, so /__clerk returns 400.
-  const useVercelAppProxy = process.env.VERCEL_ENV === "preview";
-  const [theme, signedIn] = await Promise.all([getSiteTheme(), isSignedIn()]);
+  const theme = await getSiteTheme();
+  // Not awaited: the page is drawn without waiting for the session, so the
+  // same ready-made page can serve everyone. Only the parts that differ
+  // (the hero's buttons) wait for this, each in its own placeholder.
+  const signedIn = isSignedIn();
   const font = siteFontById(theme.siteFont);
   const face = siteFontFace(theme.siteFont);
 
@@ -145,29 +122,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {`try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch {}`}
         </Script>
         <StaleDeployReload />
-        <ClerkWhenSignedIn
-          signedIn={signedIn}
-          {...(useVercelAppProxy ? { proxyUrl: "/__clerk" } : {})}
-          appearance={{
-            theme: shadcn,
-            variables: {
-              colorPrimary: "#111111",
-              colorModalBackdrop: "rgba(17, 17, 17, 0.4)",
-              colorInput: "var(--background)",
-              fontFamily: "var(--font-site), sans-serif",
-            },
-            elements: {
-              modalBackdrop: "backdrop-blur-md",
-              input: "bg-background text-base outline-none shadow-none ring-0 focus:ring-0 focus-visible:ring-0",
-              formFieldInput: "bg-background text-base outline-none shadow-none ring-0 focus:ring-0 focus-visible:ring-0",
-            },
-          }}
-          signInUrl={SIGN_IN_URL}
-          signUpUrl={SIGN_UP_URL}
-          signInFallbackRedirectUrl={AFTER_AUTH_PATH}
-          signUpFallbackRedirectUrl={AFTER_AUTH_PATH}
-          afterSignOutUrl="/"
-        >
+        <ClientPathnameProvider>
           {/*
             iPhones with a Dynamic Island report it as a safe-area inset on
             whichever side it lands on after a landscape rotation (left or
@@ -308,7 +263,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Suspense fallback={null}>
             <BackToTopGate />
           </Suspense>
-        </ClerkWhenSignedIn>
+        </ClientPathnameProvider>
         {/*
           Vercel Analytics and Speed Insights are cookieless — page views and
           performance samples use a request-time hash, not a client-side

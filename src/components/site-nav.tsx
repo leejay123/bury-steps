@@ -8,6 +8,7 @@ import { BottomNavBar } from "@/components/bottom-nav-bar";
 import { getClockInWalk } from "@/lib/clock-in-walk";
 import { getSiteTheme } from "@/lib/site-theme";
 import { LazySiteUserButton } from "@/components/clerk-lazy";
+import { ClerkIsland } from "@/components/clerk-island";
 import { JoinGroupButton } from "@/components/join-group-button";
 import { navItems } from "@/components/site-nav-items";
 import { NotificationBell } from "@/components/notification-bell";
@@ -66,7 +67,9 @@ export async function SiteNav() {
             <Suspense fallback={<div aria-hidden className="size-8 shrink-0" />}>
               <SiteNavBell firstName={user.firstName} userId={user.id} />
             </Suspense>
-            <LazySiteUserButton initial={(user.firstName || user.email || "?").charAt(0)} progressEnabled={progressEnabled} />
+            <ClerkIsland>
+              <LazySiteUserButton initial={(user.firstName || user.email || "?").charAt(0)} progressEnabled={progressEnabled} />
+            </ClerkIsland>
             <EmailPreferencesDrawer
               email={user.email}
               isAdmin={isAdmin}

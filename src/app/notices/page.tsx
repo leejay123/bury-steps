@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { PAGE_X_BLEED } from "@/lib/page-x";
 import { getPageNotices, getSiteNoticeCategories } from "@/lib/site-notices";
 import { NoticesBlogSection } from "@/components/notices-blog-section";
+import { PageFallback } from "@/components/page-fallback";
 
 
 
@@ -14,22 +15,16 @@ export const metadata: Metadata = {
 
 export default function NoticesPage() {
   return (
-    <>
-      {/* Signed-in check streams in beside the page (it only ever redirects). */}
-      <Suspense fallback={null}>
-        <RequireMember />
-      </Suspense>
-      <NoticesContent />
-    </>
+    // Notices are for members only, so they're added after the signed-in
+    // check — never part of the ready-made page everyone shares.
+    <Suspense fallback={<PageFallback />}>
+      <NoticesForMember />
+    </Suspense>
   );
 }
 
-async function RequireMember() {
+async function NoticesForMember() {
   await requireUser();
-  return null;
-}
-
-async function NoticesContent() {
   const [notices, categories] = await Promise.all([
     getPageNotices(),
     getSiteNoticeCategories(),

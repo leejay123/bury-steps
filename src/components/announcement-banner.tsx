@@ -2,10 +2,10 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { ArrowRightIcon } from "lucide-react";
 import { StickyBanner } from "@/components/velora/sticky-banner";
 import { ANNOUNCEMENT_MATCH_JS, announcementShowsOn } from "@/lib/announcement-pages";
+import { useClientPathname } from "@/components/client-pathname";
 
 /** localStorage: { id, until } — which wording was closed, and when to show it again. */
 const KEY = "announcement-dismissed";
@@ -65,15 +65,17 @@ function rememberDismissed(id: string) {
  */
 export function AnnouncementBanner({ text, link, pages }: { text: string; link: string; pages: string }) {
   const id = announcementId(text);
-  const pathname = usePathname();
+  // null until the browser knows the page — the pre-paint flag keeps the
+  // bar hidden on pages it isn't for until then.
+  const pathname = useClientPathname();
   const dismissed = useSyncExternalStore(noopSubscribe, readDismissed, () => null) === id;
 
   // React now decides whether the bar shows; the pre-paint flag has done its job.
   useEffect(() => {
-    document.documentElement.removeAttribute(HIDE_ATTR);
-  }, []);
+    if (pathname !== null) document.documentElement.removeAttribute(HIDE_ATTR);
+  }, [pathname]);
 
-  if (dismissed || !announcementShowsOn(pages, pathname)) {
+  if (dismissed || (pathname !== null && !announcementShowsOn(pages, pathname))) {
     return <script dangerouslySetInnerHTML={{ __html: prepaintScript(id, pages) }} />;
   }
 
