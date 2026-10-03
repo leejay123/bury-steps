@@ -13,7 +13,7 @@ const { requireAdmin, prismaMock, sendTestEmail, checkRateLimit } = vi.hoisted((
   checkRateLimit: vi.fn(() => ({ ok: true }) as { ok: true } | { ok: false; retryAfterSeconds: number }),
 }));
 
-vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }));
 vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
 vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");

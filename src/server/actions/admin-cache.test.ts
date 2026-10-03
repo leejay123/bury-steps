@@ -122,8 +122,10 @@ describe("clearSiteCache", () => {
   it("revalidates both cache tags and the public/admin/walks routes", async () => {
     const result = await clearSiteCache(null, new FormData());
     expect(revalidateTag).toHaveBeenCalledWith("homepage", { expire: 0 });
-    expect(revalidateTag).toHaveBeenCalledWith(expect.any(String), { expire: 0 });
-    expect(revalidateTag).toHaveBeenCalledTimes(2);
+    expect(revalidateTag).toHaveBeenCalledWith("site-notices", { expire: 0 });
+    // Besides those two, every refresh also tells open pages something changed.
+    const tags = new Set(revalidateTag.mock.calls.map(([tag]) => tag));
+    expect(tags).toEqual(new Set(["homepage", "site-notices", "site-version"]));
     for (const path of ["/", "/home", "/admin", "/walks"]) {
       expect(revalidatePath).toHaveBeenCalledWith(path);
     }

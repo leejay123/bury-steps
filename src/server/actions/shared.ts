@@ -3,7 +3,7 @@
 // export async functions, so anything used across more than one domain file
 // (or that isn't itself an action) lives here instead.
 
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "@/lib/revalidate";
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";

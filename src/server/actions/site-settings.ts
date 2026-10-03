@@ -3,7 +3,7 @@
 import { parsePageTransition } from "@/lib/page-transition";
 import { serializeAnnouncementPages } from "@/lib/announcement-pages";
 import { parseTextSize } from "@/lib/text-sizes";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "@/lib/revalidate";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { actorStillOwner } from "@/lib/site-owner";

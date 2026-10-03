@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, useTransition } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { CheckCheck, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { markSiteNoticeRead, markSiteNoticesRead } from "@/server/actions";
+import { NOTICE_READ_EVENT, NOTICES_UNREAD_EVENT } from "@/lib/notice-events";
 import { noticeBodyForBellDrawer, noticeDateLabel, noticeUnreadBadgeLabel, type NoticeView } from "@/lib/notices";
 import {
   OPEN_MEMBER_NOTICE_BELL_EVENT,
@@ -36,13 +37,26 @@ export function NotificationBell({
   const [unread, setUnread] = useState(unreadIds);
   const [pending, setPending] = useState(false);
   const scrollToNoticeIdRef = useRef<string | null>(null);
-  const [, startTransition] = useTransition();
   const pathname = usePathname();
-  const router = useRouter();
 
   useResetOnChange([unreadIds], () => setUnread(unreadIds));
 
   useResetOnChange([pathname], () => setOpen(false));
+
+  // Read on its own page: drop it from the count here too.
+  useEffect(() => {
+    function onRead(event: Event) {
+      const noticeId = (event as CustomEvent<string>).detail;
+      setUnread((current) => (current.includes(noticeId) ? current.filter((id) => id !== noticeId) : current));
+    }
+    window.addEventListener(NOTICE_READ_EVENT, onRead);
+    return () => window.removeEventListener(NOTICE_READ_EVENT, onRead);
+  }, []);
+
+  // The Notices dots in the phone menu and bottom bar follow this count.
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent(NOTICES_UNREAD_EVENT, { detail: unread.length }));
+  }, [unread.length]);
 
   useEffect(() => {
     function onOpenFromCarousel(event: Event) {
@@ -53,7 +67,6 @@ export function NotificationBell({
         markSiteNoticeRead(noticeId)
           .then((result) => {
             if (!result.ok) toast.error(result.error);
-            else startTransition(() => router.refresh());
           })
           .catch(() => toast.error("Could not mark that notice as read. Try again."));
       }
@@ -62,7 +75,7 @@ export function NotificationBell({
 
     window.addEventListener(OPEN_MEMBER_NOTICE_BELL_EVENT, onOpenFromCarousel);
     return () => window.removeEventListener(OPEN_MEMBER_NOTICE_BELL_EVENT, onOpenFromCarousel);
-  }, [router, startTransition]);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -89,8 +102,6 @@ export function NotificationBell({
         if (!result.ok) {
           setUnread(previous);
           toast.error(result.error);
-        } else {
-          startTransition(() => router.refresh());
         }
       })
       .catch(() => {
@@ -109,8 +120,6 @@ export function NotificationBell({
         if (!result.ok) {
           setUnread(previous);
           toast.error(result.error);
-        } else {
-          startTransition(() => router.refresh());
         }
       })
       .catch(() => {

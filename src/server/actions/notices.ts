@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "@/lib/revalidate";
 import { customAlphabet } from "nanoid";
 import { requireAdmin, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -386,7 +386,9 @@ export async function markSiteNoticesRead(): Promise<ActionResult> {
     return logActionError("markSiteNoticesRead", err, "Could not mark notices as read. Try again.");
   }
 
-  revalidatePath("/", "layout");
+  // Read receipts are per person: the bell and dots update in the
+  // browser (notice-events.ts). No site-wide refresh — that rebuilt every
+  // page and made everyone's browser forget the pages it had remembered.
   return { ok: true };
 }
 
@@ -409,7 +411,9 @@ export async function markSiteNoticeRead(noticeId: string): Promise<ActionResult
     return logActionError("markSiteNoticeRead", err, "Could not mark that notice as read. Try again.");
   }
 
-  revalidatePath("/", "layout");
+  // Read receipts are per person: the bell and dots update in the
+  // browser (notice-events.ts). No site-wide refresh — that rebuilt every
+  // page and made everyone's browser forget the pages it had remembered.
   return { ok: true };
 }
 

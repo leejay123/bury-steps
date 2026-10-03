@@ -2,6 +2,7 @@
 
 import { Suspense, use, useEffect, useRef, useState, type RefObject } from "react";
 import Link from "next/link";
+import { useNoticesUnread } from "@/hooks/use-notices-unread";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Bell,
@@ -278,7 +279,7 @@ export type MobileMenuGroup = {
 };
 
 function UnreadDot({ unread }: { unread: Promise<boolean> }) {
-  return use(unread) ? <span className="flex size-2 rounded-full bg-blue-500" title="New" /> : null;
+  return useNoticesUnread(use(unread)) ? <span className="flex size-2 rounded-full bg-blue-500" title="New" /> : null;
 }
 
 export function SiteMobileMenu({ groups, showSearch = false }: { groups: MobileMenuGroup[]; showSearch?: boolean }) {

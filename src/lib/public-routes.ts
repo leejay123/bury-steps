@@ -36,6 +36,9 @@ export const PUBLIC_ROUTE_PATTERNS = [
   // for the matcher’s static-file exclusion to catch.
   "/icon",
   "/api/health",
+  // "Has anything changed?" fingerprint for open pages (LiveUpdates) —
+  // visitors' pages refresh too. Only a meaningless code, no data.
+  "/api/site-version",
   "/__clerk(.*)",
   // Organiser URLs 404 for anyone who is not a signed-in organiser —
   // auth.protect() would send members and guests to sign-in and reveal

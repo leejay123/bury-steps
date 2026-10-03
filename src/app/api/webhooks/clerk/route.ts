@@ -1,3 +1,5 @@
+import { revalidateTag } from "next/cache";
+import { SITE_VERSION_TAG } from "@/lib/site-version";
 import { NextResponse, type NextRequest } from "next/server";
 import { clerkPhoto } from "@/lib/member-photos";
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
@@ -147,5 +149,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // A member joined, changed or left: open pages (e.g. Members) refresh.
+  revalidateTag(SITE_VERSION_TAG, { expire: 0 });
   return NextResponse.json({ received: true });
 }

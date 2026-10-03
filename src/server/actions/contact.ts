@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath } from "@/lib/revalidate";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SITE_SETTING_ID } from "@/lib/theme";

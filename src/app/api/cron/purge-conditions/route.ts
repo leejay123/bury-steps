@@ -1,3 +1,5 @@
+import { revalidateTag } from "next/cache";
+import { SITE_VERSION_TAG } from "@/lib/site-version";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { bearerMatches } from "@/lib/bearer-auth";
@@ -59,5 +61,7 @@ export async function GET(req: Request) {
     deletedReports = result.count;
   }
 
+  // Old walks or reports were cleared: open pages refresh.
+  if (deletedCancelled || deletedReports) revalidateTag(SITE_VERSION_TAG, { expire: 0 });
   return NextResponse.json({ purged, deletedCancelled, deletedReports });
 }

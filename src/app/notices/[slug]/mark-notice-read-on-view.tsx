@@ -1,20 +1,17 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { NOTICE_READ_EVENT } from "@/lib/notice-events";
 import { markSiteNoticeRead } from "@/server/actions";
 
 /**
- * Marks this notice read as soon as its page is viewed, then refreshes the
- * router so the bell's unread count updates in the browser tab that's
- * currently open. Previously this ran server-side via `after()` +
- * `revalidatePath` on the page itself — that invalidates the cache for the
- * *next* navigation, but never tells an already-rendered header to refetch,
- * so the badge stayed stale until some unrelated navigation happened to
- * pick it up. Mirrors how the bell drawer itself marks a notice read.
+ * Marks this notice read as soon as its page is viewed, then tells the
+ * bell (and the Notices dots) in this tab so the unread count drops at
+ * once. It used to refresh the whole page for that, which also made the
+ * browser forget every page it had remembered — so going back to Notices
+ * always reloaded with placeholders.
  */
 export function MarkNoticeReadOnView({ noticeId }: { noticeId: string }) {
-  const router = useRouter();
   const sentFor = useRef<string | null>(null);
 
   useEffect(() => {
@@ -22,12 +19,12 @@ export function MarkNoticeReadOnView({ noticeId }: { noticeId: string }) {
     sentFor.current = noticeId;
     markSiteNoticeRead(noticeId)
       .then((result) => {
-        if (result.ok) router.refresh();
+        if (result.ok) window.dispatchEvent(new CustomEvent(NOTICE_READ_EVENT, { detail: noticeId }));
       })
       .catch(() => {
         // Best-effort read receipt — not worth surfacing a toast for.
       });
-  }, [noticeId, router]);
+  }, [noticeId]);
 
   return null;
 }

@@ -19,7 +19,7 @@ const { revalidatePath, requireAdmin, canOrganiserEditJourney, prismaMock, trans
     };
   });
 
-vi.mock("next/cache", () => ({ revalidatePath }));
+vi.mock("next/cache", () => ({ revalidatePath, revalidateTag: vi.fn() }));
 vi.mock("@/lib/db", () => ({ prisma: { ...prismaMock, $transaction: transaction } }));
 vi.mock("@/lib/walk-window", async () => {
   const actual = await vi.importActual<typeof import("@/lib/walk-window")>("@/lib/walk-window");

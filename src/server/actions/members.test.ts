@@ -55,7 +55,7 @@ vi.mock("@/lib/member-photos", () => ({
   withMemberPhotos: vi.fn(async (rows: { id: string; imageUrl?: string | null }[]) => new Map(rows.map((row) => [row.id, row.imageUrl ?? null]))),
   clerkPhoto: vi.fn(() => null),
 }));
-vi.mock("next/cache", () => ({ revalidatePath }));
+vi.mock("next/cache", () => ({ revalidatePath, revalidateTag: vi.fn() }));
 vi.mock("@/lib/db", () => ({ prisma: { ...prismaMock, $transaction: transaction } }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit }));
 vi.mock("@/lib/site-owner", () => ({ getOwnerIds, isOwner, actorStillOwner }));

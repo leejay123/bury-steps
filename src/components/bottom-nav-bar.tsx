@@ -2,6 +2,7 @@
 
 import { Suspense, use, useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useNoticesUnread } from "@/hooks/use-notices-unread";
 import { usePathname } from "next/navigation";
 import {
   Bell,
@@ -62,7 +63,7 @@ export type BottomNavItem = { href: string; label: string; dot?: Promise<boolean
 export type BottomNavGroup = { label: string; items: BottomNavItem[] };
 
 function UnreadDot({ unread }: { unread: Promise<boolean> }) {
-  return use(unread) ? (
+  return useNoticesUnread(use(unread)) ? (
     <span aria-label="New" className="absolute -top-0.5 -right-1 size-2 rounded-full bg-blue-500 ring-2 ring-background" />
   ) : null;
 }

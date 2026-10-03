@@ -15,7 +15,7 @@ const { requireAdmin, prismaMock, sendAccidentReportAlertEmail, isOwner, actorSt
   actorStillOwner: vi.fn(async (userId: string) => userId === "admin-1"),
 }));
 
-vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }));
 vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
 vi.mock("@/lib/site-owner", () => ({ isOwner, actorStillOwner }));
 vi.mock("@/lib/auth", async () => {

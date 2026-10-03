@@ -1,5 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
+vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
+
 const { prismaMock } = vi.hoisted(() => ({
   prismaMock: {
     attendance: { updateMany: vi.fn(async () => ({ count: 0 })) },

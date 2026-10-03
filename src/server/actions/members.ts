@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath } from "@/lib/revalidate";
 import { clerkClient } from "@clerk/nextjs/server";
 import type { Prisma } from "@prisma/client";
 import { requireAdmin, displayName, getOptionalUser } from "@/lib/auth";

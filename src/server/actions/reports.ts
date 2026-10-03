@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath } from "@/lib/revalidate";
 import { z } from "zod";
 import { requireAdmin, displayName } from "@/lib/auth";
 import { isOwner, actorStillOwner } from "@/lib/site-owner";
