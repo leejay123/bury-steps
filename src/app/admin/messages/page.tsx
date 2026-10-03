@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
+import { MessageRowsSkeleton } from "@/components/list-skeletons";
 import Link from "next/link";
 import { requirePermission, displayName } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -60,7 +61,7 @@ async function AdminMessagesPageContent() {
  * shows a matching placeholder for an instant while it loads. */
 export default function AdminMessagesPage() {
   return (
-    <Suspense fallback={<AdminPageFallback title="Messages" />}>
+    <Suspense fallback={<AdminPageFallback list={<MessageRowsSkeleton />} title="Messages" />}>
       <AdminMessagesPageContent />
     </Suspense>
   );

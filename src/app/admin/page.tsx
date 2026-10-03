@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
+import { SkFilters, WalkRowsSkeleton } from "@/components/list-skeletons";
 import { connection } from "next/server";
 import { Skeleton } from "@/components/ui/skeleton";
 import { prisma } from "@/lib/db";
@@ -34,6 +34,9 @@ function toRow(walk: {
   };
 }
 
+const WALKS_INTRO =
+  "Upcoming walks, and every finished walk. Filter by status, sort by date, or search. Open a walk to share the link, cancel it, reopen it, or remove it. Long walks stay under Upcoming until clock-in closes.";
+
 async function AdminPageContent() {
   // View and Create are meaningfully independent: View is the schedule/
   // history/cancelled-walk detail, Create is the blank "start a new one"
@@ -49,7 +52,7 @@ async function AdminPageContent() {
         <section className="flex flex-col gap-4">
           <AdminPageIntro
             action={admin.permWalksCreate ? <CreateWalkDrawer /> : null}
-            description="Upcoming walks, and every finished walk. Filter by status, sort by date, or search. Open a walk to share the link, cancel it, reopen it, or remove it. Long walks stay under Upcoming until clock-in closes."
+            description={WALKS_INTRO}
             title="Walks"
           />
           {/* The heading and Create button show straight away; only the list waits. */}
@@ -168,20 +171,30 @@ async function AdminWalksTabs() {
 }
 
 /** Same shape as the tabs and walk cards that replace it. */
+/** The Walks list area while it loads: tab strip, filters, then rows shaped
+ * like the real walk rows. The whole-page placeholder uses this too, so a
+ * refresh only ever shows this one placeholder. */
 function AdminWalksSkeleton() {
   return (
-    <div className="flex flex-col gap-4">
+    <div aria-busy="true" className="flex flex-col gap-4">
       <Skeleton className="h-9 w-56 rounded-lg" />
-      <div className="flex flex-col divide-y overflow-hidden rounded-xl border">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i}>
-            <div className="h-7 border-b bg-muted/60" />
-            <div className="p-3">
-              <Skeleton className="h-10 w-full" />
-            </div>
-          </div>
-        ))}
-      </div>
+      <SkFilters />
+      <WalkRowsSkeleton />
+    </div>
+  );
+}
+
+function AdminWalksPageFallback() {
+  return (
+    <div className="flex flex-col gap-8 px-4 py-6 md:px-6">
+      <section className="flex flex-col gap-4">
+        <AdminPageIntro
+          action={<Skeleton className="h-9 w-36 rounded-md" />}
+          description={WALKS_INTRO}
+          title="Walks"
+        />
+        <AdminWalksSkeleton />
+      </section>
     </div>
   );
 }
@@ -190,7 +203,7 @@ function AdminWalksSkeleton() {
  * shows a matching placeholder for an instant while it loads. */
 export default function AdminPage() {
   return (
-    <Suspense fallback={<AdminPageFallback title="Walks" />}>
+    <Suspense fallback={<AdminWalksPageFallback />}>
       <AdminPageContent />
     </Suspense>
   );

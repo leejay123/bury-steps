@@ -68,7 +68,7 @@ function memberGroupKey(member: ViewMember): MemberGroupKey {
  * flight — same shape as a loaded row, so the list doesn't jump size, and
  * shows up instantly instead of dimming stale rows for however long the
  * fetch takes. */
-function MemberRowSkeleton() {
+export function MemberRowSkeleton() {
   return (
     <DataListItem className={dataListItemStackClassName}>
       <DataListItemMain>

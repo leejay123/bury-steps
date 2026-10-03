@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { MemberRowSkeleton } from "./members-table";
 import { Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { prisma } from "@/lib/db";
@@ -106,22 +107,17 @@ async function MembersBody({ adminId, role }: { adminId: string; role: MemberRol
   );
 }
 
-/** Same shape as the filter bar and member rows that replace it. */
+/** Same shape as the filter bar and the members table's own placeholder
+ * rows — one placeholder whether the page or the list is loading. */
 function MembersListSkeleton() {
   return (
-    <div className="flex flex-col gap-3">
+    <div aria-busy="true" className="flex flex-col gap-3">
       <Skeleton className="h-9 w-full rounded-md" />
-      <ul className="flex flex-col overflow-hidden rounded-xl border bg-card">
+      <DataList>
         {[0, 1, 2, 3, 4, 5].map((i) => (
-          <li className="flex items-center gap-3 border-b p-3 last:border-0" key={i}>
-            <Skeleton className="size-9 shrink-0 rounded-full" />
-            <div className="flex min-w-0 flex-col gap-2">
-              <Skeleton className="h-4 w-28" />
-              <Skeleton className="h-3.5 w-44 max-w-full" />
-            </div>
-          </li>
+          <MemberRowSkeleton key={i} />
         ))}
-      </ul>
+      </DataList>
     </div>
   );
 }

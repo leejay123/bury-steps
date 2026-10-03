@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
+import { MessageRowsSkeleton } from "@/components/list-skeletons";
 import { Prisma } from "@prisma/client";
 import { memberDisplayName, requirePermission } from "@/lib/auth";
 import { isOwner } from "@/lib/site-owner";
@@ -125,7 +126,7 @@ async function AccidentReportsPageContent({
  * shows a matching placeholder for an instant while it loads. */
 export default function AccidentReportsPage(props: Parameters<typeof AccidentReportsPageContent>[0]) {
   return (
-    <Suspense fallback={<AdminPageFallback title="Accident reports" />}>
+    <Suspense fallback={<AdminPageFallback list={<MessageRowsSkeleton />} title="Accident reports" />}>
       <AccidentReportsPageContent {...props} />
     </Suspense>
   );

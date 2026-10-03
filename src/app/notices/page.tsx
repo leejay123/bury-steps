@@ -5,6 +5,7 @@ import { PAGE_X_BLEED } from "@/lib/page-x";
 import { getPageNotices, getSiteNoticeCategories } from "@/lib/site-notices";
 import { NoticesBlogSection } from "@/components/notices-blog-section";
 import { Skeleton } from "@/components/ui/skeleton";
+import { NoticeRowsSkeleton, SkLine } from "@/components/list-skeletons";
 
 
 
@@ -51,16 +52,13 @@ function NoticesFallback() {
         </p>
         <Skeleton className="h-9 w-full max-w-md rounded-md" />
       </div>
-      <div className="flex flex-col gap-4 px-4 pb-6 md:px-6">
-        <ul className="flex flex-col overflow-hidden rounded-xl border">
-          {Array.from({ length: 5 }, (_, i) => (
-            <li className="flex flex-col gap-2 border-b p-4 last:border-0" key={i}>
-              <Skeleton className="h-3 w-20" />
-              <Skeleton className="h-4 w-1/2" />
-              <Skeleton className="h-3.5 w-3/4" />
-            </li>
-          ))}
-        </ul>
+      <div className="flex gap-6 border-y px-4 py-3 md:px-6">
+        {["w-6", "w-10", "w-14", "w-20", "w-12", "w-12"].map((w, i) => (
+          <SkLine className={w} key={i} size="sm" />
+        ))}
+      </div>
+      <div className="px-4 py-6 md:px-6">
+        <NoticeRowsSkeleton />
       </div>
     </div>
   );
