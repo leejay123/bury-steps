@@ -219,21 +219,56 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
       window.setTimeout(() => watcher?.disconnect(), 2500);
     }
 
-    if (from !== null && from !== pathname) {
-      const run = cardsSideways
-        ? animate(el, { opacity: [0.3, 1], x: [direction * DISTANCE, 0] }, { duration: DURATION, ease: EASE })
+    // How content comes in on this page change (also used for content that
+    // arrives a moment later — see below).
+    const enter = (nodes: HTMLElement[], fromHidden: boolean) =>
+      cardsSideways
+        ? animate(nodes, { opacity: [0.3, 1], x: [direction * DISTANCE, 0] }, { duration: DURATION, ease: EASE })
         : mode === "rise"
         ? // Like the walk cards: rise 14px into place while fading in.
-          animate(el, { opacity: [0, 1], y: [14, 0] }, { duration: 0.28, ease: EASE })
+          animate(nodes, { opacity: [0, 1], y: [14, 0] }, { duration: 0.28, ease: EASE })
         : direction
         ? animate(
-            el,
-            { opacity: [wasLeaving ? 0 : 0.3, 1], x: [direction * DISTANCE, 0] },
+            nodes,
+            { opacity: [fromHidden ? 0 : 0.3, 1], x: [direction * DISTANCE, 0] },
             { duration: DURATION, ease: EASE },
           )
-        : animate(el, { opacity: [0.4, 1] }, { duration: 0.18, ease: "easeOut" });
+        : animate(nodes, { opacity: [0.4, 1] }, { duration: 0.18, ease: "easeOut" });
+
+    let arrivals: MutationObserver | null = null;
+    if (from !== null && from !== pathname) {
+      const run = enter(el, wasLeaving);
       run.then(clear, clear);
       runs.push(run);
+
+      // Pages that show your own details (Notices, Walks, Members…) open
+      // with a placeholder and swap in the real list a moment later. That
+      // list arrives after the animation above has run on the placeholder,
+      // so give whatever arrives in the next moment the same entrance.
+      arrivals = new MutationObserver((records) => {
+        const added = new Set<HTMLElement>();
+        for (const record of records) {
+          for (const node of record.addedNodes) {
+            if (!(node instanceof HTMLElement) || node.matches("script, style, template")) continue;
+            if (getComputedStyle(node).position === "absolute" || getComputedStyle(node).position === "fixed") continue;
+            added.add(node);
+          }
+        }
+        // Only the outermost new parts; their insides move with them.
+        const outer = [...added].filter((node) => ![...added].some((other) => other !== node && other.contains(node)));
+        if (!outer.length) return;
+        const late = enter(outer, true);
+        const reset = () => {
+          for (const node of outer) {
+            node.style.transform = "";
+            node.style.opacity = "";
+          }
+        };
+        late.then(reset, reset);
+        runs.push(late);
+      });
+      arrivals.observe(page, { childList: true, subtree: true });
+      window.setTimeout(() => arrivals?.disconnect(), 1500);
     } else {
       clear();
     }
@@ -241,6 +276,7 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
     // end rather than freezing half-faded.
     return () => {
       watcher?.disconnect();
+      arrivals?.disconnect();
       runs.forEach((run) => run.complete());
     };
   }, [pathname, mode]);
