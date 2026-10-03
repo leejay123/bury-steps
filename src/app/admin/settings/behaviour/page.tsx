@@ -11,6 +11,7 @@ import { MobileNavSettings } from "./mobile-nav-settings";
 import { DisplaySettings, FooterWordmarkMobileSettings, FooterWordmarkSettings } from "./display-form";
 import { ProgressToggle } from "./progress-toggle";
 import { OrganiserInviteToggle } from "./organiser-invite-toggle";
+import { EmergencyContactToggle } from "./emergency-contact-toggle";
 import { ContactMessagesOwnerSettings } from "./contact-messages-owner-settings";
 
 
@@ -20,7 +21,7 @@ export default function SiteBehaviourSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description="Sitewide behaviour that isn't part of the homepage story — announcement bar, cookie notice, back to top, the footer name, Progress, organiser invites, and the contact form."
+      description="Sitewide behaviour that isn't part of the homepage story — announcement bar, cookie notice, back to top, the footer name, Progress, clock-in, organiser invites, and the contact form."
       title="Site behaviour"
     >
       <Suspense fallback={<SettingsContentSkeleton />}>
@@ -41,7 +42,12 @@ async function SiteBehaviourSettingsPageContent() {
     }),
     prisma.siteSetting.findUnique({
       where: { id: SITE_SETTING_ID },
-      select: { contactMessagesOwnerId: true, organiserInviteRequired: true, progressEnabled: true },
+      select: {
+        contactMessagesOwnerId: true,
+        emergencyContactRequired: true,
+        organiserInviteRequired: true,
+        progressEnabled: true,
+      },
     }),
   ]);
 
@@ -64,6 +70,10 @@ async function SiteBehaviourSettingsPageContent() {
         <FooterWordmarkSettings enabled={theme.footerWordmarkEnabled} />
         {theme.footerWordmarkEnabled ? <FooterWordmarkMobileSettings enabled={theme.footerWordmarkMobile} /> : null}
         <ProgressToggle enabled={settings?.progressEnabled ?? true} />
+      </SettingsSectionGroup>
+
+      <SettingsSectionGroup description="What members fill in before they clock in." title="Clock-in">
+        <EmergencyContactToggle enabled={settings?.emergencyContactRequired ?? false} />
       </SettingsSectionGroup>
 
       <SettingsSectionGroup description="How promoting a member to organiser takes effect." title="Organisers">

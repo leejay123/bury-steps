@@ -14,6 +14,7 @@ import { ShareLink } from "@/components/share-link";
 import { EmptyState } from "@/components/empty-state";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { WalkMapSection } from "@/components/walk-map-section";
+import { WalkForecastSection } from "@/components/walk-forecast";
 import { meetingPointLabel } from "@/lib/geocode";
 import { What3wordsLink } from "@/components/what3words-link";
 import { walkShareUrl } from "@/lib/walk-slug";
@@ -84,7 +85,15 @@ async function WalkDetailPageContent({
           // Health notes are removed below for anyone without permission,
           // before anything is rendered or sent to the browser.
           conditions: true,
-          user: { select: { firstName: true, lastName: true, email: true } },
+          user: {
+            select: {
+              firstName: true,
+              lastName: true,
+              email: true,
+              emergencyContactName: true,
+              emergencyContactPhone: true,
+            },
+          },
         },
       },
       journeyEvents: {
@@ -186,6 +195,12 @@ async function WalkDetailPageContent({
       conditions: admin.permWalksHealth
         ? ("conditions" in attendance ? (attendance.conditions ?? null) : null)
         : null,
+      emergencyContactName: admin.permWalksAttendance
+        ? (attendance.user.emergencyContactName ?? null)
+        : null,
+      emergencyContactPhone: admin.permWalksAttendance
+        ? (attendance.user.emergencyContactPhone ?? null)
+        : null,
     };
   }
 
@@ -271,6 +286,16 @@ async function WalkDetailPageContent({
 
       {meeting ? <WalkMapSection location={meeting} walk={walk} /> : null}
 
+      <WalkForecastSection
+        cancelledAt={walk.cancelledAt}
+        durationMins={walk.durationMins}
+        endedAt={walk.endedAt}
+        latitude={walk.latitude}
+        longitude={walk.longitude}
+        place={meeting}
+        startsAt={walk.startsAt}
+      />
+
       {walk.what3words ? <What3wordsLink address={walk.what3words} /> : null}
 
       <WalkDetailActions
@@ -340,6 +365,7 @@ async function WalkDetailPageContent({
           */}
           <WalkAttendanceSection
             canManageAttendance={admin.permWalksAttendance}
+            canSeeEmergencyContact={admin.permWalksAttendance}
             canSeeHealthNotes={admin.permWalksHealth}
             cancelledAt={walk.cancelledAt?.toISOString() ?? null}
             clockedOutRows={clockedOut.map(toAttendanceRow)}

@@ -65,6 +65,12 @@ model User {
   /// At least one owner must always remain — removeOwner refuses to strip
   /// the last one.
   isOwner                  Boolean   @default(false)
+  /// Who to call if this member needs help on a walk. Entered at clock-in
+  /// (required or optional — SiteSetting.emergencyContactRequired) and kept
+  /// on the account until they change it or the account is removed. Visible
+  /// to organisers only, never to other members.
+  emergencyContactName     String?
+  emergencyContactPhone    String?
 
   walksCreated            Walk[]                 @relation("WalkCreator")
   attendances             Attendance[]
@@ -462,6 +468,11 @@ model SiteSetting {
   /// instead of taking effect immediately — they only become an organiser
   /// once they accept it. Off by default (instant promotion, as before).
   organiserInviteRequired     Boolean  @default(false)
+  /// When on, a member must enter an emergency contact name and phone
+  /// before they can clock in. When off, the same fields are shown and
+  /// can be left blank. Either way the values live on User, not on the
+  /// attendance row.
+  emergencyContactRequired    Boolean  @default(false)
   /// Days a cancelled walk is kept before the daily cron deletes it (and
   /// its attendances) automatically, if it was never reopened. A linked
   /// accident report is unlinked, not deleted, along with it — reports

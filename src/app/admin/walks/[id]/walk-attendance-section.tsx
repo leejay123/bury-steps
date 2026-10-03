@@ -18,6 +18,7 @@ import { WalkAttendanceTable, type WalkAttendanceRow } from "./walk-attendance";
  */
 export function WalkAttendanceSection({
   canManageAttendance,
+  canSeeEmergencyContact,
   canSeeHealthNotes,
   cancelledAt,
   clockedOutRows,
@@ -29,6 +30,7 @@ export function WalkAttendanceSection({
   walkId,
 }: {
   canManageAttendance: boolean;
+  canSeeEmergencyContact: boolean;
   canSeeHealthNotes: boolean;
   cancelledAt: string | null;
   clockedOutRows: WalkAttendanceRow[];
@@ -86,6 +88,7 @@ export function WalkAttendanceSection({
         ) : (
           <WalkAttendanceTable
             canRemove={!walk.cancelledAt && canManageAttendance}
+            canSeeEmergencyContact={canSeeEmergencyContact}
             canSeeHealthNotes={canSeeHealthNotes}
             heading={{ count: stillInRows.length, label: isCompleted ? "Attended" : "Attendance" }}
             rows={stillInRows}
@@ -98,6 +101,7 @@ export function WalkAttendanceSection({
         <section className="flex flex-col gap-3">
           <WalkAttendanceTable
             canRemove={!walk.cancelledAt && canManageAttendance}
+            canSeeEmergencyContact={canSeeEmergencyContact}
             canSeeHealthNotes={canSeeHealthNotes}
             heading={{ count: clockedOutRows.length, label: "Clocked out" }}
             rows={clockedOutRows}

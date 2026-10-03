@@ -649,6 +649,8 @@ describe("getMemberHistory", () => {
       email: "admin@example.com",
       role: "ADMIN",
       isOwner: true,
+      emergencyContactName: "Pat Stone",
+      emergencyContactPhone: "07700900123",
       createdAt: new Date("2025-01-01T00:00:00Z"),
       permWalksView: true,
       permWalksCreate: true,
@@ -702,6 +704,8 @@ describe("getMemberHistory", () => {
       attendanceCount: 1,
       isYou: true,
       isOwner: true,
+      emergencyContactName: "Pat Stone",
+      emergencyContactPhone: "07700900123",
       pendingInvite: null,
       items: [
         {

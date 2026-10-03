@@ -16,6 +16,15 @@ export function PrivacySiteSection() {
               visible to organisers with attendance access.
             </p>
             <p>
+              The emergency contact (name and phone) is separate from health notes. Members
+              enter it on the clock-in form. Organisers with attendance access see it when they
+              open someone on the walk roster, and it is included on the roster download. Owners
+              also see it on that person’s page in Members. Other members never see it. It stays
+              on the account until the member changes it or the account is removed — it is not
+              wiped after 90 days. Whether it is required is under Settings → Site behaviour →
+              Clock-in. Off by default: the fields still show, and can be left blank.
+            </p>
+            <p>
               Those notes are deleted automatically <strong>90 days</strong> after the walk. The
               clock-in record itself stays. Read anything you need before you set off — there is a
               reminder on the walk page if anyone reported a condition.

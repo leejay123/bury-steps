@@ -936,6 +936,8 @@ export async function getMemberHistory(userId: string): Promise<{
   /** One of the group's owners (see src/lib/site-owner.ts) — there can be
    * more than one. */
   isOwner: boolean;
+  emergencyContactName: string | null;
+  emergencyContactPhone: string | null;
 } | null> {
   const admin = await requireAdmin();
   if (!admin.permMembersView) return null;
@@ -985,6 +987,8 @@ export async function getMemberHistory(userId: string): Promise<{
     attendanceCount,
     isYou: member.id === admin.id,
     isOwner: member.isOwner,
+    emergencyContactName: member.emergencyContactName,
+    emergencyContactPhone: member.emergencyContactPhone,
     pendingInvite: member.organiserInviteSentAt
       ? {
           sentAt: member.organiserInviteSentAt.toISOString(),

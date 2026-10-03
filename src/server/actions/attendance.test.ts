@@ -17,7 +17,8 @@ const {
   const queryRaw = vi.fn();
   const prismaMock: Record<string, Record<string, ReturnType<typeof vi.fn>>> = {
     walk: { findUnique: vi.fn() },
-    user: { findUnique: vi.fn(), findMany: vi.fn() },
+    user: { findUnique: vi.fn(), findMany: vi.fn(), update: vi.fn() },
+    siteSetting: { findUnique: vi.fn() },
     attendance: {
       updateMany: vi.fn(),
       create: vi.fn(),
@@ -124,6 +125,8 @@ beforeEach(() => {
   windowState.mockReturnValue("open");
   canOrganiserAddAttendance.mockReturnValue(true);
   organiserRecordedClockInAt.mockImplementation((_walk, now = new Date()) => now);
+  prismaMock.siteSetting.findUnique.mockResolvedValue({ emergencyContactRequired: false });
+  prismaMock.user.update.mockResolvedValue({});
 });
 
 describe("clockIn", () => {
@@ -201,6 +204,33 @@ describe("clockIn", () => {
       }),
     );
     expect(result).toEqual({ ok: true, message: "Clocked in. Enjoy the walk." });
+  });
+
+  it("saves an emergency contact onto the member", async () => {
+    queryRaw.mockResolvedValueOnce([lockedWalkRow()]);
+    prismaMock.attendance.updateMany.mockResolvedValueOnce({ count: 0 });
+    prismaMock.attendance.create.mockResolvedValueOnce({});
+
+    const result = await clockIn(
+      null,
+      clockInForm({ emergencyContactName: "Alex Stone", emergencyContactPhone: "07700 900123" }),
+    );
+
+    expect(result.ok).toBe(true);
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: USER.id },
+      data: { emergencyContactName: "Alex Stone", emergencyContactPhone: "07700 900123" },
+    });
+  });
+
+  it("refuses clock-in when an emergency contact is required and missing", async () => {
+    prismaMock.siteSetting.findUnique.mockResolvedValueOnce({ emergencyContactRequired: true });
+    const result = await clockIn(null, clockInForm());
+    expect(result).toEqual({
+      ok: false,
+      error: "Add an emergency contact name and phone number before clocking in.",
+    });
+    expect(transaction).not.toHaveBeenCalled();
   });
 
   it("re-clocks-in via update instead of creating a duplicate row when they'd already clocked out", async () => {

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { formatDateTime, formatTime } from "@/lib/dates";
+import { emergencyPhoneHref } from "@/lib/emergency-contact";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import {
   DataList,
@@ -36,6 +37,8 @@ export type WalkAttendanceRow = {
   clockedOutAt: string | null;
   clockedOutReason: string | null;
   conditions: string | null;
+  emergencyContactName: string | null;
+  emergencyContactPhone: string | null;
 };
 
 function Detail({ label, children }: { label: string; children: React.ReactNode }) {
@@ -60,6 +63,7 @@ function stillInLabel(walkCompleted: boolean) {
 
 export function WalkAttendanceTable({
   canRemove = false,
+  canSeeEmergencyContact = false,
   canSeeHealthNotes = false,
   heading,
   rows,
@@ -67,6 +71,9 @@ export function WalkAttendanceTable({
 }: {
   /** Organiser can delete a mistaken clock-in (not on cancelled walks). */
   canRemove?: boolean;
+  /** Attendance access — name and phone from clock-in. Hidden entirely
+   * otherwise, including for someone who only opened this walk from Members. */
+  canSeeEmergencyContact?: boolean;
   /** permWalksHealth — hides the health-notes row in the detail drawer
    * entirely for an organiser without it, rather than showing an empty
    * or placeholder value. */
@@ -156,8 +163,8 @@ export function WalkAttendanceTable({
             <DrawerTitle>{selected?.name ?? "Member"}</DrawerTitle>
             <DrawerDescription>
               {canSeeHealthNotes
-                ? "Clock-in details for this walk. Health notes are only for organisers with that permission."
-                : "Clock-in details for this walk."}
+                ? "Clock-in details for this walk. Health notes are only for organisers with that permission. The emergency contact is for organisers."
+                : "Clock-in details for this walk. The emergency contact is for organisers."}
             </DrawerDescription>
           </DrawerHeader>
           {selected ? (
@@ -184,6 +191,24 @@ export function WalkAttendanceTable({
               {canSeeHealthNotes ? (
                 <Detail label="Health notes">
                   {selected.conditions ? selected.conditions : "No conditions reported"}
+                </Detail>
+              ) : null}
+              {canSeeEmergencyContact ? (
+                <Detail label="Emergency contact">
+                  {selected.emergencyContactName && selected.emergencyContactPhone ? (
+                    <p>
+                      {selected.emergencyContactName}
+                      {" · "}
+                      <a
+                        className="underline underline-offset-2"
+                        href={emergencyPhoneHref(selected.emergencyContactPhone)}
+                      >
+                        {selected.emergencyContactPhone}
+                      </a>
+                    </p>
+                  ) : (
+                    "None on file"
+                  )}
                 </Detail>
               ) : null}
             </div>

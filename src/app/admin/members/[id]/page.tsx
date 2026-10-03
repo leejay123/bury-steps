@@ -14,7 +14,8 @@ import { SITE_SETTING_ID } from "@/lib/theme";
 import { AttendanceHistory } from "@/components/attendance-history";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { emergencyPhoneHref } from "@/lib/emergency-contact";
 import { MemberDetailActions } from "./member-detail-actions";
 
 
@@ -98,6 +99,32 @@ async function MemberDetailPageContent({
             walkCount={member.walkCount}
           />
         </CardHeader>
+      </Card>
+
+      <Card className="gap-3">
+        <CardHeader className="gap-1">
+          <CardTitle className="text-base">Emergency contact</CardTitle>
+          <CardDescription>
+            Only organisers can see this. The member adds it when they clock in, and it stays on
+            their account until they change it or the account is removed.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="text-sm">
+          {member.emergencyContactName && member.emergencyContactPhone ? (
+            <p>
+              {member.emergencyContactName}
+              {" · "}
+              <a
+                className="underline underline-offset-2"
+                href={emergencyPhoneHref(member.emergencyContactPhone)}
+              >
+                {member.emergencyContactPhone}
+              </a>
+            </p>
+          ) : (
+            <p className="text-muted-foreground">None on file.</p>
+          )}
+        </CardContent>
       </Card>
 
       {/*

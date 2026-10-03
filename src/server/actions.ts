@@ -99,6 +99,7 @@ export {
   updateCancelledWalkRetentionDays,
   updateContactMessagesOwner,
   updateOrganiserInviteRequired,
+  updateEmergencyContactRequired,
   updateScrollToTopEnabled,
   updateFooterWordmarkEnabled,
   updateFooterWordmarkMobile,

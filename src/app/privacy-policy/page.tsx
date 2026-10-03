@@ -57,6 +57,12 @@ export default function PrivacyPolicyPage() {
                 Optional health notes at clock-in: only if you choose to provide them, so a walk
                 leader can help if you need it. You must tick a consent box before this is saved.
               </li>
+              <li>
+                Emergency contact: a name and phone number you can add when you clock in, so an
+                organiser can call someone if you need help. An organiser can choose to make this
+                required. It is saved on your account until you change it or your account is
+                removed.
+              </li>
             </ul>
           ),
         },
@@ -71,6 +77,7 @@ export default function PrivacyPolicyPage() {
                 <li>show you walks and let organisers run the group;</li>
                 <li>record attendance when you clock in, and if you clock out;</li>
                 <li>hold health notes you volunteer, for safety during that walk.</li>
+                <li>reach someone you name if you need help on a walk.</li>
               </ul>
               <p>We do not sell your information. We do not use it for advertising.</p>
             </>
@@ -104,9 +111,13 @@ export default function PrivacyPolicyPage() {
                 privacy policy then also apply to that sign-in.
               </li>
               <li>
-                Walk organisers can see attendance and clock-out reasons. Site owners can also
-                see any health notes you submit. Other members only see names of people still on
-                the walk.
+                Walk organisers can see attendance, clock-out reasons, and the emergency contact
+                you save. Site owners can also see any health notes you submit. Other members only
+                see names of people still on the walk.
+              </li>
+              <li>
+                <strong>Open-Meteo</strong> provides the weather forecast on a walk page. That
+                request is the meeting point’s map location only, not your account.
               </li>
             </ul>
           ),
@@ -120,6 +131,10 @@ export default function PrivacyPolicyPage() {
                 Your account stays until you ask an organiser to delete it, or it is removed.
               </li>
               <li>Health notes are deleted automatically 90 days after the walk.</li>
+              <li>
+                Your emergency contact stays on your account until you change it at clock-in or
+                your account is removed.
+              </li>
               <li>Walk attendance may be kept for the running of the group.</li>
             </ul>
           ),

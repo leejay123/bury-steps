@@ -102,6 +102,14 @@ export function WalksSection({
             preview of the site.
           </p>
           <p>
+            Under the map, while the walk is still going ahead, there is a 7-day forecast for
+            the meeting point. The day of this walk is marked on the strip, whichever day of
+            the week it is. Walks can be on any day. Temperatures are in Celsius. The card is
+            hidden once the walk is completed or cancelled, and it does not appear if the walk
+            has no map pin. If the walk is more than 16 days away, the card says the forecast
+            is not available yet. The forecast comes from Open-Meteo.
+          </p>
+          <p>
             You can publish more than one walk in a week. Each walk has its own day, time,
             meeting point, and share link. Members see every upcoming walk on their Walks page, with its status just under the title.
           </p>
@@ -194,7 +202,8 @@ export function WalksSection({
             stayed for the whole walk without clocking out, so “on the walk” would be wrong
             once it’s over — and clocking out itself stops being offered to members from then
             on, since there is nothing left to leave early from. Tap a row for email,
-            clock-out time, any clock-out reason, and (for owners) health notes.{" "}
+            clock-out time, any clock-out reason, the emergency contact if they have added one,
+            and (for owners) health notes.{" "}
             <strong>Remove</strong> sits on each list row (same as Journey and reports) when
             the walk is not cancelled — it asks you to confirm. If more than 20
             people clocked in, Previous and Next sit under either list.
@@ -235,7 +244,8 @@ export function WalksSection({
           </p>
           <p>
             Download roster (CSV) gives you names, emails, times, and clock-out reasons — and,
-            for owners, any health notes for that walk. On a phone, the action buttons under the
+            for owners, any health notes for that walk, plus the emergency contact name and
+            phone. On a phone, the action buttons under the
             map (roster, calendar, Duplicate, Cancel or End walk, Edit, Remove) scroll sideways
             in one row.
           </p>

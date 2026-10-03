@@ -298,6 +298,43 @@ export async function updateOrganiserInviteRequired(
   };
 }
 
+/** Toggles whether clock-in requires an emergency contact name and phone. */
+export async function updateEmergencyContactRequired(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  const enabled = String(formData.get("emergencyContactRequired") ?? "") === "on";
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        emergencyContactRequired: enabled,
+      },
+      update: { emergencyContactRequired: enabled },
+    });
+  } catch (err) {
+    return logActionError(
+      "updateEmergencyContactRequired",
+      err,
+      "Could not save that setting. Try again.",
+    );
+  }
+
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/behaviour");
+  return {
+    ok: true,
+    message: enabled
+      ? "Members now need an emergency contact before they can clock in."
+      : "An emergency contact is optional at clock-in again.",
+  };
+}
+
 /** Days a cancelled, unreopened walk is kept before the daily cron deletes
  * it — blank turns auto-delete off. A flagged (retentionLocked) walk is
  * kept regardless of this setting; see the walk's own page. */

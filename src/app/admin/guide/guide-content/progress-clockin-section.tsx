@@ -64,8 +64,13 @@ export function ProgressClockInSection() {
               <li>Signs in if needed.</li>
               <li>
                 Completes the pre-walk check: they confirm they are fit to take part, and either
-                report no conditions or type a short note for organisers. ← Walks at the top takes
-                them back to their Walks page without clocking in.
+                report no conditions or type a short note for organisers. They also add an
+                emergency contact — a name and phone number. If you have turned on{" "}
+                <strong>Require an emergency contact</strong> under Settings → Site behaviour,
+                both fields are needed before Clock in works. If that switch is off, they can
+                leave both blank. What they enter is saved on their account, so the next walk
+                already shows it and they can change it. ← Walks at the top takes them back to
+                their Walks page without clocking in.
               </li>
               <li>Clocks in. The time is recorded by the site, not their phone clock.</li>
             </Steps>

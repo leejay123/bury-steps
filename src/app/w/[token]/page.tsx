@@ -12,6 +12,8 @@ import { walkShareUrl } from "@/lib/walk-slug";
 import { ensureWalkSlug } from "@/lib/walk-slug-server";
 import { walkStatus } from "@/lib/walk-window";
 import { WalkMapSection } from "@/components/walk-map-section";
+import { WalkForecastSection } from "@/components/walk-forecast";
+import { SITE_SETTING_ID } from "@/lib/theme";
 import { WalkJourneyDrawer } from "@/components/walk-journey-drawer";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { HowWalksWork } from "@/components/how-walks-work";
@@ -100,7 +102,14 @@ export default async function WalkLinkPage({
   const walk = await getWalkByShareKey(token);
   if (!walk) notFound();
 
-  const [user, theme] = await Promise.all([getOptionalUser(), getSiteTheme()]);
+  const [user, theme, emergencySetting] = await Promise.all([
+    getOptionalUser(),
+    getSiteTheme(),
+    prisma.siteSetting.findUnique({
+      where: { id: SITE_SETTING_ID },
+      select: { emergencyContactRequired: true },
+    }),
+  ]);
   const status = walkStatus({
     cancelledAt: walk.cancelledAt,
     durationMins: walk.durationMins,
@@ -192,6 +201,16 @@ export default async function WalkLinkPage({
 
       {meeting ? <WalkMapSection location={meeting} walk={walk} /> : null}
 
+      <WalkForecastSection
+        cancelledAt={walk.cancelledAt}
+        durationMins={walk.durationMins}
+        endedAt={walk.endedAt}
+        latitude={walk.latitude}
+        longitude={walk.longitude}
+        place={meeting}
+        startsAt={walk.startsAt}
+      />
+
       {walk.what3words ? <What3wordsLink address={walk.what3words} /> : null}
 
       {status === "cancelled" ? null : user ? (
@@ -201,6 +220,9 @@ export default async function WalkLinkPage({
           beforeYouSetOffTips={theme.beforeYouSetOffTips}
           clockedOutAt={myAttendance?.clockedOutAt?.toISOString() ?? null}
           durationMins={walk.durationMins}
+          emergencyContactName={user.emergencyContactName ?? ""}
+          emergencyContactPhone={user.emergencyContactPhone ?? ""}
+          emergencyContactRequired={emergencySetting?.emergencyContactRequired ?? false}
           endedAt={endedAtIso}
           memberNames={memberNames}
           startsAt={startsAtIso}

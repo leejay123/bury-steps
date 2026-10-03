@@ -8,6 +8,7 @@ import { clockIn, type ActionResult } from "@/server/actions";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -21,11 +22,26 @@ function Submit({ disabled }: { disabled: boolean }) {
   );
 }
 
-export function ClockInForm({ token }: { token: string }) {
+export function ClockInForm({
+  emergencyContactName = "",
+  emergencyContactPhone = "",
+  emergencyContactRequired = false,
+  token,
+}: {
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  /** Settings → Site behaviour → Clock-in. Off still shows the fields. */
+  emergencyContactRequired?: boolean;
+  token: string;
+}) {
   const router = useRouter();
   const [state, action] = useActionState<ActionResult | null, FormData>(clockIn, null);
   const [ack, setAck] = useState(false);
   const [hasConditions, setHasConditions] = useState<"yes" | "no" | null>(null);
+  const [contactName, setContactName] = useState(emergencyContactName);
+  const [contactPhone, setContactPhone] = useState(emergencyContactPhone);
+  const contactReady =
+    !emergencyContactRequired || (contactName.trim().length > 0 && contactPhone.trim().length > 0);
 
   useEffect(() => {
     if (!state) return;
@@ -104,9 +120,44 @@ export function ClockInForm({ token }: { token: string }) {
         )}
       </fieldset>
 
+      <fieldset className="space-y-3">
+        <legend className="text-sm font-medium">Emergency contact</legend>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          Who should we call if you need help on the walk? Only organisers can see this, and
+          it stays on your account for next time.
+          {emergencyContactRequired
+            ? " You need a name and phone number before you can clock in."
+            : " You can leave both blank."}
+        </p>
+        <div className="space-y-1.5">
+          <Label htmlFor="emergencyContactName">Name</Label>
+          <Input
+            autoComplete="name"
+            id="emergencyContactName"
+            maxLength={80}
+            name="emergencyContactName"
+            onChange={(event) => setContactName(event.target.value)}
+            value={contactName}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="emergencyContactPhone">Phone</Label>
+          <Input
+            autoComplete="tel"
+            id="emergencyContactPhone"
+            inputMode="tel"
+            maxLength={30}
+            name="emergencyContactPhone"
+            onChange={(event) => setContactPhone(event.target.value)}
+            type="tel"
+            value={contactPhone}
+          />
+        </div>
+      </fieldset>
+
       <FormError message={state && !state.ok ? state.error : null} />
 
-      <Submit disabled={!ack || hasConditions === null} />
+      <Submit disabled={!ack || hasConditions === null || !contactReady} />
 
       <p className="text-xs text-muted-foreground">
         Your clock-in time is recorded automatically when you tap the button.

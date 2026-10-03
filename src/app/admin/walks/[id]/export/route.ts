@@ -26,7 +26,7 @@ export async function GET(
     include: {
       attendances: {
         orderBy: { clockedInAt: "asc" },
-        include: { user: { select: { firstName: true, lastName: true, email: true } } },
+        include: { user: { select: { firstName: true, lastName: true, email: true, emergencyContactName: true, emergencyContactPhone: true } } },
       },
     },
   });
@@ -34,7 +34,7 @@ export async function GET(
   if (!walk) return new NextResponse("Not found", { status: 404 });
 
   const rows = [
-    ["Name", "Email", "Clocked in (UK time)", "Clocked out (UK time)", "Clock-out reason", "Medical acknowledgement", "Reported conditions"],
+    ["Name", "Email", "Clocked in (UK time)", "Clocked out (UK time)", "Clock-out reason", "Medical acknowledgement", "Reported conditions", "Emergency contact", "Emergency phone"],
     ...walk.attendances.map((a) => [
       displayName(a.user),
       a.user.email,
@@ -43,6 +43,8 @@ export async function GET(
       a.clockedOutReason ?? "",
       formatDateTime(a.medicalAckAt),
       a.conditions ?? "None reported",
+      a.user.emergencyContactName ?? "",
+      a.user.emergencyContactPhone ?? "",
     ]),
   ];
 

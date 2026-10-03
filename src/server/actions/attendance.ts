@@ -12,6 +12,8 @@ import { walkShareUrl } from "@/lib/walk-slug";
 import { appUrl } from "@/lib/urls";
 import { sendAddedToWalkEmail } from "@/lib/email/mailer";
 import { conditionsPurgeAfterFromStartsAt } from "@/lib/conditions-retention";
+import { parseEmergencyContact } from "@/lib/emergency-contact";
+import { SITE_SETTING_ID } from "@/lib/theme";
 import {
   type ActionResult,
   LimitReachedError,
@@ -54,6 +56,17 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
   if (parsed.data.hasConditions === "yes" && !parsed.data.conditions) {
     return { ok: false, error: "Add a short note about your conditions, or select “No conditions to report”." };
   }
+
+  const setting = await prisma.siteSetting.findUnique({
+    where: { id: SITE_SETTING_ID },
+    select: { emergencyContactRequired: true },
+  });
+  const contact = parseEmergencyContact(
+    formData.get("emergencyContactName"),
+    formData.get("emergencyContactPhone"),
+    setting?.emergencyContactRequired ?? false,
+  );
+  if (!contact.ok) return { ok: false, error: contact.error };
 
   let walk: {
     id: string;
@@ -118,6 +131,14 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
           },
         });
       }
+
+      await tx.user.update({
+        where: { id: user.id },
+        data: {
+          emergencyContactName: contact.name,
+          emergencyContactPhone: contact.phone,
+        },
+      });
 
       return {
         ok: true as const,

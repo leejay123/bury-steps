@@ -30,6 +30,7 @@ import {
   updateTextSizes,
   updateMonthlyClockInGoal,
   updateOrganiserInviteRequired,
+  updateEmergencyContactRequired,
   updateSiteBranding,
 } from "./site-settings";
 
@@ -398,6 +399,33 @@ describe("updateOrganiserInviteRequired", () => {
     expect(result).toEqual({
       ok: true,
       message: "Promoting a member now takes effect immediately again.",
+    });
+  });
+});
+
+describe("updateEmergencyContactRequired", () => {
+  it("turns the setting on", async () => {
+    const result = await updateEmergencyContactRequired(
+      null,
+      form({ emergencyContactRequired: "on" }),
+    );
+    expect(prismaMock.siteSetting.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ update: { emergencyContactRequired: true } }),
+    );
+    expect(result).toEqual({
+      ok: true,
+      message: "Members now need an emergency contact before they can clock in.",
+    });
+  });
+
+  it("turns the setting off", async () => {
+    const result = await updateEmergencyContactRequired(null, form({}));
+    expect(prismaMock.siteSetting.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ update: { emergencyContactRequired: false } }),
+    );
+    expect(result).toEqual({
+      ok: true,
+      message: "An emergency contact is optional at clock-in again.",
     });
   });
 });

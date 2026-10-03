@@ -29,7 +29,8 @@ export function MembersSection() {
           <p>
             Click a row to open that person’s own page: joined date, membership length, quick
             totals (total walks and walks cancelled after they clocked in — plus walks
-            created, but only for organisers, since members never create walks), and their full
+            created, but only for organisers, since members never create walks), their emergency
+            contact if they have added one, and their full
             walk history below, grouped by year. Search by walk or meeting point, and filter by
             status (stayed for the walk, left early, or cancelled) or year if the list is long.
             Previous and Next appear if they have more than 20 walks. Each walk shows the date,

@@ -16,6 +16,9 @@ export function WalkLivePanel({
   beforeYouSetOffTips,
   clockedOutAt = null,
   durationMins,
+  emergencyContactName = "",
+  emergencyContactPhone = "",
+  emergencyContactRequired = false,
   endedAt = null,
   memberNames,
   startsAt,
@@ -30,6 +33,9 @@ export function WalkLivePanel({
   /** Set when the member left early — see clockOut. */
   clockedOutAt?: string | null;
   durationMins: number;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRequired?: boolean;
   /** Set once an organiser ends the walk early — see endWalkEarly. */
   endedAt?: string | null;
   memberNames: string[];
@@ -132,7 +138,12 @@ export function WalkLivePanel({
           This walk is in progress{countdown ? ` · finishes in ${countdown}` : ""}.
         </p>
       ) : null}
-      <ClockInForm token={token} />
+      <ClockInForm
+        emergencyContactName={emergencyContactName}
+        emergencyContactPhone={emergencyContactPhone}
+        emergencyContactRequired={emergencyContactRequired}
+        token={token}
+      />
     </div>
   );
 }
