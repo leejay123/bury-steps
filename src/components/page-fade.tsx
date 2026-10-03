@@ -38,6 +38,14 @@ function moving(page: HTMLElement): HTMLElement[] {
   return parts.length ? parts : [page];
 }
 
+/** Puts elements back exactly as they were before an animation moved them. */
+function resetMotion(nodes: HTMLElement[]) {
+  for (const node of nodes) {
+    node.style.transform = "";
+    node.style.opacity = "";
+  }
+}
+
 function reducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
@@ -71,6 +79,9 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
   const fromMenu = useRef(false);
   // What the last slide-out moved, so it can be put back on the next page.
   const slidOut = useRef<HTMLElement[]>([]);
+  // The slide-out itself, which can still be running when the new page
+  // arrives (it's requested at the same moment) — stopped before resetting.
+  const slideOutRun = useRef<{ stop: () => void } | null>(null);
   // Set when a bottom bar tab is tapped: which way to slide (+1 = the tab
   // is to the right of the current one), or 0 when it's not a tab tap.
   const fromBottomBar = useRef<-1 | 0 | 1>(0);
@@ -144,19 +155,14 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
       event.preventDefault();
       event.stopPropagation();
       leaving.current = true;
-      prefetch(target.href);
-      let gone = false;
-      const go = () => {
-        if (gone) return;
-        gone = true;
-        router.push(target.href);
-      };
+      // Ask for the new page straight away, while this one slides out:
+      // the wait for it overlaps the slide instead of following it. Next
+      // keeps this page on screen until the new one is ready, so it's
+      // still out first, then in — just without a gap in the middle.
       const outgoing = moving(el);
       slidOut.current = outgoing;
-      animate(outgoing, { opacity: 0, x: -target.direction * DISTANCE }, { duration: DURATION, ease: EASE }).then(go, go);
-      // Safety net: never leave someone stuck if the animation can't finish
-      // (a background tab pauses animations).
-      window.setTimeout(go, 400);
+      slideOutRun.current = animate(outgoing, { opacity: 0, x: -target.direction * DISTANCE }, { duration: DURATION, ease: EASE });
+      router.push(target.href);
     };
     document.addEventListener("pointerdown", onPointerDown, true);
     document.addEventListener("click", onClick, true);
@@ -181,11 +187,10 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
     if (!page) return;
     // A page the slide-out moved may be shown again as it was (Back
     // restores the previous page) — never leave it faded or shifted.
-    for (const node of slidOut.current) {
-      node.style.transform = "";
-      node.style.opacity = "";
-    }
-    slidOut.current = [];
+    slideOutRun.current?.stop();
+    slideOutRun.current = null;
+    const stale = slidOut.current.splice(0);
+    resetMotion(stale);
     const el = moving(page);
 
     const clear = () => {
@@ -252,9 +257,19 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
 
     let arrivals: MutationObserver | null = null;
     if (from !== null && from !== pathname) {
-      const run = enter(el, wasLeaving);
-      run.then(clear, clear);
-      runs.push(run);
+      // Still a grey placeholder (the page's own details are loading)?
+      // Don't animate that — the real content gets the one entrance when it
+      // arrives (below). Animating both looked like a stutter.
+      const placeholder = el.some(
+        (node) => node.matches('[aria-busy="true"], [data-slot="skeleton"]') || !!node.querySelector('[aria-busy="true"], [data-slot="skeleton"]'),
+      );
+      if (placeholder) {
+        clear();
+      } else {
+        const run = enter(el, wasLeaving);
+        run.then(clear, clear);
+        runs.push(run);
+      }
 
       // Pages that show your own details (Notices, Walks, Members…) open
       // with a placeholder and swap in the real list a moment later. That
@@ -283,7 +298,9 @@ export function PageFade({ children, mode = "fade" }: { children: ReactNode; mod
         runs.push(late);
       });
       arrivals.observe(page, { childList: true, subtree: true });
-      window.setTimeout(() => arrivals?.disconnect(), 1500);
+      // Up to 3s: long enough for a slow phone connection, short enough not
+      // to animate something that changes later for another reason.
+      window.setTimeout(() => arrivals?.disconnect(), 3000);
     } else {
       clear();
     }

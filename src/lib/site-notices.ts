@@ -209,43 +209,53 @@ async function loadSiteNoticeState(
 
 export async function getPageNoticeBySlug(slug: string): Promise<NoticeView | null> {
   try {
-    const row = await prisma.siteNotice.findFirst({
-      where: { slug, kind: "PAGE", enabled: true },
-      select: {
-        id: true,
-        title: true,
-        body: true,
-        kind: true,
-        audience: true,
-        slug: true,
-        pageBody: true,
-        categoryId: true,
-        category: { select: { label: true } },
-        systemKey: true,
-        enabled: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-    if (!row) return null;
-    return {
-      id: row.id,
-      title: row.title,
-      body: row.body,
-      kind: row.kind,
-      audience: row.audience,
-      slug: row.slug,
-      pageBody: row.pageBody,
-      categoryId: row.categoryId,
-      categoryLabel: row.category?.label ?? null,
-      systemKey: row.systemKey,
-      enabled: row.enabled,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-    };
+    return await getCachedPageNoticeBySlug(slug);
   } catch {
     return null;
   }
+}
+
+/** One full-page notice — a saved copy shared by every server, refreshed
+ * when any notice is saved, so opening a notice doesn't wait on the
+ * database. Members-only: callers check the visitor first. */
+async function getCachedPageNoticeBySlug(slug: string): Promise<NoticeView | null> {
+  "use cache: remote";
+  cacheTag(NOTICES_CACHE_TAG);
+  cacheLife({ revalidate: HOMEPAGE_REVALIDATE_SECONDS });
+  const row = await prisma.siteNotice.findFirst({
+    where: { slug, kind: "PAGE", enabled: true },
+    select: {
+      id: true,
+      title: true,
+      body: true,
+      kind: true,
+      audience: true,
+      slug: true,
+      pageBody: true,
+      categoryId: true,
+      category: { select: { label: true } },
+      systemKey: true,
+      enabled: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+  if (!row) return null;
+  return {
+    id: row.id,
+    title: row.title,
+    body: row.body,
+    kind: row.kind,
+    audience: row.audience,
+    slug: row.slug,
+    pageBody: row.pageBody,
+    categoryId: row.categoryId,
+    categoryLabel: row.category?.label ?? null,
+    systemKey: row.systemKey,
+    enabled: row.enabled,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
 }
 
 /** Idempotent; safe to call when opening a notice page or tapping a bell row. */
