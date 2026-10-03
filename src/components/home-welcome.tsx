@@ -2,13 +2,10 @@ import { Fragment, type ReactNode } from "react";
 import { HomeAboutDrawer } from "@/components/home-about-drawer";
 import { FeatureSection } from "@/components/feature-section";
 import { MemberFeatureSection } from "@/components/member-feature-section";
+import { AuthSwitch } from "@/components/signed-in-context";
 import { HeroCopy } from "@/components/hero-copy";
 import { TestimonialsSection } from "@/components/testimonials-section";
 import { FaqsSection } from "@/components/faqs-section";
-import {
-  HomeMemberNoticesSection,
-  type HomepageNoticeSlide,
-} from "@/components/home-member-notices";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import type { TestimonialView } from "@/lib/testimonials";
 import type { FaqCategoryView, FaqView } from "@/lib/faqs";
@@ -65,8 +62,7 @@ export function HomeWelcome({
   howThisStartedEyebrow,
   howThisStartedTeaser,
   howThisStartedTitle,
-  isSignedIn,
-  memberNotices,
+  memberNoticesSlot,
   memberNoticesEnabled,
   progressEnabled,
   sectionBgPatterns,
@@ -96,11 +92,10 @@ export function HomeWelcome({
   howThisStartedEyebrow: string;
   howThisStartedTeaser: string;
   howThisStartedTitle: string;
-  /** Swaps the "how this group works" explainer for a bento grid of what a
-   * member can already do — the sign-up/clock-in walkthrough stops being
-   * useful once someone's actually joined. */
-  isSignedIn: boolean;
-  memberNotices: HomepageNoticeSlide[];
+  /** The members' latest notices, filled in after the login check (nothing
+   * for visitors). The "how this group works" section swaps for members via
+   * AuthSwitch instead of waiting for the session here. */
+  memberNoticesSlot: ReactNode;
   /** Site-wide switch (Settings → Homepage layout → Latest notices) — hides
    * the section entirely when off, even if there are notices. */
   memberNoticesEnabled: boolean;
@@ -124,10 +119,10 @@ export function HomeWelcome({
 }) {
   const sections: Record<HomepageSectionId, ReactNode | null> = {
     photos: photosEnabled && photos.length > 0 ? <WalkPhotoSlider slides={photos} /> : null,
-    howWalksWork: isSignedIn ? (
-      <MemberFeatureSection progressEnabled={progressEnabled} />
-    ) : (
-      <FeatureSection />
+    // Both versions are in the ready-made page; the visitor's signed-in
+    // state picks one, so this section never waits for the login check.
+    howWalksWork: (
+      <AuthSwitch signedIn={<MemberFeatureSection progressEnabled={progressEnabled} />} signedOut={<FeatureSection />} />
     ),
     howThisStarted: (
       <section>
@@ -156,10 +151,9 @@ export function HomeWelcome({
         </HeroCopy>
       </section>
     ),
-    memberNotices:
-      memberNoticesEnabled && memberNotices.length > 0 ? (
-        <HomeMemberNoticesSection notices={memberNotices} />
-      ) : null,
+    // Members only: filled in after the login check (see page.tsx), so
+    // nothing else on the homepage waits for it.
+    memberNotices: memberNoticesEnabled ? memberNoticesSlot : null,
     testimonials:
       testimonials.length > 0 ? (
         <TestimonialsSection

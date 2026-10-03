@@ -252,6 +252,7 @@ export async function updateProgressEnabled(
   // Not homepage-tagged (Progress isn't part of the homepage) — just the
   // nav (every page, via the root layout) and Progress itself.
   revalidatePath("/", "layout");
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/progress");
   revalidatePath("/admin/settings");
   return {

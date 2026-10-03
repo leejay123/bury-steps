@@ -1,4 +1,6 @@
 import { cache } from "react";
+import { cacheLife, cacheTag } from "next/cache";
+import { HOMEPAGE_CACHE_TAG, HOMEPAGE_REVALIDATE_SECONDS } from "@/lib/homepage-cache";
 import { prisma } from "./db";
 import { SITE_SETTING_ID } from "./theme";
 
@@ -10,17 +12,12 @@ import { SITE_SETTING_ID } from "./theme";
  * predates this column (or a SiteSetting that hasn't been created at
  * all yet) still shows Progress.
  *
- * Cached per request (React's `cache`, not a Next data-cache tag) so the
- * nav and the Progress page itself share one lookup instead of each
- * running their own query.
+ * A shared saved copy (see getCachedProgressEnabled), also deduplicated
+ * per request with React's `cache`.
  */
 export const getProgressEnabled = cache(async (): Promise<boolean> => {
   try {
-    const setting = await prisma.siteSetting.findUnique({
-      where: { id: SITE_SETTING_ID },
-      select: { progressEnabled: true },
-    });
-    return setting?.progressEnabled ?? true;
+    return await getCachedProgressEnabled();
   } catch {
     // Same fallback as getSiteTheme — build-time prerendering (e.g.
     // /_not-found) has no real database to reach, so default to the
@@ -28,3 +25,16 @@ export const getProgressEnabled = cache(async (): Promise<boolean> => {
     return true;
   }
 });
+
+/** A saved copy shared by every server (refreshed when the switch is
+ * saved), so the homepage and nav don't ask the database each time. */
+async function getCachedProgressEnabled(): Promise<boolean> {
+  "use cache: remote";
+  cacheTag(HOMEPAGE_CACHE_TAG);
+  cacheLife({ revalidate: HOMEPAGE_REVALIDATE_SECONDS });
+  const setting = await prisma.siteSetting.findUnique({
+    where: { id: SITE_SETTING_ID },
+    select: { progressEnabled: true },
+  });
+  return setting?.progressEnabled ?? true;
+}

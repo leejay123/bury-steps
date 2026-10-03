@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { HeroSection } from "@/components/hero";
 import { HeroCinematic } from "@/components/hero-cinematic";
 import { HeroGlobe } from "@/components/hero-globe";
+import { HomeMemberNoticesSection } from "@/components/home-member-notices";
 import { HeroMarqueeHome } from "@/components/hero-marquee-home";
 import { HeroParallaxHome } from "@/components/hero-parallax-home";
 import { HeroSliderHome } from "@/components/hero-slider-home";
@@ -111,13 +112,12 @@ async function HomeSections({
   slides: Awaited<ReturnType<typeof getHomepageSlides>>;
   theme: Awaited<ReturnType<typeof getSiteTheme>>;
 }) {
-  // Who's signed in only matters from here down (member notices, the
-  // How walks work tiles), so the hero above never waits for it.
-  const user = await getOptionalUser();
-  const [testimonials, faqData, memberNotices, progressEnabled] = await Promise.all([
+  // Nothing here waits for the login check: these are saved copies shared by
+  // everyone, so the whole homepage is part of the ready-made page and shows
+  // at once. Only the members' latest notices fill in afterwards.
+  const [testimonials, faqData, progressEnabled] = await Promise.all([
     getHomepageTestimonials(),
     getHomepageFaqData(),
-    user ? getHomepageMemberNotices(user.id, user.firstName) : Promise.resolve([]),
     getProgressEnabled(),
   ]);
 
@@ -141,8 +141,11 @@ async function HomeSections({
       howThisStartedEyebrow={theme.howThisStartedEyebrow}
       howThisStartedTeaser={theme.howThisStartedTeaser}
       howThisStartedTitle={theme.howThisStartedTitle}
-      isSignedIn={user !== null}
-      memberNotices={memberNotices}
+      memberNoticesSlot={
+        <Suspense fallback={null}>
+          <HomeMemberNotices />
+        </Suspense>
+      }
       memberNoticesEnabled={theme.memberNoticesEnabled}
       photos={slides}
       // The Photo slider hero already shows these photos — don't repeat them below.
@@ -161,4 +164,13 @@ async function HomeSections({
       testimonialsSectionTitle={theme.testimonialsSectionTitle}
     />
   );
+}
+
+/** Members' latest notices on the homepage — after the login check, in its
+ * own slot so the rest of the page never waits for it. */
+async function HomeMemberNotices() {
+  const user = await getOptionalUser();
+  if (!user) return null;
+  const notices = await getHomepageMemberNotices(user.id, user.firstName);
+  return notices.length > 0 ? <HomeMemberNoticesSection notices={notices} /> : null;
 }
