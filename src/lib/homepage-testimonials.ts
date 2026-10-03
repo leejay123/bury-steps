@@ -28,10 +28,10 @@ async function loadHomepageTestimonials(): Promise<TestimonialView[]> {
   }));
 }
 
-/** Saved copy (Next.js "use cache"): refreshed every HOMEPAGE_REVALIDATE_SECONDS,
+/** Saved copy (Next.js "use cache: remote" — one copy shared by every server, so a save refreshes it everywhere): refreshed every HOMEPAGE_REVALIDATE_SECONDS,
  * and at once when testimonials are saved (revalidateTag on its tag). */
 async function getCachedHomepageTestimonials() {
-  "use cache";
+  "use cache: remote";
   cacheTag(HOMEPAGE_CACHE_TAG);
   cacheLife({ revalidate: HOMEPAGE_REVALIDATE_SECONDS });
   return loadHomepageTestimonials();

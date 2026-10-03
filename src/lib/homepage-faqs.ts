@@ -78,10 +78,10 @@ export async function loadHomepageFaqData(): Promise<HomepageFaqData> {
   };
 }
 
-/** Saved copy (Next.js "use cache"): refreshed every HOMEPAGE_REVALIDATE_SECONDS, and at once
+/** Saved copy (Next.js "use cache: remote" — one copy shared by every server, so a save refreshes it everywhere): refreshed every HOMEPAGE_REVALIDATE_SECONDS, and at once
  * when a setting is saved (revalidateTag on its tag). */
 async function getCachedHomepageFaqData() {
-  "use cache";
+  "use cache: remote";
   cacheTag(HOMEPAGE_CACHE_TAG);
   cacheLife({ revalidate: HOMEPAGE_REVALIDATE_SECONDS });
   return loadHomepageFaqData();

@@ -43,7 +43,10 @@ function trustedOrigins(): Set<string> {
  * hosts don't fail handshake after a valid sign-in.
  */
 export function clerkAuthorizedParties(): string[] {
-  return [...trustedOrigins()];
+  // Plus the site's own Clerk account pages: a token minted there just
+  // after signing in carries that origin, and refusing it made the
+  // first page after sign-in fail its handshake.
+  return [...trustedOrigins(), ACCOUNT_PORTAL_ORIGIN];
 }
 
 /** Proxy Clerk's Frontend API through /__clerk on Vercel Preview only. */

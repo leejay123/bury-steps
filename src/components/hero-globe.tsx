@@ -54,7 +54,7 @@ export function HeroGlobe({
   const stats = [
     { value: data.upcomingWalks, label: "walks coming up", Icon: CalendarDaysIcon },
     { value: data.members, label: "members", Icon: UsersIcon },
-    { value: data.walksThisYear, label: `walks so far in ${new Date().getFullYear()}`, Icon: FootprintsIcon },
+    { value: data.walksThisYear, label: `walks so far in ${data.year}`, Icon: FootprintsIcon },
   ];
 
   return (

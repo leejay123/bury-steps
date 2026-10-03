@@ -99,19 +99,19 @@ async function loadSiteNoticeCategories(): Promise<CachedCategory[]> {
   }));
 }
 
-/** Saved copy (Next.js "use cache"): refreshed every HOMEPAGE_REVALIDATE_SECONDS, and at once
+/** Saved copy (Next.js "use cache: remote" — one copy shared by every server, so a save refreshes it everywhere): refreshed every HOMEPAGE_REVALIDATE_SECONDS, and at once
  * when a setting is saved (revalidateTag on its tag). */
 async function getCachedSiteNotices() {
-  "use cache";
+  "use cache: remote";
   cacheTag(NOTICES_CACHE_TAG);
   cacheLife({ revalidate: HOMEPAGE_REVALIDATE_SECONDS });
   return loadSiteNotices();
 }
 
-/** Saved copy (Next.js "use cache"): refreshed every HOMEPAGE_REVALIDATE_SECONDS, and at once
+/** Saved copy (Next.js "use cache: remote" — one copy shared by every server, so a save refreshes it everywhere): refreshed every HOMEPAGE_REVALIDATE_SECONDS, and at once
  * when a setting is saved (revalidateTag on its tag). */
 async function getCachedSiteNoticeCategories() {
-  "use cache";
+  "use cache: remote";
   cacheTag(NOTICES_CACHE_TAG);
   cacheLife({ revalidate: HOMEPAGE_REVALIDATE_SECONDS });
   return loadSiteNoticeCategories();
@@ -133,7 +133,7 @@ function reviveNotices(rows: CachedNotice[]): NoticeView[] {
 /** Full-page notices' article text — a saved copy like the list itself,
  * refreshed when a notice is saved. */
 async function getCachedPageBodies(ids: string[]) {
-  "use cache";
+  "use cache: remote";
   cacheTag(NOTICES_CACHE_TAG);
   cacheLife({ revalidate: HOMEPAGE_REVALIDATE_SECONDS });
   return prisma.siteNotice.findMany({
