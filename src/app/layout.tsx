@@ -4,6 +4,7 @@ import { ClientPathnameProvider } from "@/components/client-pathname";
 import { SiteMotionConfig } from "@/components/site-motion-config";
 import { LiveUpdates } from "@/components/live-updates";
 import { SkeletonRevealEverywhere } from "@/components/skeleton-reveal-everywhere";
+import { ContentReveal } from "@/components/content-reveal";
 import { KeepFormInputOnError } from "@/components/keep-form-input-on-error";
 import { WalkEssentialsProvider } from "@/components/walk-essentials-context";
 import { SignedInProvider } from "@/components/signed-in-context";
@@ -141,6 +142,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <UnlockPageOnNavigate />
             <LiveUpdates />
             <SkeletonRevealEverywhere />
+            <ContentReveal />
             <KeepFormInputOnError />
             {/*
               Off-screen until focused, so a keyboard/screen-reader user's
