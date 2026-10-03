@@ -600,7 +600,9 @@ export async function updatePageTransition(
           ? "Pages now slide in and out when you open something and go back."
           : mode === "rise"
             ? "Pages now rise into place, like the walk cards."
-          : "Page changes are now instant.",
+            : mode === "reveal"
+              ? "Pages now fade in from a soft blur, like the Members list."
+              : "Page changes are now instant.",
   };
 }
 
