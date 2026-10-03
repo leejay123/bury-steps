@@ -1,5 +1,6 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { UserButton } from "@clerk/nextjs";
 import { Bell, History, LineChart, Mail } from "lucide-react";
 import { openEmailPreferences } from "@/components/email-preferences-drawer";
@@ -24,17 +25,23 @@ export function SiteUserButton({
   initial?: string;
   progressEnabled?: boolean;
 }) {
-  return (
-    <UserButton
-      fallback={
-        <span
-          aria-hidden
-          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground uppercase"
-        >
-          {initial}
-        </span>
-      }
+  // The server always draws the initial circle (Clerk isn't loaded there).
+  // If Clerk finishes loading in the browser before this part of the page
+  // wakes up, drawing the real button straight away wouldn't match the
+  // server's HTML (a hydration error). So draw the circle first, then swap.
+  const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
+  const placeholder = (
+    <span
+      aria-hidden
+      className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground uppercase"
     >
+      {initial}
+    </span>
+  );
+  if (!hydrated) return placeholder;
+
+  return (
+    <UserButton fallback={placeholder}>
       <UserButton.MenuItems>
         {progressEnabled ? (
           <UserButton.Link href="/progress" label="Progress" labelIcon={<LineChart className="size-4" />} />
@@ -49,4 +56,8 @@ export function SiteUserButton({
       </UserButton.MenuItems>
     </UserButton>
   );
+}
+
+function noopSubscribe() {
+  return () => {};
 }
