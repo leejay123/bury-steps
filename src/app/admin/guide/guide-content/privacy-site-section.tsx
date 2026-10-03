@@ -110,9 +110,7 @@ export function PrivacySiteSection() {
               tap, while the old one slides away, so it’s usually ready as soon as the slide ends. Pages you&apos;ve already opened in the last five minutes open instantly, and open pages update themselves within about half a minute when someone saves a change. Each time you open a page, everything under its heading shows as grey placeholder shapes for a moment and then fades into the real content, the way the Members list does (not on the homepage, which simply appears). If a form shows an error, everything you typed stays in it. <strong>Phone menu</strong> in Site behaviour chooses how signed-in people get around on
               phones: the original ☰ menu (logo in the middle), or a <strong>bottom bar</strong> (logo on the
               left) with four main pages plus <strong>More</strong>, which slides up everything else. Signed-out visitors get their own bar — Home, Contact, the Facebook group
-              and More — with Sign in and Join staying at the top. On a
-              walk day, from when clock-in opens until the walk ends, a round <strong>Clock in</strong>
-              button sits in the middle (it disappears once you&apos;ve clocked in). The bar steps aside
+              and More — with Sign in and Join staying at the top. The bar steps aside
               while you type, so the keyboard doesn&apos;t push it over the form. Walk cards (Manage walks,
               and Upcoming and All walks on Walks) open with a thin header strip showing the status
               (Upcoming, Starting soon…) on the left and the day on the right — tinted amber when a

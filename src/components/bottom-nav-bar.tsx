@@ -153,22 +153,19 @@ const tabClass = (active: boolean) =>
  * Phone-only bottom navigation (like Material's Bottom Navigation / an iOS
  * tab bar), for signed-in people. Four main pages plus More, which slides
  * up a sheet with everything else (the ☰ menu is hidden on phones while
- * this bar is there — globals.css). On a walk day, from when clock-in opens
- * until the walk ends, a round Clock in button takes the middle spot.
- * Steps aside while a text field has focus so the phone keyboard doesn't
- * push it up over the form. Fixed to the bottom with the iPhone home
- * indicator's safe area underneath; a spacer the same height keeps it off
+ * this bar is there — globals.css). Steps aside while a text field has
+ * focus so the phone keyboard doesn't push it up over the form. Fixed to
+ * the bottom with the iPhone home indicator's safe area underneath; a
+ * spacer the same height keeps it off
  * the footer, and globals.css (html:has([data-bottom-nav])) lifts the
  * back-to-top button, cookie banner and toasts above it.
  */
 export function BottomNavBar({
   tabs,
   more,
-  clockIn,
 }: {
   tabs: BottomNavItem[];
   more: BottomNavGroup[];
-  clockIn: { href: string; title: string } | null;
 }) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
@@ -186,9 +183,7 @@ export function BottomNavBar({
   }, []);
 
   const moreActive = more.some((group) => group.items.some((item) => isNavItemActive(pathname, item.href)));
-  const clockInActive = clockIn ? pathname === clockIn.href : false;
-  const columns = tabs.length + 1 + (clockIn ? 1 : 0);
-  const [before, after] = clockIn ? [tabs.slice(0, 2), tabs.slice(2)] : [tabs, []];
+  const columns = tabs.length + 1;
 
   const renderTab = (item: BottomNavItem) => {
     const active = isNavItemActive(pathname, item.href);
@@ -232,24 +227,7 @@ export function BottomNavBar({
         data-bottom-nav=""
       >
         <ul className="mx-auto grid h-15 max-w-md" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
-          {before.map(renderTab)}
-          {clockIn ? (
-            <li className="flex items-center justify-center">
-              {/* The walk-day action: a raised round button, one tap from anywhere. */}
-              <Link
-                aria-current={clockInActive ? "page" : undefined}
-                aria-label={`Clock in to ${clockIn.title}`}
-                className="flex -translate-y-3 touch-manipulation flex-col items-center gap-0.5 text-[11px] font-semibold text-foreground"
-                href={clockIn.href}
-              >
-                <span className="flex size-12 items-center justify-center rounded-full bg-foreground text-background shadow-lg ring-4 ring-background">
-                  <LogIn aria-hidden className="size-5" />
-                </span>
-                Clock in
-              </Link>
-            </li>
-          ) : null}
-          {after.map(renderTab)}
+          {tabs.map(renderTab)}
           <li className="flex">
             <button
               aria-expanded={moreOpen}

@@ -1,11 +1,9 @@
 import { Suspense } from "react";
-import { connection } from "next/server";
 import { getOptionalUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
 import { SiteNavLinks, SiteMobileMenu, type MobileMenuGroup } from "@/components/site-nav-menu";
 import { BottomNavBar } from "@/components/bottom-nav-bar";
-import { getClockInWalk } from "@/lib/clock-in-walk";
 import { getSiteTheme } from "@/lib/site-theme";
 import { LazySiteUserButton } from "@/components/clerk-lazy";
 import { ClerkIsland } from "@/components/clerk-island";
@@ -157,11 +155,9 @@ export async function SiteMobileNav() {
 }
 
 /**
- * Phone bottom bar for signed-in people: four main pages + More (a sheet
- * with the rest — the ☰ menu's pages, account and site links), and on a
- * walk day a Clock in button in the middle (members: Home, Walks, Clock in,
- * Notices, More). Signed-out visitors don't get one — the header has Sign
- * in / Join.
+ * Phone bottom bar: four main pages + More (a sheet with the rest — the
+ * ☰ menu's pages, account and site links). Signed-out visitors get Home,
+ * Contact, the Facebook group and More; Sign in and Join stay in the header.
  */
 export async function SiteBottomNav() {
   const [user, theme] = await Promise.all([getOptionalUser(), getSiteTheme()]);
@@ -174,7 +170,6 @@ export async function SiteBottomNav() {
   if (!user) {
     return (
       <BottomNavBar
-        clockIn={null}
         more={[
           {
             label: "More",
@@ -193,22 +188,18 @@ export async function SiteBottomNav() {
       />
     );
   }
-  // The Clock in button depends on today's time — worked out per visit.
-  await connection();
-  const [progressEnabled, clockIn] = await Promise.all([getProgressEnabled(), getClockInWalk(user.id)]);
+  const progressEnabled = await getProgressEnabled();
   const isAdmin = user.role === "ADMIN";
   const permissions = isAdmin ? (user.isOwner ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS) : undefined;
   const noticesUnread = getSiteNoticeState(user.id, user.firstName).then(({ unreadIds }) => unreadIds.length > 0);
   const items = navItems(isAdmin, isAdmin ? "/admin" : "/walks", permissions, progressEnabled).map((item) =>
     item.href === "/notices" ? { ...item, dot: noticesUnread } : item,
   );
-  // Clock in takes a tab's spot on walk days; whatever doesn't fit goes in More.
-  const tabCount = clockIn ? 3 : 4;
+  const tabCount = 4;
   const tabs = items.slice(0, tabCount);
   const rest = items.slice(tabCount);
   return (
     <BottomNavBar
-      clockIn={clockIn}
       more={[
         { label: "Pages", items: rest },
         {
