@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ANNOUNCEMENT_MATCH_JS, announcementShowsOn, serializeAnnouncementPages } from "./announcement-pages";
 
-// eslint-disable-next-line @typescript-eslint/no-implied-eval
 const inlineMatch = new Function(`return ${ANNOUNCEMENT_MATCH_JS}`)() as (rule: string, path: string) => boolean;
 
 describe("announcementShowsOn", () => {

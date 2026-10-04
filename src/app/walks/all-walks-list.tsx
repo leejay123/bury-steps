@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Footprints, Search } from "lucide-react";
 import { formatTime, londonYear } from "@/lib/dates";
@@ -53,10 +53,12 @@ export function AllWalksList({ rows }: { rows: AllWalksRow[] }) {
   const hasCompleted = useMemo(() => rows.some((row) => !row.cancelledAt), [rows]);
   const hasCancelled = useMemo(() => rows.some((row) => row.cancelledAt), [rows]);
 
-  useEffect(() => {
-    if (statusFilter === "completed" && !hasCompleted) setStatusFilter("all");
-    if (statusFilter === "cancelled" && !hasCancelled) setStatusFilter("all");
-  }, [statusFilter, hasCompleted, hasCancelled]);
+  if (
+    (statusFilter === "completed" && !hasCompleted) ||
+    (statusFilter === "cancelled" && !hasCancelled)
+  ) {
+    setStatusFilter("all");
+  }
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();

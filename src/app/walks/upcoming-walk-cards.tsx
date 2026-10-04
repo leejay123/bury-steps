@@ -185,11 +185,11 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
     );
   }, [now, walks]);
 
-  useEffect(() => {
-    if (statusFilter !== "all" && !statusOptions.some((option) => option.value === statusFilter)) {
-      setStatusFilter("all");
-    }
-  }, [statusFilter, statusOptions]);
+  // A walk changing status can take away the filter's option — fall back to
+  // All in the same render rather than showing an empty list for a frame.
+  if (statusFilter !== "all" && !statusOptions.some((option) => option.value === statusFilter)) {
+    setStatusFilter("all");
+  }
 
   // Keep the SSR tab count in sync once a walk finishes on an open page.
   const needsRefresh = walks.some((walk) => {

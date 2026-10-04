@@ -1,24 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function BackToTop() {
-  const [visible, setVisible] = useState(false);
+const SHOW_AFTER_PX = 480;
 
-  useEffect(() => {
-    let shown = window.scrollY > 480;
-    setVisible(shown);
-    const onScroll = () => {
-      const next = window.scrollY > 480;
-      if (next === shown) return;
-      shown = next;
-      setVisible(next);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+function subscribe(onChange: () => void) {
+  window.addEventListener("scroll", onChange, { passive: true });
+  return () => window.removeEventListener("scroll", onChange);
+}
+
+/** Re-renders only when the answer flips, not on every scroll event. */
+const scrolledFar = () => window.scrollY > SHOW_AFTER_PX;
+const notScrolledOnServer = () => false;
+
+export function BackToTop() {
+  const visible = useSyncExternalStore(subscribe, scrolledFar, notScrolledOnServer);
 
   if (!visible) return null;
 

@@ -1,11 +1,12 @@
 "use client";
 
 import { DescriptionText } from "@/components/description-text";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Mail, MailOpen, Search } from "lucide-react";
 import { deleteContactMessage, markContactMessageRead } from "@/server/actions";
 import { useNotifyActionState } from "@/hooks/use-action-toast";
 import { useControlledDrawerDismissGuard } from "@/hooks/use-controlled-drawer";
+import { useRetained } from "@/hooks/use-retained";
 import { cn } from "@/lib/utils";
 import { formatDateTime } from "@/lib/dates";
 import { EmptyState } from "@/components/empty-state";
@@ -107,9 +108,7 @@ function MessageDrawer({
 }) {
   // Stay mounted while closed. Mounting only once a message is chosen skips
   // the slide, because the drawer appears already open.
-  const retained = useRef(message);
-  if (message) retained.current = message;
-  const shown = message ?? retained.current;
+  const shown = useRetained(message);
 
   return (
     <Drawer

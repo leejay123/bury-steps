@@ -99,11 +99,11 @@ export function AdminWalkTable({
     );
   }, [allStatusOptions, now, scope, walks]);
 
-  useEffect(() => {
-    if (statusFilter !== "all" && !statusOptions.some((option) => option.value === statusFilter)) {
-      setStatusFilter("all");
-    }
-  }, [statusFilter, statusOptions]);
+  // A walk changing status can take away the filter's option — fall back to
+  // All in the same render rather than showing an empty list for a frame.
+  if (statusFilter !== "all" && !statusOptions.some((option) => option.value === statusFilter)) {
+    setStatusFilter("all");
+  }
 
   // Upcoming is SSR-split from History. Dropping a finished walk client-side
   // alone would hide it from both tabs until the next navigation — refresh
