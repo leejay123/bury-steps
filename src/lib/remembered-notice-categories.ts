@@ -1,6 +1,5 @@
 import { cookies } from "next/headers";
-
-export const NOTICE_CATS_COOKIE = "bs-notice-cats";
+import { NOTICE_CATS_COOKIE } from "@/lib/remembered-rows-key";
 
 export type RememberedNoticeCategory = { id: string; label: string };
 

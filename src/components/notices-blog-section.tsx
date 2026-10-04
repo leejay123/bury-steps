@@ -10,8 +10,7 @@ import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/comp
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { ListPagination } from "@/components/list-pagination";
 import { centerInScrollStrip } from "@/lib/scroll-strip";
-import { NOTICE_CATS_COOKIE } from "@/lib/remembered-notice-categories";
-import { writeClientCookie } from "@/lib/remembered-rows-key";
+import { NOTICE_CATS_COOKIE, writeClientCookie } from "@/lib/remembered-rows-key";
 import { NoticeCategoryBar } from "@/components/notice-category-bar";
 
 /**
