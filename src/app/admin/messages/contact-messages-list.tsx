@@ -1,7 +1,7 @@
 "use client";
 
 import { DescriptionText } from "@/components/description-text";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Mail, MailOpen, Search } from "lucide-react";
 import { deleteContactMessage, markContactMessageRead } from "@/server/actions";
 import { useNotifyActionState } from "@/hooks/use-action-toast";
@@ -30,6 +30,8 @@ import {
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
+import { MESSAGE_LINES_COOKIE, writeClientCookie } from "@/lib/remembered-rows-key";
 
 export type ContactMessageRow = {
   id: string;
@@ -164,16 +166,6 @@ export function ContactMessagesList({ messages }: { messages: ContactMessageRow[
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
   };
 
-  if (messages.length === 0) {
-    return (
-      <EmptyState
-        description="Submissions from the public Contact us form will show up here."
-        icon={Mail}
-        title="No messages yet"
-      />
-    );
-  }
-
   const normalizedQuery = query.trim().toLowerCase();
   const filtered = messages.filter((message) => {
     if (unreadOnly && message.read) return false;
@@ -185,6 +177,25 @@ export function ContactMessagesList({ messages }: { messages: ContactMessageRow[
       message.message.toLowerCase().includes(normalizedQuery)
     );
   });
+  const lineSignature = filtered
+    .slice(0, LIST_PAGE_SIZE)
+    .map((message) => preview(message.message))
+    .join("\n");
+
+  useEffect(() => {
+    const lines = lineSignature ? lineSignature.split("\n") : [];
+    writeClientCookie(MESSAGE_LINES_COOKIE, encodeURIComponent(JSON.stringify(lines)));
+  }, [lineSignature]);
+
+  if (messages.length === 0) {
+    return (
+      <EmptyState
+        description="Submissions from the public Contact us form will show up here."
+        icon={Mail}
+        title="No messages yet"
+      />
+    );
+  }
 
   const filtersActive = query !== "" || unreadOnly || dateRange !== "all";
 

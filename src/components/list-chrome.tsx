@@ -247,11 +247,10 @@ function MemberWalkCardSkeleton() {
         <SkLine className="w-28" size="xs" />
         <SkLine className="w-16" size="xs" />
       </div>
-      <div className="flex flex-col gap-3 p-6">
+      <div className="flex flex-col gap-1.5 p-6">
         <SkLine className="w-48" />
         <SkLine className="w-36" size="sm" />
-        <SkLine className="w-40" size="sm" />
-        <div className="h-9 w-28 rounded-md bg-primary/20" />
+        <div className="mt-1.5 h-9 w-28 rounded-md bg-primary/20" />
       </div>
     </div>
   );

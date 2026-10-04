@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
 import { ReportsFilterChrome } from "@/components/list-chrome";
 import { RememberListCount } from "@/components/remember-list-count";
-import { MessageRowsSkeleton } from "@/components/list-skeletons";
+import { ReportRowsSkeleton } from "@/components/list-skeletons";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { rememberedCount } from "@/lib/remembered-rows";
 import { Prisma } from "@prisma/client";
@@ -135,7 +135,7 @@ export function ReportsPageFallback({ rows }: { rows: number | null }) {
     <AdminPageFallback
       description={REPORTS_INTRO}
       filters={rows === 0 ? null : <ReportsFilterChrome />}
-      list={<MessageRowsSkeleton rows={rows ?? 0} />}
+      list={<ReportRowsSkeleton rows={rows ?? 0} />}
       title="Accident reports"
     />
   );

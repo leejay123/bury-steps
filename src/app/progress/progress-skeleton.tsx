@@ -1,4 +1,4 @@
-import { NameRowsSkeleton, SkLine } from "@/components/list-skeletons";
+import { NameRowsSkeleton, SkLine, SkText } from "@/components/list-skeletons";
 import { Skeleton } from "@/components/ui/skeleton";
 
 /** Same cell as the loaded stat: the number is the only part still loading. */
@@ -18,18 +18,21 @@ function BadgeSkeleton({ count }: { count: number }) {
       <h2 className="text-sm font-medium text-muted-foreground">Your badges</h2>
       <div className="flex flex-wrap gap-2">
         {Array.from({ length: count }, (_, i) => (
-          <Skeleton className="h-6 w-24 rounded-full" key={i} />
+          <Skeleton className="h-5 w-16 rounded-md" key={i} />
         ))}
       </div>
     </section>
   );
 }
 
-function TogetherSkeleton() {
+function TogetherSkeleton({ body }: { body: string }) {
+  if (!body) return null;
   return (
     <section className="flex flex-col gap-3 rounded-xl border p-4" data-reveal-card="">
-      <SkLine className="w-24" />
-      <SkLine className="w-full" size="sm" />
+      <h2 className="font-medium">Together</h2>
+      <p className="text-sm">
+        <SkText text={body} />
+      </p>
       <div className="h-2 overflow-hidden rounded-full bg-muted">
         <Skeleton className="h-full w-1/2 rounded-full" />
       </div>
@@ -37,12 +40,16 @@ function TogetherSkeleton() {
   );
 }
 
-function CupSkeleton() {
+function CupSkeleton({ title, body }: { title: string; body: string }) {
+  if (!title || !body) return null;
   return (
     <section className="flex flex-col gap-1.5 rounded-xl border p-4" data-reveal-card="">
-      <SkLine className="w-32" />
-      <SkLine className="w-full" size="sm" />
-      <SkLine className="w-4/5" size="sm" />
+      <h2 className="font-medium">
+        <SkText text={title} />
+      </h2>
+      <p className="text-sm">
+        <SkText text={body} />
+      </p>
     </section>
   );
 }
@@ -56,13 +63,15 @@ function CupSkeleton() {
 export function ProgressSkeleton({
   rows,
   badges = 0,
-  together = false,
-  cup = false,
+  togetherBody = "",
+  cupTitle = "",
+  cupBody = "",
 }: {
   rows: number;
   badges?: number;
-  together?: boolean;
-  cup?: boolean;
+  togetherBody?: string;
+  cupTitle?: string;
+  cupBody?: string;
 }) {
   return (
     <>
@@ -75,8 +84,8 @@ export function ProgressSkeleton({
       </section>
 
       <BadgeSkeleton count={badges} />
-      {together ? <TogetherSkeleton /> : null}
-      {cup ? <CupSkeleton /> : null}
+      <TogetherSkeleton body={togetherBody} />
+      <CupSkeleton body={cupBody} title={cupTitle} />
 
       <section className="flex flex-col gap-3">
         <div className="flex flex-col gap-1">
