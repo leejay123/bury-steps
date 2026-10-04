@@ -9,6 +9,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { PAGE_X_BLEED } from "@/lib/page-x";
+import { shouldPrefetchNavLink } from "@/components/site-nav-items";
 
 export function NotFoundPage() {
   return (
@@ -36,7 +37,9 @@ export function NotFoundPage() {
                     </Link>
                   </Button>
                   <Button asChild variant="outline">
-                    <Link href="/walks">
+                    {/* Guests see this page too: prefetching a sign-in-only
+                        page redirects cross-site and logs a CORS error. */}
+                    <Link href="/walks" prefetch={shouldPrefetchNavLink("/walks") ? undefined : false}>
                       <CompassIcon data-icon="inline-start" />
                       Explore
                     </Link>

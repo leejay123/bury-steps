@@ -131,8 +131,9 @@ export function ClockInForm({
         </p>
         <div className="space-y-1.5">
           <Label htmlFor="emergencyContactName">Name</Label>
+          {/* Someone else's details — "name"/"tel" would autofill the member's own. */}
           <Input
-            autoComplete="name"
+            autoComplete="off"
             id="emergencyContactName"
             maxLength={80}
             name="emergencyContactName"
@@ -143,7 +144,7 @@ export function ClockInForm({
         <div className="space-y-1.5">
           <Label htmlFor="emergencyContactPhone">Phone</Label>
           <Input
-            autoComplete="tel"
+            autoComplete="off"
             id="emergencyContactPhone"
             inputMode="tel"
             maxLength={30}

@@ -11,7 +11,7 @@ import { useWalkClock } from "@/hooks/use-walk-clock";
 import { accountPortalHref } from "@/lib/urls";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { WalkDescription } from "@/components/walk-description";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { WalkFacts } from "@/components/walk-facts";
@@ -130,7 +130,11 @@ export function WalkShareStatusChrome({
         <CardHeader>
           {/* Label beside the title from sm up; full width under it on phones. */}
           <div className="flex w-full min-w-0 flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-            <CardTitle className="min-w-0 text-xl">{title}</CardTitle>
+            {/* The page's one <h1> (CardTitle is a div): screen readers and
+                search engines take the walk's name from it. */}
+            <h1 className="min-w-0 text-xl leading-none font-semibold" data-slot="card-title">
+              {title}
+            </h1>
             <WalkStatusBadge
               cancelledAt={cancelledAt}
               className="max-sm:w-full max-sm:justify-center max-sm:py-1"

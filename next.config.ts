@@ -103,9 +103,13 @@ const nextConfig: NextConfig = {
       "https://*.clerk.accounts.dev",
       "https://accounts.burysteps-walkinggroup.co.uk",
     ];
+    // `next dev` only: React's dev tools rebuild call stacks with eval(), and
+    // Vercel Analytics loads its debug script from its own CDN. Production
+    // never needs either, so the live policy stays as strict as before.
+    const devScripts = process.env.NODE_ENV === "development" ? " 'unsafe-eval' https://va.vercel-scripts.com" : "";
     const csp = [
       "default-src 'self'",
-      `script-src 'self' 'unsafe-inline' ${clerkOrigins.join(" ")} https://challenges.cloudflare.com`,
+      `script-src 'self' 'unsafe-inline'${devScripts} ${clerkOrigins.join(" ")} https://challenges.cloudflare.com`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",

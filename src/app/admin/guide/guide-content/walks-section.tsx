@@ -109,7 +109,9 @@ export function WalksSection({
             starts selected, whichever day of the week it is. Temperatures are in Celsius. The
             card is hidden once the walk is completed or cancelled, and it does not appear if
             the walk has no map pin. If the walk is more than 16 days away, the card says the
-            forecast is not available yet. The forecast comes from Open-Meteo.
+            forecast is not available yet. The forecast comes from Open-Meteo. If Open-Meteo
+            can’t be reached, the card says the forecast couldn’t be loaded and the site tries
+            again a minute later — the rest of the walk page works as normal.
           </p>
           <p>
             You can publish more than one walk in a week. Each walk has its own day, time,
