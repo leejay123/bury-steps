@@ -143,7 +143,15 @@ export function ReportsPageFallback({ rows }: { rows: number | null }) {
 
 /** Everything here depends on who's asking and on live data, so the page
  * shows a matching placeholder for an instant while it loads. */
-export default async function AccidentReportsPage(props: Parameters<typeof AccidentReportsPageContent>[0]) {
+export default function AccidentReportsPage(props: Parameters<typeof AccidentReportsPageContent>[0]) {
+  return (
+    <Suspense fallback={<ReportsPageFallback rows={null} />}>
+      <ReportsCounted {...props} />
+    </Suspense>
+  );
+}
+
+async function ReportsCounted(props: Parameters<typeof AccidentReportsPageContent>[0]) {
   const rows = await rememberedCount("reports");
   return (
     <Suspense fallback={<ReportsPageFallback rows={rows} />}>

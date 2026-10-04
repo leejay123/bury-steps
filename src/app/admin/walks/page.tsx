@@ -218,7 +218,15 @@ function AdminWalksPageFallback({
 
 /** Everything here depends on who's asking and on live data, so the page
  * shows a matching placeholder for an instant while it loads. */
-export default async function AdminWalksPage() {
+export default function AdminWalksPage() {
+  return (
+    <Suspense fallback={<AdminWalksPageFallback pastCount={null} rows={0} upcomingCount={null} />}>
+      <AdminWalksCounted />
+    </Suspense>
+  );
+}
+
+async function AdminWalksCounted() {
   const [rows, upcomingCount, pastCount] = await Promise.all([
     rememberedRows("admin-walks"),
     rememberedCount("admin-walks-upcoming", 10000),

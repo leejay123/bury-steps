@@ -1,5 +1,8 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { HistoryLoading } from "./loading";
+import { rememberedCount } from "@/lib/remembered-rows";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { isWalkHistoryReady, walkStatus } from "@/lib/walk-window";
@@ -13,7 +16,24 @@ export const metadata: Metadata = {
 };
 
 
-export default async function WalkHistoryPage() {
+export default function WalkHistoryPage() {
+  return (
+    <Suspense fallback={<HistoryLoading rows={null} />}>
+      <HistoryCounted />
+    </Suspense>
+  );
+}
+
+async function HistoryCounted() {
+  const rows = await rememberedCount("history");
+  return (
+    <Suspense fallback={<HistoryLoading rows={rows} />}>
+      <WalkHistoryContent />
+    </Suspense>
+  );
+}
+
+async function WalkHistoryContent() {
   // This is about the viewer's own clock-ins, not an admin capability — an
   // organiser or the owner who personally walks wants to see their own
   // history too, same as a plain member. The account menu (SiteUserButton)

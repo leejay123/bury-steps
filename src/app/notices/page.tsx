@@ -17,11 +17,19 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function NoticesPage() {
-  const rows = await rememberedRows("notices");
+export default function NoticesPage() {
   return (
     // Notices are for members only, so they're added after the signed-in
     // check — never part of the ready-made page everyone shares.
+    <Suspense fallback={<NoticesFallback rows={0} />}>
+      <NoticesCounted />
+    </Suspense>
+  );
+}
+
+async function NoticesCounted() {
+  const rows = await rememberedRows("notices");
+  return (
     <Suspense fallback={<NoticesFallback rows={rows} />}>
       <NoticesForMember />
     </Suspense>

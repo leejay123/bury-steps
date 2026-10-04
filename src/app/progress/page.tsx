@@ -34,8 +34,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default async function ProgressPage() {
-  const rows = await rememberedRows("progress");
+export default function ProgressPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-1.5">
@@ -46,10 +45,19 @@ export default async function ProgressPage() {
         </p>
       </div>
       {/* The heading shows straight away; only the name rows wait. */}
-      <Suspense fallback={<ProgressSkeleton rows={rows} />}>
-        <ProgressForMember />
+      <Suspense fallback={<ProgressSkeleton rows={0} />}>
+        <ProgressCounted />
       </Suspense>
     </div>
+  );
+}
+
+async function ProgressCounted() {
+  const rows = await rememberedRows("progress");
+  return (
+    <Suspense fallback={<ProgressSkeleton rows={rows} />}>
+      <ProgressForMember />
+    </Suspense>
   );
 }
 

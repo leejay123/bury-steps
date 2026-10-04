@@ -75,7 +75,15 @@ export function MessagesPageFallback({ rows }: { rows: number | null }) {
 
 /** Everything here depends on who's asking and on live data, so the page
  * shows a matching placeholder for an instant while it loads. */
-export default async function AdminMessagesPage() {
+export default function AdminMessagesPage() {
+  return (
+    <Suspense fallback={<MessagesPageFallback rows={null} />}>
+      <MessagesCounted />
+    </Suspense>
+  );
+}
+
+async function MessagesCounted() {
   const rows = await rememberedCount("messages");
   return (
     <Suspense fallback={<MessagesPageFallback rows={rows} />}>

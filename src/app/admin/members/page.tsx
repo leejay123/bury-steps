@@ -21,12 +21,11 @@ function parseRoleFilter(raw: string | undefined): MemberRoleFilter {
 }
 
 
-export default async function MembersPage({
+export default function MembersPage({
   searchParams,
 }: {
   searchParams: Promise<{ role?: string }>;
 }) {
-  const rows = await rememberedCount("members");
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
       <AdminPageIntro
@@ -34,10 +33,19 @@ export default async function MembersPage({
         title="Members"
       />
       {/* The heading shows straight away; only the list waits for data. */}
-      <Suspense fallback={<MembersListSkeleton rows={rows} />}>
-        <MembersForViewer searchParams={searchParams} />
+      <Suspense fallback={<MembersListSkeleton rows={null} />}>
+        <MembersCounted searchParams={searchParams} />
       </Suspense>
     </div>
+  );
+}
+
+async function MembersCounted({ searchParams }: { searchParams: Promise<{ role?: string }> }) {
+  const rows = await rememberedCount("members");
+  return (
+    <Suspense fallback={<MembersListSkeleton rows={rows} />}>
+      <MembersForViewer searchParams={searchParams} />
+    </Suspense>
   );
 }
 

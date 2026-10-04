@@ -1,9 +1,10 @@
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { getOptionalUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
 import { navItems } from "@/components/site-nav-items";
-import type { RememberedNavItem } from "@/lib/remembered-nav";
+import { NAV_COOKIE, parseRememberedNav, type RememberedNavItem } from "@/lib/remembered-nav";
 import { BottomNavBar } from "@/components/bottom-nav-bar";
 import { getSiteTheme } from "@/lib/site-theme";
 import { LazySiteUserButton } from "@/components/clerk-lazy";
@@ -16,6 +17,16 @@ import { EmailPreferencesDrawer } from "@/components/email-preferences-drawer";
 import { getSiteNoticeState } from "@/lib/site-notices";
 import { getProgressEnabled } from "@/lib/progress-settings";
 import { FULL_ORGANISER_PERMISSIONS, ORGANISER_PERMISSIONS } from "@/lib/organiser-permissions";
+
+/** Cookie read stays inside Suspense so the shared layout can still be prerendered. */
+export async function SiteNavSlot() {
+  const items = parseRememberedNav((await cookies()).get(NAV_COOKIE)?.value);
+  return (
+    <Suspense fallback={<SiteNavFallback items={items} />}>
+      <SiteNav />
+    </Suspense>
+  );
+}
 
 export function SiteNavFallback({ items = [] }: { items?: RememberedNavItem[] }) {
   return (

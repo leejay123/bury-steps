@@ -1,9 +1,8 @@
 import { HistoryFilterChrome } from "@/components/list-chrome";
 import { HistoryRowsSkeleton } from "@/components/list-skeletons";
-import { rememberedCount } from "@/lib/remembered-rows";
 
-export default async function Loading() {
-  const rows = await rememberedCount("history");
+/** Static shell. The row count is read inside the page, after this placeholder. */
+export function HistoryLoading({ rows }: { rows: number | null }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1.5">
@@ -18,4 +17,8 @@ export default async function Loading() {
       <HistoryRowsSkeleton rows={rows ?? 0} />
     </div>
   );
+}
+
+export default function Loading() {
+  return <HistoryLoading rows={null} />;
 }
