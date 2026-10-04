@@ -116,6 +116,12 @@ export function Globe({
       return pts;
     });
 
+    // Land dots are drawn as one path per brightness step: a fill() per dot
+    // (~1,800 a frame) made scrolling past the spinning globe stutter. Twelve
+    // steps keep each dot within 0.03 of its exact opacity.
+    const ALPHA_STEPS = 12;
+    const shade: number[][] = Array.from({ length: ALPHA_STEPS }, () => []);
+
     let w = 0, h = 0, R = 0, raf = 0, last = 0;
     let inView = true, hover = false, focus = false;
     let drag: { x: number; y: number } | null = null;
@@ -147,13 +153,28 @@ export function Globe({
       ctx.clearRect(0, 0, w, h);
       ctx.fillStyle = dot;
       const r = Math.max(0.8, R / 130);
+      for (const step of shade) step.length = 0;
       for (let i = 0; i < dots.length; i += 3) {
         const [x, y, z] = proj(dots[i], dots[i + 1], dots[i + 2]);
         if (z <= 0) continue;
-        ctx.globalAlpha = 0.12 + 0.78 * z;
-        disc(x, y, r * (0.6 + 0.4 * z));
-        ctx.fill();
+        shade[Math.min(ALPHA_STEPS - 1, (z * ALPHA_STEPS) | 0)].push(
+          cx + x * R,
+          cy - y * R,
+          r * (0.6 + 0.4 * z),
+        );
       }
+      shade.forEach((step, k) => {
+        if (!step.length) return;
+        ctx.globalAlpha = 0.12 + 0.78 * ((k + 0.5) / ALPHA_STEPS);
+        ctx.beginPath();
+        for (let j = 0; j < step.length; j += 3) {
+          const px = step[j], py = step[j + 1], pr = step[j + 2];
+          // moveTo the arc's start so dots aren't joined into one shape.
+          ctx.moveTo(px + pr, py);
+          ctx.arc(px, py, pr, 0, 7);
+        }
+        ctx.fill();
+      });
 
       ctx.fillStyle = ctx.strokeStyle = accent;
       ctx.lineWidth = 1.5;
@@ -212,19 +233,35 @@ export function Globe({
     };
 
     const moving = () => drag || Math.abs(v.vx) + Math.abs(v.vy) > 0.01;
+    // Redrawing the globe is the heaviest thing on the page. The spin is
+    // slow (under a pixel a frame at 30 fps), so on its own it draws at 30
+    // fps, and not at all while the page is scrolling — the scroll gets the
+    // whole frame on slower computers. Dragging still gets every frame.
+    let scrolledAt = -Infinity;
+    // A resize clears the canvas and a theme change recolours it: never skip
+    // the frame after one.
+    let dirty = true;
+    const onScroll = () => {
+      scrolledAt = performance.now();
+    };
     const frame = (now: number) => {
       raf = 0;
-      const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
-      if (!drag) {
-        v.lng += v.vx;
-        v.lat += v.vy;
-        v.vx *= 0.9;
-        v.vy *= 0.9;
-        if (!reduced && !hover && !focus) v.lng -= speed * dt;
+      const idle = !moving();
+      const skip = idle && !dirty && last > 0 && (now - scrolledAt < 150 || now - last < 1000 / 30 - 2);
+      if (!skip) {
+        const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
+        if (!drag) {
+          v.lng += v.vx;
+          v.lat += v.vy;
+          v.vx *= 0.9;
+          v.vy *= 0.9;
+          if (!reduced && !hover && !focus) v.lng -= speed * dt;
+        }
+        v.lat = Math.max(-70, Math.min(70, v.lat));
+        draw(now / 1000);
+        last = now;
+        dirty = false;
       }
-      v.lat = Math.max(-70, Math.min(70, v.lat));
-      draw(now / 1000);
-      last = now;
       if (inView && !document.hidden && (!reduced || moving())) {
         raf = requestAnimationFrame(frame);
       } else last = 0;
@@ -241,6 +278,7 @@ export function Globe({
       canvas.width = w * dpr;
       canvas.height = h * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      dirty = true;
       kick();
     };
 
@@ -284,6 +322,7 @@ export function Globe({
     };
     const onTheme = () => {
       resolve();
+      dirty = true;
       kick();
     };
 
@@ -299,6 +338,7 @@ export function Globe({
       ["blur", flag],
     ];
     for (const [n, f] of events) root.addEventListener(n, f);
+    window.addEventListener("scroll", onScroll, { passive: true });
     document.addEventListener("visibilitychange", kick);
     const ro = new ResizeObserver(resize);
     ro.observe(root);
@@ -314,6 +354,7 @@ export function Globe({
     return () => {
       cancelAnimationFrame(raf);
       for (const [n, f] of events) root.removeEventListener(n, f);
+      window.removeEventListener("scroll", onScroll);
       document.removeEventListener("visibilitychange", kick);
       ro.disconnect();
       io.disconnect();
