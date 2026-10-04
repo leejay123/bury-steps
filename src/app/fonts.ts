@@ -6,40 +6,43 @@ import { SITE_FONTS, type SiteFontId } from "@/lib/site-font";
  * Each loader has to be its own module-level const — Next rejects calls
  * nested in an object. preload is off so choosing one face does not
  * download the others up front; a face is fetched when the page uses it.
+ * `optional` keeps a refresh from painting a fallback face and then snapping
+ * to the real one (that snap is a layout shift). A cached face is used
+ * immediately; if it is not ready in time, this view stays on the fallback.
  */
 const inter = Inter({
   subsets: ["latin"],
-  display: "swap",
+  display: "optional",
   preload: false,
   variable: "--font-inter",
 });
 const manrope = Manrope({
   subsets: ["latin"],
-  display: "swap",
+  display: "optional",
   preload: false,
   variable: "--font-manrope",
 });
 const figtree = Figtree({
   subsets: ["latin"],
-  display: "swap",
+  display: "optional",
   preload: false,
   variable: "--font-figtree",
 });
 const outfit = Outfit({
   subsets: ["latin"],
-  display: "swap",
+  display: "optional",
   preload: false,
   variable: "--font-outfit",
 });
 const sourceSerif = Source_Serif_4({
   subsets: ["latin"],
-  display: "swap",
+  display: "optional",
   preload: false,
   variable: "--font-source-serif",
 });
 const fraunces = Fraunces({
   subsets: ["latin"],
-  display: "swap",
+  display: "optional",
   preload: false,
   variable: "--font-fraunces",
 });
@@ -47,13 +50,13 @@ const fraunces = Fraunces({
 // shadcn's docs site font: the mobile menu, and shadcn/typeset's .typeset-docs.
 export const menuFont = Geist({
   subsets: ["latin"],
-  display: "swap",
+  display: "optional",
   preload: false,
   variable: "--font-geist",
 });
 const geistMono = Geist_Mono({
   subsets: ["latin"],
-  display: "swap",
+  display: "optional",
   preload: false,
   variable: "--font-geist-mono",
 });

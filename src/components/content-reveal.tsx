@@ -13,12 +13,13 @@ const MAX_SHAPES = 220;
 
 const MEDIA = "img, svg, video, canvas, input, textarea, select, button, [data-slot='avatar']";
 
-/** The lists and tables on the page: the shared list (data-reveal-list),
- * any list whose rows are marked data-stagger-item (walks, notices,
- * messages, reports…), and real tables. Outermost only. */
+/** The lists, tables and value cards on the page: the shared list
+ * (data-reveal-list), any list whose rows are marked data-stagger-item
+ * (walks, notices, messages, reports…), real tables, and cards whose
+ * values reveal in place (data-reveal-card). Outermost only. */
 function listParts(page: HTMLElement): HTMLElement[] {
   const found = new Set<HTMLElement>();
-  for (const el of page.querySelectorAll<HTMLElement>("[data-reveal-list], table")) found.add(el);
+  for (const el of page.querySelectorAll<HTMLElement>("[data-reveal-list], table, [data-reveal-card]")) found.add(el);
   for (const row of page.querySelectorAll<HTMLElement>("[data-stagger-item]")) {
     if (row.parentElement) found.add(row.parentElement);
   }

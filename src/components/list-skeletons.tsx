@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
  * a box the height of the text line it stands for, and fills 64% of it.
  */
 
-const LINE_HEIGHT = { xs: "h-4", sm: "h-5", base: "h-6" } as const;
+const LINE_HEIGHT = { xs: "h-4", sm: "h-5", base: "h-6", lg: "h-8" } as const;
 
 /** One line of text: base = a row's bold title, sm = grey detail, xs = small print. */
 export function SkLine({ size = "base", className }: { size?: keyof typeof LINE_HEIGHT; className?: string }) {

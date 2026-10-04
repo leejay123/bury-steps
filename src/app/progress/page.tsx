@@ -82,7 +82,7 @@ async function ProgressBody({ userId }: { userId: string }) {
     <>
       <RememberListCount count={Math.min(game.board.length, LIST_PAGE_SIZE)} id="progress" />
 
-      <section className="overflow-hidden rounded-xl border">
+      <section className="overflow-hidden rounded-xl border" data-reveal-card="">
         <div className="grid grid-cols-1 sm:grid-cols-3">
           <Stat
             label="This month"

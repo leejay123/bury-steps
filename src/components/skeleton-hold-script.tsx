@@ -1,7 +1,8 @@
 /**
  * Grey placeholders never just flash. If one appears and the real content
- * replaces it within HOLD ms, the content's lists and tables (only — headings,
- * buttons, tabs and filters show at once) are kept under matching grey shapes
+ * replaces it within HOLD ms, the content's lists, tables and value cards
+ * (only — headings, buttons, tabs, search and filters show at once) are kept
+ * under matching grey shapes
  * (one bar per line of text, the right size for pictures, avatars, fields
  * and buttons) until HOLD is up, then the grey fades into the content from
  * a soft blur — the Members list's look. Placeholders shown longer than
@@ -54,10 +55,7 @@ function reveal(nodes,hold){
   }
   nodes.forEach(function(n){n.animate([{opacity:0,filter:BLUR},{opacity:1,filter:"blur(0)"}],{duration:REVEAL,easing:"ease-in-out"});});
 }
-function keep(gone,list,hold){
-  var src=null;
-  var LISTISH="[data-reveal-list],table";
-  for(var i=0;i<gone.length&&!src;i++){var g=gone[i];src=g.matches(LISTISH)?g:g.querySelector(LISTISH);}
+function keepOne(src,list,hold){
   if(!src)return false;
   var r=list.getBoundingClientRect();if(r.width<2||r.height<2)return false;
   var layer=document.createElement("div");layer.setAttribute("aria-hidden","true");
@@ -69,6 +67,21 @@ function keep(gone,list,hold){
   layer.animate([{opacity:1,filter:"blur(0)",offset:0},{opacity:1,filter:"blur(0)",offset:h},{opacity:0,filter:BLUR,offset:1}],{duration:total,easing:"ease-in-out",fill:"forwards"});
   setTimeout(function(){layer.remove();},total+60);
   return true;
+}
+function collect(nodes,sel,live){
+  var out=[];
+  function add(el){
+    if(!el||el.nodeType!==1||out.indexOf(el)>=0)return;
+    if(el.closest(".t-skel"))return;
+    if(live&&!el.getClientRects().length)return;
+    out.push(el);
+  }
+  nodes.forEach(function(n){
+    if(n.nodeType!==1)return;
+    if(n.matches(sel))add(n);
+    [].forEach.call(n.querySelectorAll(sel),add);
+  });
+  return out.filter(function(el){return !out.some(function(o){return o!==el&&o.contains(el);});});
 }
 new MutationObserver(function(records){
   var removedSkel=false,addedSkel=false,added=[],gone=[];
@@ -85,28 +98,33 @@ new MutationObserver(function(records){
   if(!removedSkel||!added.length)return;
   var outer=added.filter(function(n){return n.isConnected&&!added.some(function(o){return o!==n&&o.contains(n);});});
   if(!outer.length)return;
-  // Only lists and tables are held and revealed (the shared list, History,
-  // any list of data-stagger-item rows, real tables) — headings, buttons,
-  // tabs and filters show straight away. Lists with their own reveal
+  // Lists, tables and value cards are held in place (the shared list,
+  // History, walk rows, the Progress stats card). Headings, buttons, tabs,
+  // search and filters show straight away. A card placeholder is only laid
+  // over the matching card, never over a list. Lists with their own reveal
   // (Members, .t-skel) are left alone.
-  var lists=[];
+  var lists=collect(outer,"[data-reveal-list],table",true);
   outer.forEach(function(n){
-    var found=[].slice.call(n.querySelectorAll("[data-reveal-list],table"));
-    if(n.matches("[data-reveal-list],table"))found.push(n);
-    [].forEach.call(n.querySelectorAll("[data-stagger-item]"),function(row){if(row.parentElement)found.push(row.parentElement);});
-    found.forEach(function(el){if(lists.indexOf(el)<0&&el.getClientRects().length&&!el.closest(".t-skel"))lists.push(el);});
+    [].forEach.call(n.querySelectorAll("[data-stagger-item]"),function(row){
+      if(row.parentElement&&lists.indexOf(row.parentElement)<0&&row.parentElement.getClientRects().length&&!row.parentElement.closest(".t-skel"))lists.push(row.parentElement);
+    });
   });
   lists=lists.filter(function(el){return !lists.some(function(o){return o!==el&&o.contains(el);});});
-  if(!lists.length)return;
+  var cards=collect(outer,"[data-reveal-card]",true);
+  var listSrc=collect(gone,"[data-reveal-list],table",false);
+  var cardSrc=collect(gone,"[data-reveal-card]",false);
+  if(!lists.length&&!cards.length)return;
   var wait=Math.max(0,HOLD-(performance.now()-shownAt));
-  // Keep the page's own placeholder on screen (a copy, over the new list)
-  // rather than swapping to different grey shapes — one placeholder that
-  // never changes shape, then a fade into the real list.
-  if(wait>30&&gone.length&&keep(gone,lists[0],wait)){
-    if(lists.length>1)reveal(lists.slice(1),0);
-    return;
+  // Keep each placeholder on top of the block it matches, at that block's
+  // own size, so the page does not jump and the grey fades into the values.
+  function holdAll(targets,sources){
+    targets.forEach(function(target,i){
+      if(wait>30&&sources[i]&&keepOne(sources[i],target,wait))return;
+      reveal([target],sources[i]?0:wait);
+    });
   }
-  reveal(lists,wait);
+  holdAll(cards,cardSrc);
+  holdAll(lists,listSrc);
 }).observe(document.documentElement,{childList:true,subtree:true});
 }catch(e){}})();`;
 
