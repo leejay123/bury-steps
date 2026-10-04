@@ -24,6 +24,7 @@ import { SiteSearchBar } from "@/components/site-search";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { unlockIdleDocument } from "@/components/overlay-root";
+import { useClientPathname } from "@/components/client-pathname";
 import { isNavItemActive, navItems } from "@/components/site-nav-items";
 import { NAV_COOKIE } from "@/lib/remembered-nav";
 import { writeClientCookie } from "@/lib/remembered-rows-key";
@@ -282,16 +283,17 @@ export function SiteNavLinks({
   );
 }
 
-/** The same links, drawn before the session resolves, so a refresh doesn't blank the menu. */
+/** The same links, drawn before the session resolves, so a refresh doesn't blank the menu.
+ * Uses the shared path (null while a page is being prepared) so this can sit in a placeholder. */
 export function StaticNavLinks({ items }: { items: { href: string; label: string }[] }) {
-  const pathname = usePathname();
+  const pathname = useClientPathname();
   if (items.length === 0) return null;
   return (
     <div className="relative hidden min-w-0 md:block">
       <nav className="flex max-w-full items-center justify-center-safe gap-1 overflow-x-auto overscroll-x-contain text-[14px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {items.map((item) => (
           <NavLink
-            active={isNavItemActive(pathname, item.href)}
+            active={pathname !== null && isNavItemActive(pathname, item.href)}
             className="shrink-0"
             href={item.href}
             key={item.href}
