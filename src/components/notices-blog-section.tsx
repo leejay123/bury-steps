@@ -1,9 +1,8 @@
 "use client";
 
-import { useDeferredValue, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Search, SearchX } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { noticeDateLabel, type NoticeCategoryView, type NoticeView } from "@/lib/notices";
 import { usePagedList } from "@/hooks/use-paged-list";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,9 @@ import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/comp
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { ListPagination } from "@/components/list-pagination";
 import { centerInScrollStrip } from "@/lib/scroll-strip";
+import { NOTICE_CATS_COOKIE } from "@/lib/remembered-notice-categories";
+import { writeClientCookie } from "@/lib/remembered-rows-key";
+import { NoticeCategoryBar } from "@/components/notice-category-bar";
 
 /**
  * Member notices index: search + FAQ-style category chips (border-y), then a
@@ -55,6 +57,11 @@ export function NoticesBlogSection({
     centerInScrollStrip(button);
   }
 
+  useEffect(() => {
+    const labels = filters.length > 1 ? filters.map((category) => category.label) : [];
+    writeClientCookie(NOTICE_CATS_COOKIE, encodeURIComponent(JSON.stringify(labels)));
+  }, [filters]);
+
   return (
     <section className="flex flex-col gap-0">
       <div className="flex flex-col gap-3 px-4 py-6 md:px-6">
@@ -76,29 +83,7 @@ export function NoticesBlogSection({
         </InputGroup>
       </div>
 
-      {filters.length > 1 ? (
-        <div className="flex gap-2 overflow-x-auto overscroll-x-contain border-y px-4 [scrollbar-width:none] [-ms-overflow-style:none] sm:flex-wrap sm:overflow-visible md:px-6 [&::-webkit-scrollbar]:hidden">
-          {filters.map((category) => {
-            const active = activeCategory === category.id;
-            return (
-              <button
-                aria-pressed={active}
-                className={cn(
-                  "shrink-0 border-b-2 px-3 py-3 text-intro md:px-4 md:py-3.5",
-                  active
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-primary",
-                )}
-                key={category.id}
-                onClick={(event) => selectCategory(category.id, event.currentTarget)}
-                type="button"
-              >
-                {category.label}
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
+      <NoticeCategoryBar active={activeCategory} labels={filters} onSelect={selectCategory} />
 
       <div className="flex flex-col gap-4 px-4 py-6 md:px-6" ref={listRef}>
         {filtered.length === 0 ? (

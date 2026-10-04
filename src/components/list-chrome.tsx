@@ -6,7 +6,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { WalkRowsSkeleton } from "@/components/list-skeletons";
+import { SkLine, WalkRowsSkeleton } from "@/components/list-skeletons";
 
 /** Search box matching the real lists — shown while the rows load, not a grey bar. */
 export function ListSearch({ label, placeholder }: { label: string; placeholder: string }) {
@@ -237,6 +237,83 @@ export function HistoryFilterChrome() {
         value="all"
       />
     </div>
+  );
+}
+
+function MemberWalkCardSkeleton() {
+  return (
+    <div className="overflow-hidden rounded-xl border bg-card" data-reveal-card="">
+      <div className="flex items-center justify-between gap-3 border-b bg-muted/50 px-6 py-1.5">
+        <SkLine className="w-28" size="xs" />
+        <SkLine className="w-16" size="xs" />
+      </div>
+      <div className="flex flex-col gap-3 p-6">
+        <SkLine className="w-48" />
+        <SkLine className="w-36" size="sm" />
+        <SkLine className="w-40" size="sm" />
+        <div className="h-9 w-28 rounded-md bg-primary/20" />
+      </div>
+    </div>
+  );
+}
+
+/** Member Walks: the real Upcoming / All walks tabs, search and filters, then one grey card per walk. */
+export function MemberWalksHold({
+  allCount = null,
+  recent = 0,
+  upcomingCount = null,
+}: {
+  allCount?: number | null;
+  recent?: number;
+  upcomingCount?: number | null;
+}) {
+  const rows = upcomingCount ?? 0;
+  return (
+    <>
+      <Tabs defaultValue="upcoming">
+        <TabsList>
+          <TabsTrigger value="upcoming">{tabLabel("Upcoming", upcomingCount)}</TabsTrigger>
+          <TabsTrigger value="all-walks">{tabLabel("All walks", allCount)}</TabsTrigger>
+        </TabsList>
+        {rows < 1 ? null : (
+          <TabsContent className="mt-4" value="upcoming">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <ListSearch label="Search walks" placeholder="Search by walk or meeting point…" />
+                <FilterSelect
+                  id="walk-status-hold"
+                  label="Status"
+                  options={[{ value: "all", label: "All statuses" }]}
+                  value="all"
+                />
+                <FilterSelect
+                  id="walk-sort-hold"
+                  label="Sort"
+                  options={[{ value: "asc", label: "Soonest first" }]}
+                  value="asc"
+                />
+              </div>
+              {Array.from({ length: rows }, (_, i) => (
+                <MemberWalkCardSkeleton key={i} />
+              ))}
+            </div>
+          </TabsContent>
+        )}
+      </Tabs>
+      {recent > 0 ? (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-sm font-medium text-muted-foreground">Your recent walks</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            {Array.from({ length: recent }, (_, i) => (
+              <div className="rounded-xl border p-4" data-reveal-card="" key={i}>
+                <SkLine className="w-40" />
+                <SkLine className="w-56" size="sm" />
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+    </>
   );
 }
 

@@ -103,16 +103,42 @@ new MutationObserver(function(records){
   // search and filters show straight away. A card placeholder is only laid
   // over the matching card, never over a list. Lists with their own reveal
   // (Members, .t-skel) are left alone.
+  function valueCard(el){
+    if(!el||el.nodeType!==1||el.closest(".t-skel,form"))return false;
+    if(el.querySelector("input,textarea,select,form"))return false;
+    return el.matches("[data-reveal-card],[data-slot='card'],section.rounded-xl.border");
+  }
+  function collectCards(nodes,live){
+    var out=[];
+    function add(el){
+      if(!valueCard(el)||out.indexOf(el)>=0)return;
+      if(live&&!el.getClientRects().length)return;
+      out.push(el);
+    }
+    nodes.forEach(function(n){
+      if(n.nodeType!==1)return;
+      add(n);
+      [].forEach.call(n.querySelectorAll("[data-reveal-card],[data-slot='card'],section.rounded-xl.border"),add);
+    });
+    return out.filter(function(el){return !out.some(function(o){return o!==el&&o.contains(el);});});
+  }
   var lists=collect(outer,"[data-reveal-list],table",true);
   outer.forEach(function(n){
     [].forEach.call(n.querySelectorAll("[data-stagger-item]"),function(row){
-      if(row.parentElement&&lists.indexOf(row.parentElement)<0&&row.parentElement.getClientRects().length&&!row.parentElement.closest(".t-skel"))lists.push(row.parentElement);
+      var parent=row.parentElement;
+      if(!parent||parent.closest(".t-skel"))return;
+      var kids=[].filter.call(parent.children,function(c){return c.nodeType===1;});
+      var pure=kids.length>0&&kids.every(function(c){return c.hasAttribute("data-stagger-item");});
+      // A card sitting beside search or filters reveals on its own. A row
+      // inside a plain list reveals with that list, the way the Walks table does.
+      if(!pure)return;
+      if(lists.indexOf(parent)<0&&parent.getClientRects().length)lists.push(parent);
     });
   });
   lists=lists.filter(function(el){return !lists.some(function(o){return o!==el&&o.contains(el);});});
-  var cards=collect(outer,"[data-reveal-card]",true);
+  var cards=collectCards(outer,true).filter(function(el){return !lists.some(function(list){return list===el||list.contains(el);});});
   var listSrc=collect(gone,"[data-reveal-list],table",false);
-  var cardSrc=collect(gone,"[data-reveal-card]",false);
+  var cardSrc=collectCards(gone,false).filter(function(el){return !listSrc.some(function(list){return list===el||list.contains(el);});});
   if(!lists.length&&!cards.length)return;
   var wait=Math.max(0,HOLD-(performance.now()-shownAt));
   // Keep each placeholder on top of the block it matches, at that block's

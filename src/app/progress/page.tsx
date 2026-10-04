@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { RememberListCount } from "@/components/remember-list-count";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
-import { rememberedRows } from "@/lib/remembered-rows";
+import { rememberedCount, rememberedRows } from "@/lib/remembered-rows";
 import { ProgressSkeleton } from "./progress-skeleton";
 import { notFound } from "next/navigation";
 import { Footprints } from "lucide-react";
@@ -45,7 +45,7 @@ export default function ProgressPage() {
         </p>
       </div>
       {/* The heading shows straight away; only the name rows wait. */}
-      <Suspense fallback={<ProgressSkeleton rows={0} />}>
+      <Suspense fallback={<ProgressSkeleton badges={0} cup={false} rows={0} together={false} />}>
         <ProgressCounted />
       </Suspense>
     </div>
@@ -53,9 +53,23 @@ export default function ProgressPage() {
 }
 
 async function ProgressCounted() {
-  const rows = await rememberedRows("progress");
+  const [rows, badges, together, cup] = await Promise.all([
+    rememberedRows("progress"),
+    rememberedCount("progress-badges", 12),
+    rememberedCount("progress-together", 1),
+    rememberedCount("progress-cup", 1),
+  ]);
   return (
-    <Suspense fallback={<ProgressSkeleton rows={rows} />}>
+    <Suspense
+      fallback={
+        <ProgressSkeleton
+          badges={badges ?? 0}
+          cup={cup === 1}
+          rows={rows}
+          together={together === 1}
+        />
+      }
+    >
       <ProgressForMember />
     </Suspense>
   );
@@ -81,6 +95,9 @@ async function ProgressBody({ userId }: { userId: string }) {
   return (
     <>
       <RememberListCount count={Math.min(game.board.length, LIST_PAGE_SIZE)} id="progress" />
+      <RememberListCount count={game.viewer.badges.length} id="progress-badges" max={12} />
+      <RememberListCount count={game.together ? 1 : 0} id="progress-together" max={1} />
+      <RememberListCount count={game.cup ? 1 : 0} id="progress-cup" max={1} />
 
       <section className="overflow-hidden rounded-xl border" data-reveal-card="">
         <div className="grid grid-cols-1 sm:grid-cols-3">
@@ -97,7 +114,7 @@ async function ProgressBody({ userId }: { userId: string }) {
       </section>
 
       {game.viewer.badges.length > 0 ? (
-        <section className="flex flex-col gap-3">
+        <section className="flex flex-col gap-3" data-reveal-card="">
           <h2 className="text-sm font-medium text-muted-foreground">Your badges</h2>
           <div className="flex flex-wrap gap-2">
             {game.viewer.badges.map((badge) => (
@@ -110,7 +127,7 @@ async function ProgressBody({ userId }: { userId: string }) {
       ) : null}
 
       {game.together ? (
-        <section className="flex flex-col gap-3 rounded-xl border p-4">
+        <section className="flex flex-col gap-3 rounded-xl border p-4" data-reveal-card="">
           <h2 className="font-medium">Together</h2>
           <p className="text-sm text-muted-foreground">
             {game.together.count >= game.together.goal
@@ -130,7 +147,7 @@ async function ProgressBody({ userId }: { userId: string }) {
       ) : null}
 
       {game.cup ? (
-        <section className="flex flex-col gap-1.5 rounded-xl border p-4">
+        <section className="flex flex-col gap-1.5 rounded-xl border p-4" data-reveal-card="">
           <h2 className="font-medium">{game.cup.monthLabel} cup</h2>
           <p className="text-sm text-muted-foreground">
             {game.cup.names.length === 1

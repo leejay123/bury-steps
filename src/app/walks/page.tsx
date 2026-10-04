@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import type { User } from "@prisma/client";
-import { Skeleton } from "@/components/ui/skeleton";
 import { redirect } from "next/navigation";
 import { Footprints } from "lucide-react";
 import { prisma } from "@/lib/db";
@@ -9,6 +8,9 @@ import { requireUser } from "@/lib/auth";
 import { formatDate, formatMembershipAge } from "@/lib/dates";
 import { windowState, walkStatus, upcomingListLookbackFrom } from "@/lib/walk-window";
 import { walkSharePath } from "@/lib/walk-slug";
+import { MemberWalksHold } from "@/components/list-chrome";
+import { RememberListCount } from "@/components/remember-list-count";
+import { rememberedCount } from "@/lib/remembered-rows";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -35,8 +37,8 @@ export default function DashboardPage() {
           </Suspense>
         </p>
       </div>
-      <Suspense fallback={<WalksListSkeleton />}>
-        <WalksForMember />
+      <Suspense fallback={<MemberWalksHold />}>
+        <WalksCounted />
       </Suspense>
     </div>
   );
@@ -49,6 +51,21 @@ async function MemberSince() {
       {" "}
       Member since {formatDate(user.createdAt)} · {formatMembershipAge(user.createdAt)}.
     </>
+  );
+}
+
+async function WalksCounted() {
+  const [upcomingCount, allCount, recent] = await Promise.all([
+    rememberedCount("member-walks", 100),
+    rememberedCount("member-walks-all", 500),
+    rememberedCount("member-recent", 3),
+  ]);
+  return (
+    <Suspense
+      fallback={<MemberWalksHold allCount={allCount} recent={recent ?? 0} upcomingCount={upcomingCount} />}
+    >
+      <WalksForMember />
+    </Suspense>
   );
 }
 
@@ -151,6 +168,9 @@ async function WalksBody({ user }: { user: User }) {
 
   return (
     <>
+      <RememberListCount count={walks.length} id="member-walks" max={100} />
+      <RememberListCount count={allWalks.length} id="member-walks-all" max={500} />
+      <RememberListCount count={recentWalks.length} id="member-recent" max={3} />
       <MemberWelcomeDialog
         firstName={user.firstName}
         hasNoWalks={totalAttendanceCount === 0 && user.welcomeSeenAt == null}
@@ -241,21 +261,3 @@ async function WalksBody({ user }: { user: User }) {
   );
 }
 
-/** Same shape as the Tabs bar and walk cards that replace it. */
-function WalksListSkeleton() {
-  return (
-    <div className="flex flex-col gap-4">
-      <Skeleton className="h-9 w-56 rounded-lg" />
-      {[0, 1, 2].map((i) => (
-        <div className="overflow-hidden rounded-xl border" key={i}>
-          <div className="h-7 border-b bg-muted/60" />
-          <div className="space-y-3 p-4">
-            <Skeleton className="h-5 w-2/3" />
-            <Skeleton className="h-4 w-1/2" />
-            <Skeleton className="h-9 w-28" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
