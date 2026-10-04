@@ -15,7 +15,7 @@ export function WalksSection({
       <AccordionContent>
         <GuideBody>
           <p>
-            Open <Link href="/admin">Walks</Link> from the menu. Upcoming and History are tabs
+            Open <Link href="/admin/walks">Walks</Link> from the menu. Upcoming and History are tabs
             on that page. A walk stays under Upcoming until its clock-in window has fully
             closed — including long walks that finish more than three hours after start —
             then it moves to History. History is every finished walk. Both tabs have a search
@@ -28,7 +28,11 @@ export function WalksSection({
             <strong>Starting soon</strong> (the hour before start — the badge shows a live
             countdown to the published start), <strong>In progress</strong> (until the
             scheduled end), <strong>Completed</strong> (from the scheduled end — self clock-in
-            is closed),             or <strong>Cancelled</strong>. The walk’s own page shows the same
+            is closed), or <strong>Cancelled</strong>. While a walk is <strong>Starting soon</strong>{" "}
+            or <strong>In progress</strong>, the row also says <strong>Clock in now</strong> until
+            you have clocked in, then <strong>You’re clocked in</strong>. Open the walk and use the
+            same pre-walk check members use — fit to take part, conditions, and emergency contact.
+            You are then on that walk’s attendance list. The walk’s own page shows the same
             status just under its title, then the date, start time, length, and meeting
             point on their own lines. Who created the walk sits under the title.
           </p>

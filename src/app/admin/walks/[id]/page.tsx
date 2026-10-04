@@ -25,6 +25,8 @@ import { WalkCompletedNotice } from "./walk-completed-notice";
 import { WalkDetailActions } from "./walk-detail-actions";
 import { WalkDescription } from "@/components/walk-description";
 import { WalkJourneyManager } from "./walk-journey";
+import { SelfClockInPanel } from "./self-clock-in-panel";
+import { SITE_SETTING_ID } from "@/lib/theme";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -46,7 +48,7 @@ async function WalkDetailPageContent({
   // The permission check and the walk are fetched at the same time (they
   // used to run one after the other, making this the slowest page to open).
   const { id } = await params;
-  const [admin, walkWithNotes] = await Promise.all([
+  const [admin, walkWithNotes, emergencySetting] = await Promise.all([
     requireAnyPermission(["permWalksView", "permMembersView"]),
     prisma.walk.findUnique({
     where: { id },
@@ -102,6 +104,10 @@ async function WalkDetailPageContent({
       },
     },
     }),
+    prisma.siteSetting.findUnique({
+      where: { id: SITE_SETTING_ID },
+      select: { emergencyContactRequired: true },
+    }),
   ]);
   // Never keep health notes for a viewer who may not see them — UI-hiding
   // alone would still ship the text to their browser.
@@ -116,7 +122,7 @@ async function WalkDetailPageContent({
   // A walk that's gone (just removed, or an old link) goes back to the
   // walks list. Removing a walk redraws this page before moving on, and a
   // "not found" page flashed up in between.
-  if (!walk) redirect("/admin");
+  if (!walk) redirect("/admin/walks");
 
   const viewerIsOwner = admin.isOwner;
   const creatorIsOwner = walk.createdBy.isOwner;
@@ -130,7 +136,7 @@ async function WalkDetailPageContent({
   if (walk.cancelledAt && !admin.permWalksView && !viewerIsOwner) {
     return (
       <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
-        <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">
+        <Link href="/admin/walks" className="text-sm text-muted-foreground hover:text-foreground">
           &larr; All walks
         </Link>
         <Alert variant="destructive">
@@ -170,6 +176,7 @@ async function WalkDetailPageContent({
   // Members access sees the attendee list the same way a member would,
   // not the full roster just because they can open the page.
   const viewerAttended = attendances.some((a) => a.userId === admin.id);
+  const mine = attendances.find((a) => a.userId === admin.id);
   const canSeeAttendance = admin.permWalksAttendance || viewerAttended;
   const status = walkStatus(walk);
   const journeyDefaultAt = utcToLondonWallClock(
@@ -206,7 +213,7 @@ async function WalkDetailPageContent({
 
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
-      <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">
+      <Link href="/admin/walks" className="text-sm text-muted-foreground hover:text-foreground">
         &larr; All walks
       </Link>
 
@@ -281,6 +288,20 @@ async function WalkDetailPageContent({
           {walk.description ? <WalkDescription description={walk.description} /> : null}
         </CardContent>
       </Card>
+
+      {walk.cancelledAt ? null : (
+        <SelfClockInPanel
+          alreadyClockedInAt={mine?.clockedInAt.toISOString() ?? null}
+          clockedOutAt={mine?.clockedOutAt?.toISOString() ?? null}
+          durationMins={walk.durationMins}
+          emergencyContactName={admin.emergencyContactName ?? ""}
+          emergencyContactPhone={admin.emergencyContactPhone ?? ""}
+          emergencyContactRequired={emergencySetting?.emergencyContactRequired ?? false}
+          endedAt={walk.endedAt?.toISOString() ?? null}
+          startsAt={walk.startsAt.toISOString()}
+          token={walk.token}
+        />
+      )}
 
       <ShareLink url={walkShareUrl(appUrl(), { token: walk.token, slug })} />
 

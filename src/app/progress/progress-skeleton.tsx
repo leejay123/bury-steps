@@ -1,64 +1,20 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { NameRowsSkeleton } from "@/components/list-skeletons";
 
-function StatSkeleton() {
+/**
+ * The name list only. Stats, badges and the cup are cards — they stay out
+ * of the placeholder so a refresh doesn't draw columns where the names go.
+ */
+export function ProgressSkeleton({ rows }: { rows: number }) {
   return (
-    <div className="flex flex-col gap-1 border-b p-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
-      <Skeleton className="h-8 w-12" />
-      <Skeleton className="h-4 w-20" />
-    </div>
-  );
-}
-
-/** Same shape as the stats, badges, Together and This month sections. */
-export function ProgressSkeleton() {
-  return (
-    <>
-
-      {/* Mirrors the This month/This year/Weeks stat row. */}
-      <section className="overflow-hidden rounded-xl border">
-        <div className="grid grid-cols-1 sm:grid-cols-3">
-          <StatSkeleton />
-          <StatSkeleton />
-          <StatSkeleton />
-        </div>
-      </section>
-
-      {/* Badges */}
-      <section className="flex flex-col gap-3">
-        <Skeleton className="h-4 w-24" />
-        <div className="flex flex-wrap gap-2">
-          <Skeleton className="h-6 w-24 rounded-full" />
-          <Skeleton className="h-6 w-32 rounded-full" />
-        </div>
-      </section>
-
-      {/* Together */}
-      <section className="flex flex-col gap-3 rounded-xl border p-4">
-        <Skeleton className="h-5 w-24" />
-        <Skeleton className="h-4 w-full max-w-md" />
-        <Skeleton className="h-2 w-full rounded-full" />
-      </section>
-
-      {/* Monthly cup */}
-      <section className="flex flex-col gap-1.5 rounded-xl border p-4">
-        <Skeleton className="h-5 w-32" />
-        <Skeleton className="h-4 w-full max-w-sm" />
-      </section>
-
-      {/* This month's board */}
-      <section className="flex flex-col gap-3">
-        <div className="flex flex-col gap-1">
-          <Skeleton className="h-5 w-32" />
-          <Skeleton className="h-4 w-full max-w-lg" />
-        </div>
-        <div className="flex flex-col divide-y overflow-hidden rounded-xl border">
-          {[0, 1, 2].map((i) => (
-            <div className="p-3" key={i}>
-              <Skeleton className="h-5 w-1/3" />
-            </div>
-          ))}
-        </div>
-      </section>
-    </>
+    <section className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1">
+        <h2 className="font-medium">This month</h2>
+        <p className="text-sm text-muted-foreground">
+          Everyone who has clocked in to a finished walk this month, grouped by how many. People
+          with the same count sit together — a draw, not a place. People with none are not listed.
+        </p>
+      </div>
+      <NameRowsSkeleton rows={rows} />
+    </section>
   );
 }

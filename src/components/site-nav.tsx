@@ -2,13 +2,14 @@ import { Suspense } from "react";
 import { getOptionalUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
-import { SiteNavLinks, SiteMobileMenu, type MobileMenuGroup } from "@/components/site-nav-menu";
+import { navItems } from "@/components/site-nav-items";
+import type { RememberedNavItem } from "@/lib/remembered-nav";
 import { BottomNavBar } from "@/components/bottom-nav-bar";
 import { getSiteTheme } from "@/lib/site-theme";
 import { LazySiteUserButton } from "@/components/clerk-lazy";
 import { ClerkIsland } from "@/components/clerk-island";
 import { JoinGroupButton } from "@/components/join-group-button";
-import { navItems } from "@/components/site-nav-items";
+import { SiteNavLinks, SiteMobileMenu, StaticNavLinks, type MobileMenuGroup } from "@/components/site-nav-menu";
 import { NotificationBell } from "@/components/notification-bell";
 import { SiteSearchBar, SiteSearchDialog } from "@/components/site-search";
 import { EmailPreferencesDrawer } from "@/components/email-preferences-drawer";
@@ -16,14 +17,13 @@ import { getSiteNoticeState } from "@/lib/site-notices";
 import { getProgressEnabled } from "@/lib/progress-settings";
 import { FULL_ORGANISER_PERMISSIONS, ORGANISER_PERMISSIONS } from "@/lib/organiser-permissions";
 
-export function SiteNavFallback() {
+export function SiteNavFallback({ items = [] }: { items?: RememberedNavItem[] }) {
   return (
     <>
-      <div className="hidden min-w-0 items-center justify-center md:flex" />
-      <div className="flex min-w-0 items-center justify-end gap-2 justify-self-end max-md:col-start-3 max-md:min-w-max sm:gap-3">
-        <div className="h-8 w-[4.5rem] rounded-md bg-muted" />
-        <div className="h-8 w-[7.5rem] rounded-md bg-muted" />
+      <div className="hidden min-w-0 items-center justify-center md:flex">
+        <StaticNavLinks items={items} />
       </div>
+      <div className="flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3" />
     </>
   );
 }
@@ -39,7 +39,7 @@ export async function SiteNav() {
   const afterAuth = `${appUrl()}${AFTER_AUTH_PATH}`;
   const [user, progressEnabled] = await Promise.all([getOptionalUser(), getProgressEnabled()]);
   const isAdmin = user?.role === "ADMIN";
-  const walksHref = isAdmin ? "/admin" : "/walks";
+  const walksHref = isAdmin ? "/admin/walks" : "/walks";
   // user.isOwner is already on the row — no second lookup.
   const permissions = isAdmin && user ? (user.isOwner ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS) : undefined;
 
@@ -131,7 +131,7 @@ export async function SiteMobileNav() {
   const permissions = isAdmin ? (user.isOwner ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS) : undefined;
   // Not awaited: the menu renders now and the Notices dot fills in later.
   const noticesUnread = getSiteNoticeState(user.id, user.firstName).then(({ unreadIds }) => unreadIds.length > 0);
-  const items = navItems(isAdmin, isAdmin ? "/admin" : "/walks", permissions, progressEnabled).map((item) =>
+  const items = navItems(isAdmin, isAdmin ? "/admin/walks" : "/walks", permissions, progressEnabled).map((item) =>
     item.href === "/notices" ? { ...item, dot: noticesUnread } : item,
   );
   const organiserItems = items.filter((item) => item.href.startsWith("/admin/"));
@@ -192,7 +192,7 @@ export async function SiteBottomNav() {
   const isAdmin = user.role === "ADMIN";
   const permissions = isAdmin ? (user.isOwner ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS) : undefined;
   const noticesUnread = getSiteNoticeState(user.id, user.firstName).then(({ unreadIds }) => unreadIds.length > 0);
-  const items = navItems(isAdmin, isAdmin ? "/admin" : "/walks", permissions, progressEnabled).map((item) =>
+  const items = navItems(isAdmin, isAdmin ? "/admin/walks" : "/walks", permissions, progressEnabled).map((item) =>
     item.href === "/notices" ? { ...item, dot: noticesUnread } : item,
   );
   const tabCount = 4;

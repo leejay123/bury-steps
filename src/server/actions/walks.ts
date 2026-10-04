@@ -219,6 +219,7 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
   }
 
   revalidatePath("/admin");
+  revalidatePath("/admin/walks");
   revalidatePath("/walks");
   revalidateWalkShare(walk);
 
@@ -310,6 +311,7 @@ export async function duplicateWalk(
   }
 
   revalidatePath("/admin");
+  revalidatePath("/admin/walks");
   revalidatePath("/walks");
   revalidatePath(`/admin/walks/${walk.id}`);
   revalidateWalkShare(walk);
@@ -419,6 +421,7 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
   }
 
   revalidatePath("/admin");
+  revalidatePath("/admin/walks");
   revalidatePath(`/admin/walks/${id}`);
   revalidatePath("/walks");
   revalidatePath("/progress");
@@ -476,6 +479,7 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
   }
 
   revalidatePath("/admin");
+  revalidatePath("/admin/walks");
   revalidatePath(`/admin/walks/${id}`);
   revalidatePath("/walks");
   revalidatePath("/progress");
@@ -595,6 +599,7 @@ export async function endWalkEarly(
   }
 
   revalidatePath("/admin");
+  revalidatePath("/admin/walks");
   revalidatePath(`/admin/walks/${id}`);
   revalidatePath("/walks");
   revalidatePath("/progress");
@@ -786,6 +791,7 @@ export async function updateWalk(
   }
 
   revalidatePath("/admin");
+  revalidatePath("/admin/walks");
   revalidatePath(`/admin/walks/${id}`);
   revalidatePath("/walks");
   revalidatePath("/progress");
@@ -847,6 +853,7 @@ export async function deleteWalk(_prev: ActionResult | null, formData: FormData)
   }
 
   revalidatePath("/admin");
+  revalidatePath("/admin/walks");
   revalidatePath("/walks");
   revalidatePath("/progress");
   revalidatePath("/history");
@@ -854,7 +861,7 @@ export async function deleteWalk(_prev: ActionResult | null, formData: FormData)
   return {
     ok: true,
     message: `“${walk.title}” has been removed.`,
-    href: "/admin",
+    href: "/admin/walks",
   };
 }
 

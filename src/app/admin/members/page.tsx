@@ -1,7 +1,9 @@
 import { Suspense } from "react";
 import { MemberRowSkeleton } from "./members-table";
 import { Users } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { MembersFilterChrome } from "@/components/list-chrome";
+import { RememberListCount } from "@/components/remember-list-count";
+import { rememberedCount } from "@/lib/remembered-rows";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/auth";
 import { formatDateTime } from "@/lib/dates";
@@ -19,11 +21,12 @@ function parseRoleFilter(raw: string | undefined): MemberRoleFilter {
 }
 
 
-export default function MembersPage({
+export default async function MembersPage({
   searchParams,
 }: {
   searchParams: Promise<{ role?: string }>;
 }) {
+  const rows = await rememberedCount("members");
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
       <AdminPageIntro
@@ -31,7 +34,7 @@ export default function MembersPage({
         title="Members"
       />
       {/* The heading shows straight away; only the list waits for data. */}
-      <Suspense fallback={<MembersListSkeleton />}>
+      <Suspense fallback={<MembersListSkeleton rows={rows} />}>
         <MembersForViewer searchParams={searchParams} />
       </Suspense>
     </div>
@@ -65,6 +68,7 @@ async function MembersBody({ adminId, role }: { adminId: string; role: MemberRol
 
   return (
     <>
+      <RememberListCount count={totalMembers === 0 ? 0 : rows.length} id="members" />
       {totalMembers === 0 ? (
         <EmptyState
           description="When someone signs up, they will show here."
@@ -107,17 +111,19 @@ async function MembersBody({ adminId, role }: { adminId: string; role: MemberRol
   );
 }
 
-/** Same shape as the filter bar and the members table's own placeholder
- * rows — one placeholder whether the page or the list is loading. */
-function MembersListSkeleton() {
+/** The real filter bar, then only as many member rows as the list last showed. */
+function MembersListSkeleton({ rows }: { rows: number | null }) {
+  if (rows === 0) return null;
   return (
-    <div aria-busy="true" className="flex flex-col gap-3">
-      <Skeleton className="h-9 w-full rounded-md" />
-      <DataList>
-        {[0, 1, 2, 3, 4, 5].map((i) => (
-          <MemberRowSkeleton key={i} />
-        ))}
-      </DataList>
+    <div aria-busy="true" className="flex flex-col gap-4">
+      <MembersFilterChrome />
+      {rows != null && rows > 0 ? (
+        <DataList>
+          {Array.from({ length: rows }, (_, i) => (
+            <MemberRowSkeleton key={i} />
+          ))}
+        </DataList>
+      ) : null}
     </div>
   );
 }

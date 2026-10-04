@@ -25,6 +25,8 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { unlockIdleDocument } from "@/components/overlay-root";
 import { isNavItemActive, navItems } from "@/components/site-nav-items";
+import { NAV_COOKIE } from "@/lib/remembered-nav";
+import { writeClientCookie } from "@/lib/remembered-rows-key";
 import type { OrganiserPermissions } from "@/lib/organiser-permissions";
 
 const NAV_ICONS: Record<string, LucideIcon> = {
@@ -232,6 +234,18 @@ export function SiteNavLinks({
   const items = navItems(isAdmin, walksHref, permissions, progressEnabled);
   const edges = useScrollEdges(scrollerRef);
   useWheelScroll(scrollerRef);
+  const navSignature = items.map((item) => `${item.href}\t${item.label}`).join("\n");
+
+  useEffect(() => {
+    const remembered = navSignature
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => {
+        const tab = line.indexOf("\t");
+        return { href: line.slice(0, tab), label: line.slice(tab + 1) };
+      });
+    writeClientCookie(NAV_COOKIE, encodeURIComponent(JSON.stringify(remembered)));
+  }, [navSignature]);
 
   useEffect(() => {
     const scroller = scrollerRef.current;
@@ -264,6 +278,27 @@ export function SiteNavLinks({
         })}
       </nav>
       <ScrollEdgeFade side="right" visible={edges.end} />
+    </div>
+  );
+}
+
+/** The same links, drawn before the session resolves, so a refresh doesn't blank the menu. */
+export function StaticNavLinks({ items }: { items: { href: string; label: string }[] }) {
+  const pathname = usePathname();
+  if (items.length === 0) return null;
+  return (
+    <div className="relative hidden min-w-0 md:block">
+      <nav className="flex max-w-full items-center justify-center-safe gap-1 overflow-x-auto overscroll-x-contain text-[14px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        {items.map((item) => (
+          <NavLink
+            active={isNavItemActive(pathname, item.href)}
+            className="shrink-0"
+            href={item.href}
+            key={item.href}
+            label={item.label}
+          />
+        ))}
+      </nav>
     </div>
   );
 }

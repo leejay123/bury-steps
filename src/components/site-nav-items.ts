@@ -16,7 +16,8 @@ import {
  * themselves — every signed-in person, organiser or not, can still browse
  * and clock in to walks like an ordinary member, so that organiser's Walks
  * link points at the member page (/walks) instead of the admin dashboard
- * (see also the matching redirect in src/app/walks/page.tsx).
+ * (see also the matching redirect in src/app/walks/page.tsx). Organisers
+ * with Walks access land on /admin/walks.
  *
  * This decides what's *shown*, but it isn't the real gate — every admin
  * page and server action re-checks the specific permission itself
@@ -83,8 +84,8 @@ export function isNavItemActive(pathname: string, href: string) {
     // startsWith(`${href}/`) case below.
     return pathname === "/walks" || pathname.startsWith("/w/");
   }
-  if (href === "/admin") {
-    return pathname === "/admin" || pathname.startsWith("/admin/walks");
+  if (href === "/admin/walks") {
+    return pathname === "/admin/walks" || pathname.startsWith("/admin/walks/");
   }
   if (href === "/admin/settings") {
     return pathname.startsWith("/admin/settings") || pathname.startsWith("/admin/homepage");

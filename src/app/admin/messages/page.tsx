@@ -1,6 +1,10 @@
 import { Suspense } from "react";
 import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
+import { MessagesFilterChrome } from "@/components/list-chrome";
+import { RememberListCount } from "@/components/remember-list-count";
 import { MessageRowsSkeleton } from "@/components/list-skeletons";
+import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
+import { rememberedCount } from "@/lib/remembered-rows";
 import Link from "next/link";
 import { requirePermission, displayName } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -27,6 +31,7 @@ async function AdminMessagesPageContent() {
 
   return (
     <div className="flex flex-col gap-4 px-4 py-6 md:px-6">
+      <RememberListCount count={Math.min(messages.length, LIST_PAGE_SIZE)} id="messages" />
       <AdminPageIntro
         description={
           owner
@@ -57,11 +62,23 @@ async function AdminMessagesPageContent() {
   );
 }
 
+/** Real title, search and date filter. Grey rows only for the messages last shown. */
+export function MessagesPageFallback({ rows }: { rows: number | null }) {
+  return (
+    <AdminPageFallback
+      filters={rows === 0 ? null : <MessagesFilterChrome />}
+      list={<MessageRowsSkeleton rows={rows ?? 0} />}
+      title="Messages"
+    />
+  );
+}
+
 /** Everything here depends on who's asking and on live data, so the page
  * shows a matching placeholder for an instant while it loads. */
-export default function AdminMessagesPage() {
+export default async function AdminMessagesPage() {
+  const rows = await rememberedCount("messages");
   return (
-    <Suspense fallback={<AdminPageFallback list={<MessageRowsSkeleton />} title="Messages" />}>
+    <Suspense fallback={<MessagesPageFallback rows={rows} />}>
       <AdminMessagesPageContent />
     </Suspense>
   );

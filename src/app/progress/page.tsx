@@ -1,5 +1,8 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { RememberListCount } from "@/components/remember-list-count";
+import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
+import { rememberedRows } from "@/lib/remembered-rows";
 import { ProgressSkeleton } from "./progress-skeleton";
 import { notFound } from "next/navigation";
 import { Footprints } from "lucide-react";
@@ -31,7 +34,8 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function ProgressPage() {
+export default async function ProgressPage() {
+  const rows = await rememberedRows("progress");
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-1.5">
@@ -41,8 +45,8 @@ export default function ProgressPage() {
           Only signed-in members see this.
         </p>
       </div>
-      {/* The heading shows straight away; only the numbers wait. */}
-      <Suspense fallback={<ProgressSkeleton />}>
+      {/* The heading shows straight away; only the name rows wait. */}
+      <Suspense fallback={<ProgressSkeleton rows={rows} />}>
         <ProgressForMember />
       </Suspense>
     </div>
@@ -68,6 +72,7 @@ async function ProgressBody({ userId }: { userId: string }) {
 
   return (
     <>
+      <RememberListCount count={Math.min(game.board.length, LIST_PAGE_SIZE)} id="progress" />
 
       <section className="overflow-hidden rounded-xl border">
         <div className="grid grid-cols-1 sm:grid-cols-3">

@@ -56,7 +56,7 @@ function reveal(nodes,hold){
 }
 function keep(gone,list,hold){
   var src=null;
-  var LISTISH="ul,ol,table,[data-reveal-list],.divide-y,.rounded-xl.border";
+  var LISTISH="[data-reveal-list],table";
   for(var i=0;i<gone.length&&!src;i++){var g=gone[i];src=g.matches(LISTISH)?g:g.querySelector(LISTISH);}
   if(!src)return false;
   var r=list.getBoundingClientRect();if(r.width<2||r.height<2)return false;

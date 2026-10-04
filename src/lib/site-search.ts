@@ -49,10 +49,10 @@ export async function buildSiteSearchIndex(user: User): Promise<SiteSearchGroup[
     }),
   ]);
 
-  const mainPages: SiteSearchItem[] = navItems(isAdmin, isAdmin ? "/admin" : "/walks", perms, progressEnabled)
+  const mainPages: SiteSearchItem[] = navItems(isAdmin, isAdmin ? "/admin/walks" : "/walks", perms, progressEnabled)
     .filter((item) => !item.href.startsWith("/admin/"))
     .map((item) => ({ label: item.label, href: item.href }));
-  const managePages: SiteSearchItem[] = navItems(isAdmin, "/admin", perms, progressEnabled)
+  const managePages: SiteSearchItem[] = navItems(isAdmin, "/admin/walks", perms, progressEnabled)
     .filter((item) => item.href.startsWith("/admin/"))
     .map((item) => ({ label: item.label, href: item.href }));
   const accountPages: SiteSearchItem[] = [

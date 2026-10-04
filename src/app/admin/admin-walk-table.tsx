@@ -32,6 +32,8 @@ export type AdminWalkRow = {
   endedAt: string | null;
   cancelledAt: string | null;
   attendanceCount: number;
+  /** This organiser is still on the walk (clocked in, not clocked out). */
+  selfClockedIn?: boolean;
 };
 
 type StatusFilter = "all" | WalkStatus;
@@ -230,7 +232,24 @@ export function AdminWalkTable({
       ) : (
         <>
           <DataList>
-            {paging.paged.map((walk) => (
+            {paging.paged.map((walk) => {
+              const status = walkStatus(
+                {
+                  cancelledAt: walk.cancelledAt ? new Date(walk.cancelledAt) : null,
+                  startsAt: new Date(walk.startsAt),
+                  durationMins: walk.durationMins,
+                  endedAt: walk.endedAt ? new Date(walk.endedAt) : null,
+                },
+                now,
+              );
+              const canClockIn = status === "starting-soon" || status === "in-progress";
+              const cue =
+                scope === "upcoming" && canClockIn
+                  ? walk.selfClockedIn
+                    ? "You're clocked in"
+                    : "Clock in now"
+                  : null;
+              return (
               <DataListItem className="relative flex-col items-stretch gap-0 p-0" data-stagger-item="" key={walk.id}>
                 {/* Status and day as the card's header strip (see WalkStatusHeader). */}
                 <WalkStatusHeader
@@ -253,11 +272,13 @@ export function AdminWalkTable({
                     <p className="text-xs text-muted-foreground">
                       {walk.attendanceCount} {attendanceLabel.toLowerCase()}
                     </p>
+                    {cue ? <p className="text-sm font-medium">{cue}</p> : null}
                   </DataListBody>
                   <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                 </DataListItemMain>
               </DataListItem>
-            ))}
+              );
+            })}
           </DataList>
           <ListPagination
             noun="walks"

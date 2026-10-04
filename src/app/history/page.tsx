@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { isWalkHistoryReady, walkStatus } from "@/lib/walk-window";
 import { AttendanceHistory } from "@/components/attendance-history";
+import { RememberListCount } from "@/components/remember-list-count";
+import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { walkSharePath } from "@/lib/walk-slug";
 
 export const metadata: Metadata = {
@@ -56,6 +58,7 @@ export default async function WalkHistoryPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <RememberListCount count={Math.min(historyReady.length, LIST_PAGE_SIZE)} id="history" />
       <div className="flex flex-col gap-1.5">
         <p className="text-sm text-muted-foreground">
           <Link className="hover:underline" href="/walks">

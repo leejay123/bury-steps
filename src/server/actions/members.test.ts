@@ -1423,7 +1423,7 @@ describe("acceptOrganiserInvite", () => {
     expect(result).toEqual({
       ok: true,
       message: "You're now an organiser.",
-      href: "/admin",
+      href: "/admin/walks",
     });
   });
 

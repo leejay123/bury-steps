@@ -19,9 +19,9 @@ describe("navItems", () => {
       "/progress",
       "/history",
     ]);
-    expect(navItems(true, "/admin").map((item) => item.href)).toEqual([
+    expect(navItems(true, "/admin/walks").map((item) => item.href)).toEqual([
       "/",
-      "/admin",
+      "/admin/walks",
       "/notices",
       "/progress",
       "/admin/members",
@@ -36,14 +36,14 @@ describe("navItems", () => {
 describe("navItems with limited organiser permissions", () => {
   it("hides each section behind its own permission, keeps Guide unconditional", () => {
     expect(
-      navItems(true, "/admin", { ...NO_ORGANISER_PERMISSIONS, permMembersView: true }).map(
+      navItems(true, "/admin/walks", { ...NO_ORGANISER_PERMISSIONS, permMembersView: true }).map(
         (item) => item.href,
       ),
     ).toEqual(["/", "/walks", "/notices", "/progress", "/admin/members", "/admin/guide"]);
   });
 
   it("hides every organiser section for someone with no permissions at all", () => {
-    expect(navItems(true, "/admin", NO_ORGANISER_PERMISSIONS).map((item) => item.href)).toEqual([
+    expect(navItems(true, "/admin/walks", NO_ORGANISER_PERMISSIONS).map((item) => item.href)).toEqual([
       "/",
       "/walks",
       "/notices",
@@ -54,21 +54,21 @@ describe("navItems with limited organiser permissions", () => {
 
   it("shows Settings for any one of the seven settings-area permissions", () => {
     expect(
-      navItems(true, "/admin", { ...NO_ORGANISER_PERMISSIONS, permCacheReset: true })
+      navItems(true, "/admin/walks", { ...NO_ORGANISER_PERMISSIONS, permCacheReset: true })
         .map((item) => item.href)
         .includes("/admin/settings"),
     ).toBe(true);
   });
 
   it("shows Messages and Reports independently of each other", () => {
-    const messagesOnly = navItems(true, "/admin", {
+    const messagesOnly = navItems(true, "/admin/walks", {
       ...NO_ORGANISER_PERMISSIONS,
       permMessages: true,
     }).map((item) => item.href);
     expect(messagesOnly).toContain("/admin/messages");
     expect(messagesOnly).not.toContain("/admin/reports");
 
-    const reportsOnly = navItems(true, "/admin", {
+    const reportsOnly = navItems(true, "/admin/walks", {
       ...NO_ORGANISER_PERMISSIONS,
       permReportsView: true,
     }).map((item) => item.href);
@@ -77,13 +77,13 @@ describe("navItems with limited organiser permissions", () => {
   });
 
   it("without the Walks permission, Walks points at the member page instead of the admin dashboard", () => {
-    const items = navItems(true, "/admin", NO_ORGANISER_PERMISSIONS);
+    const items = navItems(true, "/admin/walks", NO_ORGANISER_PERMISSIONS);
     expect(items.find((item) => item.label === "Walks")?.href).toBe("/walks");
   });
 
   it("with the Walks permission, Walks still points at the admin dashboard", () => {
-    const items = navItems(true, "/admin", { ...NO_ORGANISER_PERMISSIONS, permWalksView: true });
-    expect(items.find((item) => item.label === "Walks")?.href).toBe("/admin");
+    const items = navItems(true, "/admin/walks", { ...NO_ORGANISER_PERMISSIONS, permWalksView: true });
+    expect(items.find((item) => item.label === "Walks")?.href).toBe("/admin/walks");
   });
 });
 
@@ -91,6 +91,12 @@ describe("isNavItemActive", () => {
   it("does not treat Progress as the member Walks page", () => {
     expect(isNavItemActive("/progress", "/walks")).toBe(false);
     expect(isNavItemActive("/progress", "/progress")).toBe(true);
+  });
+
+  it("treats an organiser walk and its page as the Walks tab", () => {
+    expect(isNavItemActive("/admin/walks", "/admin/walks")).toBe(true);
+    expect(isNavItemActive("/admin/walks/abc", "/admin/walks")).toBe(true);
+    expect(isNavItemActive("/admin/members", "/admin/walks")).toBe(false);
   });
 
   it("treats an individual walk's share page (/w/<slug>) as the Walks tab", () => {
@@ -111,7 +117,7 @@ describe("navItems progressEnabled", () => {
     expect(navItems(false, "/walks", undefined, false).some((item) => item.label === "Progress")).toBe(
       false,
     );
-    expect(navItems(true, "/admin", undefined, false).some((item) => item.label === "Progress")).toBe(
+    expect(navItems(true, "/admin/walks", undefined, false).some((item) => item.label === "Progress")).toBe(
       false,
     );
   });

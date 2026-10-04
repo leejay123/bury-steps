@@ -27,7 +27,7 @@ export function SkChevron({ className }: { className?: string }) {
 
 /** The list box itself — same frame as DataList. */
 export function SkList({
-  rows = 5,
+  rows = 0,
   row,
   className,
 }: {
@@ -35,8 +35,13 @@ export function SkList({
   row: (index: number) => ReactNode;
   className?: string;
 }) {
+  if (rows < 1) return null;
   return (
-    <ul aria-busy="true" className={cn("flex flex-col overflow-hidden rounded-xl border bg-card", className)}>
+    <ul
+      aria-busy="true"
+      className={cn("flex flex-col overflow-hidden rounded-xl border bg-card", className)}
+      data-reveal-list=""
+    >
       {Array.from({ length: rows }, (_, i) => (
         <li className="border-b last:border-0" key={i}>
           {row(i)}
@@ -51,7 +56,7 @@ const DETAIL_WIDTHS = ["w-28", "w-36", "w-24", "w-32", "w-40", "w-28"];
 const pick = (list: string[], i: number) => list[i % list.length];
 
 /** Organiser Walks list: grey status strip, then name, time · place, count. */
-export function WalkRowsSkeleton({ rows = 5 }: { rows?: number }) {
+export function WalkRowsSkeleton({ rows = 0 }: { rows?: number }) {
   return (
     <SkList
       row={(i) => (
@@ -76,9 +81,10 @@ export function WalkRowsSkeleton({ rows = 5 }: { rows?: number }) {
 }
 
 /** Notices list: category, title + arrow, date, a couple of lines of text. */
-export function NoticeRowsSkeleton({ rows = 5 }: { rows?: number }) {
+export function NoticeRowsSkeleton({ rows = 0 }: { rows?: number }) {
+  if (rows < 1) return null;
   return (
-    <div aria-busy="true" className="flex flex-col divide-y rounded-xl border">
+    <div aria-busy="true" className="flex flex-col divide-y rounded-xl border" data-reveal-list="">
       {Array.from({ length: rows }, (_, i) => (
         <div className="flex flex-col gap-2 p-4" key={i}>
           <SkLine className="w-16" size="xs" />
@@ -98,7 +104,7 @@ export function NoticeRowsSkeleton({ rows = 5 }: { rows?: number }) {
 }
 
 /** Messages and accident reports: name/title, detail line, a short preview. */
-export function MessageRowsSkeleton({ rows = 5 }: { rows?: number }) {
+export function MessageRowsSkeleton({ rows = 0 }: { rows?: number }) {
   return (
     <SkList
       row={(i) => (
@@ -122,9 +128,10 @@ export function MessageRowsSkeleton({ rows = 5 }: { rows?: number }) {
 }
 
 /** Walk history: walk name + arrow, then two grey detail lines. */
-export function HistoryRowsSkeleton({ rows = 5 }: { rows?: number }) {
+export function HistoryRowsSkeleton({ rows = 0 }: { rows?: number }) {
+  if (rows < 1) return null;
   return (
-    <div aria-busy="true" className="flex flex-col divide-y rounded-xl border">
+    <div aria-busy="true" className="flex flex-col divide-y rounded-xl border" data-reveal-list="">
       {Array.from({ length: rows }, (_, i) => (
         <div className="flex flex-col gap-1 p-4" key={i}>
           <div className="flex items-start justify-between gap-3">
@@ -139,21 +146,16 @@ export function HistoryRowsSkeleton({ rows = 5 }: { rows?: number }) {
   );
 }
 
-/** A search box with the two labelled drop-downs beside it (Walks filters). */
-export function SkFilters() {
+/** Progress board: one name line per row, in a vertical list. */
+export function NameRowsSkeleton({ rows = 0 }: { rows?: number }) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-      <Skeleton className="h-9 w-full rounded-md sm:flex-1" />
-      <div className="flex gap-3">
-        <div className="flex flex-col gap-1.5">
-          <SkLine className="w-12" size="sm" />
-          <Skeleton className="h-9 w-36 rounded-md" />
+    <SkList
+      row={(i) => (
+        <div className="p-3">
+          <SkLine className={pick(TITLE_WIDTHS, i)} />
         </div>
-        <div className="flex flex-col gap-1.5">
-          <SkLine className="w-10" size="sm" />
-          <Skeleton className="h-9 w-36 rounded-md" />
-        </div>
-      </div>
-    </div>
+      )}
+      rows={rows}
+    />
   );
 }

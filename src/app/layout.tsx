@@ -15,6 +15,7 @@ import { ButtonRipple } from "@/components/button-ripple";
 import { HeaderScrollShadow } from "@/components/header-scroll-shadow";
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -24,6 +25,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { appUrl } from "@/lib/urls";
 import { PAGE_X, PAGE_Y } from "@/lib/page-x";
 import { SiteMobileNav, SiteNav, SiteNavFallback, SiteBottomNav } from "@/components/site-nav";
+import { NAV_COOKIE, parseRememberedNav } from "@/lib/remembered-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteBrandLink } from "@/components/site-brand-link";
 import { SiteLogo } from "@/components/site-logo";
@@ -96,6 +98,7 @@ async function isSignedIn() {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const theme = await getSiteTheme();
+  const navItemsRemembered = parseRememberedNav((await cookies()).get(NAV_COOKIE)?.value);
   // Not awaited: the page is drawn without waiting for the session, so the
   // same ready-made page can serve everyone. Only the parts that differ
   // (the hero's buttons) wait for this, each in its own placeholder.
@@ -219,7 +222,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                       <SiteBrandLink />
                     </Suspense>
                   </div>
-                  <Suspense fallback={<SiteNavFallback />}>
+                  <Suspense fallback={<SiteNavFallback items={navItemsRemembered} />}>
                     <SiteNav />
                   </Suspense>
                 </div>

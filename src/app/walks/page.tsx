@@ -57,7 +57,7 @@ async function WalksForMember() {
   // Organisers use the admin Walks tools at /admin — this page is the
   // ordinary member experience (browse walks, clock in), so an admin is
   // always sent there instead.
-  if (user.role === "ADMIN") redirect("/admin");
+  if (user.role === "ADMIN") redirect("/admin/walks");
   return <WalksBody user={user} />;
 }
 

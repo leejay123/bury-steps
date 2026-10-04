@@ -164,6 +164,7 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
 
   revalidateWalkShare(walk);
   revalidatePath("/walks");
+  revalidatePath("/admin/walks");
   revalidatePath("/history");
   revalidatePath("/progress");
   revalidatePath(`/admin/walks/${walk.id}`);
@@ -633,6 +634,7 @@ export async function clockOut(_prev: ActionResult | null, formData: FormData): 
 
   revalidateWalkShare(walk);
   revalidatePath("/walks");
+  revalidatePath("/admin/walks");
   revalidatePath("/history");
   revalidatePath("/progress");
   revalidatePath(`/admin/walks/${walk.id}`);
