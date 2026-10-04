@@ -56,16 +56,25 @@ function reveal(nodes,hold){
   nodes.forEach(function(n){n.animate([{opacity:0,filter:BLUR},{opacity:1,filter:"blur(0)"}],{duration:REVEAL,easing:"ease-in-out"});});
 }
 function keepOne(src,list,hold){
-  if(!src)return false;
-  var r=list.getBoundingClientRect();if(r.width<2||r.height<2)return false;
-  var layer=document.createElement("div");layer.setAttribute("aria-hidden","true");
-  layer.style.cssText="position:absolute;left:"+(r.left+window.scrollX)+"px;top:"+(r.top+window.scrollY)+"px;width:"+r.width+"px;height:"+r.height+"px;overflow:hidden;pointer-events:none;z-index:40;background:var(--background)";
-  var copy=src.cloneNode(true);copy.style.width="100%";copy.style.margin="0";
-  layer.appendChild(copy);document.body.appendChild(layer);
-  var total=hold+REVEAL,h=hold/total;
-  list.animate([{opacity:0,filter:BLUR,offset:0},{opacity:0,filter:BLUR,offset:h},{opacity:1,filter:"blur(0)",offset:1}],{duration:total,easing:"ease-in-out"});
-  layer.animate([{opacity:1,filter:"blur(0)",offset:0},{opacity:1,filter:"blur(0)",offset:h},{opacity:0,filter:BLUR,offset:1}],{duration:total,easing:"ease-in-out",fill:"forwards"});
-  setTimeout(function(){layer.remove();},total+60);
+  if(!src||!list.isConnected)return false;
+  // A card that is still a placeholder is already on screen. Copying it
+  // paints a second one (the Progress totals card on refresh).
+  if(list.querySelector('[data-slot="skeleton"]'))return false;
+  list.style.opacity="0";
+  requestAnimationFrame(function(){
+    if(!list.isConnected)return;
+    var r=list.getBoundingClientRect();
+    list.style.opacity="";
+    if(r.width<2||r.height<2)return;
+    var layer=document.createElement("div");layer.setAttribute("aria-hidden","true");
+    layer.style.cssText="position:absolute;left:"+(r.left+window.scrollX)+"px;top:"+(r.top+window.scrollY)+"px;width:"+r.width+"px;height:"+r.height+"px;overflow:hidden;pointer-events:none;z-index:40;background:var(--background)";
+    var copy=src.cloneNode(true);copy.style.width="100%";copy.style.margin="0";
+    layer.appendChild(copy);document.body.appendChild(layer);
+    var total=hold+REVEAL,h=hold/total;
+    list.animate([{opacity:0,filter:BLUR,offset:0},{opacity:0,filter:BLUR,offset:h},{opacity:1,filter:"blur(0)",offset:1}],{duration:total,easing:"ease-in-out"});
+    layer.animate([{opacity:1,filter:"blur(0)",offset:0},{opacity:1,filter:"blur(0)",offset:h},{opacity:0,filter:BLUR,offset:1}],{duration:total,easing:"ease-in-out",fill:"forwards"});
+    setTimeout(function(){layer.remove();},total+60);
+  });
   return true;
 }
 function collect(nodes,sel,live){
@@ -94,7 +103,9 @@ new MutationObserver(function(records){
       added.push(n);
     });
   });
-  if(addedSkel&&!removedSkel){shownAt=performance.now();return;}
+  // A new placeholder replacing an old one is already the card. Copying the
+  // old one as well stacks a second card (Progress totals on refresh).
+  if(addedSkel){shownAt=performance.now();return;}
   if(!removedSkel||!added.length)return;
   var outer=added.filter(function(n){return n.isConnected&&!added.some(function(o){return o!==n&&o.contains(n);});});
   if(!outer.length)return;

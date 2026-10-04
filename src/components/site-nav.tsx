@@ -4,7 +4,8 @@ import { getOptionalUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
 import { navItems } from "@/components/site-nav-items";
-import { NAV_COOKIE, parseRememberedNav, type RememberedNavItem } from "@/lib/remembered-nav";
+import { AVATAR_COOKIE, NAV_COOKIE, parseRememberedNav, type RememberedNavItem } from "@/lib/remembered-nav";
+import { RememberHeader } from "@/components/remember-header";
 import { BottomNavBar } from "@/components/bottom-nav-bar";
 import { getSiteTheme } from "@/lib/site-theme";
 import { LazySiteUserButton } from "@/components/clerk-lazy";
@@ -20,21 +21,43 @@ import { FULL_ORGANISER_PERMISSIONS, ORGANISER_PERMISSIONS } from "@/lib/organis
 
 /** Cookie read stays inside Suspense so the shared layout can still be prerendered. */
 export async function SiteNavSlot() {
-  const items = parseRememberedNav((await cookies()).get(NAV_COOKIE)?.value);
+  const jar = await cookies();
+  const items = parseRememberedNav(jar.get(NAV_COOKIE)?.value);
+  const initial = (jar.get(AVATAR_COOKIE)?.value ?? "").slice(0, 1);
   return (
-    <Suspense fallback={<SiteNavFallback items={items} />}>
+    <Suspense fallback={<SiteNavFallback initial={initial} items={items} />}>
       <SiteNav />
     </Suspense>
   );
 }
 
-export function SiteNavFallback({ items = [] }: { items?: RememberedNavItem[] }) {
+export function SiteNavFallback({ initial = "", items = [] }: { initial?: string; items?: RememberedNavItem[] }) {
+  if (items.length === 0) {
+    return (
+      <>
+        <div className="hidden min-w-0 items-center justify-center md:flex" />
+        <div className="flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3" />
+      </>
+    );
+  }
   return (
     <>
-      <div className="hidden min-w-0 items-center justify-center md:flex">
+      <div className="hidden min-w-0 items-center justify-center md:flex" data-nav-ready="">
         <StaticNavLinks items={items} />
       </div>
-      <div className="flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3" />
+      <div
+        className="flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3"
+        data-nav-ready=""
+      >
+        <SiteSearchBar />
+        <span aria-hidden className="inline-flex size-9 shrink-0 rounded-full border border-border bg-background" />
+        <span
+          aria-hidden
+          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground uppercase"
+        >
+          {initial}
+        </span>
+      </div>
     </>
   );
 }
@@ -56,9 +79,11 @@ export async function SiteNav() {
 
   // Signed-in state comes from the server here (not Clerk's client <Show>),
   // so nothing waits for Clerk's browser bundle before appearing.
+  const initial = user ? (user.firstName || user.email || "?").charAt(0) : null;
   return (
     <>
-      <div className="hidden min-w-0 items-center justify-center md:flex">
+      <RememberHeader initial={initial} />
+      <div className="hidden min-w-0 items-center justify-center md:flex" data-nav-ready="">
         {user ? (
           <SiteNavLinks
             isAdmin={isAdmin}
@@ -68,16 +93,19 @@ export async function SiteNav() {
           />
         ) : null}
       </div>
-      <div className="flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3">
+      <div
+        className="flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3"
+        data-nav-ready=""
+      >
         {user ? (
           <>
             <SiteSearchBar />
             <SiteSearchDialog />
-            <Suspense fallback={<div aria-hidden className="size-8 shrink-0" />}>
+            <Suspense fallback={<span aria-hidden className="inline-flex size-9 shrink-0 rounded-full border border-border bg-background" />}>
               <SiteNavBell firstName={user.firstName} userId={user.id} />
             </Suspense>
             <ClerkIsland>
-              <LazySiteUserButton initial={(user.firstName || user.email || "?").charAt(0)} progressEnabled={progressEnabled} />
+              <LazySiteUserButton initial={initial ?? "?"} progressEnabled={progressEnabled} />
             </ClerkIsland>
             <EmailPreferencesDrawer
               email={user.email}

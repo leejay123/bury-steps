@@ -1,5 +1,8 @@
 export const NAV_COOKIE = "bs-nav";
 
+/** One letter, so the header avatar is the right person before the account loads. */
+export const AVATAR_COOKIE = "bs-av";
+
 export type RememberedNavItem = { href: string; label: string };
 
 /** The menu last shown in the header, so a refresh can draw those links at once. */

@@ -2,7 +2,6 @@ import { Fragment, type ReactNode } from "react";
 import { HomeAboutDrawer } from "@/components/home-about-drawer";
 import { FeatureSection } from "@/components/feature-section";
 import { MemberFeatureSection } from "@/components/member-feature-section";
-import { AuthSwitch } from "@/components/signed-in-context";
 import { HeroCopy } from "@/components/hero-copy";
 import { TestimonialsSection } from "@/components/testimonials-section";
 import { FaqsSection } from "@/components/faqs-section";
@@ -93,8 +92,8 @@ export function HomeWelcome({
   howThisStartedTeaser: string;
   howThisStartedTitle: string;
   /** The members' latest notices, filled in after the login check (nothing
-   * for visitors). The "how this group works" section swaps for members via
-   * AuthSwitch instead of waiting for the session here. */
+   * for visitors). The cards under the hero are both in the page already;
+   * a returning member sees theirs on the first paint. */
   memberNoticesSlot: ReactNode;
   /** Site-wide switch (Settings → Homepage layout → Latest notices) — hides
    * the section entirely when off, even if there are notices. */
@@ -119,10 +118,18 @@ export function HomeWelcome({
 }) {
   const sections: Record<HomepageSectionId, ReactNode | null> = {
     photos: photosEnabled && photos.length > 0 ? <WalkPhotoSlider slides={photos} /> : null,
-    // Both versions are in the ready-made page; the visitor's signed-in
-    // state picks one, so this section never waits for the login check.
+    // Both are in the first paint. The header's cookie script marks a
+    // returning member before this HTML is parsed, and CSS shows their
+    // cards straight away — nothing waits for the sign-in check.
     howWalksWork: (
-      <AuthSwitch signedIn={<MemberFeatureSection progressEnabled={progressEnabled} />} signedOut={<FeatureSection />} />
+      <>
+        <div data-guest-home="">
+          <FeatureSection />
+        </div>
+        <div data-member-home="">
+          <MemberFeatureSection progressEnabled={progressEnabled} />
+        </div>
+      </>
     ),
     howThisStarted: (
       <section>

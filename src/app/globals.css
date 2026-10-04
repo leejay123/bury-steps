@@ -547,6 +547,20 @@ html[data-announcement-hide] [data-slot="sticky-banner"] {
   display: none;
 }
 
+/* Returning members: the header script sets this before the homepage is
+   parsed, so their cards are the ones in the first paint. */
+html:not([data-remembered-in]) [data-member-home] {
+  display: none;
+}
+html[data-remembered-in] [data-guest-home] {
+  display: none;
+}
+
+/* The cookie-drawn header steps aside the moment the real one is in the DOM. */
+html:has([data-nav-ready]) #bs-header-boot {
+  display: none;
+}
+
 
 /* Phone bottom navigation (bottom-nav-bar.tsx): its height, including the
    iPhone home indicator, so the page spacer, back-to-top button, cookie

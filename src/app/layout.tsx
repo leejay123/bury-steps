@@ -23,7 +23,8 @@ import { isClerkMiddlewareMissingError } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
 import { appUrl } from "@/lib/urls";
 import { PAGE_X, PAGE_Y } from "@/lib/page-x";
-import { SiteMobileNav, SiteNavFallback, SiteNavSlot, SiteBottomNav } from "@/components/site-nav";
+import { SiteMobileNav, SiteNavSlot, SiteBottomNav } from "@/components/site-nav";
+import { HeaderBootScript } from "@/components/header-boot";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteBrandLink } from "@/components/site-brand-link";
 import { SiteLogo } from "@/components/site-logo";
@@ -219,7 +220,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                       <SiteBrandLink />
                     </Suspense>
                   </div>
-                  <Suspense fallback={<SiteNavFallback />}>
+                  <div className="contents" id="bs-header-boot" />
+                  <HeaderBootScript />
+                  <Suspense fallback={null}>
                     <SiteNavSlot />
                   </Suspense>
                 </div>
