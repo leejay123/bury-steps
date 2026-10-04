@@ -1,4 +1,4 @@
-import { londonYmd } from "@/lib/dates";
+import { dayMonthShortOf, londonYmd, weekdayShortOf } from "@/lib/dates";
 
 /** WMO weather interpretation code, grouped for an icon. */
 export type WeatherKind =
@@ -67,10 +67,7 @@ export function londonDateKey(at: Date): string {
 
 function weekdayShort(ymd: string): string {
   const [year, month, day] = ymd.split("-").map(Number);
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Europe/London",
-    weekday: "short",
-  }).format(new Date(Date.UTC(year, month - 1, day, 12)));
+  return weekdayShortOf(year, month, day);
 }
 
 export function weatherKind(code: number): WeatherKind {
@@ -134,12 +131,8 @@ function clockLabel(value: unknown): string | null {
 }
 
 function dateLabelOf(ymd: string): string {
-  const [year, month, day] = ymd.split("-").map(Number);
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Europe/London",
-    day: "numeric",
-    month: "short",
-  }).format(new Date(Date.UTC(year, month - 1, day, 12)));
+  const [, month, day] = ymd.split("-").map(Number);
+  return dayMonthShortOf(month, day);
 }
 
 /** One line under the big temperature. */

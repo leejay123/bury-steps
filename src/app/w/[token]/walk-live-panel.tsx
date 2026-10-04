@@ -5,6 +5,7 @@ import { ClockInForm } from "./clock-in-form";
 import { ClockOutButton } from "@/components/clock-out-button";
 import { WalkMembers } from "@/components/walk-members";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { useWalkClock } from "@/hooks/use-walk-clock";
 import { formatDateTime } from "@/lib/dates";
 import { effectiveEndsAt, formatInProgressCountdown, walkStatus, windowState } from "@/lib/walk-window";
@@ -49,7 +50,10 @@ export function WalkLivePanel({
   const status = walkStatus(walk, now);
   const state = windowState(start, durationMins, now, walk.endedAt);
   const completed = status === "completed";
-  const countdown = status === "in-progress" ? formatInProgressCountdown(effectiveEndsAt(walk), now) : null;
+  // Time-free until hydrated, so the server's HTML matches (see useHydrated).
+  const hydrated = useHydrated();
+  const countdown =
+    hydrated && status === "in-progress" ? formatInProgressCountdown(effectiveEndsAt(walk), now) : null;
   const leftEarly = Boolean(alreadyClockedInAt && clockedOutAt);
 
   // Still on the walk (never clocked out).
