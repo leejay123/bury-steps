@@ -173,6 +173,9 @@ export function ImageDropzone({
               alt={existingAlt || "Selected photo"}
               className={objectFitClass}
               fill
+              // The current image, near the top of a settings page — often
+              // its largest picture, so it shouldn't wait to lazy-load.
+              loading="eager"
               sizes="(min-width: 640px) 33vw, 100vw"
               // Local previews are blob: URLs the image optimizer can't fetch,
               // and this is a brief admin-only preview anyway — skip

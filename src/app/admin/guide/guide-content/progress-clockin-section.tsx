@@ -93,7 +93,8 @@ export function ProgressClockInSection() {
             </p>
             <p>
               After clocking out, they can clock in again on the same walk if the window is still
-              open.
+              open. They are back on the list, and their clock-in time stays the time they first
+              arrived.
             </p>
             <p>
               If they try too early, the page says when clock-in opens and shows a short “Before

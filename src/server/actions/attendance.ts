@@ -117,9 +117,12 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
         clockedOutReason: null,
       };
 
+      // Coming back after leaving early: they're on the walk again, and
+      // their arrival time stays the first one (it used to be overwritten
+      // with now, as if they had only just turned up).
       const reclockedIn = await tx.attendance.updateMany({
         where: { walkId: locked.id, userId: user.id, clockedOutAt: { not: null } },
-        data: { ...attendanceData, clockedInAt: new Date() },
+        data: attendanceData,
       });
 
       if (reclockedIn.count === 0) {
