@@ -211,6 +211,12 @@ describe("formatInProgressCountdown", () => {
     expect(formatInProgressCountdown(endsAt, now)).toBe("23 min");
   });
 
+  it("reads hours and minutes once there is more than an hour left", () => {
+    const endsAt = new Date("2026-06-01T18:00:00.000Z");
+    expect(formatInProgressCountdown(endsAt, new Date(endsAt.getTime() - 466 * 60_000))).toBe("7 h 46 min");
+    expect(formatInProgressCountdown(endsAt, new Date(endsAt.getTime() - 120 * 60_000 - 5_000))).toBe("2 h");
+  });
+
   it("shows exact seconds once under a minute remains", () => {
     const now = new Date(endsAt.getTime() - 45 * 1000);
     expect(formatInProgressCountdown(endsAt, now)).toBe("0:45");

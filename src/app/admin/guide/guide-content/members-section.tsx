@@ -75,6 +75,8 @@ export function MembersSection() {
               Type <strong>&ldquo;Confirm&rdquo;</strong> in the box, then choose{" "}
               <strong>Remove member</strong>. Their login is deleted, their clock-ins go, and
               any walks, accident reports, or Journey beats they created are moved to you.
+              Accident reports keep their name: it is added to Who was involved on any report
+              they were tagged on, and a report they recorded gets a note saying so.
             </li>
           </Steps>
           <p>You cannot remove the last organiser, so the group is never left without one.</p>

@@ -19,6 +19,7 @@ function parseRoleFilter(raw: string | undefined): MemberRoleFilter {
 }
 
 
+// Access is checked in layout.tsx, before anything streams.
 export default function MembersPage({
   searchParams,
 }: {
@@ -111,7 +112,7 @@ async function MembersBody({ adminId, role }: { adminId: string; role: MemberRol
  * rows — one placeholder whether the page or the list is loading. */
 function MembersListSkeleton() {
   return (
-    <div aria-busy="true" className="flex flex-col gap-3">
+    <div data-page-loading="" aria-busy="true" className="flex flex-col gap-3">
       <Skeleton className="h-9 w-full rounded-md" />
       <DataList>
         {[0, 1, 2, 3, 4, 5].map((i) => (

@@ -261,6 +261,9 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
         where: { id: target.id },
         select: {
           id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
           role: true,
           isOwner: true,
           _count: {
@@ -289,11 +292,34 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
           data: { createdById: admin.id },
         });
       }
-      if (fresh._count.accidentReports > 0) {
-        await tx.accidentReport.updateMany({
-          where: { createdById: fresh.id },
-          data: { createdById: admin.id },
+      // Accident reports are a record, so they keep this person's name. Being
+      // tagged on one goes with the account, so the name is written into
+      // "Who was involved" first; a report they recorded has to belong to
+      // someone, so it moves to you with a note saying who recorded it.
+      const name = displayName(fresh);
+      const tagged = await tx.accidentReportMember.findMany({
+        where: { userId: fresh.id },
+        select: { report: { select: { id: true, whoInvolved: true } } },
+      });
+      for (const { report } of tagged) {
+        await tx.accidentReport.update({
+          where: { id: report.id },
+          data: { whoInvolved: [report.whoInvolved.trim(), name].filter(Boolean).join(", ") },
         });
+      }
+      if (fresh._count.accidentReports > 0) {
+        const recorded = await tx.accidentReport.findMany({
+          where: { createdById: fresh.id },
+          select: { id: true, organiserNotes: true },
+        });
+        const note = `Recorded by ${name}, whose account has since been removed.`;
+        for (const report of recorded) {
+          const notes = report.organiserNotes?.trim();
+          await tx.accidentReport.update({
+            where: { id: report.id },
+            data: { createdById: admin.id, organiserNotes: notes ? `${notes}\n\n${note}` : note },
+          });
+        }
       }
       if (fresh._count.journeyEvents > 0) {
         await tx.walkJourneyEvent.updateMany({

@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
-import { clearSiteCache, type ActionResult } from "@/server/actions";
+import { clearSiteCache } from "@/server/actions";
 import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,10 +29,7 @@ function ConfirmClear() {
 }
 
 export function ClearCacheForm() {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    clearSiteCache,
-    null,
-  );
+  const [state, action, isPending] = useSafeActionState(clearSiteCache);
   const [open, setOpen] = useState(false);
   useActionToast(state, () => setOpen(false));
 

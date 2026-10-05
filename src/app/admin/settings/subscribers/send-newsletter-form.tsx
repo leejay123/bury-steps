@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { Send } from "lucide-react";
-import { sendNewsletterCampaign, type ActionResult } from "@/server/actions";
+import { sendNewsletterCampaign } from "@/server/actions";
 import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { DrawerFormFooter } from "@/components/drawer-form";
 import { Button } from "@/components/ui/button";
@@ -21,10 +22,7 @@ import {
 import { SettingsSection } from "../settings-page";
 
 export function SendNewsletterForm({ recipientCount }: { recipientCount: number }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    sendNewsletterCampaign,
-    null,
-  );
+  const [state, action, isPending] = useSafeActionState(sendNewsletterCampaign);
   const [open, setOpen] = useState(false);
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");

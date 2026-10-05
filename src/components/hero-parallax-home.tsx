@@ -43,7 +43,7 @@ export function HeroParallaxHome({
         <h1 className="text-headline font-medium tracking-tight text-balance">{siteName}</h1>
         {siteTagline ? <p className="mt-6 max-w-xl text-intro text-pretty text-muted-foreground">{siteTagline}</p> : null}
         <div className="mt-8 flex flex-wrap items-center gap-3">
-          {<AuthSwitch signedIn={<><Button asChild>
+          {<AuthSwitch signedIn={<><Button asChild size="sm">
               <Link href="/walks">
                 See the walks <ArrowRightIcon />
               </Link>

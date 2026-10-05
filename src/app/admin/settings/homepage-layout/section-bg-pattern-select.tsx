@@ -1,10 +1,11 @@
 "use client";
 
-import { startTransition, useActionState, useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { updateSectionBgPattern, type ActionResult } from "@/server/actions";
+import { updateSectionBgPattern } from "@/server/actions";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { SECTION_BG_PATTERN_LABELS, type SectionBgKey, type SectionBgPattern } from "@/lib/section-background";
 import { Label } from "@/components/ui/label";
 import {
@@ -29,10 +30,7 @@ export function SectionBgPatternSelect({
   section: SectionBgKey;
 }) {
   const [selected, setSelected] = useState(pattern);
-  const [state, dispatch, isPending] = useActionState<ActionResult | null, FormData>(
-    updateSectionBgPattern,
-    null,
-  );
+  const [state, dispatch, isPending] = useSafeActionState(updateSectionBgPattern);
 
   useResetOnChange([pattern], () => setSelected(pattern));
   useResetOnChange([state, pattern], () => {

@@ -47,7 +47,7 @@ export function HeroMarqueeHome({
             <p className="mt-5 max-w-xl text-intro text-pretty text-muted-foreground">{siteTagline}</p>
           ) : null}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            {<AuthSwitch signedIn={<><Button asChild>
+            {<AuthSwitch signedIn={<><Button asChild size="sm">
                 <Link href="/walks">
                   See the walks <ArrowRightIcon />
                 </Link>

@@ -13,6 +13,7 @@ import { textSizeCssVars } from "@/lib/text-sizes";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { ButtonRipple } from "@/components/button-ripple";
 import { HeaderScrollShadow } from "@/components/header-scroll-shadow";
+import { FocusRescue } from "@/components/focus-rescue";
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import Script from "next/script";
@@ -106,6 +107,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html
       className={`${siteFontVariableClassName} ${typesetFontVariables}`}
+      // Settings → Site behaviour → Phone menu, known before anything streams
+      // in, so phone layout rules for the bottom bar (logo on the left, room
+      // at the bottom) apply from the first paint — see globals.css.
+      data-phone-menu={theme.mobileNav}
       lang="en-GB"
       style={{ "--font-site": `var(${font.cssVariable})`, ...textSizeCssVars(theme.textSizes) } as CSSProperties}
       suppressHydrationWarning
@@ -267,6 +272,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           />
           <ButtonRipple />
           <HeaderScrollShadow />
+          <FocusRescue />
           <Suspense fallback={null}>
             <SiteCookieConsentGate />
           </Suspense>

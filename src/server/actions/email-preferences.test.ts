@@ -142,6 +142,25 @@ describe("updateMyEmailPreferences", () => {
     expect(result).toEqual({ ok: true, message: "Your email preferences have been saved." });
   });
 
+  it("saves only the named switch when sent from the header drawer", async () => {
+    prismaMock.user.update.mockResolvedValueOnce({ email: "a@example.com", firstName: null });
+
+    const result = await updateMyEmailPreferences(null, form({ only: "emailProgress" }));
+
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      data: { emailProgress: false },
+      select: { email: true, firstName: true },
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it("won't let a member set an organiser-only switch on its own", async () => {
+    const result = await updateMyEmailPreferences(null, form({ only: "emailAccidentAlerts", emailAccidentAlerts: "on" }));
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
+    expect(result).toEqual({ ok: false, error: "That setting isn't available." });
+  });
+
   it("reports a generic failure on an unexpected database error", async () => {
     prismaMock.user.update.mockRejectedValueOnce(new Error("db down"));
     const result = await updateMyEmailPreferences(null, form({}));

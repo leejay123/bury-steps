@@ -25,11 +25,20 @@ describe("noticeDateLabel", () => {
     ).toBe("Posted 5 Jan 2026 · Updated 10 Feb 2026");
   });
 
-  it("treats same-day edits as not-updated (formatDate has day precision, not a timestamp)", () => {
+  it("gives the time for a same-day edit, so it agrees with the bell's Updated badge", () => {
     expect(
       noticeDateLabel({
         createdAt: new Date("2026-01-05T09:00:00Z"),
         updatedAt: new Date("2026-01-05T15:00:00Z"),
+      }),
+    ).toBe("Posted 5 Jan 2026 · Updated 15:00");
+  });
+
+  it("ignores the sub-second gap a brand-new row can have between its timestamps", () => {
+    expect(
+      noticeDateLabel({
+        createdAt: new Date("2026-01-05T09:00:00.000Z"),
+        updatedAt: new Date("2026-01-05T09:00:00.400Z"),
       }),
     ).toBe("Posted 5 Jan 2026");
   });
@@ -73,6 +82,12 @@ describe("noticeBodyForBellDrawer", () => {
     const shown = noticeBodyForBellDrawer(notice({ body, kind: "BELL" }));
     expect(shown.endsWith("…")).toBe(true);
     expect(shown.length).toBe(MAX_NOTICE_BELL_BODY + 1);
+  });
+
+  it("replaces a closing full stop with the ellipsis rather than adding to it", () => {
+    expect(noticeBodyForBellDrawer(notice({ body: "Bring water mid-walk.", kind: "PAGE" }))).toBe(
+      "Bring water mid-walk…",
+    );
   });
 
   it("always ends a full-page teaser with an ellipsis in the drawer", () => {

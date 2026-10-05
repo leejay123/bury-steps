@@ -1,10 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
-import { confirmNewsletterUnsubscribe, type ActionResult } from "@/server/actions";
+import { confirmNewsletterUnsubscribe } from "@/server/actions";
 import { Button } from "@/components/ui/button";
 import { FormError } from "@/components/form-error";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 
 /**
  * One-click email links used to unsubscribe on GET, which meant Outlook
@@ -12,10 +12,7 @@ import { useActionToast } from "@/hooks/use-action-toast";
  * opened the page. Confirm with a real button click instead.
  */
 export function ConfirmNewsletterUnsubscribeForm({ token }: { token: string }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    confirmNewsletterUnsubscribe,
-    null,
-  );
+  const [state, action, isPending] = useSafeActionState(confirmNewsletterUnsubscribe);
   useActionToast(state);
 
   if (state?.ok) {

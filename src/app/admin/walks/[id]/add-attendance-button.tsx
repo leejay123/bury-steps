@@ -1,10 +1,13 @@
 "use client";
 
-import { useActionState, useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import { UserPlus } from "lucide-react";
-import { adminClockIn, searchAddableMembers, type ActionResult } from "@/server/actions";
+import { toast } from "sonner";
+import { ACTION_NETWORK_ERROR } from "@/lib/action-errors";
+import { adminClockIn, searchAddableMembers } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { utcToLondonWallClock } from "@/lib/dates";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
@@ -50,10 +53,7 @@ function AddAttendanceDialogForm({
   walkId: string;
   walkStartsAt: string;
 }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    adminClockIn,
-    null,
-  );
+  const [state, action, isPending] = useSafeActionState(adminClockIn);
   const [query, setQuery] = useState("");
   const [members, setMembers] = useState<{ id: string; label: string }[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -73,8 +73,16 @@ function AddAttendanceDialogForm({
     let cancelled = false;
     const handle = window.setTimeout(() => {
       startSearch(async () => {
-        const next = await searchAddableMembers(walkId, query);
+        // A failed lookup (dropped connection) keeps the last list rather
+        // than throwing — thrown inside a transition, it took the walk page
+        // down with it.
+        const next = await searchAddableMembers(walkId, query).catch(() => null);
         if (cancelled) return;
+        if (!next) {
+          toast.error(ACTION_NETWORK_ERROR);
+          setLoaded(true);
+          return;
+        }
         setMembers(next);
         setLoaded(true);
         setSelectedUserId((prev) => (prev && next.some((m) => m.id === prev) ? prev : ""));

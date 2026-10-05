@@ -121,7 +121,7 @@ export function AttendanceHistory({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All</SelectItem>
-              <SelectItem value="full">Stayed for walk</SelectItem>
+              <SelectItem value="full">Stayed for the whole walk</SelectItem>
               <SelectItem value="left-early">Left early</SelectItem>
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>

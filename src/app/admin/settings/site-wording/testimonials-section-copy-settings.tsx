@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
-import { updateTestimonialsSectionCopy, type ActionResult } from "@/server/actions";
+import { updateTestimonialsSectionCopy } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,10 +39,7 @@ export function TestimonialsSectionCopySettings({
   const [eyebrow, setEyebrow] = useState(testimonialsSectionEyebrow);
   const [title, setTitle] = useState(testimonialsSectionTitle);
   const [intro, setIntro] = useState(testimonialsSectionIntro);
-  const [state, action] = useActionState<ActionResult | null, FormData>(
-    updateTestimonialsSectionCopy,
-    null,
-  );
+  const [state, action] = useSafeActionState(updateTestimonialsSectionCopy);
   useActionToast(state);
 
   useResetOnChange(

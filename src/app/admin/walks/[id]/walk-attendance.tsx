@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { ChevronRight } from "lucide-react";
-import { formatDateTime, formatTime } from "@/lib/dates";
+import { formatTime, formatWalkDate } from "@/lib/dates";
 import { emergencyPhoneHref } from "@/lib/emergency-contact";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import {
@@ -177,10 +177,10 @@ export function WalkAttendanceTable({
                   <Badge variant="outline">{stillInLabel(walkCompleted)}</Badge>
                 )}
               </Detail>
-              <Detail label="Clocked in">{formatDateTime(new Date(selected.clockedInAt))}</Detail>
+              <Detail label="Clocked in">{formatWalkDate(selected.clockedInAt)}</Detail>
               <Detail label="Clocked out">
                 {selected.clockedOutAt
-                  ? formatDateTime(new Date(selected.clockedOutAt))
+                  ? formatWalkDate(selected.clockedOutAt)
                   : walkCompleted
                     ? "Stayed for the whole walk"
                     : "Still on the walk"}

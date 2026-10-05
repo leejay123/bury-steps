@@ -1,9 +1,10 @@
 "use client";
 
-import { startTransition, useActionState, useState } from "react";
-import { updateSliderHeroWords, type ActionResult } from "@/server/actions";
+import { startTransition, useState } from "react";
+import { updateSliderHeroWords } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { SliderHeroWords } from "@/lib/hero-style";
@@ -12,8 +13,9 @@ import { SettingsSection } from "../settings-page";
 /** Saves as soon as a choice is picked, like the switches on this page. */
 export function SliderHeroWordsSettings({ words }: { words: SliderHeroWords }) {
   const [value, setValue] = useState(words);
-  const [state, action] = useActionState<ActionResult | null, FormData>(updateSliderHeroWords, null);
-  useActionToast(state);
+  const [state, action] = useSafeActionState(updateSliderHeroWords);
+  // No inline error box here, so a failed save says so in a toast.
+  useActionToast(state, undefined, { toastErrors: true });
   useResetOnChange([words], () => setValue(words));
   useResetOnChange([state], () => {
     if (state && !state.ok) setValue(words);

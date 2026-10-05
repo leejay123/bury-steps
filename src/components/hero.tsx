@@ -28,7 +28,7 @@ export function HeroSection({
         <HeroCopy
           bgPattern={bgPattern}
           actions={
-            <AuthSwitch signedIn={<><Button asChild variant="outline">
+            <AuthSwitch signedIn={<><Button asChild size="sm" variant="outline">
                 <Link href="/walks">Your walks</Link>
               </Button></>} signedOut={<><HeroGuestActions className="contents" /></>} />
           }

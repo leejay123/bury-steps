@@ -79,7 +79,17 @@ export async function updateMyEmailPreferences(
   if (!limited.ok) {
     return { ok: false, error: `Too many attempts. Try again in ${limited.retryAfterSeconds}s.` };
   }
-  const preferences = readPreferences(formData, user.role === "ADMIN");
+  const all = readPreferences(formData, user.role === "ADMIN");
+  // The header drawer saves one switch at a time ("only"), so a copy of the
+  // other switches that's out of date (changed on the page or from an email
+  // link since the header loaded) can't overwrite them. Organiser-only
+  // switches aren't in `all` for members, so they can't be set this way.
+  const only = formData.get("only");
+  let preferences: Partial<EmailPreferences> = all;
+  if (typeof only === "string" && only !== "") {
+    if (!Object.hasOwn(all, only)) return { ok: false, error: "That setting isn't available." };
+    preferences = { [only]: all[only as keyof typeof all] };
+  }
 
   try {
     const updated = await prisma.user.update({

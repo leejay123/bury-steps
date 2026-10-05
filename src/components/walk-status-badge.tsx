@@ -66,7 +66,8 @@ function useWalkStatusLabel({ cancelledAt, durationMins, endedAt = null, startsA
         ? formatInProgressCountdown(effectiveEndsAt(walk), now)
         : null;
   const label = countdown
-    ? `${LABEL[status]} · ${status === "in-progress" ? `${countdown} left` : countdown}`
+    ? // "in 7:02", not a bare "7:02", which read like a time of day.
+      `${LABEL[status]} · ${status === "in-progress" ? `${countdown} left` : `in ${countdown}`}`
     : LABEL[status];
   return { status, label };
 }

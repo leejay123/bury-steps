@@ -69,9 +69,11 @@ export function WalkAttendanceSection({
           <EmptyState
             description={
               totalAttendanceCount === 0
-                ? isCompleted
-                  ? "Nobody clocked in for this walk. If someone was there, use Add someone."
-                  : "Share the link above with the group."
+                ? cancelledAt
+                  ? "Nobody clocked in before it was cancelled."
+                  : isCompleted
+                    ? "Nobody clocked in for this walk. If someone was there, use Add someone."
+                    : "Share the link above with the group."
                 : isCompleted
                   ? "Everyone who clocked in also clocked out before the walk finished."
                   : "Everyone who clocked in has since clocked out."

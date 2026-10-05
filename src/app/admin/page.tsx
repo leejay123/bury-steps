@@ -176,7 +176,7 @@ async function AdminWalksTabs() {
  * refresh only ever shows this one placeholder. */
 function AdminWalksSkeleton() {
   return (
-    <div aria-busy="true" className="flex flex-col gap-4">
+    <div data-page-loading="" aria-busy="true" className="flex flex-col gap-4">
       <Skeleton className="h-9 w-56 rounded-lg" />
       <SkFilters />
       <WalkRowsSkeleton />
@@ -186,7 +186,7 @@ function AdminWalksSkeleton() {
 
 function AdminWalksPageFallback() {
   return (
-    <div className="flex flex-col gap-8 px-4 py-6 md:px-6">
+    <div data-page-loading="" className="flex flex-col gap-8 px-4 py-6 md:px-6">
       <section className="flex flex-col gap-4">
         <AdminPageIntro
           action={<Skeleton className="h-9 w-36 rounded-md" />}

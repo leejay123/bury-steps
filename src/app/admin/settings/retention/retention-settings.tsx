@@ -1,14 +1,14 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import {
   updateAccidentReportRetentionDays,
   updateCancelledWalkRetentionDays,
-  type ActionResult,
 } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,10 +36,7 @@ export function CancelledWalkRetentionSettings({
 }) {
   const saved = daysToInput(cancelledWalkRetentionDays);
   const [value, setValue] = useState(saved);
-  const [state, action] = useActionState<ActionResult | null, FormData>(
-    updateCancelledWalkRetentionDays,
-    null,
-  );
+  const [state, action] = useSafeActionState(updateCancelledWalkRetentionDays);
   useActionToast(state);
 
   useResetOnChange([saved], () => setValue(saved));
@@ -87,10 +84,7 @@ export function AccidentReportRetentionSettings({
 }) {
   const saved = daysToInput(accidentReportRetentionDays);
   const [value, setValue] = useState(saved);
-  const [state, action] = useActionState<ActionResult | null, FormData>(
-    updateAccidentReportRetentionDays,
-    null,
-  );
+  const [state, action] = useSafeActionState(updateAccidentReportRetentionDays);
   useActionToast(state);
 
   useResetOnChange([saved], () => setValue(saved));

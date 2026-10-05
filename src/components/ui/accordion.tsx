@@ -6,10 +6,25 @@ import { Accordion as AccordionPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
-function Accordion({
-  ...props
-}: React.ComponentProps<typeof AccordionPrimitive.Root>) {
-  return <AccordionPrimitive.Root data-slot="accordion" {...props} />
+function Accordion(props: React.ComponentProps<typeof AccordionPrimitive.Root>) {
+  // Items only slide open and shut once someone has used the accordion. An
+  // item open from the start (the Guide's first section) otherwise played
+  // its opening slide as the streamed page was revealed — Radix's own "not
+  // on first render" guard had already run while it was hidden — pushing
+  // every section below it down the page.
+  const [animate, setAnimate] = React.useState(false)
+  const { onValueChange } = props as { onValueChange?: (value: unknown) => void }
+  return (
+    <AccordionPrimitive.Root
+      data-animate={animate ? "" : undefined}
+      data-slot="accordion"
+      {...props}
+      onValueChange={((value: unknown) => {
+        setAnimate(true)
+        onValueChange?.(value)
+      }) as never}
+    />
+  )
 }
 
 function AccordionItem({
@@ -68,7 +83,7 @@ function AccordionContent({
   return (
     <AccordionPrimitive.Content
       data-slot="accordion-content"
-      className="overflow-hidden text-sm duration-150 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
+      className="overflow-hidden text-sm duration-150 [[data-animate]_&]:data-[state=closed]:animate-accordion-up [[data-animate]_&]:data-[state=open]:animate-accordion-down"
       {...props}
     >
       <div className={cn("pt-0 pb-4", className)}>{children}</div>

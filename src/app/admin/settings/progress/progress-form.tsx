@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
-import { updateMonthlyClockInGoal, type ActionResult } from "@/server/actions";
+import { updateMonthlyClockInGoal } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,10 +33,7 @@ export function ProgressSettingsForm({
 }) {
   const saved = goalToInput(monthlyClockInGoal);
   const [value, setValue] = useState(saved);
-  const [state, action] = useActionState<ActionResult | null, FormData>(
-    updateMonthlyClockInGoal,
-    null,
-  );
+  const [state, action] = useSafeActionState(updateMonthlyClockInGoal);
   useActionToast(state);
 
   useResetOnChange([saved], () => setValue(saved));

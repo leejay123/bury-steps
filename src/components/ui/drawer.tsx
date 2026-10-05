@@ -124,6 +124,14 @@ function Drawer({
                         eventDetails.cancel();
                         return;
                       }
+                      // Escape that already closed something inside the
+                      // drawer — a dropdown or the date picker marks the key
+                      // as handled — is spent. Closing the drawer too threw
+                      // away everything typed in the form.
+                      if (reason === "escape-key" && eventDetails.event?.defaultPrevented) {
+                        eventDetails.cancel();
+                        return;
+                      }
                       if (variant === "form" && (reason === "swipe" || reason === "outside-press")) {
                         eventDetails.cancel();
                         return;

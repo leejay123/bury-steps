@@ -197,6 +197,7 @@ function StatCard({ label, value }: { label: string; value: number }) {
 
 /** Everything here depends on who's asking and on live data, so the page
  * shows a matching placeholder for an instant while it loads. */
+// Access is checked in ../layout.tsx, before anything streams.
 export default function MemberDetailPage(props: Parameters<typeof MemberDetailPageContent>[0]) {
   return (
     <Suspense fallback={<AdminPageFallback rows={6} />}>

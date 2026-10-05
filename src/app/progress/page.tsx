@@ -42,7 +42,7 @@ export default function ProgressPage() {
         </p>
       </div>
       {/* The heading shows straight away; only the numbers wait. */}
-      <Suspense fallback={<ProgressSkeleton />}>
+      <Suspense fallback={<div className="contents" data-page-loading=""><ProgressSkeleton /></div>}>
         <ProgressForMember />
       </Suspense>
     </div>

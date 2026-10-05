@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Image from "next/image";
 import { ChevronRight, ImageIcon } from "lucide-react";
@@ -9,10 +9,10 @@ import {
   deleteHomepageSlide,
   reorderHomepageSlides,
   replaceHomepageSlideImage,
-  type ActionResult,
 } from "@/server/actions";
 import type { SlideView } from "@/lib/slides";
 import { preventDismissWhilePending, useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { EmptyState } from "@/components/empty-state";
@@ -117,10 +117,7 @@ function AddDrawerForm({
   onPendingChange?: (pending: boolean) => void;
   onSaved: () => void;
 }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    addHomepageSlide,
-    null,
-  );
+  const [state, action, isPending] = useSafeActionState(addHomepageSlide);
   const formRef = useRef<HTMLFormElement>(null);
 
   useActionToast(state, () => {
@@ -149,10 +146,7 @@ function EditDrawerForm({
   onSaved: () => void;
   slide: SlideView;
 }) {
-  const [updateState, updateAction, isPending] = useActionState<ActionResult | null, FormData>(
-    replaceHomepageSlideImage,
-    null,
-  );
+  const [updateState, updateAction, isPending] = useSafeActionState(replaceHomepageSlideImage);
 
   useActionToast(updateState, onSaved);
   useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);

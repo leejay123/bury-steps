@@ -33,7 +33,10 @@ export function ListPagination({
 
   function go(next: number) {
     onPageChange(next);
-    scrollToRef?.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+    // Wait a frame for the new page to be drawn: scrolling straight away
+    // started a smooth scroll that the browser then cancelled when the list
+    // changed height, leaving you mid-list or at the footer.
+    requestAnimationFrame(() => scrollListTop(scrollToRef?.current));
   }
 
   return (
@@ -58,4 +61,15 @@ export function ListPagination({
       </Pagination>
     </div>
   );
+}
+
+/** Bring the top of the list just under the sticky header, if it's above the screen. */
+function scrollListTop(list: HTMLElement | null | undefined) {
+  if (!list) return;
+  const header = document.querySelector("header[data-site-header]");
+  const headerHeight = header ? header.getBoundingClientRect().height : 0;
+  const top = list.getBoundingClientRect().top - headerHeight - 16;
+  if (top >= 0) return;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  window.scrollTo({ top: window.scrollY + top, behavior: reduce ? "auto" : "smooth" });
 }

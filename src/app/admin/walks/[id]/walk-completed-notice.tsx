@@ -38,7 +38,7 @@ export function WalkCompletedNotice({
     <Alert variant="info">
       <AlertDescription>
         This walk has finished, so it can no longer be cancelled or edited. If someone was there
-        but forgot to clock in, add them under Attendance.
+        but forgot to clock in, use Add someone in the Attended section below.
       </AlertDescription>
     </Alert>
   );

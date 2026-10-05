@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { ChevronRight, Quote } from "lucide-react";
 import {
@@ -8,10 +8,10 @@ import {
   deleteHomepageTestimonial,
   reorderHomepageTestimonials,
   updateHomepageTestimonial,
-  type ActionResult,
 } from "@/server/actions";
 import type { TestimonialView } from "@/lib/testimonials";
 import { preventDismissWhilePending, useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { EmptyState } from "@/components/empty-state";
@@ -144,10 +144,7 @@ function AddDrawerForm({
   onPendingChange?: (pending: boolean) => void;
   onSaved: () => void;
 }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    addHomepageTestimonial,
-    null,
-  );
+  const [state, action, isPending] = useSafeActionState(addHomepageTestimonial);
   const formRef = useRef<HTMLFormElement>(null);
 
   useActionToast(state, () => {
@@ -176,10 +173,7 @@ function EditDrawerForm({
   onSaved: () => void;
   testimonial: TestimonialView;
 }) {
-  const [updateState, updateAction, isPending] = useActionState<ActionResult | null, FormData>(
-    updateHomepageTestimonial,
-    null,
-  );
+  const [updateState, updateAction, isPending] = useSafeActionState(updateHomepageTestimonial);
 
   useActionToast(updateState, onSaved);
   useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { walkClockDelayMs } from "@/lib/walk-clock-delay";
 import { effectiveEndsAt, nextWalkStatusChangeAt, walkStatus } from "@/lib/walk-window";
 
@@ -26,6 +26,7 @@ export function useWalkClock(walk: {
   startsAt: string;
 }) {
   const [now, setNow] = useState(() => new Date());
+  const started = useRef(false);
 
   useEffect(() => {
     const parsed = {
@@ -38,15 +39,14 @@ export function useWalkClock(walk: {
     let timeoutId: number | undefined;
     let cancelled = false;
 
+    function tick() {
+      const at = new Date();
+      setNow(at);
+      arm(at);
+    }
+
     function arm(from: Date) {
       if (cancelled) return;
-
-      function tick() {
-        const at = new Date();
-        setNow(at);
-        arm(at);
-      }
-
       const status = walkStatus(parsed, from);
       if (status === "starting-soon") {
         timeoutId = window.setTimeout(tick, 1000);
@@ -64,7 +64,16 @@ export function useWalkClock(walk: {
       timeoutId = window.setTimeout(tick, delay);
     }
 
-    arm(new Date());
+    if (started.current) {
+      // The walk itself changed (ended early, reopened, moved): catch the
+      // clock up straight away. The last tick can be up to a minute old —
+      // still before an early end — and with nothing left to wait for, the
+      // page went on showing "In progress" and End walk.
+      timeoutId = window.setTimeout(tick, 0);
+    } else {
+      arm(new Date());
+    }
+    started.current = true;
     return () => {
       cancelled = true;
       if (timeoutId !== undefined) window.clearTimeout(timeoutId);

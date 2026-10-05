@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ArrowDown, ArrowUp, ChevronDown, Plus, Search, Trash2 } from "lucide-react";
-import { updateWalkEssentials, type ActionResult } from "@/server/actions";
+import { updateWalkEssentials } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import {
   DEFAULT_WALK_ESSENTIALS,
   ESSENTIAL_ICONS,
@@ -95,7 +96,7 @@ function IconPicker({ label, onChange, value }: { label: string; onChange: (icon
 export function WalkEssentialsEditor({ items: saved }: { items: EssentialItem[] }) {
   const [items, setItems] = useState(saved);
   useResetOnChange([saved], () => setItems(saved));
-  const [state, action, pending] = useActionState<ActionResult | null, FormData>(updateWalkEssentials, null);
+  const [state, action, pending] = useSafeActionState(updateWalkEssentials);
   useActionToast(state);
 
   const dirty = JSON.stringify(items) !== JSON.stringify(saved);

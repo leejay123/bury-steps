@@ -9,7 +9,7 @@ import { PrivacySiteSection } from "./privacy-site-section";
 import { LimitsSection } from "./limits-section";
 
 /** Bump this whenever the guide is updated. */
-export const GUIDE_LAST_UPDATED = "4 October 2026";
+export const GUIDE_LAST_UPDATED = "5 October 2026";
 
 export function OrganiserGuide({
   accidentReportRetentionDays,

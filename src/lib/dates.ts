@@ -309,6 +309,14 @@ export function formatWalkLength(mins: number): string {
   return `${hourPart} ${minPart}`;
 }
 
+/** Compact length for cards and countdowns: "45 min", "1 h", "2 h 30 min". */
+export function formatWalkLengthShort(mins: number): string {
+  if (mins < 60) return `${mins} min`;
+  const hours = Math.floor(mins / 60);
+  const rest = mins % 60;
+  return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
+}
+
 /** Day-granularity relative phrase: "today", "yesterday", "3 days ago", "in 2 days". */
 export function formatRelativeDays(at: DateInput, now: DateInput = new Date()): string {
   const from = londonYmd(now);

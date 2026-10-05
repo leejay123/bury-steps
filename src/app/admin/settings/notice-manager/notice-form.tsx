@@ -1,10 +1,9 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   addSiteNotice,
   updateSiteNotice,
-  type ActionResult,
 } from "@/server/actions";
 import {
   MAX_NOTICE_BELL_BODY,
@@ -16,6 +15,7 @@ import {
   type NoticeView,
 } from "@/lib/notices";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -183,10 +183,7 @@ export function AddNoticeForm({
   onPendingChange?: (pending: boolean) => void;
   onSaved: () => void;
 }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    addSiteNotice,
-    null,
-  );
+  const [state, action, isPending] = useSafeActionState(addSiteNotice);
   const formRef = useRef<HTMLFormElement>(null);
   useActionToast(state, () => {
     formRef.current?.reset();
@@ -216,10 +213,7 @@ export function EditNoticeForm({
   onPendingChange?: (pending: boolean) => void;
   onSaved: () => void;
 }) {
-  const [updateState, updateAction, isPending] = useActionState<ActionResult | null, FormData>(
-    updateSiteNotice,
-    null,
-  );
+  const [updateState, updateAction, isPending] = useSafeActionState(updateSiteNotice);
   useActionToast(updateState, onSaved);
   useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
 

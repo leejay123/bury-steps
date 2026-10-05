@@ -1,3 +1,5 @@
+import { formatWalkLengthShort } from "@/lib/dates";
+
 /** Clock-in opens 60 min before the start and closes when the walk is due to finish. */
 export const OPENS_BEFORE_MS = 60 * 60 * 1000;
 
@@ -144,7 +146,7 @@ export function formatInProgressCountdown(endsAt: Date, now: Date = new Date()):
     return `0:${secs.toString().padStart(2, "0")}`;
   }
   const mins = Math.floor(ms / 60_000);
-  return `${mins} min`;
+  return formatWalkLengthShort(mins);
 }
 
 /**

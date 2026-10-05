@@ -247,9 +247,11 @@ export function WalksSection({
             those rows one by one.
           </p>
           <p>
-            Download roster (CSV) gives you names, emails, times, and clock-out reasons — and,
-            for owners, any health notes for that walk, plus the emergency contact name and
-            phone. On a phone, the action buttons under the
+            Download roster (CSV) gives you names, emails, times, clock-out reasons, when each
+            person ticked the pre-walk check, and their emergency contact name and phone. Owners
+            also get any health notes for that walk. Someone you added with Add someone shows
+            “Not given” for the pre-walk check, because they never ticked it. The file is named
+            after the walk’s date and title. On a phone, the action buttons under the
             map (roster, calendar, Duplicate, Cancel or End walk, Edit, Remove) scroll sideways
             in one row.
           </p>

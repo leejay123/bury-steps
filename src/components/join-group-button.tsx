@@ -12,27 +12,30 @@ const loadMetalFx = () => (metalFxPromise ??= import("metal-fx").then((mod) => m
 
 export function JoinGroupButton({ href }: { href: string }) {
   // The silver shimmer is a WebGL effect — a large script and a shader to
-  // compile. Computers only (a mouse and hover): it's added on the first
-  // mouse move or key press, after the page has loaded. Phones keep the
-  // plain black button — preparing the effect on the first touch froze the
-  // page for about a second, so the tap that triggered it seemed to do
-  // nothing (and it costs battery).
+  // compile. Computers only (a mouse and hover): it's added once the page
+  // has loaded and the browser is idle. Phones keep the plain black button —
+  // preparing the effect on the first touch froze the page for about a
+  // second, so the tap that triggered it seemed to do nothing (and it costs
+  // battery). It used to start on the first mouse move, which put that
+  // ~100-170 ms setup right in the middle of someone moving the mouse.
   const [MetalFx, setMetalFx] = useState<MetalFxComponent | null>(null);
 
   useEffect(() => {
     if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
     let cancelled = false;
-    const events = ["mousemove", "keydown"] as const;
-    const start = () => {
-      for (const name of events) window.removeEventListener(name, start);
-      void loadMetalFx().then((component) => {
-        if (!cancelled) setMetalFx(() => component);
-      });
-    };
-    for (const name of events) window.addEventListener(name, start, { once: true, passive: true });
+    const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 2000));
+    const cancelIdle = window.cancelIdleCallback ?? window.clearTimeout;
+    const handle = idle(
+      () => {
+        void loadMetalFx().then((component) => {
+          if (!cancelled) setMetalFx(() => component);
+        });
+      },
+      { timeout: 4000 },
+    );
     return () => {
       cancelled = true;
-      for (const name of events) window.removeEventListener(name, start);
+      cancelIdle(handle);
     };
   }, []);
 

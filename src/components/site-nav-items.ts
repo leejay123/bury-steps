@@ -84,7 +84,8 @@ export function isNavItemActive(pathname: string, href: string) {
     return pathname === "/walks" || pathname.startsWith("/w/");
   }
   if (href === "/admin") {
-    return pathname === "/admin" || pathname.startsWith("/admin/walks");
+    // An organiser's Walks link: their walk tools and the walks themselves.
+    return pathname === "/admin" || pathname.startsWith("/admin/walks") || pathname.startsWith("/w/");
   }
   if (href === "/admin/settings") {
     return pathname.startsWith("/admin/settings") || pathname.startsWith("/admin/homepage");

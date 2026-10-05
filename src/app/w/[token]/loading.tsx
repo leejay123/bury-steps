@@ -1,26 +1,47 @@
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
+/**
+ * Shaped like the walk page itself (walk-share-status.tsx and walk-facts.tsx)
+ * — the back link and journey button, then the title card with its status
+ * bar, fact tiles, description and calendar button — so the real page drops
+ * into the same places instead of pushing everything down.
+ */
 export default function Loading() {
   return (
-    <div className="flex flex-col gap-6">
-      <Skeleton className="h-4 w-16" />
-      <div className="flex flex-col gap-3 rounded-lg border bg-muted/40 p-5">
-        <Skeleton className="h-4 w-56" />
-        <Skeleton className="h-4 w-full" />
-        <div className="flex gap-2">
-          <Skeleton className="h-9 w-36" />
-          <Skeleton className="h-9 w-20" />
-        </div>
+    <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-9 w-32" />
       </div>
-      <div className="flex flex-col gap-3 rounded-lg border p-5">
-        <div className="flex items-start justify-between gap-3">
-          <Skeleton className="h-6 w-2/3" />
-        </div>
-        <Skeleton className="h-4 w-40" />
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-4 w-48" />
-        <Skeleton className="h-4 w-full" />
-      </div>
+
+      <Card className="gap-4">
+        <CardHeader>
+          <div className="flex w-full min-w-0 flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+            <Skeleton className="h-5 w-2/3 max-w-sm" />
+            <Skeleton className="h-6 w-full rounded-md sm:w-32" />
+          </div>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div className="@container">
+            <div className="grid grid-cols-2 gap-2 @lg:grid-cols-3 @3xl:grid-cols-4">
+              {Array.from({ length: 6 }, (_, i) => (
+                <div className="flex flex-col gap-1.5 rounded-lg bg-muted/60 px-3 py-2.5" key={i}>
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-11/12" />
+            <Skeleton className="h-4 w-2/3" />
+          </div>
+          <Skeleton className="h-8 w-32" />
+        </CardContent>
+      </Card>
+
       <div className="flex flex-col gap-3 rounded-lg border p-5">
         <Skeleton className="h-4 w-28" />
         <Skeleton className="h-64 w-full" />

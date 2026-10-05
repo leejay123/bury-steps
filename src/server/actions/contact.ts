@@ -26,12 +26,6 @@ export async function submitContactMessage(
     return { ok: true, message: "Thanks — we'll get back to you soon." };
   }
 
-  const key = await requesterIpKey();
-  const limited = checkRateLimit(`${key}:submitContactMessage`, 3, 10 * 60_000);
-  if (!limited.ok) {
-    return { ok: false, error: "Too many messages sent. Try again in a few minutes." };
-  }
-
   const name = parseContactName(String(formData.get("name") ?? ""));
   const email = parseContactEmail(String(formData.get("email") ?? ""));
   const phone = parseContactPhone(String(formData.get("phone") ?? ""));
@@ -41,6 +35,14 @@ export async function submitContactMessage(
   if (phone === "invalid") return { ok: false, error: "Enter a valid phone number, or leave it blank." };
   if (message === "invalid") {
     return { ok: false, error: "Message needs to be at least 10 characters." };
+  }
+
+  // Counted only for messages that would actually be sent: a typo (say, a
+  // too-short message) used to use up one of the three sends.
+  const key = await requesterIpKey();
+  const limited = checkRateLimit(`${key}:submitContactMessage`, 3, 10 * 60_000);
+  if (!limited.ok) {
+    return { ok: false, error: "Too many messages sent. Try again in a few minutes." };
   }
 
   try {

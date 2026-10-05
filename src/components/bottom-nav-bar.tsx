@@ -49,7 +49,7 @@ const ICONS: Record<string, LucideIcon> = {
   Guide: BookOpen,
   // The More sheet's account and site links.
   "Email preferences": Mail,
-  "Contact Us": MessageCircle,
+  "Contact us": MessageCircle,
   "Facebook group": Facebook,
   "Walking apps": Smartphone,
   "Privacy Policy": ShieldCheck,
@@ -157,7 +157,7 @@ const tabClass = (active: boolean) =>
  * focus so the phone keyboard doesn't push it up over the form. Fixed to
  * the bottom with the iPhone home indicator's safe area underneath; a
  * spacer the same height keeps it off
- * the footer, and globals.css (html:has([data-bottom-nav])) lifts the
+ * the footer, and globals.css (html[data-phone-menu="bottom"]) lifts the
  * back-to-top button, cookie banner and toasts above it.
  */
 export function BottomNavBar({

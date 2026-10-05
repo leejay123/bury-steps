@@ -250,9 +250,16 @@ export function AdminWalkTable({
                       {formatTime(new Date(walk.startsAt))}
                       {walk.location ? ` · ${walk.location}` : ""}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {walk.attendanceCount} {attendanceLabel.toLowerCase()}
-                    </p>
+                    {/* Nobody yet on a walk that may not have started says
+                        nothing useful, so it's left off. */}
+                    {scope === "upcoming" && walk.attendanceCount === 0 ? null : (
+                      <p className="text-xs text-muted-foreground">
+                        {walk.attendanceCount}{" "}
+                        {walk.attendanceCount === 1 && attendanceLabel === "Clock-ins"
+                          ? "clock-in"
+                          : attendanceLabel.toLowerCase()}
+                      </p>
+                    )}
                   </DataListBody>
                   <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                 </DataListItemMain>

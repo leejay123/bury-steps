@@ -43,7 +43,7 @@ async function NoticesForMember() {
  * frame as the page, so nothing jumps. Same idea as the organiser pages. */
 function NoticesFallback() {
   return (
-    <div aria-busy="true" className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
+    <div data-page-loading="" aria-busy="true" className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
       <div className="flex flex-col gap-3 px-4 py-6 md:px-6">
         <h1 className="text-lg font-semibold tracking-tight">Notices</h1>
         <p className="max-w-2xl text-sm text-muted-foreground md:text-base">

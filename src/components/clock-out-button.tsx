@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
-import { clockOut, type ActionResult } from "@/server/actions";
-import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
+import { clockOut } from "@/server/actions";
+import { preventDismissWhilePending, useNotifyActionState } from "@/hooks/use-action-toast";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -29,13 +29,11 @@ function Confirm({ disabled }: { disabled: boolean }) {
 }
 
 export function ClockOutButton({ token }: { token: string }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    clockOut,
-    null,
-  );
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
-  useActionToast(state, () => {
+  // Success swaps this button out of the page, so the toast has to fire as
+  // the server answers — an effect afterwards would never run.
+  const [state, action, isPending] = useNotifyActionState(clockOut, () => {
     setOpen(false);
     setReason("");
   });

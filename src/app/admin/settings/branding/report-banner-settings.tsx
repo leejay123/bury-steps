@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { updateReportBanner, type ActionResult } from "@/server/actions";
+import { updateReportBanner } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { Label } from "@/components/ui/label";
@@ -21,7 +22,7 @@ function Submit({ disabled }: { disabled: boolean }) {
 }
 
 export function ReportBannerSettings({ reportBannerSrc }: { reportBannerSrc: string | null }) {
-  const [state, action] = useActionState<ActionResult | null, FormData>(updateReportBanner, null);
+  const [state, action] = useSafeActionState(updateReportBanner);
   const formRef = useRef<HTMLFormElement>(null);
   const [dirty, setDirty] = useState(false);
   useActionToast(state, () => formRef.current?.reset());

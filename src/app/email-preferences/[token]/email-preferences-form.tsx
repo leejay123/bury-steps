@@ -1,13 +1,13 @@
 "use client";
 
-import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { FormError } from "@/components/form-error";
-import { updateMemberEmailPreferences, type ActionResult } from "@/server/actions";
+import { updateMemberEmailPreferences } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { EMAIL_PREFERENCE_OPTIONS, type EmailPreferences } from "@/lib/email-preferences";
 
 function SaveButton() {
@@ -24,10 +24,7 @@ export function EmailPreferencesForm({
   isAdmin,
   ...prefs
 }: EmailPreferences & { token: string; isAdmin: boolean }) {
-  const [state, action] = useActionState<ActionResult | null, FormData>(
-    updateMemberEmailPreferences,
-    null,
-  );
+  const [state, action] = useSafeActionState(updateMemberEmailPreferences);
   useActionToast(state);
 
   const options = EMAIL_PREFERENCE_OPTIONS.filter((option) => !option.adminOnly || isAdmin);

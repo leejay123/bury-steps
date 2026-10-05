@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import { DescriptionText } from "@/components/description-text";
 import Link from "next/link";
@@ -38,7 +39,9 @@ export default async function NoticeDetailPage({
   if (!notice || !notice.pageBody) notFound();
 
   return (
-    <article className="flex w-full flex-col gap-6 px-4 py-8 md:px-6">
+    // No padding of its own: <main> already gives every page its frame, and
+    // this used to sit further in and lower than every other page.
+    <article className="flex w-full flex-col gap-6">
       <MarkNoticeReadOnView noticeId={notice.id} />
       <Link className="text-sm text-muted-foreground hover:text-foreground" href="/notices">
         ← All notices
@@ -50,12 +53,20 @@ export default async function NoticeDetailPage({
             {noticeDateLabel(notice)}
           </time>
         </div>
-        <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{notice.title}</h1>
+        <h1 className="text-3xl font-semibold tracking-tight wrap-break-word md:text-4xl">{notice.title}</h1>
         {notice.body ? (
-          <p className="text-intro text-muted-foreground">{notice.body}</p>
+          <p className="text-intro text-muted-foreground wrap-break-word">{notice.body}</p>
         ) : null}
       </header>
-      <DescriptionText className="typeset typeset-docs block max-w-[90ch]" text={notice.pageBody} />
+      {/* The site's own font, like the title above it: the docs preset's
+          Geist only started loading once this text appeared, so the
+          article reflowed as it swapped in, and mixed two typefaces. */}
+      <div
+        className="typeset typeset-docs max-w-[90ch]"
+        style={{ "--typeset-font-body": "inherit" } as CSSProperties}
+      >
+        <DescriptionText className="block" text={notice.pageBody} />
+      </div>
     </article>
   );
 }

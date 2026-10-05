@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
-import { resetSiteToDefault, type ActionResult } from "@/server/actions";
+import { resetSiteToDefault } from "@/server/actions";
 import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,10 +36,7 @@ function ConfirmReset({ enabled }: { enabled: boolean }) {
 }
 
 export function ResetSiteForm() {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    resetSiteToDefault,
-    null,
-  );
+  const [state, action, isPending] = useSafeActionState(resetSiteToDefault);
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState("");
   useActionToast(state, () => {

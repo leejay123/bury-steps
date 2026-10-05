@@ -23,7 +23,7 @@ import {
 } from "@/lib/walk-window";
 import { conditionsPurgeAfterFromStartsAt } from "@/lib/conditions-retention";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { walkShareUrl } from "@/lib/walk-slug";
+import { renamedWalkSlug, walkShareUrl } from "@/lib/walk-slug";
 import { allocateWalkSlug } from "@/lib/walk-slug-server";
 import { appUrl } from "@/lib/urls";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
@@ -53,16 +53,20 @@ import { getSiteTheme } from "@/lib/site-theme";
 const makeToken = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 12);
 
 const walkDetailsSchema = z.object({
-  title: z.string().trim().min(3, "Give the walk a title of at least 3 characters.").max(120),
-  description: z.string().trim().max(2000).optional(),
-  distance: z.string().trim().max(60).optional(),
-  grade: z.string().trim().max(60).optional(),
-  elevationGain: z.string().trim().max(60).optional(),
-  walkLeader: z.string().trim().max(100).optional(),
-  backMarker: z.string().trim().max(100).optional(),
-  location: z.string().trim().max(200).optional(),
-  postcode: z.string().trim().max(10).optional(),
-  what3words: z.string().trim().max(120).optional(),
+  title: z
+    .string()
+    .trim()
+    .min(3, "Give the walk a title of at least 3 characters.")
+    .max(120, "Keep the title to 120 characters or fewer."),
+  description: z.string().trim().max(2000, "Keep the description to 2,000 characters or fewer.").optional(),
+  distance: z.string().trim().max(60, "Keep the distance to 60 characters or fewer.").optional(),
+  grade: z.string().trim().max(60, "Keep the grade to 60 characters or fewer.").optional(),
+  elevationGain: z.string().trim().max(60, "Keep the elevation gain to 60 characters or fewer.").optional(),
+  walkLeader: z.string().trim().max(100, "Keep the walk leader to 100 characters or fewer.").optional(),
+  backMarker: z.string().trim().max(100, "Keep the back marker to 100 characters or fewer.").optional(),
+  location: z.string().trim().max(200, "Keep the meeting point to 200 characters or fewer.").optional(),
+  postcode: z.string().trim().max(10, "Keep the postcode to 10 characters or fewer.").optional(),
+  what3words: z.string().trim().max(120, "Keep the what3words address to 120 characters or fewer.").optional(),
   startsAt: z.string().min(16, "Choose a date and time."),
   durationMins: z.coerce.number().int().min(15).max(600),
 });
@@ -736,7 +740,10 @@ export async function updateWalk(
             latitude: pin.latitude,
             longitude: pin.longitude,
             what3words: what3words.value,
-            slug,
+            // Same code as before, so the links already posted keep working
+            // (they redirect to the new name). Only very old walks without
+            // a slug get a fresh one.
+            slug: locked.slug ? renamedWalkSlug(locked.slug, parsed.data.title) : slug,
             ...(shouldReopen ? { cancelledAt: null, cancelledReason: null } : {}),
           },
           select: { token: true, slug: true },

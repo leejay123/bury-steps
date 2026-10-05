@@ -111,7 +111,8 @@ export function HomepageNoticesSection() {
             <p className="font-medium text-foreground">One-time Walks popup</p>
             <p>
               New members (no clock-ins yet) also see a one-time popup on Walks that explains find
-              a walk, clock in, and clock out. Organisers never land on that page, so use{" "}
+              a walk, clock in, and that clocking out is only for leaving early (staying to the end
+              needs nothing else). Organisers never land on that page, so use{" "}
               <strong>Preview welcome dialog</strong> at the top of Notices settings to check it.
               The preview does not change whether a real member has already dismissed theirs.
             </p>

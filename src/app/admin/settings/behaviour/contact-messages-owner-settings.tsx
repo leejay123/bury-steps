@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
-import { updateContactMessagesOwner, type ActionResult } from "@/server/actions";
+import { updateContactMessagesOwner } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -31,10 +32,7 @@ export function ContactMessagesOwnerSettings({
 }) {
   const initial = currentOwnerId ?? NO_ONE;
   const [ownerId, setOwnerId] = useState(initial);
-  const [state, action] = useActionState<ActionResult | null, FormData>(
-    updateContactMessagesOwner,
-    null,
-  );
+  const [state, action] = useSafeActionState(updateContactMessagesOwner);
   useActionToast(state);
 
   useResetOnChange([initial], () => setOwnerId(initial));

@@ -37,6 +37,9 @@ export function NotificationBell({
   const [unread, setUnread] = useState(unreadIds);
   const [pending, setPending] = useState(false);
   const scrollToNoticeIdRef = useRef<string | null>(null);
+  // Opened from a Latest notices card: focus goes back to that card on
+  // close, not to this bell up in the header.
+  const returnFocusRef = useRef<HTMLElement | null>(null);
   const pathname = usePathname();
 
   useResetOnChange([unreadIds], () => setUnread(unreadIds));
@@ -61,6 +64,7 @@ export function NotificationBell({
   useEffect(() => {
     function onOpenFromCarousel(event: Event) {
       const noticeId = (event as CustomEvent<OpenMemberNoticeBellDetail>).detail?.noticeId;
+      returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       if (noticeId) {
         scrollToNoticeIdRef.current = noticeId;
         setUnread((current) => (current.includes(noticeId) ? current.filter((id) => id !== noticeId) : current));
@@ -139,11 +143,17 @@ export function NotificationBell({
           size="sm"
         />
       </DrawerTrigger>
-      <DrawerContent>
+      <DrawerContent
+        finalFocus={() => {
+          const card = returnFocusRef.current;
+          returnFocusRef.current = null;
+          return card?.isConnected ? card : true;
+        }}
+      >
         {/* mb-0: the header's default bottom margin left a white strip above
             the first notice, visible when it's hovered. */}
         <DrawerHeader className="mb-0 border-b px-5 pb-4 pr-14 pt-5">
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <DrawerTitle>Notices</DrawerTitle>
               <DrawerDescription className="sr-only">
@@ -226,7 +236,8 @@ export function NotificationBell({
             })}
           </div>
         )}
-        <DrawerFooter className="border-t px-5 py-4">
+        {/* Clear of the iPhone home indicator, like the More sheet. */}
+        <DrawerFooter className="border-t px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <Button asChild className="w-full" size="sm" variant="outline">
             <Link href="/notices" onClick={() => setOpen(false)}>
               Browse all notices

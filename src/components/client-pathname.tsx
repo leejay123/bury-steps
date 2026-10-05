@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, Suspense, useContext, useLayoutEffect, useState, type ReactNode } from "react";
+import { createContext, startTransition, Suspense, useContext, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
 /**
@@ -30,8 +30,20 @@ export function ClientPathnameProvider({ children }: { children: ReactNode }) {
 
 function PathnameWatcher({ onChange }: { onChange: (pathname: string) => void }) {
   const pathname = usePathname();
+  const known = useRef(false);
   useLayoutEffect(() => {
-    onChange(pathname);
+    if (known.current) {
+      // Page changes: straight away, so page animations start on time.
+      onChange(pathname);
+      return;
+    }
+    known.current = true;
+    // The first one lands while the page is still hydrating. As an urgent
+    // update it made React throw away server HTML that hadn't hydrated yet
+    // (the header avatar, waiting on Clerk's code) and redraw it empty, so
+    // the header's right side jumped about on every load. As a transition,
+    // React keeps that HTML and finishes hydrating it first.
+    startTransition(() => onChange(pathname));
   }, [onChange, pathname]);
   return null;
 }

@@ -1,14 +1,13 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CalendarDays, ChevronRight, Clock, MapPin, Search, SearchX } from "lucide-react";
-import { formatDateTime, formatTime } from "@/lib/dates";
+import { formatTime, formatWalkDate, formatWalkDay, formatWalkLengthShort } from "@/lib/dates";
 import { InlineDescriptionText } from "@/components/description-text";
 import { walkSharePath } from "@/lib/walk-slug";
-import { cn } from "@/lib/utils";
-import { walkStatus, windowState, type WalkStatus, type WindowState } from "@/lib/walk-window";
+import { walkOpensAt, walkStatus, windowState, type WalkStatus, type WindowState } from "@/lib/walk-window";
 import { WalkStatusHeader } from "@/components/walk-status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,17 +48,18 @@ export type UpcomingWalkCard = {
   memberCount: number;
 };
 
+/** Only shown while you're clocked in, so the count always includes you. */
 function walkMemberCountLabel(count: number) {
-  if (count === 0) return "No one else has clocked in yet.";
-  if (count === 1) return "1 person is on this walk.";
-  return `${count} people are on this walk.`;
+  if (count <= 1) return "Just you so far.";
+  if (count === 2) return "You and 1 other person are on this walk.";
+  return `You and ${count - 1} others are on this walk.`;
 }
 
 function walkLinkLabel(walk: UpcomingWalkCard, state: WindowState) {
   if (walk.clockedInAt) return `${walk.title} — view walk details`;
   if (state === "open") return `${walk.title} — clock in`;
   if (state === "closed") return `${walk.title} — view walk details`;
-  return `${walk.title} — open pre-walk check`;
+  return `${walk.title} — view walk details`;
 }
 
 function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
@@ -97,7 +97,9 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
       */}
       <Link
         aria-label={walkLinkLabel(walk, state)}
-        className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        // Inset: the card clips anything drawn outside it (overflow-hidden),
+        // which hid an outside ring completely from keyboard users.
+        className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
         href={walkSharePath(walk)}
       />
       <CardHeader className="flex flex-row items-start justify-between gap-3">
@@ -106,7 +108,7 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
           <CardDescription className="flex flex-col gap-1">
             <span className="inline-flex items-center gap-1.5">
               <Clock aria-hidden="true" className="size-3.5" />
-              {formatTime(new Date(walk.startsAt))} · {walk.durationMins} min
+              {formatTime(new Date(walk.startsAt))} · {formatWalkLengthShort(walk.durationMins)}
             </span>
             {walk.location ? (
               <span className="inline-flex items-center gap-1.5">
@@ -124,23 +126,25 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
             <InlineDescriptionText text={walk.description} />
           </p>
         ) : null}
-        {!walk.clockedInAt && state !== "closed" ? (
+        {!walk.clockedInAt && state === "open" ? (
           // Purely visual — the stretched link above already goes to
           // this same destination, so this isn't a second real button.
           <span
             aria-hidden="true"
-            className={cn(
-              "inline-flex h-9 w-fit items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-xs",
-              state === "too-early" && "opacity-50",
-            )}
+            className="inline-flex h-9 w-fit items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-xs"
           >
-            {state === "open" ? "Clock in" : "Open pre-walk check"}
+            Clock in
           </span>
+        ) : !walk.clockedInAt && state === "too-early" ? (
+          <p className="text-sm text-muted-foreground">
+            Clock-in opens at {formatTime(walkOpensAt(new Date(walk.startsAt)))} on{" "}
+            {formatWalkDay(walkOpensAt(new Date(walk.startsAt)))}.
+          </p>
         ) : null}
         {walk.clockedInAt ? (
           <div className="flex flex-col gap-1.5">
             <p className="text-sm text-muted-foreground">
-              Clocked in at {formatDateTime(new Date(walk.clockedInAt))}
+              Clocked in at {formatWalkDate(walk.clockedInAt)}
             </p>
             {/* No clock-out button here on purpose — clocking out is a
             deliberate action, so it only lives on the walk's own page
@@ -158,6 +162,7 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
 
 export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const deferredSearchTerm = useDeferredValue(searchTerm);
@@ -235,6 +240,8 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
   function clearFilters() {
     setSearchTerm("");
     setStatusFilter("all");
+    // The button disappears with the empty state; keep keyboard focus useful.
+    searchRef.current?.focus();
   }
 
   const hasActiveFilters = deferredSearchTerm.trim() !== "" || statusFilter !== "all";
@@ -258,6 +265,7 @@ export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
         <InputGroup className="w-full min-w-0 sm:flex-1">
           <InputGroupInput
             aria-label="Search walks"
+            ref={searchRef}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Search by walk or meeting point…"
             value={searchTerm}

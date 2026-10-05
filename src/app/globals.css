@@ -541,6 +541,16 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
   }
 }
 
+/* While a page's own loading placeholder is up (data-page-loading on each
+   loading.tsx and page-level fallback), keep the footer out of sight. A
+   placeholder is usually shorter than the page it stands in for, so the
+   footer sat on screen at the bottom of it and was then shoved off the
+   bottom when the page arrived — on desktop, the biggest layout jump on the
+   organiser pages. Hidden, it simply appears in its final place. */
+html:has(main [data-page-loading]) footer[data-site-footer] {
+  visibility: hidden;
+}
+
 /* Announcement bar: hidden before first paint when the pre-paint script
    says this page or visitor shouldn't see it (see announcement-banner.tsx). */
 html[data-announcement-hide] [data-slot="sticky-banner"] {
@@ -550,9 +560,12 @@ html[data-announcement-hide] [data-slot="sticky-banner"] {
 
 /* Phone bottom navigation (bottom-nav-bar.tsx): its height, including the
    iPhone home indicator, so the page spacer, back-to-top button, cookie
-   banner and toasts all sit above it. Zero when there's no bar. */
+   banner and toasts all sit above it. Zero when there's no bar.
+   Keyed on the setting (data-phone-menu, set by the root layout) rather
+   than on the bar itself: the bar streams in after the header, and waiting
+   for it drew the logo in the middle and then jumped it to the left. */
 @media (width < 48rem) {
-  html:has([data-bottom-nav]) {
+  html[data-phone-menu="bottom"] {
     --bottom-nav-offset: calc(3.75rem + env(safe-area-inset-bottom));
   }
 }
@@ -561,10 +574,10 @@ html[data-announcement-hide] [data-slot="sticky-banner"] {
    second copy of the same pages — hide it there, and move the logo into its
    place on the left (Settings → Site behaviour → Phone menu). */
 @media (width < 48rem) {
-  html:has([data-bottom-nav]) [data-mobile-nav] {
+  html[data-phone-menu="bottom"] [data-mobile-nav] {
     display: none;
   }
-  html:has([data-bottom-nav]) [data-site-logo-cell] {
+  html[data-phone-menu="bottom"] [data-site-logo-cell] {
     grid-column-start: 1;
     justify-content: flex-start;
   }

@@ -58,7 +58,11 @@ export function MeetingPointFields({
   function applyCoordsInput(raw: string) {
     const trimmed = raw.trim();
     if (!trimmed) {
+      // Emptying the box takes the pin off (the saved walk then falls back
+      // to looking up the meeting point, if there is one).
       setCoordsError(null);
+      setPickedId(null);
+      setPin(null);
       return;
     }
     const match = trimmed.match(/^(-?\d+(?:\.\d+)?)[,\s]+(-?\d+(?:\.\d+)?)$/);

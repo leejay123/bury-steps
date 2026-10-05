@@ -5,6 +5,8 @@ import type React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertCircle, ChevronRight, Search } from "lucide-react";
+import { toast } from "sonner";
+import { ACTION_NETWORK_ERROR } from "@/lib/action-errors";
 import { formatDate, formatMembershipAge, formatRelativeDays } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { initials } from "@/lib/names";
@@ -403,7 +405,15 @@ export function MembersTable({
     const handle = setTimeout(
       () => {
         startTransition(async () => {
-          const result = await searchMembers({ needsAttention, page, query, role: roleFilter, sort });
+          // A failed lookup keeps the current rows and says so, instead of
+          // throwing to the error page.
+          const result = await searchMembers({ needsAttention, page, query, role: roleFilter, sort }).catch(
+            () => null,
+          );
+          if (!result) {
+            toast.error(ACTION_NETWORK_ERROR);
+            return;
+          }
           setRows(result.rows.map((row) => ({ ...row, isYou: row.id === viewerId })));
           setTotal(result.total);
         });

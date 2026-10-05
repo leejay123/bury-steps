@@ -93,8 +93,8 @@ export function PrivacySiteSection() {
               in a large list that starts right under the header, over a heavy blur of the page
               behind (no white tint), and the page behind stays still until you
               close it or pick a page. Signed-in people also get a <strong>search</strong> next to the
-              bell (a search bar on a computer, a magnifying-glass icon on a phone, or ⌘K /
-              Ctrl+K), that finds
+              bell (a search bar on a computer, a magnifying-glass icon on a phone or tablet, or
+              ⌘K on a Mac / Ctrl+K elsewhere), that finds
               pages, walks, notices and FAQs — organisers also find the settings their permissions
               allow. It opens on the main pages; type to see up to five matches per section, split into
               upcoming and recent walks, notices, FAQs by category, and settings by area. Walks show
@@ -119,7 +119,7 @@ export function PrivacySiteSection() {
               Notices means there’s one you haven’t read. The list is split under small labels:
               Menu for the main pages, Manage for the admin pages (owners and organisers only),
               Account for History and
-              email preferences, and More for Contact Us, the Facebook group, the Privacy Policy,
+              email preferences, and More for Contact us, the Facebook group, the Privacy Policy,
               and the Terms of Service. Visitors who aren’t signed in see Home, Sign in, Join the
               group, and the More links.
             </p>

@@ -2,11 +2,13 @@
 
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Footprints, Search } from "lucide-react";
-import { formatTime, londonYear } from "@/lib/dates";
+import { ChevronRight, Footprints, Search, SearchX } from "lucide-react";
+import { formatTime, formatWalkLengthShort, londonYear } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/empty-state";
 import { ListPagination } from "@/components/list-pagination";
+import { Button } from "@/components/ui/button";
+import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { WalkStatusHeader } from "@/components/walk-status-badge";
 import { usePagedList } from "@/hooks/use-paged-list";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
@@ -42,6 +44,15 @@ export function AllWalksList({ rows }: { rows: AllWalksRow[] }) {
   const [yearFilter, setYearFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const listRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  function clearFilters() {
+    setQuery("");
+    setStatusFilter("all");
+    setYearFilter("all");
+    // The button disappears with the empty state; keep keyboard focus useful.
+    searchRef.current?.focus();
+  }
 
   const availableYears = useMemo(() => {
     const years = new Set<number>();
@@ -92,6 +103,7 @@ export function AllWalksList({ rows }: { rows: AllWalksRow[] }) {
         <InputGroup className="w-full min-w-0 sm:flex-1">
           <InputGroupInput
             aria-label="Search all walks"
+            ref={searchRef}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search by walk or meeting point…"
             value={query}
@@ -134,11 +146,21 @@ export function AllWalksList({ rows }: { rows: AllWalksRow[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState
-          description="Try a different search, status, or year."
-          icon={Search}
-          title="No matching walks"
-        />
+        // Same empty state as the Upcoming tab, with a way back to every walk.
+        <Empty className="border">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Search />
+            </EmptyMedia>
+            <EmptyTitle>No walks match your search</EmptyTitle>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button onClick={clearFilters} type="button" variant="outline">
+              <SearchX data-icon="inline-start" />
+              Clear search
+            </Button>
+          </EmptyContent>
+        </Empty>
       ) : (
         <>
           <div className="flex flex-col divide-y overflow-hidden rounded-xl border">
@@ -173,7 +195,7 @@ export function AllWalksList({ rows }: { rows: AllWalksRow[] }) {
                       ) : null}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {formatTime(startsAt)} · {row.durationMins} min
+                      {formatTime(startsAt)} · {formatWalkLengthShort(row.durationMins)}
                       {row.location ? ` · ${row.location}` : ""}
                     </p>
                     {row.cancelledAt
@@ -186,9 +208,11 @@ export function AllWalksList({ rows }: { rows: AllWalksRow[] }) {
                         )
                       : (
                           <p className="text-sm text-muted-foreground">
-                            {row.attendanceCount === 1
-                              ? "1 person attended"
-                              : `${row.attendanceCount} people attended`}
+                            {row.attendanceCount === 0
+                              ? "No one attended"
+                              : row.attendanceCount === 1
+                                ? "1 person attended"
+                                : `${row.attendanceCount} people attended`}
                           </p>
                         )}
                   </div>

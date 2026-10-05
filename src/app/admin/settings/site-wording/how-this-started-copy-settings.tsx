@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { ChevronRight } from "lucide-react";
-import { updateHowThisStartedCopy, type ActionResult } from "@/server/actions";
+import { updateHowThisStartedCopy } from "@/server/actions";
 import { useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
 import { useControlledDrawerDismissGuard } from "@/hooks/use-controlled-drawer";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import {
@@ -143,10 +144,7 @@ export function HowThisStartedCopySettings({
   const [body, setBody] = useState(howThisStartedBody);
   const [bodyDrawerOpen, setBodyDrawerOpen] = useState(false);
   const { openSoon, onPointerDownOutside } = useControlledDrawerDismissGuard();
-  const [state, action] = useActionState<ActionResult | null, FormData>(
-    updateHowThisStartedCopy,
-    null,
-  );
+  const [state, action] = useSafeActionState(updateHowThisStartedCopy);
   useActionToast(state);
 
   useResetOnChange(

@@ -30,6 +30,9 @@ export default function DashboardPage() {
         <p className="text-sm text-muted-foreground">
           Upcoming walks you can clock in to. Cancelled walks are in All walks, alongside completed
           ones. Past walks you attended are in History.
+        </p>
+        {/* Its own line, held open while it loads, so arriving doesn't push the list down. */}
+        <p className="min-h-5 text-sm text-muted-foreground">
           <Suspense fallback={null}>
             <MemberSince />
           </Suspense>
@@ -46,7 +49,6 @@ async function MemberSince() {
   const user = await requireUser();
   return (
     <>
-      {" "}
       Member since {formatDate(user.createdAt)} · {formatMembershipAge(user.createdAt)}.
     </>
   );
@@ -241,11 +243,20 @@ async function WalksBody({ user }: { user: User }) {
   );
 }
 
-/** Same shape as the Tabs bar and walk cards that replace it. */
+/** Same shape as the Tabs bar, search and filters, and walk cards that replace it. */
 function WalksListSkeleton() {
   return (
-    <div className="flex flex-col gap-4">
+    <div data-page-loading="" className="flex flex-col gap-4">
       <Skeleton className="h-9 w-56 rounded-lg" />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <Skeleton className="h-9 w-full sm:flex-1" />
+        {[0, 1].map((i) => (
+          <div className="flex shrink-0 flex-col gap-1.5" key={i}>
+            <Skeleton className="h-3.5 w-12" />
+            <Skeleton className="h-9 w-full sm:w-[11rem]" />
+          </div>
+        ))}
+      </div>
       {[0, 1, 2].map((i) => (
         <div className="overflow-hidden rounded-xl border" key={i}>
           <div className="h-7 border-b bg-muted/60" />

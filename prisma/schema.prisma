@@ -169,7 +169,8 @@ model Attendance {
   /// Why they clocked out. Visible to organisers only.
   clockedOutReason String?
   /// When the member gave explicit consent to store health information.
-  medicalAckAt     DateTime
+  /// Null when an organiser added the person (they never ticked the check).
+  medicalAckAt     DateTime?
 
   /// UK GDPR Art. 9 special category data. Nullable — members may leave it blank.
   conditions           String?

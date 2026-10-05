@@ -29,8 +29,9 @@ const STEPS = [
   },
   {
     icon: LogOut,
-    title: "Clock out when you leave",
-    description: "Open the walk again and tap Clock out. It's a separate step, so it's never by accident.",
+    title: "Leaving early? Clock out",
+    description:
+      "Staying to the end? There's nothing else to do. Only if you leave before the walk finishes, open it again and tap Clock out.",
   },
 ];
 
@@ -117,7 +118,9 @@ export function MemberWelcomeDialog({
     } catch {
       // Ignore — the account flag below is what actually sticks.
     }
-    void dismissMemberWelcome();
+    // Best effort: if it doesn't reach the server, the browser copy above
+    // still keeps this closed here.
+    dismissMemberWelcome().catch(() => {});
   }
 
   return (

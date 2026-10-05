@@ -23,7 +23,7 @@ const BASE_TILES: BentoTile[] = [
   },
   {
     title: "Track your progress",
-    description: "Your monthly goal and how many walks you've done.",
+    description: "How many walks you've done, and the group goal when there is one.",
     icon: <LineChart />,
     href: "/progress",
   },
@@ -35,7 +35,7 @@ const BASE_TILES: BentoTile[] = [
   },
   {
     title: "Your walk history",
-    description: "Every walk you've clocked into, past and present.",
+    description: "Every walk you've clocked in to.",
     icon: <History />,
     href: "/history",
   },

@@ -63,6 +63,13 @@ export function WalkFormFields({
 }) {
   const id = (name: string) => `${idPrefix}-${name}`;
   const essentials = useWalkEssentials();
+  // A walk saved with a length that isn't one of the presets (an older walk,
+  // or one changed elsewhere) keeps it as a choice instead of a blank box.
+  const savedLength = defaults?.durationMins;
+  const lengthOptions =
+    savedLength && !WALK_LENGTH_OPTIONS.includes(savedLength)
+      ? [...WALK_LENGTH_OPTIONS, savedLength].sort((a, b) => a - b)
+      : WALK_LENGTH_OPTIONS;
 
   return (
     <div className="flex flex-col gap-6">
@@ -73,6 +80,8 @@ export function WalkFormFields({
         <Input
           defaultValue={defaults?.title}
           id={id("title")}
+          maxLength={120}
+          minLength={3}
           name="title"
           placeholder="Burrs Country Park loop"
           required
@@ -107,7 +116,7 @@ export function WalkFormFields({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {WALK_LENGTH_OPTIONS.map((mins) => (
+                {lengthOptions.map((mins) => (
                   <SelectItem key={mins} value={String(mins)}>
                     {walkLengthLabel(mins)}
                   </SelectItem>
@@ -142,6 +151,7 @@ export function WalkFormFields({
             <Input
               defaultValue={defaults?.distance ?? ""}
               id={id("distance")}
+              maxLength={60}
               name="distance"
               placeholder="8.8 km (5.5 miles)"
             />
@@ -151,6 +161,7 @@ export function WalkFormFields({
             <Input
               defaultValue={defaults?.elevationGain ?? ""}
               id={id("elevationGain")}
+              maxLength={60}
               name="elevationGain"
               placeholder="213 m"
             />
@@ -162,6 +173,8 @@ export function WalkFormFields({
                 <SelectValue placeholder="Not specified" />
               </SelectTrigger>
               <SelectContent>
+                {/* So a grade set by mistake can be taken off again. */}
+                <SelectItem value="">Not specified</SelectItem>
                 {WALK_GRADE_OPTIONS.map((grade) => (
                   <SelectItem key={grade} value={grade}>
                     {grade}
@@ -175,6 +188,7 @@ export function WalkFormFields({
             <Input
               defaultValue={defaults?.walkLeader ?? ""}
               id={id("walkLeader")}
+              maxLength={100}
               name="walkLeader"
               placeholder="Glyn Beckwith"
             />
@@ -184,6 +198,7 @@ export function WalkFormFields({
             <Input
               defaultValue={defaults?.backMarker ?? ""}
               id={id("backMarker")}
+              maxLength={100}
               name="backMarker"
               placeholder="TBA"
             />

@@ -1,6 +1,6 @@
 "use client";
 
-import { formatDate, formatTime } from "@/lib/dates";
+import { formatTime, formatWalkDay } from "@/lib/dates";
 import {
   canAddWalkToCalendar,
   walkOpensAt,
@@ -25,6 +25,7 @@ export function WalkShareStatusChrome({
   attended,
   backMarker,
   cancelledAt,
+  cancelledReason = null,
   description,
   distance,
   durationMins,
@@ -44,6 +45,8 @@ export function WalkShareStatusChrome({
   attended: boolean;
   backMarker: string | null;
   cancelledAt: string | null;
+  /** What the organiser typed when cancelling, if anything. */
+  cancelledReason?: string | null;
   description: string | null;
   distance: string | null;
   durationMins: number;
@@ -80,13 +83,16 @@ export function WalkShareStatusChrome({
       {status === "cancelled" ? (
         <Alert variant="destructive">
           <AlertTitle>This walk has been cancelled</AlertTitle>
-          <AlertDescription>Check the walks list for the next one.</AlertDescription>
+          <AlertDescription>
+            {cancelledReason?.trim() ? `${cancelledReason.trim().replace(/[.!]?$/, ".")} ` : ""}
+            Check the walks list for the next one.
+          </AlertDescription>
         </Alert>
       ) : completed && !signedIn ? (
         <Alert variant="info">
           <AlertTitle>This walk has finished</AlertTitle>
           <AlertDescription>
-            Clock-in is closed. Details and the journey below are still here to look back on.
+            Clock-in is closed. The details are still here to look back on.
           </AlertDescription>
         </Alert>
       ) : signedIn && !attended && tooEarly ? (
@@ -94,7 +100,7 @@ export function WalkShareStatusChrome({
           <AlertTitle>Clock-in is not open yet</AlertTitle>
           <AlertDescription>
             It opens an hour before the walk starts, at {formatTime(opensAt)} on{" "}
-            {formatDate(opensAt)}. Come back on the day and this page will be ready.
+            {formatWalkDay(opensAt)}. Come back on the day and this page will be ready.
           </AlertDescription>
         </Alert>
       ) : closedNoClockIn ? (

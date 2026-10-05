@@ -24,6 +24,7 @@ export function NoticesBlogSection({
   notices: NoticeView[];
 }) {
   const listRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const deferredSearchTerm = useDeferredValue(searchTerm);
@@ -66,6 +67,7 @@ export function NoticesBlogSection({
         <InputGroup className="w-full max-w-md">
           <InputGroupInput
             aria-label="Search notices"
+            ref={searchRef}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Search notices…"
             value={searchTerm}
@@ -91,6 +93,8 @@ export function NoticesBlogSection({
                 )}
                 key={category.id}
                 onClick={(event) => selectCategory(category.id, event.currentTarget)}
+                // Tabbing to a chip that's off the edge brings it into view.
+                onFocus={(event) => centerInScrollStrip(event.currentTarget)}
                 type="button"
               >
                 {category.label}
@@ -119,6 +123,8 @@ export function NoticesBlogSection({
                   onClick={() => {
                     setSearchTerm("");
                     setActiveCategory("all");
+                    // The button goes with the empty state; keep focus useful.
+                    searchRef.current?.focus();
                   }}
                   variant="outline"
                 >

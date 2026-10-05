@@ -93,7 +93,7 @@ export function HeroGlobe({
 
             <BlurFade delay={0.3}>
               <div className="mt-10 flex flex-wrap items-center gap-3">
-                {<AuthSwitch signedIn={<><Button asChild>
+                {<AuthSwitch signedIn={<><Button asChild size="sm">
                     <Link href="/walks">
                       See the walks <ArrowRightIcon />
                     </Link>

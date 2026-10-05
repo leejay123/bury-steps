@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { createRouteMatcher } from "@clerk/nextjs/server";
-import { NextRequest } from "next/server";
-import { PUBLIC_ROUTE_PATTERNS, isTokenPublicPath } from "./public-routes";
+import fs from "node:fs";
+import path from "node:path";
+import {
+  APP_TOP_LEVEL_SEGMENTS,
+  PUBLIC_ROUTE_PATTERNS,
+  isPublicPath,
+  isTokenPublicPath,
+  isUnknownAppPath,
+} from "./public-routes";
 
 describe("PUBLIC_ROUTE_PATTERNS", () => {
   it("keeps email-preference and organiser-invite token links public", () => {
@@ -19,8 +25,7 @@ describe("PUBLIC_ROUTE_PATTERNS", () => {
 });
 
 describe("public route matching", () => {
-  const isPublic = createRouteMatcher([...PUBLIC_ROUTE_PATTERNS]);
-  const at = (path: string) => isPublic(new NextRequest(`https://example.com${path}`));
+  const at = isPublicPath;
 
   it("keeps shared walk links public", () => {
     expect(at("/w/abc123")).toBe(true);
@@ -32,6 +37,21 @@ describe("public route matching", () => {
     expect(at("/notices")).toBe(false);
     expect(at("/progress")).toBe(false);
     expect(at("/history")).toBe(false);
+    expect(at("/email-preferences")).toBe(false);
+    expect(at("/walkies")).toBe(false);
+  });
+
+  it("matches whole paths, with or without a trailing slash, in any case", () => {
+    expect(at("/")).toBe(true);
+    expect(at("/contact")).toBe(true);
+    expect(at("/contact/")).toBe(true);
+    expect(at("/Contact")).toBe(true);
+    expect(at("/contact-us")).toBe(false);
+    expect(at("/sign-in/factor-one")).toBe(true);
+    expect(at("/email-preferences/abc123")).toBe(true);
+    expect(at("/admin/members")).toBe(true);
+    expect(at("/robots.txt")).toBe(true);
+    expect(at("/robotsxtxt")).toBe(false);
   });
 });
 
@@ -47,5 +67,35 @@ describe("isTokenPublicPath", () => {
     expect(isTokenPublicPath("/email-preferences/")).toBe(false);
     expect(isTokenPublicPath("/organiser-invite")).toBe(false);
     expect(isTokenPublicPath("/walks")).toBe(false);
+  });
+});
+
+describe("isUnknownAppPath", () => {
+  it("lists every top-level page or route in src/app, so none can skip sign-in", () => {
+    const appDir = path.join(__dirname, "..", "app");
+    const routeFile = /^(page|layout|loading|error|not-found|global-error|template|default)\.(t|j)sx?$/;
+    const notRoutes = new Set(["globals.css", "typeset.css", "fonts.ts", "typeset-font.ts"]);
+    const segments = fs
+      .readdirSync(appDir, { withFileTypes: true })
+      .filter((entry) => !routeFile.test(entry.name) && !notRoutes.has(entry.name))
+      // Folders as-is; metadata route files by their URL (icon.tsx -> /icon, robots.ts -> /robots.txt).
+      .map((entry) => {
+        if (entry.isDirectory()) return entry.name;
+        const base = entry.name.replace(/\.(t|j)sx?$/, "");
+        return { robots: "robots.txt", sitemap: "sitemap.xml", manifest: "manifest.webmanifest" }[base] ?? base;
+      });
+    for (const segment of segments) {
+      expect(APP_TOP_LEVEL_SEGMENTS, `add "${segment}" to APP_TOP_LEVEL_SEGMENTS`).toContain(segment);
+    }
+  });
+
+  it("is true only for paths that can't be a page", () => {
+    expect(isUnknownAppPath("/this-does-not-exist")).toBe(true);
+    expect(isUnknownAppPath("/walk")).toBe(true);
+    expect(isUnknownAppPath("/")).toBe(false);
+    expect(isUnknownAppPath("/walks")).toBe(false);
+    expect(isUnknownAppPath("/notices/anything")).toBe(false);
+    expect(isUnknownAppPath("/api/site-search")).toBe(false);
+    expect(isUnknownAppPath("/history")).toBe(false);
   });
 });

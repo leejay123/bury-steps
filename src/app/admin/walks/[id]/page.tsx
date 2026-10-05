@@ -228,11 +228,13 @@ async function WalkDetailPageContent({
         <Alert variant="destructive">
           <AlertTitle>This walk has been cancelled</AlertTitle>
           <AlertDescription>
-            {walk.cancelledReason ? `Reason: ${walk.cancelledReason}. ` : ""}
+            {walk.cancelledReason ? `Reason: ${walk.cancelledReason.replace(/[.!?]+$/, "")}. ` : ""}
             Members see it as cancelled and can no longer clock in.
-            {admin.permWalksEdit
-              ? " If it's going ahead after all, press Edit and save — the walk becomes upcoming again and members can join it."
-              : ""}
+            {admin.permWalksCancel
+              ? " If it's going ahead after all, press Reopen walk — it becomes upcoming again and members can join it."
+              : admin.permWalksEdit
+                ? " If it's going ahead after all, press Edit and save — the walk becomes upcoming again and members can join it."
+                : ""}
           </AlertDescription>
         </Alert>
       ) : null}
@@ -305,7 +307,7 @@ async function WalkDetailPageContent({
         canCancel={admin.permWalksCancel}
         canCreate={admin.permWalksCreate}
         canEdit={admin.permWalksEdit}
-        canExportRoster={admin.permWalksExport && admin.permWalksHealth}
+        canExportRoster={admin.permWalksExport}
         description={walk.description}
         distance={walk.distance}
         durationMins={walk.durationMins}

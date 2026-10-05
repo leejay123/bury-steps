@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronRight, Folders } from "lucide-react";
 import {
   addHomepageFaqCategory,
@@ -11,6 +11,7 @@ import {
 } from "@/server/actions";
 import { MAX_FAQ_CATEGORY_LABEL, type FaqCategoryView } from "@/lib/faqs";
 import { useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { EmptyState } from "@/components/empty-state";
 import { ReorderButtons, useReorderableIds } from "@/components/sortable-rows";
@@ -70,10 +71,7 @@ function CategoryLabelForm({
   submitLabel: string;
   submitPendingLabel: string;
 }) {
-  const [state, formAction, isPending] = useActionState<ActionResult | null, FormData>(
-    action,
-    null,
-  );
+  const [state, formAction, isPending] = useSafeActionState(action);
   const [label, setLabel] = useState(category?.label ?? "");
   useActionToast(state, onSaved);
   useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);

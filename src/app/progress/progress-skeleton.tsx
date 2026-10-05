@@ -4,12 +4,15 @@ function StatSkeleton() {
   return (
     <div className="flex flex-col gap-1 border-b p-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
       <Skeleton className="h-8 w-12" />
-      <Skeleton className="h-4 w-20" />
+      <Skeleton className="h-5 w-20" />
     </div>
   );
 }
 
-/** Same shape as the stats, badges, Together and This month sections. */
+/** Same shape as the stats, badges, monthly cup and This month sections.
+ * The Together card only shows once an organiser sets a group goal (off by
+ * default), so it isn't drawn here — a placeholder for a card that then
+ * doesn't come made everything below jump up. */
 export function ProgressSkeleton() {
   return (
     <>
@@ -27,16 +30,9 @@ export function ProgressSkeleton() {
       <section className="flex flex-col gap-3">
         <Skeleton className="h-4 w-24" />
         <div className="flex flex-wrap gap-2">
-          <Skeleton className="h-6 w-24 rounded-full" />
-          <Skeleton className="h-6 w-32 rounded-full" />
+          <Skeleton className="h-[22px] w-24 rounded-md" />
+          <Skeleton className="h-[22px] w-32 rounded-md" />
         </div>
-      </section>
-
-      {/* Together */}
-      <section className="flex flex-col gap-3 rounded-xl border p-4">
-        <Skeleton className="h-5 w-24" />
-        <Skeleton className="h-4 w-full max-w-md" />
-        <Skeleton className="h-2 w-full rounded-full" />
       </section>
 
       {/* Monthly cup */}

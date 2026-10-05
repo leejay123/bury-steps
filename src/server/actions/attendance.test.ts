@@ -397,7 +397,8 @@ describe("adminClockIn", () => {
 
     expect(prismaMock.attendance.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ walkId: "walk-1", userId: member.id }),
+        // No pre-walk check was ticked, so none is recorded for them.
+        data: expect.objectContaining({ walkId: "walk-1", userId: member.id, medicalAckAt: null }),
       }),
     );
     expect(result).toEqual({ ok: true, message: "Jo has been clocked in." });

@@ -97,6 +97,12 @@ describe("isNavItemActive", () => {
     expect(isNavItemActive("/w/sunday-stroll-ab12", "/walks")).toBe(true);
     expect(isNavItemActive("/w/ab12", "/walks")).toBe(true);
   });
+
+  it("highlights an organiser's Walks link (/admin) on walk share pages too", () => {
+    expect(isNavItemActive("/w/sunday-stroll-ab12", "/admin")).toBe(true);
+    expect(isNavItemActive("/admin/walks/abc", "/admin")).toBe(true);
+    expect(isNavItemActive("/admin/members", "/admin")).toBe(false);
+  });
 });
 
 describe("navItems progressEnabled", () => {

@@ -1,18 +1,17 @@
 "use client";
 
-import { useActionState, useId, useRef } from "react";
-import { useFormStatus } from "react-dom";
+import { startTransition, useId, useRef, type FormEvent } from "react";
 import { AtSign, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { PAGE_X } from "@/lib/page-x";
-import { subscribeToNewsletter, type ActionResult } from "@/server/actions";
+import { subscribeToNewsletter } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
+function SubmitButton({ pending }: { pending: boolean }) {
   return (
     <Button disabled={pending} type="submit">
       {pending ? "Subscribing…" : "Subscribe"}
@@ -25,10 +24,14 @@ function SubmitButton() {
 export function NewsletterSignup() {
   const inputId = useId();
   const formRef = useRef<HTMLFormElement>(null);
-  const [state, action] = useActionState<ActionResult | null, FormData>(
-    subscribeToNewsletter,
-    null,
-  );
+  const [state, action, pending] = useSafeActionState(subscribeToNewsletter);
+  // Sent by hand, not <form action>: React empties a form after every
+  // action, so a rejected address vanished along with the error.
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    startTransition(() => action(formData));
+  }
   // No inline error box on this compact footer form — the toast is the
   // only place an error shows, so it opts back into toasting errors.
   useActionToast(state, () => formRef.current?.reset(), { toastErrors: true });
@@ -46,7 +49,7 @@ export function NewsletterSignup() {
           Occasional updates on walks and group news, straight to your inbox.
         </p>
       </div>
-      <form action={action} className="flex items-center justify-center gap-2" ref={formRef}>
+      <form className="flex items-center justify-center gap-2" onSubmit={submit} ref={formRef}>
         {/* Honeypot — same pattern as the contact form. */}
         <div aria-hidden className="sr-only">
           <Label htmlFor={`${inputId}-company`}>Company</Label>
@@ -61,7 +64,7 @@ export function NewsletterSignup() {
           </InputGroupAddon>
           <InputGroupInput id={inputId} name="email" placeholder="Enter your email" required type="email" />
         </InputGroup>
-        <SubmitButton />
+        <SubmitButton pending={pending} />
       </form>
       <FullWidthDivider position="bottom" />
     </div>

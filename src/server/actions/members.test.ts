@@ -20,7 +20,8 @@ const {
   const prismaMock: Record<string, Record<string, ReturnType<typeof vi.fn>>> = {
     user: { findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn(), update: vi.fn(), updateMany: vi.fn(), delete: vi.fn() },
     walk: { updateMany: vi.fn() },
-    accidentReport: { updateMany: vi.fn() },
+    accidentReport: { updateMany: vi.fn(), findMany: vi.fn(async () => []), update: vi.fn() },
+    accidentReportMember: { findMany: vi.fn(async () => []) },
     walkJourneyEvent: { updateMany: vi.fn() },
     attendance: { count: vi.fn() },
     siteSetting: { updateMany: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
@@ -306,11 +307,14 @@ describe("deleteMember", () => {
     prismaMock.user.findUnique
       .mockResolvedValueOnce(target)
       .mockResolvedValueOnce({
-        id: target.id,
-        role: "MEMBER",
+        ...target,
         isOwner: false,
         _count: { walksCreated: 2, accidentReports: 1, journeyEvents: 3 },
       });
+    prismaMock.accidentReportMember.findMany.mockResolvedValueOnce([
+      { report: { id: "report-tagged", whoInvolved: "A passer-by" } },
+    ]);
+    prismaMock.accidentReport.findMany.mockResolvedValueOnce([{ id: "report-recorded", organiserNotes: null }]);
     prismaMock.user.delete.mockResolvedValueOnce(target);
     deleteUser.mockResolvedValueOnce(undefined);
 
@@ -320,9 +324,15 @@ describe("deleteMember", () => {
       where: { createdById: target.id },
       data: { createdById: ADMIN.id },
     });
-    expect(prismaMock.accidentReport.updateMany).toHaveBeenCalledWith({
-      where: { createdById: target.id },
-      data: { createdById: ADMIN.id },
+    // Their name stays on the reports: added to who was involved, and noted
+    // on the one they recorded, which moves to the acting admin.
+    expect(prismaMock.accidentReport.update).toHaveBeenCalledWith({
+      where: { id: "report-tagged" },
+      data: { whoInvolved: "A passer-by, Jo" },
+    });
+    expect(prismaMock.accidentReport.update).toHaveBeenCalledWith({
+      where: { id: "report-recorded" },
+      data: { createdById: ADMIN.id, organiserNotes: "Recorded by Jo, whose account has since been removed." },
     });
     expect(prismaMock.walkJourneyEvent.updateMany).toHaveBeenCalledWith({
       where: { createdById: target.id },

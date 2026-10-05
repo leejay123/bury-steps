@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
-import { updateFaqSectionCopy, type ActionResult } from "@/server/actions";
+import { updateFaqSectionCopy } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,10 +32,7 @@ export function FaqSectionCopySettings({
 }) {
   const [title, setTitle] = useState(faqSectionTitle);
   const [intro, setIntro] = useState(faqSectionIntro);
-  const [state, action] = useActionState<ActionResult | null, FormData>(
-    updateFaqSectionCopy,
-    null,
-  );
+  const [state, action] = useSafeActionState(updateFaqSectionCopy);
   useActionToast(state);
 
   useResetOnChange([faqSectionTitle, faqSectionIntro], () => {

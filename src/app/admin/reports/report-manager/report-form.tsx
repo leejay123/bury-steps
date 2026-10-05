@@ -1,16 +1,17 @@
 "use client";
 
-import { useActionState, useEffect, useState, type ComponentType, type ReactNode } from "react";
+import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import { AlertTriangle, Clock, Footprints, HeartPulse, NotebookPen, Users } from "lucide-react";
+import { toast } from "sonner";
 import {
   addAccidentReport,
   getWalkAttendeesForReportForm,
   updateAccidentReport,
-  type ActionResult,
 } from "@/server/actions";
 import { utcToLondonWallClock } from "@/lib/dates";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -93,6 +94,12 @@ function InvolvedMembersField({
         }
         return [...merged.values()];
       });
+    }).catch(() => {
+      // A dropped connection: stop "Loading attendees…" and say so. Anyone
+      // already tagged stays tagged.
+      if (cancelled) return;
+      setLoadedForWalkId(walkId);
+      toast.error("Could not load this walk’s attendees. Check your connection and try again.");
     });
     return () => {
       cancelled = true;
@@ -264,10 +271,7 @@ export function AddForm({
   onSaved: () => void;
   walks: WalkOption[];
 }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    addAccidentReport,
-    null,
-  );
+  const [state, action, isPending] = useSafeActionState(addAccidentReport);
   useActionToast(state, onSaved);
   useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
   // Keeps everything typed if the save comes back with a problem.
@@ -294,10 +298,7 @@ export function EditForm({
   report: ReportView;
   walks: WalkOption[];
 }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    updateAccidentReport,
-    null,
-  );
+  const [state, action, isPending] = useSafeActionState(updateAccidentReport);
   useActionToast(state, onSaved);
   useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
   // Keeps everything typed if the save comes back with a problem.
