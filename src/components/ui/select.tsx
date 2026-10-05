@@ -19,6 +19,7 @@ type SelectContextValue = {
   open: boolean;
   selected: string;
   select: (value: string) => void;
+  setOpen: (open: boolean) => void;
   triggerWidth?: number;
 };
 
@@ -88,23 +89,22 @@ function Select({
     setOpen(false);
   }
 
+  function openChange(next: boolean) {
+    if (next) {
+      const width = triggerRef.current?.getBoundingClientRect().width;
+      if (width) setTriggerWidth(width);
+    } else {
+      unlockIdleDocument();
+    }
+    setOpen(next);
+  }
+
   return (
     <SelectContext.Provider
-      value={{ disabled, items, open, select, selected, triggerWidth }}
+      value={{ disabled, items, open, select, selected, setOpen: openChange, triggerWidth }}
     >
       {name ? <input name={name} required={required} type="hidden" value={selected} /> : null}
-      <Popover
-        onOpenChange={(next) => {
-          if (next) {
-            const width = triggerRef.current?.getBoundingClientRect().width;
-            if (width) setTriggerWidth(width);
-          } else {
-            unlockIdleDocument();
-          }
-          setOpen(next);
-        }}
-        open={open}
-      >
+      <Popover onOpenChange={openChange} open={open}>
         <SelectTriggerRefContext.Provider value={triggerRef}>{children}</SelectTriggerRefContext.Provider>
       </Popover>
     </SelectContext.Provider>
@@ -118,9 +118,10 @@ const SelectTriggerRefContext = React.createContext<React.RefObject<HTMLButtonEl
 function SelectTrigger({
   className,
   children,
+  onKeyDown,
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const { disabled, open } = useSelect();
+  const { disabled, open, setOpen } = useSelect();
   const triggerRef = React.useContext(SelectTriggerRefContext);
 
   return (
@@ -131,9 +132,18 @@ function SelectTrigger({
           button's own flex-item sizing one level up. */}
       <Button
         aria-expanded={open}
+        aria-haspopup="listbox"
         className={cn("group min-w-0 w-full justify-between font-normal", className)}
         data-select-trigger=""
         disabled={disabled}
+        onKeyDown={(event) => {
+          onKeyDown?.(event);
+          // Up or down arrow opens the list too, as on a built-in dropdown.
+          if (!event.defaultPrevented && !open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+            event.preventDefault();
+            setOpen(true);
+          }
+        }}
         ref={triggerRef}
         role="combobox"
         variant="outline"
@@ -172,9 +182,84 @@ function SelectValue({
   return <span className={cn("min-w-0 truncate", className)}>{item.label}</span>;
 }
 
+function enabledOptions(list: HTMLElement) {
+  return [...list.querySelectorAll<HTMLButtonElement>('[role="option"]:not(:disabled)')];
+}
+
+/** Focuses a choice and scrolls the list (never the page) to show it. */
+function focusOption(list: HTMLElement, option: HTMLElement) {
+  option.focus({ preventScroll: true });
+  const options = enabledOptions(list);
+  if (option === options[0]) {
+    list.scrollTop = 0;
+    return;
+  }
+  if (option === options.at(-1)) {
+    list.scrollTop = list.scrollHeight;
+    return;
+  }
+  const listBox = list.getBoundingClientRect();
+  const box = option.getBoundingClientRect();
+  if (box.top < listBox.top) list.scrollTop -= listBox.top - box.top;
+  else if (box.bottom > listBox.bottom) list.scrollTop += box.bottom - listBox.bottom;
+}
+
+/**
+ * Keyboard use inside the open list, as on a built-in dropdown: up and down
+ * arrows move between choices, Home and End jump to the first and last, and
+ * typing a letter or two jumps to the choice that starts with them. Enter
+ * or Space picks the one that has focus.
+ */
+function useListKeys() {
+  const typed = React.useRef({ text: "", at: 0 });
+
+  return (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const options = enabledOptions(event.currentTarget);
+    if (options.length === 0) return;
+    const current = options.indexOf(document.activeElement as HTMLButtonElement);
+    const startingWith = (search: string, from: number) => {
+      for (let step = 0; step < options.length; step++) {
+        const index = (from + step) % options.length;
+        if (options[index].textContent?.trim().toLowerCase().startsWith(search)) return index;
+      }
+    };
+    let next: number | undefined;
+
+    if (event.key === "ArrowDown") next = current < 0 ? 0 : Math.min(current + 1, options.length - 1);
+    else if (event.key === "ArrowUp") next = current < 0 ? options.length - 1 : Math.max(current - 1, 0);
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = options.length - 1;
+    else if (event.key.length === 1 && event.key !== " " && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      const now = event.timeStamp;
+      const text = (now - typed.current.at < 700 ? typed.current.text : "") + event.key.toLowerCase();
+      typed.current = { text, at: now };
+      if (text.length === 1) {
+        next = startingWith(text, current + 1);
+      } else {
+        // Keep matching everything typed ("22" finds 22), and the same
+        // letter again with no such choice moves on to the next one
+        // starting with it.
+        next = startingWith(text, Math.max(current, 0));
+        if (next === undefined && [...text].every((char) => char === text[0])) {
+          next = startingWith(text[0], current + 1);
+        }
+      }
+      if (next === undefined) return;
+    } else {
+      return;
+    }
+    if (event.key.length !== 1) typed.current = { text: "", at: 0 };
+
+    event.preventDefault();
+    focusOption(event.currentTarget, options[next]);
+  };
+}
+
 function SelectContent({
   children,
   className,
+  onKeyDown,
+  onOpenAutoFocus,
   position: _position = "popper",
   ...props
 }: {
@@ -183,10 +268,27 @@ function SelectContent({
   position?: "item-aligned" | "popper";
 } & React.ComponentProps<typeof PopoverContent>) {
   const { triggerWidth } = useSelect();
+  const listKeys = useListKeys();
 
   return (
     <PopoverContent
       align="start"
+      onKeyDown={(event) => {
+        onKeyDown?.(event);
+        if (!event.defaultPrevented) listKeys(event);
+      }}
+      onOpenAutoFocus={(event) => {
+        onOpenAutoFocus?.(event);
+        if (event.defaultPrevented) return;
+        // Start on the current choice, so the arrows move on from it.
+        const list = event.currentTarget as HTMLElement;
+        const chosen =
+          list.querySelector<HTMLButtonElement>('[role="option"][aria-selected="true"]:not(:disabled)') ??
+          enabledOptions(list)[0];
+        if (!chosen) return;
+        event.preventDefault();
+        focusOption(list, chosen);
+      }}
       className={cn(
         "max-h-72 w-auto overflow-y-auto overscroll-y-contain p-1",
         // Slide-in from shadcn studio's Combobox 13: rises into place instead of zooming.

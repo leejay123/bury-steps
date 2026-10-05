@@ -95,6 +95,12 @@ export function OverviewSection({
               you&apos;ve typed.
             </p>
             <p>
+              Dropdowns work from the keyboard too: with one selected, the up or down arrow opens
+              it, the arrows move through the choices, and typing a letter or a number jumps to
+              the choice that starts with it. Enter picks it; Escape closes the list without
+              changing anything.
+            </p>
+            <p>
               Signed-in people can open their profile from the round button in the top-right
               (change name, email, or sign out).
             </p>
