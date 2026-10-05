@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth";
 import { PAGE_X_BLEED } from "@/lib/page-x";
-import { getPageNotices, getSiteNoticeCategories } from "@/lib/site-notices";
+import { getPageNotices, getSiteNoticeCategories, getSiteNoticeState } from "@/lib/site-notices";
 import { NoticesBlogSection } from "@/components/notices-blog-section";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NoticeRowsSkeleton, SkLine } from "@/components/list-skeletons";
@@ -25,15 +25,18 @@ export default function NoticesPage() {
 }
 
 async function NoticesForMember() {
-  await requireUser();
-  const [notices, categories] = await Promise.all([
+  const user = await requireUser();
+  const [notices, categories, { unreadIds }] = await Promise.all([
     getPageNotices(),
     getSiteNoticeCategories(),
+    // Same unread list as the bell, so the rows the Notices dot is about
+    // say "New" or "Updated".
+    getSiteNoticeState(user.id, user.firstName),
   ]);
 
   return (
     <div className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
-      <NoticesBlogSection categories={categories} notices={notices} />
+      <NoticesBlogSection categories={categories} notices={notices} unreadIds={unreadIds} />
     </div>
   );
 }

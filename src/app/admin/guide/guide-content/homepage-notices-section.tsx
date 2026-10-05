@@ -150,7 +150,9 @@ export function HomepageNoticesSection() {
             <p>
               On <Link href="/notices">Notices</Link>, members can search and filter by category.
               Each full-page notice is a simple list row (title, category, date, teaser),{" "}
-              {LIST_PAGE_SIZE} at a time with Previous and Next when the list is long. Full-page
+              {LIST_PAGE_SIZE} at a time with Previous and Next when the list is long, and one
+              they haven&apos;t read yet has the same <strong>New</strong> or{" "}
+              <strong>Updated</strong> badge as the bell. Full-page
               links use a short random suffix (like walk share links), so the address cannot be
               guessed from the title alone. On Walks, members can
               also search upcoming walks by title or meeting point. If you edit a notice, it shows

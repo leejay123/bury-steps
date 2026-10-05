@@ -1,11 +1,13 @@
 "use client";
 
-import { useDeferredValue, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ChevronRight, Search, SearchX } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { noticeDateLabel, type NoticeCategoryView, type NoticeView } from "@/lib/notices";
+import { noticeDateLabel, noticeUnreadBadgeLabel, type NoticeCategoryView, type NoticeView } from "@/lib/notices";
+import { isNoticeReadInThisTab, noticesReadVersion, subscribeNoticesRead } from "@/lib/notice-events";
 import { usePagedList } from "@/hooks/use-paged-list";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
@@ -19,10 +21,17 @@ import { centerInScrollStrip } from "@/lib/scroll-strip";
 export function NoticesBlogSection({
   categories,
   notices,
+  unreadIds = [],
 }: {
   categories: NoticeCategoryView[];
   notices: NoticeView[];
+  /** The member's unread notices (the bell's list). */
+  unreadIds?: string[];
 }) {
+  // Re-renders when a notice is read in this tab — on its own page, or in
+  // the bell — even if this page was kept hidden in the meantime.
+  useSyncExternalStore(subscribeNoticesRead, noticesReadVersion, () => 0);
+  const unread = new Set(unreadIds.filter((id) => !isNoticeReadInThisTab(id)));
   const listRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -144,9 +153,16 @@ export function NoticesBlogSection({
                   href={`/notices/${notice.slug}`}
                   key={notice.id}
                 >
-                  <p className="text-xs font-medium text-muted-foreground">
-                    {notice.categoryLabel ?? "Notice"}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      {notice.categoryLabel ?? "Notice"}
+                    </p>
+                    {unread.has(notice.id) ? (
+                      <Badge className="h-5 w-fit px-1.5 text-[10px]" variant="secondary">
+                        {noticeUnreadBadgeLabel(notice)}
+                      </Badge>
+                    ) : null}
+                  </div>
                   <div className="flex items-start justify-between gap-3">
                     <p className="font-medium">{notice.title}</p>
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground" />

@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { CheckCheck, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { markSiteNoticeRead, markSiteNoticesRead } from "@/server/actions";
-import { NOTICE_READ_EVENT, NOTICES_UNREAD_EVENT } from "@/lib/notice-events";
+import { NOTICE_READ_EVENT, NOTICES_UNREAD_EVENT, markNoticesReadInThisTab } from "@/lib/notice-events";
 import { noticeBodyForBellDrawer, noticeDateLabel, noticeUnreadBadgeLabel, type NoticeView } from "@/lib/notices";
 import {
   OPEN_MEMBER_NOTICE_BELL_EVENT,
@@ -70,7 +70,8 @@ export function NotificationBell({
         setUnread((current) => (current.includes(noticeId) ? current.filter((id) => id !== noticeId) : current));
         markSiteNoticeRead(noticeId)
           .then((result) => {
-            if (!result.ok) toast.error(result.error);
+            if (result.ok) markNoticesReadInThisTab([noticeId]);
+            else toast.error(result.error);
           })
           .catch(() => toast.error("Could not mark that notice as read. Try again."));
       }
@@ -103,7 +104,9 @@ export function NotificationBell({
     setPending(true);
     markSiteNoticesRead()
       .then((result) => {
-        if (!result.ok) {
+        if (result.ok) {
+          markNoticesReadInThisTab(previous);
+        } else {
           setUnread(previous);
           toast.error(result.error);
         }
@@ -121,7 +124,9 @@ export function NotificationBell({
     setUnread((current) => current.filter((id) => id !== noticeId));
     markSiteNoticeRead(noticeId)
       .then((result) => {
-        if (!result.ok) {
+        if (result.ok) {
+          markNoticesReadInThisTab([noticeId]);
+        } else {
           setUnread(previous);
           toast.error(result.error);
         }

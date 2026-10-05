@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { NOTICE_READ_EVENT } from "@/lib/notice-events";
+import { NOTICE_READ_EVENT, markNoticesReadInThisTab } from "@/lib/notice-events";
 import { markSiteNoticeRead } from "@/server/actions";
 
 /**
@@ -19,7 +19,9 @@ export function MarkNoticeReadOnView({ noticeId }: { noticeId: string }) {
     sentFor.current = noticeId;
     markSiteNoticeRead(noticeId)
       .then((result) => {
-        if (result.ok) window.dispatchEvent(new CustomEvent(NOTICE_READ_EVENT, { detail: noticeId }));
+        if (!result.ok) return;
+        markNoticesReadInThisTab([noticeId]);
+        window.dispatchEvent(new CustomEvent(NOTICE_READ_EVENT, { detail: noticeId }));
       })
       .catch(() => {
         // Best-effort read receipt — not worth surfacing a toast for.
