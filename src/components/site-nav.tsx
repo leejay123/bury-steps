@@ -1,14 +1,17 @@
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { getOptionalUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
-import { SiteNavLinks, SiteMobileMenu, type MobileMenuGroup } from "@/components/site-nav-menu";
+import { navItems } from "@/components/site-nav-items";
+import { AVATAR_COOKIE, NAV_COOKIE, parseRememberedNav, type RememberedNavItem } from "@/lib/remembered-nav";
+import { RememberHeader } from "@/components/remember-header";
 import { BottomNavBar } from "@/components/bottom-nav-bar";
 import { getSiteTheme } from "@/lib/site-theme";
 import { LazySiteUserButton } from "@/components/clerk-lazy";
 import { ClerkIsland } from "@/components/clerk-island";
 import { JoinGroupButton } from "@/components/join-group-button";
-import { navItems } from "@/components/site-nav-items";
+import { SiteNavLinks, SiteMobileMenu, StaticNavLinks, type MobileMenuGroup } from "@/components/site-nav-menu";
 import { NotificationBell } from "@/components/notification-bell";
 import { SiteSearchBar, SiteSearchDialog } from "@/components/site-search";
 import { EmailPreferencesDrawer } from "@/components/email-preferences-drawer";
@@ -25,13 +28,46 @@ import { FULL_ORGANISER_PERMISSIONS, ORGANISER_PERMISSIONS } from "@/lib/organis
  */
 const RIGHT_CLUSTER = "md:min-w-[7.75rem] lg:min-w-[20.5rem]";
 
-export function SiteNavFallback() {
+/** Cookie read stays inside Suspense so the shared layout can still be prerendered. */
+export async function SiteNavSlot() {
+  const jar = await cookies();
+  const items = parseRememberedNav(jar.get(NAV_COOKIE)?.value);
+  const initial = (jar.get(AVATAR_COOKIE)?.value ?? "").slice(0, 1);
+  return (
+    <Suspense fallback={<SiteNavFallback initial={initial} items={items} />}>
+      <SiteNav />
+    </Suspense>
+  );
+}
+
+export function SiteNavFallback({ initial = "", items = [] }: { initial?: string; items?: RememberedNavItem[] }) {
+  if (items.length === 0) {
+    return (
+      <>
+        <div className="hidden min-w-0 items-center justify-center md:flex" />
+        <div
+          className={`flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3 ${RIGHT_CLUSTER}`}
+        />
+      </>
+    );
+  }
   return (
     <>
-      <div className="hidden min-w-0 items-center justify-center md:flex" />
-      <div className={`flex min-w-0 items-center justify-end gap-2 justify-self-end max-md:col-start-3 max-md:min-w-max sm:gap-3 ${RIGHT_CLUSTER}`}>
-        <div className="h-8 w-[4.5rem] rounded-md bg-muted" />
-        <div className="h-8 w-[7.5rem] rounded-md bg-muted" />
+      <div className="hidden min-w-0 items-center justify-center md:flex" data-nav-ready="">
+        <StaticNavLinks items={items} />
+      </div>
+      <div
+        className={`flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3 ${RIGHT_CLUSTER}`}
+        data-nav-ready=""
+      >
+        <SiteSearchBar />
+        <span aria-hidden className="inline-flex size-9 shrink-0 rounded-full border border-border bg-background" />
+        <span
+          aria-hidden
+          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground uppercase"
+        >
+          {initial}
+        </span>
       </div>
     </>
   );
@@ -48,15 +84,17 @@ export async function SiteNav() {
   const afterAuth = `${appUrl()}${AFTER_AUTH_PATH}`;
   const [user, progressEnabled] = await Promise.all([getOptionalUser(), getProgressEnabled()]);
   const isAdmin = user?.role === "ADMIN";
-  const walksHref = isAdmin ? "/admin" : "/walks";
+  const walksHref = isAdmin ? "/admin/walks" : "/walks";
   // user.isOwner is already on the row — no second lookup.
   const permissions = isAdmin && user ? (user.isOwner ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS) : undefined;
 
   // Signed-in state comes from the server here (not Clerk's client <Show>),
   // so nothing waits for Clerk's browser bundle before appearing.
+  const initial = user ? (user.firstName || user.email || "?").charAt(0) : null;
   return (
     <>
-      <div className="hidden min-w-0 items-center justify-center md:flex">
+      <RememberHeader initial={initial} />
+      <div className="hidden min-w-0 items-center justify-center md:flex" data-nav-ready="">
         {user ? (
           <SiteNavLinks
             isAdmin={isAdmin}
@@ -66,19 +104,22 @@ export async function SiteNav() {
           />
         ) : null}
       </div>
-      <div className={`flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3 ${RIGHT_CLUSTER}`}>
+      <div
+        className={`flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3 ${RIGHT_CLUSTER}`}
+        data-nav-ready=""
+      >
         {user ? (
           <>
             <SiteSearchBar />
             <SiteSearchDialog />
-            <Suspense fallback={<div aria-hidden className="size-9 shrink-0" />}>
+            <Suspense fallback={<span aria-hidden className="inline-flex size-9 shrink-0 rounded-full border border-border bg-background" />}>
               <SiteNavBell firstName={user.firstName} userId={user.id} />
             </Suspense>
             {/* A fixed slot: while Clerk's code loads the avatar's own
                 placeholder can be missing, and the cluster jumped 40px. */}
             <div className="flex size-7 shrink-0 items-center justify-center">
               <ClerkIsland>
-                <LazySiteUserButton initial={(user.firstName || user.email || "?").charAt(0)} progressEnabled={progressEnabled} />
+                <LazySiteUserButton initial={initial ?? "?"} progressEnabled={progressEnabled} />
               </ClerkIsland>
             </div>
             <EmailPreferencesDrawer
@@ -144,7 +185,7 @@ export async function SiteMobileNav() {
   const permissions = isAdmin ? (user.isOwner ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS) : undefined;
   // Not awaited: the menu renders now and the Notices dot fills in later.
   const noticesUnread = getSiteNoticeState(user.id, user.firstName).then(({ unreadIds }) => unreadIds.length > 0);
-  const items = navItems(isAdmin, isAdmin ? "/admin" : "/walks", permissions, progressEnabled).map((item) =>
+  const items = navItems(isAdmin, isAdmin ? "/admin/walks" : "/walks", permissions, progressEnabled).map((item) =>
     item.href === "/notices" ? { ...item, dot: noticesUnread } : item,
   );
   const organiserItems = items.filter((item) => item.href.startsWith("/admin/"));
@@ -205,7 +246,7 @@ export async function SiteBottomNav() {
   const isAdmin = user.role === "ADMIN";
   const permissions = isAdmin ? (user.isOwner ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS) : undefined;
   const noticesUnread = getSiteNoticeState(user.id, user.firstName).then(({ unreadIds }) => unreadIds.length > 0);
-  const items = navItems(isAdmin, isAdmin ? "/admin" : "/walks", permissions, progressEnabled).map((item) =>
+  const items = navItems(isAdmin, isAdmin ? "/admin/walks" : "/walks", permissions, progressEnabled).map((item) =>
     item.href === "/notices" ? { ...item, dot: noticesUnread } : item,
   );
   const tabCount = 4;

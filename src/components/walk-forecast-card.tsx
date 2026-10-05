@@ -58,7 +58,7 @@ export function WalkForecastCard({
   const isWalkDay = selected.date === walkDate;
 
   return (
-    <Card className="gap-0 overflow-hidden py-0">
+    <Card className="gap-0 overflow-hidden py-0" data-reveal-card="">
       <div className="flex items-center justify-between gap-3 px-4 py-4 sm:px-5">
         <div className="flex items-center gap-2 text-sm font-semibold">
           <Sun aria-hidden className="size-4" />

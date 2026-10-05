@@ -4,8 +4,13 @@ import { requireUser } from "@/lib/auth";
 import { PAGE_X_BLEED } from "@/lib/page-x";
 import { getPageNotices, getSiteNoticeCategories, getSiteNoticeState } from "@/lib/site-notices";
 import { NoticesBlogSection } from "@/components/notices-blog-section";
-import { Skeleton } from "@/components/ui/skeleton";
-import { NoticeRowsSkeleton, SkLine } from "@/components/list-skeletons";
+import { NoticesSearchChrome } from "@/components/list-chrome";
+import { NoticeCategoryBar } from "@/components/notice-category-bar";
+import { RememberListCount } from "@/components/remember-list-count";
+import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
+import { rememberedNoticeCategories, type RememberedNoticeCategory } from "@/lib/remembered-notice-categories";
+import { rememberedRows } from "@/lib/remembered-rows";
+import { NoticeRowsSkeleton } from "@/components/list-skeletons";
 
 
 
@@ -18,7 +23,19 @@ export default function NoticesPage() {
   return (
     // Notices are for members only, so they're added after the signed-in
     // check — never part of the ready-made page everyone shares.
-    <Suspense fallback={<NoticesFallback />}>
+    <Suspense fallback={<NoticesFallback categories={null} rows={0} />}>
+      <NoticesCounted />
+    </Suspense>
+  );
+}
+
+async function NoticesCounted() {
+  const [rows, categories] = await Promise.all([
+    rememberedRows("notices"),
+    rememberedNoticeCategories(),
+  ]);
+  return (
+    <Suspense fallback={<NoticesFallback categories={categories} rows={rows} />}>
       <NoticesForMember />
     </Suspense>
   );
@@ -36,6 +53,7 @@ async function NoticesForMember() {
 
   return (
     <div className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
+      <RememberListCount count={Math.min(notices.length, LIST_PAGE_SIZE)} id="notices" />
       <NoticesBlogSection categories={categories} notices={notices} unreadIds={unreadIds} />
     </div>
   );
@@ -44,25 +62,29 @@ async function NoticesForMember() {
 /** The instant before the notices arrive: the page's real heading and
  * description (they never change) and list-shaped placeholders — the same
  * frame as the page, so nothing jumps. Same idea as the organiser pages. */
-function NoticesFallback() {
+function NoticesFallback({
+  rows,
+  categories,
+}: {
+  rows: number;
+  categories: RememberedNoticeCategory[] | null;
+}) {
   return (
     <div data-page-loading="" aria-busy="true" className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
-      <div className="flex flex-col gap-3 px-4 py-6 md:px-6">
-        <h1 className="text-lg font-semibold tracking-tight">Notices</h1>
-        <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
-          Updates from the organisers for signed-in members. Short messages stay in the bell; open a
-          row here for the full write-up.
-        </p>
-        <Skeleton className="h-9 w-full max-w-md rounded-md" />
-      </div>
-      <div className="flex gap-6 border-y px-4 py-3 md:px-6">
-        {["w-6", "w-10", "w-14", "w-20", "w-12", "w-12"].map((w, i) => (
-          <SkLine className={w} key={i} size="sm" />
-        ))}
-      </div>
-      <div className="px-4 py-6 md:px-6">
-        <NoticeRowsSkeleton />
-      </div>
+      <section className="flex flex-col gap-0">
+        <div className="flex flex-col gap-3 px-4 py-6 md:px-6">
+          <h1 className="text-lg font-semibold tracking-tight">Notices</h1>
+          <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
+            Updates from the organisers for signed-in members. Short messages stay in the bell; open a
+            row here for the full write-up.
+          </p>
+          <NoticesSearchChrome />
+        </div>
+        {categories ? <NoticeCategoryBar labels={categories} /> : null}
+        <div className="flex flex-col gap-4 px-4 py-6 md:px-6">
+          <NoticeRowsSkeleton rows={rows} />
+        </div>
+      </section>
     </div>
   );
 }

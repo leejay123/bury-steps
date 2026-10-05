@@ -386,6 +386,7 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
       // it's removed from Clerk directly.
       console.error("deleteMember: Clerk login removal failed after database removal", err);
       revalidatePath("/admin");
+      revalidatePath("/admin/walks");
       revalidatePath("/admin/members");
       revalidatePath("/admin/messages");
       revalidatePath("/admin/settings");
@@ -399,6 +400,7 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
   }
 
   revalidatePath("/admin");
+  revalidatePath("/admin/walks");
   revalidatePath("/admin/members");
   // contactMessagesOwnerId SetNulls on delete — refresh messages + settings
   // so a stale "messages go to …" label does not linger.

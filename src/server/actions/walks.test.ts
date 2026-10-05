@@ -829,7 +829,7 @@ describe("deleteWalk", () => {
     expect(result).toEqual({ ok: false, error: "That walk is no longer there." });
   });
 
-  it("deletes the walk and sends the caller back to /admin", async () => {
+  it("deletes the walk and sends the caller back to the walks list", async () => {
     prismaMock.walk.delete.mockResolvedValueOnce({
       token: "tok-1",
       slug: null,
@@ -839,7 +839,7 @@ describe("deleteWalk", () => {
     expect(result).toEqual({
       ok: true,
       message: "“Sunday stroll” has been removed.",
-      href: "/admin",
+      href: "/admin/walks",
     });
   });
 });

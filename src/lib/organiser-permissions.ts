@@ -248,7 +248,7 @@ export function hasAnySettingsPermission(perms: OrganiserPermissions): boolean {
  * currently includes Walks, the ordinary member Walks page otherwise.
  */
 export function walksLandingPath(perms: OrganiserPermissions): string {
-  return perms.permWalksView || perms.permWalksCreate ? "/admin" : "/walks";
+  return perms.permWalksView || perms.permWalksCreate ? "/admin/walks" : "/walks";
 }
 
 /**

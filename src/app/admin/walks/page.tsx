@@ -1,27 +1,30 @@
 import { Suspense } from "react";
-import { SkFilters, WalkRowsSkeleton } from "@/components/list-skeletons";
 import { connection } from "next/server";
-import { Skeleton } from "@/components/ui/skeleton";
+import { WalkListChrome } from "@/components/list-chrome";
+import { RememberListCount } from "@/components/remember-list-count";
+import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
+import { rememberedCount, rememberedRows } from "@/lib/remembered-rows";
 import { prisma } from "@/lib/db";
 import { requireAnyPermission } from "@/lib/auth";
-import { CreateWalkDrawer } from "./create-walk-drawer";
-import { AdminPageIntro } from "./admin-page-intro";
-import { AdminWalkTable } from "./admin-walk-table";
+import { CreateWalkDrawer } from "../create-walk-drawer";
+import { AdminPageIntro } from "../admin-page-intro";
+import { AdminWalkTable } from "../admin-walk-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { upcomingListLookbackFrom, walkStatus } from "@/lib/walk-window";
 
-
-
-function toRow(walk: {
-  id: string;
-  title: string;
-  location: string | null;
-  startsAt: Date;
-  durationMins: number;
-  endedAt: Date | null;
-  cancelledAt: Date | null;
-  _count: { attendances: number };
-}) {
+function toRow(
+  walk: {
+    id: string;
+    title: string;
+    location: string | null;
+    startsAt: Date;
+    durationMins: number;
+    endedAt: Date | null;
+    cancelledAt: Date | null;
+    _count: { attendances: number };
+  },
+  selfClockedIn = false,
+) {
   return {
     id: walk.id,
     title: walk.title,
@@ -31,13 +34,22 @@ function toRow(walk: {
     endedAt: walk.endedAt?.toISOString() ?? null,
     cancelledAt: walk.cancelledAt?.toISOString() ?? null,
     attendanceCount: walk._count.attendances,
+    selfClockedIn,
   };
 }
 
 const WALKS_INTRO =
-  "Upcoming walks, and every finished walk. Filter by status, sort by date, or search. Open a walk to share the link, cancel it, reopen it, or remove it. Long walks stay under Upcoming until clock-in closes.";
+  "Upcoming walks, and every finished walk. Filter by status, sort by date, or search. When a walk is starting soon or in progress, the row says Clock in now — open it and clock in with the same pre-walk check members use. You can also share the link, cancel, reopen, or remove a walk. Long walks stay under Upcoming until clock-in closes.";
 
-async function AdminPageContent() {
+async function AdminPageContent({
+  pastCount,
+  rows,
+  upcomingCount,
+}: {
+  pastCount: number | null;
+  rows: number;
+  upcomingCount: number | null;
+}) {
   // View and Create are meaningfully independent: View is the schedule/
   // history/cancelled-walk detail, Create is the blank "start a new one"
   // form — an organiser with only Create doesn't need to browse anything
@@ -56,8 +68,8 @@ async function AdminPageContent() {
             title="Walks"
           />
           {/* The heading and Create button show straight away; only the list waits. */}
-          <Suspense fallback={<AdminWalksSkeleton />}>
-            <AdminWalksTabs />
+          <Suspense fallback={<AdminWalksSkeleton pastCount={pastCount} rows={rows} upcomingCount={upcomingCount} />}>
+            <AdminWalksTabs userId={admin.id} />
           </Suspense>
         </section>
       ) : admin.permWalksCreate ? (
@@ -77,7 +89,7 @@ async function AdminPageContent() {
 }
 
 /** The Upcoming / History tabs — the part of the page that waits for data. */
-async function AdminWalksTabs() {
+async function AdminWalksTabs({ userId }: { userId: string }) {
   // Upcoming vs History depends on the time now — worked out per visit.
   await connection();
   // A Create-only organiser (no View) never sees the list below at all —
@@ -105,7 +117,7 @@ async function AdminWalksTabs() {
         _count: { select: { attendances: true } },
         attendances: {
           where: { clockedOutAt: null },
-          select: { id: true },
+          select: { userId: true },
         },
       },
     }),
@@ -127,29 +139,29 @@ async function AdminWalksTabs() {
   const upcoming = recent
     .filter((walk) => walkStatus(walk) !== "completed")
     .map((walk) =>
-      toRow({
-        ...walk,
-        _count: { attendances: walk.attendances.length },
-      }),
+      toRow(
+        {
+          ...walk,
+          _count: { attendances: walk.attendances.length },
+        },
+        walk.attendances.some((row) => row.userId === userId),
+      ),
     );
-  const past = [
-    ...recent.filter((walk) => walkStatus(walk) === "completed"),
-    ...older,
-  ]
+  const past = [...recent.filter((walk) => walkStatus(walk) === "completed"), ...older]
     .sort((a, b) => b.startsAt.getTime() - a.startsAt.getTime())
-    .map(toRow);
+    .map((walk) => toRow(walk));
 
   return (
+    <>
+    <RememberListCount count={Math.min(upcoming.length, LIST_PAGE_SIZE)} id="admin-walks" />
+    <RememberListCount count={upcoming.length} id="admin-walks-upcoming" max={10000} />
+    <RememberListCount count={past.length} id="admin-walks-past" max={10000} />
     <Tabs className="w-full" defaultValue="upcoming">
       <TabsList>
         <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
         <TabsTrigger value="past">History ({past.length})</TabsTrigger>
       </TabsList>
-      <TabsContent
-        className="mt-4 data-[state=inactive]:hidden"
-        forceMount
-        value="upcoming"
-      >
+      <TabsContent className="mt-4 data-[state=inactive]:hidden" forceMount value="upcoming">
         <AdminWalkTable
           attendanceLabel="On the walk"
           emptyDescription="Create one and it will show here."
@@ -167,33 +179,42 @@ async function AdminWalksTabs() {
         />
       </TabsContent>
     </Tabs>
+    </>
   );
 }
 
-/** Same shape as the tabs and walk cards that replace it. */
-/** The Walks list area while it loads: tab strip, filters, then rows shaped
- * like the real walk rows. The whole-page placeholder uses this too, so a
- * refresh only ever shows this one placeholder. */
-function AdminWalksSkeleton() {
+/** Tabs, search and filters stay as the real controls. Only the walk rows
+ * are placeholders, and only as many as the list last showed. */
+function AdminWalksSkeleton({
+  pastCount,
+  rows,
+  upcomingCount,
+}: {
+  pastCount: number | null;
+  rows: number;
+  upcomingCount: number | null;
+}) {
   return (
-    <div data-page-loading="" aria-busy="true" className="flex flex-col gap-4">
-      <Skeleton className="h-9 w-56 rounded-lg" />
-      <SkFilters />
-      <WalkRowsSkeleton />
+    <div className="contents" data-page-loading="">
+      <WalkListChrome pastCount={pastCount} rows={rows} upcomingCount={upcomingCount} />
     </div>
   );
 }
 
-function AdminWalksPageFallback() {
+function AdminWalksPageFallback({
+  pastCount,
+  rows,
+  upcomingCount,
+}: {
+  pastCount: number | null;
+  rows: number;
+  upcomingCount: number | null;
+}) {
   return (
     <div data-page-loading="" className="flex flex-col gap-8 px-4 py-6 md:px-6">
       <section className="flex flex-col gap-4">
-        <AdminPageIntro
-          action={<Skeleton className="h-9 w-36 rounded-md" />}
-          description={WALKS_INTRO}
-          title="Walks"
-        />
-        <AdminWalksSkeleton />
+        <AdminPageIntro description={WALKS_INTRO} title="Walks" />
+        <AdminWalksSkeleton pastCount={pastCount} rows={rows} upcomingCount={upcomingCount} />
       </section>
     </div>
   );
@@ -201,10 +222,23 @@ function AdminWalksPageFallback() {
 
 /** Everything here depends on who's asking and on live data, so the page
  * shows a matching placeholder for an instant while it loads. */
-export default function AdminPage() {
+export default function AdminWalksPage() {
   return (
-    <Suspense fallback={<AdminWalksPageFallback />}>
-      <AdminPageContent />
+    <Suspense fallback={<AdminWalksPageFallback pastCount={null} rows={0} upcomingCount={null} />}>
+      <AdminWalksCounted />
+    </Suspense>
+  );
+}
+
+async function AdminWalksCounted() {
+  const [rows, upcomingCount, pastCount] = await Promise.all([
+    rememberedRows("admin-walks"),
+    rememberedCount("admin-walks-upcoming", 10000),
+    rememberedCount("admin-walks-past", 10000),
+  ]);
+  return (
+    <Suspense fallback={<AdminWalksPageFallback pastCount={pastCount} rows={rows} upcomingCount={upcomingCount} />}>
+      <AdminPageContent pastCount={pastCount} rows={rows} upcomingCount={upcomingCount} />
     </Suspense>
   );
 }

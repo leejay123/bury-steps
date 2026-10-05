@@ -36,7 +36,7 @@ export function slideDirection(from: string, to: string): -1 | 0 | 1 {
 
 /**
  * The menu bar's sections in order (src/components/site-nav-items.ts).
- * Organisers' Walks is /admin, members' is /walks — both sit at Walks.
+ * Organisers' Walks is /admin/walks, members' is /walks — both sit at Walks.
  */
 const SECTIONS: string[][] = [
   ["/"],

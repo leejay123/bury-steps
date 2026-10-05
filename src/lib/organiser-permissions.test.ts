@@ -45,9 +45,9 @@ describe("hasAnySettingsPermission", () => {
 
 describe("walksLandingPath", () => {
   it("goes to the admin Walks dashboard when granted View or Create", () => {
-    expect(walksLandingPath(FULL_ORGANISER_PERMISSIONS)).toBe("/admin");
-    expect(walksLandingPath({ ...NONE, permWalksView: true })).toBe("/admin");
-    expect(walksLandingPath({ ...NONE, permWalksCreate: true })).toBe("/admin");
+    expect(walksLandingPath(FULL_ORGANISER_PERMISSIONS)).toBe("/admin/walks");
+    expect(walksLandingPath({ ...NONE, permWalksView: true })).toBe("/admin/walks");
+    expect(walksLandingPath({ ...NONE, permWalksCreate: true })).toBe("/admin/walks");
   });
 
   it("goes to the ordinary member Walks page otherwise", () => {

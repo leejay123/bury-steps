@@ -13,14 +13,29 @@ const MAX_SHAPES = 220;
 
 const MEDIA = "img, svg, video, canvas, input, textarea, select, button, [data-slot='avatar']";
 
-/** The lists and tables on the page: the shared list (data-reveal-list),
- * any list whose rows are marked data-stagger-item (walks, notices,
- * messages, reports…), and real tables. Outermost only. */
+function isValueCard(el: HTMLElement): boolean {
+  if (el.closest(".t-skel, form")) return false;
+  if (el.querySelector("input, textarea, select, form")) return false;
+  return el.matches("[data-reveal-card], [data-slot='card'], section.rounded-xl.border");
+}
+
+/** The lists, tables and value cards on the page: the shared list
+ * (data-reveal-list), a list whose rows are marked data-stagger-item
+ * (notices, messages, reports…), real tables, and each content card
+ * (a walk card, the October cup, the forecast). Search, tabs and form
+ * cards stay still. Outermost only. */
 function listParts(page: HTMLElement): HTMLElement[] {
   const found = new Set<HTMLElement>();
   for (const el of page.querySelectorAll<HTMLElement>("[data-reveal-list], table")) found.add(el);
+  for (const el of page.querySelectorAll<HTMLElement>("[data-reveal-card], [data-slot='card'], section.rounded-xl.border")) {
+    if (isValueCard(el)) found.add(el);
+  }
   for (const row of page.querySelectorAll<HTMLElement>("[data-stagger-item]")) {
-    if (row.parentElement) found.add(row.parentElement);
+    const parent = row.parentElement;
+    if (!parent) continue;
+    const kids = [...parent.children];
+    const pure = kids.length > 0 && kids.every((child) => child.hasAttribute("data-stagger-item"));
+    if (pure) found.add(parent);
   }
   const shown = [...found].filter((el) => el.getClientRects().length > 0 && !el.closest(".t-skel"));
   return shown.filter((el) => !shown.some((other) => other !== el && other.contains(el)));

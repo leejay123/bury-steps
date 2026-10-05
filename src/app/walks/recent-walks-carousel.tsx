@@ -28,6 +28,7 @@ export function RecentWalksCarousel({ walks }: { walks: RecentWalkCard[] }) {
           <CarouselItem className="md:basis-1/2" key={walk.id}>
             <Link
               className="block h-full w-full rounded-xl border p-4 transition-colors hover:bg-muted/50"
+              data-reveal-card=""
               href={walkSharePath(walk)}
             >
               <p className="font-medium">{walk.title}</p>

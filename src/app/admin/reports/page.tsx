@@ -1,6 +1,10 @@
 import { Suspense } from "react";
 import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
-import { MessageRowsSkeleton } from "@/components/list-skeletons";
+import { ReportsFilterChrome } from "@/components/list-chrome";
+import { RememberListCount } from "@/components/remember-list-count";
+import { ReportRowsSkeleton } from "@/components/list-skeletons";
+import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
+import { rememberedCount } from "@/lib/remembered-rows";
 import { Prisma } from "@prisma/client";
 import { memberDisplayName, requirePermission } from "@/lib/auth";
 import { isOwner } from "@/lib/site-owner";
@@ -13,6 +17,9 @@ type SortOrder = "desc" | "asc";
 
 /** Cap for client-side search — enough for a small group without putting PII in ?q=. */
 const REPORTS_FETCH_LIMIT = 500;
+
+const REPORTS_INTRO =
+  "Record what happened, who was involved, and what you did. Filter by linked walk, sort by date, or search. Open a report to read the full write-up, then edit it or print a PDF.";
 
 function parseLinkFilter(raw: string | undefined): LinkFilter {
   if (raw === "linked" || raw === "unlinked") return raw;
@@ -87,11 +94,11 @@ async function AccidentReportsPageContent({
 
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
+      <RememberListCount count={totalReports === 0 ? 0 : Math.min(reports.length, LIST_PAGE_SIZE)} id="reports" />
       <AccidentReportManager
         intro={{
           title: "Accident reports",
-          description:
-            "Record what happened, who was involved, and what you did. Filter by linked walk, sort by date, or search. Open a report to read the full write-up, then edit it or print a PDF.",
+          description: REPORTS_INTRO,
         }}
         canCreate={admin.permReportsCreate}
         canDelete={canDelete}
@@ -126,11 +133,32 @@ async function AccidentReportsPageContent({
   );
 }
 
+/** Real title, search and filters. Grey rows only for the reports last shown. */
+export function ReportsPageFallback({ rows }: { rows: number | null }) {
+  return (
+    <AdminPageFallback
+      description={REPORTS_INTRO}
+      filters={rows === 0 ? null : <ReportsFilterChrome />}
+      list={<ReportRowsSkeleton rows={rows ?? 0} />}
+      title="Accident reports"
+    />
+  );
+}
+
 /** Everything here depends on who's asking and on live data, so the page
  * shows a matching placeholder for an instant while it loads. */
 export default function AccidentReportsPage(props: Parameters<typeof AccidentReportsPageContent>[0]) {
   return (
-    <Suspense fallback={<AdminPageFallback list={<MessageRowsSkeleton />} title="Accident reports" />}>
+    <Suspense fallback={<ReportsPageFallback rows={null} />}>
+      <ReportsCounted {...props} />
+    </Suspense>
+  );
+}
+
+async function ReportsCounted(props: Parameters<typeof AccidentReportsPageContent>[0]) {
+  const rows = await rememberedCount("reports");
+  return (
+    <Suspense fallback={<ReportsPageFallback rows={rows} />}>
       <AccidentReportsPageContent {...props} />
     </Suspense>
   );

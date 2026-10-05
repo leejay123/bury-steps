@@ -27,7 +27,10 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { unlockIdleDocument } from "@/components/overlay-root";
+import { useClientPathname } from "@/components/client-pathname";
 import { isNavItemActive, navItems } from "@/components/site-nav-items";
+import { NAV_COOKIE } from "@/lib/remembered-nav";
+import { writeClientCookie } from "@/lib/remembered-rows-key";
 import type { OrganiserPermissions } from "@/lib/organiser-permissions";
 
 const NAV_ICONS: Record<string, LucideIcon> = {
@@ -237,6 +240,18 @@ export function SiteNavLinks({
   const items = navItems(isAdmin, walksHref, permissions, progressEnabled);
   const edges = useScrollEdges(scrollerRef);
   useWheelScroll(scrollerRef);
+  const navSignature = items.map((item) => `${item.href}\t${item.label}`).join("\n");
+
+  useEffect(() => {
+    const remembered = navSignature
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => {
+        const tab = line.indexOf("\t");
+        return { href: line.slice(0, tab), label: line.slice(tab + 1) };
+      });
+    writeClientCookie(NAV_COOKIE, encodeURIComponent(JSON.stringify(remembered)));
+  }, [navSignature]);
 
   useEffect(() => {
     const scroller = scrollerRef.current;
@@ -280,6 +295,20 @@ export function SiteNavLinks({
   );
 }
 
+/** The Manage trigger's face: the same in the live menu and the placeholder. */
+function ManageLabel({ active }: { active: boolean }) {
+  return (
+    <>
+      {active ? <span className="absolute inset-0 rounded-md bg-muted" /> : null}
+      <span className="relative z-10 inline-flex items-center gap-1.5">
+        <BriefcaseBusiness aria-hidden="true" className="size-4 shrink-0" />
+        Manage
+        <ChevronDown aria-hidden="true" className="size-3.5 shrink-0" />
+      </span>
+    </>
+  );
+}
+
 function ManageMenu({ items, pathname }: { items: { href: string; label: string }[]; pathname: string }) {
   const active = items.some((item) => isNavItemActive(pathname, item.href));
   return (
@@ -290,12 +319,7 @@ function ManageMenu({ items, pathname }: { items: { href: string; label: string 
         className={cn(navLinkClass(active), "shrink-0 cursor-pointer data-[state=open]:text-foreground")}
         data-nav-active={active ? "" : undefined}
       >
-        {active ? <span className="absolute inset-0 rounded-md bg-muted" /> : null}
-        <span className="relative z-10 inline-flex items-center gap-1.5">
-          <BriefcaseBusiness aria-hidden="true" className="size-4 shrink-0" />
-          Manage
-          <ChevronDown aria-hidden="true" className="size-3.5 shrink-0" />
-        </span>
+        <ManageLabel active={active} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="center" className="min-w-44">
         {items.map((item) => {
@@ -316,6 +340,37 @@ function ManageMenu({ items, pathname }: { items: { href: string; label: string 
         })}
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+/** The same links, drawn before the session resolves, so a refresh doesn't blank the menu.
+ * Uses the shared path (null while a page is being prepared) so this can sit in a placeholder.
+ * Organiser pages sit under the same Manage face as the live menu (it opens once that arrives). */
+export function StaticNavLinks({ items }: { items: { href: string; label: string }[] }) {
+  const pathname = useClientPathname();
+  if (items.length === 0) return null;
+  const mainItems = items.filter((item) => !item.href.startsWith("/admin/"));
+  const manageItems = items.filter((item) => item.href.startsWith("/admin/"));
+  const manageActive = pathname !== null && manageItems.some((item) => isNavItemActive(pathname, item.href));
+  return (
+    <div className="relative hidden min-w-0 md:block">
+      <nav className="flex max-w-full items-center justify-center-safe gap-1 overflow-x-auto overscroll-x-contain text-[14px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        {mainItems.map((item) => (
+          <NavLink
+            active={pathname !== null && isNavItemActive(pathname, item.href)}
+            className="shrink-0"
+            href={item.href}
+            key={item.href}
+            label={item.label}
+          />
+        ))}
+        {manageItems.length > 0 ? (
+          <span aria-hidden className={cn(navLinkClass(manageActive), "shrink-0")}>
+            <ManageLabel active={manageActive} />
+          </span>
+        ) : null}
+      </nav>
+    </div>
   );
 }
 

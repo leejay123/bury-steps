@@ -156,7 +156,7 @@ export default async function WalkLinkPage({
     ? await getWalkMemberNames(walk.id, { finished: status === "completed" })
     : [];
   const meeting = meetingPointLabel(walk.location, walk.postcode);
-  const walksHref = user?.role === "ADMIN" ? "/admin" : "/walks";
+  const walksHref = user?.role === "ADMIN" ? "/admin/walks" : "/walks";
   const journeyEvents = walk.journeyEvents.map((event) => ({
     id: event.id,
     title: event.title,
