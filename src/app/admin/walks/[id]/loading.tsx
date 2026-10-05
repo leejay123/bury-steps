@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { WalkMapSkeleton } from "@/components/walk-map-skeleton";
 
 /**
  * Shaped like the organiser's walk page (page.tsx) — the back link, then
@@ -29,13 +30,21 @@ export default function Loading() {
           {/* Same line heights as walk-facts.tsx, tile for tile. */}
           <div className="@container flex flex-col gap-3">
             <div className="grid grid-cols-2 gap-2 @lg:grid-cols-3 @3xl:grid-cols-4">
-              {Array.from({ length: 8 }, (_, i) => (
+              {Array.from({ length: 9 }, (_, i) => (
                 <div className="flex flex-col gap-1 rounded-lg bg-muted/60 px-3 py-2.5" key={i}>
                   <div className="flex h-4 items-center">
                     <Skeleton className="h-3 w-16" />
                   </div>
-                  <div className="flex h-5 items-center">
-                    <Skeleton className="h-4 w-24" />
+                  <div className="flex flex-col">
+                    <div className="flex h-5 items-center">
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                    {/* The meeting point wraps onto a second line in two columns. */}
+                    {i === 3 ? (
+                      <div className="flex h-5 items-center @lg:hidden">
+                        <Skeleton className="h-4 w-16" />
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               ))}
@@ -62,14 +71,7 @@ export default function Loading() {
         <Skeleton className="h-8 w-full sm:w-26 sm:shrink-0" />
       </div>
 
-      <div className="flex flex-col gap-3 rounded-lg border p-5">
-        <Skeleton className="h-4 w-28" />
-        <Skeleton className="h-64 w-full" />
-        <div className="flex gap-2">
-          <Skeleton className="h-9 w-32" />
-          <Skeleton className="h-9 w-28" />
-        </div>
-      </div>
+      <WalkMapSkeleton />
     </div>
   );
 }
