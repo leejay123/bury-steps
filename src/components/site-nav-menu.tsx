@@ -388,6 +388,9 @@ export function SiteMobileMenu({ groups, showSearch = false }: { groups: MobileM
         // PopoverContent defaults to a 4px gap; the page showed through it.
         sideOffset={0}
         avoidCollisions={false}
+        // Fills the screen edge to edge (the available size above counts
+        // any padding against it).
+        collisionPadding={0}
       >
         <div className="flex flex-col gap-12 overflow-auto px-6 py-6">
           {showSearch ? <SiteSearchBar className="-mb-6 h-10 text-base" onOpen={() => setOpen(false)} /> : null}
