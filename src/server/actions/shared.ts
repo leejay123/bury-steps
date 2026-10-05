@@ -139,7 +139,6 @@ export function logActionError(
 export function revalidateHomepage() {
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
-  revalidatePath("/admin/homepage");
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/hero-photos");
   revalidatePath("/admin/settings/testimonials");

@@ -25,12 +25,14 @@ export type SettingsHubPage = SettingsPageLink &
 
 export type SettingsHubGroup = { label: string; danger: boolean; pages: SettingsHubPage[] };
 
+// Every word typed has to appear somewhere on the row, in any order — so
+// "phone menu" or "menu phone" both find Site behaviour.
 function matches(link: SettingsPageLink & SettingsRowState, needle: string): boolean {
-  return [link.title, link.description, link.keywords, link.status, link.attention]
+  const haystack = [link.title, link.description, link.keywords, link.status, link.attention]
     .filter(Boolean)
     .join(" ")
-    .toLowerCase()
-    .includes(needle);
+    .toLowerCase();
+  return needle.split(/\s+/).every((word) => haystack.includes(word));
 }
 
 function navigate() {

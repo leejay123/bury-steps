@@ -79,6 +79,16 @@ const nextConfig: NextConfig = {
       // version of the page). Keep old bookmarks/emails/sign-in redirects
       // working.
       { source: "/dashboard", destination: "/walks", permanent: true },
+      // Old organiser addresses. Sent on before anything is drawn (a page
+      // that redirected drew an empty frame first, and on a phone the page
+      // jumped). Not permanent, so these can still be reused one day; the
+      // pages they land on check permissions as usual.
+      { source: "/admin/homepage", destination: "/admin/settings", permanent: false },
+      {
+        source: "/admin/settings/site-wording",
+        destination: "/admin/settings/site-wording/how-this-started",
+        permanent: false,
+      },
     ];
   },
   async headers() {

@@ -88,7 +88,7 @@ export function isNavItemActive(pathname: string, href: string) {
     return pathname === "/admin" || pathname.startsWith("/admin/walks") || pathname.startsWith("/w/");
   }
   if (href === "/admin/settings") {
-    return pathname.startsWith("/admin/settings") || pathname.startsWith("/admin/homepage");
+    return pathname.startsWith("/admin/settings");
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }

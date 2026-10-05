@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HOMEPAGE_MEMBER_NOTICES_LIMIT } from "@/lib/homepage-copy";
+import { SITE_WORDING_PAGES } from "@/lib/settings-pages";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { GuideBody, Steps } from "./shared";
 
@@ -56,7 +57,8 @@ export function ReportsDisplaySection() {
               or who gets contact-form messages). Anything unfinished or not set up — such as email
               sending, or no one receiving contact messages — is marked in amber on its row and
               listed together at the top. Type in the search box to find a setting by what&apos;s on
-              it (&ldquo;logo&rdquo;, &ldquo;cookie&rdquo;, &ldquo;newsletter&rdquo;). Site wording
+              it (&ldquo;logo&rdquo;, &ldquo;cookie&rdquo;, &ldquo;phone menu&rdquo;, &ldquo;text
+              size&rdquo;) — each word you type just has to appear somewhere on the row. Site wording
               opens in place to show its five pages. Reset the site sits on its own under{" "}
               <strong>Danger zone</strong>. Every settings page has an <strong>All settings</strong>{" "}
               link at the top to come back.
@@ -116,7 +118,7 @@ export function ReportsDisplaySection() {
             </p>
             <p className="font-medium text-foreground">Site wording</p>
             <p>
-              Open <Link href="/admin/settings/site-wording">Site wording</Link> to edit the{" "}
+              Open <Link href={SITE_WORDING_PAGES[0].href}>Site wording</Link> to edit the{" "}
               <strong>How this started</strong> heading, blurb, and full story (the story opens in a
               drawer), the About drawer <strong>goals / places / expect / rules</strong> lists (each
               opens in a drawer), the <strong>Testimonials</strong> heading and intro, the{" "}
