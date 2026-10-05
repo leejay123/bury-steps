@@ -21,12 +21,27 @@ const FOCUSABLE =
  * When what disappeared was a menu or dialog (its whole content goes), focus
  * goes back to the last control used on the page itself — the "⋯" button
  * that opened a menu, say, whose dialog's own hidden trigger can't take it.
+ *
+ * A focused button that switches itself off (a Save that's busy, or has
+ * nothing left to save) drops focus the same way. Focus moves to the
+ * nearest control beside it straight away, and back to the button if it
+ * comes back on shortly (the end of a save).
  */
 export function FocusRescue() {
   useEffect(() => {
     let last: { el: HTMLElement; ancestors: HTMLElement[]; path: string } | null = null;
     let lastOnPage: HTMLElement | null = null;
     let scheduled = false;
+    // Only for keyboard use: that's who is stranded at the top of the page,
+    // and moving focus into a text box after a mouse click would light up
+    // its focus ring for no reason.
+    let viaKeyboard = false;
+    const onKeyDown = () => {
+      viaKeyboard = true;
+    };
+    const onPointerDown = () => {
+      viaKeyboard = false;
+    };
 
     function onFocusIn(event: FocusEvent) {
       const el = event.target;
@@ -39,38 +54,62 @@ export function FocusRescue() {
       last = { el, ancestors, path: location.pathname };
     }
 
+    const isOff = (el: HTMLElement) => (el as HTMLButtonElement).disabled === true;
+    const focusIsLost = () => !document.activeElement || document.activeElement === document.body;
+
     function rescue() {
       scheduled = false;
       const lost = last;
-      if (!lost || lost.el.isConnected) return;
+      if (!lost || (lost.el.isConnected && !isOff(lost.el))) return;
+      if (!viaKeyboard || !focusIsLost() || location.pathname !== lost.path) return;
       last = null;
-      const active = document.activeElement;
-      if ((active && active !== document.body) || location.pathname !== lost.path) return;
+      const stand = focusNear(lost);
+      if (lost.el.isConnected && stand) waitForReturn(lost.el, stand);
+    }
+
+    // Switched off: if it comes back on while focus is still where we put
+    // it (nobody has moved on), hand focus back to it.
+    function waitForReturn(button: HTMLElement, stand: HTMLElement, tries = 0) {
+      window.setTimeout(() => {
+        if (document.activeElement !== stand || !button.isConnected) return;
+        if (!isOff(button)) button.focus({ preventScroll: true });
+        else if (tries < 20) waitForReturn(button, stand, tries + 1);
+      }, 100);
+    }
+
+    /** Focuses the nearest usable control and returns it (null if none). */
+    function focusNear(lost: NonNullable<typeof last>): HTMLElement | null {
       for (const ancestor of lost.ancestors) {
         if (!ancestor.isConnected || ancestor === document.documentElement) continue;
         const target = [...ancestor.querySelectorAll<HTMLElement>(FOCUSABLE)].find(
-          (node) => node.getClientRects().length > 0 && !node.closest(OVERLAY),
+          (node) => node !== lost.el && !isOff(node) && node.getClientRects().length > 0 && !node.closest(OVERLAY),
         );
         if (target) {
           target.focus({ preventScroll: true });
-          return;
+          return target;
         }
       }
-      if (lastOnPage?.isConnected && lastOnPage.getClientRects().length > 0) {
+      if (lastOnPage?.isConnected && lastOnPage !== lost.el && lastOnPage.getClientRects().length > 0) {
         lastOnPage.focus({ preventScroll: true });
+        return lastOnPage;
       }
+      return null;
     }
 
     const observer = new MutationObserver(() => {
-      if (scheduled || !last || last.el.isConnected) return;
+      if (scheduled || !last || (last.el.isConnected && !isOff(last.el))) return;
       scheduled = true;
       requestAnimationFrame(rescue);
     });
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, { attributeFilter: ["disabled"], childList: true, subtree: true });
     document.addEventListener("focusin", onFocusIn);
+    document.addEventListener("keydown", onKeyDown, true);
+    document.addEventListener("pointerdown", onPointerDown, true);
     return () => {
       observer.disconnect();
       document.removeEventListener("focusin", onFocusIn);
+      document.removeEventListener("keydown", onKeyDown, true);
+      document.removeEventListener("pointerdown", onPointerDown, true);
     };
   }, []);
 
