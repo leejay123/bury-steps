@@ -11,6 +11,7 @@ import { useWalkClock } from "@/hooks/use-walk-clock";
 import { formatWalkDate } from "@/lib/dates";
 import { effectiveEndsAt, formatInProgressCountdown, walkStatus, windowState } from "@/lib/walk-window";
 import { Button } from "@/components/ui/button";
+import type { WalkMemberName } from "@/lib/walk-members";
 
 export function WalkLivePanel({
   alreadyClockedInAt,
@@ -40,7 +41,7 @@ export function WalkLivePanel({
   emergencyContactRequired?: boolean;
   /** Set once an organiser ends the walk early — see endWalkEarly. */
   endedAt?: string | null;
-  memberNames: string[];
+  memberNames: WalkMemberName[];
   startsAt: string;
   token: string;
   walksHref: string;

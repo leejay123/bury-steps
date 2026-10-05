@@ -152,7 +152,9 @@ export default async function WalkLinkPage({
   // people who have not joined yet. WalkMembers paginates at 20, so a
   // thousand names on one walk stay usable. Clocking out does not revoke
   // that — they were on the walk.
-  const memberNames = attended ? await getWalkMemberNames(walk.id) : [];
+  const memberNames = attended
+    ? await getWalkMemberNames(walk.id, { finished: status === "completed" })
+    : [];
   const meeting = meetingPointLabel(walk.location, walk.postcode);
   const walksHref = user?.role === "ADMIN" ? "/admin" : "/walks";
   const journeyEvents = walk.journeyEvents.map((event) => ({

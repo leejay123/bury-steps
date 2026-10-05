@@ -70,6 +70,8 @@ function scrollListTop(list: HTMLElement | null | undefined) {
   const headerHeight = header ? header.getBoundingClientRect().height : 0;
   const top = list.getBoundingClientRect().top - headerHeight - 16;
   if (top >= 0) return;
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  window.scrollTo({ top: window.scrollY + top, behavior: reduce ? "auto" : "smooth" });
+  // Straight there, not a smooth scroll: the rows are swapped while it
+  // would still be gliding up the page, which stopped it partway (Next at
+  // the bottom of Members left you near the bottom of the next page).
+  window.scrollTo({ top: window.scrollY + top, behavior: "instant" });
 }

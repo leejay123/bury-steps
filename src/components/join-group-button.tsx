@@ -10,6 +10,8 @@ type MetalFxComponent = typeof MetalFxType;
 let metalFxPromise: Promise<MetalFxComponent> | null = null;
 const loadMetalFx = () => (metalFxPromise ??= import("metal-fx").then((mod) => mod.MetalFx));
 
+const INTRO_MS = 4000;
+
 export function JoinGroupButton({ href }: { href: string }) {
   // The silver shimmer is a WebGL effect — a large script and a shader to
   // compile. Computers only (a mouse and hover): it's added once the page
@@ -19,6 +21,20 @@ export function JoinGroupButton({ href }: { href: string }) {
   // battery). It used to start on the first mouse move, which put that
   // ~100-170 ms setup right in the middle of someone moving the mouse.
   const [MetalFx, setMetalFx] = useState<MetalFxComponent | null>(null);
+  // It shimmers for a few seconds when it appears, then rests on a still
+  // frame (the metal look stays) and shimmers again on hover or focus — left
+  // running, it kept a computer's processor busy on every visitor page,
+  // since the header is always in view. Still throughout for anyone who
+  // has asked for less motion.
+  const [intro, setIntro] = useState(true);
+  const [pointedAt, setPointedAt] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    if (!MetalFx) return;
+    const timer = window.setTimeout(() => setIntro(false), INTRO_MS);
+    return () => window.clearTimeout(timer);
+  }, [MetalFx]);
 
   useEffect(() => {
     if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
@@ -28,7 +44,9 @@ export function JoinGroupButton({ href }: { href: string }) {
     const handle = idle(
       () => {
         void loadMetalFx().then((component) => {
-          if (!cancelled) setMetalFx(() => component);
+          if (cancelled) return;
+          setReduceMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+          setMetalFx(() => component);
         });
       },
       { timeout: 4000 },
@@ -41,7 +59,15 @@ export function JoinGroupButton({ href }: { href: string }) {
 
   const button = (
     <Button asChild className="bg-black text-white hover:bg-black" size="sm">
-      <a href={href}>Join the group</a>
+      <a
+        href={href}
+        onBlur={() => setPointedAt(false)}
+        onFocus={() => setPointedAt(true)}
+        onMouseEnter={() => setPointedAt(true)}
+        onMouseLeave={() => setPointedAt(false)}
+      >
+        Join the group
+      </a>
     </Button>
   );
 
@@ -56,6 +82,7 @@ export function JoinGroupButton({ href }: { href: string }) {
       // it has measured the button, so the black fill showed square corners
       // on page load.
       className="visible! rounded-md opacity-100! [&>:not(a)]:pointer-events-none"
+      paused={reduceMotion || !(intro || pointedAt)}
       preset="silver"
       strength={0.9}
       style={{ background: "#000" }}
