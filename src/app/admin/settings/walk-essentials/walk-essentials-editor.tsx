@@ -96,7 +96,7 @@ function IconPicker({ label, onChange, value }: { label: string; onChange: (icon
 export function WalkEssentialsEditor({ items: saved }: { items: EssentialItem[] }) {
   const [items, setItems] = useState(saved);
   useResetOnChange([saved], () => setItems(saved));
-  const [state, action, pending] = useSafeActionState(updateWalkEssentials);
+  const [state, action, pending, clearError] = useSafeActionState(updateWalkEssentials);
   useActionToast(state);
 
   const dirty = JSON.stringify(items) !== JSON.stringify(saved);
@@ -191,7 +191,15 @@ export function WalkEssentialsEditor({ items: saved }: { items: EssentialItem[] 
             {pending ? "Saving…" : "Save"}
           </Button>
           {dirty ? (
-            <Button onClick={() => setItems(saved)} size="sm" type="button" variant="outline">
+            <Button
+              onClick={() => {
+                setItems(saved);
+                clearError();
+              }}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
               Discard
             </Button>
           ) : null}

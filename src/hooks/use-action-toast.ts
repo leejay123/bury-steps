@@ -11,6 +11,7 @@ import {
 import { unlockIdleDocument } from "@/components/overlay-root";
 import { setFlashToast } from "@/lib/flash-toast";
 import { preventDismissWhilePending } from "@/hooks/prevent-dismiss";
+import { useClearableResult } from "@/hooks/use-safe-action-state";
 
 export { preventDismissWhilePending };
 
@@ -81,7 +82,9 @@ export function useNotifyActionState(action: ServerAction, onOk?: () => void, op
     return result;
   }, [router, toastErrors]);
 
-  return useActionState<ActionResult | null, FormData>(wrapped, null);
+  const [state, dispatch, pending] = useActionState<ActionResult | null, FormData>(wrapped, null);
+  const [shown, clear] = useClearableResult(state);
+  return [shown, dispatch, pending, clear] as const;
 }
 
 /**

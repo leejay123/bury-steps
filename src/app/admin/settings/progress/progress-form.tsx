@@ -33,7 +33,7 @@ export function ProgressSettingsForm({
 }) {
   const saved = goalToInput(monthlyClockInGoal);
   const [value, setValue] = useState(saved);
-  const [state, action] = useSafeActionState(updateMonthlyClockInGoal);
+  const [state, action, , clearError] = useSafeActionState(updateMonthlyClockInGoal);
   useActionToast(state);
 
   useResetOnChange([saved], () => setValue(saved));
@@ -64,7 +64,14 @@ export function ProgressSettingsForm({
         <div className="flex flex-wrap gap-2">
           <Submit disabled={!dirty} />
           {dirty ? (
-            <Button onClick={() => setValue(saved)} type="button" variant="outline">
+            <Button
+              onClick={() => {
+                setValue(saved);
+                clearError();
+              }}
+              type="button"
+              variant="outline"
+            >
               Discard
             </Button>
           ) : null}

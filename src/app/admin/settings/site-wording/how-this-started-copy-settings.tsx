@@ -144,7 +144,7 @@ export function HowThisStartedCopySettings({
   const [body, setBody] = useState(howThisStartedBody);
   const [bodyDrawerOpen, setBodyDrawerOpen] = useState(false);
   const { openSoon, onPointerDownOutside } = useControlledDrawerDismissGuard();
-  const [state, action] = useSafeActionState(updateHowThisStartedCopy);
+  const [state, action, , clearError] = useSafeActionState(updateHowThisStartedCopy);
   useActionToast(state);
 
   useResetOnChange(
@@ -217,6 +217,7 @@ export function HowThisStartedCopySettings({
                   setTitle(howThisStartedTitle);
                   setEyebrow(howThisStartedEyebrow);
                   setTeaser(howThisStartedTeaser);
+                  clearError();
                 }}
                 type="button"
                 variant="outline"

@@ -32,7 +32,7 @@ export function FaqSectionCopySettings({
 }) {
   const [title, setTitle] = useState(faqSectionTitle);
   const [intro, setIntro] = useState(faqSectionIntro);
-  const [state, action] = useSafeActionState(updateFaqSectionCopy);
+  const [state, action, , clearError] = useSafeActionState(updateFaqSectionCopy);
   useActionToast(state);
 
   useResetOnChange([faqSectionTitle, faqSectionIntro], () => {
@@ -79,6 +79,7 @@ export function FaqSectionCopySettings({
               onClick={() => {
                 setTitle(faqSectionTitle);
                 setIntro(faqSectionIntro);
+                clearError();
               }}
               type="button"
               variant="outline"

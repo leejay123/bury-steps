@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo } from "react";
+import { useActionState, useMemo, useState } from "react";
 import type { ActionResult } from "@/server/actions";
 import { safeServerAction } from "@/lib/action-errors";
 
@@ -16,5 +16,18 @@ export function useSafeActionState(
   action: (prev: ActionResult | null, formData: FormData) => Promise<ActionResult>,
 ) {
   const safeAction = useMemo(() => safeServerAction(action), [action]);
-  return useActionState<ActionResult | null, FormData>(safeAction, null);
+  const [state, dispatch, pending] = useActionState<ActionResult | null, FormData>(safeAction, null);
+  const [shown, clear] = useClearableResult(state);
+  return [shown, dispatch, pending, clear] as const;
+}
+
+/**
+ * The last result, and a way to put it away: a Discard that puts the saved
+ * values back shouldn't leave an error about the ones it just threw away.
+ * The next save shows its own result as usual.
+ */
+export function useClearableResult(result: ActionResult | null) {
+  const [cleared, setCleared] = useState<ActionResult | null>(null);
+  const shown = result !== null && result === cleared ? null : result;
+  return [shown, () => setCleared(result)] as const;
 }

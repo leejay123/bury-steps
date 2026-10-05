@@ -41,7 +41,7 @@ export function AnnouncementSettings({
   const [on, setOn] = useState(enabled);
   const [message, setMessage] = useState(text);
   const [href, setHref] = useState(link);
-  const [state, action, pending] = useSafeActionState(updateAnnouncementBanner);
+  const [state, action, pending, clearError] = useSafeActionState(updateAnnouncementBanner);
   useActionToast(state);
 
   const reset = () => {
@@ -139,7 +139,10 @@ export function AnnouncementSettings({
           <Submit disabled={!dirty} pending={pending} />
           {dirty ? (
             <Button
-              onClick={reset}
+              onClick={() => {
+                reset();
+                clearError();
+              }}
               type="button"
               variant="outline"
             >

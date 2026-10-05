@@ -36,7 +36,7 @@ export function CancelledWalkRetentionSettings({
 }) {
   const saved = daysToInput(cancelledWalkRetentionDays);
   const [value, setValue] = useState(saved);
-  const [state, action] = useSafeActionState(updateCancelledWalkRetentionDays);
+  const [state, action, , clearError] = useSafeActionState(updateCancelledWalkRetentionDays);
   useActionToast(state);
 
   useResetOnChange([saved], () => setValue(saved));
@@ -67,7 +67,14 @@ export function CancelledWalkRetentionSettings({
         <div className="flex flex-wrap gap-2">
           <Submit disabled={!dirty} />
           {dirty ? (
-            <Button onClick={() => setValue(saved)} type="button" variant="outline">
+            <Button
+              onClick={() => {
+                setValue(saved);
+                clearError();
+              }}
+              type="button"
+              variant="outline"
+            >
               Discard
             </Button>
           ) : null}
@@ -84,7 +91,7 @@ export function AccidentReportRetentionSettings({
 }) {
   const saved = daysToInput(accidentReportRetentionDays);
   const [value, setValue] = useState(saved);
-  const [state, action] = useSafeActionState(updateAccidentReportRetentionDays);
+  const [state, action, , clearError] = useSafeActionState(updateAccidentReportRetentionDays);
   useActionToast(state);
 
   useResetOnChange([saved], () => setValue(saved));
@@ -115,7 +122,14 @@ export function AccidentReportRetentionSettings({
         <div className="flex flex-wrap gap-2">
           <Submit disabled={!dirty} />
           {dirty ? (
-            <Button onClick={() => setValue(saved)} type="button" variant="outline">
+            <Button
+              onClick={() => {
+                setValue(saved);
+                clearError();
+              }}
+              type="button"
+              variant="outline"
+            >
               Discard
             </Button>
           ) : null}

@@ -39,7 +39,7 @@ export function TestimonialsSectionCopySettings({
   const [eyebrow, setEyebrow] = useState(testimonialsSectionEyebrow);
   const [title, setTitle] = useState(testimonialsSectionTitle);
   const [intro, setIntro] = useState(testimonialsSectionIntro);
-  const [state, action] = useSafeActionState(updateTestimonialsSectionCopy);
+  const [state, action, , clearError] = useSafeActionState(updateTestimonialsSectionCopy);
   useActionToast(state);
 
   useResetOnChange(
@@ -104,6 +104,7 @@ export function TestimonialsSectionCopySettings({
                 setEyebrow(testimonialsSectionEyebrow);
                 setTitle(testimonialsSectionTitle);
                 setIntro(testimonialsSectionIntro);
+                clearError();
               }}
               type="button"
               variant="outline"

@@ -32,7 +32,7 @@ export function ContactMessagesOwnerSettings({
 }) {
   const initial = currentOwnerId ?? NO_ONE;
   const [ownerId, setOwnerId] = useState(initial);
-  const [state, action] = useSafeActionState(updateContactMessagesOwner);
+  const [state, action, , clearError] = useSafeActionState(updateContactMessagesOwner);
   useActionToast(state);
 
   useResetOnChange([initial], () => setOwnerId(initial));
@@ -66,7 +66,14 @@ export function ContactMessagesOwnerSettings({
         <div className="flex flex-wrap gap-2">
           <Submit disabled={!dirty} />
           {dirty ? (
-            <Button onClick={() => setOwnerId(initial)} type="button" variant="outline">
+            <Button
+              onClick={() => {
+                setOwnerId(initial);
+                clearError();
+              }}
+              type="button"
+              variant="outline"
+            >
               Discard
             </Button>
           ) : null}

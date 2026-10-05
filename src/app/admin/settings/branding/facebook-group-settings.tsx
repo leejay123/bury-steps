@@ -24,7 +24,7 @@ function Submit({ disabled }: { disabled: boolean }) {
 
 export function FacebookGroupSettings({ facebookGroupUrl }: { facebookGroupUrl: string }) {
   const [url, setUrl] = useState(facebookGroupUrl);
-  const [state, action] = useSafeActionState(updateFacebookGroupUrl);
+  const [state, action, , clearError] = useSafeActionState(updateFacebookGroupUrl);
   useActionToast(state);
 
   useResetOnChange([facebookGroupUrl], () => setUrl(facebookGroupUrl));
@@ -54,7 +54,14 @@ export function FacebookGroupSettings({ facebookGroupUrl }: { facebookGroupUrl: 
         <div className="flex flex-wrap gap-2">
           <Submit disabled={!dirty} />
           {dirty ? (
-            <Button onClick={() => setUrl(facebookGroupUrl)} type="button" variant="outline">
+            <Button
+              onClick={() => {
+                setUrl(facebookGroupUrl);
+                clearError();
+              }}
+              type="button"
+              variant="outline"
+            >
               Discard
             </Button>
           ) : null}

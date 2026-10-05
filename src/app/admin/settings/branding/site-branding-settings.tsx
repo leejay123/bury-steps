@@ -32,7 +32,7 @@ export function SiteBrandingSettings({
 }) {
   const [name, setName] = useState(siteName);
   const [tagline, setTagline] = useState(siteTagline);
-  const [state, action] = useSafeActionState(updateSiteBranding);
+  const [state, action, , clearError] = useSafeActionState(updateSiteBranding);
   useActionToast(state);
 
   useResetOnChange([siteName, siteTagline], () => {
@@ -82,6 +82,7 @@ export function SiteBrandingSettings({
               onClick={() => {
                 setName(siteName);
                 setTagline(siteTagline);
+                clearError();
               }}
               type="button"
               variant="outline"
