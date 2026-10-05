@@ -225,7 +225,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                       <SiteBrandLink />
                     </Suspense>
                   </div>
-                  <div className="contents" id="bs-header-boot" />
+                  {/* The boot script below may already have drawn last visit's menu in
+                      here. Marked as raw HTML so React leaves it alone when the page
+                      wakes up: a filled slot failed hydration (React error #418) and
+                      redrew the whole page. The script empties it once the live menu
+                      arrives. */}
+                  <div
+                    className="contents"
+                    dangerouslySetInnerHTML={{ __html: "" }}
+                    id="bs-header-boot"
+                    suppressHydrationWarning
+                  />
                   <HeaderBootScript />
                   <Suspense fallback={null}>
                     <SiteNavSlot />
