@@ -61,7 +61,9 @@ export function ReportsDisplaySection() {
               size&rdquo;) — each word you type just has to appear somewhere on the row. Site wording
               opens in place to show its five pages. Reset the site sits on its own under{" "}
               <strong>Danger zone</strong>. Every settings page has an <strong>All settings</strong>{" "}
-              link at the top to come back.
+              link at the top to come back. When you change something, <strong>Save</strong>{" "}
+              keeps it and <strong>Discard</strong> puts back what was saved — along with
+              clearing any error about the change you threw away.
             </p>
             <p className="font-medium text-foreground">Branding</p>
             <p>
