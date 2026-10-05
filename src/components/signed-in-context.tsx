@@ -16,6 +16,12 @@ export function SignedInProvider({ children, signedIn }: { children: ReactNode; 
   return <SignedInContext value={signedIn}>{children}</SignedInContext>;
 }
 
+/** The signed-in promise itself, for a client component that only needs to
+ * act once it knows (null outside the provider). */
+export function useSignedInPromise(): Promise<boolean> | null {
+  return useContext(SignedInContext);
+}
+
 /**
  * Shows `signedIn` to signed-in visitors and `signedOut` to everyone else.
  *

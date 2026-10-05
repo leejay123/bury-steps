@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "@/lib/revalidate";
-import { requireAdmin } from "@/lib/auth";
+import { getOptionalUser, requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -14,6 +14,14 @@ import {
 } from "@/lib/contact";
 import { sendContactMessageAdminAlertEmail, sendContactMessageReceivedEmail } from "@/lib/email/mailer";
 import { type ActionResult, isPrismaCode, logActionError, permissionDenied } from "./shared";
+
+/** A signed-in member's name and email for the Contact us form, so they
+ * don't have to type them again. Null for visitors. */
+export async function getContactFormDefaults(): Promise<{ name: string; email: string } | null> {
+  const user = await getOptionalUser();
+  if (!user) return null;
+  return { name: [user.firstName, user.lastName].filter(Boolean).join(" "), email: user.email };
+}
 
 export async function submitContactMessage(
   _prev: ActionResult | null,

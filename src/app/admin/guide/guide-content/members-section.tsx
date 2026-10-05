@@ -123,7 +123,8 @@ export function MessagesSection() {
         <GuideBody>
           <p>
             <Link href="/admin/messages">Messages</Link> (under Manage) collects everything sent
-            through the public <Link href="/contact">Contact us</Link> form, newest first. Owners
+            through the public <Link href="/contact">Contact us</Link> form, newest first (a
+            signed-in member finds their name and email already filled in there). Owners
             only. Whoever is chosen in Settings → Site behaviour → Contact messages also gets an
             email for each new one and can reply straight from it.
           </p>
