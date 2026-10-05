@@ -106,7 +106,7 @@ export async function markContactMessageRead(
   }
 
   revalidatePath("/admin/messages");
-  return { ok: true };
+  return { ok: true, message: "Marked as read." };
 }
 
 export async function deleteContactMessage(

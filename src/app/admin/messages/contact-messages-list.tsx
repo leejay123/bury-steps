@@ -8,9 +8,20 @@ import { useNotifyActionState } from "@/hooks/use-action-toast";
 import { useControlledDrawerDismissGuard } from "@/hooks/use-controlled-drawer";
 import { useRetained } from "@/hooks/use-retained";
 import { cn } from "@/lib/utils";
-import { formatDateTime } from "@/lib/dates";
+import { formatCompactDateTime } from "@/lib/dates";
 import { EmptyState } from "@/components/empty-state";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   Drawer,
   DrawerContent,
@@ -79,19 +90,72 @@ function MarkReadButton({ messageId, onDone }: { messageId: string; onDone?: () 
   );
 }
 
-function RemoveButton({ messageId, onDone }: { messageId: string; onDone?: () => void }) {
-  // No inline error box next to this button — the toast is the only place
-  // an error shows, so it opts back into toasting errors.
-  const [, action, isPending] = useNotifyActionState(deleteContactMessage, onDone, {
-    toastErrors: true,
+function RemoveButton({ from, messageId, onDone }: { from: string; messageId: string; onDone?: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [session, setSession] = useState(0);
+  // Asks first, like removing a report: a message can't be brought back.
+  return (
+    <AlertDialog
+      onOpenChange={(next) => {
+        if (next) setSession((value) => value + 1);
+        setOpen(next);
+      }}
+      open={open}
+    >
+      <AlertDialogTrigger asChild>
+        <Button aria-label={`Remove the message from ${from}`} size="xs" type="button" variant="destructive">
+          Remove
+        </Button>
+      </AlertDialogTrigger>
+      {open ? (
+        <RemoveMessageDialogForm
+          from={from}
+          key={session}
+          messageId={messageId}
+          onClose={() => setOpen(false)}
+          onDone={onDone}
+        />
+      ) : null}
+    </AlertDialog>
+  );
+}
+
+function RemoveMessageDialogForm({
+  from,
+  messageId,
+  onClose,
+  onDone,
+}: {
+  from: string;
+  messageId: string;
+  onClose: () => void;
+  onDone?: () => void;
+}) {
+  const [state, action, isPending] = useNotifyActionState(deleteContactMessage, () => {
+    onClose();
+    onDone?.();
   });
   return (
-    <form action={action}>
-      <input name="messageId" type="hidden" value={messageId} />
-      <Button disabled={isPending} size="xs" type="submit" variant="destructive">
-        {isPending ? "Removing…" : "Remove"}
-      </Button>
-    </form>
+    <AlertDialogContent closeDisabled={isPending}>
+      <form action={action}>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remove this message?</AlertDialogTitle>
+          <AlertDialogDescription>
+            The message from {from} will be deleted. This cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <input name="messageId" type="hidden" value={messageId} />
+        <FormError message={state && !state.ok ? state.error : null} />
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isPending} type="button">
+            Keep it
+          </AlertDialogCancel>
+          <Button disabled={isPending} type="submit" variant="destructive">
+            {isPending ? "Removing…" : "Remove"}
+          </Button>
+        </AlertDialogFooter>
+      </form>
+    </AlertDialogContent>
   );
 }
 
@@ -124,18 +188,35 @@ function MessageDrawer({
             <DrawerHeader className="text-left">
               <DrawerTitle>{shown.name}</DrawerTitle>
               <DrawerDescription>
-                {shown.email}
-                {shown.phone ? ` · ${shown.phone}` : ""} · {formatDateTime(shown.createdAt)}
+                <a className="underline-offset-2 hover:underline" href={`mailto:${shown.email}`}>
+                  {shown.email}
+                </a>
+                {shown.phone ? (
+                  <>
+                    {" · "}
+                    <a className="underline-offset-2 hover:underline" href={`tel:${shown.phone.replace(/[^\d+]/g, "")}`}>
+                      {shown.phone}
+                    </a>
+                  </>
+                ) : null}
+                {" · "}
+                {formatCompactDateTime(shown.createdAt)}
               </DrawerDescription>
             </DrawerHeader>
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4">
               <DescriptionText className="typeset typeset-docs block wrap-break-word" text={shown.message} />
             </div>
             <DrawerFooter className="flex-row flex-wrap gap-2">
+              <Button asChild size="xs" variant="outline">
+                <a href={`mailto:${shown.email}?subject=${encodeURIComponent("Your message to Bury Steps")}`}>
+                  <Mail data-icon="inline-start" />
+                  Reply by email
+                </a>
+              </Button>
               {!shown.read ? (
                 <MarkReadButton messageId={shown.id} onDone={onClose} />
               ) : null}
-              <RemoveButton messageId={shown.id} onDone={onClose} />
+              <RemoveButton from={shown.name} messageId={shown.id} onDone={onClose} />
             </DrawerFooter>
           </>
         ) : null}
@@ -273,14 +354,14 @@ export function ContactMessagesList({ messages }: { messages: ContactMessageRow[
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {message.email}
-                    {message.phone ? ` · ${message.phone}` : ""} · {formatDateTime(message.createdAt)}
+                    {message.phone ? ` · ${message.phone}` : ""} · {formatCompactDateTime(message.createdAt)}
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">{preview(message.message)}</p>
                 </DataListBody>
               </DataListItemMain>
               <DataListActions className={dataListActionsStackClassName}>
                 {!message.read ? <MarkReadButton messageId={message.id} /> : null}
-                <RemoveButton messageId={message.id} />
+                <RemoveButton from={message.name} messageId={message.id} />
               </DataListActions>
             </DataListItem>
           ))}

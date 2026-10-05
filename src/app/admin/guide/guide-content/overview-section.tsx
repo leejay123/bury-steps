@@ -90,8 +90,9 @@ export function OverviewSection({
             <p>
               Forms that open in a side panel (creating or editing a walk, a notice, a report, and
               so on) close only with the close button or Cancel — swiping or tapping beside the
-              panel won&apos;t close it, so a stray touch can&apos;t throw away what you&apos;ve
-              typed.
+              panel won&apos;t close it, and nor will Escape while you&apos;re typing in a box
+              or closing a dropdown, so a stray key or touch can&apos;t throw away what
+              you&apos;ve typed.
             </p>
             <p>
               Signed-in people can open their profile from the round button in the top-right

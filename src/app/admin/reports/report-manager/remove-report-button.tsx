@@ -74,7 +74,7 @@ function RemoveReportDialogForm({
         <AlertDialogHeader>
           <AlertDialogTitle>Remove this report?</AlertDialogTitle>
           <AlertDialogDescription>
-            {title} will be deleted. This cannot be undone.
+            The report from {title} will be deleted. This cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <input name="reportId" type="hidden" value={reportId} />

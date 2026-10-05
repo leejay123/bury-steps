@@ -8,7 +8,7 @@ import {
   getWalkAttendeesForReportForm,
   updateAccidentReport,
 } from "@/server/actions";
-import { utcToLondonWallClock } from "@/lib/dates";
+import { formatWalkDay, utcToLondonWallClock } from "@/lib/dates";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useSafeActionState } from "@/hooks/use-safe-action-state";
@@ -189,7 +189,9 @@ function ReportFields({
             <SelectItem value="none">No linked walk</SelectItem>
             {walks.map((walk) => (
               <SelectItem key={walk.id} value={walk.id}>
-                {walk.title}
+                {/* Newest first, with the day, so two walks with the same
+                    title can be told apart. */}
+                {formatWalkDay(walk.startsAt)} · {walk.title}
               </SelectItem>
             ))}
           </SelectContent>
@@ -213,7 +215,9 @@ function ReportFields({
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <FieldLabel htmlFor={`${prefix}-who`} icon={Users}>
+        {/* Required in the sense that one of the two must be filled: a
+            tagged member or a name typed below. */}
+        <FieldLabel htmlFor={`${prefix}-who`} icon={Users} required>
           Who was involved
         </FieldLabel>
         <InvolvedMembersField
@@ -226,7 +230,11 @@ function ReportFields({
           defaultValue={report?.whoInvolved}
           id={`${prefix}-who`}
           name="whoInvolved"
-          placeholder="Anyone not tagged above — a passerby who isn't a member, say."
+          placeholder={
+            walkId === "none"
+              ? "Who was hurt or helped — names, or a description if they aren't members."
+              : "Anyone not tagged above — a passerby who isn't a member, say."
+          }
           rows={2}
         />
       </div>

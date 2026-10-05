@@ -185,6 +185,31 @@ function clockText({ hour, minute }: LondonClock): string {
   return `${pad2(hour)}:${pad2(minute)}`;
 }
 
+const WEEKDAY_LONG = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
+const MONTH_LONG = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+
+/** "Saturday 3 October 2026, 13:00" — for printed records. */
+export function formatLongDateTime(at: DateInput): string {
+  const date = toDate(at);
+  if (!isValidDate(date)) return "";
+  const c = londonClock(date);
+  const weekday = WEEKDAY_LONG[new Date(Date.UTC(c.year, c.month - 1, c.day, 12)).getUTCDay()];
+  return `${weekday} ${c.day} ${MONTH_LONG[c.month - 1]} ${c.year}, ${clockText(c)}`;
+}
+
 /** "Wed 7 Oct", or "Wed 7 Oct 2027" outside this year. */
 export function formatWalkDay(at: DateInput): string {
   const date = toDate(at);

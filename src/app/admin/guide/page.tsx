@@ -12,7 +12,7 @@ import { FullWidthDivider } from "@/components/full-width-divider";
 
 
 async function OrganiserGuidePageContent() {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const [cancelledWalkRetentionDays, accidentReportRetentionDays] = await Promise.all([
     getCancelledWalkRetentionDays(),
     getAccidentReportRetentionDays(),
@@ -22,7 +22,11 @@ async function OrganiserGuidePageContent() {
     <div className="flex flex-col">
       <div className="relative px-4 py-6 md:px-6">
         <AdminPageIntro
-          description={`How this website works, and how to run walks, members, and the homepage. Last updated ${GUIDE_LAST_UPDATED}.`}
+          description={
+            admin.isOwner
+              ? `How this website works, and how to run walks, members, and the homepage. Last updated ${GUIDE_LAST_UPDATED}.`
+              : `How this website works, and how to run walks and accident reports. Members, Messages, and Settings are for the group’s owners — where this guide mentions them, ask an owner. Last updated ${GUIDE_LAST_UPDATED}.`
+          }
           title="Guide"
         />
         <FullWidthDivider position="bottom" />
@@ -30,6 +34,7 @@ async function OrganiserGuidePageContent() {
       <OrganiserGuide
         accidentReportRetentionDays={accidentReportRetentionDays}
         cancelledWalkRetentionDays={cancelledWalkRetentionDays}
+        isOwner={admin.isOwner}
       />
     </div>
   );

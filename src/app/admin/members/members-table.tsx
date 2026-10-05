@@ -11,7 +11,13 @@ import { formatDate, formatMembershipAge, formatRelativeDays } from "@/lib/dates
 import { cn } from "@/lib/utils";
 import { initials } from "@/lib/names";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
-import { searchMembers, type MemberRoleFilter, type MemberRow, type MemberSort } from "@/server/actions";
+import {
+  searchMembers,
+  type MemberGroupTotals,
+  type MemberRoleFilter,
+  type MemberRow,
+  type MemberSort,
+} from "@/server/actions";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { AddOwnerButton } from "./add-owner-button";
 import { DeleteMemberButton } from "./delete-member-button";
@@ -323,6 +329,7 @@ function MemberListRow({
  * — it's only ever sent as a server action argument.
  */
 export function MembersTable({
+  initialGroupTotals,
   initialRows,
   initialTotal,
   inviteRequired,
@@ -330,6 +337,7 @@ export function MembersTable({
   viewerId,
   viewerIsOwner,
 }: {
+  initialGroupTotals: MemberGroupTotals;
   initialRows: ViewMember[];
   initialTotal: number;
   inviteRequired: boolean;
@@ -351,6 +359,7 @@ export function MembersTable({
   const [page, setPage] = useState(1);
   const [rows, setRows] = useState(initialRows);
   const [total, setTotal] = useState(initialTotal);
+  const [groupTotals, setGroupTotals] = useState(initialGroupTotals);
   const [isPending, startTransition] = useTransition();
   // Bumped by a row action (resend/cancel invite, role change, remove) once
   // it succeeds, to re-run the fetch below with the *current* query/page —
@@ -391,6 +400,7 @@ export function MembersTable({
     setPage(1);
     setRows(initialRows);
     setTotal(initialTotal);
+    setGroupTotals(initialGroupTotals);
     skipNextFetchRef.current = true;
   });
 
@@ -416,6 +426,7 @@ export function MembersTable({
           }
           setRows(result.rows.map((row) => ({ ...row, isYou: row.id === viewerId })));
           setTotal(result.total);
+          setGroupTotals(result.groupTotals);
         });
       },
       queryJustChanged && query !== "" ? 300 : 0,
@@ -458,7 +469,9 @@ export function MembersTable({
 
   // Group the current page's rows into Owner / Organisers / Members
   // sections, in that fixed order, keeping each group's own current sort
-  // order intact. This is what replaced the old per-row role badge — see
+  // order intact. The server sorts by group first, so a group only runs on
+  // to the next page when it's longer than a page, and each heading's count
+  // is the group's total, not just what's on this page. This is what replaced the old per-row role badge — see
   // DataListGroupHeader. With a role filter active there's usually only one
   // group, so the header (redundant with the Role select above) is
   // skipped entirely.
@@ -588,7 +601,7 @@ export function MembersTable({
               {groupedRows.map((group) => (
                 <Fragment key={group.key}>
                   {showGroupHeaders ? (
-                    <DataListGroupHeader count={group.members.length} label={group.label} />
+                    <DataListGroupHeader count={groupTotals[group.key]} label={group.label} />
                   ) : null}
                   {group.members.map((member) => (
                     <MemberListRow

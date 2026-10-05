@@ -3,6 +3,7 @@ import {
   formatCompactDateTime,
   formatDate,
   formatDateTime,
+  formatLongDateTime,
   formatMembershipAge,
   formatRelativeDays,
   formatTime,
@@ -193,6 +194,11 @@ describe("display formats", () => {
     vi.useFakeTimers({ now: new Date("2026-06-01T12:00:00.000Z") });
     expect(formatWalkDay(evening)).toBe("Wed 9 Sept");
     expect(formatWalkDay(new Date("2027-01-03T10:00:00.000Z"))).toBe("Sun 3 Jan 2027");
+  });
+
+  it("writes printed dates in full, in London time", () => {
+    expect(formatLongDateTime(evening)).toBe("Wednesday 9 September 2026, 18:30");
+    expect(formatLongDateTime(midnight)).toBe("Sunday 1 November 2026, 00:05");
   });
 
   it("writes walk dates and times in London time", () => {

@@ -13,9 +13,10 @@ import { walkStatus } from "@/lib/walk-window";
 import { type ActionResult, isPrismaCode, logActionError, ownerDenied, permissionDenied } from "./shared";
 
 /**
- * The UI only offers completed walks for linking. Enforce the same on the
- * server so a tampered walkId cannot attach a report to an upcoming,
- * in-progress, or cancelled walk.
+ * The UI only offers walks that have started (in progress or finished) for
+ * linking — an accident can be written up while the walk is still going.
+ * Enforce the same on the server so a tampered walkId cannot attach a
+ * report to an upcoming or cancelled walk.
  */
 async function assertLinkableWalkId(
   walkId: string | undefined,
@@ -32,10 +33,11 @@ async function assertLinkableWalkId(
     },
   });
   if (!walk) return { ok: false, error: "That walk is no longer there." };
-  if (walkStatus(walk) !== "completed") {
+  const status = walkStatus(walk);
+  if (status !== "completed" && status !== "in-progress") {
     return {
       ok: false,
-      error: "Link the report to a walk that has already finished, or leave it unlinked.",
+      error: "Link the report to a walk that has started, or leave it unlinked.",
     };
   }
   return { ok: true };

@@ -26,7 +26,7 @@ import { WalkDetailActions } from "./walk-detail-actions";
 import { WalkDescription } from "@/components/walk-description";
 import { WalkJourneyManager } from "./walk-journey";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { WalkAttendanceRow } from "./walk-attendance";
 
@@ -141,7 +141,9 @@ async function WalkDetailPageContent({
         </Alert>
         <Card className="gap-4">
           <CardHeader>
-            <CardTitle className="text-2xl">{walk.title}</CardTitle>
+            <h1 className="text-2xl leading-none font-semibold" data-slot="card-title">
+              {walk.title}
+            </h1>
           </CardHeader>
           <CardContent>
             <WalkFacts
@@ -245,7 +247,10 @@ async function WalkDetailPageContent({
             {/* Status label: beside the title from sm up; on phones it sits
                 full width under "Created by" instead (see below). */}
             <div className="flex w-full min-w-0 items-center justify-between gap-4">
-              <CardTitle className="min-w-0 text-2xl">{walk.title}</CardTitle>
+              {/* The page's one <h1> (CardTitle is a div). */}
+              <h1 className="min-w-0 text-2xl leading-none font-semibold" data-slot="card-title">
+                {walk.title}
+              </h1>
               <WalkStatusBadge
                 cancelledAt={walk.cancelledAt?.toISOString() ?? null}
                 className="max-sm:hidden"

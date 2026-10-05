@@ -48,6 +48,7 @@ export {
   type MemberHistoryItem,
   type MemberRow,
   type MemberRoleFilter,
+  type MemberGroupTotals,
   type MemberSort,
 } from "./actions/members";
 

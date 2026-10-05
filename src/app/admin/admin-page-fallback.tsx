@@ -21,7 +21,7 @@ export function AdminPageFallback({
     <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6 px-4 py-6 md:px-6">
       <div className="flex flex-col gap-1.5">
         {title ? (
-          <h2 className="font-semibold text-lg tracking-tight">{title}</h2>
+          <h1 className="font-semibold text-lg tracking-tight">{title}</h1>
         ) : (
           <Skeleton className="h-6 w-48" />
         )}

@@ -62,6 +62,10 @@ export type MemberRoleFilter = "all" | "ADMIN" | "MEMBER";
 
 export type MemberSort = "oldest" | "newest" | "name" | "clockins";
 
+/** How many matching people are in each heading's group across every page,
+ * not just the rows on this one. */
+export type MemberGroupTotals = { OWNER: number; ADMIN: number; MEMBER: number };
+
 /** A plain member with no clock-ins yet and no invite in flight, or an
  * organiser invite that's expired — see MemberRow.needsAttention. */
 function attentionWhere(now: Date): Prisma.UserWhereInput {
@@ -94,25 +98,30 @@ export async function searchMembers({
   sort?: MemberSort;
   /** Only members needing a look — see MemberRow.needsAttention. */
   needsAttention?: boolean;
-}): Promise<{ rows: MemberRow[]; total: number }> {
+}): Promise<{ rows: MemberRow[]; total: number; groupTotals: MemberGroupTotals }> {
   const admin = await requireAdmin();
-  if (!admin.permMembersView) return { rows: [], total: 0 };
+  if (!admin.permMembersView) return { rows: [], total: 0, groupTotals: { OWNER: 0, ADMIN: 0, MEMBER: 0 } };
 
   const needle = query.trim();
   let searchWhere: Prisma.UserWhereInput | undefined;
   if (needle) {
+    // Every word has to match the name or email somewhere, so a full name
+    // ("Mark Walker") finds them as well as either half does.
+    const words = needle.split(/\s+/);
     const textMatch: Prisma.UserWhereInput = {
-      OR: [
-        { email: { contains: needle, mode: "insensitive" } },
-        { firstName: { contains: needle, mode: "insensitive" } },
-        { lastName: { contains: needle, mode: "insensitive" } },
-      ],
+      AND: words.map((word) => ({
+        OR: [
+          { email: { contains: word, mode: "insensitive" as const } },
+          { firstName: { contains: word, mode: "insensitive" as const } },
+          { lastName: { contains: word, mode: "insensitive" as const } },
+        ],
+      })),
     };
     // Same "type a role name to filter by it" shortcut the old client-side
     // search had — typing "adm"/"organiser"/"member" also matches by role.
     const lower = needle.toLowerCase();
     const roleMatches: Prisma.UserWhereInput["role"][] = [];
-    if (lower.length >= 3) {
+    if (lower.length >= 3 && words.length === 1) {
       if ("organiser".startsWith(lower) || "admin".startsWith(lower)) roleMatches.push("ADMIN");
       if ("member".startsWith(lower)) roleMatches.push("MEMBER");
     }
@@ -132,7 +141,11 @@ export async function searchMembers({
     ...(andConditions.length > 0 ? { AND: andConditions } : {}),
   };
 
-  const orderBy: Prisma.UserOrderByWithRelationInput[] =
+  // Owners, then organisers, then members — the groups the list shows under
+  // headings — so a group is never split by paging, then the chosen sort
+  // inside each group.
+  const groupOrder: Prisma.UserOrderByWithRelationInput[] = [{ isOwner: "desc" }, { role: "desc" }];
+  const sortOrder: Prisma.UserOrderByWithRelationInput[] =
     sort === "newest"
       ? [{ createdAt: "desc" }, { id: "desc" }]
       : sort === "name"
@@ -143,10 +156,14 @@ export async function searchMembers({
             // when rows share a createdAt millisecond.
             [{ createdAt: "asc" }, { id: "asc" }];
 
+  const orderBy = [...groupOrder, ...sortOrder];
+
   const skip = (Math.max(1, page) - 1) * LIST_PAGE_SIZE;
 
-  const [total, members, ownerIds] = await Promise.all([
+  const [total, ownersTotal, organisersTotal, members, ownerIds] = await Promise.all([
     prisma.user.count({ where }),
+    prisma.user.count({ where: { AND: [where, { isOwner: true }] } }),
+    prisma.user.count({ where: { AND: [where, { isOwner: false, role: "ADMIN" }] } }),
     prisma.user.findMany({
       where,
       orderBy,
@@ -176,6 +193,7 @@ export async function searchMembers({
   const nowMs = now.getTime();
   return {
     total,
+    groupTotals: { OWNER: ownersTotal, ADMIN: organisersTotal, MEMBER: total - ownersTotal - organisersTotal },
     rows: members.map((member) => {
       const inviteExpiresAtMs = member.organiserInviteExpiresAt?.getTime() ?? 0;
       const inviteExpired = member.organiserInviteSentAt ? inviteExpiresAtMs < nowMs : false;

@@ -78,8 +78,12 @@ async function AccidentReportsPageContent({
   ]);
 
   // An accident report is about something that happened on a walk — a walk
-  // that hasn't started yet (or was cancelled) can't be linked to one.
-  const completedWalks = walks.filter((walk) => walkStatus(walk) === "completed");
+  // that hasn't started yet (or was cancelled) can't be linked to one. One
+  // still in progress can: the report is often written up on the day.
+  const linkableWalks = walks.filter((walk) => {
+    const status = walkStatus(walk);
+    return status === "completed" || status === "in-progress";
+  });
 
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
@@ -112,7 +116,7 @@ async function AccidentReportsPageContent({
           retentionLocked: report.retentionLocked,
         }))}
         sortOrder={sort}
-        walks={completedWalks.map((walk) => ({
+        walks={linkableWalks.map((walk) => ({
           id: walk.id,
           title: walk.title,
           startsAt: walk.startsAt.toISOString(),
