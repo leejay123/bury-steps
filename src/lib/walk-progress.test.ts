@@ -17,7 +17,7 @@ function data(overrides: Partial<WalkGameLoadedData> = {}): WalkGameLoadedData {
           {
             userId: "viewer",
             clockedOutAt: null,
-            user: { firstName: "Pat", lastName: "Lee" },
+            user: { firstName: "Pat", lastName: "Lee", imageUrl: null },
           },
         ],
       },
