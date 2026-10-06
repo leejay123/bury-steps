@@ -1,0 +1,18 @@
+name: Walk starting soon
+
+on:
+  schedule:
+    # About every 15 minutes. GitHub may start a run a few minutes late;
+    # the alert window is wide enough to still catch the walk.
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ask the site to send starting-soon alerts
+        run: |
+          curl --fail-with-body --silent --show-error \
+            --header "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://burysteps-walkinggroup.co.uk/api/cron/walk-starting-soon

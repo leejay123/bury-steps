@@ -7,8 +7,9 @@ import { startingSoonPushWindow } from "@/lib/walk-push";
 
 /**
  * Phone alert about an hour before each walk, for members who turned alerts
- * on. Scheduled every 15 minutes. A walk is marked sent once the alert goes
- * out, or when nobody is subscribed, so it is not retried all afternoon.
+ * on. A free schedule calls this about every 15 minutes. A walk is marked
+ * sent once the alert goes out, or when nobody is subscribed, so it is not
+ * retried all afternoon.
  */
 export async function GET(req: Request) {
   if (!bearerMatches(req.headers.get("authorization"), process.env.CRON_SECRET)) {

@@ -55,7 +55,8 @@ export function PrivacySiteSection() {
               notifications in the browser is enough. Turning it off removes that device. The
               keys that send the alerts live in the site&apos;s environment (VAPID_PUBLIC_KEY,
               VAPID_PRIVATE_KEY, and VAPID_SUBJECT). Without them, the switch explains that
-              alerts are not set up yet.
+              alerts are not set up yet. A free schedule looks for walks that are about to
+              start, about every 15 minutes.
             </p>
             <p>
               The homepage is cached so visitors get it quickly, without waiting on a sign-in

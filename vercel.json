@@ -11,10 +11,6 @@
     {
       "path": "/api/cron/monthly-progress",
       "schedule": "0 6 1 * *"
-    },
-    {
-      "path": "/api/cron/walk-starting-soon",
-      "schedule": "*/15 * * * *"
     }
   ]
 }
