@@ -100,7 +100,7 @@ describe("createJourneyEvent", () => {
   });
 
   it("rejects an organiser without the Journey updates permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permWalksJourney: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permWalksJourney: false });
     const result = await createJourneyEvent(null, eventForm());
     expect(result).toEqual({ ok: false, error: "You do not have permission to manage journey updates." });
   });

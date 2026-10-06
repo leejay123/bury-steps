@@ -1,3 +1,4 @@
+import { SerwistProvider } from "@serwist/turbopack/react";
 import type { CSSProperties } from "react";
 import { PageFade } from "@/components/page-fade";
 import { ClientPathnameProvider } from "@/components/client-pathname";
@@ -63,6 +64,11 @@ export async function generateMetadata(): Promise<Metadata> {
       title: theme.siteName,
       description,
     },
+    appleWebApp: {
+      capable: true,
+      title: theme.siteName,
+      statusBarStyle: "default",
+    },
   };
 }
 
@@ -119,6 +125,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body
         className={`${face.className} min-h-dvh overflow-x-clip touch-manipulation bg-background text-foreground antialiased`}
       >
+        <SerwistProvider reloadOnOnline={false} swUrl="/serwist/sw.js">
         {/*
           The browser's own scroll-restoration-on-refresh fights this app's
           progressively-loading content (images, carousels, the FAQ
@@ -303,6 +310,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         */}
         <Analytics />
         <SpeedInsights />
+        </SerwistProvider>
       </body>
     </html>
   );

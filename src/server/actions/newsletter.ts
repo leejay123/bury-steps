@@ -1,5 +1,8 @@
 "use server";
 
+import { z } from "zod";
+import { guardForm } from "@/lib/safe-action";
+
 import { revalidatePath } from "@/lib/revalidate";
 import { getOptionalUser, requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -19,7 +22,7 @@ import { NewsletterCampaignEmail } from "@/lib/email/templates/newsletter-campai
 import { makeCapabilityToken } from "@/lib/email/unsubscribe";
 import { type ActionResult, isPrismaCode, logActionError, permissionDenied } from "./shared";
 
-export async function subscribeToNewsletter(
+async function subscribeToNewsletterWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -141,7 +144,7 @@ async function loadCampaignRecipients(): Promise<{
   return { recipients, footerUnsubscribed };
 }
 
-export async function sendNewsletterCampaign(
+async function sendNewsletterCampaignWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -219,7 +222,7 @@ export async function sendNewsletterCampaign(
  * duplicate from before parseContactEmail lowercased addresses on the way
  * in, or someone who asked to be removed some other way than the
  * one-click unsubscribe link. Also removes them from the Resend audience. */
-export async function removeNewsletterSubscriber(
+async function removeNewsletterSubscriberWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -284,7 +287,7 @@ export async function unsubscribeFromNewsletter(token: string): Promise<boolean>
 }
 
 /** Form action for the public confirm-unsubscribe page. */
-export async function confirmNewsletterUnsubscribe(
+async function confirmNewsletterUnsubscribeWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -294,3 +297,66 @@ export async function confirmNewsletterUnsubscribe(
   if (!ok) return { ok: false, error: "This unsubscribe link is invalid or has already been used." };
   return { ok: true, message: "You've been unsubscribed." };
 }
+
+const subscribeSchema = z
+  .object({
+    company: z.string(),
+    email: z.string(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.company.trim().length > 0) return;
+    if (parseContactEmail(value.email) === "invalid") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Enter a valid email address.",
+        path: ["email"],
+      });
+    }
+  });
+
+function readSubscribe(formData: FormData) {
+  return {
+    company: String(formData.get("company") ?? ""),
+    email: String(formData.get("email") ?? ""),
+  };
+}
+
+const campaignSchema = z.object({
+  subject: z.string().trim().min(1, "Enter a subject."),
+  body: z.string().trim().min(1, "Enter a message."),
+});
+
+function readCampaign(formData: FormData) {
+  return {
+    subject: String(formData.get("subject") ?? ""),
+    body: String(formData.get("body") ?? ""),
+  };
+}
+
+const subscriberIdSchema = z.object({
+  id: z.string().min(1, "No subscriber selected."),
+});
+
+const unsubscribeTokenSchema = z.object({
+  token: z.string().min(1, "This link is missing its token."),
+});
+
+export const subscribeToNewsletter = guardForm("public", subscribeSchema, readSubscribe, subscribeToNewsletterWork);
+export const sendNewsletterCampaign = guardForm(
+  "organiser",
+  campaignSchema,
+  readCampaign,
+  sendNewsletterCampaignWork,
+);
+export const removeNewsletterSubscriber = guardForm(
+  "organiser",
+  subscriberIdSchema,
+  (formData) => ({ id: String(formData.get("id") ?? "") }),
+  removeNewsletterSubscriberWork,
+);
+export const confirmNewsletterUnsubscribe = guardForm(
+  "public",
+  unsubscribeTokenSchema,
+  (formData) => ({ token: String(formData.get("token") ?? "") }),
+  confirmNewsletterUnsubscribeWork,
+);

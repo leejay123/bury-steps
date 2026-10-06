@@ -1,5 +1,8 @@
 "use server";
 
+import { z } from "zod";
+import { guardForm } from "@/lib/safe-action";
+
 import { clerkClient } from "@clerk/nextjs/server";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { requireAdmin, displayName } from "@/lib/auth";
@@ -22,7 +25,7 @@ import { type ActionResult, logActionError, ownerDenied } from "./shared";
  * (who, who-as, when) before the redirect happens, so the log is written
  * even if the admin never actually completes the sign-in.
  */
-export async function startImpersonation(
+async function startImpersonationWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -108,3 +111,14 @@ export async function startImpersonation(
     return logActionError("startImpersonation", err, "Could not log in as that member. Try again.");
   }
 }
+
+const targetSchema = z.object({
+  targetId: z.string().min(1, "No member selected."),
+});
+
+export const startImpersonation = guardForm(
+  "organiser",
+  targetSchema,
+  (formData) => ({ targetId: String(formData.get("targetId") ?? "") }),
+  startImpersonationWork,
+);

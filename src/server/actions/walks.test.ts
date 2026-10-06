@@ -169,14 +169,14 @@ beforeEach(() => {
 
 describe("Walks permission guard", () => {
   it("rejects duplicateWalk without the Create permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permWalksCreate: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permWalksCreate: false });
     const result = await duplicateWalk(null, form({ walkId: "walk-1" }));
     expect(result).toEqual({ ok: false, error: "You do not have permission to manage creating walks." });
     expect(prismaMock.walk.findUnique).not.toHaveBeenCalled();
   });
 
   it("rejects cancelWalk without the Cancel permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permWalksCancel: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permWalksCancel: false });
     const result = await cancelWalk(null, form({ walkId: "walk-1" }));
     expect(result).toEqual({
       ok: false,

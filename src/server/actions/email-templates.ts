@@ -1,5 +1,8 @@
 "use server";
 
+import { z } from "zod";
+import { guardForm } from "@/lib/safe-action";
+
 import { revalidatePath } from "@/lib/revalidate";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -43,7 +46,7 @@ export async function getEmailTemplateOverrides(): Promise<
   return result;
 }
 
-export async function updateEmailTemplate(
+async function updateEmailTemplateWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -98,7 +101,7 @@ export async function updateEmailTemplate(
  * template actually renders (fonts, spacing, dark mode, whatever their edit
  * changed) without doing something for real to trigger it.
  */
-export async function sendTestEmailTemplate(
+async function sendTestEmailTemplateWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -127,7 +130,7 @@ export async function sendTestEmailTemplate(
   return { ok: true, message: `Test email sent to ${admin.email}.` };
 }
 
-export async function resetEmailTemplate(
+async function resetEmailTemplateWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -152,7 +155,7 @@ export async function resetEmailTemplate(
  * on; test sends still work. Owner-only, like other site-wide choices that
  * affect every member.
  */
-export async function setEmailEnabled(
+async function setEmailEnabledWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -178,3 +181,21 @@ export async function setEmailEnabled(
   const label = getEmailTemplateMeta(key).label;
   return { ok: true, message: enabled ? `“${label}” emails are on.` : `“${label}” emails are off.` };
 }
+
+const emailKeySchema = z.object({
+  key: z.string().refine(isEmailTemplateKey, "Unknown email."),
+});
+
+function readEmailKey(formData: FormData) {
+  return { key: String(formData.get("key") ?? "") };
+}
+
+export const updateEmailTemplate = guardForm("organiser", emailKeySchema, readEmailKey, updateEmailTemplateWork);
+export const sendTestEmailTemplate = guardForm(
+  "organiser",
+  emailKeySchema,
+  readEmailKey,
+  sendTestEmailTemplateWork,
+);
+export const resetEmailTemplate = guardForm("organiser", emailKeySchema, readEmailKey, resetEmailTemplateWork);
+export const setEmailEnabled = guardForm("organiser", emailKeySchema, readEmailKey, setEmailEnabledWork);

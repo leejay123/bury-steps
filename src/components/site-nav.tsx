@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { getOptionalUser } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { vapidConfig } from "@/lib/vapid";
 import { Button } from "@/components/ui/button";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
 import { navItems } from "@/components/site-nav-items";
@@ -83,6 +85,9 @@ async function SiteNavBell({ firstName, userId }: { firstName: string | null; us
 export async function SiteNav() {
   const afterAuth = `${appUrl()}${AFTER_AUTH_PATH}`;
   const [user, progressEnabled] = await Promise.all([getOptionalUser(), getProgressEnabled()]);
+  const pushOn = user
+    ? (await prisma.pushSubscription.findFirst({ where: { userId: user.id }, select: { id: true } })) != null
+    : false;
   const isAdmin = user?.role === "ADMIN";
   const walksHref = isAdmin ? "/admin/walks" : "/walks";
   // user.isOwner is already on the row — no second lookup.
@@ -125,6 +130,7 @@ export async function SiteNav() {
             <EmailPreferencesDrawer
               email={user.email}
               isAdmin={isAdmin}
+              phoneAlertsOn={pushOn}
               preferences={{
                 emailAccidentAlerts: user.emailAccidentAlerts,
                 emailNewsletter: user.emailNewsletter,
@@ -132,6 +138,7 @@ export async function SiteNav() {
                 emailProgress: user.emailProgress,
                 emailWalkAnnouncements: user.emailWalkAnnouncements,
               }}
+              vapidPublicKey={vapidConfig()?.publicKey ?? null}
             />
           </>
         ) : (

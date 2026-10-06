@@ -139,7 +139,7 @@ describe("submitContactMessage", () => {
 
 describe("markContactMessageRead", () => {
   it("rejects an organiser without the Messages permission", async () => {
-    requireAdmin.mockResolvedValueOnce({
+    requireAdmin.mockResolvedValue({
       id: "admin-1",
       permWalksView: true,
       permWalksCreate: true,
@@ -188,7 +188,7 @@ describe("markContactMessageRead", () => {
 
 describe("deleteContactMessage", () => {
   it("rejects an organiser without the Messages permission", async () => {
-    requireAdmin.mockResolvedValueOnce({
+    requireAdmin.mockResolvedValue({
       id: "admin-1",
       permWalksView: true,
       permWalksCreate: true,

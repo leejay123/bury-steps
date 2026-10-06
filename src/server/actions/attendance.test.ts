@@ -329,7 +329,7 @@ describe("adminClockIn", () => {
   });
 
   it("rejects an organiser without the Attendance permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permWalksAttendance: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permWalksAttendance: false });
     const result = await adminClockIn(null, adminClockInForm());
     expect(result).toEqual({ ok: false, error: "You do not have permission to manage attendance." });
     expect(transaction).not.toHaveBeenCalled();
@@ -640,7 +640,7 @@ describe("searchAddableMembers", () => {
   });
 
   it("returns nothing for an organiser without the Attendance permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permWalksAttendance: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permWalksAttendance: false });
     expect(await searchAddableMembers("walk-1", "jo")).toEqual([]);
     expect(prismaMock.walk.findUnique).not.toHaveBeenCalled();
   });

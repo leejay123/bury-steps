@@ -75,7 +75,7 @@ beforeEach(() => {
 
 describe("Site settings permission guard", () => {
   it("rejects updateSiteBranding for an organiser without the Display permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permDisplay: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permDisplay: false });
     const result = await updateSiteBranding(
       null,
       form({ siteName: "Bury Steps", siteTagline: "A friendly walking group." }),
@@ -85,21 +85,21 @@ describe("Site settings permission guard", () => {
   });
 
   it("rejects updateOrganiserInviteRequired for an organiser without the Display permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permDisplay: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permDisplay: false });
     const result = await updateOrganiserInviteRequired(null, form({}));
     expect(result).toEqual({ ok: false, error: "You do not have permission to manage site display and branding." });
     expect(prismaMock.siteSetting.upsert).not.toHaveBeenCalled();
   });
 
   it("rejects updateMonthlyClockInGoal for an organiser without the Progress permission (a separate permission from Display)", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permProgress: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permProgress: false });
     const result = await updateMonthlyClockInGoal(null, form({ monthlyClockInGoal: "150" }));
     expect(result).toEqual({ ok: false, error: "You do not have permission to manage the progress goal." });
     expect(prismaMock.siteSetting.upsert).not.toHaveBeenCalled();
   });
 
   it("rejects updateCancelledWalkRetentionDays for an organiser without the Cache & reset permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permCacheReset: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permCacheReset: false });
     const result = await updateCancelledWalkRetentionDays(
       null,
       form({ cancelledWalkRetentionDays: "30" }),
@@ -112,7 +112,7 @@ describe("Site settings permission guard", () => {
   });
 
   it("rejects updateAccidentReportRetentionDays for an organiser without the Cache & reset permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permCacheReset: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permCacheReset: false });
     const result = await updateAccidentReportRetentionDays(
       null,
       form({ accidentReportRetentionDays: "90" }),

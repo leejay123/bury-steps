@@ -28,7 +28,7 @@ export function HeroParallaxHome({
   siteName: string;
   siteTagline: string;
 }) {
-  const own = slides.map((slide) => ({ title: slide.alt, image: slide.src }));
+  const own = slides.map((slide) => ({ title: slide.alt, image: slide.src, blur: slide.blur }));
   const samples = SAMPLE_WALK_PHOTOS.map((sample) => ({ title: sample.alt, image: sample.src }));
   const cards = [...own, ...samples].slice(0, Math.max(CARD_COUNT, own.length));
 

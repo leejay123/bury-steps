@@ -1,5 +1,8 @@
 "use server";
 
+import { z } from "zod";
+import { guardForm } from "@/lib/safe-action";
+
 import { revalidatePath } from "@/lib/revalidate";
 import { clerkClient } from "@clerk/nextjs/server";
 import type { Prisma } from "@prisma/client";
@@ -224,7 +227,7 @@ export async function searchMembers({
   };
 }
 
-export async function deleteMember(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+async function deleteMemberWork(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const admin = await requireAdmin();
   const id = String(formData.get("userId") ?? "");
   if (!id) return { ok: false, error: "No member selected." };
@@ -419,7 +422,7 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
  * Promote a member to organiser, or demote an organiser to member. The group
  * must always keep at least one organiser — demoting the last one is blocked.
  */
-export async function setMemberRole(
+async function setMemberRoleWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -567,7 +570,7 @@ export async function setMemberRole(
  * them first if they aren't one yet). For adding a co-owner without giving
  * up your own access, see addOwner below instead.
  */
-export async function transferOwnership(
+async function transferOwnershipWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -633,7 +636,7 @@ export async function transferOwnership(
  * src/lib/site-owner.ts), unlike transferOwnership above, which is a full
  * handover. Owner-only, and only to someone already an organiser.
  */
-export async function addOwner(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+async function addOwnerWork(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!(await isOwner(admin.id))) return ownerDenied("add another owner");
   const limited = checkRateLimit(`${admin.id}:addOwner`, 10, 60_000);
@@ -693,7 +696,7 @@ export async function addOwner(_prev: ActionResult | null, formData: FormData): 
  * owner (see src/lib/site-owner.ts's ownerCount; at least one must always
  * remain). Owner-only, same as every other action here.
  */
-export async function removeOwner(
+async function removeOwnerWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -799,7 +802,7 @@ async function sendOrganiserInvite(target: {
   };
 }
 
-export async function resendOrganiserInvite(
+async function resendOrganiserInviteWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -824,7 +827,7 @@ export async function resendOrganiserInvite(
   return sendOrganiserInvite(target);
 }
 
-export async function cancelOrganiserInvite(
+async function cancelOrganiserInviteWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -875,7 +878,7 @@ export async function cancelOrganiserInvite(
  * the "require accepted invite" setting is that this is the one and only
  * place role flips to ADMIN while it's on.
  */
-export async function acceptOrganiserInvite(
+async function acceptOrganiserInviteWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -1057,3 +1060,43 @@ export async function getMemberHistory(userId: string): Promise<{
     })),
   };
 }
+
+const memberIdSchema = z.object({
+  userId: z.string().min(1, "No member selected."),
+});
+
+function readMemberId(formData: FormData) {
+  return { userId: String(formData.get("userId") ?? "") };
+}
+
+const organiserIdSchema = z.object({
+  userId: z.string().min(1, "No organiser selected."),
+});
+
+const inviteTokenSchema = z.object({
+  token: z.string().min(1, "This invite link is invalid."),
+});
+
+export const deleteMember = guardForm("organiser", memberIdSchema, readMemberId, deleteMemberWork);
+export const setMemberRole = guardForm("organiser", memberIdSchema, readMemberId, setMemberRoleWork);
+export const transferOwnership = guardForm("organiser", organiserIdSchema, readMemberId, transferOwnershipWork);
+export const addOwner = guardForm("organiser", organiserIdSchema, readMemberId, addOwnerWork);
+export const removeOwner = guardForm("organiser", organiserIdSchema, readMemberId, removeOwnerWork);
+export const resendOrganiserInvite = guardForm(
+  "organiser",
+  memberIdSchema,
+  readMemberId,
+  resendOrganiserInviteWork,
+);
+export const cancelOrganiserInvite = guardForm(
+  "organiser",
+  memberIdSchema,
+  readMemberId,
+  cancelOrganiserInviteWork,
+);
+export const acceptOrganiserInvite = guardForm(
+  "public",
+  inviteTokenSchema,
+  (formData) => ({ token: String(formData.get("token") ?? "") }),
+  acceptOrganiserInviteWork,
+);

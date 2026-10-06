@@ -1,6 +1,8 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef } from "react";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { useQueryChoice, useQueryText } from "@/hooks/use-filter-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CalendarDays, ChevronRight, Clock, MapPin, Search, SearchX } from "lucide-react";
@@ -160,11 +162,22 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
   );
 }
 
+const UPCOMING_STATUSES = ["all", "upcoming", "starting-soon", "in-progress"] as const;
+const SORTS = ["asc", "desc"] as const;
+
 export function UpcomingWalkCards({ walks }: { walks: UpcomingWalkCard[] }) {
-  const [searchTerm, setSearchTerm] = useState("");
+  return (
+    <NuqsAdapter>
+      <UpcomingWalkCardsInner walks={walks} />
+    </NuqsAdapter>
+  );
+}
+
+function UpcomingWalkCardsInner({ walks }: { walks: UpcomingWalkCard[] }) {
+  const [searchTerm, setSearchTerm] = useQueryText("q");
   const searchRef = useRef<HTMLInputElement>(null);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
+  const [statusFilter, setStatusFilter] = useQueryChoice("status", UPCOMING_STATUSES, "all");
+  const [sortOrder, setSortOrder] = useQueryChoice("sort", SORTS, "asc");
   const deferredSearchTerm = useDeferredValue(searchTerm);
   const now = useLiveNow();
   const router = useRouter();

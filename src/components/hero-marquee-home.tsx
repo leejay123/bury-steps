@@ -27,7 +27,7 @@ export function HeroMarqueeHome({
   siteName: string;
   siteTagline: string;
 }) {
-  const own = slides.map((slide) => ({ src: slide.src, alt: slide.alt }));
+  const own = slides.map((slide) => ({ src: slide.src, alt: slide.alt, blur: slide.blur }));
   const images = [...own, ...SAMPLE_WALK_PHOTOS].slice(0, Math.max(TILE_COUNT, own.length));
 
   return (

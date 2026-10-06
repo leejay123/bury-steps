@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "@/lib/revalidate";
 import { z } from "zod";
+import { guardForm } from "@/lib/safe-action";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { isValidLondonWallClock, londonWallClockToUtc } from "@/lib/dates";
@@ -35,7 +36,7 @@ const journeyEventSchema = z.object({
     .refine(isValidLondonWallClock, "Pick a valid time."),
 });
 
-export async function createJourneyEvent(
+async function createJourneyEventWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -110,7 +111,7 @@ export async function createJourneyEvent(
   }
 }
 
-export async function updateJourneyEvent(
+async function updateJourneyEventWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -185,7 +186,7 @@ export async function updateJourneyEvent(
   }
 }
 
-export async function deleteJourneyEvent(
+async function deleteJourneyEventWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -238,3 +239,46 @@ export async function deleteJourneyEvent(
     return logActionError("deleteJourneyEvent", err);
   }
 }
+
+const updateJourneyEventSchema = journeyEventSchema.extend({
+  eventId: z.string().min(1),
+});
+
+function readJourneyEvent(formData: FormData): z.input<typeof journeyEventSchema> {
+  return {
+    walkId: formData.get("walkId"),
+    title: formData.get("title"),
+    body: formData.get("body") || undefined,
+    happenedAt: formData.get("happenedAt"),
+  } as z.input<typeof journeyEventSchema>;
+}
+
+function readUpdateJourney(formData: FormData): z.input<typeof updateJourneyEventSchema> {
+  return {
+    ...readJourneyEvent(formData),
+    eventId: formData.get("eventId"),
+  } as z.input<typeof updateJourneyEventSchema>;
+}
+
+const deleteJourneySchema = z.object({
+  eventId: z.string().min(1, "That event is no longer there."),
+});
+
+export const createJourneyEvent = guardForm(
+  "organiser",
+  journeyEventSchema,
+  readJourneyEvent,
+  createJourneyEventWork,
+);
+export const updateJourneyEvent = guardForm(
+  "organiser",
+  updateJourneyEventSchema,
+  readUpdateJourney,
+  updateJourneyEventWork,
+);
+export const deleteJourneyEvent = guardForm(
+  "organiser",
+  deleteJourneySchema,
+  (formData) => ({ eventId: String(formData.get("eventId") ?? "") }),
+  deleteJourneyEventWork,
+);

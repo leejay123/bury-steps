@@ -1,5 +1,8 @@
 "use server";
 
+import { z } from "zod";
+import { guardArgs, guardCall, guardForm } from "@/lib/safe-action";
+
 import { revalidatePath, revalidateTag } from "@/lib/revalidate";
 import { customAlphabet } from "nanoid";
 import { requireAdmin, requireUser } from "@/lib/auth";
@@ -143,7 +146,7 @@ async function notifyMembersOfNewNotice(notice: {
   }
 }
 
-export async function addSiteNotice(
+async function addSiteNoticeWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -201,7 +204,7 @@ export async function addSiteNotice(
   };
 }
 
-export async function updateSiteNotice(
+async function updateSiteNoticeWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -293,7 +296,7 @@ export async function updateSiteNotice(
   return { ok: true, message: "Notice updated. Members will see it as recently updated." };
 }
 
-export async function deleteSiteNotice(
+async function deleteSiteNoticeWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -321,7 +324,7 @@ export async function deleteSiteNotice(
   return { ok: true, message: "Notice removed." };
 }
 
-export async function setSiteNoticeEnabled(
+async function setSiteNoticeEnabledWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -359,7 +362,7 @@ export async function setSiteNoticeEnabled(
   };
 }
 
-export async function markSiteNoticesRead(): Promise<ActionResult> {
+async function markSiteNoticesReadWork(): Promise<ActionResult> {
   const user = await requireUser();
 
   const limited = checkRateLimit(`${user.id}:markSiteNoticesRead`, 20, 60_000);
@@ -404,7 +407,7 @@ export async function markSiteNoticesRead(): Promise<ActionResult> {
   return { ok: true };
 }
 
-export async function markSiteNoticeRead(noticeId: string): Promise<ActionResult> {
+async function markSiteNoticeReadWork(noticeId: string): Promise<ActionResult> {
   const user = await requireUser();
   const id = noticeId.trim();
   if (!id) return { ok: false, error: "No notice selected." };
@@ -438,7 +441,7 @@ function readNoticeCategoryLabel(formData: FormData): { label: string } | { erro
   return { label };
 }
 
-export async function addSiteNoticeCategory(
+async function addSiteNoticeCategoryWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -476,7 +479,7 @@ export async function addSiteNoticeCategory(
   return { ok: true, message: "Category added." };
 }
 
-export async function updateSiteNoticeCategory(
+async function updateSiteNoticeCategoryWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -507,7 +510,7 @@ export async function updateSiteNoticeCategory(
   return { ok: true, message: "Category updated." };
 }
 
-export async function deleteSiteNoticeCategory(
+async function deleteSiteNoticeCategoryWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -557,7 +560,7 @@ export async function deleteSiteNoticeCategory(
   return { ok: true, message: "Category removed." };
 }
 
-export async function reorderSiteNoticeCategories(ids: string[]): Promise<ActionResult> {
+async function reorderSiteNoticeCategoriesWork(ids: string[]): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permNotices) return permissionDenied("permNotices");
   const validated = validateReorderIds(ids, MAX_NOTICE_CATEGORIES * 2);
@@ -588,3 +591,91 @@ export async function reorderSiteNoticeCategories(ids: string[]): Promise<Action
   revalidateNotices();
   return { ok: true };
 }
+
+const noticeFieldsSchema = z.object({
+  title: z.string().trim().min(1, "Add a title."),
+  body: z.string().trim().min(1, "Add a short message for the bell."),
+});
+
+function readNoticeFields(formData: FormData) {
+  return {
+    title: String(formData.get("title") ?? ""),
+    body: String(formData.get("body") ?? ""),
+  };
+}
+
+const updateNoticeSchema = z.object({
+  noticeId: z.string().min(1, "No notice selected."),
+  title: z.string().trim().min(1, "Add a title."),
+  body: z.string().trim().min(1, "Add a short message for the bell."),
+});
+
+function readUpdateNotice(formData: FormData) {
+  return {
+    noticeId: String(formData.get("noticeId") ?? ""),
+    title: String(formData.get("title") ?? ""),
+    body: String(formData.get("body") ?? ""),
+  };
+}
+
+const noticeIdSchema = z.object({
+  noticeId: z.string().min(1, "No notice selected."),
+});
+
+function readNoticeId(formData: FormData) {
+  return { noticeId: String(formData.get("noticeId") ?? "") };
+}
+
+const noticeCategorySchema = z.object({
+  label: z.string().trim().min(1, "Add a category name."),
+});
+
+const updateNoticeCategorySchema = z.object({
+  categoryId: z.string().min(1, "No category selected."),
+  label: z.string().trim().min(1, "Add a category name."),
+});
+
+const deleteNoticeCategorySchema = z.object({
+  categoryId: z.string().min(1, "No category selected."),
+});
+
+const reorderIdsSchema = z
+  .array(z.string().min(1, "Could not save that order. Try again."))
+  .min(1, "Could not save that order. Try again.");
+
+export const addSiteNotice = guardForm("organiser", noticeFieldsSchema, readNoticeFields, addSiteNoticeWork);
+export const updateSiteNotice = guardForm("organiser", updateNoticeSchema, readUpdateNotice, updateSiteNoticeWork);
+export const deleteSiteNotice = guardForm("organiser", noticeIdSchema, readNoticeId, deleteSiteNoticeWork);
+export const setSiteNoticeEnabled = guardForm("organiser", noticeIdSchema, readNoticeId, setSiteNoticeEnabledWork);
+export const markSiteNoticesRead = guardCall("member", markSiteNoticesReadWork);
+export const markSiteNoticeRead = guardArgs(
+  "member",
+  z.string().trim().min(1, "No notice selected."),
+  markSiteNoticeReadWork,
+);
+export const addSiteNoticeCategory = guardForm(
+  "organiser",
+  noticeCategorySchema,
+  (formData) => ({ label: String(formData.get("label") ?? "") }),
+  addSiteNoticeCategoryWork,
+);
+export const updateSiteNoticeCategory = guardForm(
+  "organiser",
+  updateNoticeCategorySchema,
+  (formData) => ({
+    categoryId: String(formData.get("categoryId") ?? ""),
+    label: String(formData.get("label") ?? ""),
+  }),
+  updateSiteNoticeCategoryWork,
+);
+export const deleteSiteNoticeCategory = guardForm(
+  "organiser",
+  deleteNoticeCategorySchema,
+  (formData) => ({ categoryId: String(formData.get("categoryId") ?? "") }),
+  deleteSiteNoticeCategoryWork,
+);
+export const reorderSiteNoticeCategories = guardArgs(
+  "organiser",
+  reorderIdsSchema,
+  reorderSiteNoticeCategoriesWork,
+);

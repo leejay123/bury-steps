@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 import { cn } from "@/lib/utils";
+import { blurImageProps } from "@/lib/blur-image";
 
 const noopSubscribe = () => () => {};
 
@@ -19,6 +20,8 @@ export interface SliderImage {
   src: string;
   /** Alternative text ("" when the image is purely decorative) */
   alt: string;
+  /** Soft preview while the photo loads. */
+  blur?: string | null;
 }
 
 interface ImageSliderProps extends React.HTMLAttributes<HTMLElement> {
@@ -176,6 +179,7 @@ export function ImageSlider({
                   priority={index === 0}
                   sizes="100vw"
                   src={image.src}
+                  {...blurImageProps(image.blur)}
                 />
               </motion.div>
             )}

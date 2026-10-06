@@ -4,8 +4,9 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 
 import { cn } from "@/lib/utils";
+import { blurImageProps } from "@/lib/blur-image";
 
-export type Marquee3DImage = string | { src: string; alt?: string };
+export type Marquee3DImage = string | { src: string; alt?: string; blur?: string | null };
 
 interface Marquee3DProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Image URLs, or { src, alt } objects (images without alt are decorative) */
@@ -93,7 +94,7 @@ export function Marquee3D({
                   {Array.from({ length: perCopy }, (_, k) => {
                     const i = c + k * columns;
                     const image = images[i % n];
-                    const { src, alt = "" } = typeof image === "string" ? { src: image } : image;
+                    const { src, alt = "", blur } = typeof image === "string" ? { src: image, blur: null } : image;
                     return (
                       // Next's image service: a tile-sized copy, not the full upload.
                       <Image
@@ -108,6 +109,7 @@ export function Marquee3D({
                         // tiles on a 3D-tilted plane popped in blank after
                         // coming back to the homepage.
                         loading="eager"
+                        {...blurImageProps(blur)}
                         draggable={false}
                         className={cn(
                           "aspect-4/3 w-full rounded-xl bg-muted object-cover shadow-lg ring-1 ring-border",

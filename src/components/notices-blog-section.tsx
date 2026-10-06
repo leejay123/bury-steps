@@ -1,6 +1,8 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { useQueryDefault, useQueryText } from "@/hooks/use-filter-query";
 import Link from "next/link";
 import { ChevronRight, Search, SearchX } from "lucide-react";
 import { noticeDateLabel, noticeUnreadBadgeLabel, type NoticeCategoryView, type NoticeView } from "@/lib/notices";
@@ -19,7 +21,19 @@ import { NoticeCategoryBar } from "@/components/notice-category-bar";
  * Member notices index: search + FAQ-style category chips (border-y), then a
  * paginated list of full-page notices — no edge/hairline grid.
  */
-export function NoticesBlogSection({
+export function NoticesBlogSection(props: {
+  categories: NoticeCategoryView[];
+  notices: NoticeView[];
+  unreadIds?: string[];
+}) {
+  return (
+    <NuqsAdapter>
+      <NoticesBlogSectionInner {...props} />
+    </NuqsAdapter>
+  );
+}
+
+function NoticesBlogSectionInner({
   categories,
   notices,
   unreadIds = [],
@@ -35,8 +49,8 @@ export function NoticesBlogSection({
   const unread = new Set(unreadIds.filter((id) => !isNoticeReadInThisTab(id)));
   const listRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [searchTerm, setSearchTerm] = useQueryText("q");
+  const [activeCategory, setActiveCategory] = useQueryDefault("cat", "all");
   const deferredSearchTerm = useDeferredValue(searchTerm);
 
   const filters = useMemo(() => {

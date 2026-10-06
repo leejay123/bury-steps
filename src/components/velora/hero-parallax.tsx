@@ -12,12 +12,14 @@ import {
 } from "motion/react";
 
 import { cn } from "@/lib/utils";
+import { blurImageProps } from "@/lib/blur-image";
 
 export interface HeroParallaxProduct {
   /** Caption on the card; also the link's accessible name */
   title: string;
   /** Image URL, shown with empty alt text since the title labels it */
   image: string;
+  blur?: string | null;
   /** Turns the card into a link */
   href?: string;
 }
@@ -159,6 +161,7 @@ function Row({
                 loading="eager"
                 sizes="(max-width: 640px) 240px, 288px"
                 width={480}
+                {...blurImageProps(item.blur)}
                 className="size-full object-cover transition-transform duration-500 ease-out motion-safe:group-hover/hero-card:scale-105"
               />
               <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-4 pt-10 pb-3 text-sm font-medium text-white">

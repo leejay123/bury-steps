@@ -21,7 +21,9 @@ export function WalksSection({
             then it moves to History. History is every finished walk. Both tabs have a search
             box, a <strong>Status</strong> filter (for example Upcoming, In progress,
             Cancelled, or Completed on History), and a <strong>Sort</strong> control (soonest
-            first or latest first). Click a row to open the walk. History shows how many people
+            first or latest first). Those choices stay in the address, so a refresh or the
+            back button keeps them, and you can copy the link. The member Walks page does the
+            same. Click a row to open the walk. History shows how many people
             clocked in, not how many are still on the walk. Long lists show 20 at a time, with
             Previous and Next at the bottom. Each row carries a status that updates as the day
             goes on: <strong>Upcoming</strong> (before clock-in opens),{" "}

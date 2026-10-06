@@ -37,6 +37,8 @@ export type TestimonialView = {
   role: string;
   quote: string;
   image?: string;
+  /** Tiny blurred preview for next/image. */
+  blur?: string | null;
 };
 
 export function testimonialSrc(row: {

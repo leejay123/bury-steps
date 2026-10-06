@@ -1,5 +1,8 @@
 "use server";
 
+import { z } from "zod";
+import { guardForm } from "@/lib/safe-action";
+
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import type { EmailPreferences } from "@/lib/email-preferences";
@@ -27,7 +30,7 @@ function readPreferences(
 /** Public /email-preferences/[token] page, reached from an email footer link
  * — no sign-in required, since the whole point is a member can manage
  * preferences without needing to log in first. */
-export async function updateMemberEmailPreferences(
+async function updateMemberEmailPreferencesWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -70,7 +73,7 @@ export async function updateMemberEmailPreferences(
 
 /** Authenticated /email-preferences page, reached from the account menu —
  * acts on the signed-in member directly, no token needed. */
-export async function updateMyEmailPreferences(
+async function updateMyEmailPreferencesWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -104,3 +107,23 @@ export async function updateMyEmailPreferences(
 
   return { ok: true, message: "Your email preferences have been saved." };
 }
+
+const tokenSchema = z.object({
+  token: z.string().min(1, "This link is missing its token."),
+});
+
+const pass = z.object({});
+const readPass = (_formData: FormData) => ({});
+
+export const updateMemberEmailPreferences = guardForm(
+  "public",
+  tokenSchema,
+  (formData) => ({ token: String(formData.get("token") ?? "") }),
+  updateMemberEmailPreferencesWork,
+);
+export const updateMyEmailPreferences = guardForm(
+  "member",
+  pass,
+  readPass,
+  updateMyEmailPreferencesWork,
+);

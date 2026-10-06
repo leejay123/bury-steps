@@ -18,6 +18,10 @@ export const PUBLIC_ROUTE_PATTERNS = [
   "/terms-of-service",
   "/contact",
   "/apps",
+  // Saved page the service worker shows when a walk page can't be reached.
+  "/offline",
+  // The service worker itself (phone alerts and offline walk pages).
+  "/serwist(.*)",
   // Email footer links — members manage preferences / unsubscribe without
   // signing in. The token itself is the credential (see
   // src/lib/email/unsubscribe.ts).
@@ -96,6 +100,7 @@ export const APP_TOP_LEVEL_SEGMENTS = [
   "icon",
   "manifest.webmanifest",
   "notices",
+  "offline",
   "onboarding",
   "opengraph-image",
   "organiser-invite",
@@ -104,6 +109,7 @@ export const APP_TOP_LEVEL_SEGMENTS = [
   "progress",
   "robots.txt",
   "sign-in",
+  "serwist",
   "sign-up",
   "sitemap.xml",
   "terms-of-service",

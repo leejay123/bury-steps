@@ -7,6 +7,7 @@ import { revalidatePath, revalidateTag } from "@/lib/revalidate";
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
+import { photoBlur } from "@/lib/photo-blur";
 import { isAllowedImageMime, sniffImageMime } from "@/lib/image-bytes";
 import { stripImageMetadata } from "@/lib/strip-image-metadata";
 import type { OrganiserPermissions } from "@/lib/organiser-permissions";
@@ -181,7 +182,7 @@ const MAX_SLIDE_BYTES = 4 * 1024 * 1024;
 /** Shared by homepage slides and testimonials — both accept an uploaded photo. */
 export async function readSlideImage(
   formData: FormData,
-): Promise<{ data: Uint8Array<ArrayBuffer>; mime: string } | { error: string }> {
+): Promise<{ data: Uint8Array<ArrayBuffer>; mime: string; blur: string | null } | { error: string }> {
   const file = formData.get("image");
   if (!(file instanceof File) || file.size === 0) {
     return { error: "Choose an image to upload." };
@@ -200,11 +201,12 @@ export async function readSlideImage(
   // coordinates. If the image can't be re-encoded, fall back to keeping it
   // as it is minus that metadata.
   try {
-    return { data: await optimisePhoto(raw), mime: "image/webp" };
+    const data = await optimisePhoto(raw);
+    return { data, mime: "image/webp", blur: await photoBlur(data) };
   } catch (err) {
     console.error("readSlideImage: could not shrink the photo, storing it as uploaded", err);
     const data = stripImageMetadata(raw, mime) as Uint8Array<ArrayBuffer>;
-    return { data, mime };
+    return { data, mime, blur: await photoBlur(data) };
   }
 }
 

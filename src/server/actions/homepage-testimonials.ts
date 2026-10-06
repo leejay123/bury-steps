@@ -1,5 +1,8 @@
 "use server";
 
+import { z } from "zod";
+import { guardArgs, guardForm } from "@/lib/safe-action";
+
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import {
@@ -42,7 +45,7 @@ function readTestimonialCopy(
   return { name, role, quote };
 }
 
-export async function addHomepageTestimonial(
+async function addHomepageTestimonialWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -70,6 +73,7 @@ export async function addHomepageTestimonial(
           imagePath: null,
           imageMime: image?.mime ?? null,
           imageData: image?.data ?? null,
+          imageBlur: image?.blur ?? null,
         },
       });
     });
@@ -82,7 +86,7 @@ export async function addHomepageTestimonial(
   return { ok: true, message: "Testimonial added." };
 }
 
-export async function updateHomepageTestimonial(
+async function updateHomepageTestimonialWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -105,9 +109,9 @@ export async function updateHomepageTestimonial(
         role: copy.role,
         quote: copy.quote,
         ...(image
-          ? { imagePath: null, imageMime: image.mime, imageData: image.data }
+          ? { imagePath: null, imageMime: image.mime, imageData: image.data, imageBlur: image.blur }
           : formData.get("removeImage") === "on"
-            ? { imagePath: null, imageMime: null, imageData: null }
+            ? { imagePath: null, imageMime: null, imageData: null, imageBlur: null }
             : {}),
       },
     });
@@ -120,7 +124,7 @@ export async function updateHomepageTestimonial(
   return { ok: true, message: "Testimonial saved." };
 }
 
-export async function deleteHomepageTestimonial(
+async function deleteHomepageTestimonialWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -154,7 +158,7 @@ export async function deleteHomepageTestimonial(
   return { ok: true, message: "Testimonial removed." };
 }
 
-export async function reorderHomepageTestimonials(ids: string[]): Promise<ActionResult> {
+async function reorderHomepageTestimonialsWork(ids: string[]): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permHomepage) return permissionDenied("permHomepage");
   const validated = validateReorderIds(ids, MAX_HOMEPAGE_TESTIMONIALS * 2);
@@ -170,3 +174,57 @@ export async function reorderHomepageTestimonials(ids: string[]): Promise<Action
   revalidateHomepage();
   return { ok: true };
 }
+
+const testimonialFieldsSchema = z.object({
+  name: z.string().trim().min(1, "Add a name."),
+  quote: z.string().trim().min(1, "Add the testimonial text."),
+});
+
+function readTestimonialFields(formData: FormData) {
+  return {
+    name: String(formData.get("name") ?? ""),
+    quote: String(formData.get("quote") ?? ""),
+  };
+}
+
+const updateTestimonialSchema = z.object({
+  testimonialId: z.string().min(1, "No testimonial selected."),
+  name: z.string().trim().min(1, "Add a name."),
+  quote: z.string().trim().min(1, "Add the testimonial text."),
+});
+
+function readUpdateTestimonial(formData: FormData) {
+  return {
+    testimonialId: String(formData.get("testimonialId") ?? ""),
+    name: String(formData.get("name") ?? ""),
+    quote: String(formData.get("quote") ?? ""),
+  };
+}
+
+const reorderIdsSchema = z
+  .array(z.string().min(1, "Could not save that order. Try again."))
+  .min(1, "Could not save that order. Try again.");
+
+export const addHomepageTestimonial = guardForm(
+  "organiser",
+  testimonialFieldsSchema,
+  readTestimonialFields,
+  addHomepageTestimonialWork,
+);
+export const updateHomepageTestimonial = guardForm(
+  "organiser",
+  updateTestimonialSchema,
+  readUpdateTestimonial,
+  updateHomepageTestimonialWork,
+);
+export const deleteHomepageTestimonial = guardForm(
+  "organiser",
+  z.object({ testimonialId: z.string().min(1, "No testimonial selected.") }),
+  (formData) => ({ testimonialId: String(formData.get("testimonialId") ?? "") }),
+  deleteHomepageTestimonialWork,
+);
+export const reorderHomepageTestimonials = guardArgs(
+  "organiser",
+  reorderIdsSchema,
+  reorderHomepageTestimonialsWork,
+);

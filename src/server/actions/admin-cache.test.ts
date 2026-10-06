@@ -113,7 +113,7 @@ beforeEach(() => {
 
 describe("clearSiteCache", () => {
   it("rejects an organiser without the Settings permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permCacheReset: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permCacheReset: false });
     const result = await clearSiteCache(null, new FormData());
     expect(result).toEqual({ ok: false, error: "You do not have permission to manage the site cache and reset." });
     expect(revalidateTag).not.toHaveBeenCalled();
@@ -135,7 +135,7 @@ describe("clearSiteCache", () => {
 
 describe("resetSiteToDefault", () => {
   it("rejects an organiser without the Settings permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permCacheReset: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permCacheReset: false });
     const result = await resetSiteToDefault(null, resetForm("delete"));
     expect(result).toEqual({ ok: false, error: "You do not have permission to manage the site cache and reset." });
     expect(transaction).not.toHaveBeenCalled();

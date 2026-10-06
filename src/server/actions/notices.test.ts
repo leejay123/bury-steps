@@ -136,14 +136,14 @@ beforeEach(() => {
 
 describe("Site notices permission guard", () => {
   it("rejects addSiteNotice for an organiser without the Notices permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permNotices: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permNotices: false });
     const result = await addSiteNotice(null, bellForm());
     expect(result).toEqual({ ok: false, error: "You do not have permission to manage notices." });
     expect(prismaMock.siteNotice.create).not.toHaveBeenCalled();
   });
 
   it("rejects deleteSiteNotice for an organiser without the Notices permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permNotices: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permNotices: false });
     const formData = new FormData();
     formData.set("noticeId", "notice-1");
     const result = await deleteSiteNotice(null, formData);
@@ -152,7 +152,7 @@ describe("Site notices permission guard", () => {
   });
 
   it("rejects addSiteNoticeCategory for an organiser without the Notices permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permNotices: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permNotices: false });
     const formData = new FormData();
     formData.set("label", "General");
     const result = await addSiteNoticeCategory(null, formData);

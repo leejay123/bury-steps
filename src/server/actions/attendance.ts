@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "@/lib/revalidate";
 import { z } from "zod";
+import { guardForm } from "@/lib/safe-action";
 import { prisma } from "@/lib/db";
 import { requireAdmin, requireUser, displayName } from "@/lib/auth";
 import { canOrganiserAddAttendance, effectiveEndsAt, walkOpensAt, windowState } from "@/lib/walk-window";
@@ -34,7 +35,7 @@ const clockInSchema = z.object({
   conditions: z.string().trim().max(1000).optional(),
 });
 
-export async function clockIn(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+async function clockInWork(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const user = await requireUser();
 
   const limited = checkRateLimit(`${user.id}:clockIn`, 8, 60_000);
@@ -264,7 +265,7 @@ export async function searchAddableMembers(
   });
 }
 
-export async function adminClockIn(
+async function adminClockInWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -480,7 +481,7 @@ const adminRemoveAttendanceSchema = z.object({
   attendanceId: z.string().min(1),
 });
 
-export async function adminRemoveAttendance(
+async function adminRemoveAttendanceWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -560,7 +561,7 @@ const clockOutSchema = z.object({
     .max(500, "Keep the reason under 500 characters."),
 });
 
-export async function clockOut(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+async function clockOutWork(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const user = await requireUser();
 
   const limited = checkRateLimit(`${user.id}:clockOut`, 8, 60_000);
@@ -643,3 +644,44 @@ export async function clockOut(_prev: ActionResult | null, formData: FormData): 
   revalidatePath(`/admin/walks/${walk.id}`);
   return { ok: true, message: "You have clocked out. Your name is no longer on the walk for other members." };
 }
+
+function readClockIn(formData: FormData): z.input<typeof clockInSchema> {
+  return {
+    token: formData.get("token"),
+    medicalAck: formData.get("medicalAck"),
+    hasConditions: formData.get("hasConditions"),
+    conditions: formData.get("conditions") || undefined,
+  } as z.input<typeof clockInSchema>;
+}
+
+function readAdminClockIn(formData: FormData): z.input<typeof adminClockInSchema> {
+  return {
+    walkId: formData.get("walkId"),
+    userId: formData.get("userId"),
+    clockedInAt: formData.get("clockedInAt"),
+    clockedOutAt: formData.get("clockedOutAt") ?? "",
+  } as z.input<typeof adminClockInSchema>;
+}
+
+function readAdminRemove(formData: FormData): z.input<typeof adminRemoveAttendanceSchema> {
+  return {
+    attendanceId: formData.get("attendanceId"),
+  } as z.input<typeof adminRemoveAttendanceSchema>;
+}
+
+function readClockOut(formData: FormData): z.input<typeof clockOutSchema> {
+  return {
+    token: formData.get("token"),
+    reason: formData.get("reason"),
+  } as z.input<typeof clockOutSchema>;
+}
+
+export const clockIn = guardForm("member", clockInSchema, readClockIn, clockInWork);
+export const adminClockIn = guardForm("organiser", adminClockInSchema, readAdminClockIn, adminClockInWork);
+export const adminRemoveAttendance = guardForm(
+  "organiser",
+  adminRemoveAttendanceSchema,
+  readAdminRemove,
+  adminRemoveAttendanceWork,
+);
+export const clockOut = guardForm("member", clockOutSchema, readClockOut, clockOutWork);

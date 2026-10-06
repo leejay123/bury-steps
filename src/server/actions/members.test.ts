@@ -643,7 +643,7 @@ describe("getMemberHistory", () => {
   });
 
   it("returns null for an organiser without the View members permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembersView: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permMembersView: false });
     const result = await getMemberHistory(ADMIN.id);
     expect(result).toBeNull();
     expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
@@ -738,7 +738,7 @@ describe("getMemberHistory", () => {
 
 describe("searchMembers", () => {
   it("returns an empty page for an organiser without the View members permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembersView: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permMembersView: false });
     const result = await searchMembers({ role: "all" });
     expect(result).toEqual({ rows: [], total: 0, groupTotals: { OWNER: 0, ADMIN: 0, MEMBER: 0 } });
     expect(prismaMock.user.findMany).not.toHaveBeenCalled();

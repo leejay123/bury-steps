@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { useQueryChoice, useQueryDefault, useQueryText } from "@/hooks/use-filter-query";
 import Link from "next/link";
 import { ChevronRight, Footprints, Search, SearchX } from "lucide-react";
 import { formatTime, formatWalkLengthShort, londonYear } from "@/lib/dates";
@@ -39,10 +41,20 @@ type StatusFilter = "all" | "completed" | "cancelled";
  * the viewer was on that walk themselves (WalkLivePanel's existing privacy
  * rule) — this list never shows names itself.
  */
+const HISTORY_STATUSES = ["all", "completed", "cancelled"] as const;
+
 export function AllWalksList({ rows }: { rows: AllWalksRow[] }) {
-  const [query, setQuery] = useState("");
-  const [yearFilter, setYearFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  return (
+    <NuqsAdapter>
+      <AllWalksListInner rows={rows} />
+    </NuqsAdapter>
+  );
+}
+
+function AllWalksListInner({ rows }: { rows: AllWalksRow[] }) {
+  const [query, setQuery] = useQueryText("aq");
+  const [yearFilter, setYearFilter] = useQueryDefault("year", "all");
+  const [statusFilter, setStatusFilter] = useQueryChoice("astatus", HISTORY_STATUSES, "all");
   const listRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 

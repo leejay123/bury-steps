@@ -23,6 +23,7 @@ import { SAMPLE_WALK_PHOTOS } from "@/lib/sample-walk-photos";
 import type { SlideView } from "@/lib/slides";
 import type { SectionBgPattern } from "@/lib/section-background";
 import { SectionBackground } from "@/components/section-background";
+import { blurImageProps } from "@/lib/blur-image";
 import { cn } from "@/lib/utils";
 
 /**
@@ -43,11 +44,11 @@ export type PhotoHeroProps = {
   siteTagline: string;
 };
 
-type Photo = { src: string; title: string };
+type Photo = { src: string; title: string; blur?: string | null };
 
 /** The owner's photos first, then samples, until there are `count`. */
 function heroPhotos(slides: SlideView[], count: number): Photo[] {
-  const own = slides.map((slide) => ({ src: slide.src, title: slide.alt }));
+  const own = slides.map((slide) => ({ src: slide.src, title: slide.alt, blur: slide.blur }));
   const samples = SAMPLE_WALK_PHOTOS.map((sample) => ({ src: sample.src, title: sample.alt }));
   const pool = [...own, ...samples];
   return Array.from({ length: Math.max(count, own.length) }, (_, i) => pool[i % pool.length]);
@@ -73,6 +74,7 @@ function PhotoImg({ photo, className, sizes = "(max-width: 640px) 45vw, 280px", 
       sizes={sizes}
       src={photo.src}
       width={640}
+      {...blurImageProps(photo.blur)}
     />
   );
 }

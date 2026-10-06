@@ -77,7 +77,7 @@ beforeEach(() => {
 
 describe("getEmailTemplateOverrides", () => {
   it("returns null subject/body for every template for an organiser without the Emails permission", async () => {
-    requireAdmin.mockResolvedValueOnce(admin({ permEmails: false }));
+    requireAdmin.mockResolvedValue(admin({ permEmails: false }));
     const overrides = await getEmailTemplateOverrides();
     expect(overrides.welcome).toEqual({ subject: null, body: null });
     expect(prismaMock.emailTemplateOverride.findMany).not.toHaveBeenCalled();
@@ -103,7 +103,7 @@ describe("getEmailTemplateOverrides", () => {
 
 describe("updateEmailTemplate", () => {
   it("rejects an organiser without the Emails permission", async () => {
-    requireAdmin.mockResolvedValueOnce(admin({ permEmails: false }));
+    requireAdmin.mockResolvedValue(admin({ permEmails: false }));
     const result = await updateEmailTemplate(null, form({ key: "welcome" }));
     expect(result).toEqual({ ok: false, error: "You do not have permission to manage emails." });
     expect(prismaMock.emailTemplateOverride.upsert).not.toHaveBeenCalled();
@@ -177,7 +177,7 @@ describe("sendTestEmailTemplate", () => {
   });
 
   it("rejects an organiser without the Emails permission", async () => {
-    requireAdmin.mockResolvedValueOnce(admin({ permEmails: false }));
+    requireAdmin.mockResolvedValue(admin({ permEmails: false }));
     const result = await sendTestEmailTemplate(null, form({ key: "welcome" }));
     expect(result).toEqual({ ok: false, error: "You do not have permission to manage emails." });
     expect(sendTestEmail).not.toHaveBeenCalled();
@@ -215,7 +215,7 @@ describe("sendTestEmailTemplate", () => {
 
 describe("resetEmailTemplate", () => {
   it("rejects an organiser without the Emails permission", async () => {
-    requireAdmin.mockResolvedValueOnce(admin({ permEmails: false }));
+    requireAdmin.mockResolvedValue(admin({ permEmails: false }));
     const result = await resetEmailTemplate(null, form({ key: "welcome" }));
     expect(result).toEqual({ ok: false, error: "You do not have permission to manage emails." });
     expect(prismaMock.emailTemplateOverride.deleteMany).not.toHaveBeenCalled();

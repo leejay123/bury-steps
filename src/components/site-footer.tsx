@@ -27,7 +27,7 @@ export async function SiteFooter() {
       {user ? <NewsletterFooterGate /> : null}
       <div className={`flex flex-col gap-6 py-8 ${PAGE_X}`}>
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <SiteLogo alt={theme.siteName} src={theme.logoSrc} />
+          <SiteLogo alt={theme.siteName} blur={theme.logoBlur} src={theme.logoSrc} />
           {facebookUrl ? (
             <a
               aria-label="Facebook group"

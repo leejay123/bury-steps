@@ -1,5 +1,8 @@
 "use server";
 
+import { z } from "zod";
+import { guardArgs, guardForm } from "@/lib/safe-action";
+
 import { parsePageTransition } from "@/lib/page-transition";
 import { serializeAnnouncementPages } from "@/lib/announcement-pages";
 import { parseTextSize } from "@/lib/text-sizes";
@@ -68,7 +71,7 @@ import {
   revalidateHomepage,
 } from "./shared";
 
-export async function updateCarouselEnabled(
+async function updateCarouselEnabledWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -99,7 +102,7 @@ export async function updateCarouselEnabled(
 
 /** Homepage hero style: the usual light hero, or a full-bleed video hero
  * (see HeroCinematic) using one of the bundled HERO_VIDEO_OPTIONS. */
-export async function updateHeroStyle(
+async function updateHeroStyleWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -158,7 +161,7 @@ export async function updateHeroStyle(
 /** Background pattern (none/dots/stripes — see src/lib/section-background.ts)
  * behind one homepage section. One action for all five sections: which
  * SiteSetting column it writes depends on `section`. */
-export async function updateSectionBgPattern(
+async function updateSectionBgPatternWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -191,7 +194,7 @@ export async function updateSectionBgPattern(
 /** Site-wide switch for the homepage's "Latest notices" section — off
  * hides it for every signed-in member, even when there are notices they'd
  * otherwise see there (see SiteTheme.memberNoticesEnabled). */
-export async function updateMemberNoticesEnabled(
+async function updateMemberNoticesEnabledWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -227,7 +230,7 @@ export async function updateMemberNoticesEnabled(
 
 /** Site-wide switch for /progress (see getProgressEnabled) — off 404s the
  * page for everyone, organisers included, not just members. */
-export async function updateProgressEnabled(
+async function updateProgressEnabledWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -263,7 +266,7 @@ export async function updateProgressEnabled(
 
 /** Toggles whether promoting a member to organiser sends an invite email
  * (taking effect only once accepted) instead of promoting immediately. */
-export async function updateOrganiserInviteRequired(
+async function updateOrganiserInviteRequiredWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -300,7 +303,7 @@ export async function updateOrganiserInviteRequired(
 }
 
 /** Toggles whether clock-in requires an emergency contact name and phone. */
-export async function updateEmergencyContactRequired(
+async function updateEmergencyContactRequiredWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -339,7 +342,7 @@ export async function updateEmergencyContactRequired(
 /** Days a cancelled, unreopened walk is kept before the daily cron deletes
  * it — blank turns auto-delete off. A flagged (retentionLocked) walk is
  * kept regardless of this setting; see the walk's own page. */
-export async function updateCancelledWalkRetentionDays(
+async function updateCancelledWalkRetentionDaysWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -391,7 +394,7 @@ export async function updateCancelledWalkRetentionDays(
  * daily cron deletes it — blank (the default) turns auto-delete off. A
  * flagged (retentionLocked) report is kept regardless; see the report
  * itself in Reports. */
-export async function updateAccidentReportRetentionDays(
+async function updateAccidentReportRetentionDaysWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -442,7 +445,7 @@ export async function updateAccidentReportRetentionDays(
 /** Sets the single organiser who gets contact-form alert emails and is
  * expected to reply (via the alert email's reply-to). Pass an empty string
  * to designate no one. */
-export async function updateContactMessagesOwner(
+async function updateContactMessagesOwnerWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -491,7 +494,7 @@ export async function updateContactMessagesOwner(
   };
 }
 
-export async function updateScrollToTopEnabled(
+async function updateScrollToTopEnabledWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -535,7 +538,7 @@ function parseAnnouncementLink(raw: string): string | null {
   }
 }
 
-export async function updateAnnouncementBanner(
+async function updateAnnouncementBannerWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -581,7 +584,7 @@ export async function updateAnnouncementBanner(
   return { ok: true, message: enabled ? "Announcement is showing." : "Announcement saved and hidden." };
 }
 
-export async function updateMobileNav(
+async function updateMobileNavWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -608,7 +611,7 @@ export async function updateMobileNav(
   };
 }
 
-export async function updatePageTransition(
+async function updatePageTransitionWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -642,7 +645,7 @@ export async function updatePageTransition(
   };
 }
 
-export async function updateSliderHeroWords(
+async function updateSliderHeroWordsWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -674,7 +677,7 @@ export async function updateSliderHeroWords(
   };
 }
 
-export async function updateTitleRevealEnabled(
+async function updateTitleRevealEnabledWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -698,7 +701,7 @@ export async function updateTitleRevealEnabled(
   return { ok: true, message: enabled ? "Section titles now animate in." : "Section titles are plain again." };
 }
 
-export async function updateFooterWordmarkMobile(
+async function updateFooterWordmarkMobileWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -722,7 +725,7 @@ export async function updateFooterWordmarkMobile(
   return { ok: true, message: enabled ? "Footer name shows on phones too." : "Footer name is hidden on phones." };
 }
 
-export async function updateFooterWordmarkEnabled(
+async function updateFooterWordmarkEnabledWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -752,7 +755,7 @@ export async function updateFooterWordmarkEnabled(
   return { ok: true, message: enabled ? "Footer name is on." : "Footer name is off." };
 }
 
-export async function updateSiteFont(
+async function updateSiteFontWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -786,7 +789,7 @@ export async function updateSiteFont(
   return { ok: true, message: "Site font saved. The whole website is using it now." };
 }
 
-export async function updateTextSizes(
+async function updateTextSizesWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -824,7 +827,7 @@ export async function updateTextSizes(
   return { ok: true, message: "Text sizes saved. The whole website is using them now." };
 }
 
-export async function updateCookieConsentVariant(
+async function updateCookieConsentVariantWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -866,7 +869,7 @@ export async function updateCookieConsentVariant(
   };
 }
 
-export async function updateSiteBranding(
+async function updateSiteBrandingWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -907,7 +910,7 @@ export async function updateSiteBranding(
   return { ok: true, message: "Site name and tagline saved." };
 }
 
-export async function updateFacebookGroupUrl(
+async function updateFacebookGroupUrlWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -951,7 +954,7 @@ export async function updateFacebookGroupUrl(
   };
 }
 
-export async function reorderHomepageSections(ids: HomepageSectionId[]): Promise<ActionResult> {
+async function reorderHomepageSectionsWork(ids: HomepageSectionId[]): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
   const order = parseHomepageSectionOrder(serializeHomepageSectionOrder(ids));
@@ -983,7 +986,7 @@ export async function reorderHomepageSections(ids: HomepageSectionId[]): Promise
   return { ok: true, message: "Homepage section order saved." };
 }
 
-export async function updateFaqSectionCopy(
+async function updateFaqSectionCopyWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -1023,7 +1026,7 @@ export async function updateFaqSectionCopy(
   return { ok: true, message: "FAQ heading and intro saved." };
 }
 
-export async function updateTestimonialsSectionCopy(
+async function updateTestimonialsSectionCopyWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -1078,7 +1081,7 @@ export async function updateTestimonialsSectionCopy(
   return { ok: true, message: "Testimonials heading and intro saved." };
 }
 
-export async function updateHowThisStartedCopy(
+async function updateHowThisStartedCopyWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -1145,7 +1148,7 @@ export async function updateHowThisStartedCopy(
   return { ok: true, message: "How this started copy saved." };
 }
 
-export async function updateAboutLists(
+async function updateAboutListsWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -1275,7 +1278,7 @@ async function updateWalkPageCardEnabled(
   return { ok: true, message: enabled ? copy.on : copy.off };
 }
 
-export async function updateBeforeYouSetOffEnabled(
+async function updateBeforeYouSetOffEnabledWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -1285,7 +1288,7 @@ export async function updateBeforeYouSetOffEnabled(
   });
 }
 
-export async function updateHowWalksWorkEnabled(
+async function updateHowWalksWorkEnabledWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -1298,7 +1301,7 @@ export async function updateHowWalksWorkEnabled(
 /** The walk-page "Before you set off" and "How this group works" cards —
  * same list/rule format as the About lists above, so it reuses their
  * parse/serialize helpers. */
-export async function updateWalkPageCopy(
+async function updateWalkPageCopyWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -1361,7 +1364,7 @@ function parseMonthlyClockInGoal(raw: string): number | null | "invalid" {
   return n;
 }
 
-export async function updateMonthlyClockInGoal(
+async function updateMonthlyClockInGoalWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -1401,7 +1404,7 @@ export async function updateMonthlyClockInGoal(
   };
 }
 
-export async function updateSiteLogo(
+async function updateSiteLogoWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -1419,9 +1422,11 @@ export async function updateSiteLogo(
         id: SITE_SETTING_ID,
         primaryColor: DEFAULT_PRIMARY_COLOR,
         carouselEnabled: true,
-        ...(image ? { logoMime: image.mime, logoData: image.data } : {}),
+        ...(image ? { logoMime: image.mime, logoData: image.data, logoBlur: image.blur } : {}),
       },
-      update: image ? { logoMime: image.mime, logoData: image.data } : { logoMime: null, logoData: null },
+      update: image
+        ? { logoMime: image.mime, logoData: image.data, logoBlur: image.blur }
+        : { logoMime: null, logoData: null, logoBlur: null },
     });
   } catch (err) {
     return logActionError("updateSiteLogo", err, "Could not save that logo. Try again.");
@@ -1432,7 +1437,7 @@ export async function updateSiteLogo(
   return { ok: true, message: removing ? "Back to the default logo." : "Logo updated." };
 }
 
-export async function updateSiteFavicon(
+async function updateSiteFaviconWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -1480,7 +1485,7 @@ export async function updateSiteFavicon(
   };
 }
 
-export async function updateReportBanner(
+async function updateReportBannerWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -1498,11 +1503,13 @@ export async function updateReportBanner(
         id: SITE_SETTING_ID,
         primaryColor: DEFAULT_PRIMARY_COLOR,
         carouselEnabled: true,
-        ...(image ? { reportBannerMime: image.mime, reportBannerData: image.data } : {}),
+        ...(image
+          ? { reportBannerMime: image.mime, reportBannerData: image.data, reportBannerBlur: image.blur }
+          : {}),
       },
       update: image
-        ? { reportBannerMime: image.mime, reportBannerData: image.data }
-        : { reportBannerMime: null, reportBannerData: null },
+        ? { reportBannerMime: image.mime, reportBannerData: image.data, reportBannerBlur: image.blur }
+        : { reportBannerMime: null, reportBannerData: null, reportBannerBlur: null },
     });
   } catch (err) {
     return logActionError("updateReportBanner", err, "Could not save that banner. Try again.");
@@ -1520,7 +1527,7 @@ export async function updateReportBanner(
  * [{ key, label, icon }]. Removing an item takes it off every walk's page;
  * walks keep the key, so putting it back brings their ticks back too.
  */
-export async function updateWalkEssentials(
+async function updateWalkEssentialsWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -1556,3 +1563,487 @@ export async function updateWalkEssentials(
   revalidatePath("/", "layout");
   return { ok: true, message: "Walk essentials saved." };
 }
+
+const pass = z.object({});
+const readPass = (_formData: FormData) => ({});
+
+function readStrings<const K extends string>(
+  formData: FormData,
+  keys: readonly K[],
+): { [P in K]: string } {
+  const out = {} as { [P in K]: string };
+  for (const key of keys) out[key] = String(formData.get(key) ?? "");
+  return out;
+}
+
+function reject(ctx: z.RefinementCtx, path: string, message: string) {
+  ctx.addIssue({ code: z.ZodIssueCode.custom, message, path: [path] });
+}
+
+const heroStyleSchema = z
+  .object({ heroStyle: z.string(), heroVideoKey: z.string() })
+  .superRefine((value, ctx) => {
+    const heroStyle = parseHeroStyle(value.heroStyle);
+    if (heroStyle === "cinematic" && !HERO_VIDEO_OPTIONS.some((option) => option.key === value.heroVideoKey)) {
+      reject(ctx, "heroVideoKey", "Choose a video.");
+    }
+  });
+
+const sectionBgSchema = z.object({
+  section: z.string().refine(
+    (section): section is SectionBgKey => SECTION_BG_KEYS.includes(section as SectionBgKey),
+    "Unknown section.",
+  ),
+});
+
+const retentionMessage = `Enter a whole number of days from 1 to ${MAX_RETENTION_DAYS.toLocaleString("en-GB")}, or leave it blank to turn auto-delete off.`;
+
+const cancelledRetentionSchema = z
+  .object({ cancelledWalkRetentionDays: z.string() })
+  .superRefine((value, ctx) => {
+    if (parseRetentionDays(value.cancelledWalkRetentionDays) === "invalid") {
+      reject(ctx, "cancelledWalkRetentionDays", retentionMessage);
+    }
+  });
+
+const accidentRetentionSchema = z
+  .object({ accidentReportRetentionDays: z.string() })
+  .superRefine((value, ctx) => {
+    if (parseRetentionDays(value.accidentReportRetentionDays) === "invalid") {
+      reject(ctx, "accidentReportRetentionDays", retentionMessage);
+    }
+  });
+
+const announcementSchema = z
+  .object({
+    announcementEnabled: z.string(),
+    announcementText: z.string(),
+    announcementLink: z.string(),
+    announcementScope: z.string(),
+    announcementPaths: z.string(),
+  })
+  .superRefine((value, ctx) => {
+    const enabled = value.announcementEnabled === "on";
+    const text = value.announcementText.trim();
+    const link = parseAnnouncementLink(value.announcementLink);
+    const pages = serializeAnnouncementPages(value.announcementScope, value.announcementPaths);
+    if (text.length > 160) {
+      reject(ctx, "announcementText", "Keep the announcement to 160 characters or fewer.");
+      return;
+    }
+    if (enabled && !text) {
+      reject(ctx, "announcementText", "Write the announcement before turning it on.");
+      return;
+    }
+    if (link === null) {
+      reject(
+        ctx,
+        "announcementLink",
+        "The link must be a page on this site (like /walks) or start with https://.",
+      );
+      return;
+    }
+    if (pages === null) {
+      reject(
+        ctx,
+        "announcementPaths",
+        "List the pages to show it on, separated by commas — for example /walks, /notices.",
+      );
+    }
+  });
+
+function readAnnouncement(formData: FormData) {
+  return {
+    announcementEnabled: String(formData.get("announcementEnabled") ?? ""),
+    announcementText: String(formData.get("announcementText") ?? ""),
+    announcementLink: String(formData.get("announcementLink") ?? ""),
+    announcementScope: String(formData.get("announcementScope") ?? "all"),
+    announcementPaths: String(formData.get("announcementPaths") ?? ""),
+  };
+}
+
+const siteFontSchema = z.object({
+  siteFont: z.string().refine((value) => parseSiteFont(value) !== null, "Choose a site font."),
+});
+
+const textSizesSchema = z
+  .object({
+    headline: z.string(),
+    section: z.string(),
+    intro: z.string(),
+    body: z.string(),
+  })
+  .superRefine((value, ctx) => {
+    if (
+      parseTextSize("headline", value.headline) === null ||
+      parseTextSize("section", value.section) === null ||
+      parseTextSize("intro", value.intro) === null ||
+      parseTextSize("body", value.body) === null
+    ) {
+      reject(ctx, "headline", "Choose a size for each option.");
+    }
+  });
+
+const cookieSchema = z.object({
+  cookieConsentVariant: z
+    .string()
+    .refine((value) => parseCookieConsentVariant(value) !== null, "Choose a cookie notice layout."),
+});
+
+const siteBrandingSchema = z
+  .object({ siteName: z.string(), siteTagline: z.string() })
+  .superRefine((value, ctx) => {
+    if (parseSiteName(value.siteName) === "invalid") {
+      reject(ctx, "siteName", "Give the site a name of 2–80 characters.");
+      return;
+    }
+    if (parseSiteTagline(value.siteTagline) === "invalid") {
+      reject(ctx, "siteTagline", "Give a short tagline of 8–220 characters.");
+    }
+  });
+
+const facebookSchema = z
+  .object({ facebookGroupUrl: z.string() })
+  .superRefine((value, ctx) => {
+    if (parseFacebookGroupUrl(value.facebookGroupUrl) === "invalid") {
+      reject(
+        ctx,
+        "facebookGroupUrl",
+        "Enter a full https Facebook group link, or leave it blank to hide the link.",
+      );
+    }
+  });
+
+const reorderIdsSchema = z
+  .array(z.string().min(1, "Could not save that order. Try again."))
+  .min(1, "Could not save that order. Try again.");
+
+const faqSectionSchema = z
+  .object({ faqSectionTitle: z.string(), faqSectionIntro: z.string() })
+  .superRefine((value, ctx) => {
+    if (parseFaqSectionTitle(value.faqSectionTitle) === "invalid") {
+      reject(ctx, "faqSectionTitle", "Give the FAQs a heading of 2–80 characters.");
+      return;
+    }
+    if (parseFaqSectionIntro(value.faqSectionIntro) === "invalid") {
+      reject(ctx, "faqSectionIntro", "Give a short intro of 8–280 characters.");
+    }
+  });
+
+const testimonialsSectionSchema = z
+  .object({
+    testimonialsSectionEyebrow: z.string(),
+    testimonialsSectionTitle: z.string(),
+    testimonialsSectionIntro: z.string(),
+  })
+  .superRefine((value, ctx) => {
+    if (parseTestimonialsSectionEyebrow(value.testimonialsSectionEyebrow) === "invalid") {
+      reject(ctx, "testimonialsSectionEyebrow", "Keep the eyebrow under 80 characters, or leave it blank.");
+      return;
+    }
+    if (parseTestimonialsSectionTitle(value.testimonialsSectionTitle) === "invalid") {
+      reject(ctx, "testimonialsSectionTitle", "Give testimonials a heading of 2–80 characters.");
+      return;
+    }
+    if (parseTestimonialsSectionIntro(value.testimonialsSectionIntro) === "invalid") {
+      reject(ctx, "testimonialsSectionIntro", "Give a short intro of 8–280 characters.");
+    }
+  });
+
+const howThisStartedSchema = z
+  .object({
+    howThisStartedTitle: z.string(),
+    howThisStartedEyebrow: z.string(),
+    howThisStartedTeaser: z.string(),
+    howThisStartedBody: z.string(),
+  })
+  .superRefine((value, ctx) => {
+    if (parseHowThisStartedTitle(value.howThisStartedTitle) === "invalid") {
+      reject(ctx, "howThisStartedTitle", "Give How this started a heading of 2–80 characters.");
+      return;
+    }
+    if (parseHowThisStartedEyebrow(value.howThisStartedEyebrow) === "invalid") {
+      reject(ctx, "howThisStartedEyebrow", "Keep the eyebrow under 80 characters, or leave it blank.");
+      return;
+    }
+    if (parseHowThisStartedTeaser(value.howThisStartedTeaser) === "invalid") {
+      reject(ctx, "howThisStartedTeaser", "Give a short homepage blurb of 8–400 characters.");
+      return;
+    }
+    if (parseHowThisStartedBody(value.howThisStartedBody) === "invalid") {
+      reject(ctx, "howThisStartedBody", "Give the full story at least 40 characters (up to 12,000).");
+    }
+  });
+
+const aboutListsSchema = z
+  .object({
+    aboutGoals: z.string(),
+    aboutPlaces: z.string(),
+    aboutExpect: z.string(),
+    aboutRules: z.string(),
+    aboutGoalsHeading: z.string(),
+    aboutPlacesHeading: z.string(),
+    aboutExpectHeading: z.string(),
+    aboutRulesHeading: z.string(),
+  })
+  .superRefine((value, ctx) => {
+    if (parseAboutList(value.aboutGoals) === "invalid") {
+      reject(
+        ctx,
+        "aboutGoals",
+        `Goals need 1–${MAX_ABOUT_LIST_ITEMS} lines, each up to ${MAX_ABOUT_LIST_ITEM} characters.`,
+      );
+      return;
+    }
+    if (parseAboutList(value.aboutPlaces) === "invalid") {
+      reject(
+        ctx,
+        "aboutPlaces",
+        `Places need 1–${MAX_ABOUT_LIST_ITEMS} lines, each up to ${MAX_ABOUT_LIST_ITEM} characters.`,
+      );
+      return;
+    }
+    if (parseAboutList(value.aboutExpect) === "invalid") {
+      reject(
+        ctx,
+        "aboutExpect",
+        `“What you can expect” needs 1–${MAX_ABOUT_LIST_ITEMS} lines, each up to ${MAX_ABOUT_LIST_ITEM} characters.`,
+      );
+      return;
+    }
+    if (parseAboutRules(value.aboutRules) === "invalid") {
+      reject(ctx, "aboutRules", `Rules need 1–${MAX_ABOUT_RULES} lines as “Title | Body”.`);
+      return;
+    }
+    if (
+      parseAboutSectionHeading(value.aboutGoalsHeading) === "invalid" ||
+      parseAboutSectionHeading(value.aboutPlacesHeading) === "invalid" ||
+      parseAboutSectionHeading(value.aboutExpectHeading) === "invalid" ||
+      parseAboutSectionHeading(value.aboutRulesHeading) === "invalid"
+    ) {
+      reject(ctx, "aboutGoalsHeading", `Give each heading 2–${MAX_ABOUT_SECTION_HEADING} characters.`);
+    }
+  });
+
+const walkPageCopySchema = z
+  .object({
+    beforeYouSetOffTips: z.string(),
+    howWalksWorkSteps: z.string(),
+  })
+  .superRefine((value, ctx) => {
+    if (parseAboutList(value.beforeYouSetOffTips) === "invalid") {
+      reject(
+        ctx,
+        "beforeYouSetOffTips",
+        `"Before you set off" needs 1–${MAX_ABOUT_LIST_ITEMS} lines, each up to ${MAX_ABOUT_LIST_ITEM} characters.`,
+      );
+      return;
+    }
+    if (parseAboutRules(value.howWalksWorkSteps) === "invalid") {
+      reject(
+        ctx,
+        "howWalksWorkSteps",
+        `"How this group works" needs 1–${MAX_ABOUT_RULES} lines as "Title | Body".`,
+      );
+    }
+  });
+
+const monthlyGoalSchema = z
+  .object({ monthlyClockInGoal: z.string() })
+  .superRefine((value, ctx) => {
+    if (parseMonthlyClockInGoal(value.monthlyClockInGoal) === "invalid") {
+      reject(
+        ctx,
+        "monthlyClockInGoal",
+        `Enter a whole number from 1 to ${MAX_MONTHLY_CLOCK_IN_GOAL.toLocaleString("en-GB")}, or leave it blank.`,
+      );
+    }
+  });
+
+const walkEssentialsSchema = z
+  .object({ items: z.string() })
+  .superRefine((value, ctx) => {
+    let raw: unknown;
+    try {
+      raw = JSON.parse(value.items || "[]");
+    } catch {
+      reject(ctx, "items", "Could not read the list. Try again.");
+      return;
+    }
+    if (!Array.isArray(raw)) {
+      reject(ctx, "items", "Could not read the list. Try again.");
+      return;
+    }
+    if (raw.length > MAX_WALK_ESSENTIALS) {
+      reject(ctx, "items", `Keep the list to ${MAX_WALK_ESSENTIALS} items or fewer.`);
+      return;
+    }
+    if (raw.some((item) => !item || typeof item.label !== "string" || !item.label.trim())) {
+      reject(ctx, "items", "Give every item a name, or remove it.");
+    }
+  });
+
+function readWalkEssentials(formData: FormData) {
+  return { items: String(formData.get("items") ?? "[]") };
+}
+
+const reorderHomepageSectionsGuarded = guardArgs(
+  "organiser",
+  reorderIdsSchema,
+  (ids) => reorderHomepageSectionsWork(ids as HomepageSectionId[]),
+);
+
+export const updateCarouselEnabled = guardForm("organiser", pass, readPass, updateCarouselEnabledWork);
+export const updateHeroStyle = guardForm(
+  "organiser",
+  heroStyleSchema,
+  (formData) => readStrings(formData, ["heroStyle", "heroVideoKey"] as const),
+  updateHeroStyleWork,
+);
+export const updateSectionBgPattern = guardForm(
+  "organiser",
+  sectionBgSchema,
+  (formData) => readStrings(formData, ["section"] as const),
+  updateSectionBgPatternWork,
+);
+export const updateMemberNoticesEnabled = guardForm("organiser", pass, readPass, updateMemberNoticesEnabledWork);
+export const updateProgressEnabled = guardForm("organiser", pass, readPass, updateProgressEnabledWork);
+export const updateOrganiserInviteRequired = guardForm(
+  "organiser",
+  pass,
+  readPass,
+  updateOrganiserInviteRequiredWork,
+);
+export const updateEmergencyContactRequired = guardForm(
+  "organiser",
+  pass,
+  readPass,
+  updateEmergencyContactRequiredWork,
+);
+export const updateCancelledWalkRetentionDays = guardForm(
+  "organiser",
+  cancelledRetentionSchema,
+  (formData) => readStrings(formData, ["cancelledWalkRetentionDays"] as const),
+  updateCancelledWalkRetentionDaysWork,
+);
+export const updateAccidentReportRetentionDays = guardForm(
+  "organiser",
+  accidentRetentionSchema,
+  (formData) => readStrings(formData, ["accidentReportRetentionDays"] as const),
+  updateAccidentReportRetentionDaysWork,
+);
+export const updateContactMessagesOwner = guardForm("organiser", pass, readPass, updateContactMessagesOwnerWork);
+export const updateScrollToTopEnabled = guardForm("organiser", pass, readPass, updateScrollToTopEnabledWork);
+export const updateAnnouncementBanner = guardForm(
+  "organiser",
+  announcementSchema,
+  readAnnouncement,
+  updateAnnouncementBannerWork,
+);
+export const updateMobileNav = guardForm("organiser", pass, readPass, updateMobileNavWork);
+export const updatePageTransition = guardForm("organiser", pass, readPass, updatePageTransitionWork);
+export const updateSliderHeroWords = guardForm("organiser", pass, readPass, updateSliderHeroWordsWork);
+export const updateTitleRevealEnabled = guardForm("organiser", pass, readPass, updateTitleRevealEnabledWork);
+export const updateFooterWordmarkMobile = guardForm("organiser", pass, readPass, updateFooterWordmarkMobileWork);
+export const updateFooterWordmarkEnabled = guardForm("organiser", pass, readPass, updateFooterWordmarkEnabledWork);
+export const updateSiteFont = guardForm(
+  "organiser",
+  siteFontSchema,
+  (formData) => readStrings(formData, ["siteFont"] as const),
+  updateSiteFontWork,
+);
+export const updateTextSizes = guardForm(
+  "organiser",
+  textSizesSchema,
+  (formData) => readStrings(formData, ["headline", "section", "intro", "body"] as const),
+  updateTextSizesWork,
+);
+export const updateCookieConsentVariant = guardForm(
+  "organiser",
+  cookieSchema,
+  (formData) => readStrings(formData, ["cookieConsentVariant"] as const),
+  updateCookieConsentVariantWork,
+);
+export const updateSiteBranding = guardForm(
+  "organiser",
+  siteBrandingSchema,
+  (formData) => readStrings(formData, ["siteName", "siteTagline"] as const),
+  updateSiteBrandingWork,
+);
+export const updateFacebookGroupUrl = guardForm(
+  "organiser",
+  facebookSchema,
+  (formData) => readStrings(formData, ["facebookGroupUrl"] as const),
+  updateFacebookGroupUrlWork,
+);
+export async function reorderHomepageSections(ids: HomepageSectionId[]): Promise<ActionResult> {
+  return reorderHomepageSectionsGuarded(ids);
+}
+export const updateFaqSectionCopy = guardForm(
+  "organiser",
+  faqSectionSchema,
+  (formData) => readStrings(formData, ["faqSectionTitle", "faqSectionIntro"] as const),
+  updateFaqSectionCopyWork,
+);
+export const updateTestimonialsSectionCopy = guardForm(
+  "organiser",
+  testimonialsSectionSchema,
+  (formData) =>
+    readStrings(formData, [
+      "testimonialsSectionEyebrow",
+      "testimonialsSectionTitle",
+      "testimonialsSectionIntro",
+    ] as const),
+  updateTestimonialsSectionCopyWork,
+);
+export const updateHowThisStartedCopy = guardForm(
+  "organiser",
+  howThisStartedSchema,
+  (formData) =>
+    readStrings(formData, [
+      "howThisStartedTitle",
+      "howThisStartedEyebrow",
+      "howThisStartedTeaser",
+      "howThisStartedBody",
+    ] as const),
+  updateHowThisStartedCopyWork,
+);
+export const updateAboutLists = guardForm(
+  "organiser",
+  aboutListsSchema,
+  (formData) =>
+    readStrings(formData, [
+      "aboutGoals",
+      "aboutPlaces",
+      "aboutExpect",
+      "aboutRules",
+      "aboutGoalsHeading",
+      "aboutPlacesHeading",
+      "aboutExpectHeading",
+      "aboutRulesHeading",
+    ] as const),
+  updateAboutListsWork,
+);
+export const updateBeforeYouSetOffEnabled = guardForm("organiser", pass, readPass, updateBeforeYouSetOffEnabledWork);
+export const updateHowWalksWorkEnabled = guardForm("organiser", pass, readPass, updateHowWalksWorkEnabledWork);
+export const updateWalkPageCopy = guardForm(
+  "organiser",
+  walkPageCopySchema,
+  (formData) => readStrings(formData, ["beforeYouSetOffTips", "howWalksWorkSteps"] as const),
+  updateWalkPageCopyWork,
+);
+export const updateMonthlyClockInGoal = guardForm(
+  "organiser",
+  monthlyGoalSchema,
+  (formData) => readStrings(formData, ["monthlyClockInGoal"] as const),
+  updateMonthlyClockInGoalWork,
+);
+export const updateSiteLogo = guardForm("organiser", pass, readPass, updateSiteLogoWork);
+export const updateSiteFavicon = guardForm("organiser", pass, readPass, updateSiteFaviconWork);
+export const updateReportBanner = guardForm("organiser", pass, readPass, updateReportBannerWork);
+export const updateWalkEssentials = guardForm(
+  "organiser",
+  walkEssentialsSchema,
+  readWalkEssentials,
+  updateWalkEssentialsWork,
+);

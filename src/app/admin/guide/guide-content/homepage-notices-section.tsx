@@ -47,7 +47,8 @@ export function HomepageNoticesSection() {
               slider, Parallax (12 cards) and 3D Marquee (15 tiles) heroes; any gaps show sample
               walking photos until you add your own. JPEG, PNG, or WebP, up to 4&nbsp;MB. Add a
               short description for each (on Parallax it&apos;s the card&apos;s caption). With two or
-              more, the slider rotates on its own.
+              more, the slider rotates on its own. A soft blurred copy of each photo, the logo,
+              and testimonial pictures shows straight away, then sharpens into the real picture.
             </p>
             <p>
               On <Link href="/admin/settings/hero-photos">Hero photos</Link> you add and reorder
@@ -151,7 +152,8 @@ export function HomepageNoticesSection() {
             </Steps>
             <p>
               On <Link href="/notices">Notices</Link>, members can search and filter by category.
-              Each full-page notice is a simple list row (title, category, date, teaser),{" "}
+              The search and the chosen category stay in the address, so a refresh or the back
+              button keeps them. Each full-page notice is a simple list row (title, category, date, teaser),{" "}
               {LIST_PAGE_SIZE} at a time with Previous and Next when the list is long, and one
               they haven&apos;t read yet has the same <strong>New</strong> or{" "}
               <strong>Updated</strong> badge as the bell. Full-page

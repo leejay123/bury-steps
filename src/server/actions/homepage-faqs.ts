@@ -1,5 +1,8 @@
 "use server";
 
+import { z } from "zod";
+import { guardArgs, guardForm } from "@/lib/safe-action";
+
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
@@ -72,7 +75,7 @@ async function uniqueFaqCategorySlug(tx: Prisma.TransactionClient, label: string
   return slug;
 }
 
-export async function addHomepageFaq(
+async function addHomepageFaqWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -106,7 +109,7 @@ export async function addHomepageFaq(
   return { ok: true, message: "FAQ added." };
 }
 
-export async function updateHomepageFaq(
+async function updateHomepageFaqWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -136,7 +139,7 @@ export async function updateHomepageFaq(
   return { ok: true, message: "FAQ saved." };
 }
 
-export async function deleteHomepageFaq(
+async function deleteHomepageFaqWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -170,7 +173,7 @@ export async function deleteHomepageFaq(
   return { ok: true, message: "FAQ removed." };
 }
 
-export async function reorderHomepageFaqs(ids: string[]): Promise<ActionResult> {
+async function reorderHomepageFaqsWork(ids: string[]): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permHomepage) return permissionDenied("permHomepage");
   const validated = validateReorderIds(ids, MAX_HOMEPAGE_FAQS * 2);
@@ -187,7 +190,7 @@ export async function reorderHomepageFaqs(ids: string[]): Promise<ActionResult> 
   return { ok: true };
 }
 
-export async function addHomepageFaqCategory(
+async function addHomepageFaqCategoryWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -231,7 +234,7 @@ export async function addHomepageFaqCategory(
   return { ok: true, message: "Category added." };
 }
 
-export async function updateHomepageFaqCategory(
+async function updateHomepageFaqCategoryWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -263,7 +266,7 @@ export async function updateHomepageFaqCategory(
   return { ok: true, message: "Category saved." };
 }
 
-export async function deleteHomepageFaqCategory(
+async function deleteHomepageFaqCategoryWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -313,7 +316,7 @@ export async function deleteHomepageFaqCategory(
   return { ok: true, message: "Category removed." };
 }
 
-export async function reorderHomepageFaqCategories(ids: string[]): Promise<ActionResult> {
+async function reorderHomepageFaqCategoriesWork(ids: string[]): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permHomepage) return permissionDenied("permHomepage");
   const validated = validateReorderIds(ids, MAX_FAQ_CATEGORIES * 2);
@@ -329,3 +332,96 @@ export async function reorderHomepageFaqCategories(ids: string[]): Promise<Actio
   revalidateHomepage();
   return { ok: true };
 }
+
+const faqFieldsSchema = z.object({
+  categoryId: z.string().trim().min(1, "Choose a category."),
+  question: z.string().trim().min(1, "Add a question."),
+  answer: z.string().trim().min(1, "Add an answer."),
+});
+
+function readFaqFields(formData: FormData) {
+  return {
+    categoryId: String(formData.get("categoryId") ?? ""),
+    question: String(formData.get("question") ?? ""),
+    answer: String(formData.get("answer") ?? ""),
+  };
+}
+
+const updateFaqSchema = z.object({
+  faqId: z.string().min(1, "No FAQ selected."),
+  categoryId: z.string().trim().min(1, "Choose a category."),
+  question: z.string().trim().min(1, "Add a question."),
+  answer: z.string().trim().min(1, "Add an answer."),
+});
+
+function readUpdateFaq(formData: FormData) {
+  return {
+    faqId: String(formData.get("faqId") ?? ""),
+    ...readFaqFields(formData),
+  };
+}
+
+const faqCategorySchema = z.object({
+  label: z.string().trim().min(1, "Add a category name."),
+});
+
+function readFaqCategory(formData: FormData) {
+  return { label: String(formData.get("label") ?? "") };
+}
+
+const updateFaqCategorySchema = z.object({
+  categoryId: z.string().min(1, "No category selected."),
+  label: z.string().trim().min(1, "Add a category name."),
+});
+
+function readUpdateFaqCategory(formData: FormData) {
+  return {
+    categoryId: String(formData.get("categoryId") ?? ""),
+    label: String(formData.get("label") ?? ""),
+  };
+}
+
+const deleteFaqSchema = z.object({
+  faqId: z.string().min(1, "No FAQ selected."),
+});
+
+const deleteFaqCategorySchema = z.object({
+  categoryId: z.string().min(1, "No category selected."),
+});
+
+const reorderIdsSchema = z
+  .array(z.string().min(1, "Could not save that order. Try again."))
+  .min(1, "Could not save that order. Try again.");
+
+export const addHomepageFaq = guardForm("organiser", faqFieldsSchema, readFaqFields, addHomepageFaqWork);
+export const updateHomepageFaq = guardForm("organiser", updateFaqSchema, readUpdateFaq, updateHomepageFaqWork);
+export const deleteHomepageFaq = guardForm(
+  "organiser",
+  deleteFaqSchema,
+  (formData) => ({ faqId: String(formData.get("faqId") ?? "") }),
+  deleteHomepageFaqWork,
+);
+export const reorderHomepageFaqs = guardArgs("organiser", reorderIdsSchema, reorderHomepageFaqsWork);
+export const addHomepageFaqCategory = guardForm(
+  "organiser",
+  faqCategorySchema,
+  readFaqCategory,
+  addHomepageFaqCategoryWork,
+);
+export const updateHomepageFaqCategory = guardForm(
+  "organiser",
+  updateFaqCategorySchema,
+  readUpdateFaqCategory,
+  updateHomepageFaqCategoryWork,
+);
+export const deleteHomepageFaqCategory = guardForm(
+  "organiser",
+  deleteFaqCategorySchema,
+  (formData) => ({ categoryId: String(formData.get("categoryId") ?? "") }),
+  deleteHomepageFaqCategoryWork,
+);
+export const reorderHomepageFaqCategories = guardArgs(
+  "organiser",
+  reorderIdsSchema,
+  reorderHomepageFaqCategoriesWork,
+);

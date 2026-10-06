@@ -88,8 +88,24 @@ model User {
   /// At most one SiteSetting row ever exists, so this is really 0-or-1 —
   /// Prisma still requires the relation's other side to be declared.
   contactMessagesOwnerFor SiteSetting[]          @relation("ContactMessagesOwner")
+  pushSubscriptions       PushSubscription[]
 
   @@index([createdAt])
+}
+
+/// A browser push subscription for "walk starting soon" alerts. One member
+/// can have several (phone and computer). The endpoint is the browser's
+/// own address for this device — deleting the row is how they opt out.
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Walk {
@@ -142,6 +158,9 @@ model Walk {
   /// auto-delete cron, regardless of SiteSetting.cancelledWalkRetentionDays.
   /// Meaningless (and harmless) for a walk that was never cancelled.
   retentionLocked Boolean   @default(false)
+  /// Set once the "starting soon" phone alert has been sent for this walk,
+  /// so a later cron run does not send it again.
+  startingSoonPushSentAt DateTime?
 
   createdById String
   createdBy   User   @relation("WalkCreator", fields: [createdById], references: [id])
@@ -206,6 +225,8 @@ model HomepageSlide {
   imagePath String?
   imageMime String?
   imageData Bytes?
+  /// Tiny blurred preview (a data URL) shown while the real photo loads.
+  imageBlur String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -223,6 +244,8 @@ model HomepageTestimonial {
   imagePath String?
   imageMime String?
   imageData Bytes?
+  /// Tiny blurred preview (a data URL) shown while the real photo loads.
+  imageBlur String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -452,6 +475,8 @@ model SiteSetting {
   /// Uploaded site logo (header, print reports). Null uses the bundled default.
   logoMime                    String?
   logoData                    Bytes?
+  /// Tiny blurred preview of an uploaded logo.
+  logoBlur                    String?
   /// Uploaded browser-tab favicon. Null uses the bundled default.
   faviconMime                 String?
   faviconData                 Bytes?
@@ -460,6 +485,8 @@ model SiteSetting {
   /// (there is no bundled default for this one).
   reportBannerMime            String?
   reportBannerData            Bytes?
+  /// Tiny blurred preview of the printed-report banner.
+  reportBannerBlur            String?
   /// Resend audience (Segment) id that newsletter subscribers are synced
   /// into. Created automatically on first use — see
   /// src/lib/email/resend-audience.ts — so there's nothing to configure by

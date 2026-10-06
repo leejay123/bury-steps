@@ -5,6 +5,7 @@ import { ChevronDownIcon } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { blurImageProps } from "@/lib/blur-image";
 import { GridPattern } from "@/components/ui/grid-pattern";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { FullWidthDivider } from "@/components/full-width-divider";
@@ -117,7 +118,7 @@ function TestimonialsCard({
 }: ComponentProps<"figure"> & {
   testimonial: TestimonialView;
 }) {
-  const { quote, image, name, role } = testimonial;
+  const { quote, image, name, role, blur } = testimonial;
   return (
     <figure
       className={cn(
@@ -148,6 +149,7 @@ function TestimonialsCard({
             fill
             sizes="32px"
             src={image}
+            {...blurImageProps(blur)}
           />
         ) : null}
       </Avatar>

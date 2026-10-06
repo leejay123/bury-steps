@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/carousel";
 import { useAnyOverlayOpen } from "@/components/overlay-root";
 import { cn } from "@/lib/utils";
+import { blurImageProps } from "@/lib/blur-image";
 import type { SlideView } from "@/lib/slides";
 
 export function HomeCarousel({
@@ -86,6 +87,7 @@ export function HomeCarousel({
                 priority={index === 0}
                 sizes="100vw"
                 src={slide.src}
+                {...blurImageProps(slide.blur)}
               />
             </div>
           </CarouselItem>

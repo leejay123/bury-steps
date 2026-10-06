@@ -76,14 +76,14 @@ beforeEach(() => {
 
 describe("Homepage slides permission guard", () => {
   it("rejects addHomepageSlide for an organiser without the Homepage permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permHomepage: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permHomepage: false });
     const result = await addHomepageSlide(null, formWithImage());
     expect(result).toEqual({ ok: false, error: "You do not have permission to manage homepage content." });
     expect(transaction).not.toHaveBeenCalled();
   });
 
   it("rejects deleteHomepageSlide for an organiser without the Homepage permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permHomepage: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permHomepage: false });
     const formData = new FormData();
     formData.set("slideId", "slide-1");
     const result = await deleteHomepageSlide(null, formData);

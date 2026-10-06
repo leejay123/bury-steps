@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "@/lib/revalidate";
 import { z } from "zod";
+import { guardForm } from "@/lib/safe-action";
 import { requireAdmin, displayName } from "@/lib/auth";
 import { isOwner, actorStillOwner } from "@/lib/site-owner";
 import { prisma } from "@/lib/db";
@@ -111,7 +112,7 @@ function readInvolvedMemberIds(formData: FormData): string[] {
   return [...new Set(formData.getAll("involvedMemberIds").map(String).filter(Boolean))];
 }
 
-export async function addAccidentReport(
+async function addAccidentReportWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -196,7 +197,7 @@ async function notifyOtherAdminsOfAccidentReport(report: {
   }
 }
 
-export async function updateAccidentReport(
+async function updateAccidentReportWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -252,7 +253,7 @@ export async function updateAccidentReport(
   return { ok: true, message: "Accident report saved." };
 }
 
-export async function deleteAccidentReport(
+async function deleteAccidentReportWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -279,7 +280,7 @@ export async function deleteAccidentReport(
 
 /** Flags/unflags a report to exempt it from the accident-report auto-delete
  * cron (Settings → Data retention), regardless of the configured days. */
-export async function setAccidentReportRetentionLocked(
+async function setAccidentReportRetentionLockedWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -304,3 +305,61 @@ export async function setAccidentReportRetentionLocked(
       : "This report is no longer flagged — it will be deleted automatically like any other, once old enough.",
   };
 }
+
+function readReportFields(formData: FormData): z.input<typeof reportCopySchema> {
+  return {
+    happenedAt: formData.get("happenedAt"),
+    walkId: (() => {
+      const value = String(formData.get("walkId") ?? "").trim();
+      return !value || value === "none" ? undefined : value;
+    })(),
+    whatHappened: formData.get("whatHappened"),
+    whoInvolved: String(formData.get("whoInvolved") ?? "").trim() || undefined,
+    whatWeDid: formData.get("whatWeDid"),
+    organiserNotes: String(formData.get("organiserNotes") ?? "").trim() || undefined,
+  } as z.input<typeof reportCopySchema>;
+}
+
+const updateAccidentReportSchema = z
+  .object({ reportId: z.string().min(1, "No report selected.") })
+  .and(reportCopySchema);
+
+function readUpdateReport(formData: FormData): z.input<typeof updateAccidentReportSchema> {
+  return {
+    ...readReportFields(formData),
+    reportId: String(formData.get("reportId") ?? ""),
+  } as z.input<typeof updateAccidentReportSchema>;
+}
+
+const reportIdSchema = z.object({
+  reportId: z.string().min(1, "No report selected."),
+});
+
+function readReportId(formData: FormData) {
+  return { reportId: String(formData.get("reportId") ?? "") };
+}
+
+export const addAccidentReport = guardForm(
+  "organiser",
+  reportCopySchema,
+  readReportFields,
+  addAccidentReportWork,
+);
+export const updateAccidentReport = guardForm(
+  "organiser",
+  updateAccidentReportSchema,
+  readUpdateReport,
+  updateAccidentReportWork,
+);
+export const deleteAccidentReport = guardForm(
+  "organiser",
+  reportIdSchema,
+  readReportId,
+  deleteAccidentReportWork,
+);
+export const setAccidentReportRetentionLocked = guardForm(
+  "organiser",
+  reportIdSchema,
+  readReportId,
+  setAccidentReportRetentionLockedWork,
+);

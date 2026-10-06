@@ -10,6 +10,8 @@ export type SlideView = {
   /** Optional words for the Photo slider hero ("Each photo's own words"). */
   heading: string;
   caption: string;
+  /** Tiny blurred preview, shown until the photo itself has loaded. */
+  blur?: string | null;
 };
 
 export function slideSrc(slide: {

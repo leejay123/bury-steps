@@ -47,6 +47,17 @@ export function PrivacySiteSection() {
         <AccordionContent>
           <GuideBody>
             <p>
+              Members can turn on a phone alert for walks that are about to start. It sits under
+              Phone in the email preferences drawer (the account menu) and on the Email
+              preferences page. About an hour before a walk, anyone who turned it on gets a
+              notification with the walk name and a link to clock in. On an iPhone the site has
+              to be added to the Home Screen first. On Android or a computer, allowing
+              notifications in the browser is enough. Turning it off removes that device. The
+              keys that send the alerts live in the site&apos;s environment (VAPID_PUBLIC_KEY,
+              VAPID_PRIVATE_KEY, and VAPID_SUBJECT). Without them, the switch explains that
+              alerts are not set up yet.
+            </p>
+            <p>
               The homepage is cached so visitors get it quickly, without waiting on a sign-in
               check. Photos, quotes, FAQs, and the carousel switch update on the public site as
               soon as you save. If they do not, use{" "}

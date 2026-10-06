@@ -14,6 +14,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { actionResultErrorMessage, safeServerAction } from "@/lib/action-errors";
+import { PhoneAlertsSwitch } from "@/components/phone-alerts-switch";
 import { EMAIL_PREFERENCE_OPTIONS, type EmailPreferences } from "@/lib/email-preferences";
 import { updateMyEmailPreferences } from "@/server/actions";
 
@@ -40,11 +41,15 @@ const SECTIONS: { heading: string; names: (keyof EmailPreferences)[] }[] = [
 export function EmailPreferencesDrawer({
   email,
   isAdmin,
+  phoneAlertsOn,
   preferences,
+  vapidPublicKey,
 }: {
   email: string;
   isAdmin: boolean;
+  phoneAlertsOn: boolean;
   preferences: EmailPreferences;
+  vapidPublicKey: string | null;
 }) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
@@ -123,9 +128,10 @@ export function EmailPreferencesDrawer({
                     );
                   })}
                 </div>
-              </div>
-            );
-          })}
+            </div>
+          );
+        })}
+          <PhoneAlertsSwitch initiallyOn={phoneAlertsOn} vapidPublicKey={vapidPublicKey} />
         </div>
       </DrawerContent>
     </Drawer>

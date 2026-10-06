@@ -85,14 +85,14 @@ beforeEach(() => {
 
 describe("Homepage FAQs permission guard", () => {
   it("rejects addHomepageFaq for an organiser without the Homepage permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permHomepage: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permHomepage: false });
     const result = await addHomepageFaq(null, faqForm());
     expect(result).toEqual({ ok: false, error: "You do not have permission to manage homepage content." });
     expect(prismaMock.homepageFaq.create).not.toHaveBeenCalled();
   });
 
   it("rejects deleteHomepageFaq for an organiser without the Homepage permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permHomepage: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permHomepage: false });
     const formData = new FormData();
     formData.set("faqId", "faq-1");
     const result = await deleteHomepageFaq(null, formData);
@@ -101,7 +101,7 @@ describe("Homepage FAQs permission guard", () => {
   });
 
   it("rejects addHomepageFaqCategory for an organiser without the Homepage permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permHomepage: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permHomepage: false });
     const formData = new FormData();
     formData.set("label", "New category");
     const result = await addHomepageFaqCategory(null, formData);

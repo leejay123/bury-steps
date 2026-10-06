@@ -1,5 +1,8 @@
 "use server";
 
+import { z } from "zod";
+import { guardArgs, guardForm } from "@/lib/safe-action";
+
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
@@ -18,7 +21,7 @@ import {
   withCountLimitLock,
 } from "./shared";
 
-export async function addHomepageSlide(
+async function addHomepageSlideWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -47,6 +50,7 @@ export async function addHomepageSlide(
           imagePath: null,
           imageMime: image.mime,
           imageData: image.data,
+          imageBlur: image.blur,
         },
       });
     });
@@ -59,7 +63,7 @@ export async function addHomepageSlide(
   return { ok: true, message: "Slide added." };
 }
 
-export async function replaceHomepageSlideImage(
+async function replaceHomepageSlideImageWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -83,7 +87,7 @@ export async function replaceHomepageSlideImage(
         heading,
         caption,
         ...(image
-          ? { imagePath: null, imageMime: image.mime, imageData: image.data }
+          ? { imagePath: null, imageMime: image.mime, imageData: image.data, imageBlur: image.blur }
           : {}),
       },
     });
@@ -96,7 +100,7 @@ export async function replaceHomepageSlideImage(
   return { ok: true, message: "Slide saved." };
 }
 
-export async function deleteHomepageSlide(
+async function deleteHomepageSlideWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -132,7 +136,7 @@ export async function deleteHomepageSlide(
   return { ok: true, message: "Slide removed." };
 }
 
-export async function reorderHomepageSlides(ids: string[]): Promise<ActionResult> {
+async function reorderHomepageSlidesWork(ids: string[]): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permHomepage) return permissionDenied("permHomepage");
   const validated = validateReorderIds(ids, MAX_HOMEPAGE_SLIDES * 2);
@@ -148,3 +152,28 @@ export async function reorderHomepageSlides(ids: string[]): Promise<ActionResult
   revalidateHomepage();
   return { ok: true };
 }
+
+const pass = z.object({});
+const readPass = (_formData: FormData) => ({});
+
+const slideIdSchema = z.object({
+  slideId: z.string().min(1, "No slide selected."),
+});
+
+function readSlideId(formData: FormData) {
+  return { slideId: String(formData.get("slideId") ?? "") };
+}
+
+const reorderIdsSchema = z
+  .array(z.string().min(1, "Could not save that order. Try again."))
+  .min(1, "Could not save that order. Try again.");
+
+export const addHomepageSlide = guardForm("organiser", pass, readPass, addHomepageSlideWork);
+export const replaceHomepageSlideImage = guardForm(
+  "organiser",
+  slideIdSchema,
+  readSlideId,
+  replaceHomepageSlideImageWork,
+);
+export const deleteHomepageSlide = guardForm("organiser", slideIdSchema, readSlideId, deleteHomepageSlideWork);
+export const reorderHomepageSlides = guardArgs("organiser", reorderIdsSchema, reorderHomepageSlidesWork);

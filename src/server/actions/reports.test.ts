@@ -78,7 +78,7 @@ beforeEach(() => {
 
 describe("addAccidentReport", () => {
   it("rejects an organiser without the Create reports permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permReportsCreate: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permReportsCreate: false });
     const result = await addAccidentReport(null, reportForm());
     expect(result).toEqual({
       ok: false,
@@ -255,7 +255,7 @@ describe("addAccidentReport", () => {
 
 describe("updateAccidentReport", () => {
   it("rejects an organiser without the Edit reports permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permReportsEdit: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permReportsEdit: false });
     const result = await updateAccidentReport(null, reportForm({ reportId: "report-1" }));
     expect(result).toEqual({
       ok: false,
@@ -323,7 +323,7 @@ describe("deleteAccidentReport", () => {
 
 describe("setAccidentReportRetentionLocked", () => {
   it("rejects an organiser without the Edit reports permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permReportsEdit: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permReportsEdit: false });
     const formData = new FormData();
     formData.set("reportId", "report-1");
     const result = await setAccidentReportRetentionLocked(null, formData);

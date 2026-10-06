@@ -20,6 +20,8 @@ function clearAll() {
   delete process.env.INITIAL_ADMIN_EMAIL;
   delete process.env.RESEND_API_KEY;
   delete process.env.RESEND_WEBHOOK_SECRET;
+  delete process.env.VAPID_PUBLIC_KEY;
+  delete process.env.VAPID_PRIVATE_KEY;
   delete process.env.VERCEL_ENV;
   setNodeEnv("test");
 }
@@ -90,6 +92,8 @@ describe("validateEnv", () => {
     expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("INITIAL_ADMIN_EMAIL"));
     expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("RESEND_API_KEY"));
     expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("RESEND_WEBHOOK_SECRET"));
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("VAPID_PUBLIC_KEY"));
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("VAPID_PRIVATE_KEY"));
   });
 
   it("stays silent about recommended vars once they're set", () => {
@@ -99,6 +103,8 @@ describe("validateEnv", () => {
     process.env.INITIAL_ADMIN_EMAIL = "admin@example.com";
     process.env.RESEND_API_KEY = "re_test";
     process.env.RESEND_WEBHOOK_SECRET = "whsec_test";
+    process.env.VAPID_PUBLIC_KEY = "public-key";
+    process.env.VAPID_PRIVATE_KEY = "private-key";
     validateEnv();
     expect(console.warn).not.toHaveBeenCalled();
   });

@@ -76,14 +76,14 @@ beforeEach(() => {
 
 describe("Homepage testimonials permission guard", () => {
   it("rejects addHomepageTestimonial for an organiser without the Homepage permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permHomepage: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permHomepage: false });
     const result = await addHomepageTestimonial(null, baseForm());
     expect(result).toEqual({ ok: false, error: "You do not have permission to manage homepage content." });
     expect(prismaMock.homepageTestimonial.create).not.toHaveBeenCalled();
   });
 
   it("rejects deleteHomepageTestimonial for an organiser without the Homepage permission", async () => {
-    requireAdmin.mockResolvedValueOnce({ ...ADMIN, permHomepage: false });
+    requireAdmin.mockResolvedValue({ ...ADMIN, permHomepage: false });
     const formData = new FormData();
     formData.set("testimonialId", "t-1");
     const result = await deleteHomepageTestimonial(null, formData);

@@ -1,6 +1,8 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { useQueryChoice, useQueryText } from "@/hooks/use-filter-query";
 import type React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -325,10 +327,30 @@ function MemberListRow({
  * Search and paging both run server-side via `searchMembers`, so this stays
  * correct — and, once the trigram search index is in, fast — no matter how
  * many members the group has, rather than only up to some fetch cap.
- * Search text is deliberately kept off the URL (it can be a name or email)
- * — it's only ever sent as a server action argument.
+ * Search, sort, and Needs attention stay in the address so a refresh or the
+ * back button keeps them. The words are still sent to searchMembers, which
+ * is what actually filters the list.
  */
-export function MembersTable({
+const MEMBER_SORTS = ["oldest", "newest", "name", "clockins"] as const;
+const ATTENTION = ["0", "1"] as const;
+
+export function MembersTable(props: {
+  initialGroupTotals: MemberGroupTotals;
+  initialRows: ViewMember[];
+  initialTotal: number;
+  inviteRequired: boolean;
+  roleFilter: MemberRoleFilter;
+  viewerId: string;
+  viewerIsOwner: boolean;
+}) {
+  return (
+    <NuqsAdapter>
+      <MembersTableInner {...props} />
+    </NuqsAdapter>
+  );
+}
+
+function MembersTableInner({
   initialGroupTotals,
   initialRows,
   initialTotal,
@@ -353,9 +375,10 @@ export function MembersTable({
 }) {
   const router = useRouter();
   const listRef = useRef<HTMLDivElement>(null);
-  const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<MemberSort>("oldest");
-  const [needsAttention, setNeedsAttention] = useState(false);
+  const [query, setQuery] = useQueryText("q");
+  const [sort, setSort] = useQueryChoice("sort", MEMBER_SORTS, "oldest");
+  const [attention, setAttention] = useQueryChoice("attention", ATTENTION, "0");
+  const needsAttention = attention === "1";
   const [page, setPage] = useState(1);
   const [rows, setRows] = useState(initialRows);
   const [total, setTotal] = useState(initialTotal);
@@ -371,47 +394,29 @@ export function MembersTable({
   const [refreshNonce, setRefreshNonce] = useState(0);
   const refetch = useCallback(() => setRefreshNonce((n) => n + 1), []);
 
-  // `initialRows`/`initialTotal` are already the result of this exact
-  // query (page 1, no search, current roleFilter) — the server component
-  // fetches with `searchMembers({ role })` before ever rendering this
-  // component. Without this, the effect below re-ran that identical fetch
-  // on every mount (and again on every roleFilter change, since
-  // `useResetOnChange` re-syncs rows/total to the fresh initialRows but
-  // doesn't stop the effect from firing too), producing a visible
-  // opacity fade over data that hadn't actually changed. Starts `true` so
-  // the very first mount is skipped; set back to `true` whenever
-  // useResetOnChange re-syncs to a fresh set of server-provided rows.
-  const skipNextFetchRef = useRef(true);
-  // Only an actual change to the typed query should wait out the debounce
-  // below — a discrete click (role, sort, needs-attention, pagination)
-  // is already a deliberate one-off action, not a keystroke that might be
-  // followed by more keystrokes a moment later, so it should fetch right
-  // away even while a search query is also active.
-  const lastDebouncedQueryRef = useRef(query);
+  // The server renders the unfiltered first page. Skip the first fetch when
+  // the address has no search, sort, or Needs attention. When those are in
+  // the address, fetch them on mount so a refresh shows the filtered list.
+  const filtersFromAddress = query !== "" || sort !== "oldest" || needsAttention;
+  const skipNextFetchRef = useRef(!filtersFromAddress);
 
-  // A full navigation changes roleFilter/initialRows — drop back to page 1,
-  // no search, the default sort, no attention filter, and the fresh
-  // server-rendered rows for that role (which the server always fetches
-  // with that same default view).
+  // A full navigation changes roleFilter/initialRows. Keep the search, sort,
+  // and Needs attention that are already in the address, and show the
+  // server-rendered rows until the effect below loads that role with those
+  // filters.
   useResetOnChange([roleFilter], () => {
-    setQuery("");
-    setSort("oldest");
-    setNeedsAttention(false);
     setPage(1);
     setRows(initialRows);
     setTotal(initialTotal);
     setGroupTotals(initialGroupTotals);
-    skipNextFetchRef.current = true;
+    skipNextFetchRef.current = query === "" && sort === "oldest" && !needsAttention;
   });
 
   useEffect(() => {
     if (skipNextFetchRef.current) {
       skipNextFetchRef.current = false;
-      lastDebouncedQueryRef.current = query;
       return;
     }
-    const queryJustChanged = query !== lastDebouncedQueryRef.current;
-    lastDebouncedQueryRef.current = query;
     const handle = setTimeout(
       () => {
         startTransition(async () => {
@@ -429,7 +434,7 @@ export function MembersTable({
           setGroupTotals(result.groupTotals);
         });
       },
-      queryJustChanged && query !== "" ? 300 : 0,
+      0,
     );
     return () => clearTimeout(handle);
   }, [query, sort, needsAttention, page, roleFilter, viewerId, refreshNonce]);
@@ -445,24 +450,18 @@ export function MembersTable({
   }
 
   function toggleNeedsAttention() {
-    setNeedsAttention((value) => !value);
+    void setAttention(needsAttention ? "0" : "1");
     setPage(1);
   }
 
   const filtersActive = query !== "" || sort !== "oldest" || needsAttention || roleFilter !== "all";
 
   function clearFilters() {
-    if (roleFilter !== "all") {
-      // A full navigation back to the unfiltered URL — useResetOnChange
-      // above picks up the roleFilter change and resets query/sort/
-      // needsAttention/page too, so there's nothing left to do here.
-      router.push("/admin/members");
-      return;
-    }
-    setQuery("");
-    setSort("oldest");
-    setNeedsAttention(false);
+    void setQuery("");
+    void setSort("oldest");
+    void setAttention("0");
     setPage(1);
+    if (roleFilter !== "all") router.push("/admin/members");
   }
 
   const pageCount = Math.max(1, Math.ceil(total / LIST_PAGE_SIZE));
@@ -500,8 +499,9 @@ export function MembersTable({
           <Label htmlFor="member-role-filter">Role</Label>
           <Select
             onValueChange={(value) => {
-              const params = new URLSearchParams();
-              if (value !== "all") params.set("role", value);
+              const params = new URLSearchParams(window.location.search);
+              if (value === "all") params.delete("role");
+              else params.set("role", value);
               const qs = params.toString();
               router.push(`/admin/members${qs ? `?${qs}` : ""}`);
             }}

@@ -1,5 +1,8 @@
 "use server";
 
+import { z } from "zod";
+import { guardForm } from "@/lib/safe-action";
+
 import { revalidatePath } from "@/lib/revalidate";
 import { getOptionalUser, requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -23,7 +26,7 @@ export async function getContactFormDefaults(): Promise<{ name: string; email: s
   return { name: [user.firstName, user.lastName].filter(Boolean).join(" "), email: user.email };
 }
 
-export async function submitContactMessage(
+async function submitContactMessageWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -97,7 +100,7 @@ async function notifyAdminsOfContactMessage(submission: {
   }
 }
 
-export async function markContactMessageRead(
+async function markContactMessageReadWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -117,7 +120,7 @@ export async function markContactMessageRead(
   return { ok: true, message: "Marked as read." };
 }
 
-export async function deleteContactMessage(
+async function deleteContactMessageWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -136,3 +139,74 @@ export async function deleteContactMessage(
   revalidatePath("/admin/messages");
   return { ok: true, message: "Message removed." };
 }
+
+const contactSchema = z
+  .object({
+    company: z.string(),
+    name: z.string(),
+    email: z.string(),
+    phone: z.string(),
+    message: z.string(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.company.trim().length > 0) return;
+    if (parseContactName(value.name) === "invalid") {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Enter your name.", path: ["name"] });
+      return;
+    }
+    if (parseContactEmail(value.email) === "invalid") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Enter a valid email address.",
+        path: ["email"],
+      });
+      return;
+    }
+    if (parseContactPhone(value.phone) === "invalid") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Enter a valid phone number, or leave it blank.",
+        path: ["phone"],
+      });
+      return;
+    }
+    if (parseContactMessage(value.message) === "invalid") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Message needs to be at least 10 characters.",
+        path: ["message"],
+      });
+    }
+  });
+
+function readContact(formData: FormData) {
+  return {
+    company: String(formData.get("company") ?? ""),
+    name: String(formData.get("name") ?? ""),
+    email: String(formData.get("email") ?? ""),
+    phone: String(formData.get("phone") ?? ""),
+    message: String(formData.get("message") ?? ""),
+  };
+}
+
+const messageIdSchema = z.object({
+  messageId: z.string().min(1, "No message selected."),
+});
+
+function readMessageId(formData: FormData) {
+  return { messageId: String(formData.get("messageId") ?? "") };
+}
+
+export const submitContactMessage = guardForm("public", contactSchema, readContact, submitContactMessageWork);
+export const markContactMessageRead = guardForm(
+  "organiser",
+  messageIdSchema,
+  readMessageId,
+  markContactMessageReadWork,
+);
+export const deleteContactMessage = guardForm(
+  "organiser",
+  messageIdSchema,
+  readMessageId,
+  deleteContactMessageWork,
+);

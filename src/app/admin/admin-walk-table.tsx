@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { useQueryChoice, useQueryText } from "@/hooks/use-filter-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Footprints, Search } from "lucide-react";
@@ -53,7 +55,25 @@ const PAST_STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "cancelled", label: "Cancelled" },
 ];
 
-export function AdminWalkTable({
+const UPCOMING_STATUS_VALUES = ["all", "upcoming", "starting-soon", "in-progress", "cancelled"] as const;
+const PAST_STATUS_VALUES = ["all", "completed", "cancelled"] as const;
+const SORTS = ["asc", "desc"] as const;
+
+export function AdminWalkTable(props: {
+  attendanceLabel?: string;
+  emptyDescription: string;
+  emptyTitle: string;
+  scope: "upcoming" | "past";
+  walks: AdminWalkRow[];
+}) {
+  return (
+    <NuqsAdapter>
+      <AdminWalkTableInner {...props} />
+    </NuqsAdapter>
+  );
+}
+
+function AdminWalkTableInner({
   attendanceLabel = "Clock-ins",
   emptyDescription,
   emptyTitle,
@@ -67,9 +87,17 @@ export function AdminWalkTable({
   scope: "upcoming" | "past";
   walks: AdminWalkRow[];
 }) {
-  const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [sortOrder, setSortOrder] = useState<SortOrder>(scope === "past" ? "desc" : "asc");
+  const [query, setQuery] = useQueryText(scope === "upcoming" ? "q" : "pq");
+  const [statusFilter, setStatusFilter] = useQueryChoice(
+    scope === "upcoming" ? "status" : "pstatus",
+    scope === "upcoming" ? UPCOMING_STATUS_VALUES : PAST_STATUS_VALUES,
+    "all",
+  );
+  const [sortOrder, setSortOrder] = useQueryChoice(
+    scope === "upcoming" ? "sort" : "psort",
+    SORTS,
+    scope === "past" ? "desc" : "asc",
+  );
   const listRef = useRef<HTMLDivElement>(null);
   const allStatusOptions = scope === "upcoming" ? UPCOMING_STATUS_OPTIONS : PAST_STATUS_OPTIONS;
   const now = useLiveNow();

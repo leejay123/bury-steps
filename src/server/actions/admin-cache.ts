@@ -1,5 +1,8 @@
 "use server";
 
+import { z } from "zod";
+import { guardForm } from "@/lib/safe-action";
+
 import { revalidatePath, revalidateTag } from "@/lib/revalidate";
 import { clerkClient } from "@clerk/nextjs/server";
 import { requireAdmin } from "@/lib/auth";
@@ -55,7 +58,7 @@ import {
   permissionDenied,
 } from "./shared";
 
-export async function clearSiteCache(
+async function clearSiteCacheWork(
   _prev: ActionResult | null,
   _formData: FormData,
 ): Promise<ActionResult> {
@@ -74,7 +77,7 @@ export async function clearSiteCache(
   };
 }
 
-export async function resetSiteToDefault(
+async function resetSiteToDefaultWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -173,10 +176,12 @@ export async function resetSiteToDefault(
           progressEnabled: true,
           logoMime: null,
           logoData: null,
+          logoBlur: null,
           faviconMime: null,
           faviconData: null,
           reportBannerMime: null,
           reportBannerData: null,
+          reportBannerBlur: null,
           resendAudienceId: null,
           contactMessagesOwnerId: null,
           organiserInviteRequired: false,
@@ -232,10 +237,12 @@ export async function resetSiteToDefault(
           progressEnabled: true,
           logoMime: null,
           logoData: null,
+          logoBlur: null,
           faviconMime: null,
           faviconData: null,
           reportBannerMime: null,
           reportBannerData: null,
+          reportBannerBlur: null,
           resendAudienceId: null,
           contactMessagesOwnerId: null,
           organiserInviteRequired: false,
@@ -353,3 +360,21 @@ export async function resetSiteToDefault(
     message: "The site is reset to the starter homepage. You are still the organiser. Everyone else will need to join again.",
   };
 }
+
+const pass = z.object({});
+const readPass = (_formData: FormData) => ({});
+
+const resetSchema = z.object({
+  confirm: z.string().refine(
+    (value) => isResetConfirmWord(value),
+    "Type delete to confirm, then try again.",
+  ),
+});
+
+export const clearSiteCache = guardForm("organiser", pass, readPass, clearSiteCacheWork);
+export const resetSiteToDefault = guardForm(
+  "organiser",
+  resetSchema,
+  (formData) => ({ confirm: String(formData.get("confirm") ?? "") }),
+  resetSiteToDefaultWork,
+);

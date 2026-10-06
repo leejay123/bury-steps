@@ -15,9 +15,11 @@ export function MembersSection() {
             they have been a member, and how many clock-ins they have. The joined date is the day
             they first signed in. Filter by role (All, Organisers, or Members), sort the list
             (newest or oldest first, name, or most clock-ins), and search by name (first, last,
-            or both), email, or role. The list is grouped under Owner, Organisers, and Members
+            or both), email, or role. Role, search, sort, and Needs attention stay in the
+            address, so a refresh or the back button keeps them, and you can send another
+            organiser the filtered link. The list is grouped under Owner, Organisers, and Members
             headings, each showing how many there are in total, and the sort applies inside each
-            group. Search stays on this page only — it is not put in the address bar. If there
+            group. If there
             are more than 20 people, Previous and Next at the bottom of the list take you through
             them.
           </p>

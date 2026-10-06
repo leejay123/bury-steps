@@ -3,6 +3,7 @@
 import { revalidatePath } from "@/lib/revalidate";
 import { customAlphabet } from "nanoid";
 import { z } from "zod";
+import { guardForm } from "@/lib/safe-action";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { formatWalkDate, formatWalkLength, londonWallClockToUtc } from "@/lib/dates";
@@ -147,7 +148,7 @@ function parseWhat3Words(
   return { ok: true, value: normalized };
 }
 
-export async function createWalk(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+async function createWalkWork(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permWalksCreate) return permissionDenied("permWalksCreate");
 
@@ -240,7 +241,7 @@ export async function createWalk(_prev: ActionResult | null, formData: FormData)
 }
 
 /** Copy a walk’s details onto a new walk one week later (same weekday/time). */
-export async function duplicateWalk(
+async function duplicateWalkWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -352,7 +353,7 @@ export async function searchWalkPlaces(
   return { ok: true, places };
 }
 
-export async function cancelWalk(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+async function cancelWalkWork(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permWalksCancel) return permissionDenied("permWalksCancel");
   const id = String(formData.get("walkId") ?? "");
@@ -442,7 +443,7 @@ export async function cancelWalk(_prev: ActionResult | null, formData: FormData)
   return { ok: true, message: "Walk cancelled. Members will see it marked as cancelled." };
 }
 
-export async function reopenWalk(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+async function reopenWalkWork(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permWalksCancel) return permissionDenied("permWalksCancel");
   const id = String(formData.get("walkId") ?? "");
@@ -520,7 +521,7 @@ export async function reopenWalk(_prev: ActionResult | null, formData: FormData)
  * having stayed for the whole (now-shorter) walk, exactly like the
  * ordinary "walk finished and they never explicitly clocked out" case.
  */
-export async function endWalkEarly(
+async function endWalkEarlyWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -619,7 +620,7 @@ export async function endWalkEarly(
   };
 }
 
-export async function updateWalk(
+async function updateWalkWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -837,7 +838,7 @@ export async function updateWalk(
   };
 }
 
-export async function deleteWalk(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+async function deleteWalkWork(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const admin = await requireAdmin();
   // Deleting a walk is permanent and irreversible, so it stays owner-only —
   // organisers can't delete or remove anything.
@@ -876,7 +877,7 @@ export async function deleteWalk(_prev: ActionResult | null, formData: FormData)
  * auto-delete cron (Settings → Data retention), regardless of the
  * configured days. Meaningless (and harmless) for a walk that isn't
  * cancelled — the cron only ever considers cancelled walks anyway. */
-export async function setWalkRetentionLocked(
+async function setWalkRetentionLockedWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
@@ -901,3 +902,60 @@ export async function setWalkRetentionLocked(
       : "This walk is no longer flagged — it will be deleted automatically like any other, once old enough.",
   };
 }
+
+function readWalkDetails(formData: FormData): z.input<typeof walkDetailsSchema> {
+  return {
+    title: formData.get("title"),
+    description: formData.get("description") || undefined,
+    distance: formData.get("distance") || undefined,
+    grade: formData.get("grade") || undefined,
+    elevationGain: formData.get("elevationGain") || undefined,
+    walkLeader: formData.get("walkLeader") || undefined,
+    backMarker: formData.get("backMarker") || undefined,
+    location: formData.get("location") || undefined,
+    postcode: formData.get("postcode") || undefined,
+    what3words: formData.get("what3words") || undefined,
+    startsAt: formData.get("startsAt"),
+    durationMins: formData.get("durationMins") ?? 90,
+  } as z.input<typeof walkDetailsSchema>;
+}
+
+const updateWalkSchema = z
+  .object({ walkId: z.string().min(1, "No walk selected.") })
+  .and(
+    walkDetailsSchema.extend({
+      reopen: z.string().optional(),
+      wasCancelled: z.string().optional(),
+    }),
+  );
+
+function readUpdateWalk(formData: FormData): z.input<typeof updateWalkSchema> {
+  return {
+    ...readWalkDetails(formData),
+    walkId: String(formData.get("walkId") ?? ""),
+    reopen: formData.get("reopen") || undefined,
+    wasCancelled: formData.get("wasCancelled") || undefined,
+  } as z.input<typeof updateWalkSchema>;
+}
+
+const walkIdSchema = z.object({
+  walkId: z.string().min(1, "No walk selected."),
+});
+
+function readWalkId(formData: FormData) {
+  return { walkId: String(formData.get("walkId") ?? "") };
+}
+
+export const createWalk = guardForm("organiser", walkDetailsSchema, readWalkDetails, createWalkWork);
+export const duplicateWalk = guardForm("organiser", walkIdSchema, readWalkId, duplicateWalkWork);
+export const cancelWalk = guardForm("organiser", walkIdSchema, readWalkId, cancelWalkWork);
+export const reopenWalk = guardForm("organiser", walkIdSchema, readWalkId, reopenWalkWork);
+export const endWalkEarly = guardForm("organiser", walkIdSchema, readWalkId, endWalkEarlyWork);
+export const updateWalk = guardForm("organiser", updateWalkSchema, readUpdateWalk, updateWalkWork);
+export const deleteWalk = guardForm("organiser", walkIdSchema, readWalkId, deleteWalkWork);
+export const setWalkRetentionLocked = guardForm(
+  "organiser",
+  walkIdSchema,
+  readWalkId,
+  setWalkRetentionLockedWork,
+);

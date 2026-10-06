@@ -43,6 +43,14 @@ const RECOMMENDED: EnvCheck[] = [
     name: "RESEND_WEBHOOK_SECRET",
     hint: "Resend dashboard → Webhooks → your endpoint → Signing Secret. Without it, bounce/complaint/delivery events aren't recorded.",
   },
+  {
+    name: "VAPID_PUBLIC_KEY",
+    hint: "Phone alerts. Generate a pair with `npx web-push generate-vapid-keys`, then set VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, and VAPID_SUBJECT (a mailto: or https: address). Without them, the walk-starting alert is skipped.",
+  },
+  {
+    name: "VAPID_PRIVATE_KEY",
+    hint: "The private half of the phone-alert key pair. Never share it.",
+  },
 ];
 
 function isSet(name: string): boolean {

@@ -1,10 +1,13 @@
 import { cache } from "react";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { parsePageTransition, type PageTransition } from "@/lib/page-transition";
 import { parseSliderHeroWords, type SliderHeroWords } from "@/lib/hero-style";
 import { DEFAULT_TEXT_SIZES, parseTextSize, type TextSizes } from "@/lib/text-sizes";
 import { cacheLife, cacheTag } from "next/cache";
 import { DEFAULT_WALK_ESSENTIALS, parseEssentialList, type EssentialItem } from "@/lib/walk-essentials";
 import { prisma } from "@/lib/db";
+import { photoBlur } from "@/lib/photo-blur";
 import { HOMEPAGE_CACHE_TAG, HOMEPAGE_REVALIDATE_SECONDS } from "@/lib/homepage-cache";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import {
@@ -143,12 +146,15 @@ export type SiteTheme = {
   homepageSectionOrder: HomepageSectionId[];
   /** Bundled default, or `/api/site-logo?v=...` once an admin has uploaded one. */
   logoSrc: string;
+  /** Blurred preview of the logo, when one has been made. */
+  logoBlur: string | null;
   hasCustomLogo: boolean;
   /** Bundled default, or `/icon.png?v=...` once an admin has uploaded one — for the settings preview only; the actual `<link rel="icon">` always points at `/icon.png`. */
   faviconSrc: string;
   hasCustomFavicon: boolean;
   /** Letterhead-style banner for printed accident reports. No bundled default — null hides it entirely. */
   reportBannerSrc: string | null;
+  reportBannerBlur: string | null;
 };
 
 const DEFAULT_LOGO_SRC = "/bury-steps-logo.png";
@@ -214,10 +220,12 @@ function defaultTheme(): SiteTheme {
     howWalksWorkStepsText: DEFAULT_HOW_WALKS_WORK_STEPS_TEXT,
     homepageSectionOrder: normalizeHomepageSectionOrder(null),
     logoSrc: DEFAULT_LOGO_SRC,
+    logoBlur: null,
     hasCustomLogo: false,
     faviconSrc: DEFAULT_FAVICON_SRC,
     hasCustomFavicon: false,
     reportBannerSrc: null,
+    reportBannerBlur: null,
   };
 }
 
@@ -280,8 +288,10 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       howWalksWorkSteps: true,
       homepageSectionOrder: true,
       logoMime: true,
+      logoBlur: true,
       faviconMime: true,
       reportBannerMime: true,
+      reportBannerBlur: true,
       updatedAt: true,
     },
   });
@@ -292,6 +302,14 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   const aboutRules = aboutRulesFromStored(row?.aboutRules);
   const beforeYouSetOffTips = beforeYouSetOffTipsFromStored(row?.beforeYouSetOffTips);
   const howWalksWorkSteps = howWalksWorkStepsFromStored(row?.howWalksWorkSteps);
+  const logoBlur = await resolveBlur(row?.logoBlur, Boolean(row?.logoMime), "logoData", "logoBlur", "/bury-steps-logo.png");
+  const reportBannerBlur = await resolveBlur(
+    row?.reportBannerBlur,
+    Boolean(row?.reportBannerMime),
+    "reportBannerData",
+    "reportBannerBlur",
+    null,
+  );
 
   return {
     heroStyle: parseHeroStyle(row?.heroStyle),
@@ -386,6 +404,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     logoSrc: row?.logoMime
       ? `/api/site-logo?v=${row.updatedAt.getTime()}`
       : DEFAULT_LOGO_SRC,
+    logoBlur,
     hasCustomLogo: Boolean(row?.logoMime),
     faviconSrc: row?.faviconMime
       ? `/icon.png?v=${row.updatedAt.getTime()}`
@@ -394,7 +413,38 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     reportBannerSrc: row?.reportBannerMime
       ? `/api/report-banner?v=${row.updatedAt.getTime()}`
       : null,
+    reportBannerBlur,
   };
+}
+
+async function resolveBlur(
+  current: string | null | undefined,
+  hasUpload: boolean,
+  bytesField: "logoData" | "reportBannerData",
+  blurField: "logoBlur" | "reportBannerBlur",
+  bundledPath: string | null,
+): Promise<string | null> {
+  if (hasUpload && current) return current;
+  if (hasUpload) {
+    const stored = await prisma.siteSetting.findUnique({
+      where: { id: SITE_SETTING_ID },
+      select: { logoData: true, reportBannerData: true },
+    });
+    const bytes = stored?.[bytesField];
+    if (!bytes || bytes.length === 0) return null;
+    const blur = await photoBlur(bytes);
+    if (!blur) return null;
+    await prisma.siteSetting
+      .update({ where: { id: SITE_SETTING_ID }, data: { [blurField]: blur } })
+      .catch((err) => console.error("Could not store a photo preview", err));
+    return blur;
+  }
+  if (!bundledPath) return null;
+  try {
+    return await photoBlur(await readFile(path.join(process.cwd(), "public", bundledPath.slice(1))));
+  } catch {
+    return null;
+  }
 }
 
 /** Saved copy (Next.js "use cache: remote" — one copy shared by every server, so a save refreshes it everywhere): refreshed every HOMEPAGE_REVALIDATE_SECONDS, and at once

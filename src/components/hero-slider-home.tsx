@@ -30,7 +30,7 @@ export function HeroSliderHome({
   siteName: string;
   siteTagline: string;
 }) {
-  const images = slides.length > 0 ? slides.map((slide) => ({ src: slide.src, alt: slide.alt })) : SAMPLE_WALK_PHOTOS;
+  const images = slides.length > 0 ? slides.map((slide) => ({ src: slide.src, alt: slide.alt, blur: slide.blur })) : SAMPLE_WALK_PHOTOS;
 
   const actions = <AuthSwitch signedIn={<><Button asChild className="bg-white text-black hover:bg-white/90" size="sm">
       <Link href="/walks">
