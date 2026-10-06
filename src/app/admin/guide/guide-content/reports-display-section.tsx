@@ -13,7 +13,7 @@ export function ReportsDisplaySection() {
         <AccordionContent>
           <GuideBody>
             <p>
-              Open <Link href="/admin/reports">Reports</Link> from Manage in the top menu. Only organisers can
+              Open <Link href="/admin/reports">Reports</Link> in the top menu. Only organisers can
               see this. Add a report with the date, an optional walk, what happened, who was
               involved, what you did, and extra notes if you need them. The walk list shows walks
               that have started, newest first with their day, so a report can be written up while

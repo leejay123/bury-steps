@@ -54,7 +54,7 @@ export function OverviewSection({
               clock-ins together, not a race.
             </p>
             <p>
-              <Badge>Organisers</Badge> get Walks tools, and Reports under Manage in the top menu, plus this
+              <Badge>Organisers</Badge> get Walks tools and Reports in the top menu, plus this
               Guide and the same Progress page members see. You create walks, share the link, see
               the roster, record accident reports, and update a walk&rsquo;s Journey.
             </p>
@@ -80,12 +80,12 @@ export function OverviewSection({
             <p>
               Sign in and join happen on the account pages at accounts.burysteps-walkinggroup.co.uk.
               After signing in, members land on Walks. Organisers are sent to Walks in Organiser
-              tools. Walks, Notices, and Progress sit in the top menu; the organiser pages (Members,
-              Messages, Reports, Settings, and this Guide — whichever you have) are under{" "}
-              <strong>Manage</strong>, a dropdown at the end of it, which stays highlighted while
-              you are on one of them. On a phone they are in the menu under Manage. The menu loads
-              those pages in the background, so a tap opens the page that is already ready. There
-              is no second row of tabs.
+              tools. Walks, Notices, Progress and the organiser pages (Members, Messages, Reports,
+              Settings, and this Guide — whichever you have) are all in the top menu, each with an
+              icon beside the name. If they don&apos;t all fit, the row scrolls sideways. On a phone
+              the organiser pages are in the menu under Manage. The menu loads those pages in the
+              background, so a tap opens the page that is already ready. There is no second row of
+              tabs.
             </p>
             <p>
               Forms that open in a side panel (creating or editing a walk, a notice, a report, and

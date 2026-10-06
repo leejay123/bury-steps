@@ -122,7 +122,7 @@ export function MessagesSection() {
       <AccordionContent>
         <GuideBody>
           <p>
-            <Link href="/admin/messages">Messages</Link> (under Manage) collects everything sent
+            <Link href="/admin/messages">Messages</Link> (in the top menu) collects everything sent
             through the public <Link href="/contact">Contact us</Link> form, newest first (a
             signed-in member finds their name and email already filled in there). Owners
             only. Whoever is chosen in Settings → Site behaviour → Contact messages also gets an

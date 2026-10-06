@@ -18,16 +18,13 @@ function on(href){
   return path===href||path.indexOf(href+"/")===0;
 }
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
-var links="",manage=0,manageOn=false;
+var links="";
 for(var i=0;i<items.length&&i<16;i++){
   var item=items[i];if(!item||typeof item.href!=="string"||typeof item.label!=="string")continue;
   if(item.href.charAt(0)!=="/"||item.href.charAt(1)==="/"||item.label.length>40)continue;
   var active=on(item.href);
-  // Organiser pages sit under one Manage menu in the live header.
-  if(item.href.indexOf("/admin/")===0){manage++;if(active)manageOn=true;continue;}
   links+='<a class="relative inline-flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-[14px] '+(active?"text-foreground":"text-muted-foreground")+'" href="'+esc(item.href)+'">'+(active?'<span class="absolute inset-0 rounded-md bg-muted"></span>':"")+'<span class="relative z-10 inline-flex items-center gap-1.5"><span class="inline-block size-4 shrink-0"></span>'+esc(item.label)+"</span></a>";
 }
-if(manage)links+='<span aria-hidden="true" class="relative inline-flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-[14px] '+(manageOn?"text-foreground":"text-muted-foreground")+'">'+(manageOn?'<span class="absolute inset-0 rounded-md bg-muted"></span>':"")+'<span class="relative z-10 inline-flex items-center gap-1.5"><span class="inline-block size-4 shrink-0"></span>Manage<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-3.5 shrink-0" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></span></span>';
 if(!links)return;
 var slot=document.getElementById("bs-header-boot");if(!slot)return;
 document.documentElement.setAttribute("data-remembered-in","");
