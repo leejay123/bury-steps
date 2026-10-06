@@ -1,9 +1,13 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-import { UserButton } from "@clerk/nextjs";
+import { useEffect, useSyncExternalStore } from "react";
+import { UserButton, useUser } from "@clerk/nextjs";
 import { Bell, History, LineChart, Mail } from "lucide-react";
 import { openEmailPreferences } from "@/components/email-preferences-drawer";
+import { isClerkImageUrl } from "@/components/header-chrome";
+import { AvatarPlaceholder } from "@/components/header-placeholders";
+import { AVATAR_IMAGE_COOKIE } from "@/lib/remembered-nav";
+import { writeClientCookie } from "@/lib/remembered-rows-key";
 
 /**
  * Shortcuts into the same avatar menu Clerk already renders ("Manage
@@ -18,26 +22,32 @@ import { openEmailPreferences } from "@/components/email-preferences-drawer";
  * render (no error, just missing) if this lives in a server component.
  */
 export function SiteUserButton({
+  imageUrl,
   initial,
   progressEnabled = true,
 }: {
-  /** Shown in a circle until Clerk's avatar loads, so the header doesn't jump. */
+  /** The picture Clerk's avatar will show, drawn until it loads (see AvatarPlaceholder). */
+  imageUrl?: string | null;
+  /** Shown in a circle until Clerk's avatar loads when there's no picture, so the header doesn't jump. */
   initial?: string;
   progressEnabled?: boolean;
 }) {
-  // The server always draws the initial circle (Clerk isn't loaded there).
+  // The server always draws the placeholder (Clerk isn't loaded there).
   // If Clerk finishes loading in the browser before this part of the page
   // wakes up, drawing the real button straight away wouldn't match the
-  // server's HTML (a hydration error). So draw the circle first, then swap.
+  // server's HTML (a hydration error). So draw the placeholder first, then swap.
   const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
-  const placeholder = (
-    <span
-      aria-hidden
-      className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground uppercase"
-    >
-      {initial}
-    </span>
-  );
+  const { user } = useUser();
+  const clerkId = user?.id;
+  const clerkImage = user?.imageUrl;
+  // Remember the picture Clerk shows, so the next page load draws it before
+  // Clerk's code arrives (header-boot.tsx, SiteNav).
+  useEffect(() => {
+    if (clerkId && isClerkImageUrl(clerkImage)) {
+      writeClientCookie(AVATAR_IMAGE_COOKIE, encodeURIComponent(`${clerkId}|${clerkImage}`));
+    }
+  }, [clerkId, clerkImage]);
+  const placeholder = <AvatarPlaceholder imageUrl={imageUrl} initial={initial} />;
   if (!hydrated) return placeholder;
 
   return (

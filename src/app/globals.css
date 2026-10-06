@@ -566,8 +566,11 @@ html[data-remembered-in] [data-guest-home] {
   display: none;
 }
 
-/* The cookie-drawn header steps aside the moment the real one is in the DOM. */
-html:has([data-nav-ready]) #bs-header-boot {
+/* The cookie-drawn header steps aside the moment the real one is in the
+   header. Only there: React first streams the real one into a hidden holding
+   <div> at the end of the page, and counting that copy blanked the menu
+   until React moved it in. */
+html:has([data-site-header] [data-nav-ready]) #bs-header-boot {
   display: none;
 }
 

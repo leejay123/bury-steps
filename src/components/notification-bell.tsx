@@ -13,6 +13,9 @@ import {
   type OpenMemberNoticeBellDetail,
 } from "@/lib/member-notices-bridge";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { BELL_MAX } from "@/components/header-chrome";
+import { UNREAD_COOKIE } from "@/lib/remembered-nav";
+import { writeClientCookie } from "@/lib/remembered-rows-key";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { NotificationBell as NoticeBellButton } from "@/components/spectrumui/notification-bell";
@@ -56,9 +59,11 @@ export function NotificationBell({
     return () => window.removeEventListener(NOTICE_READ_EVENT, onRead);
   }, []);
 
-  // The Notices dots in the phone menu and bottom bar follow this count.
+  // The Notices dots in the phone menu and bottom bar follow this count, and
+  // the next page load draws the badge with it before the notices load.
   useEffect(() => {
     window.dispatchEvent(new CustomEvent(NOTICES_UNREAD_EVENT, { detail: unread.length }));
+    writeClientCookie(UNREAD_COOKIE, String(Math.min(unread.length, 99)));
   }, [unread.length]);
 
   useEffect(() => {
@@ -143,7 +148,7 @@ export function NotificationBell({
         <NoticeBellButton
           className="border-transparent bg-transparent shadow-none hover:bg-accent"
           count={unreadCount}
-          max={9}
+          max={BELL_MAX}
           ringOnMount={unreadCount > 0}
           size="sm"
         />

@@ -4,6 +4,12 @@ import * as React from "react";
 import { SearchIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Kbd } from "@/components/ui/kbd";
+import {
+  SEARCH_BUTTON_CLASS,
+  SEARCH_ICON_CLASS,
+  SEARCH_KBD_CLASS,
+  SEARCH_LABEL_CLASS,
+} from "@/components/header-chrome";
 import dynamic from "next/dynamic";
 
 export const OPEN_EVENT = "site-search:open";
@@ -15,38 +21,42 @@ export function openSiteSearch() {
 
 const noSubscribe = () => () => {};
 
-/** ⌘ on Macs and iPads, Ctrl everywhere else. The server (and hydration) assume ⌘. */
-function useIsApple() {
+/** ⌘ on Macs and iPads, Ctrl everywhere else. The server (and hydration)
+ * go by the browser's description of itself when the header passes it on,
+ * else assume ⌘. */
+function useIsApple(serverGuess = true) {
   return React.useSyncExternalStore(
     noSubscribe,
     () => /mac|iphone|ipad|ipod/i.test(navigator.platform || navigator.userAgent),
-    () => true,
+    () => serverGuess,
   );
 }
 
 /** A search icon on phones and tablets; a search-bar-shaped button from lg up. */
-export function SiteSearchBar({ className, onOpen }: { className?: string; onOpen?: () => void }) {
+export function SiteSearchBar({
+  apple,
+  className,
+  onOpen,
+}: {
+  /** From the server: whether this is a Mac, iPhone or iPad, for the ⌘K hint. */
+  apple?: boolean;
+  className?: string;
+  onOpen?: () => void;
+}) {
   return (
     <button
       aria-label="Search the site"
       data-site-search=""
-      className={cn(
-        "flex size-9 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
-        // Same round hover as the bell on phones and tablets; a bordered bar
-        // from lg up. On tablets the bar took the room the menu links needed,
-        // so the last one was cut off.
-        "lg:h-8 lg:w-60 lg:justify-start lg:rounded-md lg:border lg:bg-background lg:px-2.5 lg:shadow-xs",
-        className,
-      )}
+      className={cn(SEARCH_BUTTON_CLASS, className)}
       onClick={() => {
         onOpen?.();
         openSiteSearch();
       }}
       type="button"
     >
-      <SearchIcon aria-hidden className="size-4 shrink-0 max-lg:text-foreground" />
-      <span className="truncate max-lg:hidden">Search the site…</span>
-      <Kbd className="ml-auto hidden lg:inline-flex">{useIsApple() ? "⌘K" : "Ctrl K"}</Kbd>
+      <SearchIcon aria-hidden className={SEARCH_ICON_CLASS} />
+      <span className={SEARCH_LABEL_CLASS}>Search the site…</span>
+      <Kbd className={SEARCH_KBD_CLASS}>{useIsApple(apple) ? "⌘K" : "Ctrl K"}</Kbd>
     </button>
   );
 }

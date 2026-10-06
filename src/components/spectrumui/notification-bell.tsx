@@ -14,6 +14,14 @@ import { useState } from "react";
 import type React from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
+// Shared with the header's placeholder bell (header-placeholders.tsx), so
+// the two are drawn alike.
+import {
+  BELL_BADGE_CLASS,
+  BELL_BADGE_COUNT_CLASS,
+  BELL_CLAPPER_PATH,
+  BELL_DOME_PATH,
+} from "@/components/header-chrome";
 
 export interface NotificationBellProps extends Omit<
   React.ComponentProps<typeof motion.button>,
@@ -49,8 +57,6 @@ const BADGE_SPRING = { type: "spring", stiffness: 500, damping: 22 } as const;
 const COUNT_SPRING = { type: "spring", stiffness: 400, damping: 30 } as const;
 const TAP_SPRING = { type: "spring", stiffness: 500, damping: 30 } as const;
 
-const BELL_DOME_PATH = "M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9";
-const BELL_CLAPPER_PATH = "M10.3 21a1.94 1.94 0 0 0 3.4 0";
 
 const SIZES = {
   sm: { button: "size-9", icon: 16 },
@@ -170,14 +176,14 @@ export function NotificationBell({
             <motion.span
               animate={{ scale: 1 }}
               aria-hidden="true"
-              className="absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-white ring-2 ring-background"
+              className={BELL_BADGE_CLASS}
               exit={{ scale: 0 }}
               initial={{ scale: 0 }}
               key="badge"
               style={{ transformOrigin: "left bottom" }}
               transition={badgeTransition}
             >
-              <span className="relative inline-flex overflow-hidden tabular-nums">
+              <span className={BELL_BADGE_COUNT_CLASS}>
                 <AnimatePresence custom={direction} initial={false} mode="popLayout">
                   <motion.span
                     animate="center"

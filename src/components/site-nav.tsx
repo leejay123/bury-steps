@@ -1,17 +1,26 @@
 import { Suspense } from "react";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { getOptionalUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
 import { navItems } from "@/components/site-nav-items";
-import { AVATAR_COOKIE, NAV_COOKIE, parseRememberedNav, type RememberedNavItem } from "@/lib/remembered-nav";
+import {
+  AVATAR_IMAGE_COOKIE,
+  NAV_COOKIE,
+  UNREAD_COOKIE,
+  parseRememberedAvatar,
+  parseRememberedNav,
+  parseRememberedUnread,
+} from "@/lib/remembered-nav";
 import { RememberHeader } from "@/components/remember-header";
 import { BottomNavBar } from "@/components/bottom-nav-bar";
 import { getSiteTheme } from "@/lib/site-theme";
 import { LazySiteUserButton } from "@/components/clerk-lazy";
 import { ClerkIsland } from "@/components/clerk-island";
 import { JoinGroupButton } from "@/components/join-group-button";
-import { SiteNavLinks, SiteMobileMenu, StaticNavLinks, type MobileMenuGroup } from "@/components/site-nav-menu";
+import { SiteNavLinks, SiteMobileMenu, type MobileMenuGroup } from "@/components/site-nav-menu";
+import { AvatarPlaceholder, BellPlaceholder } from "@/components/header-placeholders";
+import { HEADER_NAV_COLUMN_CLASS, HEADER_TOOLS_CLASS } from "@/components/header-chrome";
 import { NotificationBell } from "@/components/notification-bell";
 import { SiteSearchBar, SiteSearchDialog } from "@/components/site-search";
 import { EmailPreferencesDrawer } from "@/components/email-preferences-drawer";
@@ -19,56 +28,42 @@ import { getSiteNoticeState } from "@/lib/site-notices";
 import { getProgressEnabled } from "@/lib/progress-settings";
 import { FULL_ORGANISER_PERMISSIONS, ORGANISER_PERMISSIONS } from "@/lib/organiser-permissions";
 
-/**
- * The right-hand column is held at the signed-in width (search, bell and
- * avatar: icons on tablets, a search bar from lg) for everyone and in the
- * placeholder too. Its contents change as the header streams in —
- * placeholder, then Sign in/Join or the member's tools — and without a fixed
- * width each change slid the centred menu sideways.
- */
-const RIGHT_CLUSTER = "md:min-w-[7.75rem] lg:min-w-[20.5rem]";
+/** What the header remembers from last visit (cookies), for its placeholders. */
+type RememberedHeader = {
+  avatar: { clerkId: string; url: string } | null;
+  /** Whether the visitor is on a Mac, iPhone or iPad (⌘K rather than Ctrl K). */
+  apple: boolean;
+  unread: number;
+};
 
 /** Cookie read stays inside Suspense so the shared layout can still be prerendered. */
 export async function SiteNavSlot() {
-  const jar = await cookies();
-  const items = parseRememberedNav(jar.get(NAV_COOKIE)?.value);
-  const initial = (jar.get(AVATAR_COOKIE)?.value ?? "").slice(0, 1);
+  const [jar, head] = await Promise.all([cookies(), headers()]);
+  const remembered: RememberedHeader = {
+    avatar: parseRememberedAvatar(jar.get(AVATAR_IMAGE_COOKIE)?.value),
+    apple: /Macintosh|Mac OS X|iPhone|iPad|iPod/i.test(head.get("user-agent") ?? ""),
+    unread: parseRememberedUnread(jar.get(UNREAD_COOKIE)?.value),
+  };
+  const remembersMenu = parseRememberedNav(jar.get(NAV_COOKIE)?.value).length > 0;
   return (
-    <Suspense fallback={<SiteNavFallback initial={initial} items={items} />}>
-      <SiteNav />
+    <Suspense fallback={<SiteNavFallback remembersMenu={remembersMenu} />}>
+      <SiteNav remembered={remembered} />
     </Suspense>
   );
 }
 
-export function SiteNavFallback({ initial = "", items = [] }: { initial?: string; items?: RememberedNavItem[] }) {
-  if (items.length === 0) {
-    return (
-      <>
-        <div className="hidden min-w-0 items-center justify-center md:flex" />
-        <div
-          className={`flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3 ${RIGHT_CLUSTER}`}
-        />
-      </>
-    );
-  }
+/**
+ * Until the session is known. A returning member's header is already drawn
+ * from last visit's cookies by the script in header-boot.tsx, so this stays
+ * out of the way (it would only cover that copy with an identical one).
+ * Otherwise it holds the header's columns open.
+ */
+export function SiteNavFallback({ remembersMenu = false }: { remembersMenu?: boolean }) {
+  if (remembersMenu) return null;
   return (
     <>
-      <div className="hidden min-w-0 items-center justify-center md:flex" data-nav-ready="">
-        <StaticNavLinks items={items} />
-      </div>
-      <div
-        className={`flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3 ${RIGHT_CLUSTER}`}
-        data-nav-ready=""
-      >
-        <SiteSearchBar />
-        <span aria-hidden className="inline-flex size-9 shrink-0 rounded-full border border-border bg-background" />
-        <span
-          aria-hidden
-          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground uppercase"
-        >
-          {initial}
-        </span>
-      </div>
+      <div className={HEADER_NAV_COLUMN_CLASS} />
+      <div className={HEADER_TOOLS_CLASS} />
     </>
   );
 }
@@ -80,7 +75,7 @@ async function SiteNavBell({ firstName, userId }: { firstName: string | null; us
   return <NotificationBell notices={notices} unreadIds={unreadIds} />;
 }
 
-export async function SiteNav() {
+export async function SiteNav({ remembered }: { remembered?: RememberedHeader }) {
   const afterAuth = `${appUrl()}${AFTER_AUTH_PATH}`;
   const [user, progressEnabled] = await Promise.all([getOptionalUser(), getProgressEnabled()]);
   const isAdmin = user?.role === "ADMIN";
@@ -91,10 +86,14 @@ export async function SiteNav() {
   // Signed-in state comes from the server here (not Clerk's client <Show>),
   // so nothing waits for Clerk's browser bundle before appearing.
   const initial = user ? (user.firstName || user.email || "?").charAt(0) : null;
+  // Clerk's picture from last time if it was this person's, else their
+  // photo on record, else the initial: whatever Clerk's button will show.
+  const rememberedAvatar = remembered?.avatar && user && remembered.avatar.clerkId === user.clerkId ? remembered.avatar.url : null;
+  const avatarUrl = rememberedAvatar ?? user?.imageUrl ?? null;
   return (
     <>
       <RememberHeader initial={initial} />
-      <div className="hidden min-w-0 items-center justify-center md:flex" data-nav-ready="">
+      <div className={HEADER_NAV_COLUMN_CLASS} data-nav-ready="">
         {user ? (
           <SiteNavLinks
             isAdmin={isAdmin}
@@ -104,22 +103,23 @@ export async function SiteNav() {
           />
         ) : null}
       </div>
-      <div
-        className={`flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3 ${RIGHT_CLUSTER}`}
-        data-nav-ready=""
-      >
+      <div className={HEADER_TOOLS_CLASS} data-nav-ready="">
         {user ? (
           <>
-            <SiteSearchBar />
+            <SiteSearchBar apple={remembered?.apple} />
             <SiteSearchDialog />
-            <Suspense fallback={<span aria-hidden className="inline-flex size-9 shrink-0 rounded-full border border-border bg-background" />}>
+            <Suspense fallback={<BellPlaceholder unread={remembered?.unread} />}>
               <SiteNavBell firstName={user.firstName} userId={user.id} />
             </Suspense>
             {/* A fixed slot: while Clerk's code loads the avatar's own
                 placeholder can be missing, and the cluster jumped 40px. */}
             <div className="flex size-7 shrink-0 items-center justify-center">
-              <ClerkIsland>
-                <LazySiteUserButton initial={initial ?? "?"} progressEnabled={progressEnabled} />
+              <ClerkIsland fallback={<AvatarPlaceholder imageUrl={avatarUrl} initial={initial ?? "?"} />}>
+                <LazySiteUserButton
+                  imageUrl={avatarUrl}
+                  initial={initial ?? "?"}
+                  progressEnabled={progressEnabled}
+                />
               </ClerkIsland>
             </div>
             <EmailPreferencesDrawer

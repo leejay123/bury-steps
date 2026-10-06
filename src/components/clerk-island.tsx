@@ -14,13 +14,14 @@ import { AFTER_AUTH_PATH, SIGN_IN_URL, SIGN_UP_URL } from "@/lib/urls";
  * visitors still never download Clerk. When two are on one page they share
  * a single Clerk instance in the browser.
  */
-export function ClerkIsland({ children }: { children: ReactNode }) {
+export function ClerkIsland({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) {
   // Preview only. The live domain uses Clerk's CNAME. Production unique
   // *.vercel.app URLs (Vercel screenshots) must not set this — there is no
   // proxy URL registered on the Clerk instance, so /__clerk returns 400.
   const useVercelAppProxy = process.env.VERCEL_ENV === "preview";
   return (
     <LazyClerkProvider
+      fallback={fallback}
       {...(useVercelAppProxy ? { proxyUrl: "/__clerk" } : {})}
       appearance={{
         theme: shadcn,

@@ -4,19 +4,6 @@ import { Suspense, use, useEffect, useRef, useState, type RefObject } from "reac
 import Link from "next/link";
 import { useNoticesUnread } from "@/hooks/use-notices-unread";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  Bell,
-  BookOpen,
-  ChartColumn,
-  FileBarChart,
-  Footprints,
-  History,
-  House,
-  MessageSquare,
-  SlidersHorizontal,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { menuFont } from "@/app/fonts";
 import { lockBackgroundScroll } from "@/components/overlay-scroll-lock";
@@ -24,53 +11,33 @@ import { SiteSearchBar } from "@/components/site-search";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { unlockIdleDocument } from "@/components/overlay-root";
-import { useClientPathname } from "@/components/client-pathname";
 import { isNavItemActive, navItems } from "@/components/site-nav-items";
+import { NAV_ICONS } from "@/components/nav-icons";
+import {
+  NAV_ACTIVE_PILL_CLASS,
+  NAV_ICON_CLASS,
+  NAV_LINK_LABEL_CLASS,
+  NAV_ROW_CLASS,
+  NAV_ROW_WRAPPER_CLASS,
+  navLinkClass,
+} from "@/components/header-chrome";
 import { NAV_COOKIE } from "@/lib/remembered-nav";
 import { writeClientCookie } from "@/lib/remembered-rows-key";
 import type { OrganiserPermissions } from "@/lib/organiser-permissions";
 
-const NAV_ICONS: Record<string, LucideIcon> = {
-  Home: House,
-  Walks: Footprints,
-  Notices: Bell,
-  Progress: ChartColumn,
-  History: History,
-  Members: Users,
-  Messages: MessageSquare,
-  Reports: FileBarChart,
-  Settings: SlidersHorizontal,
-  Guide: BookOpen,
-};
-
-// A fixed 14px, not text-sm: text-sm follows Settings → Branding → Text
-// sizes → Body, and a bigger body size made the desktop menu too large.
-// The current page keeps the same weight as the rest (only colour and the
-// grey pill change) — bolder text is wider, so it looked like the item grew
-// and nudged its neighbours when clicked.
-function navLinkClass(active: boolean) {
-  return cn(
-    "relative inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[14px] text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
-    !active && "hover:bg-muted",
-    active && "text-foreground",
-  );
-}
-
 function NavIcon({ label }: { label: string }) {
   const Icon = NAV_ICONS[label];
   if (!Icon) return null;
-  return <Icon aria-hidden="true" className="size-4 shrink-0" />;
+  return <Icon aria-hidden="true" className={NAV_ICON_CLASS} />;
 }
 
 function NavLink({
   active,
-  className,
   href,
   label,
   onSelect,
 }: {
   active: boolean;
-  className?: string;
   href: string;
   label: string;
   onSelect?: (el: HTMLAnchorElement) => void;
@@ -80,7 +47,7 @@ function NavLink({
   return (
     <Link
       aria-current={active ? "page" : undefined}
-      className={cn(navLinkClass(active), className)}
+      className={navLinkClass(active)}
       href={href}
       // Tabbing to a link that's scrolled out of the row brings it into view.
       onFocus={(event) => onSelect?.(event.currentTarget)}
@@ -104,8 +71,8 @@ function NavLink({
         router.push(href);
       }}
     >
-      {active ? <span className="absolute inset-0 rounded-md bg-muted" /> : null}
-      <span className="relative z-10 inline-flex items-center gap-1.5">
+      {active ? <span className={NAV_ACTIVE_PILL_CLASS} /> : null}
+      <span className={NAV_LINK_LABEL_CLASS}>
         <NavIcon label={label} />
         {label}
       </span>
@@ -257,18 +224,14 @@ export function SiteNavLinks({
   }, [pathname]);
 
   return (
-    <div className="relative hidden min-w-0 md:block">
+    <div className={NAV_ROW_WRAPPER_CLASS}>
       <ScrollEdgeFade side="left" visible={edges.start} />
-      <nav
-        className="flex max-w-full items-center justify-center-safe gap-1 overflow-x-auto overscroll-x-contain text-[14px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-        ref={scrollerRef}
-      >
+      <nav className={NAV_ROW_CLASS} ref={scrollerRef}>
         {items.map((item) => {
           const active = isNavItemActive(pathname, item.href);
           return (
             <NavLink
               active={active}
-              className="shrink-0"
               href={item.href}
               key={item.href}
               label={item.label}
@@ -281,28 +244,6 @@ export function SiteNavLinks({
         })}
       </nav>
       <ScrollEdgeFade side="right" visible={edges.end} />
-    </div>
-  );
-}
-
-/** The same links, drawn before the session resolves, so a refresh doesn't blank the menu.
- * Uses the shared path (null while a page is being prepared) so this can sit in a placeholder. */
-export function StaticNavLinks({ items }: { items: { href: string; label: string }[] }) {
-  const pathname = useClientPathname();
-  if (items.length === 0) return null;
-  return (
-    <div className="relative hidden min-w-0 md:block">
-      <nav className="flex max-w-full items-center justify-center-safe gap-1 overflow-x-auto overscroll-x-contain text-[14px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-        {items.map((item) => (
-          <NavLink
-            active={pathname !== null && isNavItemActive(pathname, item.href)}
-            className="shrink-0"
-            href={item.href}
-            key={item.href}
-            label={item.label}
-          />
-        ))}
-      </nav>
     </div>
   );
 }

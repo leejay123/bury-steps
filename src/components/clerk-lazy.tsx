@@ -1,6 +1,7 @@
 "use client";
 
-import { lazy, Suspense, type ComponentProps } from "react";
+import { lazy, Suspense, type ComponentProps, type ReactNode } from "react";
+import { AvatarPlaceholder } from "@/components/header-placeholders";
 
 /**
  * Clerk's browser code, split off so it's only downloaded when one of
@@ -21,11 +22,18 @@ const ImpersonationBannerInner = lazy(() =>
   import("@/components/impersonation-banner").then((mod) => ({ default: mod.ImpersonationBanner })),
 );
 
-export function LazyClerkProvider(props: ComponentProps<typeof ClerkProviderInner>) {
+export function LazyClerkProvider({
+  fallback = null,
+  ...props
+}: ComponentProps<typeof ClerkProviderInner> & {
+  /** Shown if Clerk's code isn't ready yet. Usually never: on the first load
+   * React keeps the server's HTML until it is, and later page changes reuse
+   * it. But a server that has only just started can send the page before
+   * its own copy has loaded, and then this is what's in the page. */
+  fallback?: ReactNode;
+}) {
   return (
-    // No fallback needed in practice: on the first load React keeps the
-    // server's HTML until this is ready, and later page changes reuse it.
-    <Suspense fallback={null}>
+    <Suspense fallback={fallback}>
       <ClerkProviderInner {...props} />
     </Suspense>
   );
@@ -33,16 +41,7 @@ export function LazyClerkProvider(props: ComponentProps<typeof ClerkProviderInne
 
 export function LazySiteUserButton(props: ComponentProps<typeof SiteUserButtonInner>) {
   return (
-    <Suspense
-      fallback={
-        <span
-          aria-hidden
-          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground uppercase"
-        >
-          {props.initial}
-        </span>
-      }
-    >
+    <Suspense fallback={<AvatarPlaceholder imageUrl={props.imageUrl} initial={props.initial} />}>
       <SiteUserButtonInner {...props} />
     </Suspense>
   );
