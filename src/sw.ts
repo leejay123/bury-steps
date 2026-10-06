@@ -1,7 +1,7 @@
 /// <reference lib="esnext" />
 /// <reference lib="webworker" />
 import { defaultCache } from "@serwist/turbopack/worker";
-import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
+import type { PrecacheEntry, RuntimeCaching, SerwistGlobalConfig } from "serwist";
 import { Serwist } from "serwist";
 
 declare global {
@@ -12,12 +12,30 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope;
 
+/**
+ * Only cache this site. The default list also answers every other address
+ * (Clerk profile photos, maps, and so on). When that answer fails, the
+ * photo is left blank.
+ */
+const runtimeCaching: RuntimeCaching[] = defaultCache.map((entry) => {
+  const matcher = entry.matcher;
+  return {
+    ...entry,
+    matcher(options) {
+      if (!options.sameOrigin) return false;
+      if (typeof matcher === "function") return matcher(options);
+      if (matcher instanceof RegExp) return matcher.test(options.url.href);
+      return options.url.href.includes(matcher);
+    },
+  };
+});
+
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
-  runtimeCaching: defaultCache,
+  runtimeCaching,
   fallbacks: {
     entries: [
       {
