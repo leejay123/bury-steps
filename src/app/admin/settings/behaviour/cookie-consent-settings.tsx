@@ -69,7 +69,7 @@ export function CookieConsentSettings({ variant }: { variant: CookieConsentVaria
           onValueChange={(value) => onVariantChange(value as CookieConsentVariant)}
           value={selected}
         >
-          <SelectTrigger className="w-full" id="cookie-consent-variant">
+          <SelectTrigger className="w-full sm:w-[24rem]" id="cookie-consent-variant">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

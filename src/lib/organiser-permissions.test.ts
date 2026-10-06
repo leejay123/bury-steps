@@ -41,6 +41,10 @@ describe("hasAnySettingsPermission", () => {
     expect(hasAnySettingsPermission({ ...NONE, permHomepage: true })).toBe(true);
     expect(hasAnySettingsPermission({ ...NONE, permCacheReset: true })).toBe(true);
   });
+
+  it("counts Edit walks, which owns the Walk essentials settings page", () => {
+    expect(hasAnySettingsPermission({ ...NONE, permWalksEdit: true })).toBe(true);
+  });
 });
 
 describe("walksLandingPath", () => {

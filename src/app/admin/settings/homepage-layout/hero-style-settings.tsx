@@ -153,7 +153,7 @@ export function HeroStyleSettings({
 
   return (
     <SettingsSection
-      description="The top of the public homepage: the light Default banner, a looping Video, the Globe, or one of the photo heroes — Parallax, 3D Marquee and Photo slider — which use your Hero photos."
+      description="The top of the public homepage: the light Default banner, a looping Video, the Globe, or one of the photo heroes — Photo slider, Parallax, 3D Marquee, Sideways strip, Tiles, Diagonal rows and Accordion — which use your Hero photos."
       title="Hero style"
     >
       <div className="flex w-full flex-col gap-4">

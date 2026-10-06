@@ -326,8 +326,10 @@ function SelectItem({
   return (
     <Button
       aria-selected={isSelected}
+      // A long choice wraps onto a second line rather than being cut off
+      // with "…" (the closed trigger still shows one line).
       className={cn(
-        "h-8 w-full justify-between font-normal",
+        "h-auto min-h-8 w-full justify-between py-1.5 text-left font-normal whitespace-normal",
         isSelected && "bg-accent",
         className,
       )}
@@ -338,7 +340,7 @@ function SelectItem({
       type="button"
       variant="ghost"
     >
-      <span className="truncate">{children}</span>
+      <span className="min-w-0">{children}</span>
       {isSelected ? <CheckIcon className="shrink-0 text-primary" /> : null}
     </Button>
   );

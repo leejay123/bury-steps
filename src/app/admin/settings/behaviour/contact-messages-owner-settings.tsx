@@ -41,13 +41,13 @@ export function ContactMessagesOwnerSettings({
 
   return (
     <SettingsSection
-      description="Exactly one organiser gets emailed when someone submits the public contact form, and can reply straight from that email — instead of every organiser who's opted in."
+      description="One organiser gets an email when someone sends the public contact form, and can reply straight from that email. Choose No one to stop these emails."
       title="Contact messages"
     >
       <form action={action} className="flex w-full flex-col gap-4">
         <input name="contactMessagesOwnerId" type="hidden" value={ownerId === NO_ONE ? "" : ownerId} />
         <div className="flex flex-col gap-2">
-          <Label htmlFor="contact-messages-owner">Alert and reply owner</Label>
+          <Label htmlFor="contact-messages-owner">Who gets them</Label>
           <Select onValueChange={setOwnerId} value={ownerId}>
             <SelectTrigger className="w-full sm:w-[16rem]" id="contact-messages-owner">
               <SelectValue />

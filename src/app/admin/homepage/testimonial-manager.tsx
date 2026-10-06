@@ -9,7 +9,12 @@ import {
   reorderHomepageTestimonials,
   updateHomepageTestimonial,
 } from "@/server/actions";
-import type { TestimonialView } from "@/lib/testimonials";
+import {
+  MAX_TESTIMONIAL_NAME,
+  MAX_TESTIMONIAL_QUOTE,
+  MAX_TESTIMONIAL_ROLE,
+  type TestimonialView,
+} from "@/lib/testimonials";
 import { preventDismissWhilePending, useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
 import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
@@ -40,6 +45,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { SettingsListHeader } from "../settings/settings-page";
 import { DrawerFormFooter } from "@/components/drawer-form";
+import { useRetainedItem } from "@/hooks/use-retained";
 
 const DEMO_TESTIMONIAL = {
   name: "Jane H.",
@@ -73,6 +79,7 @@ function TestimonialFields({
         <Input
           disabled={disabled}
           id={`${prefix}-name`}
+          maxLength={MAX_TESTIMONIAL_NAME}
           name="name"
           onChange={(event) => setName(event.target.value)}
           placeholder={DEMO_TESTIMONIAL.name}
@@ -85,6 +92,7 @@ function TestimonialFields({
         <Input
           disabled={disabled}
           id={`${prefix}-role`}
+          maxLength={MAX_TESTIMONIAL_ROLE}
           name="role"
           onChange={(event) => setRole(event.target.value)}
           placeholder={DEMO_TESTIMONIAL.role}
@@ -98,6 +106,7 @@ function TestimonialFields({
         <Textarea
           disabled={disabled}
           id={`${prefix}-quote`}
+          maxLength={MAX_TESTIMONIAL_QUOTE}
           name="quote"
           onChange={(event) => setQuote(event.target.value)}
           placeholder={DEMO_TESTIMONIAL.quote}
@@ -257,6 +266,9 @@ export function HomepageTestimonialManager({
   testimonials: TestimonialView[];
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
+  // The drawer keeps its last item while it slides shut; each opening gets
+  // a fresh form (keyed on session).
+  const { shown, session } = useRetainedItem(mode);
   const [isPending, setIsPending] = useState(false);
   const testimonialIds = testimonials.map((item) => item.id);
   const { moveDown, moveUp, order } = useReorderableIds(testimonialIds, (ids) => {
@@ -267,14 +279,14 @@ export function HomepageTestimonialManager({
     .map((id) => testimonials.find((item) => item.id === id))
     .filter((item): item is TestimonialView => Boolean(item));
   const atLimit = testimonials.length >= maxTestimonials;
-  const editingId = mode?.type === "edit" ? mode.testimonial.id : null;
+  const editingId = shown?.type === "edit" ? shown.testimonial.id : null;
   const liveIndex = editingId ? testimonials.findIndex((item) => item.id === editingId) : -1;
   const editing =
-    mode?.type === "edit"
+    shown?.type === "edit"
       ? {
           testimonial:
-            testimonials.find((item) => item.id === mode.testimonial.id) ?? mode.testimonial,
-          index: liveIndex < 0 ? mode.index : liveIndex,
+            testimonials.find((item) => item.id === shown.testimonial.id) ?? shown.testimonial,
+          index: liveIndex < 0 ? shown.index : liveIndex,
         }
       : null;
 
@@ -363,8 +375,9 @@ export function HomepageTestimonialManager({
                 : "Name, the line under the name, and the quote. Photo is optional."}
             </DrawerDescription>
           </DrawerHeader>
-          {mode?.type === "add" ? (
+          {shown?.type === "add" ? (
             <AddDrawerForm
+              key={session}
               disabled={atLimit}
               onPendingChange={setIsPending}
               onSaved={() => setMode(null)}
@@ -372,7 +385,7 @@ export function HomepageTestimonialManager({
           ) : null}
           {editing ? (
             <EditDrawerForm
-              key={editing.testimonial.id}
+              key={`${session}-${editing.testimonial.id}`}
               onPendingChange={setIsPending}
               onSaved={() => setMode(null)}
               testimonial={editing.testimonial}

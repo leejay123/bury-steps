@@ -48,6 +48,7 @@ import { Popover, PopoverContent, PopoverDescription, PopoverTrigger } from "@/c
 import { RemoveConfirm } from "./shared";
 import { SettingsListHeader } from "../settings-page";
 import { DrawerFormFooter } from "@/components/drawer-form";
+import { useRetainedItem } from "@/hooks/use-retained";
 
 type CategoryDrawerMode = { type: "add" } | { type: "edit"; category: NoticeCategoryView };
 
@@ -105,6 +106,9 @@ function CategoryDrawer({
 }) {
   const [isPending, setIsPending] = useState(false);
   const open = mode !== null;
+  // Keeps the last category while the drawer slides shut; each opening
+  // gets a fresh form (keyed on session).
+  const { shown, session } = useRetainedItem(mode);
   return (
     <Drawer
       closeDisabled={isPending}
@@ -114,24 +118,25 @@ function CategoryDrawer({
     >
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>{mode?.type === "edit" ? "Edit category" : "Add a category"}</DrawerTitle>
+          <DrawerTitle>{shown?.type === "edit" ? "Edit category" : "Add a category"}</DrawerTitle>
           <DrawerDescription>
             Categories group full-page notices on the Notices page and in its filters.
           </DrawerDescription>
         </DrawerHeader>
         <div className="flex min-h-0 flex-1 flex-col">
-          {mode?.type === "edit" ? (
+          {shown?.type === "edit" ? (
             <CategoryLabelForm
               action={updateSiteNoticeCategory}
-              category={mode.category}
-              key={mode.category.id}
+              category={shown.category}
+              key={`${session}-${shown.category.id}`}
               onPendingChange={setIsPending}
               onSaved={() => onOpenChange(false)}
               submitLabel="Save"
               submitPendingLabel="Saving…"
             />
-          ) : mode?.type === "add" ? (
+          ) : shown?.type === "add" ? (
             <CategoryLabelForm
+              key={session}
               action={addSiteNoticeCategory}
               onPendingChange={setIsPending}
               onSaved={() => onOpenChange(false)}

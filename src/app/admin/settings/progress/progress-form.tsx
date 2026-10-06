@@ -17,6 +17,12 @@ function goalToInput(value: number | null): string {
   return value && value > 0 ? String(value) : "";
 }
 
+/** "0" means none here, the same as leaving it blank (that's what saving it
+ * stores), so it isn't an unsaved change against a blank one. */
+function asSaved(value: string): string {
+  return value.trim() !== "" && Number(value) === 0 ? "" : value;
+}
+
 function Submit({ disabled }: { disabled: boolean }) {
   const { pending } = useFormStatus();
   return (
@@ -38,7 +44,7 @@ export function ProgressSettingsForm({
 
   useResetOnChange([saved], () => setValue(saved));
 
-  const dirty = value !== saved;
+  const dirty = asSaved(value) !== saved;
 
   return (
     <SettingsSection

@@ -129,15 +129,17 @@ export function WalkEssentialsEditor({ items: saved }: { items: EssentialItem[] 
                     onChange={(icon) => update(index, { icon })}
                     value={item.icon}
                   />
+                  {/* At least 12rem, so on a phone the arrows and Remove wrap
+                      onto their own line instead of squeezing the name. */}
                   <Input
                     aria-label="Name"
-                    className="min-w-0 flex-1"
+                    className="min-w-[12rem] flex-1"
                     maxLength={MAX_WALK_ESSENTIAL_LABEL}
                     onChange={(event) => update(index, { label: event.target.value })}
                     placeholder="e.g. Toilets available"
                     value={item.label}
                   />
-                  <div className="flex shrink-0 gap-1">
+                  <div className="ml-auto flex shrink-0 gap-1">
                     <Button
                       aria-label="Move up"
                       disabled={index === 0}

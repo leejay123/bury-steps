@@ -27,6 +27,7 @@ import {
 import { AddFaqForm, EditFaqForm } from "./faq-form";
 import { FaqCategoryManager } from "./faq-category-manager";
 import { RemoveFaqButton } from "./remove-faq-button";
+import { useRetainedItem } from "@/hooks/use-retained";
 
 type DrawerMode = { type: "add" } | { type: "edit"; faq: FaqView; index: number };
 
@@ -42,6 +43,9 @@ export function HomepageFaqManager({
   maxFaqs: number;
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
+  // The drawer keeps its last item while it slides shut; each opening gets
+  // a fresh form (keyed on session).
+  const { shown, session } = useRetainedItem(mode);
   const [isPending, setIsPending] = useState(false);
   const faqIds = faqs.map((item) => item.id);
   const { moveDown, moveUp, order } = useReorderableIds(faqIds, (ids) => {
@@ -53,13 +57,13 @@ export function HomepageFaqManager({
     .filter((item): item is FaqView => Boolean(item));
   const atLimit = faqs.length >= maxFaqs;
   const noCategories = categories.length === 0;
-  const editingId = mode?.type === "edit" ? mode.faq.id : null;
+  const editingId = shown?.type === "edit" ? shown.faq.id : null;
   const liveIndex = editingId ? faqs.findIndex((item) => item.id === editingId) : -1;
   const editing =
-    mode?.type === "edit"
+    shown?.type === "edit"
       ? {
-          faq: faqs.find((item) => item.id === mode.faq.id) ?? mode.faq,
-          index: liveIndex < 0 ? mode.index : liveIndex,
+          faq: faqs.find((item) => item.id === shown.faq.id) ?? shown.faq,
+          index: liveIndex < 0 ? shown.index : liveIndex,
         }
       : null;
 
@@ -152,8 +156,9 @@ export function HomepageFaqManager({
                 : "Question, answer, and a category for the filters on the homepage."}
             </DrawerDescription>
           </DrawerHeader>
-          {mode?.type === "add" ? (
+          {shown?.type === "add" ? (
             <AddFaqForm
+              key={session}
               categories={categories}
               disabled={atLimit}
               onPendingChange={setIsPending}
@@ -164,7 +169,7 @@ export function HomepageFaqManager({
             <EditFaqForm
               categories={categories}
               faq={editing.faq}
-              key={editing.faq.id}
+              key={`${session}-${editing.faq.id}`}
               onPendingChange={setIsPending}
               onSaved={() => setMode(null)}
             />

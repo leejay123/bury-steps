@@ -17,6 +17,17 @@ import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { DrawerFormFooter, FieldHint } from "@/components/drawer-form";
 import { FormError } from "@/components/form-error";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -140,15 +151,26 @@ function EmailEditDrawer({
                   {testing ? "Sending…" : "Send test to me"}
                 </Button>
                 {isCustomized ? (
-                  <Button
-                    disabled={resetting}
-                    onClick={() => run(resetAction)}
-                    size="sm"
-                    type="button"
-                    variant="outline"
-                  >
-                    {resetting ? "Resetting…" : "Reset to default"}
-                  </Button>
+                  // Asks first, like the site's other changes that can't be undone.
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button disabled={resetting} size="sm" type="button" variant="outline">
+                        {resetting ? "Resetting…" : "Reset to default"}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Put back the standard wording?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Your changes to this email&apos;s subject and message will be lost.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Keep my wording</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => run(resetAction)}>Reset</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 ) : null}
               </div>
               <FieldHint>

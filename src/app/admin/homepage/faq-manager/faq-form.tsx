@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { addHomepageFaq, updateHomepageFaq } from "@/server/actions";
-import { DEMO_FAQ, type FaqCategoryView, type FaqView } from "@/lib/faqs";
+import { DEMO_FAQ, MAX_FAQ_ANSWER, MAX_FAQ_QUESTION, type FaqCategoryView, type FaqView } from "@/lib/faqs";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
@@ -91,6 +91,7 @@ function FaqFields({
         <Input
           disabled={disabled}
           id={`${prefix}-question`}
+          maxLength={MAX_FAQ_QUESTION}
           name="question"
           onChange={(event) => setQuestion(event.target.value)}
           placeholder={DEMO_FAQ.question}
@@ -105,6 +106,7 @@ function FaqFields({
         <Textarea
           disabled={disabled}
           id={`${prefix}-answer`}
+          maxLength={MAX_FAQ_ANSWER}
           name="answer"
           onChange={(event) => setAnswer(event.target.value)}
           placeholder={DEMO_FAQ.answer}

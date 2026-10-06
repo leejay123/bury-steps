@@ -60,7 +60,8 @@ export async function GET() {
   }
 
   const rows = [
-    ["Email", "First name", "Last name", "Source", "Subscribed since (UK time)"],
+    // A member's opt-in date isn't kept, so theirs is the day they joined.
+    ["Email", "First name", "Last name", "Source", "Signed up or joined (UK time)"],
     ...[...byEmail.values()].map((row) => [
       row.email,
       row.firstName,

@@ -63,7 +63,7 @@ export function TestimonialsSectionCopySettings({
     >
       <form action={action} className="flex w-full flex-col gap-4">
         <div className="flex flex-col gap-2">
-          <Label htmlFor="testimonialsSectionEyebrow">Eyebrow (optional)</Label>
+          <Label htmlFor="testimonialsSectionEyebrow">Small line above the heading (optional)</Label>
           <Input
             id="testimonialsSectionEyebrow"
             maxLength={MAX_TESTIMONIALS_SECTION_EYEBROW}

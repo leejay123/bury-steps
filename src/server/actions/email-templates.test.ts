@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { requireAdmin, prismaMock, sendTestEmail, checkRateLimit } = vi.hoisted(() => ({
   requireAdmin: vi.fn(),
@@ -166,6 +166,16 @@ describe("updateEmailTemplate", () => {
 });
 
 describe("sendTestEmailTemplate", () => {
+  beforeEach(() => vi.stubEnv("RESEND_API_KEY", "re_test"));
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("says nothing was sent when email sending isn't set up", async () => {
+    vi.stubEnv("RESEND_API_KEY", "");
+    const result = await sendTestEmailTemplate(null, form({ key: "welcome" }));
+    expect(result).toEqual({ ok: false, error: "Email sending isn't set up yet, so no test email was sent." });
+    expect(sendTestEmail).not.toHaveBeenCalled();
+  });
+
   it("rejects an organiser without the Emails permission", async () => {
     requireAdmin.mockResolvedValueOnce(admin({ permEmails: false }));
     const result = await sendTestEmailTemplate(null, form({ key: "welcome" }));

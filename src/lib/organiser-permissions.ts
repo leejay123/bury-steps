@@ -235,9 +235,12 @@ const SETTINGS_GROUP_OPTIONS = ORGANISER_PERMISSION_OPTIONS.filter(
 
 /** True if any of the seven settings-area permissions is granted — used to
  * decide whether the Settings hub (and its nav link) shows at all, since
- * the hub itself isn't tied to any one of the pages it links to. */
+ * the hub itself isn't tied to any one of the pages it links to. Edit walks
+ * counts too: Walk essentials (the tick boxes on every walk) is a settings
+ * page that belongs to it, and the hub shows each organiser only the pages
+ * they're allowed. */
 export function hasAnySettingsPermission(perms: OrganiserPermissions): boolean {
-  return SETTINGS_GROUP_OPTIONS.some((option) => perms[option.name]);
+  return SETTINGS_GROUP_OPTIONS.some((option) => perms[option.name]) || perms.permWalksEdit;
 }
 
 /**

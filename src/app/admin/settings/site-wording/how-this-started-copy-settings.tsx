@@ -187,7 +187,7 @@ export function HowThisStartedCopySettings({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="howThisStartedEyebrow">Eyebrow (optional)</Label>
+            <Label htmlFor="howThisStartedEyebrow">Small line above the heading (optional)</Label>
             <Input
               id="howThisStartedEyebrow"
               maxLength={MAX_HOW_THIS_STARTED_EYEBROW}
@@ -241,16 +241,19 @@ export function HowThisStartedCopySettings({
         </DataList>
       </div>
 
+      {/* The story saves through the same action as the fields above, so it
+          sends their saved wording: whatever is typed up there and not yet
+          saved stays unsaved (it used to go live with the story). */}
       <FullStoryDrawer
         body={body}
-        eyebrow={eyebrow}
+        eyebrow={howThisStartedEyebrow}
         onBodyChange={setBody}
         onClose={closeBodyDrawer}
         onPointerDownOutside={onPointerDownOutside}
         onSaved={closeBodyDrawer}
         open={bodyDrawerOpen}
-        teaser={teaser}
-        title={title}
+        teaser={howThisStartedTeaser}
+        title={howThisStartedTitle}
       />
     </SettingsSection>
   );

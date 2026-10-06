@@ -212,7 +212,7 @@ export async function updateSiteNotice(
 
   const existingForLimit = await prisma.siteNotice.findUnique({
     where: { id },
-    select: { systemKey: true },
+    select: { systemKey: true, title: true, body: true, kind: true, pageBody: true, categoryId: true },
   });
   if (!existingForLimit) return { ok: false, error: "That notice is no longer there." };
 
@@ -220,6 +220,18 @@ export async function updateSiteNotice(
     maxBody: existingForLimit.systemKey ? MAX_NOTICE_TEASER : MAX_NOTICE_BELL_BODY,
   });
   if ("error" in copy) return { ok: false, error: copy.error };
+
+  // Saving without changing anything mustn't mark the notice as updated
+  // (and unread) for every member.
+  const unchanged =
+    existingForLimit.title === copy.title &&
+    existingForLimit.body === copy.body &&
+    (existingForLimit.systemKey
+      ? true
+      : existingForLimit.kind === copy.kind &&
+        (existingForLimit.pageBody ?? null) === copy.pageBody &&
+        (existingForLimit.categoryId ?? null) === copy.categoryId);
+  if (unchanged) return { ok: true, message: "No changes to save." };
 
   try {
     let slugPath: string | null = null;
@@ -441,6 +453,12 @@ export async function addSiteNoticeCategory(
       if (count >= MAX_NOTICE_CATEGORIES) {
         throw new LimitReachedError(`You can have up to ${MAX_NOTICE_CATEGORIES} categories.`);
       }
+      // Two chips with the same name on the Notices page can't be told apart.
+      const clash = await tx.siteNoticeCategory.findFirst({
+        where: { label: { equals: copy.label, mode: "insensitive" } },
+        select: { id: true },
+      });
+      if (clash) throw new LimitReachedError(`There's already a category called “${copy.label}”.`);
       await tx.siteNoticeCategory.create({
         data: {
           label: copy.label,
@@ -468,6 +486,12 @@ export async function updateSiteNoticeCategory(
   if (!id) return { ok: false, error: "No category selected." };
   const copy = readNoticeCategoryLabel(formData);
   if ("error" in copy) return { ok: false, error: copy.error };
+
+  const clash = await prisma.siteNoticeCategory.findFirst({
+    where: { id: { not: id }, label: { equals: copy.label, mode: "insensitive" } },
+    select: { id: true },
+  });
+  if (clash) return { ok: false, error: `There's already a category called “${copy.label}”.` };
 
   try {
     await prisma.siteNoticeCategory.update({

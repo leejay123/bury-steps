@@ -3,6 +3,8 @@ export const MAX_FAQ_CATEGORIES = 8;
 export const MAX_FAQ_CATEGORY_LABEL = 32;
 export const MAX_FAQ_SECTION_TITLE = 80;
 export const MAX_FAQ_SECTION_INTRO = 280;
+export const MAX_FAQ_QUESTION = 160;
+export const MAX_FAQ_ANSWER = 1200;
 
 export const DEFAULT_FAQ_SECTION_TITLE = "Frequently asked questions";
 export const DEFAULT_FAQ_SECTION_INTRO =

@@ -128,7 +128,8 @@ export function HomepageNoticesSection() {
               <li>
                 Choose <strong>Bell only</strong> for a short message that stays in the drawer, or{" "}
                 <strong>Full page</strong> for a teaser in the bell plus a longer article on{" "}
-                <Link href="/notices">Notices</Link>.
+                <Link href="/notices">Notices</Link>. Switching a full-page notice to Bell only
+                deletes its article and link when you save — the drawer warns you first.
               </li>
               <li>
                 Add a title and a short bell message (up to {MAX_NOTICE_BELL_BODY} characters —
@@ -141,7 +142,8 @@ export function HomepageNoticesSection() {
                 new one arrives, and the number rolls. Opening it uses the same floating card
                 as the other drawers. Each unread row has a <strong>New</strong> or{" "}
                 <strong>Updated</strong> badge (Updated after you edit a notice they had already
-                seen). In the drawer, ordinary notices stay short; full-page teasers end with …
+                seen; Save stays greyed out until you change something, so an accidental save
+                can&apos;t mark it as updated). In the drawer, ordinary notices stay short; full-page teasers end with …
                 and say <strong>Read full notice</strong>. Tapping a row marks that notice read.{" "}
                 <strong>Mark all as read</strong> clears everything. Opening the bell does not
                 clear them on its own.

@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { Download } from "lucide-react";
 import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -27,7 +26,7 @@ export default function AdminSubscribersSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description="Who's opted into which emails. Every newsletter subscriber below is kept in sync with a Resend audience automatically — send a real campaign to all of them without leaving this page."
+      description="Who's opted into which emails. Send a newsletter to everyone on the list straight from this page, or download the list."
       title="Subscribers"
     >
       <Suspense fallback={<SettingsContentSkeleton />}>
@@ -100,15 +99,17 @@ async function AdminSubscribersSettingsPageContent() {
       <SendNewsletterForm recipientCount={newsletterRecipientCount} />
 
       <SettingsSection
-        description={`${newsletterRecipientCount} people currently opted in (${unsubscribedFooterCount} have unsubscribed via the footer form over time). Includes a name where the subscriber is also a member — everyone's own account emails also stays counted under "Notices"/"Walk announcements"/"Progress" above regardless of their newsletter choice.`}
+        description={`${newsletterRecipientCount} ${newsletterRecipientCount === 1 ? "person gets" : "people get"} the newsletter (${unsubscribedFooterCount} ${unsubscribedFooterCount === 1 ? "has" : "have"} unsubscribed from the footer form over time). A subscriber who is also a member shows with their name. Members' other emails — notices, walk announcements and progress — are counted separately above, whatever they chose for the newsletter.`}
         flush
         title="Newsletter list"
       >
-        <Button asChild size="sm" variant="outline">
-          <Link href="/admin/settings/subscribers/export">
+        {/* A plain download link: next/link would fetch (and so run) the
+            export ahead of time on every visit to this page. */}
+        <Button asChild className="self-start" size="sm" variant="outline">
+          <a download href="/admin/settings/subscribers/export">
             <Download aria-hidden className="size-4" />
             Export as CSV
-          </Link>
+          </a>
         </Button>
 
         <DataList>

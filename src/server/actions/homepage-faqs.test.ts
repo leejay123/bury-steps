@@ -184,6 +184,16 @@ describe("addHomepageFaqCategory", () => {
     expect(result).toEqual({ ok: false, error: "You can have up to 8 categories." });
   });
 
+  it("refuses a name that's already taken, whatever its case", async () => {
+    prismaMock.homepageFaqCategory.count.mockResolvedValueOnce(2);
+    prismaMock.homepageFaqCategory.findFirst.mockResolvedValueOnce({ id: "cat-1" });
+    const formData = new FormData();
+    formData.set("label", "general");
+    const result = await addHomepageFaqCategory(null, formData);
+    expect(result).toEqual({ ok: false, error: "There's already a category called “general”." });
+    expect(prismaMock.homepageFaqCategory.create).not.toHaveBeenCalled();
+  });
+
   it("reports a friendly message for a same-instant duplicate name race (P2002)", async () => {
     prismaMock.homepageFaqCategory.count.mockResolvedValueOnce(0);
     prismaMock.homepageFaqCategory.findFirst.mockResolvedValueOnce(null);

@@ -66,7 +66,8 @@ export function WalksSection({
               recommended, stiles. Each shows on the walk page as its own line or tag, so the
               description can stay for the story of the walk. To rename these, change their
               icons, reorder them, add your own or remove ones you don&apos;t use, go to{" "}
-              <strong>Settings → Walk essentials</strong>; changes show on every walk straight away.
+              <strong>Settings → Walk essentials</strong> (anyone allowed to edit walks can open
+              it, even without other settings); changes show on every walk straight away.
             </li>
             <li>
               Most walks need nothing more for the location. For a what3words address or exact

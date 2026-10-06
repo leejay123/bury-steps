@@ -177,7 +177,9 @@ export function ReportsDisplaySection() {
               every email the site sends (welcome, new walk, walk cancelled, new notice, monthly
               progress, contact alerts and so on). Only the owner can change them. An email that&apos;s
               off isn&apos;t sent to anyone until it&apos;s switched back on; &ldquo;Send test to me&rdquo; still
-              works so you can check the wording first. Newsletters aren&apos;t affected.
+              works so you can check the wording first (until email sending is set up, it says
+              so instead of sending). <strong>Reset to default</strong> asks before it puts back
+              the standard wording. Newsletters aren&apos;t affected.
             </p>
           </GuideBody>
         </AccordionContent>

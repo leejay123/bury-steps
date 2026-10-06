@@ -39,7 +39,9 @@ export function DataListItem({
   // inside it — read out as one long button, and not valid in a list.
   if (typeof onClick !== "function") {
     return (
-      <li className={cn("flex cursor-pointer items-center gap-3 border-b p-3 last:border-0 hover:bg-muted/50", className)} {...props}>
+      // No pointer of its own: a row that opens something does so through a
+      // link inside it, which brings its own.
+      <li className={cn("flex items-center gap-3 border-b p-3 last:border-0 hover:bg-muted/50", className)} {...props}>
         {children}
       </li>
     );

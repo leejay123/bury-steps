@@ -44,8 +44,8 @@ function RemoveSubscriberDialogForm({
         <AlertDialogHeader>
           <AlertDialogTitle>Remove {email}?</AlertDialogTitle>
           <AlertDialogDescription>
-            They stop getting the newsletter and are removed from the Resend audience. If this was
-            a mistake, they can subscribe again from the footer form.
+            They stop getting the newsletter and come off the mailing list. If this was a mistake,
+            they can subscribe again from the footer form.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <input name="id" type="hidden" value={id} />

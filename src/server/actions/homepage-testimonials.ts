@@ -2,7 +2,12 @@
 
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
+import {
+  MAX_HOMEPAGE_TESTIMONIALS,
+  MAX_TESTIMONIAL_NAME,
+  MAX_TESTIMONIAL_QUOTE,
+  MAX_TESTIMONIAL_ROLE,
+} from "@/lib/testimonials";
 import { COUNT_LIMIT_LOCK_KEYS } from "@/lib/count-limit-locks";
 import {
   type ActionResult,
@@ -25,9 +30,15 @@ function readTestimonialCopy(
   const quote = String(formData.get("quote") ?? "").trim();
   if (!name) return { error: "Add a name." };
   if (!quote) return { error: "Add the testimonial text." };
-  if (name.length > 80) return { error: "Keep the name under 80 characters." };
-  if (role.length > 120) return { error: "Keep the line under the name under 120 characters." };
-  if (quote.length > 600) return { error: "Keep the testimonial under 600 characters." };
+  if (name.length > MAX_TESTIMONIAL_NAME) {
+    return { error: `Keep the name under ${MAX_TESTIMONIAL_NAME} characters.` };
+  }
+  if (role.length > MAX_TESTIMONIAL_ROLE) {
+    return { error: `Keep the line under the name under ${MAX_TESTIMONIAL_ROLE} characters.` };
+  }
+  if (quote.length > MAX_TESTIMONIAL_QUOTE) {
+    return { error: `Keep the testimonial under ${MAX_TESTIMONIAL_QUOTE} characters.` };
+  }
   return { name, role, quote };
 }
 

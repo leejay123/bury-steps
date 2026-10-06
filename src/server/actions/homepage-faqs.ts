@@ -4,8 +4,10 @@ import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import {
+  MAX_FAQ_ANSWER,
   MAX_FAQ_CATEGORIES,
   MAX_FAQ_CATEGORY_LABEL,
+  MAX_FAQ_QUESTION,
   MAX_HOMEPAGE_FAQS,
   faqCategorySlug,
 } from "@/lib/faqs";
@@ -36,8 +38,12 @@ async function readFaqCopy(
   if (!category) return { error: "Choose a category." };
   if (!question) return { error: "Add a question." };
   if (!answer) return { error: "Add an answer." };
-  if (question.length > 160) return { error: "Keep the question under 160 characters." };
-  if (answer.length > 1200) return { error: "Keep the answer under 1,200 characters." };
+  if (question.length > MAX_FAQ_QUESTION) {
+    return { error: `Keep the question under ${MAX_FAQ_QUESTION} characters.` };
+  }
+  if (answer.length > MAX_FAQ_ANSWER) {
+    return { error: `Keep the answer under ${MAX_FAQ_ANSWER.toLocaleString("en-GB")} characters.` };
+  }
   return { categoryId, question, answer };
 }
 
@@ -197,6 +203,12 @@ export async function addHomepageFaqCategory(
       if (count >= MAX_FAQ_CATEGORIES) {
         throw new LimitReachedError(`You can have up to ${MAX_FAQ_CATEGORIES} categories.`);
       }
+      // Two filters with the same name on the homepage can't be told apart.
+      const clash = await tx.homepageFaqCategory.findFirst({
+        where: { label: { equals: copy.label, mode: "insensitive" } },
+        select: { id: true },
+      });
+      if (clash) throw new LimitReachedError(`There's already a category called “${copy.label}”.`);
       await tx.homepageFaqCategory.create({
         data: {
           label: copy.label,
@@ -230,6 +242,12 @@ export async function updateHomepageFaqCategory(
 
   const copy = readCategoryLabel(formData);
   if ("error" in copy) return { ok: false, error: copy.error };
+
+  const clash = await prisma.homepageFaqCategory.findFirst({
+    where: { id: { not: id }, label: { equals: copy.label, mode: "insensitive" } },
+    select: { id: true },
+  });
+  if (clash) return { ok: false, error: `There's already a category called “${copy.label}”.` };
 
   try {
     await prisma.homepageFaqCategory.update({

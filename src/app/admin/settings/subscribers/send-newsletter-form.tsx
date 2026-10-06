@@ -44,7 +44,7 @@ export function SendNewsletterForm({ recipientCount }: { recipientCount: number 
         variant="form"
       >
         <DrawerTrigger asChild>
-          <Button disabled={recipientCount === 0} type="button">
+          <Button className="self-start" disabled={recipientCount === 0} type="button">
             <Send data-icon="inline-start" />
             Send a newsletter
           </Button>
