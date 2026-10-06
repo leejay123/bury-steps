@@ -190,7 +190,8 @@ export function NameRowsSkeleton({ rows = 0 }: { rows?: number }) {
   return (
     <SkList
       row={(i) => (
-        <div className="p-3">
+        <div className="flex items-center gap-3 p-3">
+          <Skeleton className="size-9 shrink-0 rounded-full" />
           <SkLine className={pick(TITLE_WIDTHS, i)} />
         </div>
       )}

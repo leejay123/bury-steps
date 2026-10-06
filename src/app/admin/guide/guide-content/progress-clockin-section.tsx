@@ -29,9 +29,10 @@ export function ProgressClockInSection() {
             <p>
               This month’s cup goes to whoever has the most finished clock-ins this UK month. It
               resets next month. A tie is shared. First names only — if two people share a first
-              name, a last initial is added. The month list groups people by walk count (for
-              example “5 walks”, then “3 walks”) so a draw sits together — there are no 1st / 2nd
-              places.
+              name, a last initial is added. Each person has their photo beside their name — the
+              same photo as on their member page. Someone with no photo shows their initials
+              instead. The month list groups people by walk count (for example “5 walks”, then
+              “3 walks”) so a draw sits together — there are no 1st / 2nd places.
             </p>
             <p>
               Optionally set a monthly together goal under{" "}

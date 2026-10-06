@@ -22,6 +22,7 @@ export type WalkGameAttendance = {
   clockedOutAt: Date | null;
   firstName: string | null;
   lastName: string | null;
+  imageUrl?: string | null;
 };
 
 export type WalkGameBadge = {
@@ -32,6 +33,7 @@ export type WalkGameBadge = {
 export type WalkGamePerson = {
   userId: string;
   name: string;
+  imageUrl: string | null;
   isViewer: boolean;
   monthCount: number;
 };
@@ -109,7 +111,7 @@ function lastInitial(row: { lastName: string | null }): string | null {
 }
 
 function displayNames(
-  people: Map<string, { firstName: string | null; lastName: string | null }>,
+  people: Map<string, { firstName: string | null; lastName: string | null; imageUrl?: string | null }>,
 ): Map<string, string> {
   const firsts = new Map<string, string[]>();
   for (const [userId, person] of people) {
@@ -238,7 +240,7 @@ export function buildWalkGame({
   const thisMonth = londonMonthKey(now);
   const thisYear = londonYear(now);
 
-  const people = new Map<string, { firstName: string | null; lastName: string | null }>();
+  const people = new Map<string, { firstName: string | null; lastName: string | null; imageUrl: string | null }>();
   const rows: { userId: string; item: Qualifying; clockedOutAt: Date | null }[] = [];
 
   for (const attendance of attendances) {
@@ -247,6 +249,7 @@ export function buildWalkGame({
     people.set(attendance.userId, {
       firstName: attendance.firstName,
       lastName: attendance.lastName,
+      imageUrl: attendance.imageUrl ?? null,
     });
     rows.push({ userId: attendance.userId, item, clockedOutAt: attendance.clockedOutAt });
   }
@@ -294,6 +297,7 @@ export function buildWalkGame({
     .map(([userId, stats]) => ({
       userId,
       name: names.get(userId) ?? "Member",
+      imageUrl: people.get(userId)?.imageUrl ?? null,
       isViewer: userId === viewerId,
       monthCount: stats.months,
     }))

@@ -16,7 +16,7 @@ export type WalkGameLoadedData = {
     attendances: {
       userId: string;
       clockedOutAt: Date | null;
-      user: { firstName: string | null; lastName: string | null };
+      user: { firstName: string | null; lastName: string | null; imageUrl: string | null };
     }[];
   }[];
   monthlyClockInGoal: number | null;
@@ -67,14 +67,14 @@ export async function loadWalkGameData(now = new Date()): Promise<WalkGameLoaded
     for (const row of walk.attendances) monthUserIds.add(row.userId);
   }
 
-  const nameById = new Map<string, { firstName: string | null; lastName: string | null }>();
+  const nameById = new Map<string, { firstName: string | null; lastName: string | null; imageUrl: string | null }>();
   if (monthUserIds.size > 0) {
     const users = await prisma.user.findMany({
       where: { id: { in: [...monthUserIds] } },
-      select: { id: true, firstName: true, lastName: true },
+      select: { id: true, firstName: true, lastName: true, imageUrl: true },
     });
     for (const user of users) {
-      nameById.set(user.id, { firstName: user.firstName, lastName: user.lastName });
+      nameById.set(user.id, { firstName: user.firstName, lastName: user.lastName, imageUrl: user.imageUrl });
     }
   }
 
@@ -87,7 +87,7 @@ export async function loadWalkGameData(now = new Date()): Promise<WalkGameLoaded
     attendances: walk.attendances.map((row) => ({
       userId: row.userId,
       clockedOutAt: row.clockedOutAt,
-      user: nameById.get(row.userId) ?? { firstName: null, lastName: null },
+      user: nameById.get(row.userId) ?? { firstName: null, lastName: null, imageUrl: null },
     })),
   }));
 
@@ -122,6 +122,7 @@ export function walkGameFromLoadedData(
         clockedOutAt: row.clockedOutAt,
         firstName: row.user.firstName,
         lastName: row.user.lastName,
+        imageUrl: row.user.imageUrl,
       })),
     ),
   });

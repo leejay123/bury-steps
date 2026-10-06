@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useRef } from "react";
+import { initials } from "@/lib/names";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { DataList, DataListBody, DataListItem } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
@@ -44,6 +46,10 @@ export function ProgressBoard({ board }: { board: WalkGamePerson[] }) {
             <DataList>
               {group.people.map((row) => (
                 <DataListItem className="cursor-default hover:bg-transparent" key={row.userId}>
+                  <Avatar className="size-9 shrink-0">
+                    {row.imageUrl ? <AvatarImage alt="" src={row.imageUrl} /> : null}
+                    <AvatarFallback className="text-xs">{initials(row.name)}</AvatarFallback>
+                  </Avatar>
                   <DataListBody>
                     <p className="font-medium">
                       {row.name}
