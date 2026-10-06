@@ -82,6 +82,7 @@ export function MessagesPageFallback({
 
 /** Everything here depends on who's asking and on live data, so the page
  * shows a matching placeholder for an instant while it loads. */
+// Access is checked in layout.tsx, before anything streams.
 export default function AdminMessagesPage() {
   return (
     <Suspense fallback={<MessagesPageFallback rows={null} />}>

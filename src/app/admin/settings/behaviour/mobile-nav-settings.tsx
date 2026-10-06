@@ -1,9 +1,10 @@
 "use client";
 
-import { startTransition, useActionState, useState } from "react";
-import { updateMobileNav, type ActionResult } from "@/server/actions";
+import { startTransition, useState } from "react";
+import { updateMobileNav } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SettingsSection } from "../settings-page";
@@ -13,8 +14,9 @@ type MobileNav = "bottom" | "menu";
 /** Saves as soon as a choice is picked, like the switches on this page. */
 export function MobileNavSettings({ style }: { style: MobileNav }) {
   const [value, setValue] = useState(style);
-  const [state, action] = useActionState<ActionResult | null, FormData>(updateMobileNav, null);
-  useActionToast(state);
+  const [state, action] = useSafeActionState(updateMobileNav);
+  // No inline error box here, so a failed save says so in a toast.
+  useActionToast(state, undefined, { toastErrors: true });
   useResetOnChange([style], () => setValue(style));
   useResetOnChange([state], () => {
     if (state && !state.ok) setValue(style);

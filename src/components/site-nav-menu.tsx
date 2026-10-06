@@ -7,7 +7,9 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Bell,
   BookOpen,
+  BriefcaseBusiness,
   ChartColumn,
+  ChevronDown,
   FileBarChart,
   Footprints,
   History,
@@ -23,6 +25,7 @@ import { lockBackgroundScroll } from "@/components/overlay-scroll-lock";
 import { SiteSearchBar } from "@/components/site-search";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { unlockIdleDocument } from "@/components/overlay-root";
 import { useClientPathname } from "@/components/client-pathname";
 import { isNavItemActive, navItems } from "@/components/site-nav-items";
@@ -50,7 +53,7 @@ const NAV_ICONS: Record<string, LucideIcon> = {
 // and nudged its neighbours when clicked.
 function navLinkClass(active: boolean) {
   return cn(
-    "relative inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[14px] text-muted-foreground transition-colors hover:text-foreground",
+    "relative inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[14px] text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
     !active && "hover:bg-muted",
     active && "text-foreground",
   );
@@ -82,6 +85,8 @@ function NavLink({
       aria-current={active ? "page" : undefined}
       className={cn(navLinkClass(active), className)}
       href={href}
+      // Tabbing to a link that's scrolled out of the row brings it into view.
+      onFocus={(event) => onSelect?.(event.currentTarget)}
       // Default prefetch: only the page's ready-made outline, which comes
       // from the CDN at no cost. Loading every menu page in full on every
       // page view (and again whenever anything was saved) was ~8 database
@@ -250,9 +255,15 @@ export function SiteNavLinks({
 
   useEffect(() => {
     const scroller = scrollerRef.current;
-    const active = scroller?.querySelector<HTMLElement>("[aria-current='page']");
+    const active = scroller?.querySelector<HTMLElement>("[aria-current='page'], [data-nav-active]");
     if (scroller && active) scrollNavItemIntoView(scroller, active);
   }, [pathname]);
+
+  // Organiser pages sit under one "Manage" menu, as in the phone menu: as
+  // separate links the owner's nine items never fitted the header, even at
+  // full desktop width, so the first and last were always cut off.
+  const mainItems = items.filter((item) => !item.href.startsWith("/admin/"));
+  const manageItems = items.filter((item) => item.href.startsWith("/admin/"));
 
   return (
     <div className="relative hidden min-w-0 md:block">
@@ -261,7 +272,7 @@ export function SiteNavLinks({
         className="flex max-w-full items-center justify-center-safe gap-1 overflow-x-auto overscroll-x-contain text-[14px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         ref={scrollerRef}
       >
-        {items.map((item) => {
+        {mainItems.map((item) => {
           const active = isNavItemActive(pathname, item.href);
           return (
             <NavLink
@@ -277,21 +288,74 @@ export function SiteNavLinks({
             />
           );
         })}
+        {manageItems.length > 0 ? <ManageMenu items={manageItems} pathname={pathname} /> : null}
       </nav>
       <ScrollEdgeFade side="right" visible={edges.end} />
     </div>
   );
 }
 
+/** The Manage trigger's face: the same in the live menu and the placeholder. */
+function ManageLabel({ active }: { active: boolean }) {
+  return (
+    <>
+      {active ? <span className="absolute inset-0 rounded-md bg-muted" /> : null}
+      <span className="relative z-10 inline-flex items-center gap-1.5">
+        <BriefcaseBusiness aria-hidden="true" className="size-4 shrink-0" />
+        Manage
+        <ChevronDown aria-hidden="true" className="size-3.5 shrink-0" />
+      </span>
+    </>
+  );
+}
+
+function ManageMenu({ items, pathname }: { items: { href: string; label: string }[]; pathname: string }) {
+  const active = items.some((item) => isNavItemActive(pathname, item.href));
+  return (
+    // Not modal: the page behind stays as it is (no scroll lock or
+    // pointer-events juggling for a short list of links).
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger
+        className={cn(navLinkClass(active), "shrink-0 cursor-pointer data-[state=open]:text-foreground")}
+        data-nav-active={active ? "" : undefined}
+      >
+        <ManageLabel active={active} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="center" className="min-w-44">
+        {items.map((item) => {
+          const current = isNavItemActive(pathname, item.href);
+          return (
+            <DropdownMenuItem asChild key={item.href}>
+              <Link
+                aria-current={current ? "page" : undefined}
+                className={cn("text-[14px]", current && "bg-muted font-medium")}
+                href={item.href}
+                onClick={unlockIdleDocument}
+              >
+                <NavIcon label={item.label} />
+                {item.label}
+              </Link>
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 /** The same links, drawn before the session resolves, so a refresh doesn't blank the menu.
- * Uses the shared path (null while a page is being prepared) so this can sit in a placeholder. */
+ * Uses the shared path (null while a page is being prepared) so this can sit in a placeholder.
+ * Organiser pages sit under the same Manage face as the live menu (it opens once that arrives). */
 export function StaticNavLinks({ items }: { items: { href: string; label: string }[] }) {
   const pathname = useClientPathname();
   if (items.length === 0) return null;
+  const mainItems = items.filter((item) => !item.href.startsWith("/admin/"));
+  const manageItems = items.filter((item) => item.href.startsWith("/admin/"));
+  const manageActive = pathname !== null && manageItems.some((item) => isNavItemActive(pathname, item.href));
   return (
     <div className="relative hidden min-w-0 md:block">
       <nav className="flex max-w-full items-center justify-center-safe gap-1 overflow-x-auto overscroll-x-contain text-[14px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-        {items.map((item) => (
+        {mainItems.map((item) => (
           <NavLink
             active={pathname !== null && isNavItemActive(pathname, item.href)}
             className="shrink-0"
@@ -300,6 +364,11 @@ export function StaticNavLinks({ items }: { items: { href: string; label: string
             label={item.label}
           />
         ))}
+        {manageItems.length > 0 ? (
+          <span aria-hidden className={cn(navLinkClass(manageActive), "shrink-0")}>
+            <ManageLabel active={manageActive} />
+          </span>
+        ) : null}
       </nav>
     </div>
   );
@@ -374,6 +443,9 @@ export function SiteMobileMenu({ groups, showSearch = false }: { groups: MobileM
         // PopoverContent defaults to a 4px gap; the page showed through it.
         sideOffset={0}
         avoidCollisions={false}
+        // Fills the screen edge to edge (the available size above counts
+        // any padding against it).
+        collisionPadding={0}
       >
         <div className="flex flex-col gap-12 overflow-auto px-6 py-6">
           {showSearch ? <SiteSearchBar className="-mb-6 h-10 text-base" onOpen={() => setOpen(false)} /> : null}

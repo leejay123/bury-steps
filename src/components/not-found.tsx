@@ -6,9 +6,9 @@ import {
   EmptyContent,
   EmptyDescription,
   EmptyHeader,
-  EmptyTitle,
 } from "@/components/ui/empty";
 import { PAGE_X_BLEED } from "@/lib/page-x";
+import { shouldPrefetchNavLink } from "@/components/site-nav-items";
 
 export function NotFoundPage() {
   return (
@@ -20,7 +20,10 @@ export function NotFoundPage() {
           {i === 4 ? (
             <Empty className="h-full">
               <EmptyHeader>
-                <EmptyTitle className="font-mono text-8xl font-black">404</EmptyTitle>
+                {/* The page's heading, so screen readers announce what this is. */}
+                <h1 className="font-mono text-8xl font-black tracking-tight" data-slot="empty-title">
+                  404<span className="sr-only"> — page not found</span>
+                </h1>
                 <EmptyDescription className="sm:text-nowrap">
                   The page you’re looking for might have been{" "}
                   <br className="hidden sm:inline" />
@@ -36,7 +39,9 @@ export function NotFoundPage() {
                     </Link>
                   </Button>
                   <Button asChild variant="outline">
-                    <Link href="/walks">
+                    {/* Guests see this page too: prefetching a sign-in-only
+                        page redirects cross-site and logs a CORS error. */}
+                    <Link href="/walks" prefetch={shouldPrefetchNavLink("/walks") ? undefined : false}>
                       <CompassIcon data-icon="inline-start" />
                       Explore
                     </Link>

@@ -107,6 +107,12 @@ export async function sendTestEmailTemplate(
   const key = String(formData.get("key") ?? "");
   if (!isEmailTemplateKey(key)) return { ok: false, error: "Unknown email." };
 
+  // Without it the mail client only logs and skips the send, and this said
+  // "sent" anyway.
+  if (!process.env.RESEND_API_KEY?.trim()) {
+    return { ok: false, error: "Email sending isn't set up yet, so no test email was sent." };
+  }
+
   const limited = checkRateLimit(`${admin.id}:sendTestEmailTemplate`, 5, 60_000);
   if (!limited.ok) {
     return { ok: false, error: `Too many test sends. Try again in ${limited.retryAfterSeconds}s.` };

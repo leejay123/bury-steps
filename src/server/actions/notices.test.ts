@@ -274,6 +274,26 @@ describe("updateSiteNotice", () => {
   });
 });
 
+describe("updateSiteNotice without changes", () => {
+  it("doesn't mark an unchanged notice as updated for members", async () => {
+    const form = bellForm({ noticeId: "notice-1" });
+    prismaMock.siteNotice.findUnique.mockResolvedValueOnce({
+      systemKey: null,
+      title: String(form.get("title")),
+      body: String(form.get("body")),
+      kind: "BELL",
+      pageBody: null,
+      categoryId: null,
+    });
+
+    const result = await updateSiteNotice(null, form);
+
+    expect(result).toEqual({ ok: true, message: "No changes to save." });
+    expect(prismaMock.siteNotice.update).not.toHaveBeenCalled();
+    expect(prismaMock.siteNoticeRead.deleteMany).not.toHaveBeenCalled();
+  });
+});
+
 describe("deleteSiteNotice", () => {
   it("refuses to remove a pinned system notice", async () => {
     prismaMock.siteNotice.findUnique.mockResolvedValueOnce({ systemKey: "welcome" });

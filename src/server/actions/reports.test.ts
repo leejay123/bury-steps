@@ -173,7 +173,7 @@ describe("addAccidentReport", () => {
     );
   });
 
-  it("rejects linking to a walk that has not finished yet", async () => {
+  it("rejects linking to a walk that has not started yet", async () => {
     prismaMock.walk.findUnique.mockResolvedValueOnce({
       id: "walk-1",
       cancelledAt: null,
@@ -186,9 +186,24 @@ describe("addAccidentReport", () => {
 
     expect(result).toEqual({
       ok: false,
-      error: "Link the report to a walk that has already finished, or leave it unlinked.",
+      error: "Link the report to a walk that has started, or leave it unlinked.",
     });
     expect(prismaMock.accidentReport.create).not.toHaveBeenCalled();
+  });
+
+  it("allows linking to a walk that is still in progress", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({
+      id: "walk-1",
+      cancelledAt: null,
+      startsAt: new Date(Date.now() - 30 * 60_000),
+      durationMins: 90,
+      endedAt: null,
+    });
+    prismaMock.accidentReport.create.mockResolvedValueOnce({ involvedMembers: [] });
+
+    const result = await addAccidentReport(null, reportForm({ walkId: "walk-1" }));
+
+    expect(result).toEqual({ ok: true, message: "Accident report saved." });
   });
 
   it("rejects linking to a walk that no longer exists", async () => {

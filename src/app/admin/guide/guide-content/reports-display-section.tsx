@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HOMEPAGE_MEMBER_NOTICES_LIMIT } from "@/lib/homepage-copy";
+import { SITE_WORDING_PAGES } from "@/lib/settings-pages";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { GuideBody, Steps } from "./shared";
 
@@ -12,10 +13,11 @@ export function ReportsDisplaySection() {
         <AccordionContent>
           <GuideBody>
             <p>
-              Open <Link href="/admin/reports">Reports</Link> in the top menu. Only organisers can
+              Open <Link href="/admin/reports">Reports</Link> from Manage in the top menu. Only organisers can
               see this. Add a report with the date, an optional walk, what happened, who was
-              involved, what you did, and extra notes if you need them. Once there is more than one
-              report, a search box appears above the list — it matches the linked walk, who was
+              involved, what you did, and extra notes if you need them. The walk list shows walks
+              that have started, newest first with their day, so a report can be written up while
+              the walk is still going. Once there is a report, a search box appears above the list — it matches the linked walk, who was
               involved, and the write-up text, and stays on this page only (it is not put in the
               address bar). You can also filter by whether a walk is linked, and sort newest or
               oldest first. Each row shows the date, walk, and a short preview of what happened. Tap
@@ -55,10 +57,13 @@ export function ReportsDisplaySection() {
               or who gets contact-form messages). Anything unfinished or not set up — such as email
               sending, or no one receiving contact messages — is marked in amber on its row and
               listed together at the top. Type in the search box to find a setting by what&apos;s on
-              it (&ldquo;logo&rdquo;, &ldquo;cookie&rdquo;, &ldquo;newsletter&rdquo;). Site wording
+              it (&ldquo;logo&rdquo;, &ldquo;cookie&rdquo;, &ldquo;phone menu&rdquo;, &ldquo;text
+              size&rdquo;) — each word you type just has to appear somewhere on the row. Site wording
               opens in place to show its five pages. Reset the site sits on its own under{" "}
               <strong>Danger zone</strong>. Every settings page has an <strong>All settings</strong>{" "}
-              link at the top to come back.
+              link at the top to come back. When you change something, <strong>Save</strong>{" "}
+              keeps it and <strong>Discard</strong> puts back what was saved — along with
+              clearing any error about the change you threw away.
             </p>
             <p className="font-medium text-foreground">Branding</p>
             <p>
@@ -115,7 +120,7 @@ export function ReportsDisplaySection() {
             </p>
             <p className="font-medium text-foreground">Site wording</p>
             <p>
-              Open <Link href="/admin/settings/site-wording">Site wording</Link> to edit the{" "}
+              Open <Link href={SITE_WORDING_PAGES[0].href}>Site wording</Link> to edit the{" "}
               <strong>How this started</strong> heading, blurb, and full story (the story opens in a
               drawer), the About drawer <strong>goals / places / expect / rules</strong> lists (each
               opens in a drawer), the <strong>Testimonials</strong> heading and intro, the{" "}
@@ -172,7 +177,9 @@ export function ReportsDisplaySection() {
               every email the site sends (welcome, new walk, walk cancelled, new notice, monthly
               progress, contact alerts and so on). Only the owner can change them. An email that&apos;s
               off isn&apos;t sent to anyone until it&apos;s switched back on; &ldquo;Send test to me&rdquo; still
-              works so you can check the wording first. Newsletters aren&apos;t affected.
+              works so you can check the wording first (until email sending is set up, it says
+              so instead of sending). <strong>Reset to default</strong> asks before it puts back
+              the standard wording. Newsletters aren&apos;t affected.
             </p>
           </GuideBody>
         </AccordionContent>

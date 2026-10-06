@@ -22,7 +22,7 @@ export async function SiteFooter() {
   const facebookUrl = theme.facebookGroupUrl.trim();
 
   return (
-    <footer className="relative z-10 shrink-0 bg-background">
+    <footer className="relative z-10 shrink-0 bg-background" data-site-footer="">
       <FullWidthDivider position="top" />
       {user ? <NewsletterFooterGate /> : null}
       <div className={`flex flex-col gap-6 py-8 ${PAGE_X}`}>
@@ -59,16 +59,19 @@ export async function SiteFooter() {
           <Link className={linkClassName} href="/">
             Home
           </Link>
-          <Link className={linkClassName} href="/notices" prefetch={shouldPrefetchNavLink("/notices") ? undefined : false}>
-            Notices
-          </Link>
-          {progressEnabled ? (
+          {/* Members-only pages: a visitor would just be sent to sign in. */}
+          {user ? (
+            <Link className={linkClassName} href="/notices" prefetch={shouldPrefetchNavLink("/notices") ? undefined : false}>
+              Notices
+            </Link>
+          ) : null}
+          {user && progressEnabled ? (
             <Link className={linkClassName} href="/progress" prefetch={shouldPrefetchNavLink("/progress") ? undefined : false}>
               Progress
             </Link>
           ) : null}
           <Link className={linkClassName} href="/contact">
-            Contact Us
+            Contact us
           </Link>
           <Link className={linkClassName} href="/apps">
             Walking apps

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { CalendarIcon } from "lucide-react";
 import { enGB } from "react-day-picker/locale";
 import { Calendar } from "@/components/ui/calendar";
@@ -65,6 +65,8 @@ export function DateTimePicker({
 }) {
   const initial = parseWallClock(defaultValue);
   const [open, setOpen] = useState(false);
+  const [missing, setMissing] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const [date, setDate] = useState<Date | undefined>(initial?.date);
   const [hour, setHour] = useState(initial?.hour ?? "13");
   const [minute, setMinute] = useState(initial?.minute ?? "00");
@@ -145,6 +147,13 @@ export function DateTimePicker({
         className="sr-only"
         name={name}
         onChange={() => {}}
+        // Left empty, the browser pinned its "Please fill out this field"
+        // bubble to this invisible input. Say it under the button instead.
+        onInvalid={(event) => {
+          event.preventDefault();
+          setMissing(true);
+          triggerRef.current?.focus();
+        }}
         required={required}
         tabIndex={-1}
         value={value}
@@ -159,9 +168,11 @@ export function DateTimePicker({
         <PopoverTrigger asChild>
           <Button
             aria-expanded={open}
+            aria-invalid={missing && !value ? true : undefined}
             className="w-full justify-start font-normal"
             disabled={disabled}
             id={id}
+            ref={triggerRef}
             type="button"
             variant="outline"
           >
@@ -275,6 +286,11 @@ export function DateTimePicker({
           </div>
         </PopoverContent>
       </Popover>
+      {missing && !value ? (
+        <p className="text-sm text-destructive" role="alert">
+          Choose a date and time.
+        </p>
+      ) : null}
     </div>
   );
 }

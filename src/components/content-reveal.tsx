@@ -41,16 +41,34 @@ function listParts(page: HTMLElement): HTMLElement[] {
   return shown.filter((el) => !shown.some((other) => other !== el && other.contains(el)));
 }
 
+/** Moves a tree walker past the current element's contents, to whatever
+ * comes after it (null at the end). */
+function skipContents(walker: TreeWalker): Node | null {
+  for (;;) {
+    const sibling = walker.nextSibling();
+    if (sibling) return sibling;
+    if (!walker.parentNode()) return null;
+  }
+}
+
 /**
  * Grey shapes that copy a part's real layout, like the Members list's
  * hand-made placeholder: one bar per line of text, exactly as long as the
  * words; pictures, avatars, fields and buttons at their own size and
  * roundness. Only these go grey — card edges, borders and row dividers stay
- * on screen. Returns the layer and the pieces of content it stands in for.
+ * on screen. Returns the layer (not yet on the page) and the pieces of
+ * content it stands in for.
+ *
+ * Measures only: nothing is added to the page here, so the browser lays it
+ * out once for every part (adding each layer as it was made re-did the
+ * whole layout for the next part — a long freeze going Back to a long
+ * list). Rows below the fold, and the insides of anything already covered,
+ * are skipped whole rather than measured element by element.
  */
 function skeletonFor(part: HTMLElement, budget: { left: number }): { layer: HTMLElement; covered: Element[] } | null {
   const box = part.getBoundingClientRect();
-  if (box.height < 4 || box.top > window.innerHeight * 1.5) return null;
+  const limit = window.innerHeight * 1.5;
+  if (box.height < 4 || box.top > limit) return null;
   const layer = document.createElement("div");
   layer.setAttribute("aria-hidden", "true");
   Object.assign(layer.style, {
@@ -77,21 +95,34 @@ function skeletonFor(part: HTMLElement, budget: { left: number }): { layer: HTML
   };
   const covered: Element[] = [];
   const range = document.createRange();
-  for (const el of part.querySelectorAll("*")) {
-    if (budget.left <= 0) break;
-    if (covered.some((c) => c.contains(el))) continue;
+  const walker = document.createTreeWalker(part, NodeFilter.SHOW_ELEMENT);
+  let node = walker.nextNode();
+  while (node && budget.left > 0) {
+    const el = node as Element;
     const r = el.getBoundingClientRect();
-    if (r.width < 2 || r.height < 2 || r.top > window.innerHeight * 1.5) continue;
+    if (r.top > limit) {
+      // Below the fold, and so is everything inside it.
+      node = skipContents(walker);
+      continue;
+    }
+    if (r.width < 2 || r.height < 2) {
+      node = walker.nextNode();
+      continue;
+    }
     if (el.matches(MEDIA)) {
       // Same size and roundness as the real thing (avatars stay circles).
       const radius = el.matches("[data-slot='avatar']") ? "9999px" : getComputedStyle(el).borderRadius || "6px";
       shape(r.left, r.top, r.width, r.height, radius === "0px" ? "6px" : radius);
       covered.push(el);
       budget.left--;
+      node = skipContents(walker);
       continue;
     }
     const texts = [...el.childNodes].filter((n) => n.nodeType === Node.TEXT_NODE && n.textContent!.trim());
-    if (!texts.length) continue;
+    if (!texts.length) {
+      node = walker.nextNode();
+      continue;
+    }
     // One bar per line, as long as the words on that line.
     for (const text of texts) {
       range.selectNodeContents(text);
@@ -102,9 +133,9 @@ function skeletonFor(part: HTMLElement, budget: { left: number }): { layer: HTML
       }
     }
     covered.push(el);
+    node = skipContents(walker);
   }
   if (!layer.childElementCount) return null;
-  document.body.append(layer);
   return { layer, covered };
 }
 
@@ -138,17 +169,17 @@ export function ContentReveal() {
 
     const parts = listParts(page);
     const budget = { left: MAX_SHAPES };
-    const layers: HTMLElement[] = [];
+    // Measure every part first, then add all the layers at once.
+    const found = parts.flatMap((part) => skeletonFor(part, budget) ?? []);
+    const layers = found.map((item) => item.layer);
+    document.body.append(...layers);
     const runs: Animation[] = [];
     const total = HOLD_MS + REVEAL_MS;
     const hold = HOLD_MS / total;
-    for (const part of parts) {
-      const found = skeletonFor(part, budget);
-      if (!found) continue;
-      layers.push(found.layer);
+    for (const item of found) {
       // The content itself (not the cards and borders around it) is hidden
       // under the grey, then fades in from a soft blur as the grey goes.
-      for (const piece of found.covered) {
+      for (const piece of item.covered) {
         runs.push(
           piece.animate(
             [
@@ -161,7 +192,7 @@ export function ContentReveal() {
         );
       }
       runs.push(
-        found.layer.animate(
+        item.layer.animate(
           [
             { opacity: 1, filter: "blur(0)", offset: 0 },
             { opacity: 1, filter: "blur(0)", offset: hold },

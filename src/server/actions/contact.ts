@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "@/lib/revalidate";
-import { requireAdmin } from "@/lib/auth";
+import { getOptionalUser, requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -15,6 +15,14 @@ import {
 import { sendContactMessageAdminAlertEmail, sendContactMessageReceivedEmail } from "@/lib/email/mailer";
 import { type ActionResult, isPrismaCode, logActionError, permissionDenied } from "./shared";
 
+/** A signed-in member's name and email for the Contact us form, so they
+ * don't have to type them again. Null for visitors. */
+export async function getContactFormDefaults(): Promise<{ name: string; email: string } | null> {
+  const user = await getOptionalUser();
+  if (!user) return null;
+  return { name: [user.firstName, user.lastName].filter(Boolean).join(" "), email: user.email };
+}
+
 export async function submitContactMessage(
   _prev: ActionResult | null,
   formData: FormData,
@@ -26,12 +34,6 @@ export async function submitContactMessage(
     return { ok: true, message: "Thanks — we'll get back to you soon." };
   }
 
-  const key = await requesterIpKey();
-  const limited = checkRateLimit(`${key}:submitContactMessage`, 3, 10 * 60_000);
-  if (!limited.ok) {
-    return { ok: false, error: "Too many messages sent. Try again in a few minutes." };
-  }
-
   const name = parseContactName(String(formData.get("name") ?? ""));
   const email = parseContactEmail(String(formData.get("email") ?? ""));
   const phone = parseContactPhone(String(formData.get("phone") ?? ""));
@@ -41,6 +43,14 @@ export async function submitContactMessage(
   if (phone === "invalid") return { ok: false, error: "Enter a valid phone number, or leave it blank." };
   if (message === "invalid") {
     return { ok: false, error: "Message needs to be at least 10 characters." };
+  }
+
+  // Counted only for messages that would actually be sent: a typo (say, a
+  // too-short message) used to use up one of the three sends.
+  const key = await requesterIpKey();
+  const limited = checkRateLimit(`${key}:submitContactMessage`, 3, 10 * 60_000);
+  if (!limited.ok) {
+    return { ok: false, error: "Too many messages sent. Try again in a few minutes." };
   }
 
   try {
@@ -104,7 +114,7 @@ export async function markContactMessageRead(
   }
 
   revalidatePath("/admin/messages");
-  return { ok: true };
+  return { ok: true, message: "Marked as read." };
 }
 
 export async function deleteContactMessage(

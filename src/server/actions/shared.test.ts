@@ -179,7 +179,6 @@ describe("revalidateHomepage", () => {
     expect(revalidateTag).toHaveBeenCalledWith("homepage", { expire: 0 });
     for (const path of [
       "/",
-      "/admin/homepage",
       "/admin/settings",
       "/admin/settings/hero-photos",
       "/admin/settings/testimonials",

@@ -93,8 +93,8 @@ export function PrivacySiteSection() {
               in a large list that starts right under the header, over a heavy blur of the page
               behind (no white tint), and the page behind stays still until you
               close it or pick a page. Signed-in people also get a <strong>search</strong> next to the
-              bell (a search bar on a computer, a magnifying-glass icon on a phone, or ⌘K /
-              Ctrl+K), that finds
+              bell (a search bar on a computer, a magnifying-glass icon on a phone or tablet, or
+              ⌘K on a Mac / Ctrl+K elsewhere), that finds
               pages, walks, notices and FAQs — organisers also find the settings their permissions
               allow. It opens on the main pages; type to see up to five matches per section, split into
               upcoming and recent walks, notices, FAQs by category, and settings by area. Walks show
@@ -107,7 +107,7 @@ export function PrivacySiteSection() {
               moving between main sections slides like tabs, following the order of the menu bar;
               pages opened from the phone menu just appear, since the menu closing is already the
               change; the homepage always just appears, with no slide or fade); Rise up, where each page rises gently into place like the walk cards; or No transition. On the Contact page only the contact card moves — its heading stays still. Tapping the phone bottom bar, the page slides in sideways towards the tab you tapped. With Slide, the next page starts loading the moment you
-              tap, while the old one slides away, so it’s usually ready as soon as the slide ends. Pages you&apos;ve already opened in the last five minutes open instantly, and open pages update themselves within about half a minute when someone saves a change. Each time you open a page, the menu, tabs, search boxes, filters, headings and buttons are already there — including the category chips on Notices (All, Walks, and the rest). For anyone already signed in, the header (the page links, search, bell and avatar) and the homepage cards (See what's on, Track your progress, and the rest) are in place on the first paint, the same as last time. Every content card, such as the Progress totals, Together, and the monthly cup, fades in the same way as the Walks table: the card is already the right size, and the words and numbers inside show as grey for a moment, then fade in. A placeholder is never taller than the text it stands in for, so the page does not shrink when the words arrive. The number of grey rows matches the list — two reports show two rows, and an empty list shows none — so the page does not jump as it finishes loading. The typeface does not swap in after the page has painted. If a form shows an error, everything you typed stays in it. <strong>Phone menu</strong> in Site behaviour chooses how signed-in people get around on
+              tap, while the old one slides away, so it’s usually ready as soon as the slide ends. Pages you&apos;ve already opened in the last five minutes open instantly, and open pages update themselves within about half a minute when someone saves a change. Each time you open a page, the menu, tabs, search boxes, filters, headings and buttons are already there — including the category chips on Notices (All, Walks, and the rest). For anyone already signed in, the header (the page links, search, bell and avatar) and the homepage cards (See what&apos;s on, Track your progress, and the rest) are in place on the first paint, the same as last time. Every content card, such as the Progress totals, Together, and the monthly cup, fades in the same way as the Walks table: the card is already the right size, and the words and numbers inside show as grey for a moment, then fade in. A placeholder is never taller than the text it stands in for, so the page does not shrink when the words arrive. The number of grey rows matches the list — two reports show two rows, and an empty list shows none — so the page does not jump as it finishes loading. The typeface does not swap in after the page has painted. If a form shows an error, everything you typed stays in it. <strong>Phone menu</strong> in Site behaviour chooses how signed-in people get around on
               phones: the original ☰ menu (logo in the middle), or a <strong>bottom bar</strong> (logo on the
               left) with four main pages plus <strong>More</strong>, which slides up everything else. Signed-out visitors get their own bar — Home, Contact, the Facebook group
               and More — with Sign in and Join staying at the top. The bar steps aside
@@ -119,7 +119,7 @@ export function PrivacySiteSection() {
               Notices means there’s one you haven’t read. The list is split under small labels:
               Menu for the main pages, Manage for the admin pages (owners and organisers only),
               Account for History and
-              email preferences, and More for Contact Us, the Facebook group, the Privacy Policy,
+              email preferences, and More for Contact us, the Facebook group, the Privacy Policy,
               and the Terms of Service. Visitors who aren’t signed in see Home, Sign in, Join the
               group, and the More links.
             </p>

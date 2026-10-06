@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useDeferredValue, useMemo, useState } from "react";
+import { memo, useDeferredValue, useMemo, useRef, useState } from "react";
 import { Search, SearchX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -36,6 +36,7 @@ export function FaqsSection({
   title: string;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
 
   if (faqs.length === 0) return null;
 
@@ -45,6 +46,7 @@ export function FaqsSection({
     <section>
       <FaqIntro
         bgPattern={bgPattern}
+        inputRef={searchRef}
         intro={intro}
         onSearchChange={setSearchTerm}
         searchTerm={searchTerm}
@@ -54,7 +56,11 @@ export function FaqsSection({
         categories={categories}
         facebookGroupUrl={facebookUrl}
         faqs={faqs}
-        onClearSearch={() => setSearchTerm("")}
+        onClearSearch={() => {
+          setSearchTerm("");
+          // The button goes with the empty state; keep focus useful.
+          searchRef.current?.focus();
+        }}
         searchTerm={searchTerm}
       />
     </section>
@@ -63,12 +69,14 @@ export function FaqsSection({
 
 const FaqIntro = memo(function FaqIntro({
   bgPattern,
+  inputRef,
   intro,
   searchTerm,
   onSearchChange,
   title,
 }: {
   bgPattern: SectionBgPattern;
+  inputRef: React.RefObject<HTMLInputElement | null>;
   intro: string;
   searchTerm: string;
   onSearchChange: (value: string) => void;
@@ -80,6 +88,7 @@ const FaqIntro = memo(function FaqIntro({
         <InputGroup className="w-full">
           <InputGroupInput
             aria-label="Search FAQs"
+            ref={inputRef}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="Search FAQs…"
             value={searchTerm}
@@ -162,6 +171,8 @@ function FaqBrowser({
               )}
               key={category.id}
               onClick={(event) => selectCategory(category.id, event.currentTarget)}
+              // Tabbing to a chip that's off the edge brings it into view.
+              onFocus={(event) => centerInScrollStrip(event.currentTarget)}
               type="button"
             >
               {category.label}

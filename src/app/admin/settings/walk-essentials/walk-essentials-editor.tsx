@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ArrowDown, ArrowUp, ChevronDown, Plus, Search, Trash2 } from "lucide-react";
-import { updateWalkEssentials, type ActionResult } from "@/server/actions";
+import { updateWalkEssentials } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import {
   DEFAULT_WALK_ESSENTIALS,
   ESSENTIAL_ICONS,
@@ -95,7 +96,7 @@ function IconPicker({ label, onChange, value }: { label: string; onChange: (icon
 export function WalkEssentialsEditor({ items: saved }: { items: EssentialItem[] }) {
   const [items, setItems] = useState(saved);
   useResetOnChange([saved], () => setItems(saved));
-  const [state, action, pending] = useActionState<ActionResult | null, FormData>(updateWalkEssentials, null);
+  const [state, action, pending, clearError] = useSafeActionState(updateWalkEssentials);
   useActionToast(state);
 
   const dirty = JSON.stringify(items) !== JSON.stringify(saved);
@@ -128,15 +129,17 @@ export function WalkEssentialsEditor({ items: saved }: { items: EssentialItem[] 
                     onChange={(icon) => update(index, { icon })}
                     value={item.icon}
                   />
+                  {/* At least 12rem, so on a phone the arrows and Remove wrap
+                      onto their own line instead of squeezing the name. */}
                   <Input
                     aria-label="Name"
-                    className="min-w-0 flex-1"
+                    className="min-w-[12rem] flex-1"
                     maxLength={MAX_WALK_ESSENTIAL_LABEL}
                     onChange={(event) => update(index, { label: event.target.value })}
                     placeholder="e.g. Toilets available"
                     value={item.label}
                   />
-                  <div className="flex shrink-0 gap-1">
+                  <div className="ml-auto flex shrink-0 gap-1">
                     <Button
                       aria-label="Move up"
                       disabled={index === 0}
@@ -190,7 +193,15 @@ export function WalkEssentialsEditor({ items: saved }: { items: EssentialItem[] 
             {pending ? "Saving…" : "Save"}
           </Button>
           {dirty ? (
-            <Button onClick={() => setItems(saved)} size="sm" type="button" variant="outline">
+            <Button
+              onClick={() => {
+                setItems(saved);
+                clearError();
+              }}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
               Discard
             </Button>
           ) : null}

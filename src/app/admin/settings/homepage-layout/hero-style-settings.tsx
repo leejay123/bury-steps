@@ -1,11 +1,12 @@
 "use client";
 
-import { startTransition, useActionState, useEffect, useRef, useState } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { updateHeroStyle, type ActionResult } from "@/server/actions";
+import { updateHeroStyle } from "@/server/actions";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { HERO_VIDEO_OPTIONS, type HeroStyle } from "@/lib/hero-style";
 import type { SectionBgPattern } from "@/lib/section-background";
 import { Label } from "@/components/ui/label";
@@ -70,10 +71,7 @@ export function HeroStyleSettings({
   const [videoKey, setVideoKey] = useState(heroVideoKey);
   const [overlayOpacity, setOverlayOpacity] = useState(heroOverlayOpacity);
   const [textColor, setTextColor] = useState(heroTextColor);
-  const [state, dispatch, isPending] = useActionState<ActionResult | null, FormData>(
-    updateHeroStyle,
-    null,
-  );
+  const [state, dispatch, isPending] = useSafeActionState(updateHeroStyle);
   const commitTimerRef = useRef(0);
 
   useResetOnChange([heroStyle], () => setStyle(heroStyle));
@@ -155,7 +153,7 @@ export function HeroStyleSettings({
 
   return (
     <SettingsSection
-      description="The top of the public homepage: the light Default banner, a looping Video, the Globe, or one of the photo heroes — Parallax, 3D Marquee and Photo slider — which use your Hero photos."
+      description="The top of the public homepage: the light Default banner, a looping Video, the Globe, or one of the photo heroes — Photo slider, Parallax, 3D Marquee, Sideways strip, Tiles, Diagonal rows and Accordion — which use your Hero photos."
       title="Hero style"
     >
       <div className="flex w-full flex-col gap-4">

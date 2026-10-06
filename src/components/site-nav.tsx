@@ -19,6 +19,15 @@ import { getSiteNoticeState } from "@/lib/site-notices";
 import { getProgressEnabled } from "@/lib/progress-settings";
 import { FULL_ORGANISER_PERMISSIONS, ORGANISER_PERMISSIONS } from "@/lib/organiser-permissions";
 
+/**
+ * The right-hand column is held at the signed-in width (search, bell and
+ * avatar: icons on tablets, a search bar from lg) for everyone and in the
+ * placeholder too. Its contents change as the header streams in —
+ * placeholder, then Sign in/Join or the member's tools — and without a fixed
+ * width each change slid the centred menu sideways.
+ */
+const RIGHT_CLUSTER = "md:min-w-[7.75rem] lg:min-w-[20.5rem]";
+
 /** Cookie read stays inside Suspense so the shared layout can still be prerendered. */
 export async function SiteNavSlot() {
   const jar = await cookies();
@@ -36,7 +45,9 @@ export function SiteNavFallback({ initial = "", items = [] }: { initial?: string
     return (
       <>
         <div className="hidden min-w-0 items-center justify-center md:flex" />
-        <div className="flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3" />
+        <div
+          className={`flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3 ${RIGHT_CLUSTER}`}
+        />
       </>
     );
   }
@@ -46,7 +57,7 @@ export function SiteNavFallback({ initial = "", items = [] }: { initial?: string
         <StaticNavLinks items={items} />
       </div>
       <div
-        className="flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3"
+        className={`flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3 ${RIGHT_CLUSTER}`}
         data-nav-ready=""
       >
         <SiteSearchBar />
@@ -94,7 +105,7 @@ export async function SiteNav() {
         ) : null}
       </div>
       <div
-        className="flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3"
+        className={`flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3 ${RIGHT_CLUSTER}`}
         data-nav-ready=""
       >
         {user ? (
@@ -104,9 +115,13 @@ export async function SiteNav() {
             <Suspense fallback={<span aria-hidden className="inline-flex size-9 shrink-0 rounded-full border border-border bg-background" />}>
               <SiteNavBell firstName={user.firstName} userId={user.id} />
             </Suspense>
-            <ClerkIsland>
-              <LazySiteUserButton initial={initial ?? "?"} progressEnabled={progressEnabled} />
-            </ClerkIsland>
+            {/* A fixed slot: while Clerk's code loads the avatar's own
+                placeholder can be missing, and the cluster jumped 40px. */}
+            <div className="flex size-7 shrink-0 items-center justify-center">
+              <ClerkIsland>
+                <LazySiteUserButton initial={initial ?? "?"} progressEnabled={progressEnabled} />
+              </ClerkIsland>
+            </div>
             <EmailPreferencesDrawer
               email={user.email}
               isAdmin={isAdmin}
@@ -138,7 +153,7 @@ export async function SiteMobileNav() {
   const more: MobileMenuGroup = {
     label: "More",
     items: [
-      { href: "/contact", label: "Contact Us" },
+      { href: "/contact", label: "Contact us" },
       { href: "/apps", label: "Walking apps" },
       ...(facebookUrl ? [{ href: facebookUrl, label: "Facebook group", newTab: true }] : []),
       { href: "/privacy-policy", label: "Privacy Policy" },
@@ -221,7 +236,7 @@ export async function SiteBottomNav() {
         ]}
         tabs={[
           { href: "/", label: "Home" },
-          { href: "/contact", label: "Contact Us" },
+          { href: "/contact", label: "Contact us" },
           ...(facebookUrl ? [{ href: facebookUrl, label: "Facebook group", newTab: true }] : []),
         ]}
       />
@@ -251,7 +266,7 @@ export async function SiteBottomNav() {
         {
           label: "More",
           items: [
-            { href: "/contact", label: "Contact Us" },
+            { href: "/contact", label: "Contact us" },
             { href: "/apps", label: "Walking apps" },
             ...(facebookUrl ? [{ href: facebookUrl, label: "Facebook group", newTab: true }] : []),
             { href: "/privacy-policy", label: "Privacy Policy" },

@@ -20,7 +20,8 @@ const {
   const prismaMock: Record<string, Record<string, ReturnType<typeof vi.fn>>> = {
     user: { findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn(), update: vi.fn(), updateMany: vi.fn(), delete: vi.fn() },
     walk: { updateMany: vi.fn() },
-    accidentReport: { updateMany: vi.fn() },
+    accidentReport: { updateMany: vi.fn(), findMany: vi.fn(async () => []), update: vi.fn() },
+    accidentReportMember: { findMany: vi.fn(async () => []) },
     walkJourneyEvent: { updateMany: vi.fn() },
     attendance: { count: vi.fn() },
     siteSetting: { updateMany: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
@@ -306,11 +307,14 @@ describe("deleteMember", () => {
     prismaMock.user.findUnique
       .mockResolvedValueOnce(target)
       .mockResolvedValueOnce({
-        id: target.id,
-        role: "MEMBER",
+        ...target,
         isOwner: false,
         _count: { walksCreated: 2, accidentReports: 1, journeyEvents: 3 },
       });
+    prismaMock.accidentReportMember.findMany.mockResolvedValueOnce([
+      { report: { id: "report-tagged", whoInvolved: "A passer-by" } },
+    ]);
+    prismaMock.accidentReport.findMany.mockResolvedValueOnce([{ id: "report-recorded", organiserNotes: null }]);
     prismaMock.user.delete.mockResolvedValueOnce(target);
     deleteUser.mockResolvedValueOnce(undefined);
 
@@ -320,9 +324,15 @@ describe("deleteMember", () => {
       where: { createdById: target.id },
       data: { createdById: ADMIN.id },
     });
-    expect(prismaMock.accidentReport.updateMany).toHaveBeenCalledWith({
-      where: { createdById: target.id },
-      data: { createdById: ADMIN.id },
+    // Their name stays on the reports: added to who was involved, and noted
+    // on the one they recorded, which moves to the acting admin.
+    expect(prismaMock.accidentReport.update).toHaveBeenCalledWith({
+      where: { id: "report-tagged" },
+      data: { whoInvolved: "A passer-by, Jo" },
+    });
+    expect(prismaMock.accidentReport.update).toHaveBeenCalledWith({
+      where: { id: "report-recorded" },
+      data: { createdById: ADMIN.id, organiserNotes: "Recorded by Jo, whose account has since been removed." },
     });
     expect(prismaMock.walkJourneyEvent.updateMany).toHaveBeenCalledWith({
       where: { createdById: target.id },
@@ -730,7 +740,7 @@ describe("searchMembers", () => {
   it("returns an empty page for an organiser without the View members permission", async () => {
     requireAdmin.mockResolvedValueOnce({ ...ADMIN, permMembersView: false });
     const result = await searchMembers({ role: "all" });
-    expect(result).toEqual({ rows: [], total: 0 });
+    expect(result).toEqual({ rows: [], total: 0, groupTotals: { OWNER: 0, ADMIN: 0, MEMBER: 0 } });
     expect(prismaMock.user.findMany).not.toHaveBeenCalled();
   });
 
@@ -783,7 +793,8 @@ describe("searchMembers", () => {
     expect(prismaMock.user.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {},
-        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+        // Owners, then organisers, then members, then the chosen sort.
+        orderBy: [{ isOwner: "desc" }, { role: "desc" }, { createdAt: "asc" }, { id: "asc" }],
         skip: 20,
         take: 20,
       }),
@@ -828,16 +839,41 @@ describe("searchMembers", () => {
         where: {
           AND: [
             {
-              OR: [
-                { email: { contains: "jo", mode: "insensitive" } },
-                { firstName: { contains: "jo", mode: "insensitive" } },
-                { lastName: { contains: "jo", mode: "insensitive" } },
+              AND: [
+                {
+                  OR: [
+                    { email: { contains: "jo", mode: "insensitive" } },
+                    { firstName: { contains: "jo", mode: "insensitive" } },
+                    { lastName: { contains: "jo", mode: "insensitive" } },
+                  ],
+                },
               ],
             },
           ],
         },
       }),
     );
+  });
+
+  it("finds someone by their full name: every word has to match somewhere", async () => {
+    prismaMock.user.findMany.mockResolvedValueOnce([]);
+    prismaMock.user.count.mockResolvedValueOnce(0);
+
+    await searchMembers({ query: "  Mark   Walker " });
+
+    const words = prismaMock.user.findMany.mock.calls[0][0].where.AND[0].AND;
+    expect(words).toHaveLength(2);
+    expect(words[0].OR[1]).toEqual({ firstName: { contains: "Mark", mode: "insensitive" } });
+    expect(words[1].OR[2]).toEqual({ lastName: { contains: "Walker", mode: "insensitive" } });
+  });
+
+  it("counts each heading's group across every page, not just this one", async () => {
+    prismaMock.user.findMany.mockResolvedValueOnce([]);
+    prismaMock.user.count.mockResolvedValueOnce(30).mockResolvedValueOnce(1).mockResolvedValueOnce(2);
+
+    const result = await searchMembers({ page: 2 });
+
+    expect(result.groupTotals).toEqual({ OWNER: 1, ADMIN: 2, MEMBER: 27 });
   });
 
   it("also matches by role when typing a role name (3+ letters)", async () => {
@@ -873,7 +909,9 @@ describe("searchMembers", () => {
 
     await searchMembers({ sort });
 
-    expect(prismaMock.user.findMany).toHaveBeenCalledWith(expect.objectContaining({ orderBy }));
+    expect(prismaMock.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ orderBy: [{ isOwner: "desc" }, { role: "desc" }, ...orderBy] }),
+    );
   });
 
   it("defaults to the oldest-first order when no sort is given", async () => {
@@ -883,7 +921,9 @@ describe("searchMembers", () => {
     await searchMembers({});
 
     expect(prismaMock.user.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
+      expect.objectContaining({
+        orderBy: [{ isOwner: "desc" }, { role: "desc" }, { createdAt: "asc" }, { id: "asc" }],
+      }),
     );
   });
 

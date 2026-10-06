@@ -117,9 +117,12 @@ export async function clockIn(_prev: ActionResult | null, formData: FormData): P
         clockedOutReason: null,
       };
 
+      // Coming back after leaving early: they're on the walk again, and
+      // their arrival time stays the first one (it used to be overwritten
+      // with now, as if they had only just turned up).
       const reclockedIn = await tx.attendance.updateMany({
         where: { walkId: locked.id, userId: user.id, clockedOutAt: { not: null } },
-        data: { ...attendanceData, clockedInAt: new Date() },
+        data: attendanceData,
       });
 
       if (reclockedIn.count === 0) {
@@ -385,7 +388,6 @@ export async function adminClockIn(
         }
       }
 
-      const now = new Date();
       const purgeAfter = conditionsPurgeAfterFromStartsAt(locked.startsAt);
       // Re-adding someone who left early must not wipe medical notes they
       // already gave — only a brand-new attendance row starts with null.
@@ -393,8 +395,9 @@ export async function adminClockIn(
         await tx.attendance.update({
           where: { id: existingAttendance.id },
           data: {
+            // Their own earlier acknowledgement (if any) stands; an
+            // organiser adding them doesn't give one on their behalf.
             clockedInAt: recordedClockedInAt,
-            medicalAckAt: now,
             conditionsPurgeAfter: purgeAfter,
             clockedOutAt: recordedClockedOutAt,
             clockedOutReason: null,
@@ -406,7 +409,7 @@ export async function adminClockIn(
             walkId: locked.id,
             userId: member.id,
             clockedInAt: recordedClockedInAt,
-            medicalAckAt: now,
+            medicalAckAt: null,
             conditions: null,
             conditionsPurgeAfter: purgeAfter,
             clockedOutAt: recordedClockedOutAt,

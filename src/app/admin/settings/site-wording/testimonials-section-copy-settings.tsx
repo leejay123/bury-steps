@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
-import { updateTestimonialsSectionCopy, type ActionResult } from "@/server/actions";
+import { updateTestimonialsSectionCopy } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,10 +39,7 @@ export function TestimonialsSectionCopySettings({
   const [eyebrow, setEyebrow] = useState(testimonialsSectionEyebrow);
   const [title, setTitle] = useState(testimonialsSectionTitle);
   const [intro, setIntro] = useState(testimonialsSectionIntro);
-  const [state, action] = useActionState<ActionResult | null, FormData>(
-    updateTestimonialsSectionCopy,
-    null,
-  );
+  const [state, action, , clearError] = useSafeActionState(updateTestimonialsSectionCopy);
   useActionToast(state);
 
   useResetOnChange(
@@ -65,7 +63,7 @@ export function TestimonialsSectionCopySettings({
     >
       <form action={action} className="flex w-full flex-col gap-4">
         <div className="flex flex-col gap-2">
-          <Label htmlFor="testimonialsSectionEyebrow">Eyebrow (optional)</Label>
+          <Label htmlFor="testimonialsSectionEyebrow">Small line above the heading (optional)</Label>
           <Input
             id="testimonialsSectionEyebrow"
             maxLength={MAX_TESTIMONIALS_SECTION_EYEBROW}
@@ -106,6 +104,7 @@ export function TestimonialsSectionCopySettings({
                 setEyebrow(testimonialsSectionEyebrow);
                 setTitle(testimonialsSectionTitle);
                 setIntro(testimonialsSectionIntro);
+                clearError();
               }}
               type="button"
               variant="outline"

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { PAGE_X_BLEED } from "@/lib/page-x";
 import { Skeleton } from "@/components/ui/skeleton";
+import { typesetFont } from "@/app/typeset-font";
 
 export const LEGAL_LAST_UPDATED = "28 August 2026";
 
@@ -14,7 +15,7 @@ export type LegalSection = {
 
 function LegalBody({ children }: { children: ReactNode }) {
   return (
-    <div className="typeset typeset-docs max-w-[90ch]">
+    <div className={`typeset typeset-docs max-w-[90ch] ${typesetFont.variable}`}>
       {children}
     </div>
   );

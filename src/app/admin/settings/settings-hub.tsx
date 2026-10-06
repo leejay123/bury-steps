@@ -25,12 +25,14 @@ export type SettingsHubPage = SettingsPageLink &
 
 export type SettingsHubGroup = { label: string; danger: boolean; pages: SettingsHubPage[] };
 
+// Every word typed has to appear somewhere on the row, in any order — so
+// "phone menu" or "menu phone" both find Site behaviour.
 function matches(link: SettingsPageLink & SettingsRowState, needle: string): boolean {
-  return [link.title, link.description, link.keywords, link.status, link.attention]
+  const haystack = [link.title, link.description, link.keywords, link.status, link.attention]
     .filter(Boolean)
     .join(" ")
-    .toLowerCase()
-    .includes(needle);
+    .toLowerCase();
+  return needle.split(/\s+/).every((word) => haystack.includes(word));
 }
 
 function navigate() {
@@ -169,6 +171,15 @@ export function SettingsHub({ groups }: { groups: SettingsHubGroup[] }) {
   const [query, setQuery] = useState("");
   const needle = useDeferredValue(query).trim().toLowerCase();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  // While a search holds a row open (a sub-page matched), its button can
+  // still close it for this search only — without flipping how the row is
+  // left once the search is cleared.
+  const [searchClosed, setSearchClosed] = useState<{ needle: string; hrefs: string[] }>({
+    needle: "",
+    hrefs: [],
+  });
+  const closedThisSearch = (href: string) =>
+    searchClosed.needle === needle && searchClosed.hrefs.includes(href);
 
   const needsAttention = groups.flatMap((group) => group.pages.filter((page) => page.attention));
 
@@ -240,11 +251,20 @@ export function SettingsHub({ groups }: { groups: SettingsHubGroup[] }) {
               {group.pages.map(({ page, children, forceOpen }) =>
                 page.children ? (
                   <ExpandableRow
-                    expanded={forceOpen || Boolean(expanded[page.href])}
+                    expanded={forceOpen ? !closedThisSearch(page.href) : Boolean(expanded[page.href])}
                     key={page.href}
-                    onToggle={() =>
-                      setExpanded((current) => ({ ...current, [page.href]: !current[page.href] }))
-                    }
+                    onToggle={() => {
+                      if (!forceOpen) {
+                        setExpanded((current) => ({ ...current, [page.href]: !current[page.href] }));
+                        return;
+                      }
+                      const closed = closedThisSearch(page.href);
+                      const others = searchClosed.needle === needle ? searchClosed.hrefs : [];
+                      setSearchClosed({
+                        needle,
+                        hrefs: closed ? others.filter((href) => href !== page.href) : [...others, page.href],
+                      });
+                    }}
                     page={page}
                     visibleChildren={children}
                   />

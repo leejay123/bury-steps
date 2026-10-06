@@ -1,9 +1,10 @@
 "use client";
 
-import { startTransition, useActionState, useState } from "react";
-import { updateAnnouncementBanner, type ActionResult } from "@/server/actions";
+import { startTransition, useState } from "react";
+import { updateAnnouncementBanner } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FieldHint } from "@/components/drawer-form";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
@@ -40,7 +41,7 @@ export function AnnouncementSettings({
   const [on, setOn] = useState(enabled);
   const [message, setMessage] = useState(text);
   const [href, setHref] = useState(link);
-  const [state, action, pending] = useActionState<ActionResult | null, FormData>(updateAnnouncementBanner, null);
+  const [state, action, pending, clearError] = useSafeActionState(updateAnnouncementBanner);
   useActionToast(state);
 
   const reset = () => {
@@ -138,7 +139,10 @@ export function AnnouncementSettings({
           <Submit disabled={!dirty} pending={pending} />
           {dirty ? (
             <Button
-              onClick={reset}
+              onClick={() => {
+                reset();
+                clearError();
+              }}
               type="button"
               variant="outline"
             >

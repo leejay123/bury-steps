@@ -21,7 +21,7 @@ export default function SiteBehaviourSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description="Sitewide behaviour that isn't part of the homepage story — announcement bar, cookie notice, back to top, the footer name, Progress, clock-in, organiser invites, and the contact form."
+      description="Sitewide behaviour that isn't part of the homepage story — announcement bar, page transitions, the phone menu, cookie notice, back to top, the footer name, Progress, clock-in, organiser invites, and the contact form."
       title="Site behaviour"
     >
       <Suspense fallback={<SettingsContentSkeleton />}>
@@ -62,7 +62,7 @@ async function SiteBehaviourSettingsPageContent() {
         />
       </SettingsSectionGroup>
 
-      <SettingsSectionGroup description="Behaviour that applies across the whole site." title="Site chrome">
+      <SettingsSectionGroup description="Behaviour that applies across the whole site." title="Across the site">
         <CookieConsentSettings variant={theme.cookieConsentVariant} />
         <PageTransitionSettings mode={theme.pageTransition} />
         <MobileNavSettings style={theme.mobileNav} />

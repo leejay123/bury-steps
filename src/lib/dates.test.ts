@@ -1,7 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  formatCompactDateTime,
+  formatDate,
+  formatDateTime,
+  formatLongDateTime,
   formatMembershipAge,
   formatRelativeDays,
+  formatTime,
+  formatWalkDate,
+  formatWalkDay,
   formatWalkLength,
   londonMonthKey,
   londonWallClockToUtc,
@@ -167,5 +174,51 @@ describe("londonMonthKey", () => {
   it("uses the UK calendar month of the instant", () => {
     expect(londonMonthKey(londonWallClockToUtc("2026-08-30T14:00"))).toBe("2026-08");
     expect(londonMonthKey(new Date("2026-07-31T23:30:00.000Z"))).toBe("2026-08");
+  });
+});
+
+// Server and browser must format a date identically, or React discards the
+// server HTML (hydration error #418). These pin the exact text, whatever
+// locale data the runtime happens to ship.
+describe("display formats", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  // 18:30 BST, a Wednesday in September (the month Intl spells two ways).
+  const evening = new Date("2026-09-09T17:30:00.000Z");
+  // Just after midnight GMT (London and UTC agree in winter).
+  const midnight = new Date("2026-11-01T00:05:00.000Z");
+
+  it("writes walk days without a comma, adding the year only outside this one", () => {
+    vi.useFakeTimers({ now: new Date("2026-06-01T12:00:00.000Z") });
+    expect(formatWalkDay(evening)).toBe("Wed 9 Sept");
+    expect(formatWalkDay(new Date("2027-01-03T10:00:00.000Z"))).toBe("Sun 3 Jan 2027");
+  });
+
+  it("writes printed dates in full, in London time", () => {
+    expect(formatLongDateTime(evening)).toBe("Wednesday 9 September 2026, 18:30");
+    expect(formatLongDateTime(midnight)).toBe("Sunday 1 November 2026, 00:05");
+  });
+
+  it("writes walk dates and times in London time", () => {
+    expect(formatWalkDate(evening)).toBe("Wed 9 Sept, 18:30");
+    expect(formatWalkDate(midnight)).toBe("Sun 1 Nov, 00:05");
+    expect(formatTime(evening)).toBe("18:30");
+    expect(formatTime(midnight)).toBe("00:05");
+  });
+
+  it("writes plain and table dates", () => {
+    vi.useFakeTimers({ now: new Date("2026-06-01T12:00:00.000Z") });
+    expect(formatDate(evening)).toBe("9 Sept 2026");
+    expect(formatDateTime(evening)).toBe("09/09/2026, 18:30");
+    expect(formatCompactDateTime(evening)).toBe("9 Sept, 18:30");
+    expect(formatCompactDateTime(new Date("2025-12-31T09:00:00.000Z"))).toBe("31 Dec 2025, 09:00");
+  });
+
+  it("returns an empty string for an unreadable date", () => {
+    expect(formatWalkDay("not a date")).toBe("");
+    expect(formatWalkDate("not a date")).toBe("");
+    expect(formatDateTime("not a date")).toBe("");
   });
 });

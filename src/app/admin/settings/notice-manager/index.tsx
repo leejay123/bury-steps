@@ -21,6 +21,7 @@ import { AddNoticeForm, EditNoticeForm } from "./notice-form";
 import { NoticeCategoryManager } from "./notice-category-manager";
 import { RemoveNoticeButton } from "./remove-notice-button";
 import { WelcomeEnabledToggle } from "./welcome-enabled-toggle";
+import { useRetainedItem } from "@/hooks/use-retained";
 
 type DrawerMode = { type: "add" } | { type: "edit"; notice: NoticeView; index: number };
 
@@ -34,17 +35,20 @@ export function SiteNoticeManager({
   notices: NoticeView[];
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
+  // The drawer keeps its last item while it slides shut; each opening gets
+  // a fresh form (keyed on session).
+  const { shown, session } = useRetainedItem(mode);
   const [isPending, setIsPending] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const paging = usePagedList(notices, { resetKey: String(notices.length) });
   const noCategories = categories.length === 0;
-  const editingId = mode?.type === "edit" ? mode.notice.id : null;
+  const editingId = shown?.type === "edit" ? shown.notice.id : null;
   const liveIndex = editingId ? notices.findIndex((item) => item.id === editingId) : -1;
   const editing =
-    mode?.type === "edit"
+    shown?.type === "edit"
       ? {
-          notice: notices.find((item) => item.id === mode.notice.id) ?? mode.notice,
-          index: liveIndex < 0 ? mode.index : liveIndex,
+          notice: notices.find((item) => item.id === shown.notice.id) ?? shown.notice,
+          index: liveIndex < 0 ? shown.index : liveIndex,
         }
       : null;
 
@@ -168,8 +172,9 @@ export function SiteNoticeManager({
                 : "Members see it in the bell; a full page also appears on Notices."}
             </DrawerDescription>
           </DrawerHeader>
-          {mode?.type === "add" ? (
+          {shown?.type === "add" ? (
             <AddNoticeForm
+              key={session}
               categories={categories}
               disabled={false}
               onPendingChange={setIsPending}
@@ -179,7 +184,7 @@ export function SiteNoticeManager({
           {editing ? (
             <EditNoticeForm
               categories={categories}
-              key={editing.notice.id}
+              key={`${session}-${editing.notice.id}`}
               notice={editing.notice}
               onPendingChange={setIsPending}
               onSaved={() => setMode(null)}

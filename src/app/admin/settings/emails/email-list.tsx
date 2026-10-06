@@ -1,13 +1,12 @@
 "use client";
 
-import { startTransition, useActionState, useState } from "react";
+import { startTransition, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import {
   resetEmailTemplate,
   sendTestEmailTemplate,
   setEmailEnabled,
   updateEmailTemplate,
-  type ActionResult,
 } from "@/server/actions";
 import type { EmailTemplateMeta, EmailTemplateOverrideValues } from "@/lib/email/registry";
 import { MAX_EMAIL_TEMPLATE_BODY, MAX_EMAIL_TEMPLATE_SUBJECT } from "@/lib/email/template-limits";
@@ -15,8 +14,20 @@ import { useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
 import { useControlledDrawerDismissGuard } from "@/hooks/use-controlled-drawer";
 import { useOptimisticSettingToggle } from "@/hooks/use-optimistic-setting-toggle";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { DrawerFormFooter, FieldHint } from "@/components/drawer-form";
 import { FormError } from "@/components/form-error";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -64,9 +75,9 @@ function EmailEditDrawer({
   });
 
   const [saveState, saveAction, saving] = useNotifyActionState(updateEmailTemplate, onClose);
-  const [testState, testAction, testing] = useActionState<ActionResult | null, FormData>(sendTestEmailTemplate, null);
+  const [testState, testAction, testing] = useSafeActionState(sendTestEmailTemplate);
   useActionToast(testState);
-  const [resetState, resetAction, resetting] = useActionState<ActionResult | null, FormData>(resetEmailTemplate, null);
+  const [resetState, resetAction, resetting] = useSafeActionState(resetEmailTemplate);
   useActionToast(resetState);
 
   const dirty = subject !== savedSubject || body !== savedBody;
@@ -140,15 +151,26 @@ function EmailEditDrawer({
                   {testing ? "Sending…" : "Send test to me"}
                 </Button>
                 {isCustomized ? (
-                  <Button
-                    disabled={resetting}
-                    onClick={() => run(resetAction)}
-                    size="sm"
-                    type="button"
-                    variant="outline"
-                  >
-                    {resetting ? "Resetting…" : "Reset to default"}
-                  </Button>
+                  // Asks first, like the site's other changes that can't be undone.
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button disabled={resetting} size="sm" type="button" variant="outline">
+                        {resetting ? "Resetting…" : "Reset to default"}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Put back the standard wording?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Your changes to this email&apos;s subject and message will be lost.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Keep my wording</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => run(resetAction)}>Reset</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 ) : null}
               </div>
               <FieldHint>

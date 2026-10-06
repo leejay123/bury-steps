@@ -1,13 +1,12 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { ChevronRight, Plus, Trash2 } from "lucide-react";
 import {
   createJourneyEvent,
   deleteJourneyEvent,
   updateJourneyEvent,
-  type ActionResult,
 } from "@/server/actions";
 import { utcToLondonWallClock } from "@/lib/dates";
 import {
@@ -19,6 +18,7 @@ import {
 import { canOrganiserEditJourney, walkStatus } from "@/lib/walk-window";
 import { useWalkClock } from "@/hooks/use-walk-clock";
 import { useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { FormError } from "@/components/form-error";
 import { DrawerFormFooter } from "@/components/drawer-form";
@@ -173,14 +173,8 @@ export function WalkJourneyManager({
     walkStatus(walk, now) === "in-progress" ? utcToLondonWallClock(now) : defaultHappenedAt;
 
   const [mode, setMode] = useState<Mode | null>(null);
-  const [createState, createAction, createPending] = useActionState<ActionResult | null, FormData>(
-    createJourneyEvent,
-    null,
-  );
-  const [updateState, updateAction, updatePending] = useActionState<ActionResult | null, FormData>(
-    updateJourneyEvent,
-    null,
-  );
+  const [createState, createAction, createPending] = useSafeActionState(createJourneyEvent);
+  const [updateState, updateAction, updatePending] = useSafeActionState(updateJourneyEvent);
   const pending = createPending || updatePending;
   useActionToast(createState, () => setMode(null));
   useActionToast(updateState, () => setMode(null));
@@ -198,8 +192,8 @@ export function WalkJourneyManager({
         <div className="flex flex-col gap-1">
           <h2 className="font-medium">Journey</h2>
           <p className="text-sm text-muted-foreground">
-            Short moments from the walk. Preview opens the timeline in a drawer — same as members
-            see. Up to {MAX_JOURNEY_EVENTS}.
+            Short moments from the walk. View journey opens the timeline in a drawer — the same one
+            members see. Up to {MAX_JOURNEY_EVENTS}.
           </p>
         </div>
         <div

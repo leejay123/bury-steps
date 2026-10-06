@@ -158,7 +158,7 @@ export async function sendNewsletterCampaign(
   if (!body) return { ok: false, error: "Enter a message." };
 
   const resend = getResendClient();
-  if (!resend) return { ok: false, error: "RESEND_API_KEY isn't set — see the Vercel environment variables." };
+  if (!resend) return { ok: false, error: "Email sending isn't set up yet, so the newsletter wasn't sent." };
 
   const audienceId = await getOrCreateAudienceId();
   if (!audienceId) return { ok: false, error: "Could not reach Resend to set up the newsletter audience." };

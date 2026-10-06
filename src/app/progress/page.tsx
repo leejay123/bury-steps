@@ -46,7 +46,13 @@ export default function ProgressPage() {
         </p>
       </div>
       {/* The heading shows straight away; only the name rows wait. */}
-      <Suspense fallback={<ProgressSkeleton badges={0} cupBody="" cupTitle="" rows={0} togetherBody="" />}>
+      <Suspense
+        fallback={
+          <div className="contents" data-page-loading="">
+            <ProgressSkeleton badges={0} cupBody="" cupTitle="" rows={0} togetherBody="" />
+          </div>
+        }
+      >
         <ProgressCounted />
       </Suspense>
     </div>

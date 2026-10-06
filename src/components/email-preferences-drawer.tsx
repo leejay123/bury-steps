@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { useActionState, useTransition } from "react";
+import { useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   Drawer,
   DrawerContent,
@@ -10,9 +12,15 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Switch } from "@/components/ui/switch";
-import { useActionToast } from "@/hooks/use-action-toast";
+import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { actionResultErrorMessage, safeServerAction } from "@/lib/action-errors";
 import { EMAIL_PREFERENCE_OPTIONS, type EmailPreferences } from "@/lib/email-preferences";
-import { updateMyEmailPreferences, type ActionResult } from "@/server/actions";
+import { updateMyEmailPreferences } from "@/server/actions";
+
+// A failed save (offline, or a deploy mid-session) comes back as an error
+// instead of throwing — thrown here, in the header, it took down the whole
+// site to the bare error screen.
+const savePreference = safeServerAction(updateMyEmailPreferences);
 
 const OPEN_EVENT = "email-preferences:open";
 
@@ -38,11 +46,22 @@ export function EmailPreferencesDrawer({
   isAdmin: boolean;
   preferences: EmailPreferences;
 }) {
+  const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [prefs, setPrefs] = React.useState(preferences);
-  const [state, action] = useActionState<ActionResult | null, FormData>(updateMyEmailPreferences, null);
   const [, startTransition] = useTransition();
-  useActionToast(state);
+  // The header stays put across page changes, so take in the saved values
+  // whenever they change (e.g. after saving on the Email preferences page).
+  useResetOnChange(
+    [
+      preferences.emailAccidentAlerts,
+      preferences.emailNewsletter,
+      preferences.emailNotices,
+      preferences.emailProgress,
+      preferences.emailWalkAnnouncements,
+    ],
+    () => setPrefs(preferences),
+  );
 
   React.useEffect(() => {
     const onOpen = () => setOpen(true);
@@ -50,12 +69,23 @@ export function EmailPreferencesDrawer({
     return () => window.removeEventListener(OPEN_EVENT, onOpen);
   }, []);
 
+  // Saves just this switch, so it can't overwrite the others with an old
+  // copy, and puts it back if the save fails.
   function toggle(name: keyof EmailPreferences, checked: boolean) {
-    const next = { ...prefs, [name]: checked };
-    setPrefs(next);
+    setPrefs((current) => ({ ...current, [name]: checked }));
     const formData = new FormData();
-    for (const [key, value] of Object.entries(next)) if (value) formData.set(key, "on");
-    startTransition(() => action(formData));
+    formData.set("only", name);
+    if (checked) formData.set(name, "on");
+    startTransition(async () => {
+      const result = await savePreference(null, formData);
+      if (result.ok) {
+        toast.success(result.message ?? "Saved.");
+        router.refresh();
+      } else {
+        setPrefs((current) => ({ ...current, [name]: !checked }));
+        toast.error(actionResultErrorMessage(result.error));
+      }
+    });
   }
 
   const options = EMAIL_PREFERENCE_OPTIONS.filter((option) => !option.adminOnly || isAdmin);

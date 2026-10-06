@@ -77,7 +77,9 @@ export function ProgressClockInSection() {
             <p>
               Members who leave early tap <strong>Clock out</strong> and must give a reason. You
               see that reason on the walk page. Other members only see that the person is no
-              longer on the list — not why they left. Clock out is only offered while the walk
+              longer on the list — not why they left. Once the walk is over, Who attended lists
+              everyone who clocked in again, with &ldquo;Left early&rdquo; beside anyone who
+              did, so it matches the count on the Walks page. Clock out is only offered while the walk
               is still open — once it reaches Completed there is nothing left to leave early
               from, so a member who stayed clocked in the whole time just sees “You attended this
               walk”, with no button.
@@ -91,7 +93,8 @@ export function ProgressClockInSection() {
             </p>
             <p>
               After clocking out, they can clock in again on the same walk if the window is still
-              open.
+              open. They are back on the list, and their clock-in time stays the time they first
+              arrived.
             </p>
             <p>
               If they try too early, the page says when clock-in opens and shows a short “Before

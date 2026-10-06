@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { centerInScrollStrip } from "@/lib/scroll-strip";
 
 /** The Notices category chips. The same bar is used while the list loads, so a refresh does not wait for it. */
 export function NoticeCategoryBar({
@@ -26,6 +27,8 @@ export function NoticeCategoryBar({
             )}
             key={category.id}
             onClick={onSelect ? (event) => onSelect(category.id, event.currentTarget) : undefined}
+            // Tabbing to a chip that's off the edge brings it into view.
+            onFocus={onSelect ? (event) => centerInScrollStrip(event.currentTarget) : undefined}
             type="button"
           >
             {category.label}

@@ -1,16 +1,17 @@
 "use client";
 
-import { useActionState, useEffect, useState, type ComponentType, type ReactNode } from "react";
+import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import { AlertTriangle, Clock, Footprints, HeartPulse, NotebookPen, Users } from "lucide-react";
+import { toast } from "sonner";
 import {
   addAccidentReport,
   getWalkAttendeesForReportForm,
   updateAccidentReport,
-  type ActionResult,
 } from "@/server/actions";
-import { utcToLondonWallClock } from "@/lib/dates";
+import { formatWalkDay, utcToLondonWallClock } from "@/lib/dates";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -93,6 +94,12 @@ function InvolvedMembersField({
         }
         return [...merged.values()];
       });
+    }).catch(() => {
+      // A dropped connection: stop "Loading attendees…" and say so. Anyone
+      // already tagged stays tagged.
+      if (cancelled) return;
+      setLoadedForWalkId(walkId);
+      toast.error("Could not load this walk’s attendees. Check your connection and try again.");
     });
     return () => {
       cancelled = true;
@@ -182,7 +189,9 @@ function ReportFields({
             <SelectItem value="none">No linked walk</SelectItem>
             {walks.map((walk) => (
               <SelectItem key={walk.id} value={walk.id}>
-                {walk.title}
+                {/* Newest first, with the day, so two walks with the same
+                    title can be told apart. */}
+                {formatWalkDay(walk.startsAt)} · {walk.title}
               </SelectItem>
             ))}
           </SelectContent>
@@ -206,7 +215,9 @@ function ReportFields({
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <FieldLabel htmlFor={`${prefix}-who`} icon={Users}>
+        {/* Required in the sense that one of the two must be filled: a
+            tagged member or a name typed below. */}
+        <FieldLabel htmlFor={`${prefix}-who`} icon={Users} required>
           Who was involved
         </FieldLabel>
         <InvolvedMembersField
@@ -219,7 +230,11 @@ function ReportFields({
           defaultValue={report?.whoInvolved}
           id={`${prefix}-who`}
           name="whoInvolved"
-          placeholder="Anyone not tagged above — a passerby who isn't a member, say."
+          placeholder={
+            walkId === "none"
+              ? "Who was hurt or helped — names, or a description if they aren't members."
+              : "Anyone not tagged above — a passerby who isn't a member, say."
+          }
           rows={2}
         />
       </div>
@@ -264,10 +279,7 @@ export function AddForm({
   onSaved: () => void;
   walks: WalkOption[];
 }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    addAccidentReport,
-    null,
-  );
+  const [state, action, isPending] = useSafeActionState(addAccidentReport);
   useActionToast(state, onSaved);
   useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
   // Keeps everything typed if the save comes back with a problem.
@@ -294,10 +306,7 @@ export function EditForm({
   report: ReportView;
   walks: WalkOption[];
 }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    updateAccidentReport,
-    null,
-  );
+  const [state, action, isPending] = useSafeActionState(updateAccidentReport);
   useActionToast(state, onSaved);
   useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
   // Keeps everything typed if the save comes back with a problem.

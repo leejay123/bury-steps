@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Image from "next/image";
 import { ChevronRight, ImageIcon } from "lucide-react";
@@ -9,10 +9,10 @@ import {
   deleteHomepageSlide,
   reorderHomepageSlides,
   replaceHomepageSlideImage,
-  type ActionResult,
 } from "@/server/actions";
 import type { SlideView } from "@/lib/slides";
 import { preventDismissWhilePending, useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { EmptyState } from "@/components/empty-state";
@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { SettingsListHeader } from "../settings/settings-page";
 import { DrawerFormFooter, FieldHint } from "@/components/drawer-form";
+import { useRetainedItem } from "@/hooks/use-retained";
 
 type DrawerMode = { type: "add" } | { type: "edit"; slide: SlideView; index: number };
 
@@ -117,10 +118,7 @@ function AddDrawerForm({
   onPendingChange?: (pending: boolean) => void;
   onSaved: () => void;
 }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    addHomepageSlide,
-    null,
-  );
+  const [state, action, isPending] = useSafeActionState(addHomepageSlide);
   const formRef = useRef<HTMLFormElement>(null);
 
   useActionToast(state, () => {
@@ -149,10 +147,7 @@ function EditDrawerForm({
   onSaved: () => void;
   slide: SlideView;
 }) {
-  const [updateState, updateAction, isPending] = useActionState<ActionResult | null, FormData>(
-    replaceHomepageSlideImage,
-    null,
-  );
+  const [updateState, updateAction, isPending] = useSafeActionState(replaceHomepageSlideImage);
 
   useActionToast(updateState, onSaved);
   useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
@@ -236,6 +231,9 @@ export function HomepageSlideManager({
   slides: SlideView[];
 }) {
   const [mode, setMode] = useState<DrawerMode | null>(null);
+  // The drawer keeps its last item while it slides shut; each opening gets
+  // a fresh form (keyed on session).
+  const { shown, session } = useRetainedItem(mode);
   const [isPending, setIsPending] = useState(false);
   const slideIds = slides.map((item) => item.id);
   const { moveDown, moveUp, order } = useReorderableIds(slideIds, (ids) => {
@@ -246,13 +244,13 @@ export function HomepageSlideManager({
     .map((id) => slides.find((item) => item.id === id))
     .filter((item): item is SlideView => Boolean(item));
   const atLimit = slides.length >= maxSlides;
-  const editingId = mode?.type === "edit" ? mode.slide.id : null;
+  const editingId = shown?.type === "edit" ? shown.slide.id : null;
   const liveIndex = editingId ? slides.findIndex((item) => item.id === editingId) : -1;
   const editing =
-    mode?.type === "edit"
+    shown?.type === "edit"
       ? {
-          slide: slides.find((item) => item.id === mode.slide.id) ?? mode.slide,
-          index: liveIndex < 0 ? mode.index : liveIndex,
+          slide: slides.find((item) => item.id === shown.slide.id) ?? shown.slide,
+          index: liveIndex < 0 ? shown.index : liveIndex,
         }
       : null;
 
@@ -344,8 +342,9 @@ export function HomepageSlideManager({
                 : "Add a photo for the homepage carousel. JPEG, PNG or WebP, under 4 MB — it's shrunk automatically for the web."}
             </DrawerDescription>
           </DrawerHeader>
-          {mode?.type === "add" ? (
+          {shown?.type === "add" ? (
             <AddDrawerForm
+              key={session}
               disabled={atLimit}
               onPendingChange={setIsPending}
               onSaved={() => setMode(null)}
@@ -353,7 +352,7 @@ export function HomepageSlideManager({
           ) : null}
           {editing ? (
             <EditDrawerForm
-              key={editing.slide.id}
+              key={`${session}-${editing.slide.id}`}
               onPendingChange={setIsPending}
               onSaved={() => setMode(null)}
               slide={editing.slide}

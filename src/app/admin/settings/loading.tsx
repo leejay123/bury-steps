@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
  */
 export default function Loading() {
   return (
-    <div className="flex flex-col">
+    <div data-page-loading="" className="flex flex-col">
       <div className="border-b px-4 py-6 md:px-6">
         <div className="flex w-full flex-col gap-4">
           <Skeleton className="h-4 w-28" />

@@ -23,10 +23,11 @@ export function AdminPageFallback({
   list?: ReactNode;
 }) {
   return (
-    <div aria-busy="true" className="flex flex-col gap-6 px-4 py-6 md:px-6">
+    <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6 px-4 py-6 md:px-6">
       {title || description ? (
         <div className="flex flex-col gap-1.5">
-          {title ? <h2 className="font-semibold text-lg tracking-tight">{title}</h2> : null}
+          {/* The page's own heading is its one <h1> (AdminPageIntro). */}
+          {title ? <h1 className="font-semibold text-lg tracking-tight">{title}</h1> : null}
           {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
         </div>
       ) : null}

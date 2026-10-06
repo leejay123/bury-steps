@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronRight, Folders } from "lucide-react";
 import {
   addSiteNoticeCategory,
@@ -11,6 +11,7 @@ import {
 } from "@/server/actions";
 import { MAX_NOTICE_CATEGORY_LABEL, type NoticeCategoryView } from "@/lib/notices";
 import { useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { EmptyState } from "@/components/empty-state";
 import { ReorderButtons, useReorderableIds } from "@/components/sortable-rows";
@@ -47,6 +48,7 @@ import { Popover, PopoverContent, PopoverDescription, PopoverTrigger } from "@/c
 import { RemoveConfirm } from "./shared";
 import { SettingsListHeader } from "../settings-page";
 import { DrawerFormFooter } from "@/components/drawer-form";
+import { useRetainedItem } from "@/hooks/use-retained";
 
 type CategoryDrawerMode = { type: "add" } | { type: "edit"; category: NoticeCategoryView };
 
@@ -65,10 +67,7 @@ function CategoryLabelForm({
   submitLabel: string;
   submitPendingLabel: string;
 }) {
-  const [state, formAction, isPending] = useActionState<ActionResult | null, FormData>(
-    action,
-    null,
-  );
+  const [state, formAction, isPending] = useSafeActionState(action);
   const [label, setLabel] = useState(category?.label ?? "");
   useActionToast(state, onSaved);
   useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
@@ -107,6 +106,9 @@ function CategoryDrawer({
 }) {
   const [isPending, setIsPending] = useState(false);
   const open = mode !== null;
+  // Keeps the last category while the drawer slides shut; each opening
+  // gets a fresh form (keyed on session).
+  const { shown, session } = useRetainedItem(mode);
   return (
     <Drawer
       closeDisabled={isPending}
@@ -116,24 +118,25 @@ function CategoryDrawer({
     >
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>{mode?.type === "edit" ? "Edit category" : "Add a category"}</DrawerTitle>
+          <DrawerTitle>{shown?.type === "edit" ? "Edit category" : "Add a category"}</DrawerTitle>
           <DrawerDescription>
             Categories group full-page notices on the Notices page and in its filters.
           </DrawerDescription>
         </DrawerHeader>
         <div className="flex min-h-0 flex-1 flex-col">
-          {mode?.type === "edit" ? (
+          {shown?.type === "edit" ? (
             <CategoryLabelForm
               action={updateSiteNoticeCategory}
-              category={mode.category}
-              key={mode.category.id}
+              category={shown.category}
+              key={`${session}-${shown.category.id}`}
               onPendingChange={setIsPending}
               onSaved={() => onOpenChange(false)}
               submitLabel="Save"
               submitPendingLabel="Saving…"
             />
-          ) : mode?.type === "add" ? (
+          ) : shown?.type === "add" ? (
             <CategoryLabelForm
+              key={session}
               action={addSiteNoticeCategory}
               onPendingChange={setIsPending}
               onSaved={() => onOpenChange(false)}

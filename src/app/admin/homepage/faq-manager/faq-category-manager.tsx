@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronRight, Folders } from "lucide-react";
 import {
   addHomepageFaqCategory,
@@ -11,6 +11,7 @@ import {
 } from "@/server/actions";
 import { MAX_FAQ_CATEGORY_LABEL, type FaqCategoryView } from "@/lib/faqs";
 import { useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { EmptyState } from "@/components/empty-state";
 import { ReorderButtons, useReorderableIds } from "@/components/sortable-rows";
@@ -52,6 +53,7 @@ import {
 import { RemoveConfirm } from "./shared";
 import { DrawerFormFooter } from "@/components/drawer-form";
 import { SettingsListHeader } from "../../settings/settings-page";
+import { useRetainedItem } from "@/hooks/use-retained";
 
 type CategoryDrawerMode = { type: "add" } | { type: "edit"; category: FaqCategoryView };
 
@@ -70,10 +72,7 @@ function CategoryLabelForm({
   submitLabel: string;
   submitPendingLabel: string;
 }) {
-  const [state, formAction, isPending] = useActionState<ActionResult | null, FormData>(
-    action,
-    null,
-  );
+  const [state, formAction, isPending] = useSafeActionState(action);
   const [label, setLabel] = useState(category?.label ?? "");
   useActionToast(state, onSaved);
   useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
@@ -111,6 +110,9 @@ function CategoryDrawer({
   onOpenChange: (open: boolean) => void;
 }) {
   const [isPending, setIsPending] = useState(false);
+  // Keeps the last category while the drawer slides shut; each opening
+  // gets a fresh form (keyed on session).
+  const { shown, session } = useRetainedItem(mode);
 
   return (
     <Drawer
@@ -121,22 +123,23 @@ function CategoryDrawer({
     >
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>{mode?.type === "edit" ? "Edit category" : "Add a category"}</DrawerTitle>
+          <DrawerTitle>{shown?.type === "edit" ? "Edit category" : "Add a category"}</DrawerTitle>
           <DrawerDescription>This name shows as a filter on the public FAQ.</DrawerDescription>
         </DrawerHeader>
         <div className="flex min-h-0 flex-1 flex-col">
-          {mode?.type === "edit" ? (
+          {shown?.type === "edit" ? (
             <CategoryLabelForm
               action={updateHomepageFaqCategory}
-              category={mode.category}
-              key={mode.category.id}
+              category={shown.category}
+              key={`${session}-${shown.category.id}`}
               onPendingChange={setIsPending}
               onSaved={() => onOpenChange(false)}
               submitLabel="Save"
               submitPendingLabel="Saving…"
             />
-          ) : mode?.type === "add" ? (
+          ) : shown?.type === "add" ? (
             <CategoryLabelForm
+              key={session}
               action={addHomepageFaqCategory}
               onPendingChange={setIsPending}
               onSaved={() => onOpenChange(false)}

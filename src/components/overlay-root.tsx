@@ -236,13 +236,59 @@ export function UnlockingLink({
   );
 }
 
+/** Where each page was scrolled to, so Back/Forward can return there. */
+const scrollPositions = new Map<string, number>();
+const pageKey = () => window.location.pathname + window.location.search;
+
 export function UnlockPageOnNavigate() {
   // null until known in the browser (see client-pathname.tsx).
   const pathname = useClientPathname();
   const viewportStyleRef = useRef<HTMLStyleElement>(null);
+  // The page Back/Forward (popstate) is returning to, until it's handled. A
+  // same-page #link also fires popstate, so this only counts for that page.
+  const restoring = useRef<string | null>(null);
+
+  useEffect(() => {
+    let frame = 0;
+    const record = () => {
+      frame = 0;
+      scrollPositions.set(pageKey(), window.scrollY);
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(record);
+    };
+    const onPopState = () => {
+      restoring.current = pageKey();
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("popstate", onPopState);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("popstate", onPopState);
+    };
+  }, []);
 
   useEffect(() => {
     if (pathname === null) return;
+    // Back/Forward: return to where this page was, as browsers do on
+    // ordinary sites, instead of the top of a long list. The page may still
+    // be filling in, so keep trying for a moment until it's tall enough.
+    const returning = restoring.current === pageKey();
+    restoring.current = null;
+    if (returning) {
+      neutralizeStaleOverlays();
+      restorePagePointerEvents();
+      const target = scrollPositions.get(pageKey()) ?? 0;
+      let tries = 0;
+      let frame = 0;
+      const restore = () => {
+        window.scrollTo(0, target);
+        if (Math.abs(window.scrollY - target) > 2 && tries++ < 60) frame = requestAnimationFrame(restore);
+      };
+      restore();
+      return () => cancelAnimationFrame(frame);
+    }
     // Next's own "scroll to top on navigation" defers entirely to the
     // browser's native history.scrollRestoration when it's "manual" — which
     // the scroll-restoration script in layout.tsx deliberately sets, to stop

@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
-import { updateContactMessagesOwner, type ActionResult } from "@/server/actions";
+import { updateContactMessagesOwner } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -31,10 +32,7 @@ export function ContactMessagesOwnerSettings({
 }) {
   const initial = currentOwnerId ?? NO_ONE;
   const [ownerId, setOwnerId] = useState(initial);
-  const [state, action] = useActionState<ActionResult | null, FormData>(
-    updateContactMessagesOwner,
-    null,
-  );
+  const [state, action, , clearError] = useSafeActionState(updateContactMessagesOwner);
   useActionToast(state);
 
   useResetOnChange([initial], () => setOwnerId(initial));
@@ -43,13 +41,13 @@ export function ContactMessagesOwnerSettings({
 
   return (
     <SettingsSection
-      description="Exactly one organiser gets emailed when someone submits the public contact form, and can reply straight from that email — instead of every organiser who's opted in."
+      description="One organiser gets an email when someone sends the public contact form, and can reply straight from that email. Choose No one to stop these emails."
       title="Contact messages"
     >
       <form action={action} className="flex w-full flex-col gap-4">
         <input name="contactMessagesOwnerId" type="hidden" value={ownerId === NO_ONE ? "" : ownerId} />
         <div className="flex flex-col gap-2">
-          <Label htmlFor="contact-messages-owner">Alert and reply owner</Label>
+          <Label htmlFor="contact-messages-owner">Who gets them</Label>
           <Select onValueChange={setOwnerId} value={ownerId}>
             <SelectTrigger className="w-full sm:w-[16rem]" id="contact-messages-owner">
               <SelectValue />
@@ -68,7 +66,14 @@ export function ContactMessagesOwnerSettings({
         <div className="flex flex-wrap gap-2">
           <Submit disabled={!dirty} />
           {dirty ? (
-            <Button onClick={() => setOwnerId(initial)} type="button" variant="outline">
+            <Button
+              onClick={() => {
+                setOwnerId(initial);
+                clearError();
+              }}
+              type="button"
+              variant="outline"
+            >
               Discard
             </Button>
           ) : null}

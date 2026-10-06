@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { BoldIcon, ItalicIcon, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { actionErrorMessage } from "@/lib/action-errors";
 import { summarizeWalkDescription } from "@/server/actions";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -73,7 +74,12 @@ export function WalkDescriptionField({
   function onSummarize() {
     const text = textareaRef.current?.value ?? "";
     startTransition(async () => {
-      const result = await summarizeWalkDescription(text);
+      // Caught so a dropped connection is a toast, not the error page (which
+      // also threw away the walk being edited).
+      const result = await summarizeWalkDescription(text).catch((err: unknown) => ({
+        ok: false as const,
+        error: actionErrorMessage(err),
+      }));
       if (result.ok) {
         setSummary(result.summary);
       } else {
@@ -121,10 +127,14 @@ export function WalkDescriptionField({
       </div>
       <Textarea
         defaultValue={defaultValue}
-        disabled={isPending}
         id={id}
+        maxLength={2000}
         name={name}
         placeholder="Roughly 4 miles, one steady climb. Boots recommended after rain."
+        // Read-only, not disabled, while summarising: a disabled field is
+        // left out when the form is sent, so saving mid-summary dropped
+        // the description.
+        readOnly={isPending}
         ref={textareaRef}
         rows={3}
       />

@@ -85,10 +85,11 @@ export function isNavItemActive(pathname: string, href: string) {
     return pathname === "/walks" || pathname.startsWith("/w/");
   }
   if (href === "/admin/walks") {
-    return pathname === "/admin/walks" || pathname.startsWith("/admin/walks/");
+    // An organiser's Walks link: their walk tools and the walks themselves.
+    return pathname === "/admin/walks" || pathname.startsWith("/admin/walks/") || pathname.startsWith("/w/");
   }
   if (href === "/admin/settings") {
-    return pathname.startsWith("/admin/settings") || pathname.startsWith("/admin/homepage");
+    return pathname.startsWith("/admin/settings");
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }

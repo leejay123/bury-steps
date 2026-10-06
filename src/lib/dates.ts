@@ -130,39 +130,108 @@ export function combineLondonDateAndTime(date: Date, hour: number, minute: numbe
   return `${year}-${pad2(month)}-${pad2(day)}T${pad2(hour)}:${pad2(minute)}`;
 }
 
+/*
+ * Display formats are built from numbers and the fixed names below, not
+ * from Intl's own patterns. Intl's punctuation and abbreviations come from
+ * each runtime's locale data, which differs between Node, Chrome, Safari
+ * and Firefox (Node writes "Wed 7 Oct", Chrome "Wed, 7 Oct"; older Safari
+ * writes "Sep" where newer ones write "Sept"). A date rendered on the
+ * server then read again in the browser has to come out identical, or
+ * React throws away the server HTML and redraws the page (hydration
+ * error #418).
+ */
+const WEEKDAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"] as const;
+
+type LondonClock = { year: number; month: number; day: number; hour: number; minute: number };
+
+/** London wall-clock fields of an instant. Numeric parts only — the one
+ * piece of Intl output that is the same in every runtime. */
+function londonClock(date: Date): LondonClock {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: LONDON,
+      hourCycle: "h23",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+    })
+      .formatToParts(date)
+      .map((part) => [part.type, part.value]),
+  );
+  return {
+    year: Number(parts.year),
+    month: Number(parts.month),
+    day: Number(parts.day),
+    // Some engines still write midnight as "24" even with h23.
+    hour: Number(parts.hour) % 24,
+    minute: Number(parts.minute),
+  };
+}
+
+/** "Wed" for a calendar day (any time zone — the date is already London's). */
+export function weekdayShortOf(year: number, month: number, day: number): string {
+  return WEEKDAY_SHORT[new Date(Date.UTC(year, month - 1, day, 12)).getUTCDay()];
+}
+
+/** "7 Oct" for a calendar day. */
+export function dayMonthShortOf(month: number, day: number): string {
+  return `${day} ${MONTH_SHORT[month - 1]}`;
+}
+
+function clockText({ hour, minute }: LondonClock): string {
+  return `${pad2(hour)}:${pad2(minute)}`;
+}
+
+const WEEKDAY_LONG = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
+const MONTH_LONG = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+
+/** "Saturday 3 October 2026, 13:00" — for printed records. */
+export function formatLongDateTime(at: DateInput): string {
+  const date = toDate(at);
+  if (!isValidDate(date)) return "";
+  const c = londonClock(date);
+  const weekday = WEEKDAY_LONG[new Date(Date.UTC(c.year, c.month - 1, c.day, 12)).getUTCDay()];
+  return `${weekday} ${c.day} ${MONTH_LONG[c.month - 1]} ${c.year}, ${clockText(c)}`;
+}
+
+/** "Wed 7 Oct", or "Wed 7 Oct 2027" outside this year. */
 export function formatWalkDay(at: DateInput): string {
   const date = toDate(at);
   if (!isValidDate(date)) return "";
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: LONDON,
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    ...(londonYear(date) === londonYear(new Date()) ? {} : { year: "numeric" }),
-  }).format(date);
+  const c = londonClock(date);
+  const day = `${weekdayShortOf(c.year, c.month, c.day)} ${dayMonthShortOf(c.month, c.day)}`;
+  return c.year === londonClock(new Date()).year ? day : `${day} ${c.year}`;
 }
 
+/** "Wed 7 Oct, 10:05". */
 export function formatWalkDate(at: DateInput): string {
   const date = toDate(at);
   if (!isValidDate(date)) return "";
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: LONDON,
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
+  const c = londonClock(date);
+  return `${weekdayShortOf(c.year, c.month, c.day)} ${dayMonthShortOf(c.month, c.day)}, ${clockText(c)}`;
 }
 
+/** "10:05". */
 export function formatTime(at: DateInput): string {
   const date = toDate(at);
   if (!isValidDate(date)) return "";
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: LONDON,
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
+  return clockText(londonClock(date));
 }
 
 export function londonYear(at: DateInput): number {
@@ -176,15 +245,12 @@ export function londonYear(at: DateInput): number {
   );
 }
 
+/** "7 Oct 2026". */
 export function formatDate(at: DateInput): string {
   const date = toDate(at);
   if (!isValidDate(date)) return "";
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: LONDON,
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(date);
+  const c = londonClock(date);
+  return `${dayMonthShortOf(c.month, c.day)} ${c.year}`;
 }
 
 /** Monday of the UK ISO week, as `YYYY-MM-DD`. Sunday walks sit in that week. */
@@ -268,6 +334,14 @@ export function formatWalkLength(mins: number): string {
   return `${hourPart} ${minPart}`;
 }
 
+/** Compact length for cards and countdowns: "45 min", "1 h", "2 h 30 min". */
+export function formatWalkLengthShort(mins: number): string {
+  if (mins < 60) return `${mins} min`;
+  const hours = Math.floor(mins / 60);
+  const rest = mins % 60;
+  return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
+}
+
 /** Day-granularity relative phrase: "today", "yesterday", "3 days ago", "in 2 days". */
 export function formatRelativeDays(at: DateInput, now: DateInput = new Date()): string {
   const from = londonYmd(now);
@@ -282,26 +356,20 @@ export function formatRelativeDays(at: DateInput, now: DateInput = new Date()): 
   return diffDays > 0 ? `in ${diffDays} days` : `${Math.abs(diffDays)} days ago`;
 }
 
+/** "07/10/2026, 10:05". */
 export function formatDateTime(at: DateInput): string {
   const date = toDate(at);
   if (!isValidDate(date)) return "";
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: LONDON,
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(date);
+  const c = londonClock(date);
+  return `${pad2(c.day)}/${pad2(c.month)}/${c.year}, ${clockText(c)}`;
 }
 
 /** Short date and time for tables, e.g. "30 Aug, 13:00". Adds the year when it is not this year. */
 export function formatCompactDateTime(at: DateInput): string {
   const date = toDate(at);
   if (!isValidDate(date)) return "";
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: LONDON,
-    day: "numeric",
-    month: "short",
-    ...(londonYear(date) === londonYear(new Date()) ? {} : { year: "numeric" }),
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
+  const c = londonClock(date);
+  const day = dayMonthShortOf(c.month, c.day);
+  const dated = c.year === londonClock(new Date()).year ? day : `${day} ${c.year}`;
+  return `${dated}, ${clockText(c)}`;
 }

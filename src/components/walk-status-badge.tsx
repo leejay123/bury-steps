@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { useWalkClock } from "@/hooks/use-walk-clock";
 import { formatWalkDay } from "@/lib/dates";
 import { cn } from "@/lib/utils";
@@ -45,6 +46,9 @@ type WalkStatusInput = {
  */
 function useWalkStatusLabel({ cancelledAt, durationMins, endedAt = null, startsAt }: WalkStatusInput) {
   const now = useWalkClock({ cancelledAt, durationMins, endedAt, startsAt });
+  // The countdown moves every second, so the server's copy is already out
+  // of date by the time the browser hydrates it. Leave it off until then.
+  const hydrated = useHydrated();
   const start = new Date(startsAt);
   const walk = {
     cancelledAt: cancelledAt ? new Date(cancelledAt) : null,
@@ -54,14 +58,16 @@ function useWalkStatusLabel({ cancelledAt, durationMins, endedAt = null, startsA
   };
   const status = walkStatus(walk, now);
 
-  const countdown =
-    status === "starting-soon"
+  const countdown = !hydrated
+    ? null
+    : status === "starting-soon"
       ? formatStartingSoonCountdown(start, now)
       : status === "in-progress"
         ? formatInProgressCountdown(effectiveEndsAt(walk), now)
         : null;
   const label = countdown
-    ? `${LABEL[status]} · ${status === "in-progress" ? `${countdown} left` : countdown}`
+    ? // "in 7:02", not a bare "7:02", which read like a time of day.
+      `${LABEL[status]} · ${status === "in-progress" ? `${countdown} left` : `in ${countdown}`}`
     : LABEL[status];
   return { status, label };
 }
@@ -74,7 +80,9 @@ export function WalkStatusBadge({ className, ...walk }: WalkStatusInput & { clas
   const { status, label } = useWalkStatusLabel(walk);
   return (
     <Badge className={className} variant={VARIANT[status]}>
-      {label}
+      {/* The status itself can change between the server's render and
+          hydration (a walk starting that second); the clock corrects it. */}
+      <span suppressHydrationWarning>{label}</span>
     </Badge>
   );
 }
@@ -94,7 +102,7 @@ export function WalkStatusHeader({ className, ...walk }: WalkStatusInput & { cla
         className,
       )}
     >
-      <span>{label}</span>
+      <span suppressHydrationWarning>{label}</span>
       <span className="shrink-0">{formatWalkDay(walk.startsAt)}</span>
     </div>
   );

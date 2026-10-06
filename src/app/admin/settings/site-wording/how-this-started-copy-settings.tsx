@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { ChevronRight } from "lucide-react";
-import { updateHowThisStartedCopy, type ActionResult } from "@/server/actions";
+import { updateHowThisStartedCopy } from "@/server/actions";
 import { useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
 import { useControlledDrawerDismissGuard } from "@/hooks/use-controlled-drawer";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import {
@@ -143,10 +144,7 @@ export function HowThisStartedCopySettings({
   const [body, setBody] = useState(howThisStartedBody);
   const [bodyDrawerOpen, setBodyDrawerOpen] = useState(false);
   const { openSoon, onPointerDownOutside } = useControlledDrawerDismissGuard();
-  const [state, action] = useActionState<ActionResult | null, FormData>(
-    updateHowThisStartedCopy,
-    null,
-  );
+  const [state, action, , clearError] = useSafeActionState(updateHowThisStartedCopy);
   useActionToast(state);
 
   useResetOnChange(
@@ -189,7 +187,7 @@ export function HowThisStartedCopySettings({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="howThisStartedEyebrow">Eyebrow (optional)</Label>
+            <Label htmlFor="howThisStartedEyebrow">Small line above the heading (optional)</Label>
             <Input
               id="howThisStartedEyebrow"
               maxLength={MAX_HOW_THIS_STARTED_EYEBROW}
@@ -219,6 +217,7 @@ export function HowThisStartedCopySettings({
                   setTitle(howThisStartedTitle);
                   setEyebrow(howThisStartedEyebrow);
                   setTeaser(howThisStartedTeaser);
+                  clearError();
                 }}
                 type="button"
                 variant="outline"
@@ -242,16 +241,19 @@ export function HowThisStartedCopySettings({
         </DataList>
       </div>
 
+      {/* The story saves through the same action as the fields above, so it
+          sends their saved wording: whatever is typed up there and not yet
+          saved stays unsaved (it used to go live with the story). */}
       <FullStoryDrawer
         body={body}
-        eyebrow={eyebrow}
+        eyebrow={howThisStartedEyebrow}
         onBodyChange={setBody}
         onClose={closeBodyDrawer}
         onPointerDownOutside={onPointerDownOutside}
         onSaved={closeBodyDrawer}
         open={bodyDrawerOpen}
-        teaser={teaser}
-        title={title}
+        teaser={howThisStartedTeaser}
+        title={howThisStartedTitle}
       />
     </SettingsSection>
   );

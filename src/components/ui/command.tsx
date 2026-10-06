@@ -32,11 +32,14 @@ function CommandDialog({
   description = "Search the site",
   children,
   className,
+  onCloseAutoFocus,
   ...props
 }: React.ComponentProps<typeof Dialog> & {
   title?: string;
   description?: string;
   className?: string;
+  /** Where focus goes on close — needed when it's opened without a DialogTrigger. */
+  onCloseAutoFocus?: React.ComponentProps<typeof DialogContent>["onCloseAutoFocus"];
 }) {
   return (
     <Dialog {...props}>
@@ -45,6 +48,7 @@ function CommandDialog({
       <DialogContent
         className={cn("overflow-hidden p-0 **:data-[slot=command-input-wrapper]:pr-12", className)}
         closeButtonClassName="top-2 right-2"
+        onCloseAutoFocus={onCloseAutoFocus}
       >
         <DialogHeader className="sr-only">
           <DialogTitle>{title}</DialogTitle>

@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
-import { updateMonthlyClockInGoal, type ActionResult } from "@/server/actions";
+import { updateMonthlyClockInGoal } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,12 @@ import { SettingsSection } from "../settings-page";
 
 function goalToInput(value: number | null): string {
   return value && value > 0 ? String(value) : "";
+}
+
+/** "0" means none here, the same as leaving it blank (that's what saving it
+ * stores), so it isn't an unsaved change against a blank one. */
+function asSaved(value: string): string {
+  return value.trim() !== "" && Number(value) === 0 ? "" : value;
 }
 
 function Submit({ disabled }: { disabled: boolean }) {
@@ -32,15 +39,12 @@ export function ProgressSettingsForm({
 }) {
   const saved = goalToInput(monthlyClockInGoal);
   const [value, setValue] = useState(saved);
-  const [state, action] = useActionState<ActionResult | null, FormData>(
-    updateMonthlyClockInGoal,
-    null,
-  );
+  const [state, action, , clearError] = useSafeActionState(updateMonthlyClockInGoal);
   useActionToast(state);
 
   useResetOnChange([saved], () => setValue(saved));
 
-  const dirty = value !== saved;
+  const dirty = asSaved(value) !== saved;
 
   return (
     <SettingsSection
@@ -66,7 +70,14 @@ export function ProgressSettingsForm({
         <div className="flex flex-wrap gap-2">
           <Submit disabled={!dirty} />
           {dirty ? (
-            <Button onClick={() => setValue(saved)} type="button" variant="outline">
+            <Button
+              onClick={() => {
+                setValue(saved);
+                clearError();
+              }}
+              type="button"
+              variant="outline"
+            >
               Discard
             </Button>
           ) : null}

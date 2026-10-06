@@ -20,14 +20,22 @@ export function RetentionLockToggle({ locked, walkId }: { locked: boolean; walkI
 
   return (
     <div className="flex items-center gap-2">
-      {isPending ? (
-        <Loader2 aria-label="Saving" className="size-4 shrink-0 animate-spin text-muted-foreground" role="status" />
-      ) : (
-        <Checkbox checked={on} id={`retention-locked-${walkId}`} onCheckedChange={(v) => toggle(v === true)} />
-      )}
+      {/* Stays in place while saving (the spinner sits beside it): swapping
+          it out took keyboard focus with it. */}
+      <Checkbox
+        aria-busy={isPending || undefined}
+        checked={on}
+        id={`retention-locked-${walkId}`}
+        onCheckedChange={(v) => {
+          if (!isPending) toggle(v === true);
+        }}
+      />
       <Label className="text-sm font-normal" htmlFor={`retention-locked-${walkId}`}>
         Keep — don&rsquo;t delete automatically
       </Label>
+      {isPending ? (
+        <Loader2 aria-label="Saving" className="size-4 shrink-0 animate-spin text-muted-foreground" role="status" />
+      ) : null}
     </div>
   );
 }

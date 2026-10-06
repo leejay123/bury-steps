@@ -262,6 +262,10 @@ describe("clockIn", () => {
     await clockIn(null, clockInForm());
 
     expect(prismaMock.attendance.create).not.toHaveBeenCalled();
+    // Back on the walk, keeping the time they first arrived.
+    const data = prismaMock.attendance.updateMany.mock.calls[0][0].data;
+    expect(data.clockedOutAt).toBeNull();
+    expect(data).not.toHaveProperty("clockedInAt");
   });
 
   it("stores the reported conditions when the member has some to report", async () => {
@@ -397,7 +401,8 @@ describe("adminClockIn", () => {
 
     expect(prismaMock.attendance.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ walkId: "walk-1", userId: member.id }),
+        // No pre-walk check was ticked, so none is recorded for them.
+        data: expect.objectContaining({ walkId: "walk-1", userId: member.id, medicalAckAt: null }),
       }),
     );
     expect(result).toEqual({ ok: true, message: "Jo has been clocked in." });

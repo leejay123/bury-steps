@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import {
   useInView,
   useMotionValue,
@@ -39,11 +39,13 @@ export function NumberTicker({
   const isInView = useInView(ref, { once: true, margin: "0px 0px -10% 0px" });
   const reducedMotion = useReducedMotion();
 
-  const format = (n: number) =>
-    `${prefix}${Intl.NumberFormat("en-US", {
+  const format = useMemo(() => {
+    const number = new Intl.NumberFormat("en-US", {
       minimumFractionDigits: decimalPlaces,
       maximumFractionDigits: decimalPlaces,
-    }).format(n)}${suffix}`;
+    });
+    return (n: number) => `${prefix}${number.format(n)}${suffix}`;
+  }, [prefix, suffix, decimalPlaces]);
 
   useEffect(() => {
     if (!isInView) return;
@@ -58,14 +60,19 @@ export function NumberTicker({
     return () => clearTimeout(timeout);
   }, [isInView, reducedMotion, motionValue, springValue, value, delay]);
 
-  useEffect(
-    () =>
-      springValue.on("change", (latest) => {
-        if (ref.current) ref.current.textContent = format(latest);
-      }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [springValue, prefix, suffix, decimalPlaces]
-  );
+  // The spring keeps easing for a few seconds after the number on screen
+  // has stopped changing. Only touch the page when the text differs: writing
+  // it every frame re-laid out the hero ~60 times a second, which made
+  // scrolling stutter on slower computers.
+  useEffect(() => {
+    let shown = ref.current?.textContent ?? "";
+    return springValue.on("change", (latest) => {
+      const next = format(latest);
+      if (next === shown || !ref.current) return;
+      shown = next;
+      ref.current.textContent = next;
+    });
+  }, [springValue, format]);
 
   return (
     <span

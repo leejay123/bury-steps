@@ -1,6 +1,5 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 import { setSiteNoticeEnabled } from "@/server/actions";
 import type { NoticeView } from "@/lib/notices";
 import { useOptimisticSettingToggle } from "@/hooks/use-optimistic-setting-toggle";
@@ -22,11 +21,9 @@ export function WelcomeEnabledToggle({ notice }: { notice: NoticeView }) {
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
     >
-      {isPending ? (
-        <Loader2 aria-label="Saving" className="size-4 shrink-0 animate-spin" role="status" />
-      ) : (
-        <Switch checked={on} onCheckedChange={toggle} size="sm" />
-      )}
+      {/* Stays a switch while it saves (it flips straight away), so the
+          label doesn't jump and keyboard focus stays on it. */}
+      <Switch aria-busy={isPending || undefined} checked={on} onCheckedChange={toggle} size="sm" />
       <span>{on ? "On in bell" : "Hidden"}</span>
     </label>
   );

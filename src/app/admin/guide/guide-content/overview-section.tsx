@@ -54,7 +54,7 @@ export function OverviewSection({
               clock-ins together, not a race.
             </p>
             <p>
-              <Badge>Organisers</Badge> get Walks tools and Reports in the top menu, plus this
+              <Badge>Organisers</Badge> get Walks tools, and Reports under Manage in the top menu, plus this
               Guide and the same Progress page members see. You create walks, share the link, see
               the roster, record accident reports, and update a walk&rsquo;s Journey.
             </p>
@@ -80,14 +80,25 @@ export function OverviewSection({
             <p>
               Sign in and join happen on the account pages at accounts.burysteps-walkinggroup.co.uk.
               After signing in, members land on Walks. Organisers are sent to Walks in Organiser
-              tools. Walks, Members, Reports, Settings, and this Guide stay in the top menu, each with an icon beside the name. The menu loads those pages in the background, so a tap opens the page that is already ready. There is no
-              second row of tabs.
+              tools. Walks, Notices, and Progress sit in the top menu; the organiser pages (Members,
+              Messages, Reports, Settings, and this Guide — whichever you have) are under{" "}
+              <strong>Manage</strong>, a dropdown at the end of it, which stays highlighted while
+              you are on one of them. On a phone they are in the menu under Manage. The menu loads
+              those pages in the background, so a tap opens the page that is already ready. There
+              is no second row of tabs.
             </p>
             <p>
               Forms that open in a side panel (creating or editing a walk, a notice, a report, and
               so on) close only with the close button or Cancel — swiping or tapping beside the
-              panel won&apos;t close it, so a stray touch can&apos;t throw away what you&apos;ve
-              typed.
+              panel won&apos;t close it, and nor will Escape while you&apos;re typing in a box
+              or closing a dropdown, so a stray key or touch can&apos;t throw away what
+              you&apos;ve typed.
+            </p>
+            <p>
+              Dropdowns work from the keyboard too: with one selected, the up or down arrow opens
+              it, the arrows move through the choices, and typing a letter or a number jumps to
+              the choice that starts with it. Enter picks it; Escape closes the list without
+              changing anything.
             </p>
             <p>
               Signed-in people can open their profile from the round button in the top-right

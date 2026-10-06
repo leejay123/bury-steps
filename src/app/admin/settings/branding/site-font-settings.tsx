@@ -1,10 +1,11 @@
 "use client";
 
-import { startTransition, useActionState, useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { updateSiteFont, type ActionResult } from "@/server/actions";
+import { updateSiteFont } from "@/server/actions";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { SITE_FONTS, siteFontById, type SiteFontId } from "@/lib/site-font";
 import { Label } from "@/components/ui/label";
 import {
@@ -20,10 +21,7 @@ const SAMPLE = "Sunday afternoons, Bury and the surrounding countryside.";
 
 export function SiteFontSettings({ font }: { font: SiteFontId }) {
   const [selected, setSelected] = useState(font);
-  const [state, dispatch, isPending] = useActionState<ActionResult | null, FormData>(
-    updateSiteFont,
-    null,
-  );
+  const [state, dispatch, isPending] = useSafeActionState(updateSiteFont);
   const current = siteFontById(selected);
 
   useResetOnChange([font], () => setSelected(font));

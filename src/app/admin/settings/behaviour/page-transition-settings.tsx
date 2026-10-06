@@ -1,9 +1,10 @@
 "use client";
 
-import { startTransition, useActionState, useState } from "react";
-import { updatePageTransition, type ActionResult } from "@/server/actions";
+import { startTransition, useState } from "react";
+import { updatePageTransition } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { PageTransition } from "@/lib/page-transition";
@@ -12,8 +13,9 @@ import { SettingsSection } from "../settings-page";
 /** Saves as soon as a choice is picked, like the switches on this page. */
 export function PageTransitionSettings({ mode }: { mode: PageTransition }) {
   const [value, setValue] = useState(mode);
-  const [state, action] = useActionState<ActionResult | null, FormData>(updatePageTransition, null);
-  useActionToast(state);
+  const [state, action] = useSafeActionState(updatePageTransition);
+  // No inline error box here, so a failed save says so in a toast.
+  useActionToast(state, undefined, { toastErrors: true });
   useResetOnChange([mode], () => setValue(mode));
   useResetOnChange([state], () => {
     if (state && !state.ok) setValue(mode);

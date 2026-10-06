@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
-import { updateFacebookGroupUrl, type ActionResult } from "@/server/actions";
+import { updateFacebookGroupUrl } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,10 +24,7 @@ function Submit({ disabled }: { disabled: boolean }) {
 
 export function FacebookGroupSettings({ facebookGroupUrl }: { facebookGroupUrl: string }) {
   const [url, setUrl] = useState(facebookGroupUrl);
-  const [state, action] = useActionState<ActionResult | null, FormData>(
-    updateFacebookGroupUrl,
-    null,
-  );
+  const [state, action, , clearError] = useSafeActionState(updateFacebookGroupUrl);
   useActionToast(state);
 
   useResetOnChange([facebookGroupUrl], () => setUrl(facebookGroupUrl));
@@ -56,7 +54,14 @@ export function FacebookGroupSettings({ facebookGroupUrl }: { facebookGroupUrl: 
         <div className="flex flex-wrap gap-2">
           <Submit disabled={!dirty} />
           {dirty ? (
-            <Button onClick={() => setUrl(facebookGroupUrl)} type="button" variant="outline">
+            <Button
+              onClick={() => {
+                setUrl(facebookGroupUrl);
+                clearError();
+              }}
+              type="button"
+              variant="outline"
+            >
               Discard
             </Button>
           ) : null}

@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { updateTextSizes, type ActionResult } from "@/server/actions";
+import { updateTextSizes } from "@/server/actions";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { TEXT_SIZE_FIELDS, type TextSizeKey, type TextSizes } from "@/lib/text-sizes";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -25,7 +26,7 @@ const PREVIEW: Record<TextSizeKey, string> = {
 
 export function TextSizeSettings({ sizes }: { sizes: TextSizes }) {
   const [selected, setSelected] = useState(sizes);
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(updateTextSizes, null);
+  const [state, action, isPending] = useSafeActionState(updateTextSizes);
 
   useResetOnChange([sizes], () => setSelected(sizes));
 

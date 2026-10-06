@@ -90,16 +90,29 @@ export async function getWalkAttendeesForReport(
   return rows.map((row) => ({ id: row.user.id, name: memberDisplayName(row.user) }));
 }
 
-export async function getWalkMemberNames(walkId: string): Promise<string[]> {
+export type WalkMemberName = { name: string; leftEarly: boolean };
+
+/**
+ * Who is on a walk right now — or, once it has finished, everyone who
+ * clocked in, with the people who left early marked. They attended too:
+ * leaving them off made the walk page's count disagree with the All walks
+ * list, and a member who left early wasn't in the list they'd just been
+ * told they attended.
+ */
+export async function getWalkMemberNames(
+  walkId: string,
+  { finished = false }: { finished?: boolean } = {},
+): Promise<WalkMemberName[]> {
   const rows = await prisma.attendance.findMany({
-    where: { walkId, clockedOutAt: null },
+    where: { walkId, ...(finished ? {} : { clockedOutAt: null }) },
     orderBy: { clockedInAt: "asc" },
     select: {
+      clockedOutAt: true,
       user: { select: { firstName: true, lastName: true } },
     },
   });
 
-  return rows.map((row) => memberDisplayName(row.user));
+  return rows.map((row) => ({ name: memberDisplayName(row.user), leftEarly: row.clockedOutAt !== null }));
 }
 
 /** Headcounts only — used on the Walks cards so a busy walk does not ship every name. */

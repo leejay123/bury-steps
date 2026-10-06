@@ -6,6 +6,8 @@ import { getProgressEnabled } from "@/lib/progress-settings";
 import { SETTINGS_PAGE_GROUPS } from "@/lib/settings-pages";
 import { getSiteNoticeState } from "@/lib/site-notices";
 import { walkSharePath } from "@/lib/walk-slug";
+import { effectiveEndsAt } from "@/lib/walk-window";
+import { formatWalkDay } from "@/lib/dates";
 import { navItems } from "@/components/site-nav-items";
 
 export type SiteSearchItem = {
@@ -44,7 +46,7 @@ export async function buildSiteSearchIndex(user: User): Promise<SiteSearchGroup[
     prisma.walk.findMany({
       where: { cancelledAt: null, startsAt: { gt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 60) } },
       orderBy: { startsAt: "asc" },
-      select: { id: true, slug: true, token: true, title: true, startsAt: true, location: true },
+      select: { id: true, slug: true, token: true, title: true, startsAt: true, location: true, durationMins: true, endedAt: true },
       take: 40,
     }),
   ]);
@@ -66,10 +68,19 @@ export async function buildSiteSearchIndex(user: User): Promise<SiteSearchGroup[
   ];
 
   const now = Date.now();
-  const walkItem = (walk: (typeof walks)[number]): SiteSearchItem => ({
-    label: walk.title,
-    href: canAdminWalks ? `/admin/walks/${walk.id}` : walkSharePath(walk),
-  });
+  // Walk titles often repeat in a walking group, so each result shows its
+  // day, and can be found by place or date too.
+  const walkItem = (walk: (typeof walks)[number]): SiteSearchItem => {
+    const day = formatWalkDay(walk.startsAt);
+    return {
+      label: walk.title,
+      href: canAdminWalks ? `/admin/walks/${walk.id}` : walkSharePath(walk),
+      hint: day,
+      keywords: [walk.location ?? "", day],
+    };
+  };
+  // A walk that has started but not finished is still coming up, not recent.
+  const notOver = (walk: (typeof walks)[number]) => effectiveEndsAt(walk).getTime() > now;
 
   // Settings split by the hub's own groups (Homepage, Members…).
   const settingsGroups: SiteSearchGroup[] = perms
@@ -103,14 +114,14 @@ export async function buildSiteSearchIndex(user: User): Promise<SiteSearchGroup[
       id: "walks-upcoming",
       kind: "walks",
       heading: "Upcoming walks",
-      items: walks.filter((walk) => walk.startsAt.getTime() >= now).map(walkItem),
+      items: walks.filter(notOver).map(walkItem),
     },
     {
       id: "walks-past",
       kind: "walks",
       heading: "Recent walks",
       items: walks
-        .filter((walk) => walk.startsAt.getTime() < now)
+        .filter((walk) => !notOver(walk))
         .reverse()
         .map(walkItem),
     },

@@ -1,22 +1,25 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   addSiteNotice,
   updateSiteNotice,
-  type ActionResult,
 } from "@/server/actions";
+import { TriangleAlert } from "lucide-react";
 import {
   MAX_NOTICE_BELL_BODY,
   MAX_NOTICE_PAGE_BODY,
   MAX_NOTICE_TEASER,
+  MAX_NOTICE_TITLE,
   isPinnedNotice,
   type NoticeCategoryView,
   type NoticeKind,
   type NoticeView,
 } from "@/lib/notices";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,22 +37,33 @@ function NoticeFields({
   categories,
   disabled,
   notice,
+  onDirtyChange,
   prefix,
 }: {
   categories: NoticeCategoryView[];
   disabled?: boolean;
   notice?: NoticeView;
+  /** Editing: whether anything differs from the saved notice. */
+  onDirtyChange?: (dirty: boolean) => void;
   prefix: string;
 }) {
   const pinned = notice ? isPinnedNotice(notice) : false;
   const bodyMax = pinned ? MAX_NOTICE_TEASER : MAX_NOTICE_BELL_BODY;
+  const savedCategoryId = notice?.categoryId ?? categories[0]?.id ?? "";
   const [title, setTitle] = useState(notice?.title ?? "");
   const [body, setBody] = useState(notice?.body ?? "");
   const [kind, setKind] = useState<NoticeKind>(notice?.kind ?? "BELL");
   const [pageBody, setPageBody] = useState(notice?.pageBody ?? "");
-  const [categoryId, setCategoryId] = useState(
-    notice?.categoryId ?? categories[0]?.id ?? "",
-  );
+  const [categoryId, setCategoryId] = useState(savedCategoryId);
+  const dirty =
+    notice !== undefined &&
+    (title.trim() !== notice.title ||
+      body.trim() !== notice.body ||
+      kind !== notice.kind ||
+      (kind === "PAGE" && (pageBody.trim() !== (notice.pageBody ?? "") || categoryId !== savedCategoryId)));
+  useEffect(() => onDirtyChange?.(dirty), [dirty, onDirtyChange]);
+  // Bell only keeps no article: saving drops the full page and its link.
+  const losesPage = notice?.kind === "PAGE" && kind === "BELL";
 
   return (
     <div className="flex flex-col gap-3">
@@ -79,6 +93,17 @@ function NoticeFields({
               <SelectItem value="PAGE">Full page — teaser in the bell, article on Notices</SelectItem>
             </SelectContent>
           </Select>
+          {losesPage ? (
+            <Alert className="mt-1" variant="warning">
+              <TriangleAlert aria-hidden />
+              <AlertTitle>Saving removes the full page</AlertTitle>
+              <AlertDescription>
+                A bell-only notice has no article, so its full page text
+                {notice?.slug ? ` and its link (/notices/${notice.slug})` : ""} will be deleted. Switch
+                back to Full page to keep them.
+              </AlertDescription>
+            </Alert>
+          ) : null}
         </div>
       ) : (
         <input name="kind" type="hidden" value="BELL" />
@@ -90,6 +115,7 @@ function NoticeFields({
         <Input
           disabled={disabled}
           id={`${prefix}-title`}
+          maxLength={MAX_NOTICE_TITLE}
           name="title"
           onChange={(event) => setTitle(event.target.value)}
           placeholder="Sunday walk is at 2pm"
@@ -183,10 +209,7 @@ export function AddNoticeForm({
   onPendingChange?: (pending: boolean) => void;
   onSaved: () => void;
 }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    addSiteNotice,
-    null,
-  );
+  const [state, action, isPending] = useSafeActionState(addSiteNotice);
   const formRef = useRef<HTMLFormElement>(null);
   useActionToast(state, () => {
     formRef.current?.reset();
@@ -216,10 +239,10 @@ export function EditNoticeForm({
   onPendingChange?: (pending: boolean) => void;
   onSaved: () => void;
 }) {
-  const [updateState, updateAction, isPending] = useActionState<ActionResult | null, FormData>(
-    updateSiteNotice,
-    null,
-  );
+  const [updateState, updateAction, isPending] = useSafeActionState(updateSiteNotice);
+  // Save waits for a change: an unchanged save used to mark the notice
+  // as updated (and unread) for every member.
+  const [dirty, setDirty] = useState(false);
   useActionToast(updateState, onSaved);
   useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
 
@@ -230,11 +253,12 @@ export function EditNoticeForm({
           <NoticeFields
             categories={categories}
             notice={notice}
+            onDirtyChange={setDirty}
             prefix={`edit-${notice.id}`}
           />
           <FormError message={updateState && !updateState.ok ? updateState.error : null} />
         </div>
-        <DrawerFormFooter label="Save" pendingLabel="Saving…" />
+        <DrawerFormFooter disabled={!dirty} label="Save" pendingLabel="Saving…" />
       </form>
     </div>
   );

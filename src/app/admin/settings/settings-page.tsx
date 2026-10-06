@@ -237,7 +237,7 @@ export function SettingsListHeader({
  */
 export function SettingsContentSkeleton() {
   return (
-    <div aria-busy="true" aria-label="Loading settings" className="flex flex-col gap-3">
+    <div data-page-loading="" aria-busy="true" aria-label="Loading settings" className="flex flex-col gap-3">
       <Skeleton className="h-3 w-28" />
       <div className="flex flex-col gap-px overflow-hidden rounded-xl border bg-border">
         {[0, 1, 2].map((i) => (

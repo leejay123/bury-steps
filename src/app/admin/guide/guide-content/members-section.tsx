@@ -14,16 +14,18 @@ export function MembersSection() {
             name, email, whether they are an organiser or a member, when they joined, how long
             they have been a member, and how many clock-ins they have. The joined date is the day
             they first signed in. Filter by role (All, Organisers, or Members), sort the list
-            (newest or oldest first, name, or most clock-ins), and search by name, email, or
-            role. Search stays on this page only — it is not put in the address bar. If there
+            (newest or oldest first, name, or most clock-ins), and search by name (first, last,
+            or both), email, or role. The list is grouped under Owner, Organisers, and Members
+            headings, each showing how many there are in total, and the sort applies inside each
+            group. Search stays on this page only — it is not put in the address bar. If there
             are more than 20 people, Previous and Next at the bottom of the list take you through
             them.
           </p>
           <p>
             <strong>Needs attention</strong> narrows the list to the two things most worth a
             look: a member who has never clocked in, and an organiser invite that has expired.
-            Either is also marked with a small warning icon next to their name even with the
-            filter off, so they still stand out while browsing the full list.
+            Even with the filter off, a member who has never clocked in has a small warning icon
+            next to their name, and an expired invite says so on its row.
           </p>
           <p className="font-medium text-foreground">Walk history</p>
           <p>
@@ -39,6 +41,15 @@ export function MembersSection() {
             full page rather than a drawer, so it stays readable even for someone who has been
             on hundreds of walks.
           </p>
+          <p className="font-medium text-foreground">Log in as a member</p>
+          <p>
+            On a member’s own page, <strong>Log in as</strong> signs you in as them in this
+            browser, so you can see the site exactly as they do — handy when someone says a page
+            looks wrong. A banner stays on screen the whole time with a one-click way back to
+            your own account. They are not told, and every use is listed in the{" "}
+            <strong>Sign-in log</strong> at the bottom of Members (the most recent 20). Owners
+            only.
+          </p>
           <p className="font-medium text-foreground">Make organiser or member</p>
           <p>
             Only a site owner can open Members, promote a member, demote an organiser, or remove
@@ -47,8 +58,10 @@ export function MembersSection() {
           </p>
           <Steps>
             <li>
-              Open the person on <Link href="/admin/members">Members</Link>, or use the button
-              on their row in the list.
+              Use <strong>Make organiser</strong> or <strong>Make member</strong> on their row in{" "}
+              <Link href="/admin/members">Members</Link>, or on their own page. Less common
+              actions — Make owner, Add as co-owner, Cancel invite, Remove — are in the{" "}
+              <strong>⋯</strong> menu at the end of the row.
             </li>
             <li>
               Choose <strong>Make organiser</strong> (or <strong>Invite as organiser</strong> if
@@ -66,22 +79,23 @@ export function MembersSection() {
           <p className="font-medium text-foreground">Remove someone</p>
           <Steps>
             <li>
-              Choose the small Remove button, either on the Members list or on the member’s own
-              page. On a phone, role and Remove sit under the name so the email is not squeezed.
-              You cannot remove yourself. Owners must give up owner access first before they can
+              Choose <strong>Remove</strong> from the <strong>⋯</strong> menu on their row in the
+              Members list, or on the member’s own page. You cannot remove yourself. Owners must give up owner access first before they can
               be removed.
             </li>
             <li>
               Type <strong>&ldquo;Confirm&rdquo;</strong> in the box, then choose{" "}
               <strong>Remove member</strong>. Their login is deleted, their clock-ins go, and
               any walks, accident reports, or Journey beats they created are moved to you.
+              Accident reports keep their name: it is added to Who was involved on any report
+              they were tagged on, and a report they recorded gets a note saying so.
             </li>
           </Steps>
           <p>You cannot remove the last organiser, so the group is never left without one.</p>
           <p className="font-medium text-foreground">Owners</p>
           <p>
-            The group can have more than one owner — each is shown with an Owner badge instead of
-            Organiser. Owners have full access: Members, Messages, Settings, health notes on
+            The group can have more than one owner — owners are listed under their own Owner
+            heading, above the organisers. Owners have full access: Members, Messages, Settings, health notes on
             walks, and the owner-only actions above. Plain organisers keep walks and accident
             reports only.
           </p>
@@ -94,6 +108,40 @@ export function MembersSection() {
             organiser&rsquo;s own name to confirm, rather than just the word{" "}
             &ldquo;Confirm&rdquo; used elsewhere. You cannot remove the last remaining owner.
           </p>
+        </GuideBody>
+      </AccordionContent>
+    </AccordionItem>
+  );
+}
+
+/** "Messages" — the Contact us inbox. */
+export function MessagesSection() {
+  return (
+    <AccordionItem className="px-4 md:px-6" value="messages">
+      <AccordionTrigger className="text-base">Messages</AccordionTrigger>
+      <AccordionContent>
+        <GuideBody>
+          <p>
+            <Link href="/admin/messages">Messages</Link> (under Manage) collects everything sent
+            through the public <Link href="/contact">Contact us</Link> form, newest first (a
+            signed-in member finds their name and email already filled in there). Owners
+            only. Whoever is chosen in Settings → Site behaviour → Contact messages also gets an
+            email for each new one and can reply straight from it.
+          </p>
+          <Steps>
+            <li>
+              Search by name, email, or the message itself, pick a <strong>Date</strong> range,
+              or turn on <strong>Unread only</strong>. Clear filters puts the full list back.
+            </li>
+            <li>
+              Tap a message to read it in full. Its email and phone are links, and{" "}
+              <strong>Reply by email</strong> opens a reply in your email app.
+            </li>
+            <li>
+              <strong>Mark read</strong> once it has been dealt with. <strong>Remove</strong>{" "}
+              asks first, then deletes the message for good.
+            </li>
+          </Steps>
         </GuideBody>
       </AccordionContent>
     </AccordionItem>

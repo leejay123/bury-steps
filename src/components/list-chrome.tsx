@@ -268,7 +268,7 @@ export function MemberWalksHold({
 }) {
   const rows = upcomingCount ?? 0;
   return (
-    <>
+    <div className="contents" data-page-loading="">
       <Tabs defaultValue="upcoming">
         <TabsList>
           <TabsTrigger value="upcoming">{tabLabel("Upcoming", upcomingCount)}</TabsTrigger>
@@ -312,7 +312,7 @@ export function MemberWalksHold({
           </div>
         </section>
       ) : null}
-    </>
+    </div>
   );
 }
 

@@ -1,10 +1,12 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ChevronRight, Search, SearchX } from "lucide-react";
-import { noticeDateLabel, type NoticeCategoryView, type NoticeView } from "@/lib/notices";
+import { noticeDateLabel, noticeUnreadBadgeLabel, type NoticeCategoryView, type NoticeView } from "@/lib/notices";
+import { isNoticeReadInThisTab, noticesReadVersion, subscribeNoticesRead } from "@/lib/notice-events";
 import { usePagedList } from "@/hooks/use-paged-list";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
@@ -20,11 +22,19 @@ import { NoticeCategoryBar } from "@/components/notice-category-bar";
 export function NoticesBlogSection({
   categories,
   notices,
+  unreadIds = [],
 }: {
   categories: NoticeCategoryView[];
   notices: NoticeView[];
+  /** The member's unread notices (the bell's list). */
+  unreadIds?: string[];
 }) {
+  // Re-renders when a notice is read in this tab — on its own page, or in
+  // the bell — even if this page was kept hidden in the meantime.
+  useSyncExternalStore(subscribeNoticesRead, noticesReadVersion, () => 0);
+  const unread = new Set(unreadIds.filter((id) => !isNoticeReadInThisTab(id)));
   const listRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const deferredSearchTerm = useDeferredValue(searchTerm);
@@ -72,6 +82,7 @@ export function NoticesBlogSection({
         <InputGroup className="w-full max-w-md">
           <InputGroupInput
             aria-label="Search notices"
+            ref={searchRef}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Search notices…"
             value={searchTerm}
@@ -103,6 +114,8 @@ export function NoticesBlogSection({
                   onClick={() => {
                     setSearchTerm("");
                     setActiveCategory("all");
+                    // The button goes with the empty state; keep focus useful.
+                    searchRef.current?.focus();
                   }}
                   variant="outline"
                 >
@@ -122,9 +135,16 @@ export function NoticesBlogSection({
                   href={`/notices/${notice.slug}`}
                   key={notice.id}
                 >
-                  <p className="text-xs font-medium text-muted-foreground">
-                    {notice.categoryLabel ?? "Notice"}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      {notice.categoryLabel ?? "Notice"}
+                    </p>
+                    {unread.has(notice.id) ? (
+                      <Badge className="h-5 w-fit px-1.5 text-[10px]" variant="secondary">
+                        {noticeUnreadBadgeLabel(notice)}
+                      </Badge>
+                    ) : null}
+                  </div>
                   <div className="flex items-start justify-between gap-3">
                     <p className="font-medium">{notice.title}</p>
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground" />

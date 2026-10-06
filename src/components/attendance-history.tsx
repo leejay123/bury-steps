@@ -47,8 +47,12 @@ function matchesStatus(row: AttendanceHistoryRow, status: StatusFilter): boolean
 }
 
 export function AttendanceHistory({
+  emptyDescription = "When you clock in, those walks will show here.",
   rows,
 }: {
+  /** The no-walks line. The default speaks to the member themselves; an
+   * organiser looking at someone else's page gets it in the third person. */
+  emptyDescription?: string;
   rows: AttendanceHistoryRow[];
 }) {
   const [query, setQuery] = useState("");
@@ -92,7 +96,7 @@ export function AttendanceHistory({
   if (rows.length === 0) {
     return (
       <EmptyState
-        description="When you clock in, those walks will show here."
+        description={emptyDescription}
         icon={Footprints}
         title="No walks yet"
       />
@@ -121,7 +125,7 @@ export function AttendanceHistory({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All</SelectItem>
-              <SelectItem value="full">Stayed for walk</SelectItem>
+              <SelectItem value="full">Stayed for the whole walk</SelectItem>
               <SelectItem value="left-early">Left early</SelectItem>
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>

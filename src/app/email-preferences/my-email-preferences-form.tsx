@@ -1,19 +1,18 @@
 "use client";
 
-import { useActionState } from "react";
-import { useFormStatus } from "react-dom";
+import { startTransition, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { FormError } from "@/components/form-error";
-import { updateMyEmailPreferences, type ActionResult } from "@/server/actions";
+import { updateMyEmailPreferences } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { EMAIL_PREFERENCE_OPTIONS, type EmailPreferences } from "@/lib/email-preferences";
 
-function SaveButton() {
-  const { pending } = useFormStatus();
+function SaveButton({ pending }: { pending: boolean }) {
   return (
-    <Button disabled={pending} type="submit">
+    <Button className="self-start" disabled={pending} type="submit">
       {pending ? "Saving…" : "Save preferences"}
     </Button>
   );
@@ -22,16 +21,21 @@ function SaveButton() {
 /** Same layout as the token-based form (email-preferences/[token]) but acts
  * on the signed-in user directly — no token field needed. */
 export function MyEmailPreferencesForm(prefs: EmailPreferences & { isAdmin: boolean }) {
-  const [state, action] = useActionState<ActionResult | null, FormData>(
-    updateMyEmailPreferences,
-    null,
-  );
+  const [state, action, pending] = useSafeActionState(updateMyEmailPreferences);
   useActionToast(state);
+  // Sent by hand, not <form action>: React resets a form after each action,
+  // which flipped every box back to its old state until the saved values
+  // came back from the server — it looked as if Save hadn't worked.
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    startTransition(() => action(formData));
+  }
 
   const options = EMAIL_PREFERENCE_OPTIONS.filter((option) => !option.adminOnly || prefs.isAdmin);
 
   return (
-    <form action={action} className="flex flex-col gap-5">
+    <form className="flex flex-col gap-5" onSubmit={submit}>
       <div className="flex flex-col divide-y rounded-xl border">
         {options.map((option) => (
           <div className="flex items-start gap-3 px-4 py-3.5" key={option.name}>
@@ -56,7 +60,7 @@ export function MyEmailPreferencesForm(prefs: EmailPreferences & { isAdmin: bool
         ))}
       </div>
       <FormError message={state && !state.ok ? state.error : null} />
-      <SaveButton />
+      <SaveButton pending={pending} />
     </form>
   );
 }

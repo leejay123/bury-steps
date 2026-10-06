@@ -1,10 +1,11 @@
 "use client";
 
-import { startTransition, useActionState, useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { updateCookieConsentVariant, type ActionResult } from "@/server/actions";
+import { updateCookieConsentVariant } from "@/server/actions";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import {
   COOKIE_CONSENT_VARIANTS,
   cookieConsentVariantLabel,
@@ -22,10 +23,7 @@ import { SettingsSection } from "../settings-page";
 
 export function CookieConsentSettings({ variant }: { variant: CookieConsentVariant }) {
   const [selected, setSelected] = useState(variant);
-  const [state, dispatch, isPending] = useActionState<ActionResult | null, FormData>(
-    updateCookieConsentVariant,
-    null,
-  );
+  const [state, dispatch, isPending] = useSafeActionState(updateCookieConsentVariant);
 
   useResetOnChange([variant], () => setSelected(variant));
 
@@ -71,7 +69,7 @@ export function CookieConsentSettings({ variant }: { variant: CookieConsentVaria
           onValueChange={(value) => onVariantChange(value as CookieConsentVariant)}
           value={selected}
         >
-          <SelectTrigger className="w-full" id="cookie-consent-variant">
+          <SelectTrigger className="w-full sm:w-[24rem]" id="cookie-consent-variant">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

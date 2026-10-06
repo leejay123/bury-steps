@@ -66,7 +66,8 @@ export function WalksSection({
               recommended, stiles. Each shows on the walk page as its own line or tag, so the
               description can stay for the story of the walk. To rename these, change their
               icons, reorder them, add your own or remove ones you don&apos;t use, go to{" "}
-              <strong>Settings → Walk essentials</strong>; changes show on every walk straight away.
+              <strong>Settings → Walk essentials</strong> (anyone allowed to edit walks can open
+              it, even without other settings); changes show on every walk straight away.
             </li>
             <li>
               Most walks need nothing more for the location. For a what3words address or exact
@@ -113,7 +114,9 @@ export function WalksSection({
             starts selected, whichever day of the week it is. Temperatures are in Celsius. The
             card is hidden once the walk is completed or cancelled, and it does not appear if
             the walk has no map pin. If the walk is more than 16 days away, the card says the
-            forecast is not available yet. The forecast comes from Open-Meteo.
+            forecast is not available yet. The forecast comes from Open-Meteo. If Open-Meteo
+            can’t be reached, the card says the forecast couldn’t be loaded and the site tries
+            again a minute later — the rest of the walk page works as normal.
           </p>
           <p>
             You can publish more than one walk in a week. Each walk has its own day, time,
@@ -249,9 +252,11 @@ export function WalksSection({
             those rows one by one.
           </p>
           <p>
-            Download roster (CSV) gives you names, emails, times, and clock-out reasons — and,
-            for owners, any health notes for that walk, plus the emergency contact name and
-            phone. On a phone, the action buttons under the
+            Download roster (CSV) gives you names, emails, times, clock-out reasons, when each
+            person ticked the pre-walk check, and their emergency contact name and phone. Owners
+            also get any health notes for that walk. Someone you added with Add someone shows
+            “Not given” for the pre-walk check, because they never ticked it. The file is named
+            after the walk’s date and title. On a phone, the action buttons under the
             map (roster, calendar, Duplicate, Cancel or End walk, Edit, Remove) scroll sideways
             in one row.
           </p>

@@ -111,7 +111,8 @@ export function HomepageNoticesSection() {
             <p className="font-medium text-foreground">One-time Walks popup</p>
             <p>
               New members (no clock-ins yet) also see a one-time popup on Walks that explains find
-              a walk, clock in, and clock out. Organisers never land on that page, so use{" "}
+              a walk, clock in, and that clocking out is only for leaving early (staying to the end
+              needs nothing else). Organisers never land on that page, so use{" "}
               <strong>Preview welcome dialog</strong> at the top of Notices settings to check it.
               The preview does not change whether a real member has already dismissed theirs.
             </p>
@@ -127,7 +128,8 @@ export function HomepageNoticesSection() {
               <li>
                 Choose <strong>Bell only</strong> for a short message that stays in the drawer, or{" "}
                 <strong>Full page</strong> for a teaser in the bell plus a longer article on{" "}
-                <Link href="/notices">Notices</Link>.
+                <Link href="/notices">Notices</Link>. Switching a full-page notice to Bell only
+                deletes its article and link when you save — the drawer warns you first.
               </li>
               <li>
                 Add a title and a short bell message (up to {MAX_NOTICE_BELL_BODY} characters —
@@ -140,7 +142,8 @@ export function HomepageNoticesSection() {
                 new one arrives, and the number rolls. Opening it uses the same floating card
                 as the other drawers. Each unread row has a <strong>New</strong> or{" "}
                 <strong>Updated</strong> badge (Updated after you edit a notice they had already
-                seen). In the drawer, ordinary notices stay short; full-page teasers end with …
+                seen; Save stays greyed out until you change something, so an accidental save
+                can&apos;t mark it as updated). In the drawer, ordinary notices stay short; full-page teasers end with …
                 and say <strong>Read full notice</strong>. Tapping a row marks that notice read.{" "}
                 <strong>Mark all as read</strong> clears everything. Opening the bell does not
                 clear them on its own.
@@ -149,7 +152,9 @@ export function HomepageNoticesSection() {
             <p>
               On <Link href="/notices">Notices</Link>, members can search and filter by category.
               Each full-page notice is a simple list row (title, category, date, teaser),{" "}
-              {LIST_PAGE_SIZE} at a time with Previous and Next when the list is long. Full-page
+              {LIST_PAGE_SIZE} at a time with Previous and Next when the list is long, and one
+              they haven&apos;t read yet has the same <strong>New</strong> or{" "}
+              <strong>Updated</strong> badge as the bell. Full-page
               links use a short random suffix (like walk share links), so the address cannot be
               guessed from the title alone. On Walks, members can
               also search upcoming walks by title or meeting point. If you edit a notice, it shows

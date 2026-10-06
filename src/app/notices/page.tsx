@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth";
 import { PAGE_X_BLEED } from "@/lib/page-x";
-import { getPageNotices, getSiteNoticeCategories } from "@/lib/site-notices";
+import { getPageNotices, getSiteNoticeCategories, getSiteNoticeState } from "@/lib/site-notices";
 import { NoticesBlogSection } from "@/components/notices-blog-section";
 import { NoticesSearchChrome } from "@/components/list-chrome";
 import { NoticeCategoryBar } from "@/components/notice-category-bar";
@@ -42,16 +42,19 @@ async function NoticesCounted() {
 }
 
 async function NoticesForMember() {
-  await requireUser();
-  const [notices, categories] = await Promise.all([
+  const user = await requireUser();
+  const [notices, categories, { unreadIds }] = await Promise.all([
     getPageNotices(),
     getSiteNoticeCategories(),
+    // Same unread list as the bell, so the rows the Notices dot is about
+    // say "New" or "Updated".
+    getSiteNoticeState(user.id, user.firstName),
   ]);
 
   return (
     <div className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
       <RememberListCount count={Math.min(notices.length, LIST_PAGE_SIZE)} id="notices" />
-      <NoticesBlogSection categories={categories} notices={notices} />
+      <NoticesBlogSection categories={categories} notices={notices} unreadIds={unreadIds} />
     </div>
   );
 }
@@ -67,7 +70,7 @@ function NoticesFallback({
   categories: RememberedNoticeCategory[] | null;
 }) {
   return (
-    <div aria-busy="true" className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
+    <div data-page-loading="" aria-busy="true" className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
       <section className="flex flex-col gap-0">
         <div className="flex flex-col gap-3 px-4 py-6 md:px-6">
           <h1 className="text-lg font-semibold tracking-tight">Notices</h1>

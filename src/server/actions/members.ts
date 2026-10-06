@@ -62,6 +62,10 @@ export type MemberRoleFilter = "all" | "ADMIN" | "MEMBER";
 
 export type MemberSort = "oldest" | "newest" | "name" | "clockins";
 
+/** How many matching people are in each heading's group across every page,
+ * not just the rows on this one. */
+export type MemberGroupTotals = { OWNER: number; ADMIN: number; MEMBER: number };
+
 /** A plain member with no clock-ins yet and no invite in flight, or an
  * organiser invite that's expired — see MemberRow.needsAttention. */
 function attentionWhere(now: Date): Prisma.UserWhereInput {
@@ -94,25 +98,30 @@ export async function searchMembers({
   sort?: MemberSort;
   /** Only members needing a look — see MemberRow.needsAttention. */
   needsAttention?: boolean;
-}): Promise<{ rows: MemberRow[]; total: number }> {
+}): Promise<{ rows: MemberRow[]; total: number; groupTotals: MemberGroupTotals }> {
   const admin = await requireAdmin();
-  if (!admin.permMembersView) return { rows: [], total: 0 };
+  if (!admin.permMembersView) return { rows: [], total: 0, groupTotals: { OWNER: 0, ADMIN: 0, MEMBER: 0 } };
 
   const needle = query.trim();
   let searchWhere: Prisma.UserWhereInput | undefined;
   if (needle) {
+    // Every word has to match the name or email somewhere, so a full name
+    // ("Mark Walker") finds them as well as either half does.
+    const words = needle.split(/\s+/);
     const textMatch: Prisma.UserWhereInput = {
-      OR: [
-        { email: { contains: needle, mode: "insensitive" } },
-        { firstName: { contains: needle, mode: "insensitive" } },
-        { lastName: { contains: needle, mode: "insensitive" } },
-      ],
+      AND: words.map((word) => ({
+        OR: [
+          { email: { contains: word, mode: "insensitive" as const } },
+          { firstName: { contains: word, mode: "insensitive" as const } },
+          { lastName: { contains: word, mode: "insensitive" as const } },
+        ],
+      })),
     };
     // Same "type a role name to filter by it" shortcut the old client-side
     // search had — typing "adm"/"organiser"/"member" also matches by role.
     const lower = needle.toLowerCase();
     const roleMatches: Prisma.UserWhereInput["role"][] = [];
-    if (lower.length >= 3) {
+    if (lower.length >= 3 && words.length === 1) {
       if ("organiser".startsWith(lower) || "admin".startsWith(lower)) roleMatches.push("ADMIN");
       if ("member".startsWith(lower)) roleMatches.push("MEMBER");
     }
@@ -132,7 +141,11 @@ export async function searchMembers({
     ...(andConditions.length > 0 ? { AND: andConditions } : {}),
   };
 
-  const orderBy: Prisma.UserOrderByWithRelationInput[] =
+  // Owners, then organisers, then members — the groups the list shows under
+  // headings — so a group is never split by paging, then the chosen sort
+  // inside each group.
+  const groupOrder: Prisma.UserOrderByWithRelationInput[] = [{ isOwner: "desc" }, { role: "desc" }];
+  const sortOrder: Prisma.UserOrderByWithRelationInput[] =
     sort === "newest"
       ? [{ createdAt: "desc" }, { id: "desc" }]
       : sort === "name"
@@ -143,10 +156,14 @@ export async function searchMembers({
             // when rows share a createdAt millisecond.
             [{ createdAt: "asc" }, { id: "asc" }];
 
+  const orderBy = [...groupOrder, ...sortOrder];
+
   const skip = (Math.max(1, page) - 1) * LIST_PAGE_SIZE;
 
-  const [total, members, ownerIds] = await Promise.all([
+  const [total, ownersTotal, organisersTotal, members, ownerIds] = await Promise.all([
     prisma.user.count({ where }),
+    prisma.user.count({ where: { AND: [where, { isOwner: true }] } }),
+    prisma.user.count({ where: { AND: [where, { isOwner: false, role: "ADMIN" }] } }),
     prisma.user.findMany({
       where,
       orderBy,
@@ -176,6 +193,7 @@ export async function searchMembers({
   const nowMs = now.getTime();
   return {
     total,
+    groupTotals: { OWNER: ownersTotal, ADMIN: organisersTotal, MEMBER: total - ownersTotal - organisersTotal },
     rows: members.map((member) => {
       const inviteExpiresAtMs = member.organiserInviteExpiresAt?.getTime() ?? 0;
       const inviteExpired = member.organiserInviteSentAt ? inviteExpiresAtMs < nowMs : false;
@@ -261,6 +279,9 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
         where: { id: target.id },
         select: {
           id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
           role: true,
           isOwner: true,
           _count: {
@@ -289,11 +310,34 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
           data: { createdById: admin.id },
         });
       }
-      if (fresh._count.accidentReports > 0) {
-        await tx.accidentReport.updateMany({
-          where: { createdById: fresh.id },
-          data: { createdById: admin.id },
+      // Accident reports are a record, so they keep this person's name. Being
+      // tagged on one goes with the account, so the name is written into
+      // "Who was involved" first; a report they recorded has to belong to
+      // someone, so it moves to you with a note saying who recorded it.
+      const name = displayName(fresh);
+      const tagged = await tx.accidentReportMember.findMany({
+        where: { userId: fresh.id },
+        select: { report: { select: { id: true, whoInvolved: true } } },
+      });
+      for (const { report } of tagged) {
+        await tx.accidentReport.update({
+          where: { id: report.id },
+          data: { whoInvolved: [report.whoInvolved.trim(), name].filter(Boolean).join(", ") },
         });
+      }
+      if (fresh._count.accidentReports > 0) {
+        const recorded = await tx.accidentReport.findMany({
+          where: { createdById: fresh.id },
+          select: { id: true, organiserNotes: true },
+        });
+        const note = `Recorded by ${name}, whose account has since been removed.`;
+        for (const report of recorded) {
+          const notes = report.organiserNotes?.trim();
+          await tx.accidentReport.update({
+            where: { id: report.id },
+            data: { createdById: admin.id, organiserNotes: notes ? `${notes}\n\n${note}` : note },
+          });
+        }
       }
       if (fresh._count.journeyEvents > 0) {
         await tx.walkJourneyEvent.updateMany({
@@ -342,6 +386,7 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
       // it's removed from Clerk directly.
       console.error("deleteMember: Clerk login removal failed after database removal", err);
       revalidatePath("/admin");
+      revalidatePath("/admin/walks");
       revalidatePath("/admin/members");
       revalidatePath("/admin/messages");
       revalidatePath("/admin/settings");
@@ -355,6 +400,7 @@ export async function deleteMember(_prev: ActionResult | null, formData: FormDat
   }
 
   revalidatePath("/admin");
+  revalidatePath("/admin/walks");
   revalidatePath("/admin/members");
   // contactMessagesOwnerId SetNulls on delete — refresh messages + settings
   // so a stale "messages go to …" label does not linger.

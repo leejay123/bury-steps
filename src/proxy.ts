@@ -1,9 +1,7 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { PUBLIC_ROUTE_PATTERNS } from "@/lib/public-routes";
+import { isPublicPath, isUnknownAppPath } from "@/lib/public-routes";
 import { clerkAuthorizedParties, shouldProxyClerkFrontendApi } from "@/lib/urls";
-
-const isPublic = createRouteMatcher([...PUBLIC_ROUTE_PATTERNS]);
 
 export default clerkMiddleware(
   async (auth, req) => {
@@ -24,8 +22,11 @@ export default clerkMiddleware(
     }
 
     // Walk links can be opened without an account. Clock-in still needs a
-    // signed-in member; the walk page asks guests to join first.
-    if (!isPublic(req)) await auth.protect();
+    // signed-in member; the walk page asks guests to join first. A path that
+    // can't be a page at all goes straight to "page not found" — asking a
+    // visitor to sign in just to be told that afterwards was confusing.
+    const { pathname } = req.nextUrl;
+    if (!isPublicPath(pathname) && !isUnknownAppPath(pathname)) await auth.protect();
   },
   {
     authorizedParties: clerkAuthorizedParties(),

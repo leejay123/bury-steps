@@ -1,4 +1,4 @@
-import { formatDate, type DateInput } from "./dates";
+import { formatDate, formatTime, type DateInput } from "./dates";
 
 export const MAX_NOTICE_CATEGORIES = 8;
 export const MAX_NOTICE_CATEGORY_LABEL = 32;
@@ -54,8 +54,12 @@ export type NoticeView = {
  */
 export function noticeDateLabel(notice: { createdAt: DateInput; updatedAt: DateInput }): string {
   const created = formatDate(notice.createdAt);
+  // Same rule as the bell's "Updated" badge (noticeUnreadBadgeLabel), so a
+  // notice badged Updated always says when. Same-day edits give the time.
+  const edited = new Date(notice.updatedAt).getTime() - new Date(notice.createdAt).getTime() >= 1000;
+  if (!edited) return `Posted ${created}`;
   const updated = formatDate(notice.updatedAt);
-  return created === updated ? `Posted ${created}` : `Posted ${created} · Updated ${updated}`;
+  return `Posted ${created} · Updated ${updated === created ? formatTime(notice.updatedAt) : updated}`;
 }
 
 export function isPinnedNotice(notice: Pick<NoticeView, "systemKey">): boolean {
@@ -90,7 +94,8 @@ export function noticeBodyForBellDrawer(notice: NoticeView): string {
   const text = overflow ? notice.body.slice(0, max).trimEnd() : notice.body;
 
   if (notice.kind === "PAGE" || overflow) {
-    return text.endsWith("…") ? text : `${text}…`;
+    // "mid-walk.…" read as a typo — the ellipsis replaces a closing full stop.
+    return text.endsWith("…") ? text : `${text.replace(/\.+$/, "")}…`;
   }
   return text;
 }

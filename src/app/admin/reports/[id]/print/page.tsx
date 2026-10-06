@@ -2,18 +2,25 @@ import { Suspense } from "react";
 import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { requirePermission, displayName } from "@/lib/auth";
+import { displayName, getOptionalUser, requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { formatDateTime } from "@/lib/dates";
+import { formatLongDateTime } from "@/lib/dates";
 import { involvedSummaryText } from "@/lib/accident-reports";
 import { getSiteTheme } from "@/lib/site-theme";
 import { PrintReport } from "./print-report";
 
 
 
-export const metadata: Metadata = {
-  title: "Accident report",
-};
+// The tab says "Accident report" only to an organiser looking at a real
+// report. Anyone else, or a link to one that has gone, gets the plain site
+// name like any other missing page.
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const user = await getOptionalUser();
+  if (user?.role !== "ADMIN") return {};
+  const { id } = await params;
+  const exists = await prisma.accidentReport.count({ where: { id } });
+  return exists ? { title: "Accident report" } : {};
+}
 
 async function PrintAccidentReportPageContent({
   params,
@@ -39,7 +46,7 @@ async function PrintAccidentReportPageContent({
   return (
     <PrintReport
       createdBy={displayName(report.createdBy)}
-      happenedAt={formatDateTime(report.happenedAt)}
+      happenedAt={formatLongDateTime(report.happenedAt)}
       logoSrc={theme.logoSrc}
       reportBannerSrc={theme.reportBannerSrc}
       organiserNotes={report.organiserNotes}

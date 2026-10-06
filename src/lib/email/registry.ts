@@ -105,7 +105,7 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
     key: "organiserInvite",
     label: "Organiser invite",
     trigger:
-      "Sent instead of an instant promotion when \"Require accepted invite\" is on in Settings → Site behaviour — the invited member becomes an organiser only once they accept.",
+      "Sent instead of an instant promotion when \"Require new organisers to accept an invite\" is on in Settings → Site behaviour — the invited member becomes an organiser only once they accept.",
     category: "Member lifecycle",
     placeholders: [
       { token: "firstName", description: "Their first name (\"there\" if not set)" },
@@ -138,7 +138,8 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
   {
     key: "contactAdminAlert",
     label: "Contact form — alert to organisers",
-    trigger: "Sent to every organiser opted into contact form alerts when the contact form is submitted.",
+    trigger:
+      "Sent when the contact form is submitted, to the organiser chosen under Settings → Site behaviour → Contact messages (nobody, if no one is chosen).",
     category: "Organiser alerts",
     placeholders: [
       { token: "name", description: "The sender's name" },

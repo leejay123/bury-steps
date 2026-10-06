@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { updateAboutLists } from "@/server/actions";
 import { useNotifyActionState } from "@/hooks/use-action-toast";
 import { useControlledDrawerDismissGuard } from "@/hooks/use-controlled-drawer";
+import { useRetained } from "@/hooks/use-retained";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { DrawerFormFooter } from "@/components/drawer-form";
 import { FormError } from "@/components/form-error";
@@ -178,9 +179,7 @@ function AboutListDrawer({
   );
 
   // Stay mounted while closed so the open and close slide can play.
-  const retained = useRef(active);
-  if (active) retained.current = active;
-  const shown = active ?? retained.current;
+  const shown = useRetained(active);
 
   if (!shown) {
     return (

@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Pencil } from "lucide-react";
-import { updateWalk, type ActionResult } from "@/server/actions";
+import { updateWalk } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { DrawerFormFooter, useKeepFormOnError } from "@/components/drawer-form";
 import { Button } from "@/components/ui/button";
@@ -32,10 +33,7 @@ function EditWalkForm({
   scheduleLocked: boolean;
   walkId: string;
 }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    updateWalk,
-    null,
-  );
+  const [state, action, isPending] = useSafeActionState(updateWalk);
   // Keeps everything typed if saving comes back with a problem.
   const submit = useKeepFormOnError(action);
   useActionToast(state, onClose);

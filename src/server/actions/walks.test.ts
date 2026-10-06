@@ -85,7 +85,10 @@ vi.mock("@/lib/site-theme", async () => {
   return { getSiteTheme: vi.fn(async () => ({ walkEssentials: DEFAULT_WALK_ESSENTIALS })) };
 });
 vi.mock("@/lib/site-owner", () => ({ isOwner, actorStillOwner }));
-vi.mock("@/lib/walk-slug", () => ({ walkShareUrl: vi.fn(() => "https://example.com/w/test") }));
+vi.mock("@/lib/walk-slug", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/walk-slug")>()),
+  walkShareUrl: vi.fn(() => "https://example.com/w/test"),
+}));
 vi.mock("@/lib/walk-slug-server", () => ({ allocateWalkSlug }));
 // Real email sending pulls in site-theme.ts (next/cache's unstable_cache,
 // not mocked above) and hits the network — out of scope for these tests.
@@ -690,6 +693,15 @@ describe("updateWalk", () => {
     const updateCall = prismaMock.walk.update.mock.calls[0][0];
     expect(updateCall.data.startsAt).toEqual(original);
     expect(updateCall.data.durationMins).toBe(60);
+  });
+
+  it("keeps the share link's code when the title changes, so links already posted still work", async () => {
+    queryRaw.mockResolvedValueOnce([lockedWalk({ slug: "sunday-x7k2m9" })]);
+    prismaMock.walk.update.mockResolvedValueOnce({ token: "tok-1", slug: "burrs-x7k2m9" });
+
+    await updateWalk(null, updateForm({ title: "Burrs Country Park loop" }));
+
+    expect(prismaMock.walk.update.mock.calls[0][0].data.slug).toBe("burrs-x7k2m9");
   });
 
   it("rejects a new start time in the past when the schedule isn't locked", async () => {

@@ -32,6 +32,9 @@ export default function DashboardPage() {
         <p className="text-sm text-muted-foreground">
           Upcoming walks you can clock in to. Cancelled walks are in All walks, alongside completed
           ones. Past walks you attended are in History.
+        </p>
+        {/* Its own line, held open while it loads, so arriving doesn't push the list down. */}
+        <p className="min-h-5 text-sm text-muted-foreground">
           <Suspense fallback={null}>
             <MemberSince />
           </Suspense>
@@ -48,7 +51,6 @@ async function MemberSince() {
   const user = await requireUser();
   return (
     <>
-      {" "}
       Member since {formatDate(user.createdAt)} · {formatMembershipAge(user.createdAt)}.
     </>
   );

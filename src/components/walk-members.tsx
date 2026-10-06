@@ -6,6 +6,7 @@ import { DataList, DataListItem } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
 import { usePagedList } from "@/hooks/use-paged-list";
 import { initials } from "@/lib/names";
+import type { WalkMemberName } from "@/lib/walk-members";
 
 export function WalkMembers({
   completed = false,
@@ -13,14 +14,16 @@ export function WalkMembers({
 }: {
   /** Pass true once the walk's clock-in window has fully closed. */
   completed?: boolean;
-  names: string[];
+  names: WalkMemberName[];
 }) {
   const listRef = useRef<HTMLDivElement>(null);
   const paging = usePagedList(names);
+  const leftEarly = names.filter((member) => member.leftEarly).length;
+  const attended = `${names.length === 1 ? "1 person" : `${names.length} people`} attended`;
   const countLabel = completed
-    ? names.length === 1
-      ? "1 person stayed for the whole walk."
-      : `${names.length} people stayed for the whole walk.`
+    ? leftEarly > 0
+      ? `${attended} — ${leftEarly} left early.`
+      : `${attended}.`
     : names.length === 1
       ? "1 person has clocked in."
       : `${names.length} people have clocked in.`;
@@ -33,12 +36,15 @@ export function WalkMembers({
       </div>
       <div className="flex flex-col gap-4" ref={listRef}>
         <DataList>
-          {paging.paged.map((name, index) => (
-            <DataListItem className="cursor-default hover:bg-transparent" key={`${name}-${index}`}>
+          {paging.paged.map((member, index) => (
+            <DataListItem className="cursor-default hover:bg-transparent" key={`${member.name}-${index}`}>
               <Avatar className="size-8 shrink-0">
-                <AvatarFallback className="text-xs">{initials(name)}</AvatarFallback>
+                <AvatarFallback className="text-xs">{initials(member.name)}</AvatarFallback>
               </Avatar>
-              <span className="text-sm">{name}</span>
+              <span className="text-sm">{member.name}</span>
+              {completed && member.leftEarly ? (
+                <span className="ml-auto text-xs text-muted-foreground">Left early</span>
+              ) : null}
             </DataListItem>
           ))}
         </DataList>

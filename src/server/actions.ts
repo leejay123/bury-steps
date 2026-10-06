@@ -48,6 +48,7 @@ export {
   type MemberHistoryItem,
   type MemberRow,
   type MemberRoleFilter,
+  type MemberGroupTotals,
   type MemberSort,
 } from "./actions/members";
 
@@ -144,6 +145,7 @@ export { clearSiteCache, resetSiteToDefault } from "./actions/admin-cache";
 export { startImpersonation } from "./actions/impersonation";
 
 export {
+  getContactFormDefaults,
   submitContactMessage,
   markContactMessageRead,
   deleteContactMessage,

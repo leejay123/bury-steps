@@ -28,7 +28,7 @@ import { WalkJourneyManager } from "./walk-journey";
 import { SelfClockInPanel } from "./self-clock-in-panel";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { WalkAttendanceRow } from "./walk-attendance";
 
@@ -147,7 +147,9 @@ async function WalkDetailPageContent({
         </Alert>
         <Card className="gap-4">
           <CardHeader>
-            <CardTitle className="text-2xl">{walk.title}</CardTitle>
+            <h1 className="text-2xl leading-none font-semibold" data-slot="card-title">
+              {walk.title}
+            </h1>
           </CardHeader>
           <CardContent>
             <WalkFacts
@@ -235,11 +237,13 @@ async function WalkDetailPageContent({
         <Alert variant="destructive">
           <AlertTitle>This walk has been cancelled</AlertTitle>
           <AlertDescription>
-            {walk.cancelledReason ? `Reason: ${walk.cancelledReason}. ` : ""}
+            {walk.cancelledReason ? `Reason: ${walk.cancelledReason.replace(/[.!?]+$/, "")}. ` : ""}
             Members see it as cancelled and can no longer clock in.
-            {admin.permWalksEdit
-              ? " If it's going ahead after all, press Edit and save — the walk becomes upcoming again and members can join it."
-              : ""}
+            {admin.permWalksCancel
+              ? " If it's going ahead after all, press Reopen walk — it becomes upcoming again and members can join it."
+              : admin.permWalksEdit
+                ? " If it's going ahead after all, press Edit and save — the walk becomes upcoming again and members can join it."
+                : ""}
           </AlertDescription>
         </Alert>
       ) : null}
@@ -250,7 +254,10 @@ async function WalkDetailPageContent({
             {/* Status label: beside the title from sm up; on phones it sits
                 full width under "Created by" instead (see below). */}
             <div className="flex w-full min-w-0 items-center justify-between gap-4">
-              <CardTitle className="min-w-0 text-2xl">{walk.title}</CardTitle>
+              {/* The page's one <h1> (CardTitle is a div). */}
+              <h1 className="min-w-0 text-2xl leading-none font-semibold" data-slot="card-title">
+                {walk.title}
+              </h1>
               <WalkStatusBadge
                 cancelledAt={walk.cancelledAt?.toISOString() ?? null}
                 className="max-sm:hidden"
@@ -326,7 +333,7 @@ async function WalkDetailPageContent({
         canCancel={admin.permWalksCancel}
         canCreate={admin.permWalksCreate}
         canEdit={admin.permWalksEdit}
-        canExportRoster={admin.permWalksExport && admin.permWalksHealth}
+        canExportRoster={admin.permWalksExport}
         description={walk.description}
         distance={walk.distance}
         durationMins={walk.durationMins}

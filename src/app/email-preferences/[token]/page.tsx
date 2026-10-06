@@ -1,8 +1,11 @@
 import { Suspense } from "react";
 import { PageFallback } from "@/components/page-fallback";
-import { notFound } from "next/navigation";
+import Link from "next/link";
+import { MailX } from "lucide-react";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
+import { EmptyState } from "@/components/empty-state";
+import { Button } from "@/components/ui/button";
 import { EmailPreferencesForm } from "./email-preferences-form";
 
 
@@ -30,7 +33,23 @@ async function EmailPreferencesPageContent({
       emailAccidentAlerts: true,
     },
   });
-  if (!member) notFound();
+  // An old or mistyped link: say so and point to the signed-in page,
+  // rather than a bare "page not found".
+  if (!member) {
+    return (
+      <div className="flex flex-col gap-6">
+        <h1 className="text-lg font-semibold tracking-tight">Email preferences</h1>
+        <EmptyState
+          description="This link from an email no longer works. Sign in to choose which emails you get."
+          icon={MailX}
+          title="This link has stopped working"
+        />
+        <Button asChild className="self-start">
+          <Link href="/email-preferences">Sign in to your email preferences</Link>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">

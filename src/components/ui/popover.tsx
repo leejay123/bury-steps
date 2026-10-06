@@ -22,6 +22,9 @@ function PopoverContent({
   className,
   align = "center",
   sideOffset = 4,
+  // Keeps a popover a little in from the screen edge instead of touching it
+  // (on a phone, one opened near the side would otherwise run to the edge).
+  collisionPadding = 8,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
   const overlayRoot = useOverlayRoot()
@@ -31,6 +34,7 @@ function PopoverContent({
       <PopoverPrimitive.Content
         data-slot="popover-content"
         align={align}
+        collisionPadding={collisionPadding}
         sideOffset={sideOffset}
         className={cn(
           "z-[80] w-72 origin-(--radix-popover-content-transform-origin) rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-hidden data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",

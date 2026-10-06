@@ -33,7 +33,10 @@ export function ListPagination({
 
   function go(next: number) {
     onPageChange(next);
-    scrollToRef?.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+    // Wait a frame for the new page to be drawn: scrolling straight away
+    // started a smooth scroll that the browser then cancelled when the list
+    // changed height, leaving you mid-list or at the footer.
+    requestAnimationFrame(() => scrollListTop(scrollToRef?.current));
   }
 
   return (
@@ -58,4 +61,17 @@ export function ListPagination({
       </Pagination>
     </div>
   );
+}
+
+/** Bring the top of the list just under the sticky header, if it's above the screen. */
+function scrollListTop(list: HTMLElement | null | undefined) {
+  if (!list) return;
+  const header = document.querySelector("header[data-site-header]");
+  const headerHeight = header ? header.getBoundingClientRect().height : 0;
+  const top = list.getBoundingClientRect().top - headerHeight - 16;
+  if (top >= 0) return;
+  // Straight there, not a smooth scroll: the rows are swapped while it
+  // would still be gliding up the page, which stopped it partway (Next at
+  // the bottom of Members left you near the bottom of the next page).
+  window.scrollTo({ top: window.scrollY + top, behavior: "instant" });
 }

@@ -48,15 +48,27 @@ export function SiteSearchDialogInner({ initialOpen }: { initialOpen: boolean })
   const [failed, setFailed] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const loadedAt = React.useRef(0);
+  // What had focus when search opened. It's opened by a keyboard shortcut or
+  // an event rather than a DialogTrigger, so Radix has nowhere to send focus
+  // back to and it fell to the page itself.
+  const returnFocus = React.useRef<HTMLElement | null>(null);
 
   React.useEffect(() => {
+    const remember = () => {
+      const active = document.activeElement;
+      if (active instanceof HTMLElement && active !== document.body) returnFocus.current = active;
+    };
     const onKey = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
+        remember();
         setOpen((current) => !current);
       }
     };
-    const onOpen = () => setOpen(true);
+    const onOpen = () => {
+      remember();
+      setOpen(true);
+    };
     document.addEventListener("keydown", onKey);
     window.addEventListener(OPEN_EVENT, onOpen);
     return () => {
@@ -122,6 +134,15 @@ export function SiteSearchDialogInner({ initialOpen }: { initialOpen: boolean })
     <CommandDialog
       className="w-full sm:max-w-lg"
       description="Search pages, walks, notices and more"
+      onCloseAutoFocus={(event) => {
+        event.preventDefault();
+        const saved = returnFocus.current;
+        const fallback = [...document.querySelectorAll<HTMLElement>("[data-site-search]")].find(
+          (button) => button.getClientRects().length > 0,
+        );
+        (saved?.isConnected ? saved : fallback)?.focus({ preventScroll: true });
+        returnFocus.current = null;
+      }}
       onOpenChange={(next) => {
         setOpen(next);
         if (!next) setQuery("");
@@ -130,7 +151,9 @@ export function SiteSearchDialogInner({ initialOpen }: { initialOpen: boolean })
     >
       <Command shouldFilter={false}>
         <CommandInput onValueChange={setQuery} placeholder="Search pages, walks, notices…" value={query} />
-        <CommandList>
+        {/* A fixed height: the dialog is centred, so a list that grew and
+            shrank with each keystroke moved the box you're typing in. */}
+        <CommandList className="h-[min(20rem,45dvh)] max-h-none">
           {groups || failed ? (
             <CommandEmpty>{failed && !groups ? "Search couldn’t load. Try again." : "No results found."}</CommandEmpty>
           ) : null}

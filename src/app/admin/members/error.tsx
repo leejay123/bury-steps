@@ -13,7 +13,7 @@ export default function AdminMembersError({
     <RouteError
       description="Nothing was saved. Try again, or head back to the admin dashboard."
       error={error}
-      homeHref="/admin"
+      homeHref="/admin/walks"
       homeLabel="Admin home"
       reset={reset}
       title="Something went wrong loading members"

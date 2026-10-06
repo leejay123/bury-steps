@@ -1,15 +1,17 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
-import { submitContactMessage, type ActionResult } from "@/server/actions";
+import { getContactFormDefaults, submitContactMessage } from "@/server/actions";
+import { useSignedInPromise } from "@/components/signed-in-context";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { MAX_CONTACT_MESSAGE, MAX_CONTACT_NAME, MAX_CONTACT_PHONE } from "@/lib/contact";
+import { MAX_CONTACT_MESSAGE, MAX_CONTACT_NAME, MAX_CONTACT_PHONE, MIN_CONTACT_MESSAGE } from "@/lib/contact";
 
 function Submit() {
   const { pending } = useFormStatus();
@@ -21,12 +23,34 @@ function Submit() {
 }
 
 export function ContactForm() {
-  const [state, action] = useActionState<ActionResult | null, FormData>(
-    submitContactMessage,
-    null,
-  );
+  const [state, action] = useSafeActionState(submitContactMessage);
   const formRef = useRef<HTMLFormElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const signedIn = useSignedInPromise();
   useActionToast(state, () => formRef.current?.reset());
+
+  // A signed-in member's name and email go in for them, once the page
+  // knows who they are — never over anything already typed. (The page is
+  // the same ready-made one for everyone, so it can't arrive filled in.)
+  useEffect(() => {
+    let cancelled = false;
+    // Promise.resolve: what React hands down is a bare "thenable" whose
+    // then() can't be chained.
+    void Promise.resolve(signedIn)
+      .then((yes) => (yes ? getContactFormDefaults() : null))
+      .then((defaults) => {
+        if (cancelled || !defaults) return;
+        // As the fields' starting values, so they also come back after the
+        // form clears itself on a successful send.
+        if (nameRef.current && !nameRef.current.value) nameRef.current.defaultValue = defaults.name;
+        if (emailRef.current && !emailRef.current.value) emailRef.current.defaultValue = defaults.email;
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [signedIn]);
 
   return (
     <form action={action} className="flex w-full flex-col gap-4" ref={formRef}>
@@ -38,15 +62,16 @@ export function ContactForm() {
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="contact-name">Full name</Label>
-        <Input id="contact-name" maxLength={MAX_CONTACT_NAME} name="name" required />
+        <Input autoComplete="name" id="contact-name" maxLength={MAX_CONTACT_NAME} name="name" ref={nameRef} required />
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="contact-email">Email</Label>
-        <Input id="contact-email" name="email" required type="email" />
+        <Input autoComplete="email" id="contact-email" name="email" ref={emailRef} required type="email" />
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="contact-phone">Phone (optional)</Label>
         <Input
+          autoComplete="tel"
           id="contact-phone"
           maxLength={MAX_CONTACT_PHONE}
           name="phone"
@@ -58,6 +83,7 @@ export function ContactForm() {
         <Textarea
           id="contact-message"
           maxLength={MAX_CONTACT_MESSAGE}
+          minLength={MIN_CONTACT_MESSAGE}
           name="message"
           required
           rows={5}

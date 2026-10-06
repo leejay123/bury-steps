@@ -1,5 +1,6 @@
 "use client";
 
+import { createContext, useContext, useId } from "react";
 import { cn } from "@/lib/utils";
 
 /** Mobile: stack body above actions. Desktop: one horizontal row. */
@@ -21,43 +22,54 @@ export function DataList({ className, ...props }: React.ComponentProps<"ul">) {
   );
 }
 
+const RowLabelContext = createContext<string | undefined>(undefined);
+
 export function DataListItem({
+  "aria-label": ariaLabel,
+  children,
   className,
   onClick,
-  onKeyDown,
-  role,
-  tabIndex,
   ...props
 }: React.ComponentProps<"li">) {
+  const labelId = useId();
   // Rows that open something on click (a drawer, a detail view) instead of
-  // wrapping their content in a real link need the same keyboard support a
-  // link would give for free: focusable, and Enter/Space activates it.
-  const clickable = typeof onClick === "function";
-
+  // wrapping their content in a real link get a real button for keyboard
+  // and screen-reader users, named by the row's text (DataListBody). The
+  // row itself used to be the "button", with Remove / Mark read buttons
+  // inside it — read out as one long button, and not valid in a list.
+  if (typeof onClick !== "function") {
+    return (
+      // No pointer of its own: a row that opens something does so through a
+      // link inside it, which brings its own.
+      <li className={cn("flex items-center gap-3 border-b p-3 last:border-0 hover:bg-muted/50", className)} {...props}>
+        {children}
+      </li>
+    );
+  }
   return (
     <li
       className={cn(
-        "flex cursor-pointer items-center gap-3 border-b p-3 last:border-0 hover:bg-muted/50",
-        clickable &&
-          "focus-visible:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "relative flex cursor-pointer items-center gap-3 border-b p-3 last:border-0 hover:bg-muted/50",
+        "has-[>[data-row-open]:focus-visible]:bg-muted/50 has-[>[data-row-open]:focus-visible]:ring-2 has-[>[data-row-open]:focus-visible]:ring-ring has-[>[data-row-open]:focus-visible]:ring-inset",
         className,
       )}
       onClick={onClick}
-      onKeyDown={(event) => {
-        onKeyDown?.(event);
-        // Ignore keydowns that bubbled up from a nested interactive element
-        // (e.g. the "Remove" button in DataListActions) — only the row
-        // itself being focused should trigger the row's own action.
-        if (!clickable || event.defaultPrevented || event.target !== event.currentTarget) return;
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onClick?.(event as unknown as React.MouseEvent<HTMLLIElement>);
-        }
-      }}
-      role={clickable ? (role ?? "button") : role}
-      tabIndex={clickable ? (tabIndex ?? 0) : tabIndex}
       {...props}
-    />
+    >
+      <button
+        aria-label={ariaLabel}
+        aria-labelledby={ariaLabel ? undefined : labelId}
+        className="sr-only"
+        data-row-open=""
+        onClick={(event) => {
+          // The row's own onClick would otherwise run a second time.
+          event.stopPropagation();
+          onClick(event as unknown as React.MouseEvent<HTMLLIElement>);
+        }}
+        type="button"
+      />
+      <RowLabelContext.Provider value={labelId}>{children}</RowLabelContext.Provider>
+    </li>
   );
 }
 
@@ -72,7 +84,9 @@ export function DataListItemMain({ className, ...props }: React.ComponentProps<"
 }
 
 export function DataListBody({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("min-w-0 flex-1", className)} {...props} />;
+  // Names a clickable row's open button (see DataListItem).
+  const labelId = useContext(RowLabelContext);
+  return <div className={cn("min-w-0 flex-1", className)} id={labelId} {...props} />;
 }
 
 export function DataListActions({ className, ...props }: React.ComponentProps<"div">) {

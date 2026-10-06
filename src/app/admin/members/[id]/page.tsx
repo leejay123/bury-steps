@@ -61,7 +61,10 @@ async function MemberDetailPageContent({
             </Avatar>
             <div className="flex min-w-0 flex-col gap-1.5">
               <div className="flex flex-wrap items-center gap-2">
-                <CardTitle className="text-2xl">{member.name}</CardTitle>
+                {/* The page's one <h1> (CardTitle is a div). */}
+                <h1 className="text-2xl leading-none font-semibold" data-slot="card-title">
+                  {member.name}
+                </h1>
                 {member.pendingInvite ? (
                   // Plain text, not a Badge — an outline badge next to the
                   // outline Resend/Cancel buttons below read as a third
@@ -156,6 +159,7 @@ async function MemberDetailPageContent({
           </p>
         ) : null}
         <AttendanceHistory
+          emptyDescription={`${member.name} hasn’t clocked in to a walk yet. Walks they clock in to will show here.`}
           rows={member.items.map((item) => ({
             id: item.id,
             title: item.walkTitle,
@@ -197,6 +201,7 @@ function StatCard({ label, value }: { label: string; value: number }) {
 
 /** Everything here depends on who's asking and on live data, so the page
  * shows a matching placeholder for an instant while it loads. */
+// Access is checked in ../layout.tsx, before anything streams.
 export default function MemberDetailPage(props: Parameters<typeof MemberDetailPageContent>[0]) {
   return (
     <Suspense fallback={<AdminPageFallback rows={6} />}>

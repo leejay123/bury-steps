@@ -101,11 +101,11 @@ export function AdminWalkTable({
     );
   }, [allStatusOptions, now, scope, walks]);
 
-  useEffect(() => {
-    if (statusFilter !== "all" && !statusOptions.some((option) => option.value === statusFilter)) {
-      setStatusFilter("all");
-    }
-  }, [statusFilter, statusOptions]);
+  // A walk changing status can take away the filter's option — fall back to
+  // All in the same render rather than showing an empty list for a frame.
+  if (statusFilter !== "all" && !statusOptions.some((option) => option.value === statusFilter)) {
+    setStatusFilter("all");
+  }
 
   // Upcoming is SSR-split from History. Dropping a finished walk client-side
   // alone would hide it from both tabs until the next navigation — refresh
@@ -269,9 +269,16 @@ export function AdminWalkTable({
                       {formatTime(new Date(walk.startsAt))}
                       {walk.location ? ` · ${walk.location}` : ""}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {walk.attendanceCount} {attendanceLabel.toLowerCase()}
-                    </p>
+                    {/* Nobody yet on a walk that may not have started says
+                        nothing useful, so it's left off. */}
+                    {scope === "upcoming" && walk.attendanceCount === 0 ? null : (
+                      <p className="text-xs text-muted-foreground">
+                        {walk.attendanceCount}{" "}
+                        {walk.attendanceCount === 1 && attendanceLabel === "Clock-ins"
+                          ? "clock-in"
+                          : attendanceLabel.toLowerCase()}
+                      </p>
+                    )}
                     {cue ? <p className="text-sm font-medium">{cue}</p> : null}
                   </DataListBody>
                   <ChevronRight className="size-4 shrink-0 text-muted-foreground" />

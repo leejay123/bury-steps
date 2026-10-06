@@ -72,7 +72,7 @@ export const SETTINGS_PAGE_GROUPS: SettingsPageGroup[] = [
         href: "/admin/settings/branding",
         title: "Branding",
         description: "The site's name, tagline, font, logo, browser-tab icon and Facebook link.",
-        keywords: "logo favicon icon name tagline font typeface facebook report banner",
+        keywords: "logo favicon icon name tagline font typeface facebook report banner text size sizes bigger larger smaller headings",
         permission: "permDisplay",
       },
       {
@@ -86,7 +86,7 @@ export const SETTINGS_PAGE_GROUPS: SettingsPageGroup[] = [
         href: "/admin/settings/homepage-layout",
         title: "Homepage layout",
         description: "Choose the order of the homepage sections, and show or hide the photos and latest notices.",
-        keywords: "order sections carousel reorder",
+        keywords: "order sections carousel reorder hero style parallax marquee photo slider words background patterns animate titles latest notices",
         permission: "permDisplay",
       },
       {
@@ -159,8 +159,8 @@ export const SETTINGS_PAGE_GROUPS: SettingsPageGroup[] = [
       {
         href: "/admin/settings/behaviour",
         title: "Site behaviour",
-        description: "Cookie notice, back-to-top button, the Progress page, clock-in, organiser invites and who gets contact messages.",
-        keywords: "cookie consent back to top contact form invite organiser progress page emergency contact clock-in",
+        description: "Announcement bar, page transitions, phone menu, cookie notice, back-to-top button, footer name, the Progress page, clock-in, organiser invites and who gets contact messages.",
+        keywords: "cookie consent back to top contact form invite organiser progress page emergency contact clock-in announcement bar banner page transitions animation fade slide phone menu mobile bottom bar navigation footer big name wordmark",
         permission: "permDisplay",
       },
       {

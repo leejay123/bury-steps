@@ -1,5 +1,6 @@
 import { AuthSwitch } from "@/components/signed-in-context";
 import Link from "next/link";
+import { shouldPrefetchNavLink } from "@/components/site-nav-items";
 import { ArrowRightIcon, CalendarDaysIcon, FootprintsIcon, UsersIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DecorIcon } from "@/components/decor-icon";
@@ -77,6 +78,8 @@ export function HeroGlobe({
               <Link
                 className="inline-flex items-center gap-2 rounded-full border bg-background/60 py-1 pr-3 pl-1 text-sm text-muted-foreground backdrop-blur transition-colors hover:text-foreground"
                 href="/walks"
+                // Guests see this too — see shouldPrefetchNavLink.
+                prefetch={shouldPrefetchNavLink("/walks") ? undefined : false}
               >
                 <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">Walks</span>
                 {data.upcomingWalks > 0 ? `${data.upcomingWalks} coming up` : "See where we walk"}
@@ -90,7 +93,7 @@ export function HeroGlobe({
 
             <BlurFade delay={0.3}>
               <div className="mt-10 flex flex-wrap items-center gap-3">
-                {<AuthSwitch signedIn={<><Button asChild>
+                {<AuthSwitch signedIn={<><Button asChild size="sm">
                     <Link href="/walks">
                       See the walks <ArrowRightIcon />
                     </Link>

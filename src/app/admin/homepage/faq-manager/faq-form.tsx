@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
-import { addHomepageFaq, updateHomepageFaq, type ActionResult } from "@/server/actions";
-import { DEMO_FAQ, type FaqCategoryView, type FaqView } from "@/lib/faqs";
+import { useEffect, useRef, useState } from "react";
+import { addHomepageFaq, updateHomepageFaq } from "@/server/actions";
+import { DEMO_FAQ, MAX_FAQ_ANSWER, MAX_FAQ_QUESTION, type FaqCategoryView, type FaqView } from "@/lib/faqs";
 import { useActionToast } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,6 +91,7 @@ function FaqFields({
         <Input
           disabled={disabled}
           id={`${prefix}-question`}
+          maxLength={MAX_FAQ_QUESTION}
           name="question"
           onChange={(event) => setQuestion(event.target.value)}
           placeholder={DEMO_FAQ.question}
@@ -104,6 +106,7 @@ function FaqFields({
         <Textarea
           disabled={disabled}
           id={`${prefix}-answer`}
+          maxLength={MAX_FAQ_ANSWER}
           name="answer"
           onChange={(event) => setAnswer(event.target.value)}
           placeholder={DEMO_FAQ.answer}
@@ -142,10 +145,7 @@ export function AddFaqForm({
   onPendingChange?: (pending: boolean) => void;
   onSaved: () => void;
 }) {
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    addHomepageFaq,
-    null,
-  );
+  const [state, action, isPending] = useSafeActionState(addHomepageFaq);
   const formRef = useRef<HTMLFormElement>(null);
   useActionToast(state, () => {
     formRef.current?.reset();
@@ -175,10 +175,7 @@ export function EditFaqForm({
   onPendingChange?: (pending: boolean) => void;
   onSaved: () => void;
 }) {
-  const [updateState, updateAction, isPending] = useActionState<ActionResult | null, FormData>(
-    updateHomepageFaq,
-    null,
-  );
+  const [updateState, updateAction, isPending] = useSafeActionState(updateHomepageFaq);
 
   useActionToast(updateState, onSaved);
   useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);

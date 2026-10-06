@@ -25,7 +25,7 @@ export function WalkPageCopySettings({
 }) {
   const [tips, setTips] = useState(beforeYouSetOffTipsText);
   const [steps, setSteps] = useState(howWalksWorkStepsText);
-  const [state, action, isPending] = useNotifyActionState(updateWalkPageCopy);
+  const [state, action, isPending, clearError] = useNotifyActionState(updateWalkPageCopy);
 
   useResetOnChange([beforeYouSetOffTipsText, howWalksWorkStepsText], () => {
     setTips(beforeYouSetOffTipsText);
@@ -82,6 +82,7 @@ export function WalkPageCopySettings({
               onClick={() => {
                 setTips(beforeYouSetOffTipsText);
                 setSteps(howWalksWorkStepsText);
+                clearError();
               }}
               type="button"
               variant="outline"

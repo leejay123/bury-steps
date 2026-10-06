@@ -77,16 +77,12 @@ async function WalkForecastLoaded({
   startsAt: Date;
 }) {
   const walkDate = londonDateKey(startsAt);
-  let area = place;
-  try {
-    area = (await loadForecastPlaceName(latitude, longitude)) || place;
-  } catch {
-    area = place;
-  }
-  let days;
-  try {
-    days = await loadDailyForecast(latitude, longitude);
-  } catch {
+  const [placeName, days] = await Promise.all([
+    loadForecastPlaceName(latitude, longitude),
+    loadDailyForecast(latitude, longitude),
+  ]);
+  const area = placeName || place;
+  if (!days) {
     return (
       <ForecastFrame place={area}>
         <p className="text-sm text-muted-foreground">The forecast couldn’t be loaded just now.</p>

@@ -6,7 +6,7 @@ import { RememberListCount } from "@/components/remember-list-count";
 import { rememberedCount } from "@/lib/remembered-rows";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/auth";
-import { formatDateTime } from "@/lib/dates";
+import { formatCompactDateTime } from "@/lib/dates";
 import { isOwner } from "@/lib/site-owner";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { searchMembers, type MemberRoleFilter } from "@/server/actions";
@@ -21,6 +21,7 @@ function parseRoleFilter(raw: string | undefined): MemberRoleFilter {
 }
 
 
+// Access is checked in layout.tsx, before anything streams.
 export default function MembersPage({
   searchParams,
 }: {
@@ -59,7 +60,7 @@ async function MembersBody({ adminId, role }: { adminId: string; role: MemberRol
   // Only the first page loads here — search and later pages are fetched
   // live from searchMembers, so this stays fast and correct no matter how
   // many members the group has.
-  const [{ rows, total }, totalMembers, impersonations, setting, viewerIsOwner] = await Promise.all([
+  const [{ rows, total, groupTotals }, totalMembers, impersonations, setting, viewerIsOwner] = await Promise.all([
     searchMembers({ role }),
     prisma.user.count(),
     prisma.impersonationEvent.findMany({
@@ -85,6 +86,7 @@ async function MembersBody({ adminId, role }: { adminId: string; role: MemberRol
         />
       ) : (
         <MembersTable
+          initialGroupTotals={groupTotals}
           initialRows={rows.map((member) => ({ ...member, isYou: member.id === adminId }))}
           initialTotal={total}
           inviteRequired={setting?.organiserInviteRequired ?? false}
@@ -97,6 +99,7 @@ async function MembersBody({ adminId, role }: { adminId: string; role: MemberRol
       {impersonations.length > 0 ? (
         <section className="flex flex-col gap-3">
           <AdminPageIntro
+            as="h2"
             description="Every time an organiser has used “Log in as” on a member account. Most recent 20."
             title="Sign-in log"
           />
@@ -108,7 +111,7 @@ async function MembersBody({ adminId, role }: { adminId: string; role: MemberRol
                     <span className="font-medium">{event.adminName}</span> logged in as{" "}
                     <span className="font-medium">{event.targetName}</span>
                   </p>
-                  <p className="text-xs text-muted-foreground">{formatDateTime(event.createdAt)}</p>
+                  <p className="text-xs text-muted-foreground">{formatCompactDateTime(event.createdAt)}</p>
                 </DataListBody>
               </DataListItem>
             ))}
@@ -123,7 +126,7 @@ async function MembersBody({ adminId, role }: { adminId: string; role: MemberRol
 function MembersListSkeleton({ rows }: { rows: number | null }) {
   if (rows === 0) return null;
   return (
-    <div aria-busy="true" className="flex flex-col gap-4">
+    <div data-page-loading="" aria-busy="true" className="flex flex-col gap-4">
       <MembersFilterChrome />
       {rows != null && rows > 0 ? (
         <DataList>

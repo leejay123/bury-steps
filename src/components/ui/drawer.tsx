@@ -46,6 +46,12 @@ function useIsPhone() {
   return phone;
 }
 
+function isTypingTarget(el: Element | null): boolean {
+  if (!(el instanceof HTMLElement)) return false;
+  if (el.isContentEditable || el instanceof HTMLTextAreaElement) return true;
+  return el instanceof HTMLInputElement && !["button", "checkbox", "radio", "submit", "reset", "file", "range", "color"].includes(el.type);
+}
+
 // Open is 450ms. Close is 300ms, shorter on a fast swipe. Stay mounted
 // a little past the close so it is not cut off.
 const DRAWER_CLOSE_ANIMATION_MS = 500;
@@ -121,6 +127,21 @@ function Drawer({
                     if (!next) {
                       const reason = eventDetails.reason;
                       if (closeDisabled) {
+                        eventDetails.cancel();
+                        return;
+                      }
+                      // Escape that already closed something inside the
+                      // drawer — a dropdown or the date picker marks the key
+                      // as handled — is spent. Closing the drawer too threw
+                      // away everything typed in the form.
+                      if (reason === "escape-key" && eventDetails.event?.defaultPrevented) {
+                        eventDetails.cancel();
+                        return;
+                      }
+                      // In a form, Escape while typing in a box is usually
+                      // "never mind this field", not "throw the form away";
+                      // the close button and Cancel still close it.
+                      if (variant === "form" && reason === "escape-key" && isTypingTarget(document.activeElement)) {
                         eventDetails.cancel();
                         return;
                       }

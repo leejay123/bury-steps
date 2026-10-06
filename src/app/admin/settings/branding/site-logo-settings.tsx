@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { updateSiteLogo, type ActionResult } from "@/server/actions";
+import { updateSiteLogo } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { Label } from "@/components/ui/label";
@@ -27,7 +28,7 @@ export function SiteLogoSettings({
   hasCustomLogo: boolean;
   logoSrc: string;
 }) {
-  const [state, action] = useActionState<ActionResult | null, FormData>(updateSiteLogo, null);
+  const [state, action] = useSafeActionState(updateSiteLogo);
   const formRef = useRef<HTMLFormElement>(null);
   const [dirty, setDirty] = useState(false);
   useActionToast(state, () => formRef.current?.reset());

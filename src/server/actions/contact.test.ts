@@ -182,7 +182,7 @@ describe("markContactMessageRead", () => {
       where: { id: "msg-1" },
       data: { readAt: expect.any(Date) },
     });
-    expect(result).toEqual({ ok: true });
+    expect(result).toEqual({ ok: true, message: "Marked as read." });
   });
 });
 

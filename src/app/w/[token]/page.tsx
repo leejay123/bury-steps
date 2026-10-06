@@ -3,13 +3,14 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
+import type { Prisma } from "@prisma/client";
 import { getOptionalUser } from "@/lib/auth";
 import { formatWalkDate } from "@/lib/dates";
 import { appUrl } from "@/lib/urls";
 import { meetingPointLabel } from "@/lib/geocode";
 import { What3wordsLink } from "@/components/what3words-link";
 import { walkShareUrl } from "@/lib/walk-slug";
-import { ensureWalkSlug } from "@/lib/walk-slug-server";
+import { ensureWalkSlug, findWalkIdBySlugCode } from "@/lib/walk-slug-server";
 import { walkStatus } from "@/lib/walk-window";
 import { WalkMapSection } from "@/components/walk-map-section";
 import { WalkForecastSection } from "@/components/walk-forecast";
@@ -24,38 +25,45 @@ import { WalkShareStatusChrome, WalkShareWhileOpen } from "./walk-share-status";
 
 
 
+const WALK_PAGE_SELECT = {
+  id: true,
+  token: true,
+  slug: true,
+  title: true,
+  description: true,
+  distance: true,
+  grade: true,
+  elevationGain: true,
+  essentials: true,
+  walkLeader: true,
+  backMarker: true,
+  location: true,
+  postcode: true,
+  latitude: true,
+  longitude: true,
+  what3words: true,
+  startsAt: true,
+  durationMins: true,
+  endedAt: true,
+  cancelledAt: true,
+  cancelledReason: true,
+  journeyEvents: {
+    orderBy: { happenedAt: "asc" },
+    select: { id: true, title: true, body: true, happenedAt: true },
+  },
+} satisfies Prisma.WalkSelect;
+
 // Cached per request so generateMetadata and the page body share one lookup.
-const getWalkByShareKey = cache((key: string) =>
-  prisma.walk.findFirst({
+const getWalkByShareKey = cache(async (key: string) => {
+  const walk = await prisma.walk.findFirst({
     where: { OR: [{ token: key }, { slug: key }] },
-    select: {
-      id: true,
-      token: true,
-      slug: true,
-      title: true,
-      description: true,
-      distance: true,
-      grade: true,
-      elevationGain: true,
-      essentials: true,
-      walkLeader: true,
-      backMarker: true,
-      location: true,
-      postcode: true,
-      latitude: true,
-      longitude: true,
-      what3words: true,
-      startsAt: true,
-      durationMins: true,
-      endedAt: true,
-      cancelledAt: true,
-      journeyEvents: {
-        orderBy: { happenedAt: "asc" },
-        select: { id: true, title: true, body: true, happenedAt: true },
-      },
-    },
-  }),
-);
+    select: WALK_PAGE_SELECT,
+  });
+  if (walk) return walk;
+  // A link posted before the walk was renamed: older place word, same code.
+  const id = await findWalkIdBySlugCode(key);
+  return id ? prisma.walk.findUnique({ where: { id }, select: WALK_PAGE_SELECT }) : null;
+});
 
 export async function generateMetadata({
   params,
@@ -124,7 +132,9 @@ export default async function WalkLinkPage({
   // attendee names) never renders for a cancelled walk regardless of who's
   // looking.
   const slug = await ensureWalkSlug(walk);
-  if (token === walk.token && slug !== walk.token) {
+  // The code-only token link, or a link from before a rename: send it to
+  // the walk's current address.
+  if (token !== slug) {
     redirect(`/w/${slug}`);
   }
 
@@ -142,7 +152,9 @@ export default async function WalkLinkPage({
   // people who have not joined yet. WalkMembers paginates at 20, so a
   // thousand names on one walk stay usable. Clocking out does not revoke
   // that — they were on the walk.
-  const memberNames = attended ? await getWalkMemberNames(walk.id) : [];
+  const memberNames = attended
+    ? await getWalkMemberNames(walk.id, { finished: status === "completed" })
+    : [];
   const meeting = meetingPointLabel(walk.location, walk.postcode);
   const walksHref = user?.role === "ADMIN" ? "/admin/walks" : "/walks";
   const journeyEvents = walk.journeyEvents.map((event) => ({
@@ -171,6 +183,7 @@ export default async function WalkLinkPage({
         attended={attended}
         backMarker={walk.backMarker}
         cancelledAt={cancelledAtIso}
+        cancelledReason={walk.cancelledReason}
         description={walk.description}
         distance={walk.distance}
         durationMins={walk.durationMins}
@@ -188,32 +201,9 @@ export default async function WalkLinkPage({
         walkUrl={walkUrl}
       />
 
-      {status === "cancelled" || !theme.howWalksWorkEnabled ? null : (
-        <WalkShareWhileOpen
-          cancelledAt={cancelledAtIso}
-          durationMins={walk.durationMins}
-          endedAt={endedAtIso}
-          startsAt={startsAtIso}
-        >
-          <HowWalksWork steps={theme.howWalksWorkSteps} />
-        </WalkShareWhileOpen>
-      )}
-
-      {meeting ? <WalkMapSection location={meeting} walk={walk} /> : null}
-
-      <WalkForecastSection
-        cancelledAt={walk.cancelledAt}
-        durationMins={walk.durationMins}
-        endedAt={walk.endedAt}
-        latitude={walk.latitude}
-        longitude={walk.longitude}
-        place={meeting}
-        startsAt={walk.startsAt}
-      />
-
-      {walk.what3words ? <What3wordsLink address={walk.what3words} /> : null}
-
-      {status === "cancelled" ? null : user ? (
+      {/* What the member came to do (clock in, or their clock-in status) sits
+          straight under the title card, above the map and forecast. */}
+      {status === "cancelled" || !user ? null : (
         <WalkLivePanel
           alreadyClockedInAt={myAttendance?.clockedInAt.toISOString() ?? null}
           beforeYouSetOffEnabled={theme.beforeYouSetOffEnabled}
@@ -229,7 +219,36 @@ export default async function WalkLinkPage({
           token={walk.token}
           walksHref={walksHref}
         />
-      ) : (
+      )}
+
+      {/* Sign-up steps are for visitors; members have already done them. */}
+      {status === "cancelled" || user || !theme.howWalksWorkEnabled ? null : (
+        <WalkShareWhileOpen
+          cancelledAt={cancelledAtIso}
+          durationMins={walk.durationMins}
+          endedAt={endedAtIso}
+          startsAt={startsAtIso}
+        >
+          <HowWalksWork steps={theme.howWalksWorkSteps} />
+        </WalkShareWhileOpen>
+      )}
+
+      {/* No directions to a walk that isn't happening. */}
+      {meeting && status !== "cancelled" ? <WalkMapSection location={meeting} walk={walk} /> : null}
+
+      <WalkForecastSection
+        cancelledAt={walk.cancelledAt}
+        durationMins={walk.durationMins}
+        endedAt={walk.endedAt}
+        latitude={walk.latitude}
+        longitude={walk.longitude}
+        place={meeting}
+        startsAt={walk.startsAt}
+      />
+
+      {walk.what3words ? <What3wordsLink address={walk.what3words} /> : null}
+
+      {status === "cancelled" || user ? null : (
         <WalkShareWhileOpen
           cancelledAt={cancelledAtIso}
           durationMins={walk.durationMins}

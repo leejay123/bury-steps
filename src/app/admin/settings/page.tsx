@@ -60,8 +60,8 @@ async function AdminSettingsPageContent() {
     faqCount,
     noticeCount,
     customisedEmailCount,
-    footerSubscriberCount,
-    memberSubscriberCount,
+    footerSubscriberEmails,
+    memberSubscriberEmails,
   ] = await Promise.all([
     getSiteTheme(),
     prisma.siteSetting.findUnique({
@@ -81,8 +81,10 @@ async function AdminSettingsPageContent() {
     prisma.emailTemplateOverride.count({
       where: { OR: [{ subject: { not: null } }, { body: { not: null } }] },
     }),
-    prisma.newsletterSubscriber.count({ where: { unsubscribedAt: null } }),
-    prisma.user.count({ where: { emailNewsletter: true } }),
+    // Emails, not counts: someone on both lists is one subscriber (the same
+    // count the Subscribers page shows).
+    prisma.newsletterSubscriber.findMany({ where: { unsubscribedAt: null }, select: { email: true } }),
+    prisma.user.findMany({ where: { emailNewsletter: true }, select: { email: true } }),
   ]);
 
   const contactOwner =
@@ -124,7 +126,10 @@ async function AdminSettingsPageContent() {
           : undefined,
     },
     "/admin/settings/subscribers": {
-      status: `${plural(footerSubscriberCount + memberSubscriberCount, "subscriber")}`,
+      status: plural(
+        new Set([...footerSubscriberEmails, ...memberSubscriberEmails].map((row) => row.email.toLowerCase())).size,
+        "subscriber",
+      ),
       attention: !isSet("RESEND_WEBHOOK_SECRET")
         ? "People who unsubscribe using the link in a newsletter aren't recorded here (RESEND_WEBHOOK_SECRET isn't set)."
         : undefined,

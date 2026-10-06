@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useRef } from "react";
 import { useFormStatus } from "react-dom";
-import { cancelOrganiserInvite, resendOrganiserInvite, type ActionResult } from "@/server/actions";
+import { cancelOrganiserInvite, resendOrganiserInvite } from "@/server/actions";
 import { useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
@@ -27,7 +28,7 @@ export function ResendInviteButton({
   onDone?: () => void;
   userId: string;
 }) {
-  const [state, action] = useActionState<ActionResult | null, FormData>(resendOrganiserInvite, null);
+  const [state, action] = useSafeActionState(resendOrganiserInvite);
   const formRef = useRef<HTMLFormElement>(null);
   useActionToast(state, onDone);
   return (

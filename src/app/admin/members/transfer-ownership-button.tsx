@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import type React from "react";
-import { transferOwnership, type ActionResult } from "@/server/actions";
+import { transferOwnership } from "@/server/actions";
 import { preventDismissWhilePending, useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
+import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,10 +46,7 @@ export function TransferOwnershipButton({
   userId: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [state, action, isPending] = useActionState<ActionResult | null, FormData>(
-    transferOwnership,
-    null,
-  );
+  const [state, action, isPending] = useSafeActionState(transferOwnership);
   const [confirmValue, setConfirmValue] = useState("");
   useActionToast(state, () => {
     setOpen(false);

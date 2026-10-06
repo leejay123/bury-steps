@@ -8,6 +8,10 @@
  * a soft blur — the Members list's look. Placeholders shown longer than
  * that fade straight into the content when it arrives.
  *
+ * HOLD matches ContentReveal's hold, so a page that loads quickly takes the
+ * same time to settle as one that was already there (it was 600ms, which
+ * kept Messages and Reports grey for a second when the data took 50ms).
+ *
  * An inline script at the very top of <body>, because on a fresh load React
  * swaps the streamed content in before the site's own code has started.
  * Browser animations only (no attributes touched, so nothing for React to
@@ -16,7 +20,7 @@
  */
 const SCRIPT = `(function(){try{
 if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
-var HOLD=600,REVEAL=400,BLUR="blur(2px)",MAX=220;
+var HOLD=320,REVEAL=400,BLUR="blur(2px)",MAX=220;
 var MEDIA="img,svg,video,canvas,input,textarea,select,button,[data-slot='avatar']";
 var shownAt=performance.now();
 function isSkel(n){return n.nodeType===1&&(n.matches('[data-slot="skeleton"]')||!!n.querySelector('[data-slot="skeleton"]'));}

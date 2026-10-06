@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef } from "react";
 import { CircleAlert } from "lucide-react";
 
 /**
@@ -12,10 +15,20 @@ import { CircleAlert } from "lucide-react";
  * validation copy inside drawers and dialogs.
  */
 export function FormError({ message }: { message?: string | null }) {
+  const ref = useRef<HTMLDivElement>(null);
+  // In a long form (Create walk) this sits below the fold, so pressing the
+  // button seemed to do nothing. Bring it into view when it appears.
+  useEffect(() => {
+    if (!message) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    ref.current?.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+  }, [message]);
+
   if (!message) return null;
   return (
     <div
       className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+      ref={ref}
       role="alert"
     >
       <CircleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />

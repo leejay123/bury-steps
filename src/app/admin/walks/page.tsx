@@ -194,7 +194,11 @@ function AdminWalksSkeleton({
   rows: number;
   upcomingCount: number | null;
 }) {
-  return <WalkListChrome pastCount={pastCount} rows={rows} upcomingCount={upcomingCount} />;
+  return (
+    <div className="contents" data-page-loading="">
+      <WalkListChrome pastCount={pastCount} rows={rows} upcomingCount={upcomingCount} />
+    </div>
+  );
 }
 
 function AdminWalksPageFallback({
@@ -207,7 +211,7 @@ function AdminWalksPageFallback({
   upcomingCount: number | null;
 }) {
   return (
-    <div className="flex flex-col gap-8 px-4 py-6 md:px-6">
+    <div data-page-loading="" className="flex flex-col gap-8 px-4 py-6 md:px-6">
       <section className="flex flex-col gap-4">
         <AdminPageIntro description={WALKS_INTRO} title="Walks" />
         <AdminWalksSkeleton pastCount={pastCount} rows={rows} upcomingCount={upcomingCount} />

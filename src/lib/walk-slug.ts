@@ -33,6 +33,25 @@ export function walkSlugBase(title: string): string {
   return shortWalkName(title) || "walk";
 }
 
+/** Letters and digits the random part of a share slug is drawn from. */
+export const WALK_SLUG_CODE_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
+const SLUG_CODE = /-([abcdefghjkmnpqrstuvwxyz23456789]{6})$/;
+
+/** The random code at the end of a share slug (`burrs-x7k2m9` → `x7k2m9`). */
+export function walkSlugCode(slug: string): string | null {
+  return SLUG_CODE.exec(slug)?.[1] ?? null;
+}
+
+/**
+ * The slug after a title change: the new place word, the same code. The code
+ * is what identifies the walk, so links already posted with the old word
+ * still find it (see findWalkIdBySlugCode).
+ */
+export function renamedWalkSlug(slug: string, title: string): string {
+  const code = walkSlugCode(slug);
+  return code ? `${walkSlugBase(title)}-${code}` : slug;
+}
+
 export function walkSharePath(walk: { slug?: string | null; token: string }): string {
   return `/w/${walk.slug || walk.token}`;
 }
