@@ -15,6 +15,7 @@ import { FullWidthDivider } from "@/components/full-width-divider";
 import { ButtonRipple } from "@/components/button-ripple";
 import { HeaderScrollShadow } from "@/components/header-scroll-shadow";
 import { FocusRescue } from "@/components/focus-rescue";
+import { HeaderPartBoundary } from "@/components/header-part-boundary";
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import Script from "next/script";
@@ -182,16 +183,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               className="group/site-header sticky top-0 z-[66] touch-manipulation bg-background transition-shadow duration-200 [transform:translateZ(0)] data-scrolled:shadow-[0_4px_12px_-6px_rgb(0_0_0/0.12)]"
               data-site-header=""
             >
-              {theme.announcementEnabled && theme.announcementText ? (
-                <AnnouncementBanner
-                  link={theme.announcementLink}
-                  pages={theme.announcementPages}
-                  text={theme.announcementText}
-                />
-              ) : null}
-              <Suspense fallback={null}>
-                <ImpersonationBannerSlot />
-              </Suspense>
+              <HeaderPartBoundary name="announcement">
+                {theme.announcementEnabled && theme.announcementText ? (
+                  <AnnouncementBanner
+                    link={theme.announcementLink}
+                    pages={theme.announcementPages}
+                    text={theme.announcementText}
+                  />
+                ) : null}
+              </HeaderPartBoundary>
+              <HeaderPartBoundary name="impersonation">
+                <Suspense fallback={null}>
+                  <ImpersonationBannerSlot />
+                </Suspense>
+              </HeaderPartBoundary>
               <div className="relative">
                 {/*
                   auto on the outer (logo, bell/avatar) columns, not 1fr —
@@ -218,19 +223,30 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   half the space the logo moves left rather than overlapping.
                 */}
                 <div className={`group/header-row grid h-14 grid-cols-[1fr_auto_1fr] items-center gap-3 ${PAGE_X} md:grid-cols-[auto_minmax(0,1fr)_auto]`}>
-                  <Suspense fallback={null}>
-                    <SiteMobileNav />
-                  </Suspense>
+                  <HeaderPartBoundary name="mobile-nav">
+                    <Suspense fallback={null}>
+                      <SiteMobileNav />
+                    </Suspense>
+                  </HeaderPartBoundary>
                   <div className="contents max-md:col-start-2 max-md:flex max-md:justify-center" data-site-logo-cell="">
-                    <Suspense
+                    <HeaderPartBoundary
                       fallback={
                         <div className="flex h-8 min-w-0 items-center justify-self-start">
                           <SiteLogo alt={DEFAULT_SITE_NAME} />
                         </div>
                       }
+                      name="logo"
                     >
-                      <SiteBrandLink />
-                    </Suspense>
+                      <Suspense
+                        fallback={
+                          <div className="flex h-8 min-w-0 items-center justify-self-start">
+                            <SiteLogo alt={DEFAULT_SITE_NAME} />
+                          </div>
+                        }
+                      >
+                        <SiteBrandLink />
+                      </Suspense>
+                    </HeaderPartBoundary>
                   </div>
                   {/* The boot script below may already have drawn last visit's menu in
                       here. Marked as raw HTML so React leaves it alone when the page
@@ -244,9 +260,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     suppressHydrationWarning
                   />
                   <HeaderBootScript />
-                  <Suspense fallback={null}>
-                    <SiteNavSlot />
-                  </Suspense>
+                  <HeaderPartBoundary name="nav">
+                    <Suspense fallback={null}>
+                      <SiteNavSlot />
+                    </Suspense>
+                  </HeaderPartBoundary>
                 </div>
                 {/* Line at the top of the page; the stuck header's shadow takes over once scrolled. */}
                 <FullWidthDivider
@@ -277,12 +295,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 </WalkEssentialsProvider>
               </PageFade>
             </main>
-            <Suspense fallback={null}>
-              <SiteFooter />
-            </Suspense>
-            <Suspense fallback={null}>
-              <SiteBottomNav />
-            </Suspense>
+            <HeaderPartBoundary name="footer">
+              <Suspense fallback={null}>
+                <SiteFooter />
+              </Suspense>
+            </HeaderPartBoundary>
+            <HeaderPartBoundary name="bottom-nav">
+              <Suspense fallback={null}>
+                <SiteBottomNav />
+              </Suspense>
+            </HeaderPartBoundary>
           </div>
           <Toaster
             duration={2800}
@@ -293,12 +315,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ButtonRipple />
           <HeaderScrollShadow />
           <FocusRescue />
-          <Suspense fallback={null}>
-            <SiteCookieConsentGate />
-          </Suspense>
-          <Suspense fallback={null}>
-            <BackToTopGate />
-          </Suspense>
+          <HeaderPartBoundary name="cookie-notice">
+            <Suspense fallback={null}>
+              <SiteCookieConsentGate />
+            </Suspense>
+          </HeaderPartBoundary>
+          <HeaderPartBoundary name="back-to-top">
+            <Suspense fallback={null}>
+              <BackToTopGate />
+            </Suspense>
+          </HeaderPartBoundary>
         </SiteMotionConfig>
         </ClientPathnameProvider>
         {/*

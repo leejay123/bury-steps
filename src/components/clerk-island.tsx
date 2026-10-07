@@ -22,9 +22,8 @@ export function ClerkIsland({ children }: { children: ReactNode }) {
   return (
     <LazyClerkProvider
       {...(useVercelAppProxy ? { proxyUrl: "/__clerk" } : {})}
-      // The account menu loads this when it is opened. Preloading it on every
-      // page makes the browser warn that the file was fetched and never used.
-      prefetchUI={false}
+      // Never set prefetchUI={false}: it stops Clerk loading its UI at all,
+      // so the account menu throws and takes the whole page down.
       appearance={{
         theme: shadcn,
         variables: {
