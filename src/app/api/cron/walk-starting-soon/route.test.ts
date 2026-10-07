@@ -59,21 +59,24 @@ describe("GET /api/cron/walk-starting-soon", () => {
     expect(prismaMock.walk.findMany).not.toHaveBeenCalled();
   });
 
-  it("sends once and marks the walk so a later run does not repeat it", async () => {
+  it("sends without closing the walk, so a phone turned on later still gets it", async () => {
     prismaMock.walk.findMany.mockResolvedValue([walk]);
     const response = await GET(request("test-secret"));
     expect(response.status).toBe(200);
     expect(sendStartingSoonPush).toHaveBeenCalledWith(walk);
-    expect(prismaMock.walk.update).toHaveBeenCalledWith({
-      where: { id: "walk-1" },
-      data: { startingSoonPushSentAt: expect.any(Date) },
-    });
+    expect(prismaMock.walk.update).not.toHaveBeenCalled();
+    const where = prismaMock.walk.findMany.mock.calls[0]?.[0]?.where;
+    expect(where.startsAt.gt).toBeInstanceOf(Date);
+    expect(where.startsAt.lte.getTime() - where.startsAt.gt.getTime()).toBe(70 * 60 * 1000);
   });
 
-  it("leaves the walk unmarked when every alert failed, so the next run can retry", async () => {
+  it("still sends when some phones failed, so the next look can retry those", async () => {
     prismaMock.walk.findMany.mockResolvedValue([walk]);
     sendStartingSoonPush.mockResolvedValue({ sent: 0, failed: 2, removed: 0 });
-    await GET(request("test-secret"));
-    expect(prismaMock.walk.update).not.toHaveBeenCalled();
+    const response = await GET(request("test-secret"));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      walks: [{ id: "walk-1", sent: 0, failed: 2, removed: 0 }],
+    });
   });
 });

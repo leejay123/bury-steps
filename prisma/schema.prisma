@@ -104,8 +104,25 @@ model PushSubscription {
   p256dh    String
   auth      String
   createdAt DateTime @default(now())
+  deliveries WalkAlertDelivery[]
 
   @@index([userId])
+}
+
+/// One row per phone that has already received this walk's starting-soon
+/// alert. A failed phone has no row, so the next look tries it again.
+/// A phone turned on during the hour still gets the alert.
+model WalkAlertDelivery {
+  id             String   @id @default(cuid())
+  walkId         String
+  subscriptionId String
+  sentAt         DateTime @default(now())
+
+  walk         Walk             @relation(fields: [walkId], references: [id], onDelete: Cascade)
+  subscription PushSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@unique([walkId, subscriptionId])
+  @@index([walkId])
 }
 
 model Walk {
@@ -158,8 +175,8 @@ model Walk {
   /// auto-delete cron, regardless of SiteSetting.cancelledWalkRetentionDays.
   /// Meaningless (and harmless) for a walk that was never cancelled.
   retentionLocked Boolean   @default(false)
-  /// Set once the "starting soon" phone alert has been sent for this walk,
-  /// so a later cron run does not send it again.
+  /// Set once this walk's starting-soon alerts are finished. While it is
+  /// null, each look still tries any phone that has not had the alert yet.
   startingSoonPushSentAt DateTime?
 
   createdById String
@@ -167,7 +184,8 @@ model Walk {
 
   attendances     Attendance[]
   accidentReports AccidentReport[]
-  journeyEvents   WalkJourneyEvent[]
+  journeyEvents    WalkJourneyEvent[]
+  alertDeliveries  WalkAlertDelivery[]
 
   @@index([startsAt])
   @@index([createdById])

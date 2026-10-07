@@ -2,17 +2,31 @@ name: Walk starting soon
 
 on:
   schedule:
-    # About every 15 minutes. GitHub may start a run a few minutes late;
-    # the alert window is wide enough to still catch the walk.
-    - cron: "*/15 * * * *"
+    # GitHub often skips a job that is supposed to start every 15 minutes.
+    # This one stays awake and looks itself, and a new one is booked often
+    # enough that a look is always running.
+    - cron: "0 */3 * * *"
   workflow_dispatch:
+
+concurrency:
+  group: walk-starting-soon
+  cancel-in-progress: false
 
 jobs:
   send:
     runs-on: ubuntu-latest
+    timeout-minutes: 360
     steps:
-      - name: Ask the site to send starting-soon alerts
+      - name: Look for walks that are about to start
         run: |
-          curl --fail-with-body --silent --show-error \
-            --header "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            https://burysteps-walkinggroup.co.uk/api/cron/walk-starting-soon
+          # 22 looks, 15 minutes apart: just over five hours. The next
+          # booked run is waiting, so there is no gap when this one ends.
+          for i in $(seq 1 22); do
+            curl --fail-with-body --silent --show-error \
+              --header "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+              https://burysteps-walkinggroup.co.uk/api/cron/walk-starting-soon \
+              || echo "This look failed. The next one will try again."
+            if [ "$i" -lt 22 ]; then
+              sleep 900
+            fi
+          done

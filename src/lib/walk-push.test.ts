@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import { pushEndpointAllowed, startingSoonPushPayload, startingSoonPushWindow } from "./walk-push";
 
 describe("startingSoonPushWindow", () => {
-  it("covers from ten minutes after the start back to seventy minutes before", () => {
+  it("covers from now until seventy minutes ahead, and not after the start", () => {
     const now = new Date("2026-10-06T13:00:00.000Z");
     const window = startingSoonPushWindow(now);
-    expect(window.from.toISOString()).toBe("2026-10-06T12:50:00.000Z");
+    expect(window.from.toISOString()).toBe("2026-10-06T13:00:00.000Z");
     expect(window.until.toISOString()).toBe("2026-10-06T14:10:00.000Z");
   });
 });

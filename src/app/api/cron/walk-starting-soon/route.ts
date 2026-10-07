@@ -7,9 +7,10 @@ import { startingSoonPushWindow } from "@/lib/walk-push";
 
 /**
  * Phone alert about an hour before each walk, for members who turned alerts
- * on. A free schedule calls this about every 15 minutes. A walk is marked
- * sent once the alert goes out, or when nobody is subscribed, so it is not
- * retried all afternoon.
+ * on. A job that stays awake calls this about every 15 minutes. The walk
+ * stays open until it starts, so a phone that failed, or was turned on
+ * during that hour, is included on a later look. Nothing goes out after
+ * the start time.
  */
 export async function GET(req: Request) {
   if (!bearerMatches(req.headers.get("authorization"), process.env.CRON_SECRET)) {
@@ -25,7 +26,7 @@ export async function GET(req: Request) {
     where: {
       cancelledAt: null,
       startingSoonPushSentAt: null,
-      startsAt: { gte: window.from, lte: window.until },
+      startsAt: { gt: window.from, lte: window.until },
     },
     select: { id: true, title: true, startsAt: true, slug: true, token: true },
     orderBy: { startsAt: "asc" },
@@ -34,14 +35,6 @@ export async function GET(req: Request) {
   const results: { id: string; sent: number; failed: number; removed: number }[] = [];
   for (const walk of walks) {
     const result = await sendStartingSoonPush(walk);
-    if (result.sent === 0 && result.failed > 0) {
-      results.push({ id: walk.id, ...result });
-      continue;
-    }
-    await prisma.walk.update({
-      where: { id: walk.id },
-      data: { startingSoonPushSentAt: now },
-    });
     results.push({ id: walk.id, ...result });
   }
 

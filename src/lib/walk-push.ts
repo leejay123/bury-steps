@@ -1,10 +1,12 @@
 import { formatTime } from "@/lib/dates";
 import { walkSharePath } from "@/lib/walk-slug";
 
-/** How far ahead a cron run will still catch a walk that is about to start. */
+/**
+ * How far ahead a check will still catch a walk. A look about every 15
+ * minutes then lands the alert roughly an hour before the start. Nothing
+ * is sent after the walk has already started.
+ */
 export const PUSH_LEAD_MS = 70 * 60 * 1000;
-/** Still send if the job runs a few minutes after the published start. */
-export const PUSH_GRACE_MS = 10 * 60 * 1000;
 
 export type StartingSoonWalk = {
   id: string;
@@ -16,7 +18,7 @@ export type StartingSoonWalk = {
 
 export function startingSoonPushWindow(now: Date): { from: Date; until: Date } {
   return {
-    from: new Date(now.getTime() - PUSH_GRACE_MS),
+    from: now,
     until: new Date(now.getTime() + PUSH_LEAD_MS),
   };
 }
