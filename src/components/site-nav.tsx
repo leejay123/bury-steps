@@ -12,6 +12,7 @@ import { BottomNavBar } from "@/components/bottom-nav-bar";
 import { getSiteTheme } from "@/lib/site-theme";
 import { LazySiteUserButton } from "@/components/clerk-lazy";
 import { ClerkIsland } from "@/components/clerk-island";
+import { HeaderPartBoundary } from "@/components/header-part-boundary";
 import { JoinGroupButton } from "@/components/join-group-button";
 import { SiteNavLinks, SiteMobileMenu, StaticNavLinks, type MobileMenuGroup } from "@/components/site-nav-menu";
 import { NotificationBell } from "@/components/notification-bell";
@@ -115,31 +116,51 @@ export async function SiteNav() {
       >
         {user ? (
           <>
-            <SiteSearchBar />
-            <SiteSearchDialog />
-            <Suspense fallback={<span aria-hidden className="inline-flex size-9 shrink-0 rounded-full border border-border bg-background" />}>
-              <SiteNavBell firstName={user.firstName} userId={user.id} />
-            </Suspense>
+            <HeaderPartBoundary name="search">
+              <SiteSearchBar />
+              <SiteSearchDialog />
+            </HeaderPartBoundary>
+            <HeaderPartBoundary name="bell">
+              <Suspense fallback={<span aria-hidden className="inline-flex size-9 shrink-0 rounded-full border border-border bg-background" />}>
+                <SiteNavBell firstName={user.firstName} userId={user.id} />
+              </Suspense>
+            </HeaderPartBoundary>
             {/* A fixed slot: while Clerk's code loads the avatar's own
                 placeholder can be missing, and the cluster jumped 40px. */}
             <div className="flex size-7 shrink-0 items-center justify-center">
-              <ClerkIsland>
-                <LazySiteUserButton initial={initial ?? "?"} progressEnabled={progressEnabled} />
-              </ClerkIsland>
+              {/* If the account menu ever breaks, show the plain initial instead of
+                  losing the whole page (it sits in the header on every page). */}
+              <HeaderPartBoundary
+                fallback={
+                  <span
+                    aria-hidden
+                    className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground uppercase"
+                  >
+                    {initial ?? "?"}
+                  </span>
+                }
+                name="account-menu"
+              >
+                <ClerkIsland>
+                  <LazySiteUserButton initial={initial ?? "?"} progressEnabled={progressEnabled} />
+                </ClerkIsland>
+              </HeaderPartBoundary>
             </div>
-            <EmailPreferencesDrawer
-              email={user.email}
-              isAdmin={isAdmin}
-              phoneAlertsOn={pushOn}
-              preferences={{
-                emailAccidentAlerts: user.emailAccidentAlerts,
-                emailNewsletter: user.emailNewsletter,
-                emailNotices: user.emailNotices,
-                emailProgress: user.emailProgress,
-                emailWalkAnnouncements: user.emailWalkAnnouncements,
-              }}
-              vapidPublicKey={vapidConfig()?.publicKey ?? null}
-            />
+            <HeaderPartBoundary name="email-preferences">
+              <EmailPreferencesDrawer
+                email={user.email}
+                isAdmin={isAdmin}
+                phoneAlertsOn={pushOn}
+                preferences={{
+                  emailAccidentAlerts: user.emailAccidentAlerts,
+                  emailNewsletter: user.emailNewsletter,
+                  emailNotices: user.emailNotices,
+                  emailProgress: user.emailProgress,
+                  emailWalkAnnouncements: user.emailWalkAnnouncements,
+                }}
+                vapidPublicKey={vapidConfig()?.publicKey ?? null}
+              />
+            </HeaderPartBoundary>
           </>
         ) : (
           <>
