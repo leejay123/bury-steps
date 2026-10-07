@@ -65,9 +65,12 @@ describe("GET /api/cron/walk-starting-soon", () => {
     expect(response.status).toBe(200);
     expect(sendStartingSoonPush).toHaveBeenCalledWith(walk);
     expect(prismaMock.walk.update).not.toHaveBeenCalled();
-    const where = prismaMock.walk.findMany.mock.calls[0]?.[0]?.where;
-    expect(where.startsAt.gt).toBeInstanceOf(Date);
-    expect(where.startsAt.lte.getTime() - where.startsAt.gt.getTime()).toBe(70 * 60 * 1000);
+    const calls = prismaMock.walk.findMany.mock.calls as unknown as Array<
+      [{ where: { startsAt: { gt: Date; lte: Date } } }]
+    >;
+    const startsAt = calls[0][0].where.startsAt;
+    expect(startsAt.gt).toBeInstanceOf(Date);
+    expect(startsAt.lte.getTime() - startsAt.gt.getTime()).toBe(70 * 60 * 1000);
   });
 
   it("still sends when some phones failed, so the next look can retry those", async () => {
