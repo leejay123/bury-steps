@@ -52,7 +52,9 @@ export function PrivacySiteSection() {
               preferences page. About an hour before a walk, anyone who turned it on gets a
               notification with the walk name and a link to clock in. On an iPhone the site has
               to be added to the Home Screen first. On Android or a computer, allowing
-              notifications in the browser is enough. Turning it off removes that device. The
+              notifications in the browser is enough. The switch shows this phone or computer
+              only, so it can be off here while another device is still signed up. Turning it off
+              removes that device. The
               keys that send the alerts live in the site&apos;s environment (VAPID_PUBLIC_KEY,
               VAPID_PRIVATE_KEY, and VAPID_SUBJECT). Without them, the switch explains that
               alerts are not set up yet. A free schedule looks for walks that are about to

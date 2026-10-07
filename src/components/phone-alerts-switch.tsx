@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 
@@ -10,6 +10,13 @@ function keyBytes(base64: string): Uint8Array<ArrayBuffer> {
   const bytes = new Uint8Array(raw.length);
   for (let i = 0; i < raw.length; i += 1) bytes[i] = raw.charCodeAt(i);
   return bytes;
+}
+
+/** This phone or computer only. Another device's signup must not light the switch. */
+async function thisDeviceSubscription(): Promise<PushSubscription | null> {
+  if (!("serviceWorker" in navigator)) return null;
+  const registration = await navigator.serviceWorker.getRegistration("/");
+  return (await registration?.pushManager.getSubscription()) ?? null;
 }
 
 /**
@@ -23,8 +30,19 @@ export function PhoneAlertsSwitch({
   initiallyOn: boolean;
   vapidPublicKey: string | null;
 }) {
+  const switchId = useId();
   const [on, setOn] = useState(initiallyOn);
   const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void thisDeviceSubscription().then((current) => {
+      if (!cancelled) setOn(current != null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function toggle(next: boolean) {
     if (pending) return;
@@ -40,15 +58,16 @@ export function PhoneAlertsSwitch({
     setPending(true);
     try {
       if (!next) {
-        const registration = await navigator.serviceWorker.getRegistration("/");
-        const current = await registration?.pushManager.getSubscription();
+        const current = await thisDeviceSubscription();
         const endpoint = current?.endpoint;
         await current?.unsubscribe();
-        await fetch("/api/push/subscribe", {
-          method: "DELETE",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(endpoint ? { endpoint } : {}),
-        });
+        if (endpoint) {
+          await fetch("/api/push/subscribe", {
+            method: "DELETE",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ endpoint }),
+          });
+        }
         toast.success("Phone alerts are off on this device.");
         return;
       }
@@ -59,12 +78,20 @@ export function PhoneAlertsSwitch({
         toast.error("Allow notifications to get a walk alert.");
         return;
       }
-      const registration = await navigator.serviceWorker.register("/serwist/sw.js", { scope: "/" });
-      const subscription = await registration.pushManager.subscribe({
+      await navigator.serviceWorker.register("/serwist/sw.js", { scope: "/" });
+      const ready = await navigator.serviceWorker.ready;
+      const existing = await ready.pushManager.getSubscription();
+      await existing?.unsubscribe();
+      const subscription = await ready.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: keyBytes(vapidPublicKey!),
       });
       const json = subscription.toJSON();
+      if (!json.keys?.p256dh || !json.keys.auth) {
+        setOn(false);
+        toast.error("Could not turn phone alerts on. Try again.");
+        return;
+      }
       const response = await fetch("/api/push/subscribe", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -87,7 +114,7 @@ export function PhoneAlertsSwitch({
   return (
     <div className="space-y-3">
       <p className="text-base font-medium">Phone</p>
-      <label className="flex cursor-pointer items-start justify-between gap-4" htmlFor="phone-alerts">
+      <div className="flex items-start justify-between gap-4">
         <span className="flex flex-col gap-0.5">
           <span className="text-sm font-medium">Walk starting soon</span>
           <span className="text-sm text-muted-foreground">
@@ -99,10 +126,10 @@ export function PhoneAlertsSwitch({
           checked={on}
           className="mt-0.5"
           disabled={pending}
-          id="phone-alerts"
+          id={switchId}
           onCheckedChange={(checked) => void toggle(checked)}
         />
-      </label>
+      </div>
     </div>
   );
 }
