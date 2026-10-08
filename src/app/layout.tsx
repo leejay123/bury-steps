@@ -26,7 +26,8 @@ import { appUrl } from "@/lib/urls";
 import { PAGE_X, PAGE_Y } from "@/lib/page-x";
 import { SiteMobileNav, SiteNavSlot, SiteBottomNav } from "@/components/site-nav";
 import { HeaderBootScript } from "@/components/header-boot";
-import { SiteFooter } from "@/components/site-footer";
+import { MobileMenuShell } from "@/components/mobile-menu-shell";
+import { SiteFooter, copyrightYear } from "@/components/site-footer";
 import { SiteBrandLink } from "@/components/site-brand-link";
 import { SiteLogo } from "@/components/site-logo";
 import { BackToTopGate } from "@/components/back-to-top-gate";
@@ -102,7 +103,7 @@ async function isSignedIn() {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const theme = await getSiteTheme();
+  const [theme, year] = await Promise.all([getSiteTheme(), copyrightYear()]);
   // Not awaited: the page is drawn without waiting for the session, so the
   // same ready-made page can serve everyone. Only the parts that differ
   // (the hero's buttons) wait for this, each in its own placeholder.
@@ -220,7 +221,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 */}
                 <div className={`group/header-row grid h-14 grid-cols-[1fr_auto_1fr] items-center gap-3 ${PAGE_X} md:grid-cols-[auto_minmax(0,1fr)_auto]`}>
                   <HeaderPartBoundary name="mobile-nav">
-                    <Suspense fallback={null}>
+                    <Suspense fallback={<MobileMenuShell />}>
                       <SiteMobileNav />
                     </Suspense>
                   </HeaderPartBoundary>
@@ -255,7 +256,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     id="bs-header-boot"
                     suppressHydrationWarning
                   />
-                  <HeaderBootScript />
+                  <HeaderBootScript facebookUrl={theme.facebookGroupUrl.trim()} />
                   <HeaderPartBoundary name="nav">
                     <Suspense fallback={null}>
                       <SiteNavSlot />
@@ -292,11 +293,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </PageFade>
             </main>
             <HeaderPartBoundary name="footer">
-              <Suspense fallback={null}>
-                <SiteFooter />
-              </Suspense>
+              <SiteFooter theme={theme} year={year} />
             </HeaderPartBoundary>
             <HeaderPartBoundary name="bottom-nav">
+              <div id="bs-bottom-boot" />
               <Suspense fallback={null}>
                 <SiteBottomNav />
               </Suspense>

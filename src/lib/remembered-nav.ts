@@ -3,6 +3,9 @@ export const NAV_COOKIE = "bs-nav";
 /** One letter, so the header avatar is the right person before the account loads. */
 export const AVATAR_COOKIE = "bs-av";
 
+/** Phone bottom-bar tabs last shown, so a refresh can draw that bar at once. */
+export const BAR_COOKIE = "bs-bar";
+
 export type RememberedNavItem = { href: string; label: string };
 
 /** The menu last shown in the header, so a refresh can draw those links at once. */

@@ -571,6 +571,10 @@ html:has([data-nav-ready]) #bs-header-boot {
   display: none;
 }
 
+html:has([data-bottom-nav]) #bs-bottom-boot {
+  display: none;
+}
+
 
 /* Phone bottom navigation (bottom-nav-bar.tsx): its height, including the
    iPhone home indicator, so the page spacer, back-to-top button, cookie

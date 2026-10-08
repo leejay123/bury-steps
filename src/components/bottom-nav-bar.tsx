@@ -27,6 +27,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { isNavItemActive } from "@/components/site-nav-items";
+import { BAR_COOKIE } from "@/lib/remembered-nav";
+import { writeClientCookie } from "@/lib/remembered-rows-key";
 import {
   Drawer,
   DrawerContent,
@@ -184,6 +186,18 @@ export function BottomNavBar({
 
   const moreActive = more.some((group) => group.items.some((item) => isNavItemActive(pathname, item.href)));
   const columns = tabs.length + 1;
+  const barSignature = tabs.map((tab) => `${tab.href}\t${tab.label}`).join("\n");
+
+  useEffect(() => {
+    const remembered = barSignature
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => {
+        const tab = line.indexOf("\t");
+        return { href: line.slice(0, tab), label: line.slice(tab + 1) };
+      });
+    if (remembered.length) writeClientCookie(BAR_COOKIE, encodeURIComponent(JSON.stringify(remembered)));
+  }, [barSignature]);
 
   const renderTab = (item: BottomNavItem) => {
     const active = isNavItemActive(pathname, item.href);

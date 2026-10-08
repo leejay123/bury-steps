@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { getOptionalUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { vapidConfig } from "@/lib/vapid";
+import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
 import { navItems } from "@/components/site-nav-items";
@@ -64,7 +65,9 @@ export function SiteNavFallback({ initial = "", items = [] }: { initial?: string
         data-nav-ready=""
       >
         <SiteSearchBar />
-        <span aria-hidden className="inline-flex size-9 shrink-0 rounded-full border border-border bg-background" />
+        <span aria-hidden className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground">
+          <Bell aria-hidden className="size-4" />
+        </span>
         <span
           aria-hidden
           className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground uppercase"
