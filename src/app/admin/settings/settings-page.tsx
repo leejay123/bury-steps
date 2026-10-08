@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Skeleton } from "@/components/ui/skeleton";
 import { SettingsBackLink, SettingsSubPageTabs } from "./settings-page-nav";
 
 /** Same width for every settings page, header and body alike, so every
@@ -230,24 +229,7 @@ export function SettingsListHeader({
   );
 }
 
-/**
- * Shown under a settings page's title while its current values load — the
- * title and description are already there (they're part of the ready-made
- * page), so this only stands in for the boxes of settings below them.
- */
+/** Settings appear when they are ready. The page title stays. */
 export function SettingsContentSkeleton() {
-  return (
-    <div data-page-loading="" aria-busy="true" aria-label="Loading settings" className="flex flex-col gap-3">
-      <Skeleton className="h-3 w-28" />
-      <div className="flex flex-col gap-px overflow-hidden rounded-xl border bg-border">
-        {[0, 1, 2].map((i) => (
-          <div className="flex flex-col gap-3 bg-card p-5 md:p-6" key={i}>
-            <Skeleton className="h-5 w-40" />
-            <Skeleton className="h-4 w-full max-w-md" />
-            <Skeleton className="h-9 w-full max-w-sm" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  return null;
 }

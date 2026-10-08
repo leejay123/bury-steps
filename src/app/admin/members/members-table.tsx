@@ -45,7 +45,6 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
 import { SkeletonReveal } from "@/components/spectrumui/skeleton-reveal";
 import {
   Select,
@@ -79,21 +78,7 @@ function memberGroupKey(member: ViewMember): MemberGroupKey {
  * shows up instantly instead of dimming stale rows for however long the
  * fetch takes. */
 export function MemberRowSkeleton() {
-  return (
-    <DataListItem className={dataListItemStackClassName}>
-      <DataListItemMain>
-        <Skeleton className="size-9 shrink-0 rounded-full" />
-        <DataListBody className="flex flex-col gap-1.5">
-          <Skeleton className="h-4 w-32 max-w-full" />
-          <Skeleton className="h-3.5 w-44 max-w-full" />
-          <Skeleton className="h-3 w-52 max-w-full" />
-        </DataListBody>
-      </DataListItemMain>
-      <DataListActions className={cn("justify-end", dataListActionsStackClassName)}>
-        <Skeleton className="h-7 w-20 rounded-md" />
-      </DataListActions>
-    </DataListItem>
-  );
+  return null;
 }
 
 function MemberListRow({
@@ -579,13 +564,7 @@ function MembersTableInner({
           icon={Search}
           title="No matching members"
         />
-      ) : rows.length === 0 ? (
-        <DataList>
-          {Array.from({ length: 5 }, (_, i) => (
-            <MemberRowSkeleton key={i} />
-          ))}
-        </DataList>
-      ) : (
+      ) : rows.length === 0 ? null : (
         <>
           <SkeletonReveal
             loading={isPending}

@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -135,7 +134,9 @@ function AddAttendanceDialogForm({
                 ) : null}
               </div>
               {!loaded ? (
-                <Skeleton aria-label="Looking up members…" className="h-9 w-full" role="status" />
+                <p className="text-sm text-muted-foreground" role="status">
+                  Looking up members…
+                </p>
               ) : noMatch ? (
                 <p className="text-sm text-muted-foreground">No matching members.</p>
               ) : (

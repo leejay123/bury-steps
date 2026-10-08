@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { MemberRowSkeleton } from "./members-table";
 import { Users } from "lucide-react";
 import { MembersFilterChrome } from "@/components/list-chrome";
 import { RememberListCount } from "@/components/remember-list-count";
@@ -128,13 +127,6 @@ function MembersListSkeleton({ rows }: { rows: number | null }) {
   return (
     <div data-page-loading="" aria-busy="true" className="flex flex-col gap-4">
       <MembersFilterChrome />
-      {rows != null && rows > 0 ? (
-        <DataList>
-          {Array.from({ length: rows }, (_, i) => (
-            <MemberRowSkeleton key={i} />
-          ))}
-        </DataList>
-      ) : null}
     </div>
   );
 }

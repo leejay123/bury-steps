@@ -24,7 +24,6 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command";
-import { Skeleton } from "@/components/ui/skeleton";
 import { SkeletonReveal } from "@/components/spectrumui/skeleton-reveal";
 import type { SiteSearchGroup, SiteSearchKind } from "@/lib/site-search";
 
@@ -211,15 +210,5 @@ export function SiteSearchDialogInner({ initialOpen }: { initialOpen: boolean })
 }
 
 function SearchSkeleton() {
-  return (
-    <div aria-hidden className="flex flex-col gap-3 p-3">
-      <Skeleton className="h-3 w-16" />
-      {Array.from({ length: 4 }, (_, index) => (
-        <div className="flex items-center gap-2" key={index}>
-          <Skeleton className="size-4 rounded-sm" />
-          <Skeleton className="h-3.5" style={{ width: `${[45, 30, 55, 38][index]}%` }} />
-        </div>
-      ))}
-    </div>
-  );
+  return null;
 }

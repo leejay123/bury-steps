@@ -4,8 +4,6 @@ import { PageFade } from "@/components/page-fade";
 import { ClientPathnameProvider } from "@/components/client-pathname";
 import { SiteMotionConfig } from "@/components/site-motion-config";
 import { LiveUpdates } from "@/components/live-updates";
-import { SkeletonHoldScript } from "@/components/skeleton-hold-script";
-import { ContentReveal } from "@/components/content-reveal";
 import { KeepFormInputOnError } from "@/components/keep-form-input-on-error";
 import { WalkEssentialsProvider } from "@/components/walk-essentials-context";
 import { SignedInProvider } from "@/components/signed-in-context";
@@ -137,7 +135,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           makes every refresh start at the top instead — predictable, if
           less clever than a correct restore would be.
         */}
-        <SkeletonHoldScript />
         <Script id="scroll-restoration" strategy="beforeInteractive">
           {`try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch {}`}
         </Script>
@@ -156,7 +153,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <div className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
             <UnlockPageOnNavigate />
             <LiveUpdates />
-            <ContentReveal />
             <KeepFormInputOnError />
             {/*
               Off-screen until focused, so a keyboard/screen-reader user's

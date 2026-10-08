@@ -6,7 +6,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SkLine, WalkRowsSkeleton } from "@/components/list-skeletons";
+import { WalkRowsSkeleton } from "@/components/list-skeletons";
 
 /** Search box matching the real lists — shown while the rows load, not a grey bar. */
 export function ListSearch({ label, placeholder }: { label: string; placeholder: string }) {
@@ -240,26 +240,10 @@ export function HistoryFilterChrome() {
   );
 }
 
-function MemberWalkCardSkeleton() {
-  return (
-    <div className="overflow-hidden rounded-xl border bg-card" data-reveal-card="">
-      <div className="flex items-center justify-between gap-3 border-b bg-muted/50 px-6 py-1.5">
-        <SkLine className="w-28" size="xs" />
-        <SkLine className="w-16" size="xs" />
-      </div>
-      <div className="flex flex-col gap-1.5 p-6">
-        <SkLine className="w-48" />
-        <SkLine className="w-36" size="sm" />
-        <div className="mt-1.5 h-9 w-28 rounded-md bg-primary/20" />
-      </div>
-    </div>
-  );
-}
-
-/** Member Walks: the real Upcoming / All walks tabs, search and filters, then one grey card per walk. */
+/** Member Walks: the real Upcoming / All walks tabs, search and filters. The cards appear when the walks are ready. */
 export function MemberWalksHold({
   allCount = null,
-  recent = 0,
+  recent: _recent = 0,
   upcomingCount = null,
 }: {
   allCount?: number | null;
@@ -292,26 +276,10 @@ export function MemberWalksHold({
                   value="asc"
                 />
               </div>
-              {Array.from({ length: rows }, (_, i) => (
-                <MemberWalkCardSkeleton key={i} />
-              ))}
             </div>
           </TabsContent>
         )}
       </Tabs>
-      {recent > 0 ? (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-medium text-muted-foreground">Your recent walks</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            {Array.from({ length: recent }, (_, i) => (
-              <div className="rounded-xl border p-4" data-reveal-card="" key={i}>
-                <SkLine className="w-40" />
-                <SkLine className="w-56" size="sm" />
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
     </div>
   );
 }
