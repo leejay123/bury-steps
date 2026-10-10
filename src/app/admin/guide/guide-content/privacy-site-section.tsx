@@ -68,7 +68,10 @@ export function PrivacySiteSection() {
               soon as you save. If they do not, use{" "}
               <Link href="/admin/settings/cache">Refresh the homepage</Link> in Settings. The photo slider
               is not created on every visit. A <strong>Back to top</strong> button can be turned
-              off in <Link href="/admin/settings/behaviour">Site behaviour</Link>.
+              off in <Link href="/admin/settings/behaviour">Site behaviour</Link>. Owners also have{" "}
+              <strong>Preview loading placeholders (temporary)</strong> there: in that browser only,
+              pages show their grey loading placeholder instead of their content, so you can check
+              how it looks. Nobody else sees it, and a label at the bottom of the screen turns it off.
             </p>
             <p>
               First-time visitors see a cookie notice at the bottom of the screen, with Accept

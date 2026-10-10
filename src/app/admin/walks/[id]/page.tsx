@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
 import WalkDetailLoading from "./loading";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -437,7 +438,9 @@ async function WalkDetailPageContent({
 export default function WalkDetailPage(props: Parameters<typeof WalkDetailPageContent>[0]) {
   return (
     <Suspense fallback={<WalkDetailLoading />}>
-      <WalkDetailPageContent {...props} />
+      <PlaceholderPreview fallback={<WalkDetailLoading />}>
+        <WalkDetailPageContent {...props} />
+      </PlaceholderPreview>
     </Suspense>
   );
 }

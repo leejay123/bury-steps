@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { MemberRowsSkeleton } from "@/components/list-skeletons";
 import { Users } from "lucide-react";
 import { MembersFilterChrome } from "@/components/list-chrome";
@@ -34,7 +35,9 @@ export default function MembersPage({
       />
       {/* The heading shows straight away; only the list waits for data. */}
       <Suspense fallback={<MembersListSkeleton />}>
-        <MembersForViewer searchParams={searchParams} />
+        <PlaceholderPreview fallback={<MembersListSkeleton />}>
+          <MembersForViewer searchParams={searchParams} />
+        </PlaceholderPreview>
       </Suspense>
     </div>
   );

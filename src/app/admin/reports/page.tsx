@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
 import { ReportsFilterChrome } from "@/components/list-chrome";
 import { RememberListCount } from "@/components/remember-list-count";
@@ -150,7 +151,9 @@ export function ReportsPageFallback() {
 export default function AccidentReportsPage(props: Parameters<typeof AccidentReportsPageContent>[0]) {
   return (
     <Suspense fallback={<ReportsPageFallback />}>
-      <AccidentReportsPageContent {...props} />
+      <PlaceholderPreview fallback={<ReportsPageFallback />}>
+        <AccidentReportsPageContent {...props} />
+      </PlaceholderPreview>
     </Suspense>
   );
 }

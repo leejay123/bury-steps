@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { connection } from "next/server";
 import { WalkListChrome } from "@/components/list-chrome";
 import { RememberListCount } from "@/components/remember-list-count";
@@ -60,7 +61,9 @@ async function AdminPageContent() {
           />
           {/* The heading and Create button show straight away; only the list waits. */}
           <Suspense fallback={<AdminWalksSkeleton />}>
-            <AdminWalksTabs userId={admin.id} />
+            <PlaceholderPreview fallback={<AdminWalksSkeleton />}>
+              <AdminWalksTabs userId={admin.id} />
+            </PlaceholderPreview>
           </Suspense>
         </section>
       ) : admin.permWalksCreate ? (

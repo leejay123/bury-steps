@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
 import Link from "next/link";
 import type { User } from "@prisma/client";
 import { redirect } from "next/navigation";
@@ -40,7 +41,9 @@ export default function DashboardPage() {
         </p>
       </div>
       <Suspense fallback={<MemberWalksHold />}>
-        <WalksForMember />
+        <PlaceholderPreview fallback={<MemberWalksHold />}>
+          <WalksForMember />
+        </PlaceholderPreview>
       </Suspense>
     </div>
   );

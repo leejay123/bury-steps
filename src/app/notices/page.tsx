@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
 import { getOptionalUser, requireUser } from "@/lib/auth";
@@ -38,7 +39,9 @@ export default async function NoticesPage() {
     // The notices themselves are for members only, so they're added after
     // the signed-in check — never part of the ready-made page everyone shares.
     <Suspense fallback={<NoticesFallback categories={tabs} />}>
-      <NoticesForMember />
+      <PlaceholderPreview fallback={<NoticesFallback categories={tabs} />}>
+        <NoticesForMember />
+      </PlaceholderPreview>
     </Suspense>
   );
 }

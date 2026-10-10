@@ -13,6 +13,7 @@ import { ProgressToggle } from "./progress-toggle";
 import { OrganiserInviteToggle } from "./organiser-invite-toggle";
 import { EmergencyContactToggle } from "./emergency-contact-toggle";
 import { ContactMessagesOwnerSettings } from "./contact-messages-owner-settings";
+import { PlaceholderPreviewToggle } from "./placeholder-preview-toggle";
 
 
 
@@ -32,7 +33,7 @@ export default function SiteBehaviourSettingsPage() {
 }
 
 async function SiteBehaviourSettingsPageContent() {
-  await requirePermission("permDisplay");
+  const admin = await requirePermission("permDisplay");
   const [theme, organisers, settings] = await Promise.all([
     getSiteTheme(),
     prisma.user.findMany({
@@ -70,6 +71,7 @@ async function SiteBehaviourSettingsPageContent() {
         <FooterWordmarkSettings enabled={theme.footerWordmarkEnabled} />
         {theme.footerWordmarkEnabled ? <FooterWordmarkMobileSettings enabled={theme.footerWordmarkMobile} /> : null}
         <ProgressToggle enabled={settings?.progressEnabled ?? true} />
+        {admin.isOwner ? <PlaceholderPreviewToggle /> : null}
       </SettingsSectionGroup>
 
       <SettingsSectionGroup description="What members fill in before they clock in." title="Clock-in">

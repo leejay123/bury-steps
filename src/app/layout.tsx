@@ -13,6 +13,7 @@ import { FullWidthDivider } from "@/components/full-width-divider";
 import { ButtonRipple } from "@/components/button-ripple";
 import { HeaderScrollShadow } from "@/components/header-scroll-shadow";
 import { FocusRescue } from "@/components/focus-rescue";
+import { PlaceholderPreviewBadge } from "@/components/placeholder-preview-badge";
 import { HeaderPartBoundary } from "@/components/header-part-boundary";
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
@@ -323,6 +324,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ButtonRipple />
           <HeaderScrollShadow />
           <FocusRescue />
+          <PlaceholderPreviewBadge />
           <HeaderPartBoundary name="cookie-notice">
             <Suspense fallback={null}>
               <SiteCookieConsentGate />

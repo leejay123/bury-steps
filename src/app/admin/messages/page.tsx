@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
 import { MessagesFilterChrome } from "@/components/list-chrome";
 import { RememberListCount } from "@/components/remember-list-count";
@@ -79,7 +80,9 @@ export function MessagesPageFallback() {
 export default function AdminMessagesPage() {
   return (
     <Suspense fallback={<MessagesPageFallback />}>
-      <AdminMessagesPageContent />
+      <PlaceholderPreview fallback={<MessagesPageFallback />}>
+        <AdminMessagesPageContent />
+      </PlaceholderPreview>
     </Suspense>
   );
 }

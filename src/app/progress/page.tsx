@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
 import type { Metadata } from "next";
 import { RememberListCount, RememberText } from "@/components/remember-list-count";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
@@ -53,7 +54,15 @@ export default function ProgressPage() {
           </div>
         }
       >
-        <ProgressForMember />
+        <PlaceholderPreview
+          fallback={
+            <div className="contents" data-page-loading="">
+              <ProgressSkeleton />
+            </div>
+          }
+        >
+          <ProgressForMember />
+        </PlaceholderPreview>
       </Suspense>
     </div>
   );
