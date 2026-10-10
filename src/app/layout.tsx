@@ -236,7 +236,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <div className="contents max-md:col-start-2 max-md:flex max-md:justify-center" data-site-logo-cell="">
                     <HeaderPartBoundary
                       fallback={
-                        <div className="flex h-8 min-w-0 items-center justify-self-start">
+                        <div className="flex h-8 min-w-max items-center justify-self-start">
                           <SiteLogo alt={DEFAULT_SITE_NAME} />
                         </div>
                       }
@@ -244,7 +244,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     >
                       <Suspense
                         fallback={
-                          <div className="flex h-8 min-w-0 items-center justify-self-start">
+                          <div className="flex h-8 min-w-max items-center justify-self-start">
                             <SiteLogo alt={DEFAULT_SITE_NAME} />
                           </div>
                         }
