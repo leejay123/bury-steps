@@ -17,6 +17,7 @@ import { HeroCopy } from "@/components/hero-copy";
 import { noticeDateLabel } from "@/lib/notices";
 import { openMemberNoticeBell } from "@/lib/member-notices-bridge";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export type HomepageNoticeSlide = {
   id: string;
@@ -167,6 +168,54 @@ export function HomeMemberNoticesSection({
               </>
             ) : null}
           </Carousel>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * "Latest notices" while a member's notices load (they're members-only, so
+ * they arrive after the sign-in check rather than with the page): the real
+ * heading and line, then grey cards the size of the real ones — one on a
+ * phone, two on a tablet, three on a wide screen. Only a browser the site
+ * remembers as signed in shows it (data-member-home), so visitors never see
+ * a section that isn't theirs.
+ */
+export function HomeMemberNoticesSkeleton() {
+  return (
+    <section aria-hidden data-member-home="" data-page-loading="">
+      <HeroCopy eyebrow={null} title="Latest notices" titleAs="h2">
+        <p>Updates for members — tap a card to read more, or open the bell for everything.</p>
+      </HeroCopy>
+      <div className="relative">
+        <FullWidthDivider position="top" />
+        <div className="-ml-px flex w-full overflow-hidden">
+          {[0, 1, 2].map((i) => (
+            <div
+              className={cn(
+                "flex shrink-0 basis-full bg-border pl-px sm:basis-1/2 lg:basis-1/3",
+                i > 0 && "hidden sm:flex",
+                i > 1 && "sm:hidden lg:flex",
+              )}
+              key={i}
+            >
+              <div className="flex h-44 w-full flex-col gap-3 bg-background p-6 sm:h-48 md:p-8">
+                <div className="flex shrink-0 flex-col gap-1">
+                  <div className="flex h-7 items-center">
+                    <Skeleton className="h-[64%] w-2/3 rounded-[4px]" />
+                  </div>
+                  <div className="flex h-4 items-center">
+                    <Skeleton className="h-[70%] w-24 rounded-[4px]" />
+                  </div>
+                </div>
+                <div className="flex min-h-10 flex-col justify-center gap-2">
+                  <Skeleton className="h-3 w-full rounded-[4px]" />
+                  <Skeleton className="h-3 w-4/5 rounded-[4px]" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>

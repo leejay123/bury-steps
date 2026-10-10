@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { HeroSection } from "@/components/hero";
 import { HeroCinematic } from "@/components/hero-cinematic";
 import { HeroGlobe } from "@/components/hero-globe";
-import { HomeMemberNoticesSection } from "@/components/home-member-notices";
+import { HomeMemberNoticesSection, HomeMemberNoticesSkeleton } from "@/components/home-member-notices";
 import { HeroMarqueeHome } from "@/components/hero-marquee-home";
 import { HeroParallaxHome } from "@/components/hero-parallax-home";
 import { HeroSliderHome } from "@/components/hero-slider-home";
@@ -142,7 +142,8 @@ async function HomeSections({
       howThisStartedTeaser={theme.howThisStartedTeaser}
       howThisStartedTitle={theme.howThisStartedTitle}
       memberNoticesSlot={
-        <Suspense fallback={null}>
+        // Members' browsers show the section's shape while it loads (visitors don't).
+        <Suspense fallback={<HomeMemberNoticesSkeleton />}>
           <HomeMemberNotices />
         </Suspense>
       }
