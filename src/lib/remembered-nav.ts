@@ -26,6 +26,22 @@ export function avatarImageSrc(raw: string | undefined | null): string | null {
 /** Phone bottom-bar tabs last shown, so a refresh can draw that bar at once. */
 export const BAR_COOKIE = "bs-bar";
 
+/**
+ * Set for a minute once the server has filled the cookies above right after
+ * sign-in (/api/remember-menu), so the proxy can't keep sending someone there
+ * if their menu can't be worked out.
+ */
+export const MENU_FILLED_COOKIE = "bs-menu-filled";
+
+/** Where /api/remember-menu carries on to: only a path on this site, never another site (//evil.example) or a full URL. */
+export function safeNext(raw: string | null): string {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw.includes("\\")) return "/";
+  return raw;
+}
+
+/** How many menu pages fit in the phone bottom bar (the rest go under More). */
+export const BOTTOM_BAR_TABS = 4;
+
 export type RememberedNavItem = { href: string; label: string };
 
 /** The menu last shown in the header, so a refresh can draw those links at once. */

@@ -1,6 +1,7 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { isPublicPath, isUnknownAppPath } from "@/lib/public-routes";
+import { MENU_FILLED_COOKIE, NAV_COOKIE } from "@/lib/remembered-nav";
 import { clerkAuthorizedParties, shouldProxyClerkFrontendApi } from "@/lib/urls";
 
 export default clerkMiddleware(
@@ -27,6 +28,22 @@ export default clerkMiddleware(
     // visitor to sign in just to be told that afterwards was confusing.
     const { pathname } = req.nextUrl;
     if (!isPublicPath(pathname) && !isUnknownAppPath(pathname)) await auth.protect();
+
+    // First page after signing in: no remembered menu yet, so the header and
+    // phone bar would be empty until the server sent them. Save the menu first
+    // (once per browser session), then come straight back to this page.
+    if (
+      req.method === "GET" &&
+      req.headers.get("sec-fetch-dest") === "document" &&
+      !pathname.startsWith("/api/") &&
+      !req.cookies.has(NAV_COOKIE) &&
+      !req.cookies.has(MENU_FILLED_COOKIE) &&
+      (await auth()).userId
+    ) {
+      const fill = new URL("/api/remember-menu", req.url);
+      fill.searchParams.set("next", `${pathname}${req.nextUrl.search}`);
+      return NextResponse.redirect(fill, 307);
+    }
   },
   {
     authorizedParties: clerkAuthorizedParties(),

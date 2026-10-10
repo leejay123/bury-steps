@@ -9,6 +9,7 @@ import { navItems } from "@/components/site-nav-items";
 import {
   AVATAR_COOKIE,
   AVATAR_IMAGE_COOKIE,
+  BOTTOM_BAR_TABS,
   NAV_COOKIE,
   avatarImageSrc,
   parseRememberedNav,
@@ -283,7 +284,7 @@ export async function SiteBottomNav() {
   const items = navItems(isAdmin, isAdmin ? "/admin/walks" : "/walks", permissions, progressEnabled).map((item) =>
     item.href === "/notices" ? { ...item, dot: noticesUnread } : item,
   );
-  const tabCount = 4;
+  const tabCount = BOTTOM_BAR_TABS;
   const tabs = items.slice(0, tabCount);
   const rest = items.slice(tabCount);
   return (
