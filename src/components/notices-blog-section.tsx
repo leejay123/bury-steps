@@ -188,6 +188,9 @@ function NoticesBlogSectionInner({
                   data-stagger-item=""
                   href={`/notices/${notice.slug}`}
                   key={notice.id}
+                  // Fetches this notice before it's tapped, so it opens with
+                  // no placeholder (a shared saved copy, no database work).
+                  prefetch={true}
                 >
                   <div className="flex items-center gap-2">
                     <p className="text-xs font-medium text-muted-foreground">

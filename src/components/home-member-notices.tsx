@@ -61,7 +61,8 @@ function NoticeCarouselCard({ notice }: { notice: HomepageNoticeSlide }) {
 
   if (notice.kind === "PAGE" && notice.slug) {
     return (
-      <Link className={noticeCardClassName} href={`/notices/${notice.slug}`}>
+      // Fetched before it's tapped, so the notice opens with no placeholder.
+      <Link className={noticeCardClassName} href={`/notices/${notice.slug}`} prefetch={true}>
         {content}
       </Link>
     );
