@@ -27,7 +27,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { isNavItemActive } from "@/components/site-nav-items";
-import { BAR_COOKIE } from "@/lib/remembered-nav";
+import { BAR_COOKIE, MORE_COOKIE } from "@/lib/remembered-nav";
 import { writeClientCookie } from "@/lib/remembered-rows-key";
 import {
   Drawer,
@@ -187,6 +187,15 @@ export function BottomNavBar({
   const moreActive = more.some((group) => group.items.some((item) => isNavItemActive(pathname, item.href)));
   const columns = tabs.length + 1;
   const barSignature = tabs.map((tab) => `${tab.href}\t${tab.label}`).join("\n");
+  const moreSignature = more
+    .flatMap((group) => group.items.map((item) => item.href))
+    .filter((href) => href.startsWith("/"))
+    .join("\n");
+
+  useEffect(() => {
+    // The header script highlights More from this on the next refresh.
+    if (moreSignature) writeClientCookie(MORE_COOKIE, encodeURIComponent(JSON.stringify(moreSignature.split("\n"))));
+  }, [moreSignature]);
 
   useEffect(() => {
     const remembered = barSignature

@@ -227,7 +227,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   content, so when Sign in + Join the group are wider than
                   half the space the logo moves left rather than overlapping.
                 */}
-                <div className={`group/header-row grid h-14 grid-cols-[1fr_auto_1fr] items-center gap-3 ${PAGE_X} md:grid-cols-[auto_minmax(0,1fr)_auto]`}>
+                <div className={`group/header-row grid h-14 grid-cols-[1fr_auto_1fr] items-center gap-3 ${PAGE_X} md:grid-cols-[1fr_auto_1fr]`}>
                   <HeaderPartBoundary name="mobile-nav">
                     <Suspense fallback={<MobileMenuShell />}>
                       <SiteMobileNav />

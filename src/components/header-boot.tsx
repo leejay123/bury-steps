@@ -78,7 +78,7 @@ if(items.length){
   if(slot&&links){
     document.documentElement.setAttribute("data-remembered-in","");
     var html='<div class="hidden min-w-0 items-center justify-center md:flex"><div class="relative hidden min-w-0 md:block"><nav class="flex max-w-full items-center justify-center-safe gap-1 overflow-x-auto overscroll-x-contain text-[14px] [scrollbar-width:none] [-ms-overflow-style:none]">'+links+"</nav></div></div>"
-    +'<div class="flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3 md:min-w-[7.75rem] lg:min-w-[20.5rem]">'
+    +'<div class="flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3 md:min-w-max">'
     +(val("bs-search")==="1"?'<button type="button" aria-label="Search the site" class="flex size-9 shrink-0 items-center justify-center gap-2 rounded-full text-sm text-muted-foreground md:h-8 md:w-44 md:justify-start md:rounded-md md:border md:bg-background md:px-2.5 md:shadow-xs lg:w-60"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4 shrink-0 max-md:text-foreground" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg><span class="truncate max-md:hidden">Search the site…</span><kbd class="pointer-events-none ml-auto hidden h-5 min-w-5 select-none items-center justify-center rounded-sm bg-muted px-1 font-sans text-xs font-medium text-muted-foreground lg:inline-flex">'+(/mac|iphone|ipad|ipod/i.test(navigator.platform||navigator.userAgent)?"⌘K":"Ctrl K")+'</kbd></button>':"")
     +BELL+avatar+"</div>";
     function paint(){if(document.querySelector("[data-nav-ready]:not([hidden] *)")){obs.disconnect();slot.textContent="";return;}if(!slot.childElementCount)slot.innerHTML=html;}
@@ -110,7 +110,12 @@ for(var t=0;t<tabs.length;t++){
     +'<span class="relative flex h-7 w-14 items-center justify-center">'+(tabOn?'<span class="absolute inset-0 rounded-full bg-muted"></span>':"")+'<span class="relative">'+icon(tab.label,"size-5",tabOn?"2.25":"1.75")+'</span></span>'
     +'<span class="max-w-full truncate px-1">'+esc(tab.label)+"</span></a></li>";
 }
-cells+='<li class="flex"><span class="relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-muted-foreground"><span class="relative flex h-7 w-14 items-center justify-center"><span class="relative">'+icon("More","size-5","1.75")+'</span></span><span class="max-w-full truncate px-1">More</span></span></li>';
+// More is highlighted on the pages it holds (same rule as BottomNavBar's moreActive).
+var moreList=[];
+if(items.length){try{var saved=JSON.parse(val("bs-more")||"[]");for(var mi=0;mi<saved.length&&mi<40;mi++){var mh=saved[mi];if(typeof mh==="string"&&mh.charAt(0)==="/"&&mh.indexOf("//")!==0)moreList.push(mh);}}catch(e){}}
+else moreList=["/apps","/privacy-policy","/terms-of-service"];
+var moreOn=false;for(var mj=0;mj<moreList.length;mj++)if(on(moreList[mj]))moreOn=true;
+cells+='<li class="flex"><span class="relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium '+(moreOn?"text-foreground":"text-muted-foreground")+'"><span class="relative flex h-7 w-14 items-center justify-center">'+(moreOn?'<span class="absolute inset-0 rounded-full bg-muted"></span>':"")+'<span class="relative">'+icon("More","size-5",moreOn?"2.25":"1.75")+'</span></span><span class="max-w-full truncate px-1">More</span></span></li>';
 function paintBar(){if(document.querySelector("[data-bottom-nav]:not([hidden] *)")){barObs.disconnect();barSlot.textContent="";return;}if(!barSlot.childElementCount)barSlot.innerHTML='<div aria-hidden="true" class="h-[var(--bottom-nav-offset,0px)] md:hidden"></div><nav aria-label="Main" class="fixed inset-x-0 bottom-0 z-[57] border-t bg-background/85 pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] backdrop-blur-xl md:hidden"><ul class="mx-auto grid h-15 max-w-md" style="grid-template-columns:repeat('+cols+',minmax(0,1fr))">'+cells+"</ul></nav>";}
 var barObs=new MutationObserver(paintBar);
 if(barSlot.parentNode)barObs.observe(barSlot.parentNode,{childList:true,subtree:true});

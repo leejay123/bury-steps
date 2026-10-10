@@ -8,8 +8,10 @@ import {
   BAR_COOKIE,
   BOTTOM_BAR_TABS,
   MENU_FILLED_COOKIE,
+  MORE_COOKIE,
   NAV_COOKIE,
   SEARCH_COOKIE,
+  memberMoreHrefs,
   safeNext,
   showsHeaderSearch,
 } from "@/lib/remembered-nav";
@@ -50,6 +52,7 @@ export async function GET(req: NextRequest) {
   const options = { path: "/", sameSite: "lax" as const, maxAge: MONTH, httpOnly: false };
   response.cookies.set(NAV_COOKIE, JSON.stringify(items), options);
   response.cookies.set(BAR_COOKIE, JSON.stringify(items.slice(0, BOTTOM_BAR_TABS)), options);
+  response.cookies.set(MORE_COOKIE, JSON.stringify(memberMoreHrefs(items, isAdmin)), options);
   response.cookies.set(AVATAR_COOKIE, initial, options);
   if (showsHeaderSearch(user)) response.cookies.set(SEARCH_COOKIE, "1", options);
   return response;

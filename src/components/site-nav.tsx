@@ -34,13 +34,14 @@ import { getProgressEnabled } from "@/lib/progress-settings";
 import { FULL_ORGANISER_PERMISSIONS, ORGANISER_PERMISSIONS } from "@/lib/organiser-permissions";
 
 /**
- * The right-hand column is held at the signed-in width (search, bell and
- * avatar: icons on tablets, a search bar from lg) for everyone and in the
- * placeholder too. Its contents change as the header streams in —
- * placeholder, then Sign in/Join or the member's tools — and without a fixed
- * width each change slid the centred menu sideways.
+ * The header row is three columns with equal outer ones (layout.tsx:
+ * md:grid-cols-[1fr_auto_1fr]), so the menu sits in the middle of the page
+ * whatever is on the right (search for owners, Sign in/Join, bell and
+ * avatar) and doesn't slide when that changes. The right-hand group keeps its
+ * full width (min-w-max) so it never squeezes under the menu on a narrow
+ * screen; the menu scrolls instead.
  */
-export const RIGHT_CLUSTER = "md:min-w-[7.75rem] lg:min-w-[20.5rem]";
+export const RIGHT_CLUSTER = "md:min-w-max";
 
 /** Cookie read stays inside Suspense so the shared layout can still be prerendered. */
 export async function SiteNavSlot() {

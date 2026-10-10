@@ -23,6 +23,28 @@ export function avatarImageSrc(raw: string | undefined | null): string | null {
   return `${url}?width=160`;
 }
 
+/** Pages under the phone bar's More (paths only), so the remembered bar highlights More on them too. */
+export const MORE_COOKIE = "bs-more";
+
+/**
+ * The phone bar's More pages for a signed-in member, as SiteBottomNav lists
+ * them (pages beyond the first BOTTOM_BAR_TABS, History for organisers,
+ * account and site pages). For /api/remember-menu, before the bar has saved
+ * its own list.
+ */
+export function memberMoreHrefs(items: { href: string }[], isAdmin: boolean): string[] {
+  const rest = items.slice(BOTTOM_BAR_TABS).map((item) => item.href);
+  return [
+    ...rest,
+    ...(isAdmin && !rest.includes("/history") ? ["/history"] : []),
+    "/email-preferences",
+    "/contact",
+    "/apps",
+    "/privacy-policy",
+    "/terms-of-service",
+  ];
+}
+
 /** "1" when the header shows the site search (owners only), so a refresh draws it or leaves it out at once. */
 export const SEARCH_COOKIE = "bs-search";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { AVATAR_COOKIE, AVATAR_IMAGE_COOKIE, BAR_COOKIE, NAV_COOKIE, SEARCH_COOKIE } from "@/lib/remembered-nav";
+import { AVATAR_COOKIE, AVATAR_IMAGE_COOKIE, BAR_COOKIE, MORE_COOKIE, NAV_COOKIE, SEARCH_COOKIE } from "@/lib/remembered-nav";
 import { writeClientCookie } from "@/lib/remembered-rows-key";
 
 function forget(name: string) {
@@ -22,6 +22,7 @@ export function RememberHeader({ initial, search = false }: { initial: string | 
     forget(AVATAR_COOKIE);
     forget(AVATAR_IMAGE_COOKIE);
     forget(BAR_COOKIE);
+    forget(MORE_COOKIE);
     forget(SEARCH_COOKIE);
     document.documentElement.removeAttribute("data-remembered-in");
   }, [initial, search]);
