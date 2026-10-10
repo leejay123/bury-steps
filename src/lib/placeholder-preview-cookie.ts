@@ -1,21 +1,32 @@
 /**
  * Temporary owner tool (Settings → Site behaviour): while this cookie is
- * "1" in a browser, pages there show their loading placeholder in place of
- * their content, so the placeholders can be looked at. It only affects the
- * browser it was turned on in.
+ * set in a browser, pages there show their loading placeholder — held for
+ * a few seconds before the content ("hold"), or instead of it ("always") —
+ * so the placeholders can be looked at. Only the browser it was turned on
+ * in is affected.
  */
 export const PLACEHOLDER_PREVIEW_COOKIE = "bs-preview-placeholders";
 
-export function readPlaceholderPreview(): boolean {
+export type PlaceholderPreviewMode = "hold" | "always";
+
+/** How long "hold" keeps a page's placeholder up. */
+export const PLACEHOLDER_HOLD_MS = 5000;
+
+export function parsePlaceholderPreview(value: string | undefined | null): PlaceholderPreviewMode | null {
+  return value === "hold" || value === "always" ? value : null;
+}
+
+export function readPlaceholderPreview(): PlaceholderPreviewMode | null {
   try {
-    return new RegExp(`(?:^|; )${PLACEHOLDER_PREVIEW_COOKIE}=1(?:;|$)`).test(document.cookie);
+    const match = document.cookie.match(new RegExp(`(?:^|; )${PLACEHOLDER_PREVIEW_COOKIE}=([^;]*)`));
+    return parsePlaceholderPreview(match?.[1]);
   } catch {
-    return false;
+    return null;
   }
 }
 
-export function setPlaceholderPreview(on: boolean) {
-  document.cookie = on
-    ? `${PLACEHOLDER_PREVIEW_COOKIE}=1; Path=/; Max-Age=86400; SameSite=Lax`
+export function setPlaceholderPreview(mode: PlaceholderPreviewMode | null) {
+  document.cookie = mode
+    ? `${PLACEHOLDER_PREVIEW_COOKIE}=${mode}; Path=/; Max-Age=86400; SameSite=Lax`
     : `${PLACEHOLDER_PREVIEW_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
 }

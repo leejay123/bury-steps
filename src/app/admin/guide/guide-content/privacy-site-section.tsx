@@ -70,8 +70,9 @@ export function PrivacySiteSection() {
               is not created on every visit. A <strong>Back to top</strong> button can be turned
               off in <Link href="/admin/settings/behaviour">Site behaviour</Link>. Owners also have{" "}
               <strong>Preview loading placeholders (temporary)</strong> there: in that browser only,
-              pages show their grey loading placeholder instead of their content, so you can check
-              how it looks. Nobody else sees it, and a label at the bottom of the screen turns it off.
+              pages hold their grey loading placeholder for 5 seconds before the content (or show
+              only the placeholder), so you can check how it looks. Nobody else sees it, and a label
+              at the bottom of the screen turns it off.
             </p>
             <p>
               First-time visitors see a cookie notice at the bottom of the screen, with Accept

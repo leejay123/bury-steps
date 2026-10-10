@@ -1,13 +1,16 @@
 import type { ReactNode } from "react";
-import { previewingPlaceholders } from "@/lib/placeholder-preview";
+import { holdForPreview, placeholderPreviewMode } from "@/lib/placeholder-preview";
 
 /**
- * Inside a page's <Suspense>: shows `fallback` (the page's own placeholder)
- * instead of the content while "Preview loading placeholders" is on in this
- * browser. The content isn't loaded at all then. Rendering the placeholder
- * in place of the content is the usual way to inspect a loading state;
- * it doesn't hold a request open.
+ * Inside a page's <Suspense>, around its content. With "Preview loading
+ * placeholders" on in this browser: "always" shows `fallback` (the page's
+ * own placeholder) instead of the content; "hold" keeps the placeholder up
+ * for a few seconds, then the content arrives as usual — so you can click
+ * through to a notice or a walk and see its placeholder too.
  */
 export async function PlaceholderPreview({ fallback, children }: { fallback: ReactNode; children: ReactNode }) {
-  return (await previewingPlaceholders()) ? fallback : children;
+  const mode = await placeholderPreviewMode();
+  if (mode === "always") return fallback;
+  if (mode === "hold") await holdForPreview();
+  return children;
 }

@@ -1,5 +1,5 @@
 import WalkLinkLoading from "./loading";
-import { previewingPlaceholders } from "@/lib/placeholder-preview";
+import { holdForPreview, placeholderPreviewMode } from "@/lib/placeholder-preview";
 import { cache } from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -109,7 +109,9 @@ export default async function WalkLinkPage({
   params: Promise<{ token: string }>;
 }) {
   // Temporary owner tool: show this page's placeholder instead (loading.tsx).
-  if (await previewingPlaceholders()) return <WalkLinkLoading />;
+  const preview = await placeholderPreviewMode();
+  if (preview === "always") return <WalkLinkLoading />;
+  if (preview === "hold") await holdForPreview();
   const { token } = await params;
   const walk = await getWalkByShareKey(token);
   if (!walk) notFound();

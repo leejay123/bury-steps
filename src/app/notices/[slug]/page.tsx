@@ -1,5 +1,5 @@
 import NoticeLoading from "./loading";
-import { previewingPlaceholders } from "@/lib/placeholder-preview";
+import { holdForPreview, placeholderPreviewMode } from "@/lib/placeholder-preview";
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import { DescriptionText } from "@/components/description-text";
@@ -38,7 +38,9 @@ export default async function NoticeDetailPage({
 }) {
   await requireUser();
   // Temporary owner tool: show this page's placeholder instead (loading.tsx).
-  if (await previewingPlaceholders()) return <NoticeLoading />;
+  const preview = await placeholderPreviewMode();
+  if (preview === "always") return <NoticeLoading />;
+  if (preview === "hold") await holdForPreview();
   const { slug } = await params;
   const notice = await getPageNoticeBySlug(slug);
   // Removed, or turned back into a bell-only notice, since the link went
