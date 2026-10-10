@@ -4,8 +4,6 @@ import { MessagesFilterChrome } from "@/components/list-chrome";
 import { RememberListCount } from "@/components/remember-list-count";
 import { MessageRowsSkeleton } from "@/components/list-skeletons";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
-import { MESSAGE_LINES_COOKIE } from "@/lib/remembered-rows-key";
-import { rememberedCount, rememberedLines } from "@/lib/remembered-rows";
 import Link from "next/link";
 import { requirePermission, displayName } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -63,18 +61,13 @@ async function AdminMessagesPageContent() {
   );
 }
 
-/** Real title, search and date filter. Grey rows only for the messages last shown. */
-export function MessagesPageFallback({
-  rows,
-  lines = null,
-}: {
-  rows: number | null;
-  lines?: string[] | null;
-}) {
+/** Real title, search and date filter, then as many message rows as last
+ * time — one placeholder from the first paint. */
+export function MessagesPageFallback() {
   return (
     <AdminPageFallback
-      filters={rows === 0 ? null : <MessagesFilterChrome />}
-      list={<MessageRowsSkeleton lines={lines} rows={rows ?? 0} />}
+      filters={<MessagesFilterChrome />}
+      list={<MessageRowsSkeleton remember="messages" />}
       title="Messages"
     />
   );
@@ -85,19 +78,7 @@ export function MessagesPageFallback({
 // Access is checked in layout.tsx, before anything streams.
 export default function AdminMessagesPage() {
   return (
-    <Suspense fallback={<MessagesPageFallback rows={null} />}>
-      <MessagesCounted />
-    </Suspense>
-  );
-}
-
-async function MessagesCounted() {
-  const [rows, lines] = await Promise.all([
-    rememberedCount("messages"),
-    rememberedLines(MESSAGE_LINES_COOKIE),
-  ]);
-  return (
-    <Suspense fallback={<MessagesPageFallback lines={lines} rows={rows} />}>
+    <Suspense fallback={<MessagesPageFallback />}>
       <AdminMessagesPageContent />
     </Suspense>
   );

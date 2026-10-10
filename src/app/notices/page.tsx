@@ -9,8 +9,6 @@ import { NoticesSearchChrome } from "@/components/list-chrome";
 import { NoticeCategoryBar } from "@/components/notice-category-bar";
 import { RememberListCount } from "@/components/remember-list-count";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
-import { rememberedNoticeCategories, type RememberedNoticeCategory } from "@/lib/remembered-notice-categories";
-import { rememberedRows } from "@/lib/remembered-rows";
 import { NoticeRowsSkeleton } from "@/components/list-skeletons";
 
 
@@ -29,23 +27,17 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function NoticesPage() {
+export default async function NoticesPage() {
+  // The category tabs come from the shared saved copies (not the member),
+  // built the same way as NoticesBlogSection's filters, so the placeholder
+  // in the ready-made page already has exactly the tabs the page will show.
+  const [notices, categories] = await Promise.all([getPageNotices(), getSiteNoticeCategories()]);
+  const used = categories.filter((category) => notices.some((notice) => notice.categoryId === category.id));
+  const tabs = used.length > 0 ? [{ id: "all", label: "All" }, ...used.map(({ id, label }) => ({ id, label }))] : null;
   return (
-    // Notices are for members only, so they're added after the signed-in
-    // check — never part of the ready-made page everyone shares.
-    <Suspense fallback={<NoticesFallback categories={null} rows={0} />}>
-      <NoticesCounted />
-    </Suspense>
-  );
-}
-
-async function NoticesCounted() {
-  const [rows, categories] = await Promise.all([
-    rememberedRows("notices"),
-    rememberedNoticeCategories(),
-  ]);
-  return (
-    <Suspense fallback={<NoticesFallback categories={categories} rows={rows} />}>
+    // The notices themselves are for members only, so they're added after
+    // the signed-in check — never part of the ready-made page everyone shares.
+    <Suspense fallback={<NoticesFallback categories={tabs} />}>
       <NoticesForMember />
     </Suspense>
   );
@@ -93,13 +85,7 @@ async function NoticesForMember() {
 /** The instant before the notices arrive: the page's real heading and
  * description (they never change) and list-shaped placeholders — the same
  * frame as the page, so nothing jumps. Same idea as the organiser pages. */
-function NoticesFallback({
-  rows,
-  categories,
-}: {
-  rows: number;
-  categories: RememberedNoticeCategory[] | null;
-}) {
+function NoticesFallback({ categories }: { categories: { id: string; label: string }[] | null }) {
   return (
     <div data-page-loading="" aria-busy="true" className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
       <section className="flex flex-col gap-0">
@@ -113,7 +99,8 @@ function NoticesFallback({
         </div>
         {categories ? <NoticeCategoryBar labels={categories} /> : null}
         <div className="flex flex-col gap-4 px-4 py-6 md:px-6">
-          <NoticeRowsSkeleton rows={rows} />
+          {/* As many rows as last time, from the first paint. */}
+          <NoticeRowsSkeleton remember="notices" />
         </div>
       </section>
     </div>

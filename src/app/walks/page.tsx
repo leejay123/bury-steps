@@ -10,7 +10,6 @@ import { windowState, walkStatus, upcomingListLookbackFrom } from "@/lib/walk-wi
 import { walkSharePath } from "@/lib/walk-slug";
 import { MemberWalksHold } from "@/components/list-chrome";
 import { RememberListCount } from "@/components/remember-list-count";
-import { rememberedCount } from "@/lib/remembered-rows";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -41,7 +40,7 @@ export default function DashboardPage() {
         </p>
       </div>
       <Suspense fallback={<MemberWalksHold />}>
-        <WalksCounted />
+        <WalksForMember />
       </Suspense>
     </div>
   );
@@ -53,21 +52,6 @@ async function MemberSince() {
     <>
       Member since {formatDate(user.createdAt)} · {formatMembershipAge(user.createdAt)}.
     </>
-  );
-}
-
-async function WalksCounted() {
-  const [upcomingCount, allCount, recent] = await Promise.all([
-    rememberedCount("member-walks", 100),
-    rememberedCount("member-walks-all", 500),
-    rememberedCount("member-recent", 3),
-  ]);
-  return (
-    <Suspense
-      fallback={<MemberWalksHold allCount={allCount} recent={recent ?? 0} upcomingCount={upcomingCount} />}
-    >
-      <WalksForMember />
-    </Suspense>
   );
 }
 

@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { ChevronRight } from "lucide-react";
+import { RememberedRows } from "@/components/remembered-rows";
+import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -54,11 +56,26 @@ export function SkList({
   rows = 0,
   row,
   className,
+  remember,
 }: {
   rows?: number;
   row: (index: number) => ReactNode;
   className?: string;
+  /** The list's RememberListCount key: draws as many rows as last time, from the first paint. */
+  remember?: string;
 }) {
+  if (remember) {
+    return (
+      <RememberedRows
+        as="ul"
+        className={cn("flex flex-col overflow-hidden rounded-xl border bg-card", className)}
+        remember={remember}
+        rowAs="li"
+        rowClassName="border-b last:border-0 [&:has(+[hidden])]:border-0"
+        rows={Array.from({ length: LIST_PAGE_SIZE }, (_, i) => row(i))}
+      />
+    );
+  }
   if (rows < 1) return null;
   return (
     <ul
@@ -87,7 +104,7 @@ const DETAIL_WIDTHS = ["w-28", "w-36", "w-24", "w-32", "w-40", "w-28"];
 const pick = (list: string[], i: number) => list[i % list.length];
 
 /** Organiser Walks list: grey status strip, then name, time · place, count. */
-export function WalkRowsSkeleton({ rows = 0 }: { rows?: number }) {
+export function WalkRowsSkeleton({ rows = 0, remember }: { rows?: number; remember?: string }) {
   return (
     <SkList
       row={(i) => (
@@ -106,25 +123,46 @@ export function WalkRowsSkeleton({ rows = 0 }: { rows?: number }) {
           </div>
         </>
       )}
+      remember={remember}
       rows={rows}
     />
   );
 }
 
 /** Notices list: category, title + arrow, date, a couple of lines of text. */
-export function NoticeRowsSkeleton({ rows = 0 }: { rows?: number }) {
+function NoticeRow({ i }: { i: number }) {
+  return (
+    <>
+      <SkLine className="w-16" size="xs" />
+      <div className="flex items-start justify-between gap-3">
+        <SkLine className={pick(TITLE_WIDTHS, i)} />
+        <SkChevron className="mt-1" />
+      </div>
+      <SkLine className="w-24" size="xs" />
+      <SkLine className="w-full" size="sm" />
+    </>
+  );
+}
+
+export function NoticeRowsSkeleton({ rows = 0, remember }: { rows?: number; remember?: string }) {
+  if (remember) {
+    return (
+      <RememberedRows
+        className="flex flex-col divide-y rounded-xl border"
+        remember={remember}
+        rowClassName="flex flex-col gap-2 p-4"
+        rows={Array.from({ length: LIST_PAGE_SIZE }, (_, i) => (
+          <NoticeRow i={i} key={i} />
+        ))}
+      />
+    );
+  }
   if (rows < 1) return null;
   return (
     <div aria-busy="true" className="flex flex-col divide-y rounded-xl border" data-reveal-list="">
       {Array.from({ length: rows }, (_, i) => (
         <div className="flex flex-col gap-2 p-4" key={i}>
-          <SkLine className="w-16" size="xs" />
-          <div className="flex items-start justify-between gap-3">
-            <SkLine className={pick(TITLE_WIDTHS, i)} />
-            <SkChevron className="mt-1" />
-          </div>
-          <SkLine className="w-24" size="xs" />
-          <SkLine className="w-full" size="sm" />
+          <NoticeRow i={i} />
         </div>
       ))}
     </div>
@@ -132,7 +170,15 @@ export function NoticeRowsSkeleton({ rows = 0 }: { rows?: number }) {
 }
 
 /** Messages: name, email line, then one preview — as tall as that preview, never a second invented line. */
-export function MessageRowsSkeleton({ rows = 0, lines }: { rows?: number; lines?: string[] | null }) {
+export function MessageRowsSkeleton({
+  rows = 0,
+  lines,
+  remember,
+}: {
+  rows?: number;
+  lines?: string[] | null;
+  remember?: string;
+}) {
   return (
     <SkList
       row={(i) => (
@@ -149,13 +195,14 @@ export function MessageRowsSkeleton({ rows = 0, lines }: { rows?: number; lines?
           </div>
         </div>
       )}
+      remember={remember}
       rows={rows}
     />
   );
 }
 
 /** Accident reports: day, walk, then one line of the write-up (it can grow to three, never the other way). */
-export function ReportRowsSkeleton({ rows = 0 }: { rows?: number }) {
+export function ReportRowsSkeleton({ rows = 0, remember }: { rows?: number; remember?: string }) {
   return (
     <SkList
       row={(i) => (
@@ -170,24 +217,45 @@ export function ReportRowsSkeleton({ rows = 0 }: { rows?: number }) {
           </div>
         </div>
       )}
+      remember={remember}
       rows={rows}
     />
   );
 }
 
 /** Walk history: walk name + arrow, then two grey detail lines. */
-export function HistoryRowsSkeleton({ rows = 0 }: { rows?: number }) {
+function HistoryRow({ i }: { i: number }) {
+  return (
+    <>
+      <div className="flex items-start justify-between gap-3">
+        <SkLine className={pick(TITLE_WIDTHS, i)} />
+        <SkChevron className="mt-1" />
+      </div>
+      <SkLine className={pick(DETAIL_WIDTHS, i)} size="sm" />
+      <SkLine className="w-24" size="sm" />
+    </>
+  );
+}
+
+export function HistoryRowsSkeleton({ rows = 0, remember }: { rows?: number; remember?: string }) {
+  if (remember) {
+    return (
+      <RememberedRows
+        className="flex flex-col divide-y rounded-xl border"
+        remember={remember}
+        rowClassName="flex flex-col gap-2 p-4"
+        rows={Array.from({ length: LIST_PAGE_SIZE }, (_, i) => (
+          <HistoryRow i={i} key={i} />
+        ))}
+      />
+    );
+  }
   if (rows < 1) return null;
   return (
     <div aria-busy="true" className="flex flex-col divide-y rounded-xl border" data-reveal-list="">
       {Array.from({ length: rows }, (_, i) => (
         <div className="flex flex-col gap-2 p-4" key={i}>
-          <div className="flex items-start justify-between gap-3">
-            <SkLine className={pick(TITLE_WIDTHS, i)} />
-            <SkChevron className="mt-1" />
-          </div>
-          <SkLine className={pick(DETAIL_WIDTHS, i)} size="sm" />
-          <SkLine className="w-24" size="sm" />
+          <HistoryRow i={i} />
         </div>
       ))}
     </div>
@@ -195,7 +263,7 @@ export function HistoryRowsSkeleton({ rows = 0 }: { rows?: number }) {
 }
 
 /** Progress board: one name line per row, in a vertical list. */
-export function NameRowsSkeleton({ rows = 0 }: { rows?: number }) {
+export function NameRowsSkeleton({ rows = 0, remember }: { rows?: number; remember?: string }) {
   return (
     <SkList
       row={(i) => (
@@ -204,6 +272,7 @@ export function NameRowsSkeleton({ rows = 0 }: { rows?: number }) {
           <SkLine className={pick(TITLE_WIDTHS, i)} />
         </div>
       )}
+      remember={remember}
       rows={rows}
     />
   );
@@ -215,35 +284,51 @@ export function NameRowsSkeleton({ rows = 0 }: { rows?: number }) {
  * photo circle, name, email, joined · clock-ins, arrow, and the empty space
  * where the row's actions button sits (members-table.tsx).
  */
-export function MemberRowsSkeleton({ rows = 0 }: { rows?: number }) {
-  if (rows < 1) return null;
+function MemberRow({ i }: { i: number }) {
   return (
-    <ul aria-busy="true" className="flex flex-col overflow-hidden rounded-xl border bg-card" data-reveal-list="">
-      <li
-        aria-hidden="true"
-        className="flex items-baseline gap-1.5 border-b bg-muted/50 px-3 py-1.5 text-xs font-semibold tracking-wide uppercase"
-      >
-        <span className="invisible">Members</span>
-      </li>
-      {Array.from({ length: rows }, (_, i) => (
+    <>
+      <div className="flex min-w-0 flex-1 items-start gap-2 sm:items-center">
+        <Skeleton className="size-9 shrink-0 rounded-full" />
+        <div className="min-w-0 flex-1">
+          <SkLine className={pick(TITLE_WIDTHS, i)} />
+          <SkLine className={pick(DETAIL_WIDTHS, i)} size="sm" />
+          <SkLine className="w-40" size="xs" />
+        </div>
+        <SkChevron className="mt-1 sm:mt-0" />
+      </div>
+      <div className="relative z-10 flex shrink-0 flex-wrap items-center justify-end gap-2 border-t pt-2 sm:border-0 sm:pt-0">
+        <SkButtonSpace className="w-7" />
+      </div>
+    </>
+  );
+}
+
+/**
+ * Organiser Members list: the group strip (Owner / Organisers / Members, left
+ * empty — it's a heading), then a row per member shaped like the real one:
+ * photo circle, name, email, joined · clock-ins, arrow, and the empty space
+ * where the row's actions button sits (members-table.tsx). As many rows as
+ * last time, from the first paint.
+ */
+export function MemberRowsSkeleton({ remember = "members" }: { remember?: string }) {
+  return (
+    <RememberedRows
+      as="ul"
+      className="flex flex-col overflow-hidden rounded-xl border bg-card"
+      leading={
         <li
-          className="relative flex flex-col items-stretch gap-2 border-b p-3 last:border-0 sm:flex-row sm:items-center sm:gap-3"
-          key={i}
+          aria-hidden="true"
+          className="flex items-baseline gap-1.5 border-b bg-muted/50 px-3 py-1.5 text-xs font-semibold tracking-wide uppercase"
         >
-          <div className="flex min-w-0 flex-1 items-start gap-2 sm:items-center">
-            <Skeleton className="size-9 shrink-0 rounded-full" />
-            <div className="min-w-0 flex-1">
-              <SkLine className={pick(TITLE_WIDTHS, i)} />
-              <SkLine className={pick(DETAIL_WIDTHS, i)} size="sm" />
-              <SkLine className="w-40" size="xs" />
-            </div>
-            <SkChevron className="mt-1 sm:mt-0" />
-          </div>
-          <div className="relative z-10 flex shrink-0 flex-wrap items-center justify-end gap-2 border-t pt-2 sm:border-0 sm:pt-0">
-            <SkButtonSpace className="w-7" />
-          </div>
+          <span className="invisible">Members</span>
         </li>
+      }
+      remember={remember}
+      rowAs="li"
+      rowClassName="relative flex flex-col items-stretch gap-2 border-b p-3 last:border-0 [&:has(+[hidden])]:border-0 sm:flex-row sm:items-center sm:gap-3"
+      rows={Array.from({ length: LIST_PAGE_SIZE }, (_, i) => (
+        <MemberRow i={i} key={i} />
       ))}
-    </ul>
+    />
   );
 }

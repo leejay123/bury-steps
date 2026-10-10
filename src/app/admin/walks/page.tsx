@@ -3,7 +3,6 @@ import { connection } from "next/server";
 import { WalkListChrome } from "@/components/list-chrome";
 import { RememberListCount } from "@/components/remember-list-count";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
-import { rememberedCount, rememberedRows } from "@/lib/remembered-rows";
 import { prisma } from "@/lib/db";
 import { requireAnyPermission } from "@/lib/auth";
 import { CreateWalkDrawer } from "../create-walk-drawer";
@@ -41,15 +40,7 @@ function toRow(
 const WALKS_INTRO =
   "Upcoming walks, and every finished walk. Filter by status, sort by date, or search. When a walk is starting soon or in progress, the row says Clock in now — open it and clock in with the same pre-walk check members use. You can also share the link, cancel, reopen, or remove a walk. Long walks stay under Upcoming until clock-in closes.";
 
-async function AdminPageContent({
-  pastCount,
-  rows,
-  upcomingCount,
-}: {
-  pastCount: number | null;
-  rows: number;
-  upcomingCount: number | null;
-}) {
+async function AdminPageContent() {
   // View and Create are meaningfully independent: View is the schedule/
   // history/cancelled-walk detail, Create is the blank "start a new one"
   // form — an organiser with only Create doesn't need to browse anything
@@ -68,7 +59,7 @@ async function AdminPageContent({
             title="Walks"
           />
           {/* The heading and Create button show straight away; only the list waits. */}
-          <Suspense fallback={<AdminWalksSkeleton pastCount={pastCount} rows={rows} upcomingCount={upcomingCount} />}>
+          <Suspense fallback={<AdminWalksSkeleton />}>
             <AdminWalksTabs userId={admin.id} />
           </Suspense>
         </section>
@@ -184,37 +175,21 @@ async function AdminWalksTabs({ userId }: { userId: string }) {
 }
 
 /** Tabs, search and filters stay as the real controls. Only the walk rows
- * are placeholders, and only as many as the list last showed. */
-function AdminWalksSkeleton({
-  pastCount,
-  rows,
-  upcomingCount,
-}: {
-  pastCount: number | null;
-  rows: number;
-  upcomingCount: number | null;
-}) {
+ * are placeholders — as many as the list last showed, from the first paint. */
+function AdminWalksSkeleton() {
   return (
     <div className="contents" data-page-loading="">
-      <WalkListChrome pastCount={pastCount} rows={rows} upcomingCount={upcomingCount} />
+      <WalkListChrome />
     </div>
   );
 }
 
-function AdminWalksPageFallback({
-  pastCount,
-  rows,
-  upcomingCount,
-}: {
-  pastCount: number | null;
-  rows: number;
-  upcomingCount: number | null;
-}) {
+function AdminWalksPageFallback() {
   return (
     <div data-page-loading="" className="flex flex-col gap-8 px-4 py-6 md:px-6">
       <section className="flex flex-col gap-4">
         <AdminPageIntro description={WALKS_INTRO} title="Walks" />
-        <AdminWalksSkeleton pastCount={pastCount} rows={rows} upcomingCount={upcomingCount} />
+        <AdminWalksSkeleton />
       </section>
     </div>
   );
@@ -224,21 +199,9 @@ function AdminWalksPageFallback({
  * shows a matching placeholder for an instant while it loads. */
 export default function AdminWalksPage() {
   return (
-    <Suspense fallback={<AdminWalksPageFallback pastCount={null} rows={0} upcomingCount={null} />}>
-      <AdminWalksCounted />
+    <Suspense fallback={<AdminWalksPageFallback />}>
+      <AdminPageContent />
     </Suspense>
   );
 }
 
-async function AdminWalksCounted() {
-  const [rows, upcomingCount, pastCount] = await Promise.all([
-    rememberedRows("admin-walks"),
-    rememberedCount("admin-walks-upcoming", 10000),
-    rememberedCount("admin-walks-past", 10000),
-  ]);
-  return (
-    <Suspense fallback={<AdminWalksPageFallback pastCount={pastCount} rows={rows} upcomingCount={upcomingCount} />}>
-      <AdminPageContent pastCount={pastCount} rows={rows} upcomingCount={upcomingCount} />
-    </Suspense>
-  );
-}

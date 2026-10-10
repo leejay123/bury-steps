@@ -1,9 +1,8 @@
 import { Suspense } from "react";
-import { FIRST_VISIT_ROWS, MemberRowsSkeleton } from "@/components/list-skeletons";
+import { MemberRowsSkeleton } from "@/components/list-skeletons";
 import { Users } from "lucide-react";
 import { MembersFilterChrome } from "@/components/list-chrome";
 import { RememberListCount } from "@/components/remember-list-count";
-import { rememberedCount } from "@/lib/remembered-rows";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/auth";
 import { formatCompactDateTime } from "@/lib/dates";
@@ -34,19 +33,10 @@ export default function MembersPage({
         title="Members"
       />
       {/* The heading shows straight away; only the list waits for data. */}
-      <Suspense fallback={<MembersListSkeleton rows={null} />}>
-        <MembersCounted searchParams={searchParams} />
+      <Suspense fallback={<MembersListSkeleton />}>
+        <MembersForViewer searchParams={searchParams} />
       </Suspense>
     </div>
-  );
-}
-
-async function MembersCounted({ searchParams }: { searchParams: Promise<{ role?: string }> }) {
-  const rows = await rememberedCount("members");
-  return (
-    <Suspense fallback={<MembersListSkeleton rows={rows} />}>
-      <MembersForViewer searchParams={searchParams} />
-    </Suspense>
   );
 }
 
@@ -122,13 +112,13 @@ async function MembersBody({ adminId, role }: { adminId: string; role: MemberRol
   );
 }
 
-/** The real filter bar, then member-shaped rows (as many as the list last showed). */
-function MembersListSkeleton({ rows }: { rows: number | null }) {
-  if (rows === 0) return null;
+/** The real filter bar, then member-shaped rows — as many as the list last
+ * showed, from the first paint (one placeholder, on a refresh or a page change). */
+function MembersListSkeleton() {
   return (
     <div data-page-loading="" aria-busy="true" className="flex flex-col gap-4">
       <MembersFilterChrome />
-      <MemberRowsSkeleton rows={rows ?? FIRST_VISIT_ROWS} />
+      <MemberRowsSkeleton remember="members" />
     </div>
   );
 }

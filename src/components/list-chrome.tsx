@@ -6,7 +6,10 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FIRST_VISIT_ROWS, SkChevron, SkLine, WalkRowsSkeleton } from "@/components/list-skeletons";
+import { SkChevron, SkLine, WalkRowsSkeleton } from "@/components/list-skeletons";
+import { RememberedRows } from "@/components/remembered-rows";
+import { RememberedCount } from "@/components/remembered-text";
+import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 /** Search box matching the real lists — shown while the rows load, not a grey bar. */
@@ -53,30 +56,26 @@ function FilterSelect({
   );
 }
 
-function tabLabel(name: string, count: number | null) {
-  return count == null ? name : `${name} (${count})`;
-}
-
 /** Upcoming / History, search, status and sort — the same controls the loaded list uses. */
-export function WalkListChrome({
-  pastCount = null,
-  rows,
-  upcomingCount = null,
-}: {
-  pastCount?: number | null;
-  rows: number;
-  upcomingCount?: number | null;
-}) {
-  const knownEmpty = upcomingCount === 0;
+export function WalkListChrome() {
+  // Tab counts and rows as last time, from the first paint (RememberedCount /
+  // RememberedRows); with no rows last time the list hides itself, and the
+  // search and filters with it, as on the real page.
   return (
     <Tabs className="w-full" defaultValue="upcoming">
       <TabsList>
-        <TabsTrigger value="upcoming">{tabLabel("Upcoming", upcomingCount)}</TabsTrigger>
-        <TabsTrigger value="past">{tabLabel("History", pastCount)}</TabsTrigger>
+        <TabsTrigger value="upcoming">
+          Upcoming
+          <RememberedCount remember="admin-walks-upcoming" />
+        </TabsTrigger>
+        <TabsTrigger value="past">
+          History
+          <RememberedCount remember="admin-walks-past" />
+        </TabsTrigger>
       </TabsList>
-      {knownEmpty ? null : (
+      {
         <TabsContent className="mt-4" value="upcoming">
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 has-[>[data-reveal-list][hidden]]:hidden">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
               <ListSearch label="Search upcoming walks" placeholder="Search by walk or meeting point…" />
               <FilterSelect
@@ -101,10 +100,10 @@ export function WalkListChrome({
                 value="asc"
               />
             </div>
-            <WalkRowsSkeleton rows={rows} />
+            <WalkRowsSkeleton remember="admin-walks" />
           </div>
         </TabsContent>
-      )}
+      }
     </Tabs>
   );
 }
@@ -275,62 +274,64 @@ function MemberWalkCardSkeleton({ index }: { index: number }) {
   );
 }
 
-/** Member Walks: the real Upcoming / All walks tabs, search and filters, then a card-shaped placeholder per walk. */
-export function MemberWalksHold({
-  allCount = null,
-  recent = 0,
-  upcomingCount = null,
-}: {
-  allCount?: number | null;
-  recent?: number;
-  upcomingCount?: number | null;
-}) {
-  const rows = upcomingCount ?? FIRST_VISIT_ROWS;
+/** Member Walks: the real Upcoming / All walks tabs, search and filters, then
+ * card-shaped placeholders — counts, cards and recent walks as last time,
+ * from the first paint (RememberedCount / RememberedRows). */
+export function MemberWalksHold() {
   return (
     <div className="contents" data-page-loading="">
       <Tabs defaultValue="upcoming">
         <TabsList>
-          <TabsTrigger value="upcoming">{tabLabel("Upcoming", upcomingCount)}</TabsTrigger>
-          <TabsTrigger value="all-walks">{tabLabel("All walks", allCount)}</TabsTrigger>
+          <TabsTrigger value="upcoming">
+            Upcoming
+            <RememberedCount remember="member-walks" />
+          </TabsTrigger>
+          <TabsTrigger value="all-walks">
+            All walks
+            <RememberedCount remember="member-walks-all" />
+          </TabsTrigger>
         </TabsList>
-        {rows < 1 ? null : (
-          <TabsContent className="mt-4" value="upcoming">
-            <div aria-busy="true" className="flex flex-col gap-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-                <ListSearch label="Search walks" placeholder="Search by walk or meeting point…" />
-                <FilterSelect
-                  id="walk-status-hold"
-                  label="Status"
-                  options={[{ value: "all", label: "All statuses" }]}
-                  value="all"
-                />
-                <FilterSelect
-                  id="walk-sort-hold"
-                  label="Sort"
-                  options={[{ value: "asc", label: "Soonest first" }]}
-                  value="asc"
-                />
-              </div>
-              {Array.from({ length: rows }, (_, i) => (
+        <TabsContent className="mt-4" value="upcoming">
+          <div aria-busy="true" className="flex flex-col gap-4 has-[>[data-reveal-list][hidden]]:hidden">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <ListSearch label="Search walks" placeholder="Search by walk or meeting point…" />
+              <FilterSelect
+                id="walk-status-hold"
+                label="Status"
+                options={[{ value: "all", label: "All statuses" }]}
+                value="all"
+              />
+              <FilterSelect
+                id="walk-sort-hold"
+                label="Sort"
+                options={[{ value: "asc", label: "Soonest first" }]}
+                value="asc"
+              />
+            </div>
+            <RememberedRows
+              className="contents"
+              remember="member-walks"
+              rows={Array.from({ length: LIST_PAGE_SIZE }, (_, i) => (
                 <MemberWalkCardSkeleton index={i} key={i} />
               ))}
-            </div>
-          </TabsContent>
-        )}
-      </Tabs>
-      {recent > 0 ? (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-medium text-muted-foreground">Your recent walks</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            {Array.from({ length: recent }, (_, i) => (
-              <div aria-hidden className="rounded-xl border p-4" data-reveal-card="" key={i}>
-                <SkLine className="w-40" />
-                <SkLine className="w-56" size="sm" />
-              </div>
-            ))}
+            />
           </div>
-        </section>
-      ) : null}
+        </TabsContent>
+      </Tabs>
+      <section className="flex flex-col gap-3 has-[>[hidden]]:hidden">
+        <h2 className="text-sm font-medium text-muted-foreground">Your recent walks</h2>
+        <RememberedRows
+          className="grid gap-4 md:grid-cols-2"
+          max={3}
+          remember="member-recent"
+          rows={Array.from({ length: 3 }, (_, i) => (
+            <div aria-hidden className="rounded-xl border p-4" data-reveal-card="" key={i}>
+              <SkLine className="w-40" />
+              <SkLine className="w-56" size="sm" />
+            </div>
+          ))}
+        />
+      </section>
     </div>
   );
 }

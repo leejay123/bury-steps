@@ -1,5 +1,5 @@
 import { ReportsPageFallback } from "./page";
 
 export default function Loading() {
-  return <ReportsPageFallback rows={null} />;
+  return <ReportsPageFallback />;
 }

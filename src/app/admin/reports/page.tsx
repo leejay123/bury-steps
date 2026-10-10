@@ -4,7 +4,6 @@ import { ReportsFilterChrome } from "@/components/list-chrome";
 import { RememberListCount } from "@/components/remember-list-count";
 import { ReportRowsSkeleton } from "@/components/list-skeletons";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
-import { rememberedCount } from "@/lib/remembered-rows";
 import { Prisma } from "@prisma/client";
 import { memberDisplayName, requirePermission } from "@/lib/auth";
 import { isOwner } from "@/lib/site-owner";
@@ -133,13 +132,14 @@ async function AccidentReportsPageContent({
   );
 }
 
-/** Real title, search and filters. Grey rows only for the reports last shown. */
-export function ReportsPageFallback({ rows }: { rows: number | null }) {
+/** Real title, search and filters, then as many report rows as last time —
+ * one placeholder from the first paint. */
+export function ReportsPageFallback() {
   return (
     <AdminPageFallback
       description={REPORTS_INTRO}
-      filters={rows === 0 ? null : <ReportsFilterChrome />}
-      list={<ReportRowsSkeleton rows={rows ?? 0} />}
+      filters={<ReportsFilterChrome />}
+      list={<ReportRowsSkeleton remember="reports" />}
       title="Accident reports"
     />
   );
@@ -149,16 +149,7 @@ export function ReportsPageFallback({ rows }: { rows: number | null }) {
  * shows a matching placeholder for an instant while it loads. */
 export default function AccidentReportsPage(props: Parameters<typeof AccidentReportsPageContent>[0]) {
   return (
-    <Suspense fallback={<ReportsPageFallback rows={null} />}>
-      <ReportsCounted {...props} />
-    </Suspense>
-  );
-}
-
-async function ReportsCounted(props: Parameters<typeof AccidentReportsPageContent>[0]) {
-  const rows = await rememberedCount("reports");
-  return (
-    <Suspense fallback={<ReportsPageFallback rows={rows} />}>
+    <Suspense fallback={<ReportsPageFallback />}>
       <AccidentReportsPageContent {...props} />
     </Suspense>
   );

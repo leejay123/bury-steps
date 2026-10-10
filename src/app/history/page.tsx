@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { HistoryLoading } from "./loading";
-import { rememberedCount } from "@/lib/remembered-rows";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { isWalkHistoryReady, walkStatus } from "@/lib/walk-window";
@@ -18,16 +17,7 @@ export const metadata: Metadata = {
 
 export default function WalkHistoryPage() {
   return (
-    <Suspense fallback={<HistoryLoading rows={null} />}>
-      <HistoryCounted />
-    </Suspense>
-  );
-}
-
-async function HistoryCounted() {
-  const rows = await rememberedCount("history");
-  return (
-    <Suspense fallback={<HistoryLoading rows={rows} />}>
+    <Suspense fallback={<HistoryLoading />}>
       <WalkHistoryContent />
     </Suspense>
   );

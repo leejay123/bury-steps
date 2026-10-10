@@ -28,8 +28,12 @@ export function AdminPageFallback({
           {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
         </div>
       ) : null}
-      {filters}
-      {list}
+      {/* When the list was empty last time, its placeholder hides itself
+          (RememberedRows), and the filters with it, as on the real page. */}
+      <div className="flex flex-col gap-6 has-[>[data-reveal-list][hidden]]:hidden">
+        {filters}
+        {list}
+      </div>
     </div>
   );
 }
