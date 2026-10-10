@@ -5,7 +5,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { getOptionalUser, requireUser } from "@/lib/auth";
 import { PAGE_X_BLEED } from "@/lib/page-x";
 import { NOTICES_CACHE_TAG, getPageNotices, getSiteNoticeCategories, getSiteNoticeState } from "@/lib/site-notices";
-import { NoticesBlogSection } from "@/components/notices-blog-section";
+import { NoticesBlogSection, NoticesBlogSectionReady } from "@/components/notices-blog-section";
 import { NoticesSearchChrome } from "@/components/list-chrome";
 import { NoticeCategoryBar } from "@/components/notice-category-bar";
 import { RememberListCount, RememberText } from "@/components/remember-list-count";
@@ -44,7 +44,7 @@ export default async function NoticesPage() {
   const rows = Math.min(notices.length, LIST_PAGE_SIZE);
   const sharedList = (
     <div className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
-      <NoticesBlogSection
+      <NoticesBlogSectionReady
         action={<CreateNoticeAction categories={categories} />}
         categories={categories}
         notices={notices}

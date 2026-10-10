@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useRef, useSyncExternalStore, type ReactNode } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { useQueryDefault, useQueryText } from "@/hooks/use-filter-query";
 import Link from "next/link";
@@ -21,16 +21,55 @@ import { NoticeCategoryBar } from "@/components/notice-category-bar";
  * Member notices index: search + FAQ-style category chips (border-y), then a
  * paginated list of full-page notices — no edge/hairline grid.
  */
-export function NoticesBlogSection(props: {
+type NoticesBlogSectionProps = {
   categories: NoticeCategoryView[];
   notices: NoticeView[];
+  /** The member's unread notices (the bell's list). */
   unreadIds?: string[];
+  /** Beside the title, like Walks' "Create a walk" (CreateNoticeDrawer). */
   action?: ReactNode;
-}) {
+};
+
+type NoticeFilters = {
+  searchTerm: string;
+  setSearchTerm: (value: string) => void;
+  activeCategory: string;
+  setActiveCategory: (value: string) => void;
+};
+
+export function NoticesBlogSection(props: NoticesBlogSectionProps) {
   return (
     <NuqsAdapter>
-      <NoticesBlogSectionInner {...props} />
+      <AddressFilters {...props} />
     </NuqsAdapter>
+  );
+}
+
+/** Search and category kept in the address (?q=, ?cat=), so they survive a refresh or a share. */
+function AddressFilters(props: NoticesBlogSectionProps) {
+  const [searchTerm, setSearchTerm] = useQueryText("q");
+  const [activeCategory, setActiveCategory] = useQueryDefault("cat", "all");
+  return (
+    <NoticesBlogSectionInner
+      {...props}
+      filters={{ searchTerm, setSearchTerm, activeCategory, setActiveCategory }}
+    />
+  );
+}
+
+/**
+ * The same list for the ready-made page (made before anyone asks for it,
+ * so it can't read the address): no search, All selected. The page swaps
+ * in NoticesBlogSection a moment later, which reads the address as usual.
+ */
+export function NoticesBlogSectionReady(props: NoticesBlogSectionProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeCategory, setActiveCategory] = useState("all");
+  return (
+    <NoticesBlogSectionInner
+      {...props}
+      filters={{ searchTerm, setSearchTerm, activeCategory, setActiveCategory }}
+    />
   );
 }
 
@@ -39,22 +78,14 @@ function NoticesBlogSectionInner({
   notices,
   unreadIds = [],
   action,
-}: {
-  categories: NoticeCategoryView[];
-  notices: NoticeView[];
-  /** Beside the title, like Walks' "Create a walk" (CreateNoticeDrawer). */
-  action?: ReactNode;
-  /** The member's unread notices (the bell's list). */
-  unreadIds?: string[];
-}) {
+  filters: { searchTerm, setSearchTerm, activeCategory, setActiveCategory },
+}: NoticesBlogSectionProps & { filters: NoticeFilters }) {
   // Re-renders when a notice is read in this tab — on its own page, or in
   // the bell — even if this page was kept hidden in the meantime.
   useSyncExternalStore(subscribeNoticesRead, noticesReadVersion, () => 0);
   const unread = new Set(unreadIds.filter((id) => !isNoticeReadInThisTab(id)));
   const listRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
-  const [searchTerm, setSearchTerm] = useQueryText("q");
-  const [activeCategory, setActiveCategory] = useQueryDefault("cat", "all");
   const deferredSearchTerm = useDeferredValue(searchTerm);
 
   const filters = useMemo(() => {
