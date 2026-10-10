@@ -22,7 +22,7 @@ export function PlaceholderPreviewToggle() {
   const value = override ?? saved ?? "off";
   return (
     <SettingsSection
-      description="Temporary, for checking the loading placeholders. In this browser only — nobody else is affected. Hold keeps each page's grey placeholder up for 5 seconds before its content, so you can click into a notice or a walk and see its placeholder too. Always shows only the placeholders. A label at the bottom of the screen turns it off."
+      description="Temporary, for checking the loading placeholders. In this browser only — nobody else is affected. Hold keeps each page's grey placeholder up for 5 seconds before its content, so you can click into a notice or a walk and see its placeholder too. Always shows only the placeholders. To switch quickly, use the small Placeholders button at the bottom left of any page, or press Alt+P (Option+P on a Mac)."
       title="Preview loading placeholders (temporary)"
     >
       <div className="flex w-full flex-col gap-1.5">

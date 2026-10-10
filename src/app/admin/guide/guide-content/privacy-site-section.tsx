@@ -71,8 +71,9 @@ export function PrivacySiteSection() {
               off in <Link href="/admin/settings/behaviour">Site behaviour</Link>. Owners also have{" "}
               <strong>Preview loading placeholders (temporary)</strong> there: in that browser only,
               pages hold their grey loading placeholder for 5 seconds before the content (or show
-              only the placeholder), so you can check how it looks. Nobody else sees it, and a label
-              at the bottom of the screen turns it off.
+              only the placeholder), so you can check how it looks. Nobody else sees it. To switch it
+              quickly, use the small <strong>Placeholders</strong> button at the bottom left of any
+              page, or press Alt+P (Option+P on a Mac).
             </p>
             <p>
               First-time visitors see a cookie notice at the bottom of the screen, with Accept
