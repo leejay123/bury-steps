@@ -14,6 +14,9 @@ export const TOGETHER_BODY_COOKIE = "bs-together-body";
 /** Message previews last shown, one per row, so each row is only as tall as its text. */
 export const MESSAGE_LINES_COOKIE = "bs-msg-lines";
 
+/** "1" when this browser's person could create notices last time (the Notices page button). */
+export const CAN_CREATE_NOTICE_COOKIE = "bs-can-notice";
+
 /** Writes a cookie from the browser. Kept out of components so the render rules stay happy. */
 export function writeClientCookie(name: string, value: string) {
   document.cookie = `${name}=${value}; Path=/; Max-Age=2592000; SameSite=Lax`;

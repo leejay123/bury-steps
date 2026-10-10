@@ -8,7 +8,12 @@ import { NOTICES_CACHE_TAG, getPageNotices, getSiteNoticeCategories, getSiteNoti
 import { NoticesBlogSection } from "@/components/notices-blog-section";
 import { NoticesSearchChrome } from "@/components/list-chrome";
 import { NoticeCategoryBar } from "@/components/notice-category-bar";
-import { RememberListCount } from "@/components/remember-list-count";
+import { RememberListCount, RememberText } from "@/components/remember-list-count";
+import { RememberedAction } from "@/components/remembered-action";
+import { CreateNoticeDrawer } from "@/components/create-notice-drawer";
+import { CAN_CREATE_NOTICE_COOKIE } from "@/lib/remembered-rows-key";
+import { FULL_ORGANISER_PERMISSIONS, ORGANISER_PERMISSIONS } from "@/lib/organiser-permissions";
+import type { NoticeCategoryView } from "@/lib/notices";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { NoticeRowsSkeleton } from "@/components/list-skeletons";
 
@@ -29,23 +34,40 @@ export const metadata: Metadata = {
 };
 
 export default async function NoticesPage() {
-  // The category tabs come from the shared saved copies (not the member),
-  // built the same way as NoticesBlogSection's filters, so the placeholder
-  // in the ready-made page already has exactly the tabs the page will show.
+  // The notices are the same for every member, from shared saved copies,
+  // and only signed-in people ever get this page (the sign-in check in
+  // proxy.ts runs first). So the ready-made page already has the real list
+  // — on a refresh too — and only the member's own "New" labels follow.
   const [notices, categories] = await Promise.all([getPageNotices(), getSiteNoticeCategories()]);
   const used = categories.filter((category) => notices.some((notice) => notice.categoryId === category.id));
-  // Every member sees the same notices, so the placeholder draws exactly
-  // as many rows as the list will show.
-  const rows = Math.min(notices.length, LIST_PAGE_SIZE);
   const tabs = used.length > 0 ? [{ id: "all", label: "All" }, ...used.map(({ id, label }) => ({ id, label }))] : null;
+  const rows = Math.min(notices.length, LIST_PAGE_SIZE);
+  const sharedList = (
+    <div className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
+      <NoticesBlogSection
+        action={<CreateNoticeAction categories={categories} />}
+        categories={categories}
+        notices={notices}
+      />
+    </div>
+  );
   return (
-    // The notices themselves are for members only, so they're added after
-    // the signed-in check — never part of the ready-made page everyone shares.
-    <Suspense fallback={<NoticesFallback categories={tabs} rows={rows} />}>
+    <Suspense fallback={sharedList}>
+      {/* The owner's placeholder preview still shows the list's placeholder. */}
       <PlaceholderPreview fallback={<NoticesFallback categories={tabs} rows={rows} />}>
         <NoticesForMember />
       </PlaceholderPreview>
     </Suspense>
+  );
+}
+
+/** "Create a notice", for people allowed to (`known` once the page knows who
+ * this is; before that, as last time in this browser — RememberedAction). */
+function CreateNoticeAction({ categories, known }: { categories: NoticeCategoryView[]; known?: boolean }) {
+  return (
+    <RememberedAction className="shrink-0" known={known} name={CAN_CREATE_NOTICE_COOKIE}>
+      <CreateNoticeDrawer categories={categories} />
+    </RememberedAction>
   );
 }
 
@@ -71,19 +93,34 @@ async function getMemberNotices() {
     // say "New" or "Updated".
     getSiteNoticeState(user.id, user.firstName),
   ]);
-  return { notices, categories, unreadIds };
+  // Same rule as the save itself (requireAdmin + permNotices).
+  const canCreate =
+    user.role === "ADMIN" &&
+    (user.isOwner ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS).permNotices;
+  return { notices, categories, unreadIds, canCreate };
 }
 
 async function NoticesForMember() {
   const member = await getMemberNotices();
   // Not signed in: requireUser sends them to sign in, as before.
   if (!member) await requireUser();
-  const { notices, categories, unreadIds } = member ?? { notices: [], categories: [], unreadIds: [] };
+  const { notices, categories, unreadIds, canCreate } = member ?? {
+    notices: [],
+    categories: [],
+    unreadIds: [],
+    canCreate: false,
+  };
 
   return (
     <div className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
       <RememberListCount count={Math.min(notices.length, LIST_PAGE_SIZE)} id="notices" />
-      <NoticesBlogSection categories={categories} notices={notices} unreadIds={unreadIds} />
+      <RememberText name={CAN_CREATE_NOTICE_COOKIE} value={canCreate ? "1" : ""} />
+      <NoticesBlogSection
+        action={<CreateNoticeAction categories={categories} known={canCreate} />}
+        categories={categories}
+        notices={notices}
+        unreadIds={unreadIds}
+      />
     </div>
   );
 }

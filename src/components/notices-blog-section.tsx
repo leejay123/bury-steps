@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useSyncExternalStore, type ReactNode } from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { useQueryDefault, useQueryText } from "@/hooks/use-filter-query";
 import Link from "next/link";
@@ -25,6 +25,7 @@ export function NoticesBlogSection(props: {
   categories: NoticeCategoryView[];
   notices: NoticeView[];
   unreadIds?: string[];
+  action?: ReactNode;
 }) {
   return (
     <NuqsAdapter>
@@ -37,9 +38,12 @@ function NoticesBlogSectionInner({
   categories,
   notices,
   unreadIds = [],
+  action,
 }: {
   categories: NoticeCategoryView[];
   notices: NoticeView[];
+  /** Beside the title, like Walks' "Create a walk" (CreateNoticeDrawer). */
+  action?: ReactNode;
   /** The member's unread notices (the bell's list). */
   unreadIds?: string[];
 }) {
@@ -88,11 +92,16 @@ function NoticesBlogSectionInner({
   return (
     <section className="flex flex-col gap-0">
       <div className="flex flex-col gap-3 px-4 py-6 md:px-6">
-        <h1 className="text-lg font-semibold tracking-tight">Notices</h1>
-        <p className="text-sm text-muted-foreground">
-          Updates from the organisers for signed-in members. Short messages stay in the bell; open a
-          row here for the full write-up.
-        </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-col gap-3">
+            <h1 className="text-lg font-semibold tracking-tight">Notices</h1>
+            <p className="text-sm text-muted-foreground">
+              Updates from the organisers for signed-in members. Short messages stay in the bell; open a
+              row here for the full write-up.
+            </p>
+          </div>
+          {action}
+        </div>
         <InputGroup className="w-full max-w-md">
           <InputGroupInput
             aria-label="Search notices"
