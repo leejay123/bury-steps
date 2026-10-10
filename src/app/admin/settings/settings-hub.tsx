@@ -1,6 +1,7 @@
 "use client";
 
-import { Fragment, useDeferredValue, useState } from "react";
+import { Fragment, createContext, useContext, useDeferredValue, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { IntentLink } from "@/components/intent-link";
 import { AlertCircle, ChevronDown, ChevronRight, Search, SearchX } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -53,14 +54,22 @@ function GroupHeader({ danger, label }: { danger: boolean; label: string }) {
   );
 }
 
+/** True in SettingsHubSkeleton: rows show a grey shape where their status goes. */
+const StatusLoading = createContext(false);
+
 function RowText({ page }: { page: SettingsHubPage }) {
+  const statusLoading = useContext(StatusLoading);
   return (
     <DataListBody className="flex flex-col gap-1">
       <div className="flex flex-col gap-x-3 gap-y-0.5 sm:flex-row sm:items-baseline sm:justify-between">
         <p className={cn("font-medium leading-snug", page.danger && "text-destructive")}>
           {page.title}
         </p>
-        {page.status ? (
+        {statusLoading ? (
+          <span className="flex h-4 items-center sm:shrink-0">
+            <Skeleton className="h-3 w-28 rounded-[4px]" />
+          </span>
+        ) : page.status ? (
           <p className="text-xs text-muted-foreground tabular-nums sm:shrink-0 sm:text-right">
             {page.status}
           </p>
@@ -164,6 +173,21 @@ function ExpandableRow({
         </li>
       ) : null}
     </>
+  );
+}
+
+/**
+ * The Settings table while its statuses load (a refresh, or a click that
+ * beat the fetch-ahead): the real search box, groups and rows — they're
+ * fixed — with a grey shape where each row's current status goes.
+ */
+export function SettingsHubSkeleton({ groups }: { groups: SettingsHubGroup[] }) {
+  return (
+    <StatusLoading.Provider value>
+      <div className="contents" data-page-loading="">
+        <SettingsHub groups={groups} />
+      </div>
+    </StatusLoading.Provider>
   );
 }
 

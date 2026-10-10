@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { noteServerTime } from "@/lib/server-clock";
 
 /** How often an open page asks whether anything has changed. */
 const CHECK_EVERY_MS = 30_000;
@@ -28,8 +29,11 @@ export function LiveUpdates() {
         // A plain request, so Vercel's CDN can answer from its 15-second copy
         // (a "no-store" request tells caches to skip their copy). The
         // browser never keeps one itself: the answer says no-store.
+        const sentAt = Date.now();
         const response = await fetch("/api/site-version");
         if (!response.ok) return;
+        // Its Date header also tells walk clocks the site's real time.
+        noteServerTime(response, sentAt, Date.now());
         const { v } = (await response.json()) as { v: string };
         if (seen.current !== null && v !== seen.current) router.refresh();
         seen.current = v;

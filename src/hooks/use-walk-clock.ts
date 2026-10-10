@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { walkClockDelayMs } from "@/lib/walk-clock-delay";
+import { SERVER_CLOCK_EVENT, serverNow } from "@/lib/server-clock";
 import { effectiveEndsAt, nextWalkStatusChangeAt, walkStatus } from "@/lib/walk-window";
 
 const ONE_MINUTE_MS = 60_000;
@@ -25,7 +26,7 @@ export function useWalkClock(walk: {
   endedAt?: string | null;
   startsAt: string;
 }) {
-  const [now, setNow] = useState(() => new Date());
+  const [now, setNow] = useState(() => serverNow());
   const started = useRef(false);
 
   useEffect(() => {
@@ -40,7 +41,7 @@ export function useWalkClock(walk: {
     let cancelled = false;
 
     function tick() {
-      const at = new Date();
+      const at = serverNow();
       setNow(at);
       arm(at);
     }
@@ -60,7 +61,7 @@ export function useWalkClock(walk: {
       }
       const next = nextWalkStatusChangeAt(parsed, from);
       if (!next) return;
-      const delay = walkClockDelayMs(next);
+      const delay = walkClockDelayMs(next, from.getTime());
       timeoutId = window.setTimeout(tick, delay);
     }
 
@@ -71,11 +72,18 @@ export function useWalkClock(walk: {
       // page went on showing "In progress" and End walk.
       timeoutId = window.setTimeout(tick, 0);
     } else {
-      arm(new Date());
+      arm(serverNow());
     }
     started.current = true;
+    // When the site's clock turns out to differ from this device's, catch up.
+    const onClock = () => {
+      if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+      tick();
+    };
+    window.addEventListener(SERVER_CLOCK_EVENT, onClock);
     return () => {
       cancelled = true;
+      window.removeEventListener(SERVER_CLOCK_EVENT, onClock);
       if (timeoutId !== undefined) window.clearTimeout(timeoutId);
     };
   }, [walk.cancelledAt, walk.durationMins, walk.endedAt, walk.startsAt]);
