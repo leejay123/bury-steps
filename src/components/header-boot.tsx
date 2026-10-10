@@ -87,8 +87,12 @@ if(items.length){
     paint();
   }
 }
+// The phone bar's slot is at the end of the page, not parsed yet when this
+// runs in the header, so this part is kept for BottomBarBootScript to call
+// right after the slot (calling it here too is harmless).
+window.__bsBottomBoot=function(){try{
 if(document.documentElement.getAttribute("data-phone-menu")!=="bottom")return;
-var barSlot=document.getElementById("bs-bottom-boot");if(!barSlot)return;
+var barSlot=document.getElementById("bs-bottom-boot");if(!barSlot||barSlot.childElementCount)return;
 var tabs=items.length?itemsFrom(val("bs-bar")):[];
 if(!tabs.length&&!items.length){
   tabs=[{href:"/",label:"Home"},{href:"/contact",label:"Contact us"}];
@@ -111,7 +115,14 @@ function paintBar(){if(document.querySelector("[data-bottom-nav]:not([hidden] *)
 var barObs=new MutationObserver(paintBar);
 if(barSlot.parentNode)barObs.observe(barSlot.parentNode,{childList:true,subtree:true});
 paintBar();
+}catch(e){}};
+window.__bsBottomBoot();
 }catch(e){}})();`;
+}
+
+/** Right after the phone bar's slot (layout.tsx): draws last visit's bar into it before the first paint. */
+export function BottomBarBootScript() {
+  return <script dangerouslySetInnerHTML={{ __html: "window.__bsBottomBoot&&window.__bsBottomBoot();" }} />;
 }
 
 export function HeaderBootScript({ facebookUrl = "" }: { facebookUrl?: string }) {

@@ -25,7 +25,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { appUrl } from "@/lib/urls";
 import { PAGE_X, PAGE_Y } from "@/lib/page-x";
 import { SiteMobileNav, SiteNavSlot, SiteBottomNav } from "@/components/site-nav";
-import { HeaderBootScript } from "@/components/header-boot";
+import { BottomBarBootScript, HeaderBootScript } from "@/components/header-boot";
 import { MobileMenuShell } from "@/components/mobile-menu-shell";
 import { SiteFooter, copyrightYear } from "@/components/site-footer";
 import { SiteBrandLink } from "@/components/site-brand-link";
@@ -296,7 +296,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <SiteFooter theme={theme} year={year} />
             </HeaderPartBoundary>
             <HeaderPartBoundary name="bottom-nav">
-              <div id="bs-bottom-boot" />
+              {/* Last visit's phone bar is drawn in here by the script below,
+                  before the first paint. Raw HTML so React leaves it alone
+                  when the page wakes up (same as #bs-header-boot). */}
+              <div dangerouslySetInnerHTML={{ __html: "" }} id="bs-bottom-boot" suppressHydrationWarning />
+              <BottomBarBootScript />
               <Suspense fallback={null}>
                 <SiteBottomNav />
               </Suspense>
