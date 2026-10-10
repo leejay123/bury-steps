@@ -1,8 +1,7 @@
-import type { ComponentProps } from "react";
+import { cn } from "@/lib/utils";
 
-/** Kept so older imports still compile. The app no longer shows grey placeholders. */
-function Skeleton(_props: ComponentProps<"div">) {
-  return null;
+function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
+  return <div data-slot="skeleton" className={cn("bg-accent animate-pulse rounded-md", className)} {...props} />;
 }
 
 export { Skeleton };
