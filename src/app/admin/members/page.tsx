@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { FIRST_VISIT_ROWS, MemberRowsSkeleton } from "@/components/list-skeletons";
 import { Users } from "lucide-react";
 import { MembersFilterChrome } from "@/components/list-chrome";
 import { RememberListCount } from "@/components/remember-list-count";
@@ -121,12 +122,13 @@ async function MembersBody({ adminId, role }: { adminId: string; role: MemberRol
   );
 }
 
-/** The real filter bar, then only as many member rows as the list last showed. */
+/** The real filter bar, then member-shaped rows (as many as the list last showed). */
 function MembersListSkeleton({ rows }: { rows: number | null }) {
   if (rows === 0) return null;
   return (
     <div data-page-loading="" aria-busy="true" className="flex flex-col gap-4">
       <MembersFilterChrome />
+      <MemberRowsSkeleton rows={rows ?? FIRST_VISIT_ROWS} />
     </div>
   );
 }
