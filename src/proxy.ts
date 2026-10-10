@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { isPublicPath, isUnknownAppPath } from "@/lib/public-routes";
 import { MENU_FILLED_COOKIE, NAV_COOKIE } from "@/lib/remembered-nav";
 import { clerkAuthorizedParties, shouldProxyClerkFrontendApi } from "@/lib/urls";
+import type { RoleClaims } from "@/lib/clerk-role";
 
 export default clerkMiddleware(
   async (auth, req) => {
@@ -28,6 +29,19 @@ export default clerkMiddleware(
     // visitor to sign in just to be told that afterwards was confusing.
     const { pathname } = req.nextUrl;
     if (!isPublicPath(pathname) && !isUnknownAppPath(pathname)) await auth.protect();
+
+    // Organiser pages: anyone whose sign-in token says they're not an
+    // organiser (or who isn't signed in) gets the site's ordinary "page not
+    // found" here, before anything is drawn and without a database lookup.
+    // The role rides in the token (clerk-role.ts). A token that doesn't
+    // carry a role yet goes on to the pages' own organiser check, so nobody
+    // is turned away by mistake.
+    if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+      const { userId, sessionClaims } = await auth();
+      if (!userId || (sessionClaims as RoleClaims | null)?.metadata?.role === "MEMBER") {
+        return NextResponse.rewrite(new URL("/__not-found", req.url), { status: 404 });
+      }
+    }
 
     // First page after signing in: no remembered menu yet, so the header and
     // phone bar would be empty until the server sent them. Save the menu first
