@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { Fragment, createContext, useCallback, useContext, useEffect, useRef, useState, useTransition } from "react";
 import { IntentLink } from "@/components/intent-link";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { useQueryChoice, useQueryText } from "@/hooks/use-filter-query";
@@ -78,6 +78,14 @@ function memberGroupKey(member: ViewMember): MemberGroupKey {
  * flight — same shape as a loaded row, so the list doesn't jump size, and
  * shows up instantly instead of dimming stale rows for however long the
  * fetch takes. */
+/**
+ * "Now", as the list's saved copy recorded it, for "member for 1 month" and
+ * "invited 3 days ago". Reading the clock while drawing the rows stopped
+ * Next.js preparing the page ahead, so Members always opened on its
+ * placeholder.
+ */
+const MembersNow = createContext<string | null>(null);
+
 export function MemberRowSkeleton() {
   return null;
 }
@@ -97,6 +105,8 @@ function MemberListRow({
    * own checks) rather than assuming. */
   viewerIsOwner: boolean;
 }) {
+  const recordedNow = useContext(MembersNow);
+  const now = recordedNow ? new Date(recordedNow) : undefined;
   // Every applicable action collapses behind a single "⋯"
   // menu — even when there's only one — so a row's controls
   // are always just the role badge plus that one button.
@@ -292,7 +302,7 @@ function MemberListRow({
           </p>
           <p className="text-sm text-muted-foreground wrap-break-word">{member.email || "No email"}</p>
           <p className="text-xs text-muted-foreground">
-            {formatDate(new Date(member.createdAt))} · {formatMembershipAge(new Date(member.createdAt))} ·{" "}
+            {formatDate(new Date(member.createdAt))} · {formatMembershipAge(new Date(member.createdAt), now)} ·{" "}
             {member.attendanceCount} {member.attendanceCount === 1 ? "clock-in" : "clock-ins"}
           </p>
         </DataListBody>
@@ -305,8 +315,8 @@ function MemberListRow({
           // status.
           <span className="flex h-7 items-center text-xs font-medium text-muted-foreground">
             {member.pendingInvite.expired
-              ? `Invite expired ${formatRelativeDays(new Date(member.pendingInvite.expiresAt))}`
-              : `Invited ${formatRelativeDays(new Date(member.pendingInvite.sentAt))}`}
+              ? `Invite expired ${formatRelativeDays(new Date(member.pendingInvite.expiresAt), now)}`
+              : `Invited ${formatRelativeDays(new Date(member.pendingInvite.sentAt), now)}`}
           </span>
         ) : null}
         {actions.length > 0 ? (
@@ -332,7 +342,12 @@ function MemberListRow({
 const MEMBER_SORTS = ["oldest", "newest", "name", "clockins"] as const;
 const ATTENTION = ["0", "1"] as const;
 
-export function MembersTable(props: {
+export function MembersTable({
+  now,
+  ...props
+}: {
+  /** When the list was loaded (see MembersNow). */
+  now: string;
   initialGroupTotals: MemberGroupTotals;
   initialRows: ViewMember[];
   initialTotal: number;
@@ -342,9 +357,11 @@ export function MembersTable(props: {
   viewerIsOwner: boolean;
 }) {
   return (
-    <NuqsAdapter>
-      <MembersTableInner {...props} />
-    </NuqsAdapter>
+    <MembersNow.Provider value={now}>
+      <NuqsAdapter>
+        <MembersTableInner {...props} />
+      </NuqsAdapter>
+    </MembersNow.Provider>
   );
 }
 

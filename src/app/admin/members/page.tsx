@@ -89,6 +89,9 @@ async function getMembersView(role: MemberRoleFilter) {
     impersonations,
     inviteRequired: setting?.organiserInviteRequired ?? false,
     viewerIsOwner: admin.isOwner,
+    // "Member for…" and "invited… ago" are worked out from this, not from
+    // reading the clock while the rows are drawn (see MembersNow).
+    now: new Date().toISOString(),
   };
 }
 
@@ -106,7 +109,7 @@ function MembersBody({
   role: MemberRoleFilter;
   view: NonNullable<Awaited<ReturnType<typeof getMembersView>>>;
 }) {
-  const { adminId, rows, total, groupTotals, totalMembers, impersonations, inviteRequired, viewerIsOwner } = view;
+  const { adminId, rows, total, groupTotals, totalMembers, impersonations, inviteRequired, viewerIsOwner, now } = view;
 
   return (
     <>
@@ -123,6 +126,7 @@ function MembersBody({
           initialRows={rows.map((member) => ({ ...member, isYou: member.id === adminId }))}
           initialTotal={total}
           inviteRequired={inviteRequired}
+          now={now}
           roleFilter={role}
           viewerId={adminId}
           viewerIsOwner={viewerIsOwner}
