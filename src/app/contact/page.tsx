@@ -18,7 +18,7 @@ export default async function ContactPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <h1 className="text-lg font-semibold tracking-tight">Contact us</h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           {"Questions about joining, a walk, or anything else — send us a message and we'll get back to you."}
         </p>
       </div>

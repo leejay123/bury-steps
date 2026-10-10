@@ -34,7 +34,7 @@ export function LegalPage({
       <div className="relative px-4 py-6 md:px-6">
         <div className="flex flex-col gap-1.5">
           <h1 className="font-semibold text-lg tracking-tight">{title}</h1>
-          <p className="text-muted-foreground text-sm">{description}</p>
+          <p className="text-sm text-muted-foreground">{description}</p>
         </div>
         <FullWidthDivider position="bottom" />
       </div>

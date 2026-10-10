@@ -42,7 +42,7 @@ export function SettingsPage({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
             <div className="flex max-w-2xl flex-col gap-1.5">
               <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
-              <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+              <p className="text-sm text-muted-foreground">{description}</p>
             </div>
             {previewHref ? (
               <Button asChild className="shrink-0 self-start sm:self-auto" size="sm" variant="outline">
@@ -107,7 +107,7 @@ export function SettingsSection({
             </h2>
           ) : null}
           {description ? (
-            <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+            <p className="text-sm text-muted-foreground">{description}</p>
           ) : null}
         </div>
       ) : null}
@@ -136,7 +136,7 @@ export function SettingsSectionGroup({
       <div className="flex flex-col gap-1">
         <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{title}</h2>
         {description ? (
-          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">{description}</p>
+          <p className="text-sm text-muted-foreground">{description}</p>
         ) : null}
       </div>
       <div
@@ -221,7 +221,7 @@ export function SettingsListHeader({
       <div className="flex min-w-0 flex-col gap-1">
         <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{title}</h2>
         {description ? (
-          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">{description}</p>
+          <p className="text-sm text-muted-foreground">{description}</p>
         ) : null}
       </div>
       {action ? <div className="shrink-0 [&>*]:w-full sm:[&>*]:w-auto">{action}</div> : null}
