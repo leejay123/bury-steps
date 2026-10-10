@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { cacheLife } from "next/cache";
+import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
 import { getSiteTheme } from "@/lib/site-theme";
 import { SettingsContentSkeleton, SettingsPage, SettingsSectionGroup } from "../../settings-page";
@@ -7,6 +9,9 @@ import { WalkPageCopySettings } from "../walk-page-copy-settings";
 import { WalkPageSectionsSettings } from "../walk-page-sections-settings";
 
 
+
+/** Fetched ahead (from the menu, the Settings table, or its tabs), so it opens with its settings there. */
+export const prefetch = "partial";
 
 export default function WalkPageCardsWordingPage() {
   // Title and description are part of the ready-made page; the settings
@@ -24,6 +29,10 @@ export default function WalkPageCardsWordingPage() {
 }
 
 async function WalkPageCardsWordingPageContent() {
+  // A private saved copy (this browser only, five minutes), so the page
+  // can be fetched ahead with its settings already in it.
+  "use cache: private";
+  cacheLife(PRIVATE_SAVED_COPY);
   await requirePermission("permDisplay");
   const theme = await getSiteTheme();
 

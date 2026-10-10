@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useDeferredValue, useState } from "react";
-import Link from "next/link";
+import { IntentLink } from "@/components/intent-link";
 import { AlertCircle, ChevronDown, ChevronRight, Search, SearchX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { unlockIdleDocument } from "@/components/overlay-root";
@@ -97,7 +97,7 @@ function LinkRow({ page }: { page: SettingsHubPage }) {
       <RowIcon page={page} />
       <RowText page={page} />
       <ChevronRight aria-hidden className="mt-2.5 size-4 shrink-0 text-muted-foreground" />
-      <Link
+      <IntentLink
         aria-label={page.title}
         className="absolute inset-0 rounded-[inherit] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
         href={page.href}
@@ -147,7 +147,7 @@ function ExpandableRow({
           <ul className="flex flex-col py-1 pl-[3.75rem]">
             {visibleChildren.map((child) => (
               <li key={child.href}>
-                <Link
+                <IntentLink
                   className="group flex items-center gap-3 rounded-md py-2 pr-4 hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   href={child.href}
                   onClick={navigate}
@@ -157,7 +157,7 @@ function ExpandableRow({
                     <span className="block text-sm text-muted-foreground">{child.description}</span>
                   </span>
                   <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />
-                </Link>
+                </IntentLink>
               </li>
             ))}
           </ul>
@@ -213,9 +213,9 @@ export function SettingsHub({ groups }: { groups: SettingsHubGroup[] }) {
             <ul className="mt-1 flex list-disc flex-col gap-0.5 pl-4">
               {needsAttention.map((page) => (
                 <li key={page.href}>
-                  <Link className="font-medium underline underline-offset-2" href={page.href} onClick={navigate}>
+                  <IntentLink className="font-medium underline underline-offset-2" href={page.href} onClick={navigate}>
                     {page.title}
-                  </Link>
+                  </IntentLink>
                   : {page.attention}
                 </li>
               ))}

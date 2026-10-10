@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { cacheLife } from "next/cache";
+import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requireAnySettingsPermission, displayName } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SITE_SETTING_ID } from "@/lib/theme";
@@ -33,6 +35,9 @@ function keptFor(days: number | null): string {
  * table) — so whoever runs the site can see at a glance whether anything
  * is unfinished or broken, without opening every page to check.
  */
+/** Fetched ahead (from the menu, the Settings table, or its tabs), so it opens with its settings there. */
+export const prefetch = "partial";
+
 export default function AdminSettingsPage() {
   // Title and description are part of the ready-made page; the settings
   // themselves (and the access check) fill in just after.
@@ -50,6 +55,10 @@ export default function AdminSettingsPage() {
 }
 
 async function AdminSettingsPageContent() {
+  // A private saved copy (this browser only, five minutes), so the page
+  // can be fetched ahead with its settings already in it.
+  "use cache: private";
+  cacheLife(PRIVATE_SAVED_COPY);
   const admin = await requireAnySettingsPermission();
 
   const [

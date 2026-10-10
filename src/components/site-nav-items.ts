@@ -93,6 +93,7 @@ const FETCHED_AHEAD = new Set([
   "/admin/members",
   "/admin/messages",
   "/admin/reports",
+  "/admin/settings",
 ]);
 
 /** prefetch={true} for converted pages (FETCHED_AHEAD), otherwise the default. */

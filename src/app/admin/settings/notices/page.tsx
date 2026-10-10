@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { cacheLife } from "next/cache";
+import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
 import { getSiteNoticeCategories, getSiteNotices } from "@/lib/site-notices";
 import { MAX_NOTICE_CATEGORIES } from "@/lib/notices";
@@ -7,6 +9,9 @@ import { SiteNoticeManager } from "../notice-manager";
 import { SettingsContentSkeleton, SettingsPage, SettingsSection } from "../settings-page";
 
 
+
+/** Fetched ahead (from the menu, the Settings table, or its tabs), so it opens with its settings there. */
+export const prefetch = "partial";
 
 export default function NoticesSettingsPage() {
   // Title and description are part of the ready-made page; the settings
@@ -24,6 +29,10 @@ export default function NoticesSettingsPage() {
 }
 
 async function NoticesSettingsPageContent() {
+  // A private saved copy (this browser only, five minutes), so the page
+  // can be fetched ahead with its settings already in it.
+  "use cache: private";
+  cacheLife(PRIVATE_SAVED_COPY);
   const admin = await requirePermission("permNotices");
   const [notices, categories] = await Promise.all([
     getSiteNotices(),

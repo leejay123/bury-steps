@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { cacheLife } from "next/cache";
+import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
 import { ensureDefaultHomepageSlide, getHomepageSlides } from "@/lib/homepage-slides";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
@@ -6,6 +8,9 @@ import { HomepageSlideManager } from "../../homepage/slide-manager";
 import { SettingsContentSkeleton, SettingsPage } from "../settings-page";
 
 
+
+/** Fetched ahead (from the menu, the Settings table, or its tabs), so it opens with its settings there. */
+export const prefetch = "partial";
 
 export default function HeroPhotosSettingsPage() {
   // Title and description are part of the ready-made page; the settings
@@ -24,6 +29,10 @@ export default function HeroPhotosSettingsPage() {
 }
 
 async function HeroPhotosSettingsPageContent() {
+  // A private saved copy (this browser only, five minutes), so the page
+  // can be fetched ahead with its settings already in it.
+  "use cache: private";
+  cacheLife(PRIVATE_SAVED_COPY);
   await requirePermission("permHomepage");
   await ensureDefaultHomepageSlide();
   const slides = await getHomepageSlides();
