@@ -11,7 +11,8 @@ import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
 import { formatCompactDateTime } from "@/lib/dates";
 import { SITE_SETTING_ID } from "@/lib/theme";
-import { searchMembers, type MemberRoleFilter } from "@/server/actions";
+import type { MemberRoleFilter } from "@/server/actions";
+import { loadMembersPage } from "@/lib/members-search";
 import { MembersTable } from "./members-table";
 import { AdminPageIntro } from "../admin-page-intro";
 import { EmptyState } from "@/components/empty-state";
@@ -67,7 +68,7 @@ async function getMembersView(role: MemberRoleFilter) {
   // live from searchMembers, so this stays fast and correct no matter how
   // many members the group has.
   const [{ rows, total, groupTotals }, totalMembers, impersonations, setting] = await Promise.all([
-    searchMembers({ role }),
+    loadMembersPage({ role }),
     prisma.user.count(),
     prisma.impersonationEvent.findMany({
       orderBy: { createdAt: "desc" },
