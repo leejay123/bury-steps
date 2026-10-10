@@ -1,3 +1,32 @@
+import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
+
 export default function Loading() {
-  return null;
+  return (
+    <article data-page-loading=""
+      aria-busy="true"
+      aria-label="Loading notice"
+      className="flex w-full flex-col gap-6"
+    >
+      <Link className="text-sm text-muted-foreground hover:text-foreground" href="/notices">
+        ← All notices
+      </Link>
+      <header className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <Skeleton className="h-5 w-20 rounded-md" />
+          <Skeleton className="h-4 w-28" />
+        </div>
+        <Skeleton className="h-9 w-full max-w-md md:h-10" />
+        <Skeleton className="h-5 w-full max-w-lg" />
+        <Skeleton className="h-5 w-2/3 max-w-md" />
+      </header>
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-3/4" />
+      </div>
+    </article>
+  );
 }
