@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { getOptionalUser } from "@/lib/auth";
+import { syncOwnClerkRole } from "@/lib/clerk-role";
 import { prisma } from "@/lib/db";
 import { vapidConfig } from "@/lib/vapid";
 import { Button } from "@/components/ui/button";
@@ -99,6 +100,8 @@ async function SiteNavBell({ firstName, userId }: { firstName: string | null; us
 export async function SiteNav() {
   const afterAuth = `${appUrl()}${AFTER_AUTH_PATH}`;
   const [user, progressEnabled] = await Promise.all([getOptionalUser(), getProgressEnabled()]);
+  // Keeps the role in their sign-in token up to date (see clerk-role.ts).
+  if (user) await syncOwnClerkRole(user);
   const pushOn = user
     ? (await prisma.pushSubscription.findFirst({ where: { userId: user.id }, select: { id: true } })) != null
     : false;

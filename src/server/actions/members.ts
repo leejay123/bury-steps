@@ -6,6 +6,7 @@ import { guardForm } from "@/lib/safe-action";
 import { revalidatePath, revalidateTag } from "@/lib/revalidate";
 import { CONTACT_MESSAGES_OWNER_TAG } from "@/lib/contact-messages-owner";
 import { clerkClient } from "@clerk/nextjs/server";
+import { setClerkRole } from "@/lib/clerk-role";
 import type { Prisma } from "@prisma/client";
 import { requireAdmin, displayName, getOptionalUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -540,6 +541,11 @@ async function setMemberRoleWork(
     return logActionError("setMemberRole", err, "Could not change their role. Try again.");
   }
 
+  // Their sign-in token carries their role too (see clerk-role.ts). Read back,
+  // since an invite (instead of a promotion) leaves them a member for now.
+  const finalRole = (await prisma.user.findUnique({ where: { id: target.id }, select: { role: true } }))?.role;
+  if (finalRole) await setClerkRole(target.clerkId, finalRole);
+
   if (role === "ADMIN") {
     await sendAdminPromotedEmail(target).catch((err) => {
       console.error("setMemberRole: failed to send admin-promoted email", err);
@@ -938,6 +944,9 @@ async function acceptOrganiserInviteWork(
   } catch (err) {
     return logActionError("acceptOrganiserInvite", err, "Could not accept the invite. Try again.");
   }
+
+  // Their sign-in token carries their role too (see clerk-role.ts).
+  await setClerkRole(target.clerkId, "ADMIN");
 
   await sendAdminPromotedEmail(target).catch((err) => {
     console.error("acceptOrganiserInvite: failed to send admin-promoted confirmation email", err);
