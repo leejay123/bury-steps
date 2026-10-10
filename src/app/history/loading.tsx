@@ -22,10 +22,12 @@ export function HistoryLoading() {
       </div>
       {/* As many rows as last time, from the first paint; with none last
           time the list hides itself, and the filters with it. */}
-      <div className="flex flex-col gap-6 has-[[data-reveal-list][hidden]]:hidden">
-        <HistoryFilterChrome />
+      <div className="flex flex-col gap-6 [&:has([data-reveal-list][hidden])>[data-sk-filters]]:hidden">
+        <div className="contents" data-sk-filters="">
+          <HistoryFilterChrome />
+        </div>
         <section className="flex flex-col gap-3">
-          <div aria-hidden className="h-5" />
+          <div aria-hidden className="h-5 [section:has([data-reveal-list][hidden])>&]:hidden" />
           <HistoryRowsSkeleton remember="history" />
         </section>
       </div>

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { ChevronRight } from "lucide-react";
 import { RememberedRows } from "@/components/remembered-rows";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
+import { Empty, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -57,16 +58,20 @@ export function SkList({
   row,
   className,
   remember,
+  empty,
 }: {
   rows?: number;
   row: (index: number) => ReactNode;
   className?: string;
   /** The list's RememberListCount key: draws as many rows as last time, from the first paint. */
   remember?: string;
+  /** Shown when the list was empty last time (EmptyStateSkeleton). */
+  empty?: ReactNode;
 }) {
   if (remember) {
     return (
       <RememberedRows
+        empty={empty}
         as="ul"
         className={cn("flex flex-col overflow-hidden rounded-xl border bg-card", className)}
         remember={remember}
@@ -195,6 +200,7 @@ export function MessageRowsSkeleton({
           </div>
         </div>
       )}
+      empty={<EmptyStateSkeleton lines={2} />}
       remember={remember}
       rows={rows}
     />
@@ -217,6 +223,7 @@ export function ReportRowsSkeleton({ rows = 0, remember }: { rows?: number; reme
           </div>
         </div>
       )}
+      empty={<EmptyStateSkeleton lines={2} />}
       remember={remember}
       rows={rows}
     />
@@ -241,6 +248,7 @@ export function HistoryRowsSkeleton({ rows = 0, remember }: { rows?: number; rem
   if (remember) {
     return (
       <RememberedRows
+        empty={<EmptyStateSkeleton />}
         className="flex flex-col divide-y rounded-xl border"
         remember={remember}
         rowClassName="flex flex-col gap-2 p-4"
@@ -330,5 +338,38 @@ export function MemberRowsSkeleton({ remember = "members" }: { remember?: string
         <MemberRow i={i} key={i} />
       ))}
     />
+  );
+}
+
+/**
+ * The empty box (EmptyState: "No messages yet", "When you clock in, those
+ * walks will show here."…) as a placeholder, for a list that was empty last
+ * time: same frame and size, grey where the icon, title and sentence go.
+ * Not the message itself — it may not be empty any more.
+ */
+/** `lines`: how many lines the real empty box's sentence wraps to (max-w-sm). */
+export function EmptyStateSkeleton({ lines = 1 }: { lines?: 1 | 2 }) {
+  return (
+    <Empty aria-hidden className="w-full min-h-64 border bg-muted/30">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <Skeleton className="size-6 rounded-md" />
+        </EmptyMedia>
+        <div className="flex h-7 items-center">
+          <Skeleton className="h-[64%] w-44 rounded-[4px]" />
+        </div>
+        {/* text-sm/relaxed: 0.875rem × 1.625 per line. */}
+        <div className="flex w-full flex-col items-center">
+          <div className="flex h-[1.421875rem] w-full items-center justify-center">
+            <Skeleton className={cn("h-[54%] max-w-full rounded-[4px]", lines === 2 ? "w-80" : "w-64")} />
+          </div>
+          {lines === 2 ? (
+            <div className="flex h-[1.421875rem] w-full items-center justify-center">
+              <Skeleton className="h-[54%] w-48 max-w-full rounded-[4px]" />
+            </div>
+          ) : null}
+        </div>
+      </EmptyHeader>
+    </Empty>
   );
 }

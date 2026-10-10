@@ -36,6 +36,7 @@ export function RememberedRows({
   rowAs = "div",
   rowClassName,
   leading,
+  empty,
   max = LIST_PAGE_SIZE,
 }: {
   /** The list's key, as given to RememberListCount. */
@@ -48,6 +49,8 @@ export function RememberedRows({
   rowClassName?: string;
   /** Drawn before the rows and not counted (e.g. the Members group strip). */
   leading?: ReactNode;
+  /** Shown instead when the list was empty last time: the empty box's shape (EmptyStateSkeleton). */
+  empty?: ReactNode;
   max?: number;
 }) {
   const id = useId();
@@ -60,7 +63,7 @@ export function RememberedRows({
   const script = `{var m=document.cookie.match(/(?:^|; )${name}=(\\d+)/);var n=m?Math.min(+m[1],${limit}):${Math.min(
     FIRST_VISIT_ROWS,
     limit,
-  )};var el=document.getElementById(${JSON.stringify(id)});if(el){if(n===0)el.setAttribute("hidden","");var r=el.querySelectorAll(":scope>[data-sk-row]");for(var i=n;i<r.length;i++)r[i].setAttribute("hidden","")}}`;
+  )};var el=document.getElementById(${JSON.stringify(id)});var e=document.getElementById(${JSON.stringify(`${id}-empty`)});if(e&&n===0)e.removeAttribute("hidden");if(el){if(n===0)el.setAttribute("hidden","");var r=el.querySelectorAll(":scope>[data-sk-row]");for(var i=n;i<r.length;i++)r[i].setAttribute("hidden","")}}`;
 
   return (
     <>
@@ -89,6 +92,11 @@ export function RememberedRows({
           ),
         ),
       )}
+      {empty ? (
+        <div hidden={count !== 0 || undefined} id={`${id}-empty`} suppressHydrationWarning>
+          {empty}
+        </div>
+      ) : null}
       <InlineScript html={script} />
     </>
   );

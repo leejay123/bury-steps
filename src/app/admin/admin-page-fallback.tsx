@@ -28,10 +28,15 @@ export function AdminPageFallback({
           {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
         </div>
       ) : null}
-      {/* When the list was empty last time, its placeholder hides itself
-          (RememberedRows), and the filters with it, as on the real page. */}
-      <div className="flex flex-col gap-6 has-[>[data-reveal-list][hidden]]:hidden">
-        {filters}
+      {/* When the list was empty last time, its rows hide themselves and the
+          empty box's shape shows instead (RememberedRows); the filters hide
+          too, as on the real empty page. */}
+      <div className="flex flex-col gap-6 [&:has([data-reveal-list][hidden])>[data-sk-filters]]:hidden">
+        {filters ? (
+          <div className="contents" data-sk-filters="">
+            {filters}
+          </div>
+        ) : null}
         {list}
       </div>
     </div>
