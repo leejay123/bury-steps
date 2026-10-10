@@ -38,6 +38,7 @@ export function RememberedRows({
   leading,
   empty,
   max = LIST_PAGE_SIZE,
+  known,
 }: {
   /** The list's key, as given to RememberListCount. */
   remember: string;
@@ -52,18 +53,27 @@ export function RememberedRows({
   /** Shown instead when the list was empty last time: the empty box's shape (EmptyStateSkeleton). */
   empty?: ReactNode;
   max?: number;
+  /** The real row count, when the list is the same for everyone (list-counts.ts):
+   * drawn exactly, instead of last time's count. A filtered address (?role=…)
+   * can only have fewer, so there it's capped by last time's count too. */
+  known?: number;
 }) {
   const id = useId();
   const name = rememberedRowsCookie(remember);
   const limit = Math.min(max, rows.length);
   // Server: unknown (null), so every row is in the page for the script to
   // trim. Browser: the remembered count, the same one the script uses.
-  const [count] = useState<number | null>(() => (typeof window === "undefined" ? null : readCount(name, limit)));
+  const exact = known === undefined ? null : Math.max(0, Math.min(known, limit));
+  const [count] = useState<number | null>(() => {
+    if (typeof window === "undefined") return exact;
+    if (exact === null) return readCount(name, limit);
+    return window.location.search ? Math.min(exact, readCount(name, limit)) : exact;
+  });
 
-  const script = `{var m=document.cookie.match(/(?:^|; )${name}=(\\d+)/);var n=m?Math.min(+m[1],${limit}):${Math.min(
-    FIRST_VISIT_ROWS,
-    limit,
-  )};var el=document.getElementById(${JSON.stringify(id)});var e=document.getElementById(${JSON.stringify(`${id}-empty`)});if(e&&n===0)e.removeAttribute("hidden");if(el){if(n===0)el.setAttribute("hidden","");var r=el.querySelectorAll(":scope>[data-sk-row]");for(var i=n;i<r.length;i++)r[i].setAttribute("hidden","")}}`;
+  const first = Math.min(FIRST_VISIT_ROWS, limit);
+  const script = `{var m=document.cookie.match(/(?:^|; )${name}=(\\d+)/);var c=m?Math.min(+m[1],${limit}):${first};var n=${
+    exact === null ? "c" : `location.search?Math.min(${exact},c):${exact}`
+  };var el=document.getElementById(${JSON.stringify(id)});var e=document.getElementById(${JSON.stringify(`${id}-empty`)});if(e&&n===0)e.removeAttribute("hidden");if(el){if(n===0)el.setAttribute("hidden","");var r=el.querySelectorAll(":scope>[data-sk-row]");for(var i=n;i<r.length;i++)r[i].setAttribute("hidden","")}}`;
 
   return (
     <>

@@ -13,6 +13,7 @@ import { formatDate, formatMembershipAge, formatRelativeDays } from "@/lib/dates
 import { cn } from "@/lib/utils";
 import { initials } from "@/lib/names";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
+import { rememberedRowsCookie, writeClientCookie } from "@/lib/remembered-rows-key";
 import {
   searchMembers,
   type MemberGroupTotals,
@@ -266,7 +267,18 @@ function MemberListRow({
         </Avatar>
         <DataListBody>
           <p className="flex items-center gap-1.5 font-medium">
-            <Link className="after:absolute after:inset-0" href={`/admin/members/${member.id}`}>
+            <Link
+              className="after:absolute after:inset-0"
+              href={`/admin/members/${member.id}`}
+              // Their page's placeholder then draws exactly as many walk
+              // rows as they have (MemberDetailSkeleton).
+              onClick={() =>
+                writeClientCookie(
+                  rememberedRowsCookie("member-detail"),
+                  String(Math.min(member.attendanceCount, LIST_PAGE_SIZE)),
+                )
+              }
+            >
               {member.name}
             </Link>
             {member.isYou ? <span className="text-xs font-normal text-muted-foreground">You</span> : null}

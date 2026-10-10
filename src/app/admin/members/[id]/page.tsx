@@ -18,6 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { emergencyPhoneHref } from "@/lib/emergency-contact";
 import { MemberDetailActions } from "./member-detail-actions";
+import { RememberListCount } from "@/components/remember-list-count";
+import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 
 
 
@@ -49,6 +51,8 @@ async function MemberDetailPageContent({
 
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
+      {/* For a refresh of this page (a click from the list saves it too). */}
+      <RememberListCount count={Math.min(member.items.length, LIST_PAGE_SIZE)} id="member-detail" />
       <Link className="text-sm text-muted-foreground hover:text-foreground" href="/admin/members">
         &larr; All members
       </Link>

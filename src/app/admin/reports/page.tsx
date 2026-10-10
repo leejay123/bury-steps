@@ -4,6 +4,7 @@ import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
 import { ReportsFilterChrome } from "@/components/list-chrome";
 import { RememberListCount } from "@/components/remember-list-count";
 import { ReportRowsSkeleton } from "@/components/list-skeletons";
+import { reportsListRows } from "@/lib/list-counts";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { Prisma } from "@prisma/client";
 import { memberDisplayName, requirePermission } from "@/lib/auth";
@@ -133,14 +134,15 @@ async function AccidentReportsPageContent({
   );
 }
 
-/** Real title, search and filters, then as many report rows as last time —
- * one placeholder from the first paint. */
-export function ReportsPageFallback() {
+/** Real title, search and filters, then exactly as many report rows as
+ * there are (list-counts.ts) — one placeholder from the first paint. */
+export async function ReportsPageFallback() {
+  const rows = await reportsListRows();
   return (
     <AdminPageFallback
       description={REPORTS_INTRO}
       filters={<ReportsFilterChrome />}
-      list={<ReportRowsSkeleton remember="reports" />}
+      list={<ReportRowsSkeleton known={rows} remember="reports" />}
       title="Accident reports"
     />
   );

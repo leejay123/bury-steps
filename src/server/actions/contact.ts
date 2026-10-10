@@ -63,6 +63,8 @@ async function submitContactMessageWork(
   } catch (err) {
     return logActionError("submitContactMessage", err, "Could not send that. Try again.");
   }
+  // Organisers' Messages list (and its placeholder's row count) gains a row.
+  revalidatePath("/admin/messages");
 
   // Best-effort — the message is already saved and visible in /admin/messages
   // either way, so a failed send here shouldn't turn into a user-facing error.

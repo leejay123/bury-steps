@@ -34,12 +34,15 @@ export default async function NoticesPage() {
   // in the ready-made page already has exactly the tabs the page will show.
   const [notices, categories] = await Promise.all([getPageNotices(), getSiteNoticeCategories()]);
   const used = categories.filter((category) => notices.some((notice) => notice.categoryId === category.id));
+  // Every member sees the same notices, so the placeholder draws exactly
+  // as many rows as the list will show.
+  const rows = Math.min(notices.length, LIST_PAGE_SIZE);
   const tabs = used.length > 0 ? [{ id: "all", label: "All" }, ...used.map(({ id, label }) => ({ id, label }))] : null;
   return (
     // The notices themselves are for members only, so they're added after
     // the signed-in check — never part of the ready-made page everyone shares.
-    <Suspense fallback={<NoticesFallback categories={tabs} />}>
-      <PlaceholderPreview fallback={<NoticesFallback categories={tabs} />}>
+    <Suspense fallback={<NoticesFallback categories={tabs} rows={rows} />}>
+      <PlaceholderPreview fallback={<NoticesFallback categories={tabs} rows={rows} />}>
         <NoticesForMember />
       </PlaceholderPreview>
     </Suspense>
@@ -88,7 +91,13 @@ async function NoticesForMember() {
 /** The instant before the notices arrive: the page's real heading and
  * description (they never change) and list-shaped placeholders — the same
  * frame as the page, so nothing jumps. Same idea as the organiser pages. */
-function NoticesFallback({ categories }: { categories: { id: string; label: string }[] | null }) {
+function NoticesFallback({
+  categories,
+  rows,
+}: {
+  categories: { id: string; label: string }[] | null;
+  rows: number;
+}) {
   return (
     <div data-page-loading="" aria-busy="true" className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
       <section className="flex flex-col gap-0">
@@ -102,8 +111,8 @@ function NoticesFallback({ categories }: { categories: { id: string; label: stri
         </div>
         {categories ? <NoticeCategoryBar labels={categories} /> : null}
         <div className="flex flex-col gap-4 px-4 py-6 md:px-6">
-          {/* As many rows as last time, from the first paint. */}
-          <NoticeRowsSkeleton remember="notices" />
+          {/* Exactly as many rows as there are notices, from the first paint. */}
+          <NoticeRowsSkeleton known={rows} remember="notices" />
         </div>
       </section>
     </div>

@@ -3,7 +3,6 @@ import { HistoryFilterChrome } from "@/components/list-chrome";
 import { HistoryRowsSkeleton, SkButtonSpace, SkLine } from "@/components/list-skeletons";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FIRST_VISIT_ROWS } from "@/lib/list-page-size";
 
 /** Same card as the loaded stat: only the number is still loading. */
 function StatCardSkeleton({ label }: { label: string }) {
@@ -75,12 +74,18 @@ export function MemberDetailSkeleton() {
       <section className="flex flex-col gap-3">
         {/* "12 walks" */}
         <SkLine className="w-16" size="sm" />
-        {/* As the history list: search and filters, the year, the rows. */}
-        <div className="flex flex-col gap-6">
-          <HistoryFilterChrome />
+        {/* As the history list: search and filters, the year, then exactly
+            as many rows as they have (saved when you clicked them in the
+            list); with none, the empty box's shape, and no filters. */}
+        <div className="flex flex-col gap-6 [&:has([data-reveal-list][hidden])>[data-sk-filters]]:hidden">
+          <div className="contents" data-sk-filters="">
+            <HistoryFilterChrome />
+          </div>
           <section className="flex flex-col gap-3">
-            <SkLine className="w-12" size="sm" />
-            <HistoryRowsSkeleton rows={FIRST_VISIT_ROWS} />
+            <div className="[section:has([data-reveal-list][hidden])>&]:hidden">
+              <SkLine className="w-12" size="sm" />
+            </div>
+            <HistoryRowsSkeleton remember="member-detail" />
           </section>
         </div>
       </section>

@@ -8,6 +8,7 @@ import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import Link from "next/link";
 import { requirePermission } from "@/lib/auth";
 import { getContactMessagesDescription } from "@/lib/contact-messages-owner";
+import { messagesListRows } from "@/lib/list-counts";
 import { prisma } from "@/lib/db";
 import { AdminPageIntro } from "../admin-page-intro";
 import { ContactMessagesList } from "./contact-messages-list";
@@ -51,16 +52,16 @@ async function AdminMessagesPageContent() {
   );
 }
 
-/** Real title, description, search and date filter, then as many message
- * rows as last time — one placeholder from the first paint. The description
+/** Real title, description, search and date filter, then exactly as many
+ * message rows as there are (list-counts.ts) — one placeholder from the first paint. The description
  * names who gets alerted, from a saved copy, so it's real too. */
 export async function MessagesPageFallback() {
-  const description = await getContactMessagesDescription();
+  const [description, rows] = await Promise.all([getContactMessagesDescription(), messagesListRows()]);
   return (
     <AdminPageFallback
       description={description.text}
       filters={<MessagesFilterChrome />}
-      list={<MessageRowsSkeleton remember="messages" />}
+      list={<MessageRowsSkeleton known={rows} remember="messages" />}
       title="Messages"
     />
   );

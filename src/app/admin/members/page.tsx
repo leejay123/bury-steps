@@ -3,6 +3,7 @@ import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { MemberRowsSkeleton } from "@/components/list-skeletons";
 import { Users } from "lucide-react";
 import { MembersFilterChrome } from "@/components/list-chrome";
+import { membersListRows } from "@/lib/list-counts";
 import { RememberListCount } from "@/components/remember-list-count";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/auth";
@@ -115,13 +116,14 @@ async function MembersBody({ adminId, role }: { adminId: string; role: MemberRol
   );
 }
 
-/** The real filter bar, then member-shaped rows — as many as the list last
- * showed, from the first paint (one placeholder, on a refresh or a page change). */
-function MembersListSkeleton() {
+/** The real filter bar, then member-shaped rows — exactly as many as the
+ * first page has (list-counts.ts), from the first paint. */
+async function MembersListSkeleton() {
+  const rows = await membersListRows();
   return (
     <div data-page-loading="" aria-busy="true" className="flex flex-col gap-4">
       <MembersFilterChrome />
-      <MemberRowsSkeleton remember="members" />
+      <MemberRowsSkeleton known={rows} remember="members" />
     </div>
   );
 }

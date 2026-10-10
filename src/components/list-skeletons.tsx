@@ -59,10 +59,13 @@ export function SkList({
   className,
   remember,
   empty,
+  known,
 }: {
   rows?: number;
   row: (index: number) => ReactNode;
   className?: string;
+  /** The real count, for a list that's the same for everyone (RememberedRows). */
+  known?: number;
   /** The list's RememberListCount key: draws as many rows as last time, from the first paint. */
   remember?: string;
   /** Shown when the list was empty last time (EmptyStateSkeleton). */
@@ -72,6 +75,7 @@ export function SkList({
     return (
       <RememberedRows
         empty={empty}
+        known={known}
         as="ul"
         className={cn("flex flex-col overflow-hidden rounded-xl border bg-card", className)}
         remember={remember}
@@ -149,11 +153,20 @@ function NoticeRow({ i }: { i: number }) {
   );
 }
 
-export function NoticeRowsSkeleton({ rows = 0, remember }: { rows?: number; remember?: string }) {
+export function NoticeRowsSkeleton({
+  rows = 0,
+  remember,
+  known,
+}: {
+  rows?: number;
+  remember?: string;
+  known?: number;
+}) {
   if (remember) {
     return (
       <RememberedRows
         className="flex flex-col divide-y rounded-xl border"
+        known={known}
         remember={remember}
         rowClassName="flex flex-col gap-2 p-4"
         rows={Array.from({ length: LIST_PAGE_SIZE }, (_, i) => (
@@ -179,10 +192,12 @@ export function MessageRowsSkeleton({
   rows = 0,
   lines,
   remember,
+  known,
 }: {
   rows?: number;
   lines?: string[] | null;
   remember?: string;
+  known?: number;
 }) {
   return (
     <SkList
@@ -201,6 +216,7 @@ export function MessageRowsSkeleton({
         </div>
       )}
       empty={<EmptyStateSkeleton lines={2} />}
+      known={known}
       remember={remember}
       rows={rows}
     />
@@ -208,7 +224,15 @@ export function MessageRowsSkeleton({
 }
 
 /** Accident reports: day, walk, then one line of the write-up (it can grow to three, never the other way). */
-export function ReportRowsSkeleton({ rows = 0, remember }: { rows?: number; remember?: string }) {
+export function ReportRowsSkeleton({
+  rows = 0,
+  remember,
+  known,
+}: {
+  rows?: number;
+  remember?: string;
+  known?: number;
+}) {
   return (
     <SkList
       row={(i) => (
@@ -224,6 +248,7 @@ export function ReportRowsSkeleton({ rows = 0, remember }: { rows?: number; reme
         </div>
       )}
       empty={<EmptyStateSkeleton lines={2} />}
+      known={known}
       remember={remember}
       rows={rows}
     />
@@ -318,11 +343,12 @@ function MemberRow({ i }: { i: number }) {
  * where the row's actions button sits (members-table.tsx). As many rows as
  * last time, from the first paint.
  */
-export function MemberRowsSkeleton({ remember = "members" }: { remember?: string }) {
+export function MemberRowsSkeleton({ remember = "members", known }: { remember?: string; known?: number }) {
   return (
     <RememberedRows
       as="ul"
       className="flex flex-col overflow-hidden rounded-xl border bg-card"
+      known={known}
       leading={
         <li
           aria-hidden="true"
