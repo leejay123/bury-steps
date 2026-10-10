@@ -25,7 +25,10 @@ export function LiveUpdates() {
       if (checking || document.visibilityState !== "visible") return;
       checking = true;
       try {
-        const response = await fetch("/api/site-version", { cache: "no-store" });
+        // A plain request, so Vercel's CDN can answer from its 15-second copy
+        // (a "no-store" request tells caches to skip their copy). The
+        // browser never keeps one itself: the answer says no-store.
+        const response = await fetch("/api/site-version");
         if (!response.ok) return;
         const { v } = (await response.json()) as { v: string };
         if (seen.current !== null && v !== seen.current) router.refresh();

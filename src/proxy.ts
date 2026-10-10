@@ -60,8 +60,11 @@ export default clerkMiddleware(
 
 export const config = {
   matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|mp4|webm|mov)).*)",
-    "/(api|trpc)(.*)",
+    // /api/site-version is skipped: the same public answer for everyone,
+    // asked for every 30 seconds by every open page, so it shouldn't cost a
+    // sign-in check each time (see its route.ts).
+    "/((?!_next|api/site-version|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|mp4|webm|mov)).*)",
+    "/(api(?!/site-version)|trpc)(.*)",
     "/__clerk/:path*",
   ],
 };
