@@ -86,7 +86,15 @@ async function getMembersView(role: MemberRoleFilter) {
     total,
     groupTotals,
     totalMembers,
-    impersonations,
+    // Dates written out here, inside the saved copy: the format checks the
+    // current year, and reading the clock while drawing stops the page
+    // being prepared ahead.
+    impersonations: impersonations.map((event) => ({
+      id: event.id,
+      adminName: event.adminName,
+      targetName: event.targetName,
+      when: formatCompactDateTime(event.createdAt),
+    })),
     inviteRequired: setting?.organiserInviteRequired ?? false,
     viewerIsOwner: admin.isOwner,
     // "Member for…" and "invited… ago" are worked out from this, not from
@@ -148,7 +156,7 @@ function MembersBody({
                     <span className="font-medium">{event.adminName}</span> logged in as{" "}
                     <span className="font-medium">{event.targetName}</span>
                   </p>
-                  <p className="text-xs text-muted-foreground">{formatCompactDateTime(event.createdAt)}</p>
+                  <p className="text-xs text-muted-foreground">{event.when}</p>
                 </DataListBody>
               </DataListItem>
             ))}
