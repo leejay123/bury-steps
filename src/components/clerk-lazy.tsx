@@ -1,6 +1,7 @@
 "use client";
 
 import { lazy, Suspense, type ComponentProps } from "react";
+import { AvatarPlaceholder } from "@/components/header-placeholders";
 
 /**
  * Clerk's browser code, split off so it's only downloaded when one of
@@ -34,14 +35,7 @@ export function LazyClerkProvider(props: ComponentProps<typeof ClerkProviderInne
 export function LazySiteUserButton(props: ComponentProps<typeof SiteUserButtonInner>) {
   return (
     <Suspense
-      fallback={
-        <span
-          aria-hidden
-          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground uppercase"
-        >
-          {props.initial}
-        </span>
-      }
+      fallback={<AvatarPlaceholder image={props.image} initial={props.initial} />}
     >
       <SiteUserButtonInner {...props} />
     </Suspense>

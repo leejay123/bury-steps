@@ -5,6 +5,11 @@
  * copy once they arrive.
  */
 
+import { BELL_CLAPPER_PATH, BELL_DOME_PATH } from "@/components/header-placeholders";
+
+/** Same as BellPlaceholder: the real bell's shape and colour, so nothing changes when it arrives. */
+const BELL_HTML = `<span aria-hidden="true" class="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-foreground"><svg aria-hidden="true" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16"><path d="${BELL_DOME_PATH}"></path><path d="${BELL_CLAPPER_PATH}"></path></svg></span>`;
+
 const ICON_INNER: Record<string, string> = {
   Home: '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
   Walks:
@@ -32,6 +37,7 @@ function bootScript(facebookUrl: string) {
   return `(function(){try{
 var ICONS=${JSON.stringify(ICON_INNER)};
 var FACEBOOK=${JSON.stringify(facebookUrl)};
+var BELL=${JSON.stringify(BELL_HTML)};
 var parts=("; "+document.cookie).split("; ");
 function val(name){for(var i=0;i<parts.length;i++)if(parts[i].indexOf(name+"=")===0)return decodeURIComponent(parts[i].slice(name.length+1));return "";}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
@@ -54,6 +60,9 @@ function itemsFrom(raw){
 var items=itemsFrom(val("bs-nav"));
 if(items.length){
   var initial=(val("bs-av")||"").slice(0,1);
+  var photo=val("bs-avimg");
+  if(!/^https:\\/\\/img\\.clerk\\.com\\/[A-Za-z0-9._~=\\-]+$/.test(photo))photo="";
+  var avatar=photo?'<img alt="" aria-hidden="true" class="size-7 shrink-0 rounded-full object-cover" src="'+photo+'?width=160">':'<span aria-hidden="true" class="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground uppercase">'+esc(initial)+"</span>";
   var links="";
   for(var i=0;i<items.length;i++){
     var item=items[i];
@@ -67,8 +76,7 @@ if(items.length){
     var html='<div class="hidden min-w-0 items-center justify-center md:flex"><div class="relative hidden min-w-0 md:block"><nav class="flex max-w-full items-center justify-center-safe gap-1 overflow-x-auto overscroll-x-contain text-[14px] [scrollbar-width:none] [-ms-overflow-style:none]">'+links+"</nav></div></div>"
     +'<div class="flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3 md:min-w-[7.75rem] lg:min-w-[20.5rem]">'
     +'<button type="button" aria-label="Search the site" class="flex size-9 shrink-0 items-center justify-center gap-2 rounded-full text-sm text-muted-foreground md:h-8 md:w-44 md:justify-start md:rounded-md md:border md:bg-background md:px-2.5 md:shadow-xs lg:w-60"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4 shrink-0 max-md:text-foreground" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg><span class="truncate max-md:hidden">Search the site…</span><kbd class="pointer-events-none ml-auto hidden h-5 min-w-5 select-none items-center justify-center rounded-sm bg-muted px-1 font-sans text-xs font-medium text-muted-foreground lg:inline-flex">'+(/mac|iphone|ipad|ipod/i.test(navigator.platform||navigator.userAgent)?"⌘K":"Ctrl K")+'</kbd></button>'
-    +'<span aria-hidden="true" class="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground">'+icon("Notices","size-4","2")+'</span>'
-    +'<span aria-hidden="true" class="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground uppercase">'+esc(initial)+"</span></div>";
+    +BELL+avatar+"</div>";
     function paint(){if(document.querySelector("[data-nav-ready]")){obs.disconnect();slot.textContent="";return;}if(!slot.childElementCount)slot.innerHTML=html;}
     var obs=new MutationObserver(paint);
     if(slot.parentNode)obs.observe(slot.parentNode,{childList:true,subtree:true});

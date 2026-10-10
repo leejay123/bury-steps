@@ -3,11 +3,18 @@ import { cookies } from "next/headers";
 import { getOptionalUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { vapidConfig } from "@/lib/vapid";
-import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
 import { navItems } from "@/components/site-nav-items";
-import { AVATAR_COOKIE, NAV_COOKIE, parseRememberedNav, type RememberedNavItem } from "@/lib/remembered-nav";
+import {
+  AVATAR_COOKIE,
+  AVATAR_IMAGE_COOKIE,
+  NAV_COOKIE,
+  avatarImageSrc,
+  parseRememberedNav,
+  type RememberedNavItem,
+} from "@/lib/remembered-nav";
+import { AvatarPlaceholder, BellPlaceholder } from "@/components/header-placeholders";
 import { RememberHeader } from "@/components/remember-header";
 import { BottomNavBar } from "@/components/bottom-nav-bar";
 import { getSiteTheme } from "@/lib/site-theme";
@@ -37,14 +44,23 @@ export async function SiteNavSlot() {
   const jar = await cookies();
   const items = parseRememberedNav(jar.get(NAV_COOKIE)?.value);
   const initial = (jar.get(AVATAR_COOKIE)?.value ?? "").slice(0, 1);
+  const image = avatarImageSrc(jar.get(AVATAR_IMAGE_COOKIE)?.value);
   return (
-    <Suspense fallback={<SiteNavFallback initial={initial} items={items} />}>
+    <Suspense fallback={<SiteNavFallback image={image} initial={initial} items={items} />}>
       <SiteNav />
     </Suspense>
   );
 }
 
-export function SiteNavFallback({ initial = "", items = [] }: { initial?: string; items?: RememberedNavItem[] }) {
+export function SiteNavFallback({
+  image = null,
+  initial = "",
+  items = [],
+}: {
+  image?: string | null;
+  initial?: string;
+  items?: RememberedNavItem[];
+}) {
   if (items.length === 0) {
     return (
       <>
@@ -65,15 +81,8 @@ export function SiteNavFallback({ initial = "", items = [] }: { initial?: string
         data-nav-ready=""
       >
         <SiteSearchBar />
-        <span aria-hidden className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground">
-          <Bell aria-hidden className="size-4" />
-        </span>
-        <span
-          aria-hidden
-          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground uppercase"
-        >
-          {initial}
-        </span>
+        <BellPlaceholder />
+        <AvatarPlaceholder image={image} initial={initial} />
       </div>
     </>
   );
@@ -100,6 +109,7 @@ export async function SiteNav() {
   // Signed-in state comes from the server here (not Clerk's client <Show>),
   // so nothing waits for Clerk's browser bundle before appearing.
   const initial = user ? (user.firstName || user.email || "?").charAt(0) : null;
+  const image = user ? avatarImageSrc((await cookies()).get(AVATAR_IMAGE_COOKIE)?.value) : null;
   return (
     <>
       <RememberHeader initial={initial} />
@@ -124,7 +134,7 @@ export async function SiteNav() {
               <SiteSearchDialog />
             </HeaderPartBoundary>
             <HeaderPartBoundary name="bell">
-              <Suspense fallback={<span aria-hidden className="inline-flex size-9 shrink-0 rounded-full border border-border bg-background" />}>
+              <Suspense fallback={<BellPlaceholder />}>
                 <SiteNavBell firstName={user.firstName} userId={user.id} />
               </Suspense>
             </HeaderPartBoundary>
@@ -134,18 +144,11 @@ export async function SiteNav() {
               {/* If the account menu ever breaks, show the plain initial instead of
                   losing the whole page (it sits in the header on every page). */}
               <HeaderPartBoundary
-                fallback={
-                  <span
-                    aria-hidden
-                    className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground uppercase"
-                  >
-                    {initial ?? "?"}
-                  </span>
-                }
+                fallback={<AvatarPlaceholder image={image} initial={initial ?? "?"} />}
                 name="account-menu"
               >
                 <ClerkIsland>
-                  <LazySiteUserButton initial={initial ?? "?"} progressEnabled={progressEnabled} />
+                  <LazySiteUserButton image={image} initial={initial ?? "?"} progressEnabled={progressEnabled} />
                 </ClerkIsland>
               </HeaderPartBoundary>
             </div>
