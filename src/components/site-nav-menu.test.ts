@@ -24,6 +24,7 @@ describe("navItems", () => {
       "/admin/walks",
       "/notices",
       "/progress",
+      "/history",
       "/admin/members",
       "/admin/messages",
       "/admin/reports",
@@ -39,7 +40,7 @@ describe("navItems with limited organiser permissions", () => {
       navItems(true, "/admin/walks", { ...NO_ORGANISER_PERMISSIONS, permMembersView: true }).map(
         (item) => item.href,
       ),
-    ).toEqual(["/", "/walks", "/notices", "/progress", "/admin/members", "/admin/guide"]);
+    ).toEqual(["/", "/walks", "/notices", "/progress", "/history", "/admin/members", "/admin/guide"]);
   });
 
   it("hides every organiser section for someone with no permissions at all", () => {
@@ -48,6 +49,7 @@ describe("navItems with limited organiser permissions", () => {
       "/walks",
       "/notices",
       "/progress",
+      "/history",
       "/admin/guide",
     ]);
   });

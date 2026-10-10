@@ -42,6 +42,8 @@ export function navItems(
     },
     { href: "/notices", label: "Notices" },
     ...(progressEnabled ? [{ href: "/progress", label: "Progress" }] : []),
+    // Everyone's own walk history, organisers and owners included.
+    { href: "/history", label: "History" },
     ...(isAdmin
       ? [
           ...(perms.permMembersView ? [{ href: "/admin/members", label: "Members" }] : []),
@@ -50,7 +52,7 @@ export function navItems(
           ...(hasAnySettingsPermission(perms) ? [{ href: "/admin/settings", label: "Settings" }] : []),
           { href: "/admin/guide", label: "Guide" },
         ]
-      : [{ href: "/history", label: "History" }]),
+      : []),
   ];
 }
 

@@ -30,7 +30,7 @@ describe("remember-menu", () => {
     const set = res.headers.getSetCookie();
     const nav = JSON.parse(cookieFromHeader(set, "bs-nav")!);
     expect(nav.map((i: { label: string }) => i.label)).toEqual([
-      "Home", "Walks", "Notices", "Progress", "Members", "Messages", "Reports", "Settings", "Guide",
+      "Home", "Walks", "Notices", "Progress", "History", "Members", "Messages", "Reports", "Settings", "Guide",
     ]);
     expect(nav[1].href).toBe("/admin/walks");
     expect(JSON.parse(cookieFromHeader(set, "bs-bar")!)).toHaveLength(4);

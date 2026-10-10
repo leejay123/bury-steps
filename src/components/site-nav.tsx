@@ -237,7 +237,6 @@ export async function SiteMobileNav() {
         {
           label: "Account",
           items: [
-            ...(isAdmin ? [{ href: "/history", label: "History" }] : []),
             { href: "/email-preferences", label: "Email preferences" },
           ],
         },
