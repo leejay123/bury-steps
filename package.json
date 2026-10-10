@@ -11,7 +11,7 @@
     "unrs-resolver@1.12.2": true
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "NODE_ENV=development node ./scripts/build-sw.mjs && next dev",
     "build": "prisma generate && node ./scripts/migrate-if-database-url.mjs && node ./scripts/next-build.mjs",
     "start": "next start",
     "lint": "eslint .",

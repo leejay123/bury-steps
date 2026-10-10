@@ -17,3 +17,10 @@ execFileSync(nextBin, ["build"], {
   stdio: "inherit",
   env: process.env,
 });
+
+// Needs the finished .next/static files for its offline list. Vercel picks
+// up public/ after this script ends, so the file still gets deployed.
+execFileSync(process.execPath, [path.join(process.cwd(), "scripts", "build-sw.mjs")], {
+  stdio: "inherit",
+  env: process.env,
+});

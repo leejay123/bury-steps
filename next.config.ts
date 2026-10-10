@@ -138,6 +138,12 @@ const nextConfig: NextConfig = {
 
     return [
       {
+        // The service worker (built to public/serwist/ by scripts/build-sw.mjs)
+        // lives under /serwist/ but looks after the whole site (scope "/").
+        source: "/serwist/:path*",
+        headers: [{ key: "Service-Worker-Allowed", value: "/" }],
+      },
+      {
         source: "/:path*",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
