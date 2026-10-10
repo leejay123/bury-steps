@@ -73,6 +73,24 @@ export function navItems(
  */
 const AUTH_ONLY_HREFS = new Set(["/walks", "/notices", "/progress", "/history"]);
 
+/**
+ * Pages converted to be fetched ahead in full (`export const prefetch =
+ * "partial"`, with any personal data in "use cache: private" saved copies),
+ * so they open with no placeholder. Menu links to these use prefetch={true},
+ * which also carries the page address (search and filters live there) — one
+ * fetch per page, the same as the default. Every other link keeps the default
+ * outline-only fetch. Only add a page once it's converted: prefetch={true} on
+ * an unconverted page does the old full fetch, which ran the database out of
+ * connections on 3 October 2026. See node_modules/next/dist/docs/01-app/
+ * 02-guides/optimizing-prefetching.md.
+ */
+const FETCHED_AHEAD = new Set(["/notices", "/history", "/progress", "/walks", "/admin/walks"]);
+
+/** prefetch={true} for converted pages (FETCHED_AHEAD), otherwise the default. */
+export function navLinkPrefetch(href: string): true | undefined {
+  return FETCHED_AHEAD.has(href) ? true : undefined;
+}
+
 export function shouldPrefetchNavLink(href: string): boolean {
   return !AUTH_ONLY_HREFS.has(href);
 }

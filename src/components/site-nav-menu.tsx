@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { unlockIdleDocument } from "@/components/overlay-root";
 import { useClientPathname } from "@/components/client-pathname";
-import { isNavItemActive, navItems } from "@/components/site-nav-items";
+import { isNavItemActive, navItems, navLinkPrefetch } from "@/components/site-nav-items";
 import { NAV_COOKIE } from "@/lib/remembered-nav";
 import { writeClientCookie } from "@/lib/remembered-rows-key";
 import type { OrganiserPermissions } from "@/lib/organiser-permissions";
@@ -82,12 +82,13 @@ function NavLink({
       aria-current={active ? "page" : undefined}
       className={cn(navLinkClass(active), className)}
       href={href}
+      prefetch={navLinkPrefetch(href)}
       // Tabbing to a link that's scrolled out of the row brings it into view.
       onFocus={(event) => onSelect?.(event.currentTarget)}
-      // Default prefetch: only the page's ready-made outline, which comes
-      // from the CDN at no cost. Loading every menu page in full on every
-      // page view (and again whenever anything was saved) was ~8 database
-      // renders per open tab — too much load for a small database.
+      // Converted pages are fetched in full (navLinkPrefetch); the rest get
+      // only their ready-made outline. Loading every menu page in full the
+      // old way, on every page view, was ~8 database renders per open tab —
+      // too much load for a small database.
       onClick={(event) => {
         unlockIdleDocument();
         onSelect?.(event.currentTarget);
@@ -395,6 +396,7 @@ export function SiteMobileMenu({ groups, showSearch = false }: { groups: MobileM
                       className="flex items-center gap-2 text-2xl font-medium text-black decoration-2 underline-offset-[6px] aria-[current=page]:underline dark:text-white"
                       href={item.href}
                       key={item.href}
+                      prefetch={navLinkPrefetch(item.href)}
                       onClick={() => {
                         router.push(item.href);
                         setOpen(false);

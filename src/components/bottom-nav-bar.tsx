@@ -26,7 +26,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import { isNavItemActive } from "@/components/site-nav-items";
+import { isNavItemActive, navLinkPrefetch } from "@/components/site-nav-items";
 import { BAR_COOKIE, MORE_COOKIE } from "@/lib/remembered-nav";
 import { writeClientCookie } from "@/lib/remembered-rows-key";
 import {
@@ -213,9 +213,14 @@ export function BottomNavBar({
     return (
       <li className="flex" key={item.href}>
         {item.href.startsWith("/") ? (
-          // Default prefetch (the page's outline only) — see the note on
+          // Converted pages in full, the rest outline only — see the note on
           // the header links in site-nav-menu.tsx.
-          <Link aria-current={active ? "page" : undefined} className={tabClass(active)} href={item.href}>
+          <Link
+            aria-current={active ? "page" : undefined}
+            className={tabClass(active)}
+            href={item.href}
+            prefetch={navLinkPrefetch(item.href)}
+          >
             <Tab active={active} icon={ICONS[item.label] ?? House} label={item.label}>
               {item.dot ? (
                 <Suspense fallback={null}>
@@ -296,6 +301,7 @@ export function BottomNavBar({
                         href={item.href}
                         key={item.href}
                         onClick={() => setMoreOpen(false)}
+                        prefetch={navLinkPrefetch(item.href)}
                       >
                         {content}
                       </Link>

@@ -109,6 +109,18 @@ export async function requireAdmin(): Promise<AdminUser> {
  * the action was called from, which reads as a crash for something a
  * stale button click could trigger, rather than a normal form error.
  */
+/**
+ * The signed-in organiser with their permissions, or null for anyone else —
+ * requireAdmin without the "page not found", for saved copies that must not
+ * throw (a page then calls notFound() itself when this is null).
+ */
+export async function getOptionalAdmin(): Promise<AdminUser | null> {
+  const user = await getOptionalUser();
+  if (!user || user.role !== "ADMIN") return null;
+  const perms = user.isOwner ? FULL_ORGANISER_PERMISSIONS : ORGANISER_PERMISSIONS;
+  return { ...user, ...perms };
+}
+
 export async function requirePermission(permission: keyof OrganiserPermissions): Promise<AdminUser> {
   const admin = await requireAdmin();
   if (!admin[permission]) notFound();

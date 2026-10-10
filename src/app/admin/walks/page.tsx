@@ -1,11 +1,12 @@
 import { Suspense } from "react";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
-import { connection } from "next/server";
+import { notFound } from "next/navigation";
+import { cacheLife } from "next/cache";
 import { WalkListChrome } from "@/components/list-chrome";
 import { RememberListCount } from "@/components/remember-list-count";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { prisma } from "@/lib/db";
-import { requireAnyPermission } from "@/lib/auth";
+import { getOptionalAdmin } from "@/lib/auth";
 import { CreateWalkDrawer } from "../create-walk-drawer";
 import { AdminPageIntro } from "../admin-page-intro";
 import { AdminWalkTable } from "../admin-walk-table";
@@ -41,15 +42,34 @@ function toRow(
 const WALKS_INTRO =
   "Upcoming walks, and every finished walk. Filter by status, sort by date, or search. When a walk is starting soon or in progress, the row says Clock in now — open it and clock in with the same pre-walk check members use. You can also share the link, cancel, reopen, or remove a walk. Long walks stay under Upcoming until clock-in closes.";
 
-async function AdminPageContent() {
+/**
+ * The organiser's Walks page, as a private saved copy: kept in this browser
+ * only for five minutes (never on the server), so the page fetched ahead
+ * from the menu can carry it and opens with no placeholder. Any walk
+ * change or clock-in refreshes it at once. The table works out each walk's
+ * status from this device's clock, so a copy a few minutes old still sorts
+ * Upcoming correctly. See node_modules/next/dist/docs/01-app/02-guides/
+ * optimizing-prefetching.md.
+ */
+async function getAdminWalksView() {
+  "use cache: private";
+  cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
   // View and Create are meaningfully independent: View is the schedule/
   // history/cancelled-walk detail, Create is the blank "start a new one"
   // form — an organiser with only Create doesn't need to browse anything
   // first. The other Walks sub-permissions (Edit, Cancel, Attendance, …)
   // all act on a walk someone already found via View or Members, so they
   // don't need their own way into this page.
-  const admin = await requireAnyPermission(["permWalksView", "permWalksCreate"]);
+  const admin = await getOptionalAdmin();
+  if (!admin || !(admin.permWalksView || admin.permWalksCreate)) return null;
+  if (!admin.permWalksView) return { canView: false as const, canCreate: admin.permWalksCreate };
+  return { canView: true as const, canCreate: admin.permWalksCreate, ...(await loadAdminWalks(admin.id)) };
+}
 
+async function AdminPageContent() {
+  const view = await getAdminWalksView();
+  if (!view) notFound();
+  const admin = { permWalksView: view.canView, permWalksCreate: view.canCreate };
   return (
     <div className="flex flex-col gap-8 px-4 py-6 md:px-6">
       {admin.permWalksView ? (
@@ -62,7 +82,7 @@ async function AdminPageContent() {
           {/* The heading and Create button show straight away; only the list waits. */}
           <Suspense fallback={<AdminWalksSkeleton />}>
             <PlaceholderPreview fallback={<AdminWalksSkeleton />}>
-              <AdminWalksTabs userId={admin.id} />
+              <AdminWalksTabs />
             </PlaceholderPreview>
           </Suspense>
         </section>
@@ -82,12 +102,8 @@ async function AdminPageContent() {
   );
 }
 
-/** The Upcoming / History tabs — the part of the page that waits for data. */
-async function AdminWalksTabs({ userId }: { userId: string }) {
-  // Upcoming vs History depends on the time now — worked out per visit.
-  await connection();
-  // A Create-only organiser (no View) never sees the list below at all —
-  // no need to even query it for them.
+/** Upcoming and History rows. Upcoming vs History depends on the time now. */
+async function loadAdminWalks(userId: string) {
   const lookback = upcomingListLookbackFrom();
   const base = {
     id: true,
@@ -145,6 +161,14 @@ async function AdminWalksTabs({ userId }: { userId: string }) {
     .sort((a, b) => b.startsAt.getTime() - a.startsAt.getTime())
     .map((walk) => toRow(walk));
 
+  return { upcoming, past };
+}
+
+/** The Upcoming / History tabs — the part of the page that waits for data. */
+async function AdminWalksTabs() {
+  const view = await getAdminWalksView();
+  if (!view?.canView) return null;
+  const { upcoming, past } = view;
   return (
     <>
     <RememberListCount count={Math.min(upcoming.length, LIST_PAGE_SIZE)} id="admin-walks" />
@@ -197,6 +221,12 @@ function AdminWalksPageFallback() {
     </div>
   );
 }
+
+/**
+ * Fetched ahead from the menu (see PARTIAL_PREFETCH_ROUTES), so the page
+ * opens with its walks already there.
+ */
+export const prefetch = "partial";
 
 /** Everything here depends on who's asking and on live data, so the page
  * shows a matching placeholder for an instant while it loads. */
