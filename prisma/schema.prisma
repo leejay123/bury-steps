@@ -456,6 +456,10 @@ model SiteSetting {
   memberNoticesEnabled        Boolean  @default(true)
   /// Walk-page “How this group works” card. Off hides that card on every walk.
   howWalksWorkEnabled         Boolean  @default(true)
+  /// Walk pages (members' and organisers'): order of the shared sections under
+  /// the details card — before, map, forecast, precise. A leading "-" hides one
+  /// (Before you set off has its own switch, beforeYouSetOffEnabled).
+  walkPageSections            String   @default("before,map,forecast,precise")
   /// Walk-page "How this group works" card — one "Title | Body" step per
   /// line. Empty uses the built-in three-step default. Icons are assigned
   /// by position, not stored.

@@ -23,7 +23,7 @@ import { HowWalksWork } from "@/components/how-walks-work";
 import { getWalkMemberNames } from "@/lib/walk-members";
 import { getSiteTheme } from "@/lib/site-theme";
 import { WalkLivePanel } from "./walk-live-panel";
-import { WalkShareStatusChrome, WalkShareWhileOpen } from "./walk-share-status";
+import { WalkShareBeforeClockIn, WalkShareStatusChrome, WalkShareWhileOpen } from "./walk-share-status";
 
 
 
@@ -212,7 +212,8 @@ export default async function WalkLinkPage({
       {status === "cancelled" || !user ? null : (
         <WalkLivePanel
           alreadyClockedInAt={myAttendance?.clockedInAt.toISOString() ?? null}
-          beforeYouSetOffEnabled={theme.beforeYouSetOffEnabled}
+          // Before you set off is placed by the walk page layout below.
+          beforeYouSetOffEnabled={false}
           beforeYouSetOffTips={theme.beforeYouSetOffTips}
           clockedOutAt={myAttendance?.clockedOutAt?.toISOString() ?? null}
           durationMins={walk.durationMins}
@@ -239,33 +240,55 @@ export default async function WalkLinkPage({
         </WalkShareWhileOpen>
       )}
 
-      {/* No directions to a walk that isn't happening. */}
-      {meeting && status !== "cancelled" ? <WalkMapSection location={meeting} walk={walk} /> : null}
-
-      <WalkForecastSection
-        cancelledAt={walk.cancelledAt}
-        durationMins={walk.durationMins}
-        endedAt={walk.endedAt}
-        latitude={walk.latitude}
-        longitude={walk.longitude}
-        place={meeting}
-        startsAt={walk.startsAt}
-      />
-
-      {walk.what3words ? <What3wordsLink address={walk.what3words} /> : null}
-
-      {status === "cancelled" || user ? null : (
-        <WalkShareWhileOpen
-          cancelledAt={cancelledAtIso}
-          durationMins={walk.durationMins}
-          endedAt={endedAtIso}
-          startsAt={startsAtIso}
-        >
-          {theme.beforeYouSetOffEnabled ? (
-            <BeforeYouSetOff tips={theme.beforeYouSetOffTips} />
-          ) : null}
-        </WalkShareWhileOpen>
-      )}
+      {/* The shared sections, in the order and with the show/hide chosen in
+          Settings → Site wording → Walk page cards (walk-page-sections.ts). */}
+      {theme.walkPageSections.map(({ id, visible }) => {
+        if (!visible) return null;
+        switch (id) {
+          case "before":
+            // Visitors: while the walk is open. Members: until clock-in
+            // opens (as when it sat in the clock-in panel).
+            if (status === "cancelled" || !theme.beforeYouSetOffEnabled) return null;
+            return user ? (
+              <WalkShareBeforeClockIn
+                durationMins={walk.durationMins}
+                endedAt={endedAtIso}
+                key={id}
+                startsAt={startsAtIso}
+              >
+                <BeforeYouSetOff tips={theme.beforeYouSetOffTips} />
+              </WalkShareBeforeClockIn>
+            ) : (
+              <WalkShareWhileOpen
+                cancelledAt={cancelledAtIso}
+                durationMins={walk.durationMins}
+                endedAt={endedAtIso}
+                key={id}
+                startsAt={startsAtIso}
+              >
+                <BeforeYouSetOff tips={theme.beforeYouSetOffTips} />
+              </WalkShareWhileOpen>
+            );
+          case "map":
+            // No directions to a walk that isn't happening.
+            return meeting && status !== "cancelled" ? <WalkMapSection key={id} location={meeting} walk={walk} /> : null;
+          case "forecast":
+            return (
+              <WalkForecastSection
+                cancelledAt={walk.cancelledAt}
+                durationMins={walk.durationMins}
+                endedAt={walk.endedAt}
+                key={id}
+                latitude={walk.latitude}
+                longitude={walk.longitude}
+                place={meeting}
+                startsAt={walk.startsAt}
+              />
+            );
+          case "precise":
+            return walk.what3words ? <What3wordsLink address={walk.what3words} key={id} /> : null;
+        }
+      })}
     </div>
   );
 }

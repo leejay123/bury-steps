@@ -1,5 +1,6 @@
 "use server";
 
+import { DEFAULT_WALK_PAGE_SECTIONS_TEXT } from "@/lib/walk-page-sections";
 import { z } from "zod";
 import { guardForm } from "@/lib/safe-action";
 
@@ -167,6 +168,7 @@ async function resetSiteToDefaultWork(
           aboutExpectHeading: DEFAULT_ABOUT_EXPECT_HEADING,
           aboutRulesHeading: DEFAULT_ABOUT_RULES_HEADING,
           homepageSectionOrder: DEFAULT_HOMEPAGE_SECTION_ORDER_TEXT,
+          walkPageSections: DEFAULT_WALK_PAGE_SECTIONS_TEXT,
           memberNoticesEnabled: true,
           howWalksWorkEnabled: true,
           howWalksWorkSteps: "",
@@ -228,6 +230,7 @@ async function resetSiteToDefaultWork(
           aboutExpectHeading: DEFAULT_ABOUT_EXPECT_HEADING,
           aboutRulesHeading: DEFAULT_ABOUT_RULES_HEADING,
           homepageSectionOrder: DEFAULT_HOMEPAGE_SECTION_ORDER_TEXT,
+          walkPageSections: DEFAULT_WALK_PAGE_SECTIONS_TEXT,
           memberNoticesEnabled: true,
           howWalksWorkEnabled: true,
           howWalksWorkSteps: "",

@@ -1,3 +1,5 @@
+import { SkLine } from "@/components/list-skeletons";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Suspense } from "react";
 import { loadDailyForecast, loadForecastPlaceName } from "@/lib/weather-forecast";
 import { forecastWindow, londonDateKey } from "@/lib/weather";
@@ -25,10 +27,15 @@ function ForecastFrame({
   );
 }
 
-/** Title and place stay. The days appear when the forecast is ready. */
-function ForecastSkeleton({ place }: { place: string }) {
+/**
+ * The whole forecast card while the weather loads, shaped like
+ * WalkForecastCard: the real title and place, the seven day cells, the
+ * selected day's details and the hourly row — grey only where the
+ * weather goes — so the card doesn't grow into place when it arrives.
+ */
+export function ForecastSkeleton({ place }: { place: string | null }) {
   return (
-    <Card className="gap-0 overflow-hidden py-0">
+    <Card aria-busy="true" className="gap-0 overflow-hidden py-0" data-reveal-card="">
       <div className="flex items-center justify-between gap-3 px-4 py-4 sm:px-5">
         <div className="flex items-center gap-2 text-sm font-semibold">
           <Sun aria-hidden className="size-4" />
@@ -36,8 +43,44 @@ function ForecastSkeleton({ place }: { place: string }) {
         </div>
         <div className="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
           <MapPin aria-hidden className="size-4 shrink-0" />
-          <span className="truncate">{place}</span>
+          {place ? <span className="truncate">{place}</span> : <SkLine className="w-32" size="sm" />}
         </div>
+      </div>
+      <div aria-hidden className="grid grid-cols-7 border-y">
+        {Array.from({ length: 7 }, (_, i) => (
+          <div
+            className="flex min-w-0 flex-col items-center gap-1.5 border-r px-0.5 py-3 text-center last:border-r-0 sm:gap-2 sm:py-4"
+            key={i}
+          >
+            <div className="flex h-4 items-center sm:h-5">
+              <Skeleton className="h-[64%] w-8 rounded-[4px]" />
+            </div>
+            <div className="flex h-[1.0625rem] items-center sm:h-4">
+              <Skeleton className="h-[64%] w-7 rounded-[4px]" />
+            </div>
+            <Skeleton className="size-5 rounded-full" />
+            <div className="flex h-4 items-center sm:h-5">
+              <Skeleton className="h-[64%] w-9 rounded-[4px]" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div aria-hidden className="flex flex-col gap-3 px-4 py-4 sm:px-5">
+        <div className="flex h-9 items-center">
+          <Skeleton className="h-[64%] w-24 rounded-[4px]" />
+        </div>
+        <SkLine className="w-72 max-w-full" size="sm" />
+        <SkLine className="w-56 max-w-full" size="sm" />
+        <div className="-mx-1 flex gap-2 overflow-hidden px-1 pt-1 pb-1">
+          {Array.from({ length: 16 }, (_, i) => (
+            <div className="flex w-14 shrink-0 flex-col items-center gap-1 rounded-md border bg-background px-1 py-2" key={i}>
+              <Skeleton className="h-3 w-8 rounded-[4px]" />
+              <Skeleton className="size-4 rounded-full" />
+              <Skeleton className="h-3 w-5 rounded-[4px]" />
+            </div>
+          ))}
+        </div>
+        <span className="text-xs text-muted-foreground">Weather data by Open-Meteo</span>
       </div>
     </Card>
   );

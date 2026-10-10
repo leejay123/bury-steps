@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { parseWalkPageSections, serializeWalkPageSections } from "@/lib/walk-page-sections";
 import { guardArgs, guardForm } from "@/lib/safe-action";
 
 import { parsePageTransition } from "@/lib/page-transition";
@@ -1978,6 +1979,36 @@ export const updateFacebookGroupUrl = guardForm(
 );
 export async function reorderHomepageSections(ids: HomepageSectionId[]): Promise<ActionResult> {
   return reorderHomepageSectionsGuarded(ids);
+}
+
+/** Walk pages: the order and show/hide of the shared sections (walk-page-sections.ts). */
+async function saveWalkPageSectionsWork(value: string): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  const sections = parseWalkPageSections(value);
+  const text = serializeWalkPageSections(sections);
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, walkPageSections: text },
+      update: { walkPageSections: text },
+    });
+  } catch (err) {
+    return logActionError("saveWalkPageSections", err, "Could not save the walk page layout. Try again.");
+  }
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/site-wording/walk-page-cards");
+  return { ok: true, message: "Walk page layout saved." };
+}
+const saveWalkPageSectionsGuarded = guardArgs(
+  "organiser",
+  z.string().max(200, "Could not save the walk page layout. Try again."),
+  (value) => saveWalkPageSectionsWork(value as string),
+);
+export async function saveWalkPageSections(value: string): Promise<ActionResult> {
+  return saveWalkPageSectionsGuarded(value);
 }
 export const updateFaqSectionCopy = guardForm(
   "organiser",

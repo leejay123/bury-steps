@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { getSiteTheme } from "@/lib/site-theme";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import WalkDetailLoading from "./loading";
 import Link from "next/link";
@@ -49,7 +50,7 @@ async function WalkDetailPageContent({
   // The permission check and the walk are fetched at the same time (they
   // used to run one after the other, making this the slowest page to open).
   const { id } = await params;
-  const [admin, walkWithNotes, emergencySetting] = await Promise.all([
+  const [admin, walkWithNotes, emergencySetting, theme] = await Promise.all([
     requireAnyPermission(["permWalksView", "permMembersView"]),
     prisma.walk.findUnique({
     where: { id },
@@ -109,6 +110,7 @@ async function WalkDetailPageContent({
       where: { id: SITE_SETTING_ID },
       select: { emergencyContactRequired: true },
     }),
+    getSiteTheme(),
   ]);
   // Never keep health notes for a viewer who may not see them — UI-hiding
   // alone would still ship the text to their browser.
@@ -313,19 +315,33 @@ async function WalkDetailPageContent({
 
       <ShareLink url={walkShareUrl(appUrl(), { token: walk.token, slug })} />
 
-      {meeting ? <WalkMapSection location={meeting} walk={walk} /> : null}
-
-      <WalkForecastSection
-        cancelledAt={walk.cancelledAt}
-        durationMins={walk.durationMins}
-        endedAt={walk.endedAt}
-        latitude={walk.latitude}
-        longitude={walk.longitude}
-        place={meeting}
-        startsAt={walk.startsAt}
-      />
-
-      {walk.what3words ? <What3wordsLink address={walk.what3words} /> : null}
+      {/* The shared sections, in the order and with the show/hide chosen in
+          Settings → Site wording → Walk page cards (Before you set off is
+          members-only). */}
+      {theme.walkPageSections.map(({ id, visible }) => {
+        if (!visible) return null;
+        switch (id) {
+          case "map":
+            return meeting ? <WalkMapSection key={id} location={meeting} walk={walk} /> : null;
+          case "forecast":
+            return (
+              <WalkForecastSection
+                cancelledAt={walk.cancelledAt}
+                durationMins={walk.durationMins}
+                endedAt={walk.endedAt}
+                key={id}
+                latitude={walk.latitude}
+                longitude={walk.longitude}
+                place={meeting}
+                startsAt={walk.startsAt}
+              />
+            );
+          case "precise":
+            return walk.what3words ? <What3wordsLink address={walk.what3words} key={id} /> : null;
+          default:
+            return null;
+        }
+      })}
 
       <WalkDetailActions
         attendanceCount={walk.attendances.length}

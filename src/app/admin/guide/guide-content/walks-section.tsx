@@ -97,9 +97,13 @@ export function WalksSection({
               postcode if you added one). A long description collapses to a few lines with{" "}
               <strong>Read more</strong>, which opens the whole description at the same text size. Under the
               walk details is{" "}
-              <strong>How this group works</strong>, then the map with Get directions, then{" "}
-              <strong>Before you set off</strong> while clock-in is still closed. Both cards are
-              edited, or turned off, under Settings → Site wording → Walk page cards. Once the
+              <strong>How this group works</strong>, then the shared sections: Before you set off
+              (members see it while clock-in is still closed), the meeting point map, the 7-day
+              forecast and the precise location. Their order, and whether the map, forecast and
+              precise location show at all, is set under Settings → Site wording → Walk page cards
+              → <strong>Walk page layout</strong> (arrows to move, switches to show or hide), and
+              applies to members&apos;, organisers&apos; and owners&apos; walk pages alike. The two
+              cards&apos; wording is edited, or turned off, on the same page. Once the
               walk is Completed, guests see that it has finished instead —
               no join prompt. Names of who is on the walk stay private.
             </li>

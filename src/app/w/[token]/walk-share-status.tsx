@@ -207,3 +207,22 @@ export function WalkShareWhileOpen({
   if (completed) return null;
   return <>{children}</>;
 }
+
+/** Shows its children only until clock-in opens (the live panel's "too-early"
+ * state) — where a signed-in member's Before you set off used to sit. */
+export function WalkShareBeforeClockIn({
+  durationMins,
+  endedAt,
+  startsAt,
+  children,
+}: {
+  durationMins: number;
+  endedAt: string | null;
+  startsAt: string;
+  children: React.ReactNode;
+}) {
+  const now = useWalkClock({ cancelledAt: null, durationMins, endedAt, startsAt });
+  const state = windowState(new Date(startsAt), durationMins, now, endedAt ? new Date(endedAt) : null);
+  if (state !== "too-early") return null;
+  return <>{children}</>;
+}

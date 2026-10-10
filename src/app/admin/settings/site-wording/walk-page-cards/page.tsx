@@ -4,6 +4,7 @@ import { getSiteTheme } from "@/lib/site-theme";
 import { SettingsContentSkeleton, SettingsPage, SettingsSectionGroup } from "../../settings-page";
 import { BeforeYouSetOffToggle, HowWalksWorkToggle } from "../walk-page-card-toggles";
 import { WalkPageCopySettings } from "../walk-page-copy-settings";
+import { WalkPageSectionsSettings } from "../walk-page-sections-settings";
 
 
 
@@ -12,7 +13,7 @@ export default function WalkPageCardsWordingPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description="The two cards on a walk's own page. Edit the wording, or turn a card off if you don't want it shown."
+      description="The cards on a walk's own page, and the order of its sections. Edit the wording, turn a card off, or move a section up or down."
       title="Walk page cards"
     >
       <Suspense fallback={<SettingsContentSkeleton />}>
@@ -35,6 +36,10 @@ async function WalkPageCardsWordingPageContent() {
         <HowWalksWorkToggle enabled={theme.howWalksWorkEnabled} />
         <BeforeYouSetOffToggle enabled={theme.beforeYouSetOffEnabled} />
       </SettingsSectionGroup>
+      <WalkPageSectionsSettings
+        beforeYouSetOffEnabled={theme.beforeYouSetOffEnabled}
+        sections={theme.walkPageSections}
+      />
       <WalkPageCopySettings
         beforeYouSetOffTipsText={theme.beforeYouSetOffTipsText}
         howWalksWorkStepsText={theme.howWalksWorkStepsText}

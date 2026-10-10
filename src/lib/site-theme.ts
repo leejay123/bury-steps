@@ -5,6 +5,7 @@ import { parsePageTransition, type PageTransition } from "@/lib/page-transition"
 import { parseSliderHeroWords, type SliderHeroWords } from "@/lib/hero-style";
 import { DEFAULT_TEXT_SIZES, parseTextSize, type TextSizes } from "@/lib/text-sizes";
 import { cacheLife, cacheTag } from "next/cache";
+import { parseWalkPageSections, type WalkPageSection } from "@/lib/walk-page-sections";
 import { DEFAULT_WALK_ESSENTIALS, parseEssentialList, type EssentialItem } from "@/lib/walk-essentials";
 import { prisma } from "@/lib/db";
 import { photoBlur } from "@/lib/photo-blur";
@@ -141,6 +142,8 @@ export type SiteTheme = {
   beforeYouSetOffTips: string[];
   beforeYouSetOffTipsText: string;
   howWalksWorkEnabled: boolean;
+  /** Walk pages: order (and show/hide) of the shared sections — see walk-page-sections.ts. */
+  walkPageSections: WalkPageSection[];
   howWalksWorkSteps: AboutRule[];
   howWalksWorkStepsText: string;
   homepageSectionOrder: HomepageSectionId[];
@@ -216,6 +219,7 @@ function defaultTheme(): SiteTheme {
     beforeYouSetOffTips: [...DEFAULT_BEFORE_YOU_SET_OFF_TIPS],
     beforeYouSetOffTipsText: DEFAULT_BEFORE_YOU_SET_OFF_TIPS_TEXT,
     howWalksWorkEnabled: true,
+    walkPageSections: parseWalkPageSections(null),
     howWalksWorkSteps: DEFAULT_HOW_WALKS_WORK_STEPS.map((step) => ({ ...step })),
     howWalksWorkStepsText: DEFAULT_HOW_WALKS_WORK_STEPS_TEXT,
     homepageSectionOrder: normalizeHomepageSectionOrder(null),
@@ -285,6 +289,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       beforeYouSetOffEnabled: true,
       beforeYouSetOffTips: true,
       howWalksWorkEnabled: true,
+      walkPageSections: true,
       howWalksWorkSteps: true,
       homepageSectionOrder: true,
       logoMime: true,
@@ -396,6 +401,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       ? serializeAboutList(beforeYouSetOffTips)
       : DEFAULT_BEFORE_YOU_SET_OFF_TIPS_TEXT,
     howWalksWorkEnabled: row?.howWalksWorkEnabled ?? true,
+    walkPageSections: parseWalkPageSections(row?.walkPageSections),
     howWalksWorkSteps,
     howWalksWorkStepsText: row?.howWalksWorkSteps?.trim()
       ? serializeAboutRules(howWalksWorkSteps)
