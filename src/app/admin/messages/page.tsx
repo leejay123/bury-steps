@@ -6,7 +6,9 @@ import { RememberListCount } from "@/components/remember-list-count";
 import { MessageRowsSkeleton } from "@/components/list-skeletons";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import Link from "next/link";
-import { requirePermission } from "@/lib/auth";
+import { getOptionalAdmin } from "@/lib/auth";
+import { notFound } from "next/navigation";
+import { cacheLife } from "next/cache";
 import { getContactMessagesDescription } from "@/lib/contact-messages-owner";
 import { messagesListRows } from "@/lib/list-counts";
 import { prisma } from "@/lib/db";
@@ -15,9 +17,18 @@ import { ContactMessagesList } from "./contact-messages-list";
 
 
 
-async function AdminMessagesPageContent() {
-  await requirePermission("permMessages");
-
+/**
+ * The Messages list, as a private saved copy: kept in this browser only for
+ * five minutes (never on the server), so the page fetched ahead from the
+ * menu can carry it and opens with no placeholder. A new message, or
+ * marking one read, refreshes it at once. See node_modules/next/dist/docs/
+ * 01-app/02-guides/optimizing-prefetching.md.
+ */
+async function getMessagesView() {
+  "use cache: private";
+  cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
+  const admin = await getOptionalAdmin();
+  if (!admin?.permMessages) return null;
   const [messages, description] = await Promise.all([
     prisma.contactMessage.findMany({
       orderBy: { createdAt: "desc" },
@@ -25,6 +36,13 @@ async function AdminMessagesPageContent() {
     }),
     getContactMessagesDescription(),
   ]);
+  return { messages, description };
+}
+
+async function AdminMessagesPageContent() {
+  const view = await getMessagesView();
+  if (!view) notFound();
+  const { messages, description } = view;
 
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
@@ -70,6 +88,9 @@ export async function MessagesPageFallback() {
 /** Everything here depends on who's asking and on live data, so the page
  * shows a matching placeholder for an instant while it loads. */
 // Access is checked in layout.tsx, before anything streams.
+/** Fetched ahead from the menu (navLinkPrefetch), so it opens with the messages there. */
+export const prefetch = "partial";
+
 export default function AdminMessagesPage() {
   return (
     <Suspense fallback={<MessagesPageFallback />}>

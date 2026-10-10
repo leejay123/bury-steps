@@ -7,8 +7,9 @@ import { ReportRowsSkeleton } from "@/components/list-skeletons";
 import { reportsListRows } from "@/lib/list-counts";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { Prisma } from "@prisma/client";
-import { memberDisplayName, requirePermission } from "@/lib/auth";
-import { isOwner } from "@/lib/site-owner";
+import { getOptionalAdmin, memberDisplayName } from "@/lib/auth";
+import { notFound } from "next/navigation";
+import { cacheLife } from "next/cache";
 import { prisma } from "@/lib/db";
 import { walkStatus } from "@/lib/walk-window";
 import { AccidentReportManager } from "./report-manager";
@@ -38,16 +39,19 @@ function buildWhere(link: LinkFilter): Prisma.AccidentReportWhereInput | undefin
 }
 
 
-async function AccidentReportsPageContent({
-  searchParams,
-}: {
-  searchParams: Promise<{ link?: string; sort?: string }>;
-}) {
-  const admin = await requirePermission("permReportsView");
-  const canDelete = await isOwner(admin.id);
-  const params = await searchParams;
-  const link = parseLinkFilter(params.link);
-  const sort = parseSort(params.sort);
+/**
+ * The Reports list for one filter and sort, as a private saved copy: kept
+ * in this browser only for five minutes (never on the server), so the page
+ * fetched ahead from the menu can carry it and opens with no placeholder.
+ * Saving or deleting a report refreshes it at once. See node_modules/next/
+ * dist/docs/01-app/02-guides/optimizing-prefetching.md.
+ */
+async function getReportsView(link: LinkFilter, sort: ReturnType<typeof parseSort>) {
+  "use cache: private";
+  cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
+  const admin = await getOptionalAdmin();
+  if (!admin?.permReportsView) return null;
+  const canDelete = admin.isOwner;
   const where = buildWhere(link);
 
   const [totalReports, reports, walks] = await Promise.all([
@@ -93,6 +97,26 @@ async function AccidentReportsPageContent({
     return status === "completed" || status === "in-progress";
   });
 
+  const permissions = {
+    canCreate: admin.permReportsCreate,
+    canEdit: admin.permReportsEdit,
+    canViewMembers: admin.permMembersView,
+  };
+  return { canDelete, permissions, totalReports, reports, linkableWalks };
+}
+
+async function AccidentReportsPageContent({
+  searchParams,
+}: {
+  searchParams: Promise<{ link?: string; sort?: string }>;
+}) {
+  const params = await searchParams;
+  const link = parseLinkFilter(params.link);
+  const sort = parseSort(params.sort);
+  const view = await getReportsView(link, sort);
+  if (!view) notFound();
+  const { canDelete, permissions, totalReports, reports, linkableWalks } = view;
+
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
       <RememberListCount count={totalReports === 0 ? 0 : Math.min(reports.length, LIST_PAGE_SIZE)} id="reports" />
@@ -101,10 +125,10 @@ async function AccidentReportsPageContent({
           title: "Accident reports",
           description: REPORTS_INTRO,
         }}
-        canCreate={admin.permReportsCreate}
+        canCreate={permissions.canCreate}
         canDelete={canDelete}
-        canEdit={admin.permReportsEdit}
-        canViewMembers={admin.permMembersView}
+        canEdit={permissions.canEdit}
+        canViewMembers={permissions.canViewMembers}
         hasAnyReports={totalReports > 0}
         linkFilter={link}
         reports={reports.map((report) => ({
@@ -150,6 +174,9 @@ export async function ReportsPageFallback() {
 
 /** Everything here depends on who's asking and on live data, so the page
  * shows a matching placeholder for an instant while it loads. */
+/** Fetched ahead from the menu (navLinkPrefetch), so it opens with the reports there. */
+export const prefetch = "partial";
+
 export default function AccidentReportsPage(props: Parameters<typeof AccidentReportsPageContent>[0]) {
   return (
     <Suspense fallback={<ReportsPageFallback />}>

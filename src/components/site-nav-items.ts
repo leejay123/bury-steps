@@ -84,7 +84,16 @@ const AUTH_ONLY_HREFS = new Set(["/walks", "/notices", "/progress", "/history"])
  * connections on 3 October 2026. See node_modules/next/dist/docs/01-app/
  * 02-guides/optimizing-prefetching.md.
  */
-const FETCHED_AHEAD = new Set(["/notices", "/history", "/progress", "/walks", "/admin/walks"]);
+const FETCHED_AHEAD = new Set([
+  "/notices",
+  "/history",
+  "/progress",
+  "/walks",
+  "/admin/walks",
+  "/admin/members",
+  "/admin/messages",
+  "/admin/reports",
+]);
 
 /** prefetch={true} for converted pages (FETCHED_AHEAD), otherwise the default. */
 export function navLinkPrefetch(href: string): true | undefined {

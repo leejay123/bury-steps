@@ -6,9 +6,10 @@ import { MembersFilterChrome } from "@/components/list-chrome";
 import { membersListRows } from "@/lib/list-counts";
 import { RememberListCount } from "@/components/remember-list-count";
 import { prisma } from "@/lib/db";
-import { requirePermission } from "@/lib/auth";
+import { getOptionalAdmin } from "@/lib/auth";
+import { notFound } from "next/navigation";
+import { cacheLife } from "next/cache";
 import { formatCompactDateTime } from "@/lib/dates";
-import { isOwner } from "@/lib/site-owner";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { searchMembers, type MemberRoleFilter } from "@/server/actions";
 import { MembersTable } from "./members-table";
@@ -22,7 +23,12 @@ function parseRoleFilter(raw: string | undefined): MemberRoleFilter {
 }
 
 
-// Access is checked in layout.tsx, before anything streams.
+/**
+ * Owners only: proxy.ts turns everyone else away; getMembersView checks too.
+ * Fetched ahead from the menu (navLinkPrefetch), so it opens with the list there.
+ */
+export const prefetch = "partial";
+
 export default function MembersPage({
   searchParams,
 }: {
@@ -44,17 +50,23 @@ export default function MembersPage({
   );
 }
 
-async function MembersForViewer({ searchParams }: { searchParams: Promise<{ role?: string }> }) {
-  const admin = await requirePermission("permMembersView");
-  const role = parseRoleFilter((await searchParams).role);
-  return <MembersBody adminId={admin.id} role={role} />;
-}
-
-async function MembersBody({ adminId, role }: { adminId: string; role: MemberRoleFilter }) {
+/**
+ * The Members list for one role filter, as a private saved copy: kept in
+ * this browser only for five minutes (never on the server), so the page
+ * fetched ahead from the menu can carry it and opens with no placeholder.
+ * Any change to a member refreshes it at once. See node_modules/next/dist/
+ * docs/01-app/02-guides/optimizing-prefetching.md.
+ */
+async function getMembersView(role: MemberRoleFilter) {
+  "use cache: private";
+  cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
+  const admin = await getOptionalAdmin();
+  if (!admin?.permMembersView) return null;
+  const adminId = admin.id;
   // Only the first page loads here — search and later pages are fetched
   // live from searchMembers, so this stays fast and correct no matter how
   // many members the group has.
-  const [{ rows, total, groupTotals }, totalMembers, impersonations, setting, viewerIsOwner] = await Promise.all([
+  const [{ rows, total, groupTotals }, totalMembers, impersonations, setting] = await Promise.all([
     searchMembers({ role }),
     prisma.user.count(),
     prisma.impersonationEvent.findMany({
@@ -66,8 +78,34 @@ async function MembersBody({ adminId, role }: { adminId: string; role: MemberRol
       where: { id: SITE_SETTING_ID },
       select: { organiserInviteRequired: true },
     }),
-    isOwner(adminId),
   ]);
+  return {
+    adminId,
+    rows,
+    total,
+    groupTotals,
+    totalMembers,
+    impersonations,
+    inviteRequired: setting?.organiserInviteRequired ?? false,
+    viewerIsOwner: admin.isOwner,
+  };
+}
+
+async function MembersForViewer({ searchParams }: { searchParams: Promise<{ role?: string }> }) {
+  const role = parseRoleFilter((await searchParams).role);
+  const view = await getMembersView(role);
+  if (!view) notFound();
+  return <MembersBody role={role} view={view} />;
+}
+
+function MembersBody({
+  role,
+  view,
+}: {
+  role: MemberRoleFilter;
+  view: NonNullable<Awaited<ReturnType<typeof getMembersView>>>;
+}) {
+  const { adminId, rows, total, groupTotals, totalMembers, impersonations, inviteRequired, viewerIsOwner } = view;
 
   return (
     <>
@@ -83,7 +121,7 @@ async function MembersBody({ adminId, role }: { adminId: string; role: MemberRol
           initialGroupTotals={groupTotals}
           initialRows={rows.map((member) => ({ ...member, isYou: member.id === adminId }))}
           initialTotal={total}
-          inviteRequired={setting?.organiserInviteRequired ?? false}
+          inviteRequired={inviteRequired}
           roleFilter={role}
           viewerId={adminId}
           viewerIsOwner={viewerIsOwner}
