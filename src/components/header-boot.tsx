@@ -77,7 +77,7 @@ if(items.length){
     +'<div class="flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3 md:min-w-[7.75rem] lg:min-w-[20.5rem]">'
     +'<button type="button" aria-label="Search the site" class="flex size-9 shrink-0 items-center justify-center gap-2 rounded-full text-sm text-muted-foreground md:h-8 md:w-44 md:justify-start md:rounded-md md:border md:bg-background md:px-2.5 md:shadow-xs lg:w-60"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4 shrink-0 max-md:text-foreground" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg><span class="truncate max-md:hidden">Search the site…</span><kbd class="pointer-events-none ml-auto hidden h-5 min-w-5 select-none items-center justify-center rounded-sm bg-muted px-1 font-sans text-xs font-medium text-muted-foreground lg:inline-flex">'+(/mac|iphone|ipad|ipod/i.test(navigator.platform||navigator.userAgent)?"⌘K":"Ctrl K")+'</kbd></button>'
     +BELL+avatar+"</div>";
-    function paint(){if(document.querySelector("[data-nav-ready]")){obs.disconnect();slot.textContent="";return;}if(!slot.childElementCount)slot.innerHTML=html;}
+    function paint(){if(document.querySelector("[data-nav-ready]:not([hidden] *)")){obs.disconnect();slot.textContent="";return;}if(!slot.childElementCount)slot.innerHTML=html;}
     var obs=new MutationObserver(paint);
     if(slot.parentNode)obs.observe(slot.parentNode,{childList:true,subtree:true});
     paint();
@@ -103,7 +103,7 @@ for(var t=0;t<tabs.length;t++){
     +'<span class="max-w-full truncate px-1">'+esc(tab.label)+"</span></a></li>";
 }
 cells+='<li class="flex"><span class="relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-muted-foreground"><span class="relative flex h-7 w-14 items-center justify-center"><span class="relative">'+icon("More","size-5","1.75")+'</span></span><span class="max-w-full truncate px-1">More</span></span></li>';
-function paintBar(){if(document.querySelector("[data-bottom-nav]")){barObs.disconnect();barSlot.textContent="";return;}if(!barSlot.childElementCount)barSlot.innerHTML='<div aria-hidden="true" class="h-[var(--bottom-nav-offset,0px)] md:hidden"></div><nav aria-label="Main" class="fixed inset-x-0 bottom-0 z-[57] border-t bg-background/85 pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] backdrop-blur-xl md:hidden"><ul class="mx-auto grid h-15 max-w-md" style="grid-template-columns:repeat('+cols+',minmax(0,1fr))">'+cells+"</ul></nav>";}
+function paintBar(){if(document.querySelector("[data-bottom-nav]:not([hidden] *)")){barObs.disconnect();barSlot.textContent="";return;}if(!barSlot.childElementCount)barSlot.innerHTML='<div aria-hidden="true" class="h-[var(--bottom-nav-offset,0px)] md:hidden"></div><nav aria-label="Main" class="fixed inset-x-0 bottom-0 z-[57] border-t bg-background/85 pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] backdrop-blur-xl md:hidden"><ul class="mx-auto grid h-15 max-w-md" style="grid-template-columns:repeat('+cols+',minmax(0,1fr))">'+cells+"</ul></nav>";}
 var barObs=new MutationObserver(paintBar);
 if(barSlot.parentNode)barObs.observe(barSlot.parentNode,{childList:true,subtree:true});
 paintBar();

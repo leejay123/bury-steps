@@ -566,12 +566,15 @@ html[data-remembered-in] [data-guest-home] {
   display: none;
 }
 
-/* The cookie-drawn header steps aside the moment the real one is in the DOM. */
-html:has([data-nav-ready]) #bs-header-boot {
+/* The cookie-drawn header steps aside the moment the real one is on screen.
+   The real one first arrives in React's hidden holding area (<div hidden>)
+   and is moved into place a little later; stepping aside on arrival left the
+   header empty in between, which flashed on every refresh. */
+html:has([data-nav-ready]:not([hidden] *)) #bs-header-boot {
   display: none;
 }
 
-html:has([data-bottom-nav]) #bs-bottom-boot {
+html:has([data-bottom-nav]:not([hidden] *)) #bs-bottom-boot {
   display: none;
 }
 
