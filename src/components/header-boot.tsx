@@ -6,6 +6,10 @@
  */
 
 import { BELL_CLAPPER_PATH, BELL_DOME_PATH } from "@/components/header-placeholders";
+import { Button } from "@/components/ui/button";
+import { JoinGroupButton } from "@/components/join-group-button";
+import { RIGHT_CLUSTER } from "@/components/site-nav";
+import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
 
 /** Same as BellPlaceholder: the real bell's shape and colour, so nothing changes when it arrives. */
 const BELL_HTML = `<span aria-hidden="true" class="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-foreground"><svg aria-hidden="true" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16"><path d="${BELL_DOME_PATH}"></path><path d="${BELL_CLAPPER_PATH}"></path></svg></span>`;
@@ -111,5 +115,26 @@ paintBar();
 }
 
 export function HeaderBootScript({ facebookUrl = "" }: { facebookUrl?: string }) {
-  return <script dangerouslySetInnerHTML={{ __html: bootScript(facebookUrl) }} />;
+  const afterAuth = `${appUrl()}${AFTER_AUTH_PATH}`;
+  return (
+    <>
+      <script dangerouslySetInnerHTML={{ __html: bootScript(facebookUrl) }} />
+      {/* Signed-out header, in the ready-made page so Sign in and Join are
+          there on the first paint instead of arriving with the session check.
+          The same parts as SiteNav's signed-out branch, so nothing changes when
+          that arrives. Hidden for remembered members (data-guest-home, set by
+          the script just above) and once the real header is on screen. */}
+      <div className="contents" data-guest-home="" id="bs-guest-boot">
+        <div className="hidden min-w-0 items-center justify-center md:flex" />
+        <div
+          className={`flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3 ${RIGHT_CLUSTER}`}
+        >
+          <Button asChild size="sm" variant="outline">
+            <a href={accountPortalHref("sign-in", afterAuth)}>Sign in</a>
+          </Button>
+          <JoinGroupButton href={accountPortalHref("sign-up", afterAuth)} />
+        </div>
+      </div>
+    </>
+  );
 }

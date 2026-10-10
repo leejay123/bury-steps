@@ -19,11 +19,27 @@ type StarLayerProps = HTMLMotionProps<'div'> & {
   starColor: string;
 };
 
-function generateStars(count: number, starColor: string) {
+/**
+ * Same "random" field every time (a seeded sequence, not Math.random), so the
+ * server can draw the stars into the page and the browser draws the same ones:
+ * they're there on the first paint instead of appearing once the page wakes up.
+ */
+function seededRandom(seed: number) {
+  let t = seed >>> 0;
+  return () => {
+    t = (t + 0x6d2b79f5) >>> 0;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function generateStars(count: number, starColor: string, seed: number) {
+  const random = seededRandom(seed);
   const shadows: string[] = [];
   for (let i = 0; i < count; i++) {
-    const x = Math.floor(Math.random() * 4000) - 2000;
-    const y = Math.floor(Math.random() * 4000) - 2000;
+    const x = Math.floor(random() * 4000) - 2000;
+    const y = Math.floor(random() * 4000) - 2000;
     shadows.push(`${x}px ${y}px ${starColor}`);
   }
   return shadows.join(', ');
@@ -37,13 +53,8 @@ function StarLayer({
   className,
   ...props
 }: StarLayerProps) {
-  const [boxShadow, setBoxShadow] = React.useState<string>('');
-
-  React.useEffect(() => {
-    // Random positions are generated client-side only to avoid a hydration mismatch.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setBoxShadow(generateStars(count, starColor));
-  }, [count, starColor]);
+  // Each layer (count × size) gets its own fixed pattern.
+  const boxShadow = React.useMemo(() => generateStars(count, starColor, count * 31 + size), [count, size, starColor]);
 
   return (
     <motion.div

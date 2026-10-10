@@ -570,7 +570,8 @@ html[data-remembered-in] [data-guest-home] {
    The real one first arrives in React's hidden holding area (<div hidden>)
    and is moved into place a little later; stepping aside on arrival left the
    header empty in between, which flashed on every refresh. */
-html:has([data-nav-ready]:not([hidden] *)) #bs-header-boot {
+html:has([data-nav-ready]:not([hidden] *)) #bs-header-boot,
+html:has([data-nav-ready]:not([hidden] *)) #bs-guest-boot {
   display: none;
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, Suspense, use, useContext, type ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 
 /**
  * Whether the visitor is signed in, as a promise the root layout starts
@@ -23,28 +23,20 @@ export function useSignedInPromise(): Promise<boolean> | null {
 }
 
 /**
- * Shows `signedIn` to signed-in visitors and `signedOut` to everyone else.
- *
- * The ready-made page is shared by everyone, so it can't know which to
- * show: it holds the signed-out version's space, invisible and not
- * clickable, and the right one replaces it once this visitor's session is
- * checked. Nobody ever sees the wrong buttons, and the hero doesn't jump.
+ * Both sets of buttons are in the first paint. Last visit decides which
+ * one is visible (the header script sets data-remembered-in before the
+ * hero is drawn). If this visit disagrees, the attribute updates and the
+ * other set shows. Nothing sits invisible while the session is checked.
  */
 export function AuthSwitch({ signedIn, signedOut }: { signedIn: ReactNode; signedOut: ReactNode }) {
   return (
-    <Suspense
-      fallback={
-        <div aria-hidden className="invisible contents" inert>
-          {signedOut}
-        </div>
-      }
-    >
-      <ResolvedAuthSwitch signedIn={signedIn} signedOut={signedOut} />
-    </Suspense>
+    <>
+      <div className="contents" data-guest-home="">
+        {signedOut}
+      </div>
+      <div className="contents" data-member-home="">
+        {signedIn}
+      </div>
+    </>
   );
-}
-
-function ResolvedAuthSwitch({ signedIn, signedOut }: { signedIn: ReactNode; signedOut: ReactNode }) {
-  const promise = useContext(SignedInContext);
-  return <>{promise && use(promise) ? signedIn : signedOut}</>;
 }

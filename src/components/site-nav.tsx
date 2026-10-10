@@ -38,7 +38,7 @@ import { FULL_ORGANISER_PERMISSIONS, ORGANISER_PERMISSIONS } from "@/lib/organis
  * placeholder, then Sign in/Join or the member's tools — and without a fixed
  * width each change slid the centred menu sideways.
  */
-const RIGHT_CLUSTER = "md:min-w-[7.75rem] lg:min-w-[20.5rem]";
+export const RIGHT_CLUSTER = "md:min-w-[7.75rem] lg:min-w-[20.5rem]";
 
 /** Cookie read stays inside Suspense so the shared layout can still be prerendered. */
 export async function SiteNavSlot() {
@@ -62,16 +62,9 @@ export function SiteNavFallback({
   initial?: string;
   items?: RememberedNavItem[];
 }) {
-  if (items.length === 0) {
-    return (
-      <>
-        <div className="hidden min-w-0 items-center justify-center md:flex" />
-        <div
-          className={`flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3 ${RIGHT_CLUSTER}`}
-        />
-      </>
-    );
-  }
+  // Nothing remembered (signed out): the ready-made Sign in / Join copy from
+  // HeaderBootScript is already in those grid cells, so add nothing here.
+  if (items.length === 0) return null;
   return (
     <>
       <div className="hidden min-w-0 items-center justify-center md:flex" data-nav-ready="">
