@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
 import { WalkDetailsCardSkeleton, WalkSectionsSkeleton } from "@/components/walk-page-skeletons";
 import { getSiteTheme } from "@/lib/site-theme";
 
@@ -19,7 +20,7 @@ async function WalkLinkLoading() {
     <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6">
       {/* The real back link (members go back to Walks, everyone else Home —
           last visit decides, like the hero buttons), and the journey
-          button's space left empty: links and buttons are never grey. */}
+          button as a grey shape of its size. */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <span className="text-sm text-muted-foreground">
           <Link className="hover:text-foreground" data-member-home="" href="/walks">
@@ -29,7 +30,7 @@ async function WalkLinkLoading() {
             ← Home
           </Link>
         </span>
-        <span aria-hidden className="invisible h-9 w-32" />
+        <Skeleton className="h-9 w-32 rounded-md" />
       </div>
 
       <WalkDetailsCardSkeleton organiser={false} />

@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { HistoryFilterChrome } from "@/components/list-chrome";
-import { HistoryRowsSkeleton } from "@/components/list-skeletons";
+import { HistoryRowsSkeleton, SkLine } from "@/components/list-skeletons";
 
 /** The page's real heading, search and filters, then rows shaped like the
- * history list. Headings and descriptions are never grey: where one goes,
- * an empty line of the same height keeps the list from jumping. The row
+ * history list. The fixed heading is real; the count line and year heading
+ * depend on your walks, so they're grey lines (never an empty gap). The row
  * count (remembered from last time) is read inside the page. */
 export function HistoryLoading() {
   return (
@@ -18,7 +18,8 @@ export function HistoryLoading() {
           History
         </p>
         <h1 className="text-lg font-semibold tracking-tight">Your walk history</h1>
-        <div aria-hidden className="h-5" />
+        {/* "You have clocked in to 12 walks." — depends on your walks. */}
+        <SkLine className="w-56" size="sm" />
       </div>
       {/* As many rows as last time, from the first paint; with none last
           time the list hides itself, and the filters with it. */}
@@ -27,7 +28,10 @@ export function HistoryLoading() {
           <HistoryFilterChrome />
         </div>
         <section className="flex flex-col gap-3">
-          <div aria-hidden className="h-5 [section:has([data-reveal-list][hidden])>&]:hidden" />
+          {/* The year heading. */}
+          <div className="[section:has([data-reveal-list][hidden])>&]:hidden">
+            <SkLine className="w-12" size="sm" />
+          </div>
           <HistoryRowsSkeleton remember="history" />
         </section>
       </div>

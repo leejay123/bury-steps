@@ -13,7 +13,8 @@ import { MAX_JOURNEY_EVENTS } from "@/lib/walk-journey";
  * Placeholders for a walk's page, section by section, shaped like the real
  * ones and in the order chosen in Settings (walkPageSections). Labels,
  * headings and fixed wording are the real thing; grey only stands in for
- * the walk's own details; buttons are empty space of the same size.
+ * the walk's own details and buttons (grey shapes of their sizes — never an
+ * empty gap).
  */
 
 const FACTS = [
@@ -56,7 +57,7 @@ function WalkDescriptionSkeleton() {
           </div>
         ))}
       </div>
-      <span aria-hidden className="invisible h-5 w-24" />
+      <Skeleton className="h-4 w-20 rounded-[4px]" />
     </div>
   );
 }
@@ -89,7 +90,7 @@ export function WalkDetailsCardSkeleton({ organiser }: { organiser: boolean }) {
       <CardContent className="flex flex-col gap-4">
         <WalkFactsSkeleton />
         <WalkDescriptionSkeleton />
-        {organiser ? null : <span aria-hidden className="invisible block h-8 w-32" />}
+        {organiser ? null : <Skeleton className="h-8 w-32 rounded-md" />}
       </CardContent>
     </Card>
   );
@@ -141,8 +142,13 @@ export function WalkSectionsSkeleton({ theme, organiser }: { theme: SiteTheme; o
 export function OrganiserWalkToolsSkeleton() {
   return (
     <>
-      {/* The walk's buttons (Add to calendar, Edit…): their row, left empty. */}
-      <div aria-hidden className="h-8" />
+      {/* The walk's buttons, as grey shapes of their sizes: Add to calendar,
+          Download roster (CSV), Duplicate, Cancel walk, Edit, Remove walk. */}
+      <div aria-hidden className="flex flex-wrap gap-2">
+        {["w-32", "w-44", "w-24", "w-28", "w-16", "w-28"].map((width, i) => (
+          <Skeleton className={`h-8 rounded-md ${width}`} key={i} />
+        ))}
+      </div>
       <Separator />
       <EmptyStateSkeleton />
       <Separator />

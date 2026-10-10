@@ -3,8 +3,9 @@
 import { ClockInForm } from "@/app/w/[token]/clock-in-form";
 import { ClockOutButton } from "@/components/clock-out-button";
 import { useWalkClock } from "@/hooks/use-walk-clock";
-import { formatDateTime } from "@/lib/dates";
-import { walkStatus, windowState } from "@/lib/walk-window";
+import { formatDateTime, formatTime, formatWalkDay } from "@/lib/dates";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { walkOpensAt, walkStatus, windowState } from "@/lib/walk-window";
 
 /**
  * The same clock-in a member gets, on the organiser walk page. Owners and
@@ -74,10 +75,16 @@ export function SelfClockInPanel({
   }
 
   if (state === "too-early") {
+    // Same info box members get on the walk's page (walk-share-status.tsx).
+    const opensAt = walkOpensAt(new Date(startsAt));
     return (
-      <p className="text-sm text-muted-foreground">
-        Clock-in opens an hour before the start. You’ll use the same pre-walk check as members.
-      </p>
+      <Alert variant="info">
+        <AlertTitle>Clock-in is not open yet</AlertTitle>
+        <AlertDescription>
+          It opens an hour before the walk starts, at {formatTime(opensAt)} on {formatWalkDay(opensAt)}.
+          You’ll use the same pre-walk check as members.
+        </AlertDescription>
+      </Alert>
     );
   }
 

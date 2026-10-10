@@ -13,7 +13,7 @@ import { getSiteTheme } from "@/lib/site-theme";
  * link, the title card (four fact tiles, description), the clock-in line,
  * the share link, then the shared sections in the order chosen in Settings,
  * the buttons' row, who's on the walk and the Journey. Real wording where
- * it's fixed, grey where the walk's own details go, empty space for buttons.
+ * it's fixed, grey where the walk's own details and buttons go — no gaps.
  */
 export default function WalkDetailLoading() {
   return <OrganiserWalkLoading />;
@@ -29,15 +29,20 @@ async function OrganiserWalkLoading() {
 
       <WalkDetailsCardSkeleton organiser />
 
-      {/* "Clock-in opens an hour before the start…" — depends on the walk's time. */}
-      <SkLine className="w-96 max-w-full" size="sm" />
+      {/* The clock-in box ("Clock-in is not open yet…", or the clock-in
+          form): an info-box shape, title and two lines. */}
+      <div aria-hidden className="flex flex-col gap-1 rounded-lg border px-4 py-3">
+        <SkLine className="w-44" size="sm" />
+        <SkLine className="w-full max-w-2xl" size="sm" />
+        <SkLine className="w-2/3 max-w-xl" size="sm" />
+      </div>
 
       {/* The share link, and the Copy button's space. */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
         <div className="flex min-h-8 min-w-0 flex-1 items-center rounded-md bg-muted px-3 py-1.5">
           <Skeleton className="h-3.5 w-72 max-w-full rounded-[4px] bg-background/70" />
         </div>
-        <span aria-hidden className="invisible h-8 w-full sm:w-26 sm:shrink-0" />
+        <Skeleton className="h-8 w-full rounded-md sm:w-26 sm:shrink-0" />
       </div>
 
       <WalkSectionsSkeleton organiser theme={theme} />

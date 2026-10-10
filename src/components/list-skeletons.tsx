@@ -99,9 +99,9 @@ export function SkList({
 
 export { FIRST_VISIT_ROWS } from "@/lib/list-page-size";
 
-/** Where a row has a button: the same space, left empty (buttons are never grey). */
+/** Where a row has a button: a grey shape the button's size (no empty gaps while loading). */
 export function SkButtonSpace({ className }: { className?: string }) {
-  return <span aria-hidden className={cn("invisible block h-7 rounded-md", className)} />;
+  return <Skeleton aria-hidden className={cn("block h-7 rounded-md", className)} />;
 }
 
 const TITLE_WIDTHS = ["w-40", "w-32", "w-48", "w-36", "w-44", "w-28"];

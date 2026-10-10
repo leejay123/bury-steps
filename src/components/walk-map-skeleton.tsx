@@ -23,9 +23,9 @@ export function WalkMapSkeleton({ location }: { location?: string }) {
       <Skeleton className="h-[258px] w-full rounded-none" />
       <div className="flex flex-col gap-3 px-6 pb-6">
         <div className="grid grid-cols-2 gap-2 sm:flex">
-          {/* Directions buttons: their space, left empty (buttons are never grey). */}
-          <span aria-hidden className="invisible h-8 sm:w-32" />
-          <span aria-hidden className="invisible h-8 sm:w-28" />
+          {/* Get directions / Apple Maps, as grey buttons of the same size. */}
+          <Skeleton className="h-8 rounded-md sm:w-32" />
+          <Skeleton className="h-8 rounded-md sm:w-28" />
         </div>
         {/* The small print under the buttons: two lines on a phone. */}
         <div className="flex flex-col">

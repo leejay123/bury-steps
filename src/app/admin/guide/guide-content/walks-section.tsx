@@ -34,7 +34,9 @@ export function WalksSection({
             or <strong>In progress</strong>, the row also says <strong>Clock in now</strong> until
             you have clocked in, then <strong>You’re clocked in</strong>. Open the walk and use the
             same pre-walk check members use — fit to take part, conditions, and emergency contact.
-            You are then on that walk’s attendance list. The walk’s own page shows the same
+            Before it opens, a blue <strong>Clock-in is not open yet</strong> box on the walk’s
+            page says when it will (the same box members see). You are then on that walk’s
+            attendance list once you clock in. The walk’s own page shows the same
             status just under its title, then the date, start time, length, and meeting
             point on their own lines. Who created the walk sits under the title.
           </p>
