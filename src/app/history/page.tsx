@@ -3,12 +3,20 @@ import { PlaceholderPreview } from "@/components/placeholder-preview";
 import type { Metadata } from "next";
 import { HistoryLoading } from "./loading";
 import { prisma } from "@/lib/db";
-import { requireUser } from "@/lib/auth";
+import { getOptionalUser, requireUser } from "@/lib/auth";
+import { cacheLife } from "next/cache";
 import { isWalkHistoryReady, walkStatus } from "@/lib/walk-window";
 import { AttendanceHistory } from "@/components/attendance-history";
 import { RememberListCount } from "@/components/remember-list-count";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { walkSharePath } from "@/lib/walk-slug";
+
+/**
+ * Fetched ahead from the menu, so History opens with your walks already
+ * there (getHistoryForViewer). See node_modules/next/dist/docs/01-app/
+ * 02-guides/optimizing-prefetching.md.
+ */
+export const prefetch = "partial";
 
 export const metadata: Metadata = {
   title: "Walk history",
@@ -25,13 +33,19 @@ export default function WalkHistoryPage() {
   );
 }
 
-async function WalkHistoryContent() {
+/**
+ * Your finished walks, as a private saved copy: kept in this browser only
+ * for five minutes (never on the server), so the page fetched ahead from
+ * the menu can carry it. A clock-in or clock-out refreshes it at once.
+ */
+async function getHistoryForViewer() {
+  "use cache: private";
+  cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
   // This is about the viewer's own clock-ins, not an admin capability — an
   // organiser or the owner who personally walks wants to see their own
-  // history too, same as a plain member. The account menu (SiteUserButton)
-  // already links here unconditionally for every role; this used to bounce
-  // an admin straight back to /admin without ever showing it.
-  const user = await requireUser();
+  // history too, same as a plain member.
+  const user = await getOptionalUser();
+  if (!user) return null;
 
   const [attendances, totalCount] = await Promise.all([
     prisma.attendance.findMany({
@@ -66,11 +80,33 @@ async function WalkHistoryContent() {
   // stays exact rather than approximate.
   const historyReady = attendances.filter((attendance) => isWalkHistoryReady(attendance.walk));
   const inProgressCount = attendances.length - historyReady.length;
-  const count = totalCount - inProgressCount;
+  return {
+    count: totalCount - inProgressCount,
+    rows: historyReady.map((attendance) => ({
+      id: attendance.id,
+      title: attendance.walk.title,
+      location: attendance.walk.location,
+      startsAt: attendance.walk.startsAt.toISOString(),
+      durationMins: attendance.walk.durationMins,
+      cancelledAt: attendance.walk.cancelledAt?.toISOString() ?? null,
+      clockedInAt: attendance.clockedInAt.toISOString(),
+      clockedOutAt: attendance.clockedOutAt?.toISOString() ?? null,
+      clockedOutReason: attendance.clockedOutReason,
+      completed: walkStatus(attendance.walk) === "completed",
+      href: attendance.walk.cancelledAt ? undefined : walkSharePath(attendance.walk),
+    })),
+  };
+}
+
+async function WalkHistoryContent() {
+  const history = await getHistoryForViewer();
+  // Not signed in: requireUser sends them to sign in, as before.
+  if (!history) await requireUser();
+  const { count, rows } = history ?? { count: 0, rows: [] };
 
   return (
     <div className="flex flex-col gap-6">
-      <RememberListCount count={Math.min(historyReady.length, LIST_PAGE_SIZE)} id="history" />
+      <RememberListCount count={Math.min(rows.length, LIST_PAGE_SIZE)} id="history" />
       <div className="flex flex-col gap-1.5">
         <h1 className="text-lg font-semibold tracking-tight">Your walk history</h1>
         {/* Fixed wording, so the loading placeholder shows it for real too. */}
@@ -82,28 +118,14 @@ async function WalkHistoryContent() {
             {count === 1 ? "You have clocked in to 1 walk." : `You have clocked in to ${count} walks.`}
           </p>
         ) : null}
-        {historyReady.length < count ? (
+        {rows.length < count ? (
           <p className="text-xs text-muted-foreground">
-            Showing the {historyReady.length.toLocaleString("en-GB")} most recent.
+            Showing the {rows.length.toLocaleString("en-GB")} most recent.
           </p>
         ) : null}
       </div>
 
-      <AttendanceHistory
-        rows={historyReady.map((attendance) => ({
-          id: attendance.id,
-          title: attendance.walk.title,
-          location: attendance.walk.location,
-          startsAt: attendance.walk.startsAt.toISOString(),
-          durationMins: attendance.walk.durationMins,
-          cancelledAt: attendance.walk.cancelledAt?.toISOString() ?? null,
-          clockedInAt: attendance.clockedInAt.toISOString(),
-          clockedOutAt: attendance.clockedOutAt?.toISOString() ?? null,
-          clockedOutReason: attendance.clockedOutReason,
-          completed: walkStatus(attendance.walk) === "completed",
-          href: attendance.walk.cancelledAt ? undefined : walkSharePath(attendance.walk),
-        }))}
-      />
+      <AttendanceHistory rows={rows} />
     </div>
   );
 }

@@ -7,12 +7,22 @@ import { CUP_BODY_COOKIE, CUP_TITLE_COOKIE, TOGETHER_BODY_COOKIE } from "@/lib/r
 import { ProgressSkeleton } from "./progress-skeleton";
 import { notFound } from "next/navigation";
 import { Footprints } from "lucide-react";
-import { requireUser } from "@/lib/auth";
+import { getOptionalUser, requireUser } from "@/lib/auth";
 import { getProgressEnabled } from "@/lib/progress-settings";
-import { loadWalkGame } from "@/lib/walk-progress";
+import { loadWalkGameShared } from "@/lib/walk-progress";
+import { cacheLife } from "next/cache";
+import type { WalkGameView } from "@/lib/walk-game";
 import { EmptyState } from "@/components/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { ProgressBoard } from "./progress-board";
+
+/**
+ * Fetched ahead from the menu, so Progress opens with your numbers already
+ * there instead of its placeholder (your part is a private saved copy, see
+ * getProgressForViewer). See node_modules/next/dist/docs/01-app/02-guides/
+ * optimizing-prefetching.md.
+ */
+export const prefetch = "partial";
 
 export const metadata: Metadata = {
   title: "Progress",
@@ -68,19 +78,36 @@ export default function ProgressPage() {
   );
 }
 
-async function ProgressForMember() {
-  const user = await requireUser();
+/**
+ * Your Progress, as a private saved copy: kept in this browser only for five
+ * minutes (never on the server), so the page fetched ahead from the menu can
+ * carry it. A clock-in refreshes it at once. The group's numbers come from
+ * one copy shared by everyone (loadWalkGameShared).
+ */
+async function getProgressForViewer(): Promise<
+  { enabled: false } | { enabled: true; game: WalkGameView } | null
+> {
+  "use cache: private";
+  cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
+  const user = await getOptionalUser();
+  if (!user) return null;
   // Site-wide switch (Settings → Site behaviour) — off 404s the
   // page for every signed-in account, organisers included, same as any
   // other gated page (see requirePermission's own doc comment for why
   // a plain 404 rather than a distinguishable "disabled" message).
-  if (!(await getProgressEnabled())) notFound();
-  return <ProgressBody userId={user.id} />;
+  if (!(await getProgressEnabled())) return { enabled: false };
+  return { enabled: true, game: await loadWalkGameShared(user.id) };
 }
 
-async function ProgressBody({ userId }: { userId: string }) {
-  const game = await loadWalkGame(userId);
+async function ProgressForMember() {
+  const progress = await getProgressForViewer();
+  // Not signed in: requireUser sends them to sign in, as before.
+  if (!progress) await requireUser();
+  if (!progress?.enabled) notFound();
+  return <ProgressBody game={progress.game} />;
+}
 
+async function ProgressBody({ game }: { game: WalkGameView }) {
   const togetherPct = game.together
     ? Math.min(100, Math.round((game.together.count / game.together.goal) * 100))
     : 0;

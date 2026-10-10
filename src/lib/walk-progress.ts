@@ -1,3 +1,4 @@
+import { cacheLife } from "next/cache";
 import { prisma } from "@/lib/db";
 import { londonMonthKey } from "@/lib/dates";
 import { SITE_SETTING_ID } from "@/lib/theme";
@@ -161,6 +162,33 @@ export async function loadWalkGame(viewerId: string, now = new Date()): Promise<
     }),
   ]);
 
+  return walkGameFromLoadedData(viewerId, data, olderOutsideWindowCount);
+}
+
+/**
+ * The group's side of Progress (everyone's clock-ins, the goal), worked out
+ * once and shared by every member instead of once per member: a saved copy
+ * kept up to five minutes. It's made while drawing /progress, so a clock-in
+ * (which refreshes /progress) refreshes it at once — Next.js tags saved
+ * copies with the page that made them (revalidatePath docs).
+ */
+async function loadSharedWalkGameData(): Promise<WalkGameLoadedData> {
+  "use cache: remote";
+  cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
+  return loadWalkGameData(new Date());
+}
+
+/** Progress for one member, from the shared group copy plus their own older clock-ins. */
+export async function loadWalkGameShared(viewerId: string): Promise<WalkGameView> {
+  const shared = await loadSharedWalkGameData();
+  const data = { ...shared, now: new Date(shared.now) };
+  const historyFrom = new Date(data.now.getTime() - HISTORY_YEARS * 365 * 24 * 60 * 60 * 1000);
+  const olderOutsideWindowCount = await prisma.attendance.count({
+    where: {
+      userId: viewerId,
+      walk: { cancelledAt: null, startsAt: { lt: historyFrom } },
+    },
+  });
   return walkGameFromLoadedData(viewerId, data, olderOutsideWindowCount);
 }
 
