@@ -1,8 +1,9 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { requireUser } from "@/lib/auth";
+import { cacheLife, cacheTag } from "next/cache";
+import { getOptionalUser, requireUser } from "@/lib/auth";
 import { PAGE_X_BLEED } from "@/lib/page-x";
-import { getPageNotices, getSiteNoticeCategories, getSiteNoticeState } from "@/lib/site-notices";
+import { NOTICES_CACHE_TAG, getPageNotices, getSiteNoticeCategories, getSiteNoticeState } from "@/lib/site-notices";
 import { NoticesBlogSection } from "@/components/notices-blog-section";
 import { NoticesSearchChrome } from "@/components/list-chrome";
 import { NoticeCategoryBar } from "@/components/notice-category-bar";
@@ -13,6 +14,15 @@ import { rememberedRows } from "@/lib/remembered-rows";
 import { NoticeRowsSkeleton } from "@/components/list-skeletons";
 
 
+
+/**
+ * Trial of fetching a page ahead (Partial Prefetching) for this page only:
+ * a menu link to Notices loads the page's ready-made copy, with the
+ * member's notices in it (getMemberNotices), before it's clicked, so the
+ * list is there straight away instead of its placeholder. See
+ * node_modules/next/dist/docs/01-app/02-guides/optimizing-prefetching.md.
+ */
+export const prefetch = "partial";
 
 export const metadata: Metadata = {
   title: "Notices",
@@ -41,8 +51,21 @@ async function NoticesCounted() {
   );
 }
 
-async function NoticesForMember() {
-  const user = await requireUser();
+/**
+ * The member's notices, as a private saved copy: kept in this browser only
+ * ("use cache: private" never stores on the server), so it can travel with
+ * the page fetched ahead. The notices themselves come from the shared saved
+ * copy (site-notices.ts); only "who is this" and "which are new" are
+ * personal. Five minutes, the shortest that a fetched-ahead page reuses;
+ * a notice read in this tab still loses its New at once (notice-events.ts),
+ * and a saved or edited notice clears it (NOTICES_CACHE_TAG).
+ */
+async function getMemberNotices() {
+  "use cache: private";
+  cacheTag(NOTICES_CACHE_TAG);
+  cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
+  const user = await getOptionalUser();
+  if (!user) return null;
   const [notices, categories, { unreadIds }] = await Promise.all([
     getPageNotices(),
     getSiteNoticeCategories(),
@@ -50,6 +73,14 @@ async function NoticesForMember() {
     // say "New" or "Updated".
     getSiteNoticeState(user.id, user.firstName),
   ]);
+  return { notices, categories, unreadIds };
+}
+
+async function NoticesForMember() {
+  const member = await getMemberNotices();
+  // Not signed in: requireUser sends them to sign in, as before.
+  if (!member) await requireUser();
+  const { notices, categories, unreadIds } = member ?? { notices: [], categories: [], unreadIds: [] };
 
   return (
     <div className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
