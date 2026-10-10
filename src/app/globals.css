@@ -575,17 +575,6 @@ html:has([data-nav-ready]:not([hidden] *)) #bs-guest-boot {
   display: none;
 }
 
-/* A list replacing its placeholder fades in from a slight blur (placeholder-reveal.tsx). */
-@keyframes bs-reveal {
-  from {
-    opacity: 0;
-    filter: blur(2px);
-  }
-}
-.bs-reveal {
-  animation: bs-reveal 400ms ease-in-out;
-}
-
 /* Cookie notice already answered in this browser (site-cookie-consent-gate.tsx). */
 html[data-cookie-answered] [data-slot="cookie-consent"] {
   display: none;
