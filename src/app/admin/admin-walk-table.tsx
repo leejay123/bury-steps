@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
+import { IntentLink } from "@/components/intent-link";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { useQueryChoice, useQueryText } from "@/hooks/use-filter-query";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Footprints, Search } from "lucide-react";
 import { formatTime } from "@/lib/dates";
@@ -289,9 +289,10 @@ function AdminWalkTableInner({
                 <DataListItemMain className="items-center p-3">
                   <DataListBody>
                     <p className="font-medium">
-                      <Link className="after:absolute after:inset-0" href={`/admin/walks/${walk.id}`}>
+                      {/* Fetches this walk's page on hover or touch, not every row on screen. */}
+                      <IntentLink className="after:absolute after:inset-0" full href={`/admin/walks/${walk.id}`}>
                         {walk.title}
-                      </Link>
+                      </IntentLink>
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {formatTime(new Date(walk.startsAt))}

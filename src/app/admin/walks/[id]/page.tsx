@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { cacheLife } from "next/cache";
+import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { getSiteTheme } from "@/lib/site-theme";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import WalkDetailLoading from "./loading";
@@ -36,11 +38,18 @@ import type { WalkAttendanceRow } from "./walk-attendance";
 
 
 
-async function WalkDetailPageContent({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+/**
+ * This walk's organiser page, as a private saved copy: kept in this browser
+ * only for five minutes (never on the server), so it can be fetched ahead
+ * (on hover or touch of its row, IntentLink) and open with no placeholder.
+ * Any change to the walk, or a clock-in, refreshes it at once. The clock-in
+ * box works from this device's clock, so a copy a few minutes old still
+ * shows the right state. See node_modules/next/dist/docs/01-app/02-guides/
+ * optimizing-prefetching.md.
+ */
+async function WalkDetailPageContent({ id }: { id: string }) {
+  "use cache: private";
+  cacheLife(PRIVATE_SAVED_COPY);
   // An organiser reaches this page either as a Walks-admin page in its own
   // right, or by clicking through from a member's walk history (a
   // Members-admin page) — either permission is enough to view it. Every
@@ -49,7 +58,6 @@ async function WalkDetailPageContent({
   // individually — see the nine permWalks* fields in organiser-permissions.ts.
   // The permission check and the walk are fetched at the same time (they
   // used to run one after the other, making this the slowest page to open).
-  const { id } = await params;
   const [admin, walkWithNotes, emergencySetting, theme] = await Promise.all([
     requireAnyPermission(["permWalksView", "permMembersView"]),
     prisma.walk.findUnique({
@@ -451,11 +459,20 @@ async function WalkDetailPageContent({
 
 /** Everything here depends on who's asking and on live data, so the page
  * shows a matching placeholder for an instant while it loads. */
-export default function WalkDetailPage(props: Parameters<typeof WalkDetailPageContent>[0]) {
+/** The walk named in the address (fetched ahead with it, prefetch={true}). */
+async function WalkDetailForAddress({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return <WalkDetailPageContent id={id} />;
+}
+
+/** Fetched ahead from its row in the Walks table, on hover or touch. */
+export const prefetch = "partial";
+
+export default function WalkDetailPage(props: { params: Promise<{ id: string }> }) {
   return (
     <Suspense fallback={<WalkDetailLoading />}>
       <PlaceholderPreview fallback={<WalkDetailLoading />}>
-        <WalkDetailPageContent {...props} />
+        <WalkDetailForAddress {...props} />
       </PlaceholderPreview>
     </Suspense>
   );

@@ -1,10 +1,10 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { IntentLink } from "@/components/intent-link";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { useQueryChoice, useQueryText } from "@/hooks/use-filter-query";
 import type React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertCircle, ChevronRight, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -267,8 +267,9 @@ function MemberListRow({
         </Avatar>
         <DataListBody>
           <p className="flex items-center gap-1.5 font-medium">
-            <Link
+            <IntentLink
               className="after:absolute after:inset-0"
+              full
               href={`/admin/members/${member.id}`}
               // Their page's placeholder then draws exactly as many walk
               // rows as they have (MemberDetailSkeleton).
@@ -280,7 +281,7 @@ function MemberListRow({
               }
             >
               {member.name}
-            </Link>
+            </IntentLink>
             {member.isYou ? <span className="text-xs font-normal text-muted-foreground">You</span> : null}
             {member.needsAttention && !member.pendingInvite ? (
               <AlertCircle

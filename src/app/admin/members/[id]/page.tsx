@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { cacheLife } from "next/cache";
+import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { MemberDetailSkeleton } from "./member-detail-skeleton";
 import Link from "next/link";
@@ -23,13 +25,17 @@ import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 
 
 
-async function MemberDetailPageContent({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+/**
+ * This member's page, as a private saved copy: kept in this browser only
+ * for five minutes (never on the server), so it can be fetched ahead (on
+ * hover or touch of their row, IntentLink) and open with no placeholder.
+ * Any change to them refreshes it at once. See node_modules/next/dist/docs/
+ * 01-app/02-guides/optimizing-prefetching.md.
+ */
+async function MemberDetailPageContent({ id }: { id: string }) {
+  "use cache: private";
+  cacheLife(PRIVATE_SAVED_COPY);
   const viewer = await requirePermission("permMembersView");
-  const { id } = await params;
 
   const [member, setting, viewerIsOwner] = await Promise.all([
     getMemberHistory(id),
@@ -207,11 +213,20 @@ function StatCard({ label, value }: { label: string; value: number }) {
 /** Everything here depends on who's asking and on live data, so the page
  * shows a matching placeholder for an instant while it loads. */
 // Access is checked in ../layout.tsx, before anything streams.
-export default function MemberDetailPage(props: Parameters<typeof MemberDetailPageContent>[0]) {
+/** The member named in the address (fetched ahead with it, prefetch={true}). */
+async function MemberDetailForAddress({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return <MemberDetailPageContent id={id} />;
+}
+
+/** Fetched ahead from their row in the Members list, on hover or touch. */
+export const prefetch = "partial";
+
+export default function MemberDetailPage(props: { params: Promise<{ id: string }> }) {
   return (
     <Suspense fallback={<MemberDetailSkeleton />}>
       <PlaceholderPreview fallback={<MemberDetailSkeleton />}>
-        <MemberDetailPageContent {...props} />
+        <MemberDetailForAddress {...props} />
       </PlaceholderPreview>
     </Suspense>
   );
