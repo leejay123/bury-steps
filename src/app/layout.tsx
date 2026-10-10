@@ -122,6 +122,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       style={{ "--font-site": `var(${font.cssVariable})`, ...textSizeCssVars(theme.textSizes) } as CSSProperties}
       suppressHydrationWarning
     >
+      <head>
+        {/* Don't draw anything until the ready-made page has been read down to
+            the phone bar's slot (the end of the layout). The page streams in,
+            and the browser drew whatever had arrived: the header first, then
+            the hero, then the rest, with the logo a beat behind. Now the first
+            paint is the whole page. Chrome/Edge; other browsers ignore it. */}
+        <link blocking="render" href="#bs-bottom-boot" rel="expect" />
+      </head>
       <body
         className={`${face.className} min-h-dvh overflow-x-clip touch-manipulation bg-background text-foreground antialiased`}
       >

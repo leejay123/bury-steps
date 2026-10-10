@@ -575,6 +575,11 @@ html:has([data-nav-ready]:not([hidden] *)) #bs-guest-boot {
   display: none;
 }
 
+/* Cookie notice already answered in this browser (site-cookie-consent-gate.tsx). */
+html[data-cookie-answered] [data-slot="cookie-consent"] {
+  display: none;
+}
+
 html:has([data-bottom-nav]:not([hidden] *)) #bs-bottom-boot {
   display: none;
 }
