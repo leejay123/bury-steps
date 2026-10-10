@@ -1,5 +1,6 @@
 import { Suspense } from "react";
-import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
+import { MemberDetailSkeleton } from "./member-detail-skeleton";
 import Link from "next/link";
 import { Crown } from "lucide-react";
 import { notFound } from "next/navigation";
@@ -204,8 +205,10 @@ function StatCard({ label, value }: { label: string; value: number }) {
 // Access is checked in ../layout.tsx, before anything streams.
 export default function MemberDetailPage(props: Parameters<typeof MemberDetailPageContent>[0]) {
   return (
-    <Suspense fallback={<AdminPageFallback rows={6} />}>
-      <MemberDetailPageContent {...props} />
+    <Suspense fallback={<MemberDetailSkeleton />}>
+      <PlaceholderPreview fallback={<MemberDetailSkeleton />}>
+        <MemberDetailPageContent {...props} />
+      </PlaceholderPreview>
     </Suspense>
   );
 }

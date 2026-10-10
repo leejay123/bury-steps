@@ -54,6 +54,7 @@ import {
   type SectionBgKey,
 } from "@/lib/section-background";
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
+import { CONTACT_MESSAGES_OWNER_TAG } from "@/lib/contact-messages-owner";
 import {
   DEFAULT_COOKIE_CONSENT_VARIANT,
   parseCookieConsentVariant,
@@ -487,6 +488,7 @@ async function updateContactMessagesOwnerWork(
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/behaviour");
   revalidatePath("/admin/messages");
+  revalidateTag(CONTACT_MESSAGES_OWNER_TAG, { expire: 0 });
   return {
     ok: true,
     message: owner

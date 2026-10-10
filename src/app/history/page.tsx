@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
-import Link from "next/link";
 import type { Metadata } from "next";
 import { HistoryLoading } from "./loading";
 import { prisma } from "@/lib/db";
@@ -73,21 +72,16 @@ async function WalkHistoryContent() {
     <div className="flex flex-col gap-6">
       <RememberListCount count={Math.min(historyReady.length, LIST_PAGE_SIZE)} id="history" />
       <div className="flex flex-col gap-1.5">
-        <p className="text-sm text-muted-foreground">
-          <Link className="hover:underline" href="/walks">
-            Walks
-          </Link>
-          <span aria-hidden="true"> · </span>
-          History
-        </p>
         <h1 className="text-lg font-semibold tracking-tight">Your walk history</h1>
+        {/* Fixed wording, so the loading placeholder shows it for real too. */}
         <p className="text-sm text-muted-foreground">
-          {count === 0
-            ? "Every walk you clock in to will be kept here, once it's finished."
-            : count === 1
-              ? "You have clocked in to 1 walk."
-              : `You have clocked in to ${count} walks.`}
+          Every walk you clock in to will be kept here, once it&apos;s finished.
         </p>
+        {count > 0 ? (
+          <p className="text-sm text-muted-foreground">
+            {count === 1 ? "You have clocked in to 1 walk." : `You have clocked in to ${count} walks.`}
+          </p>
+        ) : null}
         {historyReady.length < count ? (
           <p className="text-xs text-muted-foreground">
             Showing the {historyReady.length.toLocaleString("en-GB")} most recent.

@@ -6,9 +6,9 @@ import { RememberListCount } from "@/components/remember-list-count";
 import { MessageRowsSkeleton } from "@/components/list-skeletons";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import Link from "next/link";
-import { requirePermission, displayName } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
+import { getContactMessagesDescription } from "@/lib/contact-messages-owner";
 import { prisma } from "@/lib/db";
-import { SITE_SETTING_ID } from "@/lib/theme";
 import { AdminPageIntro } from "../admin-page-intro";
 import { ContactMessagesList } from "./contact-messages-list";
 
@@ -17,30 +17,19 @@ import { ContactMessagesList } from "./contact-messages-list";
 async function AdminMessagesPageContent() {
   await requirePermission("permMessages");
 
-  const [messages, setting] = await Promise.all([
+  const [messages, description] = await Promise.all([
     prisma.contactMessage.findMany({
       orderBy: { createdAt: "desc" },
       take: 200,
     }),
-    prisma.siteSetting.findUnique({
-      where: { id: SITE_SETTING_ID },
-      select: { contactMessagesOwner: { select: { firstName: true, lastName: true, email: true } } },
-    }),
+    getContactMessagesDescription(),
   ]);
-  const owner = setting?.contactMessagesOwner;
 
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
       <RememberListCount count={Math.min(messages.length, LIST_PAGE_SIZE)} id="messages" />
-      <AdminPageIntro
-        description={
-          owner
-            ? `Submissions from the public Contact us form. ${displayName(owner)} gets an email alert for each new one and can reply straight from it — nothing else happens automatically.`
-            : "Submissions from the public Contact us form. No one is set to be alerted by email yet — set that in Settings → Site behaviour → Contact messages."
-        }
-        title="Messages"
-      />
-      {!owner ? (
+      <AdminPageIntro description={description.text} title="Messages" />
+      {!description.hasOwner ? (
         <p className="text-sm text-muted-foreground">
           <Link className="underline underline-offset-2" href="/admin/settings/behaviour#contact-messages">
             Choose who gets alerted
@@ -62,11 +51,14 @@ async function AdminMessagesPageContent() {
   );
 }
 
-/** Real title, search and date filter, then as many message rows as last
- * time — one placeholder from the first paint. */
-export function MessagesPageFallback() {
+/** Real title, description, search and date filter, then as many message
+ * rows as last time — one placeholder from the first paint. The description
+ * names who gets alerted, from a saved copy, so it's real too. */
+export async function MessagesPageFallback() {
+  const description = await getContactMessagesDescription();
   return (
     <AdminPageFallback
+      description={description.text}
       filters={<MessagesFilterChrome />}
       list={<MessageRowsSkeleton remember="messages" />}
       title="Messages"

@@ -17,21 +17,13 @@ function StatSkeleton({ label }: { label: string }) {
   );
 }
 
-/** Grey bars over invisible copy, so the box wraps to the real height (as SkText). */
+/** Grey behind invisible copy, line by line: each wrapped line's grey stops
+ * where its words stop (box-decoration-break: clone), so the box is the
+ * real height and the short last line is short — no grey block. */
 function GreyWords({ words }: { words: ReactNode }) {
   return (
-    <span className="relative block">
+    <span className="animate-pulse rounded-[4px] bg-accent [-webkit-box-decoration-break:clone] [box-decoration-break:clone]">
       {words}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-0 animate-pulse"
-        style={{
-          backgroundImage: "linear-gradient(var(--accent), var(--accent))",
-          backgroundRepeat: "repeat-y",
-          backgroundSize: "64% calc(1lh * 0.64)",
-          backgroundPosition: "left calc(1lh * 0.18)",
-        }}
-      />
     </span>
   );
 }
@@ -84,9 +76,8 @@ export function ProgressSkeleton() {
       <RememberedText className="flex flex-col gap-1.5 rounded-xl border p-4" max={40} name={CUP_TITLE_COOKIE}>
         {(title) => (
           <>
-            <h2 className="font-medium">
-              <GreyWords words={title} />
-            </h2>
+            {/* The heading ("October cup") is shown for real. */}
+            <h2 className="font-medium [&_[data-sk-words]]:visible">{title}</h2>
             <RememberedText name={CUP_BODY_COOKIE}>
               {(body) => (
                 <p className="text-sm">
