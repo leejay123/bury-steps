@@ -3,7 +3,9 @@ import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
 import { getMonthlyClockInGoal } from "@/lib/walk-progress";
-import { SettingsContentSkeleton, SettingsPage } from "../settings-page";
+import { SettingsPage } from "../settings-page";
+import { SettingsMask } from "../settings-mask";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { ProgressSettingsForm } from "./progress-form";
 
 
@@ -19,8 +21,10 @@ export default function ProgressSettingsPage() {
       description="Set an optional group clock-in goal for the month. Members see it on Progress. Leave it blank if you do not want a together target."
       title="Progress"
     >
-      <Suspense fallback={<SettingsContentSkeleton />}>
-        <ProgressSettingsPageContent />
+      <Suspense fallback={<ProgressSettingsFallback />}>
+        <PlaceholderPreview fallback={<ProgressSettingsFallback />}>
+          <ProgressSettingsPageContent />
+        </PlaceholderPreview>
       </Suspense>
     </SettingsPage>
   );
@@ -38,5 +42,14 @@ async function ProgressSettingsPageContent() {
     <>
       <ProgressSettingsForm monthlyClockInGoal={monthlyClockInGoal} />
     </>
+  );
+}
+
+/** While the goal loads: the real form, its value greyed (SettingsMask). */
+function ProgressSettingsFallback() {
+  return (
+    <SettingsMask>
+      <ProgressSettingsForm monthlyClockInGoal={null} />
+    </SettingsMask>
   );
 }

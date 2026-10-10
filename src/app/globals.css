@@ -609,3 +609,23 @@ html:has([data-bottom-nav]:not([hidden] *)) #bs-bottom-boot {
     justify-content: flex-start;
   }
 }
+
+/* Settings placeholders (settings-mask.tsx): the real form, every value-
+   bearing control a grey shape the size of the real one. */
+[data-sk-mask] :is(input, textarea, select, button, [role="switch"], [role="combobox"], [role="radio"], [data-slot="select-trigger"], [data-sk-value]) {
+  color: transparent !important;
+  background: var(--accent) !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  animation: var(--animate-pulse);
+}
+[data-sk-mask] :is(input, textarea)::placeholder {
+  color: transparent !important;
+}
+[data-sk-mask] :is(button, [role="switch"], [role="combobox"], [role="radio"], [data-slot="select-trigger"], [data-sk-value]) * {
+  visibility: hidden;
+}
+[data-sk-mask] :is(img, video, canvas) {
+  visibility: hidden;
+}
