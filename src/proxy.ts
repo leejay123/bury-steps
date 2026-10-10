@@ -36,9 +36,14 @@ export default clerkMiddleware(
     // The role rides in the token (clerk-role.ts). A token that doesn't
     // carry a role yet goes on to the pages' own organiser check, so nobody
     // is turned away by mistake.
+    // Organisers who aren't owners only get Walks, Reports and the Guide
+    // (organiser-permissions.ts), so the rest is "page not found" for them
+    // here too, once their token says so.
     if (pathname === "/admin" || pathname.startsWith("/admin/")) {
       const { userId, sessionClaims } = await auth();
-      if (!userId || (sessionClaims as RoleClaims | null)?.metadata?.role === "MEMBER") {
+      const access = (sessionClaims as RoleClaims | null)?.metadata;
+      const organiserArea = /^\/admin(\/(walks|reports|guide)(\/|$)|\/?$)/.test(pathname);
+      if (!userId || access?.role === "MEMBER" || (access?.owner === false && !organiserArea)) {
         return NextResponse.rewrite(new URL("/__not-found", req.url), { status: 404 });
       }
     }

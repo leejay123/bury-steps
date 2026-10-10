@@ -6,7 +6,7 @@ import { guardForm } from "@/lib/safe-action";
 import { revalidatePath, revalidateTag } from "@/lib/revalidate";
 import { CONTACT_MESSAGES_OWNER_TAG } from "@/lib/contact-messages-owner";
 import { clerkClient } from "@clerk/nextjs/server";
-import { setClerkRole } from "@/lib/clerk-role";
+import { syncClerkRoleFor } from "@/lib/clerk-role";
 import type { Prisma } from "@prisma/client";
 import { requireAdmin, displayName, getOptionalUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -541,10 +541,9 @@ async function setMemberRoleWork(
     return logActionError("setMemberRole", err, "Could not change their role. Try again.");
   }
 
-  // Their sign-in token carries their role too (see clerk-role.ts). Read back,
-  // since an invite (instead of a promotion) leaves them a member for now.
-  const finalRole = (await prisma.user.findUnique({ where: { id: target.id }, select: { role: true } }))?.role;
-  if (finalRole) await setClerkRole(target.clerkId, finalRole);
+  // Their sign-in token carries their access too (see clerk-role.ts); read
+  // back from the database, since an invite leaves them a member for now.
+  await syncClerkRoleFor([target.id]);
 
   if (role === "ADMIN") {
     await sendAdminPromotedEmail(target).catch((err) => {
@@ -632,6 +631,9 @@ async function transferOwnershipWork(
     return logActionError("transferOwnership", err, "Could not transfer ownership. Try again.");
   }
 
+  // Their sign-in tokens carry who is an owner too (see clerk-role.ts).
+  await syncClerkRoleFor([target.id, admin.id]);
+
   revalidatePath("/admin/members");
   revalidatePath(`/admin/members/${target.id}`);
   revalidatePath(`/admin/members/${admin.id}`);
@@ -694,6 +696,9 @@ async function addOwnerWork(_prev: ActionResult | null, formData: FormData): Pro
     return logActionError("addOwner", err, "Could not add them as an owner. Try again.");
   }
 
+  // Their sign-in tokens carry who is an owner too (see clerk-role.ts).
+  await syncClerkRoleFor([target.id]);
+
   revalidatePath("/admin/members");
   revalidatePath(`/admin/members/${target.id}`);
   revalidatePath("/", "layout");
@@ -754,6 +759,9 @@ async function removeOwnerWork(
     }
     return logActionError("removeOwner", err, "Could not remove their owner access. Try again.");
   }
+
+  // Their sign-in tokens carry who is an owner too (see clerk-role.ts).
+  await syncClerkRoleFor([target.id]);
 
   revalidatePath("/admin/members");
   revalidatePath(`/admin/members/${target.id}`);
@@ -945,8 +953,8 @@ async function acceptOrganiserInviteWork(
     return logActionError("acceptOrganiserInvite", err, "Could not accept the invite. Try again.");
   }
 
-  // Their sign-in token carries their role too (see clerk-role.ts).
-  await setClerkRole(target.clerkId, "ADMIN");
+  // Their sign-in token carries their access too (see clerk-role.ts).
+  await syncClerkRoleFor([target.id]);
 
   await sendAdminPromotedEmail(target).catch((err) => {
     console.error("acceptOrganiserInvite: failed to send admin-promoted confirmation email", err);

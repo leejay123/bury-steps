@@ -1,24 +1,13 @@
 import type { Metadata } from "next";
-import { getOptionalUser, requireAdmin } from "@/lib/auth";
 import { PAGE_X_BLEED } from "@/lib/page-x";
 
-// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
-// Remove this opt-out after verifying the segment passes validation without it.
-// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
-export const instant = false;
+// Only organisers reach these pages: proxy.ts answers "page not found" for
+// anyone else (from the role in their sign-in token, see clerk-role.ts),
+// and every page still checks the database itself before showing anything
+// of its own. So this frame no longer waits for that check, and each
+// page's ready-made parts (title, description, placeholder) show at once.
+export const metadata: Metadata = { title: "Admin", robots: { index: false, follow: false } };
 
-// Everyone else gets the same tab title as any missing page (the site's
-// name) — "Admin" told members and visitors that something lives here.
-export async function generateMetadata(): Promise<Metadata> {
-  const user = await getOptionalUser();
-  const robots = { index: false, follow: false };
-  return user?.role === "ADMIN" ? { title: "Admin", robots } : { robots };
-}
-
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  await requireAdmin();
-
-  return (
-    <div className={`-mt-6 -mb-6 flex flex-col print:m-0 ${PAGE_X_BLEED}`}>{children}</div>
-  );
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return <div className={`-mt-6 -mb-6 flex flex-col print:m-0 ${PAGE_X_BLEED}`}>{children}</div>;
 }
