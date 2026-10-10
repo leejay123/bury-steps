@@ -9,7 +9,9 @@ import {
   BOTTOM_BAR_TABS,
   MENU_FILLED_COOKIE,
   NAV_COOKIE,
+  SEARCH_COOKIE,
   safeNext,
+  showsHeaderSearch,
 } from "@/lib/remembered-nav";
 
 /** Same lifetime as writeClientCookie, so these behave like the ones the browser saves. */
@@ -49,5 +51,6 @@ export async function GET(req: NextRequest) {
   response.cookies.set(NAV_COOKIE, JSON.stringify(items), options);
   response.cookies.set(BAR_COOKIE, JSON.stringify(items.slice(0, BOTTOM_BAR_TABS)), options);
   response.cookies.set(AVATAR_COOKIE, initial, options);
+  if (showsHeaderSearch(user)) response.cookies.set(SEARCH_COOKIE, "1", options);
   return response;
 }

@@ -108,11 +108,10 @@ export function PrivacySiteSection() {
               so the one you tap stays in view. On a phone, the menu icon (two lines) at the top left opens every page
               in a large list that starts right under the header, over a heavy blur of the page
               behind (no white tint), and the page behind stays still until you
-              close it or pick a page. Signed-in people also get a <strong>search</strong> next to the
-              bell (a search bar on a computer, a magnifying-glass icon on a phone or tablet, or
+              close it or pick a page. The <strong>owner</strong> also gets a <strong>search</strong> next to the
+              bell (members and other organisers don’t see it) (a search bar on a computer, a magnifying-glass icon on a phone or tablet, or
               ⌘K on a Mac / Ctrl+K elsewhere), that finds
-              pages, walks, notices and FAQs — organisers also find the settings their permissions
-              allow. It opens on the main pages; type to see up to five matches per section, split into
+              pages, walks, notices and FAQs, and the settings pages. It opens on the main pages; type to see up to five matches per section, split into
               upcoming and recent walks, notices, FAQs by category, and settings by area. Walks show
               just their name and are found by their name only — not by date, time or meeting point. Moving between pages, the new page fades in quickly (under a fifth of a second)
               while the header stays still — the old page stays up until the new one is ready, so

@@ -23,6 +23,14 @@ export function avatarImageSrc(raw: string | undefined | null): string | null {
   return `${url}?width=160`;
 }
 
+/** "1" when the header shows the site search (owners only), so a refresh draws it or leaves it out at once. */
+export const SEARCH_COOKIE = "bs-search";
+
+/** Only owners get the site search in the header; members and organisers don't. */
+export function showsHeaderSearch(user: { isOwner?: boolean | null } | null | undefined): boolean {
+  return user?.isOwner === true;
+}
+
 /** Phone bottom-bar tabs last shown, so a refresh can draw that bar at once. */
 export const BAR_COOKIE = "bs-bar";
 

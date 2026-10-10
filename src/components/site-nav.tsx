@@ -11,7 +11,9 @@ import {
   AVATAR_IMAGE_COOKIE,
   BOTTOM_BAR_TABS,
   NAV_COOKIE,
+  SEARCH_COOKIE,
   avatarImageSrc,
+  showsHeaderSearch,
   parseRememberedNav,
   type RememberedNavItem,
 } from "@/lib/remembered-nav";
@@ -46,8 +48,9 @@ export async function SiteNavSlot() {
   const items = parseRememberedNav(jar.get(NAV_COOKIE)?.value);
   const initial = (jar.get(AVATAR_COOKIE)?.value ?? "").slice(0, 1);
   const image = avatarImageSrc(jar.get(AVATAR_IMAGE_COOKIE)?.value);
+  const search = jar.get(SEARCH_COOKIE)?.value === "1";
   return (
-    <Suspense fallback={<SiteNavFallback image={image} initial={initial} items={items} />}>
+    <Suspense fallback={<SiteNavFallback image={image} initial={initial} items={items} search={search} />}>
       <SiteNav />
     </Suspense>
   );
@@ -57,10 +60,13 @@ export function SiteNavFallback({
   image = null,
   initial = "",
   items = [],
+  search = false,
 }: {
   image?: string | null;
   initial?: string;
   items?: RememberedNavItem[];
+  /** Owners only — see showsHeaderSearch. */
+  search?: boolean;
 }) {
   // Nothing remembered (signed out): the ready-made Sign in / Join copy from
   // HeaderBootScript is already in those grid cells, so add nothing here.
@@ -74,7 +80,7 @@ export function SiteNavFallback({
         className={`flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3 ${RIGHT_CLUSTER}`}
         data-nav-ready=""
       >
-        <SiteSearchBar />
+        {search ? <SiteSearchBar /> : null}
         <BellPlaceholder />
         <AvatarPlaceholder image={image} initial={initial} />
       </div>
@@ -104,9 +110,11 @@ export async function SiteNav() {
   // so nothing waits for Clerk's browser bundle before appearing.
   const initial = user ? (user.firstName || user.email || "?").charAt(0) : null;
   const image = user ? avatarImageSrc((await cookies()).get(AVATAR_IMAGE_COOKIE)?.value) : null;
+  // The site search (bar, ⌘K) is for owners only.
+  const search = showsHeaderSearch(user);
   return (
     <>
-      <RememberHeader initial={initial} />
+      <RememberHeader initial={initial} search={search} />
       <div className="hidden min-w-0 items-center justify-center md:flex" data-nav-ready="">
         {user ? (
           <SiteNavLinks
@@ -123,10 +131,12 @@ export async function SiteNav() {
       >
         {user ? (
           <>
-            <HeaderPartBoundary name="search">
-              <SiteSearchBar />
-              <SiteSearchDialog />
-            </HeaderPartBoundary>
+            {search ? (
+              <HeaderPartBoundary name="search">
+                <SiteSearchBar />
+                <SiteSearchDialog />
+              </HeaderPartBoundary>
+            ) : null}
             <HeaderPartBoundary name="bell">
               <Suspense fallback={<BellPlaceholder />}>
                 <SiteNavBell firstName={user.firstName} userId={user.id} />

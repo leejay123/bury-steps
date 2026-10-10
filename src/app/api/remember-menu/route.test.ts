@@ -36,6 +36,7 @@ describe("remember-menu", () => {
     expect(JSON.parse(cookieFromHeader(set, "bs-bar")!)).toHaveLength(4);
     expect(cookieFromHeader(set, "bs-av")).toBe("L");
     expect(cookieFromHeader(set, "bs-menu-filled")).toBe("1");
+    expect(cookieFromHeader(set, "bs-search")).toBe("1");
     // The server reads it back the same way it reads browser-written ones.
     const raw = set.find((c) => c.startsWith("bs-nav="))!.slice(7).split(";")[0];
     expect(parseRememberedNav(raw)).toEqual(nav);
@@ -43,8 +44,11 @@ describe("remember-menu", () => {
 
   it("saves a member's menu", async () => {
     getOptionalUser.mockResolvedValue({ role: "MEMBER", isOwner: false, firstName: "Ann", email: "a@b.c" });
-    const nav = JSON.parse(cookieFromHeader((await call("/")).headers.getSetCookie(), "bs-nav")!);
+    const set = (await call("/")).headers.getSetCookie();
+    const nav = JSON.parse(cookieFromHeader(set, "bs-nav")!);
     expect(nav.map((i: { label: string }) => i.label)).toEqual(["Home", "Walks", "Notices", "Progress", "History"]);
+    // Search is for owners only.
+    expect(cookieFromHeader(set, "bs-search")).toBeUndefined();
   });
 
   it("only marks the visit when nobody is signed in, so it never loops", async () => {
