@@ -34,7 +34,7 @@ export function ShareLinkButton({ url }: { url: string }) {
   return (
     <CopyButton
       // w-auto: the copy button is a fixed square unless told otherwise.
-      className="h-9 w-auto gap-1.5 px-3 text-sm font-medium whitespace-nowrap"
+      className="h-8 w-full gap-1.5 px-3 text-sm font-medium whitespace-nowrap sm:w-auto"
       content={url}
       copiedLabel="Link copied"
       delay={2000}

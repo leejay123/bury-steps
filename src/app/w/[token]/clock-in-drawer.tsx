@@ -44,11 +44,8 @@ export function ClockInDrawer({
       variant="form"
     >
       <DrawerTrigger asChild>
-        <Button
-          className={compact ? undefined : "w-full sm:w-auto sm:min-w-48 sm:self-start"}
-          size={compact ? "default" : "lg"}
-          type="button"
-        >
+        {/* The same size as the page's other buttons; full width on a phone. */}
+        <Button className={compact ? "w-full sm:w-auto" : "w-full sm:w-auto sm:self-start"} size="sm" type="button">
           Clock in
         </Button>
       </DrawerTrigger>

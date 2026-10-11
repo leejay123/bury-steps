@@ -145,7 +145,7 @@ export function WalkTabsLayout({
       {variant === "strip" ? (
         <div className="flex flex-col gap-3">
           {live}
-          <div className="flex flex-wrap items-start gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start">
             {share}
             {tools}
           </div>
@@ -158,14 +158,15 @@ export function WalkTabsLayout({
         {variant === "sticky" ? (
           <>
             {/* Stays under the site's menu as you scroll (position: sticky,
-                offset by the menu's own height, measured). */}
+                offset by the menu's own height, measured). No box around it:
+                just the page's background, so the tabs read as tabs. */}
             <div
-              className="sticky z-20 flex flex-col gap-2 rounded-xl border bg-background p-2 shadow-[0_6px_18px_-8px_rgb(0_0_0/0.25)] sm:flex-row sm:items-center sm:justify-between"
-              style={{ top: headerHeight + 8 }}
+              className="sticky z-20 flex flex-col gap-2 bg-background py-2 sm:flex-row sm:items-center sm:justify-between"
+              style={{ top: headerHeight }}
             >
               {list}
               {share || liveCompact ? (
-                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:shrink-0 sm:flex-row sm:items-center">
                   {share}
                   {liveCompact}
                 </div>
@@ -264,7 +265,7 @@ function StatusBox({
           {line}
         </span>
       </div>
-      <div className="flex flex-wrap items-center gap-2 empty:hidden">{children}</div>
+      <div className="flex flex-col gap-2 empty:hidden sm:flex-row sm:flex-wrap sm:items-center">{children}</div>
     </section>
   );
 }
