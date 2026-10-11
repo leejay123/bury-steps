@@ -466,10 +466,12 @@ async function WalkDetailPageContent({ id }: { id: string }) {
 
   if (isWalkTabsVariant(theme.walkPageLayout)) {
     const shareUrl = walkShareUrl(appUrl(), { token: walk.token, slug });
+    const headerHasButton = theme.walkHeaderStyle !== "standard";
     const clockIn = (compact: boolean) =>
       walk.cancelledAt ? null : (
         <SelfClockInPanel
           alreadyClockedInAt={mine?.clockedInAt.toISOString() ?? null}
+          buttonElsewhere={!compact && headerHasButton}
           clockedOutAt={mine?.clockedOutAt?.toISOString() ?? null}
           compact={compact}
           durationMins={walk.durationMins}
@@ -512,9 +514,11 @@ async function WalkDetailPageContent({ id }: { id: string }) {
               </CardContent>
             </Card>
           }
+          headerStyle={theme.walkHeaderStyle}
           headline={{
             cancelledAt: walk.cancelledAt?.toISOString() ?? null,
             distance: walk.distance,
+            elevationGain: walk.elevationGain,
             durationMins: walk.durationMins,
             endedAt: walk.endedAt?.toISOString() ?? null,
             grade: walk.grade,

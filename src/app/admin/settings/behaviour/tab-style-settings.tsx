@@ -23,7 +23,7 @@ export function TabStyleSettings({ style }: { style: TabStyle }) {
 
   return (
     <SettingsSection
-      description="How every tab bar on the site looks — Upcoming and All walks on Walks, the walk page's tabs, and the rest. Underline is the shadcn-space tabs-05 style: a line under the chosen tab that slides across, a soft highlight under the pointer, and the tab's content sliding in from that side."
+      description="How every tab bar on the site looks — Upcoming and All walks on Walks, the walk page's tabs, and the rest. Underline is the shadcn-space tabs-05 style: a line under the chosen tab that slides across, and the tab's content sliding in from that side."
       title="Tabs"
     >
       <div className="flex w-full flex-col gap-1.5">

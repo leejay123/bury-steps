@@ -2,21 +2,12 @@
 
 import { useEffect, useState, type ComponentProps, type ReactNode } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { useWalkClock } from "@/hooks/use-walk-clock";
-import { formatTime, formatWalkDay } from "@/lib/dates";
 import { cn } from "@/lib/utils";
-import { effectiveEndsAt, walkOpensAt, walkStatus } from "@/lib/walk-window";
-import type { WalkTabsVariant } from "@/lib/walk-page-sections";
+import type { WalkHeaderStyle, WalkTabsVariant } from "@/lib/walk-page-sections";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WalkHeadline } from "@/components/walk-headline";
-
-type WalkTiming = {
-  cancelledAt: string | null;
-  durationMins: number;
-  endedAt: string | null;
-  startsAt: string;
-};
+import { WalkHeader, useWalkNow, type WalkTiming } from "@/components/walk-header-styles";
 
 /**
  * The one-column walk page layouts with tabs (Settings → Site wording →
@@ -34,10 +25,16 @@ type WalkTiming = {
  *
  * Tabs: Overview, Map & weather, Attended (organisers), Journey (when there
  * is one). They follow Settings → Site behaviour → Tabs like every tab bar.
+ *
+ * With a Header style other than Standard (walk-header-styles.tsx), the
+ * title and every control of the walk go to the top in that style, and the
+ * layout's own spots for them (A's row, B's bar, C's box, D's Manage) stay
+ * empty, so nothing shows twice.
  */
 export function WalkTabsLayout({
   attended,
   details,
+  headerStyle,
   headline,
   journey,
   live,
@@ -55,6 +52,7 @@ export function WalkTabsLayout({
   attended: { label: string; count: number | null; content: ReactNode } | null;
   /** The walk's facts and description (Overview). */
   details: ReactNode;
+  headerStyle: WalkHeaderStyle;
   /** The title line (WalkHeadline); D adds its Manage walk button to it. */
   headline: Omit<ComponentProps<typeof WalkHeadline>, "action">;
   journey: { count: number; content: ReactNode } | null;
@@ -75,6 +73,11 @@ export function WalkTabsLayout({
   what3words: string | null;
 }) {
   const [tab, setTab] = useState("overview");
+  // A header style puts every control at the top; the layout's own spots stay empty.
+  const custom = headerStyle !== "standard";
+  const layoutShare = custom ? null : share;
+  const layoutCompact = custom ? null : liveCompact;
+  const layoutTools = custom ? null : tools;
   const [manageOpen, setManageOpen] = useState(false);
   const headerHeight = useSiteHeaderHeight(variant === "sticky");
 
@@ -111,7 +114,7 @@ export function WalkTabsLayout({
   );
 
   const manage =
-    variant === "tiles" && (share || tools) ? (
+    variant === "tiles" && (layoutShare || layoutTools) ? (
       <Button
         aria-expanded={manageOpen}
         onClick={() => setManageOpen((open) => !open)}
@@ -127,32 +130,47 @@ export function WalkTabsLayout({
     <div className="flex flex-col gap-6">
       {variant === "status" ? (
         <StatusBox timing={timing} clockedIn={attended?.count ?? null}>
-          {share}
-          {liveCompact}
+          {layoutShare}
+          {layoutCompact}
         </StatusBox>
       ) : null}
 
       {notices}
-      <WalkHeadline {...headline} action={manage} />
+      {custom ? (
+        <WalkHeader
+          clockedIn={attended?.count ?? null}
+          headline={headline}
+          liveCompact={liveCompact}
+          share={share}
+          style={headerStyle}
+          timing={timing}
+          tools={tools}
+          what3words={what3words}
+        />
+      ) : (
+        <WalkHeadline {...headline} action={manage} />
+      )}
 
       {variant === "tiles" && manageOpen ? (
         <div className="flex flex-col gap-3 rounded-lg border p-4">
-          {share}
-          {tools}
+          {layoutShare}
+          {layoutTools}
         </div>
       ) : null}
 
       {variant === "strip" ? (
         <div className="flex flex-col gap-3">
           {live}
-          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start">
-            {share}
-            {tools}
-          </div>
+          {layoutShare || layoutTools ? (
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start">
+              {layoutShare}
+              {layoutTools}
+            </div>
+          ) : null}
         </div>
       ) : null}
 
-      {variant === "status" && tools ? tools : null}
+      {variant === "status" && layoutTools ? layoutTools : null}
 
       <Tabs onValueChange={setTab} value={tab}>
         {variant === "sticky" ? (
@@ -165,14 +183,14 @@ export function WalkTabsLayout({
               style={{ top: headerHeight }}
             >
               {list}
-              {share || liveCompact ? (
+              {layoutShare || layoutCompact ? (
                 <div className="flex w-full flex-col gap-2 sm:w-auto sm:shrink-0 sm:flex-row sm:items-center">
-                  {share}
-                  {liveCompact}
+                  {layoutShare}
+                  {layoutCompact}
                 </div>
               ) : null}
             </div>
-            {tools ? <div className="mt-2">{tools}</div> : null}
+            {layoutTools ? <div className="mt-2">{layoutTools}</div> : null}
           </>
         ) : (
           list
@@ -218,42 +236,7 @@ function StatusBox({
   clockedIn: number | null;
   timing: WalkTiming;
 }) {
-  const now = useWalkClock(timing);
-  const walk = {
-    cancelledAt: timing.cancelledAt ? new Date(timing.cancelledAt) : null,
-    durationMins: timing.durationMins,
-    endedAt: timing.endedAt ? new Date(timing.endedAt) : null,
-    startsAt: new Date(timing.startsAt),
-  };
-  const status = walkStatus(walk, now);
-  const opensAt = walkOpensAt(walk.startsAt);
-  const count = clockedIn === null ? "" : ` · ${clockedIn} clocked in`;
-  const { eyebrow, line, tone } =
-    status === "cancelled"
-      ? { eyebrow: "Cancelled", line: "This walk isn't going ahead", tone: "bg-destructive/10 text-destructive" }
-      : status === "upcoming"
-        ? {
-            eyebrow: "Upcoming",
-            line: `Clock-in opens at ${formatTime(opensAt)} on ${formatWalkDay(opensAt, now)}`,
-            tone: "bg-muted text-foreground",
-          }
-        : status === "starting-soon"
-          ? {
-              eyebrow: "Clock-in open",
-              line: `Starts at ${formatTime(walk.startsAt)}${count}`,
-              tone: "bg-emerald-50 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-50",
-            }
-          : status === "in-progress"
-            ? {
-                eyebrow: "In progress",
-                line: `Finishes at ${formatTime(effectiveEndsAt(walk))}${count}`,
-                tone: "bg-emerald-50 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-50",
-              }
-            : {
-                eyebrow: "Finished",
-                line: clockedIn === null ? "This walk has finished" : `${clockedIn} attended`,
-                tone: "bg-muted text-foreground",
-              };
+  const { eyebrow, line, tone } = useWalkNow(timing, clockedIn);
   return (
     <section
       aria-label="What's happening now"

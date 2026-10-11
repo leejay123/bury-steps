@@ -22,8 +22,6 @@ type UnderlineState = {
   /** Unique per Tabs, so two tab bars on one page don't share a sliding line. */
   id: string;
   active: string | undefined;
-  hovered: string | null;
-  setHovered: (value: string | null) => void;
   /** 1: the new tab is right of the old one (its content slides in from the right); -1: left. */
   direction: 1 | -1;
   /** Only after someone changes tab — the first tab doesn't slide in on page load. */
@@ -43,7 +41,6 @@ function Tabs({
   const id = React.useId();
   const rootRef = React.useRef<HTMLDivElement>(null);
   const [own, setOwn] = React.useState(defaultValue);
-  const [hovered, setHovered] = React.useState<string | null>(null);
   const [direction, setDirection] = React.useState<1 | -1>(1);
   const [changed, setChanged] = React.useState(false);
   const active = value ?? own;
@@ -63,8 +60,8 @@ function Tabs({
   );
 
   const underline = React.useMemo<UnderlineState | null>(
-    () => (style === "underline" ? { id, active, hovered, setHovered, direction, changed } : null),
-    [style, id, active, hovered, direction, changed],
+    () => (style === "underline" ? { id, active, direction, changed } : null),
+    [style, id, active, direction, changed],
   );
 
   return (
@@ -83,7 +80,7 @@ function Tabs({
   );
 }
 
-function TabsList({ className, onMouseLeave, ...props }: React.ComponentProps<typeof TabsPrimitive.List>) {
+function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.List>) {
   const underline = React.useContext(UnderlineContext);
   return (
     <TabsPrimitive.List
@@ -94,10 +91,6 @@ function TabsList({ className, onMouseLeave, ...props }: React.ComponentProps<ty
         className,
       )}
       data-slot="tabs-list"
-      onMouseLeave={(event) => {
-        underline?.setHovered(null);
-        onMouseLeave?.(event);
-      }}
       {...props}
     />
   );
@@ -106,7 +99,6 @@ function TabsList({ className, onMouseLeave, ...props }: React.ComponentProps<ty
 function TabsTrigger({
   children,
   className,
-  onMouseEnter,
   value,
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
@@ -139,27 +131,11 @@ function TabsTrigger({
       )}
       data-slot="tabs-trigger"
       data-value={value}
-      onMouseEnter={(event) => {
-        underline.setHovered(value);
-        onMouseEnter?.(event);
-      }}
       value={value}
       {...props}
     >
-      {/* The hover highlight covers the words only, not the line underneath. */}
-      <span className="relative z-10 flex items-center gap-1.5 rounded-md px-4 py-3">
-        {underline.hovered === value ? (
-          <motion.span
-            animate={{ opacity: 1 }}
-            className="pointer-events-none absolute inset-0 rounded-md bg-muted/70"
-            exit={{ opacity: 0 }}
-            initial={{ opacity: 0 }}
-            layoutId={`${underline.id}-hover`}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
-          />
-        ) : null}
-        <span className="relative z-10 flex items-center gap-1.5">{children}</span>
-      </span>
+      {/* No hover background: only the words darken under the pointer. */}
+      <span className="flex items-center gap-1.5 px-4 py-3">{children}</span>
       {isActive ? (
         <motion.span
           className="absolute right-0 bottom-[-1px] left-0 h-[2px] bg-primary"

@@ -5,27 +5,7 @@ import { formatTime, formatWalkDay, formatWalkLength } from "@/lib/dates";
 import { meetingPointLabel } from "@/lib/geocode";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 
-/**
- * The walk's name, status and the key facts on one line ("Sun 11 Oct ·
- * 13:45 · 1 hour 30 minutes · M45 7QJ · 2 · Easy · Led by D Henry"), for
- * the one-column tabbed walk page layouts (walk-tabs-layout.tsx), where the
- * full fact tiles sit in the Overview tab. In the browser, because the day
- * ("Today", "Tomorrow") depends on the clock.
- */
-export function WalkHeadline({
-  action,
-  cancelledAt,
-  distance,
-  durationMins,
-  endedAt,
-  grade,
-  location,
-  note,
-  postcode,
-  startsAt,
-  title,
-  walkLeader,
-}: {
+export type WalkHeadlineProps = {
   /** Beside the title on a computer, under it on a phone (D's Manage walk). */
   action?: ReactNode;
   cancelledAt: string | null;
@@ -40,17 +20,42 @@ export function WalkHeadline({
   startsAt: string;
   title: string;
   walkLeader: string | null;
-}) {
-  const start = new Date(startsAt);
-  const facts = [
+  /** Only shown by the H2 header's key facts (walk-header-styles.tsx). */
+  elevationGain?: string | null;
+};
+
+/** The facts, in order, as short bits of text: day, time, length, meeting point, distance, grade, leader. */
+export function walkHeadlineFacts(walk: Omit<WalkHeadlineProps, "action" | "note" | "title">): string[] {
+  const start = new Date(walk.startsAt);
+  return [
     formatWalkDay(start),
     formatTime(start),
-    formatWalkLength(durationMins),
-    meetingPointLabel(location, postcode),
-    distance,
-    grade,
-    walkLeader ? `Led by ${walkLeader}` : null,
-  ].filter(Boolean);
+    formatWalkLength(walk.durationMins),
+    meetingPointLabel(walk.location, walk.postcode),
+    walk.distance,
+    walk.grade,
+    walk.walkLeader ? `Led by ${walk.walkLeader}` : null,
+  ].filter((fact): fact is string => Boolean(fact));
+}
+
+/**
+ * The walk's name, status and the key facts on one line ("Sun 11 Oct ·
+ * 13:45 · 1 hour 30 minutes · M45 7QJ · 2 · Easy · Led by D Henry"), for
+ * the one-column tabbed walk page layouts (walk-tabs-layout.tsx), where the
+ * full fact tiles sit in the Overview tab. In the browser, because the day
+ * ("Today", "Tomorrow") depends on the clock.
+ */
+export function WalkHeadline({
+  action,
+  cancelledAt,
+  durationMins,
+  endedAt,
+  note,
+  startsAt,
+  title,
+  ...walk
+}: WalkHeadlineProps) {
+  const facts = walkHeadlineFacts({ cancelledAt, durationMins, endedAt, startsAt, ...walk });
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">

@@ -356,9 +356,11 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
               {visibleSections.some(({ id }) => id === "before") ? renderSection("before") : null}
             </>
           }
+          headerStyle={theme.walkHeaderStyle}
           headline={{
             cancelledAt: cancelledAtIso,
             distance: walk.distance,
+            elevationGain: walk.elevationGain,
             durationMins: walk.durationMins,
             endedAt: endedAtIso,
             grade: walk.grade,

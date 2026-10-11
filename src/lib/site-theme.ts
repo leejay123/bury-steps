@@ -5,8 +5,10 @@ import { parseSliderHeroWords, type SliderHeroWords } from "@/lib/hero-style";
 import { DEFAULT_TEXT_SIZES, parseTextSize, type TextSizes } from "@/lib/text-sizes";
 import { cacheLife, cacheTag } from "next/cache";
 import {
+  parseWalkHeaderStyle,
   parseWalkPageLayout,
   parseWalkPageSections,
+  type WalkHeaderStyle,
   type WalkPageLayout,
   type WalkPageSection,
 } from "@/lib/walk-page-sections";
@@ -149,6 +151,8 @@ export type SiteTheme = {
   walkPageSections: WalkPageSection[];
   /** Walk pages: one column, or two columns with tabs — see walk-page-sections.ts. */
   walkPageLayout: WalkPageLayout;
+  /** Walk pages with tabs: the header and controls style — see walk-page-sections.ts. */
+  walkHeaderStyle: WalkHeaderStyle;
   /** Every tab bar on the site — see tab-style.ts. */
   tabStyle: TabStyle;
   howWalksWorkSteps: AboutRule[];
@@ -229,6 +233,7 @@ export function defaultTheme(): SiteTheme {
     howWalksWorkEnabled: true,
     walkPageSections: parseWalkPageSections(null),
     walkPageLayout: "classic",
+    walkHeaderStyle: "standard",
     tabStyle: "standard",
     howWalksWorkSteps: DEFAULT_HOW_WALKS_WORK_STEPS.map((step) => ({ ...step })),
     howWalksWorkStepsText: DEFAULT_HOW_WALKS_WORK_STEPS_TEXT,
@@ -300,6 +305,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       howWalksWorkEnabled: true,
       walkPageSections: true,
       walkPageLayout: true,
+      walkHeaderStyle: true,
       tabStyle: true,
       howWalksWorkSteps: true,
       homepageSectionOrder: true,
@@ -413,6 +419,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     howWalksWorkEnabled: row?.howWalksWorkEnabled ?? true,
     walkPageSections: parseWalkPageSections(row?.walkPageSections),
     walkPageLayout: parseWalkPageLayout(row?.walkPageLayout),
+    walkHeaderStyle: parseWalkHeaderStyle(row?.walkHeaderStyle),
     tabStyle: parseTabStyle(row?.tabStyle),
     howWalksWorkSteps,
     howWalksWorkStepsText: row?.howWalksWorkSteps?.trim()

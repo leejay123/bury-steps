@@ -62,3 +62,18 @@ export function parseWalkPageLayout(value: string | null | undefined): WalkPageL
 export function isWalkTabsVariant(layout: WalkPageLayout): layout is WalkTabsVariant {
   return layout !== "classic" && layout !== "columns";
 }
+
+/**
+ * The title and the walk's controls at the top of the tabbed layouts (A to
+ * D): "standard" (the title line; controls where the layout puts them),
+ * "buttons" (H1, the controls beside the title, the rest under ⋯ More),
+ * "toolbar" (H2, a bar of controls above a big title and four key facts),
+ * "band" (H3, a box with a coloured status band and one Manage menu) or
+ * "grouped" (H4, the controls in two boxes: You, and Organise this walk).
+ */
+export const WALK_HEADER_STYLES = ["standard", "buttons", "toolbar", "band", "grouped"] as const;
+export type WalkHeaderStyle = (typeof WALK_HEADER_STYLES)[number];
+
+export function parseWalkHeaderStyle(value: string | null | undefined): WalkHeaderStyle {
+  return (WALK_HEADER_STYLES as readonly string[]).includes(value ?? "") ? (value as WalkHeaderStyle) : "standard";
+}

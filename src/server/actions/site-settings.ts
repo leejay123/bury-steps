@@ -2,7 +2,12 @@
 
 import { z } from "zod";
 import { parseTabStyle } from "@/lib/tab-style";
-import { parseWalkPageLayout, parseWalkPageSections, serializeWalkPageSections } from "@/lib/walk-page-sections";
+import {
+  parseWalkHeaderStyle,
+  parseWalkPageLayout,
+  parseWalkPageSections,
+  serializeWalkPageSections,
+} from "@/lib/walk-page-sections";
 import { guardArgs, guardForm } from "@/lib/safe-action";
 
 import { serializeAnnouncementPages } from "@/lib/announcement-pages";
@@ -1973,6 +1978,32 @@ async function updateTabStyleWork(_prev: ActionResult | null, formData: FormData
   };
 }
 export const updateTabStyle = guardForm("organiser", pass, readPass, updateTabStyleWork);
+
+/** Walk pages with tabs: the header and controls style (walk-page-sections.ts). */
+async function updateWalkHeaderStyleWork(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  const style = parseWalkHeaderStyle(String(formData.get("walkHeaderStyle") ?? ""));
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, walkHeaderStyle: style },
+      update: { walkHeaderStyle: style },
+    });
+  } catch (err) {
+    return logActionError("updateWalkHeaderStyle", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings/site-wording/walk-page-cards");
+  return { ok: true, message: "Walk page header saved." };
+}
+export const updateWalkHeaderStyle = guardForm("organiser", pass, readPass, updateWalkHeaderStyleWork);
 
 /** Walk pages: one column or two (walk-page-sections.ts, WalkPageLayout). */
 async function updateWalkPageLayoutWork(

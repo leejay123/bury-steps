@@ -126,7 +126,12 @@ export function WalksSection({
               now (for example Clock-in open, starts at 13:45, 3 clocked in) with the main
               buttons; <strong>D</strong> has a Manage walk button by the title for the walk&apos;s
               buttons, and Overview shows summary boxes (Attended, Meeting point, Weather,
-              Journey) that each open their tab. Switch back to One column at any time. Once the
+              Journey) that each open their tab. Under it, <strong>Header</strong> (for A to D)
+              chooses how the walk&apos;s name and controls are shown at the top: Standard; H1,
+              the controls beside the name with the rest under More; H2, a bar of controls above a
+              big name and four key facts; H3, a box with a coloured status band and one Manage
+              button; or H4, the controls in two boxes, You and Organise this walk. Switch back to
+              One column at any time. Once the
               walk is Completed, guests see that it has finished instead —
               no join prompt. Names of who is on the walk stay private.
             </li>

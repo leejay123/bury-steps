@@ -13,6 +13,7 @@ import { walkOpensAt, walkStatus, windowState } from "@/lib/walk-window";
  */
 export function SelfClockInPanel({
   alreadyClockedInAt,
+  buttonElsewhere = false,
   clockedOutAt = null,
   compact = false,
   durationMins,
@@ -24,6 +25,8 @@ export function SelfClockInPanel({
   token,
 }: {
   alreadyClockedInAt: string | null;
+  /** The Clock in button is shown elsewhere (a header style), so not here too. */
+  buttonElsewhere?: boolean;
   clockedOutAt?: string | null;
   /** Only the Clock in button, and only while it can be used. */
   compact?: boolean;
@@ -104,7 +107,7 @@ export function SelfClockInPanel({
     );
   }
 
-  if (state === "closed") return null;
+  if (state === "closed" || buttonElsewhere) return null;
 
   return (
     <div className="flex flex-col gap-4">
