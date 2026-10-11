@@ -2,7 +2,13 @@ import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { WalkPageColumns } from "@/components/walk-page-columns";
-import { WalkDetailsCardSkeleton, WalkSectionsSkeleton } from "@/components/walk-page-skeletons";
+import {
+  WalkDetailsCardSkeleton,
+  WalkHeadlineSkeleton,
+  WalkSectionsSkeleton,
+  WalkTabsSkeleton,
+} from "@/components/walk-page-skeletons";
+import { isWalkTabsVariant } from "@/lib/walk-page-sections";
 import { getSiteTheme } from "@/lib/site-theme";
 
 /**
@@ -18,6 +24,25 @@ export default function Loading() {
 
 export async function WalkLinkLoading() {
   const theme = await getSiteTheme();
+  if (isWalkTabsVariant(theme.walkPageLayout)) {
+    // A to D, the one-column layouts with tabs.
+    return (
+      <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6">
+        <span className="text-sm text-muted-foreground">
+          <Link className="hover:text-foreground" data-member-home="" href="/walks">
+            ← Walks
+          </Link>
+          <Link className="hover:text-foreground" data-guest-home="" href="/">
+            ← Home
+          </Link>
+        </span>
+        <WalkHeadlineSkeleton />
+        <WalkTabsSkeleton labels={[{ text: "Overview" }, { text: "Map & weather" }]}>
+          <WalkDetailsCardSkeleton organiser={false} />
+        </WalkTabsSkeleton>
+      </div>
+    );
+  }
   if (theme.walkPageLayout === "columns") {
     // The two-column layout (Settings → Walk page cards → Layout): the
     // details card, the sections under it, and Before you set off in the

@@ -14,6 +14,7 @@ import { walkOpensAt, walkStatus, windowState } from "@/lib/walk-window";
 export function SelfClockInPanel({
   alreadyClockedInAt,
   clockedOutAt = null,
+  compact = false,
   durationMins,
   emergencyContactName = "",
   emergencyContactPhone = "",
@@ -24,6 +25,8 @@ export function SelfClockInPanel({
 }: {
   alreadyClockedInAt: string | null;
   clockedOutAt?: string | null;
+  /** Only the Clock in button, and only while it can be used. */
+  compact?: boolean;
   durationMins: number;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
@@ -39,6 +42,21 @@ export function SelfClockInPanel({
   const state = windowState(start, durationMins, now, walk.endedAt);
   const completed = status === "completed";
   const leftEarly = Boolean(alreadyClockedInAt && clockedOutAt);
+
+  // Just the button, for a bar or banner (walk-tabs-layout.tsx): only while
+  // this organiser can clock in; the full panel elsewhere says the rest.
+  if (compact) {
+    const canClockIn = state === "open" && !completed && !(alreadyClockedInAt && !clockedOutAt);
+    return canClockIn ? (
+      <ClockInDrawer
+        compact
+        emergencyContactName={emergencyContactName}
+        emergencyContactPhone={emergencyContactPhone}
+        emergencyContactRequired={emergencyContactRequired}
+        token={token}
+      />
+    ) : null;
+  }
 
   if (alreadyClockedInAt && !clockedOutAt) {
     return (

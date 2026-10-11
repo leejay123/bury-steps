@@ -109,7 +109,7 @@ export function WalksSection({
               → <strong>Walk page layout</strong> (arrows to move, switches to show or hide), and
               applies to members&apos;, organisers&apos; and owners&apos; walk pages alike. The two
               cards&apos; wording is edited, or turned off, on the same page. At the top of that
-              page, <strong>One or two columns</strong> chooses how every walk&apos;s page is laid
+              page, <strong>Layout</strong> chooses how every walk&apos;s page is laid
               out, the same for members and organisers: <strong>One column</strong> (the original,
               everything stacked) or <strong>Two columns with tabs</strong>. With two columns, a
               computer shows the walk&apos;s details on the left with tabs under them (Map &amp;
@@ -117,8 +117,16 @@ export function WalksSection({
               has moments, for members), and a right-hand column that stays in view as you
               scroll: clock-in, the share link and the walk&apos;s buttons for organisers;
               clock-in, How this group works and Before you set off for members. On a phone it
-              is one column: the details, then that right-hand column, then the tabs. Switch
-              back to One column at any time. Once the
+              is one column: the details, then that right-hand column, then the tabs. Four
+              more are one column with tabs (Overview, Map &amp; weather, Attended for
+              organisers, and Journey): <strong>A</strong> puts a row of actions (clock-in, Copy
+              share link and the walk&apos;s buttons) under the title; <strong>B</strong> keeps the
+              tab bar, with Copy share link and Clock in at its end, at the top of the screen as
+              you scroll; <strong>C</strong> starts with a coloured box saying what&apos;s happening
+              now (for example Clock-in open, starts at 13:45, 3 clocked in) with the main
+              buttons; <strong>D</strong> has a Manage walk button by the title for the walk&apos;s
+              buttons, and Overview shows summary boxes (Attended, Meeting point, Weather,
+              Journey) that each open their tab. Switch back to One column at any time. Once the
               walk is Completed, guests see that it has finished instead —
               no join prompt. Names of who is on the walk stay private.
             </li>

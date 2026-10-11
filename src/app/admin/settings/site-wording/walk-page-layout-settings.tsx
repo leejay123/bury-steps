@@ -23,8 +23,8 @@ export function WalkPageLayoutSettings({ layout }: { layout: WalkPageLayout }) {
 
   return (
     <SettingsSection
-      description="How a walk's page is laid out when someone opens a walk — the same for members and organisers. Two columns keeps clock-in, the share link and the organiser buttons in view on a computer, and puts the map and weather, who attended and the journey in tabs, so there's less to scroll. Phones show it in one column, clock-in first."
-      title="One or two columns"
+      description="How a walk's page is laid out when someone opens a walk — the same for members and organisers. Two columns keeps clock-in, the share link and the organiser buttons in view on a computer, and puts the map and weather, who attended and the journey in tabs, so there's less to scroll. Phones show it in one column, clock-in first. A to D are one column with tabs: A puts a row of actions under the title; B keeps the tab bar at the top as you scroll; C starts with what's happening now; D shows summary boxes that open their tab."
+      title="Layout"
     >
       <div className="flex w-full flex-col gap-1.5">
         <Label htmlFor="walk-page-layout">Layout</Label>
@@ -42,7 +42,11 @@ export function WalkPageLayoutSettings({ layout }: { layout: WalkPageLayout }) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="classic">One column (original)</SelectItem>
-            <SelectItem value="columns">Two columns with tabs (new)</SelectItem>
+            <SelectItem value="columns">Two columns with tabs</SelectItem>
+            <SelectItem value="strip">A · One column, action strip + tabs</SelectItem>
+            <SelectItem value="sticky">B · One column, sticky tab bar</SelectItem>
+            <SelectItem value="status">C · One column, status first</SelectItem>
+            <SelectItem value="tiles">D · One column, summary tiles</SelectItem>
           </SelectContent>
         </Select>
       </div>

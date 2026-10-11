@@ -216,3 +216,18 @@ export function OrganiserWalkToolsSkeleton() {
     </>
   );
 }
+
+/** The title line of the one-column tabbed layouts (WalkHeadline): name and status, then the facts line. */
+export function WalkHeadlineSkeleton() {
+  return (
+    <div aria-hidden className="flex flex-col gap-2">
+      <div className="flex h-9 items-center gap-3">
+        <Skeleton className="h-7 w-72 max-w-full rounded-md" />
+        <Skeleton className="h-5 w-20 rounded-full" />
+      </div>
+      <div className="flex h-6 items-center">
+        <Skeleton className="h-4 w-96 max-w-full rounded-[4px]" />
+      </div>
+    </div>
+  );
+}

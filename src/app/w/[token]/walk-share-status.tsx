@@ -23,6 +23,7 @@ import { WalkFacts } from "@/components/walk-facts";
  */
 export function WalkShareStatusChrome({
   attended,
+  part = "all",
   backMarker,
   cancelledAt,
   cancelledReason = null,
@@ -44,6 +45,12 @@ export function WalkShareStatusChrome({
 }: {
   /** Whether this viewer clocked in; unknown on the shared page (see signedIn). */
   attended?: boolean;
+  /**
+   * The tabbed walk page layouts (walk-tabs-layout.tsx) place the notices
+   * and the details separately, and show the title on its own line:
+   * "notices" is just the notices; "details" is the card without its title.
+   */
+  part?: "all" | "notices" | "details";
   backMarker: string | null;
   cancelledAt: string | null;
   /** What the organiser typed when cancelling, if anything. */
@@ -124,53 +131,59 @@ export function WalkShareStatusChrome({
     </div>
   );
 
+  const notices =
+    status === "cancelled" ? (
+      <Alert variant="destructive">
+        <AlertTitle>This walk has been cancelled</AlertTitle>
+        <AlertDescription>
+          {cancelledReason?.trim() ? `${cancelledReason.trim().replace(/[.!]?$/, ".")} ` : ""}
+          Check the walks list for the next one.
+        </AlertDescription>
+      </Alert>
+    ) : signedIn === undefined ? (
+      <>
+        {guestNotice ? (
+          <div className="contents" data-guest-home="">
+            {guestNotice}
+          </div>
+        ) : null}
+        {memberNotice ? (
+          <div className="contents" data-member-home="">
+            {memberNotice}
+          </div>
+        ) : null}
+      </>
+    ) : signedIn ? (
+      (memberNotice ?? (closedNoClockIn ? closedNotice : null))
+    ) : (
+      guestNotice
+    );
+  if (part === "notices") return notices;
+
   return (
     <>
-      {status === "cancelled" ? (
-        <Alert variant="destructive">
-          <AlertTitle>This walk has been cancelled</AlertTitle>
-          <AlertDescription>
-            {cancelledReason?.trim() ? `${cancelledReason.trim().replace(/[.!]?$/, ".")} ` : ""}
-            Check the walks list for the next one.
-          </AlertDescription>
-        </Alert>
-      ) : signedIn === undefined ? (
-        <>
-          {guestNotice ? (
-            <div className="contents" data-guest-home="">
-              {guestNotice}
-            </div>
-          ) : null}
-          {memberNotice ? (
-            <div className="contents" data-member-home="">
-              {memberNotice}
-            </div>
-          ) : null}
-        </>
-      ) : signedIn ? (
-        (memberNotice ?? (closedNoClockIn ? closedNotice : null))
-      ) : (
-        guestNotice
-      )}
+      {part === "all" ? notices : null}
 
       <Card className="gap-4">
-        <CardHeader>
-          {/* Label beside the title from sm up; full width under it on phones. */}
-          <div className="flex w-full min-w-0 flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-            {/* The page's one <h1> (CardTitle is a div): screen readers and
-                search engines take the walk's name from it. */}
-            <h1 className="min-w-0 text-xl leading-none font-semibold" data-slot="card-title">
-              {title}
-            </h1>
-            <WalkStatusBadge
-              cancelledAt={cancelledAt}
-              className="max-sm:w-full max-sm:justify-center max-sm:py-1"
-              durationMins={durationMins}
-              endedAt={endedAt}
-              startsAt={startsAt}
-            />
-          </div>
-        </CardHeader>
+        {part === "details" ? null : (
+          <CardHeader>
+            {/* Label beside the title from sm up; full width under it on phones. */}
+            <div className="flex w-full min-w-0 flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              {/* The page's one <h1> (CardTitle is a div): screen readers and
+                  search engines take the walk's name from it. */}
+              <h1 className="min-w-0 text-xl leading-none font-semibold" data-slot="card-title">
+                {title}
+              </h1>
+              <WalkStatusBadge
+                cancelledAt={cancelledAt}
+                className="max-sm:w-full max-sm:justify-center max-sm:py-1"
+                durationMins={durationMins}
+                endedAt={endedAt}
+                startsAt={startsAt}
+              />
+            </div>
+          </CardHeader>
+        )}
         <CardContent className="flex flex-col gap-4">
           <WalkFacts
             backMarker={backMarker}

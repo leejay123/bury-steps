@@ -45,10 +45,20 @@ export function serializeWalkPageSections(sections: WalkPageSection[]): string {
  * the same for members and organisers: "classic" is one column, everything
  * stacked; "columns" puts the details and the sections (in tabs) on the
  * left and the clock-in, share link and organiser buttons in a right-hand
- * column that stays in view on a computer. Phones stack it in one column.
+ * column that stays in view on a computer. The rest are one column with
+ * tabs (walk-tabs-layout.tsx): "strip" (A, a row of actions under the
+ * title), "sticky" (B, a tab bar that stays at the top), "status" (C, what's
+ * happening now first) and "tiles" (D, summary boxes that open their tab).
  */
-export type WalkPageLayout = "classic" | "columns";
+export const WALK_PAGE_LAYOUTS = ["classic", "columns", "strip", "sticky", "status", "tiles"] as const;
+export type WalkPageLayout = (typeof WALK_PAGE_LAYOUTS)[number];
+/** The one-column-with-tabs designs. */
+export type WalkTabsVariant = Exclude<WalkPageLayout, "classic" | "columns">;
 
 export function parseWalkPageLayout(value: string | null | undefined): WalkPageLayout {
-  return value === "columns" ? "columns" : "classic";
+  return (WALK_PAGE_LAYOUTS as readonly string[]).includes(value ?? "") ? (value as WalkPageLayout) : "classic";
+}
+
+export function isWalkTabsVariant(layout: WalkPageLayout): layout is WalkTabsVariant {
+  return layout !== "classic" && layout !== "columns";
 }

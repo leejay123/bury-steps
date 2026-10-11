@@ -28,3 +28,24 @@ export function ShareLink({ url }: { url: string }) {
     </div>
   );
 }
+
+/** Just a "Copy share link" button, for the tabbed walk page layouts (walk-tabs-layout.tsx). */
+export function ShareLinkButton({ url }: { url: string }) {
+  return (
+    <CopyButton
+      className="h-9 gap-1.5 px-3 text-sm font-medium"
+      content={url}
+      copiedLabel="Link copied"
+      delay={2000}
+      hoverScale={1}
+      tapScale={1}
+      label="Copy share link"
+      onCopiedChange={(copied) => {
+        if (copied) toast.success("Link copied.");
+      }}
+      onCopyError={() => toast.error("Could not copy. Open the walk's page and copy the address instead.")}
+      type="button"
+      variant="outline"
+    />
+  );
+}

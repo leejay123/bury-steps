@@ -14,7 +14,7 @@ import { WalkFacts } from "@/components/walk-facts";
 import { walkStatus } from "@/lib/walk-window";
 import { appUrl } from "@/lib/urls";
 import { initials } from "@/lib/names";
-import { ShareLink } from "@/components/share-link";
+import { ShareLink, ShareLinkButton } from "@/components/share-link";
 import { EmptyState } from "@/components/empty-state";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { WalkMapSection } from "@/components/walk-map-section";
@@ -31,6 +31,8 @@ import { WalkDescription } from "@/components/walk-description";
 import { WalkJourneyManager } from "./walk-journey";
 import { SelfClockInPanel } from "./self-clock-in-panel";
 import { WalkPageColumns } from "@/components/walk-page-columns";
+import { WalkTabsLayout } from "@/components/walk-tabs-layout";
+import { isWalkTabsVariant } from "@/lib/walk-page-sections";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -461,6 +463,89 @@ async function WalkDetailPageContent({ id }: { id: string }) {
       />
     </>
   );
+
+  if (isWalkTabsVariant(theme.walkPageLayout)) {
+    const shareUrl = walkShareUrl(appUrl(), { token: walk.token, slug });
+    const clockIn = (compact: boolean) =>
+      walk.cancelledAt ? null : (
+        <SelfClockInPanel
+          alreadyClockedInAt={mine?.clockedInAt.toISOString() ?? null}
+          clockedOutAt={mine?.clockedOutAt?.toISOString() ?? null}
+          compact={compact}
+          durationMins={walk.durationMins}
+          emergencyContactName={admin.emergencyContactName ?? ""}
+          emergencyContactPhone={admin.emergencyContactPhone ?? ""}
+          emergencyContactRequired={emergencySetting?.emergencyContactRequired ?? false}
+          endedAt={walk.endedAt?.toISOString() ?? null}
+          startsAt={walk.startsAt.toISOString()}
+          token={walk.token}
+        />
+      );
+    return (
+      <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
+        <Link href="/admin/walks" className="text-sm text-muted-foreground hover:text-foreground">
+          &larr; All walks
+        </Link>
+        <WalkTabsLayout
+          attended={{
+            // The count only for those who may see the list itself.
+            label: canSeeAttendance ? `Attended (${walk.attendances.length})` : "Attended",
+            count: canSeeAttendance ? walk.attendances.length : null,
+            content: attendanceSection,
+          }}
+          details={
+            <Card className="gap-4">
+              <CardContent className="flex flex-col gap-4">
+                <WalkFacts
+                  backMarker={walk.backMarker}
+                  distance={walk.distance}
+                  durationMins={walk.durationMins}
+                  elevationGain={walk.elevationGain}
+                  essentials={walk.essentials}
+                  grade={walk.grade}
+                  location={walk.location}
+                  postcode={walk.postcode}
+                  startsAt={walk.startsAt}
+                  walkLeader={walk.walkLeader}
+                />
+                {walk.description ? <WalkDescription description={walk.description} /> : null}
+              </CardContent>
+            </Card>
+          }
+          headline={{
+            cancelledAt: walk.cancelledAt?.toISOString() ?? null,
+            distance: walk.distance,
+            durationMins: walk.durationMins,
+            endedAt: walk.endedAt?.toISOString() ?? null,
+            grade: walk.grade,
+            location: walk.location,
+            // Organiser/owner-only — members never see who created a walk.
+            note: `Created by ${displayName(walk.createdBy)} (${creatorIsOwner ? "Owner" : "Organiser"})`,
+            postcode: walk.postcode,
+            startsAt: walk.startsAt.toISOString(),
+            title: walk.title,
+            walkLeader: walk.walkLeader,
+          }}
+          journey={{ count: journeyEvents.length, content: journey }}
+          live={clockIn(false)}
+          liveCompact={clockIn(true)}
+          meeting={meeting}
+          notices={notices}
+          sections={sharedSections}
+          share={<ShareLinkButton url={shareUrl} />}
+          timing={{
+            cancelledAt: walk.cancelledAt?.toISOString() ?? null,
+            durationMins: walk.durationMins,
+            endedAt: walk.endedAt?.toISOString() ?? null,
+            startsAt: walk.startsAt.toISOString(),
+          }}
+          tools={tools}
+          variant={theme.walkPageLayout}
+          what3words={walk.what3words}
+        />
+      </div>
+    );
+  }
 
   if (theme.walkPageLayout === "columns") {
     return (

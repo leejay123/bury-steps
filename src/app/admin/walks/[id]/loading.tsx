@@ -7,8 +7,10 @@ import {
   WalkButtonsSkeleton,
   WalkDetailsCardSkeleton,
   WalkSectionsSkeleton,
+  WalkHeadlineSkeleton,
   WalkTabsSkeleton,
 } from "@/components/walk-page-skeletons";
+import { isWalkTabsVariant } from "@/lib/walk-page-sections";
 import { getSiteTheme } from "@/lib/site-theme";
 
 /**
@@ -30,7 +32,23 @@ async function OrganiserWalkLoading() {
         &larr; All walks
       </Link>
 
-      {theme.walkPageLayout === "columns" ? (
+      {isWalkTabsVariant(theme.walkPageLayout) ? (
+        // A to D, the one-column layouts with tabs: the title line, then the
+        // tabs with Overview's details.
+        <>
+          <WalkHeadlineSkeleton />
+          <WalkTabsSkeleton
+            labels={[
+              { text: "Overview" },
+              { text: "Map & weather" },
+              { text: "Attended", count: true },
+              { text: "Journey" },
+            ]}
+          >
+            <WalkDetailsCardSkeleton organiser />
+          </WalkTabsSkeleton>
+        </>
+      ) : theme.walkPageLayout === "columns" ? (
         // The two-column layout (Settings → Walk page cards → Layout).
         <WalkPageColumns
           aside={

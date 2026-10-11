@@ -18,11 +18,14 @@ import {
  * success the page swaps to "You are clocked in", which closes the drawer.
  */
 export function ClockInDrawer({
+  compact = false,
   emergencyContactName = "",
   emergencyContactPhone = "",
   emergencyContactRequired = false,
   token,
 }: {
+  /** A normal-size button, for a bar or banner. */
+  compact?: boolean;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
   emergencyContactRequired?: boolean;
@@ -41,7 +44,11 @@ export function ClockInDrawer({
       variant="form"
     >
       <DrawerTrigger asChild>
-        <Button className="w-full sm:w-auto sm:min-w-48 sm:self-start" size="lg" type="button">
+        <Button
+          className={compact ? undefined : "w-full sm:w-auto sm:min-w-48 sm:self-start"}
+          size={compact ? "default" : "lg"}
+          type="button"
+        >
           Clock in
         </Button>
       </DrawerTrigger>
