@@ -2,7 +2,10 @@ import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
-import { SettingsContentSkeleton, SettingsPage } from "../settings-page";
+import { SettingsPage } from "../settings-page";
+import { SettingsMask } from "../settings-mask";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
+
 import { ResetSiteForm } from "./reset-form";
 
 
@@ -18,8 +21,10 @@ export default function ResetSiteSettingsPage() {
       description="Wipe walks, members, messages, subscribers, and homepage edits, and put the starter content back. You stay the organiser."
       title="Reset the site"
     >
-      <Suspense fallback={<SettingsContentSkeleton />}>
-        <ResetSiteSettingsPageContent />
+      <Suspense fallback={<SettingsFallback />}>
+        <PlaceholderPreview fallback={<SettingsFallback />}>
+          <ResetSiteSettingsPageContent />
+        </PlaceholderPreview>
       </Suspense>
     </SettingsPage>
   );
@@ -36,5 +41,14 @@ async function ResetSiteSettingsPageContent() {
     <>
       <ResetSiteForm />
     </>
+  );
+}
+
+/** While it loads: the real form, greyed (SettingsMask). */
+function SettingsFallback() {
+  return (
+    <SettingsMask>
+      <ResetSiteForm />
+    </SettingsMask>
   );
 }

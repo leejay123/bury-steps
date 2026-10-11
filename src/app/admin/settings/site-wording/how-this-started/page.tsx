@@ -2,8 +2,10 @@ import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
-import { getSiteTheme } from "@/lib/site-theme";
-import { SettingsContentSkeleton, SettingsPage } from "../../settings-page";
+import { defaultTheme, getSiteTheme, type SiteTheme } from "@/lib/site-theme";
+import { SettingsPage } from "../../settings-page";
+import { SettingsMask } from "../../settings-mask";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { HowThisStartedCopySettings } from "../how-this-started-copy-settings";
 
 
@@ -20,8 +22,10 @@ export default function HowThisStartedWordingPage() {
       previewHref="/"
       title="How this started"
     >
-      <Suspense fallback={<SettingsContentSkeleton />}>
-        <HowThisStartedWordingPageContent />
+      <Suspense fallback={<SettingsFallback />}>
+        <PlaceholderPreview fallback={<SettingsFallback />}>
+          <HowThisStartedWordingPageContent />
+        </PlaceholderPreview>
       </Suspense>
     </SettingsPage>
   );
@@ -35,6 +39,11 @@ async function HowThisStartedWordingPageContent() {
   await requirePermission("permDisplay");
   const theme = await getSiteTheme();
 
+  return <SettingsView theme={theme} />;
+}
+
+/** The page drawn from the site's settings (also its placeholder, with the defaults). */
+function SettingsView({ theme }: { theme: SiteTheme }) {
   return (
     <>
       <HowThisStartedCopySettings
@@ -44,5 +53,14 @@ async function HowThisStartedWordingPageContent() {
         howThisStartedTitle={theme.howThisStartedTitle}
       />
     </>
+  );
+}
+
+/** While it loads: the page drawn with the site's default settings, greyed (SettingsMask). */
+function SettingsFallback() {
+  return (
+    <SettingsMask>
+      <SettingsView theme={defaultTheme()} />
+    </SettingsMask>
   );
 }

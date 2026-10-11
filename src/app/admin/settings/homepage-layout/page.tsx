@@ -2,8 +2,10 @@ import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
-import { getSiteTheme } from "@/lib/site-theme";
-import { SettingsContentSkeleton, SettingsPage, SettingsSection, SettingsSectionGroup } from "../settings-page";
+import { defaultTheme, getSiteTheme, type SiteTheme } from "@/lib/site-theme";
+import { SettingsPage, SettingsSection, SettingsSectionGroup } from "../settings-page";
+import { SettingsMask } from "../settings-mask";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { HomepageSectionsSettings } from "./homepage-sections-settings";
 import { CarouselToggle } from "./carousel-toggle";
 import { TitleRevealToggle } from "./title-reveal-toggle";
@@ -26,8 +28,10 @@ export default function HomepageLayoutSettingsPage() {
       previewHref="/"
       title="Homepage layout"
     >
-      <Suspense fallback={<SettingsContentSkeleton />}>
-        <HomepageLayoutSettingsPageContent />
+      <Suspense fallback={<SettingsFallback />}>
+        <PlaceholderPreview fallback={<SettingsFallback />}>
+          <HomepageLayoutSettingsPageContent />
+        </PlaceholderPreview>
       </Suspense>
     </SettingsPage>
   );
@@ -41,6 +45,11 @@ async function HomepageLayoutSettingsPageContent() {
   await requirePermission("permDisplay");
   const theme = await getSiteTheme();
 
+  return <SettingsView theme={theme} />;
+}
+
+/** The page drawn from the site's settings (also its placeholder, with the defaults). */
+function SettingsView({ theme }: { theme: SiteTheme }) {
   return (
     <>
       <HeroStyleSettings
@@ -77,5 +86,14 @@ async function HomepageLayoutSettingsPageContent() {
         </div>
       </SettingsSection>
     </>
+  );
+}
+
+/** While it loads: the page drawn with the site's default settings, greyed (SettingsMask). */
+function SettingsFallback() {
+  return (
+    <SettingsMask>
+      <SettingsView theme={defaultTheme()} />
+    </SettingsMask>
   );
 }

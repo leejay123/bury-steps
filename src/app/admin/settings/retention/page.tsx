@@ -5,7 +5,10 @@ import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { DEFAULT_CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
-import { SettingsContentSkeleton, SettingsPage, SettingsSectionGroup } from "../settings-page";
+import { SettingsPage, SettingsSectionGroup } from "../settings-page";
+import { SettingsMask } from "../settings-mask";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
+
 import { AccidentReportRetentionSettings, CancelledWalkRetentionSettings } from "./retention-settings";
 
 
@@ -21,8 +24,10 @@ export default function RetentionSettingsPage() {
       description="How long cancelled walks and accident reports are kept before they're deleted automatically. To keep a particular walk or report for good, flag it on that walk or report itself."
       title="Data retention"
     >
-      <Suspense fallback={<SettingsContentSkeleton />}>
-        <RetentionSettingsPageContent />
+      <Suspense fallback={<SettingsFallback />}>
+        <PlaceholderPreview fallback={<SettingsFallback />}>
+          <RetentionSettingsPageContent />
+        </PlaceholderPreview>
       </Suspense>
     </SettingsPage>
   );
@@ -39,6 +44,11 @@ async function RetentionSettingsPageContent() {
     select: { cancelledWalkRetentionDays: true, accidentReportRetentionDays: true },
   });
 
+  return <SettingsView settings={settings} />;
+}
+
+/** The page drawn from its saved values (also its placeholder, with stand-ins). */
+function SettingsView({ settings }: { settings: { cancelledWalkRetentionDays: number | null; accidentReportRetentionDays: number | null } | null }) {
   return (
     <>
       <SettingsSectionGroup title="Automatic deletion">
@@ -52,5 +62,14 @@ async function RetentionSettingsPageContent() {
         />
       </SettingsSectionGroup>
     </>
+  );
+}
+
+/** While it loads: the page drawn with the site's default values, greyed (SettingsMask). */
+function SettingsFallback() {
+  return (
+    <SettingsMask>
+      <SettingsView settings={null} />
+    </SettingsMask>
   );
 }

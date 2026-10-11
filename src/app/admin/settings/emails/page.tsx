@@ -4,7 +4,10 @@ import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
 import { getEmailTemplateOverrides } from "@/server/actions";
 import { EMAIL_TEMPLATES, type EmailTemplateMeta } from "@/lib/email/registry";
-import { SettingsContentSkeleton, SettingsPage } from "../settings-page";
+import { SettingsPage } from "../settings-page";
+import { SettingsMask } from "../settings-mask";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
+
 import { EmailList } from "./email-list";
 import { getDisabledEmailKeys } from "@/lib/email/switches";
 import { isOwner } from "@/lib/site-owner";
@@ -31,12 +34,20 @@ export default function AdminEmailsSettingsPage() {
       description="Every email the site sends. Tap one to edit its subject line and intro wording (the logo, layout, buttons and walk or message details stay fixed) or send yourself a test."
       title="Emails"
     >
-      <Suspense fallback={<SettingsContentSkeleton />}>
-        <AdminEmailsSettingsPageContent />
+      <Suspense fallback={<SettingsFallback />}>
+        <PlaceholderPreview fallback={<SettingsFallback />}>
+          <AdminEmailsSettingsPageContent />
+        </PlaceholderPreview>
       </Suspense>
     </SettingsPage>
   );
 }
+
+/** Emails grouped under their headings — fixed, so the placeholder has them too. */
+const EMAIL_GROUPS = CATEGORY_ORDER.map((category) => ({
+  category,
+  templates: EMAIL_TEMPLATES.filter((meta) => meta.category === category),
+}));
 
 async function AdminEmailsSettingsPageContent() {
   // A private saved copy (this browser only, five minutes), so the page
@@ -49,11 +60,23 @@ async function AdminEmailsSettingsPageContent() {
     getDisabledEmailKeys(),
     isOwner(admin.id),
   ]);
-  const groups = CATEGORY_ORDER.map((category) => ({
-    category,
-    templates: EMAIL_TEMPLATES.filter((meta) => meta.category === category),
-  }));
+  const groups = EMAIL_GROUPS;
 
+  return <SettingsView disabled={disabled} groups={groups} overrides={overrides} owner={owner} />;
+}
+
+/** The page drawn from its saved values (also its placeholder, with stand-ins). */
+function SettingsView({
+  disabled,
+  groups,
+  overrides,
+  owner,
+}: {
+  disabled: Set<string> | string[];
+  groups: { category: (typeof CATEGORY_ORDER)[number]; templates: typeof EMAIL_TEMPLATES }[];
+  overrides: Awaited<ReturnType<typeof getEmailTemplateOverrides>>;
+  owner: boolean;
+}) {
   return (
     <>
       <section className="flex flex-col gap-3" id="sending">
@@ -65,5 +88,19 @@ async function AdminEmailsSettingsPageContent() {
         <EmailList canSwitch={owner} disabled={[...disabled]} groups={groups} overrides={overrides} />
       </section>
     </>
+  );
+}
+
+/** Every email's own wording left as it ships — the placeholder's stand-in. */
+const NO_OVERRIDES = Object.fromEntries(
+  EMAIL_TEMPLATES.map((meta) => [meta.key, { subject: null, body: null }]),
+) as Awaited<ReturnType<typeof getEmailTemplateOverrides>>;
+
+/** While it loads: the page drawn with the site's default values, greyed (SettingsMask). */
+function SettingsFallback() {
+  return (
+    <SettingsMask>
+      <SettingsView disabled={[]} groups={EMAIL_GROUPS} overrides={NO_OVERRIDES} owner />
+    </SettingsMask>
   );
 }

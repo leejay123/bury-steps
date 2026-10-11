@@ -2,8 +2,10 @@ import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
-import { getSiteTheme } from "@/lib/site-theme";
-import { SettingsContentSkeleton, SettingsPage, SettingsSectionGroup } from "../../settings-page";
+import { defaultTheme, getSiteTheme, type SiteTheme } from "@/lib/site-theme";
+import { SettingsPage, SettingsSectionGroup } from "../../settings-page";
+import { SettingsMask } from "../../settings-mask";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { BeforeYouSetOffToggle, HowWalksWorkToggle } from "../walk-page-card-toggles";
 import { WalkPageCopySettings } from "../walk-page-copy-settings";
 import { WalkPageSectionsSettings } from "../walk-page-sections-settings";
@@ -21,8 +23,10 @@ export default function WalkPageCardsWordingPage() {
       description="The cards on a walk's own page, and the order of its sections. Edit the wording, turn a card off, or move a section up or down."
       title="Walk page cards"
     >
-      <Suspense fallback={<SettingsContentSkeleton />}>
-        <WalkPageCardsWordingPageContent />
+      <Suspense fallback={<SettingsFallback />}>
+        <PlaceholderPreview fallback={<SettingsFallback />}>
+          <WalkPageCardsWordingPageContent />
+        </PlaceholderPreview>
       </Suspense>
     </SettingsPage>
   );
@@ -36,6 +40,11 @@ async function WalkPageCardsWordingPageContent() {
   await requirePermission("permDisplay");
   const theme = await getSiteTheme();
 
+  return <SettingsView theme={theme} />;
+}
+
+/** The page drawn from the site's settings (also its placeholder, with the defaults). */
+function SettingsView({ theme }: { theme: SiteTheme }) {
   return (
     <>
       <SettingsSectionGroup
@@ -54,5 +63,14 @@ async function WalkPageCardsWordingPageContent() {
         howWalksWorkStepsText={theme.howWalksWorkStepsText}
       />
     </>
+  );
+}
+
+/** While it loads: the page drawn with the site's default settings, greyed (SettingsMask). */
+function SettingsFallback() {
+  return (
+    <SettingsMask>
+      <SettingsView theme={defaultTheme()} />
+    </SettingsMask>
   );
 }

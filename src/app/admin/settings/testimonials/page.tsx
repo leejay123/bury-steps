@@ -5,7 +5,8 @@ import { requirePermission } from "@/lib/auth";
 import { getHomepageTestimonials } from "@/lib/homepage-testimonials";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { HomepageTestimonialManager } from "../../homepage/testimonial-manager";
-import { SettingsContentSkeleton, SettingsPage } from "../settings-page";
+import { SettingsPage } from "../settings-page";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
 
 
 
@@ -21,8 +22,10 @@ export default function TestimonialsSettingsPage() {
       previewHref="/"
       title="Testimonials"
     >
-      <Suspense fallback={<SettingsContentSkeleton />}>
-        <TestimonialsSettingsPageContent />
+      <Suspense fallback={<SettingsFallback />}>
+        <PlaceholderPreview fallback={<SettingsFallback />}>
+          <TestimonialsSettingsPageContent />
+        </PlaceholderPreview>
       </Suspense>
     </SettingsPage>
   );
@@ -44,4 +47,14 @@ async function TestimonialsSettingsPageContent() {
       />
     </>
   );
+}
+
+/**
+ * While the page checks who you are: the real list, from the same shared
+ * saved copy the homepage uses (these are public anyway), so a refresh
+ * shows them at once instead of an empty space.
+ */
+async function SettingsFallback() {
+  const testimonials = await getHomepageTestimonials();
+  return <HomepageTestimonialManager maxTestimonials={MAX_HOMEPAGE_TESTIMONIALS} testimonials={testimonials} />;
 }

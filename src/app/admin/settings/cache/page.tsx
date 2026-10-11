@@ -2,7 +2,10 @@ import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
-import { SettingsContentSkeleton, SettingsPage } from "../settings-page";
+import { SettingsPage } from "../settings-page";
+import { SettingsMask } from "../settings-mask";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
+
 import { ClearCacheForm } from "./cache-form";
 
 
@@ -18,8 +21,10 @@ export default function CacheSettingsPage() {
       description="Use this if the public homepage still shows old photos, quotes or questions after you've saved changes."
       title="Refresh the homepage"
     >
-      <Suspense fallback={<SettingsContentSkeleton />}>
-        <CacheSettingsPageContent />
+      <Suspense fallback={<SettingsFallback />}>
+        <PlaceholderPreview fallback={<SettingsFallback />}>
+          <CacheSettingsPageContent />
+        </PlaceholderPreview>
       </Suspense>
     </SettingsPage>
   );
@@ -36,5 +41,14 @@ async function CacheSettingsPageContent() {
     <>
       <ClearCacheForm />
     </>
+  );
+}
+
+/** While it loads: the real form, greyed (SettingsMask). */
+function SettingsFallback() {
+  return (
+    <SettingsMask>
+      <ClearCacheForm />
+    </SettingsMask>
   );
 }

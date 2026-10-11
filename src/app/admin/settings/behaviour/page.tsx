@@ -3,9 +3,12 @@ import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { prisma } from "@/lib/db";
 import { requirePermission, displayName } from "@/lib/auth";
-import { getSiteTheme } from "@/lib/site-theme";
+import { defaultTheme, getSiteTheme, type SiteTheme } from "@/lib/site-theme";
 import { SITE_SETTING_ID } from "@/lib/theme";
-import { SettingsContentSkeleton, SettingsPage, SettingsSectionGroup } from "../settings-page";
+import { SettingsPage, SettingsSectionGroup } from "../settings-page";
+import { SettingsMask } from "../settings-mask";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
+
 import { AnnouncementSettings } from "./announcement-settings";
 import { CookieConsentSettings } from "./cookie-consent-settings";
 import { PageTransitionSettings } from "./page-transition-settings";
@@ -30,8 +33,10 @@ export default function SiteBehaviourSettingsPage() {
       description="Sitewide behaviour that isn't part of the homepage story — announcement bar, page transitions, the phone menu, cookie notice, back to top, the footer name, Progress, clock-in, organiser invites, and the contact form."
       title="Site behaviour"
     >
-      <Suspense fallback={<SettingsContentSkeleton />}>
-        <SiteBehaviourSettingsPageContent />
+      <Suspense fallback={<SettingsFallback />}>
+        <PlaceholderPreview fallback={<SettingsFallback />}>
+          <SiteBehaviourSettingsPageContent />
+        </PlaceholderPreview>
       </Suspense>
     </SettingsPage>
   );
@@ -61,6 +66,26 @@ async function SiteBehaviourSettingsPageContent() {
     }),
   ]);
 
+  return <SettingsView admin={admin} organisers={organisers} settings={settings} theme={theme} />;
+}
+
+/** The page drawn from its saved values (also its placeholder, with stand-ins). */
+function SettingsView({
+  admin,
+  organisers,
+  settings,
+  theme,
+}: {
+  admin: { isOwner: boolean };
+  organisers: { id: string; firstName: string | null; lastName: string | null; email: string }[];
+  settings: {
+    contactMessagesOwnerId: string | null;
+    emergencyContactRequired: boolean;
+    organiserInviteRequired: boolean;
+    progressEnabled: boolean;
+  } | null;
+  theme: SiteTheme;
+}) {
   return (
     <>
       <SettingsSectionGroup description="A message across the top of every page." title="Announcement">
@@ -102,5 +127,14 @@ async function SiteBehaviourSettingsPageContent() {
         />
       </SettingsSectionGroup>
     </>
+  );
+}
+
+/** While it loads: the page drawn with the site's default values, greyed (SettingsMask). */
+function SettingsFallback() {
+  return (
+    <SettingsMask>
+      <SettingsView admin={{ isOwner: true }} organisers={[]} settings={null} theme={defaultTheme()} />
+    </SettingsMask>
   );
 }

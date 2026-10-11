@@ -8,7 +8,12 @@ import { displayName } from "@/lib/auth";
 import { formatDate } from "@/lib/dates";
 import { Button } from "@/components/ui/button";
 import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
-import { SettingsContentSkeleton, SettingsPage, SettingsSection } from "../settings-page";
+import { SettingsPage, SettingsSection } from "../settings-page";
+import { SettingsMask } from "../settings-mask";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SkText } from "@/components/list-skeletons";
+import { newsletterListRows } from "@/lib/list-counts";
 import { RemoveSubscriberButton } from "./remove-subscriber-button";
 import { SendNewsletterForm } from "./send-newsletter-form";
 
@@ -34,8 +39,10 @@ export default function AdminSubscribersSettingsPage() {
       description="Who's opted into which emails. Send a newsletter to everyone on the list straight from this page, or download the list."
       title="Subscribers"
     >
-      <Suspense fallback={<SettingsContentSkeleton />}>
-        <AdminSubscribersSettingsPageContent />
+      <Suspense fallback={<SubscribersFallback />}>
+        <PlaceholderPreview fallback={<SubscribersFallback />}>
+          <AdminSubscribersSettingsPageContent />
+        </PlaceholderPreview>
       </Suspense>
     </SettingsPage>
   );
@@ -161,5 +168,79 @@ async function AdminSubscribersSettingsPageContent() {
         </DataList>
       </SettingsSection>
     </>
+  );
+}
+
+const STAT_LABELS = ["Newsletter (footer)", "Newsletter (members)", "Walk announcements on", "Notices on", "Progress on"];
+
+/** A grey line one text line tall (h is the line height, the bar 64% of it). */
+function GreyLine({ className, h = "h-5" }: { className: string; h?: string }) {
+  return (
+    <div className={`flex items-center ${h}`}>
+      <Skeleton className={`h-[64%] max-w-full rounded-[4px] ${className}`} />
+    </div>
+  );
+}
+
+/**
+ * Subscribers while it loads, laid out like the page: the number tiles
+ * (real labels, grey numbers), the real newsletter form greyed, then the
+ * list's heading and as many rows as it has — members' rows three lines,
+ * footer signups two lines and a Remove button. Email addresses are
+ * private, so only the counts are known ahead (newsletterListRows).
+ */
+async function SubscribersFallback() {
+  const counts = (await newsletterListRows()) ?? { members: 0, footer: 0 };
+  const widths = ["w-56", "w-44", "w-64", "w-48", "w-52", "w-40"];
+  return (
+    <div aria-hidden className="flex flex-col gap-8" data-page-loading="">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+        {STAT_LABELS.map((label) => (
+          <div className="flex flex-col gap-1 rounded-lg border p-4" key={label}>
+            <GreyLine className="w-10" h="h-8" />
+            <p className="text-sm text-muted-foreground">{label}</p>
+          </div>
+        ))}
+      </div>
+
+      <SettingsMask>
+        <SendNewsletterForm recipientCount={0} />
+      </SettingsMask>
+
+      <section className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Newsletter list</h2>
+          <p className="text-sm text-muted-foreground">
+            <SkText text="00 people get the newsletter (0 have unsubscribed from the footer form over time). A subscriber who is also a member shows with their name. Members' other emails — notices, walk announcements and progress — are counted separately above, whatever they chose for the newsletter." />
+          </p>
+        </div>
+        <Skeleton className="h-8 w-32 self-start rounded-md" />
+        <ul className="flex flex-col overflow-hidden rounded-xl border bg-card">
+          {Array.from({ length: counts.members }, (_, i) => (
+            <li className="flex items-start gap-3 border-b p-3 last:border-0" key={`m${i}`}>
+              <div className="flex min-w-0 flex-1 flex-col">
+                <GreyLine className={widths[i % widths.length]} h="h-6" />
+                <GreyLine className="w-32" />
+                <GreyLine className="w-36" h="h-4" />
+              </div>
+            </li>
+          ))}
+          {Array.from({ length: counts.footer }, (_, i) => (
+            <li className="flex items-start gap-3 border-b p-3 last:border-0" key={`f${i}`}>
+              <div className="flex min-w-0 flex-1 flex-col">
+                <GreyLine className={widths[(i + 3) % widths.length]} h="h-6" />
+                <GreyLine className="w-44" h="h-4" />
+              </div>
+              <Skeleton className="h-7 w-20 rounded-md" />
+            </li>
+          ))}
+          {counts.members + counts.footer === 0 ? (
+            <li className="flex items-center gap-3 p-3">
+              <p className="text-sm text-muted-foreground">No one&apos;s subscribed yet.</p>
+            </li>
+          ) : null}
+        </ul>
+      </section>
+    </div>
   );
 }

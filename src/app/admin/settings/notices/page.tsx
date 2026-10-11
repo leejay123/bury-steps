@@ -6,7 +6,8 @@ import { getSiteNoticeCategories, getSiteNotices } from "@/lib/site-notices";
 import { MAX_NOTICE_CATEGORIES } from "@/lib/notices";
 import { PreviewMemberWelcomeDialog } from "@/components/member-welcome-dialog";
 import { SiteNoticeManager } from "../notice-manager";
-import { SettingsContentSkeleton, SettingsPage, SettingsSection } from "../settings-page";
+import { SettingsPage, SettingsSection } from "../settings-page";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
 
 
 
@@ -21,8 +22,10 @@ export default function NoticesSettingsPage() {
       description={`Messages for signed-in members — short ones in the bell, longer ones as their own page on Notices, filed under up to ${MAX_NOTICE_CATEGORIES} categories.`}
       title="Notices"
     >
-      <Suspense fallback={<SettingsContentSkeleton />}>
-        <NoticesSettingsPageContent />
+      <Suspense fallback={<SettingsFallback />}>
+        <PlaceholderPreview fallback={<SettingsFallback />}>
+          <NoticesSettingsPageContent />
+        </PlaceholderPreview>
       </Suspense>
     </SettingsPage>
   );
@@ -52,6 +55,28 @@ async function NoticesSettingsPageContent() {
       >
         <div>
           <PreviewMemberWelcomeDialog firstName={admin.firstName} />
+        </div>
+      </SettingsSection>
+    </>
+  );
+}
+
+/**
+ * While the page checks who you are: the real notices, from the same shared
+ * saved copies members' pages use (only organisers reach this page), so a
+ * refresh shows them at once instead of an empty space.
+ */
+async function SettingsFallback() {
+  const [notices, categories] = await Promise.all([getSiteNotices(), getSiteNoticeCategories()]);
+  return (
+    <>
+      <SiteNoticeManager categories={categories} maxCategories={MAX_NOTICE_CATEGORIES} notices={notices} />
+      <SettingsSection
+        description="New members who haven't clocked in yet see this popup once on the Walks page. Previewing it here doesn't affect whether a real member has already seen it."
+        title="Welcome popup"
+      >
+        <div>
+          <PreviewMemberWelcomeDialog />
         </div>
       </SettingsSection>
     </>

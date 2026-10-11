@@ -163,7 +163,9 @@ export type SiteTheme = {
 const DEFAULT_LOGO_SRC = "/bury-steps-logo.png";
 const DEFAULT_FAVICON_SRC = "/default-favicon.png";
 
-function defaultTheme(): SiteTheme {
+/** The site's out-of-the-box settings — also the stand-in values settings
+ * placeholders draw with before greying them out (settings-mask.tsx). */
+export function defaultTheme(): SiteTheme {
   return {
     heroStyle: DEFAULT_HERO_STYLE,
     heroVideoKey: DEFAULT_HERO_VIDEO_KEY,

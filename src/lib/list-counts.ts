@@ -43,3 +43,23 @@ async function cachedMembersCount(): Promise<number> {
 export const messagesListRows = () => firstPage(cachedMessagesCount);
 export const reportsListRows = () => firstPage(cachedReportsCount);
 export const membersListRows = () => firstPage(cachedMembersCount);
+
+async function cachedNewsletterCounts(): Promise<{ members: number; footer: number }> {
+  "use cache: remote";
+  cacheLife({ revalidate: 300 });
+  const [members, footer] = await Promise.all([
+    prisma.user.count({ where: { emailNewsletter: true } }),
+    prisma.newsletterSubscriber.count({ where: { unsubscribedAt: null } }),
+  ]);
+  return { members: Math.min(members, 200), footer: Math.min(footer, 200) };
+}
+
+/** How many newsletter rows the Subscribers page lists (members, then footer
+ * signups), for its placeholder — counts only, never who. */
+export async function newsletterListRows(): Promise<{ members: number; footer: number } | undefined> {
+  try {
+    return await cachedNewsletterCounts();
+  } catch {
+    return undefined;
+  }
+}

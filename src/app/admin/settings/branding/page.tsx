@@ -2,8 +2,11 @@ import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
-import { getSiteTheme } from "@/lib/site-theme";
-import { SettingsContentSkeleton, SettingsPage, SettingsSectionGroup } from "../settings-page";
+import { defaultTheme, getSiteTheme, type SiteTheme } from "@/lib/site-theme";
+import { SettingsPage, SettingsSectionGroup } from "../settings-page";
+import { SettingsMask } from "../settings-mask";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
+
 import { SiteBrandingSettings } from "./site-branding-settings";
 import { SiteLogoSettings } from "./site-logo-settings";
 import { SiteFaviconSettings } from "./site-favicon-settings";
@@ -26,8 +29,10 @@ export default function BrandingSettingsPage() {
       previewHref="/"
       title="Branding"
     >
-      <Suspense fallback={<SettingsContentSkeleton />}>
-        <BrandingSettingsPageContent />
+      <Suspense fallback={<SettingsFallback />}>
+        <PlaceholderPreview fallback={<SettingsFallback />}>
+          <BrandingSettingsPageContent />
+        </PlaceholderPreview>
       </Suspense>
     </SettingsPage>
   );
@@ -41,6 +46,11 @@ async function BrandingSettingsPageContent() {
   await requirePermission("permDisplay");
   const theme = await getSiteTheme();
 
+  return <SettingsView theme={theme} />;
+}
+
+/** The page drawn from its saved values (also its placeholder, with stand-ins). */
+function SettingsView({ theme }: { theme: SiteTheme }) {
   return (
     <>
       <SettingsSectionGroup
@@ -59,5 +69,14 @@ async function BrandingSettingsPageContent() {
         <FacebookGroupSettings facebookGroupUrl={theme.facebookGroupUrl} />
       </SettingsSectionGroup>
     </>
+  );
+}
+
+/** While it loads: the page drawn with the site's default values, greyed (SettingsMask). */
+function SettingsFallback() {
+  return (
+    <SettingsMask>
+      <SettingsView theme={defaultTheme()} />
+    </SettingsMask>
   );
 }

@@ -5,7 +5,8 @@ import { requirePermission } from "@/lib/auth";
 import { ensureDefaultHomepageSlide, getHomepageSlides } from "@/lib/homepage-slides";
 import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
 import { HomepageSlideManager } from "../../homepage/slide-manager";
-import { SettingsContentSkeleton, SettingsPage } from "../settings-page";
+import { SettingsPage } from "../settings-page";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
 
 
 
@@ -21,8 +22,10 @@ export default function HeroPhotosSettingsPage() {
       previewHref="/"
       title="Hero photos"
     >
-      <Suspense fallback={<SettingsContentSkeleton />}>
-        <HeroPhotosSettingsPageContent />
+      <Suspense fallback={<SettingsFallback />}>
+        <PlaceholderPreview fallback={<SettingsFallback />}>
+          <HeroPhotosSettingsPageContent />
+        </PlaceholderPreview>
       </Suspense>
     </SettingsPage>
   );
@@ -42,4 +45,14 @@ async function HeroPhotosSettingsPageContent() {
       <HomepageSlideManager maxSlides={MAX_HOMEPAGE_SLIDES} slides={slides} />
     </>
   );
+}
+
+/**
+ * While the page checks who you are: the real list, from the same shared
+ * saved copy the homepage uses (these photos are public anyway), so a
+ * refresh shows them at once instead of an empty space.
+ */
+async function SettingsFallback() {
+  const slides = await getHomepageSlides();
+  return <HomepageSlideManager maxSlides={MAX_HOMEPAGE_SLIDES} slides={slides} />;
 }

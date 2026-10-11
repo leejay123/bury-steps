@@ -2,8 +2,10 @@ import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
-import { getSiteTheme } from "@/lib/site-theme";
-import { SettingsContentSkeleton, SettingsPage } from "../../settings-page";
+import { defaultTheme, getSiteTheme, type SiteTheme } from "@/lib/site-theme";
+import { SettingsPage } from "../../settings-page";
+import { SettingsMask } from "../../settings-mask";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { AboutListsSettings } from "../about-lists-settings";
 
 
@@ -20,8 +22,10 @@ export default function AboutListsWordingPage() {
       previewHref="/"
       title="About lists"
     >
-      <Suspense fallback={<SettingsContentSkeleton />}>
-        <AboutListsWordingPageContent />
+      <Suspense fallback={<SettingsFallback />}>
+        <PlaceholderPreview fallback={<SettingsFallback />}>
+          <AboutListsWordingPageContent />
+        </PlaceholderPreview>
       </Suspense>
     </SettingsPage>
   );
@@ -35,6 +39,11 @@ async function AboutListsWordingPageContent() {
   await requirePermission("permDisplay");
   const theme = await getSiteTheme();
 
+  return <SettingsView theme={theme} />;
+}
+
+/** The page drawn from the site's settings (also its placeholder, with the defaults). */
+function SettingsView({ theme }: { theme: SiteTheme }) {
   return (
     <>
       <AboutListsSettings
@@ -48,5 +57,14 @@ async function AboutListsWordingPageContent() {
         aboutRulesText={theme.aboutRulesText}
       />
     </>
+  );
+}
+
+/** While it loads: the page drawn with the site's default settings, greyed (SettingsMask). */
+function SettingsFallback() {
+  return (
+    <SettingsMask>
+      <SettingsView theme={defaultTheme()} />
+    </SettingsMask>
   );
 }
