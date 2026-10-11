@@ -41,22 +41,25 @@ export function ClockInDrawer({
       variant="form"
     >
       <DrawerTrigger asChild>
-        <Button className="w-full sm:w-auto sm:min-w-48" size="lg" type="button">
+        <Button className="w-full sm:w-auto sm:min-w-48 sm:self-start" size="lg" type="button">
           Clock in
         </Button>
       </DrawerTrigger>
-      <DrawerContent>
+      <DrawerContent className="min-h-0">
         <DrawerHeader>
           <DrawerTitle>Clock in</DrawerTitle>
           <DrawerDescription>A quick pre-walk check, then you&rsquo;re on the walk.</DrawerDescription>
         </DrawerHeader>
-        <ClockInForm
-          emergencyContactName={emergencyContactName}
-          emergencyContactPhone={emergencyContactPhone}
-          emergencyContactRequired={emergencyContactRequired}
-          key={session}
-          token={token}
-        />
+        {/* Padded and scrolling on its own, like Create a walk's drawer. */}
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain px-4 pb-4">
+          <ClockInForm
+            emergencyContactName={emergencyContactName}
+            emergencyContactPhone={emergencyContactPhone}
+            emergencyContactRequired={emergencyContactRequired}
+            key={session}
+            token={token}
+          />
+        </div>
       </DrawerContent>
     </Drawer>
   );
