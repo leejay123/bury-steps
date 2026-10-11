@@ -621,3 +621,31 @@ html:has([data-bottom-nav]:not([hidden] *)) #bs-bottom-boot {
 [data-sk-mask] :is(img, video, canvas) {
   visibility: hidden;
 }
+
+/* Temporary owner test (shimmer-test.tsx): with the shimmer-from-structure
+   look picked, placeholders keep their boxes and borders but lose their text,
+   pictures and our own grey, and the library's measured shimmer blocks are
+   drawn over them instead. */
+html[data-placeholder-style="shimmer"] [data-page-loading] * {
+  color: transparent !important;
+  animation: none !important;
+}
+html[data-placeholder-style="shimmer"] [data-page-loading] :is(img, svg, video) {
+  opacity: 0;
+}
+html[data-placeholder-style="shimmer"] [data-page-loading] :is([data-slot="skeleton"], [class*="bg-accent"], [class*="bg-muted"]),
+html[data-placeholder-style="shimmer"] [data-sk-mask] :is(input, textarea, select, button, [role="switch"], [role="combobox"], [role="radio"], [data-slot="select-trigger"], [data-sk-value]):not([aria-hidden="true"], [type="hidden"]) {
+  background: transparent !important;
+}
+.shimmer-test-sweep {
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--background) 70%, transparent), transparent);
+  animation: shimmer-test-sweep 1.5s infinite;
+}
+@keyframes shimmer-test-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}

@@ -8,6 +8,7 @@ import {
   setPlaceholderPreview,
   type PlaceholderPreviewMode,
 } from "@/lib/placeholder-preview-cookie";
+import { readPlaceholderStyle, setPlaceholderStyle, subscribePlaceholderStyle } from "@/lib/placeholder-style";
 
 const noopSubscribe = () => () => {};
 const NEXT: Record<"off" | PlaceholderPreviewMode, PlaceholderPreviewMode | null> = {
@@ -42,6 +43,7 @@ export function PlaceholderPreviewBadge() {
   const saved = useSyncExternalStore(noopSubscribe, readPlaceholderPreview, () => null);
   const [override, setOverride] = useState<PlaceholderPreviewMode | "off" | null>(null);
   const mode = override ?? saved ?? "off";
+  const style = useSyncExternalStore(subscribePlaceholderStyle, readPlaceholderStyle, () => "grey" as const);
 
   const cycle = useCallback(() => {
     const next = NEXT[mode];
@@ -64,16 +66,27 @@ export function PlaceholderPreviewBadge() {
   if (!owner) return null;
   const on = mode !== "off";
   return (
-    <button
-      aria-label={`Placeholder preview: ${LABEL[mode]}. Change (Alt+P)`}
-      className={`fixed bottom-[calc(1rem+var(--bottom-nav-offset,0px))] left-4 z-[60] flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs shadow-md ${
-        on ? "bg-foreground text-background" : "bg-background text-muted-foreground"
-      }`}
-      onClick={cycle}
-      title="Alt+P (Option+P on a Mac)"
-      type="button"
-    >
-      Placeholders: <span className="font-medium">{LABEL[mode]}</span>
-    </button>
+    <div className="fixed bottom-[calc(1rem+var(--bottom-nav-offset,0px))] left-4 z-[60] flex items-center gap-1.5">
+      <button
+        aria-label={`Placeholder preview: ${LABEL[mode]}. Change (Alt+P)`}
+        className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs shadow-md ${
+          on ? "bg-foreground text-background" : "bg-background text-muted-foreground"
+        }`}
+        onClick={cycle}
+        title="Alt+P (Option+P on a Mac)"
+        type="button"
+      >
+        Placeholders: <span className="font-medium">{LABEL[mode]}</span>
+      </button>
+      {/* Temporary test: our grey shapes or shimmer-from-structure's shimmer (shimmer-test.tsx). */}
+      <button
+        aria-label={`Placeholder style: ${style === "shimmer" ? "Shimmer" : "Grey"}. Change`}
+        className="flex items-center gap-1.5 rounded-full border bg-background px-3 py-1.5 text-xs text-muted-foreground shadow-md"
+        onClick={() => setPlaceholderStyle(style === "shimmer" ? "grey" : "shimmer")}
+        type="button"
+      >
+        Style: <span className="font-medium">{style === "shimmer" ? "Shimmer" : "Grey"}</span>
+      </button>
+    </div>
   );
 }

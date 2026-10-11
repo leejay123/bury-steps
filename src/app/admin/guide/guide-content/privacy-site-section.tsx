@@ -73,7 +73,10 @@ export function PrivacySiteSection() {
               pages hold their grey loading placeholder for 5 seconds before the content (or show
               only the placeholder), so you can check how it looks. Nobody else sees it. To switch it
               quickly, use the small <strong>Placeholders</strong> button at the bottom left of any
-              page, or press Alt+P (Option+P on a Mac).
+              page, or press Alt+P (Option+P on a Mac). Next to it, <strong>Style</strong> (also in
+              Site behaviour) is a test: it swaps the grey shapes for a shimmer drawn by the
+              shimmer-from-structure library, so you can compare the two. It too only affects that
+              browser.
             </p>
             <p>
               First-time visitors see a cookie notice at the bottom of the screen, with Accept
