@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef } from "react";
-import { ClockInForm } from "./clock-in-form";
+import { ClockInDrawer } from "./clock-in-drawer";
 import { ClockOutButton } from "@/components/clock-out-button";
 import { WalkMembers } from "@/components/walk-members";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
@@ -182,8 +182,8 @@ export function WalkLivePanel({
             </p>
           ) : null}
         </div>
-        <div className="max-w-2xl">
-          <ClockInForm
+        <div>
+          <ClockInDrawer
             emergencyContactName={emergencyContactName}
             emergencyContactPhone={emergencyContactPhone}
             emergencyContactRequired={emergencyContactRequired}

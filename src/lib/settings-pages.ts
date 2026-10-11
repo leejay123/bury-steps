@@ -159,8 +159,8 @@ export const SETTINGS_PAGE_GROUPS: SettingsPageGroup[] = [
       {
         href: "/admin/settings/behaviour",
         title: "Site behaviour",
-        description: "Announcement bar, page transitions, phone menu, cookie notice, back-to-top button, footer name, the Progress page, clock-in, organiser invites and who gets contact messages.",
-        keywords: "cookie consent back to top contact form invite organiser progress page emergency contact clock-in announcement bar banner page transitions animation fade slide phone menu mobile bottom bar navigation footer big name wordmark",
+        description: "Announcement bar, phone menu, cookie notice, back-to-top button, footer name, the Progress page, clock-in, organiser invites and who gets contact messages.",
+        keywords: "cookie consent back to top contact form invite organiser progress page emergency contact clock-in announcement bar banner phone menu mobile bottom bar navigation footer big name wordmark",
         permission: "permDisplay",
       },
       {

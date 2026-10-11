@@ -253,7 +253,7 @@ function WalksBody({ view }: { view: WalksView }) {
       <Tabs defaultValue="upcoming">
         <TabsList>
           <TabsTrigger value="upcoming">
-            Upcoming (<LiveUpcomingCount walks={upcoming} />)
+            <LiveUpcomingCount walks={upcoming} />
           </TabsTrigger>
           <TabsTrigger value="all-walks">All walks ({allWalks.length})</TabsTrigger>
         </TabsList>

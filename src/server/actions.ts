@@ -108,7 +108,6 @@ export {
   updateAnnouncementBanner,
   updateTitleRevealEnabled,
   updateSliderHeroWords,
-  updatePageTransition,
   updateMobileNav,
   updateCookieConsentVariant,
   updateSiteFont,

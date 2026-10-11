@@ -1,7 +1,6 @@
 import { cache } from "react";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { parsePageTransition, type PageTransition } from "@/lib/page-transition";
 import { parseSliderHeroWords, type SliderHeroWords } from "@/lib/hero-style";
 import { DEFAULT_TEXT_SIZES, parseTextSize, type TextSizes } from "@/lib/text-sizes";
 import { cacheLife, cacheTag } from "next/cache";
@@ -92,8 +91,6 @@ export type SiteTheme = {
   footerWordmarkEnabled: boolean;
   /** Footer name also on phones (updateFooterWordmarkMobile). */
   footerWordmarkMobile: boolean;
-  /** Page change animation (updatePageTransition). */
-  pageTransition: PageTransition;
   /** Phone navigation style (updateMobileNav). */
   mobileNav: "bottom" | "menu";
   /** Words on the Photo slider hero (updateSliderHeroWords). */
@@ -182,7 +179,6 @@ export function defaultTheme(): SiteTheme {
     footerWordmarkEnabled: true,
     footerWordmarkMobile: true,
     sliderHeroWords: "site",
-    pageTransition: "fade",
     mobileNav: "bottom",
     titleRevealEnabled: true,
     announcementEnabled: false,
@@ -254,7 +250,6 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       footerWordmarkEnabled: true,
       footerWordmarkMobile: true,
       sliderHeroWords: true,
-      pageTransition: true,
       mobileNav: true,
       titleRevealEnabled: true,
       announcementEnabled: true,
@@ -343,7 +338,6 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     footerWordmarkEnabled: row?.footerWordmarkEnabled ?? true,
     footerWordmarkMobile: row?.footerWordmarkMobile ?? true,
     sliderHeroWords: parseSliderHeroWords(row?.sliderHeroWords),
-    pageTransition: parsePageTransition(row?.pageTransition),
     mobileNav: row?.mobileNav === "menu" ? "menu" : "bottom",
     titleRevealEnabled: row?.titleRevealEnabled ?? true,
     announcementEnabled: row?.announcementEnabled ?? false,

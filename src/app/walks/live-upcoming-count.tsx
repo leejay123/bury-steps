@@ -4,7 +4,7 @@ import { useLiveNow } from "@/hooks/use-live-now";
 import { windowState } from "@/lib/walk-window";
 
 /**
- * The number in "Upcoming (3)", worked out on this device and kept current,
+ * The whole "Upcoming (3)" label, worked out on this device and kept current,
  * like the cards below it: a walk drops out of the count when it finishes,
  * even if the page was fetched a few minutes earlier.
  */
@@ -19,5 +19,7 @@ export function LiveUpcomingCount({
       windowState(new Date(walk.startsAt), walk.durationMins, now, walk.endedAt ? new Date(walk.endedAt) : null) !==
       "closed",
   ).length;
-  return <span suppressHydrationWarning>{count}</span>;
+  // One piece of text: the tab puts a gap between separate pieces, which
+  // turned "Upcoming (", the number and ")" into "Upcoming ( 3 )".
+  return <span suppressHydrationWarning>{`Upcoming (${count})`}</span>;
 }

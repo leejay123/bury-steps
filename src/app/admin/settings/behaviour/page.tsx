@@ -11,7 +11,6 @@ import { PlaceholderPreview } from "@/components/placeholder-preview";
 
 import { AnnouncementSettings } from "./announcement-settings";
 import { CookieConsentSettings } from "./cookie-consent-settings";
-import { PageTransitionSettings } from "./page-transition-settings";
 import { MobileNavSettings } from "./mobile-nav-settings";
 import { DisplaySettings, FooterWordmarkMobileSettings, FooterWordmarkSettings } from "./display-form";
 import { ProgressToggle } from "./progress-toggle";
@@ -30,7 +29,7 @@ export default function SiteBehaviourSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description="Sitewide behaviour that isn't part of the homepage story — announcement bar, page transitions, the phone menu, cookie notice, back to top, the footer name, Progress, clock-in, organiser invites, and the contact form."
+      description="Sitewide behaviour that isn't part of the homepage story — announcement bar, the phone menu, cookie notice, back to top, the footer name, Progress, clock-in, organiser invites, and the contact form."
       title="Site behaviour"
     >
       <Suspense fallback={<SettingsFallback />}>
@@ -99,7 +98,6 @@ function SettingsView({
 
       <SettingsSectionGroup description="Behaviour that applies across the whole site." title="Across the site">
         <CookieConsentSettings variant={theme.cookieConsentVariant} />
-        <PageTransitionSettings mode={theme.pageTransition} />
         <MobileNavSettings style={theme.mobileNav} />
         <DisplaySettings scrollToTopEnabled={theme.scrollToTopEnabled} />
         <FooterWordmarkSettings enabled={theme.footerWordmarkEnabled} />

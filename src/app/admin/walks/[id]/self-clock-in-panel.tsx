@@ -1,6 +1,6 @@
 "use client";
 
-import { ClockInForm } from "@/app/w/[token]/clock-in-form";
+import { ClockInDrawer } from "@/app/w/[token]/clock-in-drawer";
 import { ClockOutButton } from "@/components/clock-out-button";
 import { useWalkClock } from "@/hooks/use-walk-clock";
 import { formatDateTime, formatTime, formatWalkDay } from "@/lib/dates";
@@ -99,7 +99,7 @@ export function SelfClockInPanel({
       ) : (
         <p className="text-sm text-muted-foreground">Clock in now, the same way a member does.</p>
       )}
-      <ClockInForm
+      <ClockInDrawer
         emergencyContactName={emergencyContactName}
         emergencyContactPhone={emergencyContactPhone}
         emergencyContactRequired={emergencyContactRequired}

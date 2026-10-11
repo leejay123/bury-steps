@@ -64,6 +64,11 @@ export function ProgressClockInSection() {
               <li>Opens the share link, or taps Clock in on their Walks page.</li>
               <li>Signs in if needed.</li>
               <li>
+                Taps <strong>Clock in</strong> on the walk page. A drawer slides up with the
+                pre-walk check (the form no longer fills the walk page itself); closing it leaves
+                them un-clocked-in.
+              </li>
+              <li>
                 Completes the pre-walk check: they confirm they are fit to take part, and either
                 report no conditions or type a short note for organisers. They also add an
                 emergency contact — a name and phone number. If you have turned on{" "}
@@ -73,7 +78,7 @@ export function ProgressClockInSection() {
                 already shows it and they can change it. ← Walks at the top takes them back to
                 their Walks page without clocking in.
               </li>
-              <li>Clocks in. The time is recorded by the site, not their phone clock.</li>
+              <li>Taps Clock in at the bottom of the drawer. The time is recorded by the site, not their phone clock.</li>
             </Steps>
             <p>
               Members who leave early tap <strong>Clock out</strong> and must give a reason. You

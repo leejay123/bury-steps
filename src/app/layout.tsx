@@ -1,6 +1,5 @@
 import { SerwistProvider } from "@serwist/turbopack/react";
 import type { CSSProperties } from "react";
-import { PageFade } from "@/components/page-fade";
 import { ClientPathnameProvider } from "@/components/client-pathname";
 import { SiteMotionConfig } from "@/components/site-motion-config";
 import { LiveUpdates } from "@/components/live-updates";
@@ -293,13 +292,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               its own looks identical either way.
             */}
             <main className={`flex flex-1 flex-col ${PAGE_Y} ${PAGE_X}`} id="main-content">
-              {/* Page content fades in quickly on navigation (page-fade.tsx);
-                  the header is outside, so it stays put. */}
-              <PageFade mode={theme.pageTransition}>
+              {/* No page-change animation: a new page simply replaces the old one. */}
+              <div className="flex min-w-0 flex-1 flex-col">
                 <WalkEssentialsProvider items={theme.walkEssentials}>
                   <SignedInProvider signedIn={signedIn}>{children}</SignedInProvider>
                 </WalkEssentialsProvider>
-              </PageFade>
+              </div>
             </main>
             <HeaderPartBoundary name="footer">
               <SiteFooter theme={theme} year={year} />

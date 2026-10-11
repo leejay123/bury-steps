@@ -4,7 +4,6 @@ import { z } from "zod";
 import { parseWalkPageSections, serializeWalkPageSections } from "@/lib/walk-page-sections";
 import { guardArgs, guardForm } from "@/lib/safe-action";
 
-import { parsePageTransition } from "@/lib/page-transition";
 import { serializeAnnouncementPages } from "@/lib/announcement-pages";
 import { parseTextSize } from "@/lib/text-sizes";
 import { revalidatePath, revalidateTag } from "@/lib/revalidate";
@@ -611,40 +610,6 @@ async function updateMobileNavWork(
   return {
     ok: true,
     message: style === "menu" ? "Phones now use the ☰ menu." : "Phones now use the bottom bar.",
-  };
-}
-
-async function updatePageTransitionWork(
-  _prev: ActionResult | null,
-  formData: FormData,
-): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  if (!admin.permDisplay) return permissionDenied("permDisplay");
-  const mode = parsePageTransition(String(formData.get("pageTransition") ?? ""));
-
-  try {
-    await prisma.siteSetting.upsert({
-      where: { id: SITE_SETTING_ID },
-      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, carouselEnabled: true, pageTransition: mode },
-      update: { pageTransition: mode },
-    });
-  } catch (err) {
-    return logActionError("updatePageTransition", err, "Could not save that setting. Try again.");
-  }
-
-  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
-  revalidatePath("/", "layout");
-  revalidatePath("/admin/settings/behaviour");
-  return {
-    ok: true,
-    message:
-      mode === "fade"
-        ? "Pages now fade in."
-        : mode === "slide"
-          ? "Pages now slide in and out when you open something and go back."
-          : mode === "rise"
-            ? "Pages now rise into place, like the walk cards."
-          : "Page changes are now instant.",
   };
 }
 
@@ -1944,7 +1909,6 @@ export const updateAnnouncementBanner = guardForm(
   updateAnnouncementBannerWork,
 );
 export const updateMobileNav = guardForm("organiser", pass, readPass, updateMobileNavWork);
-export const updatePageTransition = guardForm("organiser", pass, readPass, updatePageTransitionWork);
 export const updateSliderHeroWords = guardForm("organiser", pass, readPass, updateSliderHeroWordsWork);
 export const updateTitleRevealEnabled = guardForm("organiser", pass, readPass, updateTitleRevealEnabledWork);
 export const updateFooterWordmarkMobile = guardForm("organiser", pass, readPass, updateFooterWordmarkMobileWork);
