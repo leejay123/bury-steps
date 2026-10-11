@@ -1,0 +1,84 @@
+import { Suspense } from "react";
+import { cacheLife } from "next/cache";
+import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
+import { requirePermission } from "@/lib/auth";
+import { getSiteNoticeCategories, getSiteNotices } from "@/lib/site-notices";
+import { MAX_NOTICE_CATEGORIES } from "@/lib/notices";
+import { PreviewMemberWelcomeDialog } from "@/components/member-welcome-dialog";
+import { SiteNoticeManager } from "../notice-manager";
+import { SettingsPage, SettingsSection } from "../settings-page";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
+
+
+
+/** Fetched ahead (from the menu, the Settings table, or its tabs), so it opens with its settings there. */
+export const prefetch = "partial";
+
+export default function NoticesSettingsPage() {
+  // Title and description are part of the ready-made page; the settings
+  // themselves (and the access check) fill in just after.
+  return (
+    <SettingsPage
+      description={`Messages for signed-in members — short ones in the bell, longer ones as their own page on Notices, filed under up to ${MAX_NOTICE_CATEGORIES} categories.`}
+      title="Notices"
+    >
+      <Suspense fallback={<SettingsFallback />}>
+        <PlaceholderPreview fallback={<SettingsFallback />}>
+          <NoticesSettingsPageContent />
+        </PlaceholderPreview>
+      </Suspense>
+    </SettingsPage>
+  );
+}
+
+async function NoticesSettingsPageContent() {
+  // A private saved copy (this browser only, five minutes), so the page
+  // can be fetched ahead with its settings already in it.
+  "use cache: private";
+  cacheLife(PRIVATE_SAVED_COPY);
+  const admin = await requirePermission("permNotices");
+  const [notices, categories] = await Promise.all([
+    getSiteNotices(),
+    getSiteNoticeCategories(),
+  ]);
+
+  return (
+    <>
+      <SiteNoticeManager
+        categories={categories}
+        maxCategories={MAX_NOTICE_CATEGORIES}
+        notices={notices}
+      />
+      <SettingsSection
+        description="New members who haven't clocked in yet see this popup once on the Walks page. Previewing it here doesn't affect whether a real member has already seen it."
+        title="Welcome popup"
+      >
+        <div>
+          <PreviewMemberWelcomeDialog firstName={admin.firstName} />
+        </div>
+      </SettingsSection>
+    </>
+  );
+}
+
+/**
+ * While the page checks who you are: the real notices, from the same shared
+ * saved copies members' pages use (only organisers reach this page), so a
+ * refresh shows them at once instead of an empty space.
+ */
+async function SettingsFallback() {
+  const [notices, categories] = await Promise.all([getSiteNotices(), getSiteNoticeCategories()]);
+  return (
+    <>
+      <SiteNoticeManager categories={categories} maxCategories={MAX_NOTICE_CATEGORIES} notices={notices} />
+      <SettingsSection
+        description="New members who haven't clocked in yet see this popup once on the Walks page. Previewing it here doesn't affect whether a real member has already seen it."
+        title="Welcome popup"
+      >
+        <div>
+          <PreviewMemberWelcomeDialog />
+        </div>
+      </SettingsSection>
+    </>
+  );
+}

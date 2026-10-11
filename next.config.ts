@@ -87,8 +87,6 @@ const nextConfig: NextConfig = {
       // permissions as usual.
       { source: "/admin", destination: "/admin/walks", permanent: false },
       { source: "/admin/homepage", destination: "/admin/settings", permanent: false },
-      // Notices moved out of Settings to their own organiser page, as Walks.
-      { source: "/admin/settings/notices", destination: "/admin/notices", permanent: false },
       {
         source: "/admin/settings/site-wording",
         destination: "/admin/settings/site-wording/how-this-started",
