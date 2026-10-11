@@ -116,7 +116,8 @@ async function WalkForecastLoaded({
     return (
       <ForecastFrame place={area}>
         <p className="text-sm text-muted-foreground">
-          The forecast for {formatWalkDay(startsAt)} isn’t available yet. It appears here in the 16
+          {/* Within the forecast's 16 days, so the year never needs showing. */}
+          The forecast for {formatWalkDay(startsAt, startsAt)} isn’t available yet. It appears here in the 16
           days before the walk.
         </p>
       </ForecastFrame>
@@ -134,7 +135,6 @@ async function WalkForecastLoaded({
     <WalkForecastCard
       days={window.days}
       place={area}
-      today={londonDateKey(new Date())}
       walkDate={window.walkDateInWindow ? walkDate : null}
     />
   );
@@ -153,6 +153,7 @@ export function WalkForecastSection({
   longitude,
   place,
   startsAt,
+  timeFree = false,
 }: {
   cancelledAt: Date | null;
   durationMins: number;
@@ -161,9 +162,12 @@ export function WalkForecastSection({
   longitude: number | null;
   place: string;
   startsAt: Date;
+  /** The caller hides it once the walk has finished (in the browser), so
+   * this doesn't read the clock — for a page made ahead of time. */
+  timeFree?: boolean;
 }) {
-  const status = walkStatus({ cancelledAt, durationMins, endedAt, startsAt });
-  if (status === "completed" || status === "cancelled") return null;
+  if (cancelledAt) return null;
+  if (!timeFree && walkStatus({ cancelledAt, durationMins, endedAt, startsAt }) === "completed") return null;
   if (latitude == null || longitude == null || !place) return null;
 
   return (

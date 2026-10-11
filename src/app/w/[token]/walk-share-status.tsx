@@ -42,7 +42,8 @@ export function WalkShareStatusChrome({
   walkLeader,
   walkUrl,
 }: {
-  attended: boolean;
+  /** Whether this viewer clocked in; unknown on the shared page (see signedIn). */
+  attended?: boolean;
   backMarker: string | null;
   cancelledAt: string | null;
   /** What the organiser typed when cancelling, if anything. */
@@ -57,7 +58,14 @@ export function WalkShareStatusChrome({
   icsHref: string;
   location: string | null;
   postcode: string | null;
-  signedIn: boolean;
+  /**
+   * Unknown on the shared, ready-made page (the same for everyone): then
+   * both the visitor and the member versions of the notices are drawn, and
+   * the remembered sign-in hides the wrong one before anything shows
+   * ([data-guest-home] / [data-member-home] in globals.css). "Speak to an
+   * organiser" after the walk is left to the live part, which knows.
+   */
+  signedIn?: boolean;
   startsAt: string;
   title: string;
   walkLeader: string | null;
@@ -74,9 +82,47 @@ export function WalkShareStatusChrome({
   const completed = status === "completed";
   const windowStateNow = windowState(walk.startsAt, walk.durationMins, now, walk.endedAt);
   const tooEarly = windowStateNow === "too-early";
-  const closedNoClockIn = signedIn && !attended && windowStateNow === "closed";
+  const closedNoClockIn = signedIn === true && !attended && windowStateNow === "closed";
   const opensAt = walkOpensAt(walk.startsAt);
   const showCalendar = canAddWalkToCalendar(walk, now);
+
+  // Notices that depend on who's looking (status === "cancelled" is the same
+  // for everyone). Members can't have clocked in before clock-in opens.
+  const memberNotice =
+    !attended && tooEarly ? (
+      <Alert variant="info">
+        <AlertTitle>Clock-in is not open yet</AlertTitle>
+        <AlertDescription>
+          It opens an hour before the walk starts, at {formatTime(opensAt)} on {formatWalkDay(opensAt)}. Come back
+          on the day and this page will be ready.
+        </AlertDescription>
+      </Alert>
+    ) : null;
+  const closedNotice = <WalkClosedNoClockInNotice />;
+  const guestNotice = completed ? (
+    <Alert variant="info">
+      <AlertTitle>This walk has finished</AlertTitle>
+      <AlertDescription>Clock-in is closed. The details are still here to look back on.</AlertDescription>
+    </Alert>
+  ) : (
+    <div className="space-y-4 rounded-lg border bg-muted/40 p-5">
+      <div className="space-y-1">
+        <p className="font-medium">You need to sign in to join this walk</p>
+        <p className="text-sm text-muted-foreground">
+          Clock-in is only for signed-in members. If you do not have an account yet, create one first. If you
+          already have an account, sign in. You will come back to this walk afterwards.
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button asChild size="sm">
+          <a href={accountPortalHref("sign-up", walkUrl)}>Create an account</a>
+        </Button>
+        <Button asChild size="sm" variant="outline">
+          <a href={accountPortalHref("sign-in", walkUrl)}>Sign in</a>
+        </Button>
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -88,49 +134,24 @@ export function WalkShareStatusChrome({
             Check the walks list for the next one.
           </AlertDescription>
         </Alert>
-      ) : completed && !signedIn ? (
-        <Alert variant="info">
-          <AlertTitle>This walk has finished</AlertTitle>
-          <AlertDescription>
-            Clock-in is closed. The details are still here to look back on.
-          </AlertDescription>
-        </Alert>
-      ) : signedIn && !attended && tooEarly ? (
-        <Alert variant="info">
-          <AlertTitle>Clock-in is not open yet</AlertTitle>
-          <AlertDescription>
-            It opens an hour before the walk starts, at {formatTime(opensAt)} on{" "}
-            {formatWalkDay(opensAt)}. Come back on the day and this page will be ready.
-          </AlertDescription>
-        </Alert>
-      ) : closedNoClockIn ? (
-        <Alert variant="info">
-          <AlertTitle>This walk has finished</AlertTitle>
-          <AlertDescription>
-            Clock-in is closed. If you were there, speak to an organiser — they can add you to the
-            list.
-          </AlertDescription>
-        </Alert>
-      ) : !signedIn && !completed ? (
-        <div className="space-y-4 rounded-lg border bg-muted/40 p-5">
-          <div className="space-y-1">
-            <p className="font-medium">You need to sign in to join this walk</p>
-            <p className="text-sm text-muted-foreground">
-              Clock-in is only for signed-in members. If you do not have an account yet, create one
-              first. If you already have an account, sign in. You will come back to this walk
-              afterwards.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button asChild size="sm">
-              <a href={accountPortalHref("sign-up", walkUrl)}>Create an account</a>
-            </Button>
-            <Button asChild size="sm" variant="outline">
-              <a href={accountPortalHref("sign-in", walkUrl)}>Sign in</a>
-            </Button>
-          </div>
-        </div>
-      ) : null}
+      ) : signedIn === undefined ? (
+        <>
+          {guestNotice ? (
+            <div className="contents" data-guest-home="">
+              {guestNotice}
+            </div>
+          ) : null}
+          {memberNotice ? (
+            <div className="contents" data-member-home="">
+              {memberNotice}
+            </div>
+          ) : null}
+        </>
+      ) : signedIn ? (
+        (memberNotice ?? (closedNoClockIn ? closedNotice : null))
+      ) : (
+        guestNotice
+      )}
 
       <Card className="gap-4">
         <CardHeader>
@@ -225,4 +246,19 @@ export function WalkShareBeforeClockIn({
   const state = windowState(new Date(startsAt), durationMins, now, endedAt ? new Date(endedAt) : null);
   if (state !== "too-early") return null;
   return <>{children}</>;
+}
+
+/**
+ * After a walk, for a member who didn't clock in: who to speak to. Shown by
+ * the live part of the walk page, which knows whether they clocked in.
+ */
+export function WalkClosedNoClockInNotice() {
+  return (
+    <Alert variant="info">
+      <AlertTitle>This walk has finished</AlertTitle>
+      <AlertDescription>
+        Clock-in is closed. If you were there, speak to an organiser — they can add you to the list.
+      </AlertDescription>
+    </Alert>
+  );
 }

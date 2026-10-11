@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { IntentLink } from "@/components/intent-link";
 import { formatCompactDateTime } from "@/lib/dates";
 import { walkSharePath } from "@/lib/walk-slug";
 import {
@@ -26,7 +26,7 @@ export function RecentWalksCarousel({ walks }: { walks: RecentWalkCard[] }) {
       <CarouselContent>
         {walks.map((walk) => (
           <CarouselItem className="md:basis-1/2" key={walk.id}>
-            <Link
+            <IntentLink full
               className="block h-full w-full rounded-xl border p-4 transition-colors hover:bg-muted/50"
               data-reveal-card=""
               href={walkSharePath(walk)}
@@ -38,7 +38,7 @@ export function RecentWalksCarousel({ walks }: { walks: RecentWalkCard[] }) {
                   ? ` · Out ${formatCompactDateTime(new Date(walk.clockedOutAt))}`
                   : ""}
               </p>
-            </Link>
+            </IntentLink>
           </CarouselItem>
         ))}
       </CarouselContent>

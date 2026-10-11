@@ -1,6 +1,6 @@
-import WalkLinkLoading from "./loading";
-import { holdForPreview, placeholderPreviewMode } from "@/lib/placeholder-preview";
-import { cache } from "react";
+import { WalkLinkLoading } from "./loading";
+import { Suspense, cache } from "react";
+import { cacheLife } from "next/cache";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
@@ -13,7 +13,7 @@ import { meetingPointLabel } from "@/lib/geocode";
 import { What3wordsLink } from "@/components/what3words-link";
 import { walkShareUrl } from "@/lib/walk-slug";
 import { ensureWalkSlug, findWalkIdBySlugCode } from "@/lib/walk-slug-server";
-import { walkStatus } from "@/lib/walk-window";
+import { walkStatus, windowState } from "@/lib/walk-window";
 import { WalkMapSection } from "@/components/walk-map-section";
 import { WalkForecastSection } from "@/components/walk-forecast";
 import { SITE_SETTING_ID } from "@/lib/theme";
@@ -23,7 +23,13 @@ import { HowWalksWork } from "@/components/how-walks-work";
 import { getWalkMemberNames } from "@/lib/walk-members";
 import { getSiteTheme } from "@/lib/site-theme";
 import { WalkLivePanel } from "./walk-live-panel";
-import { WalkShareBeforeClockIn, WalkShareStatusChrome, WalkShareWhileOpen } from "./walk-share-status";
+import {
+  WalkClosedNoClockInNotice,
+  WalkShareBeforeClockIn,
+  WalkShareStatusChrome,
+  WalkShareWhileOpen,
+} from "./walk-share-status";
+import { WalkLivePanelSkeleton } from "./walk-live-panel-skeleton";
 
 
 
@@ -103,68 +109,74 @@ export async function generateMetadata({
   };
 }
 
-export default async function WalkLinkPage({
-  params,
-}: {
-  params: Promise<{ token: string }>;
-}) {
-  // Temporary owner tool: show this page's placeholder instead (loading.tsx).
-  const preview = await placeholderPreviewMode();
-  if (preview === "always") return <WalkLinkLoading />;
-  if (preview === "hold") await holdForPreview();
+/**
+ * Fetched ahead from walk links (IntentLink, on hover or touch), so a walk
+ * opens with its details already there. See node_modules/next/dist/docs/
+ * 01-app/02-guides/optimizing-prefetching.md.
+ */
+export const prefetch = "partial";
+
+/**
+ * Recent and upcoming walks are made ahead of time, so opening one from a
+ * shared link or refreshing it shows the walk at once; other walks are made
+ * the first time someone opens them.
+ */
+export async function generateStaticParams(): Promise<{ token: string }[]> {
+  try {
+    const walks = await prisma.walk.findMany({
+      where: { startsAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }, slug: { not: null } },
+      orderBy: { startsAt: "asc" },
+      take: 60,
+      select: { slug: true },
+    });
+    const tokens = walks.flatMap((walk) => (walk.slug ? [{ token: walk.slug }] : []));
+    // Next.js needs at least one; this one shows "page not found".
+    return tokens.length > 0 ? tokens : [{ token: "none-yet" }];
+  } catch {
+    return [{ token: "none-yet" }];
+  }
+}
+
+/**
+ * The walk's details, the same for everyone: a saved copy shared by every
+ * server, refreshed whenever the walk changes (its page is refreshed, and
+ * Next.js ties saved copies to the page that made them) and every five
+ * minutes. Who you are, your clock-in and who's on the walk are not in it.
+ */
+async function getSharedWalk(token: string) {
+  "use cache: remote";
+  cacheLife({ revalidate: 300 });
+  return getWalkByShareKey(token);
+}
+
+export default function WalkLinkPage({ params }: { params: Promise<{ token: string }> }) {
+  return (
+    <Suspense fallback={<WalkLinkLoading />}>
+      <WalkForAddress params={params} />
+    </Suspense>
+  );
+}
+
+async function WalkForAddress({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const walk = await getWalkByShareKey(token);
+  const [walk, theme] = await Promise.all([getSharedWalk(token), getSiteTheme()]);
   if (!walk) notFound();
 
-  const [user, theme, emergencySetting] = await Promise.all([
-    getOptionalUser(),
-    getSiteTheme(),
-    prisma.siteSetting.findUnique({
-      where: { id: SITE_SETTING_ID },
-      select: { emergencyContactRequired: true },
-    }),
-  ]);
-  const status = walkStatus({
-    cancelledAt: walk.cancelledAt,
-    durationMins: walk.durationMins,
-    endedAt: walk.endedAt,
-    startsAt: walk.startsAt,
-  });
-
-  // A cancelled walk is viewable by anyone, same as a completed one — the
-  // member-facing "All walks" tab lists and links to cancelled walks
-  // alongside completed ones, so this page must not 404 for them. There's
-  // nothing sensitive to protect either way: WalkLivePanel (clock-in,
-  // attendee names) never renders for a cancelled walk regardless of who's
-  // looking.
-  const slug = await ensureWalkSlug(walk);
-  // The code-only token link, or a link from before a rename: send it to
-  // the walk's current address.
-  if (token !== slug) {
-    redirect(`/w/${slug}`);
+  // The code-only token link, a link from before a rename, or a walk with no
+  // address name yet: send it to the walk's current address.
+  if (token !== walk.slug) {
+    const slug = await ensureWalkSlug(walk);
+    if (token !== slug) redirect(`/w/${slug}`);
   }
+  const slug = walk.slug ?? token;
 
+  // Only what doesn't depend on the time is decided here: this part is
+  // made ahead, and reading the clock would stop that. Whether the walk has
+  // started or finished is worked out in the browser (the walk clocks) and
+  // in the live part.
+  const cancelled = walk.cancelledAt !== null;
   const walkUrl = walkShareUrl(appUrl(), { token: walk.token, slug });
-
-  const myAttendance = user
-    ? await prisma.attendance.findFirst({
-        where: { walkId: walk.id, userId: user.id },
-        select: { clockedInAt: true, clockedOutAt: true },
-      })
-    : null;
-  const attended = Boolean(myAttendance);
-
-  // Names only once this member has clocked in — privacy for guests and
-  // people who have not joined yet. Organisers and owners always see who's
-  // on the walk, clocked in or not. WalkMembers paginates at 20, so a
-  // thousand names on one walk stay usable. Clocking out does not revoke
-  // that — they were on the walk.
-  const organiserView = user?.role === "ADMIN";
-  const memberNames = attended || organiserView
-    ? await getWalkMemberNames(walk.id, { finished: status === "completed" })
-    : [];
   const meeting = meetingPointLabel(walk.location, walk.postcode);
-  const walksHref = user?.role === "ADMIN" ? "/admin/walks" : "/walks";
   const journeyEvents = walk.journeyEvents.map((event) => ({
     id: event.id,
     title: event.title,
@@ -178,17 +190,20 @@ export default async function WalkLinkPage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link
-          className="text-sm text-muted-foreground hover:text-foreground"
-          href={user ? walksHref : "/"}
-        >
-          ← {user ? "Walks" : "Home"}
-        </Link>
+        {/* Members go back to Walks, everyone else Home: both are here, and
+            the remembered sign-in shows the right one before anything is drawn. */}
+        <span className="text-sm text-muted-foreground">
+          <Link className="hover:text-foreground" data-member-home="" href="/walks">
+            ← Walks
+          </Link>
+          <Link className="hover:text-foreground" data-guest-home="" href="/">
+            ← Home
+          </Link>
+        </span>
         <WalkJourneyDrawer events={journeyEvents} />
       </div>
 
       <WalkShareStatusChrome
-        attended={attended}
         backMarker={walk.backMarker}
         cancelledAt={cancelledAtIso}
         cancelledReason={walk.cancelledReason}
@@ -202,7 +217,6 @@ export default async function WalkLinkPage({
         icsHref={`/w/${slug}/ics`}
         location={walk.location}
         postcode={walk.postcode}
-        signedIn={Boolean(user)}
         startsAt={startsAtIso}
         title={walk.title}
         walkLeader={walk.walkLeader}
@@ -210,37 +224,36 @@ export default async function WalkLinkPage({
       />
 
       {/* What the member came to do (clock in, or their clock-in status) sits
-          straight under the title card, above the map and forecast. */}
-      {status === "cancelled" || !user ? null : (
-        <WalkLivePanel
-          alreadyClockedInAt={myAttendance?.clockedInAt.toISOString() ?? null}
-          // Before you set off is placed by the walk page layout below.
-          beforeYouSetOffEnabled={false}
-          beforeYouSetOffTips={theme.beforeYouSetOffTips}
-          clockedOutAt={myAttendance?.clockedOutAt?.toISOString() ?? null}
-          durationMins={walk.durationMins}
-          emergencyContactName={user.emergencyContactName ?? ""}
-          emergencyContactPhone={user.emergencyContactPhone ?? ""}
-          emergencyContactRequired={emergencySetting?.emergencyContactRequired ?? false}
-          endedAt={endedAtIso}
-          memberNames={memberNames}
-          organiserView={organiserView}
-          startsAt={startsAtIso}
-          token={walk.token}
-          walksHref={walksHref}
-        />
+          straight under the title card. Always live: never a saved copy. */}
+      {cancelled ? null : (
+        <Suspense
+          fallback={
+            <WalkLivePanelSkeleton durationMins={walk.durationMins} endedAt={endedAtIso} startsAt={startsAtIso} />
+          }
+        >
+          <WalkLivePart
+            beforeYouSetOffTips={theme.beforeYouSetOffTips}
+            durationMins={walk.durationMins}
+            endedAt={walk.endedAt}
+            startsAt={walk.startsAt}
+            token={walk.token}
+            walkId={walk.id}
+          />
+        </Suspense>
       )}
 
       {/* Sign-up steps are for visitors; members have already done them. */}
-      {status === "cancelled" || user || !theme.howWalksWorkEnabled ? null : (
-        <WalkShareWhileOpen
-          cancelledAt={cancelledAtIso}
-          durationMins={walk.durationMins}
-          endedAt={endedAtIso}
-          startsAt={startsAtIso}
-        >
-          <HowWalksWork steps={theme.howWalksWorkSteps} />
-        </WalkShareWhileOpen>
+      {cancelled || !theme.howWalksWorkEnabled ? null : (
+        <div className="contents" data-guest-home="">
+          <WalkShareWhileOpen
+            cancelledAt={cancelledAtIso}
+            durationMins={walk.durationMins}
+            endedAt={endedAtIso}
+            startsAt={startsAtIso}
+          >
+            <HowWalksWork steps={theme.howWalksWorkSteps} />
+          </WalkShareWhileOpen>
+        </div>
       )}
 
       {/* The shared sections, in the order and with the show/hide chosen in
@@ -249,19 +262,34 @@ export default async function WalkLinkPage({
         if (!visible) return null;
         switch (id) {
           case "before":
-            // Visitors: while the walk is open. Members: until clock-in
-            // opens (as when it sat in the clock-in panel).
-            if (status === "cancelled" || !theme.beforeYouSetOffEnabled) return null;
-            return user ? (
-              <WalkShareBeforeClockIn
-                durationMins={walk.durationMins}
-                endedAt={endedAtIso}
-                key={id}
-                startsAt={startsAtIso}
-              >
-                <BeforeYouSetOff tips={theme.beforeYouSetOffTips} />
-              </WalkShareBeforeClockIn>
-            ) : (
+            if (cancelled || !theme.beforeYouSetOffEnabled) return null;
+            // Members: until clock-in opens. Visitors: while the walk is open.
+            // Both are drawn; the remembered sign-in hides the other.
+            return (
+              <div className="contents" key={id}>
+                <div className="contents" data-member-home="">
+                  <WalkShareBeforeClockIn durationMins={walk.durationMins} endedAt={endedAtIso} startsAt={startsAtIso}>
+                    <BeforeYouSetOff tips={theme.beforeYouSetOffTips} />
+                  </WalkShareBeforeClockIn>
+                </div>
+                <div className="contents" data-guest-home="">
+                  <WalkShareWhileOpen
+                    cancelledAt={cancelledAtIso}
+                    durationMins={walk.durationMins}
+                    endedAt={endedAtIso}
+                    startsAt={startsAtIso}
+                  >
+                    <BeforeYouSetOff tips={theme.beforeYouSetOffTips} />
+                  </WalkShareWhileOpen>
+                </div>
+              </div>
+            );
+          case "map":
+            // No directions to a walk that isn't happening.
+            return meeting && !cancelled ? <WalkMapSection key={id} location={meeting} walk={walk} /> : null;
+          case "forecast":
+            // Hidden once the walk has finished — checked in the browser.
+            return (
               <WalkShareWhileOpen
                 cancelledAt={cancelledAtIso}
                 durationMins={walk.durationMins}
@@ -269,29 +297,93 @@ export default async function WalkLinkPage({
                 key={id}
                 startsAt={startsAtIso}
               >
-                <BeforeYouSetOff tips={theme.beforeYouSetOffTips} />
+                <WalkForecastSection
+                  cancelledAt={walk.cancelledAt}
+                  durationMins={walk.durationMins}
+                  endedAt={walk.endedAt}
+                  latitude={walk.latitude}
+                  longitude={walk.longitude}
+                  place={meeting}
+                  startsAt={walk.startsAt}
+                  timeFree
+                />
               </WalkShareWhileOpen>
-            );
-          case "map":
-            // No directions to a walk that isn't happening.
-            return meeting && status !== "cancelled" ? <WalkMapSection key={id} location={meeting} walk={walk} /> : null;
-          case "forecast":
-            return (
-              <WalkForecastSection
-                cancelledAt={walk.cancelledAt}
-                durationMins={walk.durationMins}
-                endedAt={walk.endedAt}
-                key={id}
-                latitude={walk.latitude}
-                longitude={walk.longitude}
-                place={meeting}
-                startsAt={walk.startsAt}
-              />
             );
           case "precise":
             return walk.what3words ? <What3wordsLink address={walk.what3words} key={id} /> : null;
         }
       })}
     </div>
+  );
+}
+
+/**
+ * The signed-in member's part of the walk page — clock in, their clock-in
+ * status, who's on the walk — and, after a walk they missed, who to speak
+ * to. Worked out fresh on every visit (no saved copy), so it's always up to
+ * the second. Nothing for visitors.
+ */
+async function WalkLivePart({
+  beforeYouSetOffTips,
+  durationMins,
+  endedAt,
+  startsAt,
+  token,
+  walkId,
+}: {
+  beforeYouSetOffTips: readonly string[];
+  durationMins: number;
+  endedAt: Date | null;
+  startsAt: Date;
+  token: string;
+  walkId: string;
+}) {
+  const user = await getOptionalUser();
+  if (!user) return null;
+  const status = walkStatus({ cancelledAt: null, durationMins, endedAt, startsAt });
+
+  const [emergencySetting, myAttendance] = await Promise.all([
+    prisma.siteSetting.findUnique({
+      where: { id: SITE_SETTING_ID },
+      select: { emergencyContactRequired: true },
+    }),
+    prisma.attendance.findFirst({
+      where: { walkId, userId: user.id },
+      select: { clockedInAt: true, clockedOutAt: true },
+    }),
+  ]);
+  const attended = Boolean(myAttendance);
+
+  // Names only once this member has clocked in — privacy for guests and
+  // people who have not joined yet. Organisers and owners always see who's
+  // on the walk, clocked in or not. WalkMembers paginates at 20, so a
+  // thousand names on one walk stay usable. Clocking out does not revoke
+  // that — they were on the walk.
+  const organiserView = user.role === "ADMIN";
+  const memberNames =
+    attended || organiserView ? await getWalkMemberNames(walkId, { finished: status === "completed" }) : [];
+  const closedNoClockIn = !attended && windowState(startsAt, durationMins, new Date(), endedAt) === "closed";
+
+  return (
+    <>
+      {closedNoClockIn ? <WalkClosedNoClockInNotice /> : null}
+      <WalkLivePanel
+        alreadyClockedInAt={myAttendance?.clockedInAt.toISOString() ?? null}
+        // Before you set off is placed by the walk page layout.
+        beforeYouSetOffEnabled={false}
+        beforeYouSetOffTips={beforeYouSetOffTips}
+        clockedOutAt={myAttendance?.clockedOutAt?.toISOString() ?? null}
+        durationMins={durationMins}
+        emergencyContactName={user.emergencyContactName ?? ""}
+        emergencyContactPhone={user.emergencyContactPhone ?? ""}
+        emergencyContactRequired={emergencySetting?.emergencyContactRequired ?? false}
+        endedAt={endedAt?.toISOString() ?? null}
+        memberNames={memberNames}
+        organiserView={organiserView}
+        startsAt={startsAt.toISOString()}
+        token={token}
+        walksHref={organiserView ? "/admin/walks" : "/walks"}
+      />
+    </>
   );
 }

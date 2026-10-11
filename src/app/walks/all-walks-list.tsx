@@ -3,7 +3,7 @@
 import { useMemo, useRef } from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { useQueryChoice, useQueryDefault, useQueryText } from "@/hooks/use-filter-query";
-import Link from "next/link";
+import { IntentLink } from "@/components/intent-link";
 import { ChevronRight, Footprints, Search, SearchX } from "lucide-react";
 import { formatTime, formatWalkLengthShort, londonYear } from "@/lib/dates";
 import { cn } from "@/lib/utils";
@@ -195,9 +195,9 @@ function AllWalksListInner({ rows }: { rows: AllWalksRow[] }) {
                     <div className="flex items-start justify-between gap-3">
                       <p className={cn("font-medium", !row.href && "text-muted-foreground")}>
                         {row.href ? (
-                          <Link className="after:absolute after:inset-0" href={row.href}>
+                          <IntentLink full className="after:absolute after:inset-0" href={row.href}>
                             {row.title}
-                          </Link>
+                          </IntentLink>
                         ) : (
                           row.title
                         )}

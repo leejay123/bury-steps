@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import { IntentLink } from "@/components/intent-link";
 import { ChevronRight, Footprints, Search } from "lucide-react";
 import { formatCompactDateTime, formatDate, formatTime, londonYear } from "@/lib/dates";
 import { cn } from "@/lib/utils";
@@ -198,9 +198,9 @@ function HistoryList({ rows }: { rows: AttendanceHistoryRow[] }) {
             <div className="flex items-start justify-between gap-3">
               <p className={cn("font-medium", !row.href && "text-muted-foreground")}>
                 {row.href ? (
-                  <Link className="after:absolute after:inset-0" href={row.href}>
+                  <IntentLink full className="after:absolute after:inset-0" href={row.href}>
                     {row.title}
-                  </Link>
+                  </IntentLink>
                 ) : (
                   row.title
                 )}

@@ -14,7 +14,7 @@ export default function Loading() {
   return <WalkLinkLoading />;
 }
 
-async function WalkLinkLoading() {
+export async function WalkLinkLoading() {
   const theme = await getSiteTheme();
   return (
     <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6">

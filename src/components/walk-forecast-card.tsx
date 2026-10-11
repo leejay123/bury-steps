@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
+import { londonDateKey } from "@/lib/weather";
+import { serverNow } from "@/lib/server-clock";
 import {
   Cloud,
   CloudDrizzle,
@@ -38,19 +40,25 @@ function DayIcon({ kind, className }: { kind: WeatherKind; className?: string })
   return <Icon aria-hidden className={className ?? "size-5"} />;
 }
 
+/** The date doesn't need watching: the strip is re-drawn whenever the page is. */
+function subscribeNever() {
+  return () => {};
+}
+
 export function WalkForecastCard({
   days,
   place,
-  today,
   walkDate,
 }: {
   days: ForecastDay[];
   place: string;
-  /** UK date for "Today" on the strip. */
-  today: string;
   /** UK date of this walk, when it falls inside `days`. */
   walkDate: string | null;
 }) {
+  // UK date for "Today" on the strip, by the site's clock — worked out in the
+  // browser once the page is showing (the server can't read the clock on a
+  // page made ahead of time), so "Today" appears just after the strip does.
+  const today = useSyncExternalStore(subscribeNever, () => londonDateKey(serverNow()), () => null);
   const initial = days.find((day) => day.date === walkDate)?.date ?? days[0]?.date ?? "";
   const [selectedDate, setSelectedDate] = useState(initial);
   const selected = days.find((day) => day.date === selectedDate) ?? days[0];

@@ -3,7 +3,7 @@
 import { useDeferredValue, useEffect, useMemo, useRef } from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { useQueryChoice, useQueryText } from "@/hooks/use-filter-query";
-import Link from "next/link";
+import { IntentLink } from "@/components/intent-link";
 import { useRouter } from "next/navigation";
 import { CalendarDays, ChevronRight, Clock, MapPin, Search, SearchX } from "lucide-react";
 import { formatTime, formatWalkDate, formatWalkDay, formatWalkLengthShort } from "@/lib/dates";
@@ -97,7 +97,7 @@ function UpcomingWalkCardRow({ walk }: { walk: UpcomingWalkCard }) {
         this is the only focus stop and the only thing a screen reader
         announces as interactive.
       */}
-      <Link
+      <IntentLink full
         aria-label={walkLinkLabel(walk, state)}
         // Inset: the card clips anything drawn outside it (overflow-hidden),
         // which hid an outside ring completely from keyboard users.

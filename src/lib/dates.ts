@@ -210,13 +210,15 @@ export function formatLongDateTime(at: DateInput): string {
   return `${weekday} ${c.day} ${MONTH_LONG[c.month - 1]} ${c.year}, ${clockText(c)}`;
 }
 
-/** "Wed 7 Oct", or "Wed 7 Oct 2027" outside this year. */
-export function formatWalkDay(at: DateInput): string {
+/** "Wed 7 Oct", or "Wed 7 Oct 2027" outside this year. `now` decides "this
+ * year" (pass a fixed date where the clock can't be read, e.g. a page made
+ * ahead of time). */
+export function formatWalkDay(at: DateInput, now: DateInput = new Date()): string {
   const date = toDate(at);
   if (!isValidDate(date)) return "";
   const c = londonClock(date);
   const day = `${weekdayShortOf(c.year, c.month, c.day)} ${dayMonthShortOf(c.month, c.day)}`;
-  return c.year === londonClock(new Date()).year ? day : `${day} ${c.year}`;
+  return c.year === londonClock(toDate(now)).year ? day : `${day} ${c.year}`;
 }
 
 /** "Wed 7 Oct, 10:05". */
