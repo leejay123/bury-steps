@@ -36,7 +36,10 @@ export function WalksSection({
             same pre-walk check members use — fit to take part, conditions, and emergency contact.
             Before it opens, a blue <strong>Clock-in is not open yet</strong> box on the walk’s
             page says when it will (the same box members see). You are then on that walk’s
-            attendance list once you clock in. The walk’s own page shows the same
+            attendance list once you clock in. You don’t need to clock in to see who’s coming:
+            on a walk’s shared page, organisers and owners always see{" "}
+            <strong>Who’s coming</strong> (or <strong>Who attended</strong> afterwards), while
+            members only see the names once they’ve clocked in themselves. The walk’s own page shows the same
             status just under its title, then the date, start time, length, and meeting
             point on their own lines. Who created the walk sits under the title.
           </p>
