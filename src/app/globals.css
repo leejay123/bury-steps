@@ -547,6 +547,14 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
    React's <ViewTransition> as the Next.js view transitions guide shows. Only
    when a placeholder was actually on screen: a page that arrives ready
    shows at once with no animation. */
+/* React starts a view transition for navigations too, even when nothing in
+   it is set to animate; the browser would then cross-fade the whole page by
+   default. Only the skeleton reveal animates on this site: pages that
+   arrive ready must simply appear. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
 ::view-transition-old(.skeleton-reveal) {
   animation: 400ms ease-out both skeleton-reveal-out;
 }
