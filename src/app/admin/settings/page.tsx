@@ -132,7 +132,7 @@ async function AdminSettingsPageContent() {
     },
     "/admin/settings/faqs": { status: `${faqCount} of ${MAX_HOMEPAGE_FAQS} questions` },
     [SITE_WORDING_PAGES[0].href]: { status: plural(SITE_WORDING_PAGES.length, "page") },
-    "/admin/settings/notices": { status: plural(noticeCount, "notice") },
+    "/admin/notices": { status: plural(noticeCount, "notice") },
     "/admin/settings/emails": {
       status:
         customisedEmailCount > 0

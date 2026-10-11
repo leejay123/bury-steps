@@ -93,7 +93,9 @@ export function HomepageNoticesSection() {
         <AccordionContent>
           <GuideBody>
             <p>
-              Open <Link href="/admin/settings/notices">Notices</Link>. You can add as many
+              Open <Link href="/admin/notices">Notices</Link> from the menu — owners, and anyone
+              given the Notices permission, go straight to the organiser page (it used to be under
+              Settings); <strong>See it as members do</strong> opens the members&apos; page. You can add as many
               notices as you need. The member bell shows the pinned welcome (if it is on) plus the{" "}
               {BELL_NOTICE_LIMIT} newest other notices — older ones drop out of the bell only.
               Full-page notices stay on <Link href="/notices">Notices</Link> forever. Up to{" "}

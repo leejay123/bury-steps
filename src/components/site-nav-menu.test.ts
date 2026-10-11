@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ORGANISER_PERMISSION_OPTIONS, type OrganiserPermissions } from "@/lib/organiser-permissions";
+import { ORGANISER_PERMISSION_OPTIONS, ORGANISER_PERMISSIONS, type OrganiserPermissions } from "@/lib/organiser-permissions";
 import { isNavItemActive, navItems, shouldPrefetchNavLink } from "./site-nav-items";
 
 const NO_ORGANISER_PERMISSIONS: OrganiserPermissions = ORGANISER_PERMISSION_OPTIONS.reduce(
@@ -22,7 +22,8 @@ describe("navItems", () => {
     expect(navItems(true, "/admin/walks").map((item) => item.href)).toEqual([
       "/",
       "/admin/walks",
-      "/notices",
+      // Whoever manages notices gets the organiser side, as with Walks.
+      "/admin/notices",
       "/progress",
       "/history",
       "/admin/members",
@@ -31,6 +32,12 @@ describe("navItems", () => {
       "/admin/settings",
       "/admin/guide",
     ]);
+  });
+
+  it("sends organisers without the Notices permission to the members' Notices", () => {
+    const hrefs = navItems(true, "/admin/walks", ORGANISER_PERMISSIONS).map((item) => item.href);
+    expect(hrefs).toContain("/notices");
+    expect(hrefs).not.toContain("/admin/notices");
   });
 });
 

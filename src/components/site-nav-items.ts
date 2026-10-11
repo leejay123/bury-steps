@@ -40,7 +40,8 @@ export function navItems(
       href: isAdmin && !perms.permWalksView && !perms.permWalksCreate ? "/walks" : walksHref,
       label: "Walks",
     },
-    { href: "/notices", label: "Notices" },
+    // Whoever manages notices gets the organiser side, as with Walks.
+    { href: isAdmin && perms.permNotices ? "/admin/notices" : "/notices", label: "Notices" },
     ...(progressEnabled ? [{ href: "/progress", label: "Progress" }] : []),
     // Everyone's own walk history, organisers and owners included.
     { href: "/history", label: "History" },
@@ -94,6 +95,7 @@ const FETCHED_AHEAD = new Set([
   "/admin/messages",
   "/admin/reports",
   "/admin/settings",
+  "/admin/notices",
 ]);
 
 /** prefetch={true} for converted pages (FETCHED_AHEAD), otherwise the default. */

@@ -26,7 +26,7 @@ const SETTINGS_PAGE_ICONS: Record<string, LucideIcon> = {
   "/admin/settings/testimonials": Quote,
   "/admin/settings/faqs": HelpCircle,
   "/admin/settings/site-wording/how-this-started": Text,
-  "/admin/settings/notices": Bell,
+  "/admin/notices": Bell,
   "/admin/settings/emails": Mail,
   "/admin/settings/subscribers": Users,
   "/admin/settings/progress": TrendingUp,

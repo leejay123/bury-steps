@@ -43,7 +43,7 @@ function revalidateNotices(paths: string[] = []) {
   revalidatePath("/", "layout");
   revalidatePath("/notices");
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/notices");
+  revalidatePath("/admin/notices");
   for (const path of paths) revalidatePath(path);
 }
 

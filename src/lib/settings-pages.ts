@@ -117,7 +117,7 @@ export const SETTINGS_PAGE_GROUPS: SettingsPageGroup[] = [
     label: "Members & emails",
     pages: [
       {
-        href: "/admin/settings/notices",
+        href: "/admin/notices",
         title: "Notices",
         description: "Messages members see in the bell and on the Notices page.",
         keywords: "bell announcements welcome popup news",
