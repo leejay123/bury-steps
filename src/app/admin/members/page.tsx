@@ -1,4 +1,4 @@
-import { RevealSuspense } from "@/components/reveal-suspense";
+import { Suspense } from "react";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { MemberRowsSkeleton } from "@/components/list-skeletons";
 import { Users } from "lucide-react";
@@ -42,11 +42,11 @@ export default function MembersPage({
         title="Members"
       />
       {/* The heading shows straight away; only the list waits for data. */}
-      <RevealSuspense fallback={<MembersListSkeleton />}>
+      <Suspense fallback={<MembersListSkeleton />}>
         <PlaceholderPreview fallback={<MembersListSkeleton />}>
           <MembersForViewer searchParams={searchParams} />
         </PlaceholderPreview>
-      </RevealSuspense>
+      </Suspense>
     </div>
   );
 }

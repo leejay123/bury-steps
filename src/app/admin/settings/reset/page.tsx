@@ -1,4 +1,4 @@
-import { RevealSuspense } from "@/components/reveal-suspense";
+import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
@@ -21,11 +21,11 @@ export default function ResetSiteSettingsPage() {
       description="Wipe walks, members, messages, subscribers, and homepage edits, and put the starter content back. You stay the organiser."
       title="Reset the site"
     >
-      <RevealSuspense fallback={<SettingsFallback />}>
+      <Suspense fallback={<SettingsFallback />}>
         <PlaceholderPreview fallback={<SettingsFallback />}>
           <ResetSiteSettingsPageContent />
         </PlaceholderPreview>
-      </RevealSuspense>
+      </Suspense>
     </SettingsPage>
   );
 }

@@ -1,4 +1,4 @@
-import { RevealSuspense } from "@/components/reveal-suspense";
+import { Suspense } from "react";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import type { Metadata } from "next";
 import { HistoryLoading } from "./loading";
@@ -25,11 +25,11 @@ export const metadata: Metadata = {
 
 export default function WalkHistoryPage() {
   return (
-    <RevealSuspense fallback={<HistoryLoading />}>
+    <Suspense fallback={<HistoryLoading />}>
       <PlaceholderPreview fallback={<HistoryLoading />}>
         <WalkHistoryContent />
       </PlaceholderPreview>
-    </RevealSuspense>
+    </Suspense>
   );
 }
 

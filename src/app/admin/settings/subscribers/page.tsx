@@ -1,4 +1,4 @@
-import { RevealSuspense } from "@/components/reveal-suspense";
+import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { Download } from "lucide-react";
@@ -39,11 +39,11 @@ export default function AdminSubscribersSettingsPage() {
       description="Who's opted into which emails. Send a newsletter to everyone on the list straight from this page, or download the list."
       title="Subscribers"
     >
-      <RevealSuspense fallback={<SubscribersFallback />}>
+      <Suspense fallback={<SubscribersFallback />}>
         <PlaceholderPreview fallback={<SubscribersFallback />}>
           <AdminSubscribersSettingsPageContent />
         </PlaceholderPreview>
-      </RevealSuspense>
+      </Suspense>
     </SettingsPage>
   );
 }

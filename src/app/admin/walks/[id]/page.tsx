@@ -1,4 +1,4 @@
-import { RevealSuspense } from "@/components/reveal-suspense";
+import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { getSiteTheme } from "@/lib/site-theme";
@@ -470,10 +470,10 @@ export const prefetch = "partial";
 
 export default function WalkDetailPage(props: { params: Promise<{ id: string }> }) {
   return (
-    <RevealSuspense fallback={<WalkDetailLoading />}>
+    <Suspense fallback={<WalkDetailLoading />}>
       <PlaceholderPreview fallback={<WalkDetailLoading />}>
         <WalkDetailForAddress {...props} />
       </PlaceholderPreview>
-    </RevealSuspense>
+    </Suspense>
   );
 }

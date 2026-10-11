@@ -1,11 +1,10 @@
 import { Suspense } from "react";
-import { RevealSuspense } from "@/components/reveal-suspense";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import type { Metadata } from "next";
 import { RememberListCount, RememberText } from "@/components/remember-list-count";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { CUP_BODY_COOKIE, CUP_TITLE_COOKIE, TOGETHER_BODY_COOKIE } from "@/lib/remembered-rows-key";
-import { ProgressGroupSkeleton, ProgressPersonalSkeleton } from "./progress-skeleton";
+import { ProgressPersonalSkeleton, ProgressSkeleton } from "./progress-skeleton";
 import { notFound } from "next/navigation";
 import { Footprints } from "lucide-react";
 import { getOptionalUser, requireUser } from "@/lib/auth";
@@ -56,18 +55,12 @@ export default function ProgressPage() {
           Only signed-in members see this.
         </p>
       </div>
-      {/* Your own numbers and badges: a placeholder until they arrive,
-          then the skeleton reveal. */}
-      <RevealSuspense fallback={<ProgressPersonalSkeleton />}>
-        <PlaceholderPreview fallback={<ProgressPersonalSkeleton />}>
+      {/* The heading shows straight away; one placeholder, shaped like last
+          time from the first paint, until the numbers arrive. */}
+      <Suspense fallback={<ProgressFallback />}>
+        <PlaceholderPreview fallback={<ProgressFallback />}>
           <ProgressForMember />
         </PlaceholderPreview>
-      </RevealSuspense>
-      {/* Together, the cup and the board are the same for every member (and
-          only members are sent this page), so they come from the shared copy
-          and show at once — on a refresh too. */}
-      <Suspense fallback={<ProgressGroupSkeleton />}>
-        <ProgressForEveryone />
       </Suspense>
     </div>
   );
@@ -99,36 +92,27 @@ async function ProgressForMember() {
   // Not signed in: requireUser sends them to sign in, as before.
   if (!progress) await requireUser();
   if (!progress?.enabled) notFound();
-  return <ProgressBody game={progress.game} part="yours" />;
-}
-
-/** The group's side of Progress, from the copy shared by every member. */
-async function ProgressForEveryone() {
-  const [enabled, game] = await Promise.all([getProgressEnabled(), loadWalkGameForEveryone().catch(() => null)]);
-  if (!enabled || !game) return null;
-  return <ProgressBody game={game} part="group" />;
+  return <ProgressBody game={progress.game} />;
 }
 
 async function ProgressBody({
   game,
-  part,
+  viewerLoading = false,
 }: {
   game: WalkGameView;
-  /** "yours": your numbers and badges. "group": Together, the cup and the board. */
-  part: "yours" | "group";
+  /** The placeholder: the group's parts real, your own numbers and badges grey. */
+  viewerLoading?: boolean;
 }) {
-  const yours = part === "yours";
   const togetherPct = game.together
     ? Math.min(100, Math.round((game.together.count / game.together.goal) * 100))
     : 0;
 
   return (
     <>
-      {yours ? (
-        <RememberListCount count={game.viewer.badges.length} id="progress-badges" max={12} />
-      ) : (
+      {viewerLoading ? null : (
         <>
       <RememberListCount count={Math.min(game.board.length, LIST_PAGE_SIZE)} id="progress" />
+      <RememberListCount count={game.viewer.badges.length} id="progress-badges" max={12} />
       <RememberText
         name={TOGETHER_BODY_COOKIE}
         value={
@@ -154,7 +138,9 @@ async function ProgressBody({
         </>
       )}
 
-      {yours ? (
+      {viewerLoading ? (
+        <ProgressPersonalSkeleton />
+      ) : (
         <>
       <section className="overflow-hidden rounded-xl border" data-reveal-card="">
         <div className="grid grid-cols-1 sm:grid-cols-3">
@@ -183,9 +169,9 @@ async function ProgressBody({
         </section>
       ) : null}
         </>
-      ) : null}
+      )}
 
-      {!yours && game.together ? (
+      {game.together ? (
         <section className="flex flex-col gap-3 rounded-xl border p-4" data-reveal-card="">
           <h2 className="font-medium">Together</h2>
           <p className="text-sm text-muted-foreground">
@@ -205,7 +191,7 @@ async function ProgressBody({
         </section>
       ) : null}
 
-      {!yours && game.cup ? (
+      {game.cup ? (
         <section className="flex flex-col gap-1.5 rounded-xl border p-4" data-reveal-card="">
           <h2 className="font-medium">{game.cup.monthLabel} cup</h2>
           <p className="text-sm text-muted-foreground">
@@ -216,7 +202,6 @@ async function ProgressBody({
         </section>
       ) : null}
 
-      {yours ? null : (
       <section className="flex flex-col gap-3">
         <div className="flex flex-col gap-1">
           <h2 className="font-medium">This month</h2>
@@ -235,7 +220,21 @@ async function ProgressBody({
           <ProgressBoard board={game.board} />
         )}
       </section>
-      )}
     </>
+  );
+}
+
+/**
+ * Progress while your own numbers load. Together, the cup and the board are
+ * the same for every member (and only members are sent this page), so they
+ * come straight from the shared copy and show for real at once — even on a
+ * refresh; only your stats and badges are grey.
+ */
+async function ProgressFallback() {
+  const [enabled, game] = await Promise.all([getProgressEnabled(), loadWalkGameForEveryone().catch(() => null)]);
+  return (
+    <div className="contents" data-page-loading="">
+      {enabled && game ? <ProgressBody game={game} viewerLoading /> : <ProgressSkeleton />}
+    </div>
   );
 }

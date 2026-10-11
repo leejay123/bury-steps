@@ -1,4 +1,4 @@
-import { RevealSuspense } from "@/components/reveal-suspense";
+import { Suspense } from "react";
 import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
 import { requireAdmin } from "@/lib/auth";
 import {
@@ -44,8 +44,8 @@ async function OrganiserGuidePageContent() {
  * shows a matching placeholder for an instant while it loads. */
 export default function OrganiserGuidePage() {
   return (
-    <RevealSuspense fallback={<AdminPageFallback title="Guide" rows={8} />}>
+    <Suspense fallback={<AdminPageFallback title="Guide" rows={8} />}>
       <OrganiserGuidePageContent />
-    </RevealSuspense>
+    </Suspense>
   );
 }

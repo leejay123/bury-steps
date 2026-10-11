@@ -1,5 +1,4 @@
 import NoticeLoading from "./loading";
-import { RevealSuspense } from "@/components/reveal-suspense";
 import { Suspense, type CSSProperties } from "react";
 import type { Metadata } from "next";
 import { DescriptionText } from "@/components/description-text";
@@ -63,9 +62,9 @@ export default function NoticeDetailPage({
       <Suspense fallback={null}>
         <SignedInCheck />
       </Suspense>
-      <RevealSuspense fallback={<NoticeLoading />}>
+      <Suspense fallback={<NoticeLoading />}>
         <NoticeContent params={params} />
-      </RevealSuspense>
+      </Suspense>
     </>
   );
 }

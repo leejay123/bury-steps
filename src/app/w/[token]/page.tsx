@@ -1,6 +1,5 @@
 import { WalkLinkLoading } from "./loading";
-import { RevealSuspense } from "@/components/reveal-suspense";
-import { cache } from "react";
+import { Suspense, cache } from "react";
 import { cacheLife } from "next/cache";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -152,9 +151,9 @@ async function getSharedWalk(token: string) {
 
 export default function WalkLinkPage({ params }: { params: Promise<{ token: string }> }) {
   return (
-    <RevealSuspense fallback={<WalkLinkLoading />}>
+    <Suspense fallback={<WalkLinkLoading />}>
       <WalkForAddress params={params} />
-    </RevealSuspense>
+    </Suspense>
   );
 }
 
@@ -227,7 +226,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
       {/* What the member came to do (clock in, or their clock-in status) sits
           straight under the title card. Always live: never a saved copy. */}
       {cancelled ? null : (
-        <RevealSuspense
+        <Suspense
           fallback={
             <WalkLivePanelSkeleton durationMins={walk.durationMins} endedAt={endedAtIso} startsAt={startsAtIso} />
           }
@@ -240,7 +239,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
             token={walk.token}
             walkId={walk.id}
           />
-        </RevealSuspense>
+        </Suspense>
       )}
 
       {/* Sign-up steps are for visitors; members have already done them. */}

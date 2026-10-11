@@ -1,4 +1,4 @@
-import { RevealSuspense } from "@/components/reveal-suspense";
+import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { prisma } from "@/lib/db";
@@ -33,11 +33,11 @@ export default function SiteBehaviourSettingsPage() {
       description="Sitewide behaviour that isn't part of the homepage story — announcement bar, page transitions, the phone menu, cookie notice, back to top, the footer name, Progress, clock-in, organiser invites, and the contact form."
       title="Site behaviour"
     >
-      <RevealSuspense fallback={<SettingsFallback />}>
+      <Suspense fallback={<SettingsFallback />}>
         <PlaceholderPreview fallback={<SettingsFallback />}>
           <SiteBehaviourSettingsPageContent />
         </PlaceholderPreview>
-      </RevealSuspense>
+      </Suspense>
     </SettingsPage>
   );
 }

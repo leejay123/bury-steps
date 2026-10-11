@@ -1,4 +1,4 @@
-import { RevealSuspense } from "@/components/reveal-suspense";
+import { Suspense } from "react";
 import { ensureWalkPoint } from "@/lib/walk-coordinates";
 import { WalkMap } from "@/components/walk-map";
 import { WalkMapSkeleton } from "@/components/walk-map-skeleton";
@@ -35,8 +35,8 @@ export function WalkMapSection({
   };
 }) {
   return (
-    <RevealSuspense fallback={<WalkMapSkeleton location={location} />}>
+    <Suspense fallback={<WalkMapSkeleton location={location} />}>
       <WalkMapResolved location={location} walk={walk} />
-    </RevealSuspense>
+    </Suspense>
   );
 }

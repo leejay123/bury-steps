@@ -1,4 +1,4 @@
-import { RevealSuspense } from "@/components/reveal-suspense";
+import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
@@ -21,11 +21,11 @@ export default function CacheSettingsPage() {
       description="Use this if the public homepage still shows old photos, quotes or questions after you've saved changes."
       title="Refresh the homepage"
     >
-      <RevealSuspense fallback={<SettingsFallback />}>
+      <Suspense fallback={<SettingsFallback />}>
         <PlaceholderPreview fallback={<SettingsFallback />}>
           <CacheSettingsPageContent />
         </PlaceholderPreview>
-      </RevealSuspense>
+      </Suspense>
     </SettingsPage>
   );
 }

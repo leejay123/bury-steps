@@ -1,4 +1,4 @@
-import { RevealSuspense } from "@/components/reveal-suspense";
+import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
@@ -22,11 +22,11 @@ export default function HowThisStartedWordingPage() {
       previewHref="/"
       title="How this started"
     >
-      <RevealSuspense fallback={<SettingsFallback />}>
+      <Suspense fallback={<SettingsFallback />}>
         <PlaceholderPreview fallback={<SettingsFallback />}>
           <HowThisStartedWordingPageContent />
         </PlaceholderPreview>
-      </RevealSuspense>
+      </Suspense>
     </SettingsPage>
   );
 }

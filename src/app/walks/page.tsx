@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { RevealSuspense } from "@/components/reveal-suspense";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -51,11 +50,11 @@ export default function DashboardPage() {
           </Suspense>
         </p>
       </div>
-      <RevealSuspense fallback={<MemberWalksHold />}>
+      <Suspense fallback={<MemberWalksHold />}>
         <PlaceholderPreview fallback={<MemberWalksHold />}>
           <WalksForMember />
         </PlaceholderPreview>
-      </RevealSuspense>
+      </Suspense>
     </div>
   );
 }

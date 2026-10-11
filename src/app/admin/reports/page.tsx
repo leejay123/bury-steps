@@ -1,4 +1,4 @@
-import { RevealSuspense } from "@/components/reveal-suspense";
+import { Suspense } from "react";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
 import { ReportsFilterChrome } from "@/components/list-chrome";
@@ -179,10 +179,10 @@ export const prefetch = "partial";
 
 export default function AccidentReportsPage(props: Parameters<typeof AccidentReportsPageContent>[0]) {
   return (
-    <RevealSuspense fallback={<ReportsPageFallback />}>
+    <Suspense fallback={<ReportsPageFallback />}>
       <PlaceholderPreview fallback={<ReportsPageFallback />}>
         <AccidentReportsPageContent {...props} />
       </PlaceholderPreview>
-    </RevealSuspense>
+    </Suspense>
   );
 }

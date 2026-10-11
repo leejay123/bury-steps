@@ -39,16 +39,7 @@ export function ProgressSkeleton() {
   return (
     <>
       <ProgressPersonalSkeleton />
-      <ProgressGroupSkeleton />
-    </>
-  );
-}
 
-/** Together, the cup and the board while their shared copy loads (rare: it's
- * normally part of the page). */
-export function ProgressGroupSkeleton() {
-  return (
-    <>
       <RememberedText className="flex flex-col gap-3 rounded-xl border p-4" name={TOGETHER_BODY_COOKIE}>
         {(words) => (
           <>

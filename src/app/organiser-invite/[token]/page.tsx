@@ -1,4 +1,4 @@
-import { RevealSuspense } from "@/components/reveal-suspense";
+import { Suspense } from "react";
 import { PageFallback } from "@/components/page-fallback";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
@@ -119,8 +119,8 @@ async function OrganiserInvitePageContent({
  * shows a matching placeholder for an instant while it loads. */
 export default function OrganiserInvitePage(props: Parameters<typeof OrganiserInvitePageContent>[0]) {
   return (
-    <RevealSuspense fallback={<PageFallback />}>
+    <Suspense fallback={<PageFallback />}>
       <OrganiserInvitePageContent {...props} />
-    </RevealSuspense>
+    </Suspense>
   );
 }
