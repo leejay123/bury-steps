@@ -38,26 +38,7 @@ function GreyWords({ words }: { words: ReactNode }) {
 export function ProgressSkeleton() {
   return (
     <>
-      <section className="overflow-hidden rounded-xl border" data-reveal-card="">
-        <div className="grid grid-cols-1 sm:grid-cols-3">
-          <StatSkeleton label="This month" />
-          <StatSkeleton label="This year" />
-          <StatSkeleton label="Weeks in a row" />
-        </div>
-      </section>
-
-      {/* Hidden with its heading when there were no badges last time. */}
-      <section className="flex flex-col gap-3 has-[>[hidden]]:hidden" data-reveal-card="">
-        <h2 className="text-sm font-medium text-muted-foreground">Your badges</h2>
-        <RememberedRows
-          className="flex flex-wrap gap-2"
-          max={12}
-          remember="progress-badges"
-          rows={Array.from({ length: 12 }, (_, i) => (
-            <Skeleton className="h-5 w-16 rounded-md" key={i} />
-          ))}
-        />
-      </section>
+      <ProgressPersonalSkeleton />
 
       <RememberedText className="flex flex-col gap-3 rounded-xl border p-4" name={TOGETHER_BODY_COOKIE}>
         {(words) => (
@@ -98,6 +79,38 @@ export function ProgressSkeleton() {
           </p>
         </div>
         <NameRowsSkeleton remember="progress" />
+      </section>
+    </>
+  );
+}
+
+/**
+ * Your own part of Progress while it loads: the stats card (real labels,
+ * grey numbers) and your badges as many as last time. The group's parts are
+ * the same for everyone, so on a refresh they're shown for real instead.
+ */
+export function ProgressPersonalSkeleton() {
+  return (
+    <>
+      <section className="overflow-hidden rounded-xl border" data-reveal-card="">
+        <div className="grid grid-cols-1 sm:grid-cols-3">
+          <StatSkeleton label="This month" />
+          <StatSkeleton label="This year" />
+          <StatSkeleton label="Weeks in a row" />
+        </div>
+      </section>
+
+      {/* Hidden with its heading when there were no badges last time. */}
+      <section className="flex flex-col gap-3 has-[>[hidden]]:hidden" data-reveal-card="">
+        <h2 className="text-sm font-medium text-muted-foreground">Your badges</h2>
+        <RememberedRows
+          className="flex flex-wrap gap-2"
+          max={12}
+          remember="progress-badges"
+          rows={Array.from({ length: 12 }, (_, i) => (
+            <Skeleton className="h-5 w-16 rounded-md" key={i} />
+          ))}
+        />
       </section>
     </>
   );

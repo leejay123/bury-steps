@@ -178,6 +178,13 @@ async function loadSharedWalkGameData(): Promise<WalkGameLoadedData> {
   return loadWalkGameData(new Date());
 }
 
+/** The group's side of Progress (together, cup, board) — the same for every
+ * member — from the shared copy, with no one's own numbers in it. */
+export async function loadWalkGameForEveryone(): Promise<WalkGameView> {
+  const shared = await loadSharedWalkGameData();
+  return walkGameFromLoadedData("", { ...shared, now: new Date(shared.now) });
+}
+
 /** Progress for one member, from the shared group copy plus their own older clock-ins. */
 export async function loadWalkGameShared(viewerId: string): Promise<WalkGameView> {
   const shared = await loadSharedWalkGameData();

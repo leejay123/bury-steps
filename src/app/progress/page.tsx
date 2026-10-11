@@ -4,12 +4,12 @@ import type { Metadata } from "next";
 import { RememberListCount, RememberText } from "@/components/remember-list-count";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { CUP_BODY_COOKIE, CUP_TITLE_COOKIE, TOGETHER_BODY_COOKIE } from "@/lib/remembered-rows-key";
-import { ProgressSkeleton } from "./progress-skeleton";
+import { ProgressPersonalSkeleton, ProgressSkeleton } from "./progress-skeleton";
 import { notFound } from "next/navigation";
 import { Footprints } from "lucide-react";
 import { getOptionalUser, requireUser } from "@/lib/auth";
 import { getProgressEnabled } from "@/lib/progress-settings";
-import { loadWalkGameShared } from "@/lib/walk-progress";
+import { loadWalkGameForEveryone, loadWalkGameShared } from "@/lib/walk-progress";
 import { cacheLife } from "next/cache";
 import type { WalkGameView } from "@/lib/walk-game";
 import { EmptyState } from "@/components/empty-state";
@@ -57,20 +57,8 @@ export default function ProgressPage() {
       </div>
       {/* The heading shows straight away; one placeholder, shaped like last
           time from the first paint, until the numbers arrive. */}
-      <Suspense
-        fallback={
-          <div className="contents" data-page-loading="">
-            <ProgressSkeleton />
-          </div>
-        }
-      >
-        <PlaceholderPreview
-          fallback={
-            <div className="contents" data-page-loading="">
-              <ProgressSkeleton />
-            </div>
-          }
-        >
+      <Suspense fallback={<ProgressFallback />}>
+        <PlaceholderPreview fallback={<ProgressFallback />}>
           <ProgressForMember />
         </PlaceholderPreview>
       </Suspense>
@@ -107,13 +95,22 @@ async function ProgressForMember() {
   return <ProgressBody game={progress.game} />;
 }
 
-async function ProgressBody({ game }: { game: WalkGameView }) {
+async function ProgressBody({
+  game,
+  viewerLoading = false,
+}: {
+  game: WalkGameView;
+  /** The placeholder: the group's parts real, your own numbers and badges grey. */
+  viewerLoading?: boolean;
+}) {
   const togetherPct = game.together
     ? Math.min(100, Math.round((game.together.count / game.together.goal) * 100))
     : 0;
 
   return (
     <>
+      {viewerLoading ? null : (
+        <>
       <RememberListCount count={Math.min(game.board.length, LIST_PAGE_SIZE)} id="progress" />
       <RememberListCount count={game.viewer.badges.length} id="progress-badges" max={12} />
       <RememberText
@@ -138,7 +135,13 @@ async function ProgressBody({ game }: { game: WalkGameView }) {
             : ""
         }
       />
+        </>
+      )}
 
+      {viewerLoading ? (
+        <ProgressPersonalSkeleton />
+      ) : (
+        <>
       <section className="overflow-hidden rounded-xl border" data-reveal-card="">
         <div className="grid grid-cols-1 sm:grid-cols-3">
           <Stat
@@ -165,6 +168,8 @@ async function ProgressBody({ game }: { game: WalkGameView }) {
           </div>
         </section>
       ) : null}
+        </>
+      )}
 
       {game.together ? (
         <section className="flex flex-col gap-3 rounded-xl border p-4" data-reveal-card="">
@@ -216,5 +221,20 @@ async function ProgressBody({ game }: { game: WalkGameView }) {
         )}
       </section>
     </>
+  );
+}
+
+/**
+ * Progress while your own numbers load. Together, the cup and the board are
+ * the same for every member (and only members are sent this page), so they
+ * come straight from the shared copy and show for real at once — even on a
+ * refresh; only your stats and badges are grey.
+ */
+async function ProgressFallback() {
+  const [enabled, game] = await Promise.all([getProgressEnabled(), loadWalkGameForEveryone().catch(() => null)]);
+  return (
+    <div className="contents" data-page-loading="">
+      {enabled && game ? <ProgressBody game={game} viewerLoading /> : <ProgressSkeleton />}
+    </div>
   );
 }

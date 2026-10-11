@@ -2,7 +2,7 @@
 
 import { Fragment, createContext, useContext, useDeferredValue, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { IntentLink } from "@/components/intent-link";
+import Link from "next/link";
 import { AlertCircle, ChevronDown, ChevronRight, Search, SearchX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { unlockIdleDocument } from "@/components/overlay-root";
@@ -99,14 +99,18 @@ function RowIcon({ page }: { page: SettingsHubPage }) {
   );
 }
 
-/** A plain row: the whole card is one link to the page. */
+/** A plain row: the whole card is one link to the page. Each settings page
+ * is fetched in full as soon as its row is on screen (the default prefetch
+ * for a page set up to be fetched ahead), so a click — or a quick tap on a
+ * phone — opens it at once. Only owners use this table, and rarely, so
+ * those fetches cost little. */
 function LinkRow({ page }: { page: SettingsHubPage }) {
   return (
     <DataListItem className="relative items-start gap-3 px-4 py-3.5">
       <RowIcon page={page} />
       <RowText page={page} />
       <ChevronRight aria-hidden className="mt-2.5 size-4 shrink-0 text-muted-foreground" />
-      <IntentLink
+      <Link
         aria-label={page.title}
         className="absolute inset-0 rounded-[inherit] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
         href={page.href}
@@ -156,7 +160,7 @@ function ExpandableRow({
           <ul className="flex flex-col py-1 pl-[3.75rem]">
             {visibleChildren.map((child) => (
               <li key={child.href}>
-                <IntentLink
+                <Link
                   className="group flex items-center gap-3 rounded-md py-2 pr-4 hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   href={child.href}
                   onClick={navigate}
@@ -166,7 +170,7 @@ function ExpandableRow({
                     <span className="block text-sm text-muted-foreground">{child.description}</span>
                   </span>
                   <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />
-                </IntentLink>
+                </Link>
               </li>
             ))}
           </ul>
@@ -237,9 +241,9 @@ export function SettingsHub({ groups }: { groups: SettingsHubGroup[] }) {
             <ul className="mt-1 flex list-disc flex-col gap-0.5 pl-4">
               {needsAttention.map((page) => (
                 <li key={page.href}>
-                  <IntentLink className="font-medium underline underline-offset-2" href={page.href} onClick={navigate}>
+                  <Link className="font-medium underline underline-offset-2" href={page.href} onClick={navigate}>
                     {page.title}
-                  </IntentLink>
+                  </Link>
                   : {page.attention}
                 </li>
               ))}
