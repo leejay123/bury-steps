@@ -14,6 +14,7 @@ import { HeaderScrollShadow } from "@/components/header-scroll-shadow";
 import { FocusRescue } from "@/components/focus-rescue";
 import { PlaceholderPreviewBadge } from "@/components/placeholder-preview-badge";
 import { ShimmerTest } from "@/components/shimmer-test";
+import { AutoSkeletonTest } from "@/components/autoskeleton-test";
 import { TabStyleProvider } from "@/components/ui/tabs";
 import { HeaderPartBoundary } from "@/components/header-part-boundary";
 import type { Metadata, Viewport } from "next";
@@ -328,6 +329,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <FocusRescue />
           <PlaceholderPreviewBadge />
           <ShimmerTest />
+          <AutoSkeletonTest />
           <HeaderPartBoundary name="cookie-notice">
             <Suspense fallback={null}>
               <SiteCookieConsentGate />

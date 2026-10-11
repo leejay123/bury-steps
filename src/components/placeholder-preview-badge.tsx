@@ -8,7 +8,12 @@ import {
   setPlaceholderPreview,
   type PlaceholderPreviewMode,
 } from "@/lib/placeholder-preview-cookie";
-import { readPlaceholderStyle, setPlaceholderStyle, subscribePlaceholderStyle } from "@/lib/placeholder-style";
+import {
+  PLACEHOLDER_STYLES,
+  readPlaceholderStyle,
+  setPlaceholderStyle,
+  subscribePlaceholderStyle,
+} from "@/lib/placeholder-style";
 
 const noopSubscribe = () => () => {};
 const NEXT: Record<"off" | PlaceholderPreviewMode, PlaceholderPreviewMode | null> = {
@@ -44,6 +49,8 @@ export function PlaceholderPreviewBadge() {
   const [override, setOverride] = useState<PlaceholderPreviewMode | "off" | null>(null);
   const mode = override ?? saved ?? "off";
   const style = useSyncExternalStore(subscribePlaceholderStyle, readPlaceholderStyle, () => "grey" as const);
+  const styleIndex = PLACEHOLDER_STYLES.findIndex((option) => option.value === style);
+  const styleLabel = PLACEHOLDER_STYLES[styleIndex]?.label ?? "Grey";
 
   const cycle = useCallback(() => {
     const next = NEXT[mode];
@@ -78,14 +85,15 @@ export function PlaceholderPreviewBadge() {
       >
         Placeholders: <span className="font-medium">{LABEL[mode]}</span>
       </button>
-      {/* Temporary test: our grey shapes or shimmer-from-structure's shimmer (shimmer-test.tsx). */}
+      {/* Temporary test: our grey shapes, shimmer-from-structure's shimmer
+          (shimmer-test.tsx) or AutoSkeleton's shapes (autoskeleton-test.tsx). */}
       <button
-        aria-label={`Placeholder style: ${style === "shimmer" ? "Shimmer" : "Grey"}. Change`}
+        aria-label={`Placeholder style: ${styleLabel}. Change`}
         className="flex items-center gap-1.5 rounded-full border bg-background px-3 py-1.5 text-xs text-muted-foreground shadow-md"
-        onClick={() => setPlaceholderStyle(style === "shimmer" ? "grey" : "shimmer")}
+        onClick={() => setPlaceholderStyle(PLACEHOLDER_STYLES[(styleIndex + 1) % PLACEHOLDER_STYLES.length].value)}
         type="button"
       >
-        Style: <span className="font-medium">{style === "shimmer" ? "Shimmer" : "Grey"}</span>
+        Style: <span className="font-medium">{styleLabel}</span>
       </button>
     </div>
   );
