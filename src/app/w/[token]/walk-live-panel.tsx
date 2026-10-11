@@ -24,6 +24,7 @@ export function WalkLivePanel({
   emergencyContactRequired = false,
   endedAt = null,
   memberNames,
+  organiserView = false,
   startsAt,
   token,
   walksHref,
@@ -42,6 +43,8 @@ export function WalkLivePanel({
   /** Set once an organiser ends the walk early — see endWalkEarly. */
   endedAt?: string | null;
   memberNames: WalkMemberName[];
+  /** Organisers and owners see who's on the walk without clocking in. */
+  organiserView?: boolean;
   startsAt: string;
   token: string;
   walksHref: string;
@@ -138,46 +141,57 @@ export function WalkLivePanel({
 
   // The "clock-in isn't open yet" notice itself is shown at the top of the
   // page (page.tsx) — this just adds what to do while waiting.
+  // Organisers and owners: who's on the walk, whether or not they've clocked in.
+  const organiserNames = organiserView ? <WalkMembers completed={completed} names={memberNames} /> : null;
+
   if (state === "too-early") {
-    return beforeYouSetOffEnabled ? <BeforeYouSetOff tips={beforeYouSetOffTips} /> : null;
+    return (
+      <>
+        {beforeYouSetOffEnabled ? <BeforeYouSetOff tips={beforeYouSetOffTips} /> : null}
+        {organiserNames}
+      </>
+    );
   }
 
   // The "this walk has finished, clock-in is closed" notice itself is also
   // shown at the top of the page (page.tsx) — nothing else to add here.
   if (state === "closed") {
-    return null;
+    return organiserNames;
   }
 
   // Boxed like the other states of this panel, and kept to a readable width
   // on wide screens instead of running edge to edge.
   return (
-    <section
-      aria-labelledby={`clock-in-heading-${token}`}
-      className="flex flex-col gap-4 rounded-lg border p-5 sm:p-6"
-      id="clock-in"
-    >
-      <div className="flex flex-col gap-1">
-        <h2 className="font-semibold" id={`clock-in-heading-${token}`}>
-          Clock in
-        </h2>
-        {leftEarly ? (
-          <p className="text-sm text-muted-foreground outline-none" ref={statusRef} tabIndex={-1}>
-            You left early. Clock in again if you&rsquo;ve come back to the walk.
-          </p>
-        ) : status === "in-progress" ? (
-          <p className="text-sm tabular-nums text-muted-foreground">
-            This walk is in progress{countdown ? ` · finishes in ${countdown}` : ""}.
-          </p>
-        ) : null}
-      </div>
-      <div className="max-w-2xl">
-        <ClockInForm
-          emergencyContactName={emergencyContactName}
-          emergencyContactPhone={emergencyContactPhone}
-          emergencyContactRequired={emergencyContactRequired}
-          token={token}
-        />
-      </div>
-    </section>
+    <>
+      <section
+        aria-labelledby={`clock-in-heading-${token}`}
+        className="flex flex-col gap-4 rounded-lg border p-5 sm:p-6"
+        id="clock-in"
+      >
+        <div className="flex flex-col gap-1">
+          <h2 className="font-semibold" id={`clock-in-heading-${token}`}>
+            Clock in
+          </h2>
+          {leftEarly ? (
+            <p className="text-sm text-muted-foreground outline-none" ref={statusRef} tabIndex={-1}>
+              You left early. Clock in again if you&rsquo;ve come back to the walk.
+            </p>
+          ) : status === "in-progress" ? (
+            <p className="text-sm tabular-nums text-muted-foreground">
+              This walk is in progress{countdown ? ` · finishes in ${countdown}` : ""}.
+            </p>
+          ) : null}
+        </div>
+        <div className="max-w-2xl">
+          <ClockInForm
+            emergencyContactName={emergencyContactName}
+            emergencyContactPhone={emergencyContactPhone}
+            emergencyContactRequired={emergencyContactRequired}
+            token={token}
+          />
+        </div>
+      </section>
+      {organiserNames}
+    </>
   );
 }

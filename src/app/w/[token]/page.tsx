@@ -155,10 +155,12 @@ export default async function WalkLinkPage({
   const attended = Boolean(myAttendance);
 
   // Names only once this member has clocked in — privacy for guests and
-  // people who have not joined yet. WalkMembers paginates at 20, so a
+  // people who have not joined yet. Organisers and owners always see who's
+  // on the walk, clocked in or not. WalkMembers paginates at 20, so a
   // thousand names on one walk stay usable. Clocking out does not revoke
   // that — they were on the walk.
-  const memberNames = attended
+  const organiserView = user?.role === "ADMIN";
+  const memberNames = attended || organiserView
     ? await getWalkMemberNames(walk.id, { finished: status === "completed" })
     : [];
   const meeting = meetingPointLabel(walk.location, walk.postcode);
@@ -222,6 +224,7 @@ export default async function WalkLinkPage({
           emergencyContactRequired={emergencySetting?.emergencyContactRequired ?? false}
           endedAt={endedAtIso}
           memberNames={memberNames}
+          organiserView={organiserView}
           startsAt={startsAtIso}
           token={walk.token}
           walksHref={walksHref}

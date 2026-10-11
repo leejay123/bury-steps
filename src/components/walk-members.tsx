@@ -34,30 +34,33 @@ export function WalkMembers({
         <p className="text-sm font-medium">{completed ? "Who attended" : "Who’s coming"}</p>
         <p className="text-sm text-muted-foreground">{countLabel}</p>
       </div>
-      <div className="flex flex-col gap-4" ref={listRef}>
-        <DataList>
-          {paging.paged.map((member, index) => (
-            <DataListItem className="cursor-default hover:bg-transparent" key={`${member.name}-${index}`}>
-              <Avatar className="size-8 shrink-0">
-                <AvatarFallback className="text-xs">{initials(member.name)}</AvatarFallback>
-              </Avatar>
-              <span className="text-sm">{member.name}</span>
-              {completed && member.leftEarly ? (
-                <span className="ml-auto text-xs text-muted-foreground">Left early</span>
-              ) : null}
-            </DataListItem>
-          ))}
-        </DataList>
-        <ListPagination
-          noun="people"
-          onPageChange={paging.setPage}
-          page={paging.page}
-          pageCount={paging.pageCount}
-          pageSize={paging.pageSize}
-          scrollToRef={listRef}
-          total={paging.total}
-        />
-      </div>
+      {/* Nobody yet (an organiser looking before anyone has clocked in): just the line above. */}
+      {names.length === 0 ? null : (
+        <div className="flex flex-col gap-4" ref={listRef}>
+          <DataList>
+            {paging.paged.map((member, index) => (
+              <DataListItem className="cursor-default hover:bg-transparent" key={`${member.name}-${index}`}>
+                <Avatar className="size-8 shrink-0">
+                  <AvatarFallback className="text-xs">{initials(member.name)}</AvatarFallback>
+                </Avatar>
+                <span className="text-sm">{member.name}</span>
+                {completed && member.leftEarly ? (
+                  <span className="ml-auto text-xs text-muted-foreground">Left early</span>
+                ) : null}
+              </DataListItem>
+            ))}
+          </DataList>
+          <ListPagination
+            noun="people"
+            onPageChange={paging.setPage}
+            page={paging.page}
+            pageCount={paging.pageCount}
+            pageSize={paging.pageSize}
+            scrollToRef={listRef}
+            total={paging.total}
+          />
+        </div>
+      )}
     </div>
   );
 }
