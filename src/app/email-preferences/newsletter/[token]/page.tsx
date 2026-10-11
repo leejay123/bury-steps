@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { RevealSuspense } from "@/components/reveal-suspense";
 import { PageFallback } from "@/components/page-fallback";
 import type { Metadata } from "next";
 import { PAGE_X } from "@/lib/page-x";
@@ -30,8 +30,8 @@ async function NewsletterUnsubscribePageContent({
  * shows a matching placeholder for an instant while it loads. */
 export default function NewsletterUnsubscribePage(props: Parameters<typeof NewsletterUnsubscribePageContent>[0]) {
   return (
-    <Suspense fallback={<PageFallback />}>
+    <RevealSuspense fallback={<PageFallback />}>
       <NewsletterUnsubscribePageContent {...props} />
-    </Suspense>
+    </RevealSuspense>
   );
 }

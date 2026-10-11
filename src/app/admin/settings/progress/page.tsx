@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { RevealSuspense } from "@/components/reveal-suspense";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
@@ -21,11 +21,11 @@ export default function ProgressSettingsPage() {
       description="Set an optional group clock-in goal for the month. Members see it on Progress. Leave it blank if you do not want a together target."
       title="Progress"
     >
-      <Suspense fallback={<ProgressSettingsFallback />}>
+      <RevealSuspense fallback={<ProgressSettingsFallback />}>
         <PlaceholderPreview fallback={<ProgressSettingsFallback />}>
           <ProgressSettingsPageContent />
         </PlaceholderPreview>
-      </Suspense>
+      </RevealSuspense>
     </SettingsPage>
   );
 }

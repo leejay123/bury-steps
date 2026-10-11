@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { RevealSuspense } from "@/components/reveal-suspense";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
@@ -24,11 +24,11 @@ export default function RetentionSettingsPage() {
       description="How long cancelled walks and accident reports are kept before they're deleted automatically. To keep a particular walk or report for good, flag it on that walk or report itself."
       title="Data retention"
     >
-      <Suspense fallback={<SettingsFallback />}>
+      <RevealSuspense fallback={<SettingsFallback />}>
         <PlaceholderPreview fallback={<SettingsFallback />}>
           <RetentionSettingsPageContent />
         </PlaceholderPreview>
-      </Suspense>
+      </RevealSuspense>
     </SettingsPage>
   );
 }

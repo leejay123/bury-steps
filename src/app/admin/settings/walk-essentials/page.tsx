@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { RevealSuspense } from "@/components/reveal-suspense";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
@@ -21,11 +21,11 @@ export default function WalkEssentialsSettingsPage() {
       description="The tick-box list under Essentials when you create or edit a walk. Rename items, pick their icons, add your own or remove ones you don't use. Changes show on every walk straight away."
       title="Walk essentials"
     >
-      <Suspense fallback={<SettingsFallback />}>
+      <RevealSuspense fallback={<SettingsFallback />}>
         <PlaceholderPreview fallback={<SettingsFallback />}>
           <WalkEssentialsSettingsPageContent />
         </PlaceholderPreview>
-      </Suspense>
+      </RevealSuspense>
     </SettingsPage>
   );
 }

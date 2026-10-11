@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { RevealSuspense } from "@/components/reveal-suspense";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
@@ -80,11 +80,11 @@ async function AdminPageContent() {
             title="Walks"
           />
           {/* The heading and Create button show straight away; only the list waits. */}
-          <Suspense fallback={<AdminWalksSkeleton />}>
+          <RevealSuspense fallback={<AdminWalksSkeleton />}>
             <PlaceholderPreview fallback={<AdminWalksSkeleton />}>
               <AdminWalksTabs />
             </PlaceholderPreview>
-          </Suspense>
+          </RevealSuspense>
         </section>
       ) : admin.permWalksCreate ? (
         // Create without View: no list to attach the button to (see the
@@ -232,9 +232,9 @@ export const prefetch = "partial";
  * shows a matching placeholder for an instant while it loads. */
 export default function AdminWalksPage() {
   return (
-    <Suspense fallback={<AdminWalksPageFallback />}>
+    <RevealSuspense fallback={<AdminWalksPageFallback />}>
       <AdminPageContent />
-    </Suspense>
+    </RevealSuspense>
   );
 }
 

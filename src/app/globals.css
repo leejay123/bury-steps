@@ -541,14 +541,38 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
   }
 }
 
-/* While a page's own loading placeholder is up (data-page-loading on each
-   loading.tsx and page-level fallback), keep the footer out of sight. A
-   placeholder is usually shorter than the page it stands in for, so the
-   footer sat on screen at the bottom of it and was then shoved off the
-   bottom when the page arrived — on desktop, the biggest layout jump on the
-   organiser pages. Hidden, it simply appears in its final place. */
-html:has(main [data-page-loading]) footer[data-site-footer] {
-  visibility: hidden;
+/* Skeleton reveal (reveal-suspense.tsx): when a placeholder is replaced by
+   the real content, the placeholder fades out while the content fades in
+   and sharpens from a slight blur — the "skeleton reveal" recipe, done with
+   React's <ViewTransition> as the Next.js view transitions guide shows. Only
+   when a placeholder was actually on screen: a page that arrives ready
+   shows at once with no animation. */
+::view-transition-old(.skeleton-reveal) {
+  animation: 400ms ease-out both skeleton-reveal-out;
+}
+::view-transition-new(.skeleton-reveal) {
+  animation: 400ms ease-out both skeleton-reveal-in;
+}
+@keyframes skeleton-reveal-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes skeleton-reveal-in {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(.skeleton-reveal),
+  ::view-transition-new(.skeleton-reveal) {
+    animation: none;
+  }
 }
 
 /* Announcement bar: hidden before first paint when the pre-paint script

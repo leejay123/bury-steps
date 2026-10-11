@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { RevealSuspense } from "@/components/reveal-suspense";
 import { PageFallback } from "@/components/page-fallback";
 import Link from "next/link";
 import { MailX } from "lucide-react";
@@ -74,8 +74,8 @@ async function EmailPreferencesPageContent({
  * shows a matching placeholder for an instant while it loads. */
 export default function EmailPreferencesPage(props: Parameters<typeof EmailPreferencesPageContent>[0]) {
   return (
-    <Suspense fallback={<PageFallback />}>
+    <RevealSuspense fallback={<PageFallback />}>
       <EmailPreferencesPageContent {...props} />
-    </Suspense>
+    </RevealSuspense>
   );
 }

@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { RevealSuspense } from "@/components/reveal-suspense";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
@@ -224,10 +224,10 @@ export const prefetch = "partial";
 
 export default function MemberDetailPage(props: { params: Promise<{ id: string }> }) {
   return (
-    <Suspense fallback={<MemberDetailSkeleton />}>
+    <RevealSuspense fallback={<MemberDetailSkeleton />}>
       <PlaceholderPreview fallback={<MemberDetailSkeleton />}>
         <MemberDetailForAddress {...props} />
       </PlaceholderPreview>
-    </Suspense>
+    </RevealSuspense>
   );
 }

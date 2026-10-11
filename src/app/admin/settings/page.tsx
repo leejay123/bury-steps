@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { RevealSuspense } from "@/components/reveal-suspense";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requireAnySettingsPermission, displayName } from "@/lib/auth";
@@ -55,11 +55,11 @@ export default function AdminSettingsPage() {
       showBackLink={false}
       title="Settings"
     >
-      <Suspense fallback={<SettingsHubSkeleton groups={STATIC_GROUPS} />}>
+      <RevealSuspense fallback={<SettingsHubSkeleton groups={STATIC_GROUPS} />}>
         <PlaceholderPreview fallback={<SettingsHubSkeleton groups={STATIC_GROUPS} />}>
           <AdminSettingsPageContent />
         </PlaceholderPreview>
-      </Suspense>
+      </RevealSuspense>
     </SettingsPage>
   );
 }

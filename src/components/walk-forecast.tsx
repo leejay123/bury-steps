@@ -1,6 +1,6 @@
 import { SkLine } from "@/components/list-skeletons";
+import { RevealSuspense } from "@/components/reveal-suspense";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Suspense } from "react";
 import { loadDailyForecast, loadForecastPlaceName } from "@/lib/weather-forecast";
 import { forecastWindow, londonDateKey } from "@/lib/weather";
 import { formatWalkDay } from "@/lib/dates";
@@ -171,8 +171,8 @@ export function WalkForecastSection({
   if (latitude == null || longitude == null || !place) return null;
 
   return (
-    <Suspense fallback={<ForecastSkeleton place={place} />}>
+    <RevealSuspense fallback={<ForecastSkeleton place={place} />}>
       <WalkForecastLoaded latitude={latitude} longitude={longitude} place={place} startsAt={startsAt} />
-    </Suspense>
+    </RevealSuspense>
   );
 }

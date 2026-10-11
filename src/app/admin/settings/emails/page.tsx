@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { RevealSuspense } from "@/components/reveal-suspense";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
@@ -34,11 +34,11 @@ export default function AdminEmailsSettingsPage() {
       description="Every email the site sends. Tap one to edit its subject line and intro wording (the logo, layout, buttons and walk or message details stay fixed) or send yourself a test."
       title="Emails"
     >
-      <Suspense fallback={<SettingsFallback />}>
+      <RevealSuspense fallback={<SettingsFallback />}>
         <PlaceholderPreview fallback={<SettingsFallback />}>
           <AdminEmailsSettingsPageContent />
         </PlaceholderPreview>
-      </Suspense>
+      </RevealSuspense>
     </SettingsPage>
   );
 }

@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { RevealSuspense } from "@/components/reveal-suspense";
 import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -66,8 +66,8 @@ async function PrintAccidentReportPageContent({
  * shows a matching placeholder for an instant while it loads. */
 export default function PrintAccidentReportPage(props: Parameters<typeof PrintAccidentReportPageContent>[0]) {
   return (
-    <Suspense fallback={<AdminPageFallback rows={4} />}>
+    <RevealSuspense fallback={<AdminPageFallback rows={4} />}>
       <PrintAccidentReportPageContent {...props} />
-    </Suspense>
+    </RevealSuspense>
   );
 }

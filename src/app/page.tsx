@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { RevealSuspense } from "@/components/reveal-suspense";
 import { HeroSection } from "@/components/hero";
 import { HeroCinematic } from "@/components/hero-cinematic";
 import { HeroGlobe } from "@/components/hero-globe";
@@ -143,9 +144,9 @@ async function HomeSections({
       howThisStartedTitle={theme.howThisStartedTitle}
       memberNoticesSlot={
         // Members' browsers show the section's shape while it loads (visitors don't).
-        <Suspense fallback={<HomeMemberNoticesSkeleton />}>
+        <RevealSuspense fallback={<HomeMemberNoticesSkeleton />}>
           <HomeMemberNotices />
-        </Suspense>
+        </RevealSuspense>
       }
       memberNoticesEnabled={theme.memberNoticesEnabled}
       photos={slides}
