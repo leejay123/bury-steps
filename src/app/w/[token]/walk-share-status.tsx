@@ -98,18 +98,15 @@ export function WalkShareStatusChrome({
   const memberNotice =
     !attended && tooEarly ? (
       <Alert variant="info">
-        <AlertTitle>Clock-in is not open yet</AlertTitle>
         <AlertDescription>
-          It opens an hour before the walk starts, at {formatTime(opensAt)} on {formatWalkDay(opensAt)}. Come back
-          on the day and this page will be ready.
+          Clock-in opens at {formatTime(opensAt)} on {formatWalkDay(opensAt)}, an hour before the start.
         </AlertDescription>
       </Alert>
     ) : null;
   const closedNotice = <WalkClosedNoClockInNotice />;
   const guestNotice = completed ? (
     <Alert variant="info">
-      <AlertTitle>This walk has finished</AlertTitle>
-      <AlertDescription>Clock-in is closed. The details are still here to look back on.</AlertDescription>
+      <AlertDescription>This walk has finished. The details are kept here to look back on.</AlertDescription>
     </Alert>
   ) : (
     <div className="space-y-4 rounded-lg border bg-muted/40 p-5">
@@ -268,10 +265,7 @@ export function WalkShareBeforeClockIn({
 export function WalkClosedNoClockInNotice() {
   return (
     <Alert variant="info">
-      <AlertTitle>This walk has finished</AlertTitle>
-      <AlertDescription>
-        Clock-in is closed. If you were there, speak to an organiser — they can add you to the list.
-      </AlertDescription>
+      <AlertDescription>This walk has finished. Were you there? Ask an organiser to add you.</AlertDescription>
     </Alert>
   );
 }

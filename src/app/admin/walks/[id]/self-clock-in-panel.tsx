@@ -4,7 +4,7 @@ import { ClockInDrawer } from "@/app/w/[token]/clock-in-drawer";
 import { ClockOutButton } from "@/components/clock-out-button";
 import { useWalkClock } from "@/hooks/use-walk-clock";
 import { formatDateTime, formatTime, formatWalkDay } from "@/lib/dates";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { walkOpensAt, walkStatus, windowState } from "@/lib/walk-window";
 
 /**
@@ -97,10 +97,8 @@ export function SelfClockInPanel({
     const opensAt = walkOpensAt(new Date(startsAt));
     return (
       <Alert variant="info">
-        <AlertTitle>Clock-in is not open yet</AlertTitle>
         <AlertDescription>
-          It opens an hour before the walk starts, at {formatTime(opensAt)} on {formatWalkDay(opensAt)}.
-          You’ll use the same pre-walk check as members.
+          Clock-in opens at {formatTime(opensAt)} on {formatWalkDay(opensAt)}, an hour before the start.
         </AlertDescription>
       </Alert>
     );

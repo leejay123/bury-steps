@@ -249,11 +249,11 @@ async function WalkDetailPageContent({ id }: { id: string }) {
           <AlertTitle>This walk has been cancelled</AlertTitle>
           <AlertDescription>
             {walk.cancelledReason ? `Reason: ${walk.cancelledReason.replace(/[.!?]+$/, "")}. ` : ""}
-            Members see it as cancelled and can no longer clock in.
+            Members can no longer clock in.
             {admin.permWalksCancel
-              ? " If it's going ahead after all, press Reopen walk — it becomes upcoming again and members can join it."
+              ? " Going ahead after all? Press Reopen walk."
               : admin.permWalksEdit
-                ? " If it's going ahead after all, press Edit and save — the walk becomes upcoming again and members can join it."
+                ? " Going ahead after all? Press Edit and save."
                 : ""}
           </AlertDescription>
         </Alert>
