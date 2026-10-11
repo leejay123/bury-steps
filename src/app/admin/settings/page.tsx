@@ -12,6 +12,7 @@ import { EMAIL_TEMPLATES } from "@/lib/email/registry";
 import { DEFAULT_CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { SETTINGS_PAGE_GROUPS, SITE_WORDING_PAGES } from "@/lib/settings-pages";
 import { SettingsPage } from "./settings-page";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { SettingsHub, SettingsHubSkeleton, type SettingsHubGroup, type SettingsRowState } from "./settings-hub";
 
 /** Every group and row as the owner sees them, without statuses: the placeholder's table. */
@@ -55,7 +56,9 @@ export default function AdminSettingsPage() {
       title="Settings"
     >
       <Suspense fallback={<SettingsHubSkeleton groups={STATIC_GROUPS} />}>
-        <AdminSettingsPageContent />
+        <PlaceholderPreview fallback={<SettingsHubSkeleton groups={STATIC_GROUPS} />}>
+          <AdminSettingsPageContent />
+        </PlaceholderPreview>
       </Suspense>
     </SettingsPage>
   );

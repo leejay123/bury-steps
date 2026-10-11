@@ -612,7 +612,9 @@ html:has([data-bottom-nav]:not([hidden] *)) #bs-bottom-boot {
 
 /* Settings placeholders (settings-mask.tsx): the real form, every value-
    bearing control a grey shape the size of the real one. */
-[data-sk-mask] :is(input, textarea, select, button, [role="switch"], [role="combobox"], [role="radio"], [data-slot="select-trigger"], [data-sk-value]) {
+/* Hidden helpers (a switch's or select's invisible form field, aria-hidden)
+   are left alone: the pulse animation would make them visible. */
+[data-sk-mask] :is(input, textarea, select, button, [role="switch"], [role="combobox"], [role="radio"], [data-slot="select-trigger"], [data-sk-value]):not([aria-hidden="true"], [type="hidden"]) {
   color: transparent !important;
   background: var(--accent) !important;
   background-image: none !important;
