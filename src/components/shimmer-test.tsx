@@ -26,11 +26,47 @@ function placeholderRoots(): Element[] {
   );
 }
 
+/**
+ * Two things the library gets wrong on our pages, fixed with its own
+ * documented attributes, set only while measuring:
+ * - a row's invisible "click anywhere" link (an empty, stretched <a> or
+ *   <button>) counts as content, so the whole row became one block —
+ *   data-shimmer-ignore skips it;
+ * - a round photo is a square <img> inside a round frame, so photos came
+ *   out square and initials round — data-shimmer-no-children measures the
+ *   round frame instead.
+ */
+function markForMeasuring(root: Element): Element[] {
+  const marked: Element[] = [];
+  for (const el of Array.from(root.querySelectorAll("a, button, div, span"))) {
+    const style = window.getComputedStyle(el);
+    if (
+      (el.tagName === "A" || el.tagName === "BUTTON") &&
+      el.children.length === 0 &&
+      !el.textContent?.trim() &&
+      style.position === "absolute"
+    ) {
+      el.setAttribute("data-shimmer-ignore", "");
+      marked.push(el);
+    } else if (
+      style.overflow === "hidden" &&
+      style.borderRadius !== "0px" &&
+      el.children.length === 1 &&
+      el.querySelector(":scope > :is(img, svg, span)")
+    ) {
+      el.setAttribute("data-shimmer-no-children", "");
+      marked.push(el);
+    }
+  }
+  return marked;
+}
+
 /** Measures every placeholder with shimmer-from-structure, in page coordinates. */
 function measure(): Block[] {
   const origin = { left: -window.scrollX, top: -window.scrollY } as DOMRect;
   const blocks: Block[] = [];
   for (const root of placeholderRoots()) {
+    const marked = markForMeasuring(root);
     for (const child of Array.from(root.children)) {
       for (const info of extractElementInfo(child as HTMLElement, origin)) {
         blocks.push({
@@ -42,6 +78,10 @@ function measure(): Block[] {
         });
       }
     }
+    for (const el of marked) {
+      el.removeAttribute("data-shimmer-ignore");
+      el.removeAttribute("data-shimmer-no-children");
+    }
   }
   return blocks;
 }
@@ -50,8 +90,8 @@ function measure(): Block[] {
  * Temporary owner test: with "Shimmer" picked (placeholder-style.ts), every
  * loading placeholder on the site is drawn the way the shimmer-from-structure
  * library draws one — it measures the placeholder's shapes and lays a
- * shimmering block over each, with the text and our own grey hidden
- * (globals.css, html[data-placeholder-style]). One watcher here instead of
+ * shimmering block, in our grey, over each, with the text hidden and the
+ * boxes, borders and backgrounds kept (globals.css, html[data-placeholder-style]). One watcher here instead of
  * editing each placeholder, so switching back to Grey removes it entirely.
  * Before the page's code has loaded (a refresh), the usual grey shows.
  */
@@ -93,7 +133,7 @@ export function ShimmerTest() {
     <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-[1]" data-shimmer-overlay="">
       {blocks.map((block, index) => (
         <div
-          className="absolute overflow-hidden bg-muted"
+          className="absolute overflow-hidden bg-accent"
           key={index}
           style={{
             borderRadius: block.radius,
