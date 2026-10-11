@@ -10,6 +10,7 @@ import {
   type WalkPageLayout,
   type WalkPageSection,
 } from "@/lib/walk-page-sections";
+import { parseTabStyle, type TabStyle } from "@/lib/tab-style";
 import { DEFAULT_WALK_ESSENTIALS, parseEssentialList, type EssentialItem } from "@/lib/walk-essentials";
 import { prisma } from "@/lib/db";
 import { photoBlur } from "@/lib/photo-blur";
@@ -148,6 +149,8 @@ export type SiteTheme = {
   walkPageSections: WalkPageSection[];
   /** Walk pages: one column, or two columns with tabs — see walk-page-sections.ts. */
   walkPageLayout: WalkPageLayout;
+  /** Every tab bar on the site — see tab-style.ts. */
+  tabStyle: TabStyle;
   howWalksWorkSteps: AboutRule[];
   howWalksWorkStepsText: string;
   homepageSectionOrder: HomepageSectionId[];
@@ -226,6 +229,7 @@ export function defaultTheme(): SiteTheme {
     howWalksWorkEnabled: true,
     walkPageSections: parseWalkPageSections(null),
     walkPageLayout: "classic",
+    tabStyle: "standard",
     howWalksWorkSteps: DEFAULT_HOW_WALKS_WORK_STEPS.map((step) => ({ ...step })),
     howWalksWorkStepsText: DEFAULT_HOW_WALKS_WORK_STEPS_TEXT,
     homepageSectionOrder: normalizeHomepageSectionOrder(null),
@@ -296,6 +300,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       howWalksWorkEnabled: true,
       walkPageSections: true,
       walkPageLayout: true,
+      tabStyle: true,
       howWalksWorkSteps: true,
       homepageSectionOrder: true,
       logoMime: true,
@@ -408,6 +413,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     howWalksWorkEnabled: row?.howWalksWorkEnabled ?? true,
     walkPageSections: parseWalkPageSections(row?.walkPageSections),
     walkPageLayout: parseWalkPageLayout(row?.walkPageLayout),
+    tabStyle: parseTabStyle(row?.tabStyle),
     howWalksWorkSteps,
     howWalksWorkStepsText: row?.howWalksWorkSteps?.trim()
       ? serializeAboutRules(howWalksWorkSteps)

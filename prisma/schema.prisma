@@ -463,6 +463,9 @@ model SiteSetting {
   /// Walk pages (members' and organisers'): "classic" (one column) or
   /// "columns" (two columns on a computer, sections in tabs).
   walkPageLayout              String   @default("classic")
+  /// Every tab bar on the site: "standard" (grey pill) or "underline"
+  /// (shadcn-space tabs-05: sliding underline and hover highlight).
+  tabStyle                    String   @default("standard")
   /// Walk-page "How this group works" card — one "Title | Body" step per
   /// line. Empty uses the built-in three-step default. Icons are assigned
   /// by position, not stored.

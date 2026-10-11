@@ -14,6 +14,7 @@ import { HeaderScrollShadow } from "@/components/header-scroll-shadow";
 import { FocusRescue } from "@/components/focus-rescue";
 import { PlaceholderPreviewBadge } from "@/components/placeholder-preview-badge";
 import { ShimmerTest } from "@/components/shimmer-test";
+import { TabStyleProvider } from "@/components/ui/tabs";
 import { HeaderPartBoundary } from "@/components/header-part-boundary";
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
@@ -296,7 +297,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               {/* No page-change animation: a new page simply replaces the old one. */}
               <div className="flex min-w-0 flex-1 flex-col">
                 <WalkEssentialsProvider items={theme.walkEssentials}>
-                  <SignedInProvider signedIn={signedIn}>{children}</SignedInProvider>
+                  <TabStyleProvider style={theme.tabStyle}>
+                    <SignedInProvider signedIn={signedIn}>{children}</SignedInProvider>
+                  </TabStyleProvider>
                 </WalkEssentialsProvider>
               </div>
             </main>

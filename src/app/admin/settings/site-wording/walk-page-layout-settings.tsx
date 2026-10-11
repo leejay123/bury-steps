@@ -23,7 +23,7 @@ export function WalkPageLayoutSettings({ layout }: { layout: WalkPageLayout }) {
 
   return (
     <SettingsSection
-      description="How a walk's page is laid out when someone opens a walk — the same for members and organisers. Two columns keeps clock-in, the share link and the organiser buttons in view on a computer, and puts the map, weather, people and journey in tabs, so there's less to scroll. Phones show it in one column, clock-in first."
+      description="How a walk's page is laid out when someone opens a walk — the same for members and organisers. Two columns keeps clock-in, the share link and the organiser buttons in view on a computer, and puts the map and weather, who attended and the journey in tabs, so there's less to scroll. Phones show it in one column, clock-in first."
       title="One or two columns"
     >
       <div className="flex w-full flex-col gap-1.5">

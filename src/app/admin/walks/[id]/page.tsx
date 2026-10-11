@@ -480,9 +480,9 @@ async function WalkDetailPageContent({ id }: { id: string }) {
           tabs={[
             { value: "route", label: "Map & weather", content: sharedSections },
             {
-              value: "people",
+              value: "attended",
               // The count only for those who may see the list itself.
-              label: canSeeAttendance ? `People (${walk.attendances.length})` : "People",
+              label: canSeeAttendance ? `Attended (${walk.attendances.length})` : "Attended",
               content: attendanceSection,
             },
             { value: "journey", label: "Journey", content: journey },

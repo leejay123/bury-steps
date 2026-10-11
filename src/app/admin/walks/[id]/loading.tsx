@@ -46,7 +46,7 @@ async function OrganiserWalkLoading() {
               label: "Map & weather",
               content: (
                 <WalkTabsSkeleton
-                  labels={[{ text: "Map & weather" }, { text: "People", count: true }, { text: "Journey" }]}
+                  labels={[{ text: "Map & weather" }, { text: "Attended", count: true }, { text: "Journey" }]}
                 >
                   <WalkSectionsSkeleton organiser theme={theme} />
                 </WalkTabsSkeleton>

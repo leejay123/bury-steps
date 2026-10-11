@@ -18,6 +18,7 @@ import { OrganiserInviteToggle } from "./organiser-invite-toggle";
 import { EmergencyContactToggle } from "./emergency-contact-toggle";
 import { ContactMessagesOwnerSettings } from "./contact-messages-owner-settings";
 import { PlaceholderPreviewToggle } from "./placeholder-preview-toggle";
+import { TabStyleSettings } from "./tab-style-settings";
 
 
 
@@ -29,7 +30,7 @@ export default function SiteBehaviourSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description="Sitewide behaviour that isn't part of the homepage story — announcement bar, the phone menu, cookie notice, back to top, the footer name, Progress, clock-in, organiser invites, and the contact form."
+      description="Sitewide behaviour that isn't part of the homepage story — announcement bar, the phone menu, tabs, cookie notice, back to top, the footer name, Progress, clock-in, organiser invites, and the contact form."
       title="Site behaviour"
     >
       <Suspense fallback={<SettingsFallback />}>
@@ -99,6 +100,7 @@ function SettingsView({
       <SettingsSectionGroup description="Behaviour that applies across the whole site." title="Across the site">
         <CookieConsentSettings variant={theme.cookieConsentVariant} />
         <MobileNavSettings style={theme.mobileNav} />
+        <TabStyleSettings style={theme.tabStyle} />
         <DisplaySettings scrollToTopEnabled={theme.scrollToTopEnabled} />
         <FooterWordmarkSettings enabled={theme.footerWordmarkEnabled} />
         {theme.footerWordmarkEnabled ? <FooterWordmarkMobileSettings enabled={theme.footerWordmarkMobile} /> : null}

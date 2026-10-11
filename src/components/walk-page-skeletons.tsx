@@ -163,7 +163,7 @@ export function WalkButtonsSkeleton() {
 /**
  * The two-column layout's tabs (WalkPageColumns): the tab bar with its real
  * labels, the first one chosen, and the first tab's sections under it.
- * A count in a label ("People (5)") is a grey shape until it's known.
+ * A count in a label ("Attended (5)") is a grey shape until it's known.
  */
 export function WalkTabsSkeleton({
   children,

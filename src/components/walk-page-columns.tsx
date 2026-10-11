@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export type WalkPageTab = {
   value: string;
-  /** One piece of text, e.g. "People (5)" — the tab spaces separate pieces apart. */
+  /** One piece of text, e.g. "Attended (5)" — the tab spaces separate pieces apart. */
   label: string;
   content: ReactNode;
 };

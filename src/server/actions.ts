@@ -117,6 +117,7 @@ export {
   reorderHomepageSections,
   saveWalkPageSections,
   updateWalkPageLayout,
+  updateTabStyle,
   updateFaqSectionCopy,
   updateTestimonialsSectionCopy,
   updateHowThisStartedCopy,

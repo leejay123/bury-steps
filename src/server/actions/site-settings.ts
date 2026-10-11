@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { parseTabStyle } from "@/lib/tab-style";
 import { parseWalkPageLayout, parseWalkPageSections, serializeWalkPageSections } from "@/lib/walk-page-sections";
 import { guardArgs, guardForm } from "@/lib/safe-action";
 
@@ -1946,6 +1947,32 @@ export const updateFacebookGroupUrl = guardForm(
 export async function reorderHomepageSections(ids: HomepageSectionId[]): Promise<ActionResult> {
   return reorderHomepageSectionsGuarded(ids);
 }
+
+/** Every tab bar on the site: standard or underline (tab-style.ts). */
+async function updateTabStyleWork(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  const style = parseTabStyle(String(formData.get("tabStyle") ?? ""));
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, tabStyle: style },
+      update: { tabStyle: style },
+    });
+  } catch (err) {
+    return logActionError("updateTabStyle", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings/behaviour");
+  return {
+    ok: true,
+    message: style === "underline" ? "Tabs now use the underline style." : "Tabs now use the standard style.",
+  };
+}
+export const updateTabStyle = guardForm("organiser", pass, readPass, updateTabStyleWork);
 
 /** Walk pages: one column or two (walk-page-sections.ts, WalkPageLayout). */
 async function updateWalkPageLayoutWork(

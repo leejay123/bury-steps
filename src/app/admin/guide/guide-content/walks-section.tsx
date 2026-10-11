@@ -113,7 +113,7 @@ export function WalksSection({
               out, the same for members and organisers: <strong>One column</strong> (the original,
               everything stacked) or <strong>Two columns with tabs</strong>. With two columns, a
               computer shows the walk&apos;s details on the left with tabs under them (Map &amp;
-              weather, People and Journey for organisers; Map &amp; weather, and Journey once it
+              weather, Attended and Journey for organisers; Map &amp; weather, and Journey once it
               has moments, for members), and a right-hand column that stays in view as you
               scroll: clock-in, the share link and the walk&apos;s buttons for organisers;
               clock-in, How this group works and Before you set off for members. On a phone it
