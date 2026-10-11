@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { SkLine } from "@/components/list-skeletons";
 import { Skeleton } from "@/components/ui/skeleton";
+import { WalkPageColumns } from "@/components/walk-page-columns";
 import {
   OrganiserWalkToolsSkeleton,
+  WalkButtonsSkeleton,
   WalkDetailsCardSkeleton,
   WalkSectionsSkeleton,
+  WalkTabsSkeleton,
 } from "@/components/walk-page-skeletons";
 import { getSiteTheme } from "@/lib/site-theme";
 
@@ -27,27 +30,64 @@ async function OrganiserWalkLoading() {
         &larr; All walks
       </Link>
 
-      <WalkDetailsCardSkeleton organiser />
+      {theme.walkPageLayout === "columns" ? (
+        // The two-column layout (Settings → Walk page cards → Layout).
+        <WalkPageColumns
+          aside={
+            <>
+              <ClockInBoxSkeleton />
+              <ShareLinkSkeleton />
+              <WalkButtonsSkeleton />
+            </>
+          }
+          tabs={[
+            {
+              value: "route",
+              label: "Map & weather",
+              content: (
+                <WalkTabsSkeleton
+                  labels={[{ text: "Map & weather" }, { text: "People", count: true }, { text: "Journey" }]}
+                >
+                  <WalkSectionsSkeleton organiser theme={theme} />
+                </WalkTabsSkeleton>
+              ),
+            },
+          ]}
+          top={<WalkDetailsCardSkeleton organiser />}
+        />
+      ) : (
+        <>
+          <WalkDetailsCardSkeleton organiser />
+          <ClockInBoxSkeleton />
+          <ShareLinkSkeleton />
+          <WalkSectionsSkeleton organiser theme={theme} />
+          <OrganiserWalkToolsSkeleton />
+        </>
+      )}
+    </div>
+  );
+}
 
-      {/* The clock-in box ("Clock-in is not open yet…", or the clock-in
-          form): an info-box shape, title and two lines. */}
-      <div aria-hidden className="flex flex-col gap-1 rounded-lg border px-4 py-3">
-        <SkLine className="w-44" size="sm" />
-        <SkLine className="w-full max-w-2xl" size="sm" />
-        <SkLine className="w-2/3 max-w-xl" size="sm" />
+/** The clock-in box ("Clock-in is not open yet…", or the clock-in
+ * button): an info-box shape, title and two lines. */
+function ClockInBoxSkeleton() {
+  return (
+    <div aria-hidden className="flex flex-col gap-1 rounded-lg border px-4 py-3">
+      <SkLine className="w-44" size="sm" />
+      <SkLine className="w-full max-w-2xl" size="sm" />
+      <SkLine className="w-2/3 max-w-xl" size="sm" />
+    </div>
+  );
+}
+
+/** The share link, and the Copy button's space. */
+function ShareLinkSkeleton() {
+  return (
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+      <div className="flex min-h-8 min-w-0 flex-1 items-center rounded-md bg-muted px-3 py-1.5">
+        <Skeleton className="h-3.5 w-72 max-w-full rounded-[4px] bg-background/70" />
       </div>
-
-      {/* The share link, and the Copy button's space. */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
-        <div className="flex min-h-8 min-w-0 flex-1 items-center rounded-md bg-muted px-3 py-1.5">
-          <Skeleton className="h-3.5 w-72 max-w-full rounded-[4px] bg-background/70" />
-        </div>
-        <Skeleton className="h-8 w-full rounded-md sm:w-26 sm:shrink-0" />
-      </div>
-
-      <WalkSectionsSkeleton organiser theme={theme} />
-
-      <OrganiserWalkToolsSkeleton />
+      <Skeleton className="h-8 w-full rounded-md sm:w-26 sm:shrink-0" />
     </div>
   );
 }

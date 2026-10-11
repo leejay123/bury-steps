@@ -18,6 +18,9 @@ import { WalkMapSection } from "@/components/walk-map-section";
 import { WalkForecastSection } from "@/components/walk-forecast";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { WalkJourneyDrawer } from "@/components/walk-journey-drawer";
+import { WalkJourneyTimeline } from "@/components/walk-journey-timeline";
+import { WalkPageColumns, type WalkPageTab } from "@/components/walk-page-columns";
+import type { WalkPageSectionId } from "@/lib/walk-page-sections";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { HowWalksWork } from "@/components/how-walks-work";
 import { getWalkMemberNames } from "@/lib/walk-members";
@@ -187,22 +190,67 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
   const endedAtIso = walk.endedAt?.toISOString() ?? null;
   const startsAtIso = walk.startsAt.toISOString();
 
-  return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* Members go back to Walks, everyone else Home: both are here, and
-            the remembered sign-in shows the right one before anything is drawn. */}
-        <span className="text-sm text-muted-foreground">
-          <Link className="hover:text-foreground" data-member-home="" href="/walks">
-            ← Walks
-          </Link>
-          <Link className="hover:text-foreground" data-guest-home="" href="/">
-            ← Home
-          </Link>
-        </span>
-        <WalkJourneyDrawer events={journeyEvents} />
-      </div>
+  // One of the shared sections, chosen and ordered in Settings → Site
+  // wording → Walk page cards (walk-page-sections.ts).
+  function renderSection(id: WalkPageSectionId) {
+    if (!walk) return null; // never: notFound() above; tells TypeScript
+    switch (id) {
+      case "before":
+        if (cancelled || !theme.beforeYouSetOffEnabled) return null;
+        // Members: until clock-in opens. Visitors: while the walk is open.
+        // Both are drawn; the remembered sign-in hides the other.
+        return (
+          <div className="contents" key={id}>
+            <div className="contents" data-member-home="">
+              <WalkShareBeforeClockIn durationMins={walk.durationMins} endedAt={endedAtIso} startsAt={startsAtIso}>
+                <BeforeYouSetOff tips={theme.beforeYouSetOffTips} />
+              </WalkShareBeforeClockIn>
+            </div>
+            <div className="contents" data-guest-home="">
+              <WalkShareWhileOpen
+                cancelledAt={cancelledAtIso}
+                durationMins={walk.durationMins}
+                endedAt={endedAtIso}
+                startsAt={startsAtIso}
+              >
+                <BeforeYouSetOff tips={theme.beforeYouSetOffTips} />
+              </WalkShareWhileOpen>
+            </div>
+          </div>
+        );
+      case "map":
+        // No directions to a walk that isn't happening.
+        return meeting && !cancelled ? <WalkMapSection key={id} location={meeting} walk={walk} /> : null;
+      case "forecast":
+        // Hidden once the walk has finished — checked in the browser.
+        return (
+          <WalkShareWhileOpen
+            cancelledAt={cancelledAtIso}
+            durationMins={walk.durationMins}
+            endedAt={endedAtIso}
+            key={id}
+            startsAt={startsAtIso}
+          >
+            <WalkForecastSection
+              cancelledAt={walk.cancelledAt}
+              durationMins={walk.durationMins}
+              endedAt={walk.endedAt}
+              latitude={walk.latitude}
+              longitude={walk.longitude}
+              place={meeting}
+              startsAt={walk.startsAt}
+              timeFree
+            />
+          </WalkShareWhileOpen>
+        );
+      case "precise":
+        return walk.what3words ? <What3wordsLink address={walk.what3words} key={id} /> : null;
+    }
+    return null;
+  }
 
+  const chrome = (
+    <>
       <WalkShareStatusChrome
         backMarker={walk.backMarker}
         cancelledAt={cancelledAtIso}
@@ -222,7 +270,10 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
         walkLeader={walk.walkLeader}
         walkUrl={walkUrl}
       />
-
+    </>
+  );
+  const live = (
+    <>
       {/* What the member came to do (clock in, or their clock-in status) sits
           straight under the title card. Always live: never a saved copy. */}
       {cancelled ? null : (
@@ -241,7 +292,10 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
           />
         </Suspense>
       )}
-
+    </>
+  );
+  const howWalksWork = (
+    <>
       {/* Sign-up steps are for visitors; members have already done them. */}
       {cancelled || !theme.howWalksWorkEnabled ? null : (
         <div className="contents" data-guest-home="">
@@ -255,64 +309,70 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
           </WalkShareWhileOpen>
         </div>
       )}
+    </>
+  );
+  const visibleSections = theme.walkPageSections.filter(({ visible }) => visible);
 
-      {/* The shared sections, in the order and with the show/hide chosen in
-          Settings → Site wording → Walk page cards (walk-page-sections.ts). */}
-      {theme.walkPageSections.map(({ id, visible }) => {
-        if (!visible) return null;
-        switch (id) {
-          case "before":
-            if (cancelled || !theme.beforeYouSetOffEnabled) return null;
-            // Members: until clock-in opens. Visitors: while the walk is open.
-            // Both are drawn; the remembered sign-in hides the other.
-            return (
-              <div className="contents" key={id}>
-                <div className="contents" data-member-home="">
-                  <WalkShareBeforeClockIn durationMins={walk.durationMins} endedAt={endedAtIso} startsAt={startsAtIso}>
-                    <BeforeYouSetOff tips={theme.beforeYouSetOffTips} />
-                  </WalkShareBeforeClockIn>
-                </div>
-                <div className="contents" data-guest-home="">
-                  <WalkShareWhileOpen
-                    cancelledAt={cancelledAtIso}
-                    durationMins={walk.durationMins}
-                    endedAt={endedAtIso}
-                    startsAt={startsAtIso}
-                  >
-                    <BeforeYouSetOff tips={theme.beforeYouSetOffTips} />
-                  </WalkShareWhileOpen>
-                </div>
-              </div>
-            );
-          case "map":
-            // No directions to a walk that isn't happening.
-            return meeting && !cancelled ? <WalkMapSection key={id} location={meeting} walk={walk} /> : null;
-          case "forecast":
-            // Hidden once the walk has finished — checked in the browser.
-            return (
-              <WalkShareWhileOpen
-                cancelledAt={cancelledAtIso}
-                durationMins={walk.durationMins}
-                endedAt={endedAtIso}
-                key={id}
-                startsAt={startsAtIso}
-              >
-                <WalkForecastSection
-                  cancelledAt={walk.cancelledAt}
-                  durationMins={walk.durationMins}
-                  endedAt={walk.endedAt}
-                  latitude={walk.latitude}
-                  longitude={walk.longitude}
-                  place={meeting}
-                  startsAt={walk.startsAt}
-                  timeFree
-                />
-              </WalkShareWhileOpen>
-            );
-          case "precise":
-            return walk.what3words ? <What3wordsLink address={walk.what3words} key={id} /> : null;
-        }
-      })}
+  if (theme.walkPageLayout === "columns") {
+    // The same layout as the organiser's walk page (WalkPageColumns): the
+    // details and sections on the left, clock-in in the column on the right.
+    // Before you set off sits with clock-in; the Journey is a tab.
+    const tabs: WalkPageTab[] = [
+      {
+        value: "route",
+        label: "Map & weather",
+        content: visibleSections.filter(({ id }) => id !== "before").map(({ id }) => renderSection(id)),
+      },
+    ];
+    if (journeyEvents.length > 0) {
+      tabs.push({ value: "journey", label: "Journey", content: <WalkJourneyTimeline events={journeyEvents} /> });
+    }
+    return (
+      <div className="flex flex-col gap-6">
+        <span className="text-sm text-muted-foreground">
+          {/* Members go back to Walks, everyone else Home: both are here, and
+              the remembered sign-in shows the right one before anything is drawn. */}
+          <Link className="hover:text-foreground" data-member-home="" href="/walks">
+            ← Walks
+          </Link>
+          <Link className="hover:text-foreground" data-guest-home="" href="/">
+            ← Home
+          </Link>
+        </span>
+        <WalkPageColumns
+          aside={
+            <>
+              {live}
+              {howWalksWork}
+              {visibleSections.some(({ id }) => id === "before") ? renderSection("before") : null}
+            </>
+          }
+          tabs={tabs}
+          top={chrome}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <span className="text-sm text-muted-foreground">
+          {/* Members go back to Walks, everyone else Home: both are here, and
+              the remembered sign-in shows the right one before anything is drawn. */}
+          <Link className="hover:text-foreground" data-member-home="" href="/walks">
+            ← Walks
+          </Link>
+          <Link className="hover:text-foreground" data-guest-home="" href="/">
+            ← Home
+          </Link>
+        </span>
+        <WalkJourneyDrawer events={journeyEvents} />
+      </div>
+      {chrome}
+      {live}
+      {howWalksWork}
+      {visibleSections.map(({ id }) => renderSection(id))}
     </div>
   );
 }

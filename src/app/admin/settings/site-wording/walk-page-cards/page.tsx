@@ -8,6 +8,7 @@ import { SettingsMask } from "../../settings-mask";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { BeforeYouSetOffToggle, HowWalksWorkToggle } from "../walk-page-card-toggles";
 import { WalkPageCopySettings } from "../walk-page-copy-settings";
+import { WalkPageLayoutSettings } from "../walk-page-layout-settings";
 import { WalkPageSectionsSettings } from "../walk-page-sections-settings";
 
 
@@ -20,7 +21,7 @@ export default function WalkPageCardsWordingPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description="The cards on a walk's own page, and the order of its sections. Edit the wording, turn a card off, or move a section up or down."
+      description="The layout of a walk's own page, its cards, and the order of its sections. Edit the wording, turn a card off, or move a section up or down."
       title="Walk page cards"
     >
       <Suspense fallback={<SettingsFallback />}>
@@ -47,6 +48,9 @@ async function WalkPageCardsWordingPageContent() {
 function SettingsView({ theme }: { theme: SiteTheme }) {
   return (
     <>
+      <SettingsSectionGroup description="The same for members and organisers." title="Layout">
+        <WalkPageLayoutSettings layout={theme.walkPageLayout} />
+      </SettingsSectionGroup>
       <SettingsSectionGroup
         description="Off hides that card on every walk. The wording below is kept, so turning it back on restores what you wrote."
         title="Show or hide"

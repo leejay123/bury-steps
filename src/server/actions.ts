@@ -116,6 +116,7 @@ export {
   updateFacebookGroupUrl,
   reorderHomepageSections,
   saveWalkPageSections,
+  updateWalkPageLayout,
   updateFaqSectionCopy,
   updateTestimonialsSectionCopy,
   updateHowThisStartedCopy,

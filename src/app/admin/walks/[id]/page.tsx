@@ -30,6 +30,7 @@ import { WalkDetailActions } from "./walk-detail-actions";
 import { WalkDescription } from "@/components/walk-description";
 import { WalkJourneyManager } from "./walk-journey";
 import { SelfClockInPanel } from "./self-clock-in-panel";
+import { WalkPageColumns } from "@/components/walk-page-columns";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -224,12 +225,10 @@ async function WalkDetailPageContent({ id }: { id: string }) {
     };
   }
 
-  return (
-    <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
-      <Link href="/admin/walks" className="text-sm text-muted-foreground hover:text-foreground">
-        &larr; All walks
-      </Link>
-
+  // The page's parts, placed by the walk page layout chosen in Settings →
+  // Site wording → Walk page cards (one column, or two with tabs).
+  const notices = (
+    <>
       {/* Only tells someone what THEY can still do about it — an
           organiser without any of Edit/Cancel/Attendance can't act on any
           of what this mentions, so it stays silent for them rather than
@@ -243,7 +242,6 @@ async function WalkDetailPageContent({ id }: { id: string }) {
         show={admin.permWalksEdit || admin.permWalksCancel || admin.permWalksAttendance}
         startsAt={walk.startsAt.toISOString()}
       />
-
       {walk.cancelledAt ? (
         <Alert variant="destructive">
           <AlertTitle>This walk has been cancelled</AlertTitle>
@@ -258,7 +256,10 @@ async function WalkDetailPageContent({ id }: { id: string }) {
           </AlertDescription>
         </Alert>
       ) : null}
-
+    </>
+  );
+  const detailsCard = (
+    <>
       <Card className="gap-4">
         <CardHeader>
           <div className="flex min-w-0 flex-col items-start gap-1.5">
@@ -306,7 +307,10 @@ async function WalkDetailPageContent({ id }: { id: string }) {
           {walk.description ? <WalkDescription description={walk.description} /> : null}
         </CardContent>
       </Card>
-
+    </>
+  );
+  const selfClockIn = (
+    <>
       {walk.cancelledAt ? null : (
         <SelfClockInPanel
           alreadyClockedInAt={mine?.clockedInAt.toISOString() ?? null}
@@ -320,9 +324,11 @@ async function WalkDetailPageContent({ id }: { id: string }) {
           token={walk.token}
         />
       )}
-
-      <ShareLink url={walkShareUrl(appUrl(), { token: walk.token, slug })} />
-
+    </>
+  );
+  const shareLink = <ShareLink url={walkShareUrl(appUrl(), { token: walk.token, slug })} />;
+  const sharedSections = (
+    <>
       {/* The shared sections, in the order and with the show/hide chosen in
           Settings → Site wording → Walk page cards (Before you set off is
           members-only). */}
@@ -350,7 +356,10 @@ async function WalkDetailPageContent({ id }: { id: string }) {
             return null;
         }
       })}
-
+    </>
+  );
+  const tools = (
+    <>
       <WalkDetailActions
         attendanceCount={walk.attendances.length}
         backMarker={walk.backMarker}
@@ -380,69 +389,66 @@ async function WalkDetailPageContent({ id }: { id: string }) {
         walkLeader={walk.walkLeader}
         what3words={walk.what3words}
       />
-
       {walk.cancelledAt && admin.permWalksExport ? (
         <RetentionLockToggle locked={walk.retentionLocked} walkId={walk.id} />
       ) : null}
-
-      <Separator />
-
-      {canSeeAttendance ? (
-        <>
-          {admin.permWalksHealth && withConditions > 0 && (
-            <Alert variant="warning">
-              <AlertTitle>
-                {withConditions} {withConditions === 1 ? "member has" : "members have"} reported a
-                condition
-              </AlertTitle>
-              <AlertDescription>
-                Read these before setting off. They are deleted 90 days after the walk.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/*
-            Split into two lists rather than one merged table: "Attendance" is
-            who is on the walk right now, full stop — someone who clocked out
-            has left, so they no longer belong there, even with a badge. Their
-            record isn't lost (it's still in Clocked out below, in their walk
-            history, and in the CSV export) but the live headcount and the rows
-            under it now always agree, instead of the header saying "1 on the
-            walk" while the table still lists 2 people.
-
-            Once the walk is completed, "on the walk" stops being true for
-            anyone — the walk is over — so this section relabels itself to
-            "Attended": these are the people who stayed for the whole thing
-            without clocking out, not people still out there. Labels and Add
-            someone tick with the walk clock (see WalkAttendanceSection).
-          */}
-          <WalkAttendanceSection
-            canManageAttendance={admin.permWalksAttendance}
-            canSeeEmergencyContact={admin.permWalksAttendance}
-            canSeeHealthNotes={admin.permWalksHealth}
-            cancelledAt={walk.cancelledAt?.toISOString() ?? null}
-            clockedOutRows={clockedOut.map(toAttendanceRow)}
-            durationMins={walk.durationMins}
-            endedAt={walk.endedAt?.toISOString() ?? null}
-            startsAt={walk.startsAt.toISOString()}
-            stillInRows={stillIn.map(toAttendanceRow)}
-            totalAttendanceCount={walk.attendances.length}
-            walkId={walk.id}
-          />
-        </>
-      ) : (
-        // Same boundary the public walk page draws for an ordinary member
-        // (see viewerAttended above) — reached this page via Members
-        // access only, and never clocked into this particular walk.
-        <EmptyState
-          description="You'll see who's on this walk once you've clocked into it yourself, or if you're given the Attendance permission."
-          icon={ClipboardList}
-          title="Attendance is private to this walk"
-        />
+    </>
+  );
+  const attendanceSection = canSeeAttendance ? (
+    <>
+      {admin.permWalksHealth && withConditions > 0 && (
+        <Alert variant="warning">
+          <AlertTitle>
+            {withConditions} {withConditions === 1 ? "member has" : "members have"} reported a
+            condition
+          </AlertTitle>
+          <AlertDescription>
+            Read these before setting off. They are deleted 90 days after the walk.
+          </AlertDescription>
+        </Alert>
       )}
 
-      <Separator />
+      {/*
+        Split into two lists rather than one merged table: "Attendance" is
+        who is on the walk right now, full stop — someone who clocked out
+        has left, so they no longer belong there, even with a badge. Their
+        record isn't lost (it's still in Clocked out below, in their walk
+        history, and in the CSV export) but the live headcount and the rows
+        under it now always agree, instead of the header saying "1 on the
+        walk" while the table still lists 2 people.
 
+        Once the walk is completed, "on the walk" stops being true for
+        anyone — the walk is over — so this section relabels itself to
+        "Attended": these are the people who stayed for the whole thing
+        without clocking out, not people still out there. Labels and Add
+        someone tick with the walk clock (see WalkAttendanceSection).
+      */}
+      <WalkAttendanceSection
+        canManageAttendance={admin.permWalksAttendance}
+        canSeeEmergencyContact={admin.permWalksAttendance}
+        canSeeHealthNotes={admin.permWalksHealth}
+        cancelledAt={walk.cancelledAt?.toISOString() ?? null}
+        clockedOutRows={clockedOut.map(toAttendanceRow)}
+        durationMins={walk.durationMins}
+        endedAt={walk.endedAt?.toISOString() ?? null}
+        startsAt={walk.startsAt.toISOString()}
+        stillInRows={stillIn.map(toAttendanceRow)}
+        totalAttendanceCount={walk.attendances.length}
+        walkId={walk.id}
+      />
+    </>
+  ) : (
+    // Same boundary the public walk page draws for an ordinary member
+    // (see viewerAttended above) — reached this page via Members
+    // access only, and never clocked into this particular walk.
+    <EmptyState
+      description="You'll see who's on this walk once you've clocked into it yourself, or if you're given the Attendance permission."
+      icon={ClipboardList}
+      title="Attendance is private to this walk"
+    />
+  );
+  const journey = (
+    <>
       <WalkJourneyManager
         cancelledAt={walk.cancelledAt?.toISOString() ?? null}
         defaultHappenedAt={journeyDefaultAt}
@@ -453,6 +459,55 @@ async function WalkDetailPageContent({ id }: { id: string }) {
         startsAt={walk.startsAt.toISOString()}
         walkId={walk.id}
       />
+    </>
+  );
+
+  if (theme.walkPageLayout === "columns") {
+    return (
+      <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
+        <Link href="/admin/walks" className="text-sm text-muted-foreground hover:text-foreground">
+          &larr; All walks
+        </Link>
+        {notices}
+        <WalkPageColumns
+          aside={
+            <>
+              {selfClockIn}
+              {shareLink}
+              {tools}
+            </>
+          }
+          tabs={[
+            { value: "route", label: "Map & weather", content: sharedSections },
+            {
+              value: "people",
+              // The count only for those who may see the list itself.
+              label: canSeeAttendance ? `People (${walk.attendances.length})` : "People",
+              content: attendanceSection,
+            },
+            { value: "journey", label: "Journey", content: journey },
+          ]}
+          top={detailsCard}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
+      <Link href="/admin/walks" className="text-sm text-muted-foreground hover:text-foreground">
+        &larr; All walks
+      </Link>
+      {notices}
+      {detailsCard}
+      {selfClockIn}
+      {shareLink}
+      {sharedSections}
+      {tools}
+      <Separator />
+      {attendanceSection}
+      <Separator />
+      {journey}
     </div>
   );
 }

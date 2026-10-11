@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { CalendarDays, Clock, MapPin, Timer } from "lucide-react";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { EmptyStateSkeleton, SkLine } from "@/components/list-skeletons";
@@ -116,14 +117,23 @@ export function PreciseLocationSkeleton() {
 }
 
 /** The shared sections, in the chosen order. Before you set off is members-only. */
-export function WalkSectionsSkeleton({ theme, organiser }: { theme: SiteTheme; organiser: boolean }) {
+export function WalkSectionsSkeleton({
+  theme,
+  organiser,
+  withoutBefore = false,
+}: {
+  theme: SiteTheme;
+  organiser: boolean;
+  /** Two-column layout: Before you set off sits in the right-hand column instead. */
+  withoutBefore?: boolean;
+}) {
   return (
     <>
       {theme.walkPageSections.map(({ id, visible }) => {
         if (!visible) return null;
         switch (id) {
           case "before":
-            return organiser || !theme.beforeYouSetOffEnabled ? null : (
+            return organiser || withoutBefore || !theme.beforeYouSetOffEnabled ? null : (
               <BeforeYouSetOff key={id} tips={theme.beforeYouSetOffTips} />
             );
           case "map":
@@ -138,17 +148,58 @@ export function WalkSectionsSkeleton({ theme, organiser }: { theme: SiteTheme; o
   );
 }
 
+/** The walk's buttons, as grey shapes of their sizes: Add to calendar,
+ * Download roster (CSV), Duplicate, Cancel walk, Edit, Remove walk. */
+export function WalkButtonsSkeleton() {
+  return (
+    <div aria-hidden className="flex flex-wrap gap-2">
+      {["w-32", "w-44", "w-24", "w-28", "w-16", "w-28"].map((width, i) => (
+        <Skeleton className={`h-8 rounded-md ${width}`} key={i} />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * The two-column layout's tabs (WalkPageColumns): the tab bar with its real
+ * labels, the first one chosen, and the first tab's sections under it.
+ * A count in a label ("People (5)") is a grey shape until it's known.
+ */
+export function WalkTabsSkeleton({
+  children,
+  labels,
+}: {
+  children: ReactNode;
+  labels: { text: string; count?: boolean }[];
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <div
+        aria-hidden
+        className="inline-flex h-9 w-full items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground sm:w-fit"
+      >
+        {labels.map(({ text, count }, i) => (
+          <span
+            className={`inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap text-foreground ${
+              i === 0 ? "bg-background shadow-sm" : ""
+            }`}
+            key={text}
+          >
+            {text}
+            {count ? <Skeleton className="h-3.5 w-6 rounded-[4px]" /> : null}
+          </span>
+        ))}
+      </div>
+      <div className="mt-4 flex flex-col gap-6">{children}</div>
+    </div>
+  );
+}
+
 /** The organiser page's own parts after the shared sections: buttons, who's on the walk, Journey. */
 export function OrganiserWalkToolsSkeleton() {
   return (
     <>
-      {/* The walk's buttons, as grey shapes of their sizes: Add to calendar,
-          Download roster (CSV), Duplicate, Cancel walk, Edit, Remove walk. */}
-      <div aria-hidden className="flex flex-wrap gap-2">
-        {["w-32", "w-44", "w-24", "w-28", "w-16", "w-28"].map((width, i) => (
-          <Skeleton className={`h-8 rounded-md ${width}`} key={i} />
-        ))}
-      </div>
+      <WalkButtonsSkeleton />
       <Separator />
       <EmptyStateSkeleton />
       <Separator />

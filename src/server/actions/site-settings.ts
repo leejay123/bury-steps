@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { parseWalkPageSections, serializeWalkPageSections } from "@/lib/walk-page-sections";
+import { parseWalkPageLayout, parseWalkPageSections, serializeWalkPageSections } from "@/lib/walk-page-sections";
 import { guardArgs, guardForm } from "@/lib/safe-action";
 
 import { serializeAnnouncementPages } from "@/lib/announcement-pages";
@@ -1946,6 +1946,35 @@ export const updateFacebookGroupUrl = guardForm(
 export async function reorderHomepageSections(ids: HomepageSectionId[]): Promise<ActionResult> {
   return reorderHomepageSectionsGuarded(ids);
 }
+
+/** Walk pages: one column or two (walk-page-sections.ts, WalkPageLayout). */
+async function updateWalkPageLayoutWork(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  const layout = parseWalkPageLayout(String(formData.get("walkPageLayout") ?? ""));
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, walkPageLayout: layout },
+      update: { walkPageLayout: layout },
+    });
+  } catch (err) {
+    return logActionError("updateWalkPageLayout", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings/site-wording/walk-page-cards");
+  return {
+    ok: true,
+    message: layout === "columns" ? "Walk pages now use two columns." : "Walk pages now use one column.",
+  };
+}
+export const updateWalkPageLayout = guardForm("organiser", pass, readPass, updateWalkPageLayoutWork);
 
 /** Walk pages: the order and show/hide of the shared sections (walk-page-sections.ts). */
 async function saveWalkPageSectionsWork(value: string): Promise<ActionResult> {

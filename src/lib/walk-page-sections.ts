@@ -39,3 +39,16 @@ export function parseWalkPageSections(raw: string | null | undefined): WalkPageS
 export function serializeWalkPageSections(sections: WalkPageSection[]): string {
   return sections.map(({ id, visible }) => (visible || id === "before" ? id : `-${id}`)).join(",");
 }
+
+/**
+ * How a walk's page is laid out (Settings → Site wording → Walk page cards),
+ * the same for members and organisers: "classic" is one column, everything
+ * stacked; "columns" puts the details and the sections (in tabs) on the
+ * left and the clock-in, share link and organiser buttons in a right-hand
+ * column that stays in view on a computer. Phones stack it in one column.
+ */
+export type WalkPageLayout = "classic" | "columns";
+
+export function parseWalkPageLayout(value: string | null | undefined): WalkPageLayout {
+  return value === "columns" ? "columns" : "classic";
+}

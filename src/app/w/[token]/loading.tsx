@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BeforeYouSetOff } from "@/components/before-you-set-off";
+import { WalkPageColumns } from "@/components/walk-page-columns";
 import { WalkDetailsCardSkeleton, WalkSectionsSkeleton } from "@/components/walk-page-skeletons";
 import { getSiteTheme } from "@/lib/site-theme";
 
@@ -16,6 +18,35 @@ export default function Loading() {
 
 export async function WalkLinkLoading() {
   const theme = await getSiteTheme();
+  if (theme.walkPageLayout === "columns") {
+    // The two-column layout (Settings → Walk page cards → Layout): the
+    // details card, the sections under it, and Before you set off in the
+    // right-hand column (the clock-in part arrives with the page).
+    const before = theme.walkPageSections.some(({ id, visible }) => id === "before" && visible);
+    return (
+      <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6">
+        <span className="text-sm text-muted-foreground">
+          <Link className="hover:text-foreground" data-member-home="" href="/walks">
+            ← Walks
+          </Link>
+          <Link className="hover:text-foreground" data-guest-home="" href="/">
+            ← Home
+          </Link>
+        </span>
+        <WalkPageColumns
+          aside={before && theme.beforeYouSetOffEnabled ? <BeforeYouSetOff tips={theme.beforeYouSetOffTips} /> : null}
+          tabs={[
+            {
+              value: "route",
+              label: "Map & weather",
+              content: <WalkSectionsSkeleton organiser={false} theme={theme} withoutBefore />,
+            },
+          ]}
+          top={<WalkDetailsCardSkeleton organiser={false} />}
+        />
+      </div>
+    );
+  }
   return (
     <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6">
       {/* The real back link (members go back to Walks, everyone else Home —

@@ -4,7 +4,12 @@ import path from "node:path";
 import { parseSliderHeroWords, type SliderHeroWords } from "@/lib/hero-style";
 import { DEFAULT_TEXT_SIZES, parseTextSize, type TextSizes } from "@/lib/text-sizes";
 import { cacheLife, cacheTag } from "next/cache";
-import { parseWalkPageSections, type WalkPageSection } from "@/lib/walk-page-sections";
+import {
+  parseWalkPageLayout,
+  parseWalkPageSections,
+  type WalkPageLayout,
+  type WalkPageSection,
+} from "@/lib/walk-page-sections";
 import { DEFAULT_WALK_ESSENTIALS, parseEssentialList, type EssentialItem } from "@/lib/walk-essentials";
 import { prisma } from "@/lib/db";
 import { photoBlur } from "@/lib/photo-blur";
@@ -141,6 +146,8 @@ export type SiteTheme = {
   howWalksWorkEnabled: boolean;
   /** Walk pages: order (and show/hide) of the shared sections — see walk-page-sections.ts. */
   walkPageSections: WalkPageSection[];
+  /** Walk pages: one column, or two columns with tabs — see walk-page-sections.ts. */
+  walkPageLayout: WalkPageLayout;
   howWalksWorkSteps: AboutRule[];
   howWalksWorkStepsText: string;
   homepageSectionOrder: HomepageSectionId[];
@@ -218,6 +225,7 @@ export function defaultTheme(): SiteTheme {
     beforeYouSetOffTipsText: DEFAULT_BEFORE_YOU_SET_OFF_TIPS_TEXT,
     howWalksWorkEnabled: true,
     walkPageSections: parseWalkPageSections(null),
+    walkPageLayout: "classic",
     howWalksWorkSteps: DEFAULT_HOW_WALKS_WORK_STEPS.map((step) => ({ ...step })),
     howWalksWorkStepsText: DEFAULT_HOW_WALKS_WORK_STEPS_TEXT,
     homepageSectionOrder: normalizeHomepageSectionOrder(null),
@@ -287,6 +295,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       beforeYouSetOffTips: true,
       howWalksWorkEnabled: true,
       walkPageSections: true,
+      walkPageLayout: true,
       howWalksWorkSteps: true,
       homepageSectionOrder: true,
       logoMime: true,
@@ -398,6 +407,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       : DEFAULT_BEFORE_YOU_SET_OFF_TIPS_TEXT,
     howWalksWorkEnabled: row?.howWalksWorkEnabled ?? true,
     walkPageSections: parseWalkPageSections(row?.walkPageSections),
+    walkPageLayout: parseWalkPageLayout(row?.walkPageLayout),
     howWalksWorkSteps,
     howWalksWorkStepsText: row?.howWalksWorkSteps?.trim()
       ? serializeAboutRules(howWalksWorkSteps)

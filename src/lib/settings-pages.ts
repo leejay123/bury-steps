@@ -59,8 +59,8 @@ export const SITE_WORDING_PAGES: SettingsPageLink[] = [
   {
     href: "/admin/settings/site-wording/walk-page-cards",
     title: "Walk page cards",
-    description: "Edit or hide the Before you set off and How this group works cards on each walk's page.",
-    keywords: "tips steps before you set off how walks work",
+    description: "Choose one or two columns for each walk's page, and edit or hide its Before you set off and How this group works cards.",
+    keywords: "tips steps before you set off how walks work layout two columns tabs sticky walk page design",
   },
 ];
 

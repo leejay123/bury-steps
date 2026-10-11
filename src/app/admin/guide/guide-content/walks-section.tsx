@@ -108,7 +108,17 @@ export function WalksSection({
               precise location show at all, is set under Settings → Site wording → Walk page cards
               → <strong>Walk page layout</strong> (arrows to move, switches to show or hide), and
               applies to members&apos;, organisers&apos; and owners&apos; walk pages alike. The two
-              cards&apos; wording is edited, or turned off, on the same page. Once the
+              cards&apos; wording is edited, or turned off, on the same page. At the top of that
+              page, <strong>One or two columns</strong> chooses how every walk&apos;s page is laid
+              out, the same for members and organisers: <strong>One column</strong> (the original,
+              everything stacked) or <strong>Two columns with tabs</strong>. With two columns, a
+              computer shows the walk&apos;s details on the left with tabs under them (Map &amp;
+              weather, People and Journey for organisers; Map &amp; weather, and Journey once it
+              has moments, for members), and a right-hand column that stays in view as you
+              scroll: clock-in, the share link and the walk&apos;s buttons for organisers;
+              clock-in, How this group works and Before you set off for members. On a phone it
+              is one column: the details, then that right-hand column, then the tabs. Switch
+              back to One column at any time. Once the
               walk is Completed, guests see that it has finished instead —
               no join prompt. Names of who is on the walk stay private.
             </li>
