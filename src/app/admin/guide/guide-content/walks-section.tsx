@@ -201,7 +201,15 @@ export function WalksSection({
               width or stay on one row that swipes sideways. Clock in and
               Manage can go together or as separate Clock in button and Manage
               button blocks, and the walk name, status badge, countdown, the
-              day&apos;s timeline and any one fact are blocks of their own. The
+              day&apos;s timeline and any one fact are blocks of their own. Block layout&apos;s Buttons option makes the
+              block&apos;s buttons full width on phones, or everywhere. The Map block
+              has looks (card, flat, map only, details floating over the map,
+              details beside the map), a height, and Directions buttons below,
+              above, on the map or hidden — or add the Directions buttons block
+              to place them anywhere else. Inside a full-width, edge-to-edge
+              block or section, the map and cards run right to the edges with
+              square corners. The Details card&apos;s Status ribbon is a coloured
+              band across its top saying where the walk is up to. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way or finished, so you can see how
               the design changes (Clock in only appears while clock-in is

@@ -37,6 +37,7 @@ import {
   TitleBlock,
   WeatherBlock,
   CountdownBlock,
+  DirectionsBlock,
   FactBlock,
   StatusBadgeBlock,
   TimelineBlock,
@@ -64,6 +65,9 @@ const factsOptions = options<FactsVariant>([
   ["tiles", "Tiles"],
 ]);
 
+/** Inside an edge-to-edge block, lose the rounded corners and side borders. */
+const BLEED = "in-data-[bleed]:rounded-none in-data-[bleed]:border-x-0";
+
 const arrangeField = {
   type: "radio" as const,
   label: "Arrange",
@@ -85,12 +89,14 @@ type BlockLayout = {
   frame?: "none" | "card" | "tint" | "dark" | "outline" | "green";
   heading?: string;
   showOn?: "all" | "phones" | "computers";
+  buttons?: "as-is" | "phones" | "always";
 };
 const BLOCK_LAYOUT: BlockLayout = {
   width: "page",
   frame: "none",
   heading: "",
   showOn: "all",
+  buttons: "as-is",
 };
 const blockLayoutField = {
   type: "object" as const,
@@ -118,6 +124,15 @@ const blockLayoutField = {
       ]),
     },
     heading: { type: "text" as const, label: "Heading above (optional)" },
+    buttons: {
+      type: "select" as const,
+      label: "Buttons",
+      options: options([
+        ["as-is", "As designed"],
+        ["phones", "Full width on phones"],
+        ["always", "Full width everywhere"],
+      ]),
+    },
     showOn: {
       type: "radio" as const,
       label: "Show on",
@@ -137,13 +152,24 @@ function BlockFrame({
   children: ReactNode;
   layout?: BlockLayout;
 }) {
-  const { width, frame, heading, showOn } = { ...BLOCK_LAYOUT, ...layout };
+  const { width, frame, heading, showOn, buttons } = {
+    ...BLOCK_LAYOUT,
+    ...layout,
+  };
   const full = width !== "page";
   const framed = frame !== "none";
   return (
     <div
+      data-bleed={width === "full" ? "" : undefined}
       className={cn(
         full && "-mx-4 md:-mx-6",
+        // Edge to edge: cards inside lose their rounded corners and side borders.
+        width === "full" &&
+          "[&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:border-x-0",
+        buttons === "phones" &&
+          "max-sm:[&_[data-slot=button]]:w-full max-sm:[&_[data-slot=button]]:flex-1",
+        buttons === "always" &&
+          "[&_[data-slot=button]]:w-full [&_[data-slot=button]]:flex-1",
         showOn === "phones" && "md:hidden",
         showOn === "computers" && "max-md:hidden",
       )}
@@ -234,7 +260,7 @@ export const walkDesignConfig: Config = {
     },
     places: {
       title: "Map and weather",
-      components: ["Map", "Weather", "Precise", "Before"],
+      components: ["Map", "Directions", "Weather", "Precise", "Before"],
     },
     people: {
       title: "People and journey",
@@ -587,7 +613,71 @@ export const walkDesignConfig: Config = {
       render: ({ arrange }) => <BadgesBlock arrange={arrange} />,
     },
     PhasesBoard: { label: "Phases board", render: () => <PhasesBoardBlock /> },
-    Map: { label: "Map", render: () => <MapBlock /> },
+    Map: {
+      label: "Map",
+      fields: {
+        look: {
+          type: "select",
+          label: "Look",
+          options: options([
+            ["card", "Card"],
+            ["flat", "Flat, no frame (edge to edge in a full-width block)"],
+            ["bare", "Map only"],
+            ["overlay", "Details floating over the map"],
+            ["split", "Details beside the map"],
+          ]),
+        },
+        buttons: {
+          type: "select",
+          label: "Directions buttons",
+          options: options([
+            ["below", "Below the map"],
+            ["above", "Above the map"],
+            ["over", "On the map"],
+            ["none", "Hide them"],
+          ]),
+        },
+        height: {
+          type: "radio",
+          label: "Map height",
+          options: options([
+            ["short", "Short"],
+            ["medium", "Medium"],
+            ["tall", "Tall"],
+          ]),
+        },
+        showTitle: {
+          type: "radio",
+          label: "Meeting point title",
+          options: yesNo,
+        },
+        showNote: { type: "radio", label: "Small print", options: yesNo },
+      },
+      defaultProps: {
+        look: "card",
+        buttons: "below",
+        height: "medium",
+        showTitle: true,
+        showNote: true,
+      },
+      render: ({ look, buttons, height, showTitle, showNote }) => (
+        <MapBlock
+          buttons={buttons}
+          height={height}
+          look={look}
+          showNote={showNote}
+          showTitle={showTitle}
+        />
+      ),
+    },
+    Directions: {
+      label: "Directions buttons",
+      fields: {
+        full: { type: "radio", label: "Full width", options: yesNo },
+      },
+      defaultProps: { full: false },
+      render: ({ full }) => <DirectionsBlock full={full} />,
+    },
     Weather: { label: "Weather", render: () => <WeatherBlock /> },
     Precise: { label: "Precise location", render: () => <PreciseBlock /> },
     Before: { label: "Before you set off", render: () => <BeforeBlock /> },
@@ -604,6 +694,10 @@ export const walkDesignConfig: Config = {
           options: options([
             ["contained", "Page width"],
             ["full", "Full width, edge to edge"],
+            [
+              "full-inset",
+              "Full-width background, content in line with the page",
+            ],
           ]),
         },
         background: {
@@ -635,13 +729,17 @@ export const walkDesignConfig: Config = {
       },
       render: ({ width, background, padding, content: Content }) => (
         <section
+          data-bleed={width === "full" ? "" : undefined}
           className={cn(
-            width === "full" && "-mx-4 px-4 md:-mx-6 md:px-6",
+            width !== "contained" && "-mx-4 md:-mx-6",
+            width === "full-inset" && "px-4 md:px-6",
+            width === "full" &&
+              "[&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:border-x-0",
             background === "muted" && "bg-muted/50",
             background === "dark" && "bg-neutral-950 text-white",
             background === "green" && "bg-emerald-900 text-emerald-50",
             background !== "none" &&
-              width !== "full" &&
+              width === "contained" &&
               "rounded-2xl px-4 sm:px-6",
             padding === "small" && "py-4",
             padding === "large" && "py-10",
@@ -790,6 +888,7 @@ export const walkDesignConfig: Config = {
         <div
           className={cn(
             "overflow-hidden rounded-2xl",
+            BLEED,
             tone === "card" && "border bg-card shadow-sm",
             tone === "tint" && "bg-muted/40",
             tone === "dark" && "bg-neutral-950 text-white",
@@ -888,7 +987,7 @@ export const walkDesignConfig: Config = {
         }[];
         return (
           <Accordion
-            className="rounded-2xl border px-4"
+            className={cn("rounded-2xl border px-4", BLEED)}
             defaultValue={list.flatMap((item, i) =>
               item.open ? [`item-${i}`] : [],
             )}

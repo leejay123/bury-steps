@@ -32,6 +32,11 @@ import { useWalkNow } from "@/components/walk-header-styles";
 import type { WalkIdeaParts } from "@/components/walk-idea-layouts";
 import { WalkActionsBar, WalkManageMenu } from "@/components/walk-manage-menu";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
+import {
+  DirectionsButtons,
+  MapLookProvider,
+  type MapLook,
+} from "@/components/walk-map";
 import { useWalkParts } from "./parts";
 
 /**
@@ -923,20 +928,33 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       aria-label="Walk details"
       className={cn(
         "overflow-hidden",
-        o.tone === "plain" ? "" : "rounded-2xl border",
+        o.tone === "plain"
+          ? ""
+          : "rounded-2xl border in-data-[bleed]:rounded-none in-data-[bleed]:border-x-0",
         dark && "border-neutral-800 bg-neutral-950 text-white",
         o.tone === "tint" && "bg-muted/40",
         (!o.tone || o.tone === "card") && "bg-card shadow-sm",
       )}
     >
       {o.ribbon ? (
+        // A band across the top of the card saying where the walk is up to.
         <div
-          aria-hidden
           className={cn(
-            "h-1.5",
-            info.now.live ? "bg-emerald-500" : "bg-muted-foreground/30",
+            "flex items-center gap-2 px-5 py-2 text-sm sm:px-6",
+            info.now.tone,
           )}
-        />
+          suppressHydrationWarning
+        >
+          <span
+            aria-hidden
+            className={cn(
+              "size-2 shrink-0 rounded-full",
+              info.now.live ? "bg-emerald-500" : "bg-current opacity-40",
+            )}
+          />
+          <span className="font-semibold">{info.now.eyebrow}</span>
+          <span className="truncate opacity-80">{info.now.line}</span>
+        </div>
       ) : null}
       {map === "top" ? <FlushMap className="border-b" p={p} /> : null}
       {map === "side" && p.map ? (
@@ -1265,7 +1283,25 @@ function Status({ p, variant }: { p: WalkIdeaParts; variant: StatusVariant }) {
   }
 }
 
-export const MapBlock = withParts("Map and directions", (p) => <>{p.map}</>);
+/** The meeting-point map, in the look and with the buttons chosen in the designer. */
+export function MapBlock(look: MapLook) {
+  const p = useWalkParts();
+  if (!p) return <Placeholder label="Map and directions" />;
+  return <MapLookProvider value={look}>{p.map}</MapLookProvider>;
+}
+
+/** Get directions and Apple Maps on their own, to place anywhere. */
+export function DirectionsBlock({ full = false }: { full?: boolean }) {
+  const p = useWalkParts();
+  if (!p) return <Placeholder label="Directions buttons" />;
+  if (!p.meeting) return null;
+  return (
+    <DirectionsButtons
+      className={full ? "sm:grid sm:grid-cols-2" : undefined}
+      location={p.meeting}
+    />
+  );
+}
 export const WeatherBlock = withParts("Weather forecast", (p) => (
   <>{p.forecast}</>
 ));
