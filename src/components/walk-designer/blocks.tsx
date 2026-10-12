@@ -925,6 +925,8 @@ export type DetailsOptions = {
   map?: "none" | "top" | "side" | "bottom";
   mapButtons?: "below" | "above" | "none";
   mapHeight?: "short" | "medium" | "tall";
+  mapTitle?: boolean;
+  mapNote?: boolean;
   tone?: "card" | "tint" | "dark" | "plain";
   ribbon?: RibbonContent | OldRibbon;
   ribbonStyle?: RibbonStyle;
@@ -1038,6 +1040,8 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       value={{
         buttons: o.mapButtons ?? "below",
         height: o.mapHeight ?? "medium",
+        showTitle: o.mapTitle ?? true,
+        showNote: o.mapNote ?? true,
       }}
     >
       <section

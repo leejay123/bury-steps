@@ -229,7 +229,9 @@ export function WalksSection({
               whether it sits at the top or bottom. Messages have looks (soft,
               bold, compact, a coloured stripe, or hidden), and Block layout
               can restyle the messages and boxes inside any block. New
-              signed-out visitor designs start with How this group works. The
+              signed-out visitor designs start with How this group works. The Details card&apos;s map can also hide its Meeting point
+              title and its small print, as the Map block can. The Tabs block&apos;s
+              tab bar can run full width, edge to edge. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

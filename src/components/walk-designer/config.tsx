@@ -435,6 +435,16 @@ export const walkDesignConfig: Config = {
             ["none", "Hide them"],
           ]),
         },
+        mapTitle: {
+          type: "radio",
+          label: "Map's Meeting point title",
+          options: yesNo,
+        },
+        mapNote: {
+          type: "radio",
+          label: "Map's small print (OpenStreetMap…)",
+          options: yesNo,
+        },
         mapHeight: {
           type: "radio",
           label: "Map height",
@@ -513,6 +523,8 @@ export const walkDesignConfig: Config = {
         map: "none",
         mapButtons: "below",
         mapHeight: "medium",
+        mapTitle: true,
+        mapNote: true,
         tone: "card",
         showTitle: true,
         showActions: true,
@@ -533,6 +545,8 @@ export const walkDesignConfig: Config = {
         map,
         mapButtons,
         mapHeight,
+        mapTitle,
+        mapNote,
         tone,
         showTitle,
         showActions,
@@ -554,6 +568,8 @@ export const walkDesignConfig: Config = {
           map={map}
           mapButtons={mapButtons}
           mapHeight={mapHeight}
+          mapNote={mapNote}
+          mapTitle={mapTitle}
           phoneFacts={phoneFacts}
           phoneFactsArrange={phoneFactsArrange}
           ribbon={ribbon}
@@ -1094,6 +1110,14 @@ export const walkDesignConfig: Config = {
             ["transition", "Pills that drop in"],
           ]),
         },
+        bar: {
+          type: "radio",
+          label: "Tab bar width",
+          options: options([
+            ["page", "Page width"],
+            ["full", "Full width, edge to edge"],
+          ]),
+        },
         fit: {
           type: "radio",
           label: "Tab widths",
@@ -1121,6 +1145,7 @@ export const walkDesignConfig: Config = {
       },
       defaultProps: {
         style: "site",
+        bar: "page",
         fit: "fill",
         sticky: true,
         tabs: [
@@ -1129,7 +1154,7 @@ export const walkDesignConfig: Config = {
           { label: "Journey", content: [] },
         ],
       },
-      render: ({ style, fit, sticky, tabs, puck }) => {
+      render: ({ style, bar: barWidth, fit, sticky, tabs, puck }) => {
         // In the designer every tab's area is shown, one under another, so
         // blocks can be dropped into any tab (a hidden tab can't be reached).
         const editing = Boolean(puck?.isEditing);
@@ -1145,6 +1170,9 @@ export const walkDesignConfig: Config = {
               className={cn(
                 sticky &&
                   "sticky top-16 z-20 -mx-1 bg-background/95 px-1 py-2 backdrop-blur-sm",
+                // Out to the page's edges, square ends (the panels stay page width).
+                barWidth === "full" &&
+                  "-mx-4 px-0 md:-mx-6 [&_[data-slot=tabs-list]]:rounded-none",
               )}
             >
               <TabsList
