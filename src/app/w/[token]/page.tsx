@@ -28,6 +28,7 @@ import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { HowWalksWork } from "@/components/how-walks-work";
 import { getWalkMemberNames } from "@/lib/walk-members";
 import { getSiteTheme } from "@/lib/site-theme";
+import { HOMEPAGE_REVALIDATE_SECONDS } from "@/lib/homepage-cache";
 import { WalkLivePanel } from "./walk-live-panel";
 import {
   WalkClosedNoClockInNotice,
@@ -123,16 +124,24 @@ export async function generateMetadata({
 export const prefetch = "partial";
 
 /**
- * Recent and upcoming walks are made ahead of time, so opening one from a
- * shared link or refreshing it shows the walk at once; other walks are made
- * the first time someone opens them.
+ * The next couple of weeks' walks (at most 8) are made ahead of time, so
+ * opening one from a shared link shows the walk at once; any other walk is
+ * made the first time someone opens it. Kept small on purpose: every page
+ * made here is stored again on every deploy, which counts towards Vercel's
+ * free ISR writes (the site passed that limit on 12 October 2026).
  */
 export async function generateStaticParams(): Promise<{ token: string }[]> {
   try {
     const walks = await prisma.walk.findMany({
-      where: { startsAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }, slug: { not: null } },
+      where: {
+        startsAt: {
+          gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
+          lte: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        },
+        slug: { not: null },
+      },
       orderBy: { startsAt: "asc" },
-      take: 60,
+      take: 8,
       select: { slug: true },
     });
     const tokens = walks.flatMap((walk) => (walk.slug ? [{ token: walk.slug }] : []));
@@ -146,12 +155,14 @@ export async function generateStaticParams(): Promise<{ token: string }[]> {
 /**
  * The walk's details, the same for everyone: a saved copy shared by every
  * server, refreshed whenever the walk changes (its page is refreshed, and
- * Next.js ties saved copies to the page that made them) and every five
- * minutes. Who you are, your clock-in and who's on the walk are not in it.
+ * Next.js ties saved copies to the page that made them) and otherwise once a
+ * day — every rebuild of the page is an ISR write on Vercel, and the walk's
+ * details only change when someone saves it. Who you are, your clock-in and
+ * who's on the walk are not in it.
  */
 async function getSharedWalk(token: string) {
   "use cache: remote";
-  cacheLife({ revalidate: 300 });
+  cacheLife({ revalidate: HOMEPAGE_REVALIDATE_SECONDS });
   return getWalkByShareKey(token);
 }
 

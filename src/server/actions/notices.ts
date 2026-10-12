@@ -40,7 +40,10 @@ const slugSuffix = customAlphabet("abcdefghjkmnpqrstuvwxyz23456789", 6);
 
 function revalidateNotices(paths: string[] = []) {
   revalidateTag(NOTICES_CACHE_TAG, { expire: 0 });
-  revalidatePath("/", "layout");
+  // The homepage, not the whole site ("layout"): everything else showing
+  // notices reads them through NOTICES_CACHE_TAG above, and refreshing every
+  // page on each notice save made Vercel store all of them again.
+  revalidatePath("/");
   revalidatePath("/notices");
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/notices");

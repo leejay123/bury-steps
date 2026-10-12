@@ -22,21 +22,24 @@ async function firstPage(count: () => Promise<number>): Promise<number | undefin
   }
 }
 
+// Only how many grey rows the placeholder shows, so an hour old is fine:
+// at 1 minute, these lists' ready-made pages were rebuilt every minute,
+// and each rebuild can be an ISR write on Vercel.
 async function cachedMessagesCount(): Promise<number> {
   "use cache: remote";
-  cacheLife({ revalidate: 60 });
+  cacheLife({ revalidate: 60 * 60 });
   return prisma.contactMessage.count();
 }
 
 async function cachedReportsCount(): Promise<number> {
   "use cache: remote";
-  cacheLife({ revalidate: 60 });
+  cacheLife({ revalidate: 60 * 60 });
   return prisma.accidentReport.count();
 }
 
 async function cachedMembersCount(): Promise<number> {
   "use cache: remote";
-  cacheLife({ revalidate: 60 });
+  cacheLife({ revalidate: 60 * 60 });
   return prisma.user.count();
 }
 
