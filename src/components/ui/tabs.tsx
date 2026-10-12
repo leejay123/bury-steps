@@ -8,7 +8,8 @@ import type { TabStyle } from "@/lib/tab-style";
 
 /**
  * Which look every tab bar uses (Settings → Site behaviour → Tabs), set
- * once in the root layout. "underline" is the shadcn-space tabs-05 style,
+ * once in the root layout. "transition" is pills whose content drops in
+ * with a slight blur. "underline" is the shadcn-space tabs-05 style,
  * built into these components so every Tabs on the site follows the setting.
  */
 const TabStyleContext = React.createContext<TabStyle>("standard");
@@ -29,6 +30,9 @@ type UnderlineState = {
 };
 
 const UnderlineContext = React.createContext<UnderlineState | null>(null);
+
+/** The pills style ("transition"): whether someone has changed tab yet, so the first doesn't drop in on page load. */
+const PillsContext = React.createContext<{ changed: boolean } | null>(null);
 
 function Tabs({
   className,
@@ -64,7 +68,10 @@ function Tabs({
     [style, id, active, direction, changed],
   );
 
+  const pills = React.useMemo(() => (style === "transition" ? { changed } : null), [style, changed]);
+
   return (
+    <PillsContext.Provider value={pills}>
     <UnderlineContext.Provider value={underline}>
       <TabsPrimitive.Root
         className={cn("flex flex-col gap-2", className)}
@@ -77,17 +84,21 @@ function Tabs({
         {...props}
       />
     </UnderlineContext.Provider>
+    </PillsContext.Provider>
   );
 }
 
 function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.List>) {
   const underline = React.useContext(UnderlineContext);
+  const pills = React.useContext(PillsContext);
   return (
     <TabsPrimitive.List
       className={cn(
         underline
           ? "text-muted-foreground flex h-auto w-full items-end justify-start gap-0 overflow-x-auto rounded-none border-b bg-transparent p-0 [scrollbar-width:none]"
-          : "bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-lg p-[3px]",
+          : pills
+            ? "flex h-auto w-fit max-w-full items-center justify-start gap-2 overflow-x-auto bg-transparent p-0 [scrollbar-width:none]"
+            : "bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-lg p-[3px]",
         className,
       )}
       data-slot="tabs-list"
@@ -103,6 +114,25 @@ function TabsTrigger({
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
   const underline = React.useContext(UnderlineContext);
+  const pills = React.useContext(PillsContext);
+
+  if (pills) {
+    // The pills style: the chosen tab filled in, the others plain words.
+    return (
+      <TabsPrimitive.Trigger
+        className={cn(
+          "text-foreground data-[state=active]:bg-primary data-[state=active]:text-background focus-visible:ring-ring/50 inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-[3px] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
+          className,
+        )}
+        data-slot="tabs-trigger"
+        data-value={value}
+        value={value}
+        {...props}
+      >
+        {children}
+      </TabsPrimitive.Trigger>
+    );
+  }
 
   if (!underline) {
     return (
@@ -153,10 +183,14 @@ function TabsTrigger({
 
 function TabsContent({ className, style, ...props }: React.ComponentProps<typeof TabsPrimitive.Content>) {
   const underline = React.useContext(UnderlineContext);
+  const pills = React.useContext(PillsContext);
   return (
     <TabsPrimitive.Content
       className={cn(
         "flex-1 outline-none",
+        // Pills: the chosen tab's content drops in from above, sharpening
+        // from a slight blur (globals.css, tab-drop-in); not on page load.
+        pills?.changed && "motion-safe:data-[state=active]:animate-[tab-drop-in_0.2s_ease-in-out]",
         // The chosen tab's content slides in from its side (globals.css,
         // tab-slide-in); not on page load, and not with reduced motion.
         underline?.changed && "motion-safe:data-[state=active]:animate-[tab-slide-in_0.35s_cubic-bezier(0.22,1,0.36,1)]",

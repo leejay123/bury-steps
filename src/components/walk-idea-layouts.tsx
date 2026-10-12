@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useWalkNow, type WalkTiming } from "@/components/walk-header-styles";
 import { walkHeadlineFacts, type WalkHeadlineProps } from "@/components/walk-headline";
-import { WalkManageMenu } from "@/components/walk-manage-menu";
+import { WalkActionsBar, WalkManageMenu } from "@/components/walk-manage-menu";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 
 export type WalkIdeaParts = {
@@ -101,13 +101,9 @@ export function WalkIdeaLayouts({ layout, parts }: { layout: WalkIdeaLayout; par
       </WalkManageMenu>
     ) : null;
   // The usual buttons: Clock in (when it can be used), then Manage. Full width on a phone.
-  const buttons = (className?: string) =>
-    p.liveCompact || p.share || p.tools ? (
-      <div className={cn("flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center", className)}>
-        {p.liveCompact}
-        {manage()}
-      </div>
-    ) : null;
+  const buttons = (className?: string) => (
+    <WalkActionsBar className={className} liveCompact={p.liveCompact} share={p.share} tools={p.tools} />
+  );
 
   const route = (
     <>
@@ -299,10 +295,7 @@ export function WalkIdeaLayouts({ layout, parts }: { layout: WalkIdeaLayout; par
             </div>
             <div className="flex flex-col justify-between gap-3 border-t-2 border-dashed p-5 sm:border-t-0 sm:border-l-2">
               {statusLine}
-              <div className="flex flex-col gap-2 [&_button]:w-full">
-                {p.liveCompact}
-                {manage()}
-              </div>
+              {buttons()}
             </div>
           </section>
           {tabs(panels())}
@@ -411,7 +404,7 @@ export function WalkIdeaLayouts({ layout, parts }: { layout: WalkIdeaLayout; par
               ...(p.attended ? [{ value: "attended", label: p.attended.label, content: p.attended.content }] : []),
               ...(p.journey ? [{ value: "journey", label: "Journey", content: p.journey.content }] : []),
               ...(p.share || p.tools
-                ? [{ value: "manage", label: "Manage this walk", content: <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">{p.share}{p.tools}</div> }]
+                ? [{ value: "manage", label: "Manage this walk", content: <WalkActionsBar share={p.share} tools={p.tools} /> }]
                 : []),
             ].map((row) => (
               <AccordionItem className="px-4" key={row.value} value={row.value}>
@@ -490,7 +483,7 @@ export function WalkIdeaLayouts({ layout, parts }: { layout: WalkIdeaLayout; par
               </p>
               {statusLine}
             </div>
-            {buttons("sm:flex-col sm:items-stretch")}
+            {buttons()}
           </div>
           {tabs(panels())}
         </div>
@@ -596,7 +589,7 @@ export function WalkIdeaLayouts({ layout, parts }: { layout: WalkIdeaLayout; par
             ) : null}
             <span className="sm:ml-auto">{statusLine}</span>
           </div>
-          {buttons("[&_button]:rounded-full")}
+          {buttons()}
           {tabs(panels())}
         </div>
       );
@@ -731,6 +724,73 @@ export function WalkIdeaLayouts({ layout, parts }: { layout: WalkIdeaLayout; par
         </div>
       );
 
+    // 21 · A ring that fills as the walk goes, with the time left in it.
+    case "ring":
+      return (
+        <div className="flex flex-col gap-6">
+          {p.notices}
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+            <CountdownRing timing={p.timing} />
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              {statusLine}
+              {title()}
+              <p className="text-sm text-muted-foreground" suppressHydrationWarning>
+                {factLine}
+              </p>
+              {note}
+              {buttons()}
+            </div>
+          </div>
+          {tabs(panels())}
+        </div>
+      );
+
+    // 22 · The buttons in a dock floating at the bottom of the screen.
+    case "dock":
+      return (
+        <div className="flex flex-col gap-6 pb-24">
+          {p.notices}
+          <div className="flex flex-col gap-1">
+            {statusLine}
+            {title()}
+            <p className="text-sm text-muted-foreground" suppressHydrationWarning>
+              {factLine}
+            </p>
+            {note}
+          </div>
+          {tabs(panels())}
+          {p.liveCompact || p.share || p.tools ? (
+            <div className="fixed inset-x-4 bottom-[calc(1rem+var(--bottom-nav-offset,0px))] z-40 mx-auto flex w-auto justify-center sm:inset-x-0">
+              <div className="w-full rounded-xl border bg-background/95 p-1.5 shadow-lg sm:w-fit">{buttons()}</div>
+            </div>
+          ) : null}
+        </div>
+      );
+
+    // 23 · A coloured block with the time and day beside the title.
+    case "split":
+      return (
+        <div className="flex flex-col gap-6">
+          {p.notices}
+          <section className="grid overflow-hidden rounded-xl border sm:grid-cols-[13rem_minmax(0,1fr)]">
+            <div className={cn("flex flex-col justify-center gap-1 p-5", now.tone)} suppressHydrationWarning>
+              <span className="text-xs font-semibold tracking-wider uppercase">{now.eyebrow}</span>
+              <span className="text-4xl leading-none font-bold">{formatTime(start)}</span>
+              <span className="text-sm">{formatWalkDay(start)}</span>
+            </div>
+            <div className="flex min-w-0 flex-col gap-3 p-5">
+              {title()}
+              <p className="text-sm text-muted-foreground" suppressHydrationWarning>
+                {facts.slice(2).join(" · ")}
+              </p>
+              {note}
+              {buttons()}
+            </div>
+          </section>
+          {tabs(panels())}
+        </div>
+      );
+
     // 20 · Everything in one neat table, then the parts in turn.
     case "spec":
     default:
@@ -853,6 +913,43 @@ function DayTimeline({ timing }: { timing: WalkTiming }) {
         ))}
       </ol>
     </section>
+  );
+}
+
+/** 21: a ring filling from clock-in opening to the finish, the time left in its middle. */
+function CountdownRing({ timing }: { timing: WalkTiming }) {
+  const now = useWalkClock(timing);
+  const start = new Date(timing.startsAt);
+  const opens = walkOpensAt(start);
+  const end = effectiveEndsAt({ durationMins: timing.durationMins, endedAt: timing.endedAt ? new Date(timing.endedAt) : null, startsAt: start });
+  const share = Math.min(1, Math.max(0, (now.getTime() - opens.getTime()) / (end.getTime() - opens.getTime())));
+  const minsLeft = Math.max(0, Math.round((end.getTime() - now.getTime()) / 60_000));
+  const minsToStart = Math.max(0, Math.round((start.getTime() - now.getTime()) / 60_000));
+  const [big, small] =
+    now >= end ? ["Done", "finished"] : now < start ? [minsToStart > 120 ? `${Math.round(minsToStart / 60)}h` : `${minsToStart}`, minsToStart > 120 ? "to start" : "min to start"] : [`${minsLeft}`, "min left"];
+  const r = 52;
+  const c = 2 * Math.PI * r;
+  return (
+    <div className="relative size-36 shrink-0 self-center">
+      <svg aria-hidden className="size-full -rotate-90" viewBox="0 0 120 120">
+        <circle className="stroke-muted" cx="60" cy="60" fill="none" r={r} strokeWidth="10" />
+        <circle
+          className="stroke-emerald-600"
+          cx="60"
+          cy="60"
+          fill="none"
+          r={r}
+          strokeDasharray={c}
+          strokeDashoffset={c * (1 - share)}
+          strokeLinecap="round"
+          strokeWidth="10"
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center" suppressHydrationWarning>
+        <span className="text-3xl font-bold">{big}</span>
+        <span className="text-xs text-muted-foreground">{small}</span>
+      </div>
+    </div>
   );
 }
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ComponentProps, type ReactNode } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { WalkManageMenu } from "@/components/walk-manage-menu";
+import { WalkActionsBar, WalkManageMenu } from "@/components/walk-manage-menu";
 import { cn } from "@/lib/utils";
 import type { WalkHeaderStyle, WalkTabsVariant } from "@/lib/walk-page-sections";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -131,8 +131,7 @@ export function WalkTabsLayout({
     <div className="flex flex-col gap-6">
       {variant === "status" ? (
         <StatusBox timing={timing} clockedIn={attended?.count ?? null}>
-          {layoutShare}
-          {layoutCompact}
+          <WalkActionsBar liveCompact={layoutCompact} share={layoutShare} tools={layoutTools} />
         </StatusBox>
       ) : null}
 
@@ -156,16 +155,9 @@ export function WalkTabsLayout({
       {variant === "strip" ? (
         <div className="flex flex-col gap-3">
           {live}
-          {layoutShare || layoutTools ? (
-            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start">
-              {layoutShare}
-              {layoutTools}
-            </div>
-          ) : null}
+          <WalkActionsBar share={layoutShare} tools={layoutTools} />
         </div>
       ) : null}
-
-      {variant === "status" && layoutTools ? layoutTools : null}
 
       <Tabs onValueChange={setTab} value={tab}>
         {variant === "sticky" ? (
@@ -178,14 +170,13 @@ export function WalkTabsLayout({
               style={{ top: headerHeight }}
             >
               {list}
-              {layoutShare || layoutCompact ? (
-                <div className="flex w-full flex-col gap-2 sm:w-auto sm:shrink-0 sm:flex-row sm:items-center">
-                  {layoutShare}
-                  {layoutCompact}
-                </div>
-              ) : null}
+              <WalkActionsBar
+                className="sm:shrink-0"
+                liveCompact={layoutCompact}
+                share={layoutShare}
+                tools={layoutTools}
+              />
             </div>
-            {layoutTools ? <div className="mt-2">{layoutTools}</div> : null}
           </>
         ) : (
           list

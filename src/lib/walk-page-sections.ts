@@ -75,6 +75,9 @@ export const WALK_IDEA_LAYOUTS = [
   { id: "actions", label: "Action search bar" },
   { id: "bento", label: "Bento grid" },
   { id: "spec", label: "Spec sheet" },
+  { id: "ring", label: "Countdown ring" },
+  { id: "dock", label: "Floating action dock" },
+  { id: "split", label: "Split header" },
 ] as const;
 export type WalkIdeaLayout = (typeof WALK_IDEA_LAYOUTS)[number]["id"];
 
@@ -113,6 +116,20 @@ export function isWalkIdeaLayout(layout: WalkPageLayout): layout is WalkIdeaLayo
  */
 export const WALK_HEADER_STYLES = ["standard", "buttons", "toolbar", "band", "grouped"] as const;
 export type WalkHeaderStyle = (typeof WALK_HEADER_STYLES)[number];
+
+/**
+ * The single Layout choice in Settings: a layout, and for A to D optionally
+ * a header style after a colon ("sticky:toolbar" is B with the H2 header).
+ */
+export function splitWalkPageChoice(value: string): { layout: WalkPageLayout; header: WalkHeaderStyle } {
+  const [layout, header] = value.split(":");
+  const parsed = parseWalkPageLayout(layout);
+  return { layout: parsed, header: isWalkTabsVariant(parsed) ? parseWalkHeaderStyle(header) : "standard" };
+}
+
+export function joinWalkPageChoice(layout: WalkPageLayout, header: WalkHeaderStyle): string {
+  return isWalkTabsVariant(layout) && header !== "standard" ? `${layout}:${header}` : layout;
+}
 
 export function parseWalkHeaderStyle(value: string | null | undefined): WalkHeaderStyle {
   return (WALK_HEADER_STYLES as readonly string[]).includes(value ?? "") ? (value as WalkHeaderStyle) : "standard";

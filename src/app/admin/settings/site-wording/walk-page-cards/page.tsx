@@ -8,7 +8,6 @@ import { SettingsMask } from "../../settings-mask";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { BeforeYouSetOffToggle, HowWalksWorkToggle } from "../walk-page-card-toggles";
 import { WalkPageCopySettings } from "../walk-page-copy-settings";
-import { WalkHeaderStyleSettings } from "../walk-header-style-settings";
 import { WalkPageLayoutSettings } from "../walk-page-layout-settings";
 import { WalkPageSectionsSettings } from "../walk-page-sections-settings";
 
@@ -50,8 +49,7 @@ function SettingsView({ theme }: { theme: SiteTheme }) {
   return (
     <>
       <SettingsSectionGroup description="The same for members and organisers." title="Layout">
-        <WalkPageLayoutSettings layout={theme.walkPageLayout} />
-        <WalkHeaderStyleSettings style={theme.walkHeaderStyle} />
+        <WalkPageLayoutSettings header={theme.walkHeaderStyle} layout={theme.walkPageLayout} />
       </SettingsSectionGroup>
       <SettingsSectionGroup
         description="Off hides that card on every walk. The wording below is kept, so turning it back on restores what you wrote."

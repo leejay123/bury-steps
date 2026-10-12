@@ -1,69 +1,137 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { cn } from "@/lib/utils";
 
-/**
- * A button that opens the walk's other controls as a list floating over
- * the page, one per line like a menu (Manage in D and H3, More in H1), so nothing underneath moves
- * when it opens — an in-page panel pushed the tabs down and made the
- * sliding tab line jump.
- *
- * The controls stay mounted while it's closed (only hidden): their confirm
- * boxes (Remove walk, Cancel walk…) are children of them, so closing the
- * panel as one opens must not remove it. Clicks inside an open confirm box
- * don't close the panel either.
- */
-export function WalkManageMenu({ children, label }: { children: ReactNode; label: ReactNode }) {
-  const [open, setOpen] = useState(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const panelId = useId();
+type Item = { index: number; label: string; icon: string | null; destructive: boolean };
 
-  useEffect(() => {
-    if (!open) return;
-    const insideDialog = (target: EventTarget | null) =>
-      target instanceof Element && Boolean(target.closest('[role="dialog"], [role="alertdialog"]'));
-    const onPointerDown = (event: PointerEvent) => {
-      if (wrapRef.current?.contains(event.target as Node) || insideDialog(event.target)) return;
-      setOpen(false);
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || document.querySelector('[role="dialog"], [role="alertdialog"]')) return;
-      setOpen(false);
-    };
-    document.addEventListener("pointerdown", onPointerDown);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [open]);
+const ACTION_BUTTONS = '[data-slot="button"], [data-slot="copy-button"]';
+
+/**
+ * One button (Manage, or ⋯) that opens the walk's other actions as a
+ * shadcn dropdown list, one per line with its icon, the dangerous ones in
+ * red at the bottom.
+ *
+ * The actions themselves are the walk's normal buttons (Edit, Duplicate,
+ * Remove walk…), kept mounted but hidden in a portal outside the menu; each
+ * list item just clicks its hidden button. Several of them open a dialog or
+ * drawer, and Radix unmounts a menu's whole subtree as it closes — a dialog
+ * living inside the menu would vanish the moment it opened (the same fix
+ * as MemberRowActionsMenu).
+ */
+export function WalkManageMenu({
+  children,
+  iconOnly = false,
+  label = "Manage",
+}: {
+  children: ReactNode;
+  /** Just ⋯ (the end of a button group), instead of a labelled button. */
+  iconOnly?: boolean;
+  label?: ReactNode;
+}) {
+  const sourceRef = useRef<HTMLDivElement>(null);
+  const [items, setItems] = useState<Item[]>([]);
+  // The hidden buttons go in a portal, so they never sit inside a button
+  // group (they'd spoil its rounded ends); portals need the page to exist.
+  const mounted = useHydrated();
+
+  function collect() {
+    const buttons = Array.from(sourceRef.current?.querySelectorAll<HTMLElement>(ACTION_BUTTONS) ?? []);
+    setItems(
+      buttons
+        .map((el, index) => ({
+          index,
+          label: (el.textContent ?? "").replace(/\s+/g, " ").trim(),
+          icon: el.querySelector("svg")?.outerHTML ?? null,
+          destructive: el.dataset.variant === "destructive" || /remove|cancel walk|end walk/i.test(el.textContent ?? ""),
+        }))
+        .filter((item) => item.label),
+    );
+  }
+  function run(index: number) {
+    sourceRef.current?.querySelectorAll<HTMLElement>(ACTION_BUTTONS)[index]?.click();
+  }
+
+  const safe = items.filter((item) => !item.destructive);
+  const danger = items.filter((item) => item.destructive);
+  const row = (item: Item) => (
+    <DropdownMenuItem key={item.index} onSelect={() => run(item.index)} variant={item.destructive ? "destructive" : "default"}>
+      {item.icon ? <span aria-hidden className="contents" dangerouslySetInnerHTML={{ __html: item.icon }} /> : null}
+      {item.label}
+    </DropdownMenuItem>
+  );
 
   return (
-    <div className="relative" ref={wrapRef}>
-      <Button
-        aria-controls={panelId}
-        aria-expanded={open}
-        className="w-full sm:w-auto"
-        onClick={() => setOpen((value) => !value)}
-        size="sm"
-        type="button"
-        variant="outline"
-      >
-        {label}
-      </Button>
-      <div
-        className={cn(
-          "absolute top-full right-0 left-0 z-30 mt-1 flex flex-col rounded-md border bg-popover p-1 text-popover-foreground shadow-md sm:left-auto sm:w-64",
-          !open && "hidden",
-        )}
-        // A plain list, one action per line, like a menu (globals.css, [data-manage-menu]).
-        data-manage-menu=""
-        id={panelId}
-      >
-        {children}
-      </div>
-    </div>
+    <>
+      {mounted
+        ? createPortal(
+            <div hidden ref={sourceRef}>
+              {children}
+            </div>,
+            document.body,
+          )
+        : null}
+      <DropdownMenu modal={false} onOpenChange={(open) => (open ? collect() : undefined)}>
+        <DropdownMenuTrigger asChild>
+          {iconOnly ? (
+            <Button aria-label="More actions" size="sm" variant="outline">
+              <MoreHorizontal />
+            </Button>
+          ) : (
+            <Button className="w-full sm:w-auto" size="sm" variant="outline">
+              {label}
+            </Button>
+          )}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56">
+          {safe.map(row)}
+          {safe.length > 0 && danger.length > 0 ? <DropdownMenuSeparator /> : null}
+          {danger.map(row)}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
+  );
+}
+
+/**
+ * The walk's main buttons as one shadcn button group: Clock in (while it can
+ * be used), Copy share link, then ⋯ for everything else. Full width on a
+ * phone, the buttons sharing the row.
+ */
+export function WalkActionsBar({
+  className,
+  liveCompact,
+  share,
+  tools,
+}: {
+  className?: string;
+  liveCompact?: ReactNode;
+  share?: ReactNode;
+  tools?: ReactNode;
+}) {
+  if (!liveCompact && !share && !tools) return null;
+  return (
+    <ButtonGroup
+      className={cn(
+        "w-full sm:w-fit [&>*]:flex-1 sm:[&>*]:flex-none [&>[aria-label='More actions']]:flex-none",
+        className,
+      )}
+    >
+      {liveCompact}
+      {share}
+      {tools ? <WalkManageMenu iconOnly>{tools}</WalkManageMenu> : null}
+    </ButtonGroup>
   );
 }

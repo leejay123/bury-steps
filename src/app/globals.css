@@ -633,6 +633,20 @@ html[data-placeholder-style="shimmer"] [data-page-loading] * {
 html[data-placeholder-style="shimmer"] [data-page-loading] :is(img, svg, video) {
   opacity: 0;
 }
+/* Pills tabs (ui/tabs.tsx, "transition"): the chosen tab's content drops
+   in from above, sharpening from a slight blur. */
+@keyframes tab-drop-in {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+    filter: blur(4px);
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
 /* Underline tabs (ui/tabs.tsx, Settings → Site behaviour → Tabs): the
    chosen tab's content slides in from the side it was picked on. */
 @keyframes tab-slide-in {
@@ -650,33 +664,6 @@ html[data-placeholder-style="shimmer"] [data-page-loading] :is(img, svg, video) 
    (still taking its space, so nothing on the page moves). */
 html[data-placeholder-style="autoskeleton"] [data-page-loading] {
   visibility: hidden;
-}
-/* Manage / More on the walk pages (walk-manage-menu.tsx): the walk's
-   buttons shown as a plain menu list, one per line, instead of a row of
-   buttons. */
-[data-manage-menu] [data-walk-actions] {
-  margin: 0;
-  padding: 0;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0;
-  overflow: visible;
-}
-[data-manage-menu] :is([data-slot="button"], [data-slot="copy-button"]) {
-  width: 100%;
-  height: 2.25rem;
-  justify-content: flex-start;
-  border-color: transparent;
-  box-shadow: none;
-  background: transparent;
-  color: var(--foreground);
-  font-weight: 400;
-}
-[data-manage-menu] :is([data-slot="button"], [data-slot="copy-button"]):hover {
-  background: var(--accent);
-}
-[data-manage-menu] [data-variant="destructive"] {
-  color: var(--destructive);
 }
 .shimmer-test-sweep {
   background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--background) 70%, transparent), transparent);

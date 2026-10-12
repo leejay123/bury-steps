@@ -23,7 +23,7 @@ export function TabStyleSettings({ style }: { style: TabStyle }) {
 
   return (
     <SettingsSection
-      description="How every tab bar on the site looks — Upcoming and All walks on Walks, the walk page's tabs, and the rest. Underline is the shadcn-space tabs-05 style: a line under the chosen tab that slides across, and the tab's content sliding in from that side."
+      description="How every tab bar on the site looks — Upcoming and All walks on Walks, the walk page's tabs, and the rest. Underline is the shadcn-space tabs-05 style: a line under the chosen tab that slides across, and the tab's content sliding in from that side. Pills fills in the chosen tab, and its content drops in from above with a slight blur."
       title="Tabs"
     >
       <div className="flex w-full flex-col gap-1.5">
@@ -43,6 +43,7 @@ export function TabStyleSettings({ style }: { style: TabStyle }) {
           <SelectContent>
             <SelectItem value="standard">Standard (grey pill)</SelectItem>
             <SelectItem value="underline">Underline (tabs-05, test)</SelectItem>
+            <SelectItem value="transition">Pills with a drop-in (test)</SelectItem>
           </SelectContent>
         </Select>
       </div>

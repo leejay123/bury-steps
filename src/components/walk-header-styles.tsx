@@ -1,14 +1,14 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { ChevronDown, MoreHorizontal } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useWalkClock } from "@/hooks/use-walk-clock";
 import { formatTime, formatWalkDay, formatWalkLength } from "@/lib/dates";
 import { meetingPointLabel } from "@/lib/geocode";
 import { cn } from "@/lib/utils";
 import { effectiveEndsAt, walkOpensAt, walkStatus } from "@/lib/walk-window";
 import type { WalkHeaderStyle } from "@/lib/walk-page-sections";
-import { WalkManageMenu } from "@/components/walk-manage-menu";
+import { WalkActionsBar, WalkManageMenu } from "@/components/walk-manage-menu";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { walkHeadlineFacts, type WalkHeadlineProps } from "@/components/walk-headline";
 
@@ -124,24 +124,7 @@ export function WalkHeader({
             </ul>
             {note}
           </div>
-          {liveCompact || share || tools ? (
-            <div className="flex flex-col gap-2 sm:shrink-0 sm:flex-row sm:items-center">
-              {liveCompact}
-              {share}
-              {tools ? (
-                <WalkManageMenu
-                  label={
-                    <>
-                      <MoreHorizontal data-icon="inline-start" />
-                      More
-                    </>
-                  }
-                >
-                  {tools}
-                </WalkManageMenu>
-              ) : null}
-            </div>
-          ) : null}
+          <WalkActionsBar className="sm:shrink-0" liveCompact={liveCompact} share={share} tools={tools} />
         </div>
       </div>
     );
@@ -159,10 +142,8 @@ export function WalkHeader({
     return (
       <div className="flex flex-col gap-5">
         {liveCompact || share || tools ? (
-          <div className="flex flex-col gap-2 rounded-lg border bg-muted/40 p-2 sm:flex-row sm:flex-wrap sm:items-center">
-            {liveCompact}
-            {share}
-            {tools}
+          <div className="flex rounded-lg border bg-muted/40 p-2">
+            <WalkActionsBar liveCompact={liveCompact} share={share} tools={tools} />
           </div>
         ) : null}
         <div className="flex flex-col gap-2">
@@ -278,16 +259,13 @@ export function WalkHeader({
           {liveCompact || share ? (
             <section className="flex flex-col gap-2 rounded-xl border p-3">
               <span className={LABEL}>You</span>
-              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-                {liveCompact}
-                {share}
-              </div>
+              <WalkActionsBar liveCompact={liveCompact} share={share} />
             </section>
           ) : null}
           {tools ? (
             <section className="flex min-w-0 flex-col gap-2 rounded-xl border p-3">
               <span className={LABEL}>Organise this walk</span>
-              {tools}
+              <WalkManageMenu label="Edit, duplicate, roster…">{tools}</WalkManageMenu>
             </section>
           ) : null}
         </div>

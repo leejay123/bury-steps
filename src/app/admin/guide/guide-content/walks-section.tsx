@@ -126,17 +126,15 @@ export function WalksSection({
               now (for example Clock-in open, starts at 13:45, 3 clocked in) with the main
               buttons; <strong>D</strong> has a Manage walk button by the title for the walk&apos;s
               buttons, and Overview shows summary boxes (Attended, Meeting point, Weather,
-              Journey) that each open their tab. Under it, <strong>Header</strong> (for A to D)
-              chooses how the walk&apos;s name and controls are shown at the top: Standard; H1,
-              the controls beside the name with the rest under More; H2, a bar of controls above a
-              big name and four key facts; H3, a box with a coloured status band and one Manage
-              button; or H4, the controls in two boxes, You and Organise this walk. The Layout
-              list also has 20 more designs to try, numbered 1 to 20 (Minimal document, Map
-              hero, Day timeline, Walk ticket, Big numbers, Map beside details, Side tab rail,
-              Everything folded, Before · During · After, Phone app sheet, Calendar entry,
-              Checklist first, People first, Weather first, Magazine, Dark header, Progress
-              stepper, Action search bar, Bento grid and Spec sheet), each with the same parts
-              arranged differently; organisers&apos; buttons sit in a row with a Manage list. The
+              Journey) that each open their tab. A to D also come with a header style, in the same
+              list: H1, the controls beside the name; H2, a bar of controls above a big name
+              and four key facts; H3, a box with a coloured status band and one Manage button;
+              or H4, the controls in two boxes, You and Organise this walk. The list also has 23
+              more designs to try, numbered 1 to 23 (Minimal document to Spec sheet, then
+              Countdown ring, Floating action dock and Split header), each with the same parts
+              arranged differently. The walk&apos;s buttons are one button group: Clock in, Copy
+              share link and ⋯, which opens the rest as a list (Remove walk in red at the
+              bottom); where there&apos;s a single Manage button, it opens the same list. The
               Checklist&apos;s ticks are only remembered while the page is open. Switch back to One
               column at any time. Once the
               walk is Completed, guests see that it has finished instead —
