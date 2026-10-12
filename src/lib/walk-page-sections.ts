@@ -50,17 +50,57 @@ export function serializeWalkPageSections(sections: WalkPageSection[]): string {
  * title), "sticky" (B, a tab bar that stays at the top), "status" (C, what's
  * happening now first) and "tiles" (D, summary boxes that open their tab).
  */
-export const WALK_PAGE_LAYOUTS = ["classic", "columns", "strip", "sticky", "status", "tiles"] as const;
-export type WalkPageLayout = (typeof WALK_PAGE_LAYOUTS)[number];
-/** The one-column-with-tabs designs. */
-export type WalkTabsVariant = Exclude<WalkPageLayout, "classic" | "columns">;
+/**
+ * The 20 further designs (walk-idea-layouts.tsx), in the order of the
+ * Layout list, with their names there.
+ */
+export const WALK_IDEA_LAYOUTS = [
+  { id: "minimal", label: "Minimal document" },
+  { id: "maphero", label: "Map hero" },
+  { id: "timeline", label: "Day timeline" },
+  { id: "ticket", label: "Walk ticket" },
+  { id: "bignumbers", label: "Big numbers" },
+  { id: "mapside", label: "Map beside details" },
+  { id: "rail", label: "Side tab rail" },
+  { id: "folded", label: "Everything folded" },
+  { id: "phases", label: "Before · During · After" },
+  { id: "sheet", label: "Phone app sheet" },
+  { id: "calendar", label: "Calendar entry" },
+  { id: "checklist", label: "Checklist first" },
+  { id: "people", label: "People first" },
+  { id: "weather", label: "Weather first" },
+  { id: "magazine", label: "Magazine" },
+  { id: "dark", label: "Dark header" },
+  { id: "stepper", label: "Progress stepper" },
+  { id: "actions", label: "Action search bar" },
+  { id: "bento", label: "Bento grid" },
+  { id: "spec", label: "Spec sheet" },
+] as const;
+export type WalkIdeaLayout = (typeof WALK_IDEA_LAYOUTS)[number]["id"];
+
+export const WALK_PAGE_LAYOUTS = [
+  "classic",
+  "columns",
+  "strip",
+  "sticky",
+  "status",
+  "tiles",
+  ...WALK_IDEA_LAYOUTS.map((idea) => idea.id),
+] as const;
+export type WalkPageLayout = "classic" | "columns" | "strip" | "sticky" | "status" | "tiles" | WalkIdeaLayout;
+/** The one-column-with-tabs designs, A to D. */
+export type WalkTabsVariant = "strip" | "sticky" | "status" | "tiles";
 
 export function parseWalkPageLayout(value: string | null | undefined): WalkPageLayout {
   return (WALK_PAGE_LAYOUTS as readonly string[]).includes(value ?? "") ? (value as WalkPageLayout) : "classic";
 }
 
 export function isWalkTabsVariant(layout: WalkPageLayout): layout is WalkTabsVariant {
-  return layout !== "classic" && layout !== "columns";
+  return layout === "strip" || layout === "sticky" || layout === "status" || layout === "tiles";
+}
+
+export function isWalkIdeaLayout(layout: WalkPageLayout): layout is WalkIdeaLayout {
+  return WALK_IDEA_LAYOUTS.some((idea) => idea.id === layout);
 }
 
 /**

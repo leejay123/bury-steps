@@ -32,7 +32,8 @@ import { WalkJourneyManager } from "./walk-journey";
 import { SelfClockInPanel } from "./self-clock-in-panel";
 import { WalkPageColumns } from "@/components/walk-page-columns";
 import { WalkTabsLayout } from "@/components/walk-tabs-layout";
-import { isWalkTabsVariant } from "@/lib/walk-page-sections";
+import { WalkIdeaLayouts } from "@/components/walk-idea-layouts";
+import { isWalkIdeaLayout, isWalkTabsVariant, type WalkPageSectionId } from "@/lib/walk-page-sections";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -329,37 +330,34 @@ async function WalkDetailPageContent({ id }: { id: string }) {
     </>
   );
   const shareLink = <ShareLink url={walkShareUrl(appUrl(), { token: walk.token, slug })} />;
-  const sharedSections = (
-    <>
-      {/* The shared sections, in the order and with the show/hide chosen in
-          Settings → Site wording → Walk page cards (Before you set off is
-          members-only). */}
-      {theme.walkPageSections.map(({ id, visible }) => {
-        if (!visible) return null;
-        switch (id) {
-          case "map":
-            return meeting ? <WalkMapSection key={id} location={meeting} walk={walk} /> : null;
-          case "forecast":
-            return (
-              <WalkForecastSection
-                cancelledAt={walk.cancelledAt}
-                durationMins={walk.durationMins}
-                endedAt={walk.endedAt}
-                key={id}
-                latitude={walk.latitude}
-                longitude={walk.longitude}
-                place={meeting}
-                startsAt={walk.startsAt}
-              />
-            );
-          case "precise":
-            return walk.what3words ? <What3wordsLink address={walk.what3words} key={id} /> : null;
-          default:
-            return null;
-        }
-      })}
-    </>
-  );
+  // One of the shared sections, chosen and ordered in Settings → Site
+  // wording → Walk page cards (Before you set off is members-only).
+  function sectionPart(id: WalkPageSectionId) {
+    if (!walk) return null; // never: redirect() above; tells TypeScript
+    switch (id) {
+      case "map":
+        return meeting ? <WalkMapSection key={id} location={meeting} walk={walk} /> : null;
+      case "forecast":
+        return (
+          <WalkForecastSection
+            cancelledAt={walk.cancelledAt}
+            durationMins={walk.durationMins}
+            endedAt={walk.endedAt}
+            key={id}
+            latitude={walk.latitude}
+            longitude={walk.longitude}
+            place={meeting}
+            startsAt={walk.startsAt}
+          />
+        );
+      case "precise":
+        return walk.what3words ? <What3wordsLink address={walk.what3words} key={id} /> : null;
+      default:
+        return null;
+    }
+  }
+  const shown = (id: WalkPageSectionId) => theme.walkPageSections.some((section) => section.id === id && section.visible);
+  const sharedSections = <>{theme.walkPageSections.map(({ id, visible }) => (visible ? sectionPart(id) : null))}</>;
   const tools = (
     <>
       <WalkDetailActions
@@ -464,85 +462,124 @@ async function WalkDetailPageContent({ id }: { id: string }) {
     </>
   );
 
-  if (isWalkTabsVariant(theme.walkPageLayout)) {
-    const shareUrl = walkShareUrl(appUrl(), { token: walk.token, slug });
-    const headerHasButton = theme.walkHeaderStyle !== "standard";
-    const clockIn = (compact: boolean) =>
-      walk.cancelledAt ? null : (
-        <SelfClockInPanel
-          alreadyClockedInAt={mine?.clockedInAt.toISOString() ?? null}
-          buttonElsewhere={!compact && headerHasButton}
-          clockedOutAt={mine?.clockedOutAt?.toISOString() ?? null}
-          compact={compact}
+  const shareUrl = walkShareUrl(appUrl(), { token: walk.token, slug });
+  // The tabbed layouts and the 20 designs show the Clock in button on its own
+  // (compact) in their buttons; the full panel then only says the rest.
+  const clockIn = (compact: boolean, buttonElsewhere: boolean) =>
+    walk.cancelledAt ? null : (
+      <SelfClockInPanel
+        alreadyClockedInAt={mine?.clockedInAt.toISOString() ?? null}
+        buttonElsewhere={!compact && buttonElsewhere}
+        clockedOutAt={mine?.clockedOutAt?.toISOString() ?? null}
+        compact={compact}
+        durationMins={walk.durationMins}
+        emergencyContactName={admin.emergencyContactName ?? ""}
+        emergencyContactPhone={admin.emergencyContactPhone ?? ""}
+        emergencyContactRequired={emergencySetting?.emergencyContactRequired ?? false}
+        endedAt={walk.endedAt?.toISOString() ?? null}
+        startsAt={walk.startsAt.toISOString()}
+        token={walk.token}
+      />
+    );
+  const attendedTab = {
+    // The count only for those who may see the list itself.
+    label: canSeeAttendance ? `Attended (${walk.attendances.length})` : "Attended",
+    count: canSeeAttendance ? walk.attendances.length : null,
+    content: attendanceSection,
+  };
+  const factsCard = (
+    <Card className="gap-4">
+      <CardContent className="flex flex-col gap-4">
+        <WalkFacts
+          backMarker={walk.backMarker}
+          distance={walk.distance}
           durationMins={walk.durationMins}
-          emergencyContactName={admin.emergencyContactName ?? ""}
-          emergencyContactPhone={admin.emergencyContactPhone ?? ""}
-          emergencyContactRequired={emergencySetting?.emergencyContactRequired ?? false}
-          endedAt={walk.endedAt?.toISOString() ?? null}
-          startsAt={walk.startsAt.toISOString()}
-          token={walk.token}
+          elevationGain={walk.elevationGain}
+          essentials={walk.essentials}
+          grade={walk.grade}
+          location={walk.location}
+          postcode={walk.postcode}
+          startsAt={walk.startsAt}
+          walkLeader={walk.walkLeader}
         />
-      );
+        {walk.description ? <WalkDescription description={walk.description} /> : null}
+      </CardContent>
+    </Card>
+  );
+  const headlineData = {
+    cancelledAt: walk.cancelledAt?.toISOString() ?? null,
+    distance: walk.distance,
+    durationMins: walk.durationMins,
+    elevationGain: walk.elevationGain,
+    endedAt: walk.endedAt?.toISOString() ?? null,
+    grade: walk.grade,
+    location: walk.location,
+    // Organiser/owner-only — members never see who created a walk.
+    note: `Created by ${displayName(walk.createdBy)} (${creatorIsOwner ? "Owner" : "Organiser"})`,
+    postcode: walk.postcode,
+    startsAt: walk.startsAt.toISOString(),
+    title: walk.title,
+    walkLeader: walk.walkLeader,
+  };
+  const timing = {
+    cancelledAt: walk.cancelledAt?.toISOString() ?? null,
+    durationMins: walk.durationMins,
+    endedAt: walk.endedAt?.toISOString() ?? null,
+    startsAt: walk.startsAt.toISOString(),
+  };
+
+  if (isWalkIdeaLayout(theme.walkPageLayout)) {
+    return (
+      <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
+        <Link href="/admin/walks" className="text-sm text-muted-foreground hover:text-foreground">
+          &larr; All walks
+        </Link>
+        <WalkIdeaLayouts
+          layout={theme.walkPageLayout}
+          parts={{
+            attended: attendedTab,
+            before: null,
+            details: factsCard,
+            forecast: shown("forecast") ? sectionPart("forecast") : null,
+            headline: headlineData,
+            journey: { count: journeyEvents.length, content: journey },
+            live: clockIn(false, true),
+            liveCompact: clockIn(true, true),
+            map: shown("map") ? sectionPart("map") : null,
+            meeting,
+            notices,
+            precise: shown("precise") ? sectionPart("precise") : null,
+            share: <ShareLinkButton url={shareUrl} />,
+            timing,
+            tips: theme.beforeYouSetOffTips,
+            tools,
+            what3words: walk.what3words,
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (isWalkTabsVariant(theme.walkPageLayout)) {
+    const headerHasButton = theme.walkHeaderStyle !== "standard";
     return (
       <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
         <Link href="/admin/walks" className="text-sm text-muted-foreground hover:text-foreground">
           &larr; All walks
         </Link>
         <WalkTabsLayout
-          attended={{
-            // The count only for those who may see the list itself.
-            label: canSeeAttendance ? `Attended (${walk.attendances.length})` : "Attended",
-            count: canSeeAttendance ? walk.attendances.length : null,
-            content: attendanceSection,
-          }}
-          details={
-            <Card className="gap-4">
-              <CardContent className="flex flex-col gap-4">
-                <WalkFacts
-                  backMarker={walk.backMarker}
-                  distance={walk.distance}
-                  durationMins={walk.durationMins}
-                  elevationGain={walk.elevationGain}
-                  essentials={walk.essentials}
-                  grade={walk.grade}
-                  location={walk.location}
-                  postcode={walk.postcode}
-                  startsAt={walk.startsAt}
-                  walkLeader={walk.walkLeader}
-                />
-                {walk.description ? <WalkDescription description={walk.description} /> : null}
-              </CardContent>
-            </Card>
-          }
+          attended={attendedTab}
+          details={factsCard}
           headerStyle={theme.walkHeaderStyle}
-          headline={{
-            cancelledAt: walk.cancelledAt?.toISOString() ?? null,
-            distance: walk.distance,
-            elevationGain: walk.elevationGain,
-            durationMins: walk.durationMins,
-            endedAt: walk.endedAt?.toISOString() ?? null,
-            grade: walk.grade,
-            location: walk.location,
-            // Organiser/owner-only — members never see who created a walk.
-            note: `Created by ${displayName(walk.createdBy)} (${creatorIsOwner ? "Owner" : "Organiser"})`,
-            postcode: walk.postcode,
-            startsAt: walk.startsAt.toISOString(),
-            title: walk.title,
-            walkLeader: walk.walkLeader,
-          }}
+          headline={headlineData}
           journey={{ count: journeyEvents.length, content: journey }}
-          live={clockIn(false)}
-          liveCompact={clockIn(true)}
+          live={clockIn(false, headerHasButton)}
+          liveCompact={clockIn(true, headerHasButton)}
           meeting={meeting}
           notices={notices}
           sections={sharedSections}
           share={<ShareLinkButton url={shareUrl} />}
-          timing={{
-            cancelledAt: walk.cancelledAt?.toISOString() ?? null,
-            durationMins: walk.durationMins,
-            endedAt: walk.endedAt?.toISOString() ?? null,
-            startsAt: walk.startsAt.toISOString(),
-          }}
+          timing={timing}
           tools={tools}
           variant={theme.walkPageLayout}
           what3words={walk.what3words}

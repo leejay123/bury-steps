@@ -21,7 +21,8 @@ import { WalkJourneyDrawer } from "@/components/walk-journey-drawer";
 import { WalkJourneyTimeline } from "@/components/walk-journey-timeline";
 import { WalkPageColumns, type WalkPageTab } from "@/components/walk-page-columns";
 import { WalkTabsLayout } from "@/components/walk-tabs-layout";
-import { isWalkTabsVariant, type WalkPageSectionId } from "@/lib/walk-page-sections";
+import { WalkIdeaLayouts } from "@/components/walk-idea-layouts";
+import { isWalkIdeaLayout, isWalkTabsVariant, type WalkPageSectionId } from "@/lib/walk-page-sections";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { HowWalksWork } from "@/components/how-walks-work";
 import { getWalkMemberNames } from "@/lib/walk-members";
@@ -313,6 +314,103 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
     </>
   );
   const visibleSections = theme.walkPageSections.filter(({ visible }) => visible);
+
+  if (isWalkIdeaLayout(theme.walkPageLayout)) {
+    // The 20 further designs (WalkIdeaLayouts), the same as the organiser's
+    // walk page; members have no organiser buttons, so only their parts show.
+    const shown = (id: WalkPageSectionId) => visibleSections.some((section) => section.id === id);
+    return (
+      <div className="flex flex-col gap-6">
+        <span className="text-sm text-muted-foreground">
+          <Link className="hover:text-foreground" data-member-home="" href="/walks">
+            ← Walks
+          </Link>
+          <Link className="hover:text-foreground" data-guest-home="" href="/">
+            ← Home
+          </Link>
+        </span>
+        <WalkIdeaLayouts
+          layout={theme.walkPageLayout}
+          parts={{
+            attended: null,
+            before: shown("before") ? renderSection("before") : null,
+            details: (
+              <>
+                <WalkShareStatusChrome
+                  backMarker={walk.backMarker}
+                  cancelledAt={cancelledAtIso}
+                  cancelledReason={walk.cancelledReason}
+                  description={walk.description}
+                  distance={walk.distance}
+                  durationMins={walk.durationMins}
+                  endedAt={endedAtIso}
+                  elevationGain={walk.elevationGain}
+                  essentials={walk.essentials}
+                  grade={walk.grade}
+                  icsHref={`/w/${slug}/ics`}
+                  location={walk.location}
+                  postcode={walk.postcode}
+                  startsAt={startsAtIso}
+                  title={walk.title}
+                  walkLeader={walk.walkLeader}
+                  walkUrl={walkUrl}
+                  part="details"
+                />
+                {howWalksWork}
+              </>
+            ),
+            forecast: shown("forecast") ? renderSection("forecast") : null,
+            headline: {
+              cancelledAt: cancelledAtIso,
+              distance: walk.distance,
+              durationMins: walk.durationMins,
+              elevationGain: walk.elevationGain,
+              endedAt: endedAtIso,
+              grade: walk.grade,
+              location: walk.location,
+              postcode: walk.postcode,
+              startsAt: startsAtIso,
+              title: walk.title,
+              walkLeader: walk.walkLeader,
+            },
+            journey:
+              journeyEvents.length > 0
+                ? { count: journeyEvents.length, content: <WalkJourneyTimeline events={journeyEvents} /> }
+                : null,
+            live,
+            map: shown("map") ? renderSection("map") : null,
+            meeting,
+            notices: (
+              <WalkShareStatusChrome
+                backMarker={walk.backMarker}
+                cancelledAt={cancelledAtIso}
+                cancelledReason={walk.cancelledReason}
+                description={walk.description}
+                distance={walk.distance}
+                durationMins={walk.durationMins}
+                endedAt={endedAtIso}
+                elevationGain={walk.elevationGain}
+                essentials={walk.essentials}
+                grade={walk.grade}
+                icsHref={`/w/${slug}/ics`}
+                location={walk.location}
+                postcode={walk.postcode}
+                startsAt={startsAtIso}
+                title={walk.title}
+                walkLeader={walk.walkLeader}
+                walkUrl={walkUrl}
+                part="notices"
+              />
+            ),
+            precise: shown("precise") ? renderSection("precise") : null,
+            timing: { cancelledAt: cancelledAtIso, durationMins: walk.durationMins, endedAt: endedAtIso, startsAt: startsAtIso },
+            tips: theme.beforeYouSetOffTips,
+            what3words: walk.what3words,
+          }}
+        />
+      </div>
+    );
+  }
 
   if (isWalkTabsVariant(theme.walkPageLayout)) {
     // The one-column tabbed layouts, the same as the organiser's walk page

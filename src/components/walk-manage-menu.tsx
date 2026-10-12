@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 /**
- * A button that opens the walk's other controls in a panel floating over
- * the page (Manage in D and H3, More in H1), so nothing underneath moves
+ * A button that opens the walk's other controls as a list floating over
+ * the page, one per line like a menu (Manage in D and H3, More in H1), so nothing underneath moves
  * when it opens — an in-page panel pushed the tabs down and made the
  * sliding tab line jump.
  *
@@ -55,11 +55,11 @@ export function WalkManageMenu({ children, label }: { children: ReactNode; label
       </Button>
       <div
         className={cn(
-          "absolute top-full right-0 left-0 z-30 mt-2 flex flex-col gap-2 rounded-lg border bg-popover p-3 text-popover-foreground shadow-lg sm:left-auto sm:w-[26rem]",
-          // The walk's button row scrolls sideways on a phone; in here it wraps.
-          "[&_[data-walk-actions]]:mx-0 [&_[data-walk-actions]]:flex-wrap [&_[data-walk-actions]]:overflow-visible [&_[data-walk-actions]]:px-0",
+          "absolute top-full right-0 left-0 z-30 mt-1 flex flex-col rounded-md border bg-popover p-1 text-popover-foreground shadow-md sm:left-auto sm:w-64",
           !open && "hidden",
         )}
+        // A plain list, one action per line, like a menu (globals.css, [data-manage-menu]).
+        data-manage-menu=""
         id={panelId}
       >
         {children}

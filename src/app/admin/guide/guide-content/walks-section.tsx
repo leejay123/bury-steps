@@ -130,8 +130,15 @@ export function WalksSection({
               chooses how the walk&apos;s name and controls are shown at the top: Standard; H1,
               the controls beside the name with the rest under More; H2, a bar of controls above a
               big name and four key facts; H3, a box with a coloured status band and one Manage
-              button; or H4, the controls in two boxes, You and Organise this walk. Switch back to
-              One column at any time. Once the
+              button; or H4, the controls in two boxes, You and Organise this walk. The Layout
+              list also has 20 more designs to try, numbered 1 to 20 (Minimal document, Map
+              hero, Day timeline, Walk ticket, Big numbers, Map beside details, Side tab rail,
+              Everything folded, Before · During · After, Phone app sheet, Calendar entry,
+              Checklist first, People first, Weather first, Magazine, Dark header, Progress
+              stepper, Action search bar, Bento grid and Spec sheet), each with the same parts
+              arranged differently; organisers&apos; buttons sit in a row with a Manage list. The
+              Checklist&apos;s ticks are only remembered while the page is open. Switch back to One
+              column at any time. Once the
               walk is Completed, guests see that it has finished instead —
               no join prompt. Names of who is on the walk stay private.
             </li>
