@@ -144,7 +144,10 @@ export function WalksSection({
               layout the walk&apos;s actions are one <strong>Manage</strong> button: its list has
               Copy share link, Add to calendar, Download roster (CSV), Duplicate, Cancel walk,
               Edit, and Remove walk in red at the bottom. Clock in sits beside it while
-              clock-in is open. Members get a Share or save button instead (copy the link, add
+              clock-in is open. A finished walk has no Edit or Cancel walk, by design. Organisers see
+              every detail on every layout, with Not set where a field is empty and None ticked for
+              essentials, so anything missing from Edit walk is easy to spot; members only see what
+              is filled in. Members get a Share or save button instead (copy the link, add
               to calendar). The
               Checklist&apos;s ticks are only remembered while the page is open. Switch back to One
               column at any time. Once the

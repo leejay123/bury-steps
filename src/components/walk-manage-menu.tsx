@@ -16,7 +16,11 @@ import { cn } from "@/lib/utils";
 
 type Item = { index: number; label: string; icon: string | null; destructive: boolean };
 
-const ACTION_BUTTONS = '[data-slot="button"], [data-slot="copy-button"]';
+// Every button or link behind the menu. Not just [data-slot="button"]: a
+// button that opens a dialog or drawer (Duplicate, Cancel walk, Edit,
+// Remove walk) is marked as that dialog's trigger instead, and those were
+// missing from the list.
+const ACTION_BUTTONS = "button, a[href]";
 
 /**
  * One button (Manage, or ⋯) that opens the walk's other actions as a

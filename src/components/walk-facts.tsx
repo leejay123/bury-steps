@@ -12,6 +12,7 @@ export function WalkFacts({
   grade,
   location,
   postcode,
+  showEmpty = false,
   startsAt,
   walkLeader,
 }: {
@@ -23,6 +24,8 @@ export function WalkFacts({
   grade?: string | null;
   location: string | null;
   postcode?: string | null;
+  /** Organisers: every field, "Not set" where it's empty, so a walk's missing details are obvious. */
+  showEmpty?: boolean;
   startsAt: Date;
   walkLeader?: string | null;
 }) {
@@ -31,12 +34,14 @@ export function WalkFacts({
     { icon: CalendarDays, label: "Date", value: formatWalkDay(startsAt) },
     { icon: Clock, label: "Start time", value: formatTime(startsAt) },
     { icon: Timer, label: "Expected length", value: formatWalkLength(durationMins) },
-    ...(meeting ? [{ icon: MapPin, label: "Meeting point", value: meeting }] : []),
-    ...(distance ? [{ icon: Footprints, label: "Distance", value: distance }] : []),
-    ...(elevationGain ? [{ icon: Mountain, label: "Elevation gain", value: elevationGain }] : []),
-    ...(grade ? [{ icon: TrendingUp, label: "Grade", value: grade }] : []),
-    ...(walkLeader ? [{ icon: UserRound, label: "Walk leader", value: walkLeader }] : []),
-    ...(backMarker ? [{ icon: UsersRound, label: "Back marker", value: backMarker }] : []),
+    ...[
+      { icon: MapPin, label: "Meeting point", value: meeting },
+      { icon: Footprints, label: "Distance", value: distance },
+      { icon: Mountain, label: "Elevation gain", value: elevationGain },
+      { icon: TrendingUp, label: "Grade", value: grade },
+      { icon: UserRound, label: "Walk leader", value: walkLeader },
+      { icon: UsersRound, label: "Back marker", value: backMarker },
+    ].flatMap((row) => (row.value ? [{ ...row, value: row.value }] : showEmpty ? [{ ...row, value: "Not set" }] : [])),
   ];
 
 
@@ -56,7 +61,13 @@ export function WalkFacts({
           </div>
         ))}
       </dl>
-      <WalkEssentialPills keys={essentials} />
+      {showEmpty && !essentials?.length ? (
+        <p className="text-xs text-muted-foreground">
+          <span className="font-medium tracking-wide uppercase">Essentials</span> · None ticked
+        </p>
+      ) : (
+        <WalkEssentialPills keys={essentials} />
+      )}
     </div>
   );
 }

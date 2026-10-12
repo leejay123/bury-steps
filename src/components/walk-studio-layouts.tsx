@@ -78,19 +78,25 @@ export function WalkStudioLayouts({ layout, parts }: { layout: WalkStudioLayout;
     startsAt: start,
   });
   const opens = walkOpensAt(start);
+  const organiser = Boolean(p.tools);
 
   const facts: Fact[] = [
     { icon: CalendarDays, label: "Date", value: formatWalkDay(start) },
     { icon: Clock, label: "Starts", value: formatTime(start) },
     { icon: Flag, label: "Finishes", value: formatTime(end) },
     { icon: Timer, label: "Length", value: formatWalkLength(h.durationMins) },
-    ...(p.meeting ? [{ icon: MapPin, label: "Meeting point", value: p.meeting, wide: true }] : []),
-    ...(p.what3words ? [{ icon: Navigation, label: "what3words", value: `///${p.what3words}` }] : []),
-    ...(h.distance ? [{ icon: Footprints, label: "Distance", value: h.distance }] : []),
-    ...(h.elevationGain ? [{ icon: Mountain, label: "Climb", value: h.elevationGain }] : []),
-    ...(h.grade ? [{ icon: TrendingUp, label: "Grade", value: h.grade }] : []),
-    ...(h.walkLeader ? [{ icon: UserRound, label: "Walk leader", value: h.walkLeader }] : []),
-    ...(p.walk.backMarker ? [{ icon: UsersRound, label: "Back marker", value: p.walk.backMarker }] : []),
+    // Organisers see every field, "Not set" where it's empty; members only what's filled in.
+    ...[
+      { icon: MapPin, label: "Meeting point", value: p.meeting, wide: true },
+      { icon: Navigation, label: "what3words", value: p.what3words ? `///${p.what3words}` : null },
+      { icon: Footprints, label: "Distance", value: h.distance },
+      { icon: Mountain, label: "Climb", value: h.elevationGain },
+      { icon: TrendingUp, label: "Grade", value: h.grade },
+      { icon: UserRound, label: "Walk leader", value: h.walkLeader },
+      { icon: UsersRound, label: "Back marker", value: p.walk.backMarker },
+    ].flatMap((fact) =>
+      fact.value ? [{ ...fact, value: fact.value }] : organiser ? [{ ...fact, value: "Not set" }] : [],
+    ),
   ];
 
   // ── Pieces ───────────────────────────────────────────────────────────
@@ -233,7 +239,13 @@ export function WalkStudioLayouts({ layout, parts }: { layout: WalkStudioLayout;
         </div>
         {options.timeline ? timeline : null}
         {factsBlock(options.facts, dark)}
-        <WalkEssentialPills keys={p.walk.essentials} />
+        {organiser && p.walk.essentials.length === 0 ? (
+          <p className={cn("text-xs", dark ? "text-white/60" : "text-muted-foreground")}>
+            <span className="font-medium tracking-wide uppercase">Essentials</span> · None ticked
+          </p>
+        ) : (
+          <WalkEssentialPills keys={p.walk.essentials} />
+        )}
         {p.walk.description ? <WalkDescription description={p.walk.description} /> : null}
       </div>
     );
