@@ -10,8 +10,9 @@ import {
   WalkHeadlineSkeleton,
   WalkTabsSkeleton,
 } from "@/components/walk-page-skeletons";
-import { isWalkGalleryLayout, isWalkIdeaLayout, isWalkTabsVariant } from "@/lib/walk-page-sections";
+import { isWalkGalleryLayout, isWalkIdeaLayout, isWalkStudioLayout, isWalkTabsVariant } from "@/lib/walk-page-sections";
 import { getSiteTheme } from "@/lib/site-theme";
+import { getWalkPageChoice } from "@/lib/walk-page-choice";
 
 /**
  * Shaped like the organiser's walk page (page.tsx), part for part: the back
@@ -25,16 +26,17 @@ export default function WalkDetailLoading() {
 }
 
 async function OrganiserWalkLoading() {
-  const theme = await getSiteTheme();
+  const [theme, choice] = await Promise.all([getSiteTheme(), getWalkPageChoice()]);
   return (
     <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6 px-4 py-6 md:px-6">
       <Link className="text-sm text-muted-foreground hover:text-foreground" href="/admin/walks">
         &larr; All walks
       </Link>
 
-      {isWalkTabsVariant(theme.walkPageLayout) ||
-    isWalkIdeaLayout(theme.walkPageLayout) ||
-    isWalkGalleryLayout(theme.walkPageLayout) ? (
+      {isWalkTabsVariant(choice.layout) ||
+    isWalkIdeaLayout(choice.layout) ||
+    isWalkGalleryLayout(choice.layout) ||
+    isWalkStudioLayout(choice.layout) ? (
         // A to D, the one-column layouts with tabs: the title line, then the
         // tabs with Overview's details.
         <>
@@ -50,7 +52,7 @@ async function OrganiserWalkLoading() {
             <WalkDetailsCardSkeleton organiser />
           </WalkTabsSkeleton>
         </>
-      ) : theme.walkPageLayout === "columns" ? (
+      ) : choice.layout === "columns" ? (
         // The two-column layout (Settings → Walk page cards → Layout).
         <WalkPageColumns
           aside={

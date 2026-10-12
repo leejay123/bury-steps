@@ -72,11 +72,9 @@ export const WALK_IDEA_LAYOUTS = [
   { id: "magazine", label: "Magazine" },
   { id: "dark", label: "Dark header" },
   { id: "stepper", label: "Progress stepper" },
-  { id: "actions", label: "Action search bar" },
   { id: "bento", label: "Bento grid" },
   { id: "spec", label: "Spec sheet" },
   { id: "ring", label: "Countdown ring" },
-  { id: "dock", label: "Floating action dock" },
   { id: "split", label: "Split header" },
 ] as const;
 export type WalkIdeaLayout = (typeof WALK_IDEA_LAYOUTS)[number]["id"];
@@ -120,6 +118,45 @@ export const WALK_GALLERY_LAYOUTS = [
 ] as const;
 export type WalkGalleryLayout = (typeof WALK_GALLERY_LAYOUTS)[number]["id"];
 
+/**
+ * 30 more (walk-studio-layouts.tsx), each starting with the messages and one
+ * Details card holding everything about the walk, the actions always one
+ * Manage button.
+ */
+export const WALK_STUDIO_LAYOUTS = [
+  { id: "s01", label: "Map on top of the card", look: "Map in the card" },
+  { id: "s02", label: "Map down the side of the card", look: "Map in the card" },
+  { id: "s03", label: "Map along the bottom, folding sections", look: "Map in the card" },
+  { id: "s04", label: "Map, ribbon and timeline", look: "Map in the card" },
+  { id: "s05", label: "Map beside a details list", look: "Map in the card" },
+  { id: "s06", label: "Tinted card with map", look: "Map in the card" },
+  { id: "s07", label: "Full-width map, card over it", look: "Full width" },
+  { id: "s08", label: "Full-width dark band", look: "Full width" },
+  { id: "s09", label: "Full-width status band", look: "Full width" },
+  { id: "s10", label: "Full-width sections", look: "Full width" },
+  { id: "s11", label: "Full-width half and half", look: "Full width" },
+  { id: "s12", label: "Full-width sticky name bar", look: "Full width" },
+  { id: "s13", label: "Full-width tall map", look: "Full width" },
+  { id: "s14", label: "Full-width numbers strip", look: "Full width" },
+  { id: "s15", label: "Sections menu on the left", look: "With a sidebar" },
+  { id: "s16", label: "People and journey on the right", look: "With a sidebar" },
+  { id: "s17", label: "Organiser panel on the right", look: "With a sidebar" },
+  { id: "s18", label: "Inbox: pick a section", look: "With a sidebar" },
+  { id: "s19", label: "Contents that stay in view", look: "With a sidebar" },
+  { id: "s20", label: "Details card as a sidebar", look: "With a sidebar" },
+  { id: "s21", label: "Details list, folding sections", look: "Compact and neat" },
+  { id: "s22", label: "Icon grid with ribbon", look: "Compact and neat" },
+  { id: "s23", label: "Details table, headed sections", look: "Compact and neat" },
+  { id: "s24", label: "Card with the day's timeline", look: "Compact and neat" },
+  { id: "s25", label: "No border, just lines", look: "Compact and neat" },
+  { id: "s26", label: "Big title, tinted card", look: "Compact and neat" },
+  { id: "s27", label: "Card and sections side by side", look: "Compact and neat" },
+  { id: "s28", label: "Ribbon, map, folding sections", look: "Compact and neat" },
+  { id: "s29", label: "Dark card", look: "Compact and neat" },
+  { id: "s30", label: "Smallest card, full-width tabs", look: "Compact and neat" },
+] as const;
+export type WalkStudioLayout = (typeof WALK_STUDIO_LAYOUTS)[number]["id"];
+
 export const WALK_PAGE_LAYOUTS = [
   "classic",
   "columns",
@@ -129,6 +166,7 @@ export const WALK_PAGE_LAYOUTS = [
   "tiles",
   ...WALK_IDEA_LAYOUTS.map((idea) => idea.id),
   ...WALK_GALLERY_LAYOUTS.map((design) => design.id),
+  ...WALK_STUDIO_LAYOUTS.map((design) => design.id),
 ] as const;
 export type WalkPageLayout =
   | "classic"
@@ -138,7 +176,8 @@ export type WalkPageLayout =
   | "status"
   | "tiles"
   | WalkIdeaLayout
-  | WalkGalleryLayout;
+  | WalkGalleryLayout
+  | WalkStudioLayout;
 /** The one-column-with-tabs designs, A to D. */
 export type WalkTabsVariant = "strip" | "sticky" | "status" | "tiles";
 
@@ -152,6 +191,10 @@ export function isWalkTabsVariant(layout: WalkPageLayout): layout is WalkTabsVar
 
 export function isWalkIdeaLayout(layout: WalkPageLayout): layout is WalkIdeaLayout {
   return WALK_IDEA_LAYOUTS.some((idea) => idea.id === layout);
+}
+
+export function isWalkStudioLayout(layout: WalkPageLayout): layout is WalkStudioLayout {
+  return WALK_STUDIO_LAYOUTS.some((design) => design.id === layout);
 }
 
 export function isWalkGalleryLayout(layout: WalkPageLayout): layout is WalkGalleryLayout {

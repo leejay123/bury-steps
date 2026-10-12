@@ -2,9 +2,8 @@
 
 import { useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { MoreHorizontal } from "lucide-react";
+import { ChevronDown, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,7 +54,7 @@ export function WalkManageMenu({
           index,
           label: (el.textContent ?? "").replace(/\s+/g, " ").trim(),
           icon: el.querySelector("svg")?.outerHTML ?? null,
-          destructive: el.dataset.variant === "destructive" || /remove|cancel walk|end walk/i.test(el.textContent ?? ""),
+          destructive: el.dataset.variant === "destructive",
         }))
         .filter((item) => item.label),
     );
@@ -92,6 +91,7 @@ export function WalkManageMenu({
           ) : (
             <Button className="w-full sm:w-auto" size="sm" variant="outline">
               {label}
+              <ChevronDown data-icon="inline-end" />
             </Button>
           )}
         </DropdownMenuTrigger>
@@ -106,9 +106,10 @@ export function WalkManageMenu({
 }
 
 /**
- * The walk's main buttons as one shadcn button group: Clock in (while it can
- * be used), Copy share link, then ⋯ for everything else. Full width on a
- * phone, the buttons sharing the row.
+ * The walk's buttons, everywhere: Clock in (only while it can be used) and
+ * one Manage button whose list holds everything else — Copy share link, Add
+ * to calendar, Download roster, Duplicate, Cancel walk, Edit, and Remove
+ * walk in red at the bottom. Full width on a phone.
  */
 export function WalkActionsBar({
   className,
@@ -123,15 +124,14 @@ export function WalkActionsBar({
 }) {
   if (!liveCompact && !share && !tools) return null;
   return (
-    <ButtonGroup
-      className={cn(
-        "w-full sm:w-fit [&>*]:flex-1 sm:[&>*]:flex-none [&>[aria-label='More actions']]:flex-none",
-        className,
-      )}
-    >
+    <div className={cn("flex flex-col gap-2 sm:flex-row sm:items-center", className)}>
       {liveCompact}
-      {share}
-      {tools ? <WalkManageMenu iconOnly>{tools}</WalkManageMenu> : null}
-    </ButtonGroup>
+      {share || tools ? (
+        <WalkManageMenu>
+          {share}
+          {tools}
+        </WalkManageMenu>
+      ) : null}
+    </div>
   );
 }

@@ -129,17 +129,23 @@ export function WalksSection({
               Journey) that each open their tab. A to D also come with a header style, in the same
               list: H1, the controls beside the name; H2, a bar of controls above a big name
               and four key facts; H3, a box with a coloured status band and one Manage button;
-              or H4, the controls in two boxes, You and Organise this walk. The list also has 23
-              more designs to try, numbered 1 to 23 (Minimal document to Spec sheet, then
-              Countdown ring, Floating action dock and Split header), then 24 to 53, grouped by
+              or H4, the controls in two boxes, You and Organise this walk. The list also has 21
+              more designs to try, numbered 1 to 21 (Minimal document to Spec sheet, then
+              Countdown ring and Split header), then 22 to 51, grouped by
               look — polished app (Trail card, Activity, Listing with booking card…), clean and
               minimal (Properties panel, Docs with contents, Type first…), bold outdoors
               (Trailhead sign, Poster, Status takeover…) and organiser dashboard (Control room,
-              Phases board, Cockpit…) — each with the same parts arranged differently, and the
-              walk&apos;s buttons placed differently: all visible, a button group, one Manage
-              list, a list down the side, or a dock at the bottom of the screen. The walk&apos;s buttons are one button group: Clock in, Copy
-              share link and ⋯, which opens the rest as a list (Remove walk in red at the
-              bottom); where there&apos;s a single Manage button, it opens the same list. The
+              Phases board, Cockpit…) — each with the same parts arranged differently, and  Then 52 to 81, the <strong>Details first</strong> designs: any
+              messages (such as Clock-in opens at 09:15…) come first, then one card holding
+              everything about the walk — name, status, date, start and finish, length, meeting
+              point, what3words, distance, climb, grade, walk leader, back marker, essentials and
+              the description — some with the map built into the card, some running the full
+              width of the page, some with a sidebar (on a phone it opens from a button). On every
+              layout the walk&apos;s actions are one <strong>Manage</strong> button: its list has
+              Copy share link, Add to calendar, Download roster (CSV), Duplicate, Cancel walk,
+              Edit, and Remove walk in red at the bottom. Clock in sits beside it while
+              clock-in is open. Members get a Share or save button instead (copy the link, add
+              to calendar). The
               Checklist&apos;s ticks are only remembered while the page is open. Switch back to One
               column at any time. Once the
               walk is Completed, guests see that it has finished instead —

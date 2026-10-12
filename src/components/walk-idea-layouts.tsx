@@ -1,14 +1,13 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
-import { ChevronDown, ChevronRight, Search } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { formatTime, formatWalkDay, formatWalkLength } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { effectiveEndsAt, walkOpensAt, walkStatus } from "@/lib/walk-window";
 import type { WalkIdeaLayout } from "@/lib/walk-page-sections";
 import { useWalkClock } from "@/hooks/use-walk-clock";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useWalkNow, type WalkTiming } from "@/components/walk-header-styles";
 import { walkHeadlineFacts, type WalkHeadlineProps } from "@/components/walk-headline";
@@ -40,6 +39,16 @@ export type WalkIdeaParts = {
   /** The Before you set off tips, for the Checklist design. */
   tips: readonly string[];
   what3words: string | null;
+  /** Everything else from Edit walk, for the one-card Details (walk-studio-layouts.tsx). */
+  walk: {
+    backMarker: string | null;
+    calendarHref: string;
+    description: string | null;
+    essentials: string[];
+    location: string | null;
+    postcode: string | null;
+    shareUrl: string;
+  };
 };
 
 type Panel = { value: string; label: string; content: ReactNode };
@@ -650,30 +659,6 @@ export function WalkIdeaLayouts({ layout, parts }: { layout: WalkIdeaLayout; par
         </div>
       );
 
-    // 18 · A search box for the walk's actions: type to find the button.
-    case "actions":
-      return (
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-          {p.notices}
-          <div className="flex flex-col gap-1">
-            {statusLine}
-            {title()}
-            <p className="text-sm text-muted-foreground" suppressHydrationWarning>
-              {factLine}
-            </p>
-            {note}
-          </div>
-          {p.liveCompact || p.share || p.tools ? (
-            <ActionSearch>
-              {p.liveCompact}
-              {p.share}
-              {p.tools}
-            </ActionSearch>
-          ) : null}
-          {tabs(panels())}
-        </div>
-      );
-
     // 19 · Boxes of different sizes, each a summary that jumps to its part below.
     case "bento":
       return (
@@ -742,28 +727,6 @@ export function WalkIdeaLayouts({ layout, parts }: { layout: WalkIdeaLayout; par
             </div>
           </div>
           {tabs(panels())}
-        </div>
-      );
-
-    // 22 · The buttons in a dock floating at the bottom of the screen.
-    case "dock":
-      return (
-        <div className="flex flex-col gap-6 pb-24">
-          {p.notices}
-          <div className="flex flex-col gap-1">
-            {statusLine}
-            {title()}
-            <p className="text-sm text-muted-foreground" suppressHydrationWarning>
-              {factLine}
-            </p>
-            {note}
-          </div>
-          {tabs(panels())}
-          {p.liveCompact || p.share || p.tools ? (
-            <div className="fixed inset-x-4 bottom-[calc(1rem+var(--bottom-nav-offset,0px))] z-40 mx-auto flex w-auto justify-center sm:inset-x-0">
-              <div className="w-full rounded-xl border bg-background/95 p-1.5 shadow-lg sm:w-fit">{buttons()}</div>
-            </div>
-          ) : null}
         </div>
       );
 
@@ -1072,31 +1035,6 @@ function Stepper({ timing }: { timing: WalkTiming }) {
         </li>
       ))}
     </ol>
-  );
-}
-
-/** 18: type to narrow the walk's buttons down to the one you want. */
-function ActionSearch({ children }: { children: ReactNode }) {
-  const listRef = useRef<HTMLDivElement>(null);
-  const [query, setQuery] = useState("");
-  function filter(value: string) {
-    setQuery(value);
-    const words = value.trim().toLowerCase();
-    for (const el of Array.from(listRef.current?.querySelectorAll<HTMLElement>("button, a") ?? [])) {
-      el.hidden = words !== "" && !(el.textContent ?? "").toLowerCase().includes(words);
-    }
-  }
-  return (
-    <section className="flex flex-col gap-2">
-      <label className="relative">
-        <span className="sr-only">Find an action</span>
-        <Search aria-hidden className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input className="h-11 pl-9" onChange={(event) => filter(event.target.value)} placeholder="What do you want to do? Clock in, edit, roster…" value={query} />
-      </label>
-      <div className="flex flex-col gap-2 rounded-xl border p-2 sm:flex-row sm:flex-wrap [&_[data-walk-actions]]:mx-0 [&_[data-walk-actions]]:flex-wrap [&_[data-walk-actions]]:overflow-visible [&_[data-walk-actions]]:px-0" ref={listRef}>
-        {children}
-      </div>
-    </section>
   );
 }
 

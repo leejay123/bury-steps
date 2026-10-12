@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { parseTabStyle } from "@/lib/tab-style";
+import { WALK_PAGE_CHOICE_TAG } from "@/lib/walk-page-choice";
 import {
   splitWalkPageChoice,
   parseWalkPageSections,
@@ -1998,8 +1999,8 @@ async function updateWalkPageLayoutWork(
     return logActionError("updateWalkPageLayout", err, "Could not save that setting. Try again.");
   }
 
-  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
-  revalidatePath("/", "layout");
+  // Walk pages only (and this settings page) — not the whole site.
+  revalidateTag(WALK_PAGE_CHOICE_TAG, { expire: 0 });
   revalidatePath("/admin/settings/site-wording/walk-page-cards");
   return {
     ok: true,

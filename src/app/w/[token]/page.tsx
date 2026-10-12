@@ -22,12 +22,14 @@ import { WalkJourneyTimeline } from "@/components/walk-journey-timeline";
 import { WalkPageColumns, type WalkPageTab } from "@/components/walk-page-columns";
 import { WalkTabsLayout } from "@/components/walk-tabs-layout";
 import { WalkGalleryLayouts } from "@/components/walk-gallery-layouts";
+import { WalkStudioLayouts } from "@/components/walk-studio-layouts";
 import { WalkIdeaLayouts, type WalkIdeaParts } from "@/components/walk-idea-layouts";
-import { isWalkGalleryLayout, isWalkIdeaLayout, isWalkTabsVariant, type WalkPageSectionId } from "@/lib/walk-page-sections";
+import { isWalkGalleryLayout, isWalkIdeaLayout, isWalkStudioLayout, isWalkTabsVariant, type WalkPageSectionId } from "@/lib/walk-page-sections";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { HowWalksWork } from "@/components/how-walks-work";
 import { getWalkMemberNames } from "@/lib/walk-members";
 import { getSiteTheme } from "@/lib/site-theme";
+import { getWalkPageChoice } from "@/lib/walk-page-choice";
 import { HOMEPAGE_REVALIDATE_SECONDS } from "@/lib/homepage-cache";
 import { WalkLivePanel } from "./walk-live-panel";
 import {
@@ -176,7 +178,7 @@ export default function WalkLinkPage({ params }: { params: Promise<{ token: stri
 
 async function WalkForAddress({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const [walk, theme] = await Promise.all([getSharedWalk(token), getSiteTheme()]);
+  const [walk, theme, choice] = await Promise.all([getSharedWalk(token), getSiteTheme(), getWalkPageChoice()]);
   if (!walk) notFound();
 
   // The code-only token link, a link from before a rename, or a walk with no
@@ -327,8 +329,8 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
   );
   const visibleSections = theme.walkPageSections.filter(({ visible }) => visible);
 
-  if (isWalkIdeaLayout(theme.walkPageLayout) || isWalkGalleryLayout(theme.walkPageLayout)) {
-    const layout = theme.walkPageLayout;
+  if (isWalkIdeaLayout(choice.layout) || isWalkGalleryLayout(choice.layout) || isWalkStudioLayout(choice.layout)) {
+    const layout = choice.layout;
     // The 20 further designs (WalkIdeaLayouts), the same as the organiser's
     // walk page; members have no organiser buttons, so only their parts show.
     const shown = (id: WalkPageSectionId) => visibleSections.some((section) => section.id === id);
@@ -407,6 +409,15 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
       timing: { cancelledAt: cancelledAtIso, durationMins: walk.durationMins, endedAt: endedAtIso, startsAt: startsAtIso },
       tips: theme.beforeYouSetOffTips,
       what3words: walk.what3words,
+      walk: {
+        backMarker: walk.backMarker,
+        calendarHref: `/w/${slug}/ics`,
+        description: walk.description,
+        essentials: walk.essentials,
+        location: walk.location,
+        postcode: walk.postcode,
+        shareUrl: walkUrl,
+      },
     };
     return (
       <div className="flex flex-col gap-6">
@@ -418,7 +429,9 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
             ← Home
           </Link>
         </span>
-        {isWalkGalleryLayout(layout) ? (
+        {isWalkStudioLayout(layout) ? (
+          <WalkStudioLayouts layout={layout} parts={ideaParts} />
+        ) : isWalkGalleryLayout(layout) ? (
           <WalkGalleryLayouts layout={layout} parts={ideaParts} />
         ) : (
           <WalkIdeaLayouts layout={layout} parts={ideaParts} />
@@ -427,7 +440,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
     );
   }
 
-  if (isWalkTabsVariant(theme.walkPageLayout)) {
+  if (isWalkTabsVariant(choice.layout)) {
     // The one-column tabbed layouts, the same as the organiser's walk page
     // (WalkTabsLayout). Visitors' How this group works and Before you set off
     // sit in Overview with the details.
@@ -469,7 +482,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
               {visibleSections.some(({ id }) => id === "before") ? renderSection("before") : null}
             </>
           }
-          headerStyle={theme.walkHeaderStyle}
+          headerStyle={choice.header}
           headline={{
             cancelledAt: cancelledAtIso,
             distance: walk.distance,
@@ -514,14 +527,14 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
           }
           sections={visibleSections.filter(({ id }) => id !== "before").map(({ id }) => renderSection(id))}
           timing={{ cancelledAt: cancelledAtIso, durationMins: walk.durationMins, endedAt: endedAtIso, startsAt: startsAtIso }}
-          variant={theme.walkPageLayout}
+          variant={choice.layout}
           what3words={walk.what3words}
         />
       </div>
     );
   }
 
-  if (theme.walkPageLayout === "columns") {
+  if (choice.layout === "columns") {
     // The same layout as the organiser's walk page (WalkPageColumns): the
     // details and sections on the left, clock-in in the column on the right.
     // Before you set off sits with clock-in; the Journey is a tab.

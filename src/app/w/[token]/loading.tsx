@@ -8,8 +8,9 @@ import {
   WalkSectionsSkeleton,
   WalkTabsSkeleton,
 } from "@/components/walk-page-skeletons";
-import { isWalkGalleryLayout, isWalkIdeaLayout, isWalkTabsVariant } from "@/lib/walk-page-sections";
+import { isWalkGalleryLayout, isWalkIdeaLayout, isWalkStudioLayout, isWalkTabsVariant } from "@/lib/walk-page-sections";
 import { getSiteTheme } from "@/lib/site-theme";
+import { getWalkPageChoice } from "@/lib/walk-page-choice";
 
 /**
  * Shaped like the walk page itself (page.tsx): the back link and journey
@@ -23,10 +24,11 @@ export default function Loading() {
 }
 
 export async function WalkLinkLoading() {
-  const theme = await getSiteTheme();
-  if (isWalkTabsVariant(theme.walkPageLayout) ||
-    isWalkIdeaLayout(theme.walkPageLayout) ||
-    isWalkGalleryLayout(theme.walkPageLayout)) {
+  const [theme, choice] = await Promise.all([getSiteTheme(), getWalkPageChoice()]);
+  if (isWalkTabsVariant(choice.layout) ||
+    isWalkIdeaLayout(choice.layout) ||
+    isWalkGalleryLayout(choice.layout) ||
+    isWalkStudioLayout(choice.layout)) {
     // A to D, the one-column layouts with tabs.
     return (
       <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6">
@@ -45,7 +47,7 @@ export async function WalkLinkLoading() {
       </div>
     );
   }
-  if (theme.walkPageLayout === "columns") {
+  if (choice.layout === "columns") {
     // The two-column layout (Settings → Walk page cards → Layout): the
     // details card, the sections under it, and Before you set off in the
     // right-hand column (the clock-in part arrives with the page).

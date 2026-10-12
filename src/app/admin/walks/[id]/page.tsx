@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { getSiteTheme } from "@/lib/site-theme";
+import { getWalkPageChoice } from "@/lib/walk-page-choice";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import WalkDetailLoading from "./loading";
 import Link from "next/link";
@@ -14,7 +15,8 @@ import { WalkFacts } from "@/components/walk-facts";
 import { walkStatus } from "@/lib/walk-window";
 import { appUrl } from "@/lib/urls";
 import { initials } from "@/lib/names";
-import { ShareLink, ShareLinkButton } from "@/components/share-link";
+import { ShareLinkButton } from "@/components/share-link";
+import { WalkActionsBar } from "@/components/walk-manage-menu";
 import { EmptyState } from "@/components/empty-state";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { WalkMapSection } from "@/components/walk-map-section";
@@ -33,8 +35,9 @@ import { SelfClockInPanel } from "./self-clock-in-panel";
 import { WalkPageColumns } from "@/components/walk-page-columns";
 import { WalkTabsLayout } from "@/components/walk-tabs-layout";
 import { WalkGalleryLayouts } from "@/components/walk-gallery-layouts";
+import { WalkStudioLayouts } from "@/components/walk-studio-layouts";
 import { WalkIdeaLayouts, type WalkIdeaParts } from "@/components/walk-idea-layouts";
-import { isWalkGalleryLayout, isWalkIdeaLayout, isWalkTabsVariant, type WalkPageSectionId } from "@/lib/walk-page-sections";
+import { isWalkGalleryLayout, isWalkIdeaLayout, isWalkStudioLayout, isWalkTabsVariant, type WalkPageSectionId } from "@/lib/walk-page-sections";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -63,7 +66,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
   // individually — see the nine permWalks* fields in organiser-permissions.ts.
   // The permission check and the walk are fetched at the same time (they
   // used to run one after the other, making this the slowest page to open).
-  const [admin, walkWithNotes, emergencySetting, theme] = await Promise.all([
+  const [admin, walkWithNotes, emergencySetting, theme, choice] = await Promise.all([
     requireAnyPermission(["permWalksView", "permMembersView"]),
     prisma.walk.findUnique({
     where: { id },
@@ -124,6 +127,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
       select: { emergencyContactRequired: true },
     }),
     getSiteTheme(),
+    getWalkPageChoice(),
   ]);
   // Never keep health notes for a viewer who may not see them — UI-hiding
   // alone would still ship the text to their browser.
@@ -330,7 +334,6 @@ async function WalkDetailPageContent({ id }: { id: string }) {
       )}
     </>
   );
-  const shareLink = <ShareLink url={walkShareUrl(appUrl(), { token: walk.token, slug })} />;
   // One of the shared sections, chosen and ordered in Settings → Site
   // wording → Walk page cards (Before you set off is members-only).
   function sectionPart(id: WalkPageSectionId) {
@@ -394,6 +397,10 @@ async function WalkDetailPageContent({ id }: { id: string }) {
         <RetentionLockToggle locked={walk.retentionLocked} walkId={walk.id} />
       ) : null}
     </>
+  );
+  // Every layout: one Manage button holding the share link and the walk's buttons.
+  const manage = (
+    <WalkActionsBar share={<ShareLinkButton url={walkShareUrl(appUrl(), { token: walk.token, slug })} />} tools={tools} />
   );
   const attendanceSection = canSeeAttendance ? (
     <>
@@ -529,8 +536,8 @@ async function WalkDetailPageContent({ id }: { id: string }) {
     startsAt: walk.startsAt.toISOString(),
   };
 
-  if (isWalkIdeaLayout(theme.walkPageLayout) || isWalkGalleryLayout(theme.walkPageLayout)) {
-    const layout = theme.walkPageLayout;
+  if (isWalkIdeaLayout(choice.layout) || isWalkGalleryLayout(choice.layout) || isWalkStudioLayout(choice.layout)) {
+    const layout = choice.layout;
     const ideaParts: WalkIdeaParts = {
       attended: attendedTab,
       before: null,
@@ -549,13 +556,24 @@ async function WalkDetailPageContent({ id }: { id: string }) {
       tips: theme.beforeYouSetOffTips,
       tools,
       what3words: walk.what3words,
+      walk: {
+        backMarker: walk.backMarker,
+        calendarHref: `/w/${slug}/ics`,
+        description: walk.description,
+        essentials: walk.essentials,
+        location: walk.location,
+        postcode: walk.postcode,
+        shareUrl,
+      },
     };
     return (
       <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
         <Link href="/admin/walks" className="text-sm text-muted-foreground hover:text-foreground">
           &larr; All walks
         </Link>
-        {isWalkGalleryLayout(layout) ? (
+        {isWalkStudioLayout(layout) ? (
+          <WalkStudioLayouts layout={layout} parts={ideaParts} />
+        ) : isWalkGalleryLayout(layout) ? (
           <WalkGalleryLayouts layout={layout} parts={ideaParts} />
         ) : (
           <WalkIdeaLayouts layout={layout} parts={ideaParts} />
@@ -564,8 +582,8 @@ async function WalkDetailPageContent({ id }: { id: string }) {
     );
   }
 
-  if (isWalkTabsVariant(theme.walkPageLayout)) {
-    const headerHasButton = theme.walkHeaderStyle !== "standard";
+  if (isWalkTabsVariant(choice.layout)) {
+    const headerHasButton = choice.header !== "standard";
     return (
       <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
         <Link href="/admin/walks" className="text-sm text-muted-foreground hover:text-foreground">
@@ -574,7 +592,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
         <WalkTabsLayout
           attended={attendedTab}
           details={factsCard}
-          headerStyle={theme.walkHeaderStyle}
+          headerStyle={choice.header}
           headline={headlineData}
           journey={{ count: journeyEvents.length, content: journey }}
           live={clockIn(false, headerHasButton)}
@@ -585,14 +603,14 @@ async function WalkDetailPageContent({ id }: { id: string }) {
           share={<ShareLinkButton url={shareUrl} />}
           timing={timing}
           tools={tools}
-          variant={theme.walkPageLayout}
+          variant={choice.layout}
           what3words={walk.what3words}
         />
       </div>
     );
   }
 
-  if (theme.walkPageLayout === "columns") {
+  if (choice.layout === "columns") {
     return (
       <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
         <Link href="/admin/walks" className="text-sm text-muted-foreground hover:text-foreground">
@@ -603,8 +621,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
           aside={
             <>
               {selfClockIn}
-              {shareLink}
-              {tools}
+              {manage}
             </>
           }
           tabs={[
@@ -631,9 +648,8 @@ async function WalkDetailPageContent({ id }: { id: string }) {
       {notices}
       {detailsCard}
       {selfClockIn}
-      {shareLink}
+      {manage}
       {sharedSections}
-      {tools}
       <Separator />
       {attendanceSection}
       <Separator />

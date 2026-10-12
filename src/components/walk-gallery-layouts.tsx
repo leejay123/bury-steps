@@ -24,7 +24,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useWalkNow } from "@/components/walk-header-styles";
 import type { WalkIdeaParts } from "@/components/walk-idea-layouts";
-import { WalkActionsBar, WalkManageMenu } from "@/components/walk-manage-menu";
+import { WalkActionsBar } from "@/components/walk-manage-menu";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 
 type Icon = ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
@@ -191,49 +191,9 @@ export function WalkGalleryLayouts({ layout, parts }: { layout: WalkGalleryLayou
         ))}
     </dl>
   );
-  const controls = (kind: Controls, className?: string) => {
-    if (!hasControls) return null;
-    if (kind === "group") return <WalkActionsBar className={className} liveCompact={p.liveCompact} share={p.share} tools={p.tools} />;
-    if (kind === "menu")
-      return (
-        <div className={cn("flex flex-col gap-2 sm:flex-row sm:items-center", className)}>
-          {p.liveCompact}
-          <WalkManageMenu label="Manage walk">
-            {p.share}
-            {p.tools}
-          </WalkManageMenu>
-        </div>
-      );
-    if (kind === "list")
-      return (
-        <div
-          className={cn(
-            "flex flex-col gap-1.5 [&_[data-slot=button]]:w-full [&_[data-slot=button]]:justify-start [&_[data-slot=copy-button]]:w-full [&_[data-slot=copy-button]]:justify-start [&_[data-walk-actions]]:mx-0 [&_[data-walk-actions]]:flex-col [&_[data-walk-actions]]:items-stretch [&_[data-walk-actions]]:gap-1.5 [&_[data-walk-actions]]:overflow-visible [&_[data-walk-actions]]:px-0",
-            className,
-          )}
-        >
-          {p.liveCompact}
-          {p.share}
-          {p.tools}
-        </div>
-      );
-    if (kind === "dock")
-      return (
-        <div className="fixed inset-x-4 bottom-[calc(1rem+var(--bottom-nav-offset,0px))] z-40 flex justify-center sm:inset-x-0">
-          <div className="w-full rounded-2xl border bg-background/95 p-1.5 shadow-xl backdrop-blur-sm sm:w-fit">
-            <WalkActionsBar liveCompact={p.liveCompact} share={p.share} tools={p.tools} />
-          </div>
-        </div>
-      );
-    return (
-      <div className={cn("flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center", className)}>
-        {p.liveCompact}
-        {p.share}
-        {p.tools}
-      </div>
-    );
-  };
-
+  // Every design: Clock in (while it can be used) and one Manage list (walk-manage-menu.tsx).
+  const controls = (_kind: Controls, className?: string) =>
+    hasControls ? <WalkActionsBar className={className} liveCompact={p.liveCompact} share={p.share} tools={p.tools} /> : null;
   const route = (
     <>
       {p.map}
@@ -1179,16 +1139,17 @@ export function WalkGalleryLayouts({ layout, parts }: { layout: WalkGalleryLayou
         </Tabs>,
       );
 
-    // 53 · Cockpit: dense — small type, everything visible in a tight grid, a dock for actions.
+    // 53 · Cockpit: dense — small type, everything visible in a tight grid.
     case "cockpit":
     default:
       return page(
-        <div className="flex flex-col gap-4 pb-24 text-sm">
+        <div className="flex flex-col gap-4 text-sm">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b pb-3">
             {title("text-lg sm:text-xl")}
             {badge()}
             {statusLine("text-xs")}
             {note("sm:ml-auto")}
+            {controls("group", "sm:ml-auto")}
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
             {facts.map((fact) => (
@@ -1211,7 +1172,6 @@ export function WalkGalleryLayouts({ layout, parts }: { layout: WalkGalleryLayou
               {p.journey ? sectionCard("Journey", Footprints, p.journey.content, undefined, "p-3 sm:p-4") : null}
             </div>
           </div>
-          {controls("dock")}
         </div>,
       );
   }

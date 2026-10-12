@@ -3,6 +3,8 @@ import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
 import { defaultTheme, getSiteTheme, type SiteTheme } from "@/lib/site-theme";
+import { getWalkPageChoice } from "@/lib/walk-page-choice";
+import type { WalkHeaderStyle, WalkPageLayout } from "@/lib/walk-page-sections";
 import { SettingsPage, SettingsSectionGroup } from "../../settings-page";
 import { SettingsMask } from "../../settings-mask";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
@@ -39,17 +41,23 @@ async function WalkPageCardsWordingPageContent() {
   "use cache: private";
   cacheLife(PRIVATE_SAVED_COPY);
   await requirePermission("permDisplay");
-  const theme = await getSiteTheme();
+  const [theme, choice] = await Promise.all([getSiteTheme(), getWalkPageChoice()]);
 
-  return <SettingsView theme={theme} />;
+  return <SettingsView choice={choice} theme={theme} />;
 }
 
 /** The page drawn from the site's settings (also its placeholder, with the defaults). */
-function SettingsView({ theme }: { theme: SiteTheme }) {
+function SettingsView({
+  choice,
+  theme,
+}: {
+  choice: { layout: WalkPageLayout; header: WalkHeaderStyle };
+  theme: SiteTheme;
+}) {
   return (
     <>
       <SettingsSectionGroup description="The same for members and organisers." title="Layout">
-        <WalkPageLayoutSettings header={theme.walkHeaderStyle} layout={theme.walkPageLayout} />
+        <WalkPageLayoutSettings header={choice.header} layout={choice.layout} />
       </SettingsSectionGroup>
       <SettingsSectionGroup
         description="Off hides that card on every walk. The wording below is kept, so turning it back on restores what you wrote."
@@ -74,7 +82,7 @@ function SettingsView({ theme }: { theme: SiteTheme }) {
 function SettingsFallback() {
   return (
     <SettingsMask>
-      <SettingsView theme={defaultTheme()} />
+      <SettingsView choice={{ layout: "classic", header: "standard" }} theme={defaultTheme()} />
     </SettingsMask>
   );
 }

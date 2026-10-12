@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import {
   WALK_GALLERY_LAYOUTS,
+  WALK_STUDIO_LAYOUTS,
   WALK_IDEA_LAYOUTS,
   joinWalkPageChoice,
   type WalkHeaderStyle,
@@ -57,7 +58,7 @@ export function WalkPageLayoutSettings({ header, layout }: { header: WalkHeaderS
 
   return (
     <SettingsSection
-      description="How a walk's page looks when someone opens a walk — the same for members and organisers. One list for every design: the original one column, two columns, A to D (one column with tabs, each also with a header style H1 to H4), and designs 1 to 53 to try — 24 to 53 grouped by look: polished app, clean and minimal, bold outdoors, and organiser dashboard."
+      description="How a walk's page looks when someone opens a walk — the same for members and organisers. One list for every design: the original one column, two columns, A to D (one column with tabs, each also with a header style H1 to H4), and designs 1 to 81 to try, grouped by look. The Details first designs (52 to 81) start with the messages and one card holding everything about the walk, with all the walk's actions in one Manage button."
       title="Layout"
     >
       <div className="flex w-full flex-col gap-1.5">
@@ -101,6 +102,19 @@ export function WalkPageLayoutSettings({ header, layout }: { header: WalkHeaderS
                 </SelectItem>
               ))}
             </SelectGroup>
+            {(["Map in the card", "Full width", "With a sidebar", "Compact and neat"] as const).map((look) => (
+              <SelectGroup key={look}>
+                <SelectSeparator />
+                <SelectLabel>{`Details first · ${look}`}</SelectLabel>
+                {WALK_STUDIO_LAYOUTS.map((design, i) =>
+                  design.look === look ? (
+                    <SelectItem key={design.id} value={design.id}>
+                      {`${WALK_IDEA_LAYOUTS.length + WALK_GALLERY_LAYOUTS.length + i + 1} · ${design.label}`}
+                    </SelectItem>
+                  ) : null,
+                )}
+              </SelectGroup>
+            ))}
             {(["Polished app", "Clean and minimal", "Bold outdoors", "Organiser dashboard"] as const).map((look) => (
               <SelectGroup key={look}>
                 <SelectSeparator />
