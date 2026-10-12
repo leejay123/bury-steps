@@ -231,7 +231,7 @@ export function WalksSection({
               can restyle the messages and boxes inside any block. New
               signed-out visitor designs start with How this group works. The Details card&apos;s map can also hide its Meeting point
               title and its small print, as the Map block can. The Tabs block&apos;s
-              tab bar can run full width, edge to edge. The
+              tab bar can run full width, edge to edge, and its tabs can be square, rounded or fully rounded. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

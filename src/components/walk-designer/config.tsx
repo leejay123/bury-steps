@@ -1110,6 +1110,16 @@ export const walkDesignConfig: Config = {
             ["transition", "Pills that drop in"],
           ]),
         },
+        corners: {
+          type: "radio",
+          label: "Tab corners",
+          options: options([
+            ["as-is", "As the style has them"],
+            ["square", "Square"],
+            ["rounded", "Rounded"],
+            ["pill", "Fully rounded"],
+          ]),
+        },
         bar: {
           type: "radio",
           label: "Tab bar width",
@@ -1146,6 +1156,7 @@ export const walkDesignConfig: Config = {
       defaultProps: {
         style: "site",
         bar: "page",
+        corners: "as-is",
         fit: "fill",
         sticky: true,
         tabs: [
@@ -1154,7 +1165,7 @@ export const walkDesignConfig: Config = {
           { label: "Journey", content: [] },
         ],
       },
-      render: ({ style, bar: barWidth, fit, sticky, tabs, puck }) => {
+      render: ({ style, bar: barWidth, corners, fit, sticky, tabs, puck }) => {
         // In the designer every tab's area is shown, one under another, so
         // blocks can be dropped into any tab (a hidden tab can't be reached).
         const editing = Boolean(puck?.isEditing);
@@ -1171,6 +1182,12 @@ export const walkDesignConfig: Config = {
                 sticky &&
                   "sticky top-16 z-20 -mx-1 bg-background/95 px-1 py-2 backdrop-blur-sm",
                 // Out to the page's edges, square ends (the panels stay page width).
+                corners === "square" &&
+                  "[&_[data-slot=tabs-list]]:rounded-none [&_[data-slot=tabs-trigger]]:rounded-none",
+                corners === "rounded" &&
+                  "[&_[data-slot=tabs-list]]:rounded-xl [&_[data-slot=tabs-trigger]]:rounded-lg",
+                corners === "pill" &&
+                  "[&_[data-slot=tabs-list]]:rounded-full [&_[data-slot=tabs-trigger]]:rounded-full",
                 barWidth === "full" &&
                   "-mx-4 px-0 md:-mx-6 [&_[data-slot=tabs-list]]:rounded-none",
               )}
