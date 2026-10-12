@@ -176,7 +176,7 @@ export function WalksSection({
               some with the map built into the card, some running the full width
               of the page, some with a sidebar (on a phone it opens from a
               button). You can also design the walk page yourself: on any
-              organiser walk page, <strong>Design this page</strong> (owners and
+              organiser walk page, <strong>Design this page</strong> in the Manage list (owners and
               organisers with the Display permission) opens the walk page
               designer over that walk. Drag blocks in from the left — Messages,
               Title, Details card, Facts, Essentials, Clock in + Manage, Status,
@@ -231,7 +231,11 @@ export function WalksSection({
               can restyle the messages and boxes inside any block. New
               signed-out visitor designs start with How this group works. The Details card&apos;s map can also hide its Meeting point
               title and its small print, as the Map block can. The Tabs block&apos;s
-              tab bar can run full width, edge to edge, and its tabs can be square, rounded or fully rounded. The
+              tab bar can run full width, edge to edge, and its tabs can be square, rounded or fully rounded. On the page, a tab with nothing in it for whoever is
+              looking (Attended for a member, for example) is left out of the
+              tab bar. Columns are equal heights by default (the last block in
+              each column stretches; or choose As tall as their content), and
+              any one column can stay in view as you scroll on a computer. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

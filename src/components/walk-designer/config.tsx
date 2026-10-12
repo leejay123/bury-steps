@@ -1,7 +1,7 @@
 "use client";
 
 import type { ComponentConfig, Config } from "@puckeditor/core";
-import { useContext, type ReactNode } from "react";
+import { useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { PreviewAudience } from "./parts";
 import { cn } from "@/lib/utils";
 import {
@@ -210,6 +210,142 @@ const blockLayoutField = {
   },
 };
 
+type TabItem = {
+  label: string;
+  content: (props: { className?: string }) => ReactNode;
+};
+
+/** A tab with nothing in it for this person (e.g. Attended, for a member). */
+function isEmptyPanel(el: HTMLElement | null) {
+  if (!el) return false;
+  return (
+    (el.textContent ?? "").trim() === "" &&
+    !el.querySelector("img, iframe, video, canvas, input, button, a[href]")
+  );
+}
+
+/**
+ * The Tabs block. On the page, a tab whose blocks have nothing for whoever
+ * is looking (Attended for a member, organiser tools for a visitor…) is
+ * left out of the bar, checked once its content is on the page.
+ */
+function TabsView({
+  list,
+  editing,
+  sticky,
+  corners,
+  barWidth,
+  fit,
+}: {
+  list: TabItem[];
+  editing: boolean;
+  sticky?: boolean;
+  corners?: string;
+  barWidth?: string;
+  fit?: string;
+}) {
+  const panels = useRef<(HTMLDivElement | null)[]>([]);
+  const [empty, setEmpty] = useState<boolean[]>([]);
+  const [value, setValue] = useState("tab-0");
+  const count = list.length;
+
+  useEffect(() => {
+    if (editing) return;
+    const check = () => {
+      const next = Array.from({ length: count }, (_, i) =>
+        isEmptyPanel(panels.current[i] ?? null),
+      );
+      setEmpty((prev) =>
+        prev.length === next.length && prev.every((v, i) => v === next[i])
+          ? prev
+          : next,
+      );
+    };
+    check();
+    const observer = new MutationObserver(check);
+    for (const el of panels.current) {
+      if (el)
+        observer.observe(el, {
+          childList: true,
+          subtree: true,
+          characterData: true,
+        });
+    }
+    return () => observer.disconnect();
+  }, [editing, count]);
+
+  if (count === 0) return null;
+  const shown = list
+    .map((tab, i) => ({ tab, i }))
+    .filter(({ i }) => editing || !empty[i]);
+  if (shown.length === 0) return null;
+  const active = shown.some(({ i }) => `tab-${i}` === value)
+    ? value
+    : `tab-${shown[0].i}`;
+
+  return (
+    <Tabs onValueChange={setValue} value={active}>
+      {/* Full width; on a phone the names scroll sideways rather than squashing. */}
+      <div
+        className={cn(
+          sticky &&
+            "sticky top-16 z-20 -mx-1 bg-background/95 px-1 py-2 backdrop-blur-sm",
+          corners === "square" &&
+            "[&_[data-slot=tabs-list]]:rounded-none [&_[data-slot=tabs-trigger]]:rounded-none",
+          corners === "rounded" &&
+            "[&_[data-slot=tabs-list]]:rounded-xl [&_[data-slot=tabs-trigger]]:rounded-lg",
+          corners === "pill" &&
+            "[&_[data-slot=tabs-list]]:rounded-full [&_[data-slot=tabs-trigger]]:rounded-full",
+          // Out to the page's edges, square ends (the panels stay page width).
+          barWidth === "full" &&
+            "-mx-4 px-0 md:-mx-6 [&_[data-slot=tabs-list]]:rounded-none",
+        )}
+      >
+        <TabsList
+          className={cn(
+            "max-w-full justify-start overflow-x-auto [scrollbar-width:none] [&>*]:flex-none",
+            fit === "fill" && "w-full sm:[&>*]:flex-1",
+            fit === "centre" && "mx-auto flex w-fit",
+          )}
+        >
+          {shown.map(({ tab, i }) => (
+            <TabsTrigger key={i} value={`tab-${i}`}>
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </div>
+      {list.map((tab, i) => {
+        const Content = tab.content;
+        return editing ? (
+          <div
+            className="mt-4 flex flex-col gap-2 rounded-xl border border-dashed p-3"
+            key={i}
+          >
+            <span className="text-xs font-medium text-muted-foreground">
+              Tab {i + 1}: {tab.label} (drop its blocks here)
+            </span>
+            <Content className="flex min-h-16 flex-col gap-6" />
+          </div>
+        ) : (
+          // Kept on the page (hidden) so an empty tab can be spotted.
+          <TabsContent
+            className="mt-4 data-[state=inactive]:hidden"
+            forceMount
+            key={i}
+            ref={(el: HTMLDivElement | null) => {
+              panels.current[i] = el;
+            }}
+            value={`tab-${i}`}
+          >
+            <Content className="flex flex-col gap-6" />
+          </TabsContent>
+        );
+      })}
+    </Tabs>
+  );
+}
+
 /** The page; in the designer's preview it's marked with the audience being designed for (globals.css). */
 function PageRoot({ children }: { children: ReactNode }) {
   const audience = useContext(PreviewAudience);
@@ -240,6 +376,7 @@ function BlockFrame({
     <div
       data-bleed={width === "full" ? "" : undefined}
       className={cn(
+        "flex flex-col",
         full && "-mx-4 md:-mx-6",
         // Edge to edge: cards inside lose their rounded corners and side borders.
         width === "full" &&
@@ -257,7 +394,8 @@ function BlockFrame({
     >
       <div
         className={cn(
-          "flex min-w-0 flex-col gap-3",
+          // Fills the block when a column stretches it (equal heights).
+          "flex min-w-0 flex-1 flex-col gap-3 [&>*:last-child]:grow",
           framed && "py-5",
           framed && !full && "rounded-2xl px-5 sm:px-6",
           framed && full && "border-x-0",
@@ -960,10 +1098,23 @@ export const walkDesignConfig: Config = {
             ["1:1:1", "Three equal"],
           ]),
         },
-        stickySecond: {
+        heights: {
           type: "radio",
-          label: "Right column stays in view",
-          options: yesNo,
+          label: "Column heights",
+          options: options([
+            ["equal", "Equal (the last block in each column stretches)"],
+            ["natural", "As tall as their content"],
+          ]),
+        },
+        sticky: {
+          type: "select",
+          label: "Stays in view as you scroll (computers)",
+          options: options([
+            ["none", "None"],
+            ["left", "Left column"],
+            ["right", "Right (second) column"],
+            ["third", "Third column"],
+          ]),
         },
         left: { type: "slot" },
         right: { type: "slot" },
@@ -971,39 +1122,45 @@ export const walkDesignConfig: Config = {
       },
       defaultProps: {
         ratio: "2:1",
-        stickySecond: false,
+        heights: "equal",
+        sticky: "none",
         left: [],
         right: [],
         third: [],
       },
       render: ({
         ratio,
+        heights,
+        sticky,
         stickySecond,
         left: Left,
         right: Right,
         third: Third,
-      }) => (
-        <div
-          className={cn(
-            "grid gap-6",
-            ratio === "1:1" && "lg:grid-cols-2",
-            ratio === "2:1" && "lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]",
-            ratio === "1:2" && "lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]",
-            ratio === "1:1:1" && "lg:grid-cols-3",
-          )}
-        >
-          <Left className="flex min-w-0 flex-col gap-6" />
-          <Right
+      }) => {
+        // Older designs: "Right column stays in view" yes/no.
+        const stuck = sticky ?? (stickySecond ? "right" : "none");
+        const column = (name: string) =>
+          cn(
+            "flex min-w-0 flex-col gap-6",
+            heights !== "natural" && "[&>*:last-child]:grow",
+            stuck === name && "lg:sticky lg:top-24 lg:self-start",
+          );
+        return (
+          <div
             className={cn(
-              "flex min-w-0 flex-col gap-6",
-              stickySecond && "lg:sticky lg:top-24 lg:self-start",
+              "grid gap-6",
+              ratio === "1:1" && "lg:grid-cols-2",
+              ratio === "2:1" && "lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]",
+              ratio === "1:2" && "lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]",
+              ratio === "1:1:1" && "lg:grid-cols-3",
             )}
-          />
-          {ratio === "1:1:1" ? (
-            <Third className="flex min-w-0 flex-col gap-6" />
-          ) : null}
-        </div>
-      ),
+          >
+            <Left className={column("left")} />
+            <Right className={column("right")} />
+            {ratio === "1:1:1" ? <Third className={column("third")} /> : null}
+          </div>
+        );
+      },
     },
     Sidebar: {
       label: "Sidebar",
@@ -1166,71 +1323,23 @@ export const walkDesignConfig: Config = {
         ],
       },
       render: ({ style, bar: barWidth, corners, fit, sticky, tabs, puck }) => {
-        // In the designer every tab's area is shown, one under another, so
-        // blocks can be dropped into any tab (a hidden tab can't be reached).
-        const editing = Boolean(puck?.isEditing);
-        const list = (tabs ?? []) as {
-          label: string;
-          content: (props: { className?: string }) => React.ReactNode;
-        }[];
-        if (list.length === 0) return <></>;
-        const bar = (
-          <Tabs defaultValue="tab-0">
-            {/* Full width; on a phone the names scroll sideways rather than squashing. */}
-            <div
-              className={cn(
-                sticky &&
-                  "sticky top-16 z-20 -mx-1 bg-background/95 px-1 py-2 backdrop-blur-sm",
-                // Out to the page's edges, square ends (the panels stay page width).
-                corners === "square" &&
-                  "[&_[data-slot=tabs-list]]:rounded-none [&_[data-slot=tabs-trigger]]:rounded-none",
-                corners === "rounded" &&
-                  "[&_[data-slot=tabs-list]]:rounded-xl [&_[data-slot=tabs-trigger]]:rounded-lg",
-                corners === "pill" &&
-                  "[&_[data-slot=tabs-list]]:rounded-full [&_[data-slot=tabs-trigger]]:rounded-full",
-                barWidth === "full" &&
-                  "-mx-4 px-0 md:-mx-6 [&_[data-slot=tabs-list]]:rounded-none",
-              )}
-            >
-              <TabsList
-                className={cn(
-                  "max-w-full justify-start overflow-x-auto [scrollbar-width:none] [&>*]:flex-none",
-                  fit === "fill" && "w-full sm:[&>*]:flex-1",
-                  fit === "centre" && "mx-auto flex w-fit",
-                )}
-              >
-                {list.map((tab, i) => (
-                  <TabsTrigger key={i} value={`tab-${i}`}>
-                    {tab.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </div>
-            {list.map((tab, i) => {
-              const Content = tab.content;
-              return editing ? (
-                <div
-                  className="mt-4 flex flex-col gap-2 rounded-xl border border-dashed p-3"
-                  key={i}
-                >
-                  <span className="text-xs font-medium text-muted-foreground">
-                    Tab {i + 1}: {tab.label} (drop its blocks here)
-                  </span>
-                  <Content className="flex min-h-16 flex-col gap-6" />
-                </div>
-              ) : (
-                <TabsContent className="mt-4" key={i} value={`tab-${i}`}>
-                  <Content className="flex flex-col gap-6" />
-                </TabsContent>
-              );
-            })}
-          </Tabs>
+        const view = (
+          <TabsView
+            barWidth={barWidth}
+            corners={corners}
+            // In the designer every tab's area is shown, one under another,
+            // so blocks can be dropped into any tab.
+            editing={Boolean(puck?.isEditing)}
+            fit={fit}
+            list={(tabs ?? []) as TabItem[]}
+            sticky={sticky}
+          />
         );
         // "The site's tab style" follows Settings; the others set this bar's own.
         return style && style !== "site" ? (
-          <TabStyleProvider style={style as TabStyle}>{bar}</TabStyleProvider>
+          <TabStyleProvider style={style as TabStyle}>{view}</TabStyleProvider>
         ) : (
-          bar
+          view
         );
       },
     },

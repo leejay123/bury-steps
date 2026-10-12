@@ -1,9 +1,9 @@
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { getSiteTheme } from "@/lib/site-theme";
 import { getWalkDesigns, getWalkPageChoice } from "@/lib/walk-page-choice";
-import { WalkDesignButton } from "@/components/walk-designer/design-button";
+import { WalkDesignButton, WalkDesignProvider } from "@/components/walk-designer/design-button";
 import { WalkDesignRender } from "@/components/walk-designer/render";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import WalkDetailLoading from "./loading";
@@ -401,6 +401,8 @@ async function WalkDetailPageContent({ id }: { id: string }) {
       {walk.cancelledAt && admin.permWalksExport ? (
         <RetentionLockToggle locked={walk.retentionLocked} walkId={walk.id} />
       ) : null}
+      {/* Anyone allowed to change the site's look: the walk page designer. */}
+      {admin.permDisplay ? <WalkDesignButton /> : null}
     </>
   );
   // Every layout: one Manage button holding the share link and the walk's buttons.
@@ -578,31 +580,41 @@ async function WalkDetailPageContent({ id }: { id: string }) {
       shareUrl,
     },
   };
-  // Back to the list, and (for anyone allowed to change the site's look)
-  // the walk page designer, opened over this walk.
   const backRow = (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <Link href="/admin/walks" className="text-sm text-muted-foreground hover:text-foreground">
-        &larr; All walks
-      </Link>
-      {admin.permDisplay ? <WalkDesignButton designs={designs} parts={ideaParts} /> : null}
-    </div>
+    <Link href="/admin/walks" className="w-fit text-sm text-muted-foreground hover:text-foreground">
+      &larr; All walks
+    </Link>
   );
-
-  if (choice.layout === "designed") {
-    return (
+  // Every layout: the page, with the walk handed to Design this page (in
+  // the Manage list) for anyone allowed to change the site's look.
+  const page = (content: ReactNode) => {
+    const body = (
       <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
         {backRow}
-        <WalkDesignRender data={designs.organiser} parts={ideaParts} />
+        {content}
       </div>
+    );
+    return admin.permDisplay ? (
+      <WalkDesignProvider designs={designs} parts={ideaParts}>
+        {body}
+      </WalkDesignProvider>
+    ) : (
+      body
+    );
+  };
+
+  if (choice.layout === "designed") {
+    return page(
+      <>
+        <WalkDesignRender data={designs.organiser} parts={ideaParts} />
+      </>,
     );
   }
 
   if (isWalkIdeaLayout(choice.layout) || isWalkGalleryLayout(choice.layout) || isWalkStudioLayout(choice.layout)) {
     const layout = choice.layout;
-    return (
-      <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
-        {backRow}
+    return page(
+      <>
         {isWalkStudioLayout(layout) ? (
           <WalkStudioLayouts layout={layout} parts={ideaParts} />
         ) : isWalkGalleryLayout(layout) ? (
@@ -610,15 +622,14 @@ async function WalkDetailPageContent({ id }: { id: string }) {
         ) : (
           <WalkIdeaLayouts layout={layout} parts={ideaParts} />
         )}
-      </div>
+      </>,
     );
   }
 
   if (isWalkTabsVariant(choice.layout)) {
     const headerHasButton = choice.header !== "standard";
-    return (
-      <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
-        {backRow}
+    return page(
+      <>
         <WalkTabsLayout
           attended={attendedTab}
           details={factsCard}
@@ -636,14 +647,13 @@ async function WalkDetailPageContent({ id }: { id: string }) {
           variant={choice.layout}
           what3words={walk.what3words}
         />
-      </div>
+      </>,
     );
   }
 
   if (choice.layout === "columns") {
-    return (
-      <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
-        {backRow}
+    return page(
+      <>
         {notices}
         <WalkPageColumns
           aside={
@@ -664,13 +674,12 @@ async function WalkDetailPageContent({ id }: { id: string }) {
           ]}
           top={detailsCard}
         />
-      </div>
+      </>,
     );
   }
 
-  return (
-    <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
-      {backRow}
+  return page(
+    <>
       {notices}
       {detailsCard}
       {selfClockIn}
@@ -680,7 +689,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
       {attendanceSection}
       <Separator />
       {journey}
-    </div>
+    </>,
   );
 }
 
