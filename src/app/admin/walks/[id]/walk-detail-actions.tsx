@@ -94,7 +94,7 @@ export function WalkDetailActions({
   const showEnd = canCancel && status === "in-progress";
 
   return (
-    <div className="-mx-4 flex flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain px-4 [scrollbar-width:none] [-ms-overflow-style:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden [&>*]:shrink-0">
+    <div data-walk-actions="" className="-mx-4 flex flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain px-4 [scrollbar-width:none] [-ms-overflow-style:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden [&>*]:shrink-0">
       {showCalendar ? (
         <Button asChild size="sm" variant="outline">
           <a download href={icsHref}>

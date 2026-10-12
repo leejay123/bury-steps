@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { ChevronDown, MoreHorizontal } from "lucide-react";
 import { useWalkClock } from "@/hooks/use-walk-clock";
 import { formatTime, formatWalkDay, formatWalkLength } from "@/lib/dates";
@@ -8,7 +8,7 @@ import { meetingPointLabel } from "@/lib/geocode";
 import { cn } from "@/lib/utils";
 import { effectiveEndsAt, walkOpensAt, walkStatus } from "@/lib/walk-window";
 import type { WalkHeaderStyle } from "@/lib/walk-page-sections";
-import { Button } from "@/components/ui/button";
+import { WalkManageMenu } from "@/components/walk-manage-menu";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { walkHeadlineFacts, type WalkHeadlineProps } from "@/components/walk-headline";
 
@@ -93,7 +93,6 @@ export function WalkHeader({
   tools?: ReactNode;
   what3words: string | null;
 }) {
-  const [open, setOpen] = useState(false);
   const facts = walkHeadlineFacts(headline);
   const now = useWalkNow(timing, clockedIn);
   const badge = (
@@ -106,13 +105,6 @@ export function WalkHeader({
     />
   );
   const note = headline.note ? <p className="text-xs text-muted-foreground">{headline.note}</p> : null;
-  // The rest of the walk's buttons, opened by More (H1) or Manage (H3).
-  const openPanel = open ? (
-    <div className="flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:flex-wrap sm:items-start">
-      {style === "band" ? share : null}
-      {tools}
-    </div>
-  ) : null;
 
   if (style === "buttons") {
     return (
@@ -137,22 +129,20 @@ export function WalkHeader({
               {liveCompact}
               {share}
               {tools ? (
-                <Button
-                  aria-expanded={open}
-                  className="w-full sm:w-auto"
-                  onClick={() => setOpen((value) => !value)}
-                  size="sm"
-                  type="button"
-                  variant="outline"
+                <WalkManageMenu
+                  label={
+                    <>
+                      <MoreHorizontal data-icon="inline-start" />
+                      More
+                    </>
+                  }
                 >
-                  <MoreHorizontal data-icon="inline-start" />
-                  More
-                </Button>
+                  {tools}
+                </WalkManageMenu>
               ) : null}
             </div>
           ) : null}
         </div>
-        {openPanel}
       </div>
     );
   }
@@ -247,23 +237,22 @@ export function WalkHeader({
               <div className="flex flex-col gap-2 sm:shrink-0 sm:flex-row sm:items-center">
                 {liveCompact}
                 {share || tools ? (
-                  <Button
-                    aria-expanded={open}
-                    className="w-full sm:w-auto"
-                    onClick={() => setOpen((value) => !value)}
-                    size="sm"
-                    type="button"
-                    variant="outline"
+                  <WalkManageMenu
+                    label={
+                      <>
+                        Manage
+                        <ChevronDown data-icon="inline-end" />
+                      </>
+                    }
                   >
-                    Manage
-                    <ChevronDown className={cn("transition-transform", open && "rotate-180")} data-icon="inline-end" />
-                  </Button>
+                    {share}
+                    {tools}
+                  </WalkManageMenu>
                 ) : null}
               </div>
             ) : null}
           </div>
         </section>
-        {openPanel}
       </div>
     );
   }

@@ -140,6 +140,9 @@ function TabsTrigger({
         <motion.span
           className="absolute right-0 bottom-[-1px] left-0 h-[2px] bg-primary"
           initial={false}
+          // Slide only when the chosen tab changes — not when something
+          // above the tabs (a panel opening) moves the bar down the page.
+          layoutDependency={underline.active}
           layoutId={`${underline.id}-line`}
           transition={{ type: "spring", stiffness: 400, damping: 30 }}
         />

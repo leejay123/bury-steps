@@ -2,9 +2,9 @@
 
 import { useEffect, useState, type ComponentProps, type ReactNode } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { WalkManageMenu } from "@/components/walk-manage-menu";
 import { cn } from "@/lib/utils";
 import type { WalkHeaderStyle, WalkTabsVariant } from "@/lib/walk-page-sections";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WalkHeadline } from "@/components/walk-headline";
 import { WalkHeader, useWalkNow, type WalkTiming } from "@/components/walk-header-styles";
@@ -78,7 +78,6 @@ export function WalkTabsLayout({
   const layoutShare = custom ? null : share;
   const layoutCompact = custom ? null : liveCompact;
   const layoutTools = custom ? null : tools;
-  const [manageOpen, setManageOpen] = useState(false);
   const headerHeight = useSiteHeaderHeight(variant === "sticky");
 
   const tabs = [
@@ -115,15 +114,17 @@ export function WalkTabsLayout({
 
   const manage =
     variant === "tiles" && (layoutShare || layoutTools) ? (
-      <Button
-        aria-expanded={manageOpen}
-        onClick={() => setManageOpen((open) => !open)}
-        type="button"
-        variant="outline"
+      <WalkManageMenu
+        label={
+          <>
+            Manage walk
+            <ChevronDown data-icon="inline-end" />
+          </>
+        }
       >
-        Manage walk
-        <ChevronDown className={cn("transition-transform", manageOpen && "rotate-180")} data-icon="inline-end" />
-      </Button>
+        {layoutShare}
+        {layoutTools}
+      </WalkManageMenu>
     ) : null;
 
   return (
@@ -151,12 +152,6 @@ export function WalkTabsLayout({
         <WalkHeadline {...headline} action={manage} />
       )}
 
-      {variant === "tiles" && manageOpen ? (
-        <div className="flex flex-col gap-3 rounded-lg border p-4">
-          {layoutShare}
-          {layoutTools}
-        </div>
-      ) : null}
 
       {variant === "strip" ? (
         <div className="flex flex-col gap-3">
