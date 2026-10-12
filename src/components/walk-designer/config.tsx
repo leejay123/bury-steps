@@ -51,6 +51,10 @@ import {
   TimelineBlock,
   WalkNameBlock,
   FACT_NAMES,
+  BOX_LOOK,
+  MESSAGE_LOOK,
+  type BoxLook,
+  type MessageLook,
   type Arrange,
   type FactsVariant,
   type StatusVariant,
@@ -66,6 +70,7 @@ const options = <T extends string>(pairs: [T, string][]) =>
 
 const factsOptions = options<FactsVariant>([
   ["grid", "Grid of icons and values"],
+  ["pairs", "Two columns"],
   ["list", "Two-column list with lines"],
   ["table", "One-column table"],
   ["inline", "One line of icons"],
@@ -75,6 +80,42 @@ const factsOptions = options<FactsVariant>([
 
 /** Inside an edge-to-edge block, lose the rounded corners and side borders. */
 const BLEED = "in-data-[bleed]:rounded-none in-data-[bleed]:border-x-0";
+
+const phoneFactsOptions = [
+  { value: "same", label: "Same as on computers" },
+  ...factsOptions,
+];
+const phoneArrangeField = {
+  type: "radio" as const,
+  label: "On phones: arrange",
+  options: [
+    { value: "same", label: "Same as on computers" },
+    { value: "fill", label: "Fill the width" },
+    { value: "scroll", label: "One row, swipe sideways" },
+  ],
+};
+const messageLookField = {
+  type: "select" as const,
+  label: "Messages look",
+  options: options<MessageLook>([
+    ["as-is", "As designed"],
+    ["soft", "Soft grey, no border"],
+    ["bold", "Bold (dark)"],
+    ["compact", "Compact"],
+    ["stripe", "Coloured stripe down the side"],
+    ["hidden", "Hide them"],
+  ]),
+};
+const boxLookField = {
+  type: "select" as const,
+  label: "Boxes inside (panels, cards)",
+  options: options<BoxLook>([
+    ["as-is", "As designed"],
+    ["flat", "Flat: no border, background or shadow"],
+    ["tint", "Light grey, no border"],
+    ["outline", "Outline only"],
+  ]),
+};
 
 const arrangeField = {
   type: "radio" as const,
@@ -99,6 +140,8 @@ type BlockLayout = {
   showOn?: "all" | "phones" | "computers";
   buttons?: "as-is" | "phones" | "always";
   shadows?: "keep" | "none";
+  messages?: MessageLook;
+  boxes?: BoxLook;
 };
 const BLOCK_LAYOUT: BlockLayout = {
   width: "page",
@@ -107,6 +150,8 @@ const BLOCK_LAYOUT: BlockLayout = {
   showOn: "all",
   buttons: "as-is",
   shadows: "keep",
+  messages: "as-is",
+  boxes: "as-is",
 };
 const blockLayoutField = {
   type: "object" as const,
@@ -143,6 +188,8 @@ const blockLayoutField = {
         ["always", "Full width everywhere"],
       ]),
     },
+    messages: messageLookField,
+    boxes: boxLookField,
     shadows: {
       type: "radio" as const,
       label: "Shadows",
@@ -183,7 +230,7 @@ function BlockFrame({
   children: ReactNode;
   layout?: BlockLayout;
 }) {
-  const { width, frame, heading, showOn, buttons, shadows } = {
+  const { width, frame, heading, showOn, buttons, shadows, messages, boxes } = {
     ...BLOCK_LAYOUT,
     ...layout,
   };
@@ -202,6 +249,8 @@ function BlockFrame({
         buttons === "always" &&
           "[&_[data-slot=button]]:w-full [&_[data-slot=button]]:flex-1",
         shadows === "none" && "[&_*]:shadow-none",
+        MESSAGE_LOOK[messages ?? "as-is"],
+        BOX_LOOK[boxes ?? "as-is"],
         showOn === "phones" && "md:hidden",
         showOn === "computers" && "max-md:hidden",
       )}
@@ -317,7 +366,9 @@ export const walkDesignConfig: Config = {
   components: withBlockLayout({
     Messages: {
       label: "Messages",
-      render: () => <MessagesBlock />,
+      fields: { look: { ...messageLookField, label: "Look" } },
+      defaultProps: { look: "as-is" },
+      render: ({ look }) => <MessagesBlock look={look} />,
     },
     Title: {
       label: "Title",
@@ -356,6 +407,15 @@ export const walkDesignConfig: Config = {
       fields: {
         facts: { type: "select", label: "Facts", options: factsOptions },
         factsArrange: { ...arrangeField, label: "Facts arrange" },
+        phoneFacts: {
+          type: "select",
+          label: "Facts on phones",
+          options: phoneFactsOptions,
+        },
+        phoneFactsArrange: {
+          ...phoneArrangeField,
+          label: "Facts arrange on phones",
+        },
         map: {
           type: "select",
           label: "Map in the card",
@@ -406,7 +466,40 @@ export const walkDesignConfig: Config = {
           label: "Description",
           options: yesNo,
         },
-        ribbon: { type: "radio", label: "Status ribbon", options: yesNo },
+        ribbon: {
+          type: "select",
+          label: "Ribbon shows",
+          options: [
+            { value: "none", label: "No ribbon" },
+            { value: "status", label: "Where the walk is up to" },
+            { value: "messages", label: "The walk's messages" },
+            { value: "countdown", label: "Countdown" },
+            { value: "when-where", label: "When and where" },
+            { value: "text", label: "Your own words" },
+          ],
+        },
+        ribbonText: {
+          type: "text",
+          label: "Ribbon words (for Your own words)",
+        },
+        ribbonStyle: {
+          type: "select",
+          label: "Ribbon look",
+          options: [
+            { value: "soft", label: "Soft colours" },
+            { value: "bold", label: "Bold colours" },
+            { value: "plain", label: "Plain, with a line under it" },
+            { value: "bar", label: "Thin colour bar only (no words)" },
+          ],
+        },
+        ribbonAt: {
+          type: "radio",
+          label: "Ribbon position",
+          options: options([
+            ["top", "Top"],
+            ["bottom", "Bottom"],
+          ]),
+        },
         timeline: {
           type: "radio",
           label: "The day's timeline",
@@ -425,7 +518,12 @@ export const walkDesignConfig: Config = {
         showActions: true,
         showEssentials: true,
         showDescription: true,
-        ribbon: false,
+        ribbon: "none",
+        ribbonStyle: "soft",
+        ribbonText: "",
+        ribbonAt: "top",
+        phoneFacts: "same",
+        phoneFactsArrange: "same",
         timeline: false,
         bigTitle: false,
       },
@@ -441,6 +539,11 @@ export const walkDesignConfig: Config = {
         showEssentials,
         showDescription,
         ribbon,
+        ribbonStyle,
+        ribbonText,
+        ribbonAt,
+        phoneFacts,
+        phoneFactsArrange,
         timeline,
         bigTitle,
       }) => (
@@ -451,7 +554,12 @@ export const walkDesignConfig: Config = {
           map={map}
           mapButtons={mapButtons}
           mapHeight={mapHeight}
+          phoneFacts={phoneFacts}
+          phoneFactsArrange={phoneFactsArrange}
           ribbon={ribbon}
+          ribbonAt={ribbonAt}
+          ribbonStyle={ribbonStyle}
+          ribbonText={ribbonText}
           showActions={showActions}
           showDescription={showDescription}
           showEssentials={showEssentials}
@@ -466,10 +574,26 @@ export const walkDesignConfig: Config = {
       fields: {
         variant: { type: "select", label: "Look", options: factsOptions },
         arrange: arrangeField,
+        phoneVariant: {
+          type: "select",
+          label: "On phones: look",
+          options: phoneFactsOptions,
+        },
+        phoneArrange: phoneArrangeField,
       },
-      defaultProps: { variant: "grid", arrange: "fill" },
-      render: ({ variant, arrange }) => (
-        <FactsBlock arrange={arrange} variant={variant} />
+      defaultProps: {
+        variant: "grid",
+        arrange: "fill",
+        phoneVariant: "same",
+        phoneArrange: "same",
+      },
+      render: ({ variant, arrange, phoneVariant, phoneArrange }) => (
+        <FactsBlock
+          arrange={arrange}
+          phoneArrange={phoneArrange}
+          phoneVariant={phoneVariant}
+          variant={variant}
+        />
       ),
     },
     Essentials: { label: "Essentials", render: () => <EssentialsBlock /> },
@@ -632,7 +756,9 @@ export const walkDesignConfig: Config = {
     },
     HowItWorks: {
       label: "How this group works",
-      render: () => <HowItWorksBlock />,
+      render: ({ puck }) => (
+        <HowItWorksBlock editing={Boolean(puck?.isEditing)} />
+      ),
     },
     StoryCards: {
       label: "Story cards",

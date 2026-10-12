@@ -219,7 +219,17 @@ export function WalksSection({
               Shadows (keep or remove), and the Details card&apos;s map has its
               own directions-buttons and height options. The preview shows
               exactly what the chosen audience would see — Signed-out visitors
-              includes How this group works — whoever is signed in. The
+              includes How this group works — whoever is signed in. Facts (in its own block or in the Details card) can look and
+              be arranged differently on phones — for example one swiping row
+              on a phone and a grid on a computer — with looks including two
+              columns, a list, a table, chips and tiles. The Details
+              card&apos;s ribbon has what it shows (where the walk is up to, the
+              walk&apos;s messages, a countdown, when and where, or your own
+              words), how it looks (soft, bold, plain or a thin bar) and
+              whether it sits at the top or bottom. Messages have looks (soft,
+              bold, compact, a coloured stripe, or hidden), and Block layout
+              can restyle the messages and boxes inside any block. New
+              signed-out visitor designs start with How this group works. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

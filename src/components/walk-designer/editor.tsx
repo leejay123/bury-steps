@@ -23,7 +23,11 @@ import type { WalkIdeaParts } from "@/components/walk-idea-layouts";
 import type { WalkDesignAudience, WalkDesigns } from "@/lib/walk-page-choice";
 import { walkDesignConfig } from "./config";
 import { PreviewAudience, WalkPartsProvider } from "./parts";
-import { DEFAULT_WALK_DESIGN, WALK_DESIGN_PRESETS } from "./presets";
+import {
+  DEFAULT_WALK_DESIGN,
+  WALK_DESIGN_PRESETS,
+  defaultDesignFor,
+} from "./presets";
 import { isPuckData } from "./render";
 
 const AUDIENCES: { id: WalkDesignAudience; label: string }[] = [
@@ -147,7 +151,7 @@ export function WalkDesignEditor({
     const existing = saved[next];
     setStart((current) => ({
       key: current.key + 1,
-      data: isPuckData(existing) ? existing : DEFAULT_WALK_DESIGN(),
+      data: isPuckData(existing) ? existing : defaultDesignFor(next),
     }));
   }
 

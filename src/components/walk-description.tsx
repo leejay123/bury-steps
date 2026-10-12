@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DescriptionText, InlineDescriptionText } from "@/components/description-text";
@@ -22,14 +22,33 @@ const LONG_DESCRIPTION_THRESHOLD = 400;
  * as the preview (no `typeset` class, which bumps text up to 1.125em). */
 export function WalkDescription({ description }: { description: string }) {
   const [expanded, setExpanded] = useState(false);
-  const isLong = description.length > LONG_DESCRIPTION_THRESHOLD;
+  // A first guess from the length (so the page doesn't jump on load), then
+  // measured: Read more only shows when the six lines really cut text off.
+  // By length alone, a 600-character description on a wide screen fits in
+  // fewer lines, and Read more did nothing.
+  const [isLong, setIsLong] = useState(description.length > LONG_DESCRIPTION_THRESHOLD);
+  const preview = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    const el = preview.current;
+    if (!el || expanded) return;
+    const measure = () => {
+      // Hidden (e.g. in a closed tab) measures as zero; keep the guess.
+      if (el.clientHeight === 0) return;
+      setIsLong(el.scrollHeight > el.clientHeight + 1);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [description, expanded]);
 
   return (
     <div className="flex flex-col gap-2 text-sm leading-relaxed">
       {expanded ? (
         <DescriptionText text={description} />
       ) : (
-        <p className={cn(isLong && COLLAPSED_LINE_CLAMP)}>
+        <p className={COLLAPSED_LINE_CLAMP} ref={preview}>
           <InlineDescriptionText text={description} />
         </p>
       )}

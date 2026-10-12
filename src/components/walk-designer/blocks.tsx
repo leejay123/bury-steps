@@ -256,7 +256,74 @@ const SWIPE =
   "flex flex-nowrap snap-x overflow-x-auto pb-1 [scrollbar-width:none] [&>*]:shrink-0 [&>*]:snap-start";
 
 export type FactsVariant =
-  "grid" | "list" | "table" | "inline" | "chips" | "tiles";
+  "grid" | "pairs" | "list" | "table" | "inline" | "chips" | "tiles";
+
+/**
+ * The facts, with a different look and arrangement on phones if chosen
+ * ("same" keeps the computer one). Both are drawn and CSS shows the right
+ * one, so there's no jump when the page loads.
+ */
+export function DeviceFacts({
+  p,
+  dark,
+  variant = "grid",
+  arrange = "fill",
+  phoneVariant = "same",
+  phoneArrange = "same",
+}: {
+  p: WalkIdeaParts;
+  dark?: boolean;
+  variant?: FactsVariant;
+  arrange?: Arrange;
+  phoneVariant?: FactsVariant | "same";
+  phoneArrange?: Arrange | "same";
+}) {
+  const onPhone = {
+    variant: phoneVariant === "same" ? variant : phoneVariant,
+    arrange: phoneArrange === "same" ? arrange : phoneArrange,
+  };
+  if (onPhone.variant === variant && onPhone.arrange === arrange)
+    return <Facts arrange={arrange} dark={dark} p={p} variant={variant} />;
+  return (
+    <>
+      <div className="md:hidden">
+        <Facts
+          arrange={onPhone.arrange}
+          dark={dark}
+          p={p}
+          variant={onPhone.variant}
+        />
+      </div>
+      <div className="max-md:hidden">
+        <Facts arrange={arrange} dark={dark} p={p} variant={variant} />
+      </div>
+    </>
+  );
+}
+
+/** Restyles the walk's messages (and any other message boxes) inside a block. */
+export type MessageLook =
+  "as-is" | "soft" | "bold" | "compact" | "stripe" | "hidden";
+export const MESSAGE_LOOK: Record<MessageLook, string> = {
+  "as-is": "",
+  soft: "[&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:bg-muted/60",
+  bold: "[&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:bg-foreground [&_[data-slot=alert]]:text-background [&_[data-slot=alert]_*]:!text-background",
+  compact:
+    "[&_[data-slot=alert]]:gap-y-0 [&_[data-slot=alert]]:py-2 [&_[data-slot=alert]]:text-xs [&_[data-slot=alert-description]]:text-xs",
+  stripe:
+    "[&_[data-slot=alert]]:rounded-none [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:border-l-4 [&_[data-slot=alert]]:border-l-emerald-600 [&_[data-slot=alert]]:bg-transparent",
+  hidden: "[&_[data-slot=alert]]:hidden",
+};
+
+/** Restyles boxes (cards: the clock-in panel, weather, Before you set off…) inside a block. */
+export type BoxLook = "as-is" | "flat" | "tint" | "outline";
+export const BOX_LOOK: Record<BoxLook, string> = {
+  "as-is": "",
+  flat: "[&_[data-slot=card]]:border-0 [&_[data-slot=card]]:bg-transparent [&_[data-slot=card]]:shadow-none",
+  tint: "[&_[data-slot=card]]:border-0 [&_[data-slot=card]]:bg-muted/50 [&_[data-slot=card]]:shadow-none",
+  outline:
+    "[&_[data-slot=card]]:bg-transparent [&_[data-slot=card]]:shadow-none",
+};
 
 function Facts({
   p,
@@ -375,7 +442,8 @@ function Facts({
   return (
     <dl
       className={cn(
-        "grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 lg:grid-cols-4",
+        "grid grid-cols-2 gap-x-6 gap-y-4",
+        variant !== "pairs" && "sm:grid-cols-3 lg:grid-cols-4",
         swipe && cn(SWIPE, "[&>*]:w-36"),
       )}
     >
@@ -440,10 +508,16 @@ function FlushMap({ p, className }: { p: WalkIdeaParts; className?: string }) {
 }
 
 // ── Walk blocks ─────────────────────────────────────────────────────────
-export const MessagesBlock = withParts(
-  "Messages (only when there are any)",
-  (p) => <>{p.notices}</>,
-);
+/** The walk's messages (clock-in times, cancelled, finished…), in the chosen look. */
+export function MessagesBlock({ look = "as-is" }: { look?: MessageLook }) {
+  const p = useWalkParts();
+  if (!p) return <Placeholder label="Messages (only when there are any)" />;
+  return (
+    <div className={cn("flex flex-col gap-2 empty:hidden", MESSAGE_LOOK[look])}>
+      {p.notices}
+    </div>
+  );
+}
 
 export const ClockInBlock = withParts(
   "Clock-in (members: clock in and who's on the walk)",
@@ -838,6 +912,13 @@ function Title({
   }
 }
 
+/** What the Details card's ribbon shows, and how it looks. */
+export type RibbonContent =
+  "none" | "status" | "messages" | "countdown" | "when-where" | "text";
+export type RibbonStyle = "soft" | "bold" | "plain" | "bar";
+/** Designs saved before the ribbon had separate content and style. */
+type OldRibbon = boolean | "soft" | "bold" | "bar";
+
 export type DetailsOptions = {
   facts?: FactsVariant;
   factsArrange?: Arrange;
@@ -845,7 +926,12 @@ export type DetailsOptions = {
   mapButtons?: "below" | "above" | "none";
   mapHeight?: "short" | "medium" | "tall";
   tone?: "card" | "tint" | "dark" | "plain";
-  ribbon?: boolean;
+  ribbon?: RibbonContent | OldRibbon;
+  ribbonStyle?: RibbonStyle;
+  ribbonText?: string;
+  ribbonAt?: "top" | "bottom";
+  phoneFacts?: FactsVariant | "same";
+  phoneFactsArrange?: Arrange | "same";
   timeline?: boolean;
   bigTitle?: boolean;
   showTitle?: boolean;
@@ -913,10 +999,12 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         </div>
       ) : null}
       {o.timeline ? <Timeline p={p} /> : null}
-      <Facts
+      <DeviceFacts
         arrange={o.factsArrange}
         dark={dark}
         p={p}
+        phoneArrange={o.phoneFactsArrange}
+        phoneVariant={o.phoneFacts}
         variant={o.facts ?? "grid"}
       />
       {(o.showEssentials ?? true) ? <Essentials dark={dark} p={p} /> : null}
@@ -924,6 +1012,26 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         <WalkDescription description={p.walk.description} />
       ) : null}
     </div>
+  );
+  // Older designs: true / "soft" / "bold" / "bar" all meant the status band.
+  const old = o.ribbon;
+  const content: RibbonContent =
+    old === true || old === "soft" || old === "bold" || old === "bar"
+      ? "status"
+      : old === false || !old
+        ? "none"
+        : old;
+  const style: RibbonStyle =
+    o.ribbonStyle ?? (old === "bold" || old === "bar" ? old : "soft");
+  const ribbonAt = o.ribbonAt ?? "top";
+  const ribbon = (
+    <DetailsRibbon
+      content={content}
+      info={info}
+      p={p}
+      style={style}
+      text={o.ribbonText ?? ""}
+    />
   );
   return (
     <MapLookProvider
@@ -944,26 +1052,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
           (!o.tone || o.tone === "card") && "bg-card shadow-sm",
         )}
       >
-        {o.ribbon ? (
-          // A band across the top of the card saying where the walk is up to.
-          <div
-            className={cn(
-              "flex items-center gap-2 px-5 py-2 text-sm sm:px-6",
-              info.now.tone,
-            )}
-            suppressHydrationWarning
-          >
-            <span
-              aria-hidden
-              className={cn(
-                "size-2 shrink-0 rounded-full",
-                info.now.live ? "bg-emerald-500" : "bg-current opacity-40",
-              )}
-            />
-            <span className="font-semibold">{info.now.eyebrow}</span>
-            <span className="truncate opacity-80">{info.now.line}</span>
-          </div>
-        ) : null}
+        {ribbonAt === "top" ? ribbon : null}
         {map === "top" ? <FlushMap className="border-b" p={p} /> : null}
         {map === "side" && p.map ? (
           <div className="grid lg:grid-cols-[minmax(0,1fr)_24rem]">
@@ -974,6 +1063,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
           body
         )}
         {map === "bottom" ? <FlushMap className="border-t" p={p} /> : null}
+        {ribbonAt === "bottom" ? ribbon : null}
       </section>
     </MapLookProvider>
   );
@@ -982,13 +1072,23 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
 export function FactsBlock({
   variant = "grid",
   arrange = "fill",
+  phoneVariant = "same",
+  phoneArrange = "same",
 }: {
   variant?: FactsVariant;
   arrange?: Arrange;
+  phoneVariant?: FactsVariant | "same";
+  phoneArrange?: Arrange | "same";
 }) {
   const p = useWalkParts();
   return p ? (
-    <Facts arrange={arrange} p={p} variant={variant} />
+    <DeviceFacts
+      arrange={arrange}
+      p={p}
+      phoneArrange={phoneArrange}
+      phoneVariant={phoneVariant}
+      variant={variant}
+    />
   ) : (
     <Placeholder label={`Facts · ${variant}`} />
   );
@@ -1488,10 +1588,16 @@ export function MobileSidebar({
 }
 
 // ── More blocks from the walk page designs ──────────────────────────────
-export const HowItWorksBlock = withParts(
-  "How this group works (signed-out visitors)",
-  (p) => <>{p.howItWorks ?? null}</>,
-);
+export function HowItWorksBlock({ editing = false }: { editing?: boolean }) {
+  const p = useWalkParts();
+  if (!p)
+    return <Placeholder label="How this group works (signed-out visitors)" />;
+  if (p.howItWorks) return <>{p.howItWorks}</>;
+  // Says why it's empty in the designer; shows nothing on the page.
+  return editing ? (
+    <Placeholder label="How this group works: only shown to signed-out visitors (and only when it's on in Settings → Site wording → Walk page cards)" />
+  ) : null;
+}
 
 /** Cards to swipe through: when, where, weather, people, journey. */
 export function StoryCardsBlock({ arrange = "fill" }: { arrange?: Arrange }) {
@@ -2088,5 +2194,107 @@ export function WalkNameBlock({
     >
       {p.headline.title}
     </h1>
+  );
+}
+
+/**
+ * The Details card's ribbon: where the walk is up to, its messages, a
+ * countdown, when and where, or your own words — as a soft or bold band,
+ * plain text, or just a thin colour bar.
+ */
+function DetailsRibbon({
+  p,
+  content,
+  style,
+  text,
+  info,
+}: {
+  p: WalkIdeaParts;
+  content: RibbonContent;
+  style: RibbonStyle;
+  text: string;
+  info: ReturnType<typeof useWalkInfo>;
+}) {
+  if (content === "none") return null;
+  const tone =
+    style === "bold"
+      ? info.status === "cancelled"
+        ? "bg-destructive text-white"
+        : info.now.live
+          ? "bg-emerald-600 text-white"
+          : "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
+      : style === "plain"
+        ? "border-b"
+        : info.now.tone;
+  if (style === "bar")
+    return (
+      <div
+        aria-hidden
+        className={cn(
+          "h-1.5",
+          info.status === "cancelled"
+            ? "bg-destructive"
+            : info.now.live
+              ? "bg-emerald-500"
+              : "bg-muted-foreground/30",
+        )}
+      />
+    );
+  if (content === "messages")
+    return p.notices ? (
+      <div
+        className={cn(
+          "flex flex-col gap-2 px-5 py-3 empty:hidden sm:px-6 [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:bg-transparent [&_[data-slot=alert]]:p-0 [&_[data-slot=alert]]:text-inherit",
+          tone,
+        )}
+      >
+        {p.notices}
+      </div>
+    ) : null;
+  const dot = (
+    <span
+      aria-hidden
+      className={cn(
+        "size-2 shrink-0 rounded-full",
+        info.now.live && style !== "bold"
+          ? "bg-emerald-500"
+          : "bg-current opacity-60",
+      )}
+    />
+  );
+  const line =
+    content === "countdown" ? (
+      <>
+        {dot}
+        <span className="font-semibold">
+          {info.countdown.value} {info.countdown.unit}
+        </span>
+      </>
+    ) : content === "when-where" ? (
+      <>
+        <CalendarDays aria-hidden className="size-4 shrink-0 opacity-70" />
+        <span className="font-semibold">
+          {formatWalkDay(info.start)}, {formatTime(info.start)}
+        </span>
+        {p.meeting ? (
+          <span className="truncate opacity-80">· {p.meeting}</span>
+        ) : null}
+      </>
+    ) : content === "text" ? (
+      <span className="truncate font-medium">{text || "Your words here"}</span>
+    ) : (
+      <>
+        {dot}
+        <span className="font-semibold">{info.now.eyebrow}</span>
+        <span className="truncate opacity-80">{info.now.line}</span>
+      </>
+    );
+  return (
+    <div
+      className={cn("flex items-center gap-2 px-5 py-2 text-sm sm:px-6", tone)}
+      suppressHydrationWarning
+    >
+      {line}
+    </div>
   );
 }

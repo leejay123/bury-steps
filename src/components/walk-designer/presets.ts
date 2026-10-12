@@ -15,29 +15,55 @@ const block = (type: string, props: Record<string, unknown> = {}): Block => ({
 });
 
 const tabs = (items: [string, Block[]][]) =>
-  block("Tabs", { sticky: true, tabs: items.map(([label, content]) => ({ label, content })) });
+  block("Tabs", {
+    sticky: true,
+    tabs: items.map(([label, content]) => ({ label, content })),
+  });
 
 const restTabs = (mapInCard: boolean) =>
   tabs([
-    [mapInCard ? "Weather" : "Map & weather", mapInCard ? [block("Weather"), block("Precise")] : [block("Map"), block("Weather"), block("Precise")]],
+    [
+      mapInCard ? "Weather" : "Map & weather",
+      mapInCard
+        ? [block("Weather"), block("Precise")]
+        : [block("Map"), block("Weather"), block("Precise")],
+    ],
     ["Before you set off", [block("Before")]],
     ["Attended", [block("Attended")]],
     ["Journey", [block("Journey")]],
   ]);
 
-const page = (content: Block[]): Data => ({ root: { props: {} }, content: content as Data["content"] });
+const page = (content: Block[]): Data => ({
+  root: { props: {} },
+  content: content as Data["content"],
+});
 
-export const WALK_DESIGN_PRESETS: { id: string; label: string; data: () => Data }[] = [
+export const WALK_DESIGN_PRESETS: {
+  id: string;
+  label: string;
+  data: () => Data;
+}[] = [
   {
     id: "map-card-tabs",
     label: "Details with the map in the card, sticky tabs",
     data: () =>
-      page([block("Messages"), block("ClockIn"), block("Details", { map: "top", facts: "grid" }), restTabs(true)]),
+      page([
+        block("Messages"),
+        block("ClockIn"),
+        block("Details", { map: "top", facts: "grid" }),
+        restTabs(true),
+      ]),
   },
   {
     id: "map-side-tabs",
     label: "Map down the side of the card, sticky tabs",
-    data: () => page([block("Messages"), block("ClockIn"), block("Details", { map: "side", facts: "list" }), restTabs(true)]),
+    data: () =>
+      page([
+        block("Messages"),
+        block("ClockIn"),
+        block("Details", { map: "side", facts: "list" }),
+        restTabs(true),
+      ]),
   },
   {
     id: "status-first",
@@ -48,7 +74,11 @@ export const WALK_DESIGN_PRESETS: { id: string; label: string; data: () => Data 
         block("ClockIn"),
         block("Status", { variant: "box" }),
         block("Title", { variant: "chips" }),
-        block("Details", { showTitle: false, showActions: false, facts: "list" }),
+        block("Details", {
+          showTitle: false,
+          showActions: false,
+          facts: "list",
+        }),
         restTabs(false),
       ]),
   },
@@ -80,8 +110,16 @@ export const WALK_DESIGN_PRESETS: { id: string; label: string; data: () => Data 
         block("Section", { width: "full", content: [block("Map")] }),
         block("Folding", {
           items: [
-            { label: "Weather", open: true, content: [block("Weather"), block("Precise")] },
-            { label: "Before you set off", open: false, content: [block("Before")] },
+            {
+              label: "Weather",
+              open: true,
+              content: [block("Weather"), block("Precise")],
+            },
+            {
+              label: "Before you set off",
+              open: false,
+              content: [block("Before")],
+            },
             { label: "Attended", open: false, content: [block("Attended")] },
             { label: "Journey", open: false, content: [block("Journey")] },
           ],
@@ -96,7 +134,11 @@ export const WALK_DESIGN_PRESETS: { id: string; label: string; data: () => Data 
         block("Messages"),
         block("ClockIn"),
         block("Title", { variant: "poster" }),
-        block("Details", { showTitle: false, showActions: false, facts: "chips" }),
+        block("Details", {
+          showTitle: false,
+          showActions: false,
+          facts: "chips",
+        }),
         restTabs(false),
       ]),
   },
@@ -108,7 +150,12 @@ export const WALK_DESIGN_PRESETS: { id: string; label: string; data: () => Data 
         block("Messages"),
         block("ClockIn"),
         block("Title", { variant: "trailhead" }),
-        block("Details", { showTitle: false, showActions: false, facts: "list", map: "top" }),
+        block("Details", {
+          showTitle: false,
+          showActions: false,
+          facts: "list",
+          map: "top",
+        }),
         restTabs(true),
       ]),
   },
@@ -124,7 +171,15 @@ export const WALK_DESIGN_PRESETS: { id: string; label: string; data: () => Data 
         block("Columns", {
           ratio: "1:1",
           stickySecond: true,
-          left: [block("Details", { showTitle: false, showActions: false, facts: "table" }), block("Map"), block("Weather")],
+          left: [
+            block("Details", {
+              showTitle: false,
+              showActions: false,
+              facts: "table",
+            }),
+            block("Map"),
+            block("Weather"),
+          ],
           right: [block("Attended"), block("Journey")],
         }),
       ]),
@@ -132,3 +187,16 @@ export const WALK_DESIGN_PRESETS: { id: string; label: string; data: () => Data 
 ];
 
 export const DEFAULT_WALK_DESIGN = () => WALK_DESIGN_PRESETS[0].data();
+
+/** Where a new design starts: visitors' also has How this group works under the details. */
+export const defaultDesignFor = (
+  audience: "organiser" | "member" | "visitor",
+): Data =>
+  audience === "visitor"
+    ? page([
+        block("Messages"),
+        block("Details", { map: "top", facts: "grid" }),
+        block("HowItWorks"),
+        restTabs(true),
+      ])
+    : DEFAULT_WALK_DESIGN();
