@@ -159,6 +159,7 @@ export type WalkStudioLayout = (typeof WALK_STUDIO_LAYOUTS)[number]["id"];
 
 export const WALK_PAGE_LAYOUTS = [
   "classic",
+  "designed",
   "columns",
   "strip",
   "sticky",
@@ -170,6 +171,7 @@ export const WALK_PAGE_LAYOUTS = [
 ] as const;
 export type WalkPageLayout =
   | "classic"
+  | "designed"
   | "columns"
   | "strip"
   | "sticky"

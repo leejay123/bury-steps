@@ -1,0 +1,134 @@
+import type { Data } from "@puckeditor/core";
+
+/**
+ * Ready-made starting designs for the walk page designer, each following the
+ * agreed rules: messages first, then the title, essentials and every detail
+ * at the top, then the rest. A walk page uses the first one until a design
+ * is saved; the designer offers them all to start from.
+ */
+
+let counter = 0;
+type Block = { type: string; props: Record<string, unknown> };
+const block = (type: string, props: Record<string, unknown> = {}): Block => ({
+  type,
+  props: { id: `${type}-preset-${++counter}`, ...props },
+});
+
+const tabs = (items: [string, Block[]][]) =>
+  block("Tabs", { sticky: true, tabs: items.map(([label, content]) => ({ label, content })) });
+
+const restTabs = (mapInCard: boolean) =>
+  tabs([
+    [mapInCard ? "Weather" : "Map & weather", mapInCard ? [block("Weather"), block("Precise")] : [block("Map"), block("Weather"), block("Precise")]],
+    ["Before you set off", [block("Before")]],
+    ["Attended", [block("Attended")]],
+    ["Journey", [block("Journey")]],
+  ]);
+
+const page = (content: Block[]): Data => ({ root: { props: {} }, content: content as Data["content"] });
+
+export const WALK_DESIGN_PRESETS: { id: string; label: string; data: () => Data }[] = [
+  {
+    id: "map-card-tabs",
+    label: "Details with the map in the card, sticky tabs",
+    data: () =>
+      page([block("Messages"), block("ClockIn"), block("Details", { map: "top", facts: "grid" }), restTabs(true)]),
+  },
+  {
+    id: "map-side-tabs",
+    label: "Map down the side of the card, sticky tabs",
+    data: () => page([block("Messages"), block("ClockIn"), block("Details", { map: "side", facts: "list" }), restTabs(true)]),
+  },
+  {
+    id: "status-first",
+    label: "Status box, title with chips, details, tabs",
+    data: () =>
+      page([
+        block("Messages"),
+        block("ClockIn"),
+        block("Status", { variant: "box" }),
+        block("Title", { variant: "chips" }),
+        block("Details", { showTitle: false, showActions: false, facts: "list" }),
+        restTabs(false),
+      ]),
+  },
+  {
+    id: "sidebar",
+    label: "Details card, people and journey in a sidebar",
+    data: () =>
+      page([
+        block("Messages"),
+        block("ClockIn"),
+        block("Details", { map: "top", facts: "grid" }),
+        block("Sidebar", {
+          side: "right",
+          label: "People & journey",
+          sticky: true,
+          sidebar: [block("Attended"), block("Journey")],
+          main: [block("Weather"), block("Precise"), block("Before")],
+        }),
+      ]),
+  },
+  {
+    id: "full-width-map",
+    label: "Full-width map, details, folding sections",
+    data: () =>
+      page([
+        block("Messages"),
+        block("ClockIn"),
+        block("Details", { facts: "grid" }),
+        block("Section", { width: "full", content: [block("Map")] }),
+        block("Folding", {
+          items: [
+            { label: "Weather", open: true, content: [block("Weather"), block("Precise")] },
+            { label: "Before you set off", open: false, content: [block("Before")] },
+            { label: "Attended", open: false, content: [block("Attended")] },
+            { label: "Journey", open: false, content: [block("Journey")] },
+          ],
+        }),
+      ]),
+  },
+  {
+    id: "poster",
+    label: "Poster title, details, tabs",
+    data: () =>
+      page([
+        block("Messages"),
+        block("ClockIn"),
+        block("Title", { variant: "poster" }),
+        block("Details", { showTitle: false, showActions: false, facts: "chips" }),
+        restTabs(false),
+      ]),
+  },
+  {
+    id: "trailhead",
+    label: "Trailhead sign, details, tabs",
+    data: () =>
+      page([
+        block("Messages"),
+        block("ClockIn"),
+        block("Title", { variant: "trailhead" }),
+        block("Details", { showTitle: false, showActions: false, facts: "list", map: "top" }),
+        restTabs(true),
+      ]),
+  },
+  {
+    id: "dashboard",
+    label: "Big numbers, details and attended side by side",
+    data: () =>
+      page([
+        block("Messages"),
+        block("ClockIn"),
+        block("Title", { variant: "plain" }),
+        block("Status", { variant: "numbers" }),
+        block("Columns", {
+          ratio: "1:1",
+          stickySecond: true,
+          left: [block("Details", { showTitle: false, showActions: false, facts: "table" }), block("Map"), block("Weather")],
+          right: [block("Attended"), block("Journey")],
+        }),
+      ]),
+  },
+];
+
+export const DEFAULT_WALK_DESIGN = () => WALK_DESIGN_PRESETS[0].data();

@@ -58,7 +58,7 @@ export function WalkPageLayoutSettings({ header, layout }: { header: WalkHeaderS
 
   return (
     <SettingsSection
-      description="How a walk's page looks when someone opens a walk — the same for members and organisers. One list for every design: the original one column, two columns, A to D (one column with tabs, each also with a header style H1 to H4), and designs 1 to 81 to try, grouped by look. The Details first designs (52 to 81) start with the messages and one card holding everything about the walk, with all the walk's actions in one Manage button."
+      description="How a walk's page looks when someone opens a walk — the same for members and organisers. Designed uses what you build in the walk page designer (Design this page, on any organiser walk page). One list for every design: the original one column, two columns, A to D (one column with tabs, each also with a header style H1 to H4), and designs 1 to 81 to try, grouped by look. The Details first designs (52 to 81) start with the messages and one card holding everything about the walk, with all the walk's actions in one Manage button."
       title="Layout"
     >
       <div className="flex w-full flex-col gap-1.5">
@@ -76,6 +76,11 @@ export function WalkPageLayoutSettings({ header, layout }: { header: WalkHeaderS
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Your own</SelectLabel>
+              <SelectItem value="designed">Designed (in the walk page designer)</SelectItem>
+            </SelectGroup>
+            <SelectSeparator />
             <SelectGroup>
               <SelectLabel>Original</SelectLabel>
               <SelectItem value="classic">One column (original)</SelectItem>

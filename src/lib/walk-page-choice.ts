@@ -33,3 +33,19 @@ export async function getWalkPageChoice(): Promise<{ layout: WalkPageLayout; hea
     return { layout: "classic", header: "standard" };
   }
 }
+
+export type WalkDesignAudience = "organiser" | "member" | "visitor";
+export type WalkDesigns = Partial<Record<WalkDesignAudience, unknown>>;
+
+/** The designs saved in the walk page designer (Puck data per audience). */
+export async function getWalkDesigns(): Promise<WalkDesigns> {
+  "use cache: remote";
+  cacheTag(WALK_PAGE_CHOICE_TAG);
+  cacheLife({ revalidate: HOMEPAGE_REVALIDATE_SECONDS });
+  try {
+    const row = await prisma.siteSetting.findUnique({ where: { id: SITE_SETTING_ID }, select: { walkPageDesigns: true } });
+    return row?.walkPageDesigns ? (JSON.parse(row.walkPageDesigns) as WalkDesigns) : {};
+  } catch {
+    return {};
+  }
+}

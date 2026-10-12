@@ -135,7 +135,18 @@ export function WalksSection({
               look — polished app (Trail card, Activity, Listing with booking card…), clean and
               minimal (Properties panel, Docs with contents, Type first…), bold outdoors
               (Trailhead sign, Poster, Status takeover…) and organiser dashboard (Control room,
-              Phases board, Cockpit…) — each with the same parts arranged differently, and  Then 52 to 81, the <strong>Details first</strong> designs: any
+              Phases board, Cockpit…) — each with the same parts arranged differently, and  You can also design the walk page yourself: on any organiser walk page, <strong>Design
+              this page</strong> (owners and organisers with the Display permission) opens the walk
+              page designer over that walk. Drag blocks in from the left — Messages, Title, Details
+              card, Facts, Essentials, Clock in + Manage, Status, Map, Weather, Attended, Journey and
+              more, plus layout blocks such as Tabs (which can stay at the top as you scroll and
+              scroll sideways on a phone), Columns, Sidebar (opens from a button on a phone),
+              Section (page width or full width), Card and Folding sections — and pick each
+              block&apos;s look on the right; the looks are the ones from the designs below. Make one
+              design each for organisers, members and signed-out visitors, or start from a
+              ready-made one, and press Publish to save it. Walk pages use them when Layout is set
+              to <strong>Designed</strong>. Saving a design only refreshes walk pages. Then 52 to
+              81, the <strong>Details first</strong> designs: any
               messages (such as Clock-in opens at 09:15…) come first, then one card holding
               everything about the walk — name, status, date, start and finish, length, meeting
               point, what3words, distance, climb, grade, walk leader, back marker, essentials and

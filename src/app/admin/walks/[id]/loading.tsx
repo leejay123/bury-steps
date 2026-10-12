@@ -36,7 +36,8 @@ async function OrganiserWalkLoading() {
       {isWalkTabsVariant(choice.layout) ||
     isWalkIdeaLayout(choice.layout) ||
     isWalkGalleryLayout(choice.layout) ||
-    isWalkStudioLayout(choice.layout) ? (
+    isWalkStudioLayout(choice.layout) ||
+    choice.layout === "designed" ? (
         // A to D, the one-column layouts with tabs: the title line, then the
         // tabs with Overview's details.
         <>

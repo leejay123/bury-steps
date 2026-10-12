@@ -28,7 +28,8 @@ export async function WalkLinkLoading() {
   if (isWalkTabsVariant(choice.layout) ||
     isWalkIdeaLayout(choice.layout) ||
     isWalkGalleryLayout(choice.layout) ||
-    isWalkStudioLayout(choice.layout)) {
+    isWalkStudioLayout(choice.layout) ||
+    choice.layout === "designed") {
     // A to D, the one-column layouts with tabs.
     return (
       <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6">

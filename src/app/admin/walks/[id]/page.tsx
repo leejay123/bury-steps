@@ -2,7 +2,9 @@ import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { getSiteTheme } from "@/lib/site-theme";
-import { getWalkPageChoice } from "@/lib/walk-page-choice";
+import { getWalkDesigns, getWalkPageChoice } from "@/lib/walk-page-choice";
+import { WalkDesignButton } from "@/components/walk-designer/design-button";
+import { WalkDesignRender } from "@/components/walk-designer/render";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import WalkDetailLoading from "./loading";
 import Link from "next/link";
@@ -66,7 +68,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
   // individually — see the nine permWalks* fields in organiser-permissions.ts.
   // The permission check and the walk are fetched at the same time (they
   // used to run one after the other, making this the slowest page to open).
-  const [admin, walkWithNotes, emergencySetting, theme, choice] = await Promise.all([
+  const [admin, walkWithNotes, emergencySetting, theme, choice, designs] = await Promise.all([
     requireAnyPermission(["permWalksView", "permMembersView"]),
     prisma.walk.findUnique({
     where: { id },
@@ -128,6 +130,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
     }),
     getSiteTheme(),
     getWalkPageChoice(),
+    getWalkDesigns(),
   ]);
   // Never keep health notes for a viewer who may not see them — UI-hiding
   // alone would still ship the text to their browser.
@@ -538,41 +541,59 @@ async function WalkDetailPageContent({ id }: { id: string }) {
     startsAt: walk.startsAt.toISOString(),
   };
 
-  if (isWalkIdeaLayout(choice.layout) || isWalkGalleryLayout(choice.layout) || isWalkStudioLayout(choice.layout)) {
-    const layout = choice.layout;
-    const ideaParts: WalkIdeaParts = {
-      attended: attendedTab,
-      before: null,
-      details: factsCard,
-      forecast: shown("forecast") ? sectionPart("forecast") : null,
-      headline: headlineData,
-      journey: { count: journeyEvents.length, content: journey },
-      live: clockIn(false, true),
-      liveCompact: clockIn(true, true),
-      map: shown("map") ? sectionPart("map") : null,
-      meeting,
-      notices,
-      precise: shown("precise") ? sectionPart("precise") : null,
-      share: <ShareLinkButton url={shareUrl} />,
-      timing,
-      tips: theme.beforeYouSetOffTips,
-      tools,
-      what3words: walk.what3words,
-      walk: {
-        backMarker: walk.backMarker,
-        calendarHref: `/w/${slug}/ics`,
-        description: walk.description,
-        essentials: walk.essentials,
-        location: walk.location,
-        postcode: walk.postcode,
-        shareUrl,
-      },
-    };
+  const ideaParts: WalkIdeaParts = {
+    attended: attendedTab,
+    before: null,
+    details: factsCard,
+    forecast: shown("forecast") ? sectionPart("forecast") : null,
+    headline: headlineData,
+    journey: { count: journeyEvents.length, content: journey },
+    live: clockIn(false, true),
+    liveCompact: clockIn(true, true),
+    map: shown("map") ? sectionPart("map") : null,
+    meeting,
+    notices,
+    precise: shown("precise") ? sectionPart("precise") : null,
+    share: <ShareLinkButton url={shareUrl} />,
+    timing,
+    tips: theme.beforeYouSetOffTips,
+    tools,
+    what3words: walk.what3words,
+    walk: {
+      backMarker: walk.backMarker,
+      calendarHref: `/w/${slug}/ics`,
+      description: walk.description,
+      essentials: walk.essentials,
+      location: walk.location,
+      postcode: walk.postcode,
+      shareUrl,
+    },
+  };
+  // Back to the list, and (for anyone allowed to change the site's look)
+  // the walk page designer, opened over this walk.
+  const backRow = (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <Link href="/admin/walks" className="text-sm text-muted-foreground hover:text-foreground">
+        &larr; All walks
+      </Link>
+      {admin.permDisplay ? <WalkDesignButton designs={designs} parts={ideaParts} /> : null}
+    </div>
+  );
+
+  if (choice.layout === "designed") {
     return (
       <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
-        <Link href="/admin/walks" className="text-sm text-muted-foreground hover:text-foreground">
-          &larr; All walks
-        </Link>
+        {backRow}
+        <WalkDesignRender data={designs.organiser} parts={ideaParts} />
+      </div>
+    );
+  }
+
+  if (isWalkIdeaLayout(choice.layout) || isWalkGalleryLayout(choice.layout) || isWalkStudioLayout(choice.layout)) {
+    const layout = choice.layout;
+    return (
+      <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
+        {backRow}
         {isWalkStudioLayout(layout) ? (
           <WalkStudioLayouts layout={layout} parts={ideaParts} />
         ) : isWalkGalleryLayout(layout) ? (
@@ -588,9 +609,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
     const headerHasButton = choice.header !== "standard";
     return (
       <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
-        <Link href="/admin/walks" className="text-sm text-muted-foreground hover:text-foreground">
-          &larr; All walks
-        </Link>
+        {backRow}
         <WalkTabsLayout
           attended={attendedTab}
           details={factsCard}
@@ -615,9 +634,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
   if (choice.layout === "columns") {
     return (
       <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
-        <Link href="/admin/walks" className="text-sm text-muted-foreground hover:text-foreground">
-          &larr; All walks
-        </Link>
+        {backRow}
         {notices}
         <WalkPageColumns
           aside={
@@ -644,9 +661,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
 
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
-      <Link href="/admin/walks" className="text-sm text-muted-foreground hover:text-foreground">
-        &larr; All walks
-      </Link>
+      {backRow}
       {notices}
       {detailsCard}
       {selfClockIn}

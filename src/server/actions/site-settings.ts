@@ -2009,6 +2009,56 @@ async function updateWalkPageLayoutWork(
 }
 export const updateWalkPageLayout = guardForm("organiser", pass, readPass, updateWalkPageLayoutWork);
 
+/**
+ * Walk page designer (Puck): saves one audience's design ("organiser",
+ * "member" or "visitor") as JSON, refreshing walk pages only. Owners and
+ * organisers with the Display permission.
+ */
+async function saveWalkDesignWork(input: { audience: string; data: string }): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  const audience = input.audience === "member" || input.audience === "visitor" ? input.audience : "organiser";
+  let design: unknown;
+  try {
+    design = JSON.parse(input.data);
+  } catch {
+    return { ok: false, error: "That design couldn't be read. Try again." };
+  }
+  try {
+    const row = await prisma.siteSetting.findUnique({ where: { id: SITE_SETTING_ID }, select: { walkPageDesigns: true } });
+    const designs = (() => {
+      try {
+        return row?.walkPageDesigns ? (JSON.parse(row.walkPageDesigns) as Record<string, unknown>) : {};
+      } catch {
+        return {};
+      }
+    })();
+    designs[audience] = design;
+    const text = JSON.stringify(designs);
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, walkPageDesigns: text },
+      update: { walkPageDesigns: text },
+    });
+  } catch (err) {
+    return logActionError("saveWalkDesign", err, "Could not save the design. Try again.");
+  }
+  // Walk pages only (they read the designs through this tag).
+  revalidateTag(WALK_PAGE_CHOICE_TAG, { expire: 0 });
+  return { ok: true, message: "Design saved. Walk pages use it when Layout is set to Designed." };
+}
+const saveWalkDesignGuarded = guardArgs(
+  "organiser",
+  z.object({
+    audience: z.string().max(20),
+    data: z.string().max(500_000, "That design is too big to save."),
+  }),
+  (value) => saveWalkDesignWork(value as { audience: string; data: string }),
+);
+export async function saveWalkDesign(audience: string, data: string): Promise<ActionResult> {
+  return saveWalkDesignGuarded({ audience, data });
+}
+
 /** Walk pages: the order and show/hide of the shared sections (walk-page-sections.ts). */
 async function saveWalkPageSectionsWork(value: string): Promise<ActionResult> {
   const admin = await requireAdmin();

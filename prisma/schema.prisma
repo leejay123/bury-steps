@@ -466,6 +466,9 @@ model SiteSetting {
   /// Walk pages with tabs (layouts A to D): the header and controls style —
   /// "standard", "buttons" (H1), "toolbar" (H2), "band" (H3), "grouped" (H4).
   walkHeaderStyle             String   @default("standard")
+  /// Walk page designer (Puck): the saved designs, as JSON —
+  /// { organiser, member, visitor }, each Puck page data. Empty until saved.
+  walkPageDesigns             String   @default("")
   /// Every tab bar on the site: "standard" (grey pill) or "underline"
   /// (shadcn-space tabs-05: sliding underline and hover highlight).
   tabStyle                    String   @default("standard")
