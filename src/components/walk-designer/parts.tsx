@@ -11,8 +11,18 @@ import type { WalkIdeaParts } from "@/components/walk-idea-layouts";
  */
 const WalkPartsContext = createContext<WalkIdeaParts | null>(null);
 
-export function WalkPartsProvider({ children, parts }: { children: ReactNode; parts: WalkIdeaParts }) {
-  return <WalkPartsContext.Provider value={parts}>{children}</WalkPartsContext.Provider>;
+export function WalkPartsProvider({
+  children,
+  parts,
+}: {
+  children: ReactNode;
+  parts: WalkIdeaParts;
+}) {
+  return (
+    <WalkPartsContext.Provider value={parts}>
+      {children}
+    </WalkPartsContext.Provider>
+  );
 }
 
 export function useWalkParts(): WalkIdeaParts | null {

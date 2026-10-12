@@ -502,8 +502,8 @@ async function WalkDetailPageContent({ id }: { id: string }) {
   const factsCard = (
     <Card className="gap-4">
       <CardContent className="flex flex-col gap-4">
-        showEmpty
         <WalkFacts
+          showEmpty
           backMarker={walk.backMarker}
           distance={walk.distance}
           durationMins={walk.durationMins}

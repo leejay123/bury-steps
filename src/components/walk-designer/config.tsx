@@ -2,12 +2,24 @@
 
 import type { Config } from "@puckeditor/core";
 import { cn } from "@/lib/utils";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ActionsBlock,
   AttendedBlock,
+  BadgesBlock,
   BeforeBlock,
+  BentoBlock,
+  ColourBlocksBlock,
+  HowItWorksBlock,
+  PhasesBoardBlock,
+  StoryCardsBlock,
+  TicketBlock,
   ClockInBlock,
   DescriptionBlock,
   DetailsBlock,
@@ -32,7 +44,8 @@ const yesNo = [
   { label: "Yes", value: true },
   { label: "No", value: false },
 ];
-const options = <T extends string>(pairs: [T, string][]) => pairs.map(([value, label]) => ({ value, label }));
+const options = <T extends string>(pairs: [T, string][]) =>
+  pairs.map(([value, label]) => ({ value, label }));
 
 const factsOptions = options<FactsVariant>([
   ["grid", "Grid of icons and values"],
@@ -54,11 +67,49 @@ export const walkDesignConfig: Config = {
   categories: {
     walk: {
       title: "The walk",
-      components: ["Messages", "Title", "Details", "Facts", "Essentials", "Description", "Actions", "Status", "ClockIn", "PeopleStack", "SummaryTiles"],
+      components: [
+        "Messages",
+        "Title",
+        "Details",
+        "Facts",
+        "Essentials",
+        "Description",
+        "Actions",
+        "Status",
+        "ClockIn",
+        "HowItWorks",
+        "PeopleStack",
+        "SummaryTiles",
+        "StoryCards",
+        "Bento",
+        "Ticket",
+        "ColourBlocks",
+        "Badges",
+      ],
     },
-    places: { title: "Map and weather", components: ["Map", "Weather", "Precise", "Before"] },
-    people: { title: "People and journey", components: ["Attended", "Journey"] },
-    layout: { title: "Layout", components: ["Section", "Columns", "Sidebar", "Card", "Tabs", "Folding", "Spacer", "Divider", "Heading", "Text"] },
+    places: {
+      title: "Map and weather",
+      components: ["Map", "Weather", "Precise", "Before"],
+    },
+    people: {
+      title: "People and journey",
+      components: ["Attended", "Journey", "PhasesBoard"],
+    },
+    layout: {
+      title: "Layout",
+      components: [
+        "Section",
+        "Columns",
+        "Sidebar",
+        "Card",
+        "Tabs",
+        "Folding",
+        "Spacer",
+        "Divider",
+        "Heading",
+        "Text",
+      ],
+    },
   },
   components: {
     Messages: {
@@ -86,10 +137,16 @@ export const walkDesignConfig: Config = {
             ["typographic", "Huge start time"],
           ]),
         },
-        actions: { type: "radio", label: "Clock in + Manage beside it", options: yesNo },
+        actions: {
+          type: "radio",
+          label: "Clock in + Manage beside it",
+          options: yesNo,
+        },
       },
       defaultProps: { variant: "plain", actions: true },
-      render: ({ variant, actions }) => <TitleBlock actions={actions} variant={variant} />,
+      render: ({ variant, actions }) => (
+        <TitleBlock actions={actions} variant={variant} />
+      ),
     },
     Details: {
       label: "Details card",
@@ -105,13 +162,34 @@ export const walkDesignConfig: Config = {
             ["bottom", "Along the bottom"],
           ]),
         },
-        tone: { type: "select", label: "Look", options: options([["card", "Card"], ["tint", "Tinted"], ["dark", "Dark"], ["plain", "No border"]]) },
+        tone: {
+          type: "select",
+          label: "Look",
+          options: options([
+            ["card", "Card"],
+            ["tint", "Tinted"],
+            ["dark", "Dark"],
+            ["plain", "No border"],
+          ]),
+        },
         showTitle: { type: "radio", label: "Show the title", options: yesNo },
-        showActions: { type: "radio", label: "Clock in + Manage", options: yesNo },
+        showActions: {
+          type: "radio",
+          label: "Clock in + Manage",
+          options: yesNo,
+        },
         showEssentials: { type: "radio", label: "Essentials", options: yesNo },
-        showDescription: { type: "radio", label: "Description", options: yesNo },
+        showDescription: {
+          type: "radio",
+          label: "Description",
+          options: yesNo,
+        },
         ribbon: { type: "radio", label: "Status ribbon", options: yesNo },
-        timeline: { type: "radio", label: "The day's timeline", options: yesNo },
+        timeline: {
+          type: "radio",
+          label: "The day's timeline",
+          options: yesNo,
+        },
         bigTitle: { type: "radio", label: "Big title", options: yesNo },
       },
       defaultProps: {
@@ -126,7 +204,18 @@ export const walkDesignConfig: Config = {
         timeline: false,
         bigTitle: false,
       },
-      render: ({ facts, map, tone, showTitle, showActions, showEssentials, showDescription, ribbon, timeline, bigTitle }) => (
+      render: ({
+        facts,
+        map,
+        tone,
+        showTitle,
+        showActions,
+        showEssentials,
+        showDescription,
+        ribbon,
+        timeline,
+        bigTitle,
+      }) => (
         <DetailsBlock
           bigTitle={bigTitle}
           facts={facts}
@@ -143,7 +232,9 @@ export const walkDesignConfig: Config = {
     },
     Facts: {
       label: "Facts",
-      fields: { variant: { type: "select", label: "Look", options: factsOptions } },
+      fields: {
+        variant: { type: "select", label: "Look", options: factsOptions },
+      },
       defaultProps: { variant: "grid" },
       render: ({ variant }) => <FactsBlock variant={variant} />,
     },
@@ -151,7 +242,17 @@ export const walkDesignConfig: Config = {
     Description: { label: "Description", render: () => <DescriptionBlock /> },
     Actions: {
       label: "Clock in + Manage",
-      fields: { align: { type: "select", label: "Position", options: options([["start", "Left"], ["end", "Right"], ["full", "Full width"]]) } },
+      fields: {
+        align: {
+          type: "select",
+          label: "Position",
+          options: options([
+            ["start", "Left"],
+            ["end", "Right"],
+            ["full", "Full width"],
+          ]),
+        },
+      },
       defaultProps: { align: "start" },
       render: ({ align }) => <ActionsBlock align={align} />,
     },
@@ -178,8 +279,41 @@ export const walkDesignConfig: Config = {
       render: ({ variant }) => <StatusBlock variant={variant} />,
     },
     ClockIn: { label: "Clock-in panel", render: () => <ClockInBlock /> },
-    PeopleStack: { label: "People clocked in", render: () => <PeopleStackBlock /> },
-    SummaryTiles: { label: "Summary tiles", render: () => <SummaryTilesBlock /> },
+    PeopleStack: {
+      label: "People clocked in",
+      render: () => <PeopleStackBlock />,
+    },
+    SummaryTiles: {
+      label: "Summary tiles",
+      render: () => <SummaryTilesBlock />,
+    },
+    HowItWorks: {
+      label: "How this group works",
+      render: () => <HowItWorksBlock />,
+    },
+    StoryCards: { label: "Story cards", render: () => <StoryCardsBlock /> },
+    Bento: { label: "Bento grid", render: () => <BentoBlock /> },
+    Ticket: {
+      label: "Walk ticket",
+      fields: {
+        variant: {
+          type: "radio",
+          label: "Look",
+          options: options([
+            ["plain", "Plain"],
+            ["colour", "Colour"],
+          ]),
+        },
+      },
+      defaultProps: { variant: "plain" },
+      render: ({ variant }) => <TicketBlock variant={variant} />,
+    },
+    ColourBlocks: {
+      label: "Colour blocks",
+      render: () => <ColourBlocksBlock />,
+    },
+    Badges: { label: "Round badges", render: () => <BadgesBlock /> },
+    PhasesBoard: { label: "Phases board", render: () => <PhasesBoardBlock /> },
     Map: { label: "Map", render: () => <MapBlock /> },
     Weather: { label: "Weather", render: () => <WeatherBlock /> },
     Precise: { label: "Precise location", render: () => <PreciseBlock /> },
@@ -191,12 +325,41 @@ export const walkDesignConfig: Config = {
     Section: {
       label: "Section",
       fields: {
-        width: { type: "radio", label: "Width", options: options([["contained", "Page width"], ["full", "Full width, edge to edge"]]) },
-        background: { type: "select", label: "Background", options: options([["none", "None"], ["muted", "Light grey"], ["dark", "Dark"], ["green", "Green"]]) },
-        padding: { type: "select", label: "Space inside", options: options([["none", "None"], ["small", "Small"], ["large", "Large"]]) },
+        width: {
+          type: "radio",
+          label: "Width",
+          options: options([
+            ["contained", "Page width"],
+            ["full", "Full width, edge to edge"],
+          ]),
+        },
+        background: {
+          type: "select",
+          label: "Background",
+          options: options([
+            ["none", "None"],
+            ["muted", "Light grey"],
+            ["dark", "Dark"],
+            ["green", "Green"],
+          ]),
+        },
+        padding: {
+          type: "select",
+          label: "Space inside",
+          options: options([
+            ["none", "None"],
+            ["small", "Small"],
+            ["large", "Large"],
+          ]),
+        },
         content: { type: "slot" },
       },
-      defaultProps: { width: "contained", background: "none", padding: "none", content: [] },
+      defaultProps: {
+        width: "contained",
+        background: "none",
+        padding: "none",
+        content: [],
+      },
       render: ({ width, background, padding, content: Content }) => (
         <section
           className={cn(
@@ -204,7 +367,9 @@ export const walkDesignConfig: Config = {
             background === "muted" && "bg-muted/50",
             background === "dark" && "bg-neutral-950 text-white",
             background === "green" && "bg-emerald-900 text-emerald-50",
-            background !== "none" && width !== "full" && "rounded-2xl px-4 sm:px-6",
+            background !== "none" &&
+              width !== "full" &&
+              "rounded-2xl px-4 sm:px-6",
             padding === "small" && "py-4",
             padding === "large" && "py-10",
           )}
@@ -226,13 +391,29 @@ export const walkDesignConfig: Config = {
             ["1:1:1", "Three equal"],
           ]),
         },
-        stickySecond: { type: "radio", label: "Right column stays in view", options: yesNo },
+        stickySecond: {
+          type: "radio",
+          label: "Right column stays in view",
+          options: yesNo,
+        },
         left: { type: "slot" },
         right: { type: "slot" },
         third: { type: "slot" },
       },
-      defaultProps: { ratio: "2:1", stickySecond: false, left: [], right: [], third: [] },
-      render: ({ ratio, stickySecond, left: Left, right: Right, third: Third }) => (
+      defaultProps: {
+        ratio: "2:1",
+        stickySecond: false,
+        left: [],
+        right: [],
+        third: [],
+      },
+      render: ({
+        ratio,
+        stickySecond,
+        left: Left,
+        right: Right,
+        third: Third,
+      }) => (
         <div
           className={cn(
             "grid gap-6",
@@ -243,23 +424,56 @@ export const walkDesignConfig: Config = {
           )}
         >
           <Left className="flex min-w-0 flex-col gap-6" />
-          <Right className={cn("flex min-w-0 flex-col gap-6", stickySecond && "lg:sticky lg:top-24 lg:self-start")} />
-          {ratio === "1:1:1" ? <Third className="flex min-w-0 flex-col gap-6" /> : null}
+          <Right
+            className={cn(
+              "flex min-w-0 flex-col gap-6",
+              stickySecond && "lg:sticky lg:top-24 lg:self-start",
+            )}
+          />
+          {ratio === "1:1:1" ? (
+            <Third className="flex min-w-0 flex-col gap-6" />
+          ) : null}
         </div>
       ),
     },
     Sidebar: {
       label: "Sidebar",
       fields: {
-        side: { type: "radio", label: "Side", options: options([["left", "Left"], ["right", "Right"]]) },
+        side: {
+          type: "radio",
+          label: "Side",
+          options: options([
+            ["left", "Left"],
+            ["right", "Right"],
+          ]),
+        },
         label: { type: "text", label: "Button name on phones" },
         sticky: { type: "radio", label: "Stays in view", options: yesNo },
         sidebar: { type: "slot" },
         main: { type: "slot" },
       },
-      defaultProps: { side: "right", label: "More", sticky: true, sidebar: [], main: [] },
-      render: ({ side, label, sticky, sidebar: SidebarContent, main: Main }) => (
-        <div className={cn("grid gap-6", side === "left" ? "lg:grid-cols-[16rem_minmax(0,1fr)]" : "lg:grid-cols-[minmax(0,1fr)_18rem]")}>
+      defaultProps: {
+        side: "right",
+        label: "More",
+        sticky: true,
+        sidebar: [],
+        main: [],
+      },
+      render: ({
+        side,
+        label,
+        sticky,
+        sidebar: SidebarContent,
+        main: Main,
+      }) => (
+        <div
+          className={cn(
+            "grid gap-6",
+            side === "left"
+              ? "lg:grid-cols-[16rem_minmax(0,1fr)]"
+              : "lg:grid-cols-[minmax(0,1fr)_18rem]",
+          )}
+        >
           {side === "left" ? (
             <div className={cn(sticky && "lg:sticky lg:top-24 lg:self-start")}>
               <MobileSidebar label={label || "More"} side="left">
@@ -269,7 +483,12 @@ export const walkDesignConfig: Config = {
           ) : null}
           <Main className="flex min-w-0 flex-col gap-6" />
           {side === "right" ? (
-            <div className={cn("max-lg:order-first", sticky && "lg:sticky lg:top-24 lg:self-start")}>
+            <div
+              className={cn(
+                "max-lg:order-first",
+                sticky && "lg:sticky lg:top-24 lg:self-start",
+              )}
+            >
               <MobileSidebar label={label || "More"} side="right">
                 <SidebarContent className="flex flex-col gap-4" />
               </MobileSidebar>
@@ -281,7 +500,16 @@ export const walkDesignConfig: Config = {
     Card: {
       label: "Card",
       fields: {
-        tone: { type: "select", label: "Look", options: options([["card", "Card"], ["tint", "Tinted"], ["dark", "Dark"], ["outline", "Outline only"]]) },
+        tone: {
+          type: "select",
+          label: "Look",
+          options: options([
+            ["card", "Card"],
+            ["tint", "Tinted"],
+            ["dark", "Dark"],
+            ["outline", "Outline only"],
+          ]),
+        },
         content: { type: "slot" },
       },
       defaultProps: { tone: "card", content: [] },
@@ -302,11 +530,18 @@ export const walkDesignConfig: Config = {
     Tabs: {
       label: "Tabs",
       fields: {
-        sticky: { type: "radio", label: "Stays at the top as you scroll", options: yesNo },
+        sticky: {
+          type: "radio",
+          label: "Stays at the top as you scroll",
+          options: yesNo,
+        },
         tabs: {
           type: "array",
           label: "Tabs",
-          arrayFields: { label: { type: "text", label: "Name" }, content: { type: "slot" } },
+          arrayFields: {
+            label: { type: "text", label: "Name" },
+            content: { type: "slot" },
+          },
           defaultItemProps: { label: "New tab", content: [] },
           getItemSummary: (item: { label?: string }) => item.label || "Tab",
         },
@@ -320,12 +555,20 @@ export const walkDesignConfig: Config = {
         ],
       },
       render: ({ sticky, tabs }) => {
-        const list = (tabs ?? []) as { label: string; content: (props: { className?: string }) => React.ReactNode }[];
+        const list = (tabs ?? []) as {
+          label: string;
+          content: (props: { className?: string }) => React.ReactNode;
+        }[];
         if (list.length === 0) return <></>;
         return (
           <Tabs defaultValue="tab-0">
             {/* Full width; on a phone the names scroll sideways rather than squashing. */}
-            <div className={cn(sticky && "sticky top-16 z-20 -mx-1 bg-background/95 px-1 py-2 backdrop-blur-sm")}>
+            <div
+              className={cn(
+                sticky &&
+                  "sticky top-16 z-20 -mx-1 bg-background/95 px-1 py-2 backdrop-blur-sm",
+              )}
+            >
               <TabsList className="w-full justify-start overflow-x-auto [scrollbar-width:none] [&>*]:flex-none sm:[&>*]:flex-1">
                 {list.map((tab, i) => (
                   <TabsTrigger key={i} value={`tab-${i}`}>
@@ -361,16 +604,30 @@ export const walkDesignConfig: Config = {
           getItemSummary: (item: { label?: string }) => item.label || "Section",
         },
       },
-      defaultProps: { items: [{ label: "Map & weather", open: true, content: [] }] },
+      defaultProps: {
+        items: [{ label: "Map & weather", open: true, content: [] }],
+      },
       render: ({ items }) => {
-        const list = (items ?? []) as { label: string; open: boolean; content: (props: { className?: string }) => React.ReactNode }[];
+        const list = (items ?? []) as {
+          label: string;
+          open: boolean;
+          content: (props: { className?: string }) => React.ReactNode;
+        }[];
         return (
-          <Accordion className="rounded-2xl border px-4" defaultValue={list.flatMap((item, i) => (item.open ? [`item-${i}`] : []))} type="multiple">
+          <Accordion
+            className="rounded-2xl border px-4"
+            defaultValue={list.flatMap((item, i) =>
+              item.open ? [`item-${i}`] : [],
+            )}
+            type="multiple"
+          >
             {list.map((item, i) => {
               const Content = item.content;
               return (
                 <AccordionItem key={i} value={`item-${i}`}>
-                  <AccordionTrigger className="text-base">{item.label}</AccordionTrigger>
+                  <AccordionTrigger className="text-base">
+                    {item.label}
+                  </AccordionTrigger>
                   <AccordionContent>
                     <Content className="flex flex-col gap-4" />
                   </AccordionContent>
@@ -383,9 +640,26 @@ export const walkDesignConfig: Config = {
     },
     Spacer: {
       label: "Space",
-      fields: { size: { type: "select", label: "Size", options: options([["small", "Small"], ["medium", "Medium"], ["large", "Large"]]) } },
+      fields: {
+        size: {
+          type: "select",
+          label: "Size",
+          options: options([
+            ["small", "Small"],
+            ["medium", "Medium"],
+            ["large", "Large"],
+          ]),
+        },
+      },
       defaultProps: { size: "medium" },
-      render: ({ size }) => <div aria-hidden className={size === "small" ? "h-2" : size === "large" ? "h-12" : "h-6"} />,
+      render: ({ size }) => (
+        <div
+          aria-hidden
+          className={
+            size === "small" ? "h-2" : size === "large" ? "h-12" : "h-6"
+          }
+        />
+      ),
     },
     Divider: { label: "Line", render: () => <hr /> },
     Heading: {
@@ -398,10 +672,16 @@ export const walkDesignConfig: Config = {
       label: "Text",
       fields: { text: { type: "textarea", label: "Text" } },
       defaultProps: { text: "" },
-      render: ({ text }) => <p className="text-sm text-muted-foreground whitespace-pre-line">{text}</p>,
+      render: ({ text }) => (
+        <p className="text-sm text-muted-foreground whitespace-pre-line">
+          {text}
+        </p>
+      ),
     },
   },
   root: {
-    render: ({ children }: { children: React.ReactNode }) => <div className="flex flex-col gap-6">{children}</div>,
+    render: ({ children }: { children: React.ReactNode }) => (
+      <div className="flex flex-col gap-6">{children}</div>
+    ),
   },
 };

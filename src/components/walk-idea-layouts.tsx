@@ -36,6 +36,8 @@ export type WalkIdeaParts = {
   timing: WalkTiming;
   /** The walk's buttons (organisers). */
   tools?: ReactNode;
+  /** How this group works (signed-out visitors), where the page has it. */
+  howItWorks?: ReactNode;
   /** The Before you set off tips, for the Checklist design. */
   tips: readonly string[];
   what3words: string | null;
