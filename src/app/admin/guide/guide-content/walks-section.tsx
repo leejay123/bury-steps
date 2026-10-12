@@ -209,7 +209,11 @@ export function WalksSection({
               to place them anywhere else. Inside a full-width, edge-to-edge
               block or section, the map and cards run right to the edges with
               square corners. The Details card&apos;s Status ribbon is a coloured
-              band across its top saying where the walk is up to. The
+              band across its top saying where the walk is up to. The Tabs block (under Layout) has a Style — the site&apos;s
+              tab style from Settings, grey pill, sliding underline or pills
+              that drop in — and tab widths that share the full width, fit the
+              names from the left, or fit them centred; drop any blocks into
+              each tab. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way or finished, so you can see how
               the design changes (Clock in only appears while clock-in is

@@ -9,7 +9,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  TabStyleProvider,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import type { TabStyle } from "@/lib/tab-style";
 import {
   ActionsBlock,
   AttendedBlock,
@@ -902,6 +909,25 @@ export const walkDesignConfig: Config = {
     Tabs: {
       label: "Tabs",
       fields: {
+        style: {
+          type: "select",
+          label: "Style",
+          options: options([
+            ["site", "The site's tab style (Settings)"],
+            ["standard", "Grey pill"],
+            ["underline", "Sliding underline"],
+            ["transition", "Pills that drop in"],
+          ]),
+        },
+        fit: {
+          type: "radio",
+          label: "Tab widths",
+          options: options([
+            ["fill", "Share the full width"],
+            ["names", "Fit the names, from the left"],
+            ["centre", "Fit the names, centred"],
+          ]),
+        },
         sticky: {
           type: "radio",
           label: "Stays at the top as you scroll",
@@ -919,6 +945,8 @@ export const walkDesignConfig: Config = {
         },
       },
       defaultProps: {
+        style: "site",
+        fit: "fill",
         sticky: true,
         tabs: [
           { label: "Map & weather", content: [] },
@@ -926,13 +954,13 @@ export const walkDesignConfig: Config = {
           { label: "Journey", content: [] },
         ],
       },
-      render: ({ sticky, tabs }) => {
+      render: ({ style, fit, sticky, tabs }) => {
         const list = (tabs ?? []) as {
           label: string;
           content: (props: { className?: string }) => React.ReactNode;
         }[];
         if (list.length === 0) return <></>;
-        return (
+        const bar = (
           <Tabs defaultValue="tab-0">
             {/* Full width; on a phone the names scroll sideways rather than squashing. */}
             <div
@@ -941,7 +969,13 @@ export const walkDesignConfig: Config = {
                   "sticky top-16 z-20 -mx-1 bg-background/95 px-1 py-2 backdrop-blur-sm",
               )}
             >
-              <TabsList className="w-full justify-start overflow-x-auto [scrollbar-width:none] [&>*]:flex-none sm:[&>*]:flex-1">
+              <TabsList
+                className={cn(
+                  "max-w-full justify-start overflow-x-auto [scrollbar-width:none] [&>*]:flex-none",
+                  fit === "fill" && "w-full sm:[&>*]:flex-1",
+                  fit === "centre" && "mx-auto flex w-fit",
+                )}
+              >
                 {list.map((tab, i) => (
                   <TabsTrigger key={i} value={`tab-${i}`}>
                     {tab.label}
@@ -958,6 +992,12 @@ export const walkDesignConfig: Config = {
               );
             })}
           </Tabs>
+        );
+        // "The site's tab style" follows Settings; the others set this bar's own.
+        return style && style !== "site" ? (
+          <TabStyleProvider style={style as TabStyle}>{bar}</TabStyleProvider>
+        ) : (
+          bar
         );
       },
     },

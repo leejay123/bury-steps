@@ -194,6 +194,10 @@ export function WalkDesignEditor({
           <WalkPartsProvider parts={preview}>
             <Puck
               config={walkDesignConfig}
+              // Fill the space under the bar above. Puck's own default is the
+              // full screen height, which pushed its bottom off-screen, so
+              // the page and the panels couldn't scroll to the end.
+              height="100%"
               data={start.data}
               headerTitle={
                 AUDIENCES.find((item) => item.id === audience)?.label
