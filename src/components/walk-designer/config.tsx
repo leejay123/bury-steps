@@ -1,6 +1,7 @@
 "use client";
 
-import type { Config } from "@puckeditor/core";
+import type { ComponentConfig, Config } from "@puckeditor/core";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import {
   Accordion,
@@ -35,6 +36,13 @@ import {
   SummaryTilesBlock,
   TitleBlock,
   WeatherBlock,
+  CountdownBlock,
+  FactBlock,
+  StatusBadgeBlock,
+  TimelineBlock,
+  WalkNameBlock,
+  FACT_NAMES,
+  type Arrange,
   type FactsVariant,
   type StatusVariant,
   type TitleVariant,
@@ -56,6 +64,136 @@ const factsOptions = options<FactsVariant>([
   ["tiles", "Tiles"],
 ]);
 
+const arrangeField = {
+  type: "radio" as const,
+  label: "Arrange",
+  options: options<Arrange>([
+    ["fill", "Fill the width"],
+    ["scroll", "One row, swipe sideways"],
+  ]),
+};
+
+/**
+ * Options every block has, under "Block layout": how wide it goes (out to
+ * the page's edges, like the homepage's full-width sections), a frame
+ * around it, a heading above it, and whether it shows on phones,
+ * computers or both. Puck has no shared fields of its own, so they're added
+ * to each block here (withBlockLayout).
+ */
+type BlockLayout = {
+  width?: "page" | "full" | "full-inset";
+  frame?: "none" | "card" | "tint" | "dark" | "outline" | "green";
+  heading?: string;
+  showOn?: "all" | "phones" | "computers";
+};
+const BLOCK_LAYOUT: BlockLayout = {
+  width: "page",
+  frame: "none",
+  heading: "",
+  showOn: "all",
+};
+const blockLayoutField = {
+  type: "object" as const,
+  label: "Block layout",
+  objectFields: {
+    width: {
+      type: "select" as const,
+      label: "Width",
+      options: options([
+        ["page", "Page width"],
+        ["full", "Full width, edge to edge"],
+        ["full-inset", "Full-width background, content in line with the page"],
+      ]),
+    },
+    frame: {
+      type: "select" as const,
+      label: "Frame",
+      options: options([
+        ["none", "None"],
+        ["card", "Card"],
+        ["tint", "Light grey"],
+        ["outline", "Outline only"],
+        ["dark", "Dark"],
+        ["green", "Green"],
+      ]),
+    },
+    heading: { type: "text" as const, label: "Heading above (optional)" },
+    showOn: {
+      type: "radio" as const,
+      label: "Show on",
+      options: options([
+        ["all", "Everywhere"],
+        ["phones", "Phones only"],
+        ["computers", "Computers only"],
+      ]),
+    },
+  },
+};
+
+function BlockFrame({
+  children,
+  layout,
+}: {
+  children: ReactNode;
+  layout?: BlockLayout;
+}) {
+  const { width, frame, heading, showOn } = { ...BLOCK_LAYOUT, ...layout };
+  const full = width !== "page";
+  const framed = frame !== "none";
+  return (
+    <div
+      className={cn(
+        full && "-mx-4 md:-mx-6",
+        showOn === "phones" && "md:hidden",
+        showOn === "computers" && "max-md:hidden",
+      )}
+    >
+      <div
+        className={cn(
+          "flex min-w-0 flex-col gap-3",
+          framed && "py-5",
+          framed && !full && "rounded-2xl px-5 sm:px-6",
+          framed && full && "border-x-0",
+          width === "full-inset" && "px-4 md:px-6",
+          frame === "card" && "border bg-card shadow-sm",
+          frame === "tint" && "bg-muted/50",
+          frame === "outline" && "border",
+          frame === "dark" && "bg-neutral-950 text-white",
+          frame === "green" && "bg-emerald-900 text-emerald-50",
+        )}
+      >
+        {heading ? <h2 className="text-lg font-semibold">{heading}</h2> : null}
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** Adds "Block layout" to every block (except Section and Space, which have their own). */
+function withBlockLayout(
+  components: Config["components"],
+): Config["components"] {
+  return Object.fromEntries(
+    Object.entries(components).map(([name, component]) => {
+      if (name === "Section" || name === "Spacer") return [name, component];
+      const Inner = component.render as (
+        props: Record<string, unknown>,
+      ) => ReactNode;
+      const wrapped: ComponentConfig = {
+        ...component,
+        fields: { ...component.fields, layout: blockLayoutField },
+        defaultProps: { ...component.defaultProps, layout: BLOCK_LAYOUT },
+        render: (props: Record<string, unknown>) => (
+          <BlockFrame layout={props.layout as BlockLayout | undefined}>
+            <Inner {...props} />
+          </BlockFrame>
+        ),
+      };
+      return [name, wrapped];
+    }),
+  );
+}
+
 /**
  * Every block in the walk page designer (Puck), in the editor's left list:
  * the walk's parts — each with the looks from the 80 walk page designs as
@@ -70,11 +208,18 @@ export const walkDesignConfig: Config = {
       components: [
         "Messages",
         "Title",
+        "WalkName",
+        "StatusBadge",
+        "Countdown",
+        "Timeline",
+        "Fact",
         "Details",
         "Facts",
         "Essentials",
         "Description",
         "Actions",
+        "ClockInButton",
+        "ManageButton",
         "Status",
         "ClockIn",
         "HowItWorks",
@@ -111,7 +256,7 @@ export const walkDesignConfig: Config = {
       ],
     },
   },
-  components: {
+  components: withBlockLayout({
     Messages: {
       label: "Messages",
       render: () => <MessagesBlock />,
@@ -152,6 +297,7 @@ export const walkDesignConfig: Config = {
       label: "Details card",
       fields: {
         facts: { type: "select", label: "Facts", options: factsOptions },
+        factsArrange: { ...arrangeField, label: "Facts arrange" },
         map: {
           type: "select",
           label: "Map in the card",
@@ -194,6 +340,7 @@ export const walkDesignConfig: Config = {
       },
       defaultProps: {
         facts: "grid",
+        factsArrange: "fill",
         map: "none",
         tone: "card",
         showTitle: true,
@@ -206,6 +353,7 @@ export const walkDesignConfig: Config = {
       },
       render: ({
         facts,
+        factsArrange,
         map,
         tone,
         showTitle,
@@ -219,6 +367,7 @@ export const walkDesignConfig: Config = {
         <DetailsBlock
           bigTitle={bigTitle}
           facts={facts}
+          factsArrange={factsArrange}
           map={map}
           ribbon={ribbon}
           showActions={showActions}
@@ -234,9 +383,12 @@ export const walkDesignConfig: Config = {
       label: "Facts",
       fields: {
         variant: { type: "select", label: "Look", options: factsOptions },
+        arrange: arrangeField,
       },
-      defaultProps: { variant: "grid" },
-      render: ({ variant }) => <FactsBlock variant={variant} />,
+      defaultProps: { variant: "grid", arrange: "fill" },
+      render: ({ variant, arrange }) => (
+        <FactsBlock arrange={arrange} variant={variant} />
+      ),
     },
     Essentials: { label: "Essentials", render: () => <EssentialsBlock /> },
     Description: { label: "Description", render: () => <DescriptionBlock /> },
@@ -252,9 +404,116 @@ export const walkDesignConfig: Config = {
             ["full", "Full width"],
           ]),
         },
+        show: {
+          type: "select",
+          label: "Buttons",
+          options: options([
+            ["both", "Clock in + Manage"],
+            ["manage", "Manage only"],
+            ["clock", "Clock in only"],
+          ]),
+        },
+      },
+      defaultProps: { align: "start", show: "both" },
+      render: ({ align, show }) => <ActionsBlock align={align} show={show} />,
+    },
+    ClockInButton: {
+      label: "Clock in button",
+      fields: {
+        align: {
+          type: "select",
+          label: "Position",
+          options: options([
+            ["start", "Left"],
+            ["end", "Right"],
+            ["full", "Full width"],
+          ]),
+        },
       },
       defaultProps: { align: "start" },
-      render: ({ align }) => <ActionsBlock align={align} />,
+      render: ({ align }) => <ActionsBlock align={align} show="clock" />,
+    },
+    ManageButton: {
+      label: "Manage button",
+      fields: {
+        align: {
+          type: "select",
+          label: "Position",
+          options: options([
+            ["start", "Left"],
+            ["end", "Right"],
+            ["full", "Full width"],
+          ]),
+        },
+      },
+      defaultProps: { align: "start" },
+      render: ({ align }) => <ActionsBlock align={align} show="manage" />,
+    },
+    WalkName: {
+      label: "Walk name",
+      fields: {
+        size: {
+          type: "radio",
+          label: "Size",
+          options: options([
+            ["small", "Small"],
+            ["large", "Large"],
+            ["huge", "Huge"],
+          ]),
+        },
+      },
+      defaultProps: { size: "large" },
+      render: ({ size }) => <WalkNameBlock size={size} />,
+    },
+    StatusBadge: {
+      label: "Status badge",
+      fields: {
+        withLine: {
+          type: "radio",
+          label: "With its line of words",
+          options: yesNo,
+        },
+      },
+      defaultProps: { withLine: true },
+      render: ({ withLine }) => <StatusBadgeBlock withLine={withLine} />,
+    },
+    Countdown: {
+      label: "Countdown",
+      fields: {
+        look: {
+          type: "radio",
+          label: "Look",
+          options: options([
+            ["big", "Big number"],
+            ["box", "Coloured box"],
+            ["pill", "Small pill"],
+          ]),
+        },
+      },
+      defaultProps: { look: "big" },
+      render: ({ look }) => <CountdownBlock look={look} />,
+    },
+    Timeline: { label: "The day's timeline", render: () => <TimelineBlock /> },
+    Fact: {
+      label: "One fact",
+      fields: {
+        fact: {
+          type: "select",
+          label: "Fact",
+          options: FACT_NAMES.map((name) => ({ label: name, value: name })),
+        },
+        look: {
+          type: "radio",
+          label: "Look",
+          options: options([
+            ["tile", "Tile"],
+            ["line", "One line"],
+            ["big", "Big"],
+          ]),
+        },
+      },
+      defaultProps: { fact: "Date", look: "tile" },
+      render: ({ fact, look }) => <FactBlock fact={fact} look={look} />,
     },
     Status: {
       label: "Status",
@@ -285,13 +544,20 @@ export const walkDesignConfig: Config = {
     },
     SummaryTiles: {
       label: "Summary tiles",
-      render: () => <SummaryTilesBlock />,
+      fields: { arrange: arrangeField },
+      defaultProps: { arrange: "fill" },
+      render: ({ arrange }) => <SummaryTilesBlock arrange={arrange} />,
     },
     HowItWorks: {
       label: "How this group works",
       render: () => <HowItWorksBlock />,
     },
-    StoryCards: { label: "Story cards", render: () => <StoryCardsBlock /> },
+    StoryCards: {
+      label: "Story cards",
+      fields: { arrange: arrangeField },
+      defaultProps: { arrange: "fill" },
+      render: ({ arrange }) => <StoryCardsBlock arrange={arrange} />,
+    },
     Bento: { label: "Bento grid", render: () => <BentoBlock /> },
     Ticket: {
       label: "Walk ticket",
@@ -310,9 +576,16 @@ export const walkDesignConfig: Config = {
     },
     ColourBlocks: {
       label: "Colour blocks",
-      render: () => <ColourBlocksBlock />,
+      fields: { arrange: arrangeField },
+      defaultProps: { arrange: "fill" },
+      render: ({ arrange }) => <ColourBlocksBlock arrange={arrange} />,
     },
-    Badges: { label: "Round badges", render: () => <BadgesBlock /> },
+    Badges: {
+      label: "Round badges",
+      fields: { arrange: arrangeField },
+      defaultProps: { arrange: "fill" },
+      render: ({ arrange }) => <BadgesBlock arrange={arrange} />,
+    },
     PhasesBoard: { label: "Phases board", render: () => <PhasesBoardBlock /> },
     Map: { label: "Map", render: () => <MapBlock /> },
     Weather: { label: "Weather", render: () => <WeatherBlock /> },
@@ -678,7 +951,7 @@ export const walkDesignConfig: Config = {
         </p>
       ),
     },
-  },
+  }),
   root: {
     render: ({ children }: { children: React.ReactNode }) => (
       <div className="flex flex-col gap-6">{children}</div>

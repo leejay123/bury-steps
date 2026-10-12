@@ -192,7 +192,21 @@ export function WalksSection({
               and signed-out visitors, or start from a ready-made one, and press
               Publish to save it. Walk pages use them when Layout is set to{" "}
               <strong>Designed</strong>. Saving a design only refreshes walk
-              pages. On every layout the walk&apos;s actions are one{" "}
+              pages. Every block also has Block layout: page width or full width
+              (edge to edge, or a full-width background with the content in
+              line with the page), a frame (card, light grey, outline, dark or
+              green), an optional heading, and whether it shows on phones,
+              computers or both. Blocks with several items (Facts, story
+              cards, summary tiles, colour blocks, round badges) can fill the
+              width or stay on one row that swipes sideways. Clock in and
+              Manage can go together or as separate Clock in button and Manage
+              button blocks, and the walk name, status badge, countdown, the
+              day&apos;s timeline and any one fact are blocks of their own. The
+              Preview menu at the top shows the walk before clock-in opens,
+              with clock-in open, under way or finished, so you can see how
+              the design changes (Clock in only appears while clock-in is
+              open; buttons that depend on the real time, such as Edit, stay as
+              they are now). On every layout the walk&apos;s actions are one{" "}
               <strong>Manage</strong> button: its list has Copy share link, Add
               to calendar, Download roster (CSV), Duplicate, Cancel walk, Edit,
               and Remove walk in red at the bottom. Clock in sits beside it

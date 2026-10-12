@@ -1,11 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { walkClockDelayMs } from "@/lib/walk-clock-delay";
 import { SERVER_CLOCK_EVENT, serverNow } from "@/lib/server-clock";
 import { effectiveEndsAt, nextWalkStatusChangeAt, walkStatus } from "@/lib/walk-window";
 
 const ONE_MINUTE_MS = 60_000;
+
+/**
+ * A pretend "now" for every walk clock below it — only the walk page
+ * designer sets it, so its preview can show a walk before clock-in opens,
+ * while it's open, under way or finished. Real pages never have one.
+ */
+export const WalkClockPreview = createContext<Date | null>(null);
 
 /**
  * A clock that jumps forward at the next walk-status boundary (clock-in
@@ -26,6 +33,7 @@ export function useWalkClock(walk: {
   endedAt?: string | null;
   startsAt: string;
 }) {
+  const preview = useContext(WalkClockPreview);
   const [now, setNow] = useState(() => serverNow());
   const started = useRef(false);
 
@@ -88,5 +96,5 @@ export function useWalkClock(walk: {
     };
   }, [walk.cancelledAt, walk.durationMins, walk.endedAt, walk.startsAt]);
 
-  return now;
+  return preview ?? now;
 }

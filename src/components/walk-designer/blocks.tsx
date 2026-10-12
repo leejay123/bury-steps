@@ -245,6 +245,11 @@ function Essentials({ p, dark = false }: { p: WalkIdeaParts; dark?: boolean }) {
   return <WalkEssentialPills keys={p.walk.essentials} />;
 }
 
+/** Fill the width (onto more rows as needed), or keep to one row that swipes sideways. */
+export type Arrange = "fill" | "scroll";
+const SWIPE =
+  "flex flex-nowrap snap-x overflow-x-auto pb-1 [scrollbar-width:none] [&>*]:shrink-0 [&>*]:snap-start";
+
 export type FactsVariant =
   "grid" | "list" | "table" | "inline" | "chips" | "tiles";
 
@@ -252,11 +257,14 @@ function Facts({
   p,
   variant,
   dark = false,
+  arrange = "fill",
 }: {
   p: WalkIdeaParts;
   variant: FactsVariant;
   dark?: boolean;
+  arrange?: Arrange;
 }) {
+  const swipe = arrange === "scroll";
   const { facts } = useWalkInfo(p);
   const muted = dark ? "text-white/60" : "text-muted-foreground";
   if (variant === "inline")
@@ -265,6 +273,7 @@ function Facts({
         className={cn(
           "flex flex-wrap gap-x-4 gap-y-1.5 text-sm",
           dark && "text-white/90",
+          swipe && cn(SWIPE, "whitespace-nowrap"),
         )}
         suppressHydrationWarning
       >
@@ -278,7 +287,12 @@ function Facts({
     );
   if (variant === "chips")
     return (
-      <ul className="flex flex-wrap gap-1.5">
+      <ul
+        className={cn(
+          "flex flex-wrap gap-1.5",
+          swipe && cn(SWIPE, "whitespace-nowrap"),
+        )}
+      >
         {facts.map((fact) => (
           <li
             className={cn(
@@ -295,7 +309,12 @@ function Facts({
     );
   if (variant === "tiles")
     return (
-      <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <dl
+        className={cn(
+          "grid grid-cols-2 gap-2 sm:grid-cols-4",
+          swipe && cn(SWIPE, "[&>*]:w-40"),
+        )}
+      >
         {facts.map((fact) => (
           <div
             className={cn(
@@ -349,7 +368,12 @@ function Facts({
       </dl>
     );
   return (
-    <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 lg:grid-cols-4">
+    <dl
+      className={cn(
+        "grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 lg:grid-cols-4",
+        swipe && cn(SWIPE, "[&>*]:w-36"),
+      )}
+    >
       {facts.map((fact) => (
         <div
           className={cn(
@@ -811,6 +835,7 @@ function Title({
 
 export type DetailsOptions = {
   facts?: FactsVariant;
+  factsArrange?: Arrange;
   map?: "none" | "top" | "side" | "bottom";
   tone?: "card" | "tint" | "dark" | "plain";
   ribbon?: boolean;
@@ -881,7 +906,12 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         </div>
       ) : null}
       {o.timeline ? <Timeline p={p} /> : null}
-      <Facts dark={dark} p={p} variant={o.facts ?? "grid"} />
+      <Facts
+        arrange={o.factsArrange}
+        dark={dark}
+        p={p}
+        variant={o.facts ?? "grid"}
+      />
       {(o.showEssentials ?? true) ? <Essentials dark={dark} p={p} /> : null}
       {(o.showDescription ?? true) && p.walk.description ? (
         <WalkDescription description={p.walk.description} />
@@ -922,10 +952,16 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   );
 }
 
-export function FactsBlock({ variant = "grid" }: { variant?: FactsVariant }) {
+export function FactsBlock({
+  variant = "grid",
+  arrange = "fill",
+}: {
+  variant?: FactsVariant;
+  arrange?: Arrange;
+}) {
   const p = useWalkParts();
   return p ? (
-    <Facts p={p} variant={variant} />
+    <Facts arrange={arrange} p={p} variant={variant} />
   ) : (
     <Placeholder label={`Facts · ${variant}`} />
   );
@@ -940,22 +976,43 @@ export const DescriptionBlock = withParts("Description", (p) =>
   ) : null,
 );
 
+export type ActionsShow = "both" | "manage" | "clock";
+
+/**
+ * Clock in and Manage together, or either one alone. Clock in only shows
+ * while it can be used — switch the designer's preview to Clock-in open to
+ * see it. Members' clocking in is in the Clock-in panel instead.
+ */
 export function ActionsBlock({
   align = "start",
+  show = "both",
 }: {
   align?: "start" | "end" | "full";
+  show?: ActionsShow;
 }) {
   const p = useWalkParts();
-  if (!p) return <Placeholder label="Clock in + Manage" />;
+  const label =
+    show === "clock"
+      ? "Clock in button (while clock-in is open)"
+      : show === "manage"
+        ? "Manage button"
+        : "Clock in + Manage";
+  if (!p) return <Placeholder label={label} />;
   return (
     <div
       className={cn(
         "flex",
         align === "end" && "sm:justify-end",
-        align === "full" && "[&>*]:w-full",
+        align === "full" && "[&>*]:w-full [&_button]:w-full",
       )}
     >
-      <Actions p={p} />
+      {show === "clock" ? (
+        p.liveCompact ? (
+          <div>{p.liveCompact}</div>
+        ) : null
+      ) : (
+        <Actions p={show === "manage" ? { ...p, liveCompact: null } : p} />
+      )}
     </div>
   );
 }
@@ -1225,7 +1282,7 @@ export const JourneyBlock = withParts("Journey", (p) => (
   <>{p.journey?.content ?? null}</>
 ));
 
-export function SummaryTilesBlock() {
+export function SummaryTilesBlock({ arrange = "fill" }: { arrange?: Arrange }) {
   const p = useWalkParts();
   if (!p) return <Placeholder label="Summary tiles" />;
   const tiles = [
@@ -1254,7 +1311,12 @@ export function SummaryTilesBlock() {
       : []),
   ];
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div
+      className={cn(
+        "grid gap-3 sm:grid-cols-[repeat(auto-fit,minmax(12rem,1fr))]",
+        arrange === "scroll" && cn(SWIPE, "[&>*]:w-48"),
+      )}
+    >
       {tiles.map((tile) => (
         <div
           className="flex min-w-0 flex-col gap-1 rounded-xl border p-4"
@@ -1387,13 +1449,13 @@ export const HowItWorksBlock = withParts(
 );
 
 /** Cards to swipe through: when, where, weather, people, journey. */
-export function StoryCardsBlock() {
+export function StoryCardsBlock({ arrange = "fill" }: { arrange?: Arrange }) {
   const p = useWalkParts();
   if (!p) return <Placeholder label="Story cards" />;
-  return <StoryCards p={p} />;
+  return <StoryCards arrange={arrange} p={p} />;
 }
 
-function StoryCards({ p }: { p: WalkIdeaParts }) {
+function StoryCards({ p, arrange }: { p: WalkIdeaParts; arrange: Arrange }) {
   const info = useWalkInfo(p);
   const cards = [
     {
@@ -1442,11 +1504,17 @@ function StoryCards({ p }: { p: WalkIdeaParts }) {
       : []),
   ];
   return (
-    <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:px-0">
+    <div
+      className={
+        arrange === "scroll"
+          ? cn(SWIPE, "gap-3 [&>*]:w-44 sm:[&>*]:w-52")
+          : "grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(9rem,1fr))]"
+      }
+    >
       {cards.map((card) => (
         <div
           className={cn(
-            "flex w-44 shrink-0 snap-start flex-col justify-between gap-6 rounded-2xl p-4 sm:w-52",
+            "flex min-w-0 flex-col justify-between gap-6 rounded-2xl p-4",
             card.tone,
           )}
           key={card.label}
@@ -1699,16 +1767,21 @@ function PhasesBoard({ p }: { p: WalkIdeaParts }) {
 }
 
 /** The key facts as a grid of coloured blocks. */
-export function ColourBlocksBlock() {
+export function ColourBlocksBlock({ arrange = "fill" }: { arrange?: Arrange }) {
   const p = useWalkParts();
   if (!p) return <Placeholder label="Colour blocks" />;
-  return <ColourBlocks p={p} />;
+  return <ColourBlocks arrange={arrange} p={p} />;
 }
 
-function ColourBlocks({ p }: { p: WalkIdeaParts }) {
+function ColourBlocks({ p, arrange }: { p: WalkIdeaParts; arrange: Arrange }) {
   const info = useWalkInfo(p);
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+    <div
+      className={cn(
+        "grid grid-cols-2 gap-2 sm:grid-cols-4",
+        arrange === "scroll" && cn(SWIPE, "[&>*]:w-48"),
+      )}
+    >
       <div
         className={cn(
           "col-span-2 flex flex-col justify-between gap-6 rounded-2xl p-5",
@@ -1749,7 +1822,7 @@ function ColourBlocks({ p }: { p: WalkIdeaParts }) {
 }
 
 /** Round badges for the walk's numbers. */
-export function BadgesBlock() {
+export function BadgesBlock({ arrange = "fill" }: { arrange?: Arrange }) {
   const p = useWalkParts();
   if (!p) return <Placeholder label="Round badges" />;
   const h = p.headline;
@@ -1782,7 +1855,13 @@ export function BadgesBlock() {
     },
   ];
   return (
-    <div className="flex flex-wrap gap-4">
+    <div
+      className={
+        arrange === "scroll"
+          ? cn(SWIPE, "gap-4 py-1")
+          : "flex flex-wrap justify-between gap-4"
+      }
+    >
       {badges.map((badge) => (
         <div
           className={cn(
@@ -1803,5 +1882,166 @@ export function BadgesBlock() {
         </div>
       ))}
     </div>
+  );
+}
+
+// ── Single pieces, to place anywhere ─────────────────────────────────────
+export const FACT_NAMES = [
+  "Date",
+  "Starts",
+  "Finishes",
+  "Length",
+  "Meeting point",
+  "what3words",
+  "Distance",
+  "Climb",
+  "Grade",
+  "Walk leader",
+  "Back marker",
+] as const;
+export type FactName = (typeof FACT_NAMES)[number];
+export type FactLook = "line" | "tile" | "big";
+
+/** One fact on its own (members only see it when it's filled in). */
+export function FactBlock({
+  fact = "Date",
+  look = "tile",
+}: {
+  fact?: FactName;
+  look?: FactLook;
+}) {
+  const p = useWalkParts();
+  if (!p) return <Placeholder label={`Fact · ${fact}`} />;
+  return <OneFact fact={fact} look={look} p={p} />;
+}
+
+function OneFact({
+  p,
+  fact,
+  look,
+}: {
+  p: WalkIdeaParts;
+  fact: FactName;
+  look: FactLook;
+}) {
+  const found = useWalkInfo(p).facts.find((item) => item.label === fact);
+  if (!found) return null;
+  if (look === "line")
+    return (
+      <p className="flex items-center gap-2 text-sm" suppressHydrationWarning>
+        <found.icon aria-hidden className="size-4 text-muted-foreground" />
+        <span className="text-muted-foreground">{found.label}</span>
+        <span className="font-medium">{found.value}</span>
+      </p>
+    );
+  if (look === "big")
+    return (
+      <div className="flex flex-col">
+        <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <found.icon aria-hidden className="size-4" />
+          {found.label}
+        </span>
+        <span
+          className="text-3xl font-semibold tracking-tight break-words sm:text-4xl"
+          suppressHydrationWarning
+        >
+          {found.value}
+        </span>
+      </div>
+    );
+  return (
+    <div className="flex min-w-0 flex-col gap-1 rounded-xl bg-muted/60 p-3">
+      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <found.icon aria-hidden className="size-3.5" />
+        {found.label}
+      </span>
+      <span
+        className="text-sm font-semibold break-words"
+        suppressHydrationWarning
+      >
+        {found.value}
+      </span>
+    </div>
+  );
+}
+
+export type CountdownLook = "big" | "box" | "pill";
+
+/** How long until the walk sets off (or finishes, while it's under way). */
+export function CountdownBlock({ look = "big" }: { look?: CountdownLook }) {
+  const p = useWalkParts();
+  if (!p) return <Placeholder label={`Countdown · ${look}`} />;
+  return <Countdown look={look} p={p} />;
+}
+
+function Countdown({ p, look }: { p: WalkIdeaParts; look: CountdownLook }) {
+  const { countdown, now } = useWalkInfo(p);
+  if (look === "pill")
+    return (
+      <span
+        className={cn(
+          "inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium",
+          now.tone,
+        )}
+        suppressHydrationWarning
+      >
+        <Clock aria-hidden className="size-3.5" />
+        {countdown.value} {countdown.unit}
+      </span>
+    );
+  return (
+    <div
+      className={cn(
+        "flex flex-col",
+        look === "box" && cn("rounded-2xl p-5", now.tone),
+      )}
+      suppressHydrationWarning
+    >
+      <span className="text-5xl font-black tracking-tight sm:text-6xl">
+        {countdown.value}
+      </span>
+      <span className="text-sm text-muted-foreground uppercase">
+        {countdown.unit}
+      </span>
+    </div>
+  );
+}
+
+/** The walk's status badge (Upcoming, Clock-in open, In progress…), with its line of words or without. */
+export function StatusBadgeBlock({ withLine = true }: { withLine?: boolean }) {
+  const p = useWalkParts();
+  if (!p) return <Placeholder label="Status badge" />;
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Badge p={p} />
+      {withLine ? <StatusLine p={p} /> : null}
+    </div>
+  );
+}
+
+/** The day's timeline: clock-in opens, set off, finish, and how far along it is. */
+export const TimelineBlock = withParts("The day's timeline", (p) => (
+  <Timeline p={p} />
+));
+
+/** The walk's name on its own. */
+export function WalkNameBlock({
+  size = "large",
+}: {
+  size?: "small" | "large" | "huge";
+}) {
+  const p = useWalkParts();
+  if (!p) return <Placeholder label="Walk name" />;
+  return (
+    <h1
+      className={cn(
+        "leading-tight font-semibold tracking-tight text-balance",
+        size === "small" && "text-xl",
+        size === "large" && "text-2xl sm:text-3xl",
+        size === "huge" && "text-4xl font-black sm:text-6xl",
+      )}
+    >
+      {p.headline.title}
+    </h1>
   );
 }

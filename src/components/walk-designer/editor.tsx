@@ -8,6 +8,8 @@ import { Puck, type Data } from "@puckeditor/core";
 import { toast } from "sonner";
 import { X } from "lucide-react";
 import { saveWalkDesign } from "@/server/actions";
+import { WalkClockPreview } from "@/hooks/use-walk-clock";
+import { effectiveEndsAt, walkOpensAt } from "@/lib/walk-window";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -28,6 +30,35 @@ const AUDIENCES: { id: WalkDesignAudience; label: string }[] = [
   { id: "member", label: "Members" },
   { id: "visitor", label: "Signed-out visitors" },
 ];
+
+type Moment = "now" | "before" | "open" | "under-way" | "finished";
+const MOMENTS: { id: Moment; label: string }[] = [
+  { id: "now", label: "As it is now" },
+  { id: "before", label: "Before clock-in opens" },
+  { id: "open", label: "Clock-in open" },
+  { id: "under-way", label: "Under way" },
+  { id: "finished", label: "Finished" },
+];
+
+/** A time when the walk is at that moment, for the preview's pretend clock (null: the real time). */
+function momentTime(parts: WalkIdeaParts, moment: Moment): Date | null {
+  if (moment === "now") return null;
+  const start = new Date(parts.timing.startsAt);
+  const minute = 60_000;
+  if (moment === "before")
+    return new Date(walkOpensAt(start).getTime() - 3 * 60 * minute);
+  if (moment === "open") return new Date(start.getTime() - 10 * minute);
+  if (moment === "under-way")
+    return new Date(
+      start.getTime() + Math.min(30, parts.timing.durationMins / 2) * minute,
+    );
+  const end = effectiveEndsAt({
+    durationMins: parts.timing.durationMins,
+    endedAt: parts.timing.endedAt ? new Date(parts.timing.endedAt) : null,
+    startsAt: start,
+  });
+  return new Date(end.getTime() + 2 * 60 * minute);
+}
 
 /** What each audience's preview shows: members have no organiser buttons or Attended list; visitors no clock-in either. */
 function partsFor(
@@ -68,7 +99,9 @@ export function WalkDesignEditor({
       ? designs.organiser
       : DEFAULT_WALK_DESIGN(),
   }));
+  const [moment, setMoment] = useState<Moment>("now");
   const preview = useMemo(() => partsFor(parts, audience), [parts, audience]);
+  const pretendNow = useMemo(() => momentTime(parts, moment), [parts, moment]);
 
   function open(next: WalkDesignAudience) {
     setAudience(next);
@@ -130,6 +163,21 @@ export function WalkDesignEditor({
             ))}
           </SelectContent>
         </Select>
+        <Select
+          onValueChange={(value) => setMoment(value as Moment)}
+          value={moment}
+        >
+          <SelectTrigger aria-label="Show the walk" className="h-8 w-52">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {MOMENTS.map((item) => (
+              <SelectItem key={item.id} value={item.id}>
+                Preview: {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Button
           aria-label="Close the designer"
           className="ml-auto"
@@ -142,15 +190,19 @@ export function WalkDesignEditor({
         </Button>
       </div>
       <div className="min-h-0 flex-1">
-        <WalkPartsProvider parts={preview}>
-          <Puck
-            config={walkDesignConfig}
-            data={start.data}
-            headerTitle={AUDIENCES.find((item) => item.id === audience)?.label}
-            key={`${audience}-${start.key}`}
-            onPublish={publish}
-          />
-        </WalkPartsProvider>
+        <WalkClockPreview.Provider value={pretendNow}>
+          <WalkPartsProvider parts={preview}>
+            <Puck
+              config={walkDesignConfig}
+              data={start.data}
+              headerTitle={
+                AUDIENCES.find((item) => item.id === audience)?.label
+              }
+              key={`${audience}-${start.key}`}
+              onPublish={publish}
+            />
+          </WalkPartsProvider>
+        </WalkClockPreview.Provider>
       </div>
     </div>
   );
