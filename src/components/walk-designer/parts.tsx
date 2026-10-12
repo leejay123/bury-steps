@@ -2,6 +2,7 @@
 
 import { createContext, useContext, type ReactNode } from "react";
 import type { WalkIdeaParts } from "@/components/walk-idea-layouts";
+import type { WalkDesignAudience } from "@/lib/walk-page-choice";
 
 /**
  * The walk's parts (its details, map, forecast, clock-in, who attended…)
@@ -10,6 +11,13 @@ import type { WalkIdeaParts } from "@/components/walk-idea-layouts";
  * every other layout, and the blocks only arrange and style them.
  */
 const WalkPartsContext = createContext<WalkIdeaParts | null>(null);
+
+/**
+ * The designer's chosen audience, so its preview shows what they'd see —
+ * including parts the site hides from whoever's signed in (visitors' "How
+ * this group works", for example). Real walk pages don't set it.
+ */
+export const PreviewAudience = createContext<WalkDesignAudience | null>(null);
 
 export function WalkPartsProvider({
   children,

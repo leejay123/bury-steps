@@ -213,9 +213,16 @@ export function WalksSection({
               tab style from Settings, grey pill, sliding underline or pills
               that drop in — and tab widths that share the full width, fit the
               names from the left, or fit them centred; drop any blocks into
-              each tab. The
+              each tab. In the designer every tab&apos;s area, and every folding
+              section, is shown open so blocks can be dropped into each; the
+              page itself shows one tab at a time. Block layout also has
+              Shadows (keep or remove), and the Details card&apos;s map has its
+              own directions-buttons and height options. The preview shows
+              exactly what the chosen audience would see — Signed-out visitors
+              includes How this group works — whoever is signed in. The
               Preview menu at the top shows the walk before clock-in opens,
-              with clock-in open, under way or finished, so you can see how
+              with clock-in open, under way, finished or cancelled, and a second menu pretends
+              you have or haven&apos;t clocked in, so you can see how
               the design changes (Clock in only appears while clock-in is
               open; buttons that depend on the real time, such as Edit, stay as
               they are now). On every layout the walk&apos;s actions are one{" "}

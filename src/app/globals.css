@@ -556,6 +556,19 @@ html[data-remembered-in] [data-guest-home] {
   display: none;
 }
 
+/* The walk page designer's preview shows what its chosen audience would
+   see, whoever is signed in: both kinds of part come back (revert-layer
+   returns them to their own display), then the other audience's go. */
+html body [data-preview-audience] [data-member-home],
+html body [data-preview-audience] [data-guest-home] {
+  display: revert-layer;
+}
+html body [data-preview-audience="visitor"] [data-member-home],
+html body [data-preview-audience="member"] [data-guest-home],
+html body [data-preview-audience="organiser"] [data-guest-home] {
+  display: none;
+}
+
 /* The cookie-drawn header steps aside the moment the real one is on screen.
    The real one first arrives in React's hidden holding area (<div hidden>)
    and is moved into place a little later; stepping aside on arrival left the

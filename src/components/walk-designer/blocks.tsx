@@ -842,6 +842,8 @@ export type DetailsOptions = {
   facts?: FactsVariant;
   factsArrange?: Arrange;
   map?: "none" | "top" | "side" | "bottom";
+  mapButtons?: "below" | "above" | "none";
+  mapHeight?: "short" | "medium" | "tall";
   tone?: "card" | "tint" | "dark" | "plain";
   ribbon?: boolean;
   timeline?: boolean;
@@ -924,49 +926,56 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
     </div>
   );
   return (
-    <section
-      aria-label="Walk details"
-      className={cn(
-        "overflow-hidden",
-        o.tone === "plain"
-          ? ""
-          : "rounded-2xl border in-data-[bleed]:rounded-none in-data-[bleed]:border-x-0",
-        dark && "border-neutral-800 bg-neutral-950 text-white",
-        o.tone === "tint" && "bg-muted/40",
-        (!o.tone || o.tone === "card") && "bg-card shadow-sm",
-      )}
+    <MapLookProvider
+      value={{
+        buttons: o.mapButtons ?? "below",
+        height: o.mapHeight ?? "medium",
+      }}
     >
-      {o.ribbon ? (
-        // A band across the top of the card saying where the walk is up to.
-        <div
-          className={cn(
-            "flex items-center gap-2 px-5 py-2 text-sm sm:px-6",
-            info.now.tone,
-          )}
-          suppressHydrationWarning
-        >
-          <span
-            aria-hidden
+      <section
+        aria-label="Walk details"
+        className={cn(
+          "overflow-hidden",
+          o.tone === "plain"
+            ? ""
+            : "rounded-2xl border in-data-[bleed]:rounded-none in-data-[bleed]:border-x-0",
+          dark && "border-neutral-800 bg-neutral-950 text-white",
+          o.tone === "tint" && "bg-muted/40",
+          (!o.tone || o.tone === "card") && "bg-card shadow-sm",
+        )}
+      >
+        {o.ribbon ? (
+          // A band across the top of the card saying where the walk is up to.
+          <div
             className={cn(
-              "size-2 shrink-0 rounded-full",
-              info.now.live ? "bg-emerald-500" : "bg-current opacity-40",
+              "flex items-center gap-2 px-5 py-2 text-sm sm:px-6",
+              info.now.tone,
             )}
-          />
-          <span className="font-semibold">{info.now.eyebrow}</span>
-          <span className="truncate opacity-80">{info.now.line}</span>
-        </div>
-      ) : null}
-      {map === "top" ? <FlushMap className="border-b" p={p} /> : null}
-      {map === "side" && p.map ? (
-        <div className="grid lg:grid-cols-[minmax(0,1fr)_24rem]">
-          {body}
-          <FlushMap className="border-t lg:border-t-0 lg:border-l" p={p} />
-        </div>
-      ) : (
-        body
-      )}
-      {map === "bottom" ? <FlushMap className="border-t" p={p} /> : null}
-    </section>
+            suppressHydrationWarning
+          >
+            <span
+              aria-hidden
+              className={cn(
+                "size-2 shrink-0 rounded-full",
+                info.now.live ? "bg-emerald-500" : "bg-current opacity-40",
+              )}
+            />
+            <span className="font-semibold">{info.now.eyebrow}</span>
+            <span className="truncate opacity-80">{info.now.line}</span>
+          </div>
+        ) : null}
+        {map === "top" ? <FlushMap className="border-b" p={p} /> : null}
+        {map === "side" && p.map ? (
+          <div className="grid lg:grid-cols-[minmax(0,1fr)_24rem]">
+            {body}
+            <FlushMap className="border-t lg:border-t-0 lg:border-l" p={p} />
+          </div>
+        ) : (
+          body
+        )}
+        {map === "bottom" ? <FlushMap className="border-t" p={p} /> : null}
+      </section>
+    </MapLookProvider>
   );
 }
 

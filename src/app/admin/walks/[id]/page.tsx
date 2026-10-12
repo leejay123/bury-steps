@@ -22,6 +22,7 @@ import { WalkActionsBar } from "@/components/walk-manage-menu";
 import { EmptyState } from "@/components/empty-state";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { WalkMapSection } from "@/components/walk-map-section";
+import { HowWalksWork } from "@/components/how-walks-work";
 import { WalkForecastSection } from "@/components/walk-forecast";
 import { meetingPointLabel } from "@/lib/geocode";
 import { What3wordsLink } from "@/components/what3words-link";
@@ -558,6 +559,14 @@ async function WalkDetailPageContent({ id }: { id: string }) {
     timing,
     tips: theme.beforeYouSetOffTips,
     tools,
+    // For the walk page designer's signed-out visitor preview (hidden from
+    // anyone signed in, as on the members' walk page).
+    howItWorks:
+      walk.cancelledAt || !theme.howWalksWorkEnabled ? null : (
+        <div className="contents" data-guest-home="">
+          <HowWalksWork steps={theme.howWalksWorkSteps} />
+        </div>
+      ),
     what3words: walk.what3words,
     walk: {
       backMarker: walk.backMarker,

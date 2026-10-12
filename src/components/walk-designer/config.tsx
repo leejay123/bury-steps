@@ -1,7 +1,8 @@
 "use client";
 
 import type { ComponentConfig, Config } from "@puckeditor/core";
-import type { ReactNode } from "react";
+import { useContext, type ReactNode } from "react";
+import { PreviewAudience } from "./parts";
 import { cn } from "@/lib/utils";
 import {
   Accordion,
@@ -97,6 +98,7 @@ type BlockLayout = {
   heading?: string;
   showOn?: "all" | "phones" | "computers";
   buttons?: "as-is" | "phones" | "always";
+  shadows?: "keep" | "none";
 };
 const BLOCK_LAYOUT: BlockLayout = {
   width: "page",
@@ -104,6 +106,7 @@ const BLOCK_LAYOUT: BlockLayout = {
   heading: "",
   showOn: "all",
   buttons: "as-is",
+  shadows: "keep",
 };
 const blockLayoutField = {
   type: "object" as const,
@@ -140,6 +143,14 @@ const blockLayoutField = {
         ["always", "Full width everywhere"],
       ]),
     },
+    shadows: {
+      type: "radio" as const,
+      label: "Shadows",
+      options: options([
+        ["keep", "Keep"],
+        ["none", "Remove"],
+      ]),
+    },
     showOn: {
       type: "radio" as const,
       label: "Show on",
@@ -152,6 +163,19 @@ const blockLayoutField = {
   },
 };
 
+/** The page; in the designer's preview it's marked with the audience being designed for (globals.css). */
+function PageRoot({ children }: { children: ReactNode }) {
+  const audience = useContext(PreviewAudience);
+  return (
+    <div
+      className="flex flex-col gap-6"
+      data-preview-audience={audience ?? undefined}
+    >
+      {children}
+    </div>
+  );
+}
+
 function BlockFrame({
   children,
   layout,
@@ -159,7 +183,7 @@ function BlockFrame({
   children: ReactNode;
   layout?: BlockLayout;
 }) {
-  const { width, frame, heading, showOn, buttons } = {
+  const { width, frame, heading, showOn, buttons, shadows } = {
     ...BLOCK_LAYOUT,
     ...layout,
   };
@@ -177,6 +201,7 @@ function BlockFrame({
           "max-sm:[&_[data-slot=button]]:w-full max-sm:[&_[data-slot=button]]:flex-1",
         buttons === "always" &&
           "[&_[data-slot=button]]:w-full [&_[data-slot=button]]:flex-1",
+        shadows === "none" && "[&_*]:shadow-none",
         showOn === "phones" && "md:hidden",
         showOn === "computers" && "max-md:hidden",
       )}
@@ -341,6 +366,24 @@ export const walkDesignConfig: Config = {
             ["bottom", "Along the bottom"],
           ]),
         },
+        mapButtons: {
+          type: "select",
+          label: "Map's directions buttons",
+          options: options([
+            ["below", "Below the map"],
+            ["above", "Above the map"],
+            ["none", "Hide them"],
+          ]),
+        },
+        mapHeight: {
+          type: "radio",
+          label: "Map height",
+          options: options([
+            ["short", "Short"],
+            ["medium", "Medium"],
+            ["tall", "Tall"],
+          ]),
+        },
         tone: {
           type: "select",
           label: "Look",
@@ -375,6 +418,8 @@ export const walkDesignConfig: Config = {
         facts: "grid",
         factsArrange: "fill",
         map: "none",
+        mapButtons: "below",
+        mapHeight: "medium",
         tone: "card",
         showTitle: true,
         showActions: true,
@@ -388,6 +433,8 @@ export const walkDesignConfig: Config = {
         facts,
         factsArrange,
         map,
+        mapButtons,
+        mapHeight,
         tone,
         showTitle,
         showActions,
@@ -402,6 +449,8 @@ export const walkDesignConfig: Config = {
           facts={facts}
           factsArrange={factsArrange}
           map={map}
+          mapButtons={mapButtons}
+          mapHeight={mapHeight}
           ribbon={ribbon}
           showActions={showActions}
           showDescription={showDescription}
@@ -954,7 +1003,10 @@ export const walkDesignConfig: Config = {
           { label: "Journey", content: [] },
         ],
       },
-      render: ({ style, fit, sticky, tabs }) => {
+      render: ({ style, fit, sticky, tabs, puck }) => {
+        // In the designer every tab's area is shown, one under another, so
+        // blocks can be dropped into any tab (a hidden tab can't be reached).
+        const editing = Boolean(puck?.isEditing);
         const list = (tabs ?? []) as {
           label: string;
           content: (props: { className?: string }) => React.ReactNode;
@@ -985,7 +1037,17 @@ export const walkDesignConfig: Config = {
             </div>
             {list.map((tab, i) => {
               const Content = tab.content;
-              return (
+              return editing ? (
+                <div
+                  className="mt-4 flex flex-col gap-2 rounded-xl border border-dashed p-3"
+                  key={i}
+                >
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Tab {i + 1}: {tab.label} (drop its blocks here)
+                  </span>
+                  <Content className="flex min-h-16 flex-col gap-6" />
+                </div>
+              ) : (
                 <TabsContent className="mt-4" key={i} value={`tab-${i}`}>
                   <Content className="flex flex-col gap-6" />
                 </TabsContent>
@@ -1019,7 +1081,7 @@ export const walkDesignConfig: Config = {
       defaultProps: {
         items: [{ label: "Map & weather", open: true, content: [] }],
       },
-      render: ({ items }) => {
+      render: ({ items, puck }) => {
         const list = (items ?? []) as {
           label: string;
           open: boolean;
@@ -1028,9 +1090,11 @@ export const walkDesignConfig: Config = {
         return (
           <Accordion
             className={cn("rounded-2xl border px-4", BLEED)}
+            // All open in the designer, so blocks can be dropped into each.
             defaultValue={list.flatMap((item, i) =>
-              item.open ? [`item-${i}`] : [],
+              item.open || puck?.isEditing ? [`item-${i}`] : [],
             )}
+            key={puck?.isEditing ? "editing" : "page"}
             type="multiple"
           >
             {list.map((item, i) => {
@@ -1093,7 +1157,7 @@ export const walkDesignConfig: Config = {
   }),
   root: {
     render: ({ children }: { children: React.ReactNode }) => (
-      <div className="flex flex-col gap-6">{children}</div>
+      <PageRoot>{children}</PageRoot>
     ),
   },
 };

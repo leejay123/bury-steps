@@ -14,6 +14,16 @@ const ONE_MINUTE_MS = 60_000;
  */
 export const WalkClockPreview = createContext<Date | null>(null);
 
+/** The designer's preview of whether "you" have clocked in (null: as it really is). */
+export const WalkClockInPreview = createContext<"in" | "not-in" | null>(null);
+
+/** Clocked-in times, or the designer's pretend ones. */
+export function useClockedInPreview(alreadyClockedInAt: string | null, clockedOutAt: string | null, startsAt: string) {
+  const pretend = useContext(WalkClockInPreview);
+  if (pretend === null) return { alreadyClockedInAt, clockedOutAt };
+  return { alreadyClockedInAt: pretend === "in" ? startsAt : null, clockedOutAt: null };
+}
+
 /**
  * A clock that jumps forward at the next walk-status boundary (clock-in
  * opens, start, scheduled end, window closes) so badges and copy update

@@ -7,17 +7,17 @@ import { ClockOutButton } from "@/components/clock-out-button";
 import { WalkMembers } from "@/components/walk-members";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { useHydrated } from "@/hooks/use-hydrated";
-import { useWalkClock } from "@/hooks/use-walk-clock";
+import { useClockedInPreview, useWalkClock } from "@/hooks/use-walk-clock";
 import { formatWalkDate } from "@/lib/dates";
 import { effectiveEndsAt, formatInProgressCountdown, walkStatus, windowState } from "@/lib/walk-window";
 import { Button } from "@/components/ui/button";
 import type { WalkMemberName } from "@/lib/walk-members";
 
 export function WalkLivePanel({
-  alreadyClockedInAt,
+  alreadyClockedInAt: realClockedInAt,
   beforeYouSetOffEnabled,
   beforeYouSetOffTips,
-  clockedOutAt = null,
+  clockedOutAt: realClockedOutAt = null,
   durationMins,
   emergencyContactName = "",
   emergencyContactPhone = "",
@@ -49,6 +49,8 @@ export function WalkLivePanel({
   token: string;
   walksHref: string;
 }) {
+  // The walk page designer can pretend you have (or haven't) clocked in.
+  const { alreadyClockedInAt, clockedOutAt } = useClockedInPreview(realClockedInAt, realClockedOutAt, startsAt);
   const start = new Date(startsAt);
   const now = useWalkClock({ cancelledAt: null, durationMins, endedAt, startsAt });
   const walk = { cancelledAt: null, durationMins, endedAt: endedAt ? new Date(endedAt) : null, startsAt: start };

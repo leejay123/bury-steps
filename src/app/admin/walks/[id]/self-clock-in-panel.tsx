@@ -2,7 +2,7 @@
 
 import { ClockInDrawer } from "@/app/w/[token]/clock-in-drawer";
 import { ClockOutButton } from "@/components/clock-out-button";
-import { useWalkClock } from "@/hooks/use-walk-clock";
+import { useClockedInPreview, useWalkClock } from "@/hooks/use-walk-clock";
 import { formatDateTime, formatTime, formatWalkDay } from "@/lib/dates";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { walkOpensAt, walkStatus, windowState } from "@/lib/walk-window";
@@ -12,9 +12,9 @@ import { walkOpensAt, walkStatus, windowState } from "@/lib/walk-window";
  * organisers use the pre-walk check and are recorded on the attendance list.
  */
 export function SelfClockInPanel({
-  alreadyClockedInAt,
+  alreadyClockedInAt: realClockedInAt,
   buttonElsewhere = false,
-  clockedOutAt = null,
+  clockedOutAt: realClockedOutAt = null,
   compact = false,
   durationMins,
   emergencyContactName = "",
@@ -38,6 +38,8 @@ export function SelfClockInPanel({
   startsAt: string;
   token: string;
 }) {
+  // The walk page designer can pretend you have (or haven't) clocked in.
+  const { alreadyClockedInAt, clockedOutAt } = useClockedInPreview(realClockedInAt, realClockedOutAt, startsAt);
   const start = new Date(startsAt);
   const now = useWalkClock({ cancelledAt: null, durationMins, endedAt, startsAt });
   const walk = { cancelledAt: null, durationMins, endedAt: endedAt ? new Date(endedAt) : null, startsAt: start };
