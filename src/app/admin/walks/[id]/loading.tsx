@@ -10,7 +10,7 @@ import {
   WalkHeadlineSkeleton,
   WalkTabsSkeleton,
 } from "@/components/walk-page-skeletons";
-import { isWalkIdeaLayout, isWalkTabsVariant } from "@/lib/walk-page-sections";
+import { isWalkGalleryLayout, isWalkIdeaLayout, isWalkTabsVariant } from "@/lib/walk-page-sections";
 import { getSiteTheme } from "@/lib/site-theme";
 
 /**
@@ -32,7 +32,9 @@ async function OrganiserWalkLoading() {
         &larr; All walks
       </Link>
 
-      {isWalkTabsVariant(theme.walkPageLayout) || isWalkIdeaLayout(theme.walkPageLayout) ? (
+      {isWalkTabsVariant(theme.walkPageLayout) ||
+    isWalkIdeaLayout(theme.walkPageLayout) ||
+    isWalkGalleryLayout(theme.walkPageLayout) ? (
         // A to D, the one-column layouts with tabs: the title line, then the
         // tabs with Overview's details.
         <>

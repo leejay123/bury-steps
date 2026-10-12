@@ -21,8 +21,9 @@ import { WalkJourneyDrawer } from "@/components/walk-journey-drawer";
 import { WalkJourneyTimeline } from "@/components/walk-journey-timeline";
 import { WalkPageColumns, type WalkPageTab } from "@/components/walk-page-columns";
 import { WalkTabsLayout } from "@/components/walk-tabs-layout";
-import { WalkIdeaLayouts } from "@/components/walk-idea-layouts";
-import { isWalkIdeaLayout, isWalkTabsVariant, type WalkPageSectionId } from "@/lib/walk-page-sections";
+import { WalkGalleryLayouts } from "@/components/walk-gallery-layouts";
+import { WalkIdeaLayouts, type WalkIdeaParts } from "@/components/walk-idea-layouts";
+import { isWalkGalleryLayout, isWalkIdeaLayout, isWalkTabsVariant, type WalkPageSectionId } from "@/lib/walk-page-sections";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { HowWalksWork } from "@/components/how-walks-work";
 import { getWalkMemberNames } from "@/lib/walk-members";
@@ -315,10 +316,87 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
   );
   const visibleSections = theme.walkPageSections.filter(({ visible }) => visible);
 
-  if (isWalkIdeaLayout(theme.walkPageLayout)) {
+  if (isWalkIdeaLayout(theme.walkPageLayout) || isWalkGalleryLayout(theme.walkPageLayout)) {
+    const layout = theme.walkPageLayout;
     // The 20 further designs (WalkIdeaLayouts), the same as the organiser's
     // walk page; members have no organiser buttons, so only their parts show.
     const shown = (id: WalkPageSectionId) => visibleSections.some((section) => section.id === id);
+    const ideaParts: WalkIdeaParts = {
+      attended: null,
+      before: shown("before") ? renderSection("before") : null,
+      details: (
+        <>
+          <WalkShareStatusChrome
+            backMarker={walk.backMarker}
+            cancelledAt={cancelledAtIso}
+            cancelledReason={walk.cancelledReason}
+            description={walk.description}
+            distance={walk.distance}
+            durationMins={walk.durationMins}
+            endedAt={endedAtIso}
+            elevationGain={walk.elevationGain}
+            essentials={walk.essentials}
+            grade={walk.grade}
+            icsHref={`/w/${slug}/ics`}
+            location={walk.location}
+            postcode={walk.postcode}
+            startsAt={startsAtIso}
+            title={walk.title}
+            walkLeader={walk.walkLeader}
+            walkUrl={walkUrl}
+            part="details"
+          />
+          {howWalksWork}
+        </>
+      ),
+      forecast: shown("forecast") ? renderSection("forecast") : null,
+      headline: {
+        cancelledAt: cancelledAtIso,
+        distance: walk.distance,
+        durationMins: walk.durationMins,
+        elevationGain: walk.elevationGain,
+        endedAt: endedAtIso,
+        grade: walk.grade,
+        location: walk.location,
+        postcode: walk.postcode,
+        startsAt: startsAtIso,
+        title: walk.title,
+        walkLeader: walk.walkLeader,
+      },
+      journey:
+        journeyEvents.length > 0
+          ? { count: journeyEvents.length, content: <WalkJourneyTimeline events={journeyEvents} /> }
+          : null,
+      live,
+      map: shown("map") ? renderSection("map") : null,
+      meeting,
+      notices: (
+        <WalkShareStatusChrome
+          backMarker={walk.backMarker}
+          cancelledAt={cancelledAtIso}
+          cancelledReason={walk.cancelledReason}
+          description={walk.description}
+          distance={walk.distance}
+          durationMins={walk.durationMins}
+          endedAt={endedAtIso}
+          elevationGain={walk.elevationGain}
+          essentials={walk.essentials}
+          grade={walk.grade}
+          icsHref={`/w/${slug}/ics`}
+          location={walk.location}
+          postcode={walk.postcode}
+          startsAt={startsAtIso}
+          title={walk.title}
+          walkLeader={walk.walkLeader}
+          walkUrl={walkUrl}
+          part="notices"
+        />
+      ),
+      precise: shown("precise") ? renderSection("precise") : null,
+      timing: { cancelledAt: cancelledAtIso, durationMins: walk.durationMins, endedAt: endedAtIso, startsAt: startsAtIso },
+      tips: theme.beforeYouSetOffTips,
+      what3words: walk.what3words,
+    };
     return (
       <div className="flex flex-col gap-6">
         <span className="text-sm text-muted-foreground">
@@ -329,85 +407,11 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
             ← Home
           </Link>
         </span>
-        <WalkIdeaLayouts
-          layout={theme.walkPageLayout}
-          parts={{
-            attended: null,
-            before: shown("before") ? renderSection("before") : null,
-            details: (
-              <>
-                <WalkShareStatusChrome
-                  backMarker={walk.backMarker}
-                  cancelledAt={cancelledAtIso}
-                  cancelledReason={walk.cancelledReason}
-                  description={walk.description}
-                  distance={walk.distance}
-                  durationMins={walk.durationMins}
-                  endedAt={endedAtIso}
-                  elevationGain={walk.elevationGain}
-                  essentials={walk.essentials}
-                  grade={walk.grade}
-                  icsHref={`/w/${slug}/ics`}
-                  location={walk.location}
-                  postcode={walk.postcode}
-                  startsAt={startsAtIso}
-                  title={walk.title}
-                  walkLeader={walk.walkLeader}
-                  walkUrl={walkUrl}
-                  part="details"
-                />
-                {howWalksWork}
-              </>
-            ),
-            forecast: shown("forecast") ? renderSection("forecast") : null,
-            headline: {
-              cancelledAt: cancelledAtIso,
-              distance: walk.distance,
-              durationMins: walk.durationMins,
-              elevationGain: walk.elevationGain,
-              endedAt: endedAtIso,
-              grade: walk.grade,
-              location: walk.location,
-              postcode: walk.postcode,
-              startsAt: startsAtIso,
-              title: walk.title,
-              walkLeader: walk.walkLeader,
-            },
-            journey:
-              journeyEvents.length > 0
-                ? { count: journeyEvents.length, content: <WalkJourneyTimeline events={journeyEvents} /> }
-                : null,
-            live,
-            map: shown("map") ? renderSection("map") : null,
-            meeting,
-            notices: (
-              <WalkShareStatusChrome
-                backMarker={walk.backMarker}
-                cancelledAt={cancelledAtIso}
-                cancelledReason={walk.cancelledReason}
-                description={walk.description}
-                distance={walk.distance}
-                durationMins={walk.durationMins}
-                endedAt={endedAtIso}
-                elevationGain={walk.elevationGain}
-                essentials={walk.essentials}
-                grade={walk.grade}
-                icsHref={`/w/${slug}/ics`}
-                location={walk.location}
-                postcode={walk.postcode}
-                startsAt={startsAtIso}
-                title={walk.title}
-                walkLeader={walk.walkLeader}
-                walkUrl={walkUrl}
-                part="notices"
-              />
-            ),
-            precise: shown("precise") ? renderSection("precise") : null,
-            timing: { cancelledAt: cancelledAtIso, durationMins: walk.durationMins, endedAt: endedAtIso, startsAt: startsAtIso },
-            tips: theme.beforeYouSetOffTips,
-            what3words: walk.what3words,
-          }}
-        />
+        {isWalkGalleryLayout(layout) ? (
+          <WalkGalleryLayouts layout={layout} parts={ideaParts} />
+        ) : (
+          <WalkIdeaLayouts layout={layout} parts={ideaParts} />
+        )}
       </div>
     );
   }

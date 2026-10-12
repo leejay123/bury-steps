@@ -131,8 +131,13 @@ export function WalksSection({
               and four key facts; H3, a box with a coloured status band and one Manage button;
               or H4, the controls in two boxes, You and Organise this walk. The list also has 23
               more designs to try, numbered 1 to 23 (Minimal document to Spec sheet, then
-              Countdown ring, Floating action dock and Split header), each with the same parts
-              arranged differently. The walk&apos;s buttons are one button group: Clock in, Copy
+              Countdown ring, Floating action dock and Split header), then 24 to 53, grouped by
+              look — polished app (Trail card, Activity, Listing with booking card…), clean and
+              minimal (Properties panel, Docs with contents, Type first…), bold outdoors
+              (Trailhead sign, Poster, Status takeover…) and organiser dashboard (Control room,
+              Phases board, Cockpit…) — each with the same parts arranged differently, and the
+              walk&apos;s buttons placed differently: all visible, a button group, one Manage
+              list, a list down the side, or a dock at the bottom of the screen. The walk&apos;s buttons are one button group: Clock in, Copy
               share link and ⋯, which opens the rest as a list (Remove walk in red at the
               bottom); where there&apos;s a single Manage button, it opens the same list. The
               Checklist&apos;s ticks are only remembered while the page is open. Switch back to One

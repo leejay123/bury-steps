@@ -81,6 +81,45 @@ export const WALK_IDEA_LAYOUTS = [
 ] as const;
 export type WalkIdeaLayout = (typeof WALK_IDEA_LAYOUTS)[number]["id"];
 
+/**
+ * 30 more designs (walk-gallery-layouts.tsx), numbered on from the ones
+ * above, in four looks: polished app, clean and minimal, bold outdoors, and
+ * organiser dashboard.
+ */
+export const WALK_GALLERY_LAYOUTS = [
+  { id: "trailcard", label: "Trail card", look: "Polished app" },
+  { id: "activity", label: "Activity", look: "Polished app" },
+  { id: "listing", label: "Listing with booking card", look: "Polished app" },
+  { id: "appsheet", label: "App sheet over the map", look: "Polished app" },
+  { id: "stories", label: "Story cards", look: "Polished app" },
+  { id: "colourhero", label: "Colour hero", look: "Polished app" },
+  { id: "event", label: "Event page", look: "Polished app" },
+  { id: "feed", label: "Feed", look: "Polished app" },
+  { id: "issue", label: "Properties panel", look: "Clean and minimal" },
+  { id: "doc", label: "Document with properties", look: "Clean and minimal" },
+  { id: "docs", label: "Docs with contents", look: "Clean and minimal" },
+  { id: "rows", label: "Quiet rows", look: "Clean and minimal" },
+  { id: "focus", label: "Focus", look: "Clean and minimal" },
+  { id: "breadcrumbs", label: "Breadcrumbs", look: "Clean and minimal" },
+  { id: "splitpane", label: "Split pane", look: "Clean and minimal" },
+  { id: "typographic", label: "Type first", look: "Clean and minimal" },
+  { id: "trailhead", label: "Trailhead sign", look: "Bold outdoors" },
+  { id: "blocks", label: "Colour blocks", look: "Bold outdoors" },
+  { id: "poster", label: "Poster", look: "Bold outdoors" },
+  { id: "badges", label: "Badges", look: "Bold outdoors" },
+  { id: "takeover", label: "Status takeover", look: "Bold outdoors" },
+  { id: "contours", label: "Contour lines", look: "Bold outdoors" },
+  { id: "ticket2", label: "Colour ticket", look: "Bold outdoors" },
+  { id: "controlroom", label: "Control room", look: "Organiser dashboard" },
+  { id: "adminsheet", label: "Admin sheet", look: "Organiser dashboard" },
+  { id: "threepanel", label: "Three panels", look: "Organiser dashboard" },
+  { id: "board", label: "Phases board", look: "Organiser dashboard" },
+  { id: "command", label: "Command bar", look: "Organiser dashboard" },
+  { id: "sidebarapp", label: "Sidebar app", look: "Organiser dashboard" },
+  { id: "cockpit", label: "Cockpit", look: "Organiser dashboard" },
+] as const;
+export type WalkGalleryLayout = (typeof WALK_GALLERY_LAYOUTS)[number]["id"];
+
 export const WALK_PAGE_LAYOUTS = [
   "classic",
   "columns",
@@ -89,8 +128,17 @@ export const WALK_PAGE_LAYOUTS = [
   "status",
   "tiles",
   ...WALK_IDEA_LAYOUTS.map((idea) => idea.id),
+  ...WALK_GALLERY_LAYOUTS.map((design) => design.id),
 ] as const;
-export type WalkPageLayout = "classic" | "columns" | "strip" | "sticky" | "status" | "tiles" | WalkIdeaLayout;
+export type WalkPageLayout =
+  | "classic"
+  | "columns"
+  | "strip"
+  | "sticky"
+  | "status"
+  | "tiles"
+  | WalkIdeaLayout
+  | WalkGalleryLayout;
 /** The one-column-with-tabs designs, A to D. */
 export type WalkTabsVariant = "strip" | "sticky" | "status" | "tiles";
 
@@ -104,6 +152,10 @@ export function isWalkTabsVariant(layout: WalkPageLayout): layout is WalkTabsVar
 
 export function isWalkIdeaLayout(layout: WalkPageLayout): layout is WalkIdeaLayout {
   return WALK_IDEA_LAYOUTS.some((idea) => idea.id === layout);
+}
+
+export function isWalkGalleryLayout(layout: WalkPageLayout): layout is WalkGalleryLayout {
+  return WALK_GALLERY_LAYOUTS.some((design) => design.id === layout);
 }
 
 /**

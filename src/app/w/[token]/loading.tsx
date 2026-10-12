@@ -8,7 +8,7 @@ import {
   WalkSectionsSkeleton,
   WalkTabsSkeleton,
 } from "@/components/walk-page-skeletons";
-import { isWalkIdeaLayout, isWalkTabsVariant } from "@/lib/walk-page-sections";
+import { isWalkGalleryLayout, isWalkIdeaLayout, isWalkTabsVariant } from "@/lib/walk-page-sections";
 import { getSiteTheme } from "@/lib/site-theme";
 
 /**
@@ -24,7 +24,9 @@ export default function Loading() {
 
 export async function WalkLinkLoading() {
   const theme = await getSiteTheme();
-  if (isWalkTabsVariant(theme.walkPageLayout) || isWalkIdeaLayout(theme.walkPageLayout)) {
+  if (isWalkTabsVariant(theme.walkPageLayout) ||
+    isWalkIdeaLayout(theme.walkPageLayout) ||
+    isWalkGalleryLayout(theme.walkPageLayout)) {
     // A to D, the one-column layouts with tabs.
     return (
       <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6">

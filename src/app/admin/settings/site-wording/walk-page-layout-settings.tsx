@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  WALK_GALLERY_LAYOUTS,
   WALK_IDEA_LAYOUTS,
   joinWalkPageChoice,
   type WalkHeaderStyle,
@@ -56,7 +57,7 @@ export function WalkPageLayoutSettings({ header, layout }: { header: WalkHeaderS
 
   return (
     <SettingsSection
-      description="How a walk's page looks when someone opens a walk — the same for members and organisers. One list for every design: the original one column, two columns, A to D (one column with tabs, each also with a header style H1 to H4), and designs 1 to 23 to try."
+      description="How a walk's page looks when someone opens a walk — the same for members and organisers. One list for every design: the original one column, two columns, A to D (one column with tabs, each also with a header style H1 to H4), and designs 1 to 53 to try — 24 to 53 grouped by look: polished app, clean and minimal, bold outdoors, and organiser dashboard."
       title="Layout"
     >
       <div className="flex w-full flex-col gap-1.5">
@@ -100,6 +101,19 @@ export function WalkPageLayoutSettings({ header, layout }: { header: WalkHeaderS
                 </SelectItem>
               ))}
             </SelectGroup>
+            {(["Polished app", "Clean and minimal", "Bold outdoors", "Organiser dashboard"] as const).map((look) => (
+              <SelectGroup key={look}>
+                <SelectSeparator />
+                <SelectLabel>{look}</SelectLabel>
+                {WALK_GALLERY_LAYOUTS.map((design, i) =>
+                  design.look === look ? (
+                    <SelectItem key={design.id} value={design.id}>
+                      {`${WALK_IDEA_LAYOUTS.length + i + 1} · ${design.label}`}
+                    </SelectItem>
+                  ) : null,
+                )}
+              </SelectGroup>
+            ))}
           </SelectContent>
         </Select>
       </div>

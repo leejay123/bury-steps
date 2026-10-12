@@ -32,8 +32,9 @@ import { WalkJourneyManager } from "./walk-journey";
 import { SelfClockInPanel } from "./self-clock-in-panel";
 import { WalkPageColumns } from "@/components/walk-page-columns";
 import { WalkTabsLayout } from "@/components/walk-tabs-layout";
-import { WalkIdeaLayouts } from "@/components/walk-idea-layouts";
-import { isWalkIdeaLayout, isWalkTabsVariant, type WalkPageSectionId } from "@/lib/walk-page-sections";
+import { WalkGalleryLayouts } from "@/components/walk-gallery-layouts";
+import { WalkIdeaLayouts, type WalkIdeaParts } from "@/components/walk-idea-layouts";
+import { isWalkGalleryLayout, isWalkIdeaLayout, isWalkTabsVariant, type WalkPageSectionId } from "@/lib/walk-page-sections";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -528,34 +529,37 @@ async function WalkDetailPageContent({ id }: { id: string }) {
     startsAt: walk.startsAt.toISOString(),
   };
 
-  if (isWalkIdeaLayout(theme.walkPageLayout)) {
+  if (isWalkIdeaLayout(theme.walkPageLayout) || isWalkGalleryLayout(theme.walkPageLayout)) {
+    const layout = theme.walkPageLayout;
+    const ideaParts: WalkIdeaParts = {
+      attended: attendedTab,
+      before: null,
+      details: factsCard,
+      forecast: shown("forecast") ? sectionPart("forecast") : null,
+      headline: headlineData,
+      journey: { count: journeyEvents.length, content: journey },
+      live: clockIn(false, true),
+      liveCompact: clockIn(true, true),
+      map: shown("map") ? sectionPart("map") : null,
+      meeting,
+      notices,
+      precise: shown("precise") ? sectionPart("precise") : null,
+      share: <ShareLinkButton url={shareUrl} />,
+      timing,
+      tips: theme.beforeYouSetOffTips,
+      tools,
+      what3words: walk.what3words,
+    };
     return (
       <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
         <Link href="/admin/walks" className="text-sm text-muted-foreground hover:text-foreground">
           &larr; All walks
         </Link>
-        <WalkIdeaLayouts
-          layout={theme.walkPageLayout}
-          parts={{
-            attended: attendedTab,
-            before: null,
-            details: factsCard,
-            forecast: shown("forecast") ? sectionPart("forecast") : null,
-            headline: headlineData,
-            journey: { count: journeyEvents.length, content: journey },
-            live: clockIn(false, true),
-            liveCompact: clockIn(true, true),
-            map: shown("map") ? sectionPart("map") : null,
-            meeting,
-            notices,
-            precise: shown("precise") ? sectionPart("precise") : null,
-            share: <ShareLinkButton url={shareUrl} />,
-            timing,
-            tips: theme.beforeYouSetOffTips,
-            tools,
-            what3words: walk.what3words,
-          }}
-        />
+        {isWalkGalleryLayout(layout) ? (
+          <WalkGalleryLayouts layout={layout} parts={ideaParts} />
+        ) : (
+          <WalkIdeaLayouts layout={layout} parts={ideaParts} />
+        )}
       </div>
     );
   }
