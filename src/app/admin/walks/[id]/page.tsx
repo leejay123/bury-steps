@@ -4,6 +4,7 @@ import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { getSiteTheme } from "@/lib/site-theme";
 import { getWalkDesigns, getWalkPageChoice } from "@/lib/walk-page-choice";
 import { WalkDesignButton, WalkDesignProvider } from "@/components/walk-designer/design-button";
+import { designHasBackLink } from "@/components/walk-designer/has-block";
 import { WalkDesignRender } from "@/components/walk-designer/render";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import WalkDetailLoading from "./loading";
@@ -576,6 +577,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
     timing,
     tips: theme.beforeYouSetOffTips,
     tools,
+    back: { href: "/admin/walks", label: "All walks" },
     // For the walk page designer's signed-out visitor preview (hidden from
     // anyone signed in, as on the members' walk page).
     howItWorks:
@@ -602,10 +604,10 @@ async function WalkDetailPageContent({ id }: { id: string }) {
   );
   // Every layout: the page, with the walk handed to Design this page (in
   // the Manage list) for anyone allowed to change the site's look.
-  const page = (content: ReactNode) => {
+  const page = (content: ReactNode, { withBack = true }: { withBack?: boolean } = {}) => {
     const body = (
       <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
-        {backRow}
+        {withBack ? backRow : null}
         {content}
       </div>
     );
@@ -623,6 +625,8 @@ async function WalkDetailPageContent({ id }: { id: string }) {
       <>
         <WalkDesignRender data={designs.organiser} parts={ideaParts} />
       </>,
+      // A design with its own Back link block places it itself.
+      { withBack: !designHasBackLink(designs.organiser) },
     );
   }
 

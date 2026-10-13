@@ -26,6 +26,7 @@ import { WalkStudioLayouts } from "@/components/walk-studio-layouts";
 import { WalkIdeaLayouts, type WalkIdeaParts } from "@/components/walk-idea-layouts";
 import { isWalkGalleryLayout, isWalkIdeaLayout, isWalkStudioLayout, isWalkTabsVariant, type WalkPageSectionId } from "@/lib/walk-page-sections";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
+import { designHasBackLink } from "@/components/walk-designer/has-block";
 import { HowWalksWork } from "@/components/how-walks-work";
 import { getWalkMemberNames } from "@/lib/walk-members";
 import { getSiteTheme } from "@/lib/site-theme";
@@ -415,21 +416,28 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
   if (choice.layout === "designed") {
     // Both designs are drawn; the remembered sign-in shows the right one
     // ([data-member-home] / [data-guest-home]), as for the rest of this page.
+    // A design with its own Back link block places it itself.
+    const visitorDesign = designs.visitor ?? designs.member;
     return (
       <div className="flex flex-col gap-6">
-        <span className="text-sm text-muted-foreground">
-          <Link className="hover:text-foreground" data-member-home="" href="/walks">
+        {designHasBackLink(designs.member) ? null : (
+          <Link className="text-sm text-muted-foreground hover:text-foreground" data-member-home="" href="/walks">
             ← Walks
           </Link>
-          <Link className="hover:text-foreground" data-guest-home="" href="/">
+        )}
+        {designHasBackLink(visitorDesign) ? null : (
+          <Link className="text-sm text-muted-foreground hover:text-foreground" data-guest-home="" href="/">
             ← Home
           </Link>
-        </span>
+        )}
         <div className="contents" data-member-home="">
-          <WalkDesignRender data={designs.member} parts={ideaParts} />
+          <WalkDesignRender data={designs.member} parts={{ ...ideaParts, back: { href: "/walks", label: "Walks" } }} />
         </div>
         <div className="contents" data-guest-home="">
-          <WalkDesignRender data={designs.visitor ?? designs.member} parts={{ ...ideaParts, live: null }} />
+          <WalkDesignRender
+            data={visitorDesign}
+            parts={{ ...ideaParts, back: { href: "/", label: "Home" }, live: null }}
+          />
         </div>
       </div>
     );

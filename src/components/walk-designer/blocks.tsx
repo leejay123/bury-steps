@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState, type ComponentType, type ReactNode } from "react";
+import Link from "next/link";
 import {
+  ArrowLeft,
   CalendarDays,
   CalendarPlus,
+  ChevronLeft,
   ChevronRight,
   Clock,
   CloudSun,
@@ -270,6 +273,8 @@ export function DeviceFacts({
   arrange = "fill",
   phoneVariant = "same",
   phoneArrange = "same",
+  tabletVariant = "same",
+  tabletArrange = "same",
 }: {
   p: WalkIdeaParts;
   dark?: boolean;
@@ -277,26 +282,56 @@ export function DeviceFacts({
   arrange?: Arrange;
   phoneVariant?: FactsVariant | "same";
   phoneArrange?: Arrange | "same";
+  /** "same": as on computers; "phone": as on phones. */
+  tabletVariant?: FactsVariant | "same" | "phone";
+  tabletArrange?: Arrange | "same" | "phone";
 }) {
-  const onPhone = {
+  const computer = { variant, arrange };
+  const phone = {
     variant: phoneVariant === "same" ? variant : phoneVariant,
     arrange: phoneArrange === "same" ? arrange : phoneArrange,
   };
-  if (onPhone.variant === variant && onPhone.arrange === arrange)
-    return <Facts arrange={arrange} dark={dark} p={p} variant={variant} />;
+  const tablet = {
+    variant:
+      tabletVariant === "same"
+        ? variant
+        : tabletVariant === "phone"
+          ? phone.variant
+          : tabletVariant,
+    arrange:
+      tabletArrange === "same"
+        ? arrange
+        : tabletArrange === "phone"
+          ? phone.arrange
+          : tabletArrange,
+  };
+  const same = (a: typeof computer, b: typeof computer) =>
+    a.variant === b.variant && a.arrange === b.arrange;
+  const draw = (look: typeof computer) => (
+    <Facts arrange={look.arrange} dark={dark} p={p} variant={look.variant} />
+  );
+  // Phones: under 768px; tablets: 768–1023px; computers: 1024px and wider.
+  // Each look is drawn once and shown at the sizes it's for.
+  if (same(phone, computer) && same(tablet, computer)) return draw(computer);
+  if (same(tablet, computer))
+    return (
+      <>
+        <div className="md:hidden">{draw(phone)}</div>
+        <div className="max-md:hidden">{draw(computer)}</div>
+      </>
+    );
+  if (same(tablet, phone))
+    return (
+      <>
+        <div className="lg:hidden">{draw(phone)}</div>
+        <div className="max-lg:hidden">{draw(computer)}</div>
+      </>
+    );
   return (
     <>
-      <div className="md:hidden">
-        <Facts
-          arrange={onPhone.arrange}
-          dark={dark}
-          p={p}
-          variant={onPhone.variant}
-        />
-      </div>
-      <div className="max-md:hidden">
-        <Facts arrange={arrange} dark={dark} p={p} variant={variant} />
-      </div>
+      <div className="md:hidden">{draw(phone)}</div>
+      <div className="max-md:hidden lg:hidden">{draw(tablet)}</div>
+      <div className="max-lg:hidden">{draw(computer)}</div>
     </>
   );
 }
@@ -934,6 +969,8 @@ export type DetailsOptions = {
   ribbonAt?: "top" | "bottom";
   phoneFacts?: FactsVariant | "same";
   phoneFactsArrange?: Arrange | "same";
+  tabletFacts?: FactsVariant | "same" | "phone";
+  tabletFactsArrange?: Arrange | "same" | "phone";
   timeline?: boolean;
   bigTitle?: boolean;
   showTitle?: boolean;
@@ -1007,6 +1044,8 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         p={p}
         phoneArrange={o.phoneFactsArrange}
         phoneVariant={o.phoneFacts}
+        tabletArrange={o.tabletFactsArrange}
+        tabletVariant={o.tabletFacts}
         variant={o.facts ?? "grid"}
       />
       {(o.showEssentials ?? true) ? <Essentials dark={dark} p={p} /> : null}
@@ -1078,11 +1117,15 @@ export function FactsBlock({
   arrange = "fill",
   phoneVariant = "same",
   phoneArrange = "same",
+  tabletVariant = "same",
+  tabletArrange = "same",
 }: {
   variant?: FactsVariant;
   arrange?: Arrange;
   phoneVariant?: FactsVariant | "same";
   phoneArrange?: Arrange | "same";
+  tabletVariant?: FactsVariant | "same" | "phone";
+  tabletArrange?: Arrange | "same" | "phone";
 }) {
   const p = useWalkParts();
   return p ? (
@@ -1091,6 +1134,8 @@ export function FactsBlock({
       p={p}
       phoneArrange={phoneArrange}
       phoneVariant={phoneVariant}
+      tabletArrange={tabletArrange}
+      tabletVariant={tabletVariant}
       variant={variant}
     />
   ) : (
@@ -2299,6 +2344,90 @@ function DetailsRibbon({
       suppressHydrationWarning
     >
       {line}
+    </div>
+  );
+}
+
+// ── Back link ───────────────────────────────────────────────────────────
+export type BackLook = "text" | "outline" | "ghost" | "solid" | "pill" | "icon";
+export type BackArrow = "arrow" | "chevron" | "none";
+
+/**
+ * "← All walks" (organisers), "← Walks" (members) or "← Home" (visitors):
+ * placed, worded and styled in the designer. A design with this block
+ * doesn't get the fixed link above it.
+ */
+export function BackLinkBlock({
+  look = "text",
+  arrow = "arrow",
+  label = "",
+  align = "start",
+}: {
+  look?: BackLook;
+  arrow?: BackArrow;
+  label?: string;
+  align?: "start" | "centre" | "end" | "full";
+}) {
+  const p = useWalkParts();
+  const back = p?.back ?? { href: "/admin/walks", label: "All walks" };
+  const words = label.trim() || back.label;
+  const Icon = arrow === "chevron" ? ChevronLeft : ArrowLeft;
+  const icon =
+    arrow === "none" ? null : <Icon aria-hidden className="size-4" />;
+  const link =
+    look === "text" ? (
+      <Link
+        className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        href={back.href}
+      >
+        {icon}
+        {words}
+      </Link>
+    ) : look === "icon" ? (
+      <Button
+        aria-label={words}
+        asChild
+        className="rounded-full"
+        size="icon"
+        variant="outline"
+      >
+        <Link href={back.href}>
+          <Icon aria-hidden />
+        </Link>
+      </Button>
+    ) : (
+      <Button
+        asChild
+        className={cn(
+          look === "pill" && "rounded-full",
+          align === "full" && "w-full",
+        )}
+        size="sm"
+        variant={
+          look === "solid"
+            ? "default"
+            : look === "ghost"
+              ? "ghost"
+              : look === "pill"
+                ? "secondary"
+                : "outline"
+        }
+      >
+        <Link href={back.href}>
+          {icon}
+          {words}
+        </Link>
+      </Button>
+    );
+  return (
+    <div
+      className={cn(
+        "flex",
+        align === "centre" && "justify-center",
+        align === "end" && "justify-end",
+      )}
+    >
+      {link}
     </div>
   );
 }

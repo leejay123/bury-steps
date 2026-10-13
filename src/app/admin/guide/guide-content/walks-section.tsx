@@ -235,7 +235,15 @@ export function WalksSection({
               looking (Attended for a member, for example) is left out of the
               tab bar. Columns are equal heights by default (the last block in
               each column stretches; or choose As tall as their content), and
-              any one column can stay in view as you scroll on a computer. The
+              any one column can stay in view as you scroll on a computer. The Back link block (← All walks for organisers, ← Walks for
+              members, ← Home for visitors) can be moved, removed, reworded
+              and given a look: plain text, an outline, ghost or solid button,
+              a grey pill or a round arrow button, with an arrow, a chevron
+              or neither, left, centre, right or full width. A design without
+              it keeps the link at the top as before. Facts can have their own
+              look and arrangement on phones (under 768 pixels wide), tablets
+              (768 to 1023) and computers, and Block layout&apos;s Show on
+              includes tablets. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

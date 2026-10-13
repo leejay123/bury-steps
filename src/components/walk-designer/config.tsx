@@ -44,6 +44,7 @@ import {
   SummaryTilesBlock,
   TitleBlock,
   WeatherBlock,
+  BackLinkBlock,
   CountdownBlock,
   DirectionsBlock,
   FactBlock,
@@ -85,6 +86,21 @@ const phoneFactsOptions = [
   { value: "same", label: "Same as on computers" },
   ...factsOptions,
 ];
+const tabletFactsOptions = [
+  { value: "same", label: "Same as on computers" },
+  { value: "phone", label: "Same as on phones" },
+  ...factsOptions,
+];
+const tabletArrangeField = {
+  type: "radio" as const,
+  label: "On tablets: arrange",
+  options: [
+    { value: "same", label: "Same as on computers" },
+    { value: "phone", label: "Same as on phones" },
+    { value: "fill", label: "Fill the width" },
+    { value: "scroll", label: "One row, swipe sideways" },
+  ],
+};
 const phoneArrangeField = {
   type: "radio" as const,
   label: "On phones: arrange",
@@ -137,7 +153,13 @@ type BlockLayout = {
   width?: "page" | "full" | "full-inset";
   frame?: "none" | "card" | "tint" | "dark" | "outline" | "green";
   heading?: string;
-  showOn?: "all" | "phones" | "computers";
+  showOn?:
+    | "all"
+    | "phones"
+    | "tablets"
+    | "computers"
+    | "phones-tablets"
+    | "tablets-computers";
   buttons?: "as-is" | "phones" | "always";
   shadows?: "keep" | "none";
   messages?: MessageLook;
@@ -204,7 +226,10 @@ const blockLayoutField = {
       options: options([
         ["all", "Everywhere"],
         ["phones", "Phones only"],
+        ["tablets", "Tablets only"],
         ["computers", "Computers only"],
+        ["phones-tablets", "Phones and tablets"],
+        ["tablets-computers", "Tablets and computers"],
       ]),
     },
   },
@@ -388,8 +413,12 @@ function BlockFrame({
         shadows === "none" && "[&_*]:shadow-none",
         MESSAGE_LOOK[messages ?? "as-is"],
         BOX_LOOK[boxes ?? "as-is"],
+        // Phones: under 768px; tablets: 768–1023px; computers: 1024px and wider.
         showOn === "phones" && "md:hidden",
-        showOn === "computers" && "max-md:hidden",
+        showOn === "tablets" && "max-md:hidden lg:hidden",
+        showOn === "computers" && "max-lg:hidden",
+        showOn === "phones-tablets" && "lg:hidden",
+        showOn === "tablets-computers" && "max-md:hidden",
       )}
     >
       <div
@@ -451,6 +480,7 @@ export const walkDesignConfig: Config = {
     walk: {
       title: "The walk",
       components: [
+        "BackLink",
         "Messages",
         "Title",
         "WalkName",
@@ -502,6 +532,50 @@ export const walkDesignConfig: Config = {
     },
   },
   components: withBlockLayout({
+    BackLink: {
+      label: "Back link (← All walks)",
+      fields: {
+        label: {
+          type: "text",
+          label: "Words (blank: All walks / Walks / Home)",
+        },
+        look: {
+          type: "select",
+          label: "Look",
+          options: options([
+            ["text", "Plain text link"],
+            ["outline", "Outline button"],
+            ["ghost", "Ghost button"],
+            ["solid", "Solid button"],
+            ["pill", "Grey pill"],
+            ["icon", "Round arrow button only"],
+          ]),
+        },
+        arrow: {
+          type: "radio",
+          label: "Arrow",
+          options: options([
+            ["arrow", "Arrow ←"],
+            ["chevron", "Chevron ‹"],
+            ["none", "None"],
+          ]),
+        },
+        align: {
+          type: "radio",
+          label: "Position",
+          options: options([
+            ["start", "Left"],
+            ["centre", "Centre"],
+            ["end", "Right"],
+            ["full", "Full width"],
+          ]),
+        },
+      },
+      defaultProps: { label: "", look: "text", arrow: "arrow", align: "start" },
+      render: ({ label, look, arrow, align }) => (
+        <BackLinkBlock align={align} arrow={arrow} label={label} look={look} />
+      ),
+    },
     Messages: {
       label: "Messages",
       fields: { look: { ...messageLookField, label: "Look" } },
@@ -543,8 +617,12 @@ export const walkDesignConfig: Config = {
     Details: {
       label: "Details card",
       fields: {
-        facts: { type: "select", label: "Facts", options: factsOptions },
-        factsArrange: { ...arrangeField, label: "Facts arrange" },
+        facts: {
+          type: "select",
+          label: "Facts on computers",
+          options: factsOptions,
+        },
+        factsArrange: { ...arrangeField, label: "Facts arrange on computers" },
         phoneFacts: {
           type: "select",
           label: "Facts on phones",
@@ -553,6 +631,15 @@ export const walkDesignConfig: Config = {
         phoneFactsArrange: {
           ...phoneArrangeField,
           label: "Facts arrange on phones",
+        },
+        tabletFacts: {
+          type: "select",
+          label: "Facts on tablets",
+          options: tabletFactsOptions,
+        },
+        tabletFactsArrange: {
+          ...tabletArrangeField,
+          label: "Facts arrange on tablets",
         },
         map: {
           type: "select",
@@ -674,6 +761,8 @@ export const walkDesignConfig: Config = {
         ribbonAt: "top",
         phoneFacts: "same",
         phoneFactsArrange: "same",
+        tabletFacts: "same",
+        tabletFactsArrange: "same",
         timeline: false,
         bigTitle: false,
       },
@@ -696,6 +785,8 @@ export const walkDesignConfig: Config = {
         ribbonAt,
         phoneFacts,
         phoneFactsArrange,
+        tabletFacts,
+        tabletFactsArrange,
         timeline,
         bigTitle,
       }) => (
@@ -710,6 +801,8 @@ export const walkDesignConfig: Config = {
           mapTitle={mapTitle}
           phoneFacts={phoneFacts}
           phoneFactsArrange={phoneFactsArrange}
+          tabletFacts={tabletFacts}
+          tabletFactsArrange={tabletFactsArrange}
           ribbon={ribbon}
           ribbonAt={ribbonAt}
           ribbonStyle={ribbonStyle}
@@ -726,26 +819,47 @@ export const walkDesignConfig: Config = {
     Facts: {
       label: "Facts",
       fields: {
-        variant: { type: "select", label: "Look", options: factsOptions },
-        arrange: arrangeField,
+        variant: {
+          type: "select",
+          label: "On computers: look",
+          options: factsOptions,
+        },
+        arrange: { ...arrangeField, label: "On computers: arrange" },
         phoneVariant: {
           type: "select",
           label: "On phones: look",
           options: phoneFactsOptions,
         },
         phoneArrange: phoneArrangeField,
+        tabletVariant: {
+          type: "select",
+          label: "On tablets: look",
+          options: tabletFactsOptions,
+        },
+        tabletArrange: tabletArrangeField,
       },
       defaultProps: {
         variant: "grid",
         arrange: "fill",
         phoneVariant: "same",
         phoneArrange: "same",
+        tabletVariant: "same",
+        tabletArrange: "same",
       },
-      render: ({ variant, arrange, phoneVariant, phoneArrange }) => (
+      render: ({
+        variant,
+        arrange,
+        phoneVariant,
+        phoneArrange,
+        tabletVariant,
+        tabletArrange,
+      }) => (
         <FactsBlock
           arrange={arrange}
           phoneArrange={phoneArrange}
           phoneVariant={phoneVariant}
+          tabletArrange={tabletArrange}
+          tabletVariant={tabletVariant}
           variant={variant}
         />
       ),

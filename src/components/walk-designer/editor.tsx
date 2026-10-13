@@ -106,6 +106,10 @@ function partsFor(
   if (audience === "organiser") return { ...parts, howItWorks: null };
   return {
     ...parts,
+    back:
+      audience === "visitor"
+        ? { href: "/", label: "Home" }
+        : { href: "/walks", label: "Walks" },
     howItWorks: audience === "visitor" ? parts.howItWorks : null,
     attended: null,
     liveCompact: null,

@@ -33,9 +33,10 @@ const restTabs = (mapInCard: boolean) =>
     ["Journey", [block("Journey")]],
   ]);
 
+// Every ready-made design starts with the Back link block (move or remove it in the designer).
 const page = (content: Block[]): Data => ({
   root: { props: {} },
-  content: content as Data["content"],
+  content: [block("BackLink"), ...content] as Data["content"],
 });
 
 export const WALK_DESIGN_PRESETS: {

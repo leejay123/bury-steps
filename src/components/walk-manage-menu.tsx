@@ -99,7 +99,9 @@ export function WalkManageMenu({
             </Button>
           )}
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56">
+        {/* At least as wide as the button: on a phone, where Manage is full
+            width, the list lines up with it exactly. */}
+        <DropdownMenuContent className="w-56 min-w-[var(--radix-dropdown-menu-trigger-width)]">
           {safe.map(row)}
           {safe.length > 0 && danger.length > 0 ? <DropdownMenuSeparator /> : null}
           {danger.map(row)}
