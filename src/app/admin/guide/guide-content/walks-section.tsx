@@ -123,11 +123,11 @@ export function WalksSection({
               sign in first while the walk is still open, then the date, time,
               length, meeting point (and postcode if you added one). A long
               description collapses to a few lines with{" "}
-              <strong>Read more</strong>, which opens the whole description at
+              <strong>Read more</strong> (only when the text is actually cut off), which opens the whole description at
               the same text size. Under the walk details is{" "}
               <strong>How this group works</strong>, then the shared sections:
-              Before you set off (members see it while clock-in is still
-              closed), the meeting point map, the 7-day forecast and the precise
+              Before you set off (everyone — visitors, members, organisers
+              and owners — sees it until the walk finishes), the meeting point map, the 7-day forecast and the precise
               location. Their order, and whether the map, forecast and precise
               location show at all, is set under Settings → Site wording → Walk
               page cards → <strong>Walk page layout</strong> (arrows to move,

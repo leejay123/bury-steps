@@ -35,7 +35,6 @@ import { HOMEPAGE_REVALIDATE_SECONDS } from "@/lib/homepage-cache";
 import { WalkLivePanel } from "./walk-live-panel";
 import {
   WalkClosedNoClockInNotice,
-  WalkShareBeforeClockIn,
   WalkShareStatusChrome,
   WalkShareWhileOpen,
 } from "./walk-share-status";
@@ -219,26 +218,17 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
     switch (id) {
       case "before":
         if (cancelled || !theme.beforeYouSetOffEnabled) return null;
-        // Members: until clock-in opens. Visitors: while the walk is open.
-        // Both are drawn; the remembered sign-in hides the other.
+        // Members and visitors alike: until the walk finishes.
         return (
-          <div className="contents" key={id}>
-            <div className="contents" data-member-home="">
-              <WalkShareBeforeClockIn durationMins={walk.durationMins} endedAt={endedAtIso} startsAt={startsAtIso}>
-                <BeforeYouSetOff tips={theme.beforeYouSetOffTips} />
-              </WalkShareBeforeClockIn>
-            </div>
-            <div className="contents" data-guest-home="">
-              <WalkShareWhileOpen
-                cancelledAt={cancelledAtIso}
-                durationMins={walk.durationMins}
-                endedAt={endedAtIso}
-                startsAt={startsAtIso}
-              >
-                <BeforeYouSetOff tips={theme.beforeYouSetOffTips} />
-              </WalkShareWhileOpen>
-            </div>
-          </div>
+          <WalkShareWhileOpen
+            cancelledAt={cancelledAtIso}
+            durationMins={walk.durationMins}
+            endedAt={endedAtIso}
+            key={id}
+            startsAt={startsAtIso}
+          >
+            <BeforeYouSetOff tips={theme.beforeYouSetOffTips} />
+          </WalkShareWhileOpen>
         );
       case "map":
         // No directions to a walk that isn't happening.

@@ -23,6 +23,8 @@ import { EmptyState } from "@/components/empty-state";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { WalkMapSection } from "@/components/walk-map-section";
 import { HowWalksWork } from "@/components/how-walks-work";
+import { BeforeYouSetOff } from "@/components/before-you-set-off";
+import { WalkShareWhileOpen } from "@/app/w/[token]/walk-share-status";
 import { WalkForecastSection } from "@/components/walk-forecast";
 import { meetingPointLabel } from "@/lib/geocode";
 import { What3wordsLink } from "@/components/what3words-link";
@@ -361,6 +363,19 @@ async function WalkDetailPageContent({ id }: { id: string }) {
         );
       case "precise":
         return walk.what3words ? <What3wordsLink address={walk.what3words} key={id} /> : null;
+      case "before":
+        // Organisers and owners see the same tips as members, until the walk finishes.
+        return walk.cancelledAt || !theme.beforeYouSetOffEnabled ? null : (
+          <WalkShareWhileOpen
+            cancelledAt={null}
+            durationMins={walk.durationMins}
+            endedAt={walk.endedAt?.toISOString() ?? null}
+            key={id}
+            startsAt={walk.startsAt.toISOString()}
+          >
+            <BeforeYouSetOff tips={theme.beforeYouSetOffTips} />
+          </WalkShareWhileOpen>
+        );
       default:
         return null;
     }
@@ -546,7 +561,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
 
   const ideaParts: WalkIdeaParts = {
     attended: attendedTab,
-    before: null,
+    before: shown("before") ? sectionPart("before") : null,
     details: factsCard,
     forecast: shown("forecast") ? sectionPart("forecast") : null,
     headline: headlineData,
