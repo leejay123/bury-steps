@@ -4,7 +4,6 @@ import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { getSiteTheme } from "@/lib/site-theme";
 import { getWalkDesigns, getWalkPageChoice } from "@/lib/walk-page-choice";
 import { WalkDesignButton, WalkDesignProvider } from "@/components/walk-designer/design-button";
-import { designHasBackLink } from "@/components/walk-designer/has-block";
 import { WalkDesignRender } from "@/components/walk-designer/render";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import WalkDetailLoading from "./loading";
@@ -308,7 +307,6 @@ async function WalkDetailPageContent({ id }: { id: string }) {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <WalkFacts
-            showEmpty
             backMarker={walk.backMarker}
             distance={walk.distance}
             durationMins={walk.durationMins}
@@ -522,7 +520,6 @@ async function WalkDetailPageContent({ id }: { id: string }) {
     <Card className="gap-4">
       <CardContent className="flex flex-col gap-4">
         <WalkFacts
-          showEmpty
           backMarker={walk.backMarker}
           distance={walk.distance}
           durationMins={walk.durationMins}
@@ -625,8 +622,8 @@ async function WalkDetailPageContent({ id }: { id: string }) {
       <>
         <WalkDesignRender data={designs.organiser} parts={ideaParts} />
       </>,
-      // A design with its own Back link block places it itself.
-      { withBack: !designHasBackLink(designs.organiser) },
+      // Designed pages: the back link is the design's Back link block, if it has one.
+      { withBack: false },
     );
   }
 

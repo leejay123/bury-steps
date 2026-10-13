@@ -240,10 +240,19 @@ export function WalksSection({
               and given a look: plain text, an outline, ghost or solid button,
               a grey pill or a round arrow button, with an arrow, a chevron
               or neither, left, centre, right or full width. A design without
-              it keeps the link at the top as before. Facts can have their own
+              it has no back link (the ready-made designs start with one). Facts can have their own
               look and arrangement on phones (under 768 pixels wide), tablets
               (768 to 1023) and computers, and Block layout&apos;s Show on
-              includes tablets. The
+              includes tablets. Essentials have looks too (outline pills, grey chips, a
+              list, a tick list, tiles, or one line), with their own choice on
+              phones, tablets and computers, and the heading on or off. Before
+              you set off can be the card, a tick list, numbered steps, a green
+              callout, numbered tiles, swiping tiles or one short paragraph.
+              Fill the width now stretches a short last row so there are no
+              gaps; Even grid keeps the columns lined up. Spacing: the Tabs
+              block sets the space between the tabs and their content and
+              between blocks in a tab, Columns the space between columns, and
+              Block layout the space above and below any block. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how
@@ -254,10 +263,11 @@ export function WalksSection({
               to calendar, Download roster (CSV), Duplicate, Cancel walk, Edit,
               and Remove walk in red at the bottom. Clock in sits beside it
               while clock-in is open. A finished walk has no Edit or Cancel
-              walk, by design. Organisers see every detail on every layout, with
-              Not set where a field is empty and None ticked for essentials, so
-              anything missing from Edit walk is easy to spot; members only see
-              what is filled in. Members get a Share or save button instead
+              walk, by design. Everyone only sees the details that are filled in — an empty
+              field (such as Distance or Climb) is left out rather than shown
+              as Not set. In the designer, Facts and the Details card can show
+              organisers Not set (and None ticked for essentials) to spot
+              what&apos;s missing from Edit walk. Members get a Share or save button instead
               (copy the link, add to calendar). The Checklist&apos;s ticks are
               only remembered while the page is open. Switch back to One column
               at any time. Once the walk is Completed, guests see that it has

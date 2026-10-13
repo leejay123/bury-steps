@@ -97,7 +97,8 @@ const tabletArrangeField = {
   options: [
     { value: "same", label: "Same as on computers" },
     { value: "phone", label: "Same as on phones" },
-    { value: "fill", label: "Fill the width" },
+    { value: "fill", label: "Fill the width (no gaps)" },
+    { value: "grid", label: "Even grid (columns line up)" },
     { value: "scroll", label: "One row, swipe sideways" },
   ],
 };
@@ -106,7 +107,8 @@ const phoneArrangeField = {
   label: "On phones: arrange",
   options: [
     { value: "same", label: "Same as on computers" },
-    { value: "fill", label: "Fill the width" },
+    { value: "fill", label: "Fill the width (no gaps)" },
+    { value: "grid", label: "Even grid (columns line up)" },
     { value: "scroll", label: "One row, swipe sideways" },
   ],
 };
@@ -133,11 +135,118 @@ const boxLookField = {
   ]),
 };
 
+const showEmptyField = {
+  type: "radio" as const,
+  label: "Empty facts",
+  options: [
+    { value: false, label: "Hide them" },
+    { value: true, label: "Show “Not set” (organisers only)" },
+  ],
+};
+const essentialsLooks = options([
+  ["pills", "Outline pills"],
+  ["chips", "Grey chips"],
+  ["list", "List with icons"],
+  ["ticks", "Tick list"],
+  ["tiles", "Tiles"],
+  ["inline", "One line of icons and words"],
+]);
+const essentialsFields = {
+  look: {
+    type: "select" as const,
+    label: "On computers: look",
+    options: essentialsLooks,
+  },
+  arrange: {
+    type: "radio" as const,
+    label: "On computers: arrange",
+    options: options([
+      ["fill", "Fill the width (no gaps)"],
+      ["grid", "Even grid (columns line up)"],
+      ["scroll", "One row, swipe sideways"],
+    ]),
+  },
+  tabletLook: {
+    type: "select" as const,
+    label: "On tablets: look",
+    options: [
+      { value: "same", label: "Same as on computers" },
+      { value: "phone", label: "Same as on phones" },
+      ...essentialsLooks,
+    ],
+  },
+  tabletArrange: {
+    type: "radio" as const,
+    label: "On tablets: arrange",
+    options: [
+      { value: "same", label: "Same as on computers" },
+      { value: "phone", label: "Same as on phones" },
+      { value: "fill", label: "Fill the width (no gaps)" },
+      { value: "grid", label: "Even grid (columns line up)" },
+      { value: "scroll", label: "One row, swipe sideways" },
+    ],
+  },
+  phoneLook: {
+    type: "select" as const,
+    label: "On phones: look",
+    options: [
+      { value: "same", label: "Same as on computers" },
+      ...essentialsLooks,
+    ],
+  },
+  phoneArrange: {
+    type: "radio" as const,
+    label: "On phones: arrange",
+    options: [
+      { value: "same", label: "Same as on computers" },
+      { value: "fill", label: "Fill the width (no gaps)" },
+      { value: "grid", label: "Even grid (columns line up)" },
+      { value: "scroll", label: "One row, swipe sideways" },
+    ],
+  },
+  heading: {
+    type: "radio" as const,
+    label: "“Essentials” heading",
+    options: yesNo,
+  },
+  showEmpty: {
+    type: "radio" as const,
+    label: "When none are ticked",
+    options: [
+      { value: false, label: "Show nothing" },
+      { value: true, label: "Say “None ticked” (organisers only)" },
+    ],
+  },
+};
+const ESSENTIALS_DEFAULTS = {
+  look: "pills",
+  arrange: "scroll",
+  tabletLook: "same",
+  tabletArrange: "same",
+  phoneLook: "same",
+  phoneArrange: "same",
+  heading: true,
+  showEmpty: false,
+};
+const spaceOptions = options([
+  ["none", "None"],
+  ["small", "Small"],
+  ["medium", "Medium"],
+  ["large", "Large"],
+]);
+const GAP: Record<string, string> = {
+  none: "gap-0",
+  small: "gap-3",
+  medium: "gap-6",
+  large: "gap-10",
+};
+
 const arrangeField = {
   type: "radio" as const,
   label: "Arrange",
   options: options<Arrange>([
-    ["fill", "Fill the width"],
+    ["fill", "Fill the width (no gaps)"],
+    ["grid", "Even grid (columns line up)"],
     ["scroll", "One row, swipe sideways"],
   ]),
 };
@@ -164,6 +273,8 @@ type BlockLayout = {
   shadows?: "keep" | "none";
   messages?: MessageLook;
   boxes?: BoxLook;
+  spaceAbove?: "closer" | "normal" | "more" | "lots";
+  spaceBelow?: "closer" | "normal" | "more" | "lots";
 };
 const BLOCK_LAYOUT: BlockLayout = {
   width: "page",
@@ -174,6 +285,8 @@ const BLOCK_LAYOUT: BlockLayout = {
   shadows: "keep",
   messages: "as-is",
   boxes: "as-is",
+  spaceAbove: "normal",
+  spaceBelow: "normal",
 };
 const blockLayoutField = {
   type: "object" as const,
@@ -208,6 +321,26 @@ const blockLayoutField = {
         ["as-is", "As designed"],
         ["phones", "Full width on phones"],
         ["always", "Full width everywhere"],
+      ]),
+    },
+    spaceAbove: {
+      type: "select" as const,
+      label: "Space above",
+      options: options([
+        ["closer", "Closer to the block above"],
+        ["normal", "Normal"],
+        ["more", "More"],
+        ["lots", "Lots"],
+      ]),
+    },
+    spaceBelow: {
+      type: "select" as const,
+      label: "Space below",
+      options: options([
+        ["closer", "Closer to the block below"],
+        ["normal", "Normal"],
+        ["more", "More"],
+        ["lots", "Lots"],
       ]),
     },
     messages: messageLookField,
@@ -261,6 +394,8 @@ function TabsView({
   corners,
   barWidth,
   fit,
+  contentSpace = "small",
+  innerSpace = "medium",
 }: {
   list: TabItem[];
   editing: boolean;
@@ -268,7 +403,15 @@ function TabsView({
   corners?: string;
   barWidth?: string;
   fit?: string;
+  contentSpace?: string;
+  innerSpace?: string;
 }) {
+  // Between the tab bar and the content (it had 16px), and between blocks in a tab.
+  const below =
+    { none: "mt-0", small: "mt-4", medium: "mt-6", large: "mt-10" }[
+      contentSpace
+    ] ?? "mt-4";
+  const inner = GAP[innerSpace] ?? "gap-6";
   const panels = useRef<(HTMLDivElement | null)[]>([]);
   const [empty, setEmpty] = useState<boolean[]>([]);
   const [value, setValue] = useState("tab-0");
@@ -344,18 +487,21 @@ function TabsView({
         const Content = tab.content;
         return editing ? (
           <div
-            className="mt-4 flex flex-col gap-2 rounded-xl border border-dashed p-3"
+            className={cn(
+              "flex flex-col gap-2 rounded-xl border border-dashed p-3",
+              below,
+            )}
             key={i}
           >
             <span className="text-xs font-medium text-muted-foreground">
               Tab {i + 1}: {tab.label} (drop its blocks here)
             </span>
-            <Content className="flex min-h-16 flex-col gap-6" />
+            <Content className={cn("flex min-h-16 flex-col", inner)} />
           </div>
         ) : (
           // Kept on the page (hidden) so an empty tab can be spotted.
           <TabsContent
-            className="mt-4 data-[state=inactive]:hidden"
+            className={cn("data-[state=inactive]:hidden", below)}
             forceMount
             key={i}
             ref={(el: HTMLDivElement | null) => {
@@ -363,7 +509,7 @@ function TabsView({
             }}
             value={`tab-${i}`}
           >
-            <Content className="flex flex-col gap-6" />
+            <Content className={cn("flex flex-col", inner)} />
           </TabsContent>
         );
       })}
@@ -391,7 +537,18 @@ function BlockFrame({
   children: ReactNode;
   layout?: BlockLayout;
 }) {
-  const { width, frame, heading, showOn, buttons, shadows, messages, boxes } = {
+  const {
+    width,
+    frame,
+    heading,
+    showOn,
+    buttons,
+    shadows,
+    messages,
+    boxes,
+    spaceAbove,
+    spaceBelow,
+  } = {
     ...BLOCK_LAYOUT,
     ...layout,
   };
@@ -402,6 +559,13 @@ function BlockFrame({
       data-bleed={width === "full" ? "" : undefined}
       className={cn(
         "flex flex-col",
+        // Blocks sit 24px apart; these pull a block closer or push it away.
+        spaceAbove === "closer" && "-mt-3",
+        spaceAbove === "more" && "mt-4",
+        spaceAbove === "lots" && "mt-12",
+        spaceBelow === "closer" && "-mb-3",
+        spaceBelow === "more" && "mb-4",
+        spaceBelow === "lots" && "mb-12",
         full && "-mx-4 md:-mx-6",
         // Edge to edge: cards inside lose their rounded corners and side borders.
         width === "full" &&
@@ -641,6 +805,12 @@ export const walkDesignConfig: Config = {
           ...tabletArrangeField,
           label: "Facts arrange on tablets",
         },
+        showEmptyFacts: showEmptyField,
+        essentials: {
+          type: "object",
+          label: "Essentials in the card",
+          objectFields: essentialsFields,
+        },
         map: {
           type: "select",
           label: "Map in the card",
@@ -763,6 +933,8 @@ export const walkDesignConfig: Config = {
         phoneFactsArrange: "same",
         tabletFacts: "same",
         tabletFactsArrange: "same",
+        showEmptyFacts: false,
+        essentials: ESSENTIALS_DEFAULTS,
         timeline: false,
         bigTitle: false,
       },
@@ -787,6 +959,8 @@ export const walkDesignConfig: Config = {
         phoneFactsArrange,
         tabletFacts,
         tabletFactsArrange,
+        showEmptyFacts,
+        essentials,
         timeline,
         bigTitle,
       }) => (
@@ -803,6 +977,8 @@ export const walkDesignConfig: Config = {
           phoneFactsArrange={phoneFactsArrange}
           tabletFacts={tabletFacts}
           tabletFactsArrange={tabletFactsArrange}
+          showEmptyFacts={showEmptyFacts}
+          essentials={essentials}
           ribbon={ribbon}
           ribbonAt={ribbonAt}
           ribbonStyle={ribbonStyle}
@@ -837,6 +1013,7 @@ export const walkDesignConfig: Config = {
           options: tabletFactsOptions,
         },
         tabletArrange: tabletArrangeField,
+        showEmpty: showEmptyField,
       },
       defaultProps: {
         variant: "grid",
@@ -845,6 +1022,7 @@ export const walkDesignConfig: Config = {
         phoneArrange: "same",
         tabletVariant: "same",
         tabletArrange: "same",
+        showEmpty: false,
       },
       render: ({
         variant,
@@ -853,8 +1031,10 @@ export const walkDesignConfig: Config = {
         phoneArrange,
         tabletVariant,
         tabletArrange,
+        showEmpty,
       }) => (
         <FactsBlock
+          showEmpty={showEmpty}
           arrange={arrange}
           phoneArrange={phoneArrange}
           phoneVariant={phoneVariant}
@@ -864,7 +1044,32 @@ export const walkDesignConfig: Config = {
         />
       ),
     },
-    Essentials: { label: "Essentials", render: () => <EssentialsBlock /> },
+    Essentials: {
+      label: "Essentials",
+      fields: essentialsFields,
+      defaultProps: ESSENTIALS_DEFAULTS,
+      render: ({
+        look,
+        arrange,
+        tabletLook,
+        tabletArrange,
+        phoneLook,
+        phoneArrange,
+        heading,
+        showEmpty,
+      }) => (
+        <EssentialsBlock
+          arrange={arrange}
+          heading={heading}
+          look={look}
+          phoneArrange={phoneArrange}
+          phoneLook={phoneLook}
+          showEmpty={showEmpty}
+          tabletArrange={tabletArrange}
+          tabletLook={tabletLook}
+        />
+      ),
+    },
     Description: { label: "Description", render: () => <DescriptionBlock /> },
     Actions: {
       label: "Clock in + Manage",
@@ -1130,7 +1335,27 @@ export const walkDesignConfig: Config = {
     },
     Weather: { label: "Weather", render: () => <WeatherBlock /> },
     Precise: { label: "Precise location", render: () => <PreciseBlock /> },
-    Before: { label: "Before you set off", render: () => <BeforeBlock /> },
+    Before: {
+      label: "Before you set off",
+      fields: {
+        look: {
+          type: "select",
+          label: "Look",
+          options: options([
+            ["card", "Card (as on the walk page)"],
+            ["ticks", "Tick list"],
+            ["numbered", "Numbered steps"],
+            ["callout", "Green callout"],
+            ["tiles", "Numbered tiles"],
+            ["swipe", "Tiles in one swiping row"],
+            ["compact", "One short paragraph"],
+          ]),
+        },
+        title: { type: "text", label: "Heading (blank: Before you set off)" },
+      },
+      defaultProps: { look: "card", title: "" },
+      render: ({ look, title }) => <BeforeBlock look={look} title={title} />,
+    },
     Attended: { label: "Attended", render: () => <AttendedBlock /> },
     Journey: { label: "Journey", render: () => <JourneyBlock /> },
 
@@ -1212,6 +1437,11 @@ export const walkDesignConfig: Config = {
             ["1:1:1", "Three equal"],
           ]),
         },
+        gap: {
+          type: "select",
+          label: "Space between columns",
+          options: spaceOptions,
+        },
         heights: {
           type: "radio",
           label: "Column heights",
@@ -1236,6 +1466,7 @@ export const walkDesignConfig: Config = {
       },
       defaultProps: {
         ratio: "2:1",
+        gap: "medium",
         heights: "equal",
         sticky: "none",
         left: [],
@@ -1244,6 +1475,7 @@ export const walkDesignConfig: Config = {
       },
       render: ({
         ratio,
+        gap,
         heights,
         sticky,
         stickySecond,
@@ -1262,7 +1494,8 @@ export const walkDesignConfig: Config = {
         return (
           <div
             className={cn(
-              "grid gap-6",
+              "grid",
+              GAP[gap ?? "medium"] ?? "gap-6",
               ratio === "1:1" && "lg:grid-cols-2",
               ratio === "2:1" && "lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]",
               ratio === "1:2" && "lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]",
@@ -1381,6 +1614,16 @@ export const walkDesignConfig: Config = {
             ["transition", "Pills that drop in"],
           ]),
         },
+        contentSpace: {
+          type: "select",
+          label: "Space between the tabs and their content",
+          options: spaceOptions,
+        },
+        innerSpace: {
+          type: "select",
+          label: "Space between blocks in a tab",
+          options: spaceOptions,
+        },
         corners: {
           type: "radio",
           label: "Tab corners",
@@ -1428,6 +1671,8 @@ export const walkDesignConfig: Config = {
         style: "site",
         bar: "page",
         corners: "as-is",
+        contentSpace: "small",
+        innerSpace: "medium",
         fit: "fill",
         sticky: true,
         tabs: [
@@ -1436,11 +1681,23 @@ export const walkDesignConfig: Config = {
           { label: "Journey", content: [] },
         ],
       },
-      render: ({ style, bar: barWidth, corners, fit, sticky, tabs, puck }) => {
+      render: ({
+        style,
+        bar: barWidth,
+        corners,
+        contentSpace,
+        innerSpace,
+        fit,
+        sticky,
+        tabs,
+        puck,
+      }) => {
         const view = (
           <TabsView
             barWidth={barWidth}
+            contentSpace={contentSpace}
             corners={corners}
+            innerSpace={innerSpace}
             // In the designer every tab's area is shown, one under another,
             // so blocks can be dropped into any tab.
             editing={Boolean(puck?.isEditing)}

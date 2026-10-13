@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   CalendarDays,
   CalendarPlus,
+  Check,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -30,7 +31,8 @@ import { useWalkClock } from "@/hooks/use-walk-clock";
 import { Button } from "@/components/ui/button";
 import { ShareLinkButton } from "@/components/share-link";
 import { WalkDescription } from "@/components/walk-description";
-import { WalkEssentialPills } from "@/components/walk-essentials-context";
+import { useWalkEssentials } from "@/components/walk-essentials-context";
+import { essentialIcon, walkEssentialItems } from "@/lib/walk-essentials";
 import { useWalkNow } from "@/components/walk-header-styles";
 import type { WalkIdeaParts } from "@/components/walk-idea-layouts";
 import { WalkActionsBar, WalkManageMenu } from "@/components/walk-manage-menu";
@@ -53,7 +55,7 @@ type Icon = ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
 type Fact = { icon: Icon; label: string; value: string; wide?: boolean };
 
 /** The walk's times, facts and live status, worked out once for the blocks. */
-function useWalkInfo(p: WalkIdeaParts) {
+function useWalkInfo(p: WalkIdeaParts, showEmpty = false) {
   const clock = useWalkClock(p.timing);
   const now = useWalkNow(p.timing, p.attended?.count ?? null);
   const h = p.headline;
@@ -92,9 +94,11 @@ function useWalkInfo(p: WalkIdeaParts) {
       { icon: UserRound, label: "Walk leader", value: h.walkLeader },
       { icon: UsersRound, label: "Back marker", value: p.walk.backMarker },
     ].flatMap((fact) =>
+      // Empty facts are left out, unless the design asks to show organisers
+      // "Not set" (to spot what's missing from Edit walk).
       fact.value
         ? [{ ...fact, value: fact.value }]
-        : organiser
+        : organiser && showEmpty
           ? [{ ...fact, value: "Not set" }]
           : [],
     ),
@@ -237,24 +241,14 @@ export function Actions({
   );
 }
 
-function Essentials({ p, dark = false }: { p: WalkIdeaParts; dark?: boolean }) {
-  if (p.tools && p.walk.essentials.length === 0)
-    return (
-      <p
-        className={cn(
-          "text-xs",
-          dark ? "text-white/60" : "text-muted-foreground",
-        )}
-      >
-        <span className="font-medium tracking-wide uppercase">Essentials</span>{" "}
-        · None ticked
-      </p>
-    );
-  return <WalkEssentialPills keys={p.walk.essentials} />;
-}
-
-/** Fill the width (onto more rows as needed), or keep to one row that swipes sideways. */
-export type Arrange = "fill" | "scroll";
+/**
+ * "fill": rows that always reach the edge (a short last row stretches, so
+ * there's never a gap); "grid": an even grid whose columns line up;
+ * "scroll": one row that swipes sideways.
+ */
+export type Arrange = "fill" | "grid" | "scroll";
+/** Items wrap onto rows and grow, so every row (the last too) fills the width. */
+const STRETCH = "flex flex-wrap [&>*]:grow";
 const SWIPE =
   "flex flex-nowrap snap-x overflow-x-auto pb-1 [scrollbar-width:none] [&>*]:shrink-0 [&>*]:snap-start";
 
@@ -266,6 +260,64 @@ export type FactsVariant =
  * ("same" keeps the computer one). Both are drawn and CSS shows the right
  * one, so there's no jump when the page loads.
  */
+/** A setting for phones and tablets: "same" as computers, or (tablets) "phone" as phones. */
+type ForDevice<T> = T | "same" | "phone";
+
+/**
+ * Draws a part with a different look on phones (under 768px), tablets
+ * (768–1023px) and computers (1024px and wider). Each different look is
+ * drawn once and CSS shows the right one, so nothing jumps on load.
+ */
+function ByDevice<L extends object>({
+  computer,
+  tablet,
+  phone,
+  draw,
+}: {
+  computer: L;
+  tablet: { [K in keyof L]?: ForDevice<L[K]> };
+  phone: { [K in keyof L]?: ForDevice<L[K]> };
+  draw: (look: L) => ReactNode;
+}) {
+  const keys = Object.keys(computer) as (keyof L)[];
+  const onPhone = { ...computer };
+  const onTablet = { ...computer };
+  for (const k of keys) {
+    const ph = phone[k];
+    if (ph !== undefined && ph !== "same" && ph !== "phone")
+      onPhone[k] = ph as L[keyof L];
+  }
+  for (const k of keys) {
+    const tb = tablet[k];
+    if (tb === "phone") onTablet[k] = onPhone[k];
+    else if (tb !== undefined && tb !== "same") onTablet[k] = tb as L[keyof L];
+  }
+  const same = (a: L, b: L) => keys.every((k) => a[k] === b[k]);
+  if (same(onPhone, computer) && same(onTablet, computer))
+    return <>{draw(computer)}</>;
+  if (same(onTablet, computer))
+    return (
+      <>
+        <div className="md:hidden">{draw(onPhone)}</div>
+        <div className="max-md:hidden">{draw(computer)}</div>
+      </>
+    );
+  if (same(onTablet, onPhone))
+    return (
+      <>
+        <div className="lg:hidden">{draw(onPhone)}</div>
+        <div className="max-lg:hidden">{draw(computer)}</div>
+      </>
+    );
+  return (
+    <>
+      <div className="md:hidden">{draw(onPhone)}</div>
+      <div className="max-md:hidden lg:hidden">{draw(onTablet)}</div>
+      <div className="max-lg:hidden">{draw(computer)}</div>
+    </>
+  );
+}
+
 export function DeviceFacts({
   p,
   dark,
@@ -275,6 +327,7 @@ export function DeviceFacts({
   phoneArrange = "same",
   tabletVariant = "same",
   tabletArrange = "same",
+  showEmpty = false,
 }: {
   p: WalkIdeaParts;
   dark?: boolean;
@@ -282,57 +335,197 @@ export function DeviceFacts({
   arrange?: Arrange;
   phoneVariant?: FactsVariant | "same";
   phoneArrange?: Arrange | "same";
-  /** "same": as on computers; "phone": as on phones. */
-  tabletVariant?: FactsVariant | "same" | "phone";
-  tabletArrange?: Arrange | "same" | "phone";
+  tabletVariant?: ForDevice<FactsVariant>;
+  tabletArrange?: ForDevice<Arrange>;
+  showEmpty?: boolean;
 }) {
-  const computer = { variant, arrange };
-  const phone = {
-    variant: phoneVariant === "same" ? variant : phoneVariant,
-    arrange: phoneArrange === "same" ? arrange : phoneArrange,
-  };
-  const tablet = {
-    variant:
-      tabletVariant === "same"
-        ? variant
-        : tabletVariant === "phone"
-          ? phone.variant
-          : tabletVariant,
-    arrange:
-      tabletArrange === "same"
-        ? arrange
-        : tabletArrange === "phone"
-          ? phone.arrange
-          : tabletArrange,
-  };
-  const same = (a: typeof computer, b: typeof computer) =>
-    a.variant === b.variant && a.arrange === b.arrange;
-  const draw = (look: typeof computer) => (
-    <Facts arrange={look.arrange} dark={dark} p={p} variant={look.variant} />
+  return (
+    <ByDevice
+      computer={{ variant, arrange }}
+      draw={(look) => (
+        <Facts
+          arrange={look.arrange}
+          dark={dark}
+          p={p}
+          showEmpty={showEmpty}
+          variant={look.variant}
+        />
+      )}
+      phone={{ variant: phoneVariant, arrange: phoneArrange }}
+      tablet={{ variant: tabletVariant, arrange: tabletArrange }}
+    />
   );
-  // Phones: under 768px; tablets: 768–1023px; computers: 1024px and wider.
-  // Each look is drawn once and shown at the sizes it's for.
-  if (same(phone, computer) && same(tablet, computer)) return draw(computer);
-  if (same(tablet, computer))
-    return (
-      <>
-        <div className="md:hidden">{draw(phone)}</div>
-        <div className="max-md:hidden">{draw(computer)}</div>
-      </>
+}
+
+// ── Essentials ──────────────────────────────────────────────────────────
+export type EssentialsLook =
+  "pills" | "chips" | "list" | "tiles" | "inline" | "ticks";
+
+/** The walk's ticked essentials, in one of several looks. */
+function EssentialsView({
+  p,
+  look,
+  arrange,
+  heading,
+  showEmpty,
+  dark = false,
+}: {
+  p: WalkIdeaParts;
+  look: EssentialsLook;
+  arrange: Arrange;
+  heading: boolean;
+  showEmpty: boolean;
+  dark?: boolean;
+}) {
+  const items = walkEssentialItems(p.walk.essentials, useWalkEssentials());
+  const muted = dark ? "text-white/60" : "text-muted-foreground";
+  const title = heading ? (
+    <p className={cn("text-xs font-medium tracking-wide uppercase", muted)}>
+      Essentials
+    </p>
+  ) : null;
+  if (items.length === 0)
+    // Organisers can ask to see that none are ticked; otherwise nothing.
+    return showEmpty && p.tools ? (
+      <p className={cn("text-xs", muted)}>
+        <span className="font-medium tracking-wide uppercase">Essentials</span>{" "}
+        · None ticked
+      </p>
+    ) : null;
+  const swipe = arrange === "scroll";
+  const icon = (name: string, className = "size-3.5") => {
+    const Icon = essentialIcon(name);
+    return <Icon aria-hidden="true" className={cn(className, muted)} />;
+  };
+  let body: ReactNode;
+  if (look === "inline")
+    body = (
+      <p
+        className={cn(
+          "flex flex-wrap gap-x-3 gap-y-1 text-sm",
+          swipe && cn(SWIPE, "whitespace-nowrap"),
+        )}
+      >
+        {items.map((item) => (
+          <span className="flex items-center gap-1.5" key={item.key}>
+            {icon(item.icon)}
+            {item.label}
+          </span>
+        ))}
+      </p>
     );
-  if (same(tablet, phone))
-    return (
-      <>
-        <div className="lg:hidden">{draw(phone)}</div>
-        <div className="max-lg:hidden">{draw(computer)}</div>
-      </>
+  else if (look === "list" || look === "ticks")
+    body = (
+      <ul
+        className={cn(
+          "grid gap-1.5 text-sm sm:grid-cols-2",
+          swipe && cn(SWIPE, "gap-4 whitespace-nowrap"),
+        )}
+      >
+        {items.map((item) => (
+          <li className="flex items-center gap-2" key={item.key}>
+            {look === "ticks" ? (
+              <Check aria-hidden className="size-4 text-emerald-600" />
+            ) : (
+              icon(item.icon, "size-4")
+            )}
+            {item.label}
+          </li>
+        ))}
+      </ul>
+    );
+  else if (look === "tiles")
+    body = (
+      <ul
+        className={cn(
+          "grid grid-cols-2 gap-2 sm:grid-cols-4",
+          arrange === "fill" && cn(STRETCH, "[&>*]:basis-32"),
+          swipe && cn(SWIPE, "[&>*]:w-32"),
+        )}
+      >
+        {items.map((item) => (
+          <li
+            className={cn(
+              "flex flex-col items-start gap-2 rounded-xl p-3 text-sm",
+              dark ? "bg-white/10" : "bg-muted/60",
+            )}
+            key={item.key}
+          >
+            {icon(item.icon, "size-5")}
+            {item.label}
+          </li>
+        ))}
+      </ul>
+    );
+  else
+    body = (
+      <ul
+        className={cn(
+          "flex flex-wrap gap-1.5",
+          swipe && cn(SWIPE, "whitespace-nowrap"),
+        )}
+      >
+        {items.map((item) => (
+          <li
+            className={cn(
+              "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs whitespace-nowrap",
+              look === "chips" ? (dark ? "bg-white/10" : "bg-muted") : "border",
+            )}
+            key={item.key}
+          >
+            {icon(item.icon)}
+            {item.label}
+          </li>
+        ))}
+      </ul>
     );
   return (
-    <>
-      <div className="md:hidden">{draw(phone)}</div>
-      <div className="max-md:hidden lg:hidden">{draw(tablet)}</div>
-      <div className="max-lg:hidden">{draw(computer)}</div>
-    </>
+    <div className="flex flex-col gap-1.5">
+      {title}
+      {body}
+    </div>
+  );
+}
+
+export type EssentialsOptions = {
+  look?: EssentialsLook;
+  arrange?: Arrange;
+  phoneLook?: EssentialsLook | "same";
+  phoneArrange?: Arrange | "same";
+  tabletLook?: ForDevice<EssentialsLook>;
+  tabletArrange?: ForDevice<Arrange>;
+  heading?: boolean;
+  showEmpty?: boolean;
+};
+
+function DeviceEssentials({
+  p,
+  dark,
+  o,
+}: {
+  p: WalkIdeaParts;
+  dark?: boolean;
+  o: EssentialsOptions;
+}) {
+  return (
+    <ByDevice
+      computer={{ look: o.look ?? "pills", arrange: o.arrange ?? "scroll" }}
+      draw={(look) => (
+        <EssentialsView
+          arrange={look.arrange}
+          dark={dark}
+          heading={o.heading ?? true}
+          look={look.look}
+          p={p}
+          showEmpty={o.showEmpty ?? false}
+        />
+      )}
+      phone={{ look: o.phoneLook ?? "same", arrange: o.phoneArrange ?? "same" }}
+      tablet={{
+        look: o.tabletLook ?? "same",
+        arrange: o.tabletArrange ?? "same",
+      }}
+    />
   );
 }
 
@@ -365,14 +558,16 @@ function Facts({
   variant,
   dark = false,
   arrange = "fill",
+  showEmpty = false,
 }: {
   p: WalkIdeaParts;
   variant: FactsVariant;
   dark?: boolean;
   arrange?: Arrange;
+  showEmpty?: boolean;
 }) {
   const swipe = arrange === "scroll";
-  const { facts } = useWalkInfo(p);
+  const { facts } = useWalkInfo(p, showEmpty);
   const muted = dark ? "text-white/60" : "text-muted-foreground";
   if (variant === "inline")
     return (
@@ -419,6 +614,7 @@ function Facts({
       <dl
         className={cn(
           "grid grid-cols-2 gap-2 sm:grid-cols-4",
+          arrange === "fill" && cn(STRETCH, "[&>*]:basis-40"),
           swipe && cn(SWIPE, "[&>*]:w-40"),
         )}
       >
@@ -479,6 +675,13 @@ function Facts({
       className={cn(
         "grid grid-cols-2 gap-x-6 gap-y-4",
         variant !== "pairs" && "sm:grid-cols-3 lg:grid-cols-4",
+        arrange === "fill" &&
+          cn(
+            STRETCH,
+            variant === "pairs"
+              ? "[&>*]:basis-[calc(50%-0.75rem)]"
+              : "[&>*]:basis-36",
+          ),
         swipe && cn(SWIPE, "[&>*]:w-36"),
       )}
     >
@@ -970,6 +1173,8 @@ export type DetailsOptions = {
   phoneFacts?: FactsVariant | "same";
   phoneFactsArrange?: Arrange | "same";
   tabletFacts?: FactsVariant | "same" | "phone";
+  showEmptyFacts?: boolean;
+  essentials?: EssentialsOptions;
   tabletFactsArrange?: Arrange | "same" | "phone";
   timeline?: boolean;
   bigTitle?: boolean;
@@ -1044,11 +1249,14 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         p={p}
         phoneArrange={o.phoneFactsArrange}
         phoneVariant={o.phoneFacts}
+        showEmpty={o.showEmptyFacts}
         tabletArrange={o.tabletFactsArrange}
         tabletVariant={o.tabletFacts}
         variant={o.facts ?? "grid"}
       />
-      {(o.showEssentials ?? true) ? <Essentials dark={dark} p={p} /> : null}
+      {(o.showEssentials ?? true) ? (
+        <DeviceEssentials dark={dark} o={o.essentials ?? {}} p={p} />
+      ) : null}
       {(o.showDescription ?? true) && p.walk.description ? (
         <WalkDescription description={p.walk.description} />
       ) : null}
@@ -1119,6 +1327,7 @@ export function FactsBlock({
   phoneArrange = "same",
   tabletVariant = "same",
   tabletArrange = "same",
+  showEmpty = false,
 }: {
   variant?: FactsVariant;
   arrange?: Arrange;
@@ -1126,6 +1335,7 @@ export function FactsBlock({
   phoneArrange?: Arrange | "same";
   tabletVariant?: FactsVariant | "same" | "phone";
   tabletArrange?: Arrange | "same" | "phone";
+  showEmpty?: boolean;
 }) {
   const p = useWalkParts();
   return p ? (
@@ -1134,6 +1344,7 @@ export function FactsBlock({
       p={p}
       phoneArrange={phoneArrange}
       phoneVariant={phoneVariant}
+      showEmpty={showEmpty}
       tabletArrange={tabletArrange}
       tabletVariant={tabletVariant}
       variant={variant}
@@ -1143,9 +1354,11 @@ export function FactsBlock({
   );
 }
 
-export const EssentialsBlock = withParts("Essentials", (p) => (
-  <Essentials p={p} />
-));
+export function EssentialsBlock(o: EssentialsOptions) {
+  const p = useWalkParts();
+  if (!p) return <Placeholder label="Essentials" />;
+  return <DeviceEssentials o={o} p={p} />;
+}
 export const DescriptionBlock = withParts("Description", (p) =>
   p.walk.description ? (
     <WalkDescription description={p.walk.description} />
@@ -1466,9 +1679,101 @@ export const WeatherBlock = withParts("Weather forecast", (p) => (
 export const PreciseBlock = withParts("Precise location (what3words)", (p) => (
   <>{p.precise}</>
 ));
-export const BeforeBlock = withParts("Before you set off", (p) => (
-  <>{p.before}</>
-));
+export type BeforeLook =
+  "card" | "ticks" | "numbered" | "callout" | "tiles" | "swipe" | "compact";
+
+/**
+ * Before you set off, in a chosen look. It shows when the walk page's own
+ * card would (turned on in Settings, the walk not cancelled or finished);
+ * "card" is that card exactly as it is.
+ */
+export function BeforeBlock({
+  look = "card",
+  title = "",
+}: {
+  look?: BeforeLook;
+  title?: string;
+}) {
+  const p = useWalkParts();
+  if (!p) return <Placeholder label={`Before you set off · ${look}`} />;
+  if (!p.before) return null;
+  if (look === "card") return <>{p.before}</>;
+  return <BeforeTips look={look} p={p} title={title} />;
+}
+
+function BeforeTips({
+  p,
+  look,
+  title,
+}: {
+  p: WalkIdeaParts;
+  look: Exclude<BeforeLook, "card">;
+  title: string;
+}) {
+  const { status } = useWalkInfo(p);
+  if (status === "completed" || status === "cancelled") return null;
+  const heading = title.trim() || "Before you set off";
+  const tips = p.tips;
+  if (look === "compact")
+    return (
+      <p className="text-sm text-muted-foreground">
+        <span className="font-semibold text-foreground">{heading}:</span>{" "}
+        {tips.join(" · ")}
+      </p>
+    );
+  if (look === "tiles" || look === "swipe")
+    return (
+      <section className="flex flex-col gap-3">
+        <h2 className="text-base font-semibold">{heading}</h2>
+        <ol
+          className={cn(
+            "grid gap-2 sm:grid-cols-2 lg:grid-cols-3",
+            look === "swipe" && cn(SWIPE, "gap-3 [&>*]:w-60"),
+          )}
+        >
+          {tips.map((tip, i) => (
+            <li
+              className="flex gap-3 rounded-xl bg-muted/60 p-3 text-sm"
+              key={tip}
+            >
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-background text-xs font-semibold">
+                {i + 1}
+              </span>
+              {tip}
+            </li>
+          ))}
+        </ol>
+      </section>
+    );
+  return (
+    <section
+      className={cn(
+        "flex flex-col gap-3",
+        look === "callout" &&
+          "rounded-2xl border-l-4 border-emerald-600 bg-emerald-50 p-5 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-50",
+      )}
+    >
+      <h2 className="text-base font-semibold">{heading}</h2>
+      <ol className="flex flex-col gap-2 text-sm">
+        {tips.map((tip, i) => (
+          <li className="flex items-start gap-2.5" key={tip}>
+            {look === "numbered" ? (
+              <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-foreground text-[11px] font-semibold text-background">
+                {i + 1}
+              </span>
+            ) : (
+              <Check
+                aria-hidden
+                className="mt-0.5 size-4 shrink-0 text-emerald-600"
+              />
+            )}
+            <span>{tip}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
 export const AttendedBlock = withParts("Attended (organisers only)", (p) => (
   <>{p.attended?.content ?? null}</>
 ));
@@ -1708,7 +2013,9 @@ function StoryCards({ p, arrange }: { p: WalkIdeaParts; arrange: Arrange }) {
       className={
         arrange === "scroll"
           ? cn(SWIPE, "gap-3 [&>*]:w-44 sm:[&>*]:w-52")
-          : "grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(9rem,1fr))]"
+          : arrange === "grid"
+            ? "grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(9rem,1fr))]"
+            : cn(STRETCH, "gap-3 [&>*]:basis-36")
       }
     >
       {cards.map((card) => (
