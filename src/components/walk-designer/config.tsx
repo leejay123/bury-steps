@@ -241,6 +241,16 @@ const GAP: Record<string, string> = {
   large: "gap-10",
 };
 
+const preciseLookField = {
+  type: "select" as const,
+  label: "Precise location look",
+  options: [
+    { value: "card", label: "Full card (with its explanation)" },
+    { value: "compact", label: "Compact one-line chip" },
+    { value: "text", label: "Plain text link" },
+  ],
+};
+
 const arrangeField = {
   type: "radio" as const,
   label: "Arrange",
@@ -830,6 +840,20 @@ export const walkDesignConfig: Config = {
             ["none", "Hide them"],
           ]),
         },
+        preciseAt: {
+          type: "select",
+          label: "Precise location (what3words)",
+          options: [
+            { value: "none", label: "Not in the card" },
+            { value: "above-facts", label: "Above the facts" },
+            { value: "below-facts", label: "Below the facts" },
+            { value: "above-map", label: "Above the map" },
+            { value: "on-map", label: "On the map" },
+            { value: "below-map", label: "Below the map" },
+            { value: "bottom", label: "At the bottom of the card" },
+          ],
+        },
+        preciseLook: preciseLookField,
         mapTitle: {
           type: "radio",
           label: "Map's Meeting point title",
@@ -920,6 +944,8 @@ export const walkDesignConfig: Config = {
         mapHeight: "medium",
         mapTitle: true,
         mapNote: true,
+        preciseAt: "none",
+        preciseLook: "card",
         tone: "card",
         showTitle: true,
         showActions: true,
@@ -946,6 +972,8 @@ export const walkDesignConfig: Config = {
         mapHeight,
         mapTitle,
         mapNote,
+        preciseAt,
+        preciseLook,
         tone,
         showTitle,
         showActions,
@@ -973,6 +1001,8 @@ export const walkDesignConfig: Config = {
           mapHeight={mapHeight}
           mapNote={mapNote}
           mapTitle={mapTitle}
+          preciseAt={preciseAt}
+          preciseLook={preciseLook}
           phoneFacts={phoneFacts}
           phoneFactsArrange={phoneFactsArrange}
           tabletFacts={tabletFacts}
@@ -1307,6 +1337,18 @@ export const walkDesignConfig: Config = {
           options: yesNo,
         },
         showNote: { type: "radio", label: "Small print", options: yesNo },
+        preciseAt: {
+          type: "select",
+          label: "Precise location (what3words)",
+          options: [
+            { value: "none", label: "Not with the map" },
+            { value: "above-map", label: "Above the map" },
+            { value: "on-map", label: "On the map" },
+            { value: "below-map", label: "Below the map" },
+            { value: "after", label: "After the buttons" },
+          ],
+        },
+        preciseLook: preciseLookField,
       },
       defaultProps: {
         look: "card",
@@ -1314,9 +1356,21 @@ export const walkDesignConfig: Config = {
         height: "medium",
         showTitle: true,
         showNote: true,
+        preciseAt: "none",
+        preciseLook: "card",
       },
-      render: ({ look, buttons, height, showTitle, showNote }) => (
+      render: ({
+        look,
+        buttons,
+        height,
+        showTitle,
+        showNote,
+        preciseAt,
+        preciseLook,
+      }) => (
         <MapBlock
+          preciseAt={preciseAt}
+          preciseLook={preciseLook}
           buttons={buttons}
           height={height}
           look={look}

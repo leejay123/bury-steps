@@ -30,6 +30,9 @@ export type MapLook = {
   height?: "short" | "medium" | "tall";
   showTitle?: boolean;
   showNote?: boolean;
+  /** Something placed with the map, e.g. the precise location (the designer). */
+  extra?: ReactNode;
+  extraAt?: "above-map" | "on-map" | "below-map" | "after";
 };
 const DEFAULT_LOOK: Required<MapLook> = {
   look: "card",
@@ -37,6 +40,8 @@ const DEFAULT_LOOK: Required<MapLook> = {
   height: "medium",
   showTitle: true,
   showNote: true,
+  extra: null,
+  extraAt: "below-map",
 };
 /** Inside an edge-to-edge designer block, lose the rounded corners and side borders. */
 const BLEED = "in-data-[bleed]:rounded-none in-data-[bleed]:border-x-0";
@@ -98,6 +103,8 @@ export function WalkMap({
   const o = { ...DEFAULT_LOOK, ...useContext(MapLookContext) };
   const height =
     o.height === "short" ? "h-44" : o.height === "tall" ? "h-96" : "h-64";
+  const at = (where: MapLook["extraAt"]) =>
+    o.extra && o.extraAt === where ? o.extra : null;
   const map = point ? (
     <iframe
       className={cn(
@@ -111,6 +118,26 @@ export function WalkMap({
       title={`Map of ${location}`}
     />
   ) : null;
+  // The map, with anything chosen to sit on it (top left) and the
+  // directions buttons when they go on it (bottom).
+  const mapArea = (className?: string) =>
+    map ? (
+      <div className={cn("relative", className)}>
+        {map}
+        {at("on-map") ? (
+          <div className="absolute top-3 right-3 left-3 flex">
+            {at("on-map")}
+          </div>
+        ) : null}
+        {o.buttons === "over" && o.look !== "overlay" ? (
+          <div className="absolute right-3 bottom-3 left-3 sm:right-auto">
+            {buttons}
+          </div>
+        ) : null}
+      </div>
+    ) : (
+      at("on-map")
+    );
   const buttons =
     o.buttons === "none" ? null : (
       <DirectionsButtons location={location} point={point} />
@@ -143,13 +170,22 @@ export function WalkMap({
     )
   ) : null;
 
-  if (o.look === "card" && o.buttons !== "over") {
+  if (o.look === "card") {
     // The original card (walk pages outside the designer always use this).
+    const top = o.showTitle || o.buttons === "above" || at("above-map");
+    const bottom =
+      (o.buttons === "below" && buttons) ||
+      note ||
+      at("below-map") ||
+      at("after");
     return (
       <Card className="gap-4 overflow-hidden py-0">
-        {o.showTitle || o.buttons === "above" ? (
+        {top ? (
           <CardHeader
-            className={cn("px-6 pt-6", o.buttons === "above" && "gap-3")}
+            className={cn(
+              "px-6 pt-6",
+              (o.buttons === "above" || at("above-map")) && "gap-3",
+            )}
           >
             {o.showTitle ? (
               <>
@@ -157,23 +193,17 @@ export function WalkMap({
                 <CardDescription>{location}</CardDescription>
               </>
             ) : null}
+            {at("above-map")}
             {o.buttons === "above" ? buttons : null}
           </CardHeader>
         ) : null}
-        {map ? (
-          <div
-            className={cn(
-              "border-y",
-              !o.showTitle && o.buttons !== "above" && "border-t-0",
-            )}
-          >
-            {map}
-          </div>
-        ) : null}
-        {(o.buttons === "below" && buttons) || note ? (
+        {mapArea(cn("border-y", !top && "border-t-0", !bottom && "border-b-0"))}
+        {bottom ? (
           <CardContent className="flex flex-col gap-3 px-6 pb-6">
+            {at("below-map")}
             {o.buttons === "below" ? buttons : null}
             {note}
+            {at("after")}
           </CardContent>
         ) : null}
       </Card>
@@ -183,28 +213,27 @@ export function WalkMap({
   if (o.look === "bare") {
     return (
       <div className="flex flex-col gap-3">
+        {at("above-map")}
         {o.buttons === "above" ? buttons : null}
-        <div className={cn("relative overflow-hidden rounded-2xl", BLEED)}>
-          {map}
-          {o.buttons === "over" ? (
-            <div className="absolute right-3 bottom-3 left-3 sm:right-auto">
-              {buttons}
-            </div>
-          ) : null}
-        </div>
+        {mapArea(cn("overflow-hidden rounded-2xl", BLEED))}
+        {at("below-map")}
         {o.buttons === "below" ? buttons : null}
+        {at("after")}
       </div>
     );
   }
 
-  if (o.look === "overlay" || (o.look === "card" && o.buttons === "over")) {
+  if (o.look === "overlay") {
     // The map fills the block; the meeting point and buttons float over it.
     return (
       <div className={cn("relative overflow-hidden rounded-2xl border", BLEED)}>
-        {map ?? <div className={cn("bg-muted", height)} />}
+        {mapArea() ?? <div className={cn("bg-muted", height)} />}
         <div className="absolute right-3 bottom-3 left-3 flex flex-col gap-3 rounded-xl bg-background/95 p-4 shadow-lg backdrop-blur-sm sm:right-auto sm:max-w-sm">
           {title}
-          {o.buttons === "none" ? null : buttons}
+          {at("above-map")}
+          {buttons}
+          {at("below-map")}
+          {at("after")}
         </div>
       </div>
     );
@@ -220,10 +249,13 @@ export function WalkMap({
       >
         <div className="flex flex-col justify-center gap-4 p-5 sm:p-6">
           {title}
-          {o.buttons === "none" ? null : buttons}
+          {at("above-map")}
+          {o.buttons === "over" ? null : buttons}
+          {at("below-map")}
           {note}
+          {at("after")}
         </div>
-        <div className="max-lg:order-first">{map}</div>
+        {mapArea("max-lg:order-first")}
       </div>
     );
   }
@@ -232,17 +264,13 @@ export function WalkMap({
   return (
     <div className="flex flex-col gap-3">
       {title}
+      {at("above-map")}
       {o.buttons === "above" ? buttons : null}
-      <div className="relative">
-        {map}
-        {o.buttons === "over" ? (
-          <div className="absolute right-3 bottom-3 left-3 sm:right-auto">
-            {buttons}
-          </div>
-        ) : null}
-      </div>
+      {mapArea()}
+      {at("below-map")}
       {o.buttons === "below" ? buttons : null}
       {note}
+      {at("after")}
     </div>
   );
 }

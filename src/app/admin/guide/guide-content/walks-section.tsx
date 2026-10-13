@@ -252,7 +252,10 @@ export function WalksSection({
               gaps; Even grid keeps the columns lined up. Spacing: the Tabs
               block sets the space between the tabs and their content and
               between blocks in a tab, Columns the space between columns, and
-              Block layout the space above and below any block. The
+              Block layout the space above and below any block. The precise location (what3words) can go in the Details
+              card — above or below the facts, above, on or below the map, or
+              at the bottom — or with the Map block, as the full card, a
+              compact one-line chip or a plain text link. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

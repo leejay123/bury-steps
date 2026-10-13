@@ -4,6 +4,7 @@ import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
+  ArrowUpRight,
   CalendarDays,
   CalendarPlus,
   Check,
@@ -37,6 +38,8 @@ import { useWalkNow } from "@/components/walk-header-styles";
 import type { WalkIdeaParts } from "@/components/walk-idea-layouts";
 import { WalkActionsBar, WalkManageMenu } from "@/components/walk-manage-menu";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
+import { What3wordsLink } from "@/components/what3words-link";
+import { what3wordsUrl } from "@/lib/what3words";
 import {
   DirectionsButtons,
   MapLookProvider,
@@ -736,7 +739,7 @@ function FlushMap({ p, className }: { p: WalkIdeaParts; className?: string }) {
   return (
     <div
       className={cn(
-        "[&_[data-slot=card]]:gap-3 [&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:border-0 [&_[data-slot=card]]:py-0 [&_[data-slot=card]]:pb-4 [&_[data-slot=card]]:shadow-none",
+        "[&_[data-slot=card]]:gap-3 [&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:border-0 [&_[data-slot=card]]:py-0 [&_[data-slot=card]]:shadow-none",
         className,
       )}
     >
@@ -1165,6 +1168,8 @@ export type DetailsOptions = {
   mapHeight?: "short" | "medium" | "tall";
   mapTitle?: boolean;
   mapNote?: boolean;
+  preciseAt?: PreciseAt;
+  preciseLook?: PreciseLook;
   tone?: "card" | "tint" | "dark" | "plain";
   ribbon?: RibbonContent | OldRibbon;
   ribbonStyle?: RibbonStyle;
@@ -1197,6 +1202,24 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   const dark = o.tone === "dark";
   const showTitle = o.showTitle ?? true;
   const map = o.map ?? "none";
+  // The precise location, where chosen. With no map in the card, the map
+  // spots fall back to under the facts.
+  const hasMap = map !== "none" && Boolean(p.map);
+  const wanted = o.preciseAt ?? "none";
+  const preciseAt: PreciseAt =
+    !hasMap &&
+    (wanted === "above-map" || wanted === "on-map" || wanted === "below-map")
+      ? "below-facts"
+      : wanted;
+  const precise =
+    p.what3words && preciseAt !== "none" ? (
+      <PreciseLocation
+        address={p.what3words}
+        look={o.preciseLook ?? (preciseAt === "on-map" ? "compact" : "card")}
+      />
+    ) : null;
+  const preciseHere = (where: PreciseAt) =>
+    preciseAt === where ? precise : null;
   const body = (
     <div
       className={cn(
@@ -1243,6 +1266,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         </div>
       ) : null}
       {o.timeline ? <Timeline p={p} /> : null}
+      {preciseHere("above-facts")}
       <DeviceFacts
         arrange={o.factsArrange}
         dark={dark}
@@ -1254,12 +1278,14 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         tabletVariant={o.tabletFacts}
         variant={o.facts ?? "grid"}
       />
+      {preciseHere("below-facts")}
       {(o.showEssentials ?? true) ? (
         <DeviceEssentials dark={dark} o={o.essentials ?? {}} p={p} />
       ) : null}
       {(o.showDescription ?? true) && p.walk.description ? (
         <WalkDescription description={p.walk.description} />
       ) : null}
+      {preciseHere("bottom")}
     </div>
   );
   // Older designs: true / "soft" / "bold" / "bar" all meant the status band.
@@ -1289,6 +1315,16 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         height: o.mapHeight ?? "medium",
         showTitle: o.mapTitle ?? true,
         showNote: o.mapNote ?? true,
+        extra:
+          preciseAt === "above-map" ||
+          preciseAt === "on-map" ||
+          preciseAt === "below-map"
+            ? precise
+            : null,
+        extraAt:
+          preciseAt === "above-map" || preciseAt === "on-map"
+            ? preciseAt
+            : "below-map",
       }}
     >
       <section
@@ -1655,10 +1691,34 @@ function Status({ p, variant }: { p: WalkIdeaParts; variant: StatusVariant }) {
 }
 
 /** The meeting-point map, in the look and with the buttons chosen in the designer. */
-export function MapBlock(look: MapLook) {
+export function MapBlock({
+  preciseAt = "none",
+  preciseLook,
+  ...look
+}: MapLook & {
+  preciseAt?: "none" | "above-map" | "on-map" | "below-map" | "after";
+  preciseLook?: PreciseLook;
+}) {
   const p = useWalkParts();
   if (!p) return <Placeholder label="Map and directions" />;
-  return <MapLookProvider value={look}>{p.map}</MapLookProvider>;
+  const precise =
+    p.what3words && preciseAt !== "none" ? (
+      <PreciseLocation
+        address={p.what3words}
+        look={preciseLook ?? (preciseAt === "on-map" ? "compact" : "card")}
+      />
+    ) : null;
+  return (
+    <MapLookProvider
+      value={{
+        ...look,
+        extra: precise,
+        extraAt: preciseAt === "none" ? undefined : preciseAt,
+      }}
+    >
+      {p.map}
+    </MapLookProvider>
+  );
 }
 
 /** Get directions and Apple Maps on their own, to place anywhere. */
@@ -2736,5 +2796,61 @@ export function BackLinkBlock({
     >
       {link}
     </div>
+  );
+}
+
+// ── Precise location (what3words) ───────────────────────────────────────
+export type PreciseLook = "card" | "compact" | "text";
+export type PreciseAt =
+  | "none"
+  | "above-facts"
+  | "below-facts"
+  | "above-map"
+  | "on-map"
+  | "below-map"
+  | "bottom";
+
+/** The what3words precise location: the full card, a one-line chip, or a text link. */
+export function PreciseLocation({
+  address,
+  look,
+}: {
+  address: string;
+  look: PreciseLook;
+}) {
+  if (look === "card") return <What3wordsLink address={address} />;
+  const words = (
+    <span className="font-mono font-medium">
+      <span className="text-[#e11f26]">{"///"}</span>
+      {address}
+    </span>
+  );
+  if (look === "text")
+    return (
+      <a
+        className="flex w-fit items-center gap-1.5 text-sm underline-offset-4 hover:underline"
+        href={what3wordsUrl(address)}
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        <MapPin aria-hidden className="size-4 text-muted-foreground" />
+        <span className="text-muted-foreground">Precise location</span>
+        {words}
+      </a>
+    );
+  return (
+    <a
+      className="flex w-fit max-w-full items-center gap-2 rounded-full border bg-background/95 px-3 py-1.5 text-sm shadow-sm backdrop-blur-sm hover:bg-accent"
+      href={what3wordsUrl(address)}
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      <MapPin aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+      <span className="truncate">{words}</span>
+      <ArrowUpRight
+        aria-hidden
+        className="size-3.5 shrink-0 text-muted-foreground"
+      />
+    </a>
   );
 }
