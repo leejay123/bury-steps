@@ -1,4 +1,5 @@
 import type { Data } from "@puckeditor/core";
+import { READY_LAYOUTS } from "./ready-layouts";
 
 /**
  * Ready-made starting designs for the walk page designer, each following the
@@ -201,3 +202,20 @@ export const defaultDesignFor = (
         restTabs(true),
       ])
     : DEFAULT_WALK_DESIGN();
+
+/**
+ * A ready-made page for every numbered design (1–81): the Back link, then
+ * that design whole in a Ready-made layout block. Add blocks around it, or
+ * swap the design in the block's options.
+ */
+export const READY_PAGE_PRESETS: {
+  id: string;
+  label: string;
+  group: string;
+  data: () => Data;
+}[] = READY_LAYOUTS.map((item) => ({
+  id: `ready-${item.id}`,
+  label: `${item.number} · ${item.label}`,
+  group: item.group,
+  data: () => page([block("ReadyLayout", { layout: item.id })]),
+}));

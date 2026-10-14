@@ -17,6 +17,7 @@ import {
   osmViewUrl,
 } from "@/lib/maps";
 import { cn } from "@/lib/utils";
+import { Map as MapIcon, Navigation } from "lucide-react";
 
 /**
  * How the meeting-point map looks. Walk pages use the card; the walk page
@@ -30,6 +31,7 @@ export type MapLook = {
   height?: "short" | "medium" | "tall";
   showTitle?: boolean;
   showNote?: boolean;
+  buttonsLook?: DirectionsLook;
   /** Something placed with the map, e.g. the precise location (the designer). */
   extra?: ReactNode;
   extraAt?: "above-map" | "on-map" | "below-map" | "after";
@@ -42,6 +44,7 @@ const DEFAULT_LOOK: Required<MapLook> = {
   showNote: true,
   extra: null,
   extraAt: "below-map",
+  buttonsLook: "default",
 };
 /** Inside an edge-to-edge designer block, lose the rounded corners and side borders. */
 const BLEED = "in-data-[bleed]:rounded-none in-data-[bleed]:border-x-0";
@@ -59,36 +62,99 @@ export function MapLookProvider({
   );
 }
 
-/** Get directions and Apple Maps, for the map or to place on their own. */
+export type DirectionsLook =
+  | "default"
+  | "outline"
+  | "solid"
+  | "ghost"
+  | "pills"
+  | "icons"
+  | "links"
+  | "stacked";
+
+/** Get directions and Apple Maps, for the map or to place on their own, in a chosen look. */
 export function DirectionsButtons({
   className,
   location,
   point = null,
+  look = "default",
 }: {
   className?: string;
   location: string;
   point?: GeoPoint | null;
+  look?: DirectionsLook;
 }) {
+  const links = [
+    {
+      href: googleDirectionsUrl(location, point),
+      label: "Get directions",
+      Icon: Navigation,
+      primary: true,
+    },
+    {
+      href: appleMapsUrl(location, point),
+      label: "Apple Maps",
+      Icon: MapIcon,
+      primary: false,
+    },
+  ];
+  if (look === "links")
+    return (
+      <div className={cn("flex flex-wrap gap-x-4 gap-y-1 text-sm", className)}>
+        {links.map(({ href, label, Icon }) => (
+          <a
+            className="flex items-center gap-1.5 font-medium underline-offset-4 hover:underline"
+            href={href}
+            key={label}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            <Icon aria-hidden className="size-4 text-muted-foreground" />
+            {label}
+          </a>
+        ))}
+      </div>
+    );
   return (
-    <div className={cn("grid grid-cols-2 gap-2 sm:flex", className)}>
-      <Button asChild size="sm">
-        <a
-          href={googleDirectionsUrl(location, point)}
-          rel="noopener noreferrer"
-          target="_blank"
+    <div
+      className={cn(
+        look === "stacked"
+          ? "flex flex-col gap-2"
+          : "grid grid-cols-2 gap-2 sm:flex",
+        className,
+      )}
+    >
+      {links.map(({ href, label, Icon, primary }) => (
+        <Button
+          asChild
+          className={cn(
+            look === "pills" && "rounded-full",
+            look === "stacked" && "w-full",
+          )}
+          key={label}
+          size="sm"
+          variant={
+            look === "outline"
+              ? "outline"
+              : look === "solid"
+                ? "default"
+                : look === "ghost"
+                  ? "ghost"
+                  : look === "pills"
+                    ? primary
+                      ? "default"
+                      : "secondary"
+                    : primary
+                      ? "default"
+                      : "outline"
+          }
         >
-          Get directions
-        </a>
-      </Button>
-      <Button asChild size="sm" variant="outline">
-        <a
-          href={appleMapsUrl(location, point)}
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          Apple Maps
-        </a>
-      </Button>
+          <a href={href} rel="noopener noreferrer" target="_blank">
+            {look === "icons" ? <Icon data-icon="inline-start" /> : null}
+            {label}
+          </a>
+        </Button>
+      ))}
     </div>
   );
 }
@@ -140,7 +206,11 @@ export function WalkMap({
     );
   const buttons =
     o.buttons === "none" ? null : (
-      <DirectionsButtons location={location} point={point} />
+      <DirectionsButtons
+        location={location}
+        look={o.buttonsLook}
+        point={point}
+      />
     );
   const title = o.showTitle ? (
     <div className="flex flex-col gap-1">

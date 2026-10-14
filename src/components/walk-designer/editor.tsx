@@ -15,7 +15,9 @@ import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -25,6 +27,7 @@ import { walkDesignConfig } from "./config";
 import { PreviewAudience, WalkPartsProvider } from "./parts";
 import {
   DEFAULT_WALK_DESIGN,
+  READY_PAGE_PRESETS,
   WALK_DESIGN_PRESETS,
   defaultDesignFor,
 } from "./presets";
@@ -160,7 +163,9 @@ export function WalkDesignEditor({
   }
 
   function applyPreset(id: string) {
-    const preset = WALK_DESIGN_PRESETS.find((item) => item.id === id);
+    const preset = [...WALK_DESIGN_PRESETS, ...READY_PAGE_PRESETS].find(
+      (item) => item.id === id,
+    );
     if (!preset) return;
     setStart((current) => ({ key: current.key + 1, data: preset.data() }));
     toast.info(`Started from "${preset.label}". Publish to save it.`);
@@ -203,11 +208,29 @@ export function WalkDesignEditor({
             <SelectValue placeholder="Start from a ready-made design…" />
           </SelectTrigger>
           <SelectContent>
-            {WALK_DESIGN_PRESETS.map((preset) => (
-              <SelectItem key={preset.id} value={preset.id}>
-                {preset.label}
-              </SelectItem>
-            ))}
+            <SelectGroup>
+              <SelectLabel>Starting points to build on</SelectLabel>
+              {WALK_DESIGN_PRESETS.map((preset) => (
+                <SelectItem key={preset.id} value={preset.id}>
+                  {preset.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+            {/* A ready-made page for each numbered design, grouped as in Settings. */}
+            {[...new Set(READY_PAGE_PRESETS.map((preset) => preset.group))].map(
+              (group) => (
+                <SelectGroup key={group}>
+                  <SelectLabel>{group}</SelectLabel>
+                  {READY_PAGE_PRESETS.filter(
+                    (preset) => preset.group === group,
+                  ).map((preset) => (
+                    <SelectItem key={preset.id} value={preset.id}>
+                      {preset.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              ),
+            )}
           </SelectContent>
         </Select>
         <Select

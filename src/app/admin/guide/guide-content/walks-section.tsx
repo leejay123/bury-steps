@@ -255,7 +255,24 @@ export function WalksSection({
               Block layout the space above and below any block. The precise location (what3words) can go in the Details
               card — above or below the facts, above, on or below the map, or
               at the bottom — or with the Map block, as the full card, a
-              compact one-line chip or a plain text link. The
+              compact one-line chip or a plain text link. Start from a ready-made design now also lists a ready-made
+              page for every numbered design (1 to 81): each is the Back link
+              and that design whole, in a Ready-made layout block you can add
+              blocks around or switch to another design. The Tabs block has
+              tab looks from free component libraries (folder tabs, coloured
+              folder tabs, soft or solid pills, a bordered box, light, outline
+              pills, joined segments, a line on top, or plain words) and can
+              put the tab names down the left side on a computer. The Details
+              card&apos;s status (Upcoming · Clock-in opens…) can be the badge
+              and words, the badge or words only, a coloured pill or hidden,
+              above or below the walk name; its map can run edge to edge or
+              sit at page width with rounded corners; Space inside sets its
+              padding (none by default when it has no frame, so it lines up
+              with the page like the Notices heading). Directions buttons have
+              looks (solid and outline, both outline, both solid, ghost,
+              rounded pills, with map icons, text links, stacked). In the
+              designer, a walk with no messages right now shows a sample
+              message, marked Preview only, where messages would go. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

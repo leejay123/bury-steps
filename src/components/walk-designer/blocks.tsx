@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useState, type ComponentType, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ComponentType,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -29,6 +35,7 @@ import { formatTime, formatWalkDay, formatWalkLength } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { effectiveEndsAt, walkOpensAt, walkStatus } from "@/lib/walk-window";
 import { useWalkClock } from "@/hooks/use-walk-clock";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ShareLinkButton } from "@/components/share-link";
 import { WalkDescription } from "@/components/walk-description";
@@ -43,6 +50,7 @@ import { what3wordsUrl } from "@/lib/what3words";
 import {
   DirectionsButtons,
   MapLookProvider,
+  type DirectionsLook,
   type MapLook,
 } from "@/components/walk-map";
 import { useWalkParts } from "./parts";
@@ -750,13 +758,17 @@ function FlushMap({ p, className }: { p: WalkIdeaParts; className?: string }) {
 
 // ── Walk blocks ─────────────────────────────────────────────────────────
 /** The walk's messages (clock-in times, cancelled, finished…), in the chosen look. */
-export function MessagesBlock({ look = "as-is" }: { look?: MessageLook }) {
+export function MessagesBlock({
+  look = "as-is",
+  editing = false,
+}: {
+  look?: MessageLook;
+  editing?: boolean;
+}) {
   const p = useWalkParts();
   if (!p) return <Placeholder label="Messages (only when there are any)" />;
   return (
-    <div className={cn("flex flex-col gap-2 empty:hidden", MESSAGE_LOOK[look])}>
-      {p.notices}
-    </div>
+    <MessagesOrSample className={MESSAGE_LOOK[look]} editing={editing} p={p} />
   );
 }
 
@@ -1170,6 +1182,15 @@ export type DetailsOptions = {
   mapNote?: boolean;
   preciseAt?: PreciseAt;
   preciseLook?: PreciseLook;
+  /** "edge": the map runs to the card's edges; "inset": space around it, rounded. */
+  mapFit?: "edge" | "inset";
+  statusLook?: "badge-line" | "badge" | "line" | "pill" | "none";
+  statusAt?: "above" | "below";
+  mapButtonsLook?: DirectionsLook;
+  /** In the designer: shows a sample message where the walk has none. */
+  editing?: boolean;
+  /** Space inside the card ("auto": none without a frame, normal with one). */
+  inset?: "auto" | "none" | "normal" | "roomy";
   tone?: "card" | "tint" | "dark" | "plain";
   ribbon?: RibbonContent | OldRibbon;
   ribbonStyle?: RibbonStyle;
@@ -1202,6 +1223,19 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   const dark = o.tone === "dark";
   const showTitle = o.showTitle ?? true;
   const map = o.map ?? "none";
+  const padding =
+    !o.inset || o.inset === "auto"
+      ? o.tone === "plain"
+        ? "none"
+        : "normal"
+      : o.inset;
+  const inset = (o.mapFit ?? "edge") === "inset";
+  // Inset: the map's own rounded card, with the card's space around it.
+  const insetMap = (className?: string) => (
+    <div className={cn(padding !== "none" && "px-5 sm:px-6", className)}>
+      {p.map}
+    </div>
+  );
   // The precise location, where chosen. With no map in the card, the map
   // spots fall back to under the facts.
   const hasMap = map !== "none" && Boolean(p.map);
@@ -1220,24 +1254,51 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
     ) : null;
   const preciseHere = (where: PreciseAt) =>
     preciseAt === where ? precise : null;
+  // The status: "Upcoming" badge and/or its words, as chosen.
+  const statusLook = o.statusLook ?? "badge-line";
+  const statusRow =
+    statusLook === "none" ? null : statusLook === "pill" ? (
+      <span
+        className={cn(
+          "flex w-fit items-center gap-2 rounded-full px-3 py-1 text-sm",
+          info.now.tone,
+        )}
+        suppressHydrationWarning
+      >
+        <span
+          aria-hidden
+          className={cn(
+            "size-2 rounded-full",
+            info.now.live ? "bg-emerald-500" : "bg-current opacity-50",
+          )}
+        />
+        <span className="font-semibold">{info.now.eyebrow}</span>
+        <span className="opacity-80">{info.now.line}</span>
+      </span>
+    ) : (
+      <div className="flex flex-wrap items-center gap-2">
+        {statusLook !== "line" ? <Badge p={p} /> : null}
+        {statusLook !== "badge" ? (
+          <StatusLine className={dark ? "text-white/80" : undefined} p={p} />
+        ) : null}
+      </div>
+    );
   const body = (
     <div
       className={cn(
-        "flex min-w-0 flex-col gap-5 p-5 sm:p-6",
-        o.bigTitle && "sm:p-8",
+        "flex min-w-0 flex-col gap-5",
+        // A card without a frame has no space inside, so it lines up with
+        // the rest of the page (like the Notices page's heading).
+        padding === "normal" && "p-5 sm:p-6",
+        padding === "roomy" && "p-6 sm:p-8",
+        o.bigTitle && padding === "normal" && "sm:p-8",
       )}
     >
       {showTitle || (o.showActions ?? true) ? (
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           {showTitle ? (
             <div className="flex min-w-0 flex-col gap-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge p={p} />
-                <StatusLine
-                  className={dark ? "text-white/80" : undefined}
-                  p={p}
-                />
-              </div>
+              {(o.statusAt ?? "above") === "above" ? statusRow : null}
               <h1
                 className={cn(
                   "text-2xl leading-tight font-semibold tracking-tight text-balance sm:text-3xl",
@@ -1246,6 +1307,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
               >
                 {p.headline.title}
               </h1>
+              {o.statusAt === "below" ? statusRow : null}
               {p.headline.note ? (
                 <p
                   className={cn(
@@ -1302,6 +1364,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   const ribbon = (
     <DetailsRibbon
       content={content}
+      editing={o.editing ?? false}
       info={info}
       p={p}
       style={style}
@@ -1312,6 +1375,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
     <MapLookProvider
       value={{
         buttons: o.mapButtons ?? "below",
+        buttonsLook: o.mapButtonsLook ?? "default",
         height: o.mapHeight ?? "medium",
         showTitle: o.mapTitle ?? true,
         showNote: o.mapNote ?? true,
@@ -1340,16 +1404,34 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         )}
       >
         {ribbonAt === "top" ? ribbon : null}
-        {map === "top" ? <FlushMap className="border-b" p={p} /> : null}
+        {map === "top" && p.map ? (
+          inset ? (
+            insetMap(padding === "none" ? "pb-5" : "pt-5 sm:pt-6")
+          ) : (
+            <FlushMap className="border-b" p={p} />
+          )
+        ) : null}
         {map === "side" && p.map ? (
           <div className="grid lg:grid-cols-[minmax(0,1fr)_24rem]">
             {body}
-            <FlushMap className="border-t lg:border-t-0 lg:border-l" p={p} />
+            {inset ? (
+              insetMap(
+                cn("lg:pl-0", padding !== "none" && "pb-5 sm:pb-6 lg:pt-6"),
+              )
+            ) : (
+              <FlushMap className="border-t lg:border-t-0 lg:border-l" p={p} />
+            )}
           </div>
         ) : (
           body
         )}
-        {map === "bottom" ? <FlushMap className="border-t" p={p} /> : null}
+        {map === "bottom" && p.map ? (
+          inset ? (
+            insetMap(padding === "none" ? "pt-5" : "pb-5 sm:pb-6")
+          ) : (
+            <FlushMap className="border-t" p={p} />
+          )
+        ) : null}
         {ribbonAt === "bottom" ? ribbon : null}
       </section>
     </MapLookProvider>
@@ -1722,7 +1804,13 @@ export function MapBlock({
 }
 
 /** Get directions and Apple Maps on their own, to place anywhere. */
-export function DirectionsBlock({ full = false }: { full?: boolean }) {
+export function DirectionsBlock({
+  full = false,
+  look = "default",
+}: {
+  full?: boolean;
+  look?: DirectionsLook;
+}) {
   const p = useWalkParts();
   if (!p) return <Placeholder label="Directions buttons" />;
   if (!p.meeting) return null;
@@ -1730,6 +1818,7 @@ export function DirectionsBlock({ full = false }: { full?: boolean }) {
     <DirectionsButtons
       className={full ? "sm:grid sm:grid-cols-2" : undefined}
       location={p.meeting}
+      look={look}
     />
   );
 }
@@ -2624,7 +2713,9 @@ function DetailsRibbon({
   style,
   text,
   info,
+  editing = false,
 }: {
+  editing?: boolean;
   p: WalkIdeaParts;
   content: RibbonContent;
   style: RibbonStyle;
@@ -2657,16 +2748,16 @@ function DetailsRibbon({
       />
     );
   if (content === "messages")
-    return p.notices ? (
-      <div
+    return (
+      <MessagesOrSample
         className={cn(
-          "flex flex-col gap-2 px-5 py-3 empty:hidden sm:px-6 [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:bg-transparent [&_[data-slot=alert]]:p-0 [&_[data-slot=alert]]:text-inherit",
+          "px-5 py-3 sm:px-6 [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:bg-transparent [&_[data-slot=alert]]:p-0 [&_[data-slot=alert]]:text-inherit",
           tone,
         )}
-      >
-        {p.notices}
-      </div>
-    ) : null;
+        editing={editing}
+        p={p}
+      />
+    );
   const dot = (
     <span
       aria-hidden
@@ -2852,5 +2943,53 @@ export function PreciseLocation({
         className="size-3.5 shrink-0 text-muted-foreground"
       />
     </a>
+  );
+}
+
+/**
+ * The walk's messages. In the designer, when the walk has none right now, a
+ * sample stands in (marked as a preview) so the design's message spots can
+ * be seen; real pages never show it.
+ */
+function MessagesOrSample({
+  p,
+  editing,
+  className,
+}: {
+  p: WalkIdeaParts;
+  editing: boolean;
+  className?: string;
+}) {
+  const box = useRef<HTMLDivElement>(null);
+  const [empty, setEmpty] = useState(false);
+  const { opens } = useWalkInfo(p);
+  useEffect(() => {
+    if (!editing) return;
+    const el = box.current;
+    if (!el) return;
+    const check = () => setEmpty((el.textContent ?? "").trim() === "");
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(el, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+    return () => observer.disconnect();
+  }, [editing]);
+  return (
+    <div className={cn("flex flex-col gap-2", className)}>
+      <div className="flex flex-col gap-2 empty:hidden" ref={box}>
+        {p.notices}
+      </div>
+      {editing && empty ? (
+        <Alert variant="info">
+          <AlertDescription suppressHydrationWarning>
+            Preview only: messages show here, e.g. Clock-in opens at{" "}
+            {formatTime(opens)} on {formatWalkDay(opens)}.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+    </div>
   );
 }

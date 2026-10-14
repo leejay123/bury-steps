@@ -3,6 +3,8 @@
 import type { ComponentConfig, Config } from "@puckeditor/core";
 import { useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { PreviewAudience } from "./parts";
+import { ReadyLayoutBlock } from "./ready-layout-block";
+import { READY_LAYOUTS } from "./ready-layouts";
 import { cn } from "@/lib/utils";
 import {
   Accordion,
@@ -241,6 +243,21 @@ const GAP: Record<string, string> = {
   large: "gap-10",
 };
 
+const directionsLookField = {
+  type: "select" as const,
+  label: "Directions buttons look",
+  options: options([
+    ["default", "Solid + outline"],
+    ["outline", "Both outline"],
+    ["solid", "Both solid"],
+    ["ghost", "Ghost (no border)"],
+    ["pills", "Rounded pills"],
+    ["icons", "With map icons"],
+    ["links", "Plain text links"],
+    ["stacked", "Stacked, full width"],
+  ]),
+};
+
 const preciseLookField = {
   type: "select" as const,
   label: "Precise location look",
@@ -378,6 +395,38 @@ const blockLayoutField = {
   },
 };
 
+/**
+ * Tab looks from free component libraries, recreated with our own styles
+ * (nothing installed): Chakra UI's enclosed, enclosed-coloured,
+ * soft-rounded and solid-rounded; Mantine's outline; HeroUI's bordered and
+ * light; Origin UI's joined segments; plus an over-line and plain words.
+ * They sit on the plain (grey pill) tabs, so the site's tab style doesn't
+ * mix in.
+ */
+// Written out in full: Tailwind only makes the classes it finds whole in the code.
+const TAB_LOOKS: Record<string, string> = {
+  enclosed:
+    "[&_[data-slot=tabs-list]]:h-auto [&_[data-slot=tabs-list]]:rounded-none [&_[data-slot=tabs-list]]:border-b [&_[data-slot=tabs-list]]:bg-transparent [&_[data-slot=tabs-list]]:p-0 [&_[data-slot=tabs-list]]:gap-1 [&_[data-slot=tabs-trigger]]:-mb-px [&_[data-slot=tabs-trigger]]:rounded-b-none [&_[data-slot=tabs-trigger]]:rounded-t-lg [&_[data-slot=tabs-trigger]]:border [&_[data-slot=tabs-trigger]]:border-transparent [&_[data-slot=tabs-trigger]]:px-4 [&_[data-slot=tabs-trigger]]:py-2 [&_[data-slot=tabs-trigger][data-state=active]]:border-border [&_[data-slot=tabs-trigger][data-state=active]]:border-b-background [&_[data-slot=tabs-trigger][data-state=active]]:bg-background [&_[data-slot=tabs-trigger][data-state=active]]:shadow-none",
+  "enclosed-colour":
+    "[&_[data-slot=tabs-list]]:h-auto [&_[data-slot=tabs-list]]:rounded-none [&_[data-slot=tabs-list]]:border-b [&_[data-slot=tabs-list]]:bg-transparent [&_[data-slot=tabs-list]]:p-0 [&_[data-slot=tabs-list]]:gap-1 [&_[data-slot=tabs-trigger]]:-mb-px [&_[data-slot=tabs-trigger]]:rounded-b-none [&_[data-slot=tabs-trigger]]:rounded-t-lg [&_[data-slot=tabs-trigger]]:border [&_[data-slot=tabs-trigger]]:border-border [&_[data-slot=tabs-trigger]]:bg-muted [&_[data-slot=tabs-trigger]]:px-4 [&_[data-slot=tabs-trigger]]:py-2 [&_[data-slot=tabs-trigger][data-state=active]]:border-b-background [&_[data-slot=tabs-trigger][data-state=active]]:bg-background [&_[data-slot=tabs-trigger][data-state=active]]:text-emerald-700 [&_[data-slot=tabs-trigger][data-state=active]]:shadow-none",
+  "soft-rounded":
+    "[&_[data-slot=tabs-list]]:h-auto [&_[data-slot=tabs-list]]:bg-transparent [&_[data-slot=tabs-list]]:p-0 [&_[data-slot=tabs-list]]:gap-1 [&_[data-slot=tabs-trigger]]:rounded-full [&_[data-slot=tabs-trigger]]:px-4 [&_[data-slot=tabs-trigger]]:py-1.5 [&_[data-slot=tabs-trigger]]:text-muted-foreground [&_[data-slot=tabs-trigger][data-state=active]]:bg-emerald-100 [&_[data-slot=tabs-trigger][data-state=active]]:text-emerald-800 [&_[data-slot=tabs-trigger][data-state=active]]:shadow-none dark:[&_[data-slot=tabs-trigger][data-state=active]]:bg-emerald-900 dark:[&_[data-slot=tabs-trigger][data-state=active]]:text-emerald-100",
+  "solid-rounded":
+    "[&_[data-slot=tabs-list]]:h-auto [&_[data-slot=tabs-list]]:bg-transparent [&_[data-slot=tabs-list]]:p-0 [&_[data-slot=tabs-list]]:gap-1 [&_[data-slot=tabs-trigger]]:rounded-full [&_[data-slot=tabs-trigger]]:px-4 [&_[data-slot=tabs-trigger]]:py-1.5 [&_[data-slot=tabs-trigger][data-state=active]]:bg-primary [&_[data-slot=tabs-trigger][data-state=active]]:text-primary-foreground [&_[data-slot=tabs-trigger][data-state=active]]:shadow-none",
+  bordered:
+    "[&_[data-slot=tabs-list]]:h-auto [&_[data-slot=tabs-list]]:rounded-xl [&_[data-slot=tabs-list]]:border-2 [&_[data-slot=tabs-list]]:bg-transparent [&_[data-slot=tabs-list]]:p-1 [&_[data-slot=tabs-trigger]]:rounded-lg [&_[data-slot=tabs-trigger]]:py-1.5 [&_[data-slot=tabs-trigger][data-state=active]]:bg-foreground [&_[data-slot=tabs-trigger][data-state=active]]:text-background [&_[data-slot=tabs-trigger][data-state=active]]:shadow-none",
+  light:
+    "[&_[data-slot=tabs-list]]:h-auto [&_[data-slot=tabs-list]]:bg-transparent [&_[data-slot=tabs-list]]:p-0 [&_[data-slot=tabs-list]]:gap-1 [&_[data-slot=tabs-trigger]]:rounded-lg [&_[data-slot=tabs-trigger]]:px-3 [&_[data-slot=tabs-trigger]]:py-1.5 [&_[data-slot=tabs-trigger]]:text-muted-foreground [&_[data-slot=tabs-trigger][data-state=active]]:bg-muted [&_[data-slot=tabs-trigger][data-state=active]]:text-foreground [&_[data-slot=tabs-trigger][data-state=active]]:shadow-none",
+  "outline-pills":
+    "[&_[data-slot=tabs-list]]:h-auto [&_[data-slot=tabs-list]]:bg-transparent [&_[data-slot=tabs-list]]:p-0 [&_[data-slot=tabs-list]]:gap-2 [&_[data-slot=tabs-trigger]]:rounded-full [&_[data-slot=tabs-trigger]]:border [&_[data-slot=tabs-trigger]]:border-border [&_[data-slot=tabs-trigger]]:px-4 [&_[data-slot=tabs-trigger]]:py-1.5 [&_[data-slot=tabs-trigger][data-state=active]]:border-foreground [&_[data-slot=tabs-trigger][data-state=active]]:bg-foreground [&_[data-slot=tabs-trigger][data-state=active]]:text-background [&_[data-slot=tabs-trigger][data-state=active]]:shadow-none",
+  segments:
+    "[&_[data-slot=tabs-list]]:h-auto [&_[data-slot=tabs-list]]:rounded-lg [&_[data-slot=tabs-list]]:border [&_[data-slot=tabs-list]]:bg-transparent [&_[data-slot=tabs-list]]:p-0 [&_[data-slot=tabs-list]]:gap-0 [&_[data-slot=tabs-list]]:divide-x [&_[data-slot=tabs-list]]:overflow-hidden [&_[data-slot=tabs-trigger]]:rounded-none [&_[data-slot=tabs-trigger]]:px-4 [&_[data-slot=tabs-trigger]]:py-2 [&_[data-slot=tabs-trigger][data-state=active]]:bg-muted [&_[data-slot=tabs-trigger][data-state=active]]:shadow-none",
+  overline:
+    "[&_[data-slot=tabs-list]]:h-auto [&_[data-slot=tabs-list]]:rounded-none [&_[data-slot=tabs-list]]:border-t [&_[data-slot=tabs-list]]:bg-transparent [&_[data-slot=tabs-list]]:p-0 [&_[data-slot=tabs-list]]:gap-0 [&_[data-slot=tabs-trigger]]:-mt-px [&_[data-slot=tabs-trigger]]:rounded-none [&_[data-slot=tabs-trigger]]:border-0 [&_[data-slot=tabs-trigger]]:border-t-2 [&_[data-slot=tabs-trigger]]:border-transparent [&_[data-slot=tabs-trigger]]:px-4 [&_[data-slot=tabs-trigger]]:py-2.5 [&_[data-slot=tabs-trigger]]:text-muted-foreground [&_[data-slot=tabs-trigger][data-state=active]]:border-t-primary [&_[data-slot=tabs-trigger][data-state=active]]:text-foreground [&_[data-slot=tabs-trigger][data-state=active]]:shadow-none",
+  words:
+    "[&_[data-slot=tabs-list]]:h-auto [&_[data-slot=tabs-list]]:bg-transparent [&_[data-slot=tabs-list]]:p-0 [&_[data-slot=tabs-list]]:gap-5 [&_[data-slot=tabs-trigger]]:px-0 [&_[data-slot=tabs-trigger]]:text-muted-foreground [&_[data-slot=tabs-trigger][data-state=active]]:bg-transparent [&_[data-slot=tabs-trigger][data-state=active]]:font-semibold [&_[data-slot=tabs-trigger][data-state=active]]:text-foreground [&_[data-slot=tabs-trigger][data-state=active]]:shadow-none",
+};
+
 type TabItem = {
   label: string;
   content: (props: { className?: string }) => ReactNode;
@@ -406,7 +455,11 @@ function TabsView({
   fit,
   contentSpace = "small",
   innerSpace = "medium",
+  look = "style",
+  side = false,
 }: {
+  look?: string;
+  side?: boolean;
   list: TabItem[];
   editing: boolean;
   sticky?: boolean;
@@ -462,7 +515,15 @@ function TabsView({
     : `tab-${shown[0].i}`;
 
   return (
-    <Tabs onValueChange={setValue} value={active}>
+    <Tabs
+      className={cn(
+        // Side tabs (computers): the names down the left, the content beside them.
+        side &&
+          "lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:items-start lg:gap-x-6 [&>[data-slot=tabs-content]]:lg:col-start-2 [&>[data-slot=tabs-content]]:lg:row-start-1 [&>[data-slot=tabs-content]]:lg:mt-0",
+      )}
+      onValueChange={setValue}
+      value={active}
+    >
       {/* Full width; on a phone the names scroll sideways rather than squashing. */}
       <div
         className={cn(
@@ -477,6 +538,9 @@ function TabsView({
           // Out to the page's edges, square ends (the panels stay page width).
           barWidth === "full" &&
             "-mx-4 px-0 md:-mx-6 [&_[data-slot=tabs-list]]:rounded-none",
+          TAB_LOOKS[look],
+          side &&
+            "lg:col-start-1 lg:row-start-1 lg:[&_[data-slot=tabs-list]]:w-full lg:[&_[data-slot=tabs-list]]:flex-col lg:[&_[data-slot=tabs-list]]:items-stretch lg:[&_[data-slot=tabs-trigger]]:justify-start",
         )}
       >
         <TabsList
@@ -654,6 +718,7 @@ export const walkDesignConfig: Config = {
     walk: {
       title: "The walk",
       components: [
+        "ReadyLayout",
         "BackLink",
         "Messages",
         "Title",
@@ -706,6 +771,21 @@ export const walkDesignConfig: Config = {
     },
   },
   components: withBlockLayout({
+    ReadyLayout: {
+      label: "Ready-made layout (designs 1–81)",
+      fields: {
+        layout: {
+          type: "select",
+          label: "Design",
+          options: READY_LAYOUTS.map((item) => ({
+            value: item.id,
+            label: `${item.number} · ${item.label}`,
+          })),
+        },
+      },
+      defaultProps: { layout: "s01" },
+      render: ({ layout }) => <ReadyLayoutBlock layout={layout} />,
+    },
     BackLink: {
       label: "Back link (← All walks)",
       fields: {
@@ -754,7 +834,9 @@ export const walkDesignConfig: Config = {
       label: "Messages",
       fields: { look: { ...messageLookField, label: "Look" } },
       defaultProps: { look: "as-is" },
-      render: ({ look }) => <MessagesBlock look={look} />,
+      render: ({ look, puck }) => (
+        <MessagesBlock editing={Boolean(puck?.isEditing)} look={look} />
+      ),
     },
     Title: {
       label: "Title",
@@ -838,6 +920,47 @@ export const walkDesignConfig: Config = {
             ["below", "Below the map"],
             ["above", "Above the map"],
             ["none", "Hide them"],
+          ]),
+        },
+        statusLook: {
+          type: "select",
+          label: "Status (Upcoming · Clock-in opens…)",
+          options: options([
+            ["badge-line", "Badge and words"],
+            ["badge", "Badge only"],
+            ["line", "Words only"],
+            ["pill", "Coloured pill"],
+            ["none", "Hidden"],
+          ]),
+        },
+        statusAt: {
+          type: "radio",
+          label: "Status position",
+          options: options([
+            ["above", "Above the walk name"],
+            ["below", "Below the walk name"],
+          ]),
+        },
+        mapButtonsLook: {
+          ...directionsLookField,
+          label: "Map's directions buttons look",
+        },
+        mapFit: {
+          type: "radio",
+          label: "Map width in the card",
+          options: options([
+            ["edge", "Edge to edge"],
+            ["inset", "Page width (lined up with the card's words, rounded)"],
+          ]),
+        },
+        inset: {
+          type: "select",
+          label: "Space inside the card",
+          options: options([
+            ["auto", "Automatic (none without a frame)"],
+            ["none", "None"],
+            ["normal", "Normal"],
+            ["roomy", "Roomy"],
           ]),
         },
         preciseAt: {
@@ -946,6 +1069,11 @@ export const walkDesignConfig: Config = {
         mapNote: true,
         preciseAt: "none",
         preciseLook: "card",
+        mapFit: "edge",
+        inset: "auto",
+        statusLook: "badge-line",
+        statusAt: "above",
+        mapButtonsLook: "default",
         tone: "card",
         showTitle: true,
         showActions: true,
@@ -974,6 +1102,12 @@ export const walkDesignConfig: Config = {
         mapNote,
         preciseAt,
         preciseLook,
+        mapFit,
+        inset,
+        statusLook,
+        statusAt,
+        mapButtonsLook,
+        puck,
         tone,
         showTitle,
         showActions,
@@ -1003,6 +1137,12 @@ export const walkDesignConfig: Config = {
           mapTitle={mapTitle}
           preciseAt={preciseAt}
           preciseLook={preciseLook}
+          mapFit={mapFit}
+          inset={inset}
+          statusLook={statusLook}
+          statusAt={statusAt}
+          mapButtonsLook={mapButtonsLook}
+          editing={Boolean(puck?.isEditing)}
           phoneFacts={phoneFacts}
           phoneFactsArrange={phoneFactsArrange}
           tabletFacts={tabletFacts}
@@ -1349,8 +1489,10 @@ export const walkDesignConfig: Config = {
           ],
         },
         preciseLook: preciseLookField,
+        buttonsLook: directionsLookField,
       },
       defaultProps: {
+        buttonsLook: "default",
         look: "card",
         buttons: "below",
         height: "medium",
@@ -1367,8 +1509,10 @@ export const walkDesignConfig: Config = {
         showNote,
         preciseAt,
         preciseLook,
+        buttonsLook,
       }) => (
         <MapBlock
+          buttonsLook={buttonsLook}
           preciseAt={preciseAt}
           preciseLook={preciseLook}
           buttons={buttons}
@@ -1383,9 +1527,10 @@ export const walkDesignConfig: Config = {
       label: "Directions buttons",
       fields: {
         full: { type: "radio", label: "Full width", options: yesNo },
+        look: { ...directionsLookField, label: "Look" },
       },
-      defaultProps: { full: false },
-      render: ({ full }) => <DirectionsBlock full={full} />,
+      defaultProps: { full: false, look: "default" },
+      render: ({ full, look }) => <DirectionsBlock full={full} look={look} />,
     },
     Weather: { label: "Weather", render: () => <WeatherBlock /> },
     Precise: { label: "Precise location", render: () => <PreciseBlock /> },
@@ -1668,6 +1813,31 @@ export const walkDesignConfig: Config = {
             ["transition", "Pills that drop in"],
           ]),
         },
+        look: {
+          type: "select",
+          label: "Tab look",
+          options: options([
+            ["style", "Use the Style above"],
+            ["enclosed", "Folder tabs (Chakra enclosed)"],
+            ["enclosed-colour", "Coloured folder tabs (Chakra)"],
+            ["soft-rounded", "Soft green pills (Chakra)"],
+            ["solid-rounded", "Solid pills (Chakra / HeroUI)"],
+            ["bordered", "Bordered box (HeroUI)"],
+            ["light", "Light (HeroUI)"],
+            ["outline-pills", "Outline pills (Mantine)"],
+            ["segments", "Joined segments (Origin UI)"],
+            ["overline", "Line on top"],
+            ["words", "Plain words, bold when chosen"],
+          ]),
+        },
+        position: {
+          type: "radio",
+          label: "Tab bar position (computers)",
+          options: options([
+            ["top", "Above the content"],
+            ["side", "Down the left side"],
+          ]),
+        },
         contentSpace: {
           type: "select",
           label: "Space between the tabs and their content",
@@ -1727,6 +1897,8 @@ export const walkDesignConfig: Config = {
         corners: "as-is",
         contentSpace: "small",
         innerSpace: "medium",
+        look: "style",
+        position: "top",
         fit: "fill",
         sticky: true,
         tabs: [
@@ -1741,6 +1913,8 @@ export const walkDesignConfig: Config = {
         corners,
         contentSpace,
         innerSpace,
+        look,
+        position,
         fit,
         sticky,
         tabs,
@@ -1752,6 +1926,8 @@ export const walkDesignConfig: Config = {
             contentSpace={contentSpace}
             corners={corners}
             innerSpace={innerSpace}
+            look={look}
+            side={position === "side"}
             // In the designer every tab's area is shown, one under another,
             // so blocks can be dropped into any tab.
             editing={Boolean(puck?.isEditing)}
@@ -1761,6 +1937,9 @@ export const walkDesignConfig: Config = {
           />
         );
         // "The site's tab style" follows Settings; the others set this bar's own.
+        // A tab look sits on the plain grey-pill tabs.
+        if (look && look !== "style")
+          return <TabStyleProvider style="standard">{view}</TabStyleProvider>;
         return style && style !== "site" ? (
           <TabStyleProvider style={style as TabStyle}>{view}</TabStyleProvider>
         ) : (
