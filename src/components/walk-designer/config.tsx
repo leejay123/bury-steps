@@ -161,6 +161,16 @@ const phoneBoxField = (label: string) => ({
   options: [{ value: "same", label: "Same as on computers" }, ...BOXES],
 });
 
+const factLinesField = {
+  type: "radio" as const,
+  label: "Lines in the list (list and table looks)",
+  options: [
+    { value: "between", label: "Between rows only" },
+    { value: "every", label: "Under every row" },
+    { value: "none", label: "No lines" },
+  ],
+};
+
 const showEmptyField = {
   type: "radio" as const,
   label: "Empty facts",
@@ -947,6 +957,7 @@ export const walkDesignConfig: Config = {
           label: "Facts arrange on tablets",
         },
         showEmptyFacts: showEmptyField,
+        factLines: { ...factLinesField, label: "Lines in the facts list" },
         factsBox: boxField("Box around the facts (computers)"),
         tabletFactsBox: tabletBoxField("Box around the facts (tablets)"),
         phoneFactsBox: phoneBoxField("Box around the facts (phones)"),
@@ -1137,6 +1148,7 @@ export const walkDesignConfig: Config = {
         tabletFacts: "same",
         tabletFactsArrange: "same",
         showEmptyFacts: false,
+        factLines: "between",
         factsBox: "none",
         tabletFactsBox: "same",
         phoneFactsBox: "same",
@@ -1177,6 +1189,7 @@ export const walkDesignConfig: Config = {
         tabletFactsArrange,
         showEmptyFacts,
         essentials,
+        factLines,
         factsBox,
         tabletFactsBox,
         phoneFactsBox,
@@ -1207,6 +1220,7 @@ export const walkDesignConfig: Config = {
           tabletFacts={tabletFacts}
           tabletFactsArrange={tabletFactsArrange}
           showEmptyFacts={showEmptyFacts}
+          factLines={factLines}
           factsBox={factsBox}
           tabletFactsBox={tabletFactsBox}
           phoneFactsBox={phoneFactsBox}
@@ -1248,6 +1262,7 @@ export const walkDesignConfig: Config = {
         },
         tabletArrange: tabletArrangeField,
         showEmpty: showEmptyField,
+        lines: factLinesField,
         box: boxField("On computers: box"),
         tabletBox: tabletBoxField("On tablets: box"),
         phoneBox: phoneBoxField("On phones: box"),
@@ -1256,6 +1271,7 @@ export const walkDesignConfig: Config = {
         box: "none",
         tabletBox: "same",
         phoneBox: "same",
+        lines: "between",
         variant: "grid",
         arrange: "fill",
         phoneVariant: "same",
@@ -1275,8 +1291,10 @@ export const walkDesignConfig: Config = {
         box,
         tabletBox,
         phoneBox,
+        lines,
       }) => (
         <FactsBlock
+          lines={lines}
           box={box}
           tabletBox={tabletBox}
           phoneBox={phoneBox}

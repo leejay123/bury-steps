@@ -329,6 +329,8 @@ function ByDevice<L extends object>({
   );
 }
 
+export type FactLines = "between" | "every" | "none";
+
 /** An optional box around one part of the Details card (facts, essentials…). */
 export type PartBox = "none" | "outline" | "card" | "grey";
 function Boxed({
@@ -371,7 +373,9 @@ export function DeviceFacts({
   box = "none",
   phoneBox = "same",
   tabletBox = "same",
+  lines = "between",
 }: {
+  lines?: FactLines;
   p: WalkIdeaParts;
   dark?: boolean;
   variant?: FactsVariant;
@@ -393,6 +397,7 @@ export function DeviceFacts({
           <Facts
             arrange={look.arrange}
             dark={dark}
+            lines={lines}
             p={p}
             showEmpty={showEmpty}
             variant={look.variant}
@@ -628,12 +633,15 @@ function Facts({
   dark = false,
   arrange = "fill",
   showEmpty = false,
+  lines = "between",
 }: {
   p: WalkIdeaParts;
   variant: FactsVariant;
   dark?: boolean;
   arrange?: Arrange;
   showEmpty?: boolean;
+  /** List and table looks: lines between rows, under every row, or none. */
+  lines?: FactLines;
 }) {
   const swipe = arrange === "scroll";
   const { facts } = useWalkInfo(p, showEmpty);
@@ -715,12 +723,16 @@ function Facts({
         className={cn(
           "grid text-sm sm:grid-cols-2 sm:gap-x-8",
           variant === "table" && "sm:grid-cols-1",
+          // Between rows only: each row's line sits 1px into the next row,
+          // so the last row's line falls outside the list and is cut off.
+          lines === "between" && "overflow-hidden [&>*]:-mb-px",
         )}
       >
         {facts.map((fact) => (
           <div
             className={cn(
-              "flex items-baseline justify-between gap-4 border-b py-2",
+              "flex items-baseline justify-between gap-4 py-2",
+              lines !== "none" && "border-b",
               dark && "border-white/15",
             )}
             key={fact.label}
@@ -1235,6 +1247,7 @@ export type DetailsOptions = {
   statusAt?: "above" | "below";
   /** Optional boxes around the parts inside the card. */
   factsBox?: PartBox;
+  factLines?: FactLines;
   phoneFactsBox?: PartBox | "same";
   tabletFactsBox?: ForDevice<PartBox>;
   timelineBox?: PartBox;
@@ -1398,6 +1411,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         tabletVariant={o.tabletFacts}
         variant={o.facts ?? "grid"}
         box={o.factsBox}
+        lines={o.factLines}
         phoneBox={o.phoneFactsBox}
         tabletBox={o.tabletFactsBox}
       />
@@ -1501,7 +1515,9 @@ export function FactsBlock({
   box = "none",
   phoneBox = "same",
   tabletBox = "same",
+  lines = "between",
 }: {
+  lines?: FactLines;
   variant?: FactsVariant;
   arrange?: Arrange;
   phoneVariant?: FactsVariant | "same";
@@ -1525,6 +1541,7 @@ export function FactsBlock({
       tabletVariant={tabletVariant}
       variant={variant}
       box={box}
+      lines={lines}
       phoneBox={phoneBox}
       tabletBox={tabletBox}
     />

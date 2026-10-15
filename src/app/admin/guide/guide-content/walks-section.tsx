@@ -288,7 +288,9 @@ export function WalksSection({
               (the card, a tick list, numbered steps, a green callout, numbered
               tiles, swiping tiles or one short line) and its own heading;
               like any block it can go in a tab, and a tab holding only it is
-              left out for members, who don&apos;t see it. The
+              left out for members, who don&apos;t see it. In the list and table looks, Lines in the list puts lines
+              between the facts only (no line under the last one), under every
+              fact, or none. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how
