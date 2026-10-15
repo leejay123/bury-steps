@@ -584,11 +584,23 @@ function TabsView({
 }
 
 /** The page; in the designer's preview it's marked with the audience being designed for (globals.css). */
-function PageRoot({ children }: { children: ReactNode }) {
+function PageRoot({
+  children,
+  editing = false,
+}: {
+  children: ReactNode;
+  editing?: boolean;
+}) {
   const audience = useContext(PreviewAudience);
   return (
     <div
-      className="flex flex-col gap-6"
+      className={cn(
+        "flex flex-col gap-6",
+        // The real page puts its own space around the design (16px on a
+        // phone, 24px on a computer); the designer's preview has no page
+        // around it, so it adds the same space to look the same.
+        editing && "px-4 py-6 md:px-6",
+      )}
       data-preview-audience={audience ?? undefined}
     >
       {children}
@@ -1994,8 +2006,12 @@ export const walkDesignConfig: Config = {
     },
   }),
   root: {
-    render: ({ children }: { children: React.ReactNode }) => (
-      <PageRoot>{children}</PageRoot>
-    ),
+    render: ({
+      children,
+      puck,
+    }: {
+      children: React.ReactNode;
+      puck?: { isEditing?: boolean };
+    }) => <PageRoot editing={Boolean(puck?.isEditing)}>{children}</PageRoot>,
   },
 };
