@@ -650,6 +650,10 @@ function PageRoot({
     <div
       className={cn(
         "flex flex-col gap-6",
+        // Puck wraps the page's blocks in one more box (its last child here,
+        // after the message strip); the 24px between blocks goes on that,
+        // or blocks sit touching and "Closer" pulls one over another.
+        "[&>:last-child]:flex [&>:last-child]:flex-col [&>:last-child]:gap-6",
         // The real page puts its own space around the design (16px on a
         // phone, 24px on a computer); the designer's preview has no page
         // around it, so it adds the same space to look the same.
