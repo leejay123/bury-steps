@@ -742,20 +742,6 @@ function Timeline({ p }: { p: WalkIdeaParts }) {
   );
 }
 
-function FlushMap({ p, className }: { p: WalkIdeaParts; className?: string }) {
-  if (!p.map) return null;
-  return (
-    <div
-      className={cn(
-        "[&_[data-slot=card]]:gap-3 [&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:border-0 [&_[data-slot=card]]:py-0 [&_[data-slot=card]]:shadow-none",
-        className,
-      )}
-    >
-      {p.map}
-    </div>
-  );
-}
-
 // ── Walk blocks ─────────────────────────────────────────────────────────
 /** The walk's messages (clock-in times, cancelled, finished…), in the chosen look. */
 export function MessagesBlock({
@@ -1182,8 +1168,6 @@ export type DetailsOptions = {
   mapNote?: boolean;
   preciseAt?: PreciseAt;
   preciseLook?: PreciseLook;
-  /** "edge": the map runs to the card's edges; "inset": space around it, rounded. */
-  mapFit?: "edge" | "inset";
   statusLook?: "badge-line" | "badge" | "line" | "pill" | "none";
   statusAt?: "above" | "below";
   mapButtonsLook?: DirectionsLook;
@@ -1231,7 +1215,6 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         ? "none"
         : "normal"
       : o.inset;
-  const inset = (o.mapFit ?? "edge") === "inset";
   // Inset: the map's own rounded card, with the card's space around it.
   const insetMap = (className?: string) => (
     <div className={cn(padding !== "none" && "px-5 sm:px-6", className)}>
@@ -1398,43 +1381,31 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         aria-label="Walk details"
         className={cn(
           "overflow-hidden",
-          o.tone === "plain"
-            ? ""
-            : "rounded-2xl border in-data-[bleed]:rounded-none in-data-[bleed]:border-x-0",
+          o.tone === "plain" ? "" : "rounded-2xl border",
           dark && "border-neutral-800 bg-neutral-950 text-white",
           o.tone === "tint" && "bg-muted/40",
           (!o.tone || o.tone === "card") && "bg-card shadow-sm",
         )}
       >
         {ribbonAt === "top" ? ribbon : null}
-        {map === "top" && p.map ? (
-          inset ? (
-            insetMap(padding === "none" ? "pb-5" : "pt-5 sm:pt-6")
-          ) : (
-            <FlushMap className="border-b" p={p} />
-          )
-        ) : null}
+        {/* The map sits inside the card as its own rounded card, lined up
+            with the words (nothing on a designed page runs edge to edge). */}
+        {map === "top" && p.map
+          ? insetMap(padding === "none" ? "pb-5" : "pt-5 sm:pt-6")
+          : null}
         {map === "side" && p.map ? (
           <div className="grid lg:grid-cols-[minmax(0,1fr)_24rem]">
             {body}
-            {inset ? (
-              insetMap(
-                cn("lg:pl-0", padding !== "none" && "pb-5 sm:pb-6 lg:pt-6"),
-              )
-            ) : (
-              <FlushMap className="border-t lg:border-t-0 lg:border-l" p={p} />
+            {insetMap(
+              cn("lg:pl-0", padding !== "none" && "pb-5 sm:pb-6 lg:pt-6"),
             )}
           </div>
         ) : (
           body
         )}
-        {map === "bottom" && p.map ? (
-          inset ? (
-            insetMap(padding === "none" ? "pt-5" : "pb-5 sm:pb-6")
-          ) : (
-            <FlushMap className="border-t" p={p} />
-          )
-        ) : null}
+        {map === "bottom" && p.map
+          ? insetMap(padding === "none" ? "pt-5" : "pb-5 sm:pb-6")
+          : null}
         {ribbonAt === "bottom" ? ribbon : null}
       </section>
     </MapLookProvider>

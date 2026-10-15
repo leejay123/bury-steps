@@ -186,15 +186,13 @@ export function WalksSection({
               blocks, round badges and more, plus layout blocks such as Tabs
               (which can stay at the top as you scroll and scroll sideways on a
               phone), Columns, Sidebar (opens from a button on a phone), Section
-              (page width or full width), Card and Folding sections — and pick
+              (with a background and space inside), Card and Folding sections — and pick
               each block&apos;s look on the right; the looks are the ones from
               the designs below. Make one design each for organisers, members
               and signed-out visitors, or start from a ready-made one, and press
               Publish to save it. Walk pages use them when Layout is set to{" "}
               <strong>Designed</strong>. Saving a design only refreshes walk
-              pages. Every block also has Block layout: page width or full width
-              (edge to edge, or a full-width background with the content in
-              line with the page), a frame (card, light grey, outline, dark or
+              pages. Every block also has Block layout: a frame (card, light grey, outline, dark or
               green), an optional heading, and whether it shows on phones,
               computers or both. Blocks with several items (Facts, story
               cards, summary tiles, colour blocks, round badges) can fill the
@@ -206,9 +204,7 @@ export function WalksSection({
               has looks (card, flat, map only, details floating over the map,
               details beside the map), a height, and Directions buttons below,
               above, on the map or hidden — or add the Directions buttons block
-              to place them anywhere else. Inside a full-width, edge-to-edge
-              block or section, the map and cards run right to the edges with
-              square corners. The Details card&apos;s Status ribbon is a coloured
+              to place them anywhere else. The Details card&apos;s Status ribbon is a coloured
               band across its top saying where the walk is up to. The Tabs block (under Layout) has a Style — the site&apos;s
               tab style from Settings, grey pill, sliding underline or pills
               that drop in — and tab widths that share the full width, fit the
@@ -231,7 +227,7 @@ export function WalksSection({
               can restyle the messages and boxes inside any block. New
               signed-out visitor designs start with How this group works. The Details card&apos;s map can also hide its Meeting point
               title and its small print, as the Map block can. The Tabs block&apos;s
-              tab bar can run full width, edge to edge, and its tabs can be square, rounded or fully rounded. On the page, a tab with nothing in it for whoever is
+              tabs can be square, rounded or fully rounded. On the page, a tab with nothing in it for whoever is
               looking (Attended for a member, for example) is left out of the
               tab bar. Columns are equal heights by default (the last block in
               each column stretches; or choose As tall as their content), and
@@ -265,8 +261,7 @@ export function WalksSection({
               put the tab names down the left side on a computer. The Details
               card&apos;s status (Upcoming · Clock-in opens…) can be the badge
               and words, the badge or words only, a coloured pill or hidden,
-              above or below the walk name; its map can run edge to edge or
-              sit at page width with rounded corners; Space inside sets its
+              above or below the walk name; its map sits inside the card, lined up with its words; Space inside sets its
               padding (none by default when it has no frame, so it lines up
               with the page like the Notices heading). Directions buttons have
               looks (solid and outline, both outline, both solid, ghost,
@@ -274,11 +269,13 @@ export function WalksSection({
               designer, a walk with no messages right now shows a sample
               message, marked Preview only, where messages would go. Block layout&apos;s Space above has Right under the header,
               for a first block that sits straight under the site header with
-              no gap — for example a full-width Messages block (its messages
-              then run edge to edge with square ends), or the Details card
+              no gap — for example a Messages block, or the Details card
               with its ribbon showing the walk&apos;s messages. Maps can have
               square, rounded or very rounded corners. A ribbon or Messages
-              block with no messages shows nothing at all. The
+              block with no messages shows nothing at all. Nothing on a designed page runs edge to edge: every block sits in
+              a card or with no card, at page width. The Details card&apos;s
+              Card frame chooses a card (border and shadow), a light grey or
+              dark card, or no card. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

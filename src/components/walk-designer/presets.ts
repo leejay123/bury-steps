@@ -103,13 +103,13 @@ export const WALK_DESIGN_PRESETS: {
   },
   {
     id: "full-width-map",
-    label: "Full-width map, details, folding sections",
+    label: "Map, details, folding sections",
     data: () =>
       page([
         block("Messages"),
         block("ClockIn"),
         block("Details", { facts: "grid" }),
-        block("Section", { width: "full", content: [block("Map")] }),
+        block("Map"),
         block("Folding", {
           items: [
             {

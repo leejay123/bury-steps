@@ -81,9 +81,6 @@ const factsOptions = options<FactsVariant>([
   ["tiles", "Tiles"],
 ]);
 
-/** Inside an edge-to-edge block, lose the rounded corners and side borders. */
-const BLEED = "in-data-[bleed]:rounded-none in-data-[bleed]:border-x-0";
-
 const phoneFactsOptions = [
   { value: "same", label: "Same as on computers" },
   ...factsOptions,
@@ -289,14 +286,12 @@ const arrangeField = {
 };
 
 /**
- * Options every block has, under "Block layout": how wide it goes (out to
- * the page's edges, like the homepage's full-width sections), a frame
- * around it, a heading above it, and whether it shows on phones,
- * computers or both. Puck has no shared fields of its own, so they're added
+ * Options every block has, under "Block layout": a frame around it (or
+ * none — nothing on a designed page runs edge to edge), a heading above
+ * it, spacing, and whether it shows on phones, tablets or computers. Puck has no shared fields of its own, so they're added
  * to each block here (withBlockLayout).
  */
 type BlockLayout = {
-  width?: "page" | "full" | "full-inset";
   frame?: "none" | "card" | "tint" | "dark" | "outline" | "green";
   heading?: string;
   showOn?:
@@ -314,7 +309,6 @@ type BlockLayout = {
   spaceBelow?: "closer" | "normal" | "more" | "lots";
 };
 const BLOCK_LAYOUT: BlockLayout = {
-  width: "page",
   frame: "none",
   heading: "",
   showOn: "all",
@@ -329,15 +323,6 @@ const blockLayoutField = {
   type: "object" as const,
   label: "Block layout",
   objectFields: {
-    width: {
-      type: "select" as const,
-      label: "Width",
-      options: options([
-        ["page", "Page width"],
-        ["full", "Full width, edge to edge"],
-        ["full-inset", "Full-width background, content in line with the page"],
-      ]),
-    },
     frame: {
       type: "select" as const,
       label: "Frame",
@@ -462,7 +447,6 @@ function TabsView({
   editing,
   sticky,
   corners,
-  barWidth,
   fit,
   contentSpace = "small",
   innerSpace = "medium",
@@ -475,7 +459,6 @@ function TabsView({
   editing: boolean;
   sticky?: boolean;
   corners?: string;
-  barWidth?: string;
   fit?: string;
   contentSpace?: string;
   innerSpace?: string;
@@ -547,8 +530,6 @@ function TabsView({
           corners === "pill" &&
             "[&_[data-slot=tabs-list]]:rounded-full [&_[data-slot=tabs-trigger]]:rounded-full",
           // Out to the page's edges, square ends (the panels stay page width).
-          barWidth === "full" &&
-            "-mx-4 px-0 md:-mx-6 [&_[data-slot=tabs-list]]:rounded-none",
           TAB_LOOKS[look],
           side &&
             "lg:col-start-1 lg:row-start-1 lg:[&_[data-slot=tabs-list]]:w-full lg:[&_[data-slot=tabs-list]]:flex-col lg:[&_[data-slot=tabs-list]]:items-stretch lg:[&_[data-slot=tabs-trigger]]:justify-start",
@@ -623,7 +604,6 @@ function BlockFrame({
   layout?: BlockLayout;
 }) {
   const {
-    width,
     frame,
     heading,
     showOn,
@@ -637,11 +617,9 @@ function BlockFrame({
     ...BLOCK_LAYOUT,
     ...layout,
   };
-  const full = width !== "page";
   const framed = frame !== "none";
   return (
     <div
-      data-bleed={width === "full" ? "" : undefined}
       className={cn(
         "flex flex-col",
         // Blocks sit 24px apart; these pull a block closer or push it away.
@@ -653,10 +631,6 @@ function BlockFrame({
         spaceBelow === "closer" && "-mb-3",
         spaceBelow === "more" && "mb-4",
         spaceBelow === "lots" && "mb-12",
-        full && "-mx-4 md:-mx-6",
-        // Edge to edge: cards inside lose their rounded corners and side borders.
-        width === "full" &&
-          "[&_[data-slot=alert]]:rounded-none [&_[data-slot=alert]]:border-x-0 [&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:border-x-0",
         buttons === "phones" &&
           "max-sm:[&_[data-slot=button]]:w-full max-sm:[&_[data-slot=button]]:flex-1",
         buttons === "always" &&
@@ -677,9 +651,7 @@ function BlockFrame({
           // Fills the block when a column stretches it (equal heights).
           "flex min-w-0 flex-1 flex-col gap-3 [&>*:last-child]:grow",
           framed && "py-5",
-          framed && !full && "rounded-2xl px-5 sm:px-6",
-          framed && full && "border-x-0",
-          width === "full-inset" && "px-4 md:px-6",
+          framed && "rounded-2xl px-5 sm:px-6",
           frame === "card" && "border bg-card shadow-sm",
           frame === "tint" && "bg-muted/50",
           frame === "outline" && "border",
@@ -921,7 +893,7 @@ export const walkDesignConfig: Config = {
           label: "Map in the card",
           options: options([
             ["none", "No map"],
-            ["top", "Along the top, edge to edge"],
+            ["top", "Along the top"],
             ["side", "Down the side"],
             ["bottom", "Along the bottom"],
           ]),
@@ -960,15 +932,7 @@ export const walkDesignConfig: Config = {
         },
         mapCorners: {
           ...cornersField,
-          label: "Map corners (page-width map)",
-        },
-        mapFit: {
-          type: "radio",
-          label: "Map width in the card",
-          options: options([
-            ["edge", "Edge to edge"],
-            ["inset", "Page width (lined up with the card's words, rounded)"],
-          ]),
+          label: "Map corners",
         },
         inset: {
           type: "select",
@@ -1015,12 +979,12 @@ export const walkDesignConfig: Config = {
         },
         tone: {
           type: "select",
-          label: "Look",
+          label: "Card frame",
           options: options([
-            ["card", "Card"],
-            ["tint", "Tinted"],
-            ["dark", "Dark"],
-            ["plain", "No border"],
+            ["card", "Card (border and shadow)"],
+            ["tint", "Light grey card"],
+            ["dark", "Dark card"],
+            ["plain", "No card"],
           ]),
         },
         showTitle: { type: "radio", label: "Show the title", options: yesNo },
@@ -1086,7 +1050,6 @@ export const walkDesignConfig: Config = {
         mapNote: true,
         preciseAt: "none",
         preciseLook: "card",
-        mapFit: "edge",
         mapCorners: "rounded",
         inset: "auto",
         statusLook: "badge-line",
@@ -1120,7 +1083,6 @@ export const walkDesignConfig: Config = {
         mapNote,
         preciseAt,
         preciseLook,
-        mapFit,
         mapCorners,
         inset,
         statusLook,
@@ -1156,7 +1118,6 @@ export const walkDesignConfig: Config = {
           mapTitle={mapTitle}
           preciseAt={preciseAt}
           preciseLook={preciseLook}
-          mapFit={mapFit}
           mapCorners={mapCorners}
           inset={inset}
           statusLook={statusLook}
@@ -1466,7 +1427,7 @@ export const walkDesignConfig: Config = {
           label: "Look",
           options: options([
             ["card", "Card"],
-            ["flat", "Flat, no frame (edge to edge in a full-width block)"],
+            ["flat", "No frame"],
             ["bare", "Map only"],
             ["overlay", "Details floating over the map"],
             ["split", "Details beside the map"],
@@ -1586,18 +1547,6 @@ export const walkDesignConfig: Config = {
     Section: {
       label: "Section",
       fields: {
-        width: {
-          type: "radio",
-          label: "Width",
-          options: options([
-            ["contained", "Page width"],
-            ["full", "Full width, edge to edge"],
-            [
-              "full-inset",
-              "Full-width background, content in line with the page",
-            ],
-          ]),
-        },
         background: {
           type: "select",
           label: "Background",
@@ -1620,25 +1569,18 @@ export const walkDesignConfig: Config = {
         content: { type: "slot" },
       },
       defaultProps: {
-        width: "contained",
         background: "none",
         padding: "none",
         content: [],
       },
-      render: ({ width, background, padding, content: Content }) => (
+      // Always page width (nothing on a designed page runs edge to edge).
+      render: ({ background, padding, content: Content }) => (
         <section
-          data-bleed={width === "full" ? "" : undefined}
           className={cn(
-            width !== "contained" && "-mx-4 md:-mx-6",
-            width === "full-inset" && "px-4 md:px-6",
-            width === "full" &&
-              "[&_[data-slot=alert]]:rounded-none [&_[data-slot=alert]]:border-x-0 [&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:border-x-0",
             background === "muted" && "bg-muted/50",
             background === "dark" && "bg-neutral-950 text-white",
             background === "green" && "bg-emerald-900 text-emerald-50",
-            background !== "none" &&
-              width === "contained" &&
-              "rounded-2xl px-4 sm:px-6",
+            background !== "none" && "rounded-2xl px-4 sm:px-6",
             padding === "small" && "py-4",
             padding === "large" && "py-10",
           )}
@@ -1813,7 +1755,6 @@ export const walkDesignConfig: Config = {
         <div
           className={cn(
             "overflow-hidden rounded-2xl",
-            BLEED,
             tone === "card" && "border bg-card shadow-sm",
             tone === "tint" && "bg-muted/40",
             tone === "dark" && "bg-neutral-950 text-white",
@@ -1882,14 +1823,6 @@ export const walkDesignConfig: Config = {
             ["pill", "Fully rounded"],
           ]),
         },
-        bar: {
-          type: "radio",
-          label: "Tab bar width",
-          options: options([
-            ["page", "Page width"],
-            ["full", "Full width, edge to edge"],
-          ]),
-        },
         fit: {
           type: "radio",
           label: "Tab widths",
@@ -1917,7 +1850,6 @@ export const walkDesignConfig: Config = {
       },
       defaultProps: {
         style: "site",
-        bar: "page",
         corners: "as-is",
         contentSpace: "small",
         innerSpace: "medium",
@@ -1933,7 +1865,6 @@ export const walkDesignConfig: Config = {
       },
       render: ({
         style,
-        bar: barWidth,
         corners,
         contentSpace,
         innerSpace,
@@ -1946,7 +1877,6 @@ export const walkDesignConfig: Config = {
       }) => {
         const view = (
           <TabsView
-            barWidth={barWidth}
             contentSpace={contentSpace}
             corners={corners}
             innerSpace={innerSpace}
@@ -1997,7 +1927,7 @@ export const walkDesignConfig: Config = {
         }[];
         return (
           <Accordion
-            className={cn("rounded-2xl border px-4", BLEED)}
+            className={cn("rounded-2xl border px-4")}
             // All open in the designer, so blocks can be dropped into each.
             defaultValue={list.flatMap((item, i) =>
               item.open || puck?.isEditing ? [`item-${i}`] : [],

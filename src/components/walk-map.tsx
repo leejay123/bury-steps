@@ -21,8 +21,8 @@ import { Map as MapIcon, Navigation } from "lucide-react";
 
 /**
  * How the meeting-point map looks. Walk pages use the card; the walk page
- * designer's Map block sets the rest (MapLookProvider) — a flat map that
- * runs edge to edge, the map alone, the details floating over the map, or
+ * designer's Map block sets the rest (MapLookProvider) — no frame, the map
+ * alone, the details floating over the map, or
  * side by side — and where the directions buttons go, or none.
  */
 export type MapLook = {
@@ -48,8 +48,6 @@ const DEFAULT_LOOK: Required<MapLook> = {
   buttonsLook: "default",
   corners: "rounded",
 };
-/** Inside an edge-to-edge designer block, lose the rounded corners and side borders. */
-const BLEED = "in-data-[bleed]:rounded-none in-data-[bleed]:border-x-0";
 const MapLookContext = createContext<MapLook | null>(null);
 
 export function MapLookProvider({
@@ -294,7 +292,7 @@ export function WalkMap({
       <div className="flex flex-col gap-3">
         {at("above-map")}
         {o.buttons === "above" ? buttons : null}
-        {mapArea(cn("overflow-hidden rounded-2xl", round, BLEED))}
+        {mapArea(cn("overflow-hidden rounded-2xl", round))}
         {at("below-map")}
         {o.buttons === "below" ? buttons : null}
         {at("after")}
@@ -305,13 +303,7 @@ export function WalkMap({
   if (o.look === "overlay") {
     // The map fills the block; the meeting point and buttons float over it.
     return (
-      <div
-        className={cn(
-          "relative overflow-hidden rounded-2xl border",
-          round,
-          BLEED,
-        )}
-      >
+      <div className={cn("relative overflow-hidden rounded-2xl border", round)}>
         {mapArea() ?? <div className={cn("bg-muted", height)} />}
         <div className="absolute right-3 bottom-3 left-3 flex flex-col gap-3 rounded-xl bg-background/95 p-4 shadow-lg backdrop-blur-sm sm:right-auto sm:max-w-sm">
           {title}
@@ -330,7 +322,6 @@ export function WalkMap({
         className={cn(
           "grid overflow-hidden rounded-2xl border lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]",
           round,
-          BLEED,
         )}
       >
         <div className="flex flex-col justify-center gap-4 p-5 sm:p-6">
@@ -346,7 +337,7 @@ export function WalkMap({
     );
   }
 
-  // Flat: no frame, the map running the block's full width (edge to edge in a full-width block).
+  // No frame: the title, map and buttons straight on the page.
   return (
     <div className="flex flex-col gap-3">
       {title}
