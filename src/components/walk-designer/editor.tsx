@@ -182,6 +182,8 @@ export function WalkDesignEditor({
   }
 
   return (
+    // Its menus (ready-made designs, Preview, Clocked in) open at z-[100]:
+    // the site's pop-up lists sit at z-[80], under this.
     <div
       className="fixed inset-0 z-[90] flex flex-col bg-background"
       role="dialog"
@@ -207,7 +209,7 @@ export function WalkDesignEditor({
           <SelectTrigger className="h-8 w-64">
             <SelectValue placeholder="Start from a ready-made design…" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="z-[100]">
             <SelectGroup>
               <SelectLabel>Starting points to build on</SelectLabel>
               {WALK_DESIGN_PRESETS.map((preset) => (
@@ -240,7 +242,7 @@ export function WalkDesignEditor({
           <SelectTrigger aria-label="Show the walk" className="h-8 w-52">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="z-[100]">
             {MOMENTS.map((item) => (
               <SelectItem key={item.id} value={item.id}>
                 Preview: {item.label}
@@ -255,7 +257,7 @@ export function WalkDesignEditor({
           <SelectTrigger aria-label="Clocked in or not" className="h-8 w-56">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="z-[100]">
             {CLOCKED_IN.map((item) => (
               <SelectItem key={item.id} value={item.id}>
                 {item.label}

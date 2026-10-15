@@ -272,7 +272,13 @@ export function WalksSection({
               looks (solid and outline, both outline, both solid, ghost,
               rounded pills, with map icons, text links, stacked). In the
               designer, a walk with no messages right now shows a sample
-              message, marked Preview only, where messages would go. The
+              message, marked Preview only, where messages would go. Block layout&apos;s Space above has Right under the header,
+              for a first block that sits straight under the site header with
+              no gap — for example a full-width Messages block (its messages
+              then run edge to edge with square ends), or the Details card
+              with its ribbon showing the walk&apos;s messages. Maps can have
+              square, rounded or very rounded corners. A ribbon or Messages
+              block with no messages shows nothing at all. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

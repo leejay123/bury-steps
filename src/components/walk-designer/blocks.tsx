@@ -1187,6 +1187,8 @@ export type DetailsOptions = {
   statusLook?: "badge-line" | "badge" | "line" | "pill" | "none";
   statusAt?: "above" | "below";
   mapButtonsLook?: DirectionsLook;
+  /** For a page-width map in the card (an edge-to-edge one is always square). */
+  mapCorners?: "rounded" | "square" | "very-rounded";
   /** In the designer: shows a sample message where the walk has none. */
   editing?: boolean;
   /** Space inside the card ("auto": none without a frame, normal with one). */
@@ -1376,6 +1378,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       value={{
         buttons: o.mapButtons ?? "below",
         buttonsLook: o.mapButtonsLook ?? "default",
+        corners: o.mapCorners ?? "rounded",
         height: o.mapHeight ?? "medium",
         showTitle: o.mapTitle ?? true,
         showNote: o.mapNote ?? true,
@@ -2964,7 +2967,6 @@ function MessagesOrSample({
   const [empty, setEmpty] = useState(false);
   const { opens } = useWalkInfo(p);
   useEffect(() => {
-    if (!editing) return;
     const el = box.current;
     if (!el) return;
     const check = () => setEmpty((el.textContent ?? "").trim() === "");
@@ -2976,14 +2978,27 @@ function MessagesOrSample({
       characterData: true,
     });
     return () => observer.disconnect();
-  }, [editing]);
+  }, []);
   return (
-    <div className={cn("flex flex-col gap-2", className)}>
-      <div className="flex flex-col gap-2 empty:hidden" ref={box}>
+    // With no messages (and no sample), nothing shows — not even the
+    // ribbon's coloured band. The CSS rule covers the first paint; the
+    // check below also catches messages that leave only empty wrappers.
+    <div
+      className={cn(
+        "flex flex-col gap-2 [&:has(>[data-messages]:empty):not(:has(>[data-sample]))]:hidden",
+        className,
+        empty && !editing && "hidden",
+      )}
+    >
+      <div
+        className="flex flex-col gap-2 empty:hidden"
+        data-messages=""
+        ref={box}
+      >
         {p.notices}
       </div>
       {editing && empty ? (
-        <Alert variant="info">
+        <Alert data-sample="" variant="info">
           <AlertDescription suppressHydrationWarning>
             Preview only: messages show here, e.g. Clock-in opens at{" "}
             {formatTime(opens)} on {formatWalkDay(opens)}.

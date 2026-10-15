@@ -258,6 +258,16 @@ const directionsLookField = {
   ]),
 };
 
+const cornersField = {
+  type: "radio" as const,
+  label: "Map corners",
+  options: [
+    { value: "square", label: "Square" },
+    { value: "rounded", label: "Rounded" },
+    { value: "very-rounded", label: "Very rounded" },
+  ],
+};
+
 const preciseLookField = {
   type: "select" as const,
   label: "Precise location look",
@@ -300,7 +310,7 @@ type BlockLayout = {
   shadows?: "keep" | "none";
   messages?: MessageLook;
   boxes?: BoxLook;
-  spaceAbove?: "closer" | "normal" | "more" | "lots";
+  spaceAbove?: "header" | "closer" | "normal" | "more" | "lots";
   spaceBelow?: "closer" | "normal" | "more" | "lots";
 };
 const BLOCK_LAYOUT: BlockLayout = {
@@ -354,6 +364,7 @@ const blockLayoutField = {
       type: "select" as const,
       label: "Space above",
       options: options([
+        ["header", "Right under the header (no space; for the first block)"],
         ["closer", "Closer to the block above"],
         ["normal", "Normal"],
         ["more", "More"],
@@ -634,6 +645,8 @@ function BlockFrame({
       className={cn(
         "flex flex-col",
         // Blocks sit 24px apart; these pull a block closer or push it away.
+        // The page starts 24px under the header; this cancels it.
+        spaceAbove === "header" && "-mt-6",
         spaceAbove === "closer" && "-mt-3",
         spaceAbove === "more" && "mt-4",
         spaceAbove === "lots" && "mt-12",
@@ -643,7 +656,7 @@ function BlockFrame({
         full && "-mx-4 md:-mx-6",
         // Edge to edge: cards inside lose their rounded corners and side borders.
         width === "full" &&
-          "[&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:border-x-0",
+          "[&_[data-slot=alert]]:rounded-none [&_[data-slot=alert]]:border-x-0 [&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:border-x-0",
         buttons === "phones" &&
           "max-sm:[&_[data-slot=button]]:w-full max-sm:[&_[data-slot=button]]:flex-1",
         buttons === "always" &&
@@ -945,6 +958,10 @@ export const walkDesignConfig: Config = {
           ...directionsLookField,
           label: "Map's directions buttons look",
         },
+        mapCorners: {
+          ...cornersField,
+          label: "Map corners (page-width map)",
+        },
         mapFit: {
           type: "radio",
           label: "Map width in the card",
@@ -1070,6 +1087,7 @@ export const walkDesignConfig: Config = {
         preciseAt: "none",
         preciseLook: "card",
         mapFit: "edge",
+        mapCorners: "rounded",
         inset: "auto",
         statusLook: "badge-line",
         statusAt: "above",
@@ -1103,6 +1121,7 @@ export const walkDesignConfig: Config = {
         preciseAt,
         preciseLook,
         mapFit,
+        mapCorners,
         inset,
         statusLook,
         statusAt,
@@ -1138,6 +1157,7 @@ export const walkDesignConfig: Config = {
           preciseAt={preciseAt}
           preciseLook={preciseLook}
           mapFit={mapFit}
+          mapCorners={mapCorners}
           inset={inset}
           statusLook={statusLook}
           statusAt={statusAt}
@@ -1490,8 +1510,10 @@ export const walkDesignConfig: Config = {
         },
         preciseLook: preciseLookField,
         buttonsLook: directionsLookField,
+        corners: cornersField,
       },
       defaultProps: {
+        corners: "rounded",
         buttonsLook: "default",
         look: "card",
         buttons: "below",
@@ -1510,8 +1532,10 @@ export const walkDesignConfig: Config = {
         preciseAt,
         preciseLook,
         buttonsLook,
+        corners,
       }) => (
         <MapBlock
+          corners={corners}
           buttonsLook={buttonsLook}
           preciseAt={preciseAt}
           preciseLook={preciseLook}
@@ -1608,7 +1632,7 @@ export const walkDesignConfig: Config = {
             width !== "contained" && "-mx-4 md:-mx-6",
             width === "full-inset" && "px-4 md:px-6",
             width === "full" &&
-              "[&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:border-x-0",
+              "[&_[data-slot=alert]]:rounded-none [&_[data-slot=alert]]:border-x-0 [&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:border-x-0",
             background === "muted" && "bg-muted/50",
             background === "dark" && "bg-neutral-950 text-white",
             background === "green" && "bg-emerald-900 text-emerald-50",

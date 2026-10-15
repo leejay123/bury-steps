@@ -32,6 +32,7 @@ export type MapLook = {
   showTitle?: boolean;
   showNote?: boolean;
   buttonsLook?: DirectionsLook;
+  corners?: "rounded" | "square" | "very-rounded";
   /** Something placed with the map, e.g. the precise location (the designer). */
   extra?: ReactNode;
   extraAt?: "above-map" | "on-map" | "below-map" | "after";
@@ -45,6 +46,7 @@ const DEFAULT_LOOK: Required<MapLook> = {
   extra: null,
   extraAt: "below-map",
   buttonsLook: "default",
+  corners: "rounded",
 };
 /** Inside an edge-to-edge designer block, lose the rounded corners and side borders. */
 const BLEED = "in-data-[bleed]:rounded-none in-data-[bleed]:border-x-0";
@@ -169,6 +171,13 @@ export function WalkMap({
   const o = { ...DEFAULT_LOOK, ...useContext(MapLookContext) };
   const height =
     o.height === "short" ? "h-44" : o.height === "tall" ? "h-96" : "h-64";
+  // Square, rounded or very rounded corners on the map's card or frame.
+  const round =
+    o.corners === "square"
+      ? "rounded-none"
+      : o.corners === "very-rounded"
+        ? "rounded-3xl"
+        : "";
   const at = (where: MapLook["extraAt"]) =>
     o.extra && o.extraAt === where ? o.extra : null;
   const map = point ? (
@@ -249,7 +258,7 @@ export function WalkMap({
       at("below-map") ||
       at("after");
     return (
-      <Card className="gap-4 overflow-hidden py-0">
+      <Card className={cn("gap-4 overflow-hidden py-0", round)}>
         {top ? (
           <CardHeader
             className={cn(
@@ -285,7 +294,7 @@ export function WalkMap({
       <div className="flex flex-col gap-3">
         {at("above-map")}
         {o.buttons === "above" ? buttons : null}
-        {mapArea(cn("overflow-hidden rounded-2xl", BLEED))}
+        {mapArea(cn("overflow-hidden rounded-2xl", round, BLEED))}
         {at("below-map")}
         {o.buttons === "below" ? buttons : null}
         {at("after")}
@@ -296,7 +305,13 @@ export function WalkMap({
   if (o.look === "overlay") {
     // The map fills the block; the meeting point and buttons float over it.
     return (
-      <div className={cn("relative overflow-hidden rounded-2xl border", BLEED)}>
+      <div
+        className={cn(
+          "relative overflow-hidden rounded-2xl border",
+          round,
+          BLEED,
+        )}
+      >
         {mapArea() ?? <div className={cn("bg-muted", height)} />}
         <div className="absolute right-3 bottom-3 left-3 flex flex-col gap-3 rounded-xl bg-background/95 p-4 shadow-lg backdrop-blur-sm sm:right-auto sm:max-w-sm">
           {title}
@@ -314,6 +329,7 @@ export function WalkMap({
       <div
         className={cn(
           "grid overflow-hidden rounded-2xl border lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]",
+          round,
           BLEED,
         )}
       >
