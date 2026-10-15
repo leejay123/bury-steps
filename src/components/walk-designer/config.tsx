@@ -966,6 +966,10 @@ export const walkDesignConfig: Config = {
         tabletFactsBox: tabletBoxField("Box around the facts (tablets)"),
         phoneFactsBox: phoneBoxField("Box around the facts (phones)"),
         timelineBox: boxField("Box around the day's timeline"),
+        descriptionTitle: {
+          type: "text",
+          label: "Description heading (blank: no heading)",
+        },
         descriptionBox: boxField("Box around the description"),
         essentials: {
           type: "object",
@@ -1157,6 +1161,7 @@ export const walkDesignConfig: Config = {
         tabletFactsBox: "same",
         phoneFactsBox: "same",
         timelineBox: "none",
+        descriptionTitle: "",
         descriptionBox: "none",
         essentials: ESSENTIALS_DEFAULTS,
         timeline: false,
@@ -1198,6 +1203,7 @@ export const walkDesignConfig: Config = {
         tabletFactsBox,
         phoneFactsBox,
         timelineBox,
+        descriptionTitle,
         descriptionBox,
         timeline,
         bigTitle,
@@ -1229,6 +1235,7 @@ export const walkDesignConfig: Config = {
           tabletFactsBox={tabletFactsBox}
           phoneFactsBox={phoneFactsBox}
           timelineBox={timelineBox}
+          descriptionTitle={descriptionTitle}
           descriptionBox={descriptionBox}
           essentials={essentials}
           ribbon={ribbon}
@@ -1344,7 +1351,14 @@ export const walkDesignConfig: Config = {
         />
       ),
     },
-    Description: { label: "Description", render: () => <DescriptionBlock /> },
+    Description: {
+      label: "Description",
+      fields: {
+        heading: { type: "text", label: "Heading (blank: no heading)" },
+      },
+      defaultProps: { heading: "" },
+      render: ({ heading }) => <DescriptionBlock heading={heading} />,
+    },
     Actions: {
       label: "Clock in + Manage",
       fields: {

@@ -1252,6 +1252,8 @@ export type DetailsOptions = {
   tabletFactsBox?: ForDevice<PartBox>;
   timelineBox?: PartBox;
   descriptionBox?: PartBox;
+  /** A heading above the description (blank: none). */
+  descriptionTitle?: string;
   mapButtonsLook?: DirectionsLook;
   /** For a page-width map in the card (an edge-to-edge one is always square). */
   mapCorners?: "rounded" | "square" | "very-rounded";
@@ -1421,7 +1423,10 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       ) : null}
       {(o.showDescription ?? true) && p.walk.description ? (
         <Boxed box={o.descriptionBox} dark={dark}>
-          <WalkDescription description={p.walk.description} />
+          <DescriptionWithHeading
+            description={p.walk.description}
+            heading={o.descriptionTitle}
+          />
         </Boxed>
       ) : null}
       {preciseHere("bottom")}
@@ -1555,11 +1560,34 @@ export function EssentialsBlock(o: EssentialsOptions) {
   if (!p) return <Placeholder label="Essentials" />;
   return <DeviceEssentials o={o} p={p} />;
 }
-export const DescriptionBlock = withParts("Description", (p) =>
-  p.walk.description ? (
-    <WalkDescription description={p.walk.description} />
-  ) : null,
-);
+/** The walk's description, with a heading of your own above it if one is set. */
+function DescriptionWithHeading({
+  description,
+  heading,
+}: {
+  description: string;
+  heading?: string;
+}) {
+  const title = heading?.trim();
+  if (!title) return <WalkDescription description={description} />;
+  return (
+    <div className="flex flex-col gap-2">
+      <h2 className="text-base font-semibold">{title}</h2>
+      <WalkDescription description={description} />
+    </div>
+  );
+}
+
+export function DescriptionBlock({ heading = "" }: { heading?: string }) {
+  const p = useWalkParts();
+  if (!p) return <Placeholder label="Description" />;
+  return p.walk.description ? (
+    <DescriptionWithHeading
+      description={p.walk.description}
+      heading={heading}
+    />
+  ) : null;
+}
 
 export type ActionsShow = "both" | "manage" | "clock";
 
