@@ -248,6 +248,10 @@ const essentialsFields = {
     label: "“Essentials” heading",
     options: yesNo,
   },
+  headingText: {
+    type: "text" as const,
+    label: "Heading words (blank: Essentials)",
+  },
   showEmpty: {
     type: "radio" as const,
     label: "When none are ticked",
@@ -268,6 +272,7 @@ const ESSENTIALS_DEFAULTS = {
   tabletBox: "same",
   phoneBox: "same",
   heading: true,
+  headingText: "",
   showEmpty: false,
 };
 const spaceOptions = options([
@@ -961,6 +966,14 @@ export const walkDesignConfig: Config = {
           label: "Facts arrange on tablets",
         },
         showEmptyFacts: showEmptyField,
+        factsTitle: {
+          type: "text",
+          label: "Facts heading (blank: no heading)",
+        },
+        timelineTitle: {
+          type: "text",
+          label: "Timeline heading (blank: no heading)",
+        },
         factLines: { ...factLinesField, label: "Lines in the facts list" },
         factsBox: boxField("Box around the facts (computers)"),
         tabletFactsBox: tabletBoxField("Box around the facts (tablets)"),
@@ -1156,6 +1169,8 @@ export const walkDesignConfig: Config = {
         tabletFacts: "same",
         tabletFactsArrange: "same",
         showEmptyFacts: false,
+        factsTitle: "",
+        timelineTitle: "",
         factLines: "between",
         factsBox: "none",
         tabletFactsBox: "same",
@@ -1198,6 +1213,8 @@ export const walkDesignConfig: Config = {
         tabletFactsArrange,
         showEmptyFacts,
         essentials,
+        factsTitle,
+        timelineTitle,
         factLines,
         factsBox,
         tabletFactsBox,
@@ -1230,6 +1247,8 @@ export const walkDesignConfig: Config = {
           tabletFacts={tabletFacts}
           tabletFactsArrange={tabletFactsArrange}
           showEmptyFacts={showEmptyFacts}
+          factsTitle={factsTitle}
+          timelineTitle={timelineTitle}
           factLines={factLines}
           factsBox={factsBox}
           tabletFactsBox={tabletFactsBox}
@@ -1273,6 +1292,7 @@ export const walkDesignConfig: Config = {
         },
         tabletArrange: tabletArrangeField,
         showEmpty: showEmptyField,
+        heading: { type: "text", label: "Heading (blank: no heading)" },
         lines: factLinesField,
         box: boxField("On computers: box"),
         tabletBox: tabletBoxField("On tablets: box"),
@@ -1283,6 +1303,7 @@ export const walkDesignConfig: Config = {
         tabletBox: "same",
         phoneBox: "same",
         lines: "between",
+        heading: "",
         variant: "grid",
         arrange: "fill",
         phoneVariant: "same",
@@ -1303,8 +1324,10 @@ export const walkDesignConfig: Config = {
         tabletBox,
         phoneBox,
         lines,
+        heading,
       }) => (
         <FactsBlock
+          heading={heading}
           lines={lines}
           box={box}
           tabletBox={tabletBox}
@@ -1331,12 +1354,14 @@ export const walkDesignConfig: Config = {
         phoneLook,
         phoneArrange,
         heading,
+        headingText,
         showEmpty,
         box,
         tabletBox,
         phoneBox,
       }) => (
         <EssentialsBlock
+          headingText={headingText}
           box={box}
           tabletBox={tabletBox}
           phoneBox={phoneBox}

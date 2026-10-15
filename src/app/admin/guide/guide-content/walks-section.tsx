@@ -291,7 +291,10 @@ export function WalksSection({
               left out for members, who don&apos;t see it. In the list and table looks, Lines in the list puts lines
               between the facts only (no line under the last one), under every
               fact, or none. The description (in the Details card or its own block) can have
-              a heading of your own, such as About this walk, or none. The
+              a heading of your own, such as About this walk, or none. The facts and the day&apos;s timeline can have headings of
+              your own too, and the Essentials heading your own words; leave
+              any blank for none (every block also has Heading above under
+              Block layout). The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

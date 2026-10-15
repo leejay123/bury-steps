@@ -374,8 +374,11 @@ export function DeviceFacts({
   phoneBox = "same",
   tabletBox = "same",
   lines = "between",
+  heading,
 }: {
   lines?: FactLines;
+  /** A heading of your own above the facts (blank: none). */
+  heading?: string;
   p: WalkIdeaParts;
   dark?: boolean;
   variant?: FactsVariant;
@@ -394,14 +397,17 @@ export function DeviceFacts({
       computer={{ variant, arrange, box }}
       draw={(look) => (
         <Boxed box={look.box} dark={dark}>
-          <Facts
-            arrange={look.arrange}
-            dark={dark}
-            lines={lines}
-            p={p}
-            showEmpty={showEmpty}
-            variant={look.variant}
-          />
+          <div className="flex flex-col gap-2">
+            <PartHeading text={heading} />
+            <Facts
+              arrange={look.arrange}
+              dark={dark}
+              lines={lines}
+              p={p}
+              showEmpty={showEmpty}
+              variant={look.variant}
+            />
+          </div>
         </Boxed>
       )}
       phone={{ variant: phoneVariant, arrange: phoneArrange, box: phoneBox }}
@@ -427,7 +433,9 @@ function EssentialsView({
   showEmpty,
   dark = false,
   box = "none",
+  headingText,
 }: {
+  headingText?: string;
   p: WalkIdeaParts;
   look: EssentialsLook;
   arrange: Arrange;
@@ -440,7 +448,7 @@ function EssentialsView({
   const muted = dark ? "text-white/60" : "text-muted-foreground";
   const title = heading ? (
     <p className={cn("text-xs font-medium tracking-wide uppercase", muted)}>
-      Essentials
+      {headingText?.trim() || "Essentials"}
     </p>
   ) : null;
   if (items.length === 0)
@@ -560,6 +568,8 @@ export type EssentialsOptions = {
   box?: PartBox;
   phoneBox?: PartBox | "same";
   tabletBox?: ForDevice<PartBox>;
+  /** The heading's words (blank: Essentials). */
+  headingText?: string;
 };
 
 function DeviceEssentials({
@@ -580,6 +590,7 @@ function DeviceEssentials({
       }}
       draw={(look) => (
         <EssentialsView
+          headingText={o.headingText}
           box={look.box}
           arrange={look.arrange}
           dark={dark}
@@ -1247,6 +1258,9 @@ export type DetailsOptions = {
   statusAt?: "above" | "below";
   /** Optional boxes around the parts inside the card. */
   factsBox?: PartBox;
+  /** Headings of your own above the facts and the day's timeline (blank: none). */
+  factsTitle?: string;
+  timelineTitle?: string;
   factLines?: FactLines;
   phoneFactsBox?: PartBox | "same";
   tabletFactsBox?: ForDevice<PartBox>;
@@ -1398,7 +1412,10 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       ) : null}
       {o.timeline ? (
         <Boxed box={o.timelineBox} dark={dark}>
-          <Timeline p={p} />
+          <div className="flex flex-col gap-2">
+            <PartHeading text={o.timelineTitle} />
+            <Timeline p={p} />
+          </div>
         </Boxed>
       ) : null}
       {preciseHere("above-facts")}
@@ -1413,6 +1430,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         tabletVariant={o.tabletFacts}
         variant={o.facts ?? "grid"}
         box={o.factsBox}
+        heading={o.factsTitle}
         lines={o.factLines}
         phoneBox={o.phoneFactsBox}
         tabletBox={o.tabletFactsBox}
@@ -1521,8 +1539,10 @@ export function FactsBlock({
   phoneBox = "same",
   tabletBox = "same",
   lines = "between",
+  heading = "",
 }: {
   lines?: FactLines;
+  heading?: string;
   variant?: FactsVariant;
   arrange?: Arrange;
   phoneVariant?: FactsVariant | "same";
@@ -1546,6 +1566,7 @@ export function FactsBlock({
       tabletVariant={tabletVariant}
       variant={variant}
       box={box}
+      heading={heading}
       lines={lines}
       phoneBox={phoneBox}
       tabletBox={tabletBox}
@@ -1560,6 +1581,12 @@ export function EssentialsBlock(o: EssentialsOptions) {
   if (!p) return <Placeholder label="Essentials" />;
   return <DeviceEssentials o={o} p={p} />;
 }
+/** A heading of your own above one part of the Details card (blank: none). */
+function PartHeading({ text }: { text?: string }) {
+  const title = text?.trim();
+  return title ? <h2 className="text-base font-semibold">{title}</h2> : null;
+}
+
 /** The walk's description, with a heading of your own above it if one is set. */
 function DescriptionWithHeading({
   description,
