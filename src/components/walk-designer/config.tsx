@@ -275,14 +275,21 @@ const ESSENTIALS_DEFAULTS = {
   headingText: "",
   showEmpty: false,
 };
+// The same words as Block layout's space above and below.
 const spaceOptions = options([
   ["none", "None"],
-  ["small", "Small"],
-  ["medium", "Medium"],
-  ["large", "Large"],
+  ["closer", "Closer"],
+  ["normal", "Normal"],
+  ["more", "More"],
+  ["lots", "Lots"],
 ]);
+// small / medium / large: designs saved before the words changed.
 const GAP: Record<string, string> = {
   none: "gap-0",
+  closer: "gap-3",
+  normal: "gap-6",
+  more: "gap-8",
+  lots: "gap-12",
   small: "gap-3",
   medium: "gap-6",
   large: "gap-10",
@@ -468,6 +475,24 @@ const TAB_LOOKS: Record<string, string> = {
     "[&_[data-slot=tabs-list]]:h-auto [&_[data-slot=tabs-list]]:rounded-none [&_[data-slot=tabs-list]]:border-t [&_[data-slot=tabs-list]]:bg-transparent [&_[data-slot=tabs-list]]:p-0 [&_[data-slot=tabs-list]]:gap-0 [&_[data-slot=tabs-trigger]]:-mt-px [&_[data-slot=tabs-trigger]]:rounded-none [&_[data-slot=tabs-trigger]]:border-0 [&_[data-slot=tabs-trigger]]:border-t-2 [&_[data-slot=tabs-trigger]]:border-transparent [&_[data-slot=tabs-trigger]]:px-4 [&_[data-slot=tabs-trigger]]:py-2.5 [&_[data-slot=tabs-trigger]]:text-muted-foreground [&_[data-slot=tabs-trigger][data-state=active]]:border-t-primary [&_[data-slot=tabs-trigger][data-state=active]]:text-foreground [&_[data-slot=tabs-trigger][data-state=active]]:shadow-none",
   words:
     "[&_[data-slot=tabs-list]]:h-auto [&_[data-slot=tabs-list]]:bg-transparent [&_[data-slot=tabs-list]]:p-0 [&_[data-slot=tabs-list]]:gap-5 [&_[data-slot=tabs-trigger]]:px-0 [&_[data-slot=tabs-trigger]]:text-muted-foreground [&_[data-slot=tabs-trigger][data-state=active]]:bg-transparent [&_[data-slot=tabs-trigger][data-state=active]]:font-semibold [&_[data-slot=tabs-trigger][data-state=active]]:text-foreground [&_[data-slot=tabs-trigger][data-state=active]]:shadow-none",
+  capsule:
+    "[&_[data-slot=tabs-list]]:h-auto [&_[data-slot=tabs-list]]:rounded-full [&_[data-slot=tabs-list]]:p-1 [&_[data-slot=tabs-trigger]]:rounded-full [&_[data-slot=tabs-trigger]]:px-4 [&_[data-slot=tabs-trigger]]:py-1.5 [&_[data-slot=tabs-trigger][data-state=active]]:shadow-sm",
+  "capsule-dark":
+    "[&_[data-slot=tabs-list]]:h-auto [&_[data-slot=tabs-list]]:rounded-full [&_[data-slot=tabs-list]]:p-1 [&_[data-slot=tabs-trigger]]:rounded-full [&_[data-slot=tabs-trigger]]:px-4 [&_[data-slot=tabs-trigger]]:py-1.5 [&_[data-slot=tabs-trigger][data-state=active]]:bg-foreground [&_[data-slot=tabs-trigger][data-state=active]]:text-background [&_[data-slot=tabs-trigger][data-state=active]]:shadow-none",
+  floating:
+    "[&_[data-slot=tabs-list]]:h-auto [&_[data-slot=tabs-list]]:bg-transparent [&_[data-slot=tabs-list]]:p-0 [&_[data-slot=tabs-list]]:gap-2 [&_[data-slot=tabs-trigger]]:rounded-full [&_[data-slot=tabs-trigger]]:px-4 [&_[data-slot=tabs-trigger]]:py-2 [&_[data-slot=tabs-trigger]]:text-muted-foreground [&_[data-slot=tabs-trigger][data-state=active]]:bg-background [&_[data-slot=tabs-trigger][data-state=active]]:text-foreground [&_[data-slot=tabs-trigger][data-state=active]]:shadow-md",
+  material:
+    "[&_[data-slot=tabs-list]]:h-auto [&_[data-slot=tabs-list]]:rounded-none [&_[data-slot=tabs-list]]:border-b [&_[data-slot=tabs-list]]:bg-transparent [&_[data-slot=tabs-list]]:p-0 [&_[data-slot=tabs-list]]:gap-0 [&_[data-slot=tabs-trigger]]:-mb-px [&_[data-slot=tabs-trigger]]:rounded-none [&_[data-slot=tabs-trigger]]:border-0 [&_[data-slot=tabs-trigger]]:border-b-[3px] [&_[data-slot=tabs-trigger]]:border-transparent [&_[data-slot=tabs-trigger]]:px-4 [&_[data-slot=tabs-trigger]]:py-3 [&_[data-slot=tabs-trigger]]:uppercase [&_[data-slot=tabs-trigger]]:tracking-wide [&_[data-slot=tabs-trigger]]:text-xs [&_[data-slot=tabs-trigger]]:text-muted-foreground [&_[data-slot=tabs-trigger][data-state=active]]:border-b-primary [&_[data-slot=tabs-trigger][data-state=active]]:text-foreground [&_[data-slot=tabs-trigger][data-state=active]]:shadow-none",
+  "green-underline":
+    "[&_[data-slot=tabs-list]]:h-auto [&_[data-slot=tabs-list]]:rounded-none [&_[data-slot=tabs-list]]:bg-transparent [&_[data-slot=tabs-list]]:p-0 [&_[data-slot=tabs-list]]:gap-4 [&_[data-slot=tabs-trigger]]:rounded-none [&_[data-slot=tabs-trigger]]:border-0 [&_[data-slot=tabs-trigger]]:border-b-2 [&_[data-slot=tabs-trigger]]:border-transparent [&_[data-slot=tabs-trigger]]:px-0 [&_[data-slot=tabs-trigger]]:pb-2 [&_[data-slot=tabs-trigger]]:text-muted-foreground [&_[data-slot=tabs-trigger][data-state=active]]:border-b-emerald-600 [&_[data-slot=tabs-trigger][data-state=active]]:text-emerald-700 [&_[data-slot=tabs-trigger][data-state=active]]:shadow-none [&_[data-slot=tabs-trigger][data-state=active]]:bg-transparent",
+  cards:
+    "[&_[data-slot=tabs-list]]:h-auto [&_[data-slot=tabs-list]]:bg-transparent [&_[data-slot=tabs-list]]:p-0 [&_[data-slot=tabs-list]]:gap-2 [&_[data-slot=tabs-trigger]]:rounded-xl [&_[data-slot=tabs-trigger]]:border [&_[data-slot=tabs-trigger]]:bg-card [&_[data-slot=tabs-trigger]]:px-4 [&_[data-slot=tabs-trigger]]:py-2.5 [&_[data-slot=tabs-trigger]]:shadow-sm [&_[data-slot=tabs-trigger][data-state=active]]:border-foreground [&_[data-slot=tabs-trigger][data-state=active]]:ring-1 [&_[data-slot=tabs-trigger][data-state=active]]:ring-foreground",
+  "tinted-box":
+    "[&_[data-slot=tabs-list]]:h-auto [&_[data-slot=tabs-list]]:rounded-xl [&_[data-slot=tabs-list]]:bg-emerald-50 [&_[data-slot=tabs-list]]:p-1 [&_[data-slot=tabs-trigger]]:rounded-lg [&_[data-slot=tabs-trigger]]:py-1.5 [&_[data-slot=tabs-trigger]]:text-emerald-900 [&_[data-slot=tabs-trigger][data-state=active]]:bg-emerald-600 [&_[data-slot=tabs-trigger][data-state=active]]:text-white [&_[data-slot=tabs-trigger][data-state=active]]:shadow-none",
+  "big-words":
+    "[&_[data-slot=tabs-list]]:h-auto [&_[data-slot=tabs-list]]:bg-transparent [&_[data-slot=tabs-list]]:p-0 [&_[data-slot=tabs-list]]:gap-6 [&_[data-slot=tabs-trigger]]:px-0 [&_[data-slot=tabs-trigger]]:text-lg [&_[data-slot=tabs-trigger]]:text-muted-foreground [&_[data-slot=tabs-trigger][data-state=active]]:bg-transparent [&_[data-slot=tabs-trigger][data-state=active]]:text-foreground [&_[data-slot=tabs-trigger][data-state=active]]:underline [&_[data-slot=tabs-trigger][data-state=active]]:decoration-2 [&_[data-slot=tabs-trigger][data-state=active]]:underline-offset-8 [&_[data-slot=tabs-trigger][data-state=active]]:shadow-none",
+  "square-blocks":
+    "[&_[data-slot=tabs-list]]:h-auto [&_[data-slot=tabs-list]]:rounded-none [&_[data-slot=tabs-list]]:border [&_[data-slot=tabs-list]]:bg-transparent [&_[data-slot=tabs-list]]:p-0 [&_[data-slot=tabs-list]]:gap-0 [&_[data-slot=tabs-trigger]]:rounded-none [&_[data-slot=tabs-trigger]]:border-r [&_[data-slot=tabs-trigger]:last-child]:border-r-0 [&_[data-slot=tabs-trigger]]:px-4 [&_[data-slot=tabs-trigger]]:py-2.5 [&_[data-slot=tabs-trigger][data-state=active]]:bg-foreground [&_[data-slot=tabs-trigger][data-state=active]]:text-background [&_[data-slot=tabs-trigger][data-state=active]]:shadow-none",
 };
 
 type TabItem = {
@@ -495,8 +520,8 @@ function TabsView({
   sticky,
   corners,
   fit,
-  contentSpace = "small",
-  innerSpace = "medium",
+  contentSpace = "normal",
+  innerSpace = "normal",
   look = "style",
   side = false,
 }: {
@@ -512,9 +537,18 @@ function TabsView({
 }) {
   // Between the tab bar and the content (it had 16px), and between blocks in a tab.
   const below =
-    { none: "mt-0", small: "mt-4", medium: "mt-6", large: "mt-10" }[
-      contentSpace
-    ] ?? "mt-4";
+    (
+      {
+        none: "mt-0",
+        closer: "mt-2",
+        normal: "mt-4",
+        more: "mt-6",
+        lots: "mt-10",
+        small: "mt-4",
+        medium: "mt-6",
+        large: "mt-10",
+      } as Record<string, string>
+    )[contentSpace] ?? "mt-4";
   const inner = GAP[innerSpace] ?? "gap-6";
   const panels = useRef<(HTMLDivElement | null)[]>([]);
   const [empty, setEmpty] = useState<boolean[]>([]);
@@ -585,7 +619,9 @@ function TabsView({
         <TabsList
           className={cn(
             "max-w-full justify-start overflow-x-auto [scrollbar-width:none] [&>*]:flex-none",
-            fit === "fill" && "w-full sm:[&>*]:flex-1",
+            // Share the width on every screen: two tabs on a phone fill it;
+            // too many to fit keep their own width and the row scrolls.
+            fit === "fill" && "w-full [&>*]:min-w-max [&>*]:flex-1",
             fit === "centre" && "mx-auto flex w-fit",
           )}
         >
@@ -1822,7 +1858,7 @@ export const walkDesignConfig: Config = {
       },
       defaultProps: {
         ratio: "2:1",
-        gap: "medium",
+        gap: "normal",
         heights: "equal",
         sticky: "none",
         left: [],
@@ -1851,7 +1887,7 @@ export const walkDesignConfig: Config = {
           <div
             className={cn(
               "grid",
-              GAP[gap ?? "medium"] ?? "gap-6",
+              GAP[gap ?? "normal"] ?? "gap-6",
               ratio === "1:1" && "lg:grid-cols-2",
               ratio === "2:1" && "lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]",
               ratio === "1:2" && "lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]",
@@ -1983,6 +2019,15 @@ export const walkDesignConfig: Config = {
             ["segments", "Joined segments (Origin UI)"],
             ["overline", "Line on top"],
             ["words", "Plain words, bold when chosen"],
+            ["capsule", "Rounded capsule (grey track)"],
+            ["capsule-dark", "Rounded capsule, dark when chosen"],
+            ["floating", "Floating pills with a shadow"],
+            ["material", "Material: capitals with a thick underline"],
+            ["green-underline", "Green underline, spaced words"],
+            ["cards", "Little cards"],
+            ["tinted-box", "Green box"],
+            ["big-words", "Big words, underlined when chosen"],
+            ["square-blocks", "Square blocks"],
           ]),
         },
         position: {
@@ -2041,8 +2086,8 @@ export const walkDesignConfig: Config = {
       defaultProps: {
         style: "site",
         corners: "as-is",
-        contentSpace: "small",
-        innerSpace: "medium",
+        contentSpace: "normal",
+        innerSpace: "normal",
         look: "style",
         position: "top",
         fit: "fill",

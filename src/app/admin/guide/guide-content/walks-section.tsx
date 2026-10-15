@@ -297,7 +297,12 @@ export function WalksSection({
               Block layout). The strip&apos;s look is a Page setting: click an empty part of
               the page in the designer (no block selected) and choose Messages
               strip look — as designed, soft grey, bold, compact, a coloured
-              stripe, or hidden. The
+              stripe, or hidden. More tab looks: a rounded capsule (light or dark when chosen),
+              floating pills with a shadow, Material (capitals with a thick
+              underline), a green underline, little cards, a green box, big
+              words, and square blocks. With Share the full width, tabs fill
+              the row on phones too (two tabs take half each); too many to fit
+              keep their own width and the row scrolls sideways. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how
