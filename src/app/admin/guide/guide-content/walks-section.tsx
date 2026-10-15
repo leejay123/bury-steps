@@ -294,7 +294,10 @@ export function WalksSection({
               a heading of your own, such as About this walk, or none. The facts and the day&apos;s timeline can have headings of
               your own too, and the Essentials heading your own words; leave
               any blank for none (every block also has Heading above under
-              Block layout). The
+              Block layout). The strip&apos;s look is a Page setting: click an empty part of
+              the page in the designer (no block selected) and choose Messages
+              strip look — as designed, soft grey, bold, compact, a coloured
+              stripe, or hidden. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

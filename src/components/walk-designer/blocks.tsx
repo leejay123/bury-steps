@@ -837,7 +837,7 @@ export function MessagesBlock({
   // The messages show as the strip under the header instead.
   if (p.noticesInStrip)
     return editing ? (
-      <Placeholder label="Messages show as the strip under the header" />
+      <Placeholder label="Messages show as the strip under the header — set its look in the Page settings (click an empty part of the page)" />
     ) : null;
   return (
     <MessagesOrSample className={MESSAGE_LOOK[look]} editing={editing} p={p} />

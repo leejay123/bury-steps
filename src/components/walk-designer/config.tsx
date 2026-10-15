@@ -634,9 +634,12 @@ function TabsView({
 function PageRoot({
   children,
   editing = false,
+  messagesLook = "as-is",
 }: {
   children: ReactNode;
   editing?: boolean;
+  /** The message strip's look (Page settings, nothing selected). */
+  messagesLook?: MessageLook;
 }) {
   const audience = useContext(PreviewAudience);
   const p = useWalkParts();
@@ -646,7 +649,10 @@ function PageRoot({
   // messages of their own, so nothing shows twice.
   const strip = p ? (
     <MessagesOrSample
-      className="-mx-4 -mt-6 gap-0 md:-mx-6 [&_[data-slot=alert]]:rounded-none [&_[data-slot=alert]]:border-x-0 [&_[data-slot=alert]]:border-t-0 [&_[data-slot=alert]]:px-4 md:[&_[data-slot=alert]]:px-6 [&>div]:gap-0"
+      className={cn(
+        "-mx-4 -mt-6 gap-0 md:-mx-6 [&_[data-slot=alert]]:rounded-none [&_[data-slot=alert]]:border-x-0 [&_[data-slot=alert]]:border-t-0 [&_[data-slot=alert]]:px-4 md:[&_[data-slot=alert]]:px-6 [&>div]:gap-0",
+        MESSAGE_LOOK[messagesLook],
+      )}
       editing={editing}
       p={p}
     />
@@ -2177,13 +2183,27 @@ export const walkDesignConfig: Config = {
       ),
     },
   }),
+  // Page settings (shown on the right when no block is selected).
   root: {
+    fields: {
+      messagesLook: {
+        ...messageLookField,
+        label: "Messages strip look (under the header)",
+      },
+    },
+    defaultProps: { messagesLook: "as-is" },
     render: ({
       children,
       puck,
+      messagesLook,
     }: {
       children: React.ReactNode;
       puck?: { isEditing?: boolean };
-    }) => <PageRoot editing={Boolean(puck?.isEditing)}>{children}</PageRoot>,
+      messagesLook?: MessageLook;
+    }) => (
+      <PageRoot editing={Boolean(puck?.isEditing)} messagesLook={messagesLook}>
+        {children}
+      </PageRoot>
+    ),
   },
 };
