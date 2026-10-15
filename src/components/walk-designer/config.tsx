@@ -2,7 +2,7 @@
 
 import type { ComponentConfig, Config } from "@puckeditor/core";
 import { useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { PreviewAudience } from "./parts";
+import { PreviewAudience, WalkPartsProvider, useWalkParts } from "./parts";
 import { ReadyLayoutBlock } from "./ready-layout-block";
 import { READY_LAYOUTS } from "./ready-layouts";
 import { cn } from "@/lib/utils";
@@ -47,6 +47,7 @@ import {
   TitleBlock,
   WeatherBlock,
   BackLinkBlock,
+  MessagesOrSample,
   CountdownBlock,
   DirectionsBlock,
   FactBlock,
@@ -134,6 +135,32 @@ const boxLookField = {
   ]),
 };
 
+const BOXES = [
+  { value: "none", label: "No box" },
+  { value: "outline", label: "Outline" },
+  { value: "card", label: "Card (border and shadow)" },
+  { value: "grey", label: "Light grey" },
+];
+const boxField = (label: string) => ({
+  type: "select" as const,
+  label,
+  options: BOXES,
+});
+const tabletBoxField = (label: string) => ({
+  type: "select" as const,
+  label,
+  options: [
+    { value: "same", label: "Same as on computers" },
+    { value: "phone", label: "Same as on phones" },
+    ...BOXES,
+  ],
+});
+const phoneBoxField = (label: string) => ({
+  type: "select" as const,
+  label,
+  options: [{ value: "same", label: "Same as on computers" }, ...BOXES],
+});
+
 const showEmptyField = {
   type: "radio" as const,
   label: "Empty facts",
@@ -203,6 +230,9 @@ const essentialsFields = {
       { value: "scroll", label: "One row, swipe sideways" },
     ],
   },
+  box: boxField("On computers: box"),
+  tabletBox: tabletBoxField("On tablets: box"),
+  phoneBox: phoneBoxField("On phones: box"),
   heading: {
     type: "radio" as const,
     label: "“Essentials” heading",
@@ -224,6 +254,9 @@ const ESSENTIALS_DEFAULTS = {
   tabletArrange: "same",
   phoneLook: "same",
   phoneArrange: "same",
+  box: "none",
+  tabletBox: "same",
+  phoneBox: "same",
   heading: true,
   showEmpty: false,
 };
@@ -331,7 +364,6 @@ const blockLayoutField = {
         ["card", "Card"],
         ["tint", "Light grey"],
         ["outline", "Outline only"],
-        ["dark", "Dark"],
         ["green", "Green"],
       ]),
     },
@@ -592,6 +624,18 @@ function PageRoot({
   editing?: boolean;
 }) {
   const audience = useContext(PreviewAudience);
+  const p = useWalkParts();
+  // Every walk message runs as a strip straight under the site header, full
+  // width, coloured as its box would be (blue information, red cancelled,
+  // grey finished), scrolling away with the page. The blocks then have no
+  // messages of their own, so nothing shows twice.
+  const strip = p ? (
+    <MessagesOrSample
+      className="-mx-4 -mt-6 gap-0 md:-mx-6 [&_[data-slot=alert]]:rounded-none [&_[data-slot=alert]]:border-x-0 [&_[data-slot=alert]]:border-t-0 [&_[data-slot=alert]]:px-4 md:[&_[data-slot=alert]]:px-6 [&>div]:gap-0"
+      editing={editing}
+      p={p}
+    />
+  ) : null;
   return (
     <div
       className={cn(
@@ -603,7 +647,16 @@ function PageRoot({
       )}
       data-preview-audience={audience ?? undefined}
     >
-      {children}
+      {strip}
+      {p ? (
+        <WalkPartsProvider
+          parts={{ ...p, notices: null, noticesInStrip: true }}
+        >
+          {children}
+        </WalkPartsProvider>
+      ) : (
+        children
+      )}
     </div>
   );
 }
@@ -849,7 +902,6 @@ export const walkDesignConfig: Config = {
             ["magazine", "Magazine"],
             ["poster", "Poster"],
             ["trailhead", "Trailhead sign"],
-            ["dark", "Dark band"],
             ["calendar", "Calendar date"],
             ["split", "Coloured time block"],
             ["contours", "Contour lines"],
@@ -895,6 +947,11 @@ export const walkDesignConfig: Config = {
           label: "Facts arrange on tablets",
         },
         showEmptyFacts: showEmptyField,
+        factsBox: boxField("Box around the facts (computers)"),
+        tabletFactsBox: tabletBoxField("Box around the facts (tablets)"),
+        phoneFactsBox: phoneBoxField("Box around the facts (phones)"),
+        timelineBox: boxField("Box around the day's timeline"),
+        descriptionBox: boxField("Box around the description"),
         essentials: {
           type: "object",
           label: "Essentials in the card",
@@ -995,7 +1052,6 @@ export const walkDesignConfig: Config = {
           options: options([
             ["card", "Card (border and shadow)"],
             ["tint", "Light grey card"],
-            ["dark", "Dark card"],
             ["plain", "No card"],
           ]),
         },
@@ -1081,6 +1137,11 @@ export const walkDesignConfig: Config = {
         tabletFacts: "same",
         tabletFactsArrange: "same",
         showEmptyFacts: false,
+        factsBox: "none",
+        tabletFactsBox: "same",
+        phoneFactsBox: "same",
+        timelineBox: "none",
+        descriptionBox: "none",
         essentials: ESSENTIALS_DEFAULTS,
         timeline: false,
         bigTitle: false,
@@ -1116,6 +1177,11 @@ export const walkDesignConfig: Config = {
         tabletFactsArrange,
         showEmptyFacts,
         essentials,
+        factsBox,
+        tabletFactsBox,
+        phoneFactsBox,
+        timelineBox,
+        descriptionBox,
         timeline,
         bigTitle,
       }) => (
@@ -1141,6 +1207,11 @@ export const walkDesignConfig: Config = {
           tabletFacts={tabletFacts}
           tabletFactsArrange={tabletFactsArrange}
           showEmptyFacts={showEmptyFacts}
+          factsBox={factsBox}
+          tabletFactsBox={tabletFactsBox}
+          phoneFactsBox={phoneFactsBox}
+          timelineBox={timelineBox}
+          descriptionBox={descriptionBox}
           essentials={essentials}
           ribbon={ribbon}
           ribbonAt={ribbonAt}
@@ -1177,8 +1248,14 @@ export const walkDesignConfig: Config = {
         },
         tabletArrange: tabletArrangeField,
         showEmpty: showEmptyField,
+        box: boxField("On computers: box"),
+        tabletBox: tabletBoxField("On tablets: box"),
+        phoneBox: phoneBoxField("On phones: box"),
       },
       defaultProps: {
+        box: "none",
+        tabletBox: "same",
+        phoneBox: "same",
         variant: "grid",
         arrange: "fill",
         phoneVariant: "same",
@@ -1195,8 +1272,14 @@ export const walkDesignConfig: Config = {
         tabletVariant,
         tabletArrange,
         showEmpty,
+        box,
+        tabletBox,
+        phoneBox,
       }) => (
         <FactsBlock
+          box={box}
+          tabletBox={tabletBox}
+          phoneBox={phoneBox}
           showEmpty={showEmpty}
           arrange={arrange}
           phoneArrange={phoneArrange}
@@ -1220,8 +1303,14 @@ export const walkDesignConfig: Config = {
         phoneArrange,
         heading,
         showEmpty,
+        box,
+        tabletBox,
+        phoneBox,
       }) => (
         <EssentialsBlock
+          box={box}
+          tabletBox={tabletBox}
+          phoneBox={phoneBox}
           arrange={arrange}
           heading={heading}
           look={look}
@@ -1565,7 +1654,6 @@ export const walkDesignConfig: Config = {
           options: options([
             ["none", "None"],
             ["muted", "Light grey"],
-            ["dark", "Dark"],
             ["green", "Green"],
           ]),
         },
@@ -1756,7 +1844,6 @@ export const walkDesignConfig: Config = {
           options: options([
             ["card", "Card"],
             ["tint", "Tinted"],
-            ["dark", "Dark"],
             ["outline", "Outline only"],
           ]),
         },

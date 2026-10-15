@@ -275,7 +275,16 @@ export function WalksSection({
               block with no messages shows nothing at all. Nothing on a designed page runs edge to edge: every block sits in
               a card or with no card, at page width. The Details card&apos;s
               Card frame chooses a card (border and shadow), a light grey or
-              dark card, or no card. The
+              dark card, or no card. On a designed walk page every walk message (Clock-in opens…,
+              Finished, so it can&apos;t be edited…, Cancelled) runs as a strip
+              straight under the site header, full width and coloured like its
+              box (blue information, red cancelled, grey finished); it scrolls
+              away with the page, and the Details card and everything else stay
+              as they are. Inside the Details card, the facts, essentials, the
+              day&apos;s timeline and the description can each have their own
+              box (outline, card or light grey) — the facts and essentials with
+              a different box on phones and tablets if you like. There are no
+              dark looks in the designer. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

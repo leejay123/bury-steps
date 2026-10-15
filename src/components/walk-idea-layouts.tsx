@@ -38,6 +38,8 @@ export type WalkIdeaParts = {
   tools?: ReactNode;
   /** Where "back" goes from this walk page, and what it's called (the designer's Back link block). */
   back?: { href: string; label: string };
+  /** Designed pages: the messages are shown as a strip under the header instead. */
+  noticesInStrip?: boolean;
   /** How this group works (signed-out visitors), where the page has it. */
   howItWorks?: ReactNode;
   /** The Before you set off tips, for the Checklist design. */

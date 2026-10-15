@@ -329,6 +329,35 @@ function ByDevice<L extends object>({
   );
 }
 
+/** An optional box around one part of the Details card (facts, essentials…). */
+export type PartBox = "none" | "outline" | "card" | "grey";
+function Boxed({
+  box = "none",
+  dark = false,
+  children,
+}: {
+  box?: PartBox;
+  dark?: boolean;
+  children: ReactNode;
+}) {
+  if (box === "none") return <>{children}</>;
+  return (
+    <div
+      className={cn(
+        "rounded-xl p-4",
+        box === "outline" && (dark ? "border border-white/15" : "border"),
+        box === "card" &&
+          (dark
+            ? "border border-white/15 bg-white/5"
+            : "border bg-card shadow-sm"),
+        box === "grey" && (dark ? "bg-white/10" : "bg-muted/50"),
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function DeviceFacts({
   p,
   dark,
@@ -339,6 +368,9 @@ export function DeviceFacts({
   tabletVariant = "same",
   tabletArrange = "same",
   showEmpty = false,
+  box = "none",
+  phoneBox = "same",
+  tabletBox = "same",
 }: {
   p: WalkIdeaParts;
   dark?: boolean;
@@ -349,21 +381,30 @@ export function DeviceFacts({
   tabletVariant?: ForDevice<FactsVariant>;
   tabletArrange?: ForDevice<Arrange>;
   showEmpty?: boolean;
+  box?: PartBox;
+  phoneBox?: PartBox | "same";
+  tabletBox?: ForDevice<PartBox>;
 }) {
   return (
     <ByDevice
-      computer={{ variant, arrange }}
+      computer={{ variant, arrange, box }}
       draw={(look) => (
-        <Facts
-          arrange={look.arrange}
-          dark={dark}
-          p={p}
-          showEmpty={showEmpty}
-          variant={look.variant}
-        />
+        <Boxed box={look.box} dark={dark}>
+          <Facts
+            arrange={look.arrange}
+            dark={dark}
+            p={p}
+            showEmpty={showEmpty}
+            variant={look.variant}
+          />
+        </Boxed>
       )}
-      phone={{ variant: phoneVariant, arrange: phoneArrange }}
-      tablet={{ variant: tabletVariant, arrange: tabletArrange }}
+      phone={{ variant: phoneVariant, arrange: phoneArrange, box: phoneBox }}
+      tablet={{
+        variant: tabletVariant,
+        arrange: tabletArrange,
+        box: tabletBox,
+      }}
     />
   );
 }
@@ -380,6 +421,7 @@ function EssentialsView({
   heading,
   showEmpty,
   dark = false,
+  box = "none",
 }: {
   p: WalkIdeaParts;
   look: EssentialsLook;
@@ -387,6 +429,7 @@ function EssentialsView({
   heading: boolean;
   showEmpty: boolean;
   dark?: boolean;
+  box?: PartBox;
 }) {
   const items = walkEssentialItems(p.walk.essentials, useWalkEssentials());
   const muted = dark ? "text-white/60" : "text-muted-foreground";
@@ -491,10 +534,12 @@ function EssentialsView({
       </ul>
     );
   return (
-    <div className="flex flex-col gap-1.5">
-      {title}
-      {body}
-    </div>
+    <Boxed box={box} dark={dark}>
+      <div className="flex flex-col gap-1.5">
+        {title}
+        {body}
+      </div>
+    </Boxed>
   );
 }
 
@@ -507,6 +552,9 @@ export type EssentialsOptions = {
   tabletArrange?: ForDevice<Arrange>;
   heading?: boolean;
   showEmpty?: boolean;
+  box?: PartBox;
+  phoneBox?: PartBox | "same";
+  tabletBox?: ForDevice<PartBox>;
 };
 
 function DeviceEssentials({
@@ -520,9 +568,14 @@ function DeviceEssentials({
 }) {
   return (
     <ByDevice
-      computer={{ look: o.look ?? "pills", arrange: o.arrange ?? "scroll" }}
+      computer={{
+        look: o.look ?? "pills",
+        arrange: o.arrange ?? "scroll",
+        box: o.box ?? "none",
+      }}
       draw={(look) => (
         <EssentialsView
+          box={look.box}
           arrange={look.arrange}
           dark={dark}
           heading={o.heading ?? true}
@@ -531,10 +584,15 @@ function DeviceEssentials({
           showEmpty={o.showEmpty ?? false}
         />
       )}
-      phone={{ look: o.phoneLook ?? "same", arrange: o.phoneArrange ?? "same" }}
+      phone={{
+        look: o.phoneLook ?? "same",
+        arrange: o.phoneArrange ?? "same",
+        box: o.phoneBox ?? "same",
+      }}
       tablet={{
         look: o.tabletLook ?? "same",
         arrange: o.tabletArrange ?? "same",
+        box: o.tabletBox ?? "same",
       }}
     />
   );
@@ -753,6 +811,11 @@ export function MessagesBlock({
 }) {
   const p = useWalkParts();
   if (!p) return <Placeholder label="Messages (only when there are any)" />;
+  // The messages show as the strip under the header instead.
+  if (p.noticesInStrip)
+    return editing ? (
+      <Placeholder label="Messages show as the strip under the header" />
+    ) : null;
   return (
     <MessagesOrSample className={MESSAGE_LOOK[look]} editing={editing} p={p} />
   );
@@ -1170,6 +1233,12 @@ export type DetailsOptions = {
   preciseLook?: PreciseLook;
   statusLook?: "badge-line" | "badge" | "line" | "pill" | "none";
   statusAt?: "above" | "below";
+  /** Optional boxes around the parts inside the card. */
+  factsBox?: PartBox;
+  phoneFactsBox?: PartBox | "same";
+  tabletFactsBox?: ForDevice<PartBox>;
+  timelineBox?: PartBox;
+  descriptionBox?: PartBox;
   mapButtonsLook?: DirectionsLook;
   /** For a page-width map in the card (an edge-to-edge one is always square). */
   mapCorners?: "rounded" | "square" | "very-rounded";
@@ -1312,7 +1381,11 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
           ) : null}
         </div>
       ) : null}
-      {o.timeline ? <Timeline p={p} /> : null}
+      {o.timeline ? (
+        <Boxed box={o.timelineBox} dark={dark}>
+          <Timeline p={p} />
+        </Boxed>
+      ) : null}
       {preciseHere("above-facts")}
       <DeviceFacts
         arrange={o.factsArrange}
@@ -1324,13 +1397,18 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         tabletArrange={o.tabletFactsArrange}
         tabletVariant={o.tabletFacts}
         variant={o.facts ?? "grid"}
+        box={o.factsBox}
+        phoneBox={o.phoneFactsBox}
+        tabletBox={o.tabletFactsBox}
       />
       {preciseHere("below-facts")}
       {(o.showEssentials ?? true) ? (
         <DeviceEssentials dark={dark} o={o.essentials ?? {}} p={p} />
       ) : null}
       {(o.showDescription ?? true) && p.walk.description ? (
-        <WalkDescription description={p.walk.description} />
+        <Boxed box={o.descriptionBox} dark={dark}>
+          <WalkDescription description={p.walk.description} />
+        </Boxed>
       ) : null}
       {preciseHere("bottom")}
     </div>
@@ -1420,6 +1498,9 @@ export function FactsBlock({
   tabletVariant = "same",
   tabletArrange = "same",
   showEmpty = false,
+  box = "none",
+  phoneBox = "same",
+  tabletBox = "same",
 }: {
   variant?: FactsVariant;
   arrange?: Arrange;
@@ -1428,6 +1509,9 @@ export function FactsBlock({
   tabletVariant?: FactsVariant | "same" | "phone";
   tabletArrange?: Arrange | "same" | "phone";
   showEmpty?: boolean;
+  box?: PartBox;
+  phoneBox?: PartBox | "same";
+  tabletBox?: ForDevice<PartBox>;
 }) {
   const p = useWalkParts();
   return p ? (
@@ -1440,6 +1524,9 @@ export function FactsBlock({
       tabletArrange={tabletArrange}
       tabletVariant={tabletVariant}
       variant={variant}
+      box={box}
+      phoneBox={phoneBox}
+      tabletBox={tabletBox}
     />
   ) : (
     <Placeholder label={`Facts · ${variant}`} />
@@ -2721,6 +2808,7 @@ function DetailsRibbon({
         )}
       />
     );
+  if (content === "messages" && p.noticesInStrip) return null;
   if (content === "messages")
     return (
       <MessagesOrSample
@@ -2925,7 +3013,7 @@ export function PreciseLocation({
  * sample stands in (marked as a preview) so the design's message spots can
  * be seen; real pages never show it.
  */
-function MessagesOrSample({
+export function MessagesOrSample({
   p,
   editing,
   className,
