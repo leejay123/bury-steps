@@ -1315,9 +1315,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       : o.inset;
   // Inset: the map's own rounded card, with the card's space around it.
   const insetMap = (className?: string) => (
-    <div className={cn(padding !== "none" && "px-5 sm:px-6", className)}>
-      {p.map}
-    </div>
+    <div className={cn(padding !== "none" && "px-6", className)}>{p.map}</div>
   );
   // The precise location, where chosen. With no map in the card, the map
   // spots fall back to under the facts.
@@ -1369,10 +1367,11 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   const body = (
     <div
       className={cn(
-        "flex min-w-0 flex-col gap-5",
+        // The same 24px between everything, like the rest of the page.
+        "flex min-w-0 flex-col gap-6",
         // A card without a frame has no space inside, so it lines up with
         // the rest of the page (like the Notices page's heading).
-        padding === "normal" && "p-5 sm:p-6",
+        padding === "normal" && "p-6",
         padding === "roomy" && "p-6 sm:p-8",
         o.bigTitle && padding === "normal" && "sm:p-8",
       )}
@@ -1506,20 +1505,18 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         {/* The map sits inside the card as its own rounded card, lined up
             with the words (nothing on a designed page runs edge to edge). */}
         {map === "top" && p.map
-          ? insetMap(padding === "none" ? "pb-5" : "pt-5 sm:pt-6")
+          ? insetMap(padding === "none" ? "pb-6" : "pt-6")
           : null}
         {map === "side" && p.map ? (
           <div className="grid lg:grid-cols-[minmax(0,1fr)_24rem]">
             {body}
-            {insetMap(
-              cn("lg:pl-0", padding !== "none" && "pb-5 sm:pb-6 lg:pt-6"),
-            )}
+            {insetMap(cn("lg:pl-0", padding !== "none" && "pb-6 lg:pt-6"))}
           </div>
         ) : (
           body
         )}
         {map === "bottom" && p.map
-          ? insetMap(padding === "none" ? "pt-5" : "pb-5 sm:pb-6")
+          ? insetMap(padding === "none" ? "pt-6" : "pb-6")
           : null}
         {ribbonAt === "bottom" ? ribbon : null}
       </section>
@@ -2910,7 +2907,7 @@ function DetailsRibbon({
     return (
       <MessagesOrSample
         className={cn(
-          "px-5 py-3 sm:px-6 [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:bg-transparent [&_[data-slot=alert]]:p-0 [&_[data-slot=alert]]:text-inherit",
+          "px-6 py-3 [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:bg-transparent [&_[data-slot=alert]]:p-0 [&_[data-slot=alert]]:text-inherit",
           tone,
         )}
         editing={editing}
@@ -2957,7 +2954,7 @@ function DetailsRibbon({
     );
   return (
     <div
-      className={cn("flex items-center gap-2 px-5 py-2 text-sm sm:px-6", tone)}
+      className={cn("flex items-center gap-2 px-6 py-2 text-sm", tone)}
       suppressHydrationWarning
     >
       {line}

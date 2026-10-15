@@ -302,7 +302,11 @@ export function WalksSection({
               underline), a green underline, little cards, a green box, big
               words, and square blocks. With Share the full width, tabs fill
               the row on phones too (two tabs take half each); too many to fit
-              keep their own width and the row scrolls sideways. The
+              keep their own width and the row scrolls sideways. Spacing is the same 24 pixels everywhere on a designed page —
+              between blocks, between the tabs and their content, between
+              blocks in a tab, between columns, and inside cards and the
+              Details card (headings sit closer to what they label); the
+              spacing options only change it where you choose to. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

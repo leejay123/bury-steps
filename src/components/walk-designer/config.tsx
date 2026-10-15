@@ -540,15 +540,15 @@ function TabsView({
     (
       {
         none: "mt-0",
-        closer: "mt-2",
-        normal: "mt-4",
+        closer: "mt-3",
+        normal: "mt-6",
         more: "mt-6",
         lots: "mt-10",
-        small: "mt-4",
+        small: "mt-6",
         medium: "mt-6",
         large: "mt-10",
       } as Record<string, string>
-    )[contentSpace] ?? "mt-4";
+    )[contentSpace] ?? "mt-6";
   const inner = GAP[innerSpace] ?? "gap-6";
   const panels = useRef<(HTMLDivElement | null)[]>([]);
   const [empty, setEmpty] = useState<boolean[]>([]);
@@ -776,8 +776,8 @@ function BlockFrame({
         className={cn(
           // Fills the block when a column stretches it (equal heights).
           "flex min-w-0 flex-1 flex-col gap-3 [&>*:last-child]:grow",
-          framed && "py-5",
-          framed && "rounded-2xl px-5 sm:px-6",
+          // The same 24px everywhere on the page.
+          framed && "rounded-2xl p-6",
           frame === "card" && "border bg-card shadow-sm",
           frame === "tint" && "bg-muted/50",
           frame === "outline" && "border",
@@ -1807,8 +1807,8 @@ export const walkDesignConfig: Config = {
             background === "muted" && "bg-muted/50",
             background === "dark" && "bg-neutral-950 text-white",
             background === "green" && "bg-emerald-900 text-emerald-50",
-            background !== "none" && "rounded-2xl px-4 sm:px-6",
-            padding === "small" && "py-4",
+            background !== "none" && "rounded-2xl px-6",
+            padding === "small" && "py-6",
             padding === "large" && "py-10",
           )}
         >
@@ -1942,7 +1942,7 @@ export const walkDesignConfig: Config = {
           {side === "left" ? (
             <div className={cn(sticky && "lg:sticky lg:top-24 lg:self-start")}>
               <MobileSidebar label={label || "More"} side="left">
-                <SidebarContent className="flex flex-col gap-4" />
+                <SidebarContent className="flex flex-col gap-6" />
               </MobileSidebar>
             </div>
           ) : null}
@@ -1955,7 +1955,7 @@ export const walkDesignConfig: Config = {
               )}
             >
               <MobileSidebar label={label || "More"} side="right">
-                <SidebarContent className="flex flex-col gap-4" />
+                <SidebarContent className="flex flex-col gap-6" />
               </MobileSidebar>
             </div>
           ) : null}
@@ -1987,7 +1987,7 @@ export const walkDesignConfig: Config = {
             tone === "outline" && "border",
           )}
         >
-          <Content className="flex flex-col gap-5 p-5 sm:p-6" />
+          <Content className="flex flex-col gap-6 p-6" />
         </div>
       ),
     },
@@ -2178,7 +2178,7 @@ export const walkDesignConfig: Config = {
                     {item.label}
                   </AccordionTrigger>
                   <AccordionContent>
-                    <Content className="flex flex-col gap-4" />
+                    <Content className="flex flex-col gap-6" />
                   </AccordionContent>
                 </AccordionItem>
               );
