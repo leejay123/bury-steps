@@ -356,6 +356,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
     ),
     forecast: shown("forecast") ? renderSection("forecast") : null,
     howItWorks: howWalksWork,
+    howItWorksSteps: theme.howWalksWorkSteps,
     headline: {
       cancelledAt: cancelledAtIso,
       distance: walk.distance,

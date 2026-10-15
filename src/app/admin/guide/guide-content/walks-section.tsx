@@ -284,7 +284,11 @@ export function WalksSection({
               day&apos;s timeline and the description can each have their own
               box (outline, card or light grey) — the facts and essentials with
               a different box on phones and tablets if you like. There are no
-              dark looks in the designer. The
+              dark looks in the designer. How this group works has the same looks as Before you set off
+              (the card, a tick list, numbered steps, a green callout, numbered
+              tiles, swiping tiles or one short line) and its own heading;
+              like any block it can go in a tab, and a tab holding only it is
+              left out for members, who don&apos;t see it. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

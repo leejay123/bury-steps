@@ -2152,11 +2152,36 @@ export function MobileSidebar({
 }
 
 // ── More blocks from the walk page designs ──────────────────────────────
-export function HowItWorksBlock({ editing = false }: { editing?: boolean }) {
+export function HowItWorksBlock({
+  editing = false,
+  look = "card",
+  title = "",
+}: {
+  editing?: boolean;
+  look?: BeforeLook;
+  title?: string;
+}) {
   const p = useWalkParts();
   if (!p)
-    return <Placeholder label="How this group works (signed-out visitors)" />;
-  if (p.howItWorks) return <>{p.howItWorks}</>;
+    return (
+      <Placeholder
+        label={`How this group works (signed-out visitors) · ${look}`}
+      />
+    );
+  if (p.howItWorks)
+    return look === "card" || !p.howItWorksSteps?.length ? (
+      <>{p.howItWorks}</>
+    ) : (
+      // Signed-out visitors only, like the card (members have already done these steps).
+      <div className="contents" data-guest-home="">
+        <StepsLooks
+          heading={title.trim() || "How this group works"}
+          look={look}
+          p={p}
+          steps={p.howItWorksSteps}
+        />
+      </div>
+    );
   // Says why it's empty in the designer; shows nothing on the page.
   return editing ? (
     <Placeholder label="How this group works: only shown to signed-out visitors (and only when it's on in Settings → Site wording → Walk page cards)" />
@@ -3065,5 +3090,90 @@ export function MessagesOrSample({
         </Alert>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Steps with a title and a few words each (How this group works), in the
+ * same looks as Before you set off: ticks, numbered steps, a green callout,
+ * numbered tiles, tiles in a swiping row, or one short paragraph.
+ */
+function StepsLooks({
+  p,
+  look,
+  heading,
+  steps,
+}: {
+  p: WalkIdeaParts;
+  look: Exclude<BeforeLook, "card">;
+  heading: string;
+  steps: readonly { title: string; body: string }[];
+}) {
+  const { status } = useWalkInfo(p);
+  if (status === "completed" || status === "cancelled") return null;
+  if (look === "compact")
+    return (
+      <p className="text-sm text-muted-foreground">
+        <span className="font-semibold text-foreground">{heading}:</span>{" "}
+        {steps.map((step) => step.title).join(" · ")}
+      </p>
+    );
+  if (look === "tiles" || look === "swipe")
+    return (
+      <section className="flex flex-col gap-3">
+        <h2 className="text-base font-semibold">{heading}</h2>
+        <ol
+          className={cn(
+            "grid gap-2 sm:grid-cols-2 lg:grid-cols-4",
+            look === "swipe" && cn(SWIPE, "gap-3 [&>*]:w-64"),
+          )}
+        >
+          {steps.map((step, i) => (
+            <li
+              className="flex flex-col gap-2 rounded-xl bg-muted/60 p-4 text-sm"
+              key={`${i}-${step.title}`}
+            >
+              <span className="flex size-7 items-center justify-center rounded-full bg-background text-xs font-semibold">
+                {i + 1}
+              </span>
+              <span className="font-medium">{step.title}</span>
+              <span className="text-muted-foreground">{step.body}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+    );
+  return (
+    <section
+      className={cn(
+        "flex flex-col gap-3",
+        look === "callout" &&
+          "rounded-2xl border-l-4 border-emerald-600 bg-emerald-50 p-5 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-50",
+      )}
+    >
+      <h2 className="text-base font-semibold">{heading}</h2>
+      <ol className="flex flex-col gap-3 text-sm">
+        {steps.map((step, i) => (
+          <li className="flex items-start gap-2.5" key={`${i}-${step.title}`}>
+            {look === "numbered" ? (
+              <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-foreground text-[11px] font-semibold text-background">
+                {i + 1}
+              </span>
+            ) : (
+              <Check
+                aria-hidden
+                className="mt-0.5 size-4 shrink-0 text-emerald-600"
+              />
+            )}
+            <span>
+              <span className="font-medium">{step.title}</span>
+              {step.body ? (
+                <span className="block opacity-80">{step.body}</span>
+              ) : null}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }

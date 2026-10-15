@@ -42,6 +42,8 @@ export type WalkIdeaParts = {
   noticesInStrip?: boolean;
   /** How this group works (signed-out visitors), where the page has it. */
   howItWorks?: ReactNode;
+  /** Its steps, for the designer's other looks of it. */
+  howItWorksSteps?: readonly { title: string; body: string }[];
   /** The Before you set off tips, for the Checklist design. */
   tips: readonly string[];
   what3words: string | null;

@@ -1481,8 +1481,32 @@ export const walkDesignConfig: Config = {
     },
     HowItWorks: {
       label: "How this group works",
-      render: ({ puck }) => (
-        <HowItWorksBlock editing={Boolean(puck?.isEditing)} />
+      fields: {
+        look: {
+          type: "select",
+          label: "Look",
+          options: options([
+            ["card", "Card (as on the walk page)"],
+            ["ticks", "Tick list"],
+            ["numbered", "Numbered steps"],
+            ["callout", "Green callout"],
+            ["tiles", "Numbered tiles"],
+            ["swipe", "Tiles in one swiping row"],
+            ["compact", "One short line"],
+          ]),
+        },
+        title: {
+          type: "text",
+          label: "Heading (blank: How this group works)",
+        },
+      },
+      defaultProps: { look: "card", title: "" },
+      render: ({ look, title, puck }) => (
+        <HowItWorksBlock
+          editing={Boolean(puck?.isEditing)}
+          look={look}
+          title={title}
+        />
       ),
     },
     StoryCards: {

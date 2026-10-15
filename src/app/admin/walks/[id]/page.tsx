@@ -577,6 +577,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
     back: { href: "/admin/walks", label: "All walks" },
     // For the walk page designer's signed-out visitor preview (hidden from
     // anyone signed in, as on the members' walk page).
+    howItWorksSteps: theme.howWalksWorkSteps,
     howItWorks:
       walk.cancelledAt || !theme.howWalksWorkEnabled ? null : (
         <div className="contents" data-guest-home="">
