@@ -761,7 +761,8 @@ function BlockFrame({
           "max-sm:[&_[data-slot=button]]:w-full max-sm:[&_[data-slot=button]]:flex-1",
         buttons === "always" &&
           "[&_[data-slot=button]]:w-full [&_[data-slot=button]]:flex-1",
-        shadows === "none" && "[&_*]:shadow-none",
+        // Every shadow inside, except a part box chosen on purpose (Card).
+        shadows === "none" && "[&_*:not([data-part-box])]:shadow-none",
         MESSAGE_LOOK[messages ?? "as-is"],
         BOX_LOOK[boxes ?? "as-is"],
         // Phones: under 768px; tablets: 768–1023px; computers: 1024px and wider.

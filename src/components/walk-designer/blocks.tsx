@@ -344,7 +344,9 @@ function Boxed({
 }) {
   if (box === "none") return <>{children}</>;
   return (
+    // Marked so Block layout's "Shadows: Remove" leaves a box you chose alone.
     <div
+      data-part-box=""
       className={cn(
         "rounded-xl p-4",
         box === "outline" && (dark ? "border border-white/15" : "border"),
@@ -1380,9 +1382,10 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
     >
       {showTitle || (o.showActions ?? true) ? (
         <Boxed box={o.titleBox} dark={dark}>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          {/* The same 24px between everything in the card, the title's lines too. */}
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             {showTitle ? (
-              <div className="flex min-w-0 flex-col gap-2">
+              <div className="flex min-w-0 flex-col gap-6">
                 {(o.statusAt ?? "above") === "above" ? statusRow : null}
                 <h1
                   className={cn(

@@ -176,6 +176,18 @@ export function WalkMap({
       : o.corners === "very-rounded"
         ? "rounded-3xl"
         : "";
+  const cornerTop =
+    o.corners === "square"
+      ? ""
+      : o.corners === "very-rounded"
+        ? "overflow-hidden rounded-t-3xl"
+        : "overflow-hidden rounded-t-xl";
+  const cornerBottom =
+    o.corners === "square"
+      ? ""
+      : o.corners === "very-rounded"
+        ? "overflow-hidden rounded-b-3xl"
+        : "overflow-hidden rounded-b-xl";
   const at = (where: MapLook["extraAt"]) =>
     o.extra && o.extraAt === where ? o.extra : null;
   const map = point ? (
@@ -274,7 +286,19 @@ export function WalkMap({
             {o.buttons === "above" ? buttons : null}
           </CardHeader>
         ) : null}
-        {mapArea(cn("border-y", !top && "border-t-0", !bottom && "border-b-0"))}
+        {mapArea(
+          cn(
+            "border-y",
+            !top && "border-t-0",
+            !bottom && "border-b-0",
+            // At the card's top or bottom edge the map takes the card's
+            // rounded corners itself: some browsers (Safari) don't trim a
+            // map to a rounded card, so its square corners poked out.
+            "[&>iframe]:rounded-[inherit]",
+            !top && cornerTop,
+            !bottom && cornerBottom,
+          ),
+        )}
         {bottom ? (
           <CardContent className="flex flex-col gap-3 px-6 pb-6">
             {at("below-map")}
@@ -292,7 +316,9 @@ export function WalkMap({
       <div className="flex flex-col gap-3">
         {at("above-map")}
         {o.buttons === "above" ? buttons : null}
-        {mapArea(cn("overflow-hidden rounded-2xl", round))}
+        {mapArea(
+          cn("overflow-hidden rounded-2xl [&>iframe]:rounded-[inherit]", round),
+        )}
         {at("below-map")}
         {o.buttons === "below" ? buttons : null}
         {at("after")}

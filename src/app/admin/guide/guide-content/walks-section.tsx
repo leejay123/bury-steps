@@ -310,7 +310,10 @@ export function WalksSection({
               editing to another audience — organisers, members or signed-out
               visitors — to check, and Publish there saves it for them. The
               Details card can also have a box around its title (the walk
-              name, status, Created by and Manage). The
+              name, status, Created by and Manage). Inside the Details card everything is 24 pixels apart, the
+              walk name, status and Created by lines included. A box you choose
+              (such as Card) keeps its shadow even when the block&apos;s Shadows
+              is set to Remove. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how
