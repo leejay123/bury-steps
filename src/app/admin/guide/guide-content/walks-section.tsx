@@ -306,7 +306,11 @@ export function WalksSection({
               between blocks, between the tabs and their content, between
               blocks in a tab, between columns, and inside cards and the
               Details card (headings sit closer to what they label); the
-              spacing options only change it where you choose to. The
+              spacing options only change it where you choose to. Copy this design to (at the top) takes the design you&apos;re
+              editing to another audience — organisers, members or signed-out
+              visitors — to check, and Publish there saves it for them. The
+              Details card can also have a box around its title (the walk
+              name, status, Created by and Manage). The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

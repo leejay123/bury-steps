@@ -1008,6 +1008,7 @@ export const walkDesignConfig: Config = {
           label: "Facts arrange on tablets",
         },
         showEmptyFacts: showEmptyField,
+        titleBox: boxField("Box around the title (name, status, Manage)"),
         factsTitle: {
           type: "text",
           label: "Facts heading (blank: no heading)",
@@ -1211,6 +1212,7 @@ export const walkDesignConfig: Config = {
         tabletFacts: "same",
         tabletFactsArrange: "same",
         showEmptyFacts: false,
+        titleBox: "none",
         factsTitle: "",
         timelineTitle: "",
         factLines: "between",
@@ -1255,6 +1257,7 @@ export const walkDesignConfig: Config = {
         tabletFactsArrange,
         showEmptyFacts,
         essentials,
+        titleBox,
         factsTitle,
         timelineTitle,
         factLines,
@@ -1289,6 +1292,7 @@ export const walkDesignConfig: Config = {
           tabletFacts={tabletFacts}
           tabletFactsArrange={tabletFactsArrange}
           showEmptyFacts={showEmptyFacts}
+          titleBox={titleBox}
           factsTitle={factsTitle}
           timelineTitle={timelineTitle}
           factLines={factLines}

@@ -1258,6 +1258,8 @@ export type DetailsOptions = {
   statusAt?: "above" | "below";
   /** Optional boxes around the parts inside the card. */
   factsBox?: PartBox;
+  /** A box around the title area (name, status, Created by, Manage). */
+  titleBox?: PartBox;
   /** Headings of your own above the facts and the day's timeline (blank: none). */
   factsTitle?: string;
   timelineTitle?: string;
@@ -1377,37 +1379,39 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       )}
     >
       {showTitle || (o.showActions ?? true) ? (
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          {showTitle ? (
-            <div className="flex min-w-0 flex-col gap-2">
-              {(o.statusAt ?? "above") === "above" ? statusRow : null}
-              <h1
-                className={cn(
-                  "text-2xl leading-tight font-semibold tracking-tight text-balance sm:text-3xl",
-                  o.bigTitle && "sm:text-4xl",
-                )}
-              >
-                {p.headline.title}
-              </h1>
-              {o.statusAt === "below" ? statusRow : null}
-              {p.headline.note ? (
-                <p
+        <Boxed box={o.titleBox} dark={dark}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            {showTitle ? (
+              <div className="flex min-w-0 flex-col gap-2">
+                {(o.statusAt ?? "above") === "above" ? statusRow : null}
+                <h1
                   className={cn(
-                    "text-xs",
-                    dark ? "text-white/60" : "text-muted-foreground",
+                    "text-2xl leading-tight font-semibold tracking-tight text-balance sm:text-3xl",
+                    o.bigTitle && "sm:text-4xl",
                   )}
                 >
-                  {p.headline.note}
-                </p>
-              ) : null}
-            </div>
-          ) : (
-            <span />
-          )}
-          {(o.showActions ?? true) ? (
-            <Actions className="sm:shrink-0" p={p} />
-          ) : null}
-        </div>
+                  {p.headline.title}
+                </h1>
+                {o.statusAt === "below" ? statusRow : null}
+                {p.headline.note ? (
+                  <p
+                    className={cn(
+                      "text-xs",
+                      dark ? "text-white/60" : "text-muted-foreground",
+                    )}
+                  >
+                    {p.headline.note}
+                  </p>
+                ) : null}
+              </div>
+            ) : (
+              <span />
+            )}
+            {(o.showActions ?? true) ? (
+              <Actions className="sm:shrink-0" p={p} />
+            ) : null}
+          </div>
+        </Boxed>
       ) : null}
       {o.timeline ? (
         <Boxed box={o.timelineBox} dark={dark}>

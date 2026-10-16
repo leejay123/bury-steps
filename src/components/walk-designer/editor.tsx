@@ -3,7 +3,7 @@
 // No stylesheet import: Puck (0.22+) adds its own styles when it opens. An
 // import here became a separate file loaded on demand, which failed to load
 // alongside the site's inline CSS (experimental.inlineCss) and crashed the page.
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Puck, type Data } from "@puckeditor/core";
 import { toast } from "sonner";
 import { X } from "lucide-react";
@@ -145,6 +145,8 @@ export function WalkDesignEditor({
       ? designs.organiser
       : DEFAULT_WALK_DESIGN(),
   }));
+  // What's in the editor right now (published or not), for Copy to.
+  const current = useRef<Data | null>(null);
   const [moment, setMoment] = useState<Moment>("now");
   const [clockedIn, setClockedIn] = useState<ClockedIn>("real");
   const preview = useMemo(() => {
@@ -156,10 +158,22 @@ export function WalkDesignEditor({
   function open(next: WalkDesignAudience) {
     setAudience(next);
     const existing = saved[next];
-    setStart((current) => ({
-      key: current.key + 1,
-      data: isPuckData(existing) ? existing : defaultDesignFor(next),
-    }));
+    const data = isPuckData(existing) ? existing : defaultDesignFor(next);
+    current.current = data;
+    setStart((was) => ({ key: was.key + 1, data }));
+  }
+
+  /**
+   * Copy to: the design in the editor goes to another audience's page, ready
+   * to check; Publish there saves it (nothing is saved until then).
+   */
+  function copyTo(target: WalkDesignAudience) {
+    const data = structuredClone(current.current ?? start.data);
+    setAudience(target);
+    current.current = data;
+    setStart((was) => ({ key: was.key + 1, data }));
+    const name = AUDIENCES.find((item) => item.id === target)?.label;
+    toast.info(`Copied to ${name}. Press Publish to save it for them.`);
   }
 
   function applyPreset(id: string) {
@@ -167,7 +181,9 @@ export function WalkDesignEditor({
       (item) => item.id === id,
     );
     if (!preset) return;
-    setStart((current) => ({ key: current.key + 1, data: preset.data() }));
+    const data = preset.data();
+    current.current = data;
+    setStart((was) => ({ key: was.key + 1, data }));
     toast.info(`Started from "${preset.label}". Publish to save it.`);
   }
 
@@ -236,6 +252,21 @@ export function WalkDesignEditor({
           </SelectContent>
         </Select>
         <Select
+          onValueChange={(value) => copyTo(value as WalkDesignAudience)}
+          value=""
+        >
+          <SelectTrigger aria-label="Copy this design to" className="h-8 w-52">
+            <SelectValue placeholder="Copy this design to…" />
+          </SelectTrigger>
+          <SelectContent className="z-[100]">
+            {AUDIENCES.filter((item) => item.id !== audience).map((item) => (
+              <SelectItem key={item.id} value={item.id}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
           onValueChange={(value) => setMoment(value as Moment)}
           value={moment}
         >
@@ -294,6 +325,9 @@ export function WalkDesignEditor({
                     AUDIENCES.find((item) => item.id === audience)?.label
                   }
                   key={`${audience}-${start.key}`}
+                  onChange={(data) => {
+                    current.current = data;
+                  }}
                   onPublish={publish}
                 />
               </WalkPartsProvider>
