@@ -667,39 +667,51 @@ function TabsView({
 }
 
 /** The page; in the designer's preview it's marked with the audience being designed for (globals.css). */
+type MessagesAt = "top" | "strip" | "block";
+
 function PageRoot({
   children,
   editing = false,
   messagesLook = "as-is",
+  messagesAt = "top",
 }: {
   children: ReactNode;
   editing?: boolean;
-  /** The message strip's look (Page settings, nothing selected). */
+  /** The messages' look (Page settings, nothing selected). */
   messagesLook?: MessageLook;
+  /**
+   * Where the walk's messages go (Page settings): "top", at the top of the
+   * page at page width like any block; "strip", a full-width strip straight
+   * under the site header; "block", wherever the Messages block (or the
+   * Details card's messages ribbon) is placed.
+   */
+  messagesAt?: MessagesAt;
 }) {
   const audience = useContext(PreviewAudience);
   const p = useWalkParts();
-  // Every walk message runs as a strip straight under the site header, full
-  // width, coloured as its box would be (blue information, red cancelled,
-  // grey finished), scrolling away with the page. The blocks then have no
-  // messages of their own, so nothing shows twice.
-  const strip = p ? (
-    <MessagesOrSample
-      className={cn(
-        "-mx-4 -mt-6 gap-0 md:-mx-6 [&_[data-slot=alert]]:rounded-none [&_[data-slot=alert]]:border-x-0 [&_[data-slot=alert]]:border-t-0 [&_[data-slot=alert]]:px-4 md:[&_[data-slot=alert]]:px-6 [&>div]:gap-0",
-        MESSAGE_LOOK[messagesLook],
-      )}
-      editing={editing}
-      p={p}
-    />
-  ) : null;
+  const atTop = messagesAt !== "block";
+  const messages =
+    p && atTop ? (
+      <MessagesOrSample
+        className={cn(
+          messagesAt === "strip" &&
+            "-mx-4 -mt-6 gap-0 md:-mx-6 [&_[data-slot=alert]]:rounded-none [&_[data-slot=alert]]:border-x-0 [&_[data-slot=alert]]:border-t-0 [&_[data-slot=alert]]:px-4 md:[&_[data-slot=alert]]:px-6 [&>div]:gap-0",
+          MESSAGE_LOOK[messagesLook],
+        )}
+        editing={editing}
+        p={p}
+      />
+    ) : (
+      // Keeps the blocks' box the last child (it gets the 24px gaps).
+      <div hidden />
+    );
   return (
     <div
       className={cn(
         "flex flex-col gap-6",
         // Puck wraps the page's blocks in one more box (its last child here,
-        // after the message strip); the 24px between blocks goes on that,
-        // or blocks sit touching and "Closer" pulls one over another.
+        // after the messages); the 24px between blocks goes on that, or
+        // blocks sit touching and "Closer" pulls one over another.
         "[&>:last-child]:flex [&>:last-child]:flex-col [&>:last-child]:gap-6",
         // The real page puts its own space around the design (16px on a
         // phone, 24px on a computer); the designer's preview has no page
@@ -708,10 +720,16 @@ function PageRoot({
       )}
       data-preview-audience={audience ?? undefined}
     >
-      {strip}
+      {messages}
       {p ? (
+        // At the top (or in the strip), the blocks have no messages of
+        // their own, so nothing shows twice.
         <WalkPartsProvider
-          parts={{ ...p, notices: null, noticesInStrip: true }}
+          parts={
+            atTop
+              ? { ...p, notices: null, noticesInStrip: true }
+              : { ...p, noticesInStrip: false }
+          }
         >
           {children}
         </WalkPartsProvider>
@@ -2236,22 +2254,34 @@ export const walkDesignConfig: Config = {
   // Page settings (shown on the right when no block is selected).
   root: {
     fields: {
-      messagesLook: {
-        ...messageLookField,
-        label: "Messages strip look (under the header)",
+      messagesAt: {
+        type: "select",
+        label: "Where the walk's messages go",
+        options: [
+          { value: "top", label: "At the top, page width (like a block)" },
+          { value: "strip", label: "Full-width strip under the header" },
+          { value: "block", label: "Where I put the Messages block" },
+        ],
       },
+      messagesLook: { ...messageLookField, label: "Messages look" },
     },
-    defaultProps: { messagesLook: "as-is" },
+    defaultProps: { messagesAt: "top", messagesLook: "as-is" },
     render: ({
       children,
       puck,
       messagesLook,
+      messagesAt,
     }: {
       children: React.ReactNode;
       puck?: { isEditing?: boolean };
       messagesLook?: MessageLook;
+      messagesAt?: MessagesAt;
     }) => (
-      <PageRoot editing={Boolean(puck?.isEditing)} messagesLook={messagesLook}>
+      <PageRoot
+        editing={Boolean(puck?.isEditing)}
+        messagesAt={messagesAt}
+        messagesLook={messagesLook}
+      >
         {children}
       </PageRoot>
     ),
