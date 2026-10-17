@@ -1002,6 +1002,30 @@ export const walkDesignConfig: Config = {
     Details: {
       label: "Details card",
       fields: {
+        factsAs: {
+          type: "select",
+          label: "Facts shown as",
+          options: [
+            { value: "facts", label: "The facts (looks below)" },
+            {
+              value: "ticket",
+              label: "Walk ticket (has its own name and buttons)",
+            },
+            {
+              value: "ticket-colour",
+              label: "Colour walk ticket (own name and buttons)",
+            },
+            { value: "colour-blocks", label: "Colour blocks" },
+            {
+              value: "bento",
+              label: "Bento grid (has its own name and buttons)",
+            },
+            { value: "story-cards", label: "Story cards" },
+            { value: "badges", label: "Round badges" },
+            { value: "summary", label: "Summary tiles" },
+            { value: "none", label: "Don't show facts" },
+          ],
+        },
         facts: {
           type: "select",
           label: "Facts on computers",
@@ -1225,6 +1249,7 @@ export const walkDesignConfig: Config = {
         bigTitle: { type: "radio", label: "Big title", options: yesNo },
       },
       defaultProps: {
+        factsAs: "facts",
         facts: "grid",
         factsArrange: "fill",
         map: "none",
@@ -1270,6 +1295,7 @@ export const walkDesignConfig: Config = {
         bigTitle: false,
       },
       render: ({
+        factsAs,
         facts,
         factsArrange,
         map,
@@ -1316,6 +1342,7 @@ export const walkDesignConfig: Config = {
         bigTitle,
       }) => (
         <DetailsBlock
+          factsAs={factsAs}
           bigTitle={bigTitle}
           facts={facts}
           factsArrange={factsArrange}

@@ -323,7 +323,13 @@ export function WalksSection({
               divided off by a line (a table look) or as message boxes; this
               works when the messages go where you put them (the Page
               setting), so remove any Messages block to avoid showing them
-              twice. The
+              twice. The Details card can do the whole page&apos;s design on its own:
+              Facts shown as picks the facts&apos; own looks, or shows the same
+              facts as a walk ticket (plain or colour), colour blocks, a bento
+              grid, story cards, round badges or summary tiles — or none — so
+              you don&apos;t need a separate block that repeats them. The
+              ticket and bento grid have the walk name and buttons built in, so
+              the card&apos;s own title row hides when you choose them. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

@@ -1262,6 +1262,17 @@ export type DetailsOptions = {
   factsBox?: PartBox;
   /** A box around the title area (name, status, Created by, Manage). */
   titleBox?: PartBox;
+  /** How the facts show: the facts' own looks, or another design's (ticket, bento…). */
+  factsAs?:
+    | "facts"
+    | "ticket"
+    | "ticket-colour"
+    | "colour-blocks"
+    | "bento"
+    | "story-cards"
+    | "badges"
+    | "summary"
+    | "none";
   /** The walk's messages inside the title box: a row (table look) or boxes, top or bottom. */
   titleMessages?:
     "none" | "top-row" | "bottom-row" | "top-boxes" | "bottom-boxes";
@@ -1314,7 +1325,13 @@ export function DetailsBlock(options: DetailsOptions) {
 function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   const info = useWalkInfo(p);
   const dark = o.tone === "dark";
-  const showTitle = o.showTitle ?? true;
+  // Facts shown as a walk ticket or bento grid bring their own name and
+  // buttons, so the card's title row steps aside (nothing shows twice).
+  const factsAs = o.factsAs ?? "facts";
+  const ownTitle =
+    factsAs === "ticket" || factsAs === "ticket-colour" || factsAs === "bento";
+  const showTitle = (o.showTitle ?? true) && !ownTitle;
+  const showActions = (o.showActions ?? true) && !ownTitle;
   const map = o.map ?? "none";
   const padding =
     !o.inset || o.inset === "auto"
@@ -1433,7 +1450,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         o.bigTitle && padding === "normal" && "sm:p-8",
       )}
     >
-      {showTitle || (o.showActions ?? true) ? (
+      {showTitle || showActions ? (
         <Boxed box={o.titleBox} dark={dark}>
           {titleMessages("top")}
           {/* The same 24px between everything in the card, the title's lines too. */}
@@ -1465,9 +1482,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
             ) : (
               <span />
             )}
-            {(o.showActions ?? true) ? (
-              <Actions className="sm:shrink-0" p={p} />
-            ) : null}
+            {showActions ? <Actions className="sm:shrink-0" p={p} /> : null}
           </div>
           {titleMessages("bottom")}
         </Boxed>
@@ -1481,22 +1496,47 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         </Boxed>
       ) : null}
       {preciseHere("above-facts")}
-      <DeviceFacts
-        arrange={o.factsArrange}
-        dark={dark}
-        p={p}
-        phoneArrange={o.phoneFactsArrange}
-        phoneVariant={o.phoneFacts}
-        showEmpty={o.showEmptyFacts}
-        tabletArrange={o.tabletFactsArrange}
-        tabletVariant={o.tabletFacts}
-        variant={o.facts ?? "grid"}
-        box={o.factsBox}
-        heading={o.factsTitle}
-        lines={o.factLines}
-        phoneBox={o.phoneFactsBox}
-        tabletBox={o.tabletFactsBox}
-      />
+      {factsAs === "facts" ? (
+        <DeviceFacts
+          arrange={o.factsArrange}
+          dark={dark}
+          p={p}
+          phoneArrange={o.phoneFactsArrange}
+          phoneVariant={o.phoneFacts}
+          showEmpty={o.showEmptyFacts}
+          tabletArrange={o.tabletFactsArrange}
+          tabletVariant={o.tabletFacts}
+          variant={o.facts ?? "grid"}
+          box={o.factsBox}
+          heading={o.factsTitle}
+          lines={o.factLines}
+          phoneBox={o.phoneFactsBox}
+          tabletBox={o.tabletFactsBox}
+        />
+      ) : factsAs === "none" ? null : (
+        // The same facts in one of the other designs' looks, inside this card.
+        <Boxed box={o.factsBox} dark={dark}>
+          <div className="flex flex-col gap-2">
+            <PartHeading text={o.factsTitle} />
+            {factsAs === "ticket" || factsAs === "ticket-colour" ? (
+              <Ticket
+                p={p}
+                variant={factsAs === "ticket" ? "plain" : "colour"}
+              />
+            ) : factsAs === "colour-blocks" ? (
+              <ColourBlocks arrange={o.factsArrange ?? "fill"} p={p} />
+            ) : factsAs === "bento" ? (
+              <Bento p={p} />
+            ) : factsAs === "story-cards" ? (
+              <StoryCards arrange={o.factsArrange ?? "fill"} p={p} />
+            ) : factsAs === "badges" ? (
+              <BadgesBlock arrange={o.factsArrange ?? "fill"} />
+            ) : (
+              <SummaryTilesBlock arrange={o.factsArrange ?? "fill"} />
+            )}
+          </div>
+        </Boxed>
+      )}
       {preciseHere("below-facts")}
       {(o.showEssentials ?? true) ? (
         <DeviceEssentials dark={dark} o={o.essentials ?? {}} p={p} />
