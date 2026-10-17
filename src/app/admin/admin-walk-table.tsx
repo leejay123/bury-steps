@@ -7,6 +7,7 @@ import { useQueryChoice, useQueryText } from "@/hooks/use-filter-query";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Footprints, Search } from "lucide-react";
 import { formatTime } from "@/lib/dates";
+import { cn } from "@/lib/utils";
 import { walkStatus, type WalkStatus } from "@/lib/walk-window";
 import { EmptyState } from "@/components/empty-state";
 import { DataList, DataListBody, DataListItem, DataListItemMain } from "@/components/data-list";
@@ -36,6 +37,12 @@ export type AdminWalkRow = {
   attendanceCount: number;
   /** This organiser is still on the walk (clocked in, not clocked out). */
   selfClockedIn?: boolean;
+  /**
+   * Where the row goes: the organiser's walk page by default; the members'
+   * Walks page passes the walk's own page; null makes the row unclickable
+   * (a cancelled walk a member can't open).
+   */
+  href?: string | null;
 };
 
 type StatusFilter = "all" | WalkStatus;
@@ -277,8 +284,13 @@ function AdminWalkTableInner({
                     ? "You're clocked in"
                     : "Clock in now"
                   : null;
+              const href = walk.href === undefined ? `/admin/walks/${walk.id}` : walk.href;
               return (
-              <DataListItem className="relative flex-col items-stretch gap-0 p-0" data-stagger-item="" key={walk.id}>
+              <DataListItem
+                className={cn("relative flex-col items-stretch gap-0 p-0", !href && "opacity-70")}
+                data-stagger-item=""
+                key={walk.id}
+              >
                 {/* Status and day as the card's header strip (see WalkStatusHeader). */}
                 <WalkStatusHeader
                   cancelledAt={walk.cancelledAt}
@@ -288,11 +300,15 @@ function AdminWalkTableInner({
                 />
                 <DataListItemMain className="items-center p-3">
                   <DataListBody>
-                    <p className="font-medium">
-                      {/* Fetches this walk's page on hover or touch, not every row on screen. */}
-                      <IntentLink className="after:absolute after:inset-0" full href={`/admin/walks/${walk.id}`}>
-                        {walk.title}
-                      </IntentLink>
+                    <p className={cn("font-medium", !href && "text-muted-foreground")}>
+                      {href ? (
+                        // Fetches this walk's page on hover or touch, not every row on screen.
+                        <IntentLink className="after:absolute after:inset-0" full href={href}>
+                          {walk.title}
+                        </IntentLink>
+                      ) : (
+                        walk.title
+                      )}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {formatTime(new Date(walk.startsAt))}
@@ -310,7 +326,7 @@ function AdminWalkTableInner({
                     )}
                     {cue ? <p className="text-sm font-medium">{cue}</p> : null}
                   </DataListBody>
-                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                  {href ? <ChevronRight className="size-4 shrink-0 text-muted-foreground" /> : null}
                 </DataListItemMain>
               </DataListItem>
               );

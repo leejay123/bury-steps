@@ -6,11 +6,9 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SkChevron, SkLine, WalkRowsSkeleton } from "@/components/list-skeletons";
+import { SkLine, WalkRowsSkeleton } from "@/components/list-skeletons";
 import { RememberedRows } from "@/components/remembered-rows";
 import { RememberedCount } from "@/components/remembered-text";
-import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 /** Search box matching the real lists — shown while the rows load, not a grey bar. */
 export function ListSearch({ label, placeholder }: { label: string; placeholder: string }) {
@@ -240,40 +238,6 @@ export function HistoryFilterChrome() {
   );
 }
 
-/**
- * One upcoming walk card, shaped like the real one (walks/upcoming-walk-cards.tsx):
- * status / day strip, title, time and place lines, arrow, two lines of the
- * description and the "Clock-in opens…" line. Grey only where the walk's own
- * details go.
- */
-function MemberWalkCardSkeleton({ index }: { index: number }) {
-  return (
-    <Card aria-hidden className="relative gap-3 overflow-hidden pt-0" data-reveal-card="">
-      <div className="mb-1 flex items-center justify-between gap-3 border-b bg-muted/50 px-6 py-1.5">
-        <SkLine className="w-28" size="xs" />
-        <SkLine className="w-16" size="xs" />
-      </div>
-      <CardHeader className="flex flex-row items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <SkLine className={index % 2 ? "w-40" : "w-52"} />
-          <div className="flex flex-col gap-1">
-            <SkLine className="w-28" size="sm" />
-            <SkLine className={index % 2 ? "w-44" : "w-36"} size="sm" />
-          </div>
-        </div>
-        <SkChevron />
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <div>
-          <SkLine className="w-full" size="sm" />
-          <SkLine className="w-4/5" size="sm" />
-        </div>
-        <SkLine className="w-56" size="sm" />
-      </CardContent>
-    </Card>
-  );
-}
-
 /** Member Walks: the real Upcoming / All walks tabs, search and filters, then
  * card-shaped placeholders — counts, cards and recent walks as last time,
  * from the first paint (RememberedCount / RememberedRows). */
@@ -298,23 +262,26 @@ export function MemberWalksHold() {
               <FilterSelect
                 id="walk-status-hold"
                 label="Status"
-                options={[{ value: "all", label: "All statuses" }]}
+                options={[
+                  { value: "all", label: "All statuses" },
+                  { value: "upcoming", label: "Upcoming" },
+                  { value: "starting-soon", label: "Starting soon" },
+                  { value: "in-progress", label: "In progress" },
+                ]}
                 value="all"
               />
               <FilterSelect
                 id="walk-sort-hold"
                 label="Sort"
-                options={[{ value: "asc", label: "Soonest first" }]}
+                options={[
+                  { value: "asc", label: "Soonest first" },
+                  { value: "desc", label: "Latest first" },
+                ]}
                 value="asc"
               />
             </div>
-            <RememberedRows
-              className="contents"
-              remember="member-walks"
-              rows={Array.from({ length: LIST_PAGE_SIZE }, (_, i) => (
-                <MemberWalkCardSkeleton index={i} key={i} />
-              ))}
-            />
+            {/* The same rows as the organisers' list, which members now use too. */}
+            <WalkRowsSkeleton remember="member-walks-rows" />
           </div>
         </TabsContent>
       </Tabs>

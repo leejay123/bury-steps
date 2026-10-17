@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Footprints } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { getOptionalUser, requireUser } from "@/lib/auth";
 import { cacheLife } from "next/cache";
@@ -11,13 +10,12 @@ import { windowState, walkStatus, upcomingListLookbackFrom } from "@/lib/walk-wi
 import { walkSharePath } from "@/lib/walk-slug";
 import { MemberWalksHold } from "@/components/list-chrome";
 import { RememberListCount } from "@/components/remember-list-count";
-import { EmptyState } from "@/components/empty-state";
+import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MemberWelcomeDialog } from "@/components/member-welcome-dialog";
 import { getAllWalksSiteWide, getWalkMemberCountsByWalkIds } from "@/lib/walk-members";
-import { UpcomingWalkCards } from "./upcoming-walk-cards";
-import { AllWalksList } from "./all-walks-list";
+import { AdminWalkTable } from "@/app/admin/admin-walk-table";
 import { RecentWalksCarousel } from "./recent-walks-carousel";
 import { LiveUpcomingCount } from "./live-upcoming-count";
 
@@ -246,6 +244,7 @@ function WalksBody({ view }: { view: WalksView }) {
   return (
     <>
       <RememberListCount count={upcoming.length} id="member-walks" max={100} />
+      <RememberListCount count={Math.min(upcoming.length, LIST_PAGE_SIZE)} id="member-walks-rows" />
       <RememberListCount count={allWalks.length} id="member-walks-all" max={500} />
       <RememberListCount count={recent.length} id="member-recent" max={3} />
       <MemberWelcomeDialog firstName={view.firstName} hasNoWalks={view.showWelcome} userId={view.userId} />
@@ -262,18 +261,35 @@ function WalksBody({ view }: { view: WalksView }) {
           forceMount
           value="upcoming"
         >
-          {upcoming.length === 0 ? (
-            <EmptyState
-              description="Your organiser will post the next one here."
-              icon={Footprints}
-              title="No walks scheduled yet"
-            />
-          ) : (
-            <UpcomingWalkCards walks={upcoming} />
-          )}
+          {/* The same list as the organisers' Walks page (search, status,
+              sort, Clock in now), each row opening the walk's own page. */}
+          <AdminWalkTable
+            attendanceLabel="Clocked in"
+            emptyDescription="Your organiser will post the next one here."
+            emptyTitle="No walks scheduled yet"
+            scope="upcoming"
+            walks={upcoming.map((walk) => ({
+              id: walk.id,
+              href: walkSharePath(walk),
+              title: walk.title,
+              location: walk.location,
+              startsAt: walk.startsAt,
+              durationMins: walk.durationMins,
+              endedAt: walk.endedAt,
+              cancelledAt: null,
+              // Who's on the walk shows only once you've clocked in yourself.
+              attendanceCount: walk.clockedInAt ? walk.memberCount : 0,
+              selfClockedIn: Boolean(walk.clockedInAt),
+            }))}
+          />
         </TabsContent>
         <TabsContent className="mt-4" value="all-walks">
-          <AllWalksList rows={allWalks} />
+          <AdminWalkTable
+            emptyDescription="Finished and cancelled walks show here."
+            emptyTitle="No past walks yet"
+            scope="past"
+            walks={allWalks.map((walk) => ({ ...walk, href: walk.href ?? null }))}
+          />
         </TabsContent>
       </Tabs>
 
