@@ -329,7 +329,13 @@ export function WalksSection({
               grid, story cards, round badges or summary tiles — or none — so
               you don&apos;t need a separate block that repeats them. The
               ticket and bento grid have the walk name and buttons built in, so
-              the card&apos;s own title row hides when you choose them. The
+              the card&apos;s own title row hides when you choose them. Every Facts shown as look shows all the walk&apos;s filled-in
+              facts (empty ones hidden, or Not set for organisers if Empty
+              facts says so); new looks are stat cards, icons in coloured
+              circles, a spec sheet, a receipt, sticky notes and a journey
+              line. With the walk ticket, the card&apos;s precise location,
+              essentials and description go inside the ticket, so it&apos;s all
+              one card, with the same 24 pixels between everything. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

@@ -1263,16 +1263,7 @@ export type DetailsOptions = {
   /** A box around the title area (name, status, Created by, Manage). */
   titleBox?: PartBox;
   /** How the facts show: the facts' own looks, or another design's (ticket, bento…). */
-  factsAs?:
-    | "facts"
-    | "ticket"
-    | "ticket-colour"
-    | "colour-blocks"
-    | "bento"
-    | "story-cards"
-    | "badges"
-    | "summary"
-    | "none";
+  factsAs?: "facts" | "ticket" | "ticket-colour" | "bento" | "none" | FactsLook;
   /** The walk's messages inside the title box: a row (table look) or boxes, top or bottom. */
   titleMessages?:
     "none" | "top-row" | "bottom-row" | "top-boxes" | "bottom-boxes";
@@ -1390,6 +1381,9 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       />
     );
   };
+  // With the facts shown as a walk ticket, the rest of the card (precise
+  // location, essentials, description) goes inside the ticket: one card.
+  const inTicket = factsAs === "ticket" || factsAs === "ticket-colour";
   // The description: on its own (its own box), or inside the title area.
   const descriptionInTitle =
     o.descriptionAt === "title" && (o.showTitle ?? true);
@@ -1409,6 +1403,16 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         </Boxed>
       )
     ) : null;
+  const cardExtras = (
+    <>
+      {preciseHere("below-facts")}
+      {(o.showEssentials ?? true) ? (
+        <DeviceEssentials dark={dark} o={o.essentials ?? {}} p={p} />
+      ) : null}
+      {descriptionInTitle ? null : descriptionPart}
+      {preciseHere("bottom")}
+    </>
+  );
   // The status: "Upcoming" badge and/or its words, as chosen.
   const statusLook = o.statusLook ?? "badge-line";
   const statusRow =
@@ -1520,29 +1524,27 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
             <PartHeading text={o.factsTitle} />
             {factsAs === "ticket" || factsAs === "ticket-colour" ? (
               <Ticket
+                allFacts
+                // Everything else in the card goes inside the ticket.
+                extra={inTicket ? cardExtras : null}
                 p={p}
+                showEmpty={o.showEmptyFacts}
                 variant={factsAs === "ticket" ? "plain" : "colour"}
               />
-            ) : factsAs === "colour-blocks" ? (
-              <ColourBlocks arrange={o.factsArrange ?? "fill"} p={p} />
             ) : factsAs === "bento" ? (
-              <Bento p={p} />
-            ) : factsAs === "story-cards" ? (
-              <StoryCards arrange={o.factsArrange ?? "fill"} p={p} />
-            ) : factsAs === "badges" ? (
-              <BadgesBlock arrange={o.factsArrange ?? "fill"} />
+              <Bento allFacts p={p} showEmpty={o.showEmptyFacts} />
             ) : (
-              <SummaryTilesBlock arrange={o.factsArrange ?? "fill"} />
+              <FactLooks
+                arrange={o.factsArrange ?? "fill"}
+                look={factsAs}
+                p={p}
+                showEmpty={o.showEmptyFacts}
+              />
             )}
           </div>
         </Boxed>
       )}
-      {preciseHere("below-facts")}
-      {(o.showEssentials ?? true) ? (
-        <DeviceEssentials dark={dark} o={o.essentials ?? {}} p={p} />
-      ) : null}
-      {descriptionInTitle ? null : descriptionPart}
-      {preciseHere("bottom")}
+      {inTicket ? null : cardExtras}
     </div>
   );
   // Older designs: true / "soft" / "bold" / "bar" all meant the status band.
@@ -2452,8 +2454,17 @@ export function BentoBlock() {
   return <Bento p={p} />;
 }
 
-function Bento({ p }: { p: WalkIdeaParts }) {
-  const info = useWalkInfo(p);
+function Bento({
+  p,
+  allFacts = false,
+  showEmpty = false,
+}: {
+  p: WalkIdeaParts;
+  /** Every fact from Edit walk as tiles (the Details card). */
+  allFacts?: boolean;
+  showEmpty?: boolean;
+}) {
+  const info = useWalkInfo(p, showEmpty);
   const h = p.headline;
   const tile = (
     label: string,
@@ -2494,23 +2505,32 @@ function Bento({ p }: { p: WalkIdeaParts }) {
         <span className="text-sm text-muted-foreground">Actions</span>
         <Actions p={p} />
       </section>
-      {tile(
-        "Meeting point",
-        p.meeting ?? "—",
-        p.what3words ? `///${p.what3words}` : null,
-        true,
-      )}
-      {p.attended
-        ? tile(
-            "Attended",
-            p.attended.count == null ? "See who" : String(p.attended.count),
+      {allFacts
+        ? info.facts.map((fact) =>
+            tile(fact.label, fact.value, null, fact.wide),
           )
         : null}
-      {tile(
-        "Walk",
-        [h.distance, h.grade].filter(Boolean).join(" · ") ||
-          formatWalkLength(h.durationMins),
-        h.elevationGain,
+      {allFacts ? null : (
+        <>
+          {tile(
+            "Meeting point",
+            p.meeting ?? "—",
+            p.what3words ? `///${p.what3words}` : null,
+            true,
+          )}
+          {p.attended
+            ? tile(
+                "Attended",
+                p.attended.count == null ? "See who" : String(p.attended.count),
+              )
+            : null}
+          {tile(
+            "Walk",
+            [h.distance, h.grade].filter(Boolean).join(" · ") ||
+              formatWalkLength(h.durationMins),
+            h.elevationGain,
+          )}
+        </>
       )}
     </div>
   );
@@ -2529,17 +2549,35 @@ export function TicketBlock({
   return <Ticket p={p} variant={variant} />;
 }
 
-function Ticket({ p, variant }: { p: WalkIdeaParts; variant: TicketVariant }) {
-  const info = useWalkInfo(p);
+function Ticket({
+  p,
+  variant,
+  allFacts = false,
+  showEmpty = false,
+  extra,
+}: {
+  p: WalkIdeaParts;
+  variant: TicketVariant;
+  /** Every fact from Edit walk (the Details card), not just the ticket's six. */
+  allFacts?: boolean;
+  showEmpty?: boolean;
+  /** More of the walk inside the ticket (the Details card's essentials, description…). */
+  extra?: ReactNode;
+}) {
+  const info = useWalkInfo(p, showEmpty);
   const colour = variant === "colour";
-  const rows = [
-    ["Date", formatWalkDay(info.start)],
-    ["Sets off", formatTime(info.start)],
-    ["Back by", formatTime(info.end)],
-    ["Meet at", p.meeting],
-    ["Distance", p.headline.distance],
-    ["Leader", p.headline.walkLeader],
-  ].filter(([, value]) => value) as [string, string][];
+  const rows = (
+    allFacts
+      ? info.facts.map((fact) => [fact.label, fact.value])
+      : [
+          ["Date", formatWalkDay(info.start)],
+          ["Sets off", formatTime(info.start)],
+          ["Back by", formatTime(info.end)],
+          ["Meet at", p.meeting],
+          ["Distance", p.headline.distance],
+          ["Leader", p.headline.walkLeader],
+        ]
+  ).filter(([, value]) => value) as [string, string][];
   return (
     <section
       className={cn(
@@ -2547,7 +2585,8 @@ function Ticket({ p, variant }: { p: WalkIdeaParts; variant: TicketVariant }) {
         colour ? "bg-sky-600 text-white" : "border bg-card",
       )}
     >
-      <div className="flex flex-col gap-4 p-5 sm:p-6">
+      {/* The same 24px between everything, like the rest of the page. */}
+      <div className="flex min-w-0 flex-col gap-6 p-6">
         <span
           className={cn(
             "text-xs font-semibold tracking-widest uppercase",
@@ -2559,7 +2598,7 @@ function Ticket({ p, variant }: { p: WalkIdeaParts; variant: TicketVariant }) {
         <h2 className="text-2xl leading-tight font-semibold sm:text-3xl">
           {p.headline.title}
         </h2>
-        <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <dl className="grid grid-cols-2 gap-6 sm:grid-cols-3">
           {rows.map(([label, value]) => (
             <div className="flex min-w-0 flex-col" key={label}>
               <dt
@@ -2579,10 +2618,11 @@ function Ticket({ p, variant }: { p: WalkIdeaParts; variant: TicketVariant }) {
             </div>
           ))}
         </dl>
+        {extra}
       </div>
       <div
         className={cn(
-          "flex flex-col justify-between gap-3 border-t-2 border-dashed p-5 sm:border-t-0 sm:border-l-2",
+          "flex flex-col justify-between gap-6 border-t-2 border-dashed p-6 sm:border-t-0 sm:border-l-2",
           colour && "border-white/40 bg-sky-700",
         )}
       >
@@ -3340,5 +3380,280 @@ function StepsLooks({
         ))}
       </ol>
     </section>
+  );
+}
+
+// ── Every fact, in other designs' looks (the Details card's Facts shown as) ─
+export type FactsLook =
+  | "colour-blocks"
+  | "story-cards"
+  | "badges"
+  | "summary"
+  | "stat-cards"
+  | "icon-circles"
+  | "receipt"
+  | "sticky-notes"
+  | "spec-sheet"
+  | "journey";
+
+const PASTELS = [
+  "bg-amber-100 text-amber-950",
+  "bg-emerald-100 text-emerald-950",
+  "bg-sky-100 text-sky-950",
+  "bg-rose-100 text-rose-950",
+  "bg-violet-100 text-violet-950",
+  "bg-lime-100 text-lime-950",
+];
+const BOLDS = [
+  "bg-amber-300 text-amber-950",
+  "bg-sky-300 text-sky-950",
+  "bg-rose-300 text-rose-950",
+  "bg-violet-300 text-violet-950",
+  "bg-emerald-300 text-emerald-950",
+  "bg-orange-300 text-orange-950",
+];
+
+/**
+ * Every filled-in fact from Edit walk (or Not set, for organisers, when
+ * asked) in one of several looks, so the Details card can show the facts
+ * however a design wants without leaving any out. 24px between them, like
+ * the rest of the page.
+ */
+export function FactLooks({
+  p,
+  look,
+  arrange = "fill",
+  showEmpty = false,
+}: {
+  p: WalkIdeaParts;
+  look: FactsLook;
+  arrange?: Arrange;
+  showEmpty?: boolean;
+}) {
+  const { facts } = useWalkInfo(p, showEmpty);
+  const flow = (basis: string, width: string, grid: string) =>
+    arrange === "scroll"
+      ? cn(SWIPE, "gap-6", width)
+      : arrange === "grid"
+        ? cn("grid gap-6", grid)
+        : cn(STRETCH, "gap-6", basis);
+
+  if (look === "spec-sheet")
+    return (
+      <dl className="overflow-hidden rounded-xl border text-sm">
+        {facts.map((fact, i) => (
+          <div
+            className={cn(
+              "grid grid-cols-[9rem_minmax(0,1fr)] gap-6 px-4 py-3 sm:grid-cols-[12rem_minmax(0,1fr)]",
+              i % 2 === 1 && "bg-muted/50",
+            )}
+            key={fact.label}
+          >
+            <dt className="font-semibold">{fact.label}</dt>
+            <dd className="break-words" suppressHydrationWarning>
+              {fact.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    );
+
+  if (look === "receipt")
+    return (
+      <dl className="flex flex-col gap-2 rounded-xl border border-dashed p-6 font-mono text-sm">
+        {facts.map((fact) => (
+          <div className="flex items-baseline gap-2" key={fact.label}>
+            <dt className="shrink-0 uppercase">{fact.label}</dt>
+            <span aria-hidden className="mb-1 flex-1 border-b border-dotted" />
+            <dd
+              className="min-w-0 text-right break-words"
+              suppressHydrationWarning
+            >
+              {fact.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    );
+
+  if (look === "journey")
+    return (
+      <ol className="flex snap-x overflow-x-auto pb-1 [scrollbar-width:none]">
+        {facts.map((fact, i) => (
+          <li
+            className="flex w-44 shrink-0 snap-start flex-col gap-2"
+            key={fact.label}
+          >
+            <span className="flex items-center">
+              <span className="size-3 shrink-0 rounded-full bg-emerald-600" />
+              {i < facts.length - 1 ? (
+                <span aria-hidden className="h-0.5 flex-1 bg-emerald-600/30" />
+              ) : null}
+            </span>
+            <span className="pr-6 text-xs text-muted-foreground">
+              {fact.label}
+            </span>
+            <span
+              className="pr-6 text-sm font-semibold break-words"
+              suppressHydrationWarning
+            >
+              {fact.value}
+            </span>
+          </li>
+        ))}
+      </ol>
+    );
+
+  if (look === "badges")
+    return (
+      <div
+        className={
+          arrange === "scroll"
+            ? cn(SWIPE, "gap-6 py-1")
+            : "flex flex-wrap justify-center gap-6 sm:justify-start"
+        }
+      >
+        {facts.map((fact, i) => (
+          <div
+            className={cn(
+              "flex size-28 flex-col items-center justify-center gap-0.5 rounded-full p-3 text-center shadow-md ring-4 ring-background",
+              BOLDS[i % BOLDS.length],
+            )}
+            key={fact.label}
+          >
+            <fact.icon aria-hidden className="size-4 opacity-70" />
+            <span
+              className="line-clamp-2 text-sm leading-tight font-black"
+              suppressHydrationWarning
+            >
+              {fact.value}
+            </span>
+            <span className="text-[10px] font-bold tracking-wider uppercase opacity-80">
+              {fact.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+
+  if (look === "icon-circles")
+    return (
+      <div
+        className={flow(
+          "[&>*]:basis-56",
+          "[&>*]:w-56",
+          "sm:grid-cols-2 lg:grid-cols-3",
+        )}
+      >
+        {facts.map((fact, i) => (
+          <div className="flex min-w-0 items-center gap-3" key={fact.label}>
+            <span
+              className={cn(
+                "flex size-11 shrink-0 items-center justify-center rounded-full",
+                PASTELS[i % PASTELS.length],
+              )}
+            >
+              <fact.icon aria-hidden className="size-5" />
+            </span>
+            <span className="flex min-w-0 flex-col">
+              <span className="text-xs text-muted-foreground">
+                {fact.label}
+              </span>
+              <span className="truncate font-semibold" suppressHydrationWarning>
+                {fact.value}
+              </span>
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+
+  if (look === "sticky-notes")
+    return (
+      <div
+        className={flow(
+          "[&>*]:basis-40",
+          "[&>*]:w-44",
+          "grid-cols-2 sm:grid-cols-4",
+        )}
+      >
+        {facts.map((fact, i) => (
+          <div
+            className={cn(
+              "flex min-w-0 flex-col gap-1 p-4 shadow-sm",
+              PASTELS[i % PASTELS.length],
+              i % 2 === 0 ? "-rotate-1" : "rotate-1",
+            )}
+            key={fact.label}
+          >
+            <span className="text-xs font-semibold uppercase opacity-70">
+              {fact.label}
+            </span>
+            <span
+              className="font-semibold break-words"
+              suppressHydrationWarning
+            >
+              {fact.value}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+
+  // Cards with a value each: colour blocks, story cards, summary tiles, stat cards.
+  const plain = look === "summary" || look === "stat-cards";
+  const tone = (i: number) =>
+    look === "colour-blocks"
+      ? BOLDS[i % BOLDS.length]
+      : look === "story-cards"
+        ? PASTELS[i % PASTELS.length]
+        : look === "stat-cards"
+          ? "border bg-card shadow-sm"
+          : "border";
+  return (
+    <div
+      className={flow(
+        "[&>*]:basis-40",
+        "[&>*]:w-44 sm:[&>*]:w-52",
+        "grid-cols-2 sm:grid-cols-4",
+      )}
+    >
+      {facts.map((fact, i) => (
+        <div
+          className={cn(
+            "flex min-w-0 flex-col gap-1 rounded-2xl p-4",
+            !plain && "justify-between gap-6",
+            tone(i),
+            fact.wide && arrange === "grid" && "sm:col-span-2",
+          )}
+          key={fact.label}
+        >
+          {plain ? (
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <fact.icon aria-hidden className="size-3.5" />
+              {fact.label}
+            </span>
+          ) : (
+            <fact.icon aria-hidden className="size-5" />
+          )}
+          <span className="flex min-w-0 flex-col">
+            {plain ? null : (
+              <span className="text-xs font-semibold uppercase opacity-70">
+                {fact.label}
+              </span>
+            )}
+            <span
+              className={cn(
+                "font-semibold break-words",
+                look === "stat-cards" ? "text-2xl" : "text-lg",
+              )}
+              suppressHydrationWarning
+            >
+              {fact.value}
+            </span>
+          </span>
+        </div>
+      ))}
+    </div>
   );
 }
