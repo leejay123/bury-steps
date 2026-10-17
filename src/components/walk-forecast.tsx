@@ -53,30 +53,30 @@ export function ForecastSkeleton({ place }: { place: string | null }) {
             key={i}
           >
             <div className="flex h-4 items-center sm:h-5">
-              <Skeleton className="h-[64%] w-8 rounded-[4px]" />
+              <Skeleton className="h-[64%] w-8 rounded-lg" />
             </div>
             <div className="flex h-[1.0625rem] items-center sm:h-4">
-              <Skeleton className="h-[64%] w-7 rounded-[4px]" />
+              <Skeleton className="h-[64%] w-7 rounded-lg" />
             </div>
             <Skeleton className="size-5 rounded-full" />
             <div className="flex h-4 items-center sm:h-5">
-              <Skeleton className="h-[64%] w-9 rounded-[4px]" />
+              <Skeleton className="h-[64%] w-9 rounded-lg" />
             </div>
           </div>
         ))}
       </div>
       <div aria-hidden className="flex flex-col gap-3 px-4 py-4 sm:px-5">
         <div className="flex h-9 items-center">
-          <Skeleton className="h-[64%] w-24 rounded-[4px]" />
+          <Skeleton className="h-[64%] w-24 rounded-lg" />
         </div>
         <SkLine className="w-72 max-w-full" size="sm" />
         <SkLine className="w-56 max-w-full" size="sm" />
         <div className="-mx-1 flex gap-2 overflow-hidden px-1 pt-1 pb-1">
           {Array.from({ length: 16 }, (_, i) => (
             <div className="flex w-14 shrink-0 flex-col items-center gap-1 rounded-md border bg-background px-1 py-2" key={i}>
-              <Skeleton className="h-3 w-8 rounded-[4px]" />
+              <Skeleton className="h-3 w-8 rounded-lg" />
               <Skeleton className="size-4 rounded-full" />
-              <Skeleton className="h-3 w-5 rounded-[4px]" />
+              <Skeleton className="h-3 w-5 rounded-lg" />
             </div>
           ))}
         </div>

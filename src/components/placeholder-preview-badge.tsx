@@ -86,7 +86,8 @@ export function PlaceholderPreviewBadge() {
         Placeholders: <span className="font-medium">{LABEL[mode]}</span>
       </button>
       {/* Temporary test: our grey shapes, shimmer-from-structure's shimmer
-          (shimmer-test.tsx) or AutoSkeleton's shapes (autoskeleton-test.tsx). */}
+          (shimmer-test.tsx), AutoSkeleton's shapes (autoskeleton-test.tsx) or
+          Boneyard's bones (boneyard-test.tsx). */}
       <button
         aria-label={`Placeholder style: ${styleLabel}. Change`}
         className="flex items-center gap-1.5 rounded-full border bg-background px-3 py-1.5 text-xs text-muted-foreground shadow-md"

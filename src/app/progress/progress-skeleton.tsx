@@ -22,7 +22,7 @@ function StatSkeleton({ label }: { label: string }) {
  * real height and the short last line is short — no grey block. */
 function GreyWords({ words }: { words: ReactNode }) {
   return (
-    <span className="animate-pulse rounded-[4px] bg-accent [-webkit-box-decoration-break:clone] [box-decoration-break:clone]">
+    <span className="animate-pulse rounded-lg bg-accent [-webkit-box-decoration-break:clone] [box-decoration-break:clone]">
       {words}
     </span>
   );

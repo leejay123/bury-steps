@@ -434,7 +434,7 @@ export function WalkGalleryLayouts({ layout, parts }: { layout: WalkGalleryLayou
       return page(
         <div className="flex flex-col">
           {p.map}
-          <section className={cn("relative z-10 flex flex-col gap-4 rounded-t-[2rem] border-x border-t bg-background px-4 pt-3 pb-4 shadow-[0_-12px_30px_-20px_rgb(0_0_0/0.4)] sm:px-6", p.map && "-mt-10")}>
+          <section className={cn("relative z-10 flex flex-col gap-4 rounded-t-lg border-x border-t bg-background px-4 pt-3 pb-4 shadow-[0_-12px_30px_-20px_rgb(0_0_0/0.4)] sm:px-6", p.map && "-mt-10")}>
             <span aria-hidden className="mx-auto h-1.5 w-12 rounded-full bg-muted-foreground/25" />
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 flex-col gap-1">

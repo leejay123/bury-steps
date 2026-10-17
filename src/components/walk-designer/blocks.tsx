@@ -257,7 +257,87 @@ export function Actions({
  * there's never a gap); "grid": an even grid whose columns line up;
  * "scroll": one row that swipes sideways.
  */
-export type Arrange = "fill" | "grid" | "scroll";
+/** The space between facts (story cards, tiles, badges…), as the --facts-gap the looks read. */
+export type FactsGap = "none" | "tight" | "closer" | "normal" | "more" | "lots";
+export const FACTS_GAP: Record<FactsGap, string> = {
+  none: "0px",
+  tight: "0.5rem",
+  closer: "0.75rem",
+  normal: "1.5rem",
+  more: "2rem",
+  lots: "3rem",
+};
+export const factsGapStyle = (gap?: FactsGap) =>
+  ({ "--facts-gap": FACTS_GAP[gap ?? "normal"] }) as React.CSSProperties;
+
+export type Arrange = "fill" | "grid" | "scroll" | "carousel";
+
+/**
+ * One row that swipes sideways (or a carousel, with ‹ › buttons) for any
+ * look: its list's items sit side by side, each a fixed width, snapping into
+ * place. The rule is put on the list from outside, so every look (tables
+ * and timelines too) can do it without its own version.
+ */
+export function ScrollRow({
+  carousel = false,
+  children,
+}: {
+  carousel?: boolean;
+  children: ReactNode;
+}) {
+  const row = useRef<HTMLDivElement>(null);
+  const move = (direction: 1 | -1) => {
+    const list = row.current?.firstElementChild as HTMLElement | null;
+    list?.scrollBy({
+      left: direction * list.clientWidth * 0.8,
+      behavior: "smooth",
+    });
+  };
+  return (
+    <div className="flex flex-col gap-3">
+      <div
+        className="[&>*]:flex! [&>*]:flex-row! [&>*]:flex-nowrap! [&>*]:snap-x [&>*]:gap-[var(--facts-gap,1.5rem)]! [&>*]:overflow-x-auto [&>*]:pb-1 [&>*]:[scrollbar-width:none] [&>*>*]:w-60! [&>*>*]:shrink-0! [&>*>*]:snap-start"
+        ref={row}
+      >
+        {children}
+      </div>
+      {carousel ? (
+        <div className="flex justify-end gap-2">
+          <Button
+            aria-label="Previous"
+            onClick={() => move(-1)}
+            size="icon"
+            type="button"
+            variant="outline"
+          >
+            <ChevronLeft />
+          </Button>
+          <Button
+            aria-label="Next"
+            onClick={() => move(1)}
+            size="icon"
+            type="button"
+            variant="outline"
+          >
+            <ChevronRight />
+          </Button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/** Wraps a facts look in a swiping row or carousel when chosen. */
+function MaybeRow({
+  arrange,
+  children,
+}: {
+  arrange?: Arrange;
+  children: ReactNode;
+}) {
+  if (arrange !== "scroll" && arrange !== "carousel") return <>{children}</>;
+  return <ScrollRow carousel={arrange === "carousel"}>{children}</ScrollRow>;
+}
 /** Items wrap onto rows and grow, so every row (the last too) fills the width. */
 const STRETCH = "flex flex-wrap [&>*]:grow";
 const SWIPE =
@@ -401,14 +481,16 @@ export function DeviceFacts({
         <Boxed box={look.box} dark={dark}>
           <div className="flex flex-col gap-2">
             <PartHeading text={heading} />
-            <Facts
-              arrange={look.arrange}
-              dark={dark}
-              lines={lines}
-              p={p}
-              showEmpty={showEmpty}
-              variant={look.variant}
-            />
+            <MaybeRow arrange={look.arrange}>
+              <Facts
+                arrange={look.arrange}
+                dark={dark}
+                lines={lines}
+                p={p}
+                showEmpty={showEmpty}
+                variant={look.variant}
+              />
+            </MaybeRow>
           </div>
         </Boxed>
       )}
@@ -1519,6 +1601,8 @@ export type DetailsOptions = {
   statusAt?: "above" | "below";
   /** Optional boxes around the parts inside the card. */
   factsBox?: PartBox;
+  /** The space between facts (story cards, tiles…). */
+  factsGap?: FactsGap;
   /** A box around the title area (name, status, Created by, Manage). */
   titleBox?: PartBox;
   /** "standard", or one of the title looks (centred, hero, date strip…). */
@@ -1706,6 +1790,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
     );
   const body = (
     <div
+      style={factsGapStyle(o.factsGap)}
       className={cn(
         // The same 24px between everything, like the rest of the page.
         "flex min-w-0 flex-col gap-6",
@@ -1795,6 +1880,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
             {factsAs === "ticket" || factsAs === "ticket-colour" ? (
               <Ticket
                 allFacts
+                arrange={o.factsArrange}
                 // Everything else in the card goes inside the ticket.
                 extra={inTicket ? cardExtras : null}
                 p={p}
@@ -1905,7 +1991,9 @@ export function FactsBlock({
   tabletBox = "same",
   lines = "between",
   heading = "",
+  gap,
 }: {
+  gap?: FactsGap;
   lines?: FactLines;
   heading?: string;
   variant?: FactsVariant;
@@ -1921,21 +2009,23 @@ export function FactsBlock({
 }) {
   const p = useWalkParts();
   return p ? (
-    <DeviceFacts
-      arrange={arrange}
-      p={p}
-      phoneArrange={phoneArrange}
-      phoneVariant={phoneVariant}
-      showEmpty={showEmpty}
-      tabletArrange={tabletArrange}
-      tabletVariant={tabletVariant}
-      variant={variant}
-      box={box}
-      heading={heading}
-      lines={lines}
-      phoneBox={phoneBox}
-      tabletBox={tabletBox}
-    />
+    <div style={factsGapStyle(gap)}>
+      <DeviceFacts
+        arrange={arrange}
+        p={p}
+        phoneArrange={phoneArrange}
+        phoneVariant={phoneVariant}
+        showEmpty={showEmpty}
+        tabletArrange={tabletArrange}
+        tabletVariant={tabletVariant}
+        variant={variant}
+        box={box}
+        heading={heading}
+        lines={lines}
+        phoneBox={phoneBox}
+        tabletBox={tabletBox}
+      />
+    </div>
   ) : (
     <Placeholder label={`Facts · ${variant}`} />
   );
@@ -2825,6 +2915,7 @@ function Ticket({
   allFacts = false,
   showEmpty = false,
   extra,
+  arrange,
 }: {
   p: WalkIdeaParts;
   variant: TicketVariant;
@@ -2833,6 +2924,8 @@ function Ticket({
   showEmpty?: boolean;
   /** More of the walk inside the ticket (the Details card's essentials, description…). */
   extra?: ReactNode;
+  /** Its facts in a swiping row or carousel, when chosen. */
+  arrange?: Arrange;
 }) {
   const info = useWalkInfo(p, showEmpty);
   const colour = variant === "colour";
@@ -2868,26 +2961,28 @@ function Ticket({
         <h2 className="text-2xl leading-tight font-semibold sm:text-3xl">
           {p.headline.title}
         </h2>
-        <dl className="grid grid-cols-2 gap-6 sm:grid-cols-3">
-          {rows.map(([label, value]) => (
-            <div className="flex min-w-0 flex-col" key={label}>
-              <dt
-                className={cn(
-                  "text-[11px] tracking-wide uppercase",
-                  colour ? "opacity-70" : "text-muted-foreground",
-                )}
-              >
-                {label}
-              </dt>
-              <dd
-                className="truncate text-lg font-semibold"
-                suppressHydrationWarning
-              >
-                {value}
-              </dd>
-            </div>
-          ))}
-        </dl>
+        <MaybeRow arrange={arrange}>
+          <dl className="grid grid-cols-2 gap-6 sm:grid-cols-3">
+            {rows.map(([label, value]) => (
+              <div className="flex min-w-0 flex-col" key={label}>
+                <dt
+                  className={cn(
+                    "text-[11px] tracking-wide uppercase",
+                    colour ? "opacity-70" : "text-muted-foreground",
+                  )}
+                >
+                  {label}
+                </dt>
+                <dd
+                  className="truncate text-lg font-semibold"
+                  suppressHydrationWarning
+                >
+                  {value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </MaybeRow>
         {extra}
       </div>
       <div
@@ -3704,7 +3799,20 @@ const BOLDS = [
  * however a design wants without leaving any out. 24px between them, like
  * the rest of the page.
  */
-export function FactLooks({
+export function FactLooks(props: {
+  p: WalkIdeaParts;
+  look: FactsLook;
+  arrange?: Arrange;
+  showEmpty?: boolean;
+}) {
+  return (
+    <MaybeRow arrange={props.arrange}>
+      <FactLooksBody {...props} />
+    </MaybeRow>
+  );
+}
+
+function FactLooksBody({
   p,
   look,
   arrange = "fill",
@@ -3718,14 +3826,14 @@ export function FactLooks({
   const { facts } = useWalkInfo(p, showEmpty);
   const flow = (basis: string, width: string, grid: string) =>
     arrange === "scroll"
-      ? cn(SWIPE, "gap-6", width)
+      ? cn(SWIPE, "gap-[var(--facts-gap,1.5rem)]", width)
       : arrange === "grid"
-        ? cn("grid gap-6", grid)
-        : cn(STRETCH, "gap-6", basis);
+        ? cn("grid gap-[var(--facts-gap,1.5rem)]", grid)
+        : cn(STRETCH, "gap-[var(--facts-gap,1.5rem)]", basis);
 
   if (look === "numbered")
     return (
-      <ol className="flex flex-col gap-6 sm:grid sm:grid-cols-2">
+      <ol className="flex flex-col gap-[var(--facts-gap,1.5rem)] sm:grid sm:grid-cols-2">
         {facts.map((fact, i) => (
           <li className="flex min-w-0 items-start gap-3" key={fact.label}>
             <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background">
@@ -3824,7 +3932,7 @@ export function FactLooks({
     return (
       <ul
         className={cn(
-          "flex flex-wrap gap-3",
+          "flex flex-wrap gap-[var(--facts-gap,1.5rem)]",
           arrange === "scroll" && cn(SWIPE, "whitespace-nowrap"),
         )}
       >
@@ -3845,7 +3953,7 @@ export function FactLooks({
 
   if (look === "two-tone-rows")
     return (
-      <dl className="flex flex-col gap-2">
+      <dl className="flex flex-col gap-[var(--facts-gap,1.5rem)]">
         {facts.map((fact) => (
           <div
             className="grid grid-cols-[8rem_minmax(0,1fr)] overflow-hidden rounded-lg border text-sm sm:grid-cols-[11rem_minmax(0,1fr)]"
@@ -3934,8 +4042,8 @@ export function FactLooks({
       <div
         className={
           arrange === "scroll"
-            ? cn(SWIPE, "gap-6 py-1")
-            : "flex flex-wrap justify-center gap-6 sm:justify-start"
+            ? cn(SWIPE, "gap-[var(--facts-gap,1.5rem)] py-1")
+            : "flex flex-wrap justify-center gap-[var(--facts-gap,1.5rem)] sm:justify-start"
         }
       >
         {facts.map((fact, i) => (

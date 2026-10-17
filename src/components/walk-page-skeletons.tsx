@@ -37,7 +37,7 @@ function WalkFactsSkeleton() {
               {label}
             </dt>
             <dd className="flex h-5 items-center">
-              <Skeleton className={`h-[64%] max-w-full rounded-[4px] ${width}`} />
+              <Skeleton className={`h-[64%] max-w-full rounded-lg ${width}`} />
             </dd>
           </div>
         ))}
@@ -54,11 +54,11 @@ function WalkDescriptionSkeleton() {
       <div>
         {widths.map((width, i) => (
           <div className="flex h-[1.421875rem] items-center" key={i}>
-            <Skeleton className={`h-[56%] rounded-[4px] ${width}`} />
+            <Skeleton className={`h-[56%] rounded-lg ${width}`} />
           </div>
         ))}
       </div>
-      <Skeleton className="h-4 w-20 rounded-[4px]" />
+      <Skeleton className="h-4 w-20 rounded-lg" />
     </div>
   );
 }
@@ -72,7 +72,7 @@ export function WalkDetailsCardSkeleton({ organiser }: { organiser: boolean }) {
           <div className="flex min-w-0 flex-col items-start gap-1.5">
             <div className="flex w-full min-w-0 items-center justify-between gap-4">
               <div className="flex h-6 w-2/3 max-w-sm items-center">
-                <Skeleton className="h-[80%] w-full rounded-[4px]" />
+                <Skeleton className="h-[80%] w-full rounded-lg" />
               </div>
               <Skeleton className="h-6 w-24 rounded-md max-sm:hidden" />
             </div>
@@ -82,7 +82,7 @@ export function WalkDetailsCardSkeleton({ organiser }: { organiser: boolean }) {
         ) : (
           <div className="flex w-full min-w-0 flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div className="flex h-5 w-2/3 max-w-sm items-center">
-              <Skeleton className="h-[80%] w-full rounded-[4px]" />
+              <Skeleton className="h-[80%] w-full rounded-lg" />
             </div>
             <Skeleton className="h-6 w-24 rounded-md max-sm:h-7 max-sm:w-full" />
           </div>
@@ -105,7 +105,7 @@ export function PreciseLocationSkeleton() {
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="text-xs text-muted-foreground">Precise location</span>
         <span className="flex h-5 items-center">
-          <Skeleton className="h-[64%] w-40 rounded-[4px]" />
+          <Skeleton className="h-[64%] w-40 rounded-lg" />
         </span>
         <span className="text-xs text-muted-foreground">
           A what3words address — three fixed words that mark this exact spot to within 3 metres.
@@ -186,7 +186,7 @@ export function WalkTabsSkeleton({
             key={text}
           >
             {text}
-            {count ? <Skeleton className="h-3.5 w-6 rounded-[4px]" /> : null}
+            {count ? <Skeleton className="h-3.5 w-6 rounded-lg" /> : null}
           </span>
         ))}
       </div>
@@ -226,7 +226,7 @@ export function WalkHeadlineSkeleton() {
         <Skeleton className="h-5 w-20 rounded-full" />
       </div>
       <div className="flex h-6 items-center">
-        <Skeleton className="h-4 w-96 max-w-full rounded-[4px]" />
+        <Skeleton className="h-4 w-96 max-w-full rounded-lg" />
       </div>
     </div>
   );

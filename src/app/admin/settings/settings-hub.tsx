@@ -67,7 +67,7 @@ function RowText({ page }: { page: SettingsHubPage }) {
         </p>
         {statusLoading ? (
           <span className="flex h-4 items-center sm:shrink-0">
-            <Skeleton className="h-3 w-28 rounded-[4px]" />
+            <Skeleton className="h-3 w-28 rounded-lg" />
           </span>
         ) : page.status ? (
           <p className="text-xs text-muted-foreground tabular-nums sm:shrink-0 sm:text-right">

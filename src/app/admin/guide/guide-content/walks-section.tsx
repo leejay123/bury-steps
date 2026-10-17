@@ -343,7 +343,10 @@ export function WalksSection({
               (status, date, time, meet) and a hero-size name — and Facts
               shown as adds a numbered list, cards with a coloured top bar,
               columns with dividers, the first fact big, a vertical
-              timeline, big pills, two-tone rows and mini cards. The
+              timeline, big pills, two-tone rows and mini cards. Facts arrange adds One row, swipe sideways and Carousel with
+              ‹ › buttons to every Facts shown as look (the walk ticket&apos;s
+              facts too), and Space between facts sets the gap between story
+              cards, tiles, badges and the rest (none to lots). The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

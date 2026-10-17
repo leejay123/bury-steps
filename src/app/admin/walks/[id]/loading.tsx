@@ -108,7 +108,7 @@ function ShareLinkSkeleton() {
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
       <div className="flex min-h-8 min-w-0 flex-1 items-center rounded-md bg-muted px-3 py-1.5">
-        <Skeleton className="h-3.5 w-72 max-w-full rounded-[4px] bg-background/70" />
+        <Skeleton className="h-3.5 w-72 max-w-full rounded-lg bg-background/70" />
       </div>
       <Skeleton className="h-8 w-full rounded-md sm:w-26 sm:shrink-0" />
     </div>

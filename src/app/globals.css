@@ -357,10 +357,16 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  /* One corner across the whole app: every rounded size is 8px (--radius).
+     Fully round things (rounded-full: photos, round badges, pills) stay round. */
+  --radius-xs: var(--radius);
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius);
+  --radius-3xl: var(--radius);
+  --radius-4xl: var(--radius);
   --font-sans: var(--font-site), ui-sans-serif, system-ui, sans-serif;
   /* Everyday text size from Settings → Branding → Text sizes (see src/lib/text-sizes.ts). */
   --text-sm: calc(var(--text-body-n, 14) * 1px);

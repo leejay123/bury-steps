@@ -99,6 +99,7 @@ const tabletArrangeField = {
     { value: "fill", label: "Fill the width (no gaps)" },
     { value: "grid", label: "Even grid (columns line up)" },
     { value: "scroll", label: "One row, swipe sideways" },
+    { value: "carousel", label: "Carousel with ‹ › buttons" },
   ],
 };
 const phoneArrangeField = {
@@ -109,6 +110,7 @@ const phoneArrangeField = {
     { value: "fill", label: "Fill the width (no gaps)" },
     { value: "grid", label: "Even grid (columns line up)" },
     { value: "scroll", label: "One row, swipe sideways" },
+    { value: "carousel", label: "Carousel with ‹ › buttons" },
   ],
 };
 const messageLookField = {
@@ -170,6 +172,19 @@ const factLinesField = {
   ],
 };
 
+const factsGapField = {
+  type: "select" as const,
+  label: "Space between facts",
+  options: [
+    { value: "none", label: "None" },
+    { value: "tight", label: "Tight" },
+    { value: "closer", label: "Closer" },
+    { value: "normal", label: "Normal" },
+    { value: "more", label: "More" },
+    { value: "lots", label: "Lots" },
+  ],
+};
+
 const showEmptyField = {
   type: "radio" as const,
   label: "Empty facts",
@@ -199,6 +214,7 @@ const essentialsFields = {
       ["fill", "Fill the width (no gaps)"],
       ["grid", "Even grid (columns line up)"],
       ["scroll", "One row, swipe sideways"],
+      ["carousel", "Carousel with ‹ › buttons"],
     ]),
   },
   tabletLook: {
@@ -219,6 +235,7 @@ const essentialsFields = {
       { value: "fill", label: "Fill the width (no gaps)" },
       { value: "grid", label: "Even grid (columns line up)" },
       { value: "scroll", label: "One row, swipe sideways" },
+      { value: "carousel", label: "Carousel with ‹ › buttons" },
     ],
   },
   phoneLook: {
@@ -237,6 +254,7 @@ const essentialsFields = {
       { value: "fill", label: "Fill the width (no gaps)" },
       { value: "grid", label: "Even grid (columns line up)" },
       { value: "scroll", label: "One row, swipe sideways" },
+      { value: "carousel", label: "Carousel with ‹ › buttons" },
     ],
   },
   box: boxField("On computers: box"),
@@ -363,6 +381,7 @@ const arrangeField = {
     ["fill", "Fill the width (no gaps)"],
     ["grid", "Even grid (columns line up)"],
     ["scroll", "One row, swipe sideways"],
+    ["carousel", "Carousel with ‹ › buttons"],
   ]),
 };
 
@@ -1102,6 +1121,7 @@ export const walkDesignConfig: Config = {
             { value: "bottom-boxes", label: "At the bottom, as message boxes" },
           ],
         },
+        factsGap: factsGapField,
         factsTitle: {
           type: "text",
           label: "Facts heading (blank: no heading)",
@@ -1317,6 +1337,7 @@ export const walkDesignConfig: Config = {
         titleLook: "standard",
         titleBox: "none",
         titleMessages: "none",
+        factsGap: "normal",
         factsTitle: "",
         timelineTitle: "",
         factLines: "between",
@@ -1366,6 +1387,7 @@ export const walkDesignConfig: Config = {
         titleLook,
         titleBox,
         titleMessages,
+        factsGap,
         factsTitle,
         timelineTitle,
         factLines,
@@ -1405,6 +1427,7 @@ export const walkDesignConfig: Config = {
           titleLook={titleLook}
           titleBox={titleBox}
           titleMessages={titleMessages}
+          factsGap={factsGap}
           factsTitle={factsTitle}
           timelineTitle={timelineTitle}
           factLines={factLines}
@@ -1452,6 +1475,7 @@ export const walkDesignConfig: Config = {
         tabletArrange: tabletArrangeField,
         showEmpty: showEmptyField,
         heading: { type: "text", label: "Heading (blank: no heading)" },
+        gap: factsGapField,
         lines: factLinesField,
         box: boxField("On computers: box"),
         tabletBox: tabletBoxField("On tablets: box"),
@@ -1463,6 +1487,7 @@ export const walkDesignConfig: Config = {
         phoneBox: "same",
         lines: "between",
         heading: "",
+        gap: "normal",
         variant: "grid",
         arrange: "fill",
         phoneVariant: "same",
@@ -1484,8 +1509,10 @@ export const walkDesignConfig: Config = {
         phoneBox,
         lines,
         heading,
+        gap,
       }) => (
         <FactsBlock
+          gap={gap}
           heading={heading}
           lines={lines}
           box={box}

@@ -177,7 +177,7 @@ const STAT_LABELS = ["Newsletter (footer)", "Newsletter (members)", "Walk announ
 function GreyLine({ className, h = "h-5" }: { className: string; h?: string }) {
   return (
     <div className={`flex items-center ${h}`}>
-      <Skeleton className={`h-[64%] max-w-full rounded-[4px] ${className}`} />
+      <Skeleton className={`h-[64%] max-w-full rounded-lg ${className}`} />
     </div>
   );
 }

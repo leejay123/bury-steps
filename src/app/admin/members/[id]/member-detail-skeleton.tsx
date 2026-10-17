@@ -36,7 +36,7 @@ export function MemberDetailSkeleton() {
             <div className="flex min-w-0 flex-col gap-1.5">
               <div className="flex flex-wrap items-center gap-2">
                 {/* Name (text-2xl, leading-none) and the role badge. */}
-                <Skeleton className="h-6 w-40 rounded-[4px]" />
+                <Skeleton className="h-6 w-40 rounded-lg" />
                 <Skeleton className="h-7 w-20 rounded-md" />
               </div>
               <div className="flex flex-col gap-1">

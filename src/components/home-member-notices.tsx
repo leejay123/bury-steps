@@ -203,15 +203,15 @@ export function HomeMemberNoticesSkeleton() {
               <div className="flex h-44 w-full flex-col gap-3 bg-background p-6 sm:h-48 md:p-8">
                 <div className="flex shrink-0 flex-col gap-1">
                   <div className="flex h-7 items-center">
-                    <Skeleton className="h-[64%] w-2/3 rounded-[4px]" />
+                    <Skeleton className="h-[64%] w-2/3 rounded-lg" />
                   </div>
                   <div className="flex h-4 items-center">
-                    <Skeleton className="h-[70%] w-24 rounded-[4px]" />
+                    <Skeleton className="h-[70%] w-24 rounded-lg" />
                   </div>
                 </div>
                 <div className="flex min-h-10 flex-col justify-center gap-2">
-                  <Skeleton className="h-3 w-full rounded-[4px]" />
-                  <Skeleton className="h-3 w-4/5 rounded-[4px]" />
+                  <Skeleton className="h-3 w-full rounded-lg" />
+                  <Skeleton className="h-3 w-4/5 rounded-lg" />
                 </div>
               </div>
             </div>

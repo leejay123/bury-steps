@@ -15,6 +15,8 @@ import { FocusRescue } from "@/components/focus-rescue";
 import { PlaceholderPreviewBadge } from "@/components/placeholder-preview-badge";
 import { ShimmerTest } from "@/components/shimmer-test";
 import { AutoSkeletonTest } from "@/components/autoskeleton-test";
+import { BoneyardTest } from "@/components/boneyard-test";
+import { MammothTest } from "@/components/mammoth-test";
 import { TabStyleProvider } from "@/components/ui/tabs";
 import { HeaderPartBoundary } from "@/components/header-part-boundary";
 import type { Metadata, Viewport } from "next";
@@ -330,6 +332,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <PlaceholderPreviewBadge />
           <ShimmerTest />
           <AutoSkeletonTest />
+          <BoneyardTest />
+          <MammothTest />
           <HeaderPartBoundary name="cookie-notice">
             <Suspense fallback={null}>
               <SiteCookieConsentGate />

@@ -20,7 +20,7 @@ const LINE_HEIGHT = { xs: "h-4", sm: "h-5", base: "h-6", lg: "h-8" } as const;
 export function SkLine({ size = "base", className }: { size?: keyof typeof LINE_HEIGHT; className?: string }) {
   return (
     <div className={cn("flex items-center", LINE_HEIGHT[size])}>
-      <Skeleton className={cn("h-[64%] max-w-full rounded-[4px]", className)} />
+      <Skeleton className={cn("h-[64%] max-w-full rounded-lg", className)} />
     </div>
   );
 }
@@ -382,16 +382,16 @@ export function EmptyStateSkeleton({ lines = 1 }: { lines?: 1 | 2 }) {
           <Skeleton className="size-6 rounded-md" />
         </EmptyMedia>
         <div className="flex h-7 items-center">
-          <Skeleton className="h-[64%] w-44 rounded-[4px]" />
+          <Skeleton className="h-[64%] w-44 rounded-lg" />
         </div>
         {/* text-sm/relaxed: 0.875rem × 1.625 per line. */}
         <div className="flex w-full flex-col items-center">
           <div className="flex h-[1.421875rem] w-full items-center justify-center">
-            <Skeleton className={cn("h-[54%] max-w-full rounded-[4px]", lines === 2 ? "w-80" : "w-64")} />
+            <Skeleton className={cn("h-[54%] max-w-full rounded-lg", lines === 2 ? "w-80" : "w-64")} />
           </div>
           {lines === 2 ? (
             <div className="flex h-[1.421875rem] w-full items-center justify-center">
-              <Skeleton className="h-[54%] w-48 max-w-full rounded-[4px]" />
+              <Skeleton className="h-[54%] w-48 max-w-full rounded-lg" />
             </div>
           ) : null}
         </div>
