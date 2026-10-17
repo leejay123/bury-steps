@@ -1262,6 +1262,9 @@ export type DetailsOptions = {
   factsBox?: PartBox;
   /** A box around the title area (name, status, Created by, Manage). */
   titleBox?: PartBox;
+  /** The walk's messages inside the title box: a row (table look) or boxes, top or bottom. */
+  titleMessages?:
+    "none" | "top-row" | "bottom-row" | "top-boxes" | "bottom-boxes";
   /** Headings of your own above the facts and the day's timeline (blank: none). */
   factsTitle?: string;
   timelineTitle?: string;
@@ -1341,6 +1344,35 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
     ) : null;
   const preciseHere = (where: PreciseAt) =>
     preciseAt === where ? precise : null;
+  // The walk's messages inside the title box, if chosen: as a row of the
+  // box divided off by a line (a table look), or as their own boxes.
+  const titleMessagesAt = o.titleMessages ?? "none";
+  const titleBoxed = (o.titleBox ?? "none") !== "none";
+  const titleMessages = (where: "top" | "bottom") => {
+    if (titleMessagesAt === "none" || !titleMessagesAt.startsWith(where))
+      return null;
+    const row = titleMessagesAt.endsWith("row");
+    return (
+      <MessagesOrSample
+        className={cn(
+          row &&
+            "gap-0 [&_[data-slot=alert]]:rounded-none [&_[data-slot=alert]]:border-0 [&>div]:gap-0",
+          // Out to the box's edges (it has 16px inside), with a line between.
+          row &&
+            titleBoxed &&
+            (where === "top"
+              ? "-mx-4 -mt-4 mb-4 overflow-hidden rounded-t-xl border-b"
+              : "-mx-4 mt-4 -mb-4 overflow-hidden rounded-b-xl border-t"),
+          row &&
+            !titleBoxed &&
+            (where === "top" ? "mb-6 border-b" : "mt-6 border-t"),
+          !row && (where === "top" ? "mb-6" : "mt-6"),
+        )}
+        editing={o.editing ?? false}
+        p={p}
+      />
+    );
+  };
   // The description: on its own (its own box), or inside the title area.
   const descriptionInTitle =
     o.descriptionAt === "title" && (o.showTitle ?? true);
@@ -1403,6 +1435,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
     >
       {showTitle || (o.showActions ?? true) ? (
         <Boxed box={o.titleBox} dark={dark}>
+          {titleMessages("top")}
           {/* The same 24px between everything in the card, the title's lines too. */}
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             {showTitle ? (
@@ -1436,6 +1469,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
               <Actions className="sm:shrink-0" p={p} />
             ) : null}
           </div>
+          {titleMessages("bottom")}
         </Boxed>
       ) : null}
       {o.timeline ? (

@@ -318,7 +318,12 @@ export function WalksSection({
               (the default — with no Messages block, no messages show), at the
               top at page width, or a full-width strip under the header. The
               Details card&apos;s description can sit on its own or inside the
-              title box, under Created by. The
+              title box, under Created by. Messages in the title box puts the walk&apos;s messages inside
+              the Details card&apos;s title area — at the top or bottom, as a row
+              divided off by a line (a table look) or as message boxes; this
+              works when the messages go where you put them (the Page
+              setting), so remove any Messages block to avoid showing them
+              twice. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

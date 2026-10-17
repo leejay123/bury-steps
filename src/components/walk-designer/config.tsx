@@ -1028,6 +1028,20 @@ export const walkDesignConfig: Config = {
         },
         showEmptyFacts: showEmptyField,
         titleBox: boxField("Box around the title (name, status, Manage)"),
+        titleMessages: {
+          type: "select",
+          label: "Messages in the title box",
+          options: [
+            { value: "none", label: "No" },
+            { value: "top-row", label: "At the top, as a row (table look)" },
+            {
+              value: "bottom-row",
+              label: "At the bottom, as a row (table look)",
+            },
+            { value: "top-boxes", label: "At the top, as message boxes" },
+            { value: "bottom-boxes", label: "At the bottom, as message boxes" },
+          ],
+        },
         factsTitle: {
           type: "text",
           label: "Facts heading (blank: no heading)",
@@ -1240,6 +1254,7 @@ export const walkDesignConfig: Config = {
         tabletFactsArrange: "same",
         showEmptyFacts: false,
         titleBox: "none",
+        titleMessages: "none",
         factsTitle: "",
         timelineTitle: "",
         factLines: "between",
@@ -1286,6 +1301,7 @@ export const walkDesignConfig: Config = {
         showEmptyFacts,
         essentials,
         titleBox,
+        titleMessages,
         factsTitle,
         timelineTitle,
         factLines,
@@ -1322,6 +1338,7 @@ export const walkDesignConfig: Config = {
           tabletFactsArrange={tabletFactsArrange}
           showEmptyFacts={showEmptyFacts}
           titleBox={titleBox}
+          titleMessages={titleMessages}
           factsTitle={factsTitle}
           timelineTitle={timelineTitle}
           factLines={factLines}
