@@ -3,7 +3,7 @@ import { READY_LAYOUTS } from "./ready-layouts";
 
 /**
  * Ready-made starting designs for the walk page designer, each following the
- * agreed rules: messages first, then the title, essentials and every detail
+ * agreed rules: the title, essentials and every detail
  * at the top, then the rest. A walk page uses the first one until a design
  * is saved; the designer offers them all to start from.
  */
@@ -50,7 +50,6 @@ export const WALK_DESIGN_PRESETS: {
     label: "Details with the map in the card, sticky tabs",
     data: () =>
       page([
-        block("Messages"),
         block("ClockIn"),
         block("Details", { map: "top", facts: "grid" }),
         restTabs(true),
@@ -61,7 +60,6 @@ export const WALK_DESIGN_PRESETS: {
     label: "Map down the side of the card, sticky tabs",
     data: () =>
       page([
-        block("Messages"),
         block("ClockIn"),
         block("Details", { map: "side", facts: "list" }),
         restTabs(true),
@@ -72,7 +70,6 @@ export const WALK_DESIGN_PRESETS: {
     label: "Status box, title with chips, details, tabs",
     data: () =>
       page([
-        block("Messages"),
         block("ClockIn"),
         block("Status", { variant: "box" }),
         block("Title", { variant: "chips" }),
@@ -89,7 +86,6 @@ export const WALK_DESIGN_PRESETS: {
     label: "Details card, people and journey in a sidebar",
     data: () =>
       page([
-        block("Messages"),
         block("ClockIn"),
         block("Details", { map: "top", facts: "grid" }),
         block("Sidebar", {
@@ -106,7 +102,6 @@ export const WALK_DESIGN_PRESETS: {
     label: "Map, details, folding sections",
     data: () =>
       page([
-        block("Messages"),
         block("ClockIn"),
         block("Details", { facts: "grid" }),
         block("Map"),
@@ -133,7 +128,6 @@ export const WALK_DESIGN_PRESETS: {
     label: "Poster title, details, tabs",
     data: () =>
       page([
-        block("Messages"),
         block("ClockIn"),
         block("Title", { variant: "poster" }),
         block("Details", {
@@ -149,7 +143,6 @@ export const WALK_DESIGN_PRESETS: {
     label: "Trailhead sign, details, tabs",
     data: () =>
       page([
-        block("Messages"),
         block("ClockIn"),
         block("Title", { variant: "trailhead" }),
         block("Details", {
@@ -166,7 +159,6 @@ export const WALK_DESIGN_PRESETS: {
     label: "Big numbers, details and attended side by side",
     data: () =>
       page([
-        block("Messages"),
         block("ClockIn"),
         block("Title", { variant: "plain" }),
         block("Status", { variant: "numbers" }),
@@ -196,7 +188,6 @@ export const defaultDesignFor = (
 ): Data =>
   audience === "visitor"
     ? page([
-        block("Messages"),
         block("Details", { map: "top", facts: "grid" }),
         block("HowItWorks"),
         restTabs(true),

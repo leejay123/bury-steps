@@ -673,7 +673,7 @@ function PageRoot({
   children,
   editing = false,
   messagesLook = "as-is",
-  messagesAt = "top",
+  messagesAt = "block",
 }: {
   children: ReactNode;
   editing?: boolean;
@@ -1041,6 +1041,14 @@ export const walkDesignConfig: Config = {
         tabletFactsBox: tabletBoxField("Box around the facts (tablets)"),
         phoneFactsBox: phoneBoxField("Box around the facts (phones)"),
         timelineBox: boxField("Box around the day's timeline"),
+        descriptionAt: {
+          type: "radio",
+          label: "Description position",
+          options: options([
+            ["own", "On its own"],
+            ["title", "In the title box (under Created by)"],
+          ]),
+        },
         descriptionTitle: {
           type: "text",
           label: "Description heading (blank: no heading)",
@@ -1239,6 +1247,7 @@ export const walkDesignConfig: Config = {
         tabletFactsBox: "same",
         phoneFactsBox: "same",
         timelineBox: "none",
+        descriptionAt: "own",
         descriptionTitle: "",
         descriptionBox: "none",
         essentials: ESSENTIALS_DEFAULTS,
@@ -1284,6 +1293,7 @@ export const walkDesignConfig: Config = {
         tabletFactsBox,
         phoneFactsBox,
         timelineBox,
+        descriptionAt,
         descriptionTitle,
         descriptionBox,
         timeline,
@@ -1319,6 +1329,7 @@ export const walkDesignConfig: Config = {
           tabletFactsBox={tabletFactsBox}
           phoneFactsBox={phoneFactsBox}
           timelineBox={timelineBox}
+          descriptionAt={descriptionAt}
           descriptionTitle={descriptionTitle}
           descriptionBox={descriptionBox}
           essentials={essentials}
@@ -2258,14 +2269,14 @@ export const walkDesignConfig: Config = {
         type: "select",
         label: "Where the walk's messages go",
         options: [
+          { value: "block", label: "Where I put the Messages block" },
           { value: "top", label: "At the top, page width (like a block)" },
           { value: "strip", label: "Full-width strip under the header" },
-          { value: "block", label: "Where I put the Messages block" },
         ],
       },
       messagesLook: { ...messageLookField, label: "Messages look" },
     },
-    defaultProps: { messagesAt: "top", messagesLook: "as-is" },
+    defaultProps: { messagesAt: "block", messagesLook: "as-is" },
     render: ({
       children,
       puck,

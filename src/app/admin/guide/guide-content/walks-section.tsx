@@ -314,9 +314,11 @@ export function WalksSection({
               walk name, status and Created by lines included. A box you choose
               (such as Card) keeps its shadow even when the block&apos;s Shadows
               is set to Remove. Where the walk&apos;s messages go is a Page setting too (click
-              an empty part of the page): at the top, page width like any
-              block (the default); a full-width strip under the header; or
-              wherever you put the Messages block. The
+              an empty part of the page): wherever you put the Messages block
+              (the default — with no Messages block, no messages show), at the
+              top at page width, or a full-width strip under the header. The
+              Details card&apos;s description can sit on its own or inside the
+              title box, under Created by. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

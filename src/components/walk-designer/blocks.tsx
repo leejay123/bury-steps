@@ -1272,6 +1272,8 @@ export type DetailsOptions = {
   descriptionBox?: PartBox;
   /** A heading above the description (blank: none). */
   descriptionTitle?: string;
+  /** "title": inside the title area (and its box); "own": on its own. */
+  descriptionAt?: "own" | "title";
   mapButtonsLook?: DirectionsLook;
   /** For a page-width map in the card (an edge-to-edge one is always square). */
   mapCorners?: "rounded" | "square" | "very-rounded";
@@ -1339,6 +1341,25 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
     ) : null;
   const preciseHere = (where: PreciseAt) =>
     preciseAt === where ? precise : null;
+  // The description: on its own (its own box), or inside the title area.
+  const descriptionInTitle =
+    o.descriptionAt === "title" && (o.showTitle ?? true);
+  const descriptionPart =
+    (o.showDescription ?? true) && p.walk.description ? (
+      descriptionInTitle ? (
+        <DescriptionWithHeading
+          description={p.walk.description}
+          heading={o.descriptionTitle}
+        />
+      ) : (
+        <Boxed box={o.descriptionBox} dark={dark}>
+          <DescriptionWithHeading
+            description={p.walk.description}
+            heading={o.descriptionTitle}
+          />
+        </Boxed>
+      )
+    ) : null;
   // The status: "Upcoming" badge and/or its words, as chosen.
   const statusLook = o.statusLook ?? "badge-line";
   const statusRow =
@@ -1406,6 +1427,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
                     {p.headline.note}
                   </p>
                 ) : null}
+                {descriptionInTitle ? descriptionPart : null}
               </div>
             ) : (
               <span />
@@ -1445,14 +1467,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       {(o.showEssentials ?? true) ? (
         <DeviceEssentials dark={dark} o={o.essentials ?? {}} p={p} />
       ) : null}
-      {(o.showDescription ?? true) && p.walk.description ? (
-        <Boxed box={o.descriptionBox} dark={dark}>
-          <DescriptionWithHeading
-            description={p.walk.description}
-            heading={o.descriptionTitle}
-          />
-        </Boxed>
-      ) : null}
+      {descriptionInTitle ? null : descriptionPart}
       {preciseHere("bottom")}
     </div>
   );
