@@ -863,7 +863,19 @@ export type TitleVariant =
   | "calendar"
   | "split"
   | "contours"
-  | "typographic";
+  | "typographic"
+  | "centred"
+  | "eyebrow"
+  | "date-strip"
+  | "countdown"
+  | "underline"
+  | "status-bar"
+  | "two-tone"
+  | "pill-row"
+  | "minimal"
+  | "giant-date"
+  | "meta-table"
+  | "hero";
 
 export function TitleBlock({
   variant = "plain",
@@ -1222,6 +1234,253 @@ function Title({
           {act ? <div className="mt-2">{act}</div> : null}
         </div>
       );
+    // ── More title looks (24px between their parts, like the page) ──────
+    case "centred":
+      return (
+        <div className="flex flex-col items-center gap-6 text-center">
+          <Badge p={p} />
+          {heading("sm:text-4xl")}
+          <StatusLine className="justify-center" p={p} />
+          {note}
+          {act}
+        </div>
+      );
+    case "eyebrow":
+      return (
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex min-w-0 flex-col gap-2">
+            <span
+              className="text-xs font-semibold tracking-widest text-emerald-700 uppercase"
+              suppressHydrationWarning
+            >
+              {day} · {time}
+            </span>
+            {heading("sm:text-4xl")}
+            <StatusLine p={p} />
+            {note}
+          </div>
+          {act}
+        </div>
+      );
+    case "date-strip":
+      return (
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+            {heading("sm:text-4xl")}
+            {act}
+          </div>
+          <div
+            className="grid grid-cols-3 divide-x overflow-hidden rounded-xl border text-center"
+            suppressHydrationWarning
+          >
+            <span className="flex flex-col p-3">
+              <span className="text-xs text-muted-foreground">Day</span>
+              <span className="font-semibold">{day}</span>
+            </span>
+            <span className="flex flex-col p-3">
+              <span className="text-xs text-muted-foreground">Sets off</span>
+              <span className="font-semibold">{time}</span>
+            </span>
+            <span className="flex flex-col p-3">
+              <span className="text-xs text-muted-foreground">Back by</span>
+              <span className="font-semibold">{formatTime(info.end)}</span>
+            </span>
+          </div>
+          <StatusLine p={p} />
+          {note}
+        </div>
+      );
+    case "countdown":
+      return (
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 flex-col gap-2">
+            <StatusLine p={p} />
+            {heading("sm:text-4xl")}
+            {note}
+            {act ? <div className="mt-4">{act}</div> : null}
+          </div>
+          <span
+            className="flex shrink-0 flex-col items-start sm:items-end"
+            suppressHydrationWarning
+          >
+            <span className="text-6xl leading-none font-black tracking-tight">
+              {info.countdown.value}
+            </span>
+            <span className="text-sm text-muted-foreground uppercase">
+              {info.countdown.unit}
+            </span>
+          </span>
+        </div>
+      );
+    case "underline":
+      return (
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex min-w-0 flex-col gap-3">
+            {heading("sm:text-4xl")}
+            <span
+              aria-hidden
+              className="h-1.5 w-16 rounded-full bg-emerald-600"
+            />
+            <StatusLine p={p} />
+            {note}
+          </div>
+          {act}
+        </div>
+      );
+    case "status-bar":
+      return (
+        <div
+          className={cn(
+            "flex flex-col gap-6 border-l-4 pl-5 sm:flex-row sm:items-start sm:justify-between",
+            info.status === "cancelled"
+              ? "border-destructive"
+              : info.now.live
+                ? "border-emerald-500"
+                : "border-muted-foreground/40",
+          )}
+        >
+          <div className="flex min-w-0 flex-col gap-2">
+            <StatusLine p={p} />
+            {heading()}
+            {note}
+          </div>
+          {act}
+        </div>
+      );
+    case "two-tone":
+      return (
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex min-w-0 flex-col gap-1">
+            {heading("sm:text-4xl")}
+            <span
+              className="text-xl text-muted-foreground sm:text-2xl"
+              suppressHydrationWarning
+            >
+              {p.meeting ?? `${day}, ${time}`}
+            </span>
+            <div className="mt-5">
+              <StatusLine p={p} />
+            </div>
+            {note}
+          </div>
+          {act}
+        </div>
+      );
+    case "pill-row":
+      return (
+        <div className="flex flex-col gap-6">
+          <div
+            className="flex flex-wrap items-center gap-2"
+            suppressHydrationWarning
+          >
+            <Badge p={p} />
+            <span className="rounded-full bg-muted px-3 py-1 text-sm">
+              {day}
+            </span>
+            <span className="rounded-full bg-muted px-3 py-1 text-sm">
+              {time}
+            </span>
+            {p.headline.distance ? (
+              <span className="rounded-full bg-muted px-3 py-1 text-sm">
+                {p.headline.distance}
+              </span>
+            ) : null}
+          </div>
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+            {heading("sm:text-4xl")}
+            {act}
+          </div>
+          {note}
+        </div>
+      );
+    case "minimal":
+      return (
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-baseline sm:justify-between">
+          {heading("text-xl sm:text-2xl")}
+          <span className="flex items-center gap-4">
+            <span
+              className="text-sm text-muted-foreground"
+              suppressHydrationWarning
+            >
+              {day}, {time}
+            </span>
+            {act}
+          </span>
+        </div>
+      );
+    case "giant-date":
+      return (
+        <div className="relative flex flex-col gap-6 overflow-hidden">
+          <span
+            aria-hidden
+            className="pointer-events-none text-7xl leading-none font-black tracking-tighter text-muted-foreground/15 sm:text-9xl"
+            suppressHydrationWarning
+          >
+            {day}
+          </span>
+          <div className="-mt-12 flex flex-col gap-6 sm:-mt-16 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex min-w-0 flex-col gap-2">
+              {heading("sm:text-4xl")}
+              <StatusLine p={p} />
+              {note}
+            </div>
+            {act}
+          </div>
+        </div>
+      );
+    case "meta-table":
+      return (
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex min-w-0 flex-col gap-2">
+              {heading("sm:text-4xl")}
+              {note}
+            </div>
+            {act}
+          </div>
+          <div
+            className="grid grid-cols-2 divide-y overflow-hidden rounded-xl border text-sm sm:grid-cols-4 sm:divide-x sm:divide-y-0"
+            suppressHydrationWarning
+          >
+            <span className="flex flex-col p-3">
+              <span className="text-xs text-muted-foreground">Status</span>
+              <span className="font-semibold">{info.now.eyebrow}</span>
+            </span>
+            <span className="flex flex-col p-3">
+              <span className="text-xs text-muted-foreground">Date</span>
+              <span className="font-semibold">{day}</span>
+            </span>
+            <span className="flex flex-col p-3">
+              <span className="text-xs text-muted-foreground">Time</span>
+              <span className="font-semibold">
+                {time}–{formatTime(info.end)}
+              </span>
+            </span>
+            <span className="flex flex-col p-3">
+              <span className="text-xs text-muted-foreground">Meet</span>
+              <span className="truncate font-semibold">{p.meeting ?? "—"}</span>
+            </span>
+          </div>
+        </div>
+      );
+    case "hero":
+      return (
+        <div className="flex flex-col gap-6">
+          <Badge p={p} />
+          {heading("text-4xl font-black sm:text-6xl")}
+          <span
+            className="text-lg text-muted-foreground"
+            suppressHydrationWarning
+          >
+            {day} · {time} to {formatTime(info.end)}
+            {p.meeting ? ` · ${p.meeting}` : ""}
+          </span>
+          {note}
+          {act ? (
+            <div className="[&_button]:w-full sm:[&_button]:w-auto">{act}</div>
+          ) : null}
+        </div>
+      );
     default:
       return (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -1262,6 +1521,8 @@ export type DetailsOptions = {
   factsBox?: PartBox;
   /** A box around the title area (name, status, Created by, Manage). */
   titleBox?: PartBox;
+  /** "standard", or one of the title looks (centred, hero, date strip…). */
+  titleLook?: "standard" | TitleVariant;
   /** How the facts show: the facts' own looks, or another design's (ticket, bento…). */
   factsAs?: "facts" | "ticket" | "ticket-colour" | "bento" | "none" | FactsLook;
   /** The walk's messages inside the title box: a row (table look) or boxes, top or bottom. */
@@ -1322,6 +1583,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   const ownTitle =
     factsAs === "ticket" || factsAs === "ticket-colour" || factsAs === "bento";
   const showTitle = (o.showTitle ?? true) && !ownTitle;
+  const titleLook = o.titleLook ?? "standard";
   const showActions = (o.showActions ?? true) && !ownTitle;
   const map = o.map ?? "none";
   const padding =
@@ -1457,37 +1719,45 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       {showTitle || showActions ? (
         <Boxed box={o.titleBox} dark={dark}>
           {titleMessages("top")}
-          {/* The same 24px between everything in the card, the title's lines too. */}
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-            {showTitle ? (
-              <div className="flex min-w-0 flex-col gap-6">
-                {(o.statusAt ?? "above") === "above" ? statusRow : null}
-                <h1
-                  className={cn(
-                    "text-2xl leading-tight font-semibold tracking-tight text-balance sm:text-3xl",
-                    o.bigTitle && "sm:text-4xl",
-                  )}
-                >
-                  {p.headline.title}
-                </h1>
-                {o.statusAt === "below" ? statusRow : null}
-                {p.headline.note ? (
-                  <p
+          {titleLook !== "standard" && showTitle ? (
+            // One of the title looks (the Title block's), inside the card.
+            <div className="flex flex-col gap-6">
+              <Title actions={showActions} p={p} variant={titleLook} />
+              {descriptionInTitle ? descriptionPart : null}
+            </div>
+          ) : (
+            /* The same 24px between everything in the card, the title's lines too. */
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+              {showTitle ? (
+                <div className="flex min-w-0 flex-col gap-6">
+                  {(o.statusAt ?? "above") === "above" ? statusRow : null}
+                  <h1
                     className={cn(
-                      "text-xs",
-                      dark ? "text-white/60" : "text-muted-foreground",
+                      "text-2xl leading-tight font-semibold tracking-tight text-balance sm:text-3xl",
+                      o.bigTitle && "sm:text-4xl",
                     )}
                   >
-                    {p.headline.note}
-                  </p>
-                ) : null}
-                {descriptionInTitle ? descriptionPart : null}
-              </div>
-            ) : (
-              <span />
-            )}
-            {showActions ? <Actions className="sm:shrink-0" p={p} /> : null}
-          </div>
+                    {p.headline.title}
+                  </h1>
+                  {o.statusAt === "below" ? statusRow : null}
+                  {p.headline.note ? (
+                    <p
+                      className={cn(
+                        "text-xs",
+                        dark ? "text-white/60" : "text-muted-foreground",
+                      )}
+                    >
+                      {p.headline.note}
+                    </p>
+                  ) : null}
+                  {descriptionInTitle ? descriptionPart : null}
+                </div>
+              ) : (
+                <span />
+              )}
+              {showActions ? <Actions className="sm:shrink-0" p={p} /> : null}
+            </div>
+          )}
           {titleMessages("bottom")}
         </Boxed>
       ) : null}
@@ -3394,7 +3664,15 @@ export type FactsLook =
   | "receipt"
   | "sticky-notes"
   | "spec-sheet"
-  | "journey";
+  | "journey"
+  | "numbered"
+  | "top-bar"
+  | "columns"
+  | "big-first"
+  | "vertical-timeline"
+  | "big-pills"
+  | "two-tone-rows"
+  | "mini-cards";
 
 const PASTELS = [
   "bg-amber-100 text-amber-950",
@@ -3403,6 +3681,13 @@ const PASTELS = [
   "bg-rose-100 text-rose-950",
   "bg-violet-100 text-violet-950",
   "bg-lime-100 text-lime-950",
+];
+const TOP_BARS = [
+  "border-t-emerald-500",
+  "border-t-sky-500",
+  "border-t-amber-500",
+  "border-t-rose-500",
+  "border-t-violet-500",
 ];
 const BOLDS = [
   "bg-amber-300 text-amber-950",
@@ -3437,6 +3722,146 @@ export function FactLooks({
       : arrange === "grid"
         ? cn("grid gap-6", grid)
         : cn(STRETCH, "gap-6", basis);
+
+  if (look === "numbered")
+    return (
+      <ol className="flex flex-col gap-6 sm:grid sm:grid-cols-2">
+        {facts.map((fact, i) => (
+          <li className="flex min-w-0 items-start gap-3" key={fact.label}>
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background">
+              {i + 1}
+            </span>
+            <span className="flex min-w-0 flex-col">
+              <span className="text-xs text-muted-foreground">
+                {fact.label}
+              </span>
+              <span
+                className="font-semibold break-words"
+                suppressHydrationWarning
+              >
+                {fact.value}
+              </span>
+            </span>
+          </li>
+        ))}
+      </ol>
+    );
+
+  if (look === "columns")
+    return (
+      <dl className="flex flex-wrap gap-y-6 divide-x">
+        {facts.map((fact) => (
+          <div
+            className="flex min-w-0 flex-col px-6 first:pl-0"
+            key={fact.label}
+          >
+            <dt className="text-xs text-muted-foreground">{fact.label}</dt>
+            <dd className="font-semibold" suppressHydrationWarning>
+              {fact.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    );
+
+  if (look === "big-first") {
+    const [first, ...rest] = facts;
+    if (!first) return null;
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col">
+          <span className="text-sm text-muted-foreground">{first.label}</span>
+          <span
+            className="text-4xl font-black tracking-tight sm:text-5xl"
+            suppressHydrationWarning
+          >
+            {first.value}
+          </span>
+        </div>
+        <p className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+          {rest.map((fact) => (
+            <span className="flex items-center gap-1.5" key={fact.label}>
+              <fact.icon aria-hidden className="size-4 text-muted-foreground" />
+              <span className="text-muted-foreground">{fact.label}</span>
+              <span className="font-medium" suppressHydrationWarning>
+                {fact.value}
+              </span>
+            </span>
+          ))}
+        </p>
+      </div>
+    );
+  }
+
+  if (look === "vertical-timeline")
+    return (
+      <ol className="flex flex-col">
+        {facts.map((fact, i) => (
+          <li className="flex gap-4" key={fact.label}>
+            <span className="flex flex-col items-center">
+              <span className="mt-1.5 size-3 shrink-0 rounded-full bg-emerald-600" />
+              {i < facts.length - 1 ? (
+                <span aria-hidden className="w-0.5 flex-1 bg-emerald-600/30" />
+              ) : null}
+            </span>
+            <span className="flex min-w-0 flex-col pb-6">
+              <span className="text-xs text-muted-foreground">
+                {fact.label}
+              </span>
+              <span
+                className="font-semibold break-words"
+                suppressHydrationWarning
+              >
+                {fact.value}
+              </span>
+            </span>
+          </li>
+        ))}
+      </ol>
+    );
+
+  if (look === "big-pills")
+    return (
+      <ul
+        className={cn(
+          "flex flex-wrap gap-3",
+          arrange === "scroll" && cn(SWIPE, "whitespace-nowrap"),
+        )}
+      >
+        {facts.map((fact) => (
+          <li
+            className="flex items-center gap-2 rounded-full border px-4 py-2 text-sm"
+            key={fact.label}
+          >
+            <fact.icon aria-hidden className="size-4 text-muted-foreground" />
+            <span className="text-muted-foreground">{fact.label}</span>
+            <span className="font-semibold" suppressHydrationWarning>
+              {fact.value}
+            </span>
+          </li>
+        ))}
+      </ul>
+    );
+
+  if (look === "two-tone-rows")
+    return (
+      <dl className="flex flex-col gap-2">
+        {facts.map((fact) => (
+          <div
+            className="grid grid-cols-[8rem_minmax(0,1fr)] overflow-hidden rounded-lg border text-sm sm:grid-cols-[11rem_minmax(0,1fr)]"
+            key={fact.label}
+          >
+            <dt className="flex items-center gap-2 bg-emerald-50 px-3 py-2 font-medium text-emerald-900">
+              <fact.icon aria-hidden className="size-4" />
+              {fact.label}
+            </dt>
+            <dd className="px-3 py-2 break-words" suppressHydrationWarning>
+              {fact.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    );
 
   if (look === "spec-sheet")
     return (
@@ -3601,7 +4026,11 @@ export function FactLooks({
     );
 
   // Cards with a value each: colour blocks, story cards, summary tiles, stat cards.
-  const plain = look === "summary" || look === "stat-cards";
+  const plain =
+    look === "summary" ||
+    look === "stat-cards" ||
+    look === "top-bar" ||
+    look === "mini-cards";
   const tone = (i: number) =>
     look === "colour-blocks"
       ? BOLDS[i % BOLDS.length]
@@ -3609,7 +4038,11 @@ export function FactLooks({
         ? PASTELS[i % PASTELS.length]
         : look === "stat-cards"
           ? "border bg-card shadow-sm"
-          : "border";
+          : look === "top-bar"
+            ? cn("border border-t-4", TOP_BARS[i % TOP_BARS.length])
+            : look === "mini-cards"
+              ? "rounded-lg bg-muted/60 p-3"
+              : "border";
   return (
     <div
       className={flow(

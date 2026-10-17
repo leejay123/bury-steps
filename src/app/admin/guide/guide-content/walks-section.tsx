@@ -335,7 +335,15 @@ export function WalksSection({
               circles, a spec sheet, a receipt, sticky notes and a journey
               line. With the walk ticket, the card&apos;s precise location,
               essentials and description go inside the ticket, so it&apos;s all
-              one card, with the same 24 pixels between everything. The
+              one card, with the same 24 pixels between everything. The Details card&apos;s Title look offers every title design
+              — the Title block&apos;s eleven plus centred, date in green
+              capitals, a date strip, a big countdown, a green underline, a
+              status-coloured side bar, the name with the meeting point under
+              it, a row of pills, minimal, a giant faded date, a table
+              (status, date, time, meet) and a hero-size name — and Facts
+              shown as adds a numbered list, cards with a coloured top bar,
+              columns with dividers, the first fact big, a vertical
+              timeline, big pills, two-tone rows and mini cards. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

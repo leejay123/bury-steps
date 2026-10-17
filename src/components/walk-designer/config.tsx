@@ -62,7 +62,6 @@ import {
   type Arrange,
   type FactsVariant,
   type StatusVariant,
-  type TitleVariant,
 } from "./blocks";
 
 const yesNo = [
@@ -294,6 +293,33 @@ const GAP: Record<string, string> = {
   medium: "gap-6",
   large: "gap-10",
 };
+
+// Every title look (the Title block and the Details card's title).
+const TITLE_LOOKS: [string, string][] = [
+  ["plain", "Plain"],
+  ["chips", "With fact chips"],
+  ["stats", "Big name and four key facts"],
+  ["band", "Status band"],
+  ["magazine", "Magazine"],
+  ["poster", "Poster"],
+  ["trailhead", "Trailhead sign"],
+  ["calendar", "Calendar date"],
+  ["split", "Coloured time block"],
+  ["contours", "Contour lines"],
+  ["typographic", "Huge start time"],
+  ["centred", "Centred"],
+  ["eyebrow", "Date above, in green capitals"],
+  ["date-strip", "Date strip (day, sets off, back by)"],
+  ["countdown", "Big countdown beside the name"],
+  ["underline", "Green underline bar"],
+  ["status-bar", "Status-coloured bar down the side"],
+  ["two-tone", "Name with the meeting point under it"],
+  ["pill-row", "Row of pills above the name"],
+  ["minimal", "Minimal: name and date on one line"],
+  ["giant-date", "Giant faded date behind the name"],
+  ["meta-table", "Name with a table (status, date, time, meet)"],
+  ["hero", "Hero: huge name"],
+];
 
 const directionsLookField = {
   type: "select" as const,
@@ -974,19 +1000,7 @@ export const walkDesignConfig: Config = {
         variant: {
           type: "select",
           label: "Look",
-          options: options<TitleVariant>([
-            ["plain", "Plain"],
-            ["chips", "With fact chips"],
-            ["stats", "Big name and four key facts"],
-            ["band", "Status band"],
-            ["magazine", "Magazine"],
-            ["poster", "Poster"],
-            ["trailhead", "Trailhead sign"],
-            ["calendar", "Calendar date"],
-            ["split", "Coloured time block"],
-            ["contours", "Contour lines"],
-            ["typographic", "Huge start time"],
-          ]),
+          options: TITLE_LOOKS.map(([value, label]) => ({ value, label })),
         },
         actions: {
           type: "radio",
@@ -1029,6 +1043,14 @@ export const walkDesignConfig: Config = {
             { value: "receipt", label: "Receipt (dotted lines)" },
             { value: "sticky-notes", label: "Sticky notes" },
             { value: "journey", label: "Journey line (dots, swipe)" },
+            { value: "numbered", label: "Numbered list" },
+            { value: "top-bar", label: "Cards with a coloured top bar" },
+            { value: "columns", label: "Columns with dividers" },
+            { value: "big-first", label: "First fact big, the rest in a line" },
+            { value: "vertical-timeline", label: "Vertical timeline" },
+            { value: "big-pills", label: "Big pills (label and value)" },
+            { value: "two-tone-rows", label: "Two-tone rows (green labels)" },
+            { value: "mini-cards", label: "Mini cards (compact)" },
             { value: "none", label: "Don't show facts" },
           ],
         },
@@ -1057,6 +1079,14 @@ export const walkDesignConfig: Config = {
           label: "Facts arrange on tablets",
         },
         showEmptyFacts: showEmptyField,
+        titleLook: {
+          type: "select",
+          label: "Title look",
+          options: [
+            { value: "standard", label: "Standard (options below)" },
+            ...TITLE_LOOKS.map(([value, label]) => ({ value, label })),
+          ],
+        },
         titleBox: boxField("Box around the title (name, status, Manage)"),
         titleMessages: {
           type: "select",
@@ -1284,6 +1314,7 @@ export const walkDesignConfig: Config = {
         tabletFacts: "same",
         tabletFactsArrange: "same",
         showEmptyFacts: false,
+        titleLook: "standard",
         titleBox: "none",
         titleMessages: "none",
         factsTitle: "",
@@ -1332,6 +1363,7 @@ export const walkDesignConfig: Config = {
         tabletFactsArrange,
         showEmptyFacts,
         essentials,
+        titleLook,
         titleBox,
         titleMessages,
         factsTitle,
@@ -1370,6 +1402,7 @@ export const walkDesignConfig: Config = {
           tabletFacts={tabletFacts}
           tabletFactsArrange={tabletFactsArrange}
           showEmptyFacts={showEmptyFacts}
+          titleLook={titleLook}
           titleBox={titleBox}
           titleMessages={titleMessages}
           factsTitle={factsTitle}
