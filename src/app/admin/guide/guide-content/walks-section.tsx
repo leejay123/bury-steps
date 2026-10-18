@@ -264,10 +264,8 @@ export function WalksSection({
               designer, a walk with no messages right now shows a sample
               message, marked Preview only, where messages would go. Block layout&apos;s Space above has Right under the header,
               for a first block that sits straight under the site header with
-              no gap — for example a Messages block, or the Details card
-              with its ribbon showing the walk&apos;s messages. Maps can have
-              square, rounded or very rounded corners. A ribbon or Messages
-              block with no messages shows nothing at all. Nothing on a designed page runs edge to edge: every block sits in
+              no gap — for example a Messages block. Maps can have
+              square, rounded or very rounded corners. A Messages block with no messages shows nothing at all. Nothing on a designed page runs edge to edge: every block sits in
               a card or with no card, at page width. On a designed walk page every walk message (Clock-in opens…,
               Finished, so it can&apos;t be edited…, Cancelled) runs as a strip
               straight under the site header, full width and coloured like its
