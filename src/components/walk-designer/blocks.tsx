@@ -989,10 +989,13 @@ function Title({
   p,
   variant,
   actions,
+  bandMessages = null,
 }: {
   p: WalkIdeaParts;
   variant: TitleVariant;
   actions: boolean;
+  /** The walk's messages, as plain text inside the Status band look. */
+  bandMessages?: ReactNode;
 }) {
   const info = useWalkInfo(p);
   const h = p.headline;
@@ -1082,19 +1085,20 @@ function Title({
     case "band":
       return (
         <section className="overflow-hidden rounded-xl border">
+          {/* Plain grey, whatever the status (no green while it's live). */}
           <div
-            className={cn(
-              "flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2.5 text-sm font-medium sm:px-5",
-              info.now.tone,
-            )}
+            className="flex flex-col gap-2 bg-muted px-4 py-2.5 text-sm font-medium text-foreground sm:px-5"
             suppressHydrationWarning
           >
-            <span>
-              {info.now.eyebrow} · {info.now.line}
-            </span>
-            <span className="font-normal">
-              {day}, {time} to {formatTime(info.end)}
-            </span>
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+              <span>
+                {info.now.eyebrow} · {info.now.line}
+              </span>
+              <span className="font-normal">
+                {day}, {time} to {formatTime(info.end)}
+              </span>
+            </div>
+            {bandMessages}
           </div>
           <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
             <div className="flex min-w-0 flex-col gap-1.5">
@@ -1625,7 +1629,12 @@ export type DetailsOptions = {
   factsAs?: "facts" | "ticket" | "ticket-colour" | "bento" | "none" | FactsLook;
   /** The walk's messages inside the title box: a row (table look) or boxes, top or bottom. */
   titleMessages?:
-    "none" | "top-row" | "bottom-row" | "top-boxes" | "bottom-boxes";
+    | "none"
+    | "top-row"
+    | "bottom-row"
+    | "top-boxes"
+    | "bottom-boxes"
+    | "in-band";
   /** Headings of your own above the facts and the day's timeline (blank: none). */
   factsTitle?: string;
   timelineTitle?: string;
@@ -1717,7 +1726,11 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   const titleMessagesAt = o.titleMessages ?? "none";
   const titleBoxed = (o.titleBox ?? "none") !== "none";
   const titleMessages = (where: "top" | "bottom") => {
-    if (titleMessagesAt === "none" || !titleMessagesAt.startsWith(where))
+    if (
+      titleMessagesAt === "none" ||
+      titleMessagesAt === "in-band" ||
+      !titleMessagesAt.startsWith(where)
+    )
       return null;
     // The messages are at the top of the page (Page setting), not here.
     if (p.noticesInStrip) return null;
@@ -1827,7 +1840,23 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
           {titleLook !== "standard" && showTitle ? (
             // One of the title looks (the Title block's), inside the card.
             <div className="flex flex-col gap-6">
-              <Title actions={showActions} p={p} variant={titleLook} />
+              <Title
+                actions={showActions}
+                bandMessages={
+                  titleMessagesAt === "in-band" &&
+                  titleLook === "band" &&
+                  !p.noticesInStrip ? (
+                    // Plain: no box, no colour, just the words in the band.
+                    <MessagesOrSample
+                      className="gap-1 font-normal text-muted-foreground [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:bg-transparent [&_[data-slot=alert]]:p-0 [&_[data-slot=alert]]:text-inherit [&_[data-slot=alert]_*]:text-inherit"
+                      editing={o.editing ?? false}
+                      p={p}
+                    />
+                  ) : null
+                }
+                p={p}
+                variant={titleLook}
+              />
               {descriptionInTitle ? descriptionPart : null}
             </div>
           ) : (

@@ -1275,6 +1275,10 @@ export const walkDesignConfig: Config = {
             },
             { value: "top-boxes", label: "At the top, as message boxes" },
             { value: "bottom-boxes", label: "At the bottom, as message boxes" },
+            {
+              value: "in-band",
+              label: "Inside the status band, plain (Title look: Status band)",
+            },
           ],
         },
         _mapSection: section("Map", "The meeting point map inside the card."),
