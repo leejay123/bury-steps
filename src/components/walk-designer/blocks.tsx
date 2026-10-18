@@ -990,12 +990,15 @@ function Title({
   variant,
   actions,
   bandMessages = null,
+  afterNote = null,
 }: {
   p: WalkIdeaParts;
   variant: TitleVariant;
   actions: boolean;
   /** The walk's messages, as plain text inside the Status band look. */
   bandMessages?: ReactNode;
+  /** Something under "Created by" inside the Status band look's box (the description). */
+  afterNote?: ReactNode;
 }) {
   const info = useWalkInfo(p);
   const h = p.headline;
@@ -1111,6 +1114,7 @@ function Title({
             <div className="flex min-w-0 flex-col gap-1.5">
               {heading()}
               {note}
+              {afterNote ? <div className="mt-4">{afterNote}</div> : null}
             </div>
             {act}
           </div>
@@ -1652,8 +1656,8 @@ export type DetailsOptions = {
   descriptionBox?: PartBox;
   /** A heading above the description (blank: none). */
   descriptionTitle?: string;
-  /** "title": inside the title area (and its box); "own": on its own. */
-  descriptionAt?: "own" | "title";
+  /** "title": inside the title area (and its box); "after-title": just below the title box; "own": with the other parts. */
+  descriptionAt?: "own" | "title" | "after-title";
   mapButtonsLook?: DirectionsLook;
   /** For a page-width map in the card (an edge-to-edge one is always square). */
   mapCorners?: "rounded" | "square" | "very-rounded";
@@ -1769,6 +1773,8 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   // The description: on its own (its own box), or inside the title area.
   const descriptionInTitle =
     o.descriptionAt === "title" && (o.showTitle ?? true);
+  // Just below the title box (outside its outline), with its own box.
+  const descriptionAfterTitle = o.descriptionAt === "after-title";
   const descriptionPart =
     (o.showDescription ?? true) && p.walk.description ? (
       descriptionInTitle ? (
@@ -1791,7 +1797,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       {(o.showEssentials ?? true) ? (
         <DeviceEssentials dark={dark} o={o.essentials ?? {}} p={p} />
       ) : null}
-      {descriptionInTitle ? null : descriptionPart}
+      {descriptionInTitle || descriptionAfterTitle ? null : descriptionPart}
       {preciseHere("bottom")}
     </>
   );
@@ -1861,10 +1867,17 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
                     />
                   ) : null
                 }
+                afterNote={
+                  descriptionInTitle && titleLook === "band"
+                    ? descriptionPart
+                    : null
+                }
                 p={p}
                 variant={titleLook}
               />
-              {descriptionInTitle ? descriptionPart : null}
+              {descriptionInTitle && titleLook !== "band"
+                ? descriptionPart
+                : null}
             </div>
           ) : (
             /* The same 24px between everything in the card, the title's lines too. */
@@ -1902,6 +1915,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
           {titleMessages("bottom")}
         </Boxed>
       ) : null}
+      {descriptionAfterTitle ? descriptionPart : null}
       {o.timeline ? (
         <Boxed box={o.timelineBox} dark={dark}>
           <div className="flex flex-col gap-2">

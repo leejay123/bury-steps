@@ -1459,8 +1459,9 @@ export const walkDesignConfig: Config = {
           type: "radio",
           label: "Description position",
           options: options([
-            ["own", "On its own"],
+            ["own", "Lower down, after the facts and essentials"],
             ["title", "In the title box (under Created by)"],
+            ["after-title", "Just below the title box"],
           ]),
         },
         descriptionTitle: {
