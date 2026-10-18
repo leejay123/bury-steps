@@ -367,7 +367,17 @@ const LIST_LOOKS = ["list", "table"];
 function hiddenDetailsSettings(props: DetailsProps): Set<string> {
   // The Card section (frame, space inside) is no longer offered; saved
   // designs keep what they had.
-  const hide = new Set<string>(["_cardSection", "tone", "inset"]);
+  // The Card and Ribbon sections are no longer offered.
+  const hide = new Set<string>([
+    "_cardSection",
+    "tone",
+    "inset",
+    "_ribbonSection",
+    "ribbon",
+    "ribbonText",
+    "ribbonStyle",
+    "ribbonAt",
+  ]);
   const factsAs = (props.factsAs as string) ?? "facts";
   const ownTitle = ["ticket", "ticket-colour", "bento"].includes(factsAs);
   // Ribbon

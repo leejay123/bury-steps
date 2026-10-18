@@ -1973,28 +1973,6 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       {inTicket ? null : cardExtras}
     </div>
   );
-  // Older designs: true / "soft" / "bold" / "bar" all meant the status band.
-  const old = o.ribbon;
-  const content: RibbonContent =
-    old === true || old === "soft" || old === "bold" || old === "bar"
-      ? "status"
-      : old === false || !old
-        ? "none"
-        : old;
-  const style: RibbonStyle =
-    o.ribbonStyle ?? (old === "bold" || old === "bar" ? old : "soft");
-  const ribbonAt = o.ribbonAt ?? "top";
-  const ribbon = (
-    <DetailsRibbon
-      content={content}
-      editing={o.editing ?? false}
-      info={info}
-      messagesInTitle={(o.titleMessages ?? "none") !== "none"}
-      p={p}
-      style={style}
-      text={o.ribbonText ?? ""}
-    />
-  );
   return (
     <MapLookProvider
       value={{
@@ -2026,7 +2004,6 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
           (!o.tone || o.tone === "card") && "bg-card shadow-sm",
         )}
       >
-        {ribbonAt === "top" ? ribbon : null}
         {/* The map sits inside the card as its own rounded card, lined up
             with the words (nothing on a designed page runs edge to edge). */}
         {map === "top" && p.map
@@ -2043,7 +2020,6 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         {map === "bottom" && p.map
           ? insetMap(padding === "none" ? "pt-6" : "pb-6")
           : null}
-        {ribbonAt === "bottom" ? ribbon : null}
       </section>
     </MapLookProvider>
   );
@@ -3426,115 +3402,6 @@ export function WalkNameBlock({
     >
       {p.headline.title}
     </h1>
-  );
-}
-
-/**
- * The Details card's ribbon: where the walk is up to, its messages, a
- * countdown, when and where, or your own words — as a soft or bold band,
- * plain text, or just a thin colour bar.
- */
-function DetailsRibbon({
-  p,
-  content,
-  style,
-  text,
-  info,
-  editing = false,
-  messagesInTitle = false,
-}: {
-  editing?: boolean;
-  messagesInTitle?: boolean;
-  p: WalkIdeaParts;
-  content: RibbonContent;
-  style: RibbonStyle;
-  text: string;
-  info: ReturnType<typeof useWalkInfo>;
-}) {
-  if (content === "none") return null;
-  const tone =
-    style === "bold"
-      ? info.status === "cancelled"
-        ? "bg-destructive text-white"
-        : info.now.live
-          ? "bg-emerald-600 text-white"
-          : "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
-      : style === "plain"
-        ? "border-b"
-        : info.now.tone;
-  if (style === "bar")
-    return (
-      <div
-        aria-hidden
-        className={cn(
-          "h-1.5",
-          info.status === "cancelled"
-            ? "bg-destructive"
-            : info.now.live
-              ? "bg-emerald-500"
-              : "bg-muted-foreground/30",
-        )}
-      />
-    );
-  if (content === "messages" && p.noticesInStrip) return null;
-  // Messages already in the title box: not again in the ribbon.
-  if (content === "messages" && messagesInTitle) return null;
-  if (content === "messages")
-    return (
-      <MessagesOrSample
-        className={cn(
-          "px-6 py-3 [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:bg-transparent [&_[data-slot=alert]]:p-0 [&_[data-slot=alert]]:text-inherit",
-          tone,
-        )}
-        editing={editing}
-        p={p}
-      />
-    );
-  const dot = (
-    <span
-      aria-hidden
-      className={cn(
-        "size-2 shrink-0 rounded-full",
-        info.now.live && style !== "bold"
-          ? "bg-emerald-500"
-          : "bg-current opacity-60",
-      )}
-    />
-  );
-  const line =
-    content === "countdown" ? (
-      <>
-        {dot}
-        <span className="font-semibold">
-          {info.countdown.value} {info.countdown.unit}
-        </span>
-      </>
-    ) : content === "when-where" ? (
-      <>
-        <CalendarDays aria-hidden className="size-4 shrink-0 opacity-70" />
-        <span className="font-semibold">
-          {formatWalkDay(info.start)}, {formatTime(info.start)}
-        </span>
-        {p.meeting ? (
-          <span className="truncate opacity-80">· {p.meeting}</span>
-        ) : null}
-      </>
-    ) : content === "text" ? (
-      <span className="truncate font-medium">{text || "Your words here"}</span>
-    ) : (
-      <>
-        {dot}
-        <span className="font-semibold">{info.now.eyebrow}</span>
-        <span className="truncate opacity-80">{info.now.line}</span>
-      </>
-    );
-  return (
-    <div
-      className={cn("flex items-center gap-2 px-6 py-2 text-sm", tone)}
-      suppressHydrationWarning
-    >
-      {line}
-    </div>
   );
 }
 

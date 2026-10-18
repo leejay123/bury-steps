@@ -204,8 +204,7 @@ export function WalksSection({
               has looks (card, flat, map only, details floating over the map,
               details beside the map), a height, and Directions buttons below,
               above, on the map or hidden — or add the Directions buttons block
-              to place them anywhere else. The Details card&apos;s Status ribbon is a coloured
-              band across its top saying where the walk is up to. The Tabs block (under Layout) has a Style — the site&apos;s
+              to place them anywhere else. The Tabs block (under Layout) has a Style — the site&apos;s
               tab style from Settings, grey pill, sliding underline or pills
               that drop in — and tab widths that share the full width, fit the
               names from the left, or fit them centred; drop any blocks into
@@ -218,11 +217,7 @@ export function WalksSection({
               includes How this group works — whoever is signed in. Facts (in its own block or in the Details card) can look and
               be arranged differently on phones — for example one swiping row
               on a phone and a grid on a computer — with looks including two
-              columns, a list, a table, chips and tiles. The Details
-              card&apos;s ribbon has what it shows (where the walk is up to, the
-              walk&apos;s messages, a countdown, when and where, or your own
-              words), how it looks (soft, bold, plain or a thin bar) and
-              whether it sits at the top or bottom. Messages have looks (soft,
+              columns, a list, a table, chips and tiles. Messages have looks (soft,
               bold, compact, a coloured stripe, or hidden), and Block layout
               can restyle the messages and boxes inside any block. New
               signed-out visitor designs start with How this group works. The Details card&apos;s map can also hide its Meeting point
@@ -344,7 +339,7 @@ export function WalksSection({
               timeline, big pills, two-tone rows and mini cards. Facts arrange adds One row, swipe sideways and Carousel with
               ‹ › buttons to every Facts shown as look (the walk ticket&apos;s
               facts too), and Space between facts sets the gap between story
-              cards, tiles, badges and the rest (none to lots). The Details card&apos;s settings are grouped under headings in the order the card is laid out — Ribbon, Title, Map,
+              cards, tiles, badges and the rest (none to lots). The Details card&apos;s settings are grouped under headings in the order the card is laid out — Title, Map,
               Precise location, Facts, Timeline, Essentials, Description —
               and only the ones that apply show: the map&apos;s options appear
               once there&apos;s a map, the tablet and phone fact looks only for
