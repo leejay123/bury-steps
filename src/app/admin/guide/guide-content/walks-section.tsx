@@ -346,7 +346,13 @@ export function WalksSection({
               timeline, big pills, two-tone rows and mini cards. Facts arrange adds One row, swipe sideways and Carousel with
               ‹ › buttons to every Facts shown as look (the walk ticket&apos;s
               facts too), and Space between facts sets the gap between story
-              cards, tiles, badges and the rest (none to lots). The
+              cards, tiles, badges and the rest (none to lots). The Details card&apos;s settings are grouped under headings in
+              the order the card is laid out — Card, Ribbon, Title, Map,
+              Precise location, Facts, Timeline, Essentials, Description —
+              and only the ones that apply show: the map&apos;s options appear
+              once there&apos;s a map, the tablet and phone fact looks only for
+              The facts, status options only with the standard title, and so
+              on. Turning something back on brings back what was set. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

@@ -1939,6 +1939,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       content={content}
       editing={o.editing ?? false}
       info={info}
+      messagesInTitle={(o.titleMessages ?? "none") !== "none"}
       p={p}
       style={style}
       text={o.ribbonText ?? ""}
@@ -3390,8 +3391,10 @@ function DetailsRibbon({
   text,
   info,
   editing = false,
+  messagesInTitle = false,
 }: {
   editing?: boolean;
+  messagesInTitle?: boolean;
   p: WalkIdeaParts;
   content: RibbonContent;
   style: RibbonStyle;
@@ -3424,6 +3427,8 @@ function DetailsRibbon({
       />
     );
   if (content === "messages" && p.noticesInStrip) return null;
+  // Messages already in the title box: not again in the ribbon.
+  if (content === "messages" && messagesInTitle) return null;
   if (content === "messages")
     return (
       <MessagesOrSample

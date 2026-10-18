@@ -339,6 +339,113 @@ const TITLE_LOOKS: [string, string][] = [
   ["hero", "Hero: huge name"],
 ];
 
+/**
+ * A heading between groups of settings (Puck's "custom" field: it shows
+ * this instead of an input, and stores nothing).
+ */
+const section = (title: string, note: string) => ({
+  type: "custom" as const,
+  render: () => (
+    <div className="-mx-1 mt-3 border-t pt-4">
+      <p className="text-sm font-semibold">{title}</p>
+      <p className="text-xs text-muted-foreground">{note}</p>
+    </div>
+  ),
+});
+
+type DetailsProps = Record<string, unknown>;
+const LIST_LOOKS = ["list", "table"];
+
+/**
+ * The Details card's settings that can't apply to its current choices, so
+ * they're hidden rather than offered (Puck's resolveFields): the map's
+ * options with no map, the facts' device looks when the facts are shown
+ * as a ticket or tiles, status options when the title is off or has its
+ * own look, and so on. Nothing is lost: showing them again brings back
+ * what was set.
+ */
+function hiddenDetailsSettings(props: DetailsProps): Set<string> {
+  const hide = new Set<string>();
+  const factsAs = (props.factsAs as string) ?? "facts";
+  const ownTitle = ["ticket", "ticket-colour", "bento"].includes(factsAs);
+  // Ribbon
+  if (!props.ribbon || props.ribbon === "none") {
+    hide.add("ribbonText").add("ribbonStyle").add("ribbonAt");
+  } else if (props.ribbon !== "text") hide.add("ribbonText");
+  // Title (a ticket or bento grid brings its own name and buttons)
+  if (ownTitle) {
+    [
+      "showTitle",
+      "titleLook",
+      "titleBox",
+      "statusLook",
+      "statusAt",
+      "bigTitle",
+      "showActions",
+      "titleMessages",
+    ].forEach((k) => hide.add(k));
+  } else {
+    if (props.showTitle === false) {
+      ["titleLook", "statusLook", "statusAt", "bigTitle"].forEach((k) =>
+        hide.add(k),
+      );
+    }
+    if ((props.titleLook ?? "standard") !== "standard") {
+      ["statusLook", "statusAt", "bigTitle"].forEach((k) => hide.add(k));
+    }
+    if (props.statusLook === "none") hide.add("statusAt");
+  }
+  // Map
+  if (!props.map || props.map === "none") {
+    [
+      "mapButtons",
+      "mapButtonsLook",
+      "mapHeight",
+      "mapCorners",
+      "mapTitle",
+      "mapNote",
+    ].forEach((k) => hide.add(k));
+  } else if (props.mapButtons === "none") hide.add("mapButtonsLook");
+  // Precise location
+  if (!props.preciseAt || props.preciseAt === "none") hide.add("preciseLook");
+  // Facts
+  const deviceLooks = [
+    "facts",
+    "tabletFacts",
+    "tabletFactsArrange",
+    "phoneFacts",
+    "phoneFactsArrange",
+    "factLines",
+    "tabletFactsBox",
+    "phoneFactsBox",
+  ];
+  if (factsAs === "none") {
+    [
+      ...deviceLooks,
+      "factsArrange",
+      "showEmptyFacts",
+      "factsGap",
+      "factsTitle",
+      "factsBox",
+    ].forEach((k) => hide.add(k));
+  } else if (factsAs !== "facts") {
+    deviceLooks.forEach((k) => hide.add(k));
+  } else {
+    const looks = [props.facts ?? "grid", props.tabletFacts, props.phoneFacts];
+    if (!looks.some((look) => LIST_LOOKS.includes(String(look))))
+      hide.add("factLines");
+  }
+  // Timeline
+  if (!props.timeline) hide.add("timelineTitle").add("timelineBox");
+  // Essentials
+  if (props.showEssentials === false) hide.add("essentials");
+  // Description
+  if (props.showDescription === false) {
+    hide.add("descriptionAt").add("descriptionTitle").add("descriptionBox");
+  } else if (props.descriptionAt === "title") hide.add("descriptionBox");
+  return hide;
+}
+
 const directionsLookField = {
   type: "select" as const,
   label: "Directions buttons look",
@@ -1034,7 +1141,208 @@ export const walkDesignConfig: Config = {
     },
     Details: {
       label: "Details card",
+      // Only the settings that apply to what's chosen (hiddenDetailsSettings).
+      resolveFields: (data, { fields }) => {
+        const props = data.props as DetailsProps;
+        const hide = hiddenDetailsSettings(props);
+        const shown = Object.fromEntries(
+          Object.entries(fields).filter(([key]) => !hide.has(key)),
+        ) as typeof fields;
+        // Messages in the title box: the ribbon can't show them as well.
+        const titleMessages = (props.titleMessages ?? "none") !== "none";
+        const ribbon = shown.ribbon as
+          { options?: { value: string }[] } | undefined;
+        if (titleMessages && ribbon?.options) {
+          shown.ribbon = {
+            ...ribbon,
+            options: ribbon.options.filter(
+              (option) => option.value !== "messages",
+            ),
+          } as (typeof fields)["ribbon"];
+        }
+        return shown;
+      },
       fields: {
+        _cardSection: section(
+          "Card",
+          "The card itself: its frame and the space inside it.",
+        ),
+        tone: {
+          type: "select",
+          label: "Card frame",
+          options: options([
+            ["card", "Card (border and shadow)"],
+            ["tint", "Light grey card"],
+            ["plain", "No card"],
+          ]),
+        },
+        inset: {
+          type: "select",
+          label: "Space inside the card",
+          options: options([
+            ["auto", "Automatic (none without a frame)"],
+            ["none", "None"],
+            ["normal", "Normal"],
+            ["roomy", "Roomy"],
+          ]),
+        },
+        _ribbonSection: section(
+          "Ribbon",
+          "A band across the top or bottom of the card.",
+        ),
+        ribbon: {
+          type: "select",
+          label: "Ribbon shows",
+          options: [
+            { value: "none", label: "No ribbon" },
+            { value: "status", label: "Where the walk is up to" },
+            { value: "messages", label: "The walk's messages" },
+            { value: "countdown", label: "Countdown" },
+            { value: "when-where", label: "When and where" },
+            { value: "text", label: "Your own words" },
+          ],
+        },
+        ribbonText: {
+          type: "text",
+          label: "Ribbon words (for Your own words)",
+        },
+        ribbonStyle: {
+          type: "select",
+          label: "Ribbon look",
+          options: [
+            { value: "soft", label: "Soft colours" },
+            { value: "bold", label: "Bold colours" },
+            { value: "plain", label: "Plain, with a line under it" },
+            { value: "bar", label: "Thin colour bar only (no words)" },
+          ],
+        },
+        ribbonAt: {
+          type: "radio",
+          label: "Ribbon position",
+          options: options([
+            ["top", "Top"],
+            ["bottom", "Bottom"],
+          ]),
+        },
+        _titleSection: section(
+          "Title",
+          "The walk name, its status and the Clock in + Manage buttons.",
+        ),
+        showTitle: { type: "radio", label: "Show the title", options: yesNo },
+        titleLook: {
+          type: "select",
+          label: "Title look",
+          options: [
+            { value: "standard", label: "Standard (options below)" },
+            ...TITLE_LOOKS.map(([value, label]) => ({ value, label })),
+          ],
+        },
+        titleBox: boxField("Box around the title (name, status, Manage)"),
+        statusLook: {
+          type: "select",
+          label: "Status (Upcoming · Clock-in opens…)",
+          options: options([
+            ["badge-line", "Badge and words"],
+            ["badge", "Badge only"],
+            ["line", "Words only"],
+            ["pill", "Coloured pill"],
+            ["none", "Hidden"],
+          ]),
+        },
+        statusAt: {
+          type: "radio",
+          label: "Status position",
+          options: options([
+            ["above", "Above the walk name"],
+            ["below", "Below the walk name"],
+          ]),
+        },
+        bigTitle: { type: "radio", label: "Big title", options: yesNo },
+        showActions: {
+          type: "radio",
+          label: "Clock in + Manage",
+          options: yesNo,
+        },
+        titleMessages: {
+          type: "select",
+          label: "Messages in the title box",
+          options: [
+            { value: "none", label: "No" },
+            { value: "top-row", label: "At the top, as a row (table look)" },
+            {
+              value: "bottom-row",
+              label: "At the bottom, as a row (table look)",
+            },
+            { value: "top-boxes", label: "At the top, as message boxes" },
+            { value: "bottom-boxes", label: "At the bottom, as message boxes" },
+          ],
+        },
+        _mapSection: section("Map", "The meeting point map inside the card."),
+        map: {
+          type: "select",
+          label: "Map in the card",
+          options: options([
+            ["none", "No map"],
+            ["top", "Along the top"],
+            ["side", "Down the side"],
+            ["bottom", "Along the bottom"],
+          ]),
+        },
+        mapButtons: {
+          type: "select",
+          label: "Map's directions buttons",
+          options: options([
+            ["below", "Below the map"],
+            ["above", "Above the map"],
+            ["none", "Hide them"],
+          ]),
+        },
+        mapButtonsLook: {
+          ...directionsLookField,
+          label: "Map's directions buttons look",
+        },
+        mapHeight: {
+          type: "radio",
+          label: "Map height",
+          options: options([
+            ["short", "Short"],
+            ["medium", "Medium"],
+            ["tall", "Tall"],
+          ]),
+        },
+        mapCorners: {
+          ...cornersField,
+          label: "Map corners",
+        },
+        mapTitle: {
+          type: "radio",
+          label: "Map's Meeting point title",
+          options: yesNo,
+        },
+        mapNote: {
+          type: "radio",
+          label: "Map's small print (OpenStreetMap…)",
+          options: yesNo,
+        },
+        _preciseSection: section("Precise location", "The what3words address."),
+        preciseAt: {
+          type: "select",
+          label: "Precise location (what3words)",
+          options: [
+            { value: "none", label: "Not in the card" },
+            { value: "above-facts", label: "Above the facts" },
+            { value: "below-facts", label: "Below the facts" },
+            { value: "above-map", label: "Above the map" },
+            { value: "on-map", label: "On the map" },
+            { value: "below-map", label: "Below the map" },
+            { value: "bottom", label: "At the bottom of the card" },
+          ],
+        },
+        preciseLook: preciseLookField,
+        _factsSection: section(
+          "Facts",
+          "Date, times, meeting point, distance and the rest.",
+        ),
         factsAs: {
           type: "select",
           label: "Facts shown as",
@@ -1080,15 +1388,6 @@ export const walkDesignConfig: Config = {
           options: factsOptions,
         },
         factsArrange: { ...arrangeField, label: "Facts arrange on computers" },
-        phoneFacts: {
-          type: "select",
-          label: "Facts on phones",
-          options: phoneFactsOptions,
-        },
-        phoneFactsArrange: {
-          ...phoneArrangeField,
-          label: "Facts arrange on phones",
-        },
         tabletFacts: {
           type: "select",
           label: "Facts on tablets",
@@ -1098,44 +1397,58 @@ export const walkDesignConfig: Config = {
           ...tabletArrangeField,
           label: "Facts arrange on tablets",
         },
+        phoneFacts: {
+          type: "select",
+          label: "Facts on phones",
+          options: phoneFactsOptions,
+        },
+        phoneFactsArrange: {
+          ...phoneArrangeField,
+          label: "Facts arrange on phones",
+        },
+        factLines: { ...factLinesField, label: "Lines in the facts list" },
         showEmptyFacts: showEmptyField,
-        titleLook: {
-          type: "select",
-          label: "Title look",
-          options: [
-            { value: "standard", label: "Standard (options below)" },
-            ...TITLE_LOOKS.map(([value, label]) => ({ value, label })),
-          ],
-        },
-        titleBox: boxField("Box around the title (name, status, Manage)"),
-        titleMessages: {
-          type: "select",
-          label: "Messages in the title box",
-          options: [
-            { value: "none", label: "No" },
-            { value: "top-row", label: "At the top, as a row (table look)" },
-            {
-              value: "bottom-row",
-              label: "At the bottom, as a row (table look)",
-            },
-            { value: "top-boxes", label: "At the top, as message boxes" },
-            { value: "bottom-boxes", label: "At the bottom, as message boxes" },
-          ],
-        },
         factsGap: factsGapField,
         factsTitle: {
           type: "text",
           label: "Facts heading (blank: no heading)",
         },
+        factsBox: boxField("Box around the facts (computers)"),
+        tabletFactsBox: tabletBoxField("Box around the facts (tablets)"),
+        phoneFactsBox: phoneBoxField("Box around the facts (phones)"),
+        _timelineSection: section(
+          "Timeline",
+          "The day from clock-in opening to the finish.",
+        ),
+        timeline: {
+          type: "radio",
+          label: "The day's timeline",
+          options: yesNo,
+        },
         timelineTitle: {
           type: "text",
           label: "Timeline heading (blank: no heading)",
         },
-        factLines: { ...factLinesField, label: "Lines in the facts list" },
-        factsBox: boxField("Box around the facts (computers)"),
-        tabletFactsBox: tabletBoxField("Box around the facts (tablets)"),
-        phoneFactsBox: phoneBoxField("Box around the facts (phones)"),
         timelineBox: boxField("Box around the day's timeline"),
+        _essentialsSection: section(
+          "Essentials",
+          "Toilets, parking, dogs and the rest.",
+        ),
+        showEssentials: { type: "radio", label: "Essentials", options: yesNo },
+        essentials: {
+          type: "object",
+          label: "Essentials in the card",
+          objectFields: essentialsFields,
+        },
+        _descriptionSection: section(
+          "Description",
+          "The walk’s description from Edit walk.",
+        ),
+        showDescription: {
+          type: "radio",
+          label: "Description",
+          options: yesNo,
+        },
         descriptionAt: {
           type: "radio",
           label: "Description position",
@@ -1149,161 +1462,6 @@ export const walkDesignConfig: Config = {
           label: "Description heading (blank: no heading)",
         },
         descriptionBox: boxField("Box around the description"),
-        essentials: {
-          type: "object",
-          label: "Essentials in the card",
-          objectFields: essentialsFields,
-        },
-        map: {
-          type: "select",
-          label: "Map in the card",
-          options: options([
-            ["none", "No map"],
-            ["top", "Along the top"],
-            ["side", "Down the side"],
-            ["bottom", "Along the bottom"],
-          ]),
-        },
-        mapButtons: {
-          type: "select",
-          label: "Map's directions buttons",
-          options: options([
-            ["below", "Below the map"],
-            ["above", "Above the map"],
-            ["none", "Hide them"],
-          ]),
-        },
-        statusLook: {
-          type: "select",
-          label: "Status (Upcoming · Clock-in opens…)",
-          options: options([
-            ["badge-line", "Badge and words"],
-            ["badge", "Badge only"],
-            ["line", "Words only"],
-            ["pill", "Coloured pill"],
-            ["none", "Hidden"],
-          ]),
-        },
-        statusAt: {
-          type: "radio",
-          label: "Status position",
-          options: options([
-            ["above", "Above the walk name"],
-            ["below", "Below the walk name"],
-          ]),
-        },
-        mapButtonsLook: {
-          ...directionsLookField,
-          label: "Map's directions buttons look",
-        },
-        mapCorners: {
-          ...cornersField,
-          label: "Map corners",
-        },
-        inset: {
-          type: "select",
-          label: "Space inside the card",
-          options: options([
-            ["auto", "Automatic (none without a frame)"],
-            ["none", "None"],
-            ["normal", "Normal"],
-            ["roomy", "Roomy"],
-          ]),
-        },
-        preciseAt: {
-          type: "select",
-          label: "Precise location (what3words)",
-          options: [
-            { value: "none", label: "Not in the card" },
-            { value: "above-facts", label: "Above the facts" },
-            { value: "below-facts", label: "Below the facts" },
-            { value: "above-map", label: "Above the map" },
-            { value: "on-map", label: "On the map" },
-            { value: "below-map", label: "Below the map" },
-            { value: "bottom", label: "At the bottom of the card" },
-          ],
-        },
-        preciseLook: preciseLookField,
-        mapTitle: {
-          type: "radio",
-          label: "Map's Meeting point title",
-          options: yesNo,
-        },
-        mapNote: {
-          type: "radio",
-          label: "Map's small print (OpenStreetMap…)",
-          options: yesNo,
-        },
-        mapHeight: {
-          type: "radio",
-          label: "Map height",
-          options: options([
-            ["short", "Short"],
-            ["medium", "Medium"],
-            ["tall", "Tall"],
-          ]),
-        },
-        tone: {
-          type: "select",
-          label: "Card frame",
-          options: options([
-            ["card", "Card (border and shadow)"],
-            ["tint", "Light grey card"],
-            ["plain", "No card"],
-          ]),
-        },
-        showTitle: { type: "radio", label: "Show the title", options: yesNo },
-        showActions: {
-          type: "radio",
-          label: "Clock in + Manage",
-          options: yesNo,
-        },
-        showEssentials: { type: "radio", label: "Essentials", options: yesNo },
-        showDescription: {
-          type: "radio",
-          label: "Description",
-          options: yesNo,
-        },
-        ribbon: {
-          type: "select",
-          label: "Ribbon shows",
-          options: [
-            { value: "none", label: "No ribbon" },
-            { value: "status", label: "Where the walk is up to" },
-            { value: "messages", label: "The walk's messages" },
-            { value: "countdown", label: "Countdown" },
-            { value: "when-where", label: "When and where" },
-            { value: "text", label: "Your own words" },
-          ],
-        },
-        ribbonText: {
-          type: "text",
-          label: "Ribbon words (for Your own words)",
-        },
-        ribbonStyle: {
-          type: "select",
-          label: "Ribbon look",
-          options: [
-            { value: "soft", label: "Soft colours" },
-            { value: "bold", label: "Bold colours" },
-            { value: "plain", label: "Plain, with a line under it" },
-            { value: "bar", label: "Thin colour bar only (no words)" },
-          ],
-        },
-        ribbonAt: {
-          type: "radio",
-          label: "Ribbon position",
-          options: options([
-            ["top", "Top"],
-            ["bottom", "Bottom"],
-          ]),
-        },
-        timeline: {
-          type: "radio",
-          label: "The day's timeline",
-          options: yesNo,
-        },
-        bigTitle: { type: "radio", label: "Big title", options: yesNo },
       },
       defaultProps: {
         factsAs: "facts",
