@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import { Paintbrush } from "lucide-react";
@@ -9,14 +15,48 @@ import type { WalkIdeaParts } from "@/components/walk-idea-layouts";
 import type { WalkDesigns } from "@/lib/walk-page-choice";
 
 // The editor (and Puck) only loads when someone opens it.
-const WalkDesignEditor = dynamic(() => import("./editor").then((mod) => mod.WalkDesignEditor), { ssr: false });
+const WalkDesignEditor = dynamic(
+  () => import("./editor").then((mod) => mod.WalkDesignEditor),
+  { ssr: false },
+);
+
+/** Remembers, in this tab, that the designer was open on this page (survives a reload). */
+const OPEN_KEY = "walk-designer-open";
+const OPEN_EVENT = "walk-designer-open";
+
+function readOpen(): boolean {
+  try {
+    return sessionStorage.getItem(OPEN_KEY) === window.location.pathname;
+  } catch {
+    return fallbackOpen;
+  }
+}
+
+function writeOpen(open: boolean) {
+  try {
+    if (open) sessionStorage.setItem(OPEN_KEY, window.location.pathname);
+    else sessionStorage.removeItem(OPEN_KEY);
+  } catch {
+    // No storage (private window): fall back to this page only.
+    fallbackOpen = open;
+  }
+  window.dispatchEvent(new Event(OPEN_EVENT));
+}
+let fallbackOpen = false;
+
+function subscribeOpen(onChange: () => void) {
+  window.addEventListener(OPEN_EVENT, onChange);
+  return () => window.removeEventListener(OPEN_EVENT, onChange);
+}
 
 /**
- * The walk and its saved designs, for "Design this page". It's handed down
- * this way rather than to the button itself because the button sits in the
- * walk's Manage list, which is itself one of the walk's parts.
+ * The walk and its saved designs, for "Design this page", and whether the
+ * designer is open. It's kept here, at the top of the page, rather than in
+ * the button: the button sits in the walk's Manage list, which a Publish
+ * (the page refreshing to show the new design) rebuilds, and the designer
+ * used to close every time.
  */
-const WalkDesignContext = createContext<{ designs: WalkDesigns; parts: WalkIdeaParts } | null>(null);
+const WalkDesignContext = createContext<{ open: () => void } | null>(null);
 
 export function WalkDesignProvider({
   children,
@@ -27,30 +67,37 @@ export function WalkDesignProvider({
   designs: WalkDesigns;
   parts: WalkIdeaParts;
 }) {
-  return <WalkDesignContext.Provider value={{ designs, parts }}>{children}</WalkDesignContext.Provider>;
-}
+  // Open or not is kept in this tab's storage (for this page), so it lasts
+  // through the page refreshing after a Publish, and even a full reload.
+  const isOpen = useSyncExternalStore(subscribeOpen, readOpen, () => false);
+  const open = useCallback(() => writeOpen(true), []);
+  const close = useCallback(() => writeOpen(false), []);
 
-/**
- * "Design this page", in the organiser walk page's Manage list: opens the
- * walk page designer over this walk. The designer is placed on the page
- * itself (a portal), since the Manage list keeps its buttons hidden.
- */
-export function WalkDesignButton() {
-  const value = useContext(WalkDesignContext);
-  const [open, setOpen] = useState(false);
-  if (!value) return null;
   return (
-    <>
-      <Button onClick={() => setOpen(true)} size="sm" type="button" variant="outline">
-        <Paintbrush data-icon="inline-start" />
-        Design this page
-      </Button>
-      {open
+    <WalkDesignContext.Provider value={{ open }}>
+      {children}
+      {isOpen
         ? createPortal(
-            <WalkDesignEditor designs={value.designs} onClose={() => setOpen(false)} parts={value.parts} />,
+            <WalkDesignEditor
+              designs={designs}
+              onClose={close}
+              parts={parts}
+            />,
             document.body,
           )
         : null}
-    </>
+    </WalkDesignContext.Provider>
+  );
+}
+
+/** "Design this page", in the organiser walk page's Manage list: opens the walk page designer over this walk. */
+export function WalkDesignButton() {
+  const value = useContext(WalkDesignContext);
+  if (!value) return null;
+  return (
+    <Button onClick={value.open} size="sm" type="button" variant="outline">
+      <Paintbrush data-icon="inline-start" />
+      Design this page
+    </Button>
   );
 }
