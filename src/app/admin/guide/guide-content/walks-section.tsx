@@ -273,9 +273,7 @@ export function WalksSection({
               with its ribbon showing the walk&apos;s messages. Maps can have
               square, rounded or very rounded corners. A ribbon or Messages
               block with no messages shows nothing at all. Nothing on a designed page runs edge to edge: every block sits in
-              a card or with no card, at page width. The Details card&apos;s
-              Card frame chooses a card (border and shadow), a light grey or
-              dark card, or no card. On a designed walk page every walk message (Clock-in opens…,
+              a card or with no card, at page width. On a designed walk page every walk message (Clock-in opens…,
               Finished, so it can&apos;t be edited…, Cancelled) runs as a strip
               straight under the site header, full width and coloured like its
               box (blue information, red cancelled, grey finished); it scrolls
@@ -346,8 +344,7 @@ export function WalksSection({
               timeline, big pills, two-tone rows and mini cards. Facts arrange adds One row, swipe sideways and Carousel with
               ‹ › buttons to every Facts shown as look (the walk ticket&apos;s
               facts too), and Space between facts sets the gap between story
-              cards, tiles, badges and the rest (none to lots). The Details card&apos;s settings are grouped under headings in
-              the order the card is laid out — Card, Ribbon, Title, Map,
+              cards, tiles, badges and the rest (none to lots). The Details card&apos;s settings are grouped under headings in the order the card is laid out — Ribbon, Title, Map,
               Precise location, Facts, Timeline, Essentials, Description —
               and only the ones that apply show: the map&apos;s options appear
               once there&apos;s a map, the tablet and phone fact looks only for
