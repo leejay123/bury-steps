@@ -190,9 +190,12 @@ function Badge({ p, className }: { p: WalkIdeaParts; className?: string }) {
 function StatusLine({
   p,
   className,
+  withEyebrow = true,
 }: {
   p: WalkIdeaParts;
   className?: string;
+  /** Off beside the status badge, which already says it (no "In progress" twice). */
+  withEyebrow?: boolean;
 }) {
   const { now } = useWalkInfo(p);
   return (
@@ -210,7 +213,7 @@ function StatusLine({
           now.live ? "bg-emerald-500" : "bg-muted-foreground/40",
         )}
       />
-      {now.eyebrow} · {now.line}
+      {withEyebrow ? `${now.eyebrow} · ${now.line}` : now.line}
     </span>
   );
 }
@@ -1569,7 +1572,7 @@ function Title({
           <div className="flex min-w-0 flex-col gap-2">
             <div className="flex flex-wrap items-center gap-2">
               <Badge p={p} />
-              <StatusLine p={p} />
+              <StatusLine p={p} withEyebrow={false} />
             </div>
             {heading()}
             {note}
@@ -1705,6 +1708,8 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   const titleMessages = (where: "top" | "bottom") => {
     if (titleMessagesAt === "none" || !titleMessagesAt.startsWith(where))
       return null;
+    // The messages are at the top of the page (Page setting), not here.
+    if (p.noticesInStrip) return null;
     const row = titleMessagesAt.endsWith("row");
     return (
       <MessagesOrSample
@@ -1784,7 +1789,11 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       <div className="flex flex-wrap items-center gap-2">
         {statusLook !== "line" ? <Badge p={p} /> : null}
         {statusLook !== "badge" ? (
-          <StatusLine className={dark ? "text-white/80" : undefined} p={p} />
+          <StatusLine
+            className={dark ? "text-white/80" : undefined}
+            p={p}
+            withEyebrow={statusLook === "line"}
+          />
         ) : null}
       </div>
     );
@@ -3326,7 +3335,7 @@ export function StatusBadgeBlock({ withLine = true }: { withLine?: boolean }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Badge p={p} />
-      {withLine ? <StatusLine p={p} /> : null}
+      {withLine ? <StatusLine p={p} withEyebrow={false} /> : null}
     </div>
   );
 }
