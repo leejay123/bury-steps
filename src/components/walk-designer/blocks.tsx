@@ -1087,10 +1087,17 @@ function Title({
         <section className="overflow-hidden rounded-xl border">
           {/* Plain grey, whatever the status (no green while it's live). */}
           <div
-            className="flex flex-col gap-2 bg-muted px-4 py-2.5 text-sm font-medium text-foreground sm:px-5"
+            className={cn(
+              "flex flex-col gap-2 bg-muted px-4 py-2.5 text-sm font-medium text-foreground sm:px-5",
+              // A message in the band takes the place of the status and date.
+              "[&:has([data-messages]:not(:empty))>[data-band-status]]:hidden [&:has([data-sample])>[data-band-status]]:hidden",
+            )}
             suppressHydrationWarning
           >
-            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+            <div
+              className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1"
+              data-band-status=""
+            >
               <span>
                 {info.now.eyebrow} · {info.now.line}
               </span>
