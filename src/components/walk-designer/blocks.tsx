@@ -97,7 +97,11 @@ function useWalkInfo(p: WalkIdeaParts, showEmpty = false) {
       {
         icon: Navigation,
         label: "what3words",
-        value: p.what3words ? `///${p.what3words}` : null,
+        // Break opportunities after "///" and each dot (zero-width spaces),
+        // so the address wraps at its dots instead of spilling out of a tile.
+        value: p.what3words
+          ? `///\u200B${p.what3words.replaceAll(".", ".\u200B")}`
+          : null,
       },
       { icon: Footprints, label: "Distance", value: h.distance },
       { icon: Mountain, label: "Climb", value: h.elevationGain },
@@ -779,6 +783,7 @@ function Facts({
               "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs sm:text-sm",
               dark ? "bg-white/10" : "bg-muted",
             )}
+            data-wide={fact.wide ? "" : undefined}
             key={fact.label}
           >
             <fact.icon aria-hidden className="size-3.5 opacity-70" />
@@ -802,6 +807,7 @@ function Facts({
               "flex min-w-0 flex-col gap-1 rounded-xl p-3",
               dark ? "bg-white/10" : "bg-muted/60",
             )}
+            data-wide={fact.wide ? "" : undefined}
             key={fact.label}
           >
             <dt className={cn("flex items-center gap-1.5 text-xs", muted)}>
@@ -836,6 +842,7 @@ function Facts({
               lines !== "none" && "border-b",
               dark && "border-white/15",
             )}
+            data-wide={fact.wide ? "" : undefined}
             key={fact.label}
           >
             <dt className={cn("flex shrink-0 items-center gap-2", muted)}>
@@ -843,7 +850,7 @@ function Facts({
               {fact.label}
             </dt>
             <dd
-              className="min-w-0 text-right font-medium break-words"
+              className="min-w-0 text-right font-medium [overflow-wrap:anywhere]"
               suppressHydrationWarning
             >
               {fact.value}
@@ -873,6 +880,7 @@ function Facts({
             "flex min-w-0 flex-col gap-0.5",
             fact.wide && "col-span-2",
           )}
+          data-wide={fact.wide ? "" : undefined}
           key={fact.label}
         >
           <dt className={cn("flex items-center gap-1.5 text-xs", muted)}>
@@ -880,7 +888,7 @@ function Facts({
             {fact.label}
           </dt>
           <dd
-            className="text-sm font-semibold break-words"
+            className="text-sm font-semibold [overflow-wrap:anywhere]"
             suppressHydrationWarning
           >
             {fact.value}
@@ -3266,7 +3274,7 @@ function OneFact({
           {found.label}
         </span>
         <span
-          className="text-3xl font-semibold tracking-tight break-words sm:text-4xl"
+          className="text-3xl font-semibold tracking-tight [overflow-wrap:anywhere] sm:text-4xl"
           suppressHydrationWarning
         >
           {found.value}
@@ -3280,7 +3288,7 @@ function OneFact({
         {found.label}
       </span>
       <span
-        className="text-sm font-semibold break-words"
+        className="text-sm font-semibold [overflow-wrap:anywhere]"
         suppressHydrationWarning
       >
         {found.value}
@@ -3872,7 +3880,7 @@ function FactLooksBody({
                 {fact.label}
               </span>
               <span
-                className="leading-snug font-semibold text-pretty"
+                className="leading-snug font-semibold text-pretty [overflow-wrap:anywhere]"
                 suppressHydrationWarning
               >
                 {fact.value}
@@ -3896,7 +3904,7 @@ function FactLooksBody({
                 {fact.label}
               </span>
               <span
-                className="font-semibold break-words"
+                className="font-semibold [overflow-wrap:anywhere]"
                 suppressHydrationWarning
               >
                 {fact.value}
@@ -3913,6 +3921,7 @@ function FactLooksBody({
         {facts.map((fact) => (
           <div
             className="flex min-w-0 flex-col px-6 first:pl-0"
+            data-wide={fact.wide ? "" : undefined}
             key={fact.label}
           >
             <dt className="text-xs text-muted-foreground">{fact.label}</dt>
@@ -3969,7 +3978,7 @@ function FactLooksBody({
                 {fact.label}
               </span>
               <span
-                className="font-semibold break-words"
+                className="font-semibold [overflow-wrap:anywhere]"
                 suppressHydrationWarning
               >
                 {fact.value}
@@ -3991,6 +4000,7 @@ function FactLooksBody({
         {facts.map((fact) => (
           <li
             className="flex items-center gap-2 rounded-full border px-4 py-2 text-sm"
+            data-wide={fact.wide ? "" : undefined}
             key={fact.label}
           >
             <fact.icon aria-hidden className="size-4 text-muted-foreground" />
@@ -4009,13 +4019,17 @@ function FactLooksBody({
         {facts.map((fact) => (
           <div
             className="grid grid-cols-[8rem_minmax(0,1fr)] overflow-hidden rounded-lg border text-sm sm:grid-cols-[11rem_minmax(0,1fr)]"
+            data-wide={fact.wide ? "" : undefined}
             key={fact.label}
           >
             <dt className="flex items-center gap-2 bg-emerald-50 px-3 py-2 font-medium text-emerald-900">
               <fact.icon aria-hidden className="size-4" />
               {fact.label}
             </dt>
-            <dd className="px-3 py-2 break-words" suppressHydrationWarning>
+            <dd
+              className="px-3 py-2 [overflow-wrap:anywhere]"
+              suppressHydrationWarning
+            >
               {fact.value}
             </dd>
           </div>
@@ -4032,10 +4046,11 @@ function FactLooksBody({
               "grid grid-cols-[9rem_minmax(0,1fr)] gap-6 px-4 py-3 sm:grid-cols-[12rem_minmax(0,1fr)]",
               i % 2 === 1 && "bg-muted/50",
             )}
+            data-wide={fact.wide ? "" : undefined}
             key={fact.label}
           >
             <dt className="font-semibold">{fact.label}</dt>
-            <dd className="break-words" suppressHydrationWarning>
+            <dd className="[overflow-wrap:anywhere]" suppressHydrationWarning>
               {fact.value}
             </dd>
           </div>
@@ -4051,7 +4066,7 @@ function FactLooksBody({
             <dt className="shrink-0 uppercase">{fact.label}</dt>
             <span aria-hidden className="mb-1 flex-1 border-b border-dotted" />
             <dd
-              className="min-w-0 text-right break-words"
+              className="min-w-0 text-right [overflow-wrap:anywhere]"
               suppressHydrationWarning
             >
               {fact.value}
@@ -4067,6 +4082,7 @@ function FactLooksBody({
         {facts.map((fact, i) => (
           <li
             className="flex w-44 shrink-0 snap-start flex-col gap-2"
+            data-wide={fact.wide ? "" : undefined}
             key={fact.label}
           >
             <span className="flex items-center">
@@ -4079,7 +4095,7 @@ function FactLooksBody({
               {fact.label}
             </span>
             <span
-              className="pr-6 text-sm font-semibold break-words"
+              className="pr-6 text-sm font-semibold [overflow-wrap:anywhere]"
               suppressHydrationWarning
             >
               {fact.value}
@@ -4169,13 +4185,14 @@ function FactLooksBody({
               PASTELS[i % PASTELS.length],
               i % 2 === 0 ? "-rotate-1" : "rotate-1",
             )}
+            data-wide={fact.wide ? "" : undefined}
             key={fact.label}
           >
             <span className="text-xs font-semibold uppercase opacity-70">
               {fact.label}
             </span>
             <span
-              className="font-semibold break-words"
+              className="font-semibold [overflow-wrap:anywhere]"
               suppressHydrationWarning
             >
               {fact.value}
@@ -4238,7 +4255,7 @@ function FactLooksBody({
             )}
             <span
               className={cn(
-                "leading-snug font-semibold text-pretty",
+                "leading-snug font-semibold text-pretty [overflow-wrap:anywhere]",
                 look === "stat-cards" ? "text-2xl" : "text-base",
               )}
               suppressHydrationWarning
