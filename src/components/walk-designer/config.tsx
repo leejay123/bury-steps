@@ -1056,6 +1056,7 @@ export const walkDesignConfig: Config = {
             { value: "story-cards", label: "Story cards" },
             { value: "badges", label: "Round badges" },
             { value: "summary", label: "Summary tiles" },
+            { value: "wide-tiles", label: "Wide tiles (icon beside, roomy)" },
             { value: "stat-cards", label: "Stat cards (big values)" },
             { value: "icon-circles", label: "Icons in coloured circles" },
             { value: "spec-sheet", label: "Spec sheet (striped table)" },

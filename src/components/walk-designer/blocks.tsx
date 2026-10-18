@@ -299,7 +299,7 @@ export function ScrollRow({
   return (
     <div className="flex flex-col gap-3">
       <div
-        className="[&>*]:flex! [&>*]:flex-row! [&>*]:flex-nowrap! [&>*]:snap-x [&>*]:gap-[var(--facts-gap,1.5rem)]! [&>*]:overflow-x-auto [&>*]:pb-1 [&>*]:[scrollbar-width:none] [&>*>*]:w-60! [&>*>*]:shrink-0! [&>*>*]:snap-start"
+        className="[&>*]:flex! [&>*]:flex-row! [&>*]:flex-nowrap! [&>*]:snap-x [&>*]:gap-[var(--facts-gap,1.5rem)]! [&>*]:overflow-x-auto [&>*]:pb-1 [&>*]:[scrollbar-width:none] [&>*>*]:w-72! [&>*>[data-wide]]:w-96! [&>*>*]:shrink-0! [&>*>*]:snap-start"
         ref={row}
       >
         {children}
@@ -308,6 +308,8 @@ export function ScrollRow({
         <div className="flex justify-end gap-2">
           <Button
             aria-label="Previous"
+            // Stay small, even when the block's buttons are set to full width.
+            className="w-9! flex-none!"
             onClick={() => move(-1)}
             size="icon"
             type="button"
@@ -317,6 +319,7 @@ export function ScrollRow({
           </Button>
           <Button
             aria-label="Next"
+            className="w-9! flex-none!"
             onClick={() => move(1)}
             size="icon"
             type="button"
@@ -3776,7 +3779,8 @@ export type FactsLook =
   | "vertical-timeline"
   | "big-pills"
   | "two-tone-rows"
-  | "mini-cards";
+  | "mini-cards"
+  | "wide-tiles";
 
 const PASTELS = [
   "bg-amber-100 text-amber-950",
@@ -3839,6 +3843,45 @@ function FactLooksBody({
       : arrange === "grid"
         ? cn("grid gap-[var(--facts-gap,1.5rem)]", grid)
         : cn(STRETCH, "gap-[var(--facts-gap,1.5rem)]", basis);
+
+  if (look === "wide-tiles")
+    return (
+      <div
+        className={flow(
+          "[&>*]:basis-72",
+          "[&>*]:w-80",
+          "sm:grid-cols-2 lg:grid-cols-3",
+        )}
+      >
+        {facts.map((fact, i) => (
+          <div
+            className="flex min-w-0 items-center gap-4 rounded-lg border bg-card p-4"
+            data-wide={fact.wide ? "" : undefined}
+            key={fact.label}
+          >
+            <span
+              className={cn(
+                "flex size-10 shrink-0 items-center justify-center rounded-lg",
+                PASTELS[i % PASTELS.length],
+              )}
+            >
+              <fact.icon aria-hidden className="size-5" />
+            </span>
+            <span className="flex min-w-0 flex-col gap-0.5">
+              <span className="text-xs text-muted-foreground">
+                {fact.label}
+              </span>
+              <span
+                className="leading-snug font-semibold text-pretty"
+                suppressHydrationWarning
+              >
+                {fact.value}
+              </span>
+            </span>
+          </div>
+        ))}
+      </div>
+    );
 
   if (look === "numbered")
     return (
@@ -4176,6 +4219,7 @@ function FactLooksBody({
             tone(i),
             fact.wide && arrange === "grid" && "sm:col-span-2",
           )}
+          data-wide={fact.wide ? "" : undefined}
           key={fact.label}
         >
           {plain ? (
@@ -4194,8 +4238,8 @@ function FactLooksBody({
             )}
             <span
               className={cn(
-                "font-semibold break-words",
-                look === "stat-cards" ? "text-2xl" : "text-lg",
+                "leading-snug font-semibold text-pretty",
+                look === "stat-cards" ? "text-2xl" : "text-base",
               )}
               suppressHydrationWarning
             >
