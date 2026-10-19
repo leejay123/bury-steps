@@ -311,7 +311,8 @@ export function WalksSection({
               is set to Remove. Where the walk&apos;s messages go is a Page setting too (click
               an empty part of the page): wherever you put the Messages block
               (the default — with no Messages block, no messages show), at the
-              top at page width, or a full-width strip under the header. The
+              top at page width (the full-width strip under the header was taken
+              out; pages using it show the messages at the top). The
               Details card&apos;s description can sit on its own or inside the
               title box, under Created by. Messages in the title box puts the walk&apos;s messages inside
               the Details card&apos;s title area — at the top or bottom, as a row
@@ -330,14 +331,18 @@ export function WalksSection({
               circles, a spec sheet, a receipt, sticky notes and a journey
               line. With the walk ticket, the card&apos;s precise location,
               essentials and description go inside the ticket, so it&apos;s all
-              one card, with the same 24 pixels between everything. To put the facts in the title, set Facts → Where the facts go to
-              Inside the title box: they take the Facts shown as look and
-              don&apos;t show again below (pages that used the With fact chips or
-              Big name and four key facts title looks now work this way). The
-              Details card&apos;s Title look offers Standard, Plain and Status band. Inside the title box, the facts, timeline and
-              description sit under the name at the full width of the box;
-              Order inside the title box puts them in the order you want, and
-              Space between the things in the title box makes the gaps closer,
+              one card, with the same 24 pixels between everything. Inside the title box (in the Title section) is a list of what goes
+              in the title box under the name: press + Add and choose Facts,
+              Essentials, Precise location, The day&apos;s timeline, Description
+              or Map, drag them up and down to set the order, and remove one
+              with its bin. Anything in the list shows only there, never twice,
+              in its own look (the facts in their Facts shown as look), and
+              its own &quot;where it goes&quot; settings are hidden. Pages that put
+              the facts, timeline or description in the title box before (or
+              used the With fact chips or Big name and four key facts title
+              looks) start with those already in the list. The
+              Details card&apos;s Title look offers Standard, Plain and Status band. Inside the title box, everything sits under the name at the full
+              width of the box, and Space between the things in the title box makes the gaps closer,
               normal (24 pixels) or more without changing the edges. Facts
               arrange only offers what works with the chosen look (a spec sheet
               or list can&apos;t swipe, pills only wrap or swipe), and Spec sheet
@@ -363,8 +368,7 @@ export function WalksSection({
               still there as a choice; the Status band title look has the same
               Band style options. Cancelled walks are listed under History on
               the Walks page, not Upcoming. The walk&apos;s messages and description can sit in the
-              Status band&apos;s box too. The day&apos;s timeline can go inside the
-              title box (under Created by) or under it, with a look of its own
+              Status band&apos;s box too. The day&apos;s timeline has a look of its own
               (a progress bar, a box split into sections, dots on a line, one
               line, or a list); choose which times show — Clock-in opens, Set
               off, Finish — and add your own, one per line, like 13:00 Lunch at

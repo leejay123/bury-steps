@@ -393,6 +393,53 @@ const REMOVED_FACT_LOOKS = [
   "two-tone-rows",
 ];
 
+/** What can go inside the Details card's title box, under the name. */
+export type TitlePart =
+  "facts" | "essentials" | "precise" | "timeline" | "description" | "map";
+const TITLE_PARTS: readonly string[] = [
+  "facts",
+  "essentials",
+  "precise",
+  "timeline",
+  "description",
+  "map",
+];
+
+/**
+ * The parts inside the title box, in order (each once). Pages saved before
+ * the list existed are read from their old settings (facts / timeline /
+ * description "inside the title box" and the order menu).
+ */
+export function titlePartsOf(o: {
+  titleParts?: { part?: string }[];
+  factsAt?: string;
+  titleLook?: string;
+  timeline?: boolean;
+  timelineAt?: string;
+  descriptionAt?: string;
+  showDescription?: boolean;
+  titleOrder?: string;
+}): TitlePart[] {
+  const listed = Array.isArray(o.titleParts)
+    ? o.titleParts.map((item) => String(item?.part ?? ""))
+    : (o.titleOrder ?? "facts,timeline,description")
+        .split(",")
+        .filter((key) =>
+          key === "facts"
+            ? o.factsAt === "title" ||
+              o.titleLook === "chips" ||
+              o.titleLook === "stats"
+            : key === "timeline"
+              ? Boolean(o.timeline) && o.timelineAt === "title"
+              : key === "description"
+                ? o.showDescription !== false && o.descriptionAt === "title"
+                : false,
+        );
+  return listed.filter(
+    (key, i) => TITLE_PARTS.includes(key) && listed.indexOf(key) === i,
+  ) as TitlePart[];
+}
+
 /** Facts shown as: a look that was taken out becomes the plain facts. */
 export function keptFactsAs(value: unknown): string {
   const look = typeof value === "string" && value ? value : "facts";
@@ -1548,8 +1595,10 @@ export type DetailsOptions = {
   timelineExtra?: string;
   /** The gaps between the things in the title box. */
   titleGap?: TitleGap;
-  /** The order of the facts, timeline and description inside the title box. */
+  /** (Old pages) the order of the facts, timeline and description in the title box. */
   titleOrder?: string;
+  /** What goes inside the title box, under the name, in this order. */
+  titleParts?: { part?: string }[];
   factLines?: FactLines;
   phoneFactsBox?: PartBox | "same";
   tabletFactsBox?: ForDevice<PartBox>;
@@ -1608,10 +1657,13 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   const savedLook = o.titleLook ?? "standard";
   const factsLook = savedLook === "chips" || savedLook === "stats";
   const titleLook = factsLook ? "plain" : savedLook;
-  const factsInTitle =
-    (o.factsAt === "title" || factsLook) && showTitle && factsAs !== "none";
+  // What's inside the title box (none without a title to hold it).
+  const titleParts = showTitle ? titlePartsOf(o) : [];
+  const inTitle = (part: TitlePart) => titleParts.includes(part);
+  const factsInTitle = inTitle("facts") && factsAs !== "none";
   const showActions = (o.showActions ?? true) && !ownTitle;
-  const map = o.map ?? "none";
+  // A map in the title box isn't placed anywhere else in the card.
+  const map = inTitle("map") ? "none" : (o.map ?? "none");
   const padding =
     !o.inset || o.inset === "auto"
       ? o.tone === "plain"
@@ -1624,8 +1676,8 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   );
   // The precise location, where chosen. With no map in the card, the map
   // spots fall back to under the facts.
-  const hasMap = map !== "none" && Boolean(p.map);
-  const wanted = o.preciseAt ?? "none";
+  const hasMap = (map !== "none" || inTitle("map")) && Boolean(p.map);
+  const wanted = inTitle("precise") ? "none" : (o.preciseAt ?? "none");
   const preciseAt: PreciseAt =
     !hasMap &&
     (wanted === "above-map" || wanted === "on-map" || wanted === "below-map")
@@ -1640,6 +1692,9 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
     ) : null;
   const preciseHere = (where: PreciseAt) =>
     preciseAt === where ? precise : null;
+  const preciseInTitle = p.what3words ? (
+    <PreciseLocation address={p.what3words} look={o.preciseLook ?? "card"} />
+  ) : null;
   // The walk's messages inside the title box, if chosen: as a row of the
   // box divided off by a line (a table look), or as their own boxes.
   const titleMessagesAt = o.titleMessages ?? "none";
@@ -1677,8 +1732,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   };
   // The description: on its own (its own box), or inside the title area.
   // The day's timeline, inside the title box (under Created by) if chosen.
-  const timelineInTitle =
-    Boolean(o.timeline) && o.timelineAt === "title" && (o.showTitle ?? true);
+  const timelineInTitle = inTitle("timeline");
   const timelineView = (
     <div className="flex flex-col gap-2">
       <PartHeading text={o.timelineTitle} />
@@ -1694,12 +1748,13 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       />
     </div>
   );
-  const descriptionInTitle =
-    o.descriptionAt === "title" && (o.showTitle ?? true);
+  const descriptionInTitle = inTitle("description");
   // Just below the title box (outside its outline), with its own box.
-  const descriptionAfterTitle = o.descriptionAt === "after-title";
+  const descriptionAfterTitle =
+    !descriptionInTitle && o.descriptionAt === "after-title";
   const descriptionPart =
-    (o.showDescription ?? true) && p.walk.description ? (
+    ((o.showDescription ?? true) || descriptionInTitle) &&
+    p.walk.description ? (
       descriptionInTitle ? (
         <DescriptionWithHeading
           description={p.walk.description}
@@ -1717,7 +1772,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   const cardExtras = (
     <>
       {preciseHere("below-facts")}
-      {(o.showEssentials ?? true) ? (
+      {(o.showEssentials ?? true) && !inTitle("essentials") ? (
         <DeviceEssentials dark={dark} o={o.essentials ?? {}} p={p} />
       ) : null}
       {descriptionInTitle || descriptionAfterTitle ? null : descriptionPart}
@@ -1796,22 +1851,22 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
     );
   // What's inside the title box under the name, in the chosen order.
   const gap = TITLE_GAP[o.titleGap ?? "normal"] ?? TITLE_GAP.normal;
-  const insideParts: Record<string, ReactNode> = {
+  const insideParts: Record<TitlePart, ReactNode> = {
     facts: factsInTitle ? factsPart : null,
-    timeline: timelineInTitle ? timelineView : null,
-    description: descriptionInTitle ? descriptionPart : null,
+    essentials: <DeviceEssentials dark={dark} o={o.essentials ?? {}} p={p} />,
+    precise: preciseInTitle,
+    timeline: timelineView,
+    description: descriptionPart,
+    map: p.map,
   };
-  const order = (o.titleOrder ?? "facts,timeline,description").split(",");
   const inside =
-    factsInTitle || timelineInTitle || descriptionInTitle ? (
+    titleParts.length > 0 ? (
       <>
-        {[...order, "facts", "timeline", "description"]
-          .filter((key, i, all) => all.indexOf(key) === i && key in insideParts)
-          .map((key) =>
-            insideParts[key] ? (
-              <Fragment key={key}>{insideParts[key]}</Fragment>
-            ) : null,
-          )}
+        {titleParts.map((key) =>
+          insideParts[key] ? (
+            <Fragment key={key}>{insideParts[key]}</Fragment>
+          ) : null,
+        )}
       </>
     ) : null;
   const body = (
@@ -1928,7 +1983,8 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       <section
         aria-label="Walk details"
         className={cn(
-          "overflow-hidden",
+          // Clip, not hidden: hidden would stop the side map sticking.
+          "overflow-clip",
           o.tone === "plain" ? "" : "rounded-2xl border",
           dark && "border-neutral-800 bg-neutral-950 text-white",
           o.tone === "tint" && "bg-muted/40",
@@ -1941,9 +1997,16 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
           ? insetMap(padding === "none" ? "pb-6" : "pt-6")
           : null}
         {map === "side" && p.map ? (
-          <div className="grid lg:grid-cols-[minmax(0,1fr)_24rem]">
-            {body}
-            {insetMap(cn("lg:pl-0", padding !== "none" && "pb-6 lg:pt-6"))}
+          // Map down the side: whichever side is shorter stays in view
+          // (under the site header) while the longer one scrolls past.
+          <div className="grid lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">
+            <div className="min-w-0 lg:sticky lg:top-24">{body}</div>
+            {insetMap(
+              cn(
+                "lg:sticky lg:top-24 lg:pl-0",
+                padding !== "none" && "pb-6 lg:pt-6",
+              ),
+            )}
           </div>
         ) : (
           body

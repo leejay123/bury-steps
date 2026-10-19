@@ -61,6 +61,8 @@ import {
   type MessageLook,
   arrangesFor,
   keptFactsAs,
+  titlePartsOf,
+  type TitlePart,
   type Arrange,
   type FactsVariant,
   type StatusVariant,
@@ -348,6 +350,15 @@ const timelineItemFields = {
   },
 };
 
+const TITLE_PART_NAMES: Record<string, string> = {
+  facts: "Facts",
+  essentials: "Essentials",
+  precise: "Precise location",
+  timeline: "The day's timeline",
+  description: "Description",
+  map: "Map",
+};
+
 // Every title look (the Title block and the Details card's title).
 const TITLE_LOOKS: [string, string][] = [
   ["plain", "Plain"],
@@ -437,6 +448,11 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
   ]);
   const factsAs = keptFactsAs(props.factsAs);
   const ownTitle = factsAs === "bento";
+  // What's inside the title box: those parts' "where" settings don't apply.
+  const parts =
+    ownTitle || props.showTitle === false ? [] : titlePartsOf(props);
+  const inTitle = (part: TitlePart) => parts.includes(part);
+  if (ownTitle || props.showTitle === false) hide.add("titleParts");
   // Ribbon
   if (!props.ribbon || props.ribbon === "none") {
     hide.add("ribbonText").add("ribbonStyle").add("ribbonAt");
@@ -454,7 +470,6 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
       "titleMessages",
       "bandStyle",
       "titleGap",
-      "titleOrder",
     ].forEach((k) => hide.add(k));
   } else {
     if (props.showTitle === false) {
@@ -471,22 +486,9 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
   }
   // Only the looks with a frame round them all have one to turn off.
   if (factsAs !== "spec-sheet") hide.add("factsBorder");
-  // The order inside the title box matters once two things are in it.
-  const inTitle = [
-    props.factsAt === "title" ||
-      props.titleLook === "chips" ||
-      props.titleLook === "stats",
-    Boolean(props.timeline) && props.timelineAt === "title",
-    props.showDescription !== false && props.descriptionAt === "title",
-  ].filter(Boolean).length;
-  if (inTitle < 2 || ownTitle || props.showTitle === false)
-    hide.add("titleOrder");
-  // Inside the title box only when there's a title (a ticket or bento grid
-  // has its own) and facts to show.
-  if (ownTitle || props.showTitle === false || factsAs === "none")
-    hide.add("factsAt");
   // Map
-  if (!props.map || props.map === "none") {
+  if (inTitle("map")) hide.add("map");
+  else if (!props.map || props.map === "none") {
     [
       "mapButtons",
       "mapButtonsLook",
@@ -497,7 +499,9 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
     ].forEach((k) => hide.add(k));
   } else if (props.mapButtons === "none") hide.add("mapButtonsLook");
   // Precise location
-  if (!props.preciseAt || props.preciseAt === "none") hide.add("preciseLook");
+  if (inTitle("precise")) hide.add("preciseAt");
+  else if (!props.preciseAt || props.preciseAt === "none")
+    hide.add("preciseLook");
   // Facts
   const deviceLooks = [
     "facts",
@@ -526,22 +530,24 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
       hide.add("factLines");
   }
   // Timeline
-  if (!props.timeline)
+  // Inside the title box, the timeline is on and has no box of its own.
+  if (inTitle("timeline")) hide.add("timeline").add("timelineBox");
+  else if (!props.timeline)
     [
       "timelineTitle",
       "timelineBox",
-      "timelineAt",
       "timelineLook",
       ...Object.keys(timelineItemFields),
     ].forEach((k) => hide.add(k));
-  // Inside the title box, the timeline has no box of its own.
-  else if (props.timelineAt === "title") hide.add("timelineBox");
   // Essentials
-  if (props.showEssentials === false) hide.add("essentials");
+  if (inTitle("essentials")) hide.add("showEssentials");
+  else if (props.showEssentials === false) hide.add("essentials");
   // Description
-  if (props.showDescription === false) {
+  if (inTitle("description")) {
+    hide.add("showDescription").add("descriptionAt").add("descriptionBox");
+  } else if (props.showDescription === false) {
     hide.add("descriptionAt").add("descriptionTitle").add("descriptionBox");
-  } else if (props.descriptionAt === "title") hide.add("descriptionBox");
+  }
   return hide;
 }
 
@@ -933,9 +939,9 @@ function PageRoot({
   messagesLook?: MessageLook;
   /**
    * Where the walk's messages go (Page settings): "top", at the top of the
-   * page at page width like any block; "strip", a full-width strip straight
-   * under the site header; "block", wherever the Messages block (or the
-   * Details card's messages ribbon) is placed.
+   * page at page width like any block ("strip", the old full-width strip,
+   * was taken out and now shows the same); "block", wherever the Messages
+   * block is placed.
    */
   messagesAt?: MessagesAt;
 }) {
@@ -945,11 +951,7 @@ function PageRoot({
   const messages =
     p && atTop ? (
       <MessagesOrSample
-        className={cn(
-          messagesAt === "strip" &&
-            "-mx-4 -mt-6 gap-0 md:-mx-6 [&_[data-slot=alert]]:rounded-none [&_[data-slot=alert]]:border-x-0 [&_[data-slot=alert]]:border-t-0 [&_[data-slot=alert]]:px-4 md:[&_[data-slot=alert]]:px-6 [&>div]:gap-0",
-          MESSAGE_LOOK[messagesLook],
-        )}
+        className={MESSAGE_LOOK[messagesLook]}
         editing={editing}
         p={p}
       />
@@ -1241,6 +1243,18 @@ export const walkDesignConfig: Config = {
     },
     Details: {
       label: "Details card",
+      // Pages saved before the title box list: fill it from their old
+      // settings, so the list shows what's already in the title box.
+      resolveData: (data) =>
+        Array.isArray(data.props.titleParts)
+          ? data
+          : {
+              ...data,
+              props: {
+                ...data.props,
+                titleParts: titlePartsOf(data.props).map((part) => ({ part })),
+              },
+            },
       // Only the settings that apply to what's chosen (hiddenDetailsSettings).
       resolveFields: (data, { fields }) => {
         const props = data.props as DetailsProps;
@@ -1380,17 +1394,27 @@ export const walkDesignConfig: Config = {
             ["more", "More"],
           ]),
         },
-        titleOrder: {
-          type: "select",
-          label: "Order inside the title box (under the name)",
-          options: options([
-            ["facts,timeline,description", "Facts, timeline, description"],
-            ["facts,description,timeline", "Facts, description, timeline"],
-            ["description,facts,timeline", "Description, facts, timeline"],
-            ["description,timeline,facts", "Description, timeline, facts"],
-            ["timeline,facts,description", "Timeline, facts, description"],
-            ["timeline,description,facts", "Timeline, description, facts"],
-          ]),
+        titleParts: {
+          type: "array",
+          label:
+            "Inside the title box (under the name) — + Add, drag to reorder",
+          arrayFields: {
+            part: {
+              type: "select",
+              label: "Part",
+              options: options([
+                ["facts", "Facts"],
+                ["essentials", "Essentials"],
+                ["precise", "Precise location"],
+                ["timeline", "The day's timeline"],
+                ["description", "Description"],
+                ["map", "Map"],
+              ]),
+            },
+          },
+          defaultItemProps: { part: "description" },
+          getItemSummary: (item: { part?: string }) =>
+            TITLE_PART_NAMES[item.part ?? ""] ?? "Choose a part",
         },
         titleBox: boxField("Box around the title (name, status, Manage)"),
         statusLook: {
@@ -1502,14 +1526,6 @@ export const walkDesignConfig: Config = {
           "Facts",
           "Date, times, meeting point, distance and the rest.",
         ),
-        factsAt: {
-          type: "radio",
-          label: "Where the facts go",
-          options: options([
-            ["own", "Under the title box"],
-            ["title", "Inside the title box (under Created by)"],
-          ]),
-        },
         factsAs: {
           type: "select",
           label: "Facts shown as",
@@ -1586,14 +1602,6 @@ export const walkDesignConfig: Config = {
           label: "The day's timeline",
           options: yesNo,
         },
-        timelineAt: {
-          type: "radio",
-          label: "Where the timeline goes",
-          options: options([
-            ["own", "Under the title box"],
-            ["title", "Inside the title box (under Created by)"],
-          ]),
-        },
         timelineLook: timelineLookField,
         ...timelineItemFields,
         timelineTitle: {
@@ -1625,7 +1633,6 @@ export const walkDesignConfig: Config = {
           label: "Description position",
           options: options([
             ["own", "Lower down, after the facts and essentials"],
-            ["title", "In the title box (under Created by)"],
             ["after-title", "Just below the title box"],
           ]),
         },
@@ -1682,15 +1689,13 @@ export const walkDesignConfig: Config = {
         descriptionBox: "none",
         essentials: ESSENTIALS_DEFAULTS,
         timeline: false,
-        factsAt: "own",
-        timelineAt: "own",
         timelineLook: "bar",
         timelineOpens: true,
         timelineStart: true,
         timelineEnd: true,
         timelineExtra: "",
         titleGap: "normal",
-        titleOrder: "facts,timeline,description",
+        titleParts: [],
         factsBorder: true,
         bigTitle: false,
       },
@@ -1751,6 +1756,7 @@ export const walkDesignConfig: Config = {
         timelineExtra,
         titleGap,
         titleOrder,
+        titleParts,
         factsBorder,
         bigTitle,
       }) => (
@@ -1811,6 +1817,7 @@ export const walkDesignConfig: Config = {
           timelineExtra={timelineExtra}
           titleGap={titleGap}
           titleOrder={titleOrder}
+          titleParts={titleParts}
           factsBorder={factsBorder}
           tone={tone}
         />
@@ -2786,7 +2793,6 @@ export const walkDesignConfig: Config = {
         options: [
           { value: "block", label: "Where I put the Messages block" },
           { value: "top", label: "At the top, page width (like a block)" },
-          { value: "strip", label: "Full-width strip under the header" },
         ],
       },
       messagesLook: { ...messageLookField, label: "Messages look" },
