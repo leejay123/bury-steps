@@ -117,11 +117,12 @@ const messageLookField = {
   type: "select" as const,
   label: "Messages look",
   options: options<MessageLook>([
-    ["as-is", "As designed"],
-    ["soft", "Soft grey, no border"],
-    ["bold", "Bold (dark)"],
+    ["as-is", "Plain grey band (like the status band)"],
+    ["band-outline", "Plain band with an outline"],
+    ["band-bar", "Grey band with a dark bar on the left"],
+    ["band-line", "Plain, with a line underneath"],
     ["compact", "Compact"],
-    ["stripe", "Coloured stripe down the side"],
+    ["boxes", "Coloured boxes (blue information, red cancelled)"],
     ["hidden", "Hide them"],
   ]),
 };
@@ -395,6 +396,7 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
       "bigTitle",
       "showActions",
       "titleMessages",
+      "bandStyle",
     ].forEach((k) => hide.add(k));
   } else {
     if (props.showTitle === false) {
@@ -402,6 +404,7 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
         hide.add(k),
       );
     }
+    if (props.titleLook !== "band") hide.add("bandStyle");
     if ((props.titleLook ?? "standard") !== "standard") {
       ["statusLook", "statusAt", "bigTitle"].forEach((k) => hide.add(k));
     }
@@ -1249,6 +1252,16 @@ export const walkDesignConfig: Config = {
             ...TITLE_LOOKS.map(([value, label]) => ({ value, label })),
           ],
         },
+        bandStyle: {
+          type: "select",
+          label: "Band style (Status band look)",
+          options: [
+            { value: "grey", label: "Plain grey" },
+            { value: "outline", label: "Plain, with a line under it" },
+            { value: "bar", label: "Grey with a dark bar on the left" },
+            { value: "line", label: "No background, a line under it" },
+          ],
+        },
         titleBox: boxField("Box around the title (name, status, Manage)"),
         statusLook: {
           type: "select",
@@ -1511,6 +1524,7 @@ export const walkDesignConfig: Config = {
         tabletFactsArrange: "same",
         showEmptyFacts: false,
         titleLook: "standard",
+        bandStyle: "grey",
         titleBox: "none",
         titleMessages: "none",
         factsGap: "normal",
@@ -1561,6 +1575,7 @@ export const walkDesignConfig: Config = {
         showEmptyFacts,
         essentials,
         titleLook,
+        bandStyle,
         titleBox,
         titleMessages,
         factsGap,
@@ -1601,6 +1616,7 @@ export const walkDesignConfig: Config = {
           tabletFactsArrange={tabletFactsArrange}
           showEmptyFacts={showEmptyFacts}
           titleLook={titleLook}
+          bandStyle={bandStyle}
           titleBox={titleBox}
           titleMessages={titleMessages}
           factsGap={factsGap}

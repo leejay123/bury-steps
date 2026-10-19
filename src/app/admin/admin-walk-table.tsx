@@ -53,7 +53,6 @@ const UPCOMING_STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "upcoming", label: "Upcoming" },
   { value: "starting-soon", label: "Starting soon" },
   { value: "in-progress", label: "In progress" },
-  { value: "cancelled", label: "Cancelled" },
 ];
 
 const PAST_STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
@@ -62,7 +61,7 @@ const PAST_STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "cancelled", label: "Cancelled" },
 ];
 
-const UPCOMING_STATUS_VALUES = ["all", "upcoming", "starting-soon", "in-progress", "cancelled"] as const;
+const UPCOMING_STATUS_VALUES = ["all", "upcoming", "starting-soon", "in-progress"] as const;
 const PAST_STATUS_VALUES = ["all", "completed", "cancelled"] as const;
 const SORTS = ["asc", "desc"] as const;
 

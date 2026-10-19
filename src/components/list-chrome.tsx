@@ -84,7 +84,6 @@ export function WalkListChrome() {
                   { value: "upcoming", label: "Upcoming" },
                   { value: "starting-soon", label: "Starting soon" },
                   { value: "in-progress", label: "In progress" },
-                  { value: "cancelled", label: "Cancelled" },
                 ]}
                 value="all"
               />

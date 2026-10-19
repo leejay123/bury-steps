@@ -710,15 +710,33 @@ function DeviceEssentials({
 
 /** Restyles the walk's messages (and any other message boxes) inside a block. */
 export type MessageLook =
-  "as-is" | "soft" | "bold" | "compact" | "stripe" | "hidden";
+  | "as-is"
+  | "boxes"
+  | "band-outline"
+  | "band-bar"
+  | "band-line"
+  | "soft"
+  | "bold"
+  | "compact"
+  | "stripe"
+  | "hidden";
 export const MESSAGE_LOOK: Record<MessageLook, string> = {
-  "as-is": "",
+  // The default: a plain grey band, like the Status band (no blue or red boxes).
+  "as-is":
+    "[&_[data-slot=alert]]:rounded-lg [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:bg-muted [&_[data-slot=alert]]:text-foreground [&_[data-slot=alert]]:font-normal [&_[data-slot=alert]_*]:text-inherit",
+  boxes: "",
+  "band-outline":
+    "[&_[data-slot=alert]]:rounded-lg [&_[data-slot=alert]]:border [&_[data-slot=alert]]:bg-transparent [&_[data-slot=alert]]:text-foreground [&_[data-slot=alert]]:font-normal [&_[data-slot=alert]_*]:text-inherit",
+  "band-bar":
+    "[&_[data-slot=alert]]:rounded-none [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:border-l-4 [&_[data-slot=alert]]:border-l-foreground [&_[data-slot=alert]]:bg-muted [&_[data-slot=alert]]:text-foreground [&_[data-slot=alert]]:font-normal [&_[data-slot=alert]_*]:text-inherit",
+  "band-line":
+    "[&_[data-slot=alert]]:rounded-none [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:border-b [&_[data-slot=alert]]:bg-transparent [&_[data-slot=alert]]:px-0 [&_[data-slot=alert]]:text-foreground [&_[data-slot=alert]]:font-normal [&_[data-slot=alert]_*]:text-inherit",
   soft: "[&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:bg-muted/60",
   bold: "[&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:bg-foreground [&_[data-slot=alert]]:text-background [&_[data-slot=alert]_*]:!text-background",
   compact:
     "[&_[data-slot=alert]]:gap-y-0 [&_[data-slot=alert]]:py-2 [&_[data-slot=alert]]:text-xs [&_[data-slot=alert-description]]:text-xs",
   stripe:
-    "[&_[data-slot=alert]]:rounded-none [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:border-l-4 [&_[data-slot=alert]]:border-l-emerald-600 [&_[data-slot=alert]]:bg-transparent",
+    "[&_[data-slot=alert]]:rounded-none [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:border-l-4 [&_[data-slot=alert]]:border-l-muted-foreground [&_[data-slot=alert]]:bg-transparent",
   hidden: "[&_[data-slot=alert]]:hidden",
 };
 
@@ -947,6 +965,8 @@ export const ClockInBlock = withParts(
   (p) => <>{p.live}</>,
 );
 
+export type BandStyle = "grey" | "outline" | "bar" | "line";
+
 export type TitleVariant =
   | "plain"
   | "chips"
@@ -991,7 +1011,10 @@ function Title({
   actions,
   bandMessages = null,
   afterNote = null,
+  bandStyle = "grey",
 }: {
+  /** The Status band look's band: grey, outlined, grey with a dark bar, or a line under it. */
+  bandStyle?: BandStyle;
   p: WalkIdeaParts;
   variant: TitleVariant;
   actions: boolean;
@@ -1091,7 +1114,11 @@ function Title({
           {/* Plain grey, whatever the status (no green while it's live). */}
           <div
             className={cn(
-              "flex flex-col gap-2 bg-muted px-4 py-2.5 text-sm font-medium text-foreground sm:px-5",
+              "flex flex-col gap-2 px-4 py-2.5 text-sm font-medium text-foreground sm:px-5",
+              bandStyle === "grey" && "bg-muted",
+              bandStyle === "outline" && "border-b",
+              bandStyle === "bar" && "border-l-4 border-l-foreground bg-muted",
+              bandStyle === "line" && "mx-4 border-b px-0 sm:mx-5 sm:px-0",
               // A message in the band takes the place of the status and date.
               "[&:has([data-messages]:not(:empty))>[data-band-status]]:hidden [&:has([data-sample])>[data-band-status]]:hidden",
             )}
@@ -1636,6 +1663,8 @@ export type DetailsOptions = {
   titleBox?: PartBox;
   /** "standard", or one of the title looks (centred, hero, date strip…). */
   titleLook?: "standard" | TitleVariant;
+  /** The Status band title look's band style. */
+  bandStyle?: BandStyle;
   /** How the facts show: the facts' own looks, or another design's (ticket, bento…). */
   factsAs?: "facts" | "ticket" | "ticket-colour" | "bento" | "none" | FactsLook;
   /** The walk's messages inside the title box: a row (table look) or boxes, top or bottom. */
@@ -1867,6 +1896,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
                     />
                   ) : null
                 }
+                bandStyle={o.bandStyle}
                 afterNote={
                   descriptionInTitle && titleLook === "band"
                     ? descriptionPart

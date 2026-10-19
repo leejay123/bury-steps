@@ -40,7 +40,7 @@ function toRow(
 }
 
 const WALKS_INTRO =
-  "Upcoming walks, and every finished walk. Filter by status, sort by date, or search. When a walk is starting soon or in progress, the row says Clock in now — open it and clock in with the same pre-walk check members use. You can also share the link, cancel, reopen, or remove a walk. Long walks stay under Upcoming until clock-in closes.";
+  "Upcoming walks, and every finished or cancelled walk under History. Filter by status, sort by date, or search. When a walk is starting soon or in progress, the row says Clock in now — open it and clock in with the same pre-walk check members use. You can also share the link, cancel, reopen, or remove a walk. Long walks stay under Upcoming until clock-in closes.";
 
 /**
  * The organiser's Walks page, as a private saved copy: kept in this browser
@@ -146,8 +146,13 @@ async function loadAdminWalks(userId: string) {
     }),
   ]);
 
+  // Cancelled walks go under History with the finished ones, not Upcoming.
+  const finishedOrCancelled = (walk: (typeof recent)[number]) => {
+    const status = walkStatus(walk);
+    return status === "completed" || status === "cancelled";
+  };
   const upcoming = recent
-    .filter((walk) => walkStatus(walk) !== "completed")
+    .filter((walk) => !finishedOrCancelled(walk))
     .map((walk) =>
       toRow(
         {
@@ -157,7 +162,7 @@ async function loadAdminWalks(userId: string) {
         walk.attendances.some((row) => row.userId === userId),
       ),
     );
-  const past = [...recent.filter((walk) => walkStatus(walk) === "completed"), ...older]
+  const past = [...recent.filter(finishedOrCancelled), ...older]
     .sort((a, b) => b.startsAt.getTime() - a.startsAt.getTime())
     .map((walk) => toRow(walk));
 

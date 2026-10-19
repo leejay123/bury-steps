@@ -342,7 +342,12 @@ export function WalksSection({
               and only the ones that apply show: the map&apos;s options appear
               once there&apos;s a map, the tablet and phone fact looks only for
               The facts, status options only with the standard title, and so
-              on. Turning something back on brings back what was set. The
+              on. Turning something back on brings back what was set. Walk messages now look like a plain grey band by default (as in the
+              Status band), with other band styles — outlined, a dark bar on
+              the left, or just a line underneath — and the coloured boxes
+              still there as a choice; the Status band title look has the same
+              Band style options. Cancelled walks are listed under History on
+              the Walks page, not Upcoming. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how
