@@ -10,7 +10,8 @@ import {
 } from "@/components/walk-page-skeletons";
 import { isWalkGalleryLayout, isWalkIdeaLayout, isWalkStudioLayout, isWalkTabsVariant } from "@/lib/walk-page-sections";
 import { getSiteTheme } from "@/lib/site-theme";
-import { getWalkPageChoice } from "@/lib/walk-page-choice";
+import { getWalkDesigns, getWalkPageChoice } from "@/lib/walk-page-choice";
+import { DesignSkeleton } from "@/components/walk-designer/design-skeleton";
 
 /**
  * Shaped like the walk page itself (page.tsx): the back link and journey
@@ -24,7 +25,30 @@ export default function Loading() {
 }
 
 export async function WalkLinkLoading() {
-  const [theme, choice] = await Promise.all([getSiteTheme(), getWalkPageChoice()]);
+  const [theme, choice, designs] = await Promise.all([getSiteTheme(), getWalkPageChoice(), getWalkDesigns()]);
+  // A designed page: the placeholder follows the members' or visitors'
+  // design (shown by the same switch as ← Walks / ← Home), not the standard tabs.
+  const memberDesign = designs.member ?? designs.visitor;
+  const visitorDesign = designs.visitor ?? designs.member;
+  if (choice.layout === "designed" && memberDesign && visitorDesign)
+    return (
+      <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6">
+        <span className="text-sm text-muted-foreground">
+          <Link className="hover:text-foreground" data-member-home="" href="/walks">
+            ← Walks
+          </Link>
+          <Link className="hover:text-foreground" data-guest-home="" href="/">
+            ← Home
+          </Link>
+        </span>
+        <div data-member-home="">
+          <DesignSkeleton design={memberDesign} />
+        </div>
+        <div data-guest-home="">
+          <DesignSkeleton design={visitorDesign} />
+        </div>
+      </div>
+    );
   if (isWalkTabsVariant(choice.layout) ||
     isWalkIdeaLayout(choice.layout) ||
     isWalkGalleryLayout(choice.layout) ||

@@ -457,18 +457,26 @@ function FoldHeading({
   return (
     <button
       aria-expanded={open}
-      className="-mx-1 mt-2 flex w-[calc(100%+0.5rem)] cursor-pointer items-start gap-2 rounded-lg border-t px-1 pt-3 pb-1 text-left"
+      // Plain: the designer already puts a line between settings, so no
+      // border or rounding of its own (they doubled up and looked messy).
+      className="flex w-full cursor-pointer items-center gap-2 text-left"
       onClick={onToggle}
       type="button"
     >
       {open ? (
-        <ChevronDown aria-hidden className="mt-0.5 size-4 shrink-0" />
+        <ChevronDown
+          aria-hidden
+          className="size-4 shrink-0 text-muted-foreground"
+        />
       ) : (
-        <ChevronRight aria-hidden className="mt-0.5 size-4 shrink-0" />
+        <ChevronRight
+          aria-hidden
+          className="size-4 shrink-0 text-muted-foreground"
+        />
       )}
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="flex items-baseline justify-between gap-3">
-          <span className="text-sm font-semibold">{title}</span>
+          <span className="text-sm font-medium">{title}</span>
           {open ? null : (
             <span className="truncate text-xs text-muted-foreground">
               {summary(props)}

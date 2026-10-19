@@ -12,7 +12,8 @@ import {
 } from "@/components/walk-page-skeletons";
 import { isWalkGalleryLayout, isWalkIdeaLayout, isWalkStudioLayout, isWalkTabsVariant } from "@/lib/walk-page-sections";
 import { getSiteTheme } from "@/lib/site-theme";
-import { getWalkPageChoice } from "@/lib/walk-page-choice";
+import { getWalkDesigns, getWalkPageChoice } from "@/lib/walk-page-choice";
+import { DesignSkeleton } from "@/components/walk-designer/design-skeleton";
 
 /**
  * Shaped like the organiser's walk page (page.tsx), part for part: the back
@@ -26,7 +27,15 @@ export default function WalkDetailLoading() {
 }
 
 async function OrganiserWalkLoading() {
-  const [theme, choice] = await Promise.all([getSiteTheme(), getWalkPageChoice()]);
+  const [theme, choice, designs] = await Promise.all([getSiteTheme(), getWalkPageChoice(), getWalkDesigns()]);
+  // A designed page: the placeholder follows the organisers' design (its own
+  // back link, title box, facts and tab names), not the standard tabs.
+  if (choice.layout === "designed" && designs.organiser)
+    return (
+      <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6 px-4 py-6 md:px-6">
+        <DesignSkeleton design={designs.organiser} />
+      </div>
+    );
   return (
     <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6 px-4 py-6 md:px-6">
       <Link className="text-sm text-muted-foreground hover:text-foreground" href="/admin/walks">
