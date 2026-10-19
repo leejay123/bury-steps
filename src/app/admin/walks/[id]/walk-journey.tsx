@@ -114,7 +114,10 @@ function RemoveJourneyEventDialogForm({
   onClose: () => void;
   title: string;
 }) {
-  const [state, action, isPending] = useNotifyActionState(deleteJourneyEvent, onClose);
+  const [state, action, isPending] = useNotifyActionState(
+    deleteJourneyEvent,
+    onClose,
+  );
 
   return (
     <AlertDialogContent closeDisabled={isPending}>
@@ -170,11 +173,15 @@ export function WalkJourneyManager({
   };
   const canEdit = mayEdit && canOrganiserEditJourney(walk, now);
   const liveDefaultHappenedAt =
-    walkStatus(walk, now) === "in-progress" ? utcToLondonWallClock(now) : defaultHappenedAt;
+    walkStatus(walk, now) === "in-progress"
+      ? utcToLondonWallClock(now)
+      : defaultHappenedAt;
 
   const [mode, setMode] = useState<Mode | null>(null);
-  const [createState, createAction, createPending] = useSafeActionState(createJourneyEvent);
-  const [updateState, updateAction, updatePending] = useSafeActionState(updateJourneyEvent);
+  const [createState, createAction, createPending] =
+    useSafeActionState(createJourneyEvent);
+  const [updateState, updateAction, updatePending] =
+    useSafeActionState(updateJourneyEvent);
   const pending = createPending || updatePending;
   useActionToast(createState, () => setMode(null));
   useActionToast(updateState, () => setMode(null));
@@ -188,35 +195,32 @@ export function WalkJourneyManager({
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <h2 className="font-medium">Journey</h2>
-          <p className="text-sm text-muted-foreground">
-            Short moments from the walk. View journey opens the timeline in a drawer — the same one
-            members see. Up to {MAX_JOURNEY_EVENTS}.
-          </p>
+      {/* No heading of its own: the tab (or section) already says Journey, and
+          a heading here made this tab start lower than the others. */}
+      {showJourneyDrawer || showAddEvent ? (
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div
+            className={
+              showBothButtons
+                ? "grid w-full grid-cols-2 gap-2 sm:w-auto"
+                : "flex w-full flex-col gap-2 sm:w-auto"
+            }
+          >
+            <WalkJourneyDrawer className="w-full" events={events} />
+            {canEdit && !atCap ? (
+              <Button
+                className="w-full"
+                onClick={() => setMode({ type: "add" })}
+                size="sm"
+                variant="outline"
+              >
+                <Plus data-icon="inline-start" />
+                Add event
+              </Button>
+            ) : null}
+          </div>
         </div>
-        <div
-          className={
-            showBothButtons
-              ? "grid w-full grid-cols-2 gap-2 sm:w-auto"
-              : "flex w-full flex-col gap-2 sm:w-auto"
-          }
-        >
-          <WalkJourneyDrawer className="w-full" events={events} />
-          {canEdit && !atCap ? (
-            <Button
-              className="w-full"
-              onClick={() => setMode({ type: "add" })}
-              size="sm"
-              variant="outline"
-            >
-              <Plus data-icon="inline-start" />
-              Add event
-            </Button>
-          ) : null}
-        </div>
-      </div>
+      ) : null}
 
       {events.length === 0 ? (
         <EmptyState
@@ -253,7 +257,9 @@ export function WalkJourneyManager({
                   eventId={event.id}
                   onRemoved={() =>
                     setMode((current) =>
-                      current?.type === "edit" && current.event.id === event.id ? null : current,
+                      current?.type === "edit" && current.event.id === event.id
+                        ? null
+                        : current,
                     )
                   }
                   title={event.title}
@@ -275,7 +281,9 @@ export function WalkJourneyManager({
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>{editing ? "Edit event" : "Add event"}</DrawerTitle>
-            <DrawerDescription>What happened, and when (UK time).</DrawerDescription>
+            <DrawerDescription>
+              What happened, and when (UK time).
+            </DrawerDescription>
           </DrawerHeader>
           <form
             action={editing ? updateAction : createAction}
@@ -283,7 +291,9 @@ export function WalkJourneyManager({
             key={editing?.id ?? "add"}
           >
             <input name="walkId" type="hidden" value={walkId} />
-            {editing ? <input name="eventId" type="hidden" value={editing.id} /> : null}
+            {editing ? (
+              <input name="eventId" type="hidden" value={editing.id} />
+            ) : null}
             {/* Only the fields scroll — on a phone with the keyboard up, the
                 old unscrollable form clipped When and the button off the
                 bottom of the drawer. */}
@@ -318,14 +328,18 @@ export function WalkJourneyManager({
                 </Label>
                 <DateTimePicker
                   defaultValue={
-                    editing ? utcToLondonWallClock(editing.happenedAt) : liveDefaultHappenedAt
+                    editing
+                      ? utcToLondonWallClock(editing.happenedAt)
+                      : liveDefaultHappenedAt
                   }
                   id="journey-when"
                   name="happenedAt"
                   required
                 />
               </div>
-              <FormError message={formState && !formState.ok ? formState.error : null} />
+              <FormError
+                message={formState && !formState.ok ? formState.error : null}
+              />
             </div>
             <DrawerFormFooter
               label={editing ? "Save changes" : "Add event"}

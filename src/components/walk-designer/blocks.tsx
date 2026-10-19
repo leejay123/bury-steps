@@ -3803,7 +3803,11 @@ function FactLooksBody({
             key={fact.label}
           >
             <dt className="font-semibold">{fact.label}</dt>
-            <dd className="[overflow-wrap:anywhere]" suppressHydrationWarning>
+            {/* The value on the far right of its row. */}
+            <dd
+              className="text-right [overflow-wrap:anywhere]"
+              suppressHydrationWarning
+            >
               {fact.value}
             </dd>
           </div>

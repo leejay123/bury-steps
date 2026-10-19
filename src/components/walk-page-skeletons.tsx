@@ -8,7 +8,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ForecastSkeleton } from "@/components/walk-forecast";
 import { WalkMapSkeleton } from "@/components/walk-map-skeleton";
 import type { SiteTheme } from "@/lib/site-theme";
-import { MAX_JOURNEY_EVENTS } from "@/lib/walk-journey";
 
 /**
  * Placeholders for a walk's page, section by section, shaped like the real
@@ -31,7 +30,10 @@ function WalkFactsSkeleton() {
     <div className="@container flex flex-col gap-3">
       <dl className="grid grid-cols-2 gap-2 @lg:grid-cols-3 @3xl:grid-cols-4">
         {FACTS.map(({ icon: Icon, label, width }) => (
-          <div className="flex min-w-0 flex-col gap-1 rounded-lg bg-muted/60 px-3 py-2.5" key={label}>
+          <div
+            className="flex min-w-0 flex-col gap-1 rounded-lg bg-muted/60 px-3 py-2.5"
+            key={label}
+          >
             <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Icon aria-hidden="true" className="size-3.5 shrink-0" />
               {label}
@@ -108,8 +110,8 @@ export function PreciseLocationSkeleton() {
           <Skeleton className="h-[64%] w-40 rounded-lg" />
         </span>
         <span className="text-xs text-muted-foreground">
-          A what3words address — three fixed words that mark this exact spot to within 3 metres.
-          Tap to open it in Maps.
+          A what3words address — three fixed words that mark this exact spot to
+          within 3 metres. Tap to open it in Maps.
         </span>
       </span>
     </div>
@@ -133,7 +135,9 @@ export function WalkSectionsSkeleton({
         if (!visible) return null;
         switch (id) {
           case "before":
-            return organiser || withoutBefore || !theme.beforeYouSetOffEnabled ? null : (
+            return organiser ||
+              withoutBefore ||
+              !theme.beforeYouSetOffEnabled ? null : (
               <BeforeYouSetOff key={id} tips={theme.beforeYouSetOffTips} />
             );
           case "map":
@@ -204,13 +208,8 @@ export function OrganiserWalkToolsSkeleton() {
       <EmptyStateSkeleton />
       <Separator />
       <section className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="font-medium">Journey</h2>
-          <p className="text-sm text-muted-foreground">
-            Short moments from the walk. View journey opens the timeline in a drawer — the same one
-            members see. Up to {MAX_JOURNEY_EVENTS}.
-          </p>
-        </div>
+        {/* The View journey / Add event buttons. */}
+        <Skeleton className="h-8 w-40 rounded-lg" />
         <EmptyStateSkeleton />
       </section>
     </>

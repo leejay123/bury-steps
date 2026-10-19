@@ -855,14 +855,15 @@ function TabsView({
         className={cn(
           sticky &&
             "sticky top-16 z-20 -mx-1 bg-background/95 px-1 py-2 backdrop-blur-sm",
-          corners === "square" &&
-            "[&_[data-slot=tabs-list]]:rounded-none [&_[data-slot=tabs-trigger]]:rounded-none",
-          corners === "rounded" &&
-            "[&_[data-slot=tabs-list]]:rounded-xl [&_[data-slot=tabs-trigger]]:rounded-lg",
-          corners === "pill" &&
-            "[&_[data-slot=tabs-list]]:rounded-full [&_[data-slot=tabs-trigger]]:rounded-full",
-          // Out to the page's edges, square ends (the panels stay page width).
           TAB_LOOKS[look],
+          // After the look, and forced, so the corners always win over the
+          // look's own (they used to lose, so the setting seemed to do nothing).
+          corners === "square" &&
+            "[&_[data-slot=tabs-list]]:rounded-none! [&_[data-slot=tabs-trigger]]:rounded-none!",
+          corners === "rounded" &&
+            "[&_[data-slot=tabs-list]]:rounded-[8px]! [&_[data-slot=tabs-trigger]]:rounded-[8px]!",
+          corners === "pill" &&
+            "[&_[data-slot=tabs-list]]:rounded-full! [&_[data-slot=tabs-trigger]]:rounded-full!",
           side &&
             "lg:col-start-1 lg:row-start-1 lg:[&_[data-slot=tabs-list]]:w-full lg:[&_[data-slot=tabs-list]]:flex-col lg:[&_[data-slot=tabs-list]]:items-stretch lg:[&_[data-slot=tabs-trigger]]:justify-start",
         )}
