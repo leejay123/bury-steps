@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /** Splits **only** on a blank line (2+ newlines) into paragraphs — a single
@@ -8,8 +8,16 @@ import { cn } from "@/lib/utils";
  * blank line (that gap stacks on top of the line's own line-height). Also
  * turns **text** into bold — the only formatting the plain-text description
  * field supports (see the hint under the Textarea in walk-form-fields.tsx). */
-export function DescriptionText({ text, className }: { text: string; className?: string }) {
-  const paragraphs = text.trim().split(/\n{2,}/);
+export function DescriptionText({
+  text,
+  className,
+}: {
+  text: string;
+  className?: string;
+}) {
+  const paragraphs = normaliseBreaks(text)
+    .trim()
+    .split(/\n{2,}/);
   return (
     <div className={cn("flex flex-col gap-2", className)}>
       {paragraphs.map((paragraph, index) => (
@@ -24,14 +32,46 @@ export function DescriptionText({ text, className }: { text: string; className?:
  * inline flow for the clamp to count lines correctly. Line breaks (single
  * \n) still become <br>, so a preview reads the same as the full text up to
  * where it gets cut off, just without literal ** markup showing through. */
-export function InlineDescriptionText({ text, className }: { text: string; className?: string }) {
-  return <span className={className}>{formatParagraph(text)}</span>;
+export function InlineDescriptionText({
+  text,
+  className,
+}: {
+  text: string;
+  className?: string;
+}) {
+  // A blank line between paragraphs: a small 8px gap (as in the full text),
+  // not a whole empty line.
+  const paragraphs = normaliseBreaks(text)
+    .trim()
+    .split(/\n{2,}/);
+  return (
+    <span className={className}>
+      {paragraphs.map((paragraph, index) => (
+        <Fragment key={index}>
+          {index > 0 ? (
+            <>
+              <br />
+              <span aria-hidden className="block h-2" />
+            </>
+          ) : null}
+          {formatParagraph(paragraph)}
+        </Fragment>
+      ))}
+    </span>
+  );
+}
+
+/** Text boxes send line breaks as "\r\n": seen as two lines, a blank line
+ * between paragraphs then wasn't found, and showed as a whole empty line. */
+function normaliseBreaks(text: string) {
+  return text.replace(/\r\n?/g, "\n");
 }
 
 function formatParagraph(paragraph: string): ReactNode[] {
   return paragraph.split("\n").flatMap((line, lineIndex, lines) => {
     const nodes: ReactNode[] = boldify(line, lineIndex);
-    if (lineIndex < lines.length - 1) nodes.push(<br key={`br-${lineIndex}`} />);
+    if (lineIndex < lines.length - 1)
+      nodes.push(<br key={`br-${lineIndex}`} />);
     return nodes;
   });
 }
@@ -43,7 +83,9 @@ function boldify(line: string, lineIndex: number): ReactNode[] {
   const parts = line.split(/(\*\*[^*]+\*\*)/g).filter((part) => part !== "");
   return parts.flatMap((part, partIndex): ReactNode[] => {
     if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
-      return [<strong key={`${lineIndex}-${partIndex}`}>{part.slice(2, -2)}</strong>];
+      return [
+        <strong key={`${lineIndex}-${partIndex}`}>{part.slice(2, -2)}</strong>,
+      ];
     }
     return italicize(part, `${lineIndex}-${partIndex}`);
   });

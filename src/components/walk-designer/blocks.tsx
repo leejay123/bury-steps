@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { formatTime, formatWalkDay, formatWalkLength } from "@/lib/dates";
 import { cn } from "@/lib/utils";
+import { DataList, DataListItem } from "@/components/data-list";
 import { effectiveEndsAt, walkOpensAt, walkStatus } from "@/lib/walk-window";
 import { useWalkClock } from "@/hooks/use-walk-clock";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -368,7 +369,14 @@ function MaybeRow({
  * into a swiping row, and pills and one-liners only wrap or swipe. Looks not
  * named here (cards and tiles) work with all of them.
  */
-const NO_ARRANGE = ["list", "table", "spec-sheet", "journey", "columns"];
+const NO_ARRANGE = [
+  "list",
+  "table",
+  "spec-sheet",
+  "journey",
+  "columns",
+  "card-table",
+];
 const WRAP_OR_SWIPE = ["chips", "inline", "big-pills"];
 export function arrangesFor(look: string): Arrange[] {
   if (NO_ARRANGE.includes(look)) return [];
@@ -1661,8 +1669,14 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         : "normal"
       : o.inset;
   // Inset: the map's own rounded card, with the card's space around it.
+  // (Empty when the walk has no map pin: then it takes no room.)
   const insetMap = (className?: string) => (
-    <div className={cn(padding !== "none" && "px-6", className)}>{p.map}</div>
+    <div
+      className={cn(padding !== "none" && "px-6", "empty:hidden", className)}
+      data-card-map=""
+    >
+      {p.map}
+    </div>
   );
   // The precise location, where chosen. With no map in the card, the map
   // spots fall back to under the facts.
@@ -2030,6 +2044,8 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
           <div
             className={cn(
               "grid lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start",
+              // No map pin: no side column either.
+              "lg:has-[>[data-card-map]:empty]:grid-cols-1",
               // With no space inside the card, the two sides need their
               // own 24px gap (otherwise the title box and map touch).
               padding === "none" && "gap-6",
@@ -3724,6 +3740,7 @@ function StepsLooks({
 
 // ── Every fact, in other designs' looks (the Details card's Facts shown as) ─
 export type FactsLook =
+  | "card-table"
   | "colour-blocks"
   | "story-cards"
   | "summary"
@@ -3894,6 +3911,36 @@ function FactLooksBody({
           </li>
         ))}
       </ul>
+    );
+
+  // The same card list as the Walks, Members and History pages: one
+  // outlined box, a row per fact. On a phone the label sits over the value;
+  // wider, the value moves to the right of its row.
+  if (look === "card-table")
+    return (
+      <DataList className={cn(!border && "rounded-none border-0")}>
+        {facts.map((fact) => (
+          <DataListItem
+            className="items-start gap-3 hover:bg-transparent sm:items-center"
+            key={fact.label}
+          >
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+              <fact.icon aria-hidden className="size-4 text-muted-foreground" />
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+              <span className="text-xs text-muted-foreground sm:text-sm">
+                {fact.label}
+              </span>
+              <span
+                className="text-sm font-medium [overflow-wrap:anywhere] sm:text-right"
+                suppressHydrationWarning
+              >
+                {fact.value}
+              </span>
+            </span>
+          </DataListItem>
+        ))}
+      </DataList>
     );
 
   if (look === "spec-sheet")

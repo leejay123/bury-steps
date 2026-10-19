@@ -166,7 +166,12 @@ export function WalkMap({
   location: string;
   point: GeoPoint | null;
 }) {
-  const o = { ...DEFAULT_LOOK, ...useContext(MapLookContext) };
+  const designed = useContext(MapLookContext);
+  const o = { ...DEFAULT_LOOK, ...designed };
+  // On a designed page, no map pin means no map: the Directions block (or
+  // the card's buttons elsewhere) still gets people there, and a map box
+  // with nothing in it only takes up room. Other walk pages keep the box.
+  if (designed && !point) return null;
   const height =
     o.height === "short" ? "h-44" : o.height === "tall" ? "h-96" : "h-64";
   // Square, rounded or very rounded corners on the map's card or frame.

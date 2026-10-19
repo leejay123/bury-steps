@@ -1,11 +1,16 @@
 "use client";
 
-import type { ComponentConfig, Config } from "@puckeditor/core";
+import {
+  createUsePuck,
+  type ComponentConfig,
+  type Config,
+} from "@puckeditor/core";
 import { useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { PreviewAudience, WalkPartsProvider, useWalkParts } from "./parts";
 import { ReadyLayoutBlock } from "./ready-layout-block";
 import { READY_LAYOUTS } from "./ready-layouts";
 import { cn } from "@/lib/utils";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -357,6 +362,10 @@ const TITLE_PART_NAMES: Record<string, string> = {
 // Every design for the Details card's facts.
 const FACTS_AS_OPTIONS: { value: string; label: string }[] = [
   { value: "facts", label: "Plain facts (pick the look below)" },
+  {
+    value: "card-table",
+    label: "Card table (like the Walks and Members lists)",
+  },
   { value: "colour-blocks", label: "Colour blocks" },
   {
     value: "bento",
@@ -393,6 +402,236 @@ const TITLE_LOOKS: [string, string][] = [
  * A heading between groups of settings (Puck's "custom" field: it shows
  * this instead of an input, and stores nothing).
  */
+const usePuck = createUsePuck();
+
+/** Reads the selected block's settings (for the fold headings' summaries). */
+function useSelectedProps(): Record<string, unknown> {
+  return (usePuck((s) => s.selectedItem?.props) ?? {}) as Record<
+    string,
+    unknown
+  >;
+}
+
+/**
+ * A Details card section heading that folds its settings away: click to
+ * open (the others close, see FOLDS), with a one-line summary of what's
+ * chosen when shut. Its stored value is just whether it's open.
+ */
+const foldSection = (
+  title: string,
+  note: string,
+  summary: (props: Record<string, unknown>) => string,
+) => ({
+  type: "custom" as const,
+  render: ({
+    value,
+    onChange,
+  }: {
+    value?: boolean;
+    onChange: (value: boolean) => void;
+  }) => (
+    <FoldHeading
+      note={note}
+      onToggle={() => onChange(!value)}
+      open={Boolean(value)}
+      summary={summary}
+      title={title}
+    />
+  ),
+});
+
+function FoldHeading({
+  title,
+  note,
+  open,
+  onToggle,
+  summary,
+}: {
+  title: string;
+  note: string;
+  open: boolean;
+  onToggle: () => void;
+  summary: (props: Record<string, unknown>) => string;
+}) {
+  const props = useSelectedProps();
+  return (
+    <button
+      aria-expanded={open}
+      className="-mx-1 mt-2 flex w-[calc(100%+0.5rem)] cursor-pointer items-start gap-2 rounded-lg border-t px-1 pt-3 pb-1 text-left"
+      onClick={onToggle}
+      type="button"
+    >
+      {open ? (
+        <ChevronDown aria-hidden className="mt-0.5 size-4 shrink-0" />
+      ) : (
+        <ChevronRight aria-hidden className="mt-0.5 size-4 shrink-0" />
+      )}
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="flex items-baseline justify-between gap-3">
+          <span className="text-sm font-semibold">{title}</span>
+          {open ? null : (
+            <span className="truncate text-xs text-muted-foreground">
+              {summary(props)}
+            </span>
+          )}
+        </span>
+        {open ? (
+          <span className="text-xs text-muted-foreground">{note}</span>
+        ) : null}
+      </span>
+    </button>
+  );
+}
+
+/** "More … options" inside an open section: shows the less-used settings. */
+const moreToggle = (what: string) => ({
+  type: "custom" as const,
+  render: ({
+    value,
+    onChange,
+  }: {
+    value?: boolean;
+    onChange: (value: boolean) => void;
+  }) => (
+    <button
+      aria-expanded={Boolean(value)}
+      className="flex cursor-pointer items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+      onClick={() => onChange(!value)}
+      type="button"
+    >
+      {value ? (
+        <ChevronDown aria-hidden className="size-3.5" />
+      ) : (
+        <ChevronRight aria-hidden className="size-3.5" />
+      )}
+      {value ? `Fewer ${what} options` : `More ${what} options`}
+    </button>
+  ),
+});
+
+/** Shown as the summary: the chosen option's words, or "Off". */
+const said = (value: unknown, words: Record<string, string>, fallback = "") =>
+  words[String(value)] ?? (fallback || String(value ?? ""));
+
+/**
+ * The Details card's sections, in order: the heading, the main settings,
+ * then (behind More … options) the less-used ones. Only one section is open
+ * at a time (the Details block's resolveData).
+ */
+const FOLDS: {
+  key: string;
+  more: string;
+  main: string[];
+  extra: string[];
+}[] = [
+  {
+    key: "_titleSection",
+    more: "_titleMore",
+    main: ["showTitle", "titleLook", "titleParts", "showActions"],
+    extra: [
+      "bandStyle",
+      "titleGap",
+      "titleBox",
+      "statusLook",
+      "statusAt",
+      "bigTitle",
+      "titleMessages",
+    ],
+  },
+  {
+    key: "_mapSection",
+    more: "_mapMore",
+    main: ["map", "mapButtons", "mapHeight"],
+    extra: ["mapButtonsLook", "mapCorners", "mapTitle", "mapNote"],
+  },
+  {
+    key: "_preciseSection",
+    more: "_preciseMore",
+    main: ["preciseAt", "preciseLook"],
+    extra: [],
+  },
+  {
+    key: "_factsSection",
+    more: "_factsMore",
+    main: [
+      "factsAs",
+      "tabletFactsAs",
+      "phoneFactsAs",
+      "facts",
+      "factsArrange",
+      "tabletFacts",
+      "tabletFactsArrange",
+      "phoneFacts",
+      "phoneFactsArrange",
+    ],
+    extra: [
+      "factsBorder",
+      "factLines",
+      "showEmptyFacts",
+      "factsGap",
+      "factsTitle",
+      "factsBox",
+      "tabletFactsBox",
+      "phoneFactsBox",
+    ],
+  },
+  {
+    key: "_timelineSection",
+    more: "_timelineMore",
+    main: ["timeline", "timelineLook"],
+    extra: [
+      "timelineOpens",
+      "timelineStart",
+      "timelineEnd",
+      "timelineTitle",
+      "timelineBox",
+    ],
+  },
+  {
+    key: "_essentialsSection",
+    more: "_essentialsMore",
+    main: ["showEssentials", "essentials"],
+    extra: [],
+  },
+  {
+    key: "_descriptionSection",
+    more: "_descriptionMore",
+    main: ["showDescription", "descriptionAt"],
+    extra: ["descriptionTitle", "descriptionBox"],
+  },
+];
+
+/**
+ * Puts the Details card's settings in section order and folds away the
+ * shut sections (and each open one's More options), after the settings
+ * that can't apply have already been taken out.
+ */
+function foldDetailsFields<F extends Record<string, unknown>>(
+  shown: F,
+  props: Record<string, unknown>,
+): F {
+  const out: Record<string, unknown> = {};
+  const placed = new Set<string>();
+  for (const fold of FOLDS) {
+    placed.add(fold.key).add(fold.more);
+    [...fold.main, ...fold.extra].forEach((k) => placed.add(k));
+    if (shown[fold.key]) out[fold.key] = shown[fold.key];
+    if (!props[fold.key]) continue;
+    for (const k of fold.main) if (k in shown) out[k] = shown[k];
+    const extra = fold.extra.filter((k) => k in shown);
+    if (extra.length === 0) continue;
+    out[fold.more] =
+      shown[fold.more] ??
+      moreToggle(
+        fold.key.replace(/^_|Section$/g, "").replace("precise", "location"),
+      );
+    if (props[fold.more]) for (const k of extra) out[k] = shown[k];
+  }
+  // Anything not in a section keeps its place at the end.
+  for (const [k, v] of Object.entries(shown)) if (!placed.has(k)) out[k] = v;
+  return out as F;
+}
+
 const section = (title: string, note: string) => ({
   type: "custom" as const,
   render: () => (
@@ -567,9 +806,10 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
     if (props.statusLook === "none") hide.add("statusAt");
   }
   // Only the looks with a frame round them all have one to turn off.
+  const framed = ["spec-sheet", "card-table"];
   if (
-    ![props.factsAs, props.tabletFactsAs, props.phoneFactsAs].includes(
-      "spec-sheet",
+    ![props.factsAs, props.tabletFactsAs, props.phoneFactsAs].some((look) =>
+      framed.includes(String(look)),
     )
   )
     hide.add("factsBorder");
@@ -1322,16 +1562,21 @@ export const walkDesignConfig: Config = {
       label: "Details card",
       // Pages saved before the title box list: fill it from their old
       // settings, so the list shows what's already in the title box.
-      resolveData: (data) =>
-        Array.isArray(data.props.titleParts)
-          ? data
-          : {
-              ...data,
-              props: {
-                ...data.props,
-                titleParts: titlePartsOf(data.props).map((part) => ({ part })),
-              },
-            },
+      // Opening one section of settings shuts the others.
+      resolveData: (data, { changed }) => {
+        const props: Record<string, unknown> = { ...data.props };
+        if (!Array.isArray(props.titleParts))
+          props.titleParts = titlePartsOf(props).map((part) => ({ part }));
+        const opened = FOLDS.find(
+          (fold) =>
+            (changed as Record<string, boolean | undefined>)[fold.key] &&
+            props[fold.key],
+        );
+        if (opened)
+          for (const fold of FOLDS)
+            if (fold !== opened) props[fold.key] = false;
+        return { ...data, props: props as typeof data.props };
+      },
       // Only the settings that apply to what's chosen (hiddenDetailsSettings).
       resolveFields: (data, { fields }) => {
         const props = data.props as DetailsProps;
@@ -1404,7 +1649,7 @@ export const walkDesignConfig: Config = {
             ),
           } as (typeof fields)["ribbon"];
         }
-        return shown;
+        return foldDetailsFields(shown, props);
       },
       fields: {
         _cardSection: section(
@@ -1468,9 +1713,28 @@ export const walkDesignConfig: Config = {
             ["bottom", "Bottom"],
           ]),
         },
-        _titleSection: section(
+        _titleSection: foldSection(
           "Title",
           "The walk name, its status and the Clock in + Manage buttons.",
+          (p) =>
+            p.showTitle === false
+              ? "Off"
+              : [
+                  said(
+                    p.titleLook,
+                    {
+                      standard: "Standard",
+                      plain: "Plain",
+                      band: "Status band",
+                    },
+                    "Standard",
+                  ),
+                  Array.isArray(p.titleParts) && p.titleParts.length
+                    ? `${p.titleParts.length} inside`
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" · "),
         ),
         showTitle: { type: "radio", label: "Show the title", options: yesNo },
         titleLook: {
@@ -1570,7 +1834,21 @@ export const walkDesignConfig: Config = {
             },
           ],
         },
-        _mapSection: section("Map", "The meeting point map inside the card."),
+        _mapSection: foldSection(
+          "Map",
+          "The meeting point map inside the card.",
+          (p) =>
+            said(
+              p.map,
+              {
+                none: "Off",
+                top: "At the top",
+                side: "Down the side",
+                bottom: "At the bottom",
+              },
+              "Off",
+            ),
+        ),
         map: {
           type: "select",
           label: "Map in the card",
@@ -1617,7 +1895,11 @@ export const walkDesignConfig: Config = {
           label: "Map's small print (OpenStreetMap…)",
           options: yesNo,
         },
-        _preciseSection: section("Precise location", "The what3words address."),
+        _preciseSection: foldSection(
+          "Precise location",
+          "The what3words address.",
+          (p) => (!p.preciseAt || p.preciseAt === "none" ? "Off" : "On"),
+        ),
         preciseAt: {
           type: "select",
           label: "Precise location (what3words)",
@@ -1632,9 +1914,13 @@ export const walkDesignConfig: Config = {
           ],
         },
         preciseLook: preciseLookField,
-        _factsSection: section(
+        _factsSection: foldSection(
           "Facts",
           "Date, times, meeting point, distance and the rest.",
+          (p) =>
+            FACTS_AS_OPTIONS.find(
+              (o) => o.value === keptFactsAs(p.factsAs),
+            )?.label.replace(/ \(.*\)$/, "") ?? "",
         ),
         factsAs: {
           type: "select",
@@ -1700,9 +1986,11 @@ export const walkDesignConfig: Config = {
         factsBox: boxField("Box around the facts (computers)"),
         tabletFactsBox: tabletBoxField("Box around the facts (tablets)"),
         phoneFactsBox: phoneBoxField("Box around the facts (phones)"),
-        _timelineSection: section(
+        _timelineSection: foldSection(
           "Timeline",
           "The day from clock-in opening to the finish.",
+          (p) =>
+            p.timeline || titlePartsOf(p).includes("timeline") ? "On" : "Off",
         ),
         timeline: {
           type: "radio",
@@ -1716,9 +2004,10 @@ export const walkDesignConfig: Config = {
           label: "Timeline heading (blank: no heading)",
         },
         timelineBox: boxField("Box around the day's timeline"),
-        _essentialsSection: section(
+        _essentialsSection: foldSection(
           "Essentials",
           "Toilets, parking, dogs and the rest.",
+          (p) => (p.showEssentials === false ? "Off" : "On"),
         ),
         showEssentials: { type: "radio", label: "Essentials", options: yesNo },
         essentials: {
@@ -1726,9 +2015,15 @@ export const walkDesignConfig: Config = {
           label: "Essentials in the card",
           objectFields: essentialsFields,
         },
-        _descriptionSection: section(
+        _descriptionSection: foldSection(
           "Description",
           "The walk’s description from Edit walk.",
+          (p) =>
+            titlePartsOf(p).includes("description")
+              ? "In the title box"
+              : p.showDescription === false
+                ? "Off"
+                : "On",
         ),
         showDescription: {
           type: "radio",
@@ -1748,6 +2043,12 @@ export const walkDesignConfig: Config = {
           label: "Description heading (blank: no heading)",
         },
         descriptionBox: boxField("Box around the description"),
+        // The More … options switches (placed by foldDetailsFields).
+        _titleMore: moreToggle("title"),
+        _mapMore: moreToggle("map"),
+        _factsMore: moreToggle("facts"),
+        _timelineMore: moreToggle("timeline"),
+        _descriptionMore: moreToggle("description"),
       },
       defaultProps: {
         factsAs: "facts",

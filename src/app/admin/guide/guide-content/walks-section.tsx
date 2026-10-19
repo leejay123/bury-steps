@@ -378,7 +378,14 @@ export function WalksSection({
               every fact its own colour. Facts shown as on tablets and Facts shown as on
               phones (under Facts shown as) give those devices a different
               design, or Same as on computers; with Plain facts, Plain facts
-              look on each device picks the plain look there. The
+              look on each device picks the plain look there. The Details card&apos;s settings fold away: click a
+              section heading (Title, Map, Precise location, Facts, Timeline,
+              Essentials, Description) to open it — the others shut — and
+              each shut heading shows a short summary of what&apos;s chosen. The
+              less-used settings in a section are under More … options. Card
+              table (in Facts shown as) shows the facts in the same outlined
+              list as the Walks and Members pages. On a designed page, a walk
+              whose meeting point can&apos;t be found on the map shows no map box. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how
