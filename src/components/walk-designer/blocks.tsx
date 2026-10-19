@@ -1562,6 +1562,9 @@ export type DetailsOptions = {
   factsAs?: "facts" | "bento" | "none" | FactsLook | (string & {});
   /** Looks with a frame round them all (Spec sheet): show the frame. */
   factsBorder?: boolean;
+  /** Facts shown as on tablets and phones ("same": as on computers). */
+  tabletFactsAs?: string;
+  phoneFactsAs?: string;
   /** The walk's messages inside the title box: a row (table look) or boxes, top or bottom. */
   titleMessages?:
     | "none"
@@ -1646,7 +1649,8 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   // What's inside the title box (none without a title to hold it).
   const titleParts = showTitle ? titlePartsOf(o) : [];
   const inTitle = (part: TitlePart) => titleParts.includes(part);
-  const factsInTitle = inTitle("facts") && factsAs !== "none";
+  // (Shown even if computers have none: tablets or phones may have some.)
+  const factsInTitle = inTitle("facts");
   const showActions = (o.showActions ?? true) && !ownTitle;
   // A map in the title box isn't placed anywhere else in the card.
   const map = inTitle("map") ? "none" : (o.map ?? "none");
@@ -1799,8 +1803,9 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         ) : null}
       </div>
     );
-  const factsPart =
-    factsAs === "facts" ? (
+  // The facts in one design (or none), with its arrangement and box.
+  const factsIn = (as: string, arrange?: Arrange, box?: PartBox) =>
+    as === "facts" ? (
       <DeviceFacts
         arrange={o.factsArrange}
         dark={dark}
@@ -1817,24 +1822,60 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         phoneBox={o.phoneFactsBox}
         tabletBox={o.tabletFactsBox}
       />
-    ) : factsAs === "none" ? null : (
+    ) : as === "none" ? null : (
       // The same facts in one of the other designs' looks, inside this card.
-      <Boxed box={o.factsBox} dark={dark}>
+      <Boxed box={box} dark={dark}>
         <div className="flex flex-col gap-2">
           <PartHeading text={o.factsTitle} />
-          {factsAs === "bento" ? (
+          {as === "bento" ? (
             <Bento allFacts p={p} showEmpty={o.showEmptyFacts} />
           ) : (
             <FactLooks
-              arrange={o.factsArrange}
+              arrange={arrange}
               border={o.factsBorder ?? true}
-              look={factsAs as FactsLook}
+              look={as as FactsLook}
               p={p}
               showEmpty={o.showEmptyFacts}
             />
           )}
         </div>
       </Boxed>
+    );
+  // Facts shown as can differ on tablets and phones ("same": as on
+  // computers; tablets can also follow phones).
+  const phoneAs = keptFactsAs(o.phoneFactsAs ?? "same");
+  const tabletAs = keptFactsAs(o.tabletFactsAs ?? "same");
+  const phoneDesign = phoneAs === "same" ? factsAs : phoneAs;
+  const tabletDesign =
+    tabletAs === "same"
+      ? factsAs
+      : tabletAs === "phone"
+        ? phoneDesign
+        : tabletAs;
+  const factsPart =
+    phoneDesign === factsAs &&
+    tabletDesign === factsAs &&
+    factsAs === "facts" ? (
+      factsIn("facts")
+    ) : (
+      <ByDevice
+        computer={{
+          as: factsAs,
+          arrange: o.factsArrange ?? "fill",
+          box: o.factsBox ?? "none",
+        }}
+        draw={(look) => factsIn(look.as, look.arrange, look.box)}
+        phone={{
+          as: phoneAs,
+          arrange: o.phoneFactsArrange ?? "same",
+          box: o.phoneFactsBox ?? "same",
+        }}
+        tablet={{
+          as: tabletAs,
+          arrange: o.tabletFactsArrange ?? "same",
+          box: o.tabletFactsBox ?? "same",
+        }}
+      />
     );
   // What's inside the title box under the name, in the chosen order.
   const gap = TITLE_GAP[o.titleGap ?? "normal"] ?? TITLE_GAP.normal;

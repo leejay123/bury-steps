@@ -375,7 +375,10 @@ export function WalksSection({
               around the title (the band has its own outline); with the map
               down the side, the two sides always have a 24 pixel gap and the
               shorter side stays in view. Cards with a coloured top bar give
-              every fact its own colour. The
+              every fact its own colour. Facts shown as on tablets and Facts shown as on
+              phones (under Facts shown as) give those devices a different
+              design, or Same as on computers; with Plain facts, Plain facts
+              look on each device picks the plain look there. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

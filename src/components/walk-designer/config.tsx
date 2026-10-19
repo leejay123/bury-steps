@@ -354,6 +354,33 @@ const TITLE_PART_NAMES: Record<string, string> = {
   map: "Map",
 };
 
+// Every design for the Details card's facts.
+const FACTS_AS_OPTIONS: { value: string; label: string }[] = [
+  { value: "facts", label: "Plain facts (pick the look below)" },
+  { value: "colour-blocks", label: "Colour blocks" },
+  {
+    value: "bento",
+    label: "Bento grid (has its own name and buttons)",
+  },
+  { value: "story-cards", label: "Story cards" },
+  { value: "summary", label: "Summary tiles" },
+  { value: "wide-tiles", label: "Wide tiles (icon beside, roomy)" },
+  { value: "stat-cards", label: "Stat cards (big values)" },
+  { value: "icon-circles", label: "Icons in coloured circles" },
+  { value: "spec-sheet", label: "Spec sheet (striped table)" },
+  { value: "sticky-notes", label: "Sticky notes" },
+  { value: "journey", label: "Journey line (dots, swipe)" },
+  { value: "top-bar", label: "Cards with a coloured top bar" },
+  { value: "columns", label: "Columns with dividers" },
+  { value: "big-pills", label: "Big pills (label and value)" },
+  { value: "mini-cards", label: "Mini cards (compact)" },
+  { value: "none", label: "Don't show facts" },
+];
+// On tablets and phones: all but the bento grid (it has its own name and buttons).
+const DEVICE_FACTS_AS = FACTS_AS_OPTIONS.filter(
+  (option) => option.value !== "bento",
+);
+
 // Every title look (the Title block and the Details card's title).
 const TITLE_LOOKS: [string, string][] = [
   ["plain", "Plain"],
@@ -404,6 +431,31 @@ function limitArranges(
   }
 }
 
+/** Keeps only the options of one setting that make sense right now. */
+function keepOptions(
+  shown: Record<string, unknown>,
+  key: string,
+  keep: (value: string) => boolean,
+) {
+  const field = shown[key] as { options?: { value: unknown }[] } | undefined;
+  if (!field?.options) return;
+  shown[key] = {
+    ...field,
+    options: field.options.filter((option) => keep(String(option.value))),
+  };
+}
+
+/** Essentials looks where an even grid is the same as wrapping. */
+const ESSENTIALS_NO_GRID = [
+  "pills",
+  "chips",
+  "inline",
+  "words",
+  "rows",
+  "list",
+  "ticks",
+];
+
 /** Which device looks a phone and tablet end up with ("same", "phone"). */
 function deviceLooks(computer: string, tablet: unknown, phone: unknown) {
   const phoneLook = !phone || phone === "same" ? computer : String(phone);
@@ -417,6 +469,35 @@ function deviceLooks(computer: string, tablet: unknown, phone: unknown) {
 }
 
 type DetailsProps = Record<string, unknown>;
+
+/**
+ * The facts design on each device (Facts shown as, then on tablets and
+ * phones), and the look whose arrangements apply there: a plain facts
+ * device uses its plain facts look.
+ */
+function factsOnDevices(props: DetailsProps) {
+  const computer = keptFactsAs(props.factsAs);
+  const phoneAs = keptFactsAs(props.phoneFactsAs ?? "same");
+  const tabletAs = keptFactsAs(props.tabletFactsAs ?? "same");
+  const phone = phoneAs === "same" ? computer : phoneAs;
+  const tablet =
+    tabletAs === "same" ? computer : tabletAs === "phone" ? phone : tabletAs;
+  const plain = String(props.facts ?? "grid");
+  const plainLooks = deviceLooks(plain, props.tabletFacts, props.phoneFacts);
+  return {
+    computer,
+    tablet,
+    phone,
+    computerLook: computer === "facts" ? plain : computer,
+    tabletLook: tablet === "facts" ? plainLooks.tabletLook : tablet,
+    phoneLook: phone === "facts" ? plainLooks.phoneLook : phone,
+    plainLooks: [
+      computer === "facts" ? plain : null,
+      tablet === "facts" ? plainLooks.tabletLook : null,
+      phone === "facts" ? plainLooks.phoneLook : null,
+    ].filter((look): look is string => look !== null),
+  };
+}
 const LIST_LOOKS = ["list", "table"];
 
 /**
@@ -468,9 +549,14 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
     ].forEach((k) => hide.add(k));
   } else {
     if (props.showTitle === false) {
-      ["titleLook", "statusLook", "statusAt", "bigTitle"].forEach((k) =>
-        hide.add(k),
-      );
+      [
+        "titleLook",
+        "statusLook",
+        "statusAt",
+        "bigTitle",
+        "bandStyle",
+        "titleGap",
+      ].forEach((k) => hide.add(k));
     }
     // The Status band has its own outline, so no box around it as well.
     if (String(props.titleLook ?? "").startsWith("band")) hide.add("titleBox");
@@ -481,7 +567,12 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
     if (props.statusLook === "none") hide.add("statusAt");
   }
   // Only the looks with a frame round them all have one to turn off.
-  if (factsAs !== "spec-sheet") hide.add("factsBorder");
+  if (
+    ![props.factsAs, props.tabletFactsAs, props.phoneFactsAs].includes(
+      "spec-sheet",
+    )
+  )
+    hide.add("factsBorder");
   // Map
   if (inTitle("map")) hide.add("map");
   else if (!props.map || props.map === "none") {
@@ -498,33 +589,23 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
   if (inTitle("precise")) hide.add("preciseAt");
   else if (!props.preciseAt || props.preciseAt === "none")
     hide.add("preciseLook");
-  // Facts
-  const deviceLooks = [
-    "facts",
-    "tabletFacts",
-    "tabletFactsArrange",
-    "phoneFacts",
-    "phoneFactsArrange",
-    "factLines",
-    "tabletFactsBox",
-    "phoneFactsBox",
-  ];
-  if (factsAs === "none") {
-    [
-      ...deviceLooks,
-      "factsArrange",
-      "showEmptyFacts",
-      "factsGap",
-      "factsTitle",
-      "factsBox",
-    ].forEach((k) => hide.add(k));
-  } else if (factsAs !== "facts") {
-    deviceLooks.forEach((k) => hide.add(k));
-  } else {
-    const looks = [props.facts ?? "grid", props.tabletFacts, props.phoneFacts];
-    if (!looks.some((look) => LIST_LOOKS.includes(String(look))))
-      hide.add("factLines");
-  }
+  // Facts: each device's settings only when that device shows facts, and
+  // the plain look's settings only where the plain facts are used.
+  const devices = factsOnDevices(props);
+  if (factsAs === "bento") hide.add("tabletFactsAs").add("phoneFactsAs");
+  const designs = [devices.computer, devices.tablet, devices.phone];
+  if (designs.every((design) => design === "none"))
+    ["showEmptyFacts", "factsGap", "factsTitle"].forEach((k) => hide.add(k));
+  if (!designs.includes("facts")) hide.add("facts");
+  if (devices.tablet !== "facts") hide.add("tabletFacts");
+  if (devices.phone !== "facts") hide.add("phoneFacts");
+  if (devices.computer === "none") hide.add("factsArrange").add("factsBox");
+  if (devices.tablet === "none")
+    hide.add("tabletFactsArrange").add("tabletFactsBox");
+  if (devices.phone === "none")
+    hide.add("phoneFactsArrange").add("phoneFactsBox");
+  if (!devices.plainLooks.some((look) => LIST_LOOKS.includes(look)))
+    hide.add("factLines");
   // Timeline
   // Inside the title box, the timeline is on and has no box of its own.
   if (inTitle("timeline")) hide.add("timeline").add("timelineBox");
@@ -1260,24 +1341,57 @@ export const walkDesignConfig: Config = {
         ) as typeof fields;
         // Each facts look offers only the arrangements it works with (a
         // table can't be cut into a swiping row); none: the setting goes.
-        const factsAs = keptFactsAs(props.factsAs);
-        const computerLook =
-          factsAs === "facts" ? String(props.facts ?? "grid") : factsAs;
-        const phoneLook =
-          !props.phoneFacts || props.phoneFacts === "same"
-            ? computerLook
-            : String(props.phoneFacts);
-        const tabletLook =
-          !props.tabletFacts || props.tabletFacts === "same"
-            ? computerLook
-            : props.tabletFacts === "phone"
-              ? phoneLook
-              : String(props.tabletFacts);
+        const { computerLook, tabletLook, phoneLook } = factsOnDevices(props);
         limitArranges(shown, [
           ["factsArrange", computerLook],
           ["tabletFactsArrange", tabletLook],
           ["phoneFactsArrange", phoneLook],
         ]);
+        // Only the choices that apply to what's picked elsewhere.
+        const band = String(props.titleLook ?? "").startsWith("band");
+        keepOptions(shown, "titleMessages", (v) => v !== "in-band" || band);
+        const mapOn =
+          Boolean(props.map && props.map !== "none") ||
+          titlePartsOf(props).includes("map");
+        keepOptions(
+          shown,
+          "preciseAt",
+          (v) => mapOn || !["above-map", "on-map", "below-map"].includes(v),
+        );
+        keepOptions(
+          shown,
+          "descriptionAt",
+          (v) => v !== "after-title" || props.showTitle !== false,
+        );
+        // Essentials: no heading words with the heading off, and no even
+        // grid for looks where it's the same as wrapping.
+        const essentials = shown.essentials as
+          { objectFields?: Record<string, unknown> } | undefined;
+        const e = (props.essentials ?? {}) as Record<string, unknown>;
+        if (essentials?.objectFields) {
+          const sub = { ...essentials.objectFields };
+          if (e.heading === false) delete sub.headingText;
+          const look = String(e.look ?? "pills");
+          const { tabletLook, phoneLook } = deviceLooks(
+            look,
+            e.tabletLook,
+            e.phoneLook,
+          );
+          for (const [key, deviceLook] of [
+            ["arrange", look],
+            ["tabletArrange", tabletLook],
+            ["phoneArrange", phoneLook],
+          ] as const)
+            keepOptions(
+              sub,
+              key,
+              (v) => v !== "grid" || !ESSENTIALS_NO_GRID.includes(deviceLook),
+            );
+          shown.essentials = {
+            ...essentials,
+            objectFields: sub,
+          } as (typeof fields)["essentials"];
+        }
         // Messages in the title box: the ribbon can't show them as well.
         const titleMessages = (props.titleMessages ?? "none") !== "none";
         const ribbon = shown.ribbon as
@@ -1524,27 +1638,24 @@ export const walkDesignConfig: Config = {
         ),
         factsAs: {
           type: "select",
-          label: "Facts shown as",
+          label: "Facts shown as (computers)",
+          options: FACTS_AS_OPTIONS,
+        },
+        tabletFactsAs: {
+          type: "select",
+          label: "Facts shown as on tablets",
           options: [
-            { value: "facts", label: "The facts (looks below)" },
-            { value: "colour-blocks", label: "Colour blocks" },
-            {
-              value: "bento",
-              label: "Bento grid (has its own name and buttons)",
-            },
-            { value: "story-cards", label: "Story cards" },
-            { value: "summary", label: "Summary tiles" },
-            { value: "wide-tiles", label: "Wide tiles (icon beside, roomy)" },
-            { value: "stat-cards", label: "Stat cards (big values)" },
-            { value: "icon-circles", label: "Icons in coloured circles" },
-            { value: "spec-sheet", label: "Spec sheet (striped table)" },
-            { value: "sticky-notes", label: "Sticky notes" },
-            { value: "journey", label: "Journey line (dots, swipe)" },
-            { value: "top-bar", label: "Cards with a coloured top bar" },
-            { value: "columns", label: "Columns with dividers" },
-            { value: "big-pills", label: "Big pills (label and value)" },
-            { value: "mini-cards", label: "Mini cards (compact)" },
-            { value: "none", label: "Don't show facts" },
+            { value: "same", label: "Same as on computers" },
+            { value: "phone", label: "Same as on phones" },
+            ...DEVICE_FACTS_AS,
+          ],
+        },
+        phoneFactsAs: {
+          type: "select",
+          label: "Facts shown as on phones",
+          options: [
+            { value: "same", label: "Same as on computers" },
+            ...DEVICE_FACTS_AS,
           ],
         },
         factsBorder: {
@@ -1557,13 +1668,13 @@ export const walkDesignConfig: Config = {
         },
         facts: {
           type: "select",
-          label: "Facts on computers",
+          label: "Plain facts look on computers",
           options: factsOptions,
         },
         factsArrange: { ...arrangeField, label: "Facts arrange on computers" },
         tabletFacts: {
           type: "select",
-          label: "Facts on tablets",
+          label: "Plain facts look on tablets",
           options: tabletFactsOptions,
         },
         tabletFactsArrange: {
@@ -1572,7 +1683,7 @@ export const walkDesignConfig: Config = {
         },
         phoneFacts: {
           type: "select",
-          label: "Facts on phones",
+          label: "Plain facts look on phones",
           options: phoneFactsOptions,
         },
         phoneFactsArrange: {
@@ -1692,6 +1803,8 @@ export const walkDesignConfig: Config = {
         titleGap: "normal",
         titleParts: [],
         factsBorder: true,
+        tabletFactsAs: "same",
+        phoneFactsAs: "same",
         bigTitle: false,
       },
       render: ({
@@ -1752,6 +1865,8 @@ export const walkDesignConfig: Config = {
         titleOrder,
         titleParts,
         factsBorder,
+        tabletFactsAs,
+        phoneFactsAs,
         bigTitle,
       }) => (
         <DetailsBlock
@@ -1812,6 +1927,8 @@ export const walkDesignConfig: Config = {
           titleOrder={titleOrder}
           titleParts={titleParts}
           factsBorder={factsBorder}
+          tabletFactsAs={tabletFactsAs}
+          phoneFactsAs={phoneFactsAs}
           tone={tone}
         />
       ),
