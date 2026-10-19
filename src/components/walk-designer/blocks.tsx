@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Fragment,
   useEffect,
   useRef,
   useState,
@@ -362,6 +363,42 @@ function MaybeRow({
   if (arrange !== "scroll" && arrange !== "carousel") return <>{children}</>;
   return <ScrollRow carousel={arrange === "carousel"}>{children}</ScrollRow>;
 }
+/**
+ * The arrangements each facts look works with: a table or list can't be cut
+ * into a swiping row, and pills and one-liners only wrap or swipe. Looks not
+ * named here (cards and tiles) work with all of them.
+ */
+const NO_ARRANGE = ["list", "table", "spec-sheet", "journey", "columns"];
+const WRAP_OR_SWIPE = ["chips", "inline", "big-pills"];
+export function arrangesFor(look: string): Arrange[] {
+  if (NO_ARRANGE.includes(look)) return [];
+  if (WRAP_OR_SWIPE.includes(look)) return ["fill", "scroll"];
+  return ["fill", "grid", "scroll", "carousel"];
+}
+/** The chosen arrangement if the look works with it, or the look's first. */
+export function keptArrange(look: string, arrange?: Arrange): Arrange {
+  const ok = arrangesFor(look);
+  return arrange && ok.includes(arrange) ? arrange : (ok[0] ?? "fill");
+}
+
+/** The facts looks that were taken out show as the plain facts instead. */
+const REMOVED_FACT_LOOKS = [
+  "ticket",
+  "ticket-colour",
+  "badges",
+  "receipt",
+  "numbered",
+  "big-first",
+  "vertical-timeline",
+  "two-tone-rows",
+];
+
+/** Facts shown as: a look that was taken out becomes the plain facts. */
+export function keptFactsAs(value: unknown): string {
+  const look = typeof value === "string" && value ? value : "facts";
+  return REMOVED_FACT_LOOKS.includes(look) ? "facts" : look;
+}
+
 /** Items wrap onto rows and grow, so every row (the last too) fills the width. */
 const STRETCH = "flex flex-wrap [&>*]:grow";
 const SWIPE =
@@ -505,9 +542,9 @@ export function DeviceFacts({
         <Boxed box={look.box} dark={dark}>
           <div className="flex flex-col gap-2">
             <PartHeading text={heading} />
-            <MaybeRow arrange={look.arrange}>
+            <MaybeRow arrange={keptArrange(look.variant, look.arrange)}>
               <Facts
-                arrange={look.arrange}
+                arrange={keptArrange(look.variant, look.arrange)}
                 dark={dark}
                 lines={lines}
                 p={p}
@@ -1254,53 +1291,25 @@ export function TitleBlock({
   return <Title actions={actions} p={p} variant={variant} />;
 }
 
-export type TitleSpace = "closer" | "normal" | "roomy" | "more";
+export type TitleGap = "closer" | "normal" | "more";
 
-/** The space inside the Status band look: the band, the box, and between lines. */
-const TITLE_SPACE: Record<
-  TitleSpace,
-  {
-    band: string;
-    line: string;
-    body: string;
-    lines: string;
-    after: string;
-    /** Between the parts under Created by (timeline, description). */
-    stack: string;
-  }
+/**
+ * The gaps between the things in the title box — the band to the name, the
+ * name to Created by, and between the facts, timeline and description —
+ * never the space at the box's sides.
+ */
+export const TITLE_GAP: Record<
+  TitleGap,
+  { top: string; lines: string; head: string; stack: string }
 > = {
   closer: {
-    band: "px-3 py-2 sm:px-4",
-    line: "mx-3 sm:mx-4",
-    body: "gap-3 p-3 sm:p-4",
+    top: "pt-3 sm:pt-3",
     lines: "gap-1",
-    after: "mt-3",
+    head: "gap-2",
     stack: "gap-3",
   },
-  normal: {
-    band: "px-4 py-2.5 sm:px-5",
-    line: "mx-4 sm:mx-5",
-    body: "gap-4 p-4 sm:p-5",
-    lines: "gap-1.5",
-    after: "mt-4",
-    stack: "gap-4",
-  },
-  roomy: {
-    band: "px-4 py-3 sm:px-6",
-    line: "mx-4 sm:mx-6",
-    body: "gap-6 p-4 sm:p-6",
-    lines: "gap-2",
-    after: "mt-6",
-    stack: "gap-6",
-  },
-  more: {
-    band: "px-6 py-3.5 sm:px-8",
-    line: "mx-6 sm:mx-8",
-    body: "gap-6 p-6 sm:p-8",
-    lines: "gap-2",
-    after: "mt-8",
-    stack: "gap-8",
-  },
+  normal: { top: "", lines: "gap-1.5", head: "gap-6", stack: "gap-6" },
+  more: { top: "pt-6 sm:pt-8", lines: "gap-2", head: "gap-8", stack: "gap-8" },
 };
 
 function Title({
@@ -1310,10 +1319,10 @@ function Title({
   bandMessages = null,
   afterNote = null,
   bandStyle = "grey",
-  space = "normal",
+  gap = "normal",
 }: {
   /** How much space inside the Status band look's box. */
-  space?: TitleSpace;
+  gap?: TitleGap;
   /** The Status band look's band: grey, outlined, grey with a dark bar, or a line under it. */
   bandStyle?: BandStyle;
   p: WalkIdeaParts;
@@ -1414,12 +1423,11 @@ function Title({
       // or the walk's messages in their place) and the walk's name.
       const bandClass = cn(
         "flex flex-col gap-2 text-sm font-medium text-foreground",
-        TITLE_SPACE[space].band,
+        "px-4 py-2.5 sm:px-5",
         bandStyle === "grey" && "bg-muted",
         bandStyle === "outline" && "border-b",
         bandStyle === "bar" && "border-l-4 border-l-foreground bg-muted",
-        bandStyle === "line" &&
-          cn("border-b px-0 sm:px-0", TITLE_SPACE[space].line),
+        bandStyle === "line" && "mx-4 border-b px-0 sm:mx-5 sm:px-0",
         // A message in the band takes the place of the status and date.
         "[&:has([data-messages]:not(:empty))>[data-band-status]]:hidden [&:has([data-sample])>[data-band-status]]:hidden",
       );
@@ -1440,31 +1448,24 @@ function Title({
           {bandMessages}
         </div>
       );
+      // The name and Manage on one row; anything else (facts, timeline,
+      // description) under them, the full width of the box.
       const body = (
         <div
           className={cn(
-            "flex min-w-0 flex-1 flex-col sm:flex-row sm:items-start sm:justify-between",
-            TITLE_SPACE[space].body,
+            "flex min-w-0 flex-1 flex-col p-4 sm:p-5",
+            TITLE_GAP[gap].top,
+            TITLE_GAP[gap].stack,
           )}
         >
-          <div
-            className={cn("flex min-w-0 flex-col", TITLE_SPACE[space].lines)}
-          >
-            {heading()}
-            {note}
-            {afterNote ? (
-              <div
-                className={cn(
-                  "flex flex-col",
-                  TITLE_SPACE[space].after,
-                  TITLE_SPACE[space].stack,
-                )}
-              >
-                {afterNote}
-              </div>
-            ) : null}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className={cn("flex min-w-0 flex-col", TITLE_GAP[gap].lines)}>
+              {heading()}
+              {note}
+            </div>
+            {act}
           </div>
-          {act}
+          {afterNote}
         </div>
       );
       return (
@@ -1523,7 +1524,9 @@ export type DetailsOptions = {
   /** The Status band title look's band style. */
   bandStyle?: BandStyle;
   /** How the facts show: the facts' own looks, or another design's (ticket, bento…). */
-  factsAs?: "facts" | "ticket" | "ticket-colour" | "bento" | "none" | FactsLook;
+  factsAs?: "facts" | "bento" | "none" | FactsLook | (string & {});
+  /** Looks with a frame round them all (Spec sheet): show the frame. */
+  factsBorder?: boolean;
   /** The walk's messages inside the title box: a row (table look) or boxes, top or bottom. */
   titleMessages?:
     | "none"
@@ -1543,8 +1546,10 @@ export type DetailsOptions = {
   timelineEnd?: boolean;
   /** Times of your own, one per line ("13:00 Lunch stop"). */
   timelineExtra?: string;
-  /** How much space inside the Status band title box. */
-  titleSpace?: TitleSpace;
+  /** The gaps between the things in the title box. */
+  titleGap?: TitleGap;
+  /** The order of the facts, timeline and description inside the title box. */
+  titleOrder?: string;
   factLines?: FactLines;
   phoneFactsBox?: PartBox | "same";
   tabletFactsBox?: ForDevice<PartBox>;
@@ -1591,11 +1596,11 @@ export function DetailsBlock(options: DetailsOptions) {
 function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   const info = useWalkInfo(p);
   const dark = o.tone === "dark";
-  // Facts shown as a walk ticket or bento grid bring their own name and
-  // buttons, so the card's title row steps aside (nothing shows twice).
-  const factsAs = o.factsAs ?? "facts";
-  const ownTitle =
-    factsAs === "ticket" || factsAs === "ticket-colour" || factsAs === "bento";
+  // Facts shown as a bento grid bring their own name and buttons, so the
+  // card's title row steps aside (nothing shows twice). Looks that were
+  // taken out show as the plain facts.
+  const factsAs = keptFactsAs(o.factsAs);
+  const ownTitle = factsAs === "bento";
   const showTitle = (o.showTitle ?? true) && !ownTitle;
   // The title looks with facts of their own ("With fact chips", "Big name and
   // four key facts") now mean: the facts go inside the title box, in the
@@ -1670,9 +1675,6 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       />
     );
   };
-  // With the facts shown as a walk ticket, the rest of the card (precise
-  // location, essentials, description) goes inside the ticket: one card.
-  const inTicket = factsAs === "ticket" || factsAs === "ticket-colour";
   // The description: on its own (its own box), or inside the title area.
   // The day's timeline, inside the title box (under Created by) if chosen.
   const timelineInTitle =
@@ -1778,22 +1780,13 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       <Boxed box={o.factsBox} dark={dark}>
         <div className="flex flex-col gap-2">
           <PartHeading text={o.factsTitle} />
-          {factsAs === "ticket" || factsAs === "ticket-colour" ? (
-            <Ticket
-              allFacts
-              arrange={o.factsArrange}
-              // Everything else in the card goes inside the ticket.
-              extra={inTicket ? cardExtras : null}
-              p={p}
-              showEmpty={o.showEmptyFacts}
-              variant={factsAs === "ticket" ? "plain" : "colour"}
-            />
-          ) : factsAs === "bento" ? (
+          {factsAs === "bento" ? (
             <Bento allFacts p={p} showEmpty={o.showEmptyFacts} />
           ) : (
             <FactLooks
-              arrange={o.factsArrange ?? "fill"}
-              look={factsAs}
+              arrange={o.factsArrange}
+              border={o.factsBorder ?? true}
+              look={factsAs as FactsLook}
               p={p}
               showEmpty={o.showEmptyFacts}
             />
@@ -1801,6 +1794,26 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         </div>
       </Boxed>
     );
+  // What's inside the title box under the name, in the chosen order.
+  const gap = TITLE_GAP[o.titleGap ?? "normal"] ?? TITLE_GAP.normal;
+  const insideParts: Record<string, ReactNode> = {
+    facts: factsInTitle ? factsPart : null,
+    timeline: timelineInTitle ? timelineView : null,
+    description: descriptionInTitle ? descriptionPart : null,
+  };
+  const order = (o.titleOrder ?? "facts,timeline,description").split(",");
+  const inside =
+    factsInTitle || timelineInTitle || descriptionInTitle ? (
+      <>
+        {[...order, "facts", "timeline", "description"]
+          .filter((key, i, all) => all.indexOf(key) === i && key in insideParts)
+          .map((key) =>
+            insideParts[key] ? (
+              <Fragment key={key}>{insideParts[key]}</Fragment>
+            ) : null,
+          )}
+      </>
+    ) : null;
   const body = (
     <div
       style={factsGapStyle(o.factsGap)}
@@ -1819,7 +1832,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
           {titleMessages("top")}
           {titleLook !== "standard" && showTitle ? (
             // One of the title looks (the Title block's), inside the card.
-            <div className="flex flex-col gap-6">
+            <div className={cn("flex flex-col", gap.stack)}>
               <Title
                 actions={showActions}
                 bandMessages={
@@ -1835,61 +1848,46 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
                   ) : null
                 }
                 bandStyle={o.bandStyle}
-                afterNote={
-                  (descriptionInTitle || timelineInTitle || factsInTitle) &&
-                  titleLook.startsWith("band") ? (
-                    <>
-                      {factsInTitle ? factsPart : null}
-                      {timelineInTitle ? timelineView : null}
-                      {descriptionInTitle ? descriptionPart : null}
-                    </>
-                  ) : null
-                }
-                space={o.titleSpace}
+                afterNote={titleLook.startsWith("band") ? inside : null}
+                gap={o.titleGap}
                 p={p}
                 variant={titleLook}
               />
-              {!titleLook.startsWith("band") ? (
-                <>
-                  {factsInTitle ? factsPart : null}
-                  {timelineInTitle ? timelineView : null}
-                  {descriptionInTitle ? descriptionPart : null}
-                </>
-              ) : null}
+              {!titleLook.startsWith("band") ? inside : null}
             </div>
           ) : (
-            /* The same 24px between everything in the card, the title's lines too. */
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-              {showTitle ? (
-                <div className="flex min-w-0 flex-col gap-6">
-                  {(o.statusAt ?? "above") === "above" ? statusRow : null}
-                  <h1
-                    className={cn(
-                      "text-2xl leading-tight font-semibold tracking-tight text-balance sm:text-3xl",
-                      o.bigTitle && "sm:text-4xl",
-                    )}
-                  >
-                    {p.headline.title}
-                  </h1>
-                  {o.statusAt === "below" ? statusRow : null}
-                  {p.headline.note ? (
-                    <p
+            /* The name and Manage on one row, then what's inside, full width. */
+            <div className={cn("flex flex-col", gap.stack)}>
+              <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+                {showTitle ? (
+                  <div className={cn("flex min-w-0 flex-col", gap.head)}>
+                    {(o.statusAt ?? "above") === "above" ? statusRow : null}
+                    <h1
                       className={cn(
-                        "text-xs",
-                        dark ? "text-white/60" : "text-muted-foreground",
+                        "text-2xl leading-tight font-semibold tracking-tight text-balance sm:text-3xl",
+                        o.bigTitle && "sm:text-4xl",
                       )}
                     >
-                      {p.headline.note}
-                    </p>
-                  ) : null}
-                  {factsInTitle ? factsPart : null}
-                  {timelineInTitle ? timelineView : null}
-                  {descriptionInTitle ? descriptionPart : null}
-                </div>
-              ) : (
-                <span />
-              )}
-              {showActions ? <Actions className="sm:shrink-0" p={p} /> : null}
+                      {p.headline.title}
+                    </h1>
+                    {o.statusAt === "below" ? statusRow : null}
+                    {p.headline.note ? (
+                      <p
+                        className={cn(
+                          "text-xs",
+                          dark ? "text-white/60" : "text-muted-foreground",
+                        )}
+                      >
+                        {p.headline.note}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : (
+                  <span />
+                )}
+                {showActions ? <Actions className="sm:shrink-0" p={p} /> : null}
+              </div>
+              {showTitle ? inside : null}
             </div>
           )}
           {titleMessages("bottom")}
@@ -1903,7 +1901,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       ) : null}
       {preciseHere("above-facts")}
       {factsInTitle ? null : factsPart}
-      {inTicket ? null : cardExtras}
+      {cardExtras}
     </div>
   );
   return (
@@ -3630,21 +3628,15 @@ function StepsLooks({
 export type FactsLook =
   | "colour-blocks"
   | "story-cards"
-  | "badges"
   | "summary"
   | "stat-cards"
   | "icon-circles"
-  | "receipt"
   | "sticky-notes"
   | "spec-sheet"
   | "journey"
-  | "numbered"
   | "top-bar"
   | "columns"
-  | "big-first"
-  | "vertical-timeline"
   | "big-pills"
-  | "two-tone-rows"
   | "mini-cards"
   | "wide-tiles";
 
@@ -3683,10 +3675,13 @@ export function FactLooks(props: {
   look: FactsLook;
   arrange?: Arrange;
   showEmpty?: boolean;
+  /** Looks with a frame round them all (Spec sheet): show it or not. */
+  border?: boolean;
 }) {
+  const arrange = keptArrange(props.look, props.arrange);
   return (
-    <MaybeRow arrange={props.arrange}>
-      <FactLooksBody {...props} />
+    <MaybeRow arrange={arrange}>
+      <FactLooksBody {...props} arrange={arrange} />
     </MaybeRow>
   );
 }
@@ -3696,11 +3691,13 @@ function FactLooksBody({
   look,
   arrange = "fill",
   showEmpty = false,
+  border = true,
 }: {
   p: WalkIdeaParts;
   look: FactsLook;
   arrange?: Arrange;
   showEmpty?: boolean;
+  border?: boolean;
 }) {
   const { facts } = useWalkInfo(p, showEmpty);
   const flow = (basis: string, width: string, grid: string) =>
@@ -3749,30 +3746,6 @@ function FactLooksBody({
       </div>
     );
 
-  if (look === "numbered")
-    return (
-      <ol className="flex flex-col gap-[var(--facts-gap,1.5rem)] sm:grid sm:grid-cols-2">
-        {facts.map((fact, i) => (
-          <li className="flex min-w-0 items-start gap-3" key={fact.label}>
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background">
-              {i + 1}
-            </span>
-            <span className="flex min-w-0 flex-col">
-              <span className="text-xs text-muted-foreground">
-                {fact.label}
-              </span>
-              <span
-                className="font-semibold [overflow-wrap:anywhere]"
-                suppressHydrationWarning
-              >
-                {fact.value}
-              </span>
-            </span>
-          </li>
-        ))}
-      </ol>
-    );
-
   if (look === "columns")
     return (
       <dl className="flex flex-wrap gap-y-6 divide-x">
@@ -3789,62 +3762,6 @@ function FactLooksBody({
           </div>
         ))}
       </dl>
-    );
-
-  if (look === "big-first") {
-    const [first, ...rest] = facts;
-    if (!first) return null;
-    return (
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col">
-          <span className="text-sm text-muted-foreground">{first.label}</span>
-          <span
-            className="text-4xl font-black tracking-tight sm:text-5xl"
-            suppressHydrationWarning
-          >
-            {first.value}
-          </span>
-        </div>
-        <p className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-          {rest.map((fact) => (
-            <span className="flex items-center gap-1.5" key={fact.label}>
-              <fact.icon aria-hidden className="size-4 text-muted-foreground" />
-              <span className="text-muted-foreground">{fact.label}</span>
-              <span className="font-medium" suppressHydrationWarning>
-                {fact.value}
-              </span>
-            </span>
-          ))}
-        </p>
-      </div>
-    );
-  }
-
-  if (look === "vertical-timeline")
-    return (
-      <ol className="flex flex-col">
-        {facts.map((fact, i) => (
-          <li className="flex gap-4" key={fact.label}>
-            <span className="flex flex-col items-center">
-              <span className="mt-1.5 size-3 shrink-0 rounded-full bg-emerald-600" />
-              {i < facts.length - 1 ? (
-                <span aria-hidden className="w-0.5 flex-1 bg-emerald-600/30" />
-              ) : null}
-            </span>
-            <span className="flex min-w-0 flex-col pb-6">
-              <span className="text-xs text-muted-foreground">
-                {fact.label}
-              </span>
-              <span
-                className="font-semibold [overflow-wrap:anywhere]"
-                suppressHydrationWarning
-              >
-                {fact.value}
-              </span>
-            </span>
-          </li>
-        ))}
-      </ol>
     );
 
   if (look === "big-pills")
@@ -3871,33 +3788,11 @@ function FactLooksBody({
       </ul>
     );
 
-  if (look === "two-tone-rows")
-    return (
-      <dl className="flex flex-col gap-[var(--facts-gap,1.5rem)]">
-        {facts.map((fact) => (
-          <div
-            className="grid grid-cols-[8rem_minmax(0,1fr)] overflow-hidden rounded-lg border text-sm sm:grid-cols-[11rem_minmax(0,1fr)]"
-            data-wide={fact.wide ? "" : undefined}
-            key={fact.label}
-          >
-            <dt className="flex items-center gap-2 bg-emerald-50 px-3 py-2 font-medium text-emerald-900">
-              <fact.icon aria-hidden className="size-4" />
-              {fact.label}
-            </dt>
-            <dd
-              className="px-3 py-2 [overflow-wrap:anywhere]"
-              suppressHydrationWarning
-            >
-              {fact.value}
-            </dd>
-          </div>
-        ))}
-      </dl>
-    );
-
   if (look === "spec-sheet")
     return (
-      <dl className="overflow-hidden rounded-xl border text-sm">
+      <dl
+        className={cn("overflow-hidden rounded-xl text-sm", border && "border")}
+      >
         {facts.map((fact, i) => (
           <div
             className={cn(
@@ -3909,24 +3804,6 @@ function FactLooksBody({
           >
             <dt className="font-semibold">{fact.label}</dt>
             <dd className="[overflow-wrap:anywhere]" suppressHydrationWarning>
-              {fact.value}
-            </dd>
-          </div>
-        ))}
-      </dl>
-    );
-
-  if (look === "receipt")
-    return (
-      <dl className="flex flex-col gap-2 rounded-xl border border-dashed p-6 font-mono text-sm">
-        {facts.map((fact) => (
-          <div className="flex items-baseline gap-2" key={fact.label}>
-            <dt className="shrink-0 uppercase">{fact.label}</dt>
-            <span aria-hidden className="mb-1 flex-1 border-b border-dotted" />
-            <dd
-              className="min-w-0 text-right [overflow-wrap:anywhere]"
-              suppressHydrationWarning
-            >
               {fact.value}
             </dd>
           </div>
@@ -3961,38 +3838,6 @@ function FactLooksBody({
           </li>
         ))}
       </ol>
-    );
-
-  if (look === "badges")
-    return (
-      <div
-        className={
-          arrange === "scroll"
-            ? cn(SWIPE, "gap-[var(--facts-gap,1.5rem)] py-1")
-            : "flex flex-wrap justify-center gap-[var(--facts-gap,1.5rem)] sm:justify-start"
-        }
-      >
-        {facts.map((fact, i) => (
-          <div
-            className={cn(
-              "flex size-28 flex-col items-center justify-center gap-0.5 rounded-full p-3 text-center shadow-md ring-4 ring-background",
-              BOLDS[i % BOLDS.length],
-            )}
-            key={fact.label}
-          >
-            <fact.icon aria-hidden className="size-4 opacity-70" />
-            <span
-              className="line-clamp-2 text-sm leading-tight font-black"
-              suppressHydrationWarning
-            >
-              {fact.value}
-            </span>
-            <span className="text-[10px] font-bold tracking-wider uppercase opacity-80">
-              {fact.label}
-            </span>
-          </div>
-        ))}
-      </div>
     );
 
   if (look === "icon-circles")

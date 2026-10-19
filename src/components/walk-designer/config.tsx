@@ -59,6 +59,8 @@ import {
   MESSAGE_LOOK,
   type BoxLook,
   type MessageLook,
+  arrangesFor,
+  keptFactsAs,
   type Arrange,
   type FactsVariant,
   type StatusVariant,
@@ -368,6 +370,46 @@ const section = (title: string, note: string) => ({
   ),
 });
 
+/**
+ * Each facts look offers only the arrangements it works with (a table can't
+ * be cut into a swiping row); a look with none loses the setting.
+ */
+function limitArranges(
+  shown: Record<string, unknown>,
+  pairs: [key: string, look: string][],
+) {
+  for (const [key, look] of pairs) {
+    const field = shown[key] as { options?: { value: string }[] } | undefined;
+    if (!field?.options) continue;
+    const ok: string[] = arrangesFor(look);
+    if (ok.length === 0) {
+      delete shown[key];
+      continue;
+    }
+    shown[key] = {
+      ...field,
+      options: field.options.filter(
+        (option) =>
+          option.value === "same" ||
+          option.value === "phone" ||
+          ok.includes(option.value),
+      ),
+    };
+  }
+}
+
+/** Which device looks a phone and tablet end up with ("same", "phone"). */
+function deviceLooks(computer: string, tablet: unknown, phone: unknown) {
+  const phoneLook = !phone || phone === "same" ? computer : String(phone);
+  const tabletLook =
+    !tablet || tablet === "same"
+      ? computer
+      : tablet === "phone"
+        ? phoneLook
+        : String(tablet);
+  return { tabletLook, phoneLook };
+}
+
 type DetailsProps = Record<string, unknown>;
 const LIST_LOOKS = ["list", "table"];
 
@@ -393,8 +435,8 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
     "ribbonStyle",
     "ribbonAt",
   ]);
-  const factsAs = (props.factsAs as string) ?? "facts";
-  const ownTitle = ["ticket", "ticket-colour", "bento"].includes(factsAs);
+  const factsAs = keptFactsAs(props.factsAs);
+  const ownTitle = factsAs === "bento";
   // Ribbon
   if (!props.ribbon || props.ribbon === "none") {
     hide.add("ribbonText").add("ribbonStyle").add("ribbonAt");
@@ -411,7 +453,8 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
       "showActions",
       "titleMessages",
       "bandStyle",
-      "titleSpace",
+      "titleGap",
+      "titleOrder",
     ].forEach((k) => hide.add(k));
   } else {
     if (props.showTitle === false) {
@@ -420,12 +463,24 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
       );
     }
     if (!String(props.titleLook ?? "").startsWith("band"))
-      hide.add("bandStyle").add("titleSpace");
+      hide.add("bandStyle");
     if ((props.titleLook ?? "standard") !== "standard") {
       ["statusLook", "statusAt", "bigTitle"].forEach((k) => hide.add(k));
     }
     if (props.statusLook === "none") hide.add("statusAt");
   }
+  // Only the looks with a frame round them all have one to turn off.
+  if (factsAs !== "spec-sheet") hide.add("factsBorder");
+  // The order inside the title box matters once two things are in it.
+  const inTitle = [
+    props.factsAt === "title" ||
+      props.titleLook === "chips" ||
+      props.titleLook === "stats",
+    Boolean(props.timeline) && props.timelineAt === "title",
+    props.showDescription !== false && props.descriptionAt === "title",
+  ].filter(Boolean).length;
+  if (inTitle < 2 || ownTitle || props.showTitle === false)
+    hide.add("titleOrder");
   // Inside the title box only when there's a title (a ticket or bento grid
   // has its own) and facts to show.
   if (ownTitle || props.showTitle === false || factsAs === "none")
@@ -1192,6 +1247,26 @@ export const walkDesignConfig: Config = {
         const shown = Object.fromEntries(
           Object.entries(fields).filter(([key]) => !hide.has(key)),
         ) as typeof fields;
+        // Each facts look offers only the arrangements it works with (a
+        // table can't be cut into a swiping row); none: the setting goes.
+        const factsAs = keptFactsAs(props.factsAs);
+        const computerLook =
+          factsAs === "facts" ? String(props.facts ?? "grid") : factsAs;
+        const phoneLook =
+          !props.phoneFacts || props.phoneFacts === "same"
+            ? computerLook
+            : String(props.phoneFacts);
+        const tabletLook =
+          !props.tabletFacts || props.tabletFacts === "same"
+            ? computerLook
+            : props.tabletFacts === "phone"
+              ? phoneLook
+              : String(props.tabletFacts);
+        limitArranges(shown, [
+          ["factsArrange", computerLook],
+          ["tabletFactsArrange", tabletLook],
+          ["phoneFactsArrange", phoneLook],
+        ]);
         // Messages in the title box: the ribbon can't show them as well.
         const titleMessages = (props.titleMessages ?? "none") !== "none";
         const ribbon = shown.ribbon as
@@ -1295,14 +1370,25 @@ export const walkDesignConfig: Config = {
             { value: "line", label: "No background, a line under it" },
           ],
         },
-        titleSpace: {
+        titleGap: {
           type: "radio",
-          label: "Space inside the title box (Status band)",
+          label: "Space between the things in the title box (not the edges)",
           options: options([
             ["closer", "Closer"],
-            ["normal", "Normal"],
-            ["roomy", "Roomy (24px)"],
+            ["normal", "Normal (24px)"],
             ["more", "More"],
+          ]),
+        },
+        titleOrder: {
+          type: "select",
+          label: "Order inside the title box (under the name)",
+          options: options([
+            ["facts,timeline,description", "Facts, timeline, description"],
+            ["facts,description,timeline", "Facts, description, timeline"],
+            ["description,facts,timeline", "Description, facts, timeline"],
+            ["description,timeline,facts", "Description, timeline, facts"],
+            ["timeline,facts,description", "Timeline, facts, description"],
+            ["timeline,description,facts", "Timeline, description, facts"],
           ]),
         },
         titleBox: boxField("Box around the title (name, status, Manage)"),
@@ -1428,38 +1514,32 @@ export const walkDesignConfig: Config = {
           label: "Facts shown as",
           options: [
             { value: "facts", label: "The facts (looks below)" },
-            {
-              value: "ticket",
-              label: "Walk ticket (has its own name and buttons)",
-            },
-            {
-              value: "ticket-colour",
-              label: "Colour walk ticket (own name and buttons)",
-            },
             { value: "colour-blocks", label: "Colour blocks" },
             {
               value: "bento",
               label: "Bento grid (has its own name and buttons)",
             },
             { value: "story-cards", label: "Story cards" },
-            { value: "badges", label: "Round badges" },
             { value: "summary", label: "Summary tiles" },
             { value: "wide-tiles", label: "Wide tiles (icon beside, roomy)" },
             { value: "stat-cards", label: "Stat cards (big values)" },
             { value: "icon-circles", label: "Icons in coloured circles" },
             { value: "spec-sheet", label: "Spec sheet (striped table)" },
-            { value: "receipt", label: "Receipt (dotted lines)" },
             { value: "sticky-notes", label: "Sticky notes" },
             { value: "journey", label: "Journey line (dots, swipe)" },
-            { value: "numbered", label: "Numbered list" },
             { value: "top-bar", label: "Cards with a coloured top bar" },
             { value: "columns", label: "Columns with dividers" },
-            { value: "big-first", label: "First fact big, the rest in a line" },
-            { value: "vertical-timeline", label: "Vertical timeline" },
             { value: "big-pills", label: "Big pills (label and value)" },
-            { value: "two-tone-rows", label: "Two-tone rows (green labels)" },
             { value: "mini-cards", label: "Mini cards (compact)" },
             { value: "none", label: "Don't show facts" },
+          ],
+        },
+        factsBorder: {
+          type: "radio",
+          label: "Outer border round the facts",
+          options: [
+            { label: "On", value: true },
+            { label: "Off", value: false },
           ],
         },
         facts: {
@@ -1608,7 +1688,9 @@ export const walkDesignConfig: Config = {
         timelineStart: true,
         timelineEnd: true,
         timelineExtra: "",
-        titleSpace: "normal",
+        titleGap: "normal",
+        titleOrder: "facts,timeline,description",
+        factsBorder: true,
         bigTitle: false,
       },
       render: ({
@@ -1666,7 +1748,9 @@ export const walkDesignConfig: Config = {
         timelineStart,
         timelineEnd,
         timelineExtra,
-        titleSpace,
+        titleGap,
+        titleOrder,
+        factsBorder,
         bigTitle,
       }) => (
         <DetailsBlock
@@ -1724,13 +1808,31 @@ export const walkDesignConfig: Config = {
           timelineStart={timelineStart}
           timelineEnd={timelineEnd}
           timelineExtra={timelineExtra}
-          titleSpace={titleSpace}
+          titleGap={titleGap}
+          titleOrder={titleOrder}
+          factsBorder={factsBorder}
           tone={tone}
         />
       ),
     },
     Facts: {
       label: "Facts",
+      resolveFields: (data, { fields }) => {
+        const props = data.props as Record<string, unknown>;
+        const shown = { ...fields } as Record<string, unknown>;
+        const computer = String(props.variant ?? "grid");
+        const { tabletLook, phoneLook } = deviceLooks(
+          computer,
+          props.tabletVariant,
+          props.phoneVariant,
+        );
+        limitArranges(shown, [
+          ["arrange", computer],
+          ["tabletArrange", tabletLook],
+          ["phoneArrange", phoneLook],
+        ]);
+        return shown as typeof fields;
+      },
       fields: {
         variant: {
           type: "select",

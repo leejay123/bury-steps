@@ -334,8 +334,17 @@ export function WalksSection({
               Inside the title box: they take the Facts shown as look and
               don&apos;t show again below (pages that used the With fact chips or
               Big name and four key facts title looks now work this way). The
-              Details card&apos;s Title look offers Standard, Plain and Status band (with
-              Space inside the title box: closer, normal, roomy or more). Any
+              Details card&apos;s Title look offers Standard, Plain and Status band. Inside the title box, the facts, timeline and
+              description sit under the name at the full width of the box;
+              Order inside the title box puts them in the order you want, and
+              Space between the things in the title box makes the gaps closer,
+              normal (24 pixels) or more without changing the edges. Facts
+              arrange only offers what works with the chosen look (a spec sheet
+              or list can&apos;t swipe, pills only wrap or swipe), and Spec sheet
+              can have its outer border off. Round badges, the walk tickets,
+              receipt, numbered list, first fact big, vertical timeline and
+              two-tone rows were taken out of Facts shown as; pages using them
+              show the plain facts. Any
               page that used one of the title looks that were taken out shows
               the Status band or Plain instead. Facts
               shown as adds a numbered list, cards with a coloured top bar,
