@@ -235,8 +235,12 @@ export function WalksSection({
               look and arrangement on phones (under 768 pixels wide), tablets
               (768 to 1023) and computers, and Block layout&apos;s Show on
               includes tablets. Essentials have looks too (outline pills, grey chips, a
-              list, a tick list, tiles, or one line), with their own choice on
-              phones, tablets and computers, and the heading on or off. Before
+              list, a tick list, tiles, one line, just the words, icons in grey
+              circles, big icons, small outlined cards, rows with lines between,
+              or one box split into sections), with their own choice on
+              phones, tablets and computers, and the heading on or off — the
+              heading looks like the Description&apos;s. Set Arrange to One row,
+              swipe sideways or Carousel with ‹ › buttons when there are lots. Before
               you set off can be the card, a tick list, numbered steps, a green
               callout, numbered tiles, swiping tiles or one short paragraph.
               Fill the width now stretches a short last row so there are no
@@ -326,12 +330,11 @@ export function WalksSection({
               circles, a spec sheet, a receipt, sticky notes and a journey
               line. With the walk ticket, the card&apos;s precise location,
               essentials and description go inside the ticket, so it&apos;s all
-              one card, with the same 24 pixels between everything. The Details card&apos;s Title look offers every title design
-              — the Title block&apos;s eleven plus centred, date in green
-              capitals, a date strip, a big countdown, a green underline, a
-              status-coloured side bar, the name with the meeting point under
-              it, a row of pills, minimal, a giant faded date, a table
-              (status, date, time, meet) and a hero-size name — and Facts
+              one card, with the same 24 pixels between everything. The Details card&apos;s Title look offers Standard, Plain, With
+              fact chips, Big name and four key facts, and Status band (with
+              Space inside the title box: closer, normal, roomy or more). Any
+              page that used one of the title looks that were taken out shows
+              the Status band or Plain instead. Facts
               shown as adds a numbered list, cards with a coloured top bar,
               columns with dividers, the first fact big, a vertical
               timeline, big pills, two-tone rows and mini cards. Facts arrange adds One row, swipe sideways and Carousel with
@@ -347,11 +350,13 @@ export function WalksSection({
               the left, or just a line underneath — and the coloured boxes
               still there as a choice; the Status band title look has the same
               Band style options. Cancelled walks are listed under History on
-              the Walks page, not Upcoming. More Status band title looks: the band at the bottom, the
-              band split into cells (status, date, time), the band down the
-              side, a band with the date and meeting point, and a thin, small
-              band — each with the same band styles, and the walk&apos;s messages
-              and description can sit in them too. The
+              the Walks page, not Upcoming. The walk&apos;s messages and description can sit in the
+              Status band&apos;s box too. The day&apos;s timeline can go inside the
+              title box (under Created by) or under it, with a look of its own
+              (a progress bar, a box split into sections, dots on a line, one
+              line, or a list); choose which times show — Clock-in opens, Set
+              off, Finish — and add your own, one per line, like 13:00 Lunch at
+              the Hare &amp; Hounds. They&apos;re put in time order. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how

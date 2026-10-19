@@ -124,37 +124,6 @@ export const WALK_DESIGN_PRESETS: {
       ]),
   },
   {
-    id: "poster",
-    label: "Poster title, details, tabs",
-    data: () =>
-      page([
-        block("ClockIn"),
-        block("Title", { variant: "poster" }),
-        block("Details", {
-          showTitle: false,
-          showActions: false,
-          facts: "chips",
-        }),
-        restTabs(false),
-      ]),
-  },
-  {
-    id: "trailhead",
-    label: "Trailhead sign, details, tabs",
-    data: () =>
-      page([
-        block("ClockIn"),
-        block("Title", { variant: "trailhead" }),
-        block("Details", {
-          showTitle: false,
-          showActions: false,
-          facts: "list",
-          map: "top",
-        }),
-        restTabs(true),
-      ]),
-  },
-  {
     id: "dashboard",
     label: "Big numbers, details and attended side by side",
     data: () =>

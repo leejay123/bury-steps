@@ -201,6 +201,12 @@ const essentialsLooks = options([
   ["ticks", "Tick list"],
   ["tiles", "Tiles"],
   ["inline", "One line of icons and words"],
+  ["words", "Just the words, with dots between"],
+  ["circles", "Icons in grey circles"],
+  ["big-icons", "Big icons with words under"],
+  ["cards", "Small outlined cards"],
+  ["rows", "Rows with lines between"],
+  ["segments", "One box split into sections"],
 ]);
 const essentialsFields = {
   look: {
@@ -313,36 +319,39 @@ const GAP: Record<string, string> = {
   large: "gap-10",
 };
 
+// The day's timeline: its look and what goes in it.
+const timelineLookField = {
+  type: "select" as const,
+  label: "Timeline look",
+  options: options([
+    ["bar", "Progress bar with the times under it"],
+    ["cells", "Times in a box split into sections"],
+    ["dots", "Dots on a line, start to finish"],
+    ["line", "One line of times"],
+    ["list", "List, one time per row"],
+  ]),
+};
+const timelineItemFields = {
+  timelineOpens: {
+    type: "radio" as const,
+    label: "Clock-in opens",
+    options: yesNo,
+  },
+  timelineStart: { type: "radio" as const, label: "Set off", options: yesNo },
+  timelineEnd: { type: "radio" as const, label: "Finish", options: yesNo },
+  timelineExtra: {
+    type: "textarea" as const,
+    label:
+      "Add your own times, one per line (like 13:00 Lunch at the Hare & Hounds)",
+  },
+};
+
 // Every title look (the Title block and the Details card's title).
 const TITLE_LOOKS: [string, string][] = [
   ["plain", "Plain"],
   ["chips", "With fact chips"],
   ["stats", "Big name and four key facts"],
   ["band", "Status band"],
-  ["band-bottom", "Status band, band at the bottom"],
-  ["band-cells", "Status band, split into cells (status, date, time)"],
-  ["band-side", "Status band, band down the side"],
-  ["band-meet", "Status band with the date and meeting point"],
-  ["band-thin", "Status band, thin and small"],
-  ["magazine", "Magazine"],
-  ["poster", "Poster"],
-  ["trailhead", "Trailhead sign"],
-  ["calendar", "Calendar date"],
-  ["split", "Coloured time block"],
-  ["contours", "Contour lines"],
-  ["typographic", "Huge start time"],
-  ["centred", "Centred"],
-  ["eyebrow", "Date above, in green capitals"],
-  ["date-strip", "Date strip (day, sets off, back by)"],
-  ["countdown", "Big countdown beside the name"],
-  ["underline", "Green underline bar"],
-  ["status-bar", "Status-coloured bar down the side"],
-  ["two-tone", "Name with the meeting point under it"],
-  ["pill-row", "Row of pills above the name"],
-  ["minimal", "Minimal: name and date on one line"],
-  ["giant-date", "Giant faded date behind the name"],
-  ["meta-table", "Name with a table (status, date, time, meet)"],
-  ["hero", "Hero: huge name"],
 ];
 
 /**
@@ -410,7 +419,7 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
       );
     }
     if (!String(props.titleLook ?? "").startsWith("band"))
-      hide.add("bandStyle");
+      hide.add("bandStyle").add("titleSpace");
     if ((props.titleLook ?? "standard") !== "standard") {
       ["statusLook", "statusAt", "bigTitle"].forEach((k) => hide.add(k));
     }
@@ -457,7 +466,16 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
       hide.add("factLines");
   }
   // Timeline
-  if (!props.timeline) hide.add("timelineTitle").add("timelineBox");
+  if (!props.timeline)
+    [
+      "timelineTitle",
+      "timelineBox",
+      "timelineAt",
+      "timelineLook",
+      ...Object.keys(timelineItemFields),
+    ].forEach((k) => hide.add(k));
+  // Inside the title box, the timeline has no box of its own.
+  else if (props.timelineAt === "title") hide.add("timelineBox");
   // Essentials
   if (props.showEssentials === false) hide.add("essentials");
   // Description
@@ -1268,6 +1286,16 @@ export const walkDesignConfig: Config = {
             { value: "line", label: "No background, a line under it" },
           ],
         },
+        titleSpace: {
+          type: "radio",
+          label: "Space inside the title box (Status band)",
+          options: options([
+            ["closer", "Closer"],
+            ["normal", "Normal"],
+            ["roomy", "Roomy (24px)"],
+            ["more", "More"],
+          ]),
+        },
         titleBox: boxField("Box around the title (name, status, Manage)"),
         statusLook: {
           type: "select",
@@ -1460,6 +1488,16 @@ export const walkDesignConfig: Config = {
           label: "The day's timeline",
           options: yesNo,
         },
+        timelineAt: {
+          type: "radio",
+          label: "Where the timeline goes",
+          options: options([
+            ["own", "Under the title box"],
+            ["title", "Inside the title box (under Created by)"],
+          ]),
+        },
+        timelineLook: timelineLookField,
+        ...timelineItemFields,
         timelineTitle: {
           type: "text",
           label: "Timeline heading (blank: no heading)",
@@ -1546,6 +1584,13 @@ export const walkDesignConfig: Config = {
         descriptionBox: "none",
         essentials: ESSENTIALS_DEFAULTS,
         timeline: false,
+        timelineAt: "own",
+        timelineLook: "bar",
+        timelineOpens: true,
+        timelineStart: true,
+        timelineEnd: true,
+        timelineExtra: "",
+        titleSpace: "normal",
         bigTitle: false,
       },
       render: ({
@@ -1596,6 +1641,13 @@ export const walkDesignConfig: Config = {
         descriptionTitle,
         descriptionBox,
         timeline,
+        timelineAt,
+        timelineLook,
+        timelineOpens,
+        timelineStart,
+        timelineEnd,
+        timelineExtra,
+        titleSpace,
         bigTitle,
       }) => (
         <DetailsBlock
@@ -1646,6 +1698,13 @@ export const walkDesignConfig: Config = {
           showEssentials={showEssentials}
           showTitle={showTitle}
           timeline={timeline}
+          timelineAt={timelineAt}
+          timelineLook={timelineLook}
+          timelineOpens={timelineOpens}
+          timelineStart={timelineStart}
+          timelineEnd={timelineEnd}
+          timelineExtra={timelineExtra}
+          titleSpace={titleSpace}
           tone={tone}
         />
       ),
@@ -1869,7 +1928,32 @@ export const walkDesignConfig: Config = {
       defaultProps: { look: "big" },
       render: ({ look }) => <CountdownBlock look={look} />,
     },
-    Timeline: { label: "The day's timeline", render: () => <TimelineBlock /> },
+    Timeline: {
+      label: "The day's timeline",
+      fields: { look: timelineLookField, ...timelineItemFields },
+      defaultProps: {
+        look: "bar",
+        timelineOpens: true,
+        timelineStart: true,
+        timelineEnd: true,
+        timelineExtra: "",
+      },
+      render: ({
+        look,
+        timelineOpens,
+        timelineStart,
+        timelineEnd,
+        timelineExtra,
+      }) => (
+        <TimelineBlock
+          end={timelineEnd}
+          extra={timelineExtra}
+          look={look}
+          opens={timelineOpens}
+          start={timelineStart}
+        />
+      ),
+    },
     Fact: {
       label: "One fact",
       fields: {
