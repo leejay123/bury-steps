@@ -24,6 +24,7 @@ import { ReopenWalkButton } from "./reopen-walk-button";
 export function WalkDetailActions({
   attendanceCount,
   backMarker,
+  refreshmentStop,
   cancelledAt,
   canCancel,
   canCreate,
@@ -52,6 +53,7 @@ export function WalkDetailActions({
 }: {
   attendanceCount: number;
   backMarker: string | null;
+  refreshmentStop: string | null;
   cancelledAt: string | null;
   canCancel: boolean;
   canCreate: boolean;
@@ -137,6 +139,7 @@ export function WalkDetailActions({
       {canEdit && !isCompleted ? (
         <EditWalkButton
           backMarker={backMarker}
+          refreshmentStop={refreshmentStop}
           cancelled={Boolean(walk.cancelledAt)}
           description={description}
           distance={distance}

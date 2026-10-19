@@ -87,6 +87,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
       essentials: true,
       walkLeader: true,
       backMarker: true,
+      refreshmentStop: true,
       location: true,
       postcode: true,
       latitude: true,
@@ -308,6 +309,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
         <CardContent className="flex flex-col gap-4">
           <WalkFacts
             backMarker={walk.backMarker}
+            refreshmentStop={walk.refreshmentStop}
             distance={walk.distance}
             durationMins={walk.durationMins}
             elevationGain={walk.elevationGain}
@@ -386,6 +388,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
       <WalkDetailActions
         attendanceCount={walk.attendances.length}
         backMarker={walk.backMarker}
+        refreshmentStop={walk.refreshmentStop}
         cancelledAt={walk.cancelledAt?.toISOString() ?? null}
         canCancel={admin.permWalksCancel}
         canCreate={admin.permWalksCreate}
@@ -521,6 +524,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
       <CardContent className="flex flex-col gap-4">
         <WalkFacts
           backMarker={walk.backMarker}
+          refreshmentStop={walk.refreshmentStop}
           distance={walk.distance}
           durationMins={walk.durationMins}
           elevationGain={walk.elevationGain}
@@ -587,6 +591,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
     what3words: walk.what3words,
     walk: {
       backMarker: walk.backMarker,
+      refreshmentStop: walk.refreshmentStop,
       calendarHref: `/w/${slug}/ics`,
       description: walk.description,
       essentials: walk.essentials,

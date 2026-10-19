@@ -37,6 +37,7 @@ export type WalkFormDefaults = {
   essentials: string[];
   walkLeader: string | null;
   backMarker: string | null;
+  refreshmentStop?: string | null;
   location: string | null;
   postcode: string | null;
   latitude: number | null;
@@ -203,6 +204,17 @@ export function WalkFormFields({
               placeholder="TBA"
             />
             <FieldHint>Walks at the back of the group so nobody gets left behind.</FieldHint>
+          </div>
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <Label htmlFor={id("refreshmentStop")}>Refreshment stop</Label>
+            <Input
+              defaultValue={defaults?.refreshmentStop ?? ""}
+              id={id("refreshmentStop")}
+              maxLength={150}
+              name="refreshmentStop"
+              placeholder="Hare & Hounds, Bolton Road, Abbey Village"
+            />
+            <FieldHint>Where the walk stops for a drink or a bite. Leave blank if there isn&apos;t one.</FieldHint>
           </div>
         </div>
         <fieldset className="flex flex-col gap-2">

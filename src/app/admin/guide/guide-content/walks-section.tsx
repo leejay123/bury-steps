@@ -84,7 +84,7 @@ export function WalksSection({
               Under <strong>Details</strong>, fill in what you know:{" "}
               <strong>Distance</strong> (for example “8.8 km (5.5 miles)”),{" "}
               <strong>Elevation gain</strong> (for example “213 m”), grade, walk
-              leader and back marker. Tick any <strong>Essentials</strong> —
+              leader and back marker, and any <strong>Refreshment stop</strong> (for example Hare &amp; Hounds, Bolton Road, Abbey Village). Tick any <strong>Essentials</strong> —
               toilets, parking, café, dog friendly, step-free, near public
               transport, boots recommended, stiles. Each shows on the walk page
               as its own line or tag, so the description can stay for the story
@@ -172,7 +172,7 @@ export function WalksSection({
               messages (such as Clock-in opens at 09:15…) come first, then one
               card holding everything about the walk — name, status, date, start
               and finish, length, meeting point, what3words, distance, climb,
-              grade, walk leader, back marker, essentials and the description —
+              grade, walk leader, back marker, refreshment stop, essentials and the description —
               some with the map built into the card, some running the full width
               of the page, some with a sidebar (on a phone it opens from a
               button). You can also design the walk page yourself: on any

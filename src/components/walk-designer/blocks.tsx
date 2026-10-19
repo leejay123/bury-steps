@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Clock,
   CloudSun,
+  Coffee,
   Flag,
   Footprints,
   MapPin,
@@ -108,6 +109,12 @@ function useWalkInfo(p: WalkIdeaParts, showEmpty = false) {
       { icon: TrendingUp, label: "Grade", value: h.grade },
       { icon: UserRound, label: "Walk leader", value: h.walkLeader },
       { icon: UsersRound, label: "Back marker", value: p.walk.backMarker },
+      {
+        icon: Coffee,
+        label: "Refreshment stop",
+        value: p.walk.refreshmentStop,
+        wide: true,
+      },
     ].flatMap((fact) =>
       // Empty facts are left out, unless the design asks to show organisers
       // "Not set" (to spot what's missing from Edit walk).
@@ -3287,6 +3294,7 @@ export const FACT_NAMES = [
   "Grade",
   "Walk leader",
   "Back marker",
+  "Refreshment stop",
 ] as const;
 export type FactName = (typeof FACT_NAMES)[number];
 export type FactLook = "line" | "tile" | "big";

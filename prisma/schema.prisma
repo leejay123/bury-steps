@@ -145,6 +145,8 @@ model Walk {
   essentials      String[]  @default([])
   walkLeader      String?
   backMarker      String?
+  /// Where the walk stops for a drink or bite, e.g. "Hare & Hounds, Bolton Road, Abbey Village".
+  refreshmentStop String?
   location        String?
   /// Optional UK postcode used to place the map pin. Members still see `location`.
   postcode        String?

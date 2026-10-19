@@ -5,6 +5,7 @@ import {
   CalendarDays,
   CalendarPlus,
   Clock,
+  Coffee,
   Flag,
   Footprints,
   MapPin,
@@ -93,6 +94,7 @@ export function WalkStudioLayouts({ layout, parts }: { layout: WalkStudioLayout;
       { icon: TrendingUp, label: "Grade", value: h.grade },
       { icon: UserRound, label: "Walk leader", value: h.walkLeader },
       { icon: UsersRound, label: "Back marker", value: p.walk.backMarker },
+      { icon: Coffee, label: "Refreshment stop", value: p.walk.refreshmentStop },
     ].flatMap((fact) =>
       fact.value ? [{ ...fact, value: fact.value }] : [],
     ),

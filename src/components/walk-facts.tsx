@@ -1,10 +1,11 @@
-import { CalendarDays, Clock, Footprints, MapPin, Mountain, TrendingUp, Timer, UserRound, UsersRound } from "lucide-react";
+import { CalendarDays, Clock, Coffee, Footprints, MapPin, Mountain, TrendingUp, Timer, UserRound, UsersRound } from "lucide-react";
 import { formatTime, formatWalkDay, formatWalkLength } from "@/lib/dates";
 import { meetingPointLabel } from "@/lib/geocode";
 import { WalkEssentialPills } from "@/components/walk-essentials-context";
 
 export function WalkFacts({
   backMarker,
+  refreshmentStop,
   distance,
   durationMins,
   elevationGain,
@@ -17,6 +18,7 @@ export function WalkFacts({
   walkLeader,
 }: {
   backMarker?: string | null;
+  refreshmentStop?: string | null;
   distance?: string | null;
   durationMins: number;
   elevationGain?: string | null;
@@ -41,6 +43,7 @@ export function WalkFacts({
       { icon: TrendingUp, label: "Grade", value: grade },
       { icon: UserRound, label: "Walk leader", value: walkLeader },
       { icon: UsersRound, label: "Back marker", value: backMarker },
+      { icon: Coffee, label: "Refreshment stop", value: refreshmentStop },
     ].flatMap((row) => (row.value ? [{ ...row, value: row.value }] : showEmpty ? [{ ...row, value: "Not set" }] : [])),
   ];
 

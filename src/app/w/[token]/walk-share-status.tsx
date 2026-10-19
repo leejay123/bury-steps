@@ -25,6 +25,7 @@ export function WalkShareStatusChrome({
   attended,
   part = "all",
   backMarker,
+  refreshmentStop,
   cancelledAt,
   cancelledReason = null,
   description,
@@ -52,6 +53,7 @@ export function WalkShareStatusChrome({
    */
   part?: "all" | "notices" | "details";
   backMarker: string | null;
+  refreshmentStop: string | null;
   cancelledAt: string | null;
   /** What the organiser typed when cancelling, if anything. */
   cancelledReason?: string | null;
@@ -184,6 +186,7 @@ export function WalkShareStatusChrome({
         <CardContent className="flex flex-col gap-4">
           <WalkFacts
             backMarker={backMarker}
+            refreshmentStop={refreshmentStop}
             distance={distance}
             durationMins={durationMins}
             elevationGain={elevationGain}

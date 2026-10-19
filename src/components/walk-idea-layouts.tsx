@@ -50,6 +50,7 @@ export type WalkIdeaParts = {
   /** Everything else from Edit walk, for the one-card Details (walk-studio-layouts.tsx). */
   walk: {
     backMarker: string | null;
+    refreshmentStop: string | null;
     calendarHref: string;
     description: string | null;
     essentials: string[];

@@ -54,6 +54,7 @@ const WALK_PAGE_SELECT = {
   essentials: true,
   walkLeader: true,
   backMarker: true,
+  refreshmentStop: true,
   location: true,
   postcode: true,
   latitude: true,
@@ -265,6 +266,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
     <>
       <WalkShareStatusChrome
         backMarker={walk.backMarker}
+        refreshmentStop={walk.refreshmentStop}
         cancelledAt={cancelledAtIso}
         cancelledReason={walk.cancelledReason}
         description={walk.description}
@@ -333,6 +335,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
       <>
         <WalkShareStatusChrome
           backMarker={walk.backMarker}
+          refreshmentStop={walk.refreshmentStop}
           cancelledAt={cancelledAtIso}
           cancelledReason={walk.cancelledReason}
           description={walk.description}
@@ -380,6 +383,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
     notices: (
       <WalkShareStatusChrome
         backMarker={walk.backMarker}
+        refreshmentStop={walk.refreshmentStop}
         cancelledAt={cancelledAtIso}
         cancelledReason={walk.cancelledReason}
         description={walk.description}
@@ -405,6 +409,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
     what3words: walk.what3words,
     walk: {
       backMarker: walk.backMarker,
+      refreshmentStop: walk.refreshmentStop,
       calendarHref: `/w/${slug}/ics`,
       description: walk.description,
       essentials: walk.essentials,
@@ -478,6 +483,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
             <>
               <WalkShareStatusChrome
                 backMarker={walk.backMarker}
+                refreshmentStop={walk.refreshmentStop}
                 cancelledAt={cancelledAtIso}
                 cancelledReason={walk.cancelledReason}
                 description={walk.description}
@@ -524,6 +530,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
           notices={
             <WalkShareStatusChrome
               backMarker={walk.backMarker}
+              refreshmentStop={walk.refreshmentStop}
               cancelledAt={cancelledAtIso}
               cancelledReason={walk.cancelledReason}
               description={walk.description}

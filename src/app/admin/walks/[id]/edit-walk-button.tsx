@@ -75,6 +75,7 @@ function EditWalkForm({
  * with this walk. */
 export function EditWalkButton({
   backMarker,
+  refreshmentStop,
   cancelled,
   description,
   distance,
@@ -94,6 +95,7 @@ export function EditWalkButton({
   what3words,
 }: {
   backMarker: string | null;
+  refreshmentStop: string | null;
   cancelled: boolean;
   description: string | null;
   distance: string | null;
@@ -139,6 +141,7 @@ export function EditWalkButton({
           cancelled={cancelled}
           defaults={{
             backMarker,
+            refreshmentStop,
             description,
             distance,
             durationMins,
