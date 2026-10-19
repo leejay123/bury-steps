@@ -411,6 +411,7 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
       "showActions",
       "titleMessages",
       "bandStyle",
+      "titleSpace",
     ].forEach((k) => hide.add(k));
   } else {
     if (props.showTitle === false) {
@@ -425,6 +426,10 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
     }
     if (props.statusLook === "none") hide.add("statusAt");
   }
+  // Inside the title box only when there's a title (a ticket or bento grid
+  // has its own) and facts to show.
+  if (ownTitle || props.showTitle === false || factsAs === "none")
+    hide.add("factsAt");
   // Map
   if (!props.map || props.map === "none") {
     [
@@ -1273,7 +1278,11 @@ export const walkDesignConfig: Config = {
           label: "Title look",
           options: [
             { value: "standard", label: "Standard (options below)" },
-            ...TITLE_LOOKS.map(([value, label]) => ({ value, label })),
+            // Facts in the title: use Where the facts go instead, so the
+            // facts take the Facts shown as look and never show twice.
+            ...TITLE_LOOKS.filter(
+              ([value]) => value !== "chips" && value !== "stats",
+            ).map(([value, label]) => ({ value, label })),
           ],
         },
         bandStyle: {
@@ -1406,6 +1415,14 @@ export const walkDesignConfig: Config = {
           "Facts",
           "Date, times, meeting point, distance and the rest.",
         ),
+        factsAt: {
+          type: "radio",
+          label: "Where the facts go",
+          options: options([
+            ["own", "Under the title box"],
+            ["title", "Inside the title box (under Created by)"],
+          ]),
+        },
         factsAs: {
           type: "select",
           label: "Facts shown as",
@@ -1584,6 +1601,7 @@ export const walkDesignConfig: Config = {
         descriptionBox: "none",
         essentials: ESSENTIALS_DEFAULTS,
         timeline: false,
+        factsAt: "own",
         timelineAt: "own",
         timelineLook: "bar",
         timelineOpens: true,
@@ -1641,6 +1659,7 @@ export const walkDesignConfig: Config = {
         descriptionTitle,
         descriptionBox,
         timeline,
+        factsAt,
         timelineAt,
         timelineLook,
         timelineOpens,
@@ -1698,6 +1717,7 @@ export const walkDesignConfig: Config = {
           showEssentials={showEssentials}
           showTitle={showTitle}
           timeline={timeline}
+          factsAt={factsAt}
           timelineAt={timelineAt}
           timelineLook={timelineLook}
           timelineOpens={timelineOpens}

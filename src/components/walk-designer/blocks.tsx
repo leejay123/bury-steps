@@ -1518,6 +1518,8 @@ export type DetailsOptions = {
   titleBox?: PartBox;
   /** "standard", or one of the title looks (centred, hero, date strip…). */
   titleLook?: "standard" | TitleVariant;
+  /** The facts: on their own under the title box, or inside it. */
+  factsAt?: "own" | "title";
   /** The Status band title look's band style. */
   bandStyle?: BandStyle;
   /** How the facts show: the facts' own looks, or another design's (ticket, bento…). */
@@ -1595,7 +1597,14 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   const ownTitle =
     factsAs === "ticket" || factsAs === "ticket-colour" || factsAs === "bento";
   const showTitle = (o.showTitle ?? true) && !ownTitle;
-  const titleLook = o.titleLook ?? "standard";
+  // The title looks with facts of their own ("With fact chips", "Big name and
+  // four key facts") now mean: the facts go inside the title box, in the
+  // Facts shown as look — so the facts never show twice.
+  const savedLook = o.titleLook ?? "standard";
+  const factsLook = savedLook === "chips" || savedLook === "stats";
+  const titleLook = factsLook ? "plain" : savedLook;
+  const factsInTitle =
+    (o.factsAt === "title" || factsLook) && showTitle && factsAs !== "none";
   const showActions = (o.showActions ?? true) && !ownTitle;
   const map = o.map ?? "none";
   const padding =
@@ -1746,6 +1755,52 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         ) : null}
       </div>
     );
+  const factsPart =
+    factsAs === "facts" ? (
+      <DeviceFacts
+        arrange={o.factsArrange}
+        dark={dark}
+        p={p}
+        phoneArrange={o.phoneFactsArrange}
+        phoneVariant={o.phoneFacts}
+        showEmpty={o.showEmptyFacts}
+        tabletArrange={o.tabletFactsArrange}
+        tabletVariant={o.tabletFacts}
+        variant={o.facts ?? "grid"}
+        box={o.factsBox}
+        heading={o.factsTitle}
+        lines={o.factLines}
+        phoneBox={o.phoneFactsBox}
+        tabletBox={o.tabletFactsBox}
+      />
+    ) : factsAs === "none" ? null : (
+      // The same facts in one of the other designs' looks, inside this card.
+      <Boxed box={o.factsBox} dark={dark}>
+        <div className="flex flex-col gap-2">
+          <PartHeading text={o.factsTitle} />
+          {factsAs === "ticket" || factsAs === "ticket-colour" ? (
+            <Ticket
+              allFacts
+              arrange={o.factsArrange}
+              // Everything else in the card goes inside the ticket.
+              extra={inTicket ? cardExtras : null}
+              p={p}
+              showEmpty={o.showEmptyFacts}
+              variant={factsAs === "ticket" ? "plain" : "colour"}
+            />
+          ) : factsAs === "bento" ? (
+            <Bento allFacts p={p} showEmpty={o.showEmptyFacts} />
+          ) : (
+            <FactLooks
+              arrange={o.factsArrange ?? "fill"}
+              look={factsAs}
+              p={p}
+              showEmpty={o.showEmptyFacts}
+            />
+          )}
+        </div>
+      </Boxed>
+    );
   const body = (
     <div
       style={factsGapStyle(o.factsGap)}
@@ -1781,9 +1836,10 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
                 }
                 bandStyle={o.bandStyle}
                 afterNote={
-                  (descriptionInTitle || timelineInTitle) &&
+                  (descriptionInTitle || timelineInTitle || factsInTitle) &&
                   titleLook.startsWith("band") ? (
                     <>
+                      {factsInTitle ? factsPart : null}
                       {timelineInTitle ? timelineView : null}
                       {descriptionInTitle ? descriptionPart : null}
                     </>
@@ -1795,6 +1851,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
               />
               {!titleLook.startsWith("band") ? (
                 <>
+                  {factsInTitle ? factsPart : null}
                   {timelineInTitle ? timelineView : null}
                   {descriptionInTitle ? descriptionPart : null}
                 </>
@@ -1825,6 +1882,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
                       {p.headline.note}
                     </p>
                   ) : null}
+                  {factsInTitle ? factsPart : null}
                   {timelineInTitle ? timelineView : null}
                   {descriptionInTitle ? descriptionPart : null}
                 </div>
@@ -1844,51 +1902,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         </Boxed>
       ) : null}
       {preciseHere("above-facts")}
-      {factsAs === "facts" ? (
-        <DeviceFacts
-          arrange={o.factsArrange}
-          dark={dark}
-          p={p}
-          phoneArrange={o.phoneFactsArrange}
-          phoneVariant={o.phoneFacts}
-          showEmpty={o.showEmptyFacts}
-          tabletArrange={o.tabletFactsArrange}
-          tabletVariant={o.tabletFacts}
-          variant={o.facts ?? "grid"}
-          box={o.factsBox}
-          heading={o.factsTitle}
-          lines={o.factLines}
-          phoneBox={o.phoneFactsBox}
-          tabletBox={o.tabletFactsBox}
-        />
-      ) : factsAs === "none" ? null : (
-        // The same facts in one of the other designs' looks, inside this card.
-        <Boxed box={o.factsBox} dark={dark}>
-          <div className="flex flex-col gap-2">
-            <PartHeading text={o.factsTitle} />
-            {factsAs === "ticket" || factsAs === "ticket-colour" ? (
-              <Ticket
-                allFacts
-                arrange={o.factsArrange}
-                // Everything else in the card goes inside the ticket.
-                extra={inTicket ? cardExtras : null}
-                p={p}
-                showEmpty={o.showEmptyFacts}
-                variant={factsAs === "ticket" ? "plain" : "colour"}
-              />
-            ) : factsAs === "bento" ? (
-              <Bento allFacts p={p} showEmpty={o.showEmptyFacts} />
-            ) : (
-              <FactLooks
-                arrange={o.factsArrange ?? "fill"}
-                look={factsAs}
-                p={p}
-                showEmpty={o.showEmptyFacts}
-              />
-            )}
-          </div>
-        </Boxed>
-      )}
+      {factsInTitle ? null : factsPart}
       {inTicket ? null : cardExtras}
     </div>
   );

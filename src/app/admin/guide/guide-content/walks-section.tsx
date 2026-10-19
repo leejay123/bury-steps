@@ -330,8 +330,11 @@ export function WalksSection({
               circles, a spec sheet, a receipt, sticky notes and a journey
               line. With the walk ticket, the card&apos;s precise location,
               essentials and description go inside the ticket, so it&apos;s all
-              one card, with the same 24 pixels between everything. The Details card&apos;s Title look offers Standard, Plain, With
-              fact chips, Big name and four key facts, and Status band (with
+              one card, with the same 24 pixels between everything. To put the facts in the title, set Facts → Where the facts go to
+              Inside the title box: they take the Facts shown as look and
+              don&apos;t show again below (pages that used the With fact chips or
+              Big name and four key facts title looks now work this way). The
+              Details card&apos;s Title look offers Standard, Plain and Status band (with
               Space inside the title box: closer, normal, roomy or more). Any
               page that used one of the title looks that were taken out shows
               the Status band or Plain instead. Facts
