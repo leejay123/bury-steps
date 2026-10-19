@@ -319,6 +319,11 @@ const TITLE_LOOKS: [string, string][] = [
   ["chips", "With fact chips"],
   ["stats", "Big name and four key facts"],
   ["band", "Status band"],
+  ["band-bottom", "Status band, band at the bottom"],
+  ["band-cells", "Status band, split into cells (status, date, time)"],
+  ["band-side", "Status band, band down the side"],
+  ["band-meet", "Status band with the date and meeting point"],
+  ["band-thin", "Status band, thin and small"],
   ["magazine", "Magazine"],
   ["poster", "Poster"],
   ["trailhead", "Trailhead sign"],
@@ -404,7 +409,8 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
         hide.add(k),
       );
     }
-    if (props.titleLook !== "band") hide.add("bandStyle");
+    if (!String(props.titleLook ?? "").startsWith("band"))
+      hide.add("bandStyle");
     if ((props.titleLook ?? "standard") !== "standard") {
       ["statusLook", "statusAt", "bigTitle"].forEach((k) => hide.add(k));
     }
@@ -1254,7 +1260,7 @@ export const walkDesignConfig: Config = {
         },
         bandStyle: {
           type: "select",
-          label: "Band style (Status band look)",
+          label: "Band style (Status band looks)",
           options: [
             { value: "grey", label: "Plain grey" },
             { value: "outline", label: "Plain, with a line under it" },
@@ -1302,7 +1308,7 @@ export const walkDesignConfig: Config = {
             { value: "bottom-boxes", label: "At the bottom, as message boxes" },
             {
               value: "in-band",
-              label: "Inside the status band, plain (Title look: Status band)",
+              label: "Inside the status band, plain (Status band title looks)",
             },
           ],
         },

@@ -976,6 +976,11 @@ export type BandStyle = "grey" | "outline" | "bar" | "line";
 
 export type TitleVariant =
   | "plain"
+  | "band-bottom"
+  | "band-cells"
+  | "band-side"
+  | "band-meet"
+  | "band-thin"
   | "chips"
   | "stats"
   | "band"
@@ -1116,44 +1121,139 @@ function Title({
         </div>
       );
     case "band":
-      return (
-        <section className="overflow-hidden rounded-xl border">
-          {/* Plain grey, whatever the status (no green while it's live). */}
+    case "band-bottom":
+    case "band-cells":
+    case "band-side":
+    case "band-meet":
+    case "band-thin": {
+      // The Status band family: an outlined box with a grey band (status and
+      // date, or the walk's messages in their place) and the walk's name.
+      const thin = variant === "band-thin";
+      const bandClass = cn(
+        "flex flex-col gap-2 px-4 py-2.5 text-sm font-medium text-foreground sm:px-5",
+        thin && "py-1.5 text-xs tracking-wider uppercase",
+        bandStyle === "grey" && "bg-muted",
+        bandStyle === "outline" && "border-b",
+        bandStyle === "bar" && "border-l-4 border-l-foreground bg-muted",
+        bandStyle === "line" && "mx-4 border-b px-0 sm:mx-5 sm:px-0",
+        // A message in the band takes the place of the status and date.
+        "[&:has([data-messages]:not(:empty))>[data-band-status]]:hidden [&:has([data-sample])>[data-band-status]]:hidden",
+      );
+      const statusText = `${info.now.eyebrow} · ${info.now.line}`;
+      const when = `${day}, ${time} to ${formatTime(info.end)}`;
+      const bandStatus =
+        variant === "band-cells" ? (
           <div
-            className={cn(
-              "flex flex-col gap-2 px-4 py-2.5 text-sm font-medium text-foreground sm:px-5",
-              bandStyle === "grey" && "bg-muted",
-              bandStyle === "outline" && "border-b",
-              bandStyle === "bar" && "border-l-4 border-l-foreground bg-muted",
-              bandStyle === "line" && "mx-4 border-b px-0 sm:mx-5 sm:px-0",
-              // A message in the band takes the place of the status and date.
-              "[&:has([data-messages]:not(:empty))>[data-band-status]]:hidden [&:has([data-sample])>[data-band-status]]:hidden",
-            )}
-            suppressHydrationWarning
+            className="-mx-4 -my-2.5 grid grid-cols-1 divide-y text-left sm:-mx-5 sm:grid-cols-3 sm:divide-x sm:divide-y-0"
+            data-band-status=""
           >
+            <span className="flex flex-col px-4 py-2 sm:px-5">
+              <span className="text-xs font-normal text-muted-foreground">
+                Status
+              </span>
+              {info.now.eyebrow}
+            </span>
+            <span className="flex flex-col px-4 py-2 sm:px-5">
+              <span className="text-xs font-normal text-muted-foreground">
+                Date
+              </span>
+              {day}
+            </span>
+            <span className="flex flex-col px-4 py-2 sm:px-5">
+              <span className="text-xs font-normal text-muted-foreground">
+                Time
+              </span>
+              {time} to {formatTime(info.end)}
+            </span>
+          </div>
+        ) : variant === "band-side" ? (
+          <div className="flex flex-col gap-1" data-band-status="">
+            <span>{info.now.eyebrow}</span>
+            <span className="font-normal">{info.now.line}</span>
+            <span className="font-normal">{when}</span>
+          </div>
+        ) : variant === "band-meet" ? (
+          <div
+            className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1"
+            data-band-status=""
+          >
+            <span>{when}</span>
+            <span className="flex items-center gap-1.5 font-normal">
+              <MapPin aria-hidden className="size-3.5" />
+              {p.meeting ?? "Meeting point to follow"}
+            </span>
+          </div>
+        ) : (
+          <div
+            className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1"
+            data-band-status=""
+          >
+            <span>{statusText}</span>
+            <span className="font-normal">{when}</span>
+          </div>
+        );
+      const band = (
+        <div className={bandClass} suppressHydrationWarning>
+          {bandStatus}
+          {bandMessages}
+        </div>
+      );
+      const body = (
+        <div className="flex min-w-0 flex-1 flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
+          <div className="flex min-w-0 flex-col gap-1.5">
+            {heading()}
+            {variant === "band-meet" ? (
+              <span
+                className="text-sm text-muted-foreground"
+                suppressHydrationWarning
+              >
+                {statusText}
+              </span>
+            ) : null}
+            {note}
+            {afterNote ? <div className="mt-4">{afterNote}</div> : null}
+          </div>
+          {act}
+        </div>
+      );
+      if (variant === "band-side")
+        return (
+          <section className="grid overflow-hidden rounded-xl border sm:grid-cols-[14rem_minmax(0,1fr)]">
             <div
-              className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1"
-              data-band-status=""
+              className={cn(bandClass, "justify-center sm:py-5")}
+              suppressHydrationWarning
             >
-              <span>
-                {info.now.eyebrow} · {info.now.line}
-              </span>
-              <span className="font-normal">
-                {day}, {time} to {formatTime(info.end)}
-              </span>
+              {bandStatus}
+              {bandMessages}
             </div>
-            {bandMessages}
-          </div>
-          <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
-            <div className="flex min-w-0 flex-col gap-1.5">
-              {heading()}
-              {note}
-              {afterNote ? <div className="mt-4">{afterNote}</div> : null}
-            </div>
-            {act}
-          </div>
+            {body}
+          </section>
+        );
+      return (
+        <section className="flex flex-col overflow-hidden rounded-xl border">
+          {variant === "band-bottom" ? (
+            <>
+              {body}
+              <div
+                className={cn(
+                  bandClass,
+                  bandStyle === "outline" && "border-t border-b-0",
+                )}
+                suppressHydrationWarning
+              >
+                {bandStatus}
+                {bandMessages}
+              </div>
+            </>
+          ) : (
+            <>
+              {band}
+              {body}
+            </>
+          )}
         </section>
       );
+    }
     case "magazine":
       return (
         <div className="flex flex-col gap-4">
@@ -1893,7 +1993,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
                 actions={showActions}
                 bandMessages={
                   titleMessagesAt === "in-band" &&
-                  titleLook === "band" &&
+                  titleLook.startsWith("band") &&
                   !p.noticesInStrip ? (
                     // Plain: no box, no colour, just the words in the band.
                     <MessagesOrSample
@@ -1905,14 +2005,14 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
                 }
                 bandStyle={o.bandStyle}
                 afterNote={
-                  descriptionInTitle && titleLook === "band"
+                  descriptionInTitle && titleLook.startsWith("band")
                     ? descriptionPart
                     : null
                 }
                 p={p}
                 variant={titleLook}
               />
-              {descriptionInTitle && titleLook !== "band"
+              {descriptionInTitle && !titleLook.startsWith("band")
                 ? descriptionPart
                 : null}
             </div>

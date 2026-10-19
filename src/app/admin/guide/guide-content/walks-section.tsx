@@ -347,7 +347,11 @@ export function WalksSection({
               the left, or just a line underneath — and the coloured boxes
               still there as a choice; the Status band title look has the same
               Band style options. Cancelled walks are listed under History on
-              the Walks page, not Upcoming. The
+              the Walks page, not Upcoming. More Status band title looks: the band at the bottom, the
+              band split into cells (status, date, time), the band down the
+              side, a band with the date and meeting point, and a thin, small
+              band — each with the same band styles, and the walk&apos;s messages
+              and description can sit in them too. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how
