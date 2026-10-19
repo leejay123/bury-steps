@@ -1154,24 +1154,13 @@ export type TimelineOptions = {
   opens?: boolean;
   start?: boolean;
   end?: boolean;
-  /** Times of your own, one per line, like "13:00 Lunch at the Hare & Hounds". */
-  extra?: string;
 };
 
 type TimelineItem = { time: string; label: string };
 
-/** "13:00 Lunch stop" lines → items. Lines without a time at the front are skipped. */
-function extraTimelineItems(text = ""): TimelineItem[] {
-  return text
-    .split("\n")
-    .map((line) => line.trim().match(/^(\d{1,2})[:.](\d{2})\s*[-–·]?\s*(.+)$/))
-    .filter((m): m is RegExpMatchArray => Boolean(m))
-    .map((m) => ({ time: `${m[1].padStart(2, "0")}:${m[2]}`, label: m[3] }));
-}
-
 /**
- * The day's times: clock-in opens, set off, finish, plus any of your own,
- * in time order, in one of several plain looks.
+ * The day's times: clock-in opens, set off and finish, in one of several
+ * plain looks.
  */
 function Timeline({ p, o = {} }: { p: WalkIdeaParts; o?: TimelineOptions }) {
   const { opens, start, end, progress } = useWalkInfo(p);
@@ -1184,8 +1173,7 @@ function Timeline({ p, o = {} }: { p: WalkIdeaParts; o?: TimelineOptions }) {
       ? []
       : [{ time: formatTime(start), label: "Set off" }]),
     ...(o.end === false ? [] : [{ time: formatTime(end), label: "Finish" }]),
-    ...extraTimelineItems(o.extra),
-  ].sort((a, b) => a.time.localeCompare(b.time));
+  ];
   if (items.length === 0) return null;
   if (look === "cells")
     return (
@@ -1591,8 +1579,6 @@ export type DetailsOptions = {
   timelineOpens?: boolean;
   timelineStart?: boolean;
   timelineEnd?: boolean;
-  /** Times of your own, one per line ("13:00 Lunch stop"). */
-  timelineExtra?: string;
   /** The gaps between the things in the title box. */
   titleGap?: TitleGap;
   /** (Old pages) the order of the facts, timeline and description in the title box. */
@@ -1698,7 +1684,9 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   // The walk's messages inside the title box, if chosen: as a row of the
   // box divided off by a line (a table look), or as their own boxes.
   const titleMessagesAt = o.titleMessages ?? "none";
-  const titleBoxed = (o.titleBox ?? "none") !== "none";
+  // The Status band has its own outline: no box around it as well.
+  const titleBox = titleLook.startsWith("band") ? "none" : o.titleBox;
+  const titleBoxed = (titleBox ?? "none") !== "none";
   const titleMessages = (where: "top" | "bottom") => {
     if (
       titleMessagesAt === "none" ||
@@ -1739,7 +1727,6 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       <Timeline
         o={{
           end: o.timelineEnd,
-          extra: o.timelineExtra,
           look: o.timelineLook,
           opens: o.timelineOpens,
           start: o.timelineStart,
@@ -1883,7 +1870,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       )}
     >
       {showTitle || showActions ? (
-        <Boxed box={o.titleBox} dark={dark}>
+        <Boxed box={titleBox} dark={dark}>
           {titleMessages("top")}
           {titleLook !== "standard" && showTitle ? (
             // One of the title looks (the Title block's), inside the card.
@@ -1999,7 +1986,14 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         {map === "side" && p.map ? (
           // Map down the side: whichever side is shorter stays in view
           // (under the site header) while the longer one scrolls past.
-          <div className="grid lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">
+          <div
+            className={cn(
+              "grid lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start",
+              // With no space inside the card, the two sides need their
+              // own 24px gap (otherwise the title box and map touch).
+              padding === "none" && "gap-6",
+            )}
+          >
             <div className="min-w-0 lg:sticky lg:top-24">{body}</div>
             {insetMap(
               cn(
@@ -3711,12 +3705,22 @@ const PASTELS = [
   "bg-violet-100 text-violet-950",
   "bg-lime-100 text-lime-950",
 ];
+// One colour per fact (there are up to 12), so none repeat.
 const TOP_BARS = [
   "border-t-emerald-500",
   "border-t-sky-500",
   "border-t-amber-500",
   "border-t-rose-500",
   "border-t-violet-500",
+  "border-t-orange-500",
+  "border-t-teal-500",
+  "border-t-pink-500",
+  "border-t-indigo-500",
+  "border-t-lime-500",
+  "border-t-cyan-500",
+  "border-t-fuchsia-500",
+  "border-t-red-500",
+  "border-t-yellow-500",
 ];
 const BOLDS = [
   "bg-amber-300 text-amber-950",

@@ -343,11 +343,6 @@ const timelineItemFields = {
   },
   timelineStart: { type: "radio" as const, label: "Set off", options: yesNo },
   timelineEnd: { type: "radio" as const, label: "Finish", options: yesNo },
-  timelineExtra: {
-    type: "textarea" as const,
-    label:
-      "Add your own times, one per line (like 13:00 Lunch at the Hare & Hounds)",
-  },
 };
 
 const TITLE_PART_NAMES: Record<string, string> = {
@@ -477,8 +472,9 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
         hide.add(k),
       );
     }
-    if (!String(props.titleLook ?? "").startsWith("band"))
-      hide.add("bandStyle");
+    // The Status band has its own outline, so no box around it as well.
+    if (String(props.titleLook ?? "").startsWith("band")) hide.add("titleBox");
+    else hide.add("bandStyle");
     if ((props.titleLook ?? "standard") !== "standard") {
       ["statusLook", "statusAt", "bigTitle"].forEach((k) => hide.add(k));
     }
@@ -1693,7 +1689,6 @@ export const walkDesignConfig: Config = {
         timelineOpens: true,
         timelineStart: true,
         timelineEnd: true,
-        timelineExtra: "",
         titleGap: "normal",
         titleParts: [],
         factsBorder: true,
@@ -1753,7 +1748,6 @@ export const walkDesignConfig: Config = {
         timelineOpens,
         timelineStart,
         timelineEnd,
-        timelineExtra,
         titleGap,
         titleOrder,
         titleParts,
@@ -1814,7 +1808,6 @@ export const walkDesignConfig: Config = {
           timelineOpens={timelineOpens}
           timelineStart={timelineStart}
           timelineEnd={timelineEnd}
-          timelineExtra={timelineExtra}
           titleGap={titleGap}
           titleOrder={titleOrder}
           titleParts={titleParts}
@@ -2066,18 +2059,10 @@ export const walkDesignConfig: Config = {
         timelineOpens: true,
         timelineStart: true,
         timelineEnd: true,
-        timelineExtra: "",
       },
-      render: ({
-        look,
-        timelineOpens,
-        timelineStart,
-        timelineEnd,
-        timelineExtra,
-      }) => (
+      render: ({ look, timelineOpens, timelineStart, timelineEnd }) => (
         <TimelineBlock
           end={timelineEnd}
-          extra={timelineExtra}
           look={look}
           opens={timelineOpens}
           start={timelineStart}

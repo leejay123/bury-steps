@@ -371,8 +371,11 @@ export function WalksSection({
               Status band&apos;s box too. The day&apos;s timeline has a look of its own
               (a progress bar, a box split into sections, dots on a line, one
               line, or a list); choose which times show — Clock-in opens, Set
-              off, Finish — and add your own, one per line, like 13:00 Lunch at
-              the Hare &amp; Hounds. They&apos;re put in time order. The
+              off, Finish. With the Status band title look there&apos;s no Box
+              around the title (the band has its own outline); with the map
+              down the side, the two sides always have a 24 pixel gap and the
+              shorter side stays in view. Cards with a coloured top bar give
+              every fact its own colour. The
               Preview menu at the top shows the walk before clock-in opens,
               with clock-in open, under way, finished or cancelled, and a second menu pretends
               you have or haven&apos;t clocked in, so you can see how
