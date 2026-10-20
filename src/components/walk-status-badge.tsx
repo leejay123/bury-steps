@@ -98,7 +98,7 @@ export function WalkStatusHeader({ className, ...walk }: WalkStatusInput & { cla
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-3 border-b bg-muted/50 px-3 py-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase",
+        "flex items-center justify-between gap-3 border-b bg-muted/50 px-3 py-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase",
         className,
       )}
     >
