@@ -66,6 +66,7 @@ export function WalkAttendanceTable({
   canSeeEmergencyContact = false,
   canSeeHealthNotes = false,
   heading,
+  note = null,
   rows,
   walkCompleted = false,
 }: {
@@ -82,6 +83,9 @@ export function WalkAttendanceTable({
    * Members list's role sections (see DataListGroupHeader) — "Attendance"
    * or "Clocked out", with a live count. */
   heading: { count: number; label: string };
+  /** A line under the header strip, inside the list (e.g. "1 member has
+   * reported a condition · Read these before setting off…"). */
+  note?: { title: string; text: string } | null;
   rows: WalkAttendanceRow[];
   /** Pass true once the walk's clock-in window has fully closed. */
   walkCompleted?: boolean;
@@ -104,6 +108,12 @@ export function WalkAttendanceTable({
     <div className="flex flex-col gap-4" ref={listRef}>
       <DataList>
         <DataListGroupHeader count={heading.count} label={heading.label} />
+        {note ? (
+          <li className="border-b px-3 py-2 text-sm">
+            <span className="font-medium">{note.title}</span>
+            <span className="text-muted-foreground"> · {note.text}</span>
+          </li>
+        ) : null}
         {paging.paged.map((row) => (
           <DataListItem
             className={dataListItemStackClassName}

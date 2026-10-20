@@ -88,7 +88,8 @@ export function ClockInForm({
             name="hasConditions"
             value={hasConditions ?? ""}
             onValueChange={(v) => setHasConditions(v as "yes" | "no")}
-            className="grid gap-2 sm:grid-cols-2"
+            // One under the other: side by side in the drawer was too cramped.
+            className="grid gap-2"
           >
             {(
               [

@@ -428,17 +428,6 @@ async function WalkDetailPageContent({ id }: { id: string }) {
   );
   const attendanceSection = canSeeAttendance ? (
     <>
-      {admin.permWalksHealth && withConditions > 0 && (
-        <Alert variant="warning">
-          <AlertTitle>
-            {withConditions} {withConditions === 1 ? "member has" : "members have"} reported a
-            condition
-          </AlertTitle>
-          <AlertDescription>
-            Read these before setting off. They are deleted 90 days after the walk.
-          </AlertDescription>
-        </Alert>
-      )}
 
       {/*
         Split into two lists rather than one merged table: "Attendance" is
@@ -460,6 +449,15 @@ async function WalkDetailPageContent({ id }: { id: string }) {
         canSeeEmergencyContact={admin.permWalksAttendance}
         canSeeHealthNotes={admin.permWalksHealth}
         cancelledAt={walk.cancelledAt?.toISOString() ?? null}
+        // In the list itself, under its header, rather than a box above it.
+        conditionsNote={
+          admin.permWalksHealth && withConditions > 0
+            ? {
+                title: `${withConditions} ${withConditions === 1 ? "member has" : "members have"} reported a condition`,
+                text: "Read these before setting off. They are deleted 90 days after the walk.",
+              }
+            : null
+        }
         clockedOutRows={clockedOut.map(toAttendanceRow)}
         durationMins={walk.durationMins}
         endedAt={walk.endedAt?.toISOString() ?? null}

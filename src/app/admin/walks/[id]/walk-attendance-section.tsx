@@ -21,6 +21,7 @@ export function WalkAttendanceSection({
   canSeeEmergencyContact,
   canSeeHealthNotes,
   cancelledAt,
+  conditionsNote = null,
   clockedOutRows,
   durationMins,
   endedAt,
@@ -33,6 +34,8 @@ export function WalkAttendanceSection({
   canSeeEmergencyContact: boolean;
   canSeeHealthNotes: boolean;
   cancelledAt: string | null;
+  /** Members' reported conditions: shown in the first list, under its header. */
+  conditionsNote?: { title: string; text: string } | null;
   clockedOutRows: WalkAttendanceRow[];
   durationMins: number;
   endedAt: string | null;
@@ -93,6 +96,7 @@ export function WalkAttendanceSection({
             canSeeEmergencyContact={canSeeEmergencyContact}
             canSeeHealthNotes={canSeeHealthNotes}
             heading={{ count: stillInRows.length, label: isCompleted ? "Attended" : "Attendance" }}
+            note={conditionsNote}
             rows={stillInRows}
             walkCompleted={isCompleted}
           />
@@ -106,6 +110,8 @@ export function WalkAttendanceSection({
             canSeeEmergencyContact={canSeeEmergencyContact}
             canSeeHealthNotes={canSeeHealthNotes}
             heading={{ count: clockedOutRows.length, label: "Clocked out" }}
+            // Only when the first list is empty (the note goes in the first one).
+            note={stillInRows.length === 0 ? conditionsNote : null}
             rows={clockedOutRows}
             walkCompleted={isCompleted}
           />
