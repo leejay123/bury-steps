@@ -124,7 +124,8 @@ function NoticesBlogSectionInner({
     <section className="flex flex-col gap-0">
       <div className="flex flex-col gap-3 px-4 py-6 md:px-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex flex-col gap-3">
+          {/* 6px between the title and its line, like the other pages. */}
+          <div className="flex flex-col gap-1.5">
             <h1 className="text-lg font-semibold tracking-tight">Notices</h1>
             <p className="text-sm text-muted-foreground">
               Updates from the organisers for signed-in members. Short messages stay in the bell; open a
