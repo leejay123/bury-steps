@@ -17,7 +17,7 @@ import {
 } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
 import { usePagedList } from "@/hooks/use-paged-list";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
   Drawer,
@@ -33,6 +33,8 @@ export type WalkAttendanceRow = {
   name: string;
   email: string;
   initials: string;
+  /** Their profile photo, if they have one (initials otherwise). */
+  imageUrl?: string | null;
   clockedInAt: string;
   clockedOutAt: string | null;
   clockedOutReason: string | null;
@@ -123,6 +125,7 @@ export function WalkAttendanceTable({
           >
             <DataListItemMain className="items-center">
               <Avatar className="size-7 shrink-0">
+                {row.imageUrl ? <AvatarImage alt="" src={row.imageUrl} /> : null}
                 <AvatarFallback className="text-xs">{row.initials}</AvatarFallback>
               </Avatar>
               <DataListBody>

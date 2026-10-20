@@ -227,6 +227,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
       name,
       email: attendance.user.email,
       initials: initials(name),
+      imageUrl: attendance.user.imageUrl ?? null,
       clockedInAt: attendance.clockedInAt.toISOString(),
       clockedOutAt: attendance.clockedOutAt?.toISOString() ?? null,
       clockedOutReason: attendance.clockedOutReason,
