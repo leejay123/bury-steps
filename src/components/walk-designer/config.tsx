@@ -517,6 +517,39 @@ const moreToggle = (what: string) => ({
   ),
 });
 
+/** The Block layout heading, folded like the Details card's sections. */
+const layoutSection = foldSection(
+  "Block layout",
+  "The block's frame, heading, spacing and which screens show it.",
+  (p) => {
+    const layout = (p.layout ?? {}) as Record<string, unknown>;
+    return [
+      said(
+        layout.frame,
+        {
+          none: "No frame",
+          card: "Card",
+          tint: "Light grey",
+          outline: "Outline",
+        },
+        "No frame",
+      ),
+      said(
+        layout.showOn,
+        {
+          all: "Everywhere",
+          phones: "Phones only",
+          tablets: "Tablets only",
+          computers: "Computers only",
+          "phones-tablets": "Phones and tablets",
+          "tablets-computers": "Tablets and computers",
+        },
+        "Everywhere",
+      ),
+    ].join(" · ");
+  },
+);
+
 /** Shown as the summary: the chosen option's words, or "Off". */
 const said = (value: unknown, words: Record<string, string>, fallback = "") =>
   words[String(value)] ?? (fallback || String(value ?? ""));
@@ -958,7 +991,7 @@ const BLOCK_LAYOUT: BlockLayout = {
 };
 const blockLayoutField = {
   type: "object" as const,
-  label: "Block layout",
+  label: "Frame, spacing and where it shows",
   objectFields: {
     frame: {
       type: "select" as const,
@@ -1400,9 +1433,46 @@ function withBlockLayout(
       const Inner = component.render as (
         props: Record<string, unknown>,
       ) => ReactNode;
+      const ownFields = component.resolveFields;
+      const ownData = component.resolveData;
       const wrapped: ComponentConfig = {
         ...component,
-        fields: { ...component.fields, layout: blockLayoutField },
+        fields: {
+          ...component.fields,
+          _layoutSection: layoutSection,
+          layout: blockLayoutField,
+        },
+        // Block layout folds away like the Details card's sections: shut,
+        // only its heading (with a summary) shows, at the end.
+        resolveFields: async (data, params) => {
+          const base = (
+            ownFields ? await ownFields(data, params) : params.fields
+          ) as Record<string, unknown>;
+          const { _layoutSection: heading, layout, ...rest } = base;
+          const out: Record<string, unknown> = {
+            ...rest,
+            _layoutSection: heading ?? layoutSection,
+          };
+          if (data.props?._layoutSection)
+            out.layout = layout ?? blockLayoutField;
+          return out as typeof params.fields;
+        },
+        // One section open at a time: opening Block layout shuts the
+        // block's other sections (the Details card's), and the other way round.
+        resolveData: async (data, params) => {
+          const resolved = ownData ? await ownData(data, params) : data;
+          const props: Record<string, unknown> = { ...resolved.props };
+          const changed = params.changed as Record<string, boolean | undefined>;
+          if (changed._layoutSection && props._layoutSection) {
+            for (const fold of FOLDS)
+              if (fold.key in props) props[fold.key] = false;
+          } else if (
+            FOLDS.some((fold) => changed[fold.key] && props[fold.key])
+          ) {
+            props._layoutSection = false;
+          }
+          return { ...resolved, props: props as typeof resolved.props };
+        },
         defaultProps: { ...component.defaultProps, layout: BLOCK_LAYOUT },
         render: (props: Record<string, unknown>) => (
           <BlockFrame layout={props.layout as BlockLayout | undefined}>

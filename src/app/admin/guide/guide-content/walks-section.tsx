@@ -382,7 +382,9 @@ export function WalksSection({
               section heading (Title, Map, Precise location, Facts, Timeline,
               Essentials, Description) to open it — the others shut — and
               each shut heading shows a short summary of what&apos;s chosen. The
-              less-used settings in a section are under More … options. Card
+              less-used settings in a section are under More … options. Block layout (on every block) folds away the
+              same way, at the bottom, with a summary such as No frame ·
+              Everywhere; opening it shuts the other sections. Card
               table (in Facts shown as) shows the facts in the same outlined
               list as the Walks and Members pages. On a designed page, a walk
               whose meeting point can&apos;t be found on the map shows no map box. The
