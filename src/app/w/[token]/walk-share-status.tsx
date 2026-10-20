@@ -43,6 +43,7 @@ export function WalkShareStatusChrome({
   title,
   walkLeader,
   walkUrl,
+  withoutSignIn = false,
 }: {
   /** Whether this viewer clocked in; unknown on the shared page (see signedIn). */
   attended?: boolean;
@@ -51,7 +52,10 @@ export function WalkShareStatusChrome({
    * and the details separately, and show the title on its own line:
    * "notices" is just the notices; "details" is the card without its title.
    */
-  part?: "all" | "notices" | "details";
+  part?: "all" | "notices" | "details" | "sign-in";
+  /** Designed pages: leave the sign-in box out of the notices (it's placed
+   * on its own, at the top — part "sign-in"). */
+  withoutSignIn?: boolean;
   backMarker: string | null;
   refreshmentStop: string | null;
   cancelledAt: string | null;
@@ -106,11 +110,7 @@ export function WalkShareStatusChrome({
       </Alert>
     ) : null;
   const closedNotice = <WalkClosedNoClockInNotice />;
-  const guestNotice = completed ? (
-    <Alert variant="info">
-      <AlertDescription>This walk has finished. The details are kept here to look back on.</AlertDescription>
-    </Alert>
-  ) : (
+  const signInPrompt = completed ? null : (
     <div className="space-y-4 rounded-lg border bg-muted/40 p-5">
       <div className="space-y-1">
         <p className="font-medium">You need to sign in to join this walk</p>
@@ -129,6 +129,22 @@ export function WalkShareStatusChrome({
       </div>
     </div>
   );
+  const guestNotice = completed ? (
+    <Alert variant="info">
+      <AlertDescription>This walk has finished. The details are kept here to look back on.</AlertDescription>
+    </Alert>
+  ) : withoutSignIn ? null : (
+    signInPrompt
+  );
+  // Just the sign-in box, for a designed page's top (visitors only).
+  if (part === "sign-in")
+    return status === "cancelled" || !signInPrompt || signedIn ? null : signedIn === undefined ? (
+      <div className="contents" data-guest-home="">
+        {signInPrompt}
+      </div>
+    ) : (
+      signInPrompt
+    );
 
   const notices =
     status === "cancelled" ? (

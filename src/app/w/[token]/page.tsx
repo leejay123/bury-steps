@@ -1,5 +1,5 @@
 import { WalkLinkLoading } from "./loading";
-import { Suspense, cache } from "react";
+import { Suspense, cache, cloneElement, isValidElement } from "react";
 import { cacheLife } from "next/cache";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -423,15 +423,26 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
     // ([data-member-home] / [data-guest-home]), as for the rest of this page.
     // The back link is the design's Back link block, if it has one.
     const visitorDesign = designs.visitor ?? designs.member;
+    // Visitors: the sign-in box on its own at the top, not among the walk's
+    // messages (which a design may put inside the Details card).
+    const noticesEl = isValidElement<{ part?: string; withoutSignIn?: boolean }>(ideaParts.notices)
+      ? ideaParts.notices
+      : null;
     return (
       <div className="flex flex-col gap-6">
         <div className="contents" data-member-home="">
           <WalkDesignRender data={designs.member} parts={{ ...ideaParts, back: { href: "/walks", label: "Walks" } }} />
         </div>
         <div className="contents" data-guest-home="">
+          {noticesEl ? cloneElement(noticesEl, { part: "sign-in" }) : null}
           <WalkDesignRender
             data={visitorDesign}
-            parts={{ ...ideaParts, back: { href: "/", label: "Home" }, live: null }}
+            parts={{
+              ...ideaParts,
+              back: { href: "/", label: "Home" },
+              live: null,
+              notices: noticesEl ? cloneElement(noticesEl, { withoutSignIn: true }) : ideaParts.notices,
+            }}
           />
         </div>
       </div>
