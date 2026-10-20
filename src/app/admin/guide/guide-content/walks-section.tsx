@@ -559,6 +559,9 @@ export function WalksSection({
             you already wrote, but you cannot add more.
           </p>
           <p>
+            In the attendance list, anyone who reported a condition has a grey{" "}
+            <strong>Condition</strong> tag on their row (if you may read health
+            notes), and a line under the list&apos;s header says how many.{" "}
             <strong>Add someone</strong> (in the <strong>Manage</strong> menu,
             while people can still be added) is for a
             member who was there but did not clock in — phone died, they forgot,
