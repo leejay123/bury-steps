@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DataList, DataListItem } from "@/components/data-list";
 import { ListPagination } from "@/components/list-pagination";
 import { usePagedList } from "@/hooks/use-paged-list";
@@ -41,6 +41,8 @@ export function WalkMembers({
             {paging.paged.map((member, index) => (
               <DataListItem className="cursor-default hover:bg-transparent" key={`${member.name}-${index}`}>
                 <Avatar className="size-8 shrink-0">
+                  {/* Their profile photo if they have one; initials otherwise. */}
+                  {member.imageUrl ? <AvatarImage alt="" src={member.imageUrl} /> : null}
                   <AvatarFallback className="text-xs">{initials(member.name)}</AvatarFallback>
                 </Avatar>
                 <span className="text-sm">{member.name}</span>
