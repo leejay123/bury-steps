@@ -1142,7 +1142,10 @@ function TabsView({
   innerSpace = "normal",
   look = "style",
   side = false,
+  emptyTabs = "hide",
 }: {
+  /** A tab with nothing in it: left out, or kept with a short note. */
+  emptyTabs?: "hide" | "note";
   look?: string;
   side?: boolean;
   list: TabItem[];
@@ -1201,7 +1204,7 @@ function TabsView({
   if (count === 0) return null;
   const shown = list
     .map((tab, i) => ({ tab, i }))
-    .filter(({ i }) => editing || !empty[i]);
+    .filter(({ i }) => editing || emptyTabs === "note" || !empty[i]);
   if (shown.length === 0) return null;
   const active = shown.some(({ i }) => `tab-${i}` === value)
     ? value
@@ -1272,12 +1275,23 @@ function TabsView({
             className={cn("data-[state=inactive]:hidden", below)}
             forceMount
             key={i}
-            ref={(el: HTMLDivElement | null) => {
-              panels.current[i] = el;
-            }}
             value={`tab-${i}`}
           >
-            <Content className={cn("flex flex-col", inner)} />
+            {/* The blocks, watched to spot an empty tab (the note sits
+                outside it, or it would never look empty). */}
+            <div
+              className="contents"
+              ref={(el: HTMLDivElement | null) => {
+                panels.current[i] = el;
+              }}
+            >
+              <Content className={cn("flex flex-col", inner)} />
+            </div>
+            {emptyTabs === "note" && empty[i] ? (
+              <p className="text-sm text-muted-foreground">
+                Nothing to show here for this walk right now.
+              </p>
+            ) : null}
           </TabsContent>
         );
       })}
@@ -3251,6 +3265,14 @@ export const walkDesignConfig: Config = {
           label: "Space between blocks in a tab",
           options: spaceOptions,
         },
+        emptyTabs: {
+          type: "radio",
+          label: "Tabs with nothing in them (e.g. Weather after the walk)",
+          options: options([
+            ["hide", "Hide them"],
+            ["note", "Show them, with a short note"],
+          ]),
+        },
         corners: {
           type: "radio",
           label: "Tab corners",
@@ -3289,6 +3311,7 @@ export const walkDesignConfig: Config = {
       defaultProps: {
         style: "site",
         corners: "as-is",
+        emptyTabs: "hide",
         contentSpace: "normal",
         innerSpace: "normal",
         look: "style",
@@ -3311,6 +3334,7 @@ export const walkDesignConfig: Config = {
         fit,
         sticky,
         tabs,
+        emptyTabs,
         puck,
       }) => {
         const view = (
@@ -3323,6 +3347,7 @@ export const walkDesignConfig: Config = {
             // In the designer every tab's area is shown, one under another,
             // so blocks can be dropped into any tab.
             editing={Boolean(puck?.isEditing)}
+            emptyTabs={emptyTabs}
             fit={fit}
             list={(tabs ?? []) as TabItem[]}
             sticky={sticky}
