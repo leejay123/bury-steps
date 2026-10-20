@@ -549,8 +549,9 @@ export function WalksSection({
           <p>
             <strong>Journey</strong> is the story of the walk — short timed
             events (a cafe stop, a viewpoint) with an optional note. It sits at
-            the bottom of the organiser walk page. Add events once the walk has
-            started, including after Completed. Tap a row to edit;{" "}
+            the bottom of the organiser walk page. Add events with{" "}
+            <strong>Manage → Add event</strong> once the walk has started,
+            including after Completed. Tap a row to edit;{" "}
             <strong>Remove</strong> on the list asks you to confirm, same as
             notices and reports. Use <strong>View journey</strong> to open the
             animated timeline in a drawer — members get the same button at the
@@ -558,7 +559,8 @@ export function WalksSection({
             you already wrote, but you cannot add more.
           </p>
           <p>
-            <strong>Add someone</strong> on that attendance section is for a
+            <strong>Add someone</strong> (in the <strong>Manage</strong> menu,
+            while people can still be added) is for a
             member who was there but did not clock in — phone died, they forgot,
             or the window had already closed. They must already have an account;
             you cannot add someone who has never signed up. While the walk is

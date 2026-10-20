@@ -31,7 +31,7 @@ import { What3wordsLink } from "@/components/what3words-link";
 import { walkShareUrl } from "@/lib/walk-slug";
 import { ensureWalkSlug } from "@/lib/walk-slug-server";
 import { RetentionLockToggle } from "./retention-lock-toggle";
-import { WalkAttendanceSection } from "./walk-attendance-section";
+import { AddSomeoneInManage, WalkAttendanceSection } from "./walk-attendance-section";
 import { WalkCompletedNotice } from "./walk-completed-notice";
 import { WalkDetailActions } from "./walk-detail-actions";
 import { WalkDescription } from "@/components/walk-description";
@@ -415,6 +415,27 @@ async function WalkDetailPageContent({ id }: { id: string }) {
         walkLeader={walk.walkLeader}
         what3words={walk.what3words}
       />
+      {/* Add someone and Add event live here, not in their tabs. */}
+      {admin.permWalksAttendance && canSeeAttendance ? (
+        <AddSomeoneInManage
+          cancelledAt={walk.cancelledAt?.toISOString() ?? null}
+          durationMins={walk.durationMins}
+          endedAt={walk.endedAt?.toISOString() ?? null}
+          startsAt={walk.startsAt.toISOString()}
+          walkId={walk.id}
+        />
+      ) : null}
+      <WalkJourneyManager
+        addOnly
+        cancelledAt={walk.cancelledAt?.toISOString() ?? null}
+        defaultHappenedAt={journeyDefaultAt}
+        durationMins={walk.durationMins}
+        endedAt={walk.endedAt?.toISOString() ?? null}
+        events={journeyEvents}
+        mayEdit={admin.permWalksJourney}
+        startsAt={walk.startsAt.toISOString()}
+        walkId={walk.id}
+      />
       {walk.cancelledAt && admin.permWalksExport ? (
         <RetentionLockToggle locked={walk.retentionLocked} walkId={walk.id} />
       ) : null}
@@ -464,7 +485,6 @@ async function WalkDetailPageContent({ id }: { id: string }) {
         startsAt={walk.startsAt.toISOString()}
         stillInRows={stillIn.map(toAttendanceRow)}
         totalAttendanceCount={walk.attendances.length}
-        walkId={walk.id}
       />
     </>
   ) : (

@@ -118,7 +118,7 @@ export function WalkRowsSkeleton({ rows = 0, remember }: { rows?: number; rememb
     <SkList
       row={(i) => (
         <>
-          <div className="flex items-center justify-between gap-3 border-b bg-muted/50 px-3 py-2">
+          <div className="flex items-center justify-between gap-3 border-b bg-muted/50 px-3 py-2.5">
             <SkLine className="w-28" size="xs" />
             <SkLine className="w-16" size="xs" />
           </div>
@@ -352,7 +352,7 @@ export function MemberRowsSkeleton({ remember = "members", known }: { remember?:
       leading={
         <li
           aria-hidden="true"
-          className="flex items-baseline gap-1.5 border-b bg-muted/50 px-3 py-2 text-xs font-semibold tracking-wide uppercase"
+          className="flex items-baseline gap-1.5 border-b bg-muted/50 px-3 py-2.5 text-xs font-semibold tracking-wide uppercase"
         >
           <span className="invisible">Members</span>
         </li>

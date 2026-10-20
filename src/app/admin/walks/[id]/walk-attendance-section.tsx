@@ -16,6 +16,41 @@ import { WalkAttendanceTable, type WalkAttendanceRow } from "./walk-attendance";
  * snapshot would keep "too early to add" or "Attendance" after the walk
  * finishes if the page was left open.
  */
+/**
+ * Manage → Add someone: the Add someone button, only while organisers may
+ * add people (the same live rule the Attendance tab used), for the Manage
+ * menu's list.
+ */
+export function AddSomeoneInManage({
+  cancelledAt,
+  durationMins,
+  endedAt,
+  startsAt,
+  walkId,
+}: {
+  cancelledAt: string | null;
+  durationMins: number;
+  endedAt: string | null;
+  startsAt: string;
+  walkId: string;
+}) {
+  const now = useWalkClock({ cancelledAt, durationMins, endedAt, startsAt });
+  const walk = {
+    cancelledAt: cancelledAt ? new Date(cancelledAt) : null,
+    durationMins,
+    endedAt: endedAt ? new Date(endedAt) : null,
+    startsAt: new Date(startsAt),
+  };
+  if (!canOrganiserAddAttendance(walk, now)) return null;
+  return (
+    <AddAttendanceButton
+      walkCompleted={walkStatus(walk, now) === "completed"}
+      walkId={walkId}
+      walkStartsAt={startsAt}
+    />
+  );
+}
+
 export function WalkAttendanceSection({
   canManageAttendance,
   canSeeEmergencyContact,
@@ -28,7 +63,6 @@ export function WalkAttendanceSection({
   stillInRows,
   startsAt,
   totalAttendanceCount,
-  walkId,
 }: {
   canManageAttendance: boolean;
   canSeeEmergencyContact: boolean;
@@ -42,7 +76,6 @@ export function WalkAttendanceSection({
   stillInRows: WalkAttendanceRow[];
   startsAt: string;
   totalAttendanceCount: number;
-  walkId: string;
 }) {
   const now = useWalkClock({ cancelledAt, durationMins, endedAt, startsAt });
   const walk = {
@@ -52,22 +85,11 @@ export function WalkAttendanceSection({
     startsAt: new Date(startsAt),
   };
   const isCompleted = walkStatus(walk, now) === "completed";
-  const canAdd = canOrganiserAddAttendance(walk, now);
 
   return (
     <>
       <section className="flex flex-col gap-3">
-        {canAdd && canManageAttendance ? (
-          <div className="flex justify-end">
-            <AddAttendanceButton
-              className="w-full sm:w-auto"
-              walkCompleted={isCompleted}
-              walkId={walkId}
-              walkStartsAt={startsAt}
-            />
-          </div>
-        ) : null}
-
+        {/* Add someone is in the Manage menu (AddSomeoneInManage). */}
         {stillInRows.length === 0 ? (
           <EmptyState
             description={
@@ -75,7 +97,7 @@ export function WalkAttendanceSection({
                 ? cancelledAt
                   ? "Nobody clocked in before it was cancelled."
                   : isCompleted
-                    ? "Nobody clocked in for this walk. If someone was there, use Add someone."
+                    ? "Nobody clocked in for this walk. If someone was there, use Manage → Add someone."
                     : "Share the link above with the group."
                 : isCompleted
                   ? "Everyone who clocked in also clocked out before the walk finished."

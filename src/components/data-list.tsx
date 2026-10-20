@@ -109,7 +109,7 @@ export function DataListGroupHeader({ count, label }: { count: number; label: st
   return (
     <li
       aria-hidden
-      className="flex items-baseline gap-1.5 border-b bg-muted/50 px-3 py-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+      className="flex items-baseline gap-1.5 border-b bg-muted/50 px-3 py-2.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
     >
       {label}
       <span className="text-xs font-normal normal-case text-muted-foreground/80">({count})</span>

@@ -150,6 +150,7 @@ export function WalkJourneyManager({
   endedAt = null,
   events,
   mayEdit,
+  addOnly = false,
   startsAt,
   walkId,
 }: {
@@ -161,6 +162,8 @@ export function WalkJourneyManager({
   events: JourneyEventView[];
   /** permWalksJourney — phase gating is applied live below. */
   mayEdit: boolean;
+  /** Just the Add event button and its drawer (for the Manage menu). */
+  addOnly?: boolean;
   startsAt: string;
   walkId: string;
 }) {
@@ -191,35 +194,113 @@ export function WalkJourneyManager({
   const atCap = events.length >= MAX_JOURNEY_EVENTS;
   const showJourneyDrawer = events.length > 0;
   const showAddEvent = canEdit && !atCap;
-  const showBothButtons = showJourneyDrawer && showAddEvent;
+
+  // Add or edit an event: one drawer, opened from a row (edit) or from
+  // Manage → Add event (the addOnly copy of this component).
+  const drawer = (
+    <Drawer
+      closeDisabled={pending}
+      onOpenChange={(open) => {
+        if (!open && !pending) setMode(null);
+      }}
+      open={mode !== null}
+      variant="form"
+    >
+      <DrawerContent>
+        <DrawerHeader>
+          <DrawerTitle>{editing ? "Edit event" : "Add event"}</DrawerTitle>
+          <DrawerDescription>
+            What happened, and when (UK time).
+          </DrawerDescription>
+        </DrawerHeader>
+        <form
+          action={editing ? updateAction : createAction}
+          className="flex min-h-0 flex-1 flex-col"
+          key={editing?.id ?? "add"}
+        >
+          <input name="walkId" type="hidden" value={walkId} />
+          {editing ? (
+            <input name="eventId" type="hidden" value={editing.id} />
+          ) : null}
+          {/* Only the fields scroll — on a phone with the keyboard up, the
+              old unscrollable form clipped When and the button off the
+              bottom of the drawer. */}
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain px-4 pb-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="journey-title" required>
+                Title
+              </Label>
+              <Input
+                defaultValue={editing?.title ?? ""}
+                id="journey-title"
+                maxLength={MAX_JOURNEY_TITLE}
+                name="title"
+                placeholder="Stopped at Burrs cafe"
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="journey-body">Notes</Label>
+              <Textarea
+                defaultValue={editing?.body ?? ""}
+                id="journey-body"
+                maxLength={MAX_JOURNEY_BODY}
+                name="body"
+                placeholder="Optional — what happened"
+                rows={3}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="journey-when" required>
+                When
+              </Label>
+              <DateTimePicker
+                defaultValue={
+                  editing
+                    ? utcToLondonWallClock(editing.happenedAt)
+                    : liveDefaultHappenedAt
+                }
+                id="journey-when"
+                name="happenedAt"
+                required
+              />
+            </div>
+            <FormError
+              message={formState && !formState.ok ? formState.error : null}
+            />
+          </div>
+          <DrawerFormFooter
+            label={editing ? "Save changes" : "Add event"}
+            pendingLabel={editing ? "Saving…" : "Adding…"}
+          />
+        </form>
+      </DrawerContent>
+    </Drawer>
+  );
+
+  if (addOnly)
+    return showAddEvent ? (
+      <>
+        <Button
+          onClick={() => setMode({ type: "add" })}
+          size="sm"
+          variant="outline"
+        >
+          <Plus data-icon="inline-start" />
+          Add event
+        </Button>
+        {drawer}
+      </>
+    ) : null;
 
   return (
     <section className="flex flex-col gap-3">
       {/* No heading of its own: the tab (or section) already says Journey, and
           a heading here made this tab start lower than the others. */}
-      {showJourneyDrawer || showAddEvent ? (
-        // On the right, like Attended's Add someone (full width on a phone).
+      {/* Add event is in Manage; only View journey here, on the right. */}
+      {showJourneyDrawer ? (
         <div className="flex justify-end">
-          <div
-            className={
-              showBothButtons
-                ? "grid w-full grid-cols-2 gap-2 sm:w-auto"
-                : "flex w-full flex-col gap-2 sm:w-auto"
-            }
-          >
-            <WalkJourneyDrawer className="w-full" events={events} />
-            {canEdit && !atCap ? (
-              <Button
-                className="w-full"
-                onClick={() => setMode({ type: "add" })}
-                size="sm"
-                variant="outline"
-              >
-                <Plus data-icon="inline-start" />
-                Add event
-              </Button>
-            ) : null}
-          </div>
+          <WalkJourneyDrawer className="w-full sm:w-auto" events={events} />
         </div>
       ) : null}
 
@@ -227,7 +308,7 @@ export function WalkJourneyManager({
         <EmptyState
           description={
             canEdit
-              ? "Add what happened on the walk — a cafe stop, a viewpoint, a funny moment."
+              ? "Use Manage → Add event for what happened on the walk — a cafe stop, a viewpoint, a funny moment."
               : "Nothing on this journey yet."
           }
           title="No journey events yet"
@@ -271,84 +352,7 @@ export function WalkJourneyManager({
         </DataList>
       ) : null}
 
-      <Drawer
-        closeDisabled={pending}
-        onOpenChange={(open) => {
-          if (!open && !pending) setMode(null);
-        }}
-        open={mode !== null}
-        variant="form"
-      >
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>{editing ? "Edit event" : "Add event"}</DrawerTitle>
-            <DrawerDescription>
-              What happened, and when (UK time).
-            </DrawerDescription>
-          </DrawerHeader>
-          <form
-            action={editing ? updateAction : createAction}
-            className="flex min-h-0 flex-1 flex-col"
-            key={editing?.id ?? "add"}
-          >
-            <input name="walkId" type="hidden" value={walkId} />
-            {editing ? (
-              <input name="eventId" type="hidden" value={editing.id} />
-            ) : null}
-            {/* Only the fields scroll — on a phone with the keyboard up, the
-                old unscrollable form clipped When and the button off the
-                bottom of the drawer. */}
-            <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain px-4 pb-4">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="journey-title" required>
-                  Title
-                </Label>
-                <Input
-                  defaultValue={editing?.title ?? ""}
-                  id="journey-title"
-                  maxLength={MAX_JOURNEY_TITLE}
-                  name="title"
-                  placeholder="Stopped at Burrs cafe"
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="journey-body">Notes</Label>
-                <Textarea
-                  defaultValue={editing?.body ?? ""}
-                  id="journey-body"
-                  maxLength={MAX_JOURNEY_BODY}
-                  name="body"
-                  placeholder="Optional — what happened"
-                  rows={3}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="journey-when" required>
-                  When
-                </Label>
-                <DateTimePicker
-                  defaultValue={
-                    editing
-                      ? utcToLondonWallClock(editing.happenedAt)
-                      : liveDefaultHappenedAt
-                  }
-                  id="journey-when"
-                  name="happenedAt"
-                  required
-                />
-              </div>
-              <FormError
-                message={formState && !formState.ok ? formState.error : null}
-              />
-            </div>
-            <DrawerFormFooter
-              label={editing ? "Save changes" : "Add event"}
-              pendingLabel={editing ? "Saving…" : "Adding…"}
-            />
-          </form>
-        </DrawerContent>
-      </Drawer>
+      {drawer}
     </section>
   );
 }
