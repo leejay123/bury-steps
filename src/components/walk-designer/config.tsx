@@ -1173,9 +1173,10 @@ function TabsView({
   innerSpace = "normal",
   look = "style",
   side = false,
-  emptyTabs = "hide",
+  emptyTabs = "note",
 }: {
-  /** A tab with nothing in it: left out, or kept with a short note. */
+  /** A tab with nothing in it: kept with a short note (the default, for
+   * designs that never chose), or left out. */
   emptyTabs?: "hide" | "note";
   look?: string;
   side?: boolean;
@@ -3402,7 +3403,7 @@ export const walkDesignConfig: Config = {
       defaultProps: {
         style: "site",
         corners: "as-is",
-        emptyTabs: "hide",
+        emptyTabs: "note",
         contentSpace: "normal",
         innerSpace: "normal",
         look: "style",
