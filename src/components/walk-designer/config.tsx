@@ -1131,12 +1131,31 @@ type TabItem = {
 };
 
 /** A tab with nothing in it for this person (e.g. Attended, for a member). */
+/**
+ * Whether a tab shows nothing. Only what's actually shown counts: a part
+ * hidden by its own rule (a visitors-only card for an organiser, a card that
+ * hides itself after the walk) still has its words in the page, and used to
+ * make an empty tab look full. Each part's own display is checked, so this
+ * works while the tab itself is closed too.
+ */
+const SHOWN_THINGS = "img, iframe, video, canvas, input, button, a[href]";
 function isEmptyPanel(el: HTMLElement | null) {
   if (!el) return false;
-  return (
-    (el.textContent ?? "").trim() === "" &&
-    !el.querySelector("img, iframe, video, canvas, input, button, a[href]")
-  );
+  const shown = (node: Element) => {
+    for (let at: Element | null = node; at && at !== el; at = at.parentElement)
+      if (at.hasAttribute("hidden") || getComputedStyle(at).display === "none")
+        return false;
+    return true;
+  };
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  for (let text = walker.nextNode(); text; text = walker.nextNode())
+    if (
+      (text.textContent ?? "").trim() &&
+      text.parentElement &&
+      shown(text.parentElement)
+    )
+      return false;
+  return !Array.from(el.querySelectorAll(SHOWN_THINGS)).some(shown);
 }
 
 /**
@@ -1208,6 +1227,9 @@ function TabsView({
           childList: true,
           subtree: true,
           characterData: true,
+          // A part hiding or showing itself (after the walk, say).
+          attributes: true,
+          attributeFilter: ["hidden", "class", "style"],
         });
     }
     return () => observer.disconnect();
