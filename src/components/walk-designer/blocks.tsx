@@ -1350,9 +1350,7 @@ function Title({
         {h.note ? (
           <p className="text-xs text-muted-foreground">{h.note}</p>
         ) : null}
-        {underNote ? (
-          <div className="mt-2 flex flex-col gap-2">{underNote}</div>
-        ) : null}
+        {underNote}
       </>
     ) : null;
   const act = actions ? <Actions className="sm:shrink-0" p={p} /> : null;
@@ -1901,7 +1899,8 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
     (key === "clockin" || key === "countdown");
   const listed = titleParts.filter((key) => !tucked(key));
   const underName = titleParts.some(tucked) ? (
-    <>
+    // The same small text as "Created by" (the Big number look keeps its size).
+    <div className="flex flex-col gap-1.5 [&_p]:text-xs!">
       {titleParts
         .filter(tucked)
         .map((key) =>
@@ -1909,7 +1908,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
             <Fragment key={key}>{insideParts[key]}</Fragment>
           ) : null,
         )}
-    </>
+    </div>
   ) : null;
   const inside =
     listed.length > 0 ? (
@@ -1985,17 +1984,23 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
                       {p.headline.title}
                     </h1>
                     {o.statusAt === "below" ? statusRow : null}
-                    {p.headline.note ? (
-                      <p
-                        className={cn(
-                          "text-xs",
-                          dark ? "text-white/60" : "text-muted-foreground",
-                        )}
-                      >
-                        {p.headline.note}
-                      </p>
+                    {/* Created by and anything tucked under it: one group,
+                        so they sit as close as the band look's lines. */}
+                    {p.headline.note || underName ? (
+                      <div className="flex flex-col gap-1.5">
+                        {p.headline.note ? (
+                          <p
+                            className={cn(
+                              "text-xs",
+                              dark ? "text-white/60" : "text-muted-foreground",
+                            )}
+                          >
+                            {p.headline.note}
+                          </p>
+                        ) : null}
+                        {underName}
+                      </div>
                     ) : null}
-                    {underName}
                   </div>
                 ) : (
                   <span />
