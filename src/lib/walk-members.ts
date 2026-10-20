@@ -90,7 +90,7 @@ export async function getWalkAttendeesForReport(
   return rows.map((row) => ({ id: row.user.id, name: memberDisplayName(row.user) }));
 }
 
-export type WalkMemberName = { name: string; leftEarly: boolean };
+export type WalkMemberName = { name: string; leftEarly: boolean; imageUrl?: string | null };
 
 /**
  * Who is on a walk right now — or, once it has finished, everyone who
@@ -108,11 +108,15 @@ export async function getWalkMemberNames(
     orderBy: { clockedInAt: "asc" },
     select: {
       clockedOutAt: true,
-      user: { select: { firstName: true, lastName: true } },
+      user: { select: { firstName: true, lastName: true, imageUrl: true } },
     },
   });
 
-  return rows.map((row) => ({ name: memberDisplayName(row.user), leftEarly: row.clockedOutAt !== null }));
+  return rows.map((row) => ({
+    name: memberDisplayName(row.user),
+    leftEarly: row.clockedOutAt !== null,
+    imageUrl: row.user.imageUrl,
+  }));
 }
 
 /** Headcounts only — used on the Walks cards so a busy walk does not ship every name. */

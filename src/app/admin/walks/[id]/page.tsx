@@ -11,7 +11,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ClipboardList } from "lucide-react";
 import { prisma } from "@/lib/db";
-import { requireAnyPermission, displayName } from "@/lib/auth";
+import { requireAnyPermission, displayName, memberDisplayName } from "@/lib/auth";
 import { utcToLondonWallClock } from "@/lib/dates";
 import { WalkFacts } from "@/components/walk-facts";
 import { walkStatus } from "@/lib/walk-window";
@@ -48,6 +48,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { WalkAttendanceRow } from "./walk-attendance";
+import { AvatarStack } from "@/components/avatar-stack";
 
 
 
@@ -116,6 +117,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
               firstName: true,
               lastName: true,
               email: true,
+              imageUrl: true,
               emergencyContactName: true,
               emergencyContactPhone: true,
             },
@@ -588,6 +590,12 @@ async function WalkDetailPageContent({ id }: { id: string }) {
     journey: { count: journeyEvents.length, content: journey },
     live: clockIn(false, true),
     liveCompact: clockIn(true, true),
+    // People clocked in: their profile photos (organisers see everyone).
+    peopleStack: (
+      <AvatarStack
+        people={walk.attendances.map((a) => ({ name: memberDisplayName(a.user), imageUrl: a.user.imageUrl }))}
+      />
+    ),
     myClockIn: walk.cancelledAt ? null : (
       <SelfClockInPanel
         alreadyClockedInAt={mine?.clockedInAt.toISOString() ?? null}

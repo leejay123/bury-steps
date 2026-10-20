@@ -30,6 +30,8 @@ export type WalkIdeaParts = {
   liveCompact?: ReactNode;
   /** This person's own clock-in line (designed pages: Your clock-in). */
   myClockIn?: ReactNode;
+  /** Who's clocked in, as profile photos (People clocked in), if allowed. */
+  peopleStack?: ReactNode;
   map: ReactNode;
   meeting: string | null;
   notices: ReactNode;

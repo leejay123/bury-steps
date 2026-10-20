@@ -345,6 +345,20 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
           </Suspense>
         ),
       };
+  // Designed pages: People clocked in, with their photos (once allowed).
+  const peopleStack = cancelled ? null : (
+    <Suspense fallback={null}>
+      <WalkLivePart
+        beforeYouSetOffTips={theme.beforeYouSetOffTips}
+        durationMins={walk.durationMins}
+        endedAt={walk.endedAt}
+        peopleOnly
+        startsAt={walk.startsAt}
+        token={walk.token}
+        walkId={walk.id}
+      />
+    </Suspense>
+  );
   // Designed pages: "You are clocked in · Recorded at…" (Your clock-in).
   const myClockIn = cancelled ? null : (
     <Suspense fallback={null}>
@@ -489,6 +503,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
               back: { href: "/walks", label: "Walks" },
               liveCompact,
               myClockIn,
+              peopleStack,
               attended: membersAttended,
               notices: noticesEl ? cloneElement(noticesEl, { audience: "member" }) : ideaParts.notices,
             }}
@@ -708,6 +723,7 @@ async function WalkLivePart({
   compact = false,
   membersOnly = false,
   statusOnly = false,
+  peopleOnly = false,
   durationMins,
   endedAt,
   startsAt,
@@ -721,6 +737,8 @@ async function WalkLivePart({
   membersOnly?: boolean;
   /** Just this member's own clock-in line (WalkLivePanel statusOnly). */
   statusOnly?: boolean;
+  /** Just the faces of who's on the walk (WalkLivePanel peopleOnly). */
+  peopleOnly?: boolean;
   durationMins: number;
   endedAt: Date | null;
   startsAt: Date;
@@ -755,9 +773,12 @@ async function WalkLivePart({
 
   return (
     <>
-      {closedNoClockIn && !compact && !membersOnly && !statusOnly ? <WalkClosedNoClockInNotice /> : null}
+      {closedNoClockIn && !compact && !membersOnly && !statusOnly && !peopleOnly ? (
+        <WalkClosedNoClockInNotice />
+      ) : null}
       <WalkLivePanel
         compact={compact}
+        peopleOnly={peopleOnly}
         membersOnly={membersOnly}
         statusOnly={statusOnly}
         alreadyClockedInAt={myAttendance?.clockedInAt.toISOString() ?? null}

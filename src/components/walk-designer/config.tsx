@@ -49,6 +49,7 @@ import {
   PreciseBlock,
   StatusBlock,
   SummaryTilesBlock,
+  DEFAULT_SUMMARY_TILES,
   TitleBlock,
   WeatherBlock,
   BackLinkBlock,
@@ -2621,9 +2622,73 @@ export const walkDesignConfig: Config = {
     },
     SummaryTiles: {
       label: "Summary tiles",
-      fields: { arrange: arrangeField },
-      defaultProps: { arrange: "fill" },
-      render: ({ arrange }) => <SummaryTilesBlock arrange={arrange} />,
+      fields: {
+        tiles: {
+          type: "array",
+          label: "Tiles — + Add, drag to reorder",
+          arrayFields: {
+            tile: {
+              type: "select",
+              label: "Tile",
+              options: options([
+                ["attended", "Attended"],
+                ["meeting", "Meeting point"],
+                ["weather", "Weather"],
+                ["journey", "Journey"],
+                ["date", "Date"],
+                ["starts", "Starts"],
+                ["finishes", "Finishes"],
+                ["length", "Length"],
+                ["distance", "Distance"],
+                ["climb", "Climb"],
+                ["grade", "Grade"],
+                ["leader", "Walk leader"],
+                ["back-marker", "Back marker"],
+                ["refreshment", "Refreshment stop"],
+                ["what3words", "what3words"],
+              ]),
+            },
+          },
+          defaultItemProps: { tile: "date" },
+          getItemSummary: (item: { tile?: string }) =>
+            ({
+              attended: "Attended",
+              meeting: "Meeting point",
+              weather: "Weather",
+              journey: "Journey",
+              date: "Date",
+              starts: "Starts",
+              finishes: "Finishes",
+              length: "Length",
+              distance: "Distance",
+              climb: "Climb",
+              grade: "Grade",
+              leader: "Walk leader",
+              "back-marker": "Back marker",
+              refreshment: "Refreshment stop",
+              what3words: "what3words",
+            })[item.tile ?? ""] ?? "Choose a tile",
+        },
+        arrange: arrangeField,
+      },
+      defaultProps: {
+        arrange: "fill",
+        tiles: DEFAULT_SUMMARY_TILES.map((tile) => ({ tile })),
+      },
+      // Pages saved before the list: start it with the four it always showed.
+      resolveData: (data) =>
+        Array.isArray(data.props.tiles)
+          ? data
+          : {
+              ...data,
+              props: {
+                ...data.props,
+                tiles: DEFAULT_SUMMARY_TILES.map((tile) => ({ tile })),
+              },
+            },
+      render: ({ arrange, tiles }) => (
+        <SummaryTilesBlock arrange={arrange} tiles={tiles} />
+      ),
     },
     HowItWorks: {
       label: "How this group works",

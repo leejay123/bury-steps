@@ -6,6 +6,7 @@ import { AttendedRuleContext } from "@/components/walk-designer/attended-rule";
 import { ClockInDrawer } from "./clock-in-drawer";
 import { ClockOutButton } from "@/components/clock-out-button";
 import { MyClockInLine } from "@/components/my-clock-in-line";
+import { AvatarStack } from "@/components/avatar-stack";
 import { WalkMembers } from "@/components/walk-members";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { useHydrated } from "@/hooks/use-hydrated";
@@ -30,6 +31,7 @@ export function WalkLivePanel({
   compact = false,
   membersOnly = false,
   statusOnly = false,
+  peopleOnly = false,
   startsAt,
   token,
   walksHref,
@@ -58,6 +60,8 @@ export function WalkLivePanel({
   membersOnly?: boolean;
   /** Just this person's own clock-in line (Details card: Your clock-in). */
   statusOnly?: boolean;
+  /** Just the faces of who's on the walk (People clocked in), if allowed. */
+  peopleOnly?: boolean;
   startsAt: string;
   token: string;
   walksHref: string;
@@ -91,6 +95,9 @@ export function WalkLivePanel({
     status.focus({ preventScroll: true });
     status.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [onWalk]);
+
+  if (peopleOnly)
+    return organiserView || alreadyClockedInAt ? <AvatarStack people={memberNames} /> : null;
 
   if (statusOnly)
     return (

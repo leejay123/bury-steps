@@ -2615,10 +2615,54 @@ export const JourneyBlock = withParts("Journey", (p) => (
   <>{p.journey?.content ?? null}</>
 ));
 
-export function SummaryTilesBlock({ arrange = "fill" }: { arrange?: Arrange }) {
+/** The facts a summary tile can show, by setting value → fact label. */
+const TILE_FACTS: Record<string, string> = {
+  date: "Date",
+  starts: "Starts",
+  finishes: "Finishes",
+  length: "Length",
+  what3words: "what3words",
+  distance: "Distance",
+  climb: "Climb",
+  grade: "Grade",
+  leader: "Walk leader",
+  "back-marker": "Back marker",
+  refreshment: "Refreshment stop",
+};
+export const DEFAULT_SUMMARY_TILES = [
+  "attended",
+  "meeting",
+  "weather",
+  "journey",
+];
+
+export function SummaryTilesBlock({
+  arrange = "fill",
+  tiles,
+}: {
+  arrange?: Arrange;
+  /** Which tiles, in order (the block's Tiles list). */
+  tiles?: { tile?: string }[];
+}) {
   const p = useWalkParts();
   if (!p) return <Placeholder label="Summary tiles" />;
-  const tiles = [
+  return <SummaryTiles arrange={arrange} chosen={tiles} p={p} />;
+}
+
+function SummaryTiles({
+  arrange,
+  chosen,
+  p,
+}: {
+  arrange: Arrange;
+  chosen?: { tile?: string }[];
+  p: WalkIdeaParts;
+}) {
+  const { facts } = useWalkInfo(p);
+  const keys = Array.isArray(chosen)
+    ? chosen.map((item) => String(item?.tile ?? ""))
+    : DEFAULT_SUMMARY_TILES;
+  const builtIn = [
     ...(p.attended
       ? [
           {
@@ -2643,6 +2687,23 @@ export function SummaryTilesBlock({ arrange = "fill" }: { arrange?: Arrange }) {
         ]
       : []),
   ];
+  // The chosen tiles, in order: the built-in four and any walk fact (only
+  // facts that are filled in; each tile once).
+  const byKey = (key: string) => {
+    if (key === "attended") return builtIn.find((t) => t.label === "Attended");
+    if (key === "meeting")
+      return builtIn.find((t) => t.label === "Meeting point");
+    if (key === "weather") return builtIn.find((t) => t.label === "Weather");
+    if (key === "journey") return builtIn.find((t) => t.label === "Journey");
+    const fact = facts.find((f) => f.label === TILE_FACTS[key]);
+    return fact
+      ? { icon: fact.icon, label: fact.label, value: String(fact.value) }
+      : undefined;
+  };
+  const tiles = keys
+    .filter((key, i) => keys.indexOf(key) === i)
+    .map(byKey)
+    .filter((tile): tile is NonNullable<typeof tile> => Boolean(tile));
   return (
     <div
       className={cn(
@@ -2678,6 +2739,8 @@ export function SummaryTilesBlock({ arrange = "fill" }: { arrange?: Arrange }) {
 export function PeopleStackBlock() {
   const p = useWalkParts();
   if (!p) return <Placeholder label="People clocked in (count)" />;
+  // Real profile photos where the page has them (and the viewer may see).
+  if (p.peopleStack) return <>{p.peopleStack}</>;
   if (!p.attended?.count) return null;
   return (
     <div className="flex items-center gap-2">
