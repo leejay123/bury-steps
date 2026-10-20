@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ArrowLeft, ChevronLeft } from "lucide-react";
 import { SkLine } from "@/components/list-skeletons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -27,12 +28,31 @@ export function DesignSkeleton({ design }: { design: unknown }) {
 function BlockSkeleton({ item }: { item: Item }) {
   const p = item.props ?? {};
   switch (item.type) {
-    case "BackLink":
-      return (
-        <span className="text-sm text-muted-foreground">
-          ← {String(p.label || "All walks")}
-        </span>
+    case "BackLink": {
+      // The same arrow and look as the real Back link block, so nothing
+      // swaps when the page arrives.
+      const words = String(p.label || "All walks");
+      const Icon = p.arrow === "chevron" ? ChevronLeft : ArrowLeft;
+      if ((p.look ?? "text") === "text")
+        return (
+          <span className="flex w-fit items-center gap-1 text-sm text-muted-foreground">
+            {p.arrow === "none" ? null : (
+              <Icon aria-hidden className="size-4" />
+            )}
+            {words}
+          </span>
+        );
+      return p.look === "icon" ? (
+        <Skeleton className="size-9 rounded-full" />
+      ) : (
+        <Skeleton
+          className={cn(
+            "h-8 w-32",
+            p.look === "pill" ? "rounded-full" : "rounded-lg",
+          )}
+        />
       );
+    }
     case "Details":
       return <DetailsSkeleton p={p} />;
     case "Tabs":

@@ -1358,9 +1358,16 @@ function PageRoot({
 function BlockFrame({
   children,
   layout,
+  audience,
+  editing = false,
 }: {
   children: ReactNode;
   layout?: BlockLayout;
+  /** A block for one audience only: hidden whole for everyone else (it used
+   * to leave its empty slot, and a double gap, behind). */
+  audience?: "visitors" | "members";
+  /** In the designer: never hidden, so every block can still be clicked. */
+  editing?: boolean;
 }) {
   const {
     frame,
@@ -1379,8 +1386,12 @@ function BlockFrame({
   const framed = frame !== "none";
   return (
     <div
+      data-guest-home={!editing && audience === "visitors" ? "" : undefined}
+      data-member-home={!editing && audience === "members" ? "" : undefined}
       className={cn(
         "flex flex-col",
+        // A block that shows nothing takes no room (no gap left behind).
+        !editing && "has-[>div:empty]:hidden",
         // Blocks sit 24px apart; these pull a block closer or push it away.
         // The page starts 24px under the header; this cancels it.
         spaceAbove === "header" && "-mt-6",
@@ -1480,7 +1491,19 @@ function withBlockLayout(
         },
         defaultProps: { ...component.defaultProps, layout: BLOCK_LAYOUT },
         render: (props: Record<string, unknown>) => (
-          <BlockFrame layout={props.layout as BlockLayout | undefined}>
+          <BlockFrame
+            audience={
+              name === "HowItWorks" &&
+              (props.showTo ?? "visitors") !== "everyone"
+                ? ((props.showTo as "visitors" | "members" | undefined) ??
+                  "visitors")
+                : undefined
+            }
+            editing={Boolean(
+              (props.puck as { isEditing?: boolean } | undefined)?.isEditing,
+            )}
+            layout={props.layout as BlockLayout | undefined}
+          >
             <Inner {...props} />
           </BlockFrame>
         ),
