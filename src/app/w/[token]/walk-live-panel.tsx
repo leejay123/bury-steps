@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useContext, useEffect, useRef } from "react";
+import { AttendedRuleContext } from "@/components/walk-designer/attended-rule";
 import { ClockInDrawer } from "./clock-in-drawer";
 import { ClockOutButton } from "@/components/clock-out-button";
 import { WalkMembers } from "@/components/walk-members";
@@ -61,6 +62,7 @@ export function WalkLivePanel({
   const { alreadyClockedInAt, clockedOutAt } = useClockedInPreview(realClockedInAt, realClockedOutAt, startsAt);
   const start = new Date(startsAt);
   const now = useWalkClock({ cancelledAt: null, durationMins, endedAt, startsAt });
+  const attendedRule = useContext(AttendedRuleContext);
   const walk = { cancelledAt: null, durationMins, endedAt: endedAt ? new Date(endedAt) : null, startsAt: start };
   const status = walkStatus(walk, now);
   const state = windowState(start, durationMins, now, walk.endedAt);
@@ -86,16 +88,21 @@ export function WalkLivePanel({
     status.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [onWalk]);
 
-  if (membersOnly)
-    return alreadyClockedInAt || organiserView ? (
+  if (membersOnly) {
+    // The design can take the list away once someone clocks out.
+    const gone = attendedRule === "on-walk" && Boolean(clockedOutAt);
+    return organiserView || (alreadyClockedInAt && !gone) ? (
       <WalkMembers completed={completed} names={memberNames} />
     ) : (
       <p className="text-sm text-muted-foreground">
-        {completed
-          ? "Only people who clocked in can see who was on this walk."
-          : "Clock in to see who's on the walk."}
+        {gone
+          ? "You clocked out, so the list of who's on the walk is hidden."
+          : completed
+            ? "Only people who clocked in can see who was on this walk."
+            : "Clock in to see who's on the walk."}
       </p>
     );
+  }
 
   if (compact) {
     if (alreadyClockedInAt && !clockedOutAt)

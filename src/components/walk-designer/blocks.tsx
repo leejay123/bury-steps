@@ -36,6 +36,7 @@ import {
 import { formatTime, formatWalkDay, formatWalkLength } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { DataList, DataListItem } from "@/components/data-list";
+import { AttendedRuleContext, type AttendedRule } from "./attended-rule";
 import { keptFactsAs, titlePartsOf, type TitlePart } from "./design-rules";
 export { keptFactsAs, titlePartsOf, type TitlePart };
 import { effectiveEndsAt, walkOpensAt, walkStatus } from "@/lib/walk-window";
@@ -2470,7 +2471,29 @@ export const PreciseBlock = withParts("Precise location (what3words)", (p) => (
   <>{p.precise}</>
 ));
 export type BeforeLook =
-  "card" | "ticks" | "numbered" | "callout" | "tiles" | "swipe" | "compact";
+  | "card"
+  | "ticks"
+  | "numbered"
+  | "callout"
+  | "tiles"
+  | "swipe"
+  | "compact"
+  | "row"
+  | "big-numbers"
+  | "list"
+  | "card-list"
+  | "timeline"
+  | "two-columns";
+
+/** The full-width looks, drawn by StepsLooks for both blocks. */
+const WIDE_STEP_LOOKS: readonly string[] = [
+  "row",
+  "big-numbers",
+  "list",
+  "card-list",
+  "timeline",
+  "two-columns",
+];
 
 /**
  * Before you set off, in a chosen look. It shows when the walk page's own
@@ -2488,6 +2511,15 @@ export function BeforeBlock({
   if (!p) return <Placeholder label={`Before you set off · ${look}`} />;
   if (!p.before) return null;
   if (look === "card") return <>{p.before}</>;
+  if (WIDE_STEP_LOOKS.includes(look))
+    return (
+      <StepsLooks
+        heading={title.trim() || "Before you set off"}
+        look={look as Exclude<BeforeLook, "card">}
+        p={p}
+        steps={p.tips.map((tip) => ({ title: tip, body: "" }))}
+      />
+    );
   return <BeforeTips look={look} p={p} title={title} />;
 }
 
@@ -2564,9 +2596,19 @@ function BeforeTips({
     </section>
   );
 }
-export const AttendedBlock = withParts("Attended (who's on the walk)", (p) => (
-  <>{p.attended?.content ?? null}</>
-));
+export function AttendedBlock({
+  rule = "clocked-in",
+}: {
+  rule?: AttendedRule;
+}) {
+  const p = useWalkParts();
+  if (!p) return <Placeholder label="Attended (who's on the walk)" />;
+  return (
+    <AttendedRuleContext.Provider value={rule}>
+      {p.attended?.content ?? null}
+    </AttendedRuleContext.Provider>
+  );
+}
 export const JourneyBlock = withParts("Journey", (p) => (
   <>{p.journey?.content ?? null}</>
 ));
@@ -2732,40 +2774,50 @@ export function MobileSidebar({
 }
 
 // ── More blocks from the walk page designs ──────────────────────────────
+export type HowItWorksAudience = "visitors" | "members" | "everyone";
+
 export function HowItWorksBlock({
   editing = false,
   look = "card",
   title = "",
+  showTo = "visitors",
 }: {
   editing?: boolean;
   look?: BeforeLook;
   title?: string;
+  /** Who sees it: signed-out visitors (the default), members, or everyone. */
+  showTo?: HowItWorksAudience;
 }) {
   const p = useWalkParts();
   if (!p)
-    return (
-      <Placeholder
-        label={`How this group works (signed-out visitors) · ${look}`}
-      />
-    );
-  if (p.howItWorks)
-    return look === "card" || !p.howItWorksSteps?.length ? (
-      <>{p.howItWorks}</>
-    ) : (
-      // Signed-out visitors only, like the card (members have already done these steps).
-      <div className="contents" data-guest-home="">
-        <StepsLooks
-          heading={title.trim() || "How this group works"}
-          look={look}
-          p={p}
-          steps={p.howItWorksSteps}
-        />
-      </div>
-    );
-  // Says why it's empty in the designer; shows nothing on the page.
-  return editing ? (
-    <Placeholder label="How this group works: only shown to signed-out visitors (and only when it's on in Settings → Site wording → Walk page cards)" />
-  ) : null;
+    return <Placeholder label={`How this group works (${showTo}) · ${look}`} />;
+  const steps = p.howItWorksSteps ?? [];
+  // The page's own card (visitors only, when on in Settings), as it is.
+  if (look === "card" && showTo === "visitors" && p.howItWorks)
+    return <>{p.howItWorks}</>;
+  if (steps.length === 0)
+    return editing ? (
+      <Placeholder label="How this group works: no steps yet (Settings → Site wording → Walk page cards)" />
+    ) : null;
+  const drawn = (
+    <StepsLooks
+      heading={title.trim() || "How this group works"}
+      // The card look for members or everyone: the steps in a plain box.
+      look={look === "card" ? "card-list" : look}
+      p={p}
+      steps={steps}
+    />
+  );
+  if (showTo === "everyone") return drawn;
+  return (
+    <div
+      className="contents"
+      data-guest-home={showTo === "visitors" ? "" : undefined}
+      data-member-home={showTo === "members" ? "" : undefined}
+    >
+      {drawn}
+    </div>
+  );
 }
 
 /** Cards to swipe through: when, where, weather, people, journey. */
@@ -3638,6 +3690,144 @@ function StepsLooks({
         <span className="font-semibold text-foreground">{heading}:</span>{" "}
         {steps.map((step) => step.title).join(" · ")}
       </p>
+    );
+  const number = (i: number) => String(i + 1).padStart(2, "0");
+  const title = <h2 className="text-base font-semibold">{heading}</h2>;
+  // Numbered steps across the page, one column each, joined by a line.
+  if (look === "row")
+    return (
+      <section className="flex flex-col gap-4">
+        {title}
+        <ol className="grid gap-6 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]">
+          {steps.map((step, i) => (
+            <li
+              className="relative flex flex-col gap-2 text-sm"
+              key={`${i}-${step.title}`}
+            >
+              <span className="flex items-center gap-3">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full border-2 border-foreground text-xs font-semibold">
+                  {i + 1}
+                </span>
+                {i < steps.length - 1 ? (
+                  <span
+                    aria-hidden
+                    className="h-px flex-1 bg-border max-sm:hidden"
+                  />
+                ) : null}
+              </span>
+              <span className="font-medium">{step.title}</span>
+              {step.body ? (
+                <span className="text-muted-foreground">{step.body}</span>
+              ) : null}
+            </li>
+          ))}
+        </ol>
+      </section>
+    );
+  // Big 01, 02, 03 in columns that fill the width.
+  if (look === "big-numbers")
+    return (
+      <section className="flex flex-col gap-4">
+        {title}
+        <ol className="grid gap-6 sm:grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+          {steps.map((step, i) => (
+            <li
+              className="flex flex-col gap-1 border-t pt-3 text-sm"
+              key={`${i}-${step.title}`}
+            >
+              <span className="text-3xl font-semibold tracking-tight text-muted-foreground/60 tabular-nums">
+                {number(i)}
+              </span>
+              <span className="font-medium">{step.title}</span>
+              {step.body ? (
+                <span className="text-muted-foreground">{step.body}</span>
+              ) : null}
+            </li>
+          ))}
+        </ol>
+      </section>
+    );
+  // Full-width rows: number, title and words, a line between.
+  if (look === "list" || look === "card-list")
+    return (
+      <section className="flex flex-col gap-3">
+        {title}
+        <ol
+          className={cn(
+            "flex flex-col divide-y text-sm",
+            look === "card-list" && "overflow-hidden rounded-xl border bg-card",
+          )}
+        >
+          {steps.map((step, i) => (
+            <li
+              className={cn(
+                "flex items-start gap-3",
+                look === "card-list" ? "p-3" : "py-3 first:pt-0 last:pb-0",
+              )}
+              key={`${i}-${step.title}`}
+            >
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-xs font-semibold">
+                {i + 1}
+              </span>
+              <span className="flex min-w-0 flex-col gap-0.5 pt-1">
+                <span className="font-medium">{step.title}</span>
+                {step.body ? (
+                  <span className="text-muted-foreground">{step.body}</span>
+                ) : null}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </section>
+    );
+  // A line down the side, a numbered dot for each step.
+  if (look === "timeline")
+    return (
+      <section className="flex flex-col gap-3">
+        {title}
+        <ol className="flex flex-col text-sm">
+          {steps.map((step, i) => (
+            <li className="flex gap-4" key={`${i}-${step.title}`}>
+              <span className="flex flex-col items-center">
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-full border bg-background text-xs font-semibold">
+                  {i + 1}
+                </span>
+                {i < steps.length - 1 ? (
+                  <span aria-hidden className="w-px flex-1 bg-border" />
+                ) : null}
+              </span>
+              <span className="flex min-w-0 flex-col gap-0.5 pb-5 pt-1">
+                <span className="font-medium">{step.title}</span>
+                {step.body ? (
+                  <span className="text-muted-foreground">{step.body}</span>
+                ) : null}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </section>
+    );
+  // Two even columns of numbered steps.
+  if (look === "two-columns")
+    return (
+      <section className="flex flex-col gap-3">
+        {title}
+        <ol className="grid gap-x-8 gap-y-4 text-sm sm:grid-cols-2">
+          {steps.map((step, i) => (
+            <li className="flex items-start gap-3" key={`${i}-${step.title}`}>
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-foreground text-[11px] font-semibold text-background">
+                {i + 1}
+              </span>
+              <span className="flex min-w-0 flex-col gap-0.5">
+                <span className="font-medium">{step.title}</span>
+                {step.body ? (
+                  <span className="text-muted-foreground">{step.body}</span>
+                ) : null}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </section>
     );
   if (look === "tiles" || look === "swipe")
     return (

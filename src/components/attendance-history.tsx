@@ -170,7 +170,12 @@ export function AttendanceHistory({
           <DataList>
             {years.map(([year, yearRows]) => (
               <Fragment key={year}>
-                <DataListGroupHeader count={yearRows.length} label={String(year)} />
+                <DataListGroupHeader
+                  // White, so the year stands apart from each walk's grey strip.
+                  className="bg-card"
+                  count={yearRows.length}
+                  label={String(year)}
+                />
                 {yearRows.map((row) => (
                   <HistoryRow key={row.id} row={row} />
                 ))}

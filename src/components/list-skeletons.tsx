@@ -265,7 +265,7 @@ export function HistoryRowsSkeleton({ rows = 0, remember }: { rows?: number; rem
       row={(i) => (
         <>
           {i === 0 ? (
-            <div className="flex items-center border-b bg-muted/50 px-3 py-2.5">
+            <div className="flex items-center border-b px-3 py-2.5">
               <SkLine className="w-16" size="xs" />
             </div>
           ) : null}

@@ -378,7 +378,14 @@ export function WalksSection({
               every fact its own colour. Facts shown as on tablets and Facts shown as on
               phones (under Facts shown as) give those devices a different
               design, or Same as on computers; with Plain facts, Plain facts
-              look on each device picks the plain look there. The Details card&apos;s settings fold away: click a
+              look on each device picks the plain look there. In the designer, the Attended block&apos;s Who sees the list
+              chooses whether members keep seeing who&apos;s on the walk after
+              they clock out, or only while they&apos;re on it. How this group
+              works has Shown to (signed-out visitors, members or everyone).
+              Before you set off and How this group works have full-width
+              looks too: numbered steps in a row, big numbers in columns, a
+              numbered list, a card list like the Walks list, a timeline, or
+              two columns. The Details card&apos;s settings fold away: click a
               section heading (Title, Map, Precise location, Facts, Timeline,
               Essentials, Description) to open it — the others shut — and
               each shut heading shows a short summary of what&apos;s chosen. The

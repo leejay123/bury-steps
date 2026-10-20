@@ -105,11 +105,22 @@ export function DataListActions({ className, ...props }: React.ComponentProps<"d
  * `border-t`: every group but the last already ends on a row with its own
  * `border-b` (DataListItem), so adding one here too doubled up into two
  * hairlines stacked back to back between groups. */
-export function DataListGroupHeader({ count, label }: { count: number; label: string }) {
+export function DataListGroupHeader({
+  count,
+  label,
+  className,
+}: {
+  count: number;
+  label: string;
+  className?: string;
+}) {
   return (
     <li
       aria-hidden
-      className="flex items-baseline gap-1.5 border-b bg-muted/50 px-3 py-2.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+      className={cn(
+        "flex items-baseline gap-1.5 border-b bg-muted/50 px-3 py-2.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase",
+        className,
+      )}
     >
       {label}
       <span className="text-xs font-normal normal-case text-muted-foreground/80">({count})</span>

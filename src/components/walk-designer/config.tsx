@@ -2635,6 +2635,21 @@ export const walkDesignConfig: Config = {
             ["tiles", "Numbered tiles"],
             ["swipe", "Tiles in one swiping row"],
             ["compact", "One short line"],
+            ["row", "Numbered steps in a row (full width)"],
+            ["big-numbers", "Big numbers 01, 02… in columns"],
+            ["list", "Numbered list with lines (full width)"],
+            ["card-list", "Card list, like the Walks list"],
+            ["timeline", "Timeline down the side"],
+            ["two-columns", "Two columns of numbered steps"],
+          ]),
+        },
+        showTo: {
+          type: "radio",
+          label: "Shown to",
+          options: options([
+            ["visitors", "Signed-out visitors"],
+            ["members", "Members"],
+            ["everyone", "Everyone"],
           ]),
         },
         title: {
@@ -2642,11 +2657,12 @@ export const walkDesignConfig: Config = {
           label: "Heading (blank: How this group works)",
         },
       },
-      defaultProps: { look: "card", title: "" },
-      render: ({ look, title, puck }) => (
+      defaultProps: { look: "card", title: "", showTo: "visitors" },
+      render: ({ look, title, showTo, puck }) => (
         <HowItWorksBlock
           editing={Boolean(puck?.isEditing)}
           look={look}
+          showTo={showTo}
           title={title}
         />
       ),
@@ -2800,6 +2816,12 @@ export const walkDesignConfig: Config = {
             ["tiles", "Numbered tiles"],
             ["swipe", "Tiles in one swiping row"],
             ["compact", "One short paragraph"],
+            ["row", "Numbered steps in a row (full width)"],
+            ["big-numbers", "Big numbers 01, 02… in columns"],
+            ["list", "Numbered list with lines (full width)"],
+            ["card-list", "Card list, like the Walks list"],
+            ["timeline", "Timeline down the side"],
+            ["two-columns", "Two columns of numbered steps"],
           ]),
         },
         title: { type: "text", label: "Heading (blank: Before you set off)" },
@@ -2807,7 +2829,21 @@ export const walkDesignConfig: Config = {
       defaultProps: { look: "card", title: "" },
       render: ({ look, title }) => <BeforeBlock look={look} title={title} />,
     },
-    Attended: { label: "Attended", render: () => <AttendedBlock /> },
+    Attended: {
+      label: "Attended",
+      fields: {
+        rule: {
+          type: "radio",
+          label: "Who sees the list (members)",
+          options: options([
+            ["clocked-in", "Anyone who clocked in (kept after clocking out)"],
+            ["on-walk", "Only while on the walk (gone when they clock out)"],
+          ]),
+        },
+      },
+      defaultProps: { rule: "clocked-in" },
+      render: ({ rule }) => <AttendedBlock rule={rule} />,
+    },
     Journey: { label: "Journey", render: () => <JourneyBlock /> },
 
     // ── Layout ──────────────────────────────────────────────────────────
