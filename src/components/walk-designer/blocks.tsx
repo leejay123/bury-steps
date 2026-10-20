@@ -898,10 +898,11 @@ export type MessageLook =
  * A message as one straight line, like the Status band's "Upcoming ·
  * Clock-in opens at…": its title, a dot, then the rest (reason and all),
  * at the same weight, instead of the title sitting on top. No icon (it
- * would sit on a line of its own).
+ * would sit on a line of its own). Forced (!): line-clamp-none, used before,
+ * also made the title a block, so the rest still fell to a second line.
  */
 const ONE_LINE_MESSAGE =
-  "[&_[data-slot=alert]]:block [&_[data-slot=alert]>svg]:hidden [&_[data-slot=alert]_*]:[font-weight:inherit] [&_[data-slot=alert-title]]:inline [&_[data-slot=alert-title]]:line-clamp-none [&_[data-slot=alert-title]]:after:content-['_·_'] [&_[data-slot=alert-description]]:inline [&_[data-slot=alert-description]_*]:inline [&_[data-slot=alert-description]_p+p]:before:content-['_']";
+  "[&_[data-slot=alert]]:block [&_[data-slot=alert]>svg]:hidden [&_[data-slot=alert]_*]:[font-weight:inherit] [&_[data-slot=alert-title]]:inline! [&_[data-slot=alert-title]]:[-webkit-line-clamp:unset] [&_[data-slot=alert-title]]:after:content-['_·_'] [&_[data-slot=alert-description]]:inline! [&_[data-slot=alert-description]_*]:inline! [&_[data-slot=alert-description]_p+p]:before:content-['_']";
 
 export const MESSAGE_LOOK: Record<MessageLook, string> = {
   // The default: a plain grey band, like the Status band (no blue or red boxes).
