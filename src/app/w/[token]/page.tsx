@@ -324,6 +324,27 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
       />
     </Suspense>
   );
+  // Designed pages: the Attendance tab — who's on the walk, for members
+  // (it used to be organisers only, so a copied design's tab was empty).
+  const membersAttended = cancelled
+    ? null
+    : {
+        label: "Attended",
+        count: null,
+        content: (
+          <Suspense fallback={null}>
+            <WalkLivePart
+              beforeYouSetOffTips={theme.beforeYouSetOffTips}
+              durationMins={walk.durationMins}
+              endedAt={walk.endedAt}
+              membersOnly
+              startsAt={walk.startsAt}
+              token={walk.token}
+              walkId={walk.id}
+            />
+          </Suspense>
+        ),
+      };
   const howWalksWork = (
     <>
       {/* Sign-up steps are for visitors; members have already done them. */}
@@ -453,6 +474,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
               ...ideaParts,
               back: { href: "/walks", label: "Walks" },
               liveCompact,
+              attended: membersAttended,
               notices: noticesEl ? cloneElement(noticesEl, { audience: "member" }) : ideaParts.notices,
             }}
           />
@@ -669,6 +691,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
 async function WalkLivePart({
   beforeYouSetOffTips,
   compact = false,
+  membersOnly = false,
   durationMins,
   endedAt,
   startsAt,
@@ -678,6 +701,8 @@ async function WalkLivePart({
   beforeYouSetOffTips: readonly string[];
   /** Just the Clock in / Clock out button (WalkLivePanel compact). */
   compact?: boolean;
+  /** Just who's on the walk (WalkLivePanel membersOnly). */
+  membersOnly?: boolean;
   durationMins: number;
   endedAt: Date | null;
   startsAt: Date;
@@ -712,9 +737,10 @@ async function WalkLivePart({
 
   return (
     <>
-      {closedNoClockIn && !compact ? <WalkClosedNoClockInNotice /> : null}
+      {closedNoClockIn && !compact && !membersOnly ? <WalkClosedNoClockInNotice /> : null}
       <WalkLivePanel
         compact={compact}
+        membersOnly={membersOnly}
         alreadyClockedInAt={myAttendance?.clockedInAt.toISOString() ?? null}
         // Before you set off is placed by the walk page layout.
         beforeYouSetOffEnabled={false}

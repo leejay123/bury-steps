@@ -26,6 +26,7 @@ export function WalkLivePanel({
   memberNames,
   organiserView = false,
   compact = false,
+  membersOnly = false,
   startsAt,
   token,
   walksHref,
@@ -49,6 +50,9 @@ export function WalkLivePanel({
   /** Just the button, beside Share or save on a designed page: Clock in while
    * it's open, then Clock out in the same place while on the walk. */
   compact?: boolean;
+  /** Just who's on the walk, for a designed page's Attendance tab: the names
+   * once this member has clocked in (organisers always), as on this panel. */
+  membersOnly?: boolean;
   startsAt: string;
   token: string;
   walksHref: string;
@@ -81,6 +85,17 @@ export function WalkLivePanel({
     status.focus({ preventScroll: true });
     status.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [onWalk]);
+
+  if (membersOnly)
+    return alreadyClockedInAt || organiserView ? (
+      <WalkMembers completed={completed} names={memberNames} />
+    ) : (
+      <p className="text-sm text-muted-foreground">
+        {completed
+          ? "Only people who clocked in can see who was on this walk."
+          : "Clock in to see who's on the walk."}
+      </p>
+    );
 
   if (compact) {
     if (alreadyClockedInAt && !clockedOutAt)

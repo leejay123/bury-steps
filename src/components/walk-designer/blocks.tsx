@@ -2564,7 +2564,7 @@ function BeforeTips({
     </section>
   );
 }
-export const AttendedBlock = withParts("Attended (organisers only)", (p) => (
+export const AttendedBlock = withParts("Attended (who's on the walk)", (p) => (
   <>{p.attended?.content ?? null}</>
 ));
 export const JourneyBlock = withParts("Journey", (p) => (
