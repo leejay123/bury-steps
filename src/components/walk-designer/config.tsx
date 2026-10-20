@@ -11,6 +11,7 @@ import { ReadyLayoutBlock } from "./ready-layout-block";
 import { READY_LAYOUTS } from "./ready-layouts";
 import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 import {
   Accordion,
   AccordionContent,
@@ -1323,9 +1324,11 @@ function TabsView({
               <Content className={cn("flex flex-col", inner)} />
             </div>
             {emptyTabs === "note" && empty[i] ? (
-              <p className="text-sm text-muted-foreground">
-                Nothing to show here for this walk right now.
-              </p>
+              // The same empty box as the rest of the site (e.g. No journey events yet).
+              <EmptyState
+                description={`There's nothing in ${tab.label} for this walk right now.`}
+                title="Nothing to show"
+              />
             ) : null}
           </TabsContent>
         );
