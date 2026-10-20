@@ -26,10 +26,6 @@ export function HistoryLoading() {
           <HistoryFilterChrome />
         </div>
         <section className="flex flex-col gap-3">
-          {/* The year heading. */}
-          <div className="[section:has([data-reveal-list][hidden])>&]:hidden">
-            <SkLine className="w-12" size="sm" />
-          </div>
           <HistoryRowsSkeleton remember="history" />
         </section>
       </div>

@@ -82,9 +82,6 @@ export function MemberDetailSkeleton() {
             <HistoryFilterChrome />
           </div>
           <section className="flex flex-col gap-3">
-            <div className="[section:has([data-reveal-list][hidden])>&]:hidden">
-              <SkLine className="w-12" size="sm" />
-            </div>
             <HistoryRowsSkeleton remember="member-detail" />
           </section>
         </div>

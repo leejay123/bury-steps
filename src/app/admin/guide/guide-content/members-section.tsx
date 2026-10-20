@@ -35,7 +35,9 @@ export function MembersSection() {
             totals (total walks and walks cancelled after they clocked in — plus walks
             created, but only for organisers, since members never create walks), their emergency
             contact if they have added one, and their full
-            walk history below, grouped by year. Search by walk or meeting point, and filter by
+            walk history below, in one list grouped by year (a grey strip for each year, like
+            the roles on Members), each walk with a status strip like the Walks list — Stayed
+            for the whole walk, Left early, Cancelled or Still on the walk — and its day. Search by walk or meeting point, and filter by
             status (stayed for the walk, left early, or cancelled) or year if the list is long.
             Previous and Next appear if they have more than 20 walks. Each walk shows the date,
             meeting point, and in/out times — including whether they stayed for the whole walk,

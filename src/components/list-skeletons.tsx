@@ -255,43 +255,36 @@ export function ReportRowsSkeleton({
   );
 }
 
-/** Walk history: walk name + arrow, then two grey detail lines. */
-function HistoryRow({ i }: { i: number }) {
-  return (
-    <>
-      <div className="flex items-start justify-between gap-3">
-        <SkLine className={pick(TITLE_WIDTHS, i)} />
-        <SkChevron className="mt-1" />
-      </div>
-      <SkLine className={pick(DETAIL_WIDTHS, i)} size="sm" />
-      <SkLine className="w-24" size="sm" />
-    </>
-  );
-}
-
+/** Walk history: a year strip over the first row, then each walk's status
+ * strip (and day), its name and two detail lines — like AttendanceHistory. */
 export function HistoryRowsSkeleton({ rows = 0, remember }: { rows?: number; remember?: string }) {
-  if (remember) {
-    return (
-      <RememberedRows
-        empty={<EmptyStateSkeleton />}
-        className="flex flex-col divide-y rounded-xl border"
-        remember={remember}
-        rowClassName="flex flex-col gap-2 p-4"
-        rows={Array.from({ length: LIST_PAGE_SIZE }, (_, i) => (
-          <HistoryRow i={i} key={i} />
-        ))}
-      />
-    );
-  }
-  if (rows < 1) return null;
   return (
-    <div aria-busy="true" className="flex flex-col divide-y rounded-xl border" data-reveal-list="">
-      {Array.from({ length: rows }, (_, i) => (
-        <div className="flex flex-col gap-2 p-4" key={i}>
-          <HistoryRow i={i} />
-        </div>
-      ))}
-    </div>
+    <SkList
+      empty={<EmptyStateSkeleton />}
+      remember={remember}
+      row={(i) => (
+        <>
+          {i === 0 ? (
+            <div className="flex items-center border-b bg-muted/50 px-3 py-2.5">
+              <SkLine className="w-16" size="xs" />
+            </div>
+          ) : null}
+          <div className="flex items-center justify-between gap-3 border-b bg-muted/50 px-3 py-2.5">
+            <SkLine className="w-36" size="xs" />
+            <SkLine className="w-16" size="xs" />
+          </div>
+          <div className="flex items-center gap-2 p-3">
+            <div className="min-w-0 flex-1">
+              <SkLine className={pick(TITLE_WIDTHS, i)} />
+              <SkLine className={pick(DETAIL_WIDTHS, i)} size="sm" />
+              <SkLine className="w-40" size="xs" />
+            </div>
+            <SkChevron />
+          </div>
+        </>
+      )}
+      rows={rows}
+    />
   );
 }
 

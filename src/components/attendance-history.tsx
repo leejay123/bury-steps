@@ -1,14 +1,20 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { Fragment, useMemo, useRef, useState } from "react";
 import { IntentLink } from "@/components/intent-link";
 import { ChevronRight, Footprints, Search } from "lucide-react";
-import { formatCompactDateTime, formatDate, formatTime, londonYear } from "@/lib/dates";
+import { formatCompactDateTime, formatTime, formatWalkDay, londonYear } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/empty-state";
 import { ListPagination } from "@/components/list-pagination";
 import { usePagedList } from "@/hooks/use-paged-list";
-import { Badge } from "@/components/ui/badge";
+import {
+  DataList,
+  DataListBody,
+  DataListGroupHeader,
+  DataListItem,
+  DataListItemMain,
+} from "@/components/data-list";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import {
@@ -159,14 +165,18 @@ export function AttendanceHistory({
         />
       ) : (
         <>
-          {years.map(([year, yearRows]) => (
-            <section className="flex flex-col gap-3" key={year}>
-              <h2 className="text-sm font-medium text-muted-foreground">
-                {year} · {yearRows.length} {yearRows.length === 1 ? "walk" : "walks"}
-              </h2>
-              <HistoryList rows={yearRows} />
-            </section>
-          ))}
+          {/* One list, grouped by year like the Members list's roles, each
+              walk with its status strip like the Walks list. */}
+          <DataList>
+            {years.map(([year, yearRows]) => (
+              <Fragment key={year}>
+                <DataListGroupHeader count={yearRows.length} label={String(year)} />
+                {yearRows.map((row) => (
+                  <HistoryRow key={row.id} row={row} />
+                ))}
+              </Fragment>
+            ))}
+          </DataList>
           <ListPagination
             noun="walks"
             onPageChange={paging.setPage}
@@ -182,54 +192,49 @@ export function AttendanceHistory({
   );
 }
 
-function HistoryList({ rows }: { rows: AttendanceHistoryRow[] }) {
+/** What happened: the status strip's words. */
+function historyStatus(row: AttendanceHistoryRow) {
+  if (row.cancelledAt) return "Cancelled";
+  if (row.clockedOutAt) return "Left early";
+  return row.completed ? "Stayed for the whole walk" : "Still on the walk";
+}
+
+function HistoryRow({ row }: { row: AttendanceHistoryRow }) {
+  const startsAt = new Date(row.startsAt);
   return (
-    <div className="flex flex-col divide-y rounded-xl border" data-reveal-list="">
-      {rows.map((row) => {
-        const startsAt = new Date(row.startsAt);
-        return (
-          <div
-            className={cn(
-              "relative flex flex-col gap-2 p-4",
-              row.href ? "hover:bg-muted/50" : "opacity-70",
+    <DataListItem
+      className={cn("relative flex-col items-stretch gap-0 p-0", !row.href && "opacity-70")}
+    >
+      {/* The status and day as the row's header strip, like the Walks list. */}
+      <div className="flex items-center justify-between gap-3 border-b bg-muted/50 px-3 py-2.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+        <span>{historyStatus(row)}</span>
+        <span className="shrink-0">{formatWalkDay(startsAt)}</span>
+      </div>
+      <DataListItemMain className="items-center p-3">
+        <DataListBody>
+          <p className={cn("font-medium", !row.href && "text-muted-foreground")}>
+            {row.href ? (
+              <IntentLink full className="after:absolute after:inset-0" href={row.href}>
+                {row.title}
+              </IntentLink>
+            ) : (
+              row.title
             )}
-            key={row.id}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <p className={cn("font-medium", !row.href && "text-muted-foreground")}>
-                {row.href ? (
-                  <IntentLink full className="after:absolute after:inset-0" href={row.href}>
-                    {row.title}
-                  </IntentLink>
-                ) : (
-                  row.title
-                )}
-              </p>
-              <div className="flex shrink-0 items-center gap-2">
-                {row.cancelledAt ? <Badge variant="destructive">Cancelled</Badge> : null}
-                {row.href ? <ChevronRight className="size-4 text-muted-foreground" /> : null}
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {formatDate(startsAt)} · {formatTime(startsAt)} · {row.durationMins} min
-              {row.location ? ` · ${row.location}` : ""}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              In {formatCompactDateTime(new Date(row.clockedInAt))}
-              {row.clockedOutAt
-                ? ` · Out ${formatCompactDateTime(new Date(row.clockedOutAt))}`
-                : row.cancelledAt
-                  ? ""
-                  : row.completed
-                    ? " · Stayed for the whole walk"
-                    : " · Still on the walk"}
-            </p>
-            {row.clockedOutReason ? (
-              <p className="text-sm text-muted-foreground">{row.clockedOutReason}</p>
-            ) : null}
-          </div>
-        );
-      })}
-    </div>
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {formatTime(startsAt)} · {row.durationMins} min
+            {row.location ? ` · ${row.location}` : ""}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            In {formatCompactDateTime(new Date(row.clockedInAt))}
+            {row.clockedOutAt ? ` · Out ${formatCompactDateTime(new Date(row.clockedOutAt))}` : ""}
+          </p>
+          {row.clockedOutReason ? (
+            <p className="text-xs text-muted-foreground">{row.clockedOutReason}</p>
+          ) : null}
+        </DataListBody>
+        {row.href ? <ChevronRight className="size-4 shrink-0 text-muted-foreground" /> : null}
+      </DataListItemMain>
+    </DataListItem>
   );
 }
