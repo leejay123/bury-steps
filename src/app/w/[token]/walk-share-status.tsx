@@ -8,7 +8,6 @@ import {
   windowState,
 } from "@/lib/walk-window";
 import { useWalkClock } from "@/hooks/use-walk-clock";
-import { accountPortalHref } from "@/lib/urls";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -42,7 +41,6 @@ export function WalkShareStatusChrome({
   startsAt,
   title,
   walkLeader,
-  walkUrl,
   withoutSignIn = false,
 }: {
   /** Whether this viewer clocked in; unknown on the shared page (see signedIn). */
@@ -82,6 +80,7 @@ export function WalkShareStatusChrome({
   startsAt: string;
   title: string;
   walkLeader: string | null;
+  /** The walk's own address (no longer used here: the sign-in box has no buttons). */
   walkUrl: string;
 }) {
   const now = useWalkClock({ cancelledAt, durationMins, endedAt, startsAt });
@@ -110,23 +109,14 @@ export function WalkShareStatusChrome({
       </Alert>
     ) : null;
   const closedNotice = <WalkClosedNoClockInNotice />;
+  // No buttons of its own: Sign in and Join are in the site header.
   const signInPrompt = completed ? null : (
-    <div className="space-y-4 rounded-lg border bg-muted/40 p-5">
-      <div className="space-y-1">
-        <p className="font-medium">You need to sign in to join this walk</p>
-        <p className="text-sm text-muted-foreground">
-          Clock-in is only for signed-in members. If you do not have an account yet, create one first. If you
-          already have an account, sign in. You will come back to this walk afterwards.
-        </p>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <Button asChild size="sm">
-          <a href={accountPortalHref("sign-up", walkUrl)}>Create an account</a>
-        </Button>
-        <Button asChild size="sm" variant="outline">
-          <a href={accountPortalHref("sign-in", walkUrl)}>Sign in</a>
-        </Button>
-      </div>
+    <div className="space-y-1 rounded-lg border bg-muted/40 p-5">
+      <p className="font-medium">You need to sign in to join this walk</p>
+      <p className="text-sm text-muted-foreground">
+        Clock-in is only for signed-in members. If you do not have an account yet, use Join the group at the
+        top of the page; if you already have one, use Sign in.
+      </p>
     </div>
   );
   const guestNotice = completed ? (
