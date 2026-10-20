@@ -2721,16 +2721,37 @@ export const walkDesignConfig: Config = {
             ["everyone", "Everyone"],
           ]),
         },
+        showHeading: {
+          type: "radio",
+          label: "Show the heading",
+          options: yesNo,
+        },
         title: {
           type: "text",
           label: "Heading (blank: How this group works)",
         },
       },
-      defaultProps: { look: "card", title: "", showTo: "visitors" },
-      render: ({ look, title, showTo, puck }) => (
+      defaultProps: {
+        look: "card",
+        title: "",
+        showTo: "visitors",
+        showHeading: true,
+      },
+      // The Card look (for visitors) is the page's own card, heading and all.
+      resolveFields: (data, { fields }) => {
+        const card =
+          data.props.look === "card" &&
+          (data.props.showTo ?? "visitors") === "visitors";
+        const shown = { ...fields } as Record<string, unknown>;
+        if (card) delete shown.showHeading;
+        if (card || data.props.showHeading === false) delete shown.title;
+        return shown as typeof fields;
+      },
+      render: ({ look, title, showTo, showHeading, puck }) => (
         <HowItWorksBlock
           editing={Boolean(puck?.isEditing)}
           look={look}
+          showHeading={showHeading}
           showTo={showTo}
           title={title}
         />
@@ -2893,10 +2914,25 @@ export const walkDesignConfig: Config = {
             ["two-columns", "Two columns of numbered steps"],
           ]),
         },
+        showHeading: {
+          type: "radio",
+          label: "Show the heading",
+          options: yesNo,
+        },
         title: { type: "text", label: "Heading (blank: Before you set off)" },
       },
-      defaultProps: { look: "card", title: "" },
-      render: ({ look, title }) => <BeforeBlock look={look} title={title} />,
+      defaultProps: { look: "card", title: "", showHeading: true },
+      // The Card look is the page's own card, heading and all.
+      resolveFields: (data, { fields }) => {
+        const card = (data.props.look ?? "card") === "card";
+        const shown = { ...fields } as Record<string, unknown>;
+        if (card) delete shown.showHeading;
+        if (card || data.props.showHeading === false) delete shown.title;
+        return shown as typeof fields;
+      },
+      render: ({ look, title, showHeading }) => (
+        <BeforeBlock look={look} showHeading={showHeading} title={title} />
+      ),
     },
     Attended: {
       label: "Attended",

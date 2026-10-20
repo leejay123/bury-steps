@@ -2505,9 +2505,12 @@ const WIDE_STEP_LOOKS: readonly string[] = [
 export function BeforeBlock({
   look = "card",
   title = "",
+  showHeading = true,
 }: {
   look?: BeforeLook;
   title?: string;
+  /** Off: no heading at all (the Card look keeps its own). */
+  showHeading?: boolean;
 }) {
   const p = useWalkParts();
   if (!p) return <Placeholder label={`Before you set off · ${look}`} />;
@@ -2516,39 +2519,49 @@ export function BeforeBlock({
   if (WIDE_STEP_LOOKS.includes(look))
     return (
       <StepsLooks
-        heading={title.trim() || "Before you set off"}
+        heading={showHeading ? title.trim() || "Before you set off" : ""}
         look={look as Exclude<BeforeLook, "card">}
         p={p}
         steps={p.tips.map((tip) => ({ title: tip, body: "" }))}
       />
     );
-  return <BeforeTips look={look} p={p} title={title} />;
+  return (
+    <BeforeTips
+      heading={showHeading ? title.trim() || "Before you set off" : ""}
+      look={look}
+      p={p}
+    />
+  );
 }
 
 function BeforeTips({
   p,
   look,
-  title,
+  heading,
 }: {
   p: WalkIdeaParts;
   look: Exclude<BeforeLook, "card">;
-  title: string;
+  /** Blank: no heading. */
+  heading: string;
 }) {
   const { status } = useWalkInfo(p);
   if (status === "completed" || status === "cancelled") return null;
-  const heading = title.trim() || "Before you set off";
   const tips = p.tips;
   if (look === "compact")
     return (
       <p className="text-sm text-muted-foreground">
-        <span className="font-semibold text-foreground">{heading}:</span>{" "}
+        {heading ? (
+          <span className="font-semibold text-foreground">{heading}: </span>
+        ) : null}
         {tips.join(" · ")}
       </p>
     );
   if (look === "tiles" || look === "swipe")
     return (
       <section className="flex flex-col gap-3">
-        <h2 className="text-base font-semibold">{heading}</h2>
+        {heading ? (
+          <h2 className="text-base font-semibold">{heading}</h2>
+        ) : null}
         <ol
           className={cn(
             "grid gap-2 sm:grid-cols-2 lg:grid-cols-3",
@@ -2577,7 +2590,7 @@ function BeforeTips({
           "rounded-2xl border-l-4 border-emerald-600 bg-emerald-50 p-5 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-50",
       )}
     >
-      <h2 className="text-base font-semibold">{heading}</h2>
+      {heading ? <h2 className="text-base font-semibold">{heading}</h2> : null}
       <ol className="flex flex-col gap-2 text-sm">
         {tips.map((tip, i) => (
           <li className="flex items-start gap-2.5" key={tip}>
@@ -2846,7 +2859,10 @@ export function HowItWorksBlock({
   look = "card",
   title = "",
   showTo = "visitors",
+  showHeading = true,
 }: {
+  /** Off: no heading at all (the Card look for visitors keeps its own). */
+  showHeading?: boolean;
   editing?: boolean;
   look?: BeforeLook;
   title?: string;
@@ -2866,7 +2882,7 @@ export function HowItWorksBlock({
     ) : null;
   const drawn = (
     <StepsLooks
-      heading={title.trim() || "How this group works"}
+      heading={showHeading ? title.trim() || "How this group works" : ""}
       // The card look for members or everyone: the steps in a plain box.
       look={look === "card" ? "card-list" : look}
       p={p}
@@ -3764,12 +3780,16 @@ function StepsLooks({
   if (look === "compact")
     return (
       <p className="text-sm text-muted-foreground">
-        <span className="font-semibold text-foreground">{heading}:</span>{" "}
+        {heading ? (
+          <span className="font-semibold text-foreground">{heading}: </span>
+        ) : null}
         {steps.map((step) => step.title).join(" · ")}
       </p>
     );
   const number = (i: number) => String(i + 1).padStart(2, "0");
-  const title = <h2 className="text-base font-semibold">{heading}</h2>;
+  const title = heading ? (
+    <h2 className="text-base font-semibold">{heading}</h2>
+  ) : null;
   // Numbered steps across the page, one column each, joined by a line.
   if (look === "row")
     return (
@@ -3909,7 +3929,9 @@ function StepsLooks({
   if (look === "tiles" || look === "swipe")
     return (
       <section className="flex flex-col gap-3">
-        <h2 className="text-base font-semibold">{heading}</h2>
+        {heading ? (
+          <h2 className="text-base font-semibold">{heading}</h2>
+        ) : null}
         <ol
           className={cn(
             "grid gap-2 sm:grid-cols-2 lg:grid-cols-4",
@@ -3939,7 +3961,7 @@ function StepsLooks({
           "rounded-2xl border-l-4 border-emerald-600 bg-emerald-50 p-5 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-50",
       )}
     >
-      <h2 className="text-base font-semibold">{heading}</h2>
+      {heading ? <h2 className="text-base font-semibold">{heading}</h2> : null}
       <ol className="flex flex-col gap-3 text-sm">
         {steps.map((step, i) => (
           <li className="flex items-start gap-2.5" key={`${i}-${step.title}`}>
