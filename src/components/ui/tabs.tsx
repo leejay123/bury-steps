@@ -107,13 +107,40 @@ function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimi
   );
 }
 
+/**
+ * In a row that scrolls sideways, slide the chosen tab to the middle (like
+ * the site's top menu), so the ones either side of it come into view.
+ */
+function centreTab(tab: HTMLElement) {
+  let row = tab.parentElement;
+  while (row && row.scrollWidth <= row.clientWidth + 1) row = row.parentElement;
+  if (!row || row === document.body || row === document.documentElement) return;
+  const rowBox = row.getBoundingClientRect();
+  const tabBox = tab.getBoundingClientRect();
+  const left = row.scrollLeft + (tabBox.left - rowBox.left) - (rowBox.width - tabBox.width) / 2;
+  row.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+}
+
 function TabsTrigger({
   children,
   className,
   value,
+  onClick,
+  onFocus,
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
   const underline = React.useContext(UnderlineContext);
+  // Click (Safari doesn't focus buttons on click) and focus (arrow keys).
+  const centre = {
+    onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
+      onClick?.(event);
+      centreTab(event.currentTarget);
+    },
+    onFocus: (event: React.FocusEvent<HTMLButtonElement>) => {
+      onFocus?.(event);
+      centreTab(event.currentTarget);
+    },
+  };
   const pills = React.useContext(PillsContext);
 
   if (pills) {
@@ -128,6 +155,7 @@ function TabsTrigger({
         data-value={value}
         value={value}
         {...props}
+        {...centre}
       >
         {children}
       </TabsPrimitive.Trigger>
@@ -145,6 +173,7 @@ function TabsTrigger({
         data-value={value}
         value={value}
         {...props}
+        {...centre}
       >
         {children}
       </TabsPrimitive.Trigger>
@@ -163,6 +192,7 @@ function TabsTrigger({
       data-value={value}
       value={value}
       {...props}
+      {...centre}
     >
       {/* No hover background: only the words darken under the pointer. */}
       <span className="flex items-center gap-1.5 px-4 py-3">{children}</span>
