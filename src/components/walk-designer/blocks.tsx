@@ -894,17 +894,33 @@ export type MessageLook =
   | "compact"
   | "stripe"
   | "hidden";
+/**
+ * A message as one straight line, like the Status band's "Upcoming ·
+ * Clock-in opens at…": its title, a dot, then the rest (reason and all),
+ * at the same weight, instead of the title sitting on top.
+ */
+const ONE_LINE_MESSAGE =
+  "[&_[data-slot=alert]]:block [&_[data-slot=alert]_*]:[font-weight:inherit] [&_[data-slot=alert-title]]:inline [&_[data-slot=alert-title]]:line-clamp-none [&_[data-slot=alert-title]]:after:content-['_·_'] [&_[data-slot=alert-description]]:inline [&_[data-slot=alert-description]_*]:inline [&_[data-slot=alert-description]_p+p]:before:content-['_']";
+
 export const MESSAGE_LOOK: Record<MessageLook, string> = {
   // The default: a plain grey band, like the Status band (no blue or red boxes).
   "as-is":
-    "[&_[data-slot=alert]]:rounded-lg [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:bg-muted [&_[data-slot=alert]]:text-foreground [&_[data-slot=alert]]:font-normal [&_[data-slot=alert]_*]:text-inherit",
+    "[&_[data-slot=alert]]:rounded-lg [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:bg-muted [&_[data-slot=alert]]:text-foreground [&_[data-slot=alert]]:font-normal [&_[data-slot=alert]_*]:text-inherit" +
+    " " +
+    ONE_LINE_MESSAGE,
   boxes: "",
   "band-outline":
-    "[&_[data-slot=alert]]:rounded-lg [&_[data-slot=alert]]:border [&_[data-slot=alert]]:bg-transparent [&_[data-slot=alert]]:text-foreground [&_[data-slot=alert]]:font-normal [&_[data-slot=alert]_*]:text-inherit",
+    "[&_[data-slot=alert]]:rounded-lg [&_[data-slot=alert]]:border [&_[data-slot=alert]]:bg-transparent [&_[data-slot=alert]]:text-foreground [&_[data-slot=alert]]:font-normal [&_[data-slot=alert]_*]:text-inherit" +
+    " " +
+    ONE_LINE_MESSAGE,
   "band-bar":
-    "[&_[data-slot=alert]]:rounded-none [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:border-l-4 [&_[data-slot=alert]]:border-l-foreground [&_[data-slot=alert]]:bg-muted [&_[data-slot=alert]]:text-foreground [&_[data-slot=alert]]:font-normal [&_[data-slot=alert]_*]:text-inherit",
+    "[&_[data-slot=alert]]:rounded-none [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:border-l-4 [&_[data-slot=alert]]:border-l-foreground [&_[data-slot=alert]]:bg-muted [&_[data-slot=alert]]:text-foreground [&_[data-slot=alert]]:font-normal [&_[data-slot=alert]_*]:text-inherit" +
+    " " +
+    ONE_LINE_MESSAGE,
   "band-line":
-    "[&_[data-slot=alert]]:rounded-none [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:border-b [&_[data-slot=alert]]:bg-transparent [&_[data-slot=alert]]:px-0 [&_[data-slot=alert]]:text-foreground [&_[data-slot=alert]]:font-normal [&_[data-slot=alert]_*]:text-inherit",
+    "[&_[data-slot=alert]]:rounded-none [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:border-b [&_[data-slot=alert]]:bg-transparent [&_[data-slot=alert]]:px-0 [&_[data-slot=alert]]:text-foreground [&_[data-slot=alert]]:font-normal [&_[data-slot=alert]_*]:text-inherit" +
+    " " +
+    ONE_LINE_MESSAGE,
   soft: "[&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:bg-muted/60",
   bold: "[&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:bg-foreground [&_[data-slot=alert]]:text-background [&_[data-slot=alert]_*]:!text-background",
   compact:
@@ -1657,6 +1673,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         className={cn(
           row &&
             "gap-0 [&_[data-slot=alert]]:rounded-none [&_[data-slot=alert]]:border-0 [&>div]:gap-0",
+          row && ONE_LINE_MESSAGE,
           // Out to the box's edges (it has 16px inside), with a line between.
           row &&
             titleBoxed &&
@@ -1875,7 +1892,10 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
                   !p.noticesInStrip ? (
                     // Plain: no box, no colour, just the words in the band.
                     <MessagesOrSample
-                      className="gap-1 font-normal text-muted-foreground [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:bg-transparent [&_[data-slot=alert]]:p-0 [&_[data-slot=alert]]:text-inherit [&_[data-slot=alert]_*]:text-inherit"
+                      className={cn(
+                        "gap-1 font-medium text-foreground [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:bg-transparent [&_[data-slot=alert]]:p-0 [&_[data-slot=alert]]:text-inherit [&_[data-slot=alert]_*]:text-inherit",
+                        ONE_LINE_MESSAGE,
+                      )}
                       editing={o.editing ?? false}
                       p={p}
                     />
