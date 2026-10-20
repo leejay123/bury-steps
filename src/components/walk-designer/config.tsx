@@ -1727,6 +1727,7 @@ export const walkDesignConfig: Config = {
         // Only the choices that apply to what's picked elsewhere.
         const band = String(props.titleLook ?? "").startsWith("band");
         keepOptions(shown, "titleMessages", (v) => v !== "in-band" || band);
+        keepOptions(shown, "countdownLook", (v) => v !== "band" || band);
         const mapOn =
           Boolean(props.map && props.map !== "none") ||
           titlePartsOf(props).includes("map");
@@ -1941,6 +1942,11 @@ export const walkDesignConfig: Config = {
             ["pill", "Grey pill with a tick"],
             ["outline", "Outlined box"],
             ["bar", "Grey bar down the side"],
+            ["tick", "Plain, with a tick"],
+            ["badge", "Outlined badge with a tick"],
+            ["card", "White card"],
+            ["stacked", "Two lines in a grey box, with a tick"],
+            ["underline", "With a line under it"],
           ]),
         },
         countdownLook: {
@@ -1953,6 +1959,7 @@ export const walkDesignConfig: Config = {
             ["outline", "Outlined box"],
             ["bar", "Grey bar down the side"],
             ["big", "Big number"],
+            ["band", "In the status band (… · 7 days to go)"],
           ]),
         },
         titleBox: boxField("Box around the title (name, status, Manage)"),

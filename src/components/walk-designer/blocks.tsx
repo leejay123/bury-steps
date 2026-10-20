@@ -1321,12 +1321,15 @@ function Title({
   bandMessages = null,
   afterNote = null,
   underNote = null,
+  bandCountdown = false,
   bandStyle = "grey",
   gap = "normal",
 }: {
   /** Right under "Created by", tucked in with the name (Your clock-in,
    * Countdown when placed there). */
   underNote?: ReactNode;
+  /** Add the countdown to the band's line ("… · 7 days to go"). */
+  bandCountdown?: boolean;
   /** How much space inside the Status band look's box. */
   gap?: TitleGap;
   /** The Status band look's band: grey, outlined, grey with a dark bar, or a line under it. */
@@ -1445,7 +1448,13 @@ function Title({
         // A message in the band takes the place of the status and date.
         "[&:has([data-messages]:not(:empty))>[data-band-status]]:hidden [&:has([data-sample])>[data-band-status]]:hidden",
       );
-      const statusText = `${info.now.eyebrow} · ${info.now.line}`;
+      const counting =
+        bandCountdown &&
+        info.status !== "completed" &&
+        info.status !== "cancelled";
+      const statusText = `${info.now.eyebrow} · ${info.now.line}${
+        counting ? ` · ${info.countdown.value} ${info.countdown.unit}` : ""
+      }`;
       const when = `${day}, ${time} to ${formatTime(info.end)}`;
       const bandStatus = (
         <div
@@ -1879,7 +1888,11 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
     clockin: p.myClockIn ? (
       <ClockInLook look={o.clockinLook}>{p.myClockIn}</ClockInLook>
     ) : null,
-    countdown: <CountdownLine look={o.countdownLook} p={p} />,
+    countdown:
+      // "In the status band": it's added to the band's line instead.
+      o.countdownLook === "band" ? null : (
+        <CountdownLine look={o.countdownLook} p={p} />
+      ),
   };
   // Your clock-in and the Countdown can sit right under "Created by",
   // tucked in with the name, instead of in the list's order.
@@ -1947,6 +1960,9 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
                 bandStyle={o.bandStyle}
                 afterNote={titleLook.startsWith("band") ? inside : null}
                 underNote={underName}
+                bandCountdown={
+                  inTitle("countdown") && o.countdownLook === "band"
+                }
                 gap={o.titleGap}
                 p={p}
                 variant={titleLook}
@@ -3512,7 +3528,19 @@ function OneFact({
 export type CountdownLook = "big" | "box" | "pill";
 
 /** How long until the walk sets off (or finishes, while it's under way). */
-export type LineLook = "line" | "grey" | "pill" | "outline" | "bar" | "big";
+export type LineLook =
+  | "line"
+  | "grey"
+  | "pill"
+  | "outline"
+  | "bar"
+  | "big"
+  | "band"
+  | "tick"
+  | "badge"
+  | "card"
+  | "stacked"
+  | "underline";
 
 /** The box each line look puts around Your clock-in or the Countdown. */
 const LINE_LOOK: Record<LineLook, string> = {
@@ -3522,6 +3550,14 @@ const LINE_LOOK: Record<LineLook, string> = {
   outline: "rounded-lg border px-3 py-2",
   bar: "border-l-4 border-foreground/20 bg-muted/50 px-3 py-2",
   big: "",
+  band: "",
+  tick: "",
+  badge: "w-fit rounded-full border px-3 py-1",
+  card: "rounded-lg border bg-card px-4 py-3 shadow-sm",
+  // Status on one line, "Recorded at…" under it (no dot between).
+  stacked:
+    "items-start rounded-lg bg-muted px-4 py-3 [&_p>span]:block [&_p>span:last-child]:text-xs [&_[data-dot]]:hidden",
+  underline: "border-b pb-2",
 };
 
 /** One line, e.g. "3 days to go" or "48 min left"; nothing once it's over. */
@@ -3574,11 +3610,15 @@ function ClockInLook({
         LINE_LOOK[look === "big" ? "grey" : look],
       )}
     >
-      {look === "pill" ? (
+      {look === "pill" || look === "tick" || look === "badge" ? (
         <CircleCheck
           aria-hidden
           className="size-3.5 shrink-0 text-muted-foreground"
         />
+      ) : look === "stacked" ? (
+        <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-background">
+          <Check aria-hidden className="size-4" />
+        </span>
       ) : null}
       {children}
     </div>

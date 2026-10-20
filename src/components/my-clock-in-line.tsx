@@ -24,8 +24,8 @@ export function MyClockInLine({
             You clocked in at {formatWalkDate(clockedInAt)}
           </span>
           <span className="text-muted-foreground">
-            {" "}
-            · left at {formatWalkDate(clockedOutAt)}
+            <span data-dot=""> · </span>
+            left at {formatWalkDate(clockedOutAt)}
           </span>
         </>
       ) : (
@@ -34,8 +34,8 @@ export function MyClockInLine({
             {completed ? "You attended this walk" : "You are clocked in"}
           </span>
           <span className="text-muted-foreground">
-            {" "}
-            · Recorded at {formatWalkDate(clockedInAt)}
+            <span data-dot=""> · </span>
+            Recorded at {formatWalkDate(clockedInAt)}
           </span>
         </>
       )}
