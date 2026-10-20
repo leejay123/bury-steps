@@ -63,7 +63,7 @@ export async function summarizeWalkDescription(description: string): Promise<Sum
     return { ok: false, error: "AI summarizing isn't set up yet — ask an admin to add the API key." };
   }
 
-  const prompt = `Rewrite the following walking-group walk description as tidy, easy-to-read prose for a member deciding whether to join and what to bring. Keep every practical detail — start point/address, distance, duration, grade, meeting time, walk leader, what to bring, and any safety notes — just cut repeated labels and filler wording. Aim for roughly half the original length, not a one-line summary. Plain text only — no markdown, no headings, no bullet points.\n\n${trimmed}`;
+  const prompt = `Rewrite the following walking-group walk description as tidy, easy-to-read prose for a member deciding whether to join and what to bring. Keep every practical detail — start point/address, distance, duration, grade, meeting time, walk leader, what to bring, and any safety notes — just cut repeated labels and filler wording. Aim for roughly half the original length, not a one-line summary. Plain text only — no markdown, no headings, no bullet points.\n\nUse only what the text below says. Never add a name, place, address, time, distance, grade, kit or any other detail that isn't in it — leave out anything it doesn't mention. If it has no walk details at all, just make the same text shorter and clearer.\n\nThe text:\n${trimmed}`;
 
   let busy = false;
   for (let round = 0; round < 2; round += 1) {

@@ -1387,10 +1387,12 @@ function BlockFrame({
         spaceBelow === "closer" && "-mb-3",
         spaceBelow === "more" && "mb-4",
         spaceBelow === "lots" && "mb-12",
+        // Grow, never shrink: "flex-1" (a zero starting size) squashed a
+        // button standing alone in a column, like Journey's Add event.
         buttons === "phones" &&
-          "max-sm:[&_[data-slot=button]]:w-full max-sm:[&_[data-slot=button]]:flex-1",
+          "max-sm:[&_[data-slot=button]]:w-full max-sm:[&_[data-slot=button]]:grow",
         buttons === "always" &&
-          "[&_[data-slot=button]]:w-full [&_[data-slot=button]]:flex-1",
+          "[&_[data-slot=button]]:w-full [&_[data-slot=button]]:grow",
         // Every shadow inside, except a part box chosen on purpose (Card).
         shadows === "none" && "[&_*:not([data-part-box])]:shadow-none",
         MESSAGE_LOOK[messages ?? "as-is"],

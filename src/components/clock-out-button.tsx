@@ -28,7 +28,7 @@ function Confirm({ disabled }: { disabled: boolean }) {
   );
 }
 
-export function ClockOutButton({ token }: { token: string }) {
+export function ClockOutButton({ token, className }: { token: string; className?: string }) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   // Success swaps this button out of the page, so the toast has to fire as
@@ -45,7 +45,7 @@ export function ClockOutButton({ token }: { token: string }) {
       open={open}
     >
       <AlertDialogTrigger asChild>
-        <Button size="sm" variant="outline">
+        <Button className={className} size="sm" variant="outline">
           Clock out
         </Button>
       </AlertDialogTrigger>

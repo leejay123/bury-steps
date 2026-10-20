@@ -109,9 +109,9 @@ export function WalkAttendanceTable({
       <DataList>
         <DataListGroupHeader count={heading.count} label={heading.label} />
         {note ? (
-          <li className="border-b px-3 py-2 text-sm">
+          <li className="flex flex-col gap-0.5 border-b px-3 py-2 text-sm">
             <span className="font-medium">{note.title}</span>
-            <span className="text-muted-foreground"> · {note.text}</span>
+            <span className="text-muted-foreground">{note.text}</span>
           </li>
         ) : null}
         {paging.paged.map((row) => (

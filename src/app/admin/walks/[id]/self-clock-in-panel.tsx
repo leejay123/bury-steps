@@ -48,9 +48,12 @@ export function SelfClockInPanel({
   const completed = status === "completed";
   const leftEarly = Boolean(alreadyClockedInAt && clockedOutAt);
 
-  // Just the button, for a bar or banner (walk-tabs-layout.tsx): only while
-  // this organiser can clock in; the full panel elsewhere says the rest.
+  // Just the button, for a bar or banner (walk-tabs-layout.tsx): Clock in
+  // while this organiser can, then Clock out in the same place while they're
+  // on the walk; the full panel elsewhere says the rest.
   if (compact) {
+    if (alreadyClockedInAt && !clockedOutAt && !completed)
+      return <ClockOutButton className="w-full sm:w-auto" token={token} />;
     const canClockIn = state === "open" && !completed && !(alreadyClockedInAt && !clockedOutAt);
     return canClockIn ? (
       <ClockInDrawer

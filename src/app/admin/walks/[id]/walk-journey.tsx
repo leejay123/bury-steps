@@ -194,11 +194,12 @@ export function WalkJourneyManager({
   const showBothButtons = showJourneyDrawer && showAddEvent;
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex flex-col gap-3">
       {/* No heading of its own: the tab (or section) already says Journey, and
           a heading here made this tab start lower than the others. */}
       {showJourneyDrawer || showAddEvent ? (
-        <div className="flex flex-wrap items-start justify-between gap-3">
+        // On the right, like Attended's Add someone (full width on a phone).
+        <div className="flex justify-end">
           <div
             className={
               showBothButtons
