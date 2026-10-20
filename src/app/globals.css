@@ -374,6 +374,20 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
   --font-mono: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
 }
 
+/* Every sideways scroll (rows of tabs, facts, chips, menus): a thin light
+   grey scrollbar, never hidden. Outside the layers on purpose, so it wins
+   over any [scrollbar-width:none] left on an element. scroll-x-thin is the
+   same for scrollers styled from a parent (e.g. the facts' swipe row). */
+.overflow-x-auto,
+.overflow-x-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--muted-foreground) 30%, transparent) transparent;
+}
+@utility scroll-x-thin {
+  scrollbar-width: thin !important;
+  scrollbar-color: color-mix(in oklab, var(--muted-foreground) 30%, transparent) transparent;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -308,6 +308,22 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
       )}
     </>
   );
+  // Designed pages: Clock in (then Clock out) beside Share or save, like the
+  // organisers' Clock in beside Manage — a design copied from the organisers
+  // has no Clock-in block, and members had nowhere to clock in.
+  const liveCompact = cancelled ? null : (
+    <Suspense fallback={null}>
+      <WalkLivePart
+        beforeYouSetOffTips={theme.beforeYouSetOffTips}
+        compact
+        durationMins={walk.durationMins}
+        endedAt={walk.endedAt}
+        startsAt={walk.startsAt}
+        token={walk.token}
+        walkId={walk.id}
+      />
+    </Suspense>
+  );
   const howWalksWork = (
     <>
       {/* Sign-up steps are for visitors; members have already done them. */}
@@ -436,6 +452,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
             parts={{
               ...ideaParts,
               back: { href: "/walks", label: "Walks" },
+              liveCompact,
               notices: noticesEl ? cloneElement(noticesEl, { audience: "member" }) : ideaParts.notices,
             }}
           />
@@ -651,6 +668,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
  */
 async function WalkLivePart({
   beforeYouSetOffTips,
+  compact = false,
   durationMins,
   endedAt,
   startsAt,
@@ -658,6 +676,8 @@ async function WalkLivePart({
   walkId,
 }: {
   beforeYouSetOffTips: readonly string[];
+  /** Just the Clock in / Clock out button (WalkLivePanel compact). */
+  compact?: boolean;
   durationMins: number;
   endedAt: Date | null;
   startsAt: Date;
@@ -692,8 +712,9 @@ async function WalkLivePart({
 
   return (
     <>
-      {closedNoClockIn ? <WalkClosedNoClockInNotice /> : null}
+      {closedNoClockIn && !compact ? <WalkClosedNoClockInNotice /> : null}
       <WalkLivePanel
+        compact={compact}
         alreadyClockedInAt={myAttendance?.clockedInAt.toISOString() ?? null}
         // Before you set off is placed by the walk page layout.
         beforeYouSetOffEnabled={false}

@@ -257,6 +257,8 @@ export function Actions({
         className,
       )}
     >
+      {/* Members: Clock in / Clock out (designed pages), beside it. */}
+      {p.liveCompact}
       <WalkManageMenu label="Share or save">
         <ShareLinkButton url={p.walk.shareUrl} />
         <Button asChild size="sm" variant="outline">
@@ -320,7 +322,7 @@ export function ScrollRow({
         className={
           natural
             ? undefined
-            : "[&>*]:flex! [&>*]:flex-row! [&>*]:flex-nowrap! [&>*]:snap-x [&>*]:gap-[var(--facts-gap,1.5rem)]! [&>*]:overflow-x-auto [&>*]:pb-1 [&>*]:[scrollbar-width:none] [&>*>*]:w-72! [&>*>[data-wide]]:w-96! [&>*>*]:shrink-0! [&>*>*]:snap-start"
+            : "[&>*]:flex! [&>*]:flex-row! [&>*]:flex-nowrap! [&>*]:snap-x [&>*]:gap-[var(--facts-gap,1.5rem)]! [&>*]:overflow-x-auto [&>*]:pb-1 [&>*]:scroll-x-thin [&>*>*]:w-72! [&>*>[data-wide]]:w-96! [&>*>*]:shrink-0! [&>*>*]:snap-start"
         }
         ref={row}
       >

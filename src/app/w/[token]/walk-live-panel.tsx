@@ -25,6 +25,7 @@ export function WalkLivePanel({
   endedAt = null,
   memberNames,
   organiserView = false,
+  compact = false,
   startsAt,
   token,
   walksHref,
@@ -45,6 +46,9 @@ export function WalkLivePanel({
   memberNames: WalkMemberName[];
   /** Organisers and owners see who's on the walk without clocking in. */
   organiserView?: boolean;
+  /** Just the button, beside Share or save on a designed page: Clock in while
+   * it's open, then Clock out in the same place while on the walk. */
+  compact?: boolean;
   startsAt: string;
   token: string;
   walksHref: string;
@@ -77,6 +81,20 @@ export function WalkLivePanel({
     status.focus({ preventScroll: true });
     status.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [onWalk]);
+
+  if (compact) {
+    if (alreadyClockedInAt && !clockedOutAt)
+      return completed ? null : <ClockOutButton className="w-full sm:w-auto" token={token} />;
+    return state === "open" && !completed ? (
+      <ClockInDrawer
+        compact
+        emergencyContactName={emergencyContactName}
+        emergencyContactPhone={emergencyContactPhone}
+        emergencyContactRequired={emergencyContactRequired}
+        token={token}
+      />
+    ) : null;
+  }
 
   // Still on the walk (never clocked out).
   if (alreadyClockedInAt && !clockedOutAt) {
