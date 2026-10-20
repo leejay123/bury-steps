@@ -17,6 +17,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  CircleCheck,
   Clock,
   CloudSun,
   Coffee,
@@ -1319,9 +1320,13 @@ function Title({
   actions,
   bandMessages = null,
   afterNote = null,
+  underNote = null,
   bandStyle = "grey",
   gap = "normal",
 }: {
+  /** Right under "Created by", tucked in with the name (Your clock-in,
+   * Countdown when placed there). */
+  underNote?: ReactNode;
   /** How much space inside the Status band look's box. */
   gap?: TitleGap;
   /** The Status band look's band: grey, outlined, grey with a dark bar, or a line under it. */
@@ -1336,9 +1341,17 @@ function Title({
 }) {
   const info = useWalkInfo(p);
   const h = p.headline;
-  const note = h.note ? (
-    <p className="text-xs text-muted-foreground">{h.note}</p>
-  ) : null;
+  const note =
+    h.note || underNote ? (
+      <>
+        {h.note ? (
+          <p className="text-xs text-muted-foreground">{h.note}</p>
+        ) : null}
+        {underNote ? (
+          <div className="mt-2 flex flex-col gap-2">{underNote}</div>
+        ) : null}
+      </>
+    ) : null;
   const act = actions ? <Actions className="sm:shrink-0" p={p} /> : null;
   const heading = (className?: string) => (
     <h1
@@ -1554,6 +1567,10 @@ export type DetailsOptions = {
   titleOrder?: string;
   /** What goes inside the title box, under the name, in this order. */
   titleParts?: { part?: string }[];
+  /** Your clock-in and Countdown: tucked under "Created by", or in the list. */
+  titleExtrasAt?: "under-name" | "list";
+  clockinLook?: LineLook;
+  countdownLook?: LineLook;
   factLines?: FactLines;
   phoneFactsBox?: PartBox | "same";
   tabletFactsBox?: ForDevice<PartBox>;
@@ -1859,13 +1876,32 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
     timeline: timelineView,
     description: descriptionPart,
     map: p.map,
-    clockin: p.myClockIn ?? null,
-    countdown: <CountdownLine p={p} />,
+    clockin: p.myClockIn ? (
+      <ClockInLook look={o.clockinLook}>{p.myClockIn}</ClockInLook>
+    ) : null,
+    countdown: <CountdownLine look={o.countdownLook} p={p} />,
   };
+  // Your clock-in and the Countdown can sit right under "Created by",
+  // tucked in with the name, instead of in the list's order.
+  const tucked = (key: TitlePart) =>
+    o.titleExtrasAt === "under-name" &&
+    (key === "clockin" || key === "countdown");
+  const listed = titleParts.filter((key) => !tucked(key));
+  const underName = titleParts.some(tucked) ? (
+    <>
+      {titleParts
+        .filter(tucked)
+        .map((key) =>
+          insideParts[key] ? (
+            <Fragment key={key}>{insideParts[key]}</Fragment>
+          ) : null,
+        )}
+    </>
+  ) : null;
   const inside =
-    titleParts.length > 0 ? (
+    listed.length > 0 ? (
       <>
-        {titleParts.map((key) =>
+        {listed.map((key) =>
           insideParts[key] ? (
             <Fragment key={key}>{insideParts[key]}</Fragment>
           ) : null,
@@ -1910,6 +1946,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
                 }
                 bandStyle={o.bandStyle}
                 afterNote={titleLook.startsWith("band") ? inside : null}
+                underNote={underName}
                 gap={o.titleGap}
                 p={p}
                 variant={titleLook}
@@ -1942,6 +1979,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
                         {p.headline.note}
                       </p>
                     ) : null}
+                    {underName}
                   </div>
                 ) : (
                   <span />
@@ -2485,7 +2523,12 @@ export type BeforeLook =
   | "list"
   | "card-list"
   | "timeline"
-  | "two-columns";
+  | "two-columns"
+  | "grey-row"
+  | "outline-row"
+  | "boxed-ticks"
+  | "chips"
+  | "number-cards";
 
 /** The full-width looks, drawn by StepsLooks for both blocks. */
 const WIDE_STEP_LOOKS: readonly string[] = [
@@ -2495,6 +2538,11 @@ const WIDE_STEP_LOOKS: readonly string[] = [
   "card-list",
   "timeline",
   "two-columns",
+  "grey-row",
+  "outline-row",
+  "boxed-ticks",
+  "chips",
+  "number-cards",
 ];
 
 /**
@@ -2587,7 +2635,7 @@ function BeforeTips({
       className={cn(
         "flex flex-col gap-3",
         look === "callout" &&
-          "rounded-2xl border-l-4 border-emerald-600 bg-emerald-50 p-5 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-50",
+          "rounded-lg border-l-4 border-foreground/20 bg-muted/60 p-5",
       )}
     >
       {heading ? <h2 className="text-base font-semibold">{heading}</h2> : null}
@@ -2599,10 +2647,7 @@ function BeforeTips({
                 {i + 1}
               </span>
             ) : (
-              <Check
-                aria-hidden
-                className="mt-0.5 size-4 shrink-0 text-emerald-600"
-              />
+              <Check aria-hidden className="mt-0.5 size-4 shrink-0" />
             )}
             <span>{tip}</span>
           </li>
@@ -3467,15 +3512,76 @@ function OneFact({
 export type CountdownLook = "big" | "box" | "pill";
 
 /** How long until the walk sets off (or finishes, while it's under way). */
+export type LineLook = "line" | "grey" | "pill" | "outline" | "bar" | "big";
+
+/** The box each line look puts around Your clock-in or the Countdown. */
+const LINE_LOOK: Record<LineLook, string> = {
+  line: "",
+  grey: "rounded-lg bg-muted px-3 py-2",
+  pill: "w-fit rounded-full bg-muted px-3 py-1",
+  outline: "rounded-lg border px-3 py-2",
+  bar: "border-l-4 border-foreground/20 bg-muted/50 px-3 py-2",
+  big: "",
+};
+
 /** One line, e.g. "3 days to go" or "48 min left"; nothing once it's over. */
-function CountdownLine({ p }: { p: WalkIdeaParts }) {
+function CountdownLine({
+  p,
+  look = "line",
+}: {
+  p: WalkIdeaParts;
+  look?: LineLook;
+}) {
   const { countdown, status } = useWalkInfo(p);
   if (status === "completed" || status === "cancelled") return null;
+  if (look === "big")
+    return (
+      <p className="flex items-baseline gap-2" suppressHydrationWarning>
+        <span className="text-3xl font-semibold tracking-tight tabular-nums">
+          {countdown.value}
+        </span>
+        <span className="text-sm text-muted-foreground">{countdown.unit}</span>
+      </p>
+    );
   return (
-    <p className="text-sm" suppressHydrationWarning>
-      <span className="font-semibold tabular-nums">{countdown.value}</span>{" "}
-      <span className="text-muted-foreground">{countdown.unit}</span>
+    <p
+      className={cn("flex items-center gap-2 text-sm", LINE_LOOK[look])}
+      suppressHydrationWarning
+    >
+      {look === "pill" ? (
+        <Clock aria-hidden className="size-3.5 text-muted-foreground" />
+      ) : null}
+      <span>
+        <span className="font-semibold tabular-nums">{countdown.value}</span>{" "}
+        <span className="text-muted-foreground">{countdown.unit}</span>
+      </span>
     </p>
+  );
+}
+
+/** Your clock-in in a look; hidden whole until there's a line to show. */
+function ClockInLook({
+  look = "line",
+  children,
+}: {
+  look?: LineLook;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-2 [&:not(:has(p))]:hidden [&_p]:text-sm",
+        LINE_LOOK[look === "big" ? "grey" : look],
+      )}
+    >
+      {look === "pill" ? (
+        <CircleCheck
+          aria-hidden
+          className="size-3.5 shrink-0 text-muted-foreground"
+        />
+      ) : null}
+      {children}
+    </div>
   );
 }
 
@@ -3790,6 +3896,74 @@ function StepsLooks({
   const title = heading ? (
     <h2 className="text-base font-semibold">{heading}</h2>
   ) : null;
+  // Equal boxes across the page: grey, or outlined; numbered cards.
+  if (look === "grey-row" || look === "outline-row" || look === "number-cards")
+    return (
+      <section className="flex flex-col gap-3">
+        {title}
+        <ol className="grid gap-3 sm:grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+          {steps.map((step, i) => (
+            <li
+              className={cn(
+                "flex flex-col gap-1 rounded-lg p-4 text-sm",
+                look === "grey-row" ? "bg-muted" : "border",
+              )}
+              key={`${i}-${step.title}`}
+            >
+              {look === "number-cards" ? (
+                <span className="mb-1 flex size-6 items-center justify-center rounded-md bg-muted text-xs font-semibold">
+                  {i + 1}
+                </span>
+              ) : null}
+              <span className="font-medium">{step.title}</span>
+              {step.body ? (
+                <span className="text-muted-foreground">{step.body}</span>
+              ) : null}
+            </li>
+          ))}
+        </ol>
+      </section>
+    );
+  // One outlined box, a tick on each line, lines between.
+  if (look === "boxed-ticks")
+    return (
+      <section className="flex flex-col gap-3">
+        {title}
+        <ul className="flex flex-col divide-y rounded-lg border text-sm">
+          {steps.map((step, i) => (
+            <li
+              className="flex items-start gap-3 px-4 py-3"
+              key={`${i}-${step.title}`}
+            >
+              <Check aria-hidden className="mt-0.5 size-4 shrink-0" />
+              <span className="flex min-w-0 flex-col gap-0.5">
+                <span className="font-medium">{step.title}</span>
+                {step.body ? (
+                  <span className="text-muted-foreground">{step.body}</span>
+                ) : null}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  // Just the titles, as grey chips that wrap.
+  if (look === "chips")
+    return (
+      <section className="flex flex-col gap-3">
+        {title}
+        <ul className="flex flex-wrap gap-2 text-sm">
+          {steps.map((step, i) => (
+            <li
+              className="rounded-full bg-muted px-3 py-1"
+              key={`${i}-${step.title}`}
+            >
+              {step.title}
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
   // Numbered steps across the page, one column each, joined by a line.
   if (look === "row")
     return (
@@ -3832,7 +4006,7 @@ function StepsLooks({
               className="flex flex-col gap-1 border-t pt-3 text-sm"
               key={`${i}-${step.title}`}
             >
-              <span className="text-3xl font-semibold tracking-tight text-muted-foreground/60 tabular-nums">
+              <span className="text-xl font-semibold tracking-tight text-muted-foreground/60 tabular-nums">
                 {number(i)}
               </span>
               <span className="font-medium">{step.title}</span>
@@ -3958,7 +4132,7 @@ function StepsLooks({
       className={cn(
         "flex flex-col gap-3",
         look === "callout" &&
-          "rounded-2xl border-l-4 border-emerald-600 bg-emerald-50 p-5 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-50",
+          "rounded-lg border-l-4 border-foreground/20 bg-muted/60 p-5",
       )}
     >
       {heading ? <h2 className="text-base font-semibold">{heading}</h2> : null}
@@ -3970,10 +4144,7 @@ function StepsLooks({
                 {i + 1}
               </span>
             ) : (
-              <Check
-                aria-hidden
-                className="mt-0.5 size-4 shrink-0 text-emerald-600"
-              />
+              <Check aria-hidden className="mt-0.5 size-4 shrink-0" />
             )}
             <span>
               <span className="font-medium">{step.title}</span>

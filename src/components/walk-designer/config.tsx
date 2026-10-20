@@ -571,7 +571,15 @@ const FOLDS: {
   {
     key: "_titleSection",
     more: "_titleMore",
-    main: ["showTitle", "titleLook", "titleParts", "showActions"],
+    main: [
+      "showTitle",
+      "titleLook",
+      "titleParts",
+      "titleExtrasAt",
+      "clockinLook",
+      "countdownLook",
+      "showActions",
+    ],
     extra: [
       "bandStyle",
       "titleGap",
@@ -812,6 +820,10 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
     ownTitle || props.showTitle === false ? [] : titlePartsOf(props);
   const inTitle = (part: TitlePart) => parts.includes(part);
   if (ownTitle || props.showTitle === false) hide.add("titleParts");
+  // Their looks and place only once they're in the title box list.
+  if (!inTitle("clockin")) hide.add("clockinLook");
+  if (!inTitle("countdown")) hide.add("countdownLook");
+  if (!inTitle("clockin") && !inTitle("countdown")) hide.add("titleExtrasAt");
   // Ribbon
   if (!props.ribbon || props.ribbon === "none") {
     hide.add("ribbonText").add("ribbonStyle").add("ribbonAt");
@@ -1912,6 +1924,37 @@ export const walkDesignConfig: Config = {
           getItemSummary: (item: { part?: string }) =>
             TITLE_PART_NAMES[item.part ?? ""] ?? "Choose a part",
         },
+        titleExtrasAt: {
+          type: "radio",
+          label: "Your clock-in and Countdown go",
+          options: options([
+            ["list", "In the list's order"],
+            ["under-name", "Right under Created by"],
+          ]),
+        },
+        clockinLook: {
+          type: "select",
+          label: "Your clock-in look",
+          options: options([
+            ["line", "Plain line"],
+            ["grey", "Grey background"],
+            ["pill", "Grey pill with a tick"],
+            ["outline", "Outlined box"],
+            ["bar", "Grey bar down the side"],
+          ]),
+        },
+        countdownLook: {
+          type: "select",
+          label: "Countdown look",
+          options: options([
+            ["line", "Plain line"],
+            ["grey", "Grey background"],
+            ["pill", "Grey pill with a clock"],
+            ["outline", "Outlined box"],
+            ["bar", "Grey bar down the side"],
+            ["big", "Big number"],
+          ]),
+        },
         titleBox: boxField("Box around the title (name, status, Manage)"),
         statusLook: {
           type: "select",
@@ -2225,6 +2268,9 @@ export const walkDesignConfig: Config = {
         timelineEnd: true,
         titleGap: "normal",
         titleParts: [],
+        titleExtrasAt: "list",
+        clockinLook: "line",
+        countdownLook: "line",
         factsBorder: true,
         tabletFactsAs: "same",
         phoneFactsAs: "same",
@@ -2287,6 +2333,9 @@ export const walkDesignConfig: Config = {
         titleGap,
         titleOrder,
         titleParts,
+        titleExtrasAt,
+        clockinLook,
+        countdownLook,
         factsBorder,
         tabletFactsAs,
         phoneFactsAs,
@@ -2349,6 +2398,9 @@ export const walkDesignConfig: Config = {
           titleGap={titleGap}
           titleOrder={titleOrder}
           titleParts={titleParts}
+          titleExtrasAt={titleExtrasAt}
+          clockinLook={clockinLook}
+          countdownLook={countdownLook}
           factsBorder={factsBorder}
           tabletFactsAs={tabletFactsAs}
           phoneFactsAs={phoneFactsAs}
@@ -2737,7 +2789,7 @@ export const walkDesignConfig: Config = {
             ["card", "Card (as on the walk page)"],
             ["ticks", "Tick list"],
             ["numbered", "Numbered steps"],
-            ["callout", "Green callout"],
+            ["callout", "Grey callout with a side bar"],
             ["tiles", "Numbered tiles"],
             ["swipe", "Tiles in one swiping row"],
             ["compact", "One short line"],
@@ -2747,6 +2799,11 @@ export const walkDesignConfig: Config = {
             ["card-list", "Card list, like the Walks list"],
             ["timeline", "Timeline down the side"],
             ["two-columns", "Two columns of numbered steps"],
+            ["grey-row", "Grey boxes across the page"],
+            ["outline-row", "Outlined boxes across the page"],
+            ["number-cards", "Numbered cards across the page"],
+            ["boxed-ticks", "Ticks in one outlined box"],
+            ["chips", "Just the titles, as grey chips"],
           ]),
         },
         showTo: {
@@ -2939,7 +2996,7 @@ export const walkDesignConfig: Config = {
             ["card", "Card (as on the walk page)"],
             ["ticks", "Tick list"],
             ["numbered", "Numbered steps"],
-            ["callout", "Green callout"],
+            ["callout", "Grey callout with a side bar"],
             ["tiles", "Numbered tiles"],
             ["swipe", "Tiles in one swiping row"],
             ["compact", "One short paragraph"],
@@ -2949,6 +3006,11 @@ export const walkDesignConfig: Config = {
             ["card-list", "Card list, like the Walks list"],
             ["timeline", "Timeline down the side"],
             ["two-columns", "Two columns of numbered steps"],
+            ["grey-row", "Grey boxes across the page"],
+            ["outline-row", "Outlined boxes across the page"],
+            ["number-cards", "Numbered cards across the page"],
+            ["boxed-ticks", "Ticks in one outlined box"],
+            ["chips", "Just the titles, as grey chips"],
           ]),
         },
         showHeading: {
