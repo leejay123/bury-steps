@@ -45,7 +45,8 @@ export function ClockOutButton({ token, className }: { token: string; className?
       open={open}
     >
       <AlertDialogTrigger asChild>
-        <Button className={className} size="sm" variant="outline">
+        {/* Solid, like the Clock in button it takes the place of. */}
+        <Button className={className} size="sm">
           Clock out
         </Button>
       </AlertDialogTrigger>
