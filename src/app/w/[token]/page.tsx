@@ -425,13 +425,20 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
     const visitorDesign = designs.visitor ?? designs.member;
     // Visitors: the sign-in box on its own at the top, not among the walk's
     // messages (which a design may put inside the Details card).
-    const noticesEl = isValidElement<{ part?: string; withoutSignIn?: boolean }>(ideaParts.notices)
+    const noticesEl = isValidElement<{ audience?: "member" | "visitor"; part?: string; withoutSignIn?: boolean }>(ideaParts.notices)
       ? ideaParts.notices
       : null;
     return (
       <div className="flex flex-col gap-6">
         <div className="contents" data-member-home="">
-          <WalkDesignRender data={designs.member} parts={{ ...ideaParts, back: { href: "/walks", label: "Walks" } }} />
+          <WalkDesignRender
+            data={designs.member}
+            parts={{
+              ...ideaParts,
+              back: { href: "/walks", label: "Walks" },
+              notices: noticesEl ? cloneElement(noticesEl, { audience: "member" }) : ideaParts.notices,
+            }}
+          />
         </div>
         <div className="contents" data-guest-home="">
           {noticesEl ? cloneElement(noticesEl, { part: "sign-in" }) : null}
@@ -441,7 +448,9 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
               ...ideaParts,
               back: { href: "/", label: "Home" },
               live: null,
-              notices: noticesEl ? cloneElement(noticesEl, { withoutSignIn: true }) : ideaParts.notices,
+              notices: noticesEl
+                ? cloneElement(noticesEl, { audience: "visitor", withoutSignIn: true })
+                : ideaParts.notices,
             }}
           />
         </div>

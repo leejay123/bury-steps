@@ -42,6 +42,7 @@ export function WalkShareStatusChrome({
   title,
   walkLeader,
   withoutSignIn = false,
+  audience,
 }: {
   /** Whether this viewer clocked in; unknown on the shared page (see signedIn). */
   attended?: boolean;
@@ -54,6 +55,9 @@ export function WalkShareStatusChrome({
   /** Designed pages: leave the sign-in box out of the notices (it's placed
    * on its own, at the top — part "sign-in"). */
   withoutSignIn?: boolean;
+  /** Designed pages draw one design per audience: only that audience's
+   * notices (no hidden other-audience ones, which made an empty band). */
+  audience?: "member" | "visitor";
   backMarker: string | null;
   refreshmentStop: string | null;
   cancelledAt: string | null;
@@ -145,6 +149,8 @@ export function WalkShareStatusChrome({
           Check the walks list for the next one.
         </AlertDescription>
       </Alert>
+    ) : signedIn === undefined && audience ? (
+      audience === "visitor" ? guestNotice : memberNotice
     ) : signedIn === undefined ? (
       <>
         {guestNotice ? (
