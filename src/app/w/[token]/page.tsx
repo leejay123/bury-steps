@@ -345,6 +345,20 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
           </Suspense>
         ),
       };
+  // Designed pages: "You are clocked in · Recorded at…" (Your clock-in).
+  const myClockIn = cancelled ? null : (
+    <Suspense fallback={null}>
+      <WalkLivePart
+        beforeYouSetOffTips={theme.beforeYouSetOffTips}
+        durationMins={walk.durationMins}
+        endedAt={walk.endedAt}
+        startsAt={walk.startsAt}
+        statusOnly
+        token={walk.token}
+        walkId={walk.id}
+      />
+    </Suspense>
+  );
   const howWalksWork = (
     <>
       {/* Sign-up steps are for visitors; members have already done them. */}
@@ -474,6 +488,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
               ...ideaParts,
               back: { href: "/walks", label: "Walks" },
               liveCompact,
+              myClockIn,
               attended: membersAttended,
               notices: noticesEl ? cloneElement(noticesEl, { audience: "member" }) : ideaParts.notices,
             }}
@@ -692,6 +707,7 @@ async function WalkLivePart({
   beforeYouSetOffTips,
   compact = false,
   membersOnly = false,
+  statusOnly = false,
   durationMins,
   endedAt,
   startsAt,
@@ -703,6 +719,8 @@ async function WalkLivePart({
   compact?: boolean;
   /** Just who's on the walk (WalkLivePanel membersOnly). */
   membersOnly?: boolean;
+  /** Just this member's own clock-in line (WalkLivePanel statusOnly). */
+  statusOnly?: boolean;
   durationMins: number;
   endedAt: Date | null;
   startsAt: Date;
@@ -737,10 +755,11 @@ async function WalkLivePart({
 
   return (
     <>
-      {closedNoClockIn && !compact && !membersOnly ? <WalkClosedNoClockInNotice /> : null}
+      {closedNoClockIn && !compact && !membersOnly && !statusOnly ? <WalkClosedNoClockInNotice /> : null}
       <WalkLivePanel
         compact={compact}
         membersOnly={membersOnly}
+        statusOnly={statusOnly}
         alreadyClockedInAt={myAttendance?.clockedInAt.toISOString() ?? null}
         // Before you set off is placed by the walk page layout.
         beforeYouSetOffEnabled={false}

@@ -333,8 +333,9 @@ export function WalksSection({
               essentials and description go inside the ticket, so it&apos;s all
               one card, with the same 24 pixels between everything. Inside the title box (in the Title section) is a list of what goes
               in the title box under the name: press + Add and choose Facts,
-              Essentials, Precise location, The day&apos;s timeline, Description
-              or Map, drag them up and down to set the order, and remove one
+              Essentials, Precise location, The day&apos;s timeline, Description,
+              Map, Your clock-in (You are clocked in · Recorded at…, once
+              clocked in) or Countdown (e.g. 3 days to go), drag them up and down to set the order, and remove one
               with its bin. Anything in the list shows only there, never twice,
               in its own look (the facts in their Facts shown as look), and
               its own &quot;where it goes&quot; settings are hidden. Pages that put

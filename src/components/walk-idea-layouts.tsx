@@ -28,6 +28,8 @@ export type WalkIdeaParts = {
   live: ReactNode;
   /** Just the Clock in button (organisers), while it can be used. */
   liveCompact?: ReactNode;
+  /** This person's own clock-in line (designed pages: Your clock-in). */
+  myClockIn?: ReactNode;
   map: ReactNode;
   meeting: string | null;
   notices: ReactNode;

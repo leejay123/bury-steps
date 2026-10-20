@@ -18,7 +18,14 @@ const REMOVED_FACT_LOOKS = [
 
 /** What can go inside the Details card's title box, under the name. */
 export type TitlePart =
-  "facts" | "essentials" | "precise" | "timeline" | "description" | "map";
+  | "facts"
+  | "essentials"
+  | "precise"
+  | "timeline"
+  | "description"
+  | "map"
+  | "clockin"
+  | "countdown";
 const TITLE_PARTS: readonly string[] = [
   "facts",
   "essentials",
@@ -26,6 +33,8 @@ const TITLE_PARTS: readonly string[] = [
   "timeline",
   "description",
   "map",
+  "clockin",
+  "countdown",
 ];
 
 /**

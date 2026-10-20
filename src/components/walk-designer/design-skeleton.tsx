@@ -150,6 +150,9 @@ function DetailsSkeleton({ p }: { p: Record<string, unknown> }) {
     ),
     precise: <Skeleton className="h-16 w-full rounded-lg" />,
     map,
+    // Only once clocked in: nothing to hold a place for.
+    clockin: null,
+    countdown: <SkLine className="w-28" size="sm" />,
   };
   const band = String(p.titleLook ?? "").startsWith("band");
   const name = (

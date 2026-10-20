@@ -5,6 +5,7 @@ import { useContext, useEffect, useRef } from "react";
 import { AttendedRuleContext } from "@/components/walk-designer/attended-rule";
 import { ClockInDrawer } from "./clock-in-drawer";
 import { ClockOutButton } from "@/components/clock-out-button";
+import { MyClockInLine } from "@/components/my-clock-in-line";
 import { WalkMembers } from "@/components/walk-members";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { useHydrated } from "@/hooks/use-hydrated";
@@ -28,6 +29,7 @@ export function WalkLivePanel({
   organiserView = false,
   compact = false,
   membersOnly = false,
+  statusOnly = false,
   startsAt,
   token,
   walksHref,
@@ -54,6 +56,8 @@ export function WalkLivePanel({
   /** Just who's on the walk, for a designed page's Attendance tab: the names
    * once this member has clocked in (organisers always), as on this panel. */
   membersOnly?: boolean;
+  /** Just this person's own clock-in line (Details card: Your clock-in). */
+  statusOnly?: boolean;
   startsAt: string;
   token: string;
   walksHref: string;
@@ -87,6 +91,11 @@ export function WalkLivePanel({
     status.focus({ preventScroll: true });
     status.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [onWalk]);
+
+  if (statusOnly)
+    return (
+      <MyClockInLine clockedInAt={alreadyClockedInAt} clockedOutAt={clockedOutAt} completed={completed} />
+    );
 
   if (membersOnly) {
     // The design can take the list away once someone clocks out.

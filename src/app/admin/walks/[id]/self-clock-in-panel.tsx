@@ -2,6 +2,7 @@
 
 import { ClockInDrawer } from "@/app/w/[token]/clock-in-drawer";
 import { ClockOutButton } from "@/components/clock-out-button";
+import { MyClockInLine } from "@/components/my-clock-in-line";
 import { useClockedInPreview, useWalkClock } from "@/hooks/use-walk-clock";
 import { formatDateTime, formatTime, formatWalkDay } from "@/lib/dates";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -16,6 +17,7 @@ export function SelfClockInPanel({
   buttonElsewhere = false,
   clockedOutAt: realClockedOutAt = null,
   compact = false,
+  statusOnly = false,
   durationMins,
   emergencyContactName = "",
   emergencyContactPhone = "",
@@ -30,6 +32,8 @@ export function SelfClockInPanel({
   clockedOutAt?: string | null;
   /** Only the Clock in button, and only while it can be used. */
   compact?: boolean;
+  /** Just this organiser's own clock-in line (Details card: Your clock-in). */
+  statusOnly?: boolean;
   durationMins: number;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
@@ -51,6 +55,11 @@ export function SelfClockInPanel({
   // Just the button, for a bar or banner (walk-tabs-layout.tsx): Clock in
   // while this organiser can, then Clock out in the same place while they're
   // on the walk; the full panel elsewhere says the rest.
+  if (statusOnly)
+    return (
+      <MyClockInLine clockedInAt={alreadyClockedInAt} clockedOutAt={clockedOutAt} completed={completed} />
+    );
+
   if (compact) {
     if (alreadyClockedInAt && !clockedOutAt && !completed)
       return <ClockOutButton className="w-full sm:w-auto" token={token} />;

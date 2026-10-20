@@ -357,6 +357,8 @@ const TITLE_PART_NAMES: Record<string, string> = {
   timeline: "The day's timeline",
   description: "Description",
   map: "Map",
+  clockin: "Your clock-in",
+  countdown: "Countdown",
 };
 
 // Every design for the Details card's facts.
@@ -1863,6 +1865,8 @@ export const walkDesignConfig: Config = {
                 ["timeline", "The day's timeline"],
                 ["description", "Description"],
                 ["map", "Map"],
+                ["clockin", "Your clock-in (once clocked in)"],
+                ["countdown", "Countdown (e.g. 3 days to go)"],
               ]),
             },
           },

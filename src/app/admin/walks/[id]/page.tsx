@@ -588,6 +588,21 @@ async function WalkDetailPageContent({ id }: { id: string }) {
     journey: { count: journeyEvents.length, content: journey },
     live: clockIn(false, true),
     liveCompact: clockIn(true, true),
+    myClockIn: walk.cancelledAt ? null : (
+      <SelfClockInPanel
+        alreadyClockedInAt={mine?.clockedInAt.toISOString() ?? null}
+        buttonElsewhere
+        clockedOutAt={mine?.clockedOutAt?.toISOString() ?? null}
+        durationMins={walk.durationMins}
+        emergencyContactName={admin.emergencyContactName ?? ""}
+        emergencyContactPhone={admin.emergencyContactPhone ?? ""}
+        emergencyContactRequired={emergencySetting?.emergencyContactRequired ?? false}
+        endedAt={walk.endedAt?.toISOString() ?? null}
+        startsAt={walk.startsAt.toISOString()}
+        statusOnly
+        token={walk.token}
+      />
+    ),
     map: shown("map") ? sectionPart("map") : null,
     meeting,
     notices,

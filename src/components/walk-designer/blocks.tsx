@@ -1859,6 +1859,8 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
     timeline: timelineView,
     description: descriptionPart,
     map: p.map,
+    clockin: p.myClockIn ?? null,
+    countdown: <CountdownLine p={p} />,
   };
   const inside =
     titleParts.length > 0 ? (
@@ -3386,6 +3388,18 @@ function OneFact({
 export type CountdownLook = "big" | "box" | "pill";
 
 /** How long until the walk sets off (or finishes, while it's under way). */
+/** One line, e.g. "3 days to go" or "48 min left"; nothing once it's over. */
+function CountdownLine({ p }: { p: WalkIdeaParts }) {
+  const { countdown, status } = useWalkInfo(p);
+  if (status === "completed" || status === "cancelled") return null;
+  return (
+    <p className="text-sm" suppressHydrationWarning>
+      <span className="font-semibold tabular-nums">{countdown.value}</span>{" "}
+      <span className="text-muted-foreground">{countdown.unit}</span>
+    </p>
+  );
+}
+
 export function CountdownBlock({ look = "big" }: { look?: CountdownLook }) {
   const p = useWalkParts();
   if (!p) return <Placeholder label={`Countdown · ${look}`} />;
