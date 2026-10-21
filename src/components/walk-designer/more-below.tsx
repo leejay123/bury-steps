@@ -9,8 +9,8 @@ const HEADER_ROOM = 72;
 /**
  * On a phone or tablet, a "More below" button floating over the bottom of a
  * walk page when there's more under the first screen (usually the tabs). It
- * names the tabs, and tapping it scrolls to them. It goes for good once the
- * page is scrolled.
+ * names the tabs (or counts them, if their names are long), and tapping it
+ * scrolls to them. It goes for good once the page is scrolled.
  */
 export function MoreBelow() {
   const [label, setLabel] = useState<string | null>(null);
@@ -26,9 +26,17 @@ export function MoreBelow() {
         if (tabs.getBoundingClientRect().top < window.innerHeight - 120) return;
         const names = [...tabs.querySelectorAll('[data-slot="tabs-trigger"]')]
           .map((tab) => tab.textContent?.trim())
-          .filter(Boolean)
-          .slice(0, 3);
-        setLabel(names.length ? `More below: ${names.join(" · ")}` : "More below");
+          .filter(Boolean);
+        // The tabs' names when they're short enough to read in full,
+        // otherwise just how many there are.
+        const named = names.join(" · ");
+        setLabel(
+          names.length === 0
+            ? "More below"
+            : named.length <= 24
+              ? `More below: ${named}`
+              : `${names.length} tabs below`,
+        );
       } else if (document.documentElement.scrollHeight > window.innerHeight + 200) {
         setLabel("More below");
       }
@@ -57,7 +65,8 @@ export function MoreBelow() {
   }
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(16px+var(--bottom-nav-offset,0px))] z-[56] flex justify-center px-4 lg:hidden">
+    // Above the owners' Placeholders and Style chips when they're showing.
+    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(16px+var(--bottom-nav-offset,0px))] z-[56] flex justify-center px-4 lg:hidden [html:has([data-owner-chips])_&]:bottom-[calc(64px+var(--bottom-nav-offset,0px))]">
       <button
         className="pointer-events-auto flex max-w-full animate-in cursor-pointer touch-manipulation items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background shadow-lg fade-in-0 slide-in-from-bottom-2"
         onClick={go}

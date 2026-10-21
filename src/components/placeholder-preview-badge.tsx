@@ -73,7 +73,10 @@ export function PlaceholderPreviewBadge() {
   if (!owner) return null;
   const on = mode !== "off";
   return (
-    <div className="fixed bottom-[calc(1rem+var(--bottom-nav-offset,0px))] left-4 z-[60] flex items-center gap-1.5">
+    <div
+      className="fixed bottom-[calc(1rem+var(--bottom-nav-offset,0px))] left-4 z-[60] flex items-center gap-1.5"
+      data-owner-chips=""
+    >
       <button
         aria-label={`Placeholder preview: ${LABEL[mode]}. Change (Alt+P)`}
         className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs shadow-md ${

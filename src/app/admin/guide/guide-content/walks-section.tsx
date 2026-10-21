@@ -205,7 +205,9 @@ export function WalksSection({
               (a screen 1024 pixels wide or more), not on phones or tablets.
               On a phone or tablet, when the tabs (or more of the page) are
               below the first screen, a <strong>More below</strong> button
-              floats over the bottom naming the tabs; tapping it scrolls to
+              floats over the bottom naming the tabs (or saying how many,
+              such as &quot;3 tabs below&quot;, when their names are long);
+              tapping it scrolls to
               them, and it goes once the page is scrolled. Drag blocks in from the left — Messages,
               Title, Details card, Facts, Essentials, Clock in + Manage, Status,
               Map, Weather, Attended, Journey, How this group works (for
