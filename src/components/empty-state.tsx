@@ -21,7 +21,9 @@ export function EmptyState({
   return (
     <FadeIn>
       <Empty className="w-full min-h-64 border bg-muted/30">
-        <EmptyHeader>
+        {/* The full width of the box, so the line stays on one line
+            wherever it fits (it wrapped at a narrow width before). */}
+        <EmptyHeader className="max-w-none">
           <EmptyMedia variant="icon">
             <Icon />
           </EmptyMedia>
