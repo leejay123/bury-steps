@@ -19,6 +19,22 @@ export function WalksSection({
       <AccordionContent>
         <GuideBody>
           <p>
+            <strong>Stories</strong> sit at the top of the Walks page (yours
+            and the members&apos;): a row of round photos, with a ring on anyone
+            who has a story you haven&apos;t seen. Anyone signed in — members,
+            organisers, owners — can press <strong>Add story</strong> and pick a
+            photo (it&apos;s shrunk on the phone first). Each person can have up
+            to 10 stories at once, and each one disappears 24 hours after it was
+            posted; its photo is deleted then too, so the space comes back.
+            Signed-out visitors never see stories. Tap a photo to watch: tap the
+            sides to go back or forward, hold to pause, swipe to the next
+            person. You can delete your own stories; organisers can delete
+            anyone&apos;s. Anyone can <strong>Report</strong> someone else&apos;s
+            story — organisers then see &quot;Reported&quot; under that
+            person&apos;s photo and &quot;Reported by …&quot; on the story, and can
+            delete it. Photos are kept in the group&apos;s free Supabase storage.
+          </p>
+          <p>
             Open <Link href="/admin/walks">Walks</Link> from the menu. Upcoming
             and History are tabs on that page. A walk stays under Upcoming until
             its clock-in window has fully closed — including long walks that

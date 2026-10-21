@@ -89,6 +89,8 @@ model User {
   /// Prisma still requires the relation's other side to be declared.
   contactMessagesOwnerFor SiteSetting[]          @relation("ContactMessagesOwner")
   pushSubscriptions       PushSubscription[]
+  stories                 Story[]
+  storyReports            StoryReport[]
 
   @@index([createdAt])
 }
@@ -712,4 +714,34 @@ model ImpersonationEvent {
   targetEmail String
 
   @@index([createdAt])
+}
+
+/// A photo story (Walks page), shown to signed-in people for 24 hours.
+/// The photo itself is in Supabase Storage (bucket "stories", private) at
+/// `path`; it's deleted with the row once the story has expired.
+model Story {
+  id        String        @id @default(cuid())
+  userId    String
+  /// Where the photo is in the "stories" bucket, e.g. "<userId>/<uuid>.jpg".
+  path      String
+  createdAt DateTime      @default(now())
+  /// 24 hours after it was posted: it stops showing from then.
+  expiresAt DateTime
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reports   StoryReport[]
+
+  @@index([expiresAt])
+  @@index([userId])
+}
+
+/// Someone reported a story: organisers see it flagged, and can remove it.
+model StoryReport {
+  id        String   @id @default(cuid())
+  storyId   String
+  userId    String
+  createdAt DateTime @default(now())
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, userId])
 }

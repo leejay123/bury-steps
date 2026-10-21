@@ -12,6 +12,7 @@ import { AdminPageIntro } from "../admin-page-intro";
 import { AdminWalkTable } from "../admin-walk-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { upcomingListLookbackFrom, walkStatus } from "@/lib/walk-window";
+import { StoriesRow } from "@/components/stories/stories-row";
 
 function toRow(
   walk: {
@@ -79,6 +80,7 @@ async function AdminPageContent() {
             description={WALKS_INTRO}
             title="Walks"
           />
+          <StoriesRow />
           {/* The heading and Create button show straight away; only the list waits. */}
           <Suspense fallback={<AdminWalksSkeleton />}>
             <PlaceholderPreview fallback={<AdminWalksSkeleton />}>

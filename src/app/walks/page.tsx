@@ -18,6 +18,7 @@ import { getAllWalksSiteWide, getWalkMemberCountsByWalkIds } from "@/lib/walk-me
 import { AdminWalkTable } from "@/app/admin/admin-walk-table";
 import { RecentWalksCarousel } from "./recent-walks-carousel";
 import { LiveUpcomingCount } from "./live-upcoming-count";
+import { StoriesRow } from "@/components/stories/stories-row";
 
 
 
@@ -48,6 +49,8 @@ export default function DashboardPage() {
           </Suspense>
         </p>
       </div>
+      {/* Stories: signed-in people only (it shows nothing for visitors). */}
+      <StoriesRow />
       <Suspense fallback={<MemberWalksHold />}>
         <PlaceholderPreview fallback={<MemberWalksHold />}>
           <WalksForMember />
