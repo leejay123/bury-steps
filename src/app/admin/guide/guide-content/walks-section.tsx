@@ -203,12 +203,22 @@ export function WalksSection({
               organisers with the Display permission) opens the walk page
               designer over that walk. It&apos;s only offered on a computer
               (a screen 1024 pixels wide or more), not on phones or tablets.
-              On a phone or tablet, once the walk&apos;s name has scrolled
-              away and its tab bar isn&apos;t on screen, a slim bar slides in
-              under the site header with the walk&apos;s name and date and the
-              tabs as icons (the open one underlined); tapping one opens that
-              tab and scrolls to it. A long page with no tabs gets a{" "}
-              <strong>More below</strong> button instead. Drag blocks in from the left — Messages,
+              On a phone or tablet, the Tabs block&apos;s{" "}
+              <strong>Jump to tabs on phones</strong> setting chooses how
+              people get to the tabs from elsewhere on the page — over 40
+              designs: the sticky mini tab bar under the header (the
+              default), other sticky bars, round buttons with a list,
+              speed-dial circles, an arc, a dock, a thumb wheel, a bottom
+              sheet, a side drawer, folder tabs on the edge, previous / next
+              pills, a search, a message that points down, and more, or
+              Nothing. Choosing a tab in any of them opens it and scrolls to
+              it. Switch between them in the designer and check the preview
+              at phone width. The <strong>Tab shortcuts</strong> block (under
+              Layout) puts the tabs on the page itself — drag it under the
+              title, say — as two-column links, cards, swiping cards, a
+              contents list, numbered steps, a row of round icons,
+              story-style circles, big coloured buttons or question chips
+              (&quot;What should I bring?&quot;). Drag blocks in from the left — Messages,
               Title, Details card, Facts, Essentials, Clock in + Manage, Status,
               Map, Weather, Attended, Journey, How this group works (for
               signed-out visitors), story cards, a bento grid, a walk ticket

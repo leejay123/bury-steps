@@ -3,7 +3,6 @@
 import { Render, type Data } from "@puckeditor/core";
 import type { WalkIdeaParts } from "@/components/walk-idea-layouts";
 import { walkDesignConfig } from "./config";
-import { MoreBelow } from "./more-below";
 import { ViewerAudience, WalkPartsProvider } from "./parts";
 import type { WalkDesignAudience } from "@/lib/walk-page-choice";
 import { DEFAULT_WALK_DESIGN } from "./presets";
@@ -24,7 +23,6 @@ export function WalkDesignRender({
     <ViewerAudience.Provider value={audience}>
       <WalkPartsProvider parts={parts}>
         <Render config={walkDesignConfig} data={design} />
-        <MoreBelow />
       </WalkPartsProvider>
     </ViewerAudience.Provider>
   );

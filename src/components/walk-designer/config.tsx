@@ -20,6 +20,12 @@ import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { SECTION_ICON_OPTIONS, SectionIcon } from "./section-icons";
 import {
+  TAB_JUMP_LOOKS,
+  TAB_SHORTCUT_LOOKS,
+  TabJump,
+  TabShortcuts,
+} from "./tab-jump";
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
@@ -1198,7 +1204,10 @@ function TabsView({
   side = false,
   emptyTabs = "note",
   icons = true,
+  phoneJump = "sticky",
 }: {
+  /** How phones get to these tabs from elsewhere on the page (tab-jump.tsx). */
+  phoneJump?: string;
   /** An icon before each tab's name (on unless turned off). */
   icons?: boolean;
   /** A tab with nothing in it: kept with a short note (the default, for
@@ -1288,6 +1297,7 @@ function TabsView({
     >
       {/* Full width; on a phone the names scroll sideways rather than squashing. */}
       <div
+        data-phone-jump={phoneJump}
         className={cn(
           sticky &&
             "sticky top-16 z-20 -mx-1 bg-background/95 px-1 py-2 backdrop-blur-sm",
@@ -1540,6 +1550,8 @@ function PageRoot({
       )}
       data-preview-audience={audience ?? undefined}
     >
+      {/* Phones' way to the tabs (the Tabs block's Jump to tabs on phones). */}
+      <TabJump />
       {messages}
       {p ? (
         // At the top (or in the strip), the blocks have no messages of
@@ -1774,6 +1786,7 @@ export const walkDesignConfig: Config = {
         "Sidebar",
         "Card",
         "Tabs",
+        "TabShortcuts",
         "Accordion",
         "Folding",
         "Spacer",
@@ -3551,6 +3564,11 @@ export const walkDesignConfig: Config = {
           label: "Icons before the names",
           options: yesNo,
         },
+        phoneJump: {
+          type: "select",
+          label: "Jump to tabs on phones",
+          options: options(TAB_JUMP_LOOKS),
+        },
         tabs: {
           type: "array",
           label: "Tabs",
@@ -3584,6 +3602,7 @@ export const walkDesignConfig: Config = {
         fit: "fill",
         sticky: true,
         icons: true,
+        phoneJump: "sticky",
         tabs: [
           { label: "Map & weather", content: [] },
           { label: "Attended", content: [] },
@@ -3600,6 +3619,7 @@ export const walkDesignConfig: Config = {
         fit,
         sticky,
         icons,
+        phoneJump,
         tabs,
         emptyTabs,
         puck,
@@ -3618,6 +3638,7 @@ export const walkDesignConfig: Config = {
             fit={fit}
             // On unless turned off (designs saved before Icons had none set).
             icons={icons !== false}
+            phoneJump={phoneJump ?? "sticky"}
             list={(tabs ?? []) as TabItem[]}
             sticky={sticky}
           />
@@ -3696,6 +3717,21 @@ export const walkDesignConfig: Config = {
           single={Boolean(single)}
         />
       ),
+    },
+    // The tabs as links on the page itself, wherever it's placed (under the
+    // title, say), in one of several looks (tab-jump.tsx).
+    TabShortcuts: {
+      label: "Tab shortcuts",
+      fields: {
+        look: {
+          type: "select",
+          label: "Look",
+          options: options(TAB_SHORTCUT_LOOKS),
+        },
+        heading: { type: "text", label: "Heading (blank for none)" },
+      },
+      defaultProps: { look: "on-this-walk", heading: "On this walk" },
+      render: ({ look, heading }) => <TabShortcuts heading={heading} look={look} />,
     },
     // Folding sections with an icon before each name (the same icons the
     // Tabs block can have), so a page can swap its tabs for these.
