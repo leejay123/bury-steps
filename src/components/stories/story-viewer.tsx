@@ -215,7 +215,7 @@ export function StoryViewer({
           <div className="flex gap-1">
             {person.stories.map((item, index) => (
               <div
-                className="h-0.5 flex-1 overflow-hidden rounded-full bg-white/35"
+                className="h-0.5 flex-1 overflow-hidden bg-white/35"
                 key={item.id}
               >
                 {index < pos.story ? (

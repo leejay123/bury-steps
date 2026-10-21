@@ -718,18 +718,21 @@ html[data-placeholder-style="autoskeleton"] [data-page-loading] {
 
 /* Stories (stories/story-viewer.tsx): the current story's bar fills over 5
    seconds and the viewer moves on when it ends. It stays 5 seconds with
-   reduced motion too (the catch-all rule above would end every story at once). */
+   reduced motion too (the catch-all rule above would end every story at once).
+   The white bar slides in from the left (translate, not scale, inside a
+   square-cornered track) so phones move it as one layer without redrawing,
+   which kept it from jittering on iPhone. */
 @keyframes story-fill {
   from {
-    transform: scaleX(0);
+    transform: translate3d(-100%, 0, 0);
   }
   to {
-    transform: scaleX(1);
+    transform: translate3d(0, 0, 0);
   }
 }
 .story-fill {
-  transform-origin: left;
   animation: story-fill 5s linear forwards;
+  backface-visibility: hidden;
   will-change: transform;
 }
 @media (prefers-reduced-motion: reduce) {
