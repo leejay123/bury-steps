@@ -1437,8 +1437,10 @@ function Title({
       // The Status band: an outlined box with a grey band (status and date,
       // or the walk's messages in their place) and the walk's name.
       const bandClass = cn(
-        "flex flex-col gap-2 text-sm font-medium text-foreground",
-        "px-4 py-2.5 sm:px-5",
+        // On a phone the status often wraps onto two lines with the date
+        // under it, so it gets more room around it and between the lines.
+        "flex flex-col gap-2 text-sm leading-relaxed font-medium text-foreground sm:leading-normal",
+        "px-4 py-3.5 sm:px-5 sm:py-2.5",
         bandStyle === "grey" && "bg-muted",
         bandStyle === "outline" && "border-b",
         bandStyle === "bar" && "border-l-4 border-l-foreground bg-muted",
@@ -1456,7 +1458,7 @@ function Title({
       const when = `${day}, ${time} to ${formatTime(info.end)}`;
       const bandStatus = (
         <div
-          className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1"
+          className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 sm:gap-y-1"
           data-band-status=""
         >
           <span>{statusText}</span>
