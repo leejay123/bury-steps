@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { Check, ChevronDown, LayoutList, X } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 /** Room left for the sticky site header when scrolling the tabs into view. */
 const HEADER_ROOM = 72;
@@ -32,15 +33,17 @@ function scrollToTabs(bar: HTMLElement | null) {
 }
 
 /**
- * On a phone or tablet, while a walk page's tabs are still below the
- * screen: a bar floating over the bottom with each tab (icon and name).
- * Tapping one opens that tab and scrolls down to it. It goes while the tabs
- * are in view and comes back if they're scrolled off below again. A long
- * page with no tabs gets a plain "More below" button instead, until it's
- * scrolled.
+ * On a phone or tablet, while a walk page's tab bar is off the screen: a
+ * round button floating at the bottom right. Tapping it lists the tabs
+ * (icon and name, a tick on the open one); choosing one opens that tab and
+ * scrolls to it. A long page with no tabs gets a plain "More below" button
+ * instead, until it's scrolled.
  */
 export function MoreBelow() {
-  const [tabs, setTabs] = useState<Tab[] | null>(null);
+  // Whether there's a tab bar off the screen (the round button shows then).
+  const [offScreen, setOffScreen] = useState(false);
+  const [tabs, setTabs] = useState<Tab[]>([]);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [plain, setPlain] = useState(false);
 
   useEffect(() => {
@@ -62,14 +65,10 @@ export function MoreBelow() {
         }
         return;
       }
-      // Shown only while the tab bar is below the bottom of the screen.
-      observer = new IntersectionObserver(
-        ([entry]) => {
-          const below = !entry.isIntersecting && entry.boundingClientRect.top > 0;
-          setTabs(below ? readTabs(bar) : null);
-        },
-        { rootMargin: "0px 0px -80px 0px" },
-      );
+      // Shown only while the tab bar is off the screen (above or below).
+      observer = new IntersectionObserver(([entry]) => setOffScreen(!entry.isIntersecting), {
+        rootMargin: "-72px 0px -80px 0px",
+      });
       observer.observe(bar);
     }, 600);
     return () => {
@@ -79,7 +78,8 @@ export function MoreBelow() {
     };
   }, []);
 
-  function open(value: string) {
+  function choose(value: string) {
+    setMenuOpen(false);
     const bar = visibleTabs();
     const trigger = [...(bar?.querySelectorAll<HTMLElement>('[data-slot="tabs-trigger"]') ?? [])].find(
       (tab) => tab.dataset.value === value,
@@ -89,46 +89,64 @@ export function MoreBelow() {
     scrollToTabs(bar);
   }
 
-  const wrap =
-    "pointer-events-none fixed inset-x-0 bottom-[calc(16px+var(--bottom-nav-offset,0px))] z-[56] flex justify-center px-4 md:px-6 lg:hidden [html:has([data-owner-chips])_&]:bottom-[calc(64px+var(--bottom-nav-offset,0px))]";
-
-  if (tabs && tabs.length > 0)
+  if (offScreen || menuOpen)
     return (
-      // Above the owners' Placeholders and Style chips when they're showing.
-      <div className={wrap}>
-        <nav
-          aria-label="Jump to a tab"
-          className="pointer-events-auto flex w-full max-w-xl animate-in gap-1 overflow-x-auto rounded-2xl border bg-background/95 p-1.5 shadow-lg backdrop-blur fade-in-0 slide-in-from-bottom-2 [scrollbar-width:none]"
+      // Bottom right, clear of the owners' chips (bottom left).
+      <div className="fixed right-4 bottom-[calc(16px+var(--bottom-nav-offset,0px))] z-[56] md:right-6 lg:hidden">
+        <Popover
+          onOpenChange={(next) => {
+            if (next) {
+              const bar = visibleTabs();
+              setTabs(bar ? readTabs(bar) : []);
+            }
+            setMenuOpen(next);
+          }}
+          open={menuOpen}
         >
-          {tabs.map((tab) => (
+          <PopoverTrigger asChild>
             <button
-              className={
-                // Icon over the name (two short lines at most), like the
-                // bottom menu bar, so five tabs still fit across a phone.
-                "flex min-w-14 flex-1 cursor-pointer touch-manipulation flex-col items-center justify-start gap-1 rounded-xl px-1.5 py-2 text-[11px] leading-tight font-medium " +
-                (tab.active ? "bg-foreground text-background" : "text-foreground hover:bg-muted")
-              }
-              key={tab.value}
-              onClick={() => open(tab.value)}
+              aria-label="Jump to a tab"
+              className="flex size-14 animate-in cursor-pointer touch-manipulation items-center justify-center rounded-full bg-foreground text-background shadow-lg fade-in-0 zoom-in-90"
               type="button"
             >
-              {tab.icon ? (
-                <span
-                  aria-hidden
-                  className="contents [&>svg]:size-5 [&>svg]:shrink-0"
-                  dangerouslySetInnerHTML={{ __html: tab.icon }}
-                />
-              ) : null}
-              <span className="line-clamp-2 text-center">{tab.label}</span>
+              {menuOpen ? <X className="size-6" /> : <LayoutList className="size-6" />}
             </button>
-          ))}
-        </nav>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-64 p-1.5" side="top" sideOffset={10}>
+            <p className="px-2.5 pt-1.5 pb-2 text-xs font-medium text-muted-foreground">Jump to</p>
+            <ul className="flex flex-col gap-0.5">
+              {tabs.map((tab) => (
+                <li key={tab.value}>
+                  <button
+                    className={
+                      "flex w-full cursor-pointer touch-manipulation items-center gap-3 rounded-lg px-2.5 py-2.5 text-left text-sm font-medium " +
+                      (tab.active ? "bg-muted" : "hover:bg-muted")
+                    }
+                    onClick={() => choose(tab.value)}
+                    type="button"
+                  >
+                    {tab.icon ? (
+                      <span
+                        aria-hidden
+                        className="contents [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground"
+                        dangerouslySetInnerHTML={{ __html: tab.icon }}
+                      />
+                    ) : null}
+                    <span className="min-w-0 flex-1">{tab.label}</span>
+                    {tab.active ? <Check aria-hidden className="size-4 shrink-0 text-primary" /> : null}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </PopoverContent>
+        </Popover>
       </div>
     );
 
   if (!plain) return null;
   return (
-    <div className={wrap}>
+    // Above the owners' Placeholders and Style chips when they're showing.
+    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(16px+var(--bottom-nav-offset,0px))] z-[56] flex justify-center px-4 md:px-6 lg:hidden [html:has([data-owner-chips])_&]:bottom-[calc(64px+var(--bottom-nav-offset,0px))]">
       <button
         className="pointer-events-auto flex w-full max-w-xl animate-in cursor-pointer touch-manipulation items-center justify-center gap-1.5 rounded-full bg-foreground px-4 py-2.5 text-sm font-medium text-background shadow-lg fade-in-0 slide-in-from-bottom-2"
         onClick={() => scrollToTabs(null)}
