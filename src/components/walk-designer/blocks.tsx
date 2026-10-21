@@ -49,6 +49,8 @@ import { WalkDescription } from "@/components/walk-description";
 import { useWalkEssentials } from "@/components/walk-essentials-context";
 import { essentialIcon, walkEssentialItems } from "@/lib/walk-essentials";
 import { useWalkNow } from "@/components/walk-header-styles";
+import { useWalkWording } from "@/components/walk-wording-context";
+import { walkCountdown } from "@/lib/walk-wording";
 import type { WalkIdeaParts } from "@/components/walk-idea-layouts";
 import { WalkActionsBar, WalkManageMenu } from "@/components/walk-manage-menu";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
@@ -75,6 +77,7 @@ type Fact = { icon: Icon; label: string; value: string; wide?: boolean };
 /** The walk's times, facts and live status, worked out once for the blocks. */
 function useWalkInfo(p: WalkIdeaParts, showEmpty = false) {
   const clock = useWalkClock(p.timing);
+  const words = useWalkWording();
   const now = useWalkNow(p.timing, p.attended?.count ?? null);
   const h = p.headline;
   const start = new Date(h.startsAt);
@@ -139,18 +142,7 @@ function useWalkInfo(p: WalkIdeaParts, showEmpty = false) {
     0,
     Math.round((start.getTime() - clock.getTime()) / 60_000),
   );
-  const countdown =
-    status === "in-progress"
-      ? { value: `${minsLeft}`, unit: "min left" }
-      : status === "upcoming" || status === "starting-soon"
-        ? minsToStart > 1440
-          ? { value: `${Math.round(minsToStart / 1440)}`, unit: "days to go" }
-          : minsToStart > 120
-            ? { value: `${Math.round(minsToStart / 60)}`, unit: "hours to go" }
-            : { value: `${minsToStart}`, unit: "min to go" }
-        : status === "cancelled"
-          ? { value: "—", unit: "cancelled" }
-          : { value: "Done", unit: "finished" };
+  const countdown = walkCountdown(words, status, minsToStart, minsLeft);
   const progress = Math.min(
     100,
     Math.max(
@@ -1453,16 +1445,10 @@ function Title({
         info.status !== "completed" &&
         info.status !== "cancelled";
       const countdownText = counting
-        ? ` · ${info.countdown.value} ${info.countdown.unit}`
+        ? ` · ${`${info.countdown.value} ${info.countdown.unit}`.trim()}`
         : "";
-      // Kept short enough for one row on a phone: the clock-in day is left
-      // out when it's the walk's own day (the date is on the line under it).
-      const statusText =
-        info.status === "upcoming" &&
-        formatWalkDay(info.opens) === formatWalkDay(info.start)
-          ? `${info.now.eyebrow} · Clock-in from ${formatTime(info.opens)}${countdownText}`
-          : `${info.now.eyebrow} · ${info.now.line}${countdownText}`;
-      const when = `${day}, ${time} to ${formatTime(info.end)}`;
+      // The wording is from Settings → Site wording → Walk page cards.
+      const statusText = `${info.now.eyebrow} · ${info.now.line}${countdownText}`;
       const bandStatus = (
         <div
           className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 sm:gap-y-1"
@@ -1473,7 +1459,6 @@ function Title({
           <span className="min-w-0 truncate max-[389px]:text-[13px] max-[359px]:text-xs">
             {statusText}
           </span>
-          <span className="font-normal">{when}</span>
         </div>
       );
       const band = (

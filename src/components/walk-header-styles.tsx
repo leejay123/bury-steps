@@ -10,6 +10,8 @@ import { effectiveEndsAt, walkOpensAt, walkStatus } from "@/lib/walk-window";
 import type { WalkHeaderStyle } from "@/lib/walk-page-sections";
 import { WalkActionsBar, WalkManageMenu } from "@/components/walk-manage-menu";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
+import { useWalkWording } from "@/components/walk-wording-context";
+import { fillWording } from "@/lib/walk-wording";
 import { walkHeadlineFacts, type WalkHeadlineProps } from "@/components/walk-headline";
 
 export type WalkTiming = {
@@ -26,6 +28,7 @@ export type WalkTiming = {
  */
 export function useWalkNow(timing: WalkTiming, clockedIn: number | null) {
   const now = useWalkClock(timing);
+  const words = useWalkWording();
   const walk = {
     cancelledAt: timing.cancelledAt ? new Date(timing.cancelledAt) : null,
     durationMins: timing.durationMins,
@@ -34,33 +37,48 @@ export function useWalkNow(timing: WalkTiming, clockedIn: number | null) {
   };
   const status = walkStatus(walk, now);
   const opensAt = walkOpensAt(walk.startsAt);
-  const count = clockedIn === null ? "" : ` · ${clockedIn} clocked in`;
+  const values = {
+    opens: formatTime(opensAt),
+    opensDay: formatWalkDay(opensAt, now),
+    start: formatTime(walk.startsAt),
+    finish: formatTime(effectiveEndsAt(walk)),
+    count: clockedIn ?? "",
+  };
+  const fill = (template: string) => fillWording(template, values);
+  const count = clockedIn === null ? "" : ` · ${fill(words.clockedIn)}`;
   const live = "bg-emerald-50 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-50";
   if (status === "cancelled") {
-    return { eyebrow: "Cancelled", line: "This walk isn't going ahead", tone: "bg-destructive/10 text-destructive", live: false };
+    return {
+      eyebrow: fill(words.cancelledLabel),
+      line: fill(words.cancelledLine),
+      tone: "bg-destructive/10 text-destructive",
+      live: false,
+    };
   }
   if (status === "upcoming") {
+    // The clock-in day only when it isn't the walk's own day.
+    const sameDay = formatWalkDay(opensAt) === formatWalkDay(walk.startsAt);
     return {
-      eyebrow: "Upcoming",
-      line: `Clock-in opens at ${formatTime(opensAt)} on ${formatWalkDay(opensAt, now)}`,
+      eyebrow: fill(words.upcomingLabel),
+      line: fill(sameDay ? words.upcomingLine : words.upcomingLineOtherDay),
       tone: "bg-muted text-foreground",
       live: false,
     };
   }
   if (status === "starting-soon") {
-    return { eyebrow: "Clock-in open", line: `Starts at ${formatTime(walk.startsAt)}${count}`, tone: live, live: true };
+    return { eyebrow: fill(words.openLabel), line: `${fill(words.openLine)}${count}`, tone: live, live: true };
   }
   if (status === "in-progress") {
     return {
-      eyebrow: "In progress",
-      line: `Finishes at ${formatTime(effectiveEndsAt(walk))}${count}`,
+      eyebrow: fill(words.liveLabel),
+      line: `${fill(words.liveLine)}${count}`,
       tone: live,
       live: true,
     };
   }
   return {
-    eyebrow: "Finished",
-    line: clockedIn === null ? "This walk has finished" : `${clockedIn} attended`,
+    eyebrow: fill(words.finishedLabel),
+    line: clockedIn === null ? fill(words.finishedLine) : fill(words.finishedAttended),
     tone: "bg-muted text-foreground",
     live: false,
   };

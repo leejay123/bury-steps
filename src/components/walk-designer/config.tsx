@@ -1178,9 +1178,9 @@ function TabsView({
   look = "style",
   side = false,
   emptyTabs = "note",
-  icons = false,
+  icons = true,
 }: {
-  /** An icon before each tab's name. */
+  /** An icon before each tab's name (on unless turned off). */
   icons?: boolean;
   /** A tab with nothing in it: kept with a short note (the default, for
    * designs that never chose), or left out. */
@@ -3529,7 +3529,7 @@ export const walkDesignConfig: Config = {
             label: { type: "text", label: "Name" },
             icon: {
               type: "select",
-              label: "Icon (when Icons is on)",
+              label: "Icon",
               options: SECTION_ICON_OPTIONS,
             },
             content: { type: "slot" },
@@ -3548,6 +3548,7 @@ export const walkDesignConfig: Config = {
         position: "top",
         fit: "fill",
         sticky: true,
+        icons: true,
         tabs: [
           { label: "Map & weather", content: [] },
           { label: "Attended", content: [] },
@@ -3580,7 +3581,8 @@ export const walkDesignConfig: Config = {
             editing={Boolean(puck?.isEditing)}
             emptyTabs={emptyTabs}
             fit={fit}
-            icons={Boolean(icons)}
+            // On unless turned off (designs saved before Icons had none set).
+            icons={icons !== false}
             list={(tabs ?? []) as TabItem[]}
             sticky={sticky}
           />

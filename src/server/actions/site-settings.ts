@@ -1,5 +1,6 @@
 "use server";
 
+import { changedWalkWording, MAX_WALK_WORDING } from "@/lib/walk-wording";
 import { z } from "zod";
 import { parseTabStyle } from "@/lib/tab-style";
 import { WALK_PAGE_CHOICE_TAG } from "@/lib/walk-page-choice";
@@ -1538,6 +1539,49 @@ async function updateWalkEssentialsWork(
   return { ok: true, message: "Walk essentials saved." };
 }
 
+/**
+ * Settings → Site wording → Walk page cards → Walk status wording: the
+ * status lines, countdown and messages, as JSON { key: text }. Only lines
+ * changed from the defaults are saved; a blank line goes back to its default.
+ */
+async function updateWalkWordingWork(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+
+  let raw: unknown;
+  try {
+    raw = JSON.parse(String(formData.get("wording") ?? "{}"));
+  } catch {
+    return { ok: false, error: "Could not read the wording. Try again." };
+  }
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    return { ok: false, error: "Could not read the wording. Try again." };
+  }
+  const tooLong = Object.values(raw).some(
+    (value) => typeof value === "string" && value.trim().length > MAX_WALK_WORDING,
+  );
+  if (tooLong) return { ok: false, error: `Keep each line to ${MAX_WALK_WORDING} characters or fewer.` };
+  const changed = changedWalkWording(raw as Record<string, unknown>);
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, carouselEnabled: true, walkWording: changed },
+      update: { walkWording: changed },
+    });
+  } catch (err) {
+    return logActionError("updateWalkWording", err, "Could not save the wording. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings/site-wording/walk-page-cards");
+  return { ok: true, message: "Walk status wording saved." };
+}
+
 const pass = z.object({});
 const readPass = (_formData: FormData) => ({});
 
@@ -2150,6 +2194,12 @@ export const updateMonthlyClockInGoal = guardForm(
 export const updateSiteLogo = guardForm("organiser", pass, readPass, updateSiteLogoWork);
 export const updateSiteFavicon = guardForm("organiser", pass, readPass, updateSiteFaviconWork);
 export const updateReportBanner = guardForm("organiser", pass, readPass, updateReportBannerWork);
+export const updateWalkWording = guardForm(
+  "organiser",
+  z.object({ wording: z.string() }),
+  (formData) => ({ wording: String(formData.get("wording") ?? "{}") }),
+  updateWalkWordingWork,
+);
 export const updateWalkEssentials = guardForm(
   "organiser",
   walkEssentialsSchema,

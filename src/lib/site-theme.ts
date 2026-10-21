@@ -1,3 +1,4 @@
+import { parseWalkWording, WALK_WORDING_DEFAULTS, type WalkWording } from "@/lib/walk-wording";
 import { cache } from "react";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -114,6 +115,8 @@ export type SiteTheme = {
   facebookGroupUrl: string;
   /** Settings → Walk essentials — the tick-box list on walks. */
   walkEssentials: EssentialItem[];
+  /** The walk page's status lines, countdown and messages (src/lib/walk-wording.ts). */
+  walkWording: WalkWording;
   /** Empty hides the eyebrow — unlike the title/intro, blank is a valid value here, not "unset". */
   testimonialsSectionEyebrow: string;
   testimonialsSectionTitle: string;
@@ -198,6 +201,7 @@ export function defaultTheme(): SiteTheme {
     siteTagline: DEFAULT_SITE_TAGLINE,
     facebookGroupUrl: DEFAULT_FACEBOOK_GROUP_URL,
     walkEssentials: DEFAULT_WALK_ESSENTIALS,
+    walkWording: { ...WALK_WORDING_DEFAULTS },
     testimonialsSectionEyebrow: "",
     testimonialsSectionTitle: DEFAULT_TESTIMONIALS_SECTION_TITLE,
     testimonialsSectionIntro: DEFAULT_TESTIMONIALS_SECTION_INTRO,
@@ -273,6 +277,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       siteTagline: true,
       facebookGroupUrl: true,
       walkEssentials: true,
+      walkWording: true,
       testimonialsSectionEyebrow: true,
       testimonialsSectionTitle: true,
       testimonialsSectionIntro: true,
@@ -366,6 +371,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     siteTagline: row?.siteTagline?.trim() || DEFAULT_SITE_TAGLINE,
     facebookGroupUrl: row?.facebookGroupUrl ?? DEFAULT_FACEBOOK_GROUP_URL,
     walkEssentials: parseEssentialList(row?.walkEssentials ?? null),
+    walkWording: parseWalkWording(row?.walkWording ?? null),
     testimonialsSectionEyebrow: row?.testimonialsSectionEyebrow?.trim() ?? "",
     testimonialsSectionTitle:
       row?.testimonialsSectionTitle?.trim() || DEFAULT_TESTIMONIALS_SECTION_TITLE,

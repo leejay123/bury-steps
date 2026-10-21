@@ -12,6 +12,7 @@ import { BeforeYouSetOffToggle, HowWalksWorkToggle } from "../walk-page-card-tog
 import { WalkPageCopySettings } from "../walk-page-copy-settings";
 import { WalkPageLayoutSettings } from "../walk-page-layout-settings";
 import { WalkPageSectionsSettings } from "../walk-page-sections-settings";
+import { WalkWordingSettings } from "../walk-wording-settings";
 
 
 
@@ -74,6 +75,7 @@ function SettingsView({
         beforeYouSetOffTipsText={theme.beforeYouSetOffTipsText}
         howWalksWorkStepsText={theme.howWalksWorkStepsText}
       />
+      <WalkWordingSettings wording={theme.walkWording} />
     </>
   );
 }

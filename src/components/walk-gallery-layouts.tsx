@@ -1,5 +1,7 @@
 "use client";
 
+import { useWalkWording } from "@/components/walk-wording-context";
+import { walkCountdown } from "@/lib/walk-wording";
 import { useState, type ComponentType, type ReactNode } from "react";
 import {
   CalendarDays,
@@ -45,6 +47,7 @@ export function WalkGalleryLayouts({ layout, parts }: { layout: WalkGalleryLayou
   const p = parts;
   const [tab, setTab] = useState("overview");
   const clock = useWalkClock(p.timing);
+  const words = useWalkWording();
   const now = useWalkNow(p.timing, p.attended?.count ?? null);
   const start = new Date(p.headline.startsAt);
   const end = effectiveEndsAt({
@@ -64,18 +67,7 @@ export function WalkGalleryLayouts({ layout, parts }: { layout: WalkGalleryLayou
   );
   const minsLeft = Math.max(0, Math.round((end.getTime() - clock.getTime()) / 60_000));
   const minsToStart = Math.max(0, Math.round((start.getTime() - clock.getTime()) / 60_000));
-  const countdown =
-    status === "in-progress"
-      ? { value: `${minsLeft}`, unit: "min left" }
-      : status === "upcoming" || status === "starting-soon"
-        ? minsToStart > 1440
-          ? { value: `${Math.round(minsToStart / 1440)}`, unit: "days to go" }
-          : minsToStart > 120
-            ? { value: `${Math.round(minsToStart / 60)}`, unit: "hours to go" }
-            : { value: `${minsToStart}`, unit: "min to go" }
-        : status === "cancelled"
-          ? { value: "—", unit: "cancelled" }
-          : { value: "Done", unit: "finished" };
+  const countdown = walkCountdown(words, status, minsToStart, minsLeft);
 
   const h = p.headline;
   const day = formatWalkDay(start);

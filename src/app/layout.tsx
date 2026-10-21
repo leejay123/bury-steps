@@ -5,6 +5,7 @@ import { SiteMotionConfig } from "@/components/site-motion-config";
 import { LiveUpdates } from "@/components/live-updates";
 import { KeepFormInputOnError } from "@/components/keep-form-input-on-error";
 import { WalkEssentialsProvider } from "@/components/walk-essentials-context";
+import { WalkWordingProvider } from "@/components/walk-wording-context";
 import { SignedInProvider } from "@/components/signed-in-context";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 import { textSizeCssVars } from "@/lib/text-sizes";
@@ -300,9 +301,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               {/* No page-change animation: a new page simply replaces the old one. */}
               <div className="flex min-w-0 flex-1 flex-col">
                 <WalkEssentialsProvider items={theme.walkEssentials}>
-                  <TabStyleProvider style={theme.tabStyle}>
-                    <SignedInProvider signedIn={signedIn}>{children}</SignedInProvider>
-                  </TabStyleProvider>
+                  <WalkWordingProvider wording={theme.walkWording}>
+                    <TabStyleProvider style={theme.tabStyle}>
+                      <SignedInProvider signedIn={signedIn}>{children}</SignedInProvider>
+                    </TabStyleProvider>
+                  </WalkWordingProvider>
                 </WalkEssentialsProvider>
               </div>
             </main>

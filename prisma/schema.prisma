@@ -422,6 +422,9 @@ model SiteSetting {
   /// Settings → Walk essentials: [{ key, label, icon }]. Null until first
   /// saved, meaning the built-in list (src/lib/walk-essentials.ts).
   walkEssentials              Json?
+  /// Settings → Site wording → Walk page cards → Walk status wording: only
+  /// the lines changed from the defaults (src/lib/walk-wording.ts).
+  walkWording                 Json?
   /// Homepage testimonials block.
   testimonialsEnabled         Boolean  @default(true)
   /// Optional small label above the testimonials heading. Empty hides it.

@@ -3,6 +3,7 @@
 import { useWalkClock } from "@/hooks/use-walk-clock";
 import { walkStatus } from "@/lib/walk-window";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useWalkWording } from "@/components/walk-wording-context";
 
 /** Info banner once the walk has finished — ticks live so a page left open
  * through the scheduled end does not keep offering Cancel/Edit advice that
@@ -21,6 +22,7 @@ export function WalkCompletedNotice({
   startsAt: string;
 }) {
   const now = useWalkClock({ cancelledAt, durationMins, endedAt, startsAt });
+  const words = useWalkWording();
   if (!show) return null;
 
   const status = walkStatus(
@@ -38,7 +40,7 @@ export function WalkCompletedNotice({
     <Alert variant="info">
       <AlertDescription>
         {/* Kept to one line on a computer, so the box stays small. */}
-        Finished, so it can&apos;t be edited or cancelled. Missed a clock-in? Use Add someone under Attended.
+        {words.organiserFinished}
       </AlertDescription>
     </Alert>
   );

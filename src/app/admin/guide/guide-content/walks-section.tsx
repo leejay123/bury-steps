@@ -372,7 +372,7 @@ export function WalksSection({
               the facts, timeline or description in the title box before (or
               used the With fact chips or Big name and four key facts title
               looks) start with those already in the list. The
-              Details card&apos;s Title look offers Standard, Plain and Status band. The Status band&apos;s first line is kept short so it stays on one row, even on a phone (for example &quot;Upcoming · Clock-in from 09:15 · 4 days to go&quot;, with the walk&apos;s date on the line under it). Inside the title box, everything sits under the name at the full
+              Details card&apos;s Title look offers Standard, Plain and Status band. The Status band is one line, kept short so it stays on one row even on a phone (for example &quot;Upcoming · Clock-in from 09:15 · 4 days to go&quot;); the walk&apos;s date and times aren&apos;t repeated under it. Its wording is edited in Site wording → Walk page cards → Walk status wording. Inside the title box, everything sits under the name at the full
               width of the box, and Space between the things in the title box makes the gaps closer,
               normal (24 pixels) or more without changing the edges. Facts
               arrange only offers what works with the chosen look (a spec sheet
@@ -420,9 +420,10 @@ export function WalksSection({
               same but with an icon before each section&apos;s name: Automatic
               picks one from the name (Map &amp; weather gets a map pin, Before
               you set off a backpack, Attended people, Journey a route), or
-              choose one. Tabs has the same icons: turn on Icons before the
-              names, and each tab&apos;s Icon works the same way, so tabs and an
-              accordion can match. Summary tiles has a Tiles list: add, remove and drag tiles —
+              choose one. Tabs has the same icons, shown before each tab&apos;s
+              name unless you turn off Icons before the names; each tab&apos;s
+              Icon is Automatic (from its name) unless you choose one, so tabs
+              and an accordion can match. Summary tiles has a Tiles list: add, remove and drag tiles —
               Attended, Meeting point, Weather, Journey or any walk fact (Date,
               Starts, Distance, Grade, Walk leader…). People clocked in shows
               their profile photos (initials if none) — to organisers, and to

@@ -169,7 +169,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
           &larr; All walks
         </Link>
         <Alert variant="destructive">
-          <AlertTitle>This walk has been cancelled</AlertTitle>
+          <AlertTitle>{theme.walkWording.cancelledTitle}</AlertTitle>
           <AlertDescription>
             {walk.cancelledReason || "Check with an organiser who has Walks access for details."}
           </AlertDescription>
@@ -262,7 +262,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
       />
       {walk.cancelledAt ? (
         <Alert variant="destructive">
-          <AlertTitle>This walk has been cancelled</AlertTitle>
+          <AlertTitle>{theme.walkWording.cancelledTitle}</AlertTitle>
           <AlertDescription>
             {walk.cancelledReason ? `Reason: ${walk.cancelledReason.replace(/[.!?]+$/, "")}. ` : ""}
             Members can no longer clock in.

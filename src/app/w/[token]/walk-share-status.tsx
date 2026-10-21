@@ -1,5 +1,7 @@
 "use client";
 
+import { useWalkWording } from "@/components/walk-wording-context";
+import { fillWording } from "@/lib/walk-wording";
 import { formatTime, formatWalkDay } from "@/lib/dates";
 import {
   canAddWalkToCalendar,
@@ -94,6 +96,7 @@ export function WalkShareStatusChrome({
     endedAt: endedAt ? new Date(endedAt) : null,
     startsAt: new Date(startsAt),
   };
+  const words = useWalkWording();
   const status = walkStatus(walk, now);
   const completed = status === "completed";
   const windowStateNow = windowState(walk.startsAt, walk.durationMins, now, walk.endedAt);
@@ -108,7 +111,7 @@ export function WalkShareStatusChrome({
     !attended && tooEarly ? (
       <Alert variant="info">
         <AlertDescription>
-          Clock-in opens at {formatTime(opensAt)} on {formatWalkDay(opensAt)}, an hour before the start.
+          {fillWording(words.memberBefore, { opens: formatTime(opensAt), opensDay: formatWalkDay(opensAt) })}
         </AlertDescription>
       </Alert>
     ) : null;
@@ -125,7 +128,7 @@ export function WalkShareStatusChrome({
   );
   const guestNotice = completed ? (
     <Alert variant="info">
-      <AlertDescription>This walk has finished. The details are kept here to look back on.</AlertDescription>
+      <AlertDescription>{words.visitorFinished}</AlertDescription>
     </Alert>
   ) : withoutSignIn ? null : (
     signInPrompt
@@ -143,10 +146,10 @@ export function WalkShareStatusChrome({
   const notices =
     status === "cancelled" ? (
       <Alert variant="destructive">
-        <AlertTitle>This walk has been cancelled</AlertTitle>
+        <AlertTitle>{words.cancelledTitle}</AlertTitle>
         <AlertDescription>
           {cancelledReason?.trim() ? `${cancelledReason.trim().replace(/[.!]?$/, ".")} ` : ""}
-          Check the walks list for the next one.
+          {words.cancelledNext}
         </AlertDescription>
       </Alert>
     ) : signedIn === undefined && audience ? (
@@ -278,9 +281,10 @@ export function WalkShareBeforeClockIn({
  * the live part of the walk page, which knows whether they clocked in.
  */
 export function WalkClosedNoClockInNotice() {
+  const words = useWalkWording();
   return (
     <Alert variant="info">
-      <AlertDescription>This walk has finished. Were you there? Ask an organiser to add you.</AlertDescription>
+      <AlertDescription>{words.memberMissed}</AlertDescription>
     </Alert>
   );
 }

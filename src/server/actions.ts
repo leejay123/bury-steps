@@ -124,6 +124,7 @@ export {
   updateHowThisStartedCopy,
   updateAboutLists,
   updateWalkPageCopy,
+  updateWalkWording,
   updateBeforeYouSetOffEnabled,
   updateHowWalksWorkEnabled,
   updateMonthlyClockInGoal,
