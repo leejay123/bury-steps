@@ -201,7 +201,12 @@ export function WalksSection({
               button). You can also design the walk page yourself: on any
               organiser walk page, <strong>Design this page</strong> in the Manage list (owners and
               organisers with the Display permission) opens the walk page
-              designer over that walk. Drag blocks in from the left — Messages,
+              designer over that walk. It&apos;s only offered on a computer
+              (a screen 1024 pixels wide or more), not on phones or tablets.
+              On a phone or tablet, when the tabs (or more of the page) are
+              below the first screen, a <strong>More below</strong> button
+              floats over the bottom naming the tabs; tapping it scrolls to
+              them, and it goes once the page is scrolled. Drag blocks in from the left — Messages,
               Title, Details card, Facts, Essentials, Clock in + Manage, Status,
               Map, Weather, Attended, Journey, How this group works (for
               signed-out visitors), story cards, a bento grid, a walk ticket

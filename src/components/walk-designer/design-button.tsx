@@ -90,10 +90,25 @@ export function WalkDesignProvider({
   );
 }
 
-/** "Design this page", in the organiser walk page's Manage list: opens the walk page designer over this walk. */
+const WIDE = "(min-width: 1024px)";
+function subscribeWide(change: () => void) {
+  const query = window.matchMedia(WIDE);
+  query.addEventListener("change", change);
+  return () => query.removeEventListener("change", change);
+}
+const isWide = () => window.matchMedia(WIDE).matches;
+
+/**
+ * "Design this page", in the organiser walk page's Manage list: opens the
+ * walk page designer over this walk. Computers only (1024px and wider): the
+ * designer needs the room, so phones and tablets don't offer it.
+ */
 export function WalkDesignButton() {
   const value = useContext(WalkDesignContext);
-  if (!value) return null;
+  // Not drawn at all on smaller screens (the Manage list copies every button
+  // it's given, hidden or not).
+  const computer = useSyncExternalStore(subscribeWide, isWide, () => false);
+  if (!value || !computer) return null;
   return (
     <Button onClick={value.open} size="sm" type="button" variant="outline">
       <Paintbrush data-icon="inline-start" />

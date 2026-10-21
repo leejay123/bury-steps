@@ -1,0 +1,71 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { ChevronDown } from "lucide-react";
+
+/** Room left for the sticky site header when scrolling the tabs into view. */
+const HEADER_ROOM = 72;
+
+/**
+ * On a phone or tablet, a "More below" button floating over the bottom of a
+ * walk page when there's more under the first screen (usually the tabs). It
+ * names the tabs, and tapping it scrolls to them. It goes for good once the
+ * page is scrolled.
+ */
+export function MoreBelow() {
+  const [label, setLabel] = useState<string | null>(null);
+
+  useEffect(() => {
+    let gone = false;
+    const target = () => document.querySelector<HTMLElement>('main [data-slot="tabs-list"]');
+    // Decide once the page has settled (photos and maps take their space).
+    const check = window.setTimeout(() => {
+      if (gone || window.scrollY > 40) return;
+      const tabs = target();
+      if (tabs) {
+        if (tabs.getBoundingClientRect().top < window.innerHeight - 120) return;
+        const names = [...tabs.querySelectorAll('[data-slot="tabs-trigger"]')]
+          .map((tab) => tab.textContent?.trim())
+          .filter(Boolean)
+          .slice(0, 3);
+        setLabel(names.length ? `More below: ${names.join(" · ")}` : "More below");
+      } else if (document.documentElement.scrollHeight > window.innerHeight + 200) {
+        setLabel("More below");
+      }
+    }, 600);
+    const onScroll = () => {
+      if (window.scrollY < 40) return;
+      gone = true;
+      setLabel(null);
+      window.removeEventListener("scroll", onScroll);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.clearTimeout(check);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
+  if (!label) return null;
+
+  function go() {
+    const tabs = document.querySelector<HTMLElement>('main [data-slot="tabs-list"]');
+    const top = tabs
+      ? tabs.getBoundingClientRect().top + window.scrollY - HEADER_ROOM
+      : window.scrollY + window.innerHeight * 0.7;
+    window.scrollTo({ top, behavior: "smooth" });
+  }
+
+  return (
+    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(16px+var(--bottom-nav-offset,0px))] z-[56] flex justify-center px-4 lg:hidden">
+      <button
+        className="pointer-events-auto flex max-w-full animate-in cursor-pointer touch-manipulation items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background shadow-lg fade-in-0 slide-in-from-bottom-2"
+        onClick={go}
+        type="button"
+      >
+        <span className="truncate">{label}</span>
+        <ChevronDown aria-hidden className="size-4 shrink-0 animate-bounce" />
+      </button>
+    </div>
+  );
+}
