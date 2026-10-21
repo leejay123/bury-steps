@@ -379,7 +379,11 @@ export function WalksSection({
               every fact its own colour. Facts shown as on tablets and Facts shown as on
               phones (under Facts shown as) give those devices a different
               design, or Same as on computers; with Plain facts, Plain facts
-              look on each device picks the plain look there. Summary tiles has a Tiles list: add, remove and drag tiles —
+              look on each device picks the plain look there. Folding sections works like Tabs: add sections (+ Add, drag to
+              reorder) and drop your own blocks into each one in the designer;
+              on the page they fold. Choose a look (one outlined box, separate
+              cards, lines only, grey boxes or numbered), an arrow or a plus,
+              and whether several can be open at once or only one. Summary tiles has a Tiles list: add, remove and drag tiles —
               Attended, Meeting point, Weather, Journey or any walk fact (Date,
               Starts, Distance, Grade, Walk leader…). People clocked in shows
               their profile photos (initials if none) — to organisers, and to

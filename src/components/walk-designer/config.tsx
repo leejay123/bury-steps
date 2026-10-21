@@ -10,7 +10,7 @@ import { PreviewAudience, WalkPartsProvider, useWalkParts } from "./parts";
 import { ReadyLayoutBlock } from "./ready-layout-block";
 import { READY_LAYOUTS } from "./ready-layouts";
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import {
   Accordion,
@@ -1334,6 +1334,113 @@ function TabsView({
         );
       })}
     </Tabs>
+  );
+}
+
+/**
+ * The Folding sections block. In the designer each section is an open,
+ * labelled area to drop blocks into (like Tabs); on the page they fold.
+ */
+function FoldingView({
+  list,
+  editing,
+  look = "box",
+  icon = "chevron",
+  single = false,
+}: {
+  list: {
+    label: string;
+    open: boolean;
+    content: (props: { className?: string }) => ReactNode;
+  }[];
+  editing: boolean;
+  look?: string;
+  icon?: string;
+  single?: boolean;
+}) {
+  if (list.length === 0) return null;
+  if (editing)
+    return (
+      <div className="flex flex-col gap-3">
+        {list.map((item, i) => {
+          const Content = item.content;
+          return (
+            <div
+              className="flex flex-col gap-2 rounded-lg border border-dashed p-3"
+              key={i}
+            >
+              <span className="text-xs font-medium text-muted-foreground">
+                Section {i + 1}: {item.label || "Section"} (drop its blocks
+                here)
+              </span>
+              <Content className="flex min-h-16 flex-col gap-6" />
+            </div>
+          );
+        })}
+      </div>
+    );
+  const opened = list.flatMap((item, i) => (item.open ? [`item-${i}`] : []));
+  const items = list.map((item, i) => {
+    const Content = item.content;
+    return (
+      <AccordionItem
+        className={cn(
+          look === "cards" && "rounded-lg border px-4 last:border-b",
+          look === "grey" && "rounded-lg border-b-0 bg-muted px-4",
+        )}
+        key={i}
+        value={`item-${i}`}
+      >
+        <AccordionTrigger
+          className={cn(
+            "items-center text-sm hover:no-underline",
+            // Plus: the arrow swaps for a + that turns into × when open.
+            icon === "plus" &&
+              "[&>svg]:hidden [&[data-state=open]_[data-plus]]:rotate-45",
+          )}
+        >
+          <span className="flex items-center gap-3">
+            {look === "numbered" ? (
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold">
+                {i + 1}
+              </span>
+            ) : null}
+            {item.label}
+          </span>
+          {icon === "plus" ? (
+            <span
+              aria-hidden
+              className="text-muted-foreground transition-transform duration-200"
+              data-plus=""
+            >
+              <Plus className="size-4" />
+            </span>
+          ) : null}
+        </AccordionTrigger>
+        <AccordionContent>
+          <Content className="flex flex-col gap-6" />
+        </AccordionContent>
+      </AccordionItem>
+    );
+  });
+  const rootClass = cn(
+    (look === "box" || look === "numbered") &&
+      "rounded-lg border px-4 [&>*:last-child]:border-b-0",
+    (look === "cards" || look === "grey") && "flex flex-col gap-3",
+  );
+  return single ? (
+    <Accordion
+      className={rootClass}
+      collapsible
+      defaultValue={opened[0]}
+      type="single"
+    >
+      {items}
+    </Accordion>
+  ) : (
+    <Accordion className={rootClass} defaultValue={opened} type="multiple">
+      {items}
+    </Accordion>
   );
 }
 
@@ -3464,7 +3571,7 @@ export const walkDesignConfig: Config = {
       fields: {
         items: {
           type: "array",
-          label: "Sections",
+          label: "Sections — + Add, drag to reorder",
           arrayFields: {
             label: { type: "text", label: "Name" },
             open: { type: "radio", label: "Open to start", options: yesNo },
@@ -3473,42 +3580,55 @@ export const walkDesignConfig: Config = {
           defaultItemProps: { label: "New section", open: false, content: [] },
           getItemSummary: (item: { label?: string }) => item.label || "Section",
         },
+        look: {
+          type: "select",
+          label: "Look",
+          options: options([
+            ["box", "One outlined box, lines between"],
+            ["cards", "Separate cards"],
+            ["lines", "Lines only"],
+            ["grey", "Grey boxes"],
+            ["numbered", "Numbered, in an outlined box"],
+          ]),
+        },
+        icon: {
+          type: "radio",
+          label: "Icon",
+          options: options([
+            ["chevron", "Arrow"],
+            ["plus", "Plus (turns to ×)"],
+          ]),
+        },
+        single: {
+          type: "radio",
+          label: "Open at once",
+          options: [
+            { label: "Several", value: false },
+            { label: "Only one", value: true },
+          ],
+        },
       },
       defaultProps: {
         items: [{ label: "Map & weather", open: true, content: [] }],
+        look: "box",
+        icon: "chevron",
+        single: false,
       },
-      render: ({ items, puck }) => {
-        const list = (items ?? []) as {
-          label: string;
-          open: boolean;
-          content: (props: { className?: string }) => React.ReactNode;
-        }[];
-        return (
-          <Accordion
-            className={cn("rounded-2xl border px-4")}
-            // All open in the designer, so blocks can be dropped into each.
-            defaultValue={list.flatMap((item, i) =>
-              item.open || puck?.isEditing ? [`item-${i}`] : [],
-            )}
-            key={puck?.isEditing ? "editing" : "page"}
-            type="multiple"
-          >
-            {list.map((item, i) => {
-              const Content = item.content;
-              return (
-                <AccordionItem key={i} value={`item-${i}`}>
-                  <AccordionTrigger className="text-base">
-                    {item.label}
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <Content className="flex flex-col gap-6" />
-                  </AccordionContent>
-                </AccordionItem>
-              );
-            })}
-          </Accordion>
-        );
-      },
+      render: ({ items, look, icon, single, puck }) => (
+        <FoldingView
+          editing={Boolean(puck?.isEditing)}
+          icon={icon}
+          list={
+            (items ?? []) as {
+              label: string;
+              open: boolean;
+              content: (props: { className?: string }) => React.ReactNode;
+            }[]
+          }
+          look={look}
+          single={Boolean(single)}
+        />
+      ),
     },
     Spacer: {
       label: "Space",
