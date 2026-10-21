@@ -415,7 +415,14 @@ export function WalksSection({
               reorder) and drop your own blocks into each one in the designer;
               on the page they fold. Choose a look (one outlined box, separate
               cards, lines only, grey boxes or numbered), an arrow or a plus,
-              and whether several can be open at once or only one. Summary tiles has a Tiles list: add, remove and drag tiles —
+              and whether several can be open at once or only one.{" "}
+              <strong>Accordion (with icons)</strong>, also under Layout, is the
+              same but with an icon before each section&apos;s name: Automatic
+              picks one from the name (Map &amp; weather gets a map pin, Before
+              you set off a backpack, Attended people, Journey a route), or
+              choose one. Tabs has the same icons: turn on Icons before the
+              names, and each tab&apos;s Icon works the same way, so tabs and an
+              accordion can match. Summary tiles has a Tiles list: add, remove and drag tiles —
               Attended, Meeting point, Weather, Journey or any walk fact (Date,
               Starts, Distance, Grade, Walk leader…). People clocked in shows
               their profile photos (initials if none) — to organisers, and to

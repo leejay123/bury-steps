@@ -12,6 +12,7 @@ import { READY_LAYOUTS } from "./ready-layouts";
 import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
+import { SECTION_ICON_OPTIONS, SectionIcon } from "./section-icons";
 import {
   Accordion,
   AccordionContent,
@@ -1128,6 +1129,8 @@ const TAB_LOOKS: Record<string, string> = {
 
 type TabItem = {
   label: string;
+  /** Its icon (shown when the Tabs block's Icons is on): see section-icons. */
+  icon?: string;
   content: (props: { className?: string }) => ReactNode;
 };
 
@@ -1175,7 +1178,10 @@ function TabsView({
   look = "style",
   side = false,
   emptyTabs = "note",
+  icons = false,
 }: {
+  /** An icon before each tab's name. */
+  icons?: boolean;
   /** A tab with nothing in it: kept with a short note (the default, for
    * designs that never chose), or left out. */
   emptyTabs?: "hide" | "note";
@@ -1285,6 +1291,7 @@ function TabsView({
         >
           {shown.map(({ tab, i }) => (
             <TabsTrigger key={i} value={`tab-${i}`}>
+              {icons ? <SectionIcon choice={tab.icon} name={tab.label} /> : null}
               {tab.label}
             </TabsTrigger>
           ))}
@@ -1347,9 +1354,13 @@ function FoldingView({
   look = "box",
   icon = "chevron",
   single = false,
+  icons = false,
 }: {
+  /** An icon before each section's name (the Accordion block). */
+  icons?: boolean;
   list: {
     label: string;
+    icon?: string;
     open: boolean;
     content: (props: { className?: string }) => ReactNode;
   }[];
@@ -1404,6 +1415,12 @@ function FoldingView({
               <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold">
                 {i + 1}
               </span>
+            ) : icons ? (
+              <SectionIcon
+                choice={item.icon}
+                className="text-muted-foreground"
+                name={item.label}
+              />
             ) : null}
             {item.label}
           </span>
@@ -1728,6 +1745,7 @@ export const walkDesignConfig: Config = {
         "Sidebar",
         "Card",
         "Tabs",
+        "Accordion",
         "Folding",
         "Spacer",
         "Divider",
@@ -3499,14 +3517,24 @@ export const walkDesignConfig: Config = {
           label: "Stays at the top as you scroll",
           options: yesNo,
         },
+        icons: {
+          type: "radio",
+          label: "Icons before the names",
+          options: yesNo,
+        },
         tabs: {
           type: "array",
           label: "Tabs",
           arrayFields: {
             label: { type: "text", label: "Name" },
+            icon: {
+              type: "select",
+              label: "Icon (when Icons is on)",
+              options: SECTION_ICON_OPTIONS,
+            },
             content: { type: "slot" },
           },
-          defaultItemProps: { label: "New tab", content: [] },
+          defaultItemProps: { label: "New tab", icon: "auto", content: [] },
           getItemSummary: (item: { label?: string }) => item.label || "Tab",
         },
       },
@@ -3535,6 +3563,7 @@ export const walkDesignConfig: Config = {
         position,
         fit,
         sticky,
+        icons,
         tabs,
         emptyTabs,
         puck,
@@ -3551,6 +3580,7 @@ export const walkDesignConfig: Config = {
             editing={Boolean(puck?.isEditing)}
             emptyTabs={emptyTabs}
             fit={fit}
+            icons={Boolean(icons)}
             list={(tabs ?? []) as TabItem[]}
             sticky={sticky}
           />
@@ -3621,6 +3651,87 @@ export const walkDesignConfig: Config = {
           list={
             (items ?? []) as {
               label: string;
+              open: boolean;
+              content: (props: { className?: string }) => React.ReactNode;
+            }[]
+          }
+          look={look}
+          single={Boolean(single)}
+        />
+      ),
+    },
+    // Folding sections with an icon before each name (the same icons the
+    // Tabs block can have), so a page can swap its tabs for these.
+    Accordion: {
+      label: "Accordion (with icons)",
+      fields: {
+        items: {
+          type: "array",
+          label: "Sections — + Add, drag to reorder",
+          arrayFields: {
+            label: { type: "text", label: "Name" },
+            icon: {
+              type: "select",
+              label: "Icon",
+              options: SECTION_ICON_OPTIONS,
+            },
+            open: { type: "radio", label: "Open to start", options: yesNo },
+            content: { type: "slot" },
+          },
+          defaultItemProps: {
+            label: "New section",
+            icon: "auto",
+            open: false,
+            content: [],
+          },
+          getItemSummary: (item: { label?: string }) => item.label || "Section",
+        },
+        look: {
+          type: "select",
+          label: "Look",
+          options: options([
+            ["box", "One outlined box, lines between"],
+            ["cards", "Separate cards"],
+            ["lines", "Lines only"],
+            ["grey", "Grey boxes"],
+          ]),
+        },
+        icon: {
+          type: "radio",
+          label: "Open and close sign",
+          options: options([
+            ["chevron", "Arrow"],
+            ["plus", "Plus (turns to ×)"],
+          ]),
+        },
+        single: {
+          type: "radio",
+          label: "Open at once",
+          options: [
+            { label: "Several", value: false },
+            { label: "Only one", value: true },
+          ],
+        },
+      },
+      defaultProps: {
+        items: [
+          { label: "Map & weather", icon: "auto", open: true, content: [] },
+          { label: "Before you set off", icon: "auto", open: false, content: [] },
+          { label: "Attended", icon: "auto", open: false, content: [] },
+        ],
+        look: "box",
+        icon: "chevron",
+        single: false,
+      },
+      render: ({ items, look, icon, single, puck }) => (
+        <FoldingView
+          editing={Boolean(puck?.isEditing)}
+          icon={icon}
+          icons
+          list={
+            (items ?? []) as {
+              label: string;
+              icon?: string;
               open: boolean;
               content: (props: { className?: string }) => React.ReactNode;
             }[]
