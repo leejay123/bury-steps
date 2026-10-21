@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { Flag, Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { StoryViewer, type User as ViewerUser } from "react-instagram-stories";
@@ -31,15 +38,36 @@ function initialsAvatar(name: string) {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
+/**
+ * Photos downloaded ahead (and decoded), once each. When a story comes up
+ * its photo is already there, so the viewer doesn't flash its spinner or
+ * run its timer while the photo is still arriving.
+ */
+const preloaded = new Map<string, Promise<void>>();
+function preload(src: string): Promise<void> {
+  let ready = preloaded.get(src);
+  if (!ready) {
+    const img = new Image();
+    img.src = src;
+    ready = img.decode().catch(() => undefined);
+    preloaded.set(src, ready);
+  }
+  return ready;
+}
+
 async function fetchFeed(): Promise<StoryFeed | null> {
-  const res = await fetch("/api/stories", { cache: "no-store" }).catch(() => null);
+  const res = await fetch("/api/stories", { cache: "no-store" }).catch(
+    () => null,
+  );
   if (!res?.ok) return null;
   return (await res.json()) as StoryFeed;
 }
 
 function readSeen(): Set<string> {
   try {
-    return new Set(JSON.parse(localStorage.getItem(SEEN_KEY) ?? "[]") as string[]);
+    return new Set(
+      JSON.parse(localStorage.getItem(SEEN_KEY) ?? "[]") as string[],
+    );
   } catch {
     return new Set();
   }
@@ -57,7 +85,9 @@ function saveSeen(seen: Set<string>) {
  * side, as a JPEG of under ~900 KB, so stories load fast and storage stays small.
  */
 async function shrinkPhoto(file: File): Promise<Blob> {
-  const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  const bitmap = await createImageBitmap(file, {
+    imageOrientation: "from-image",
+  });
   const scale = Math.min(1, 1440 / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(bitmap.width * scale);
@@ -87,8 +117,13 @@ export function StoriesRow() {
   const [seen, setSeen] = useState<Set<string>>(() =>
     typeof window === "undefined" ? new Set() : readSeen(),
   );
-  const [open, setOpen] = useState<{ user: number; story: number } | null>(null);
-  const [current, setCurrent] = useState<{ user: number; story: number }>({ user: 0, story: 0 });
+  const [open, setOpen] = useState<{ user: number; story: number } | null>(
+    null,
+  );
+  const [current, setCurrent] = useState<{ user: number; story: number }>({
+    user: 0,
+    story: 0,
+  });
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [uploading, startUpload] = useTransition();
   const [busy, startBusy] = useTransition();
@@ -120,13 +155,40 @@ export function StoriesRow() {
     });
   }, []);
 
+  const people = useMemo(() => feed?.people ?? [], [feed]);
+  // Every story photo downloads in the background as soon as the list arrives.
+  useEffect(() => {
+    for (const person of people)
+      for (const story of person.stories) void preload(story.src);
+  }, [people]);
+  // The viewer's list stays the same while it's open (marking a story seen
+  // used to rebuild it, which could restart or cut short the last story).
+  const users: ViewerUser[] = useMemo(
+    () =>
+      people.map((person) => ({
+        id: person.id,
+        username: person.isMe ? "Your story" : person.name,
+        avatarUrl: person.imageUrl ?? initialsAvatar(person.name),
+        stories: person.stories.map((story) => ({
+          id: story.id,
+          type: "image" as const,
+          src: story.src,
+        })),
+      })),
+    [people],
+  );
+  const [opening, setOpening] = useState<number | null>(null);
+
   if (off) return null;
   // Grey circles while it loads, so the list under it doesn't jump down.
   if (!feed)
     return (
       <div aria-hidden className="flex gap-4 overflow-hidden py-1.5">
         {[0, 1, 2, 3].map((i) => (
-          <div className="flex w-16 shrink-0 flex-col items-center gap-1.5" key={i}>
+          <div
+            className="flex w-16 shrink-0 flex-col items-center gap-1.5"
+            key={i}
+          >
             <Skeleton className="size-14 rounded-full" />
             <Skeleton className="h-3 w-12 rounded-lg" />
           </div>
@@ -134,22 +196,23 @@ export function StoriesRow() {
       </div>
     );
   if (!feed.configured || !feed.me) return null;
-  const people = feed.people;
   const mine = people.find((person) => person.isMe);
   const canAdd = (mine?.stories.length ?? 0) < MAX_LIVE;
 
-  const users: ViewerUser[] = people.map((person) => ({
-    id: person.id,
-    username: person.isMe ? "Your story" : person.name,
-    avatarUrl: person.imageUrl ?? initialsAvatar(person.name),
-    hasUnreadStories: person.stories.some((story) => !seen.has(story.id)),
-    stories: person.stories.map((story) => ({ id: story.id, type: "image" as const, src: story.src })),
-  }));
   const shown = open ? people[current.user]?.stories[current.story] : undefined;
 
-  function openPerson(index: number) {
-    const firstUnseen = people[index].stories.findIndex((story) => !seen.has(story.id));
+  async function openPerson(index: number) {
+    const firstUnseen = people[index].stories.findIndex(
+      (story) => !seen.has(story.id),
+    );
     const story = firstUnseen === -1 ? 0 : firstUnseen;
+    // Wait (up to 4 seconds) for their photos, so the first one is ready.
+    setOpening(index);
+    await Promise.race([
+      Promise.all(people[index].stories.map((item) => preload(item.src))),
+      new Promise((done) => setTimeout(done, 4000)),
+    ]);
+    setOpening(null);
     setCurrent({ user: index, story });
     setOpen({ user: index, story });
     setConfirmDelete(false);
@@ -164,7 +227,10 @@ export function StoriesRow() {
       try {
         const photo = await shrinkPhoto(file);
         const form = new FormData();
-        form.set("photo", new File([photo], "story.jpg", { type: "image/jpeg" }));
+        form.set(
+          "photo",
+          new File([photo], "story.jpg", { type: "image/jpeg" }),
+        );
         const result = await postStory(null, form);
         if (result.ok) {
           toast.success(result.message ?? "Added to your story.");
@@ -211,11 +277,17 @@ export function StoriesRow() {
           >
             <span className="relative">
               <Avatar className="size-14 border">
-                {feed.me.imageUrl ? <AvatarImage alt="" src={feed.me.imageUrl} /> : null}
+                {feed.me.imageUrl ? (
+                  <AvatarImage alt="" src={feed.me.imageUrl} />
+                ) : null}
                 <AvatarFallback>{initials(feed.me.name)}</AvatarFallback>
               </Avatar>
               <span className="absolute -right-0.5 -bottom-0.5 flex size-5 items-center justify-center rounded-full border-2 border-background bg-foreground text-background">
-                {uploading ? <Loader2 className="size-3 animate-spin" /> : <Plus className="size-3" />}
+                {uploading ? (
+                  <Loader2 className="size-3 animate-spin" />
+                ) : (
+                  <Plus className="size-3" />
+                )}
               </span>
             </span>
             <span className="w-full truncate text-xs text-muted-foreground">
@@ -229,13 +301,14 @@ export function StoriesRow() {
           return (
             <button
               className="flex w-16 shrink-0 cursor-pointer flex-col items-center gap-1.5 text-center"
+              disabled={opening !== null}
               key={person.id}
-              onClick={() => openPerson(index)}
+              onClick={() => void openPerson(index)}
               type="button"
             >
               <span
                 className={cn(
-                  "rounded-full p-0.5",
+                  "relative rounded-full p-0.5",
                   unseen ? "ring-2 ring-foreground" : "ring-1 ring-border",
                 )}
               >
@@ -248,17 +321,31 @@ export function StoriesRow() {
                   />
                   <AvatarFallback>{initials(person.name)}</AvatarFallback>
                 </Avatar>
+                {/* Their photos finishing downloading before the viewer opens. */}
+                {opening === index ? (
+                  <span className="absolute inset-0.5 flex items-center justify-center rounded-full bg-black/40">
+                    <Loader2 className="size-5 animate-spin text-white" />
+                  </span>
+                ) : null}
               </span>
               <span className="w-full truncate text-xs">
                 {person.isMe ? "Your story" : person.name.split(" ")[0]}
               </span>
               {reported ? (
-                <span className="-mt-1 text-[10px] font-medium text-muted-foreground">Reported</span>
+                <span className="-mt-1 text-[10px] font-medium text-muted-foreground">
+                  Reported
+                </span>
               ) : null}
             </button>
           );
         })}
-        <input accept="image/*" className="hidden" onChange={onPick} ref={fileRef} type="file" />
+        <input
+          accept="image/*"
+          className="hidden"
+          onChange={onPick}
+          ref={fileRef}
+          type="file"
+        />
       </div>
 
       {open ? (
@@ -300,7 +387,8 @@ export function StoriesRow() {
                   onClick={onDelete}
                   type="button"
                 >
-                  <Trash2 className="size-3.5" /> {confirmDelete ? "Tap again to delete" : "Delete"}
+                  <Trash2 className="size-3.5" />{" "}
+                  {confirmDelete ? "Tap again to delete" : "Delete"}
                 </button>
               ) : null}
             </div>
