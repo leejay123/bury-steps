@@ -365,7 +365,7 @@ export function WalksSection({
               the facts, timeline or description in the title box before (or
               used the With fact chips or Big name and four key facts title
               looks) start with those already in the list. The
-              Details card&apos;s Title look offers Standard, Plain and Status band. Inside the title box, everything sits under the name at the full
+              Details card&apos;s Title look offers Standard, Plain and Status band. On a phone the Status band&apos;s first line is shortened so it fits on one row (for example &quot;Upcoming · Clock-in from 09:15 · 4 days to go&quot;, with the walk&apos;s date on the line under it). Inside the title box, everything sits under the name at the full
               width of the box, and Space between the things in the title box makes the gaps closer,
               normal (24 pixels) or more without changing the edges. Facts
               arrange only offers what works with the chosen look (a spec sheet

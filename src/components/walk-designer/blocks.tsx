@@ -1452,16 +1452,25 @@ function Title({
         bandCountdown &&
         info.status !== "completed" &&
         info.status !== "cancelled";
-      const statusText = `${info.now.eyebrow} · ${info.now.line}${
-        counting ? ` · ${info.countdown.value} ${info.countdown.unit}` : ""
-      }`;
+      const countdownText = counting
+        ? ` · ${info.countdown.value} ${info.countdown.unit}`
+        : "";
+      const statusText = `${info.now.eyebrow} · ${info.now.line}${countdownText}`;
+      // On a phone, a shorter line that fits on one row: the clock-in day
+      // is left out when it's the walk's own day (the date is right under it).
+      const phoneStatusText =
+        info.status === "upcoming" &&
+        formatWalkDay(info.opens) === formatWalkDay(info.start)
+          ? `${info.now.eyebrow} · Clock-in from ${formatTime(info.opens)}${countdownText}`
+          : statusText;
       const when = `${day}, ${time} to ${formatTime(info.end)}`;
       const bandStatus = (
         <div
           className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 sm:gap-y-1"
           data-band-status=""
         >
-          <span>{statusText}</span>
+          <span className="sm:hidden">{phoneStatusText}</span>
+          <span className="max-sm:hidden">{statusText}</span>
           <span className="font-normal">{when}</span>
         </div>
       );
