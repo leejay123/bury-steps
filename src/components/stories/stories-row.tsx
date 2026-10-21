@@ -124,7 +124,7 @@ export function StoriesRow() {
   // Grey circles while it loads, so the list under it doesn't jump down.
   if (!feed)
     return (
-      <div aria-hidden className="flex gap-4 overflow-hidden pb-1">
+      <div aria-hidden className="flex gap-4 overflow-hidden py-1.5">
         {[0, 1, 2, 3].map((i) => (
           <div className="flex w-16 shrink-0 flex-col items-center gap-1.5" key={i}>
             <Skeleton className="size-14 rounded-full" />
@@ -200,7 +200,8 @@ export function StoriesRow() {
 
   return (
     <section aria-label="Stories" className="flex flex-col gap-2">
-      <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-1">
+      {/* Room around the circles, or the scrolling row clips their rings. */}
+      <div className="-mx-1.5 flex gap-4 overflow-x-auto px-1.5 py-1.5">
         {canAdd ? (
           <button
             className="flex w-16 shrink-0 cursor-pointer flex-col items-center gap-1.5 text-center"
@@ -238,8 +239,13 @@ export function StoriesRow() {
                   unseen ? "ring-2 ring-foreground" : "ring-1 ring-border",
                 )}
               >
+                {/* Their first story's photo (like Instagram), not their profile photo. */}
                 <Avatar className="size-13 border-2 border-background">
-                  {person.imageUrl ? <AvatarImage alt="" src={person.imageUrl} /> : null}
+                  <AvatarImage
+                    alt=""
+                    className="object-cover"
+                    src={person.stories[0]?.src ?? person.imageUrl ?? undefined}
+                  />
                   <AvatarFallback>{initials(person.name)}</AvatarFallback>
                 </Avatar>
               </span>
