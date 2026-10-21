@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   useTransition,
 } from "react";
 import { Flag, Loader2, Plus, Trash2 } from "lucide-react";
@@ -18,6 +19,8 @@ import { deleteStory, postStory, reportStory } from "@/server/actions/stories";
 import type { StoryFeed } from "@/app/api/stories/route";
 
 const SEEN_KEY = "bs-seen-stories";
+/** How many circles the row had last time, so its grey circles match. */
+const COUNT_KEY = "bs-story-circles";
 const MAX_LIVE = 10;
 
 function initials(name: string) {
@@ -72,6 +75,23 @@ function saveSeen(seen: Set<string>) {
     /* private mode: rings just show again */
   }
 }
+
+function readCount(): number {
+  try {
+    const count = Number(localStorage.getItem(COUNT_KEY) ?? "1");
+    return Number.isFinite(count) ? Math.min(Math.max(count, 0), 8) : 1;
+  } catch {
+    return 1;
+  }
+}
+function saveCount(count: number) {
+  try {
+    localStorage.setItem(COUNT_KEY, String(count));
+  } catch {
+    /* private mode: one grey circle next time */
+  }
+}
+const noSubscribe = () => () => {};
 
 /**
  * Shrinks a photo on the phone before it's sent: at most 1440px on its long
@@ -163,13 +183,27 @@ export function StoriesRow() {
     [people, markSeen],
   );
   const [opening, setOpening] = useState<number | null>(null);
+  // Before anything has loaded on this phone, one circle (the "Add story" one).
+  const skeletonCount = useSyncExternalStore(noSubscribe, readCount, () => 1);
+  // Remember how many circles there are (none when the row isn't shown).
+  useEffect(() => {
+    if (off) saveCount(0);
+    else if (feed) {
+      if (!feed.configured || !feed.me) return saveCount(0);
+      const mine = feed.people.find((person) => person.isMe);
+      const canAdd = (mine?.stories.length ?? 0) < MAX_LIVE;
+      saveCount((canAdd ? 1 : 0) + feed.people.length);
+    }
+  }, [feed, off]);
 
   if (off) return null;
-  // Grey circles while it loads, so the list under it doesn't jump down.
-  if (!feed)
+  // Grey circles while it loads, as many as there were last time, so the
+  // list under it doesn't jump down.
+  if (!feed) {
+    if (skeletonCount === 0) return null;
     return (
       <div aria-hidden className="flex gap-4 overflow-hidden py-1.5">
-        {[0, 1, 2, 3].map((i) => (
+        {Array.from({ length: skeletonCount }, (_, i) => (
           <div
             className="flex w-16 shrink-0 flex-col items-center gap-1.5"
             key={i}
@@ -180,6 +214,7 @@ export function StoriesRow() {
         ))}
       </div>
     );
+  }
   if (!feed.configured || !feed.me) return null;
   const mine = people.find((person) => person.isMe);
   const canAdd = (mine?.stories.length ?? 0) < MAX_LIVE;

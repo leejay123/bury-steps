@@ -21,7 +21,8 @@ export function WalksSection({
           <p>
             <strong>Stories</strong> sit at the top of the Walks page (yours
             and the members&apos;): a row of round photos, with a ring on anyone
-            who has a story you haven&apos;t seen. Anyone signed in — members,
+            who has a story you haven&apos;t seen (while it loads, grey circles
+            stand in, as many as that phone showed last time). Anyone signed in — members,
             organisers, owners — can press <strong>Add story</strong> and pick a
             photo (it&apos;s shrunk on the phone first). Each person can have up
             to 10 stories at once, and each one disappears 24 hours after it was
