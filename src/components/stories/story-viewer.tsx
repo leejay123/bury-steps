@@ -196,10 +196,20 @@ export function StoryViewer({
         onPointerUp={onPointerUp}
         ref={contentRef}
       >
+        {/* The whole photo always shows; a blurred copy fills the space around it. */}
         {/* eslint-disable-next-line @next/next/no-img-element -- signed one-hour link, already downloaded */}
         <img
           alt=""
-          className="absolute inset-0 size-full object-cover"
+          aria-hidden
+          className="absolute inset-0 size-full scale-110 object-cover opacity-70 blur-2xl"
+          draggable={false}
+          key={`${story.id}:backdrop`}
+          src={story.src}
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element -- signed one-hour link, already downloaded */}
+        <img
+          alt=""
+          className="absolute inset-0 size-full object-contain"
           draggable={false}
           key={story.id}
           onError={() => setLoadedId(story.id)}

@@ -26,7 +26,8 @@ export function WalksSection({
             photo (it&apos;s shrunk on the phone first). Each person can have up
             to 10 stories at once, and each one disappears 24 hours after it was
             posted; its photo is deleted then too, so the space comes back.
-            Signed-out visitors never see stories. Tap a photo to watch: each
+            Signed-out visitors never see stories. Tap a photo to watch: the whole
+            photo always shows (a blurred copy fills any space around it), each
             story shows for 5 seconds, and the bar at the top fills right to the
             end before the next one comes up (after someone&apos;s last story it
             moves to the next person, or closes after the last person). Tap the
