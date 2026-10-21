@@ -6,7 +6,13 @@ import {
   type Config,
 } from "@puckeditor/core";
 import { useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { PreviewAudience, WalkPartsProvider, useWalkParts } from "./parts";
+import {
+  PreviewAudience,
+  WalkPartsProvider,
+  shownTo,
+  useViewerAudience,
+  useWalkParts,
+} from "./parts";
 import { ReadyLayoutBlock } from "./ready-layout-block";
 import { READY_LAYOUTS } from "./ready-layouts";
 import { cn } from "@/lib/utils";
@@ -80,6 +86,17 @@ const yesNo = [
   { label: "Yes", value: true },
   { label: "No", value: false },
 ];
+/** Who a tab or accordion section is for (members and organisers are signed in). */
+const SHOW_TO_OPTIONS = [
+  { label: "Everyone", value: "everyone" },
+  { label: "Signed in only", value: "members" },
+  { label: "Signed out only", value: "visitors" },
+];
+/** The designer's note on a tab or section shown to one group only. */
+const SHOW_TO_NOTE: Record<string, string> = {
+  members: " · signed in only",
+  visitors: " · signed out only",
+};
 const options = <T extends string>(pairs: [T, string][]) =>
   pairs.map(([value, label]) => ({ value, label }));
 
@@ -1131,6 +1148,8 @@ type TabItem = {
   label: string;
   /** Its icon (shown when the Tabs block's Icons is on): see section-icons. */
   icon?: string;
+  /** Who sees it: everyone (or unset), "members" (signed in) or "visitors". */
+  showTo?: string;
   content: (props: { className?: string }) => ReactNode;
 };
 
@@ -1213,6 +1232,7 @@ function TabsView({
   const panels = useRef<(HTMLDivElement | null)[]>([]);
   const [empty, setEmpty] = useState<boolean[]>([]);
   const [value, setValue] = useState("tab-0");
+  const viewer = useViewerAudience();
   const count = list.length;
 
   useEffect(() => {
@@ -1246,7 +1266,11 @@ function TabsView({
   if (count === 0) return null;
   const shown = list
     .map((tab, i) => ({ tab, i }))
-    .filter(({ i }) => editing || emptyTabs === "note" || !empty[i]);
+    .filter(
+      ({ tab, i }) =>
+        editing ||
+        (shownTo(tab.showTo, viewer) && (emptyTabs === "note" || !empty[i])),
+    );
   if (shown.length === 0) return null;
   const active = shown.some(({ i }) => `tab-${i}` === value)
     ? value
@@ -1308,7 +1332,8 @@ function TabsView({
             key={i}
           >
             <span className="text-xs font-medium text-muted-foreground">
-              Tab {i + 1}: {tab.label} (drop its blocks here)
+              Tab {i + 1}: {tab.label}
+              {SHOW_TO_NOTE[tab.showTo ?? "everyone"] ?? ""} (drop its blocks here)
             </span>
             <Content className={cn("flex min-h-16 flex-col", inner)} />
           </div>
@@ -1361,6 +1386,7 @@ function FoldingView({
   list: {
     label: string;
     icon?: string;
+    showTo?: string;
     open: boolean;
     content: (props: { className?: string }) => ReactNode;
   }[];
@@ -1369,6 +1395,7 @@ function FoldingView({
   icon?: string;
   single?: boolean;
 }) {
+  const viewer = useViewerAudience();
   if (list.length === 0) return null;
   if (editing)
     return (
@@ -1381,8 +1408,9 @@ function FoldingView({
               key={i}
             >
               <span className="text-xs font-medium text-muted-foreground">
-                Section {i + 1}: {item.label || "Section"} (drop its blocks
-                here)
+                Section {i + 1}: {item.label || "Section"}
+                {SHOW_TO_NOTE[item.showTo ?? "everyone"] ?? ""} (drop its
+                blocks here)
               </span>
               <Content className="flex min-h-16 flex-col gap-6" />
             </div>
@@ -1392,6 +1420,7 @@ function FoldingView({
     );
   const opened = list.flatMap((item, i) => (item.open ? [`item-${i}`] : []));
   const items = list.map((item, i) => {
+    if (!shownTo(item.showTo, viewer)) return null;
     const Content = item.content;
     return (
       <AccordionItem
@@ -3532,9 +3561,15 @@ export const walkDesignConfig: Config = {
               label: "Icon",
               options: SECTION_ICON_OPTIONS,
             },
+            showTo: { type: "radio", label: "Show to", options: SHOW_TO_OPTIONS },
             content: { type: "slot" },
           },
-          defaultItemProps: { label: "New tab", icon: "auto", content: [] },
+          defaultItemProps: {
+            label: "New tab",
+            icon: "auto",
+            showTo: "everyone",
+            content: [],
+          },
           getItemSummary: (item: { label?: string }) => item.label || "Tab",
         },
       },
@@ -3677,12 +3712,14 @@ export const walkDesignConfig: Config = {
               label: "Icon",
               options: SECTION_ICON_OPTIONS,
             },
+            showTo: { type: "radio", label: "Show to", options: SHOW_TO_OPTIONS },
             open: { type: "radio", label: "Open to start", options: yesNo },
             content: { type: "slot" },
           },
           defaultItemProps: {
             label: "New section",
             icon: "auto",
+            showTo: "everyone",
             open: false,
             content: [],
           },
@@ -3734,6 +3771,7 @@ export const walkDesignConfig: Config = {
             (items ?? []) as {
               label: string;
               icon?: string;
+              showTo?: string;
               open: boolean;
               content: (props: { className?: string }) => React.ReactNode;
             }[]

@@ -19,6 +19,26 @@ const WalkPartsContext = createContext<WalkIdeaParts | null>(null);
  */
 export const PreviewAudience = createContext<WalkDesignAudience | null>(null);
 
+/**
+ * Who a real walk page's design is drawn for (the walk page draws the
+ * members' and the visitors' designs, and shows the right one), so a tab or
+ * section set to signed-in or signed-out people only can leave itself out.
+ */
+export const ViewerAudience = createContext<WalkDesignAudience | null>(null);
+
+/** Who's looking: the designer's chosen audience, or the page's. */
+export function useViewerAudience(): WalkDesignAudience | null {
+  const preview = useContext(PreviewAudience);
+  const viewer = useContext(ViewerAudience);
+  return preview ?? viewer;
+}
+
+/** Whether a tab or section set to "Show to" this choice is for that viewer. */
+export function shownTo(showTo: string | undefined, viewer: WalkDesignAudience | null): boolean {
+  if (!showTo || showTo === "everyone" || !viewer) return true;
+  return showTo === "visitors" ? viewer === "visitor" : viewer !== "visitor";
+}
+
 export function WalkPartsProvider({
   children,
   parts,

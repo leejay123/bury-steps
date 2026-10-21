@@ -668,7 +668,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
   if (choice.layout === "designed") {
     return page(
       <>
-        <WalkDesignRender data={designs.organiser} parts={ideaParts} />
+        <WalkDesignRender audience="organiser" data={designs.organiser} parts={ideaParts} />
       </>,
       // Designed pages: the back link is the design's Back link block, if it has one.
       { withBack: false },

@@ -6,6 +6,12 @@ import { ChevronDown } from "lucide-react";
 /** Room left for the sticky site header when scrolling the tabs into view. */
 const HEADER_ROOM = 72;
 
+/** The first tab bar on show (a walk page holds the signed-in and signed-out copies). */
+function visibleTabs(): HTMLElement | null {
+  const bars = document.querySelectorAll<HTMLElement>('main [data-slot="tabs-list"]');
+  return [...bars].find((bar) => bar.getClientRects().length > 0) ?? null;
+}
+
 /**
  * On a phone or tablet, a "More below" button floating over the bottom of a
  * walk page when there's more under the first screen (usually the tabs). It
@@ -17,11 +23,10 @@ export function MoreBelow() {
 
   useEffect(() => {
     let gone = false;
-    const target = () => document.querySelector<HTMLElement>('main [data-slot="tabs-list"]');
     // Decide once the page has settled (photos and maps take their space).
     const check = window.setTimeout(() => {
       if (gone || window.scrollY > 40) return;
-      const tabs = target();
+      const tabs = visibleTabs();
       if (tabs) {
         if (tabs.getBoundingClientRect().top < window.innerHeight - 120) return;
         const names = [...tabs.querySelectorAll('[data-slot="tabs-trigger"]')]
@@ -57,7 +62,7 @@ export function MoreBelow() {
   if (!label) return null;
 
   function go() {
-    const tabs = document.querySelector<HTMLElement>('main [data-slot="tabs-list"]');
+    const tabs = visibleTabs();
     const top = tabs
       ? tabs.getBoundingClientRect().top + window.scrollY - HEADER_ROOM
       : window.scrollY + window.innerHeight * 0.7;

@@ -423,7 +423,12 @@ export function WalksSection({
               choose one. Tabs has the same icons, shown before each tab&apos;s
               name unless you turn off Icons before the names; each tab&apos;s
               Icon is Automatic (from its name) unless you choose one, so tabs
-              and an accordion can match. Summary tiles has a Tiles list: add, remove and drag tiles —
+              and an accordion can match. Each tab, and each accordion section, also has{" "}
+              <strong>Show to</strong>: Everyone, Signed in only (members,
+              organisers and owners) or Signed out only (visitors) — for
+              example, an Attended tab for signed-in people only. In the
+              designer every tab still shows, marked &quot;signed in only&quot;
+              or &quot;signed out only&quot;. Summary tiles has a Tiles list: add, remove and drag tiles —
               Attended, Meeting point, Weather, Journey or any walk fact (Date,
               Starts, Distance, Grade, Walk leader…). People clocked in shows
               their profile photos (initials if none) — to organisers, and to

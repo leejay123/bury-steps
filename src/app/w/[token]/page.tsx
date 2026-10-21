@@ -497,6 +497,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
       <div className="flex flex-col gap-6">
         <div className="contents" data-member-home="">
           <WalkDesignRender
+            audience="member"
             data={designs.member}
             parts={{
               ...ideaParts,
@@ -512,6 +513,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
         <div className="contents" data-guest-home="">
           {noticesEl ? cloneElement(noticesEl, { part: "sign-in" }) : null}
           <WalkDesignRender
+            audience="visitor"
             data={visitorDesign}
             parts={{
               ...ideaParts,
