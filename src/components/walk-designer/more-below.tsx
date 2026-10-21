@@ -12,72 +12,129 @@ function visibleTabs(): HTMLElement | null {
   return [...bars].find((bar) => bar.getClientRects().length > 0) ?? null;
 }
 
+type Tab = { value: string; label: string; icon: string | null; active: boolean };
+
+/** The tabs in a bar as they are now (names, icons, which is open). */
+function readTabs(bar: HTMLElement): Tab[] {
+  return [...bar.querySelectorAll<HTMLElement>('[data-slot="tabs-trigger"]')].map((tab) => ({
+    value: tab.dataset.value ?? "",
+    label: (tab.textContent ?? "").trim(),
+    icon: tab.querySelector("svg")?.outerHTML ?? null,
+    active: tab.dataset.state === "active",
+  }));
+}
+
+function scrollToTabs(bar: HTMLElement | null) {
+  const top = bar
+    ? bar.getBoundingClientRect().top + window.scrollY - HEADER_ROOM
+    : window.scrollY + window.innerHeight * 0.7;
+  window.scrollTo({ top, behavior: "smooth" });
+}
+
 /**
- * On a phone or tablet, a "More below" button floating over the bottom of a
- * walk page when there's more under the first screen (usually the tabs). It
- * names the tabs (or counts them, if their names are long), and tapping it
- * scrolls to them. It goes for good once the page is scrolled.
+ * On a phone or tablet, while a walk page's tabs are still below the
+ * screen: a bar floating over the bottom with each tab (icon and name).
+ * Tapping one opens that tab and scrolls down to it. It goes while the tabs
+ * are in view and comes back if they're scrolled off below again. A long
+ * page with no tabs gets a plain "More below" button instead, until it's
+ * scrolled.
  */
 export function MoreBelow() {
-  const [label, setLabel] = useState<string | null>(null);
+  const [tabs, setTabs] = useState<Tab[] | null>(null);
+  const [plain, setPlain] = useState(false);
 
   useEffect(() => {
+    let observer: IntersectionObserver | null = null;
     let gone = false;
-    // Decide once the page has settled (photos and maps take their space).
-    const check = window.setTimeout(() => {
-      if (gone || window.scrollY > 40) return;
-      const tabs = visibleTabs();
-      if (tabs) {
-        if (tabs.getBoundingClientRect().top < window.innerHeight - 120) return;
-        const names = [...tabs.querySelectorAll('[data-slot="tabs-trigger"]')]
-          .map((tab) => tab.textContent?.trim())
-          .filter(Boolean);
-        // The tabs' names when they're short enough to read in full,
-        // otherwise just how many there are.
-        const named = names.join(" · ");
-        setLabel(
-          names.length === 0
-            ? "More below"
-            : named.length <= 24
-              ? `More below: ${named}`
-              : `${names.length} tabs below`,
-        );
-      } else if (document.documentElement.scrollHeight > window.innerHeight + 200) {
-        setLabel("More below");
-      }
-    }, 600);
     const onScroll = () => {
       if (window.scrollY < 40) return;
       gone = true;
-      setLabel(null);
+      setPlain(false);
       window.removeEventListener("scroll", onScroll);
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
+    // Decide once the page has settled (photos and maps take their space).
+    const start = window.setTimeout(() => {
+      const bar = visibleTabs();
+      if (!bar) {
+        if (!gone && window.scrollY < 40 && document.documentElement.scrollHeight > window.innerHeight + 200) {
+          setPlain(true);
+          window.addEventListener("scroll", onScroll, { passive: true });
+        }
+        return;
+      }
+      // Shown only while the tab bar is below the bottom of the screen.
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          const below = !entry.isIntersecting && entry.boundingClientRect.top > 0;
+          setTabs(below ? readTabs(bar) : null);
+        },
+        { rootMargin: "0px 0px -80px 0px" },
+      );
+      observer.observe(bar);
+    }, 600);
     return () => {
-      window.clearTimeout(check);
+      window.clearTimeout(start);
+      observer?.disconnect();
       window.removeEventListener("scroll", onScroll);
     };
   }, []);
 
-  if (!label) return null;
-
-  function go() {
-    const tabs = visibleTabs();
-    const top = tabs
-      ? tabs.getBoundingClientRect().top + window.scrollY - HEADER_ROOM
-      : window.scrollY + window.innerHeight * 0.7;
-    window.scrollTo({ top, behavior: "smooth" });
+  function open(value: string) {
+    const bar = visibleTabs();
+    const trigger = [...(bar?.querySelectorAll<HTMLElement>('[data-slot="tabs-trigger"]') ?? [])].find(
+      (tab) => tab.dataset.value === value,
+    );
+    // The tab bar changes tab on a press (mouse down), as when tapped.
+    trigger?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, button: 0 }));
+    scrollToTabs(bar);
   }
 
+  const wrap =
+    "pointer-events-none fixed inset-x-0 bottom-[calc(16px+var(--bottom-nav-offset,0px))] z-[56] flex justify-center px-4 md:px-6 lg:hidden [html:has([data-owner-chips])_&]:bottom-[calc(64px+var(--bottom-nav-offset,0px))]";
+
+  if (tabs && tabs.length > 0)
+    return (
+      // Above the owners' Placeholders and Style chips when they're showing.
+      <div className={wrap}>
+        <nav
+          aria-label="Jump to a tab"
+          className="pointer-events-auto flex w-full max-w-xl animate-in gap-1 overflow-x-auto rounded-2xl border bg-background/95 p-1.5 shadow-lg backdrop-blur fade-in-0 slide-in-from-bottom-2 [scrollbar-width:none]"
+        >
+          {tabs.map((tab) => (
+            <button
+              className={
+                // Icon over the name (two short lines at most), like the
+                // bottom menu bar, so five tabs still fit across a phone.
+                "flex min-w-14 flex-1 cursor-pointer touch-manipulation flex-col items-center justify-start gap-1 rounded-xl px-1.5 py-2 text-[11px] leading-tight font-medium " +
+                (tab.active ? "bg-foreground text-background" : "text-foreground hover:bg-muted")
+              }
+              key={tab.value}
+              onClick={() => open(tab.value)}
+              type="button"
+            >
+              {tab.icon ? (
+                <span
+                  aria-hidden
+                  className="contents [&>svg]:size-5 [&>svg]:shrink-0"
+                  dangerouslySetInnerHTML={{ __html: tab.icon }}
+                />
+              ) : null}
+              <span className="line-clamp-2 text-center">{tab.label}</span>
+            </button>
+          ))}
+        </nav>
+      </div>
+    );
+
+  if (!plain) return null;
   return (
-    // Above the owners' Placeholders and Style chips when they're showing.
-    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(16px+var(--bottom-nav-offset,0px))] z-[56] flex justify-center px-4 md:px-6 lg:hidden [html:has([data-owner-chips])_&]:bottom-[calc(64px+var(--bottom-nav-offset,0px))]">
+    <div className={wrap}>
       <button
         className="pointer-events-auto flex w-full max-w-xl animate-in cursor-pointer touch-manipulation items-center justify-center gap-1.5 rounded-full bg-foreground px-4 py-2.5 text-sm font-medium text-background shadow-lg fade-in-0 slide-in-from-bottom-2"
-        onClick={go}
+        onClick={() => scrollToTabs(null)}
         type="button"
       >
-        <span className="truncate">{label}</span>
+        <span className="truncate">More below</span>
         <ChevronDown aria-hidden className="size-4 shrink-0 animate-bounce" />
       </button>
     </div>

@@ -204,11 +204,12 @@ export function WalksSection({
               designer over that walk. It&apos;s only offered on a computer
               (a screen 1024 pixels wide or more), not on phones or tablets.
               On a phone or tablet, when the tabs (or more of the page) are
-              below the first screen, a <strong>More below</strong> button
-              floats over the bottom naming the tabs (or saying how many,
-              such as &quot;3 tabs below&quot;, when their names are long);
-              tapping it scrolls to
-              them, and it goes once the page is scrolled. Drag blocks in from the left — Messages,
+              below the first screen, a bar of the tabs floats over the
+              bottom (each tab&apos;s icon and name, the open one dark):
+              tapping one opens that tab and scrolls down to it. The bar goes
+              while the tabs are in view and comes back if they&apos;re
+              scrolled off below again. A long page with no tabs gets a{" "}
+              <strong>More below</strong> button instead. Drag blocks in from the left — Messages,
               Title, Details card, Facts, Essentials, Clock in + Manage, Status,
               Map, Weather, Attended, Journey, How this group works (for
               signed-out visitors), story cards, a bento grid, a walk ticket
