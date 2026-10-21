@@ -1455,22 +1455,24 @@ function Title({
       const countdownText = counting
         ? ` · ${info.countdown.value} ${info.countdown.unit}`
         : "";
-      const statusText = `${info.now.eyebrow} · ${info.now.line}${countdownText}`;
-      // On a phone, a shorter line that fits on one row: the clock-in day
-      // is left out when it's the walk's own day (the date is right under it).
-      const phoneStatusText =
+      // Kept short enough for one row on a phone: the clock-in day is left
+      // out when it's the walk's own day (the date is on the line under it).
+      const statusText =
         info.status === "upcoming" &&
         formatWalkDay(info.opens) === formatWalkDay(info.start)
           ? `${info.now.eyebrow} · Clock-in from ${formatTime(info.opens)}${countdownText}`
-          : statusText;
+          : `${info.now.eyebrow} · ${info.now.line}${countdownText}`;
       const when = `${day}, ${time} to ${formatTime(info.end)}`;
       const bandStatus = (
         <div
           className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 sm:gap-y-1"
           data-band-status=""
         >
-          <span className="sm:hidden">{phoneStatusText}</span>
-          <span className="max-sm:hidden">{statusText}</span>
+          {/* Always one row: a touch smaller on the narrowest phones, and
+              cut off with "…" only if it still can't fit. */}
+          <span className="min-w-0 truncate max-[389px]:text-[13px] max-[359px]:text-xs">
+            {statusText}
+          </span>
           <span className="font-normal">{when}</span>
         </div>
       );
