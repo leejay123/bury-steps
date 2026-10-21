@@ -1,16 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, ChevronDown, LayoutList, X } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-
-/** Room left for the sticky site header when scrolling the tabs into view. */
-const HEADER_ROOM = 72;
+import { ChevronDown } from "lucide-react";
+import { formatWalkDay } from "@/lib/dates";
+import { cn } from "@/lib/utils";
+import { useWalkParts } from "./parts";
 
 /** The first tab bar on show (a walk page holds the signed-in and signed-out copies). */
 function visibleTabs(): HTMLElement | null {
   const bars = document.querySelectorAll<HTMLElement>('main [data-slot="tabs-list"]');
   return [...bars].find((bar) => bar.getClientRects().length > 0) ?? null;
+}
+
+/** Where the site header ends (it's taller with an announcement showing). */
+function headerBottom(): number {
+  return document.querySelector("[data-site-header]")?.getBoundingClientRect().bottom ?? 64;
 }
 
 type Tab = { value: string; label: string; icon: string | null; active: boolean };
@@ -27,59 +31,65 @@ function readTabs(bar: HTMLElement): Tab[] {
 
 function scrollToTabs(bar: HTMLElement | null) {
   const top = bar
-    ? bar.getBoundingClientRect().top + window.scrollY - HEADER_ROOM
+    ? bar.getBoundingClientRect().top + window.scrollY - headerBottom() - 8
     : window.scrollY + window.innerHeight * 0.7;
   window.scrollTo({ top, behavior: "smooth" });
 }
 
 /**
- * On a phone or tablet, while a walk page's tab bar is off the screen: a
- * round button floating at the bottom right. Tapping it lists the tabs
- * (icon and name, a tick on the open one); choosing one opens that tab and
- * scrolls to it. A long page with no tabs gets a plain "More below" button
- * instead, until it's scrolled.
+ * On a phone or tablet, once the walk's name has scrolled away and while
+ * its tab bar isn't on screen: a slim bar under the site header with the
+ * walk's name and date and the tabs as icons (the open one underlined).
+ * Tapping one opens that tab and scrolls to it. A long page with no tabs
+ * gets a plain "More below" button instead, until it's scrolled.
  */
 export function MoreBelow() {
-  // Whether there's a tab bar off the screen (the round button shows then).
-  const [offScreen, setOffScreen] = useState(false);
-  const [tabs, setTabs] = useState<Tab[]>([]);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const parts = useWalkParts();
+  const [mini, setMini] = useState<{ top: number; tabs: Tab[] } | null>(null);
   const [plain, setPlain] = useState(false);
 
   useEffect(() => {
-    let observer: IntersectionObserver | null = null;
+    let frame = 0;
     let gone = false;
+    const update = () => {
+      frame = 0;
+      const bar = visibleTabs();
+      if (!bar) return setMini(null);
+      const top = headerBottom();
+      // The walk's name on show (not the hidden signed-in or signed-out copy's).
+      const title = [...document.querySelectorAll<HTMLElement>("main h1")].find(
+        (h1) => h1.getClientRects().length > 0,
+      );
+      const titlePassed = title ? title.getBoundingClientRect().bottom < top : window.scrollY > 200;
+      const rect = bar.getBoundingClientRect();
+      const tabsInView = rect.bottom > top && rect.top < window.innerHeight;
+      setMini(titlePassed && !tabsInView ? { top, tabs: readTabs(bar) } : null);
+    };
     const onScroll = () => {
-      if (window.scrollY < 40) return;
-      gone = true;
-      setPlain(false);
-      window.removeEventListener("scroll", onScroll);
+      if (!frame) frame = requestAnimationFrame(update);
+      if (!gone && window.scrollY > 40) {
+        gone = true;
+        setPlain(false);
+      }
     };
     // Decide once the page has settled (photos and maps take their space).
     const start = window.setTimeout(() => {
-      const bar = visibleTabs();
-      if (!bar) {
-        if (!gone && window.scrollY < 40 && document.documentElement.scrollHeight > window.innerHeight + 200) {
-          setPlain(true);
-          window.addEventListener("scroll", onScroll, { passive: true });
-        }
-        return;
+      if (!visibleTabs() && !gone && window.scrollY < 40) {
+        setPlain(document.documentElement.scrollHeight > window.innerHeight + 200);
       }
-      // Shown only while the tab bar is off the screen (above or below).
-      observer = new IntersectionObserver(([entry]) => setOffScreen(!entry.isIntersecting), {
-        rootMargin: "-72px 0px -80px 0px",
-      });
-      observer.observe(bar);
+      update();
     }, 600);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
     return () => {
       window.clearTimeout(start);
-      observer?.disconnect();
+      if (frame) cancelAnimationFrame(frame);
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
     };
   }, []);
 
   function choose(value: string) {
-    setMenuOpen(false);
     const bar = visibleTabs();
     const trigger = [...(bar?.querySelectorAll<HTMLElement>('[data-slot="tabs-trigger"]') ?? [])].find(
       (tab) => tab.dataset.value === value,
@@ -89,58 +99,51 @@ export function MoreBelow() {
     scrollToTabs(bar);
   }
 
-  if (offScreen || menuOpen)
+  if (mini && mini.tabs.length > 0)
     return (
-      // Bottom right, clear of the owners' chips (bottom left).
-      <div className="fixed right-4 bottom-[calc(16px+var(--bottom-nav-offset,0px))] z-[56] md:right-6 lg:hidden">
-        <Popover
-          onOpenChange={(next) => {
-            if (next) {
-              const bar = visibleTabs();
-              setTabs(bar ? readTabs(bar) : []);
-            }
-            setMenuOpen(next);
-          }}
-          open={menuOpen}
+      <nav
+        aria-label="Jump to a tab"
+        className="fixed inset-x-0 z-[65] animate-in border-b bg-background/95 shadow-[0_6px_16px_-8px_rgb(0_0_0/0.15)] backdrop-blur fade-in-0 slide-in-from-top-2 lg:hidden"
+        style={{ top: mini.top }}
+      >
+        {parts ? (
+          <div className="flex items-center justify-between gap-3 px-4 pt-2 text-xs md:px-6">
+            <span className="min-w-0 truncate font-semibold">{parts.headline.title}</span>
+            <span className="shrink-0 text-muted-foreground" suppressHydrationWarning>
+              {formatWalkDay(new Date(parts.headline.startsAt))}
+            </span>
+          </div>
+        ) : null}
+        <div
+          className="grid px-2 md:px-4"
+          style={{ gridTemplateColumns: `repeat(${mini.tabs.length}, minmax(0, 1fr))` }}
         >
-          <PopoverTrigger asChild>
+          {mini.tabs.map((tab) => (
             <button
-              aria-label="Jump to a tab"
-              className="flex size-14 animate-in cursor-pointer touch-manipulation items-center justify-center rounded-full bg-foreground text-background shadow-lg fade-in-0 zoom-in-90"
+              aria-current={tab.active ? "true" : undefined}
+              aria-label={tab.label}
+              className={cn(
+                "flex h-11 cursor-pointer touch-manipulation items-center justify-center border-b-2",
+                tab.active ? "border-foreground text-foreground" : "border-transparent text-muted-foreground",
+              )}
+              key={tab.value}
+              onClick={() => choose(tab.value)}
+              title={tab.label}
               type="button"
             >
-              {menuOpen ? <X className="size-6" /> : <LayoutList className="size-6" />}
+              {tab.icon ? (
+                <span
+                  aria-hidden
+                  className="contents [&>svg]:size-5 [&>svg]:shrink-0"
+                  dangerouslySetInnerHTML={{ __html: tab.icon }}
+                />
+              ) : (
+                <span className="truncate px-1 text-xs font-medium">{tab.label}</span>
+              )}
             </button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-64 p-1.5" side="top" sideOffset={10}>
-            <p className="px-2.5 pt-1.5 pb-2 text-xs font-medium text-muted-foreground">Jump to</p>
-            <ul className="flex flex-col gap-0.5">
-              {tabs.map((tab) => (
-                <li key={tab.value}>
-                  <button
-                    className={
-                      "flex w-full cursor-pointer touch-manipulation items-center gap-3 rounded-lg px-2.5 py-2.5 text-left text-sm font-medium " +
-                      (tab.active ? "bg-muted" : "hover:bg-muted")
-                    }
-                    onClick={() => choose(tab.value)}
-                    type="button"
-                  >
-                    {tab.icon ? (
-                      <span
-                        aria-hidden
-                        className="contents [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground"
-                        dangerouslySetInnerHTML={{ __html: tab.icon }}
-                      />
-                    ) : null}
-                    <span className="min-w-0 flex-1">{tab.label}</span>
-                    {tab.active ? <Check aria-hidden className="size-4 shrink-0 text-primary" /> : null}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </PopoverContent>
-        </Popover>
-      </div>
+          ))}
+        </div>
+      </nav>
     );
 
   if (!plain) return null;
