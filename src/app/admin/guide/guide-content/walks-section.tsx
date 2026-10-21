@@ -48,7 +48,8 @@ export function WalksSection({
             History is every finished walk. Both tabs have a search box, a{" "}
             <strong>Status</strong> filter (for example Upcoming, In progress,
             Cancelled, or Completed on History), and a <strong>Sort</strong>{" "}
-            control (soonest first or latest first). Those choices stay in the
+            control (soonest first or latest first); an open dropdown closes
+            when you scroll the page. Those choices stay in the
             address, so a refresh or the back button keeps them, and you can
             copy the link. The member Walks page does the same. Click a row to
             open the walk. History shows how many people clocked in, not how

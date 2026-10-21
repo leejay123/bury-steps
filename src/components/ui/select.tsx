@@ -99,6 +99,26 @@ function Select({
     setOpen(next);
   }
 
+  // Scrolling the page closes an open list, instead of leaving it floating
+  // over the page. Scrolling inside the list itself doesn't.
+  React.useEffect(() => {
+    if (!open) return;
+    const openedAt = performance.now();
+    const startY = window.scrollY;
+    const onScroll = (event: Event) => {
+      const target = event.target;
+      if (target instanceof Element && target.closest("[data-select-dropdown]")) return;
+      if (target === document || target === window) {
+        if (Math.abs(window.scrollY - startY) < 8) return;
+      } else if (performance.now() - openedAt < 200) {
+        return; // a box nudging itself into view as the list opens
+      }
+      openChange(false);
+    };
+    window.addEventListener("scroll", onScroll, { capture: true, passive: true });
+    return () => window.removeEventListener("scroll", onScroll, { capture: true });
+  }, [open]);
+
   return (
     <SelectContext.Provider
       value={{ disabled, items, open, select, selected, setOpen: openChange, triggerWidth }}
