@@ -370,7 +370,9 @@ export function WalksSection({
               normal (24 pixels) or more without changing the edges. Facts
               arrange only offers what works with the chosen look (a spec sheet
               or list can&apos;t swipe, pills only wrap or swipe), and Spec sheet
-              can have its outer border off. Round badges, the walk tickets,
+              can have its outer border off. On a phone, Spec sheet puts each label
+              above its value (still striped), so long values like the meeting
+              point use the full width. Round badges, the walk tickets,
               receipt, numbered list, first fact big, vertical timeline and
               two-tone rows were taken out of Facts shown as; pages using them
               show the plain facts. Any

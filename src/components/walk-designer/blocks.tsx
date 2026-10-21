@@ -4417,18 +4417,23 @@ function FactLooksBody({
         className={cn("overflow-hidden rounded-xl text-sm", border && "border")}
       >
         {facts.map((fact, i) => (
+          // On a phone the label sits over its value, so a long value (a
+          // meeting point, a what3words) gets the whole width instead of
+          // wrapping in a narrow column; wider, they share a row.
           <div
             className={cn(
-              "grid grid-cols-[9rem_minmax(0,1fr)] gap-6 px-4 py-3 sm:grid-cols-[12rem_minmax(0,1fr)]",
+              "flex flex-col gap-0.5 px-4 py-3 sm:grid sm:grid-cols-[12rem_minmax(0,1fr)] sm:gap-6",
               i % 2 === 1 && "bg-muted/50",
             )}
             data-wide={fact.wide ? "" : undefined}
             key={fact.label}
           >
-            <dt className="font-semibold">{fact.label}</dt>
-            {/* The value on the far right of its row. */}
+            <dt className="text-xs font-medium text-muted-foreground sm:text-sm sm:font-semibold sm:text-foreground">
+              {fact.label}
+            </dt>
+            {/* Wider, the value sits on the far right of its row. */}
             <dd
-              className="text-right [overflow-wrap:anywhere]"
+              className="font-medium [overflow-wrap:anywhere] sm:text-right sm:font-normal"
               suppressHydrationWarning
             >
               {fact.value}
