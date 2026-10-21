@@ -26,9 +26,13 @@ export function WalksSection({
             photo (it&apos;s shrunk on the phone first). Each person can have up
             to 10 stories at once, and each one disappears 24 hours after it was
             posted; its photo is deleted then too, so the space comes back.
-            Signed-out visitors never see stories. Tap a photo to watch: tap the
-            sides to go back or forward, hold to pause, swipe to the next
-            person. You can delete your own stories; organisers can delete
+            Signed-out visitors never see stories. Tap a photo to watch: each
+            story shows for 5 seconds, and the bar at the top fills right to the
+            end before the next one comes up (after someone&apos;s last story it
+            moves to the next person, or closes after the last person). Tap the
+            left side to go back and the right side to go forward, hold to
+            pause, swipe sideways for the next or previous person, and swipe
+            down or press the cross to close. You can delete your own stories; organisers can delete
             anyone&apos;s. Anyone can <strong>Report</strong> someone else&apos;s
             story — organisers then see &quot;Reported&quot; under that
             person&apos;s photo and &quot;Reported by …&quot; on the story, and can

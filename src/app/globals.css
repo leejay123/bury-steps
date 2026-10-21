@@ -715,3 +715,25 @@ html[data-placeholder-style="autoskeleton"] [data-page-loading] {
     transform: translateX(100%);
   }
 }
+
+/* Stories (stories/story-viewer.tsx): the current story's bar fills over 5
+   seconds and the viewer moves on when it ends. It stays 5 seconds with
+   reduced motion too (the catch-all rule above would end every story at once). */
+@keyframes story-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.story-fill {
+  transform-origin: left;
+  animation: story-fill 5s linear forwards;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-fill {
+    animation-duration: 5s !important;
+  }
+}

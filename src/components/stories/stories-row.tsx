@@ -10,11 +10,10 @@ import {
 } from "react";
 import { Flag, Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { StoryViewer, type User as ViewerUser } from "react-instagram-stories";
-import "react-instagram-stories/styles.css";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StoryViewer, type StoryPosition } from "@/components/stories/story-viewer";
 import { deleteStory, postStory, reportStory } from "@/server/actions/stories";
 import type { StoryFeed } from "@/app/api/stories/route";
 
@@ -30,12 +29,6 @@ function initials(name: string) {
       .map((part) => part[0]?.toUpperCase() ?? "")
       .join("") || "?"
   );
-}
-
-/** A plain grey circle with initials, for the viewer's header when there's no photo. */
-function initialsAvatar(name: string) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" rx="32" fill="#e4e4e7"/><text x="32" y="38" font-family="system-ui,sans-serif" font-size="22" font-weight="600" fill="#3f3f46" text-anchor="middle">${initials(name)}</text></svg>`;
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
 /**
@@ -161,21 +154,13 @@ export function StoriesRow() {
     for (const person of people)
       for (const story of person.stories) void preload(story.src);
   }, [people]);
-  // The viewer's list stays the same while it's open (marking a story seen
-  // used to rebuild it, which could restart or cut short the last story).
-  const users: ViewerUser[] = useMemo(
-    () =>
-      people.map((person) => ({
-        id: person.id,
-        username: person.isMe ? "Your story" : person.name,
-        avatarUrl: person.imageUrl ?? initialsAvatar(person.name),
-        stories: person.stories.map((story) => ({
-          id: story.id,
-          type: "image" as const,
-          src: story.src,
-        })),
-      })),
-    [people],
+  const onStoryChange = useCallback(
+    (at: StoryPosition) => {
+      setCurrent(at);
+      setConfirmDelete(false);
+      markSeen(people[at.user]?.stories[at.story]?.id);
+    },
+    [people, markSeen],
   );
   const [opening, setOpening] = useState<number | null>(null);
 
@@ -349,30 +334,23 @@ export function StoriesRow() {
       </div>
 
       {open ? (
-        <>
-          <StoryViewer
-            initialStoryIndex={open.story}
-            initialUserIndex={open.user}
-            isOpen
-            onClose={() => setOpen(null)}
-            onStoryChange={(user, story) => {
-              setCurrent({ user, story });
-              setConfirmDelete(false);
-              markSeen(people[user]?.stories[story]?.id);
-            }}
-            users={users}
-          />
-          {/* Our own buttons over the viewer (it has no slot for them). */}
+        <StoryViewer
+          onChange={onStoryChange}
+          onClose={() => setOpen(null)}
+          paused={confirmDelete || busy}
+          people={people}
+          start={open}
+        >
           {shown && (shown.canDelete || shown.canReport) ? (
-            <div className="pointer-events-none fixed inset-x-0 bottom-6 z-[10000] flex justify-center gap-2">
+            <>
               {shown.reports > 0 ? (
-                <span className="pointer-events-auto rounded-full bg-black/60 px-3 py-1.5 text-xs text-white">
+                <span className="rounded-full bg-black/60 px-3 py-1.5 text-xs text-white">
                   Reported by {shown.reports}
                 </span>
               ) : null}
               {shown.canReport ? (
                 <button
-                  className="pointer-events-auto flex cursor-pointer items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white"
+                  className="flex cursor-pointer items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white"
                   disabled={busy}
                   onClick={onReport}
                   type="button"
@@ -382,7 +360,7 @@ export function StoriesRow() {
               ) : null}
               {shown.canDelete ? (
                 <button
-                  className="pointer-events-auto flex cursor-pointer items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white"
+                  className="flex cursor-pointer items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white"
                   disabled={busy}
                   onClick={onDelete}
                   type="button"
@@ -391,9 +369,9 @@ export function StoriesRow() {
                   {confirmDelete ? "Tap again to delete" : "Delete"}
                 </button>
               ) : null}
-            </div>
+            </>
           ) : null}
-        </>
+        </StoryViewer>
       ) : null}
     </section>
   );
