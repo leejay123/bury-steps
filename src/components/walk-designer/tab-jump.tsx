@@ -8,6 +8,7 @@ import {
   ChevronRight,
   ChevronUp,
   LayoutList,
+  Menu,
   Search,
   X,
 } from "lucide-react";
@@ -102,6 +103,8 @@ type State = {
   /** How far down the page, 0 to 1. */
   progress: number;
   scrollY: number;
+  /** Whether the site's bottom menu is on the page (signed-in phones). */
+  hasNav: boolean;
 };
 
 const PASTELS = [
@@ -189,6 +192,7 @@ function useTabBar(
         top,
         progress: room > 0 ? Math.min(1, Math.max(0, win.scrollY / room)) : 0,
         scrollY: win.scrollY,
+        hasNav: Boolean(doc.querySelector("[data-bottom-nav]")),
       });
     };
     let frame = 0;
@@ -362,6 +366,8 @@ export function TabJump() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [toastGone, setToastGone] = useState(false);
+  // Walk tabs as the bottom bar: showing the site's own menu instead, for now.
+  const [siteMenu, setSiteMenu] = useState(false);
 
   const look = state?.look ?? "sticky";
 
@@ -1430,41 +1436,70 @@ export function TabJump() {
         </>
       );
       break;
-    case "bottom-bar":
+    case "bottom-bar": {
+      // The same look as the site's bottom menu (bottom-nav-bar.tsx), with
+      // the walk's tabs in it; Menu brings the site's menu back, and a
+      // small Walk tabs button above it brings the tabs back.
+      if (siteMenu) {
+        body = (
+          <button
+            className="fixed left-1/2 z-[56] flex h-10 -translate-x-1/2 cursor-pointer items-center gap-1.5 rounded-full border bg-background/95 px-4 text-[13px] font-semibold shadow-lg backdrop-blur md:hidden bottom-[calc(12px+var(--bottom-nav-offset,0px))]"
+            onClick={() => setSiteMenu(false)}
+            type="button"
+          >
+            <LayoutList className="size-4" />
+            Walk tabs
+          </button>
+        );
+        break;
+      }
+      const items = state.hasNav ? tabs.length + 1 : tabs.length;
+      const item = (active: boolean) =>
+        cn(
+          "relative flex min-w-0 flex-1 cursor-pointer touch-manipulation flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors",
+          active ? "text-foreground" : "text-muted-foreground active:text-foreground",
+        );
       body = (
         <nav
           aria-label="This walk"
-          className="fixed inset-x-0 bottom-0 z-[58] grid border-t bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
-          style={{
-            gridTemplateColumns: `repeat(${tabs.length + 1}, minmax(0, 1fr))`,
-          }}
+          // Solid, unlike the site's menu, which sits underneath it.
+          className="fixed inset-x-0 bottom-0 z-[58] border-t bg-background pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] md:hidden"
         >
-          <a
-            className="flex h-16 flex-col items-center justify-center gap-0.5 bg-muted text-[10px] text-muted-foreground"
-            href="/walks"
+          <ul
+            className="mx-auto grid h-15 max-w-md"
+            style={{ gridTemplateColumns: `repeat(${items}, minmax(0, 1fr))` }}
           >
-            <ChevronLeft className="size-5" />
-            Walks
-          </a>
-          {tabs.map((tab) => (
-            <button
-              className={cn(
-                "flex h-16 cursor-pointer flex-col items-center justify-center gap-0.5 px-0.5 text-[10px]",
-                tab.active
-                  ? "font-semibold text-emerald-700"
-                  : "text-muted-foreground",
-              )}
-              key={tab.value}
-              onClick={() => choose(tab.value)}
-              type="button"
-            >
-              <TabIcon tab={tab} />
-              <span className="w-full truncate text-center">{tab.label}</span>
-            </button>
-          ))}
+            {state.hasNav ? (
+              <li className="flex min-w-0">
+                <button className={item(false)} onClick={() => setSiteMenu(true)} type="button">
+                  <span className="relative flex h-7 w-14 items-center justify-center">
+                    <Menu aria-hidden className="size-5" strokeWidth={1.75} />
+                  </span>
+                  <span className="max-w-full truncate px-1">Menu</span>
+                </button>
+              </li>
+            ) : null}
+            {tabs.map((tab) => (
+              <li className="flex min-w-0" key={tab.value}>
+                <button
+                  aria-current={tab.active ? "true" : undefined}
+                  className={item(tab.active)}
+                  onClick={() => choose(tab.value)}
+                  type="button"
+                >
+                  <span className="relative flex h-7 w-14 items-center justify-center">
+                    {tab.active ? <span className="absolute inset-0 rounded-full bg-muted" /> : null}
+                    <TabIcon tab={tab} className="[&>svg]:relative" />
+                  </span>
+                  <span className="w-full truncate px-1 text-center">{tab.label}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
         </nav>
       );
       break;
+    }
     case "expand-pill":
       body = (
         <div

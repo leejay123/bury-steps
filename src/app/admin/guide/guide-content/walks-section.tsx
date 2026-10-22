@@ -212,7 +212,10 @@ export function WalksSection({
               sheet, a side drawer, folder tabs on the edge, previous / next
               pills, a search, a message that points down, and more, or
               Nothing. Choosing a tab in any of them opens it and scrolls to
-              it. Switch between them in the designer and check the preview
+              it. <strong>Walk tabs as the bottom bar</strong> looks just like
+              the site&apos;s bottom menu but holds the walk&apos;s tabs; its
+              first item, Menu, brings the usual menu back, with a small
+              Walk tabs button above it to switch back. Switch between them in the designer and check the preview
               at phone width. The <strong>Tab shortcuts</strong> block (under
               Layout) puts the tabs on the page itself — drag it under the
               title, say — as two-column links, cards, swiping cards, a
