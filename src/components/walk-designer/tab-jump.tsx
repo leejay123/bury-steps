@@ -1860,7 +1860,11 @@ export function TabJump() {
   return (
     <>
       {hold}
-      {body}
+      {/* Hidden while a drawer or dialog is open (globals.css), so it never
+          sits over the More menu and the like. */}
+      <div className="contents" data-tab-jump="">
+        {body}
+      </div>
     </>
   );
 }

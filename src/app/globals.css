@@ -256,6 +256,14 @@ body {
 
 /* Sticky header must not steal taps from drawers/dialogs while they are open —
    the full-screen blur overlay sits above it (header z-55, overlay z-60+). */
+/* The walk page's tab jump (walk-designer/tab-jump.tsx) steps out of the
+   way of any open drawer or dialog, such as the bottom bar's More menu. */
+html:has([data-slot="drawer-content"][data-state="open"]) [data-tab-jump],
+html:has([data-slot="dialog-content"][data-state="open"]) [data-tab-jump],
+html:has([data-slot="alert-dialog-content"][data-state="open"]) [data-tab-jump] {
+  display: none;
+}
+
 html:has([data-slot="drawer-content"][data-state="open"]) header,
 html:has([data-slot="dialog-content"][data-state="open"]) header,
 html:has([data-slot="alert-dialog-content"][data-state="open"]) header {
