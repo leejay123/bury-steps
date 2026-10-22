@@ -366,8 +366,11 @@ export function TabJump() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [toastGone, setToastGone] = useState(false);
-  // Walk tabs as the bottom bar: showing the site's own menu instead, for now.
-  const [siteMenu, setSiteMenu] = useState(false);
+  // Walk tabs as the bottom bar: Menu shows the site's own menu for a
+  // moment — until the page is scrolled, or a few seconds pass.
+  const [siteMenuAt, setSiteMenuAt] = useState<number | null>(null);
+  // The tab last scrolled into view in the bottom bar's row.
+  const shownTab = useRef<string | null>(null);
 
   const look = state?.look ?? "sticky";
 
@@ -1438,64 +1441,78 @@ export function TabJump() {
       break;
     case "bottom-bar": {
       // The same look as the site's bottom menu (bottom-nav-bar.tsx), with
-      // the walk's tabs in it; Menu brings the site's menu back, and a
-      // small Walk tabs button above it brings the tabs back.
-      if (siteMenu) {
-        body = (
-          <button
-            className="fixed left-1/2 z-[56] flex h-10 -translate-x-1/2 cursor-pointer items-center gap-1.5 rounded-full border bg-background/95 px-4 text-[13px] font-semibold shadow-lg backdrop-blur md:hidden bottom-[calc(12px+var(--bottom-nav-offset,0px))]"
-            onClick={() => setSiteMenu(false)}
-            type="button"
-          >
-            <LayoutList className="size-4" />
-            Walk tabs
-          </button>
+      // the walk's tabs in it straight away. Menu slides it down to show
+      // the site's menu underneath; it slides back by itself once the page
+      // is scrolled or after a few seconds. The tabs scroll sideways, so
+      // every name fits in full.
+      const showingSite =
+        siteMenuAt !== null && Math.abs(state.scrollY - siteMenuAt) < 60;
+      const showSiteMenu = () => {
+        const at = state.scrollY;
+        setSiteMenuAt(at);
+        window.setTimeout(
+          () => setSiteMenuAt((now) => (now === at ? null : now)),
+          6000,
         );
-        break;
-      }
-      const items = state.hasNav ? tabs.length + 1 : tabs.length;
+      };
       const item = (active: boolean) =>
         cn(
-          "relative flex min-w-0 flex-1 cursor-pointer touch-manipulation flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors",
+          "relative flex shrink-0 cursor-pointer touch-manipulation flex-col items-center justify-center gap-0.5 text-[11px] font-medium whitespace-nowrap transition-colors",
           active ? "text-foreground" : "text-muted-foreground active:text-foreground",
         );
       body = (
         <nav
           aria-label="This walk"
-          // Solid, unlike the site's menu, which sits underneath it.
-          className="fixed inset-x-0 bottom-0 z-[58] border-t bg-background pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] md:hidden"
+          className={cn(
+            // Solid, unlike the site's menu, which sits underneath it.
+            "fixed inset-x-0 bottom-0 z-[58] flex h-[calc(3.75rem+env(safe-area-inset-bottom))] border-t bg-background pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] transition-transform duration-300 ease-out md:hidden",
+            showingSite && "translate-y-full",
+          )}
         >
-          <ul
-            className="mx-auto grid h-15 max-w-md"
-            style={{ gridTemplateColumns: `repeat(${items}, minmax(0, 1fr))` }}
-          >
-            {state.hasNav ? (
-              <li className="flex min-w-0">
-                <button className={item(false)} onClick={() => setSiteMenu(true)} type="button">
-                  <span className="relative flex h-7 w-14 items-center justify-center">
-                    <Menu aria-hidden className="size-5" strokeWidth={1.75} />
-                  </span>
-                  <span className="max-w-full truncate px-1">Menu</span>
-                </button>
-              </li>
-            ) : null}
-            {tabs.map((tab) => (
-              <li className="flex min-w-0" key={tab.value}>
-                <button
-                  aria-current={tab.active ? "true" : undefined}
-                  className={item(tab.active)}
-                  onClick={() => choose(tab.value)}
-                  type="button"
-                >
-                  <span className="relative flex h-7 w-14 items-center justify-center">
-                    {tab.active ? <span className="absolute inset-0 rounded-full bg-muted" /> : null}
-                    <TabIcon tab={tab} className="[&>svg]:relative" />
-                  </span>
-                  <span className="w-full truncate px-1 text-center">{tab.label}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
+          {state.hasNav ? (
+            <button
+              className={cn(item(false), "w-16 border-r")}
+              onClick={showSiteMenu}
+              type="button"
+            >
+              <span className="relative flex h-7 w-14 items-center justify-center">
+                <Menu aria-hidden className="size-5" strokeWidth={1.75} />
+              </span>
+              Menu
+            </button>
+          ) : null}
+          <div className="relative min-w-0 flex-1">
+            <ul className="flex h-full overflow-x-auto overscroll-x-contain px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {tabs.map((tab) => (
+                <li className="flex flex-1" key={tab.value}>
+                  <button
+                    aria-current={tab.active ? "true" : undefined}
+                    className={cn(item(tab.active), "min-w-[4.5rem] flex-1 px-2")}
+                    onClick={() => choose(tab.value)}
+                    // Bring a newly opened tab into view in the row (only
+                    // when it changes, so it never fights a swipe).
+                    ref={(el) => {
+                      if (!el || !tab.active || shownTab.current === tab.value) return;
+                      shownTab.current = tab.value;
+                      el.scrollIntoView({ block: "nearest", inline: "nearest" });
+                    }}
+                    type="button"
+                  >
+                    <span className="relative flex h-7 w-14 items-center justify-center">
+                      {tab.active ? <span className="absolute inset-0 rounded-full bg-muted" /> : null}
+                      <TabIcon tab={tab} className="[&>svg]:relative" />
+                    </span>
+                    {tab.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {/* A soft edge, so it's clear the row scrolls. */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-background to-transparent"
+            />
+          </div>
         </nav>
       );
       break;
