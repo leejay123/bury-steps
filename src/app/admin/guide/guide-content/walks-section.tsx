@@ -433,7 +433,10 @@ export function WalksSection({
               and whether several can be open at once or only one. Both
               blocks have Inside each section: Full width, edge to edge makes a
               table or list in a section (like the attendance list) reach its
-              edges and drop its own border, instead of a box inside a box.{" "}
+              edges and drop its own border, instead of a box inside a box (the
+              weather forecast card too). A section with nothing in it (Weather
+              after the walk, say) shows the grey &quot;Nothing to show&quot; box,
+              like an empty tab.{" "}
               <strong>Accordion (with icons)</strong>, also under Layout, is the
               same but with an icon before each section&apos;s name: Automatic
               picks one from the name (Map &amp; weather gets a map pin, Before

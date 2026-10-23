@@ -1380,6 +1380,56 @@ function TabsView({
 }
 
 /**
+ * One open section's blocks; when they show nothing (Weather after the
+ * walk, say), the site's empty box instead, like an empty tab.
+ */
+function SectionBody({
+  Content,
+  className,
+  label,
+  padded,
+}: {
+  Content: (props: { className?: string }) => ReactNode;
+  className: string;
+  label: string;
+  /** Full width in a framed look: the box keeps side space like text. */
+  padded: boolean;
+}) {
+  const body = useRef<HTMLDivElement>(null);
+  const [empty, setEmpty] = useState(false);
+  useEffect(() => {
+    const el = body.current;
+    if (!el) return;
+    const check = () => setEmpty(isEmptyPanel(el));
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(el, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ["hidden", "class", "style"],
+    });
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <>
+      <div className="contents" ref={body}>
+        <Content className={className} />
+      </div>
+      {empty ? (
+        <div className={cn(padded && "px-4 pb-4")}>
+          <EmptyState
+            description={`There's nothing in ${label} for this walk right now.`}
+            title="Nothing to show"
+          />
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+/**
  * The Folding sections block. In the designer each section is an open,
  * labelled area to drop blocks into (like Tabs); on the page they fold.
  */
@@ -1484,13 +1534,19 @@ function FoldingView({
           ) : null}
         </AccordionTrigger>
         <AccordionContent className={fullWidth ? "pb-0" : undefined}>
-          <Content
+          <SectionBody
             className={cn(
               "flex flex-col gap-6",
+              // Lists, tables and cards (the weather) run edge to edge; text
+              // and the "nothing to show" box keep their side space.
               fullWidth &&
-                "[&_[data-reveal-list]]:rounded-none [&_[data-reveal-list]]:border-x-0 [&_[data-reveal-list]]:border-b-0 [&>*:last-child:not(:has([data-reveal-list]))]:pb-4",
-              side && "[&>*:not(:has([data-reveal-list]))]:px-4",
+                "[&_[data-reveal-list]]:rounded-none [&_[data-reveal-list]]:border-x-0 [&_[data-reveal-list]]:border-b-0 [&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:border-x-0 [&_[data-slot=card]]:border-b-0 [&_[data-slot=card]]:shadow-none [&>*:last-child:not(:has([data-reveal-list],[data-slot=card]))]:pb-4",
+              side &&
+                "[&>*:not(:has([data-reveal-list],[data-slot=card]))]:px-4",
             )}
+            Content={Content}
+            label={item.label}
+            padded={side}
           />
         </AccordionContent>
       </AccordionItem>
