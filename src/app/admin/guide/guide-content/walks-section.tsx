@@ -19,6 +19,12 @@ export function WalksSection({
       <AccordionContent>
         <GuideBody>
           <p>
+            The visitors&apos; &quot;You need to sign in to join this walk&quot;
+            box only shows where you add the <strong>Sign in to join
+            (visitors)</strong> block to a design (signed-out visitors only, while
+            the walk can still be joined).
+          </p>
+          <p>
             <strong>Stories</strong> sit at the top of the Walks page (yours
             and the members&apos;): a row of round photos, with a ring on anyone
             who has a story you haven&apos;t seen (while it loads, grey circles

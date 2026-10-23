@@ -28,6 +28,8 @@ export type WalkIdeaParts = {
   live: ReactNode;
   /** Just the Clock in button (organisers), while it can be used. */
   liveCompact?: ReactNode;
+  /** Visitors' "You need to sign in to join this walk" box (Sign in to join block). */
+  signIn?: ReactNode;
   /** This person's own clock-in line (designed pages: Your clock-in). */
   myClockIn?: ReactNode;
   /** Who's clocked in, as profile photos (People clocked in), if allowed. */

@@ -511,7 +511,6 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
           />
         </div>
         <div className="contents" data-guest-home="">
-          {noticesEl ? cloneElement(noticesEl, { part: "sign-in" }) : null}
           <WalkDesignRender
             audience="visitor"
             data={visitorDesign}
@@ -519,6 +518,8 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
               ...ideaParts,
               back: { href: "/", label: "Home" },
               live: null,
+              // Only where the design has a "Sign in to join" block.
+              signIn: noticesEl ? cloneElement(noticesEl, { part: "sign-in" }) : null,
               notices: noticesEl
                 ? cloneElement(noticesEl, { audience: "visitor", withoutSignIn: true })
                 : ideaParts.notices,

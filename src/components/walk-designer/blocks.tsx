@@ -3740,6 +3740,21 @@ export type BackArrow = "arrow" | "chevron" | "none";
  * placed, worded and styled in the designer. A design with this block
  * doesn't get the fixed link above it.
  */
+/**
+ * "You need to sign in to join this walk": only where it's added to a
+ * design, and only for signed-out visitors (nothing while the walk can't be
+ * joined any more).
+ */
+export function SignInBlock({ editing = false }: { editing?: boolean }) {
+  const p = useWalkParts();
+  if (!p)
+    return <Placeholder label="Sign in to join (signed-out visitors only)" />;
+  if (p.signIn) return <>{p.signIn}</>;
+  return editing ? (
+    <Placeholder label="Sign in to join: shows to signed-out visitors while the walk can still be joined (preview the Visitors design to see it)" />
+  ) : null;
+}
+
 export function BackLinkBlock({
   look = "text",
   arrow = "arrow",

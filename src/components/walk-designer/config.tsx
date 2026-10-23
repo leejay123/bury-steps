@@ -67,6 +67,7 @@ import {
   TitleBlock,
   WeatherBlock,
   BackLinkBlock,
+  SignInBlock,
   MessagesOrSample,
   CountdownBlock,
   DirectionsBlock,
@@ -1887,6 +1888,7 @@ export const walkDesignConfig: Config = {
       components: [
         "ReadyLayout",
         "BackLink",
+        "SignIn",
         "Messages",
         "Title",
         "WalkName",
@@ -1954,6 +1956,10 @@ export const walkDesignConfig: Config = {
       },
       defaultProps: { layout: "s01" },
       render: ({ layout }) => <ReadyLayoutBlock layout={layout} />,
+    },
+    SignIn: {
+      label: "Sign in to join (visitors)",
+      render: ({ puck }) => <SignInBlock editing={Boolean(puck?.isEditing)} />,
     },
     BackLink: {
       label: "Back link (← All walks)",
