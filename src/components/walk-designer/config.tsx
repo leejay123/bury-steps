@@ -1459,10 +1459,38 @@ function FoldingView({
   single?: boolean;
 }) {
   const viewer = useViewerAudience();
+  // In the designer: every section laid out open to drop blocks into, or
+  // folding as on the page (open and shut them to check how it looks).
+  const [folded, setFolded] = useState(false);
   if (list.length === 0) return null;
-  if (editing)
+  const toggle = editing ? (
+    <div className="flex w-fit gap-1 rounded-lg bg-muted p-1 text-xs">
+      {(
+        [
+          [false, "Drop areas"],
+          [true, "As on the page"],
+        ] as const
+      ).map(([value, words]) => (
+        <button
+          className={cn(
+            "cursor-pointer rounded-md px-2.5 py-1",
+            folded === value
+              ? "bg-background font-medium shadow-sm"
+              : "text-muted-foreground",
+          )}
+          key={words}
+          onClick={() => setFolded(value)}
+          type="button"
+        >
+          {words}
+        </button>
+      ))}
+    </div>
+  ) : null;
+  if (editing && !folded)
     return (
       <div className="flex flex-col gap-3">
+        {toggle}
         {list.map((item, i) => {
           const Content = item.content;
           return (
@@ -1537,6 +1565,8 @@ function FoldingView({
           <SectionBody
             className={cn(
               "flex flex-col gap-6",
+              // Room to drop blocks into an open section in the designer.
+              editing && "min-h-16",
               // Lists, tables and cards (the weather) run edge to edge; text
               // and the "nothing to show" box keep their side space.
               fullWidth &&
@@ -1558,7 +1588,7 @@ function FoldingView({
     side && (look === "box" || look === "numbered") && "overflow-hidden px-0",
     (look === "cards" || look === "grey") && "flex flex-col gap-3",
   );
-  return single ? (
+  const sections = single ? (
     <Accordion
       className={rootClass}
       collapsible
@@ -1571,6 +1601,14 @@ function FoldingView({
     <Accordion className={rootClass} defaultValue={opened} type="multiple">
       {items}
     </Accordion>
+  );
+  return editing ? (
+    <div className="flex flex-col gap-3">
+      {toggle}
+      {sections}
+    </div>
+  ) : (
+    sections
   );
 }
 

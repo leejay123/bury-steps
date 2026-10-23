@@ -428,7 +428,10 @@ export function WalksSection({
               design, or Same as on computers; with Plain facts, Plain facts
               look on each device picks the plain look there. Folding sections works like Tabs: add sections (+ Add, drag to
               reorder) and drop your own blocks into each one in the designer;
-              on the page they fold. Choose a look (one outlined box, separate
+              on the page they fold. In the designer, the switch above them
+              changes between Drop areas (every section open, to drop blocks in)
+              and As on the page (they fold — click a heading to open or shut
+              it, and you can still drop blocks into an open one). Choose a look (one outlined box, separate
               cards, lines only, grey boxes or numbered), an arrow or a plus,
               and whether several can be open at once or only one. Both
               blocks have Inside each section: Full width, edge to edge makes a
