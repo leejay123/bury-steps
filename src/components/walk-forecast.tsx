@@ -5,27 +5,10 @@ import { loadDailyForecast, loadForecastPlaceName } from "@/lib/weather-forecast
 import { forecastWindow, londonDateKey } from "@/lib/weather";
 import { formatWalkDay } from "@/lib/dates";
 import { walkStatus } from "@/lib/walk-window";
-import { MapPin, Sun } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CloudOff, CloudSun, MapPin, Sun } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
+import { Card } from "@/components/ui/card";
 import { WalkForecastCard } from "@/components/walk-forecast-card";
-
-function ForecastFrame({
-  place,
-  children,
-}: {
-  place: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Card className="gap-4">
-      <CardHeader className="gap-1">
-        <CardTitle className="text-base">7-day forecast</CardTitle>
-        <CardDescription>{place}</CardDescription>
-      </CardHeader>
-      <CardContent>{children}</CardContent>
-    </Card>
-  );
-}
 
 /**
  * The whole forecast card while the weather loads, shaped like
@@ -105,29 +88,35 @@ async function WalkForecastLoaded({
   const area = placeName || place;
   if (!days) {
     return (
-      <ForecastFrame place={area}>
-        <p className="text-sm text-muted-foreground">The forecast couldn’t be loaded just now.</p>
-      </ForecastFrame>
+      // The site's empty box, like an empty attendance list.
+      <EmptyState
+        description={`The forecast for ${area} couldn’t be loaded just now. Try again later.`}
+        icon={CloudOff}
+        title="Forecast unavailable"
+      />
     );
   }
 
   const window = forecastWindow(days, walkDate);
   if (window.availableLater) {
     return (
-      <ForecastFrame place={area}>
-        <p className="text-sm text-muted-foreground">
-          {/* Within the forecast's 16 days, so the year never needs showing. */}
-          The forecast for {formatWalkDay(startsAt, startsAt)} isn’t available yet. It appears here in the 16
-          days before the walk.
-        </p>
-      </ForecastFrame>
+      // The site's empty box, like an empty attendance list. Within the
+      // forecast's 16 days, so the year never needs showing.
+      <EmptyState
+        description={`The forecast for ${area} on ${formatWalkDay(startsAt, startsAt)} appears here in the 16 days before the walk.`}
+        icon={CloudSun}
+        title="No forecast yet"
+      />
     );
   }
   if (window.days.length === 0) {
     return (
-      <ForecastFrame place={area}>
-        <p className="text-sm text-muted-foreground">The forecast couldn’t be loaded just now.</p>
-      </ForecastFrame>
+      // The site's empty box, like an empty attendance list.
+      <EmptyState
+        description={`The forecast for ${area} couldn’t be loaded just now. Try again later.`}
+        icon={CloudOff}
+        title="Forecast unavailable"
+      />
     );
   }
 

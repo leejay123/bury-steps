@@ -436,7 +436,9 @@ export function WalksSection({
               edges and drop its own border, instead of a box inside a box (the
               weather forecast card too). A section with nothing in it (Weather
               after the walk, say) shows the grey &quot;Nothing to show&quot; box,
-              like an empty tab.{" "}
+              like an empty tab. The forecast itself shows that box too when it
+              isn&apos;t out yet (more than 16 days before the walk) or can&apos;t
+              be loaded.{" "}
               <strong>Accordion (with icons)</strong>, also under Layout, is the
               same but with an icon before each section&apos;s name: Automatic
               picks one from the name (Map &amp; weather gets a map pin, Before
