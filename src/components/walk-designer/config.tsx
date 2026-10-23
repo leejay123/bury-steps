@@ -1582,7 +1582,15 @@ function FoldingView({
               // Lists, tables and cards (the weather) run edge to edge; text
               // and the "nothing to show" box keep their side space.
               fullWidth &&
-                "[&_[data-reveal-list]]:rounded-none [&_[data-reveal-list]]:border-x-0 [&_[data-reveal-list]]:border-b-0 [&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:border-x-0 [&_[data-slot=card]]:border-b-0 [&_[data-slot=card]]:shadow-none [&_[data-edge]]:rounded-none [&_[data-edge]]:border-x-0 [&_[data-edge]]:border-b-0 [&>*:last-child:not(:has([data-reveal-list],[data-slot=card],[data-edge]))]:pb-4",
+                "[&_[data-reveal-list]]:rounded-none [&_[data-reveal-list]]:border-x-0 [&_[data-reveal-list]]:border-b-0 [&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:border-x-0 [&_[data-slot=card]]:border-b-0 [&_[data-slot=card]]:shadow-none [&_[data-edge]]:rounded-none [&_[data-edge]]:border-x-0 [&_[data-edge]]:border-b-0 ",
+              // Space under the last thing — not under an edge-to-edge list,
+              // card or (when chosen) empty box, which sit flush with the bottom.
+              fullWidth &&
+                !emptyEdge &&
+                "[&>*:last-child:not(:has([data-reveal-list],[data-slot=card],[data-edge]))]:pb-4",
+              fullWidth &&
+                emptyEdge &&
+                "[&>*:last-child:not(:has([data-reveal-list],[data-slot=card],[data-edge],[data-slot=empty]))]:pb-4",
               // Text keeps side space; so do the headings and rows of a
               // list that runs edge to edge (a line between each row).
               side &&
