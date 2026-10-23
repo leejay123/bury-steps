@@ -2567,6 +2567,7 @@ export type BeforeLook =
   | "grey-row"
   | "outline-row"
   | "boxed-ticks"
+  | "boxed-numbers"
   | "chips"
   | "number-cards";
 
@@ -2581,6 +2582,7 @@ const WIDE_STEP_LOOKS: readonly string[] = [
   "grey-row",
   "outline-row",
   "boxed-ticks",
+  "boxed-numbers",
   "chips",
   "number-cards",
 ];
@@ -3989,7 +3991,9 @@ function StepsLooks({
       </section>
     );
   // One outlined box, a tick on each line, lines between.
-  if (look === "boxed-ticks")
+  // One outlined box, a line between each step: a tick, or the step's
+  // number in a small grey box.
+  if (look === "boxed-ticks" || look === "boxed-numbers")
     return (
       <section className="flex flex-col gap-3">
         {title}
@@ -3999,7 +4003,13 @@ function StepsLooks({
               className="flex items-start gap-3 px-4 py-3"
               key={`${i}-${step.title}`}
             >
-              <Check aria-hidden className="mt-0.5 size-4 shrink-0" />
+              {look === "boxed-numbers" ? (
+                <span className="mt-px flex size-5 shrink-0 items-center justify-center rounded-md bg-muted text-[11px] font-semibold tabular-nums">
+                  {i + 1}
+                </span>
+              ) : (
+                <Check aria-hidden className="mt-0.5 size-4 shrink-0" />
+              )}
               <span className="flex min-w-0 flex-col gap-0.5">
                 <span className="font-medium">{step.title}</span>
                 {step.body ? (
