@@ -641,6 +641,9 @@ const FOLDS: {
       "tabletFactsArrange",
       "phoneFacts",
       "phoneFactsArrange",
+      "factsFold",
+      "factsFoldTitle",
+      "factsFoldOpen",
     ],
     extra: [
       "factsBorder",
@@ -895,6 +898,9 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
     )
   )
     hide.add("factsBorder");
+  // The folded section's name and start only once the facts fold somewhere.
+  if (!props.factsFold || props.factsFold === "none")
+    hide.add("factsFoldTitle").add("factsFoldOpen");
   // Map
   if (inTitle("map")) hide.add("map");
   else if (!props.map || props.map === "none") {
@@ -2458,6 +2464,29 @@ export const walkDesignConfig: Config = {
             ...DEVICE_FACTS_AS,
           ],
         },
+        factsFold: {
+          type: "select",
+          label: "Fold the facts into a section (tap to open)",
+          options: options([
+            ["none", "No, always shown"],
+            ["phones", "On phones"],
+            ["phones-tablets", "On phones and tablets"],
+            ["computers", "On computers"],
+            ["all", "Everywhere"],
+          ]),
+        },
+        factsFoldTitle: {
+          type: "text",
+          label: "Folded section's name (blank: Walk details)",
+        },
+        factsFoldOpen: {
+          type: "radio",
+          label: "Folded section starts",
+          options: [
+            { label: "Closed", value: false },
+            { label: "Open", value: true },
+          ],
+        },
         factsBorder: {
           type: "radio",
           label: "Outer border round the facts",
@@ -2621,6 +2650,9 @@ export const walkDesignConfig: Config = {
         clockinLook: "line",
         countdownLook: "line",
         factsBorder: true,
+        factsFold: "none",
+        factsFoldTitle: "",
+        factsFoldOpen: false,
         tabletFactsAs: "same",
         phoneFactsAs: "same",
         bigTitle: false,
@@ -2686,6 +2718,9 @@ export const walkDesignConfig: Config = {
         clockinLook,
         countdownLook,
         factsBorder,
+        factsFold,
+        factsFoldTitle,
+        factsFoldOpen,
         tabletFactsAs,
         phoneFactsAs,
         bigTitle,
@@ -2751,6 +2786,9 @@ export const walkDesignConfig: Config = {
           clockinLook={clockinLook}
           countdownLook={countdownLook}
           factsBorder={factsBorder}
+          factsFold={factsFold}
+          factsFoldTitle={factsFoldTitle}
+          factsFoldOpen={factsFoldOpen}
           tabletFactsAs={tabletFactsAs}
           phoneFactsAs={phoneFactsAs}
           tone={tone}

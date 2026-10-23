@@ -432,7 +432,11 @@ export function WalksSection({
               every fact its own colour. Facts shown as on tablets and Facts shown as on
               phones (under Facts shown as) give those devices a different
               design, or Same as on computers; with Plain facts, Plain facts
-              look on each device picks the plain look there. Folding sections works like Tabs: add sections (+ Add, drag to
+              look on each device picks the plain look there. Fold the facts into a section folds them into
+              a tap-to-open section (named Walk details, or your own name) on
+              phones, phones and tablets, computers, or everywhere — so the
+              facts can be cards on a computer and a folded spec sheet on a
+              phone. Folding sections works like Tabs: add sections (+ Add, drag to
               reorder) and drop your own blocks into each one in the designer;
               on the page they fold. In the designer, the switch above them
               changes between Drop areas (every section open, to drop blocks in)

@@ -37,6 +37,12 @@ import {
 import { formatTime, formatWalkDay, formatWalkLength } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { DataList, DataListItem } from "@/components/data-list";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { AttendedRuleContext, type AttendedRule } from "./attended-rule";
 import { keptFactsAs, titlePartsOf, type TitlePart } from "./design-rules";
 export { keptFactsAs, titlePartsOf, type TitlePart };
@@ -391,6 +397,41 @@ export function keptArrange(look: string, arrange?: Arrange): Arrange {
 const STRETCH = "flex flex-wrap [&>*]:grow";
 const SWIPE =
   "flex flex-nowrap snap-x overflow-x-auto pb-1 [scrollbar-width:none] [&>*]:shrink-0 [&>*]:snap-start";
+
+/**
+ * The facts folded into one tap-to-open section, like an accordion. A spec
+ * sheet, card table or list inside runs edge to edge (a line between rows);
+ * other looks keep space around them.
+ */
+function FoldedFacts({
+  title,
+  open,
+  children,
+}: {
+  title: string;
+  open: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <Accordion
+      className="overflow-hidden rounded-lg border"
+      collapsible
+      defaultValue={open ? "facts" : undefined}
+      type="single"
+    >
+      <AccordionItem className="border-b-0" value="facts">
+        <AccordionTrigger className="items-center px-4 text-sm hover:no-underline">
+          {title}
+        </AccordionTrigger>
+        <AccordionContent className="pb-0">
+          <div className="[&:not(:has([data-edge],[data-reveal-list],[data-slot=card]))]:px-4 [&:not(:has([data-edge],[data-reveal-list],[data-slot=card]))]:pb-4 [&_[data-edge]]:rounded-none [&_[data-edge]]:border-x-0 [&_[data-edge]]:border-b-0 [&_[data-reveal-list]]:rounded-none [&_[data-reveal-list]]:border-x-0 [&_[data-reveal-list]]:border-b-0">
+            {children}
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  );
+}
 
 export type FactsVariant =
   "grid" | "pairs" | "list" | "table" | "inline" | "chips" | "tiles";
@@ -1546,6 +1587,10 @@ export type DetailsOptions = {
   factsAs?: "facts" | "bento" | "none" | FactsLook | (string & {});
   /** Looks with a frame round them all (Spec sheet): show the frame. */
   factsBorder?: boolean;
+  /** Fold the facts into a tap-to-open section on these devices. */
+  factsFold?: "none" | "phones" | "phones-tablets" | "computers" | "all";
+  factsFoldTitle?: string;
+  factsFoldOpen?: boolean;
   /** Facts shown as on tablets and phones ("same": as on computers). */
   tabletFactsAs?: string;
   phoneFactsAs?: string;
@@ -1847,7 +1892,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       : tabletAs === "phone"
         ? phoneDesign
         : tabletAs;
-  const factsPart =
+  let factsPart =
     phoneDesign === factsAs &&
     tabletDesign === factsAs &&
     factsAs === "facts" ? (
@@ -1872,6 +1917,38 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         }}
       />
     );
+  // Folded into a tap-to-open section on the chosen devices; shown as it is
+  // on the rest (phones under 768px, tablets to 1023px, computers wider).
+  const foldOn = o.factsFold ?? "none";
+  if (foldOn !== "none" && factsAs !== "none") {
+    const folded = (
+      <FoldedFacts
+        open={o.factsFoldOpen ?? false}
+        title={o.factsFoldTitle?.trim() || "Walk details"}
+      >
+        {factsPart}
+      </FoldedFacts>
+    );
+    factsPart =
+      foldOn === "all" ? (
+        folded
+      ) : foldOn === "phones" ? (
+        <>
+          <div className="md:hidden">{folded}</div>
+          <div className="max-md:hidden">{factsPart}</div>
+        </>
+      ) : foldOn === "phones-tablets" ? (
+        <>
+          <div className="lg:hidden">{folded}</div>
+          <div className="max-lg:hidden">{factsPart}</div>
+        </>
+      ) : (
+        <>
+          <div className="lg:hidden">{factsPart}</div>
+          <div className="max-lg:hidden">{folded}</div>
+        </>
+      );
+  }
   // What's inside the title box under the name, in the chosen order.
   const gap = TITLE_GAP[o.titleGap ?? "normal"] ?? TITLE_GAP.normal;
   const insideParts: Record<TitlePart, ReactNode> = {
