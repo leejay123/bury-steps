@@ -439,7 +439,11 @@ export function WalksSection({
               edges and drop its own border, instead of a box inside a box (the
               weather forecast card too). A section with nothing in it (Weather
               after the walk, say) shows the grey &quot;Nothing to show&quot; box,
-              like an empty tab. The forecast itself shows that box too when it
+              like an empty tab. The Facts block can use any Facts shown as design
+              too (Spec sheet, Card table…), so a striped spec sheet can go in
+              a section; with Full width it runs edge to edge, as do Before you
+              set off and How this group works in their list looks (a line
+              between each step). The forecast itself shows that box too when it
               isn&apos;t out yet (more than 16 days before the walk) or can&apos;t
               be loaded.{" "}
               <strong>Accordion (with icons)</strong>, also under Layout, is the

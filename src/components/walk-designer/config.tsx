@@ -1570,9 +1570,11 @@ function FoldingView({
               // Lists, tables and cards (the weather) run edge to edge; text
               // and the "nothing to show" box keep their side space.
               fullWidth &&
-                "[&_[data-reveal-list]]:rounded-none [&_[data-reveal-list]]:border-x-0 [&_[data-reveal-list]]:border-b-0 [&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:border-x-0 [&_[data-slot=card]]:border-b-0 [&_[data-slot=card]]:shadow-none [&>*:last-child:not(:has([data-reveal-list],[data-slot=card]))]:pb-4",
+                "[&_[data-reveal-list]]:rounded-none [&_[data-reveal-list]]:border-x-0 [&_[data-reveal-list]]:border-b-0 [&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:border-x-0 [&_[data-slot=card]]:border-b-0 [&_[data-slot=card]]:shadow-none [&_[data-edge]]:rounded-none [&_[data-edge]]:border-x-0 [&_[data-edge]]:border-b-0 [&>*:last-child:not(:has([data-reveal-list],[data-slot=card],[data-edge]))]:pb-4",
+              // Text keeps side space; so do the headings and rows of a
+              // list that runs edge to edge (a line between each row).
               side &&
-                "[&>*:not(:has([data-reveal-list],[data-slot=card]))]:px-4",
+                "[&>*:not(:has([data-reveal-list],[data-slot=card],[data-edge]))]:px-4 [&>*:has([data-edge])_h2]:px-4 [&_[data-edge-rows]>*]:px-4 [&_[data-edge-rows]>*:first-child]:pt-3 [&_[data-edge-rows]]:border-t",
             )}
             Content={Content}
             label={item.label}
@@ -2725,6 +2727,27 @@ export const walkDesignConfig: Config = {
       resolveFields: (data, { fields }) => {
         const props = data.props as Record<string, unknown>;
         const shown = { ...fields } as Record<string, unknown>;
+        // Another design (Spec sheet, Card table…): the plain looks' own
+        // settings don't apply; its arrangements are its own.
+        const design = keptFactsAs(props.design);
+        if (design !== "facts") {
+          for (const key of [
+            "variant",
+            "phoneVariant",
+            "phoneArrange",
+            "tabletVariant",
+            "tabletArrange",
+            "lines",
+            "box",
+            "tabletBox",
+            "phoneBox",
+          ])
+            delete shown[key];
+          if (!["spec-sheet", "card-table"].includes(design)) delete shown.border;
+          limitArranges(shown, [["arrange", design]]);
+          return shown as typeof fields;
+        }
+        delete shown.border;
         const computer = String(props.variant ?? "grid");
         const { tabletLook, phoneLook } = deviceLooks(
           computer,
@@ -2739,6 +2762,19 @@ export const walkDesignConfig: Config = {
         return shown as typeof fields;
       },
       fields: {
+        design: {
+          type: "select",
+          label: "Facts shown as",
+          options: DEVICE_FACTS_AS.filter((option) => option.value !== "none"),
+        },
+        border: {
+          type: "radio",
+          label: "Outer border round the facts",
+          options: [
+            { label: "On", value: true },
+            { label: "Off", value: false },
+          ],
+        },
         variant: {
           type: "select",
           label: "On computers: look",
@@ -2779,8 +2815,12 @@ export const walkDesignConfig: Config = {
         tabletVariant: "same",
         tabletArrange: "same",
         showEmpty: false,
+        design: "facts",
+        border: true,
       },
       render: ({
+        design,
+        border,
         variant,
         arrange,
         phoneVariant,
@@ -2796,6 +2836,8 @@ export const walkDesignConfig: Config = {
         gap,
       }) => (
         <FactsBlock
+          border={border}
+          design={design}
           gap={gap}
           heading={heading}
           lines={lines}

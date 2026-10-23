@@ -2105,7 +2105,14 @@ export function FactsBlock({
   lines = "between",
   heading = "",
   gap,
+  design = "facts",
+  border = true,
 }: {
+  /** Plain facts (the looks below), or one of the Details card's Facts
+   * shown as designs (Spec sheet, Card table, colour blocks…). */
+  design?: string;
+  /** Spec sheet / Card table: the frame round them all. */
+  border?: boolean;
   gap?: FactsGap;
   lines?: FactLines;
   heading?: string;
@@ -2121,6 +2128,20 @@ export function FactsBlock({
   tabletBox?: ForDevice<PartBox>;
 }) {
   const p = useWalkParts();
+  const chosen = keptFactsAs(design);
+  if (p && chosen !== "facts" && chosen !== "none" && chosen !== "bento")
+    return (
+      <div className="flex flex-col gap-2" style={factsGapStyle(gap)}>
+        <PartHeading text={heading} />
+        <FactLooks
+          arrange={arrange}
+          border={border}
+          look={chosen as FactsLook}
+          p={p}
+          showEmpty={showEmpty}
+        />
+      </div>
+    );
   return p ? (
     <div style={factsGapStyle(gap)}>
       <DeviceFacts
@@ -3972,7 +3993,7 @@ function StepsLooks({
     return (
       <section className="flex flex-col gap-3">
         {title}
-        <ul className="flex flex-col divide-y rounded-lg border text-sm">
+        <ul className="flex flex-col divide-y rounded-lg border text-sm" data-edge="">
           {steps.map((step, i) => (
             <li
               className="flex items-start gap-3 px-4 py-3"
@@ -4071,6 +4092,10 @@ function StepsLooks({
             "flex flex-col divide-y text-sm",
             look === "card-list" && "overflow-hidden rounded-xl border bg-card",
           )}
+          // In a full-width section: edge to edge, a line between each step
+          // (the plain list's rows then get side space of their own).
+          data-edge=""
+          data-edge-rows={look === "list" ? "" : undefined}
         >
           {steps.map((step, i) => (
             <li
@@ -4411,6 +4436,7 @@ function FactLooksBody({
     return (
       <dl
         className={cn("overflow-hidden rounded-xl text-sm", border && "border")}
+        data-edge=""
       >
         {facts.map((fact, i) => (
           // On a phone the label sits over its value, so a long value (a
