@@ -6,6 +6,8 @@ import { AttendedRuleContext } from "@/components/walk-designer/attended-rule";
 import { ClockInDrawer } from "./clock-in-drawer";
 import { ClockOutButton } from "@/components/clock-out-button";
 import { MyClockInLine } from "@/components/my-clock-in-line";
+import { EmptyState } from "@/components/empty-state";
+import { Users } from "lucide-react";
 import { AvatarStack } from "@/components/avatar-stack";
 import { WalkMembers } from "@/components/walk-members";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
@@ -110,13 +112,24 @@ export function WalkLivePanel({
     return organiserView || (alreadyClockedInAt && !gone) ? (
       <WalkMembers completed={completed} names={memberNames} />
     ) : (
-      <p className="text-sm text-muted-foreground">
-        {gone
-          ? "You clocked out, so the list of who's on the walk is hidden."
-          : completed
-            ? "Only people who clocked in can see who was on this walk."
-            : "Clock in to see who's on the walk."}
-      </p>
+      // The site's empty box, like an empty attendance list.
+      <EmptyState
+        description={
+          gone
+            ? "You clocked out, so the list of who's on the walk is hidden."
+            : completed
+              ? "Only people who clocked in can see who was on this walk."
+              : "The list of who's on the walk shows once you've clocked in."
+        }
+        icon={Users}
+        title={
+          gone
+            ? "You've clocked out"
+            : completed
+              ? "Only for people who walked"
+              : "Clock in to see who's on the walk"
+        }
+      />
     );
   }
 
