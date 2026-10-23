@@ -430,7 +430,10 @@ export function WalksSection({
               reorder) and drop your own blocks into each one in the designer;
               on the page they fold. Choose a look (one outlined box, separate
               cards, lines only, grey boxes or numbered), an arrow or a plus,
-              and whether several can be open at once or only one.{" "}
+              and whether several can be open at once or only one. Both
+              blocks have Inside each section: Full width, edge to edge makes a
+              table or list in a section (like the attendance list) reach its
+              edges and drop its own border, instead of a box inside a box.{" "}
               <strong>Accordion (with icons)</strong>, also under Layout, is the
               same but with an icon before each section&apos;s name: Automatic
               picks one from the name (Map &amp; weather gets a map pin, Before

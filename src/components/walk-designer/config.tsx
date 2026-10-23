@@ -1390,7 +1390,10 @@ function FoldingView({
   icon = "chevron",
   single = false,
   icons = false,
+  fullWidth = false,
 }: {
+  /** Tables and lists reach the section's edges (no box within a box). */
+  fullWidth?: boolean;
   /** An icon before each section's name (the Accordion block). */
   icons?: boolean;
   list: {
@@ -1429,6 +1432,11 @@ function FoldingView({
       </div>
     );
   const opened = list.flatMap((item, i) => (item.open ? [`item-${i}`] : []));
+  // Full width: the side space moves from the section onto its heading and
+  // any text, so a list or table inside runs edge to edge, its own border
+  // and rounding dropped (it becomes part of the section).
+  const framed = look !== "lines";
+  const side = fullWidth && framed;
   const items = list.map((item, i) => {
     if (!shownTo(item.showTo, viewer)) return null;
     const Content = item.content;
@@ -1437,6 +1445,7 @@ function FoldingView({
         className={cn(
           look === "cards" && "rounded-lg border px-4 last:border-b",
           look === "grey" && "rounded-lg border-b-0 bg-muted px-4",
+          side && "overflow-hidden px-0",
         )}
         key={i}
         value={`item-${i}`}
@@ -1444,6 +1453,7 @@ function FoldingView({
         <AccordionTrigger
           className={cn(
             "items-center text-sm hover:no-underline",
+            side && "px-4",
             // Plus: the arrow swaps for a + that turns into × when open.
             icon === "plus" &&
               "[&>svg]:hidden [&[data-state=open]_[data-plus]]:rotate-45",
@@ -1473,8 +1483,15 @@ function FoldingView({
             </span>
           ) : null}
         </AccordionTrigger>
-        <AccordionContent>
-          <Content className="flex flex-col gap-6" />
+        <AccordionContent className={fullWidth ? "pb-0" : undefined}>
+          <Content
+            className={cn(
+              "flex flex-col gap-6",
+              fullWidth &&
+                "[&_[data-reveal-list]]:rounded-none [&_[data-reveal-list]]:border-x-0 [&_[data-reveal-list]]:border-b-0 [&>*:last-child:not(:has([data-reveal-list]))]:pb-4",
+              side && "[&>*:not(:has([data-reveal-list]))]:px-4",
+            )}
+          />
         </AccordionContent>
       </AccordionItem>
     );
@@ -1482,6 +1499,7 @@ function FoldingView({
   const rootClass = cn(
     (look === "box" || look === "numbered") &&
       "rounded-lg border px-4 [&>*:last-child]:border-b-0",
+    side && (look === "box" || look === "numbered") && "overflow-hidden px-0",
     (look === "cards" || look === "grey") && "flex flex-col gap-3",
   );
   return single ? (
@@ -3687,6 +3705,17 @@ export const walkDesignConfig: Config = {
             ["plus", "Plus (turns to ×)"],
           ]),
         },
+        fullWidth: {
+          type: "radio",
+          label: "Inside each section",
+          options: [
+            { label: "Space around the content", value: false },
+            {
+              label: "Full width, edge to edge (tables and lists)",
+              value: true,
+            },
+          ],
+        },
         single: {
           type: "radio",
           label: "Open at once",
@@ -3701,8 +3730,9 @@ export const walkDesignConfig: Config = {
         look: "box",
         icon: "chevron",
         single: false,
+        fullWidth: false,
       },
-      render: ({ items, look, icon, single, puck }) => (
+      render: ({ items, look, icon, single, fullWidth, puck }) => (
         <FoldingView
           editing={Boolean(puck?.isEditing)}
           icon={icon}
@@ -3715,6 +3745,7 @@ export const walkDesignConfig: Config = {
           }
           look={look}
           single={Boolean(single)}
+          fullWidth={Boolean(fullWidth)}
         />
       ),
     },
@@ -3779,6 +3810,17 @@ export const walkDesignConfig: Config = {
             ["plus", "Plus (turns to ×)"],
           ]),
         },
+        fullWidth: {
+          type: "radio",
+          label: "Inside each section",
+          options: [
+            { label: "Space around the content", value: false },
+            {
+              label: "Full width, edge to edge (tables and lists)",
+              value: true,
+            },
+          ],
+        },
         single: {
           type: "radio",
           label: "Open at once",
@@ -3797,8 +3839,9 @@ export const walkDesignConfig: Config = {
         look: "box",
         icon: "chevron",
         single: false,
+        fullWidth: false,
       },
-      render: ({ items, look, icon, single, puck }) => (
+      render: ({ items, look, icon, single, fullWidth, puck }) => (
         <FoldingView
           editing={Boolean(puck?.isEditing)}
           icon={icon}
@@ -3814,6 +3857,7 @@ export const walkDesignConfig: Config = {
           }
           look={look}
           single={Boolean(single)}
+          fullWidth={Boolean(fullWidth)}
         />
       ),
     },
