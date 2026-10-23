@@ -443,7 +443,10 @@ export function WalksSection({
               too (Spec sheet, Card table…), so a striped spec sheet can go in
               a section; with Full width it runs edge to edge, as do Before you
               set off and How this group works in their list looks (a line
-              between each step). The forecast itself shows that box too when it
+              between each step). With Full width on, Empty boxes can be Edge to
+              edge too: the grey &quot;Nothing to show&quot; box (and boxes like
+              &quot;Nobody has clocked in yet&quot;) reaches the section&apos;s
+              edges. The forecast itself shows that box too when it
               isn&apos;t out yet (more than 16 days before the walk) or can&apos;t
               be loaded.{" "}
               <strong>Accordion (with icons)</strong>, also under Layout, is the

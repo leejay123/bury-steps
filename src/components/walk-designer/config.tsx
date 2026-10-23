@@ -1388,7 +1388,10 @@ function SectionBody({
   className,
   label,
   padded,
+  edgeEmpty = false,
 }: {
+  /** Its own empty box edge to edge (no sides or rounding). */
+  edgeEmpty?: boolean;
   Content: (props: { className?: string }) => ReactNode;
   className: string;
   label: string;
@@ -1418,7 +1421,13 @@ function SectionBody({
         <Content className={className} />
       </div>
       {empty ? (
-        <div className={cn(padded && "px-4 pb-4")}>
+        <div
+          className={cn(
+            padded && "px-4 pb-4",
+            edgeEmpty &&
+              "[&_[data-slot=empty]]:rounded-none [&_[data-slot=empty]]:border-x-0 [&_[data-slot=empty]]:border-b-0",
+          )}
+        >
           <EmptyState
             description={`There's nothing in ${label} for this walk right now.`}
             title="Nothing to show"
@@ -1441,7 +1450,10 @@ function FoldingView({
   single = false,
   icons = false,
   fullWidth = false,
+  emptyEdge = false,
 }: {
+  /** With full width: empty boxes reach the edges too. */
+  emptyEdge?: boolean;
   /** Tables and lists reach the section's edges (no box within a box). */
   fullWidth?: boolean;
   /** An icon before each section's name (the Accordion block). */
@@ -1574,11 +1586,20 @@ function FoldingView({
               // Text keeps side space; so do the headings and rows of a
               // list that runs edge to edge (a line between each row).
               side &&
-                "[&>*:not(:has([data-reveal-list],[data-slot=card],[data-edge]))]:px-4 [&>*:has([data-edge])_h2]:px-4 [&_[data-edge-rows]>*]:px-4 [&_[data-edge-rows]>*:first-child]:pt-3 [&_[data-edge-rows]]:border-t",
+                !emptyEdge &&
+                "[&>*:not(:has([data-reveal-list],[data-slot=card],[data-edge]))]:px-4",
+              // Empty boxes edge to edge as well: no side space, sides or
+              // rounding of their own.
+              side &&
+                emptyEdge &&
+                "[&>*:not(:has([data-reveal-list],[data-slot=card],[data-edge],[data-slot=empty]))]:px-4 [&>*:last-child:has([data-slot=empty])]:pb-0 [&_[data-slot=empty]]:rounded-none [&_[data-slot=empty]]:border-x-0 [&_[data-slot=empty]]:border-b-0",
+              side &&
+                "[&>*:has([data-edge])_h2]:px-4 [&_[data-edge-rows]>*]:px-4 [&_[data-edge-rows]>*:first-child]:pt-3 [&_[data-edge-rows]]:border-t",
             )}
             Content={Content}
+            edgeEmpty={side && emptyEdge}
             label={item.label}
-            padded={side}
+            padded={side && !emptyEdge}
           />
         </AccordionContent>
       </AccordionItem>
@@ -3810,6 +3831,14 @@ export const walkDesignConfig: Config = {
     },
     Folding: {
       label: "Folding sections",
+      // Edge-to-edge empty boxes only with Full width (sections with space
+      // inside can't let them reach the edges).
+      resolveFields: (data, { fields }) => {
+        if (data.props.fullWidth) return fields;
+        const shown = { ...fields } as Record<string, unknown>;
+        delete shown.emptyEdge;
+        return shown as typeof fields;
+      },
       fields: {
         items: {
           type: "array",
@@ -3852,6 +3881,14 @@ export const walkDesignConfig: Config = {
             },
           ],
         },
+        emptyEdge: {
+          type: "radio",
+          label: "Empty boxes (Nothing to show…)",
+          options: [
+            { label: "With space around", value: false },
+            { label: "Edge to edge", value: true },
+          ],
+        },
         single: {
           type: "radio",
           label: "Open at once",
@@ -3867,8 +3904,9 @@ export const walkDesignConfig: Config = {
         icon: "chevron",
         single: false,
         fullWidth: false,
+        emptyEdge: false,
       },
-      render: ({ items, look, icon, single, fullWidth, puck }) => (
+      render: ({ items, look, icon, single, fullWidth, emptyEdge, puck }) => (
         <FoldingView
           editing={Boolean(puck?.isEditing)}
           icon={icon}
@@ -3882,6 +3920,7 @@ export const walkDesignConfig: Config = {
           look={look}
           single={Boolean(single)}
           fullWidth={Boolean(fullWidth)}
+          emptyEdge={Boolean(emptyEdge)}
         />
       ),
     },
@@ -3904,6 +3943,14 @@ export const walkDesignConfig: Config = {
     // Tabs block can have), so a page can swap its tabs for these.
     Accordion: {
       label: "Accordion (with icons)",
+      // Edge-to-edge empty boxes only with Full width (sections with space
+      // inside can't let them reach the edges).
+      resolveFields: (data, { fields }) => {
+        if (data.props.fullWidth) return fields;
+        const shown = { ...fields } as Record<string, unknown>;
+        delete shown.emptyEdge;
+        return shown as typeof fields;
+      },
       fields: {
         items: {
           type: "array",
@@ -3957,6 +4004,14 @@ export const walkDesignConfig: Config = {
             },
           ],
         },
+        emptyEdge: {
+          type: "radio",
+          label: "Empty boxes (Nothing to show…)",
+          options: [
+            { label: "With space around", value: false },
+            { label: "Edge to edge", value: true },
+          ],
+        },
         single: {
           type: "radio",
           label: "Open at once",
@@ -3976,8 +4031,9 @@ export const walkDesignConfig: Config = {
         icon: "chevron",
         single: false,
         fullWidth: false,
+        emptyEdge: false,
       },
-      render: ({ items, look, icon, single, fullWidth, puck }) => (
+      render: ({ items, look, icon, single, fullWidth, emptyEdge, puck }) => (
         <FoldingView
           editing={Boolean(puck?.isEditing)}
           icon={icon}
@@ -3994,6 +4050,7 @@ export const walkDesignConfig: Config = {
           look={look}
           single={Boolean(single)}
           fullWidth={Boolean(fullWidth)}
+          emptyEdge={Boolean(emptyEdge)}
         />
       ),
     },
