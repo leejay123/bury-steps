@@ -3,7 +3,6 @@
 import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import {
   CalendarDays,
-  CalendarPlus,
   Clock,
   Coffee,
   Flag,
@@ -31,6 +30,7 @@ import { WalkDescription } from "@/components/walk-description";
 import { WalkEssentialPills } from "@/components/walk-essentials-context";
 import { useWalkNow } from "@/components/walk-header-styles";
 import type { WalkIdeaParts } from "@/components/walk-idea-layouts";
+import { AddToCalendarButton } from "@/components/add-to-calendar-button";
 import { WalkActionsBar, WalkManageMenu } from "@/components/walk-manage-menu";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 
@@ -120,12 +120,7 @@ export function WalkStudioLayouts({ layout, parts }: { layout: WalkStudioLayout;
   const memberMenu = (
     <WalkManageMenu label="Share or save">
       <ShareLinkButton url={p.walk.shareUrl} />
-      <Button asChild size="sm" variant="outline">
-        <a download href={p.walk.calendarHref}>
-          <CalendarPlus data-icon="inline-start" />
-          Add to calendar
-        </a>
-      </Button>
+      <AddToCalendarButton href={p.walk.calendarHref} timing={p.timing} />
     </WalkManageMenu>
   );
   const actions = (className?: string) =>

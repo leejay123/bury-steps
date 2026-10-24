@@ -606,7 +606,8 @@ export function WalksSection({
             <strong>Add to calendar</strong> downloads a small calendar file
             (.ics) so phones and calendar apps can save the date, time, meeting
             point, and a link back to the walk. Cancelled and completed walks do
-            not offer Add to calendar — for members or organisers — and the
+            not offer Add to calendar — for members or organisers, on every walk page layout
+            including the Share or save list — and the
             calendar file link returns not found. Those buttons update live if
             you leave the walk page open as the status changes (for example
             Cancel becomes End walk when start time arrives).

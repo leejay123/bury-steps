@@ -13,7 +13,6 @@ import {
   ArrowLeft,
   ArrowUpRight,
   CalendarDays,
-  CalendarPlus,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -58,6 +57,7 @@ import { useWalkNow } from "@/components/walk-header-styles";
 import { useWalkWording } from "@/components/walk-wording-context";
 import { walkCountdown } from "@/lib/walk-wording";
 import type { WalkIdeaParts } from "@/components/walk-idea-layouts";
+import { AddToCalendarButton } from "@/components/add-to-calendar-button";
 import { WalkActionsBar, WalkManageMenu } from "@/components/walk-manage-menu";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { What3wordsLink } from "@/components/what3words-link";
@@ -261,12 +261,7 @@ export function Actions({
       {p.liveCompact}
       <WalkManageMenu label="Share or save">
         <ShareLinkButton url={p.walk.shareUrl} />
-        <Button asChild size="sm" variant="outline">
-          <a download href={p.walk.calendarHref}>
-            <CalendarPlus data-icon="inline-start" />
-            Add to calendar
-          </a>
-        </Button>
+        <AddToCalendarButton href={p.walk.calendarHref} timing={p.timing} />
       </WalkManageMenu>
     </div>
   );
