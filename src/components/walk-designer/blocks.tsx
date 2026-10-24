@@ -49,7 +49,6 @@ import { effectiveEndsAt, walkOpensAt, walkStatus } from "@/lib/walk-window";
 import { useWalkClock } from "@/hooks/use-walk-clock";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { ShareLinkButton } from "@/components/share-link";
 import { WalkDescription } from "@/components/walk-description";
 import { useWalkEssentials } from "@/components/walk-essentials-context";
 import { essentialIcon, walkEssentialItems } from "@/lib/walk-essentials";
@@ -57,8 +56,8 @@ import { useWalkNow } from "@/components/walk-header-styles";
 import { useWalkWording } from "@/components/walk-wording-context";
 import { walkCountdown } from "@/lib/walk-wording";
 import type { WalkIdeaParts } from "@/components/walk-idea-layouts";
-import { AddToCalendarButton } from "@/components/add-to-calendar-button";
-import { WalkActionsBar, WalkManageMenu } from "@/components/walk-manage-menu";
+import { MemberShareMenu } from "@/components/member-share-menu";
+import { WalkActionsBar } from "@/components/walk-manage-menu";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { What3wordsLink } from "@/components/what3words-link";
 import { what3wordsUrl } from "@/lib/what3words";
@@ -233,7 +232,7 @@ function StatusLine({
   );
 }
 
-/** Clock in (while it can be used) and one Manage list; members get Share or save. */
+/** Clock in (while it can be used) and one Manage list; members get Share or save (Share walk once it can't be added to a calendar). */
 export function Actions({
   p,
   className,
@@ -259,10 +258,7 @@ export function Actions({
     >
       {/* Members: Clock in / Clock out (designed pages), beside it. */}
       {p.liveCompact}
-      <WalkManageMenu label="Share or save">
-        <ShareLinkButton url={p.walk.shareUrl} />
-        <AddToCalendarButton href={p.walk.calendarHref} timing={p.timing} />
-      </WalkManageMenu>
+      <MemberShareMenu calendarHref={p.walk.calendarHref} shareUrl={p.walk.shareUrl} timing={p.timing} />
     </div>
   );
 }

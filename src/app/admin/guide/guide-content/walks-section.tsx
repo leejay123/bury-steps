@@ -509,7 +509,8 @@ export function WalksSection({
               as Not set. In the designer, Facts and the Details card can show
               organisers Not set (and None ticked for essentials) to spot
               what&apos;s missing from Edit walk. Members get a Share or save button instead
-              (copy the link, add to calendar). The Checklist&apos;s ticks are
+              (copy the link, add to calendar); once the walk is finished or cancelled it
+              becomes Share walk, with just the link. The Checklist&apos;s ticks are
               only remembered while the page is open. Switch back to One column
               at any time. Once the walk is Completed, guests see that it has
               finished instead — no join prompt. Names of who is on the walk
@@ -609,7 +610,7 @@ export function WalksSection({
             (.ics) so phones and calendar apps can save the date, time, meeting
             point, and a link back to the walk. Cancelled and completed walks do
             not offer Add to calendar — for members or organisers, on every walk page layout
-            including the Share or save list — and the
+            including the Share or save list, which then reads Share walk — and the
             calendar file link returns not found. Those buttons update live if
             you leave the walk page open as the status changes (for example
             Cancel becomes End walk when start time arrives).

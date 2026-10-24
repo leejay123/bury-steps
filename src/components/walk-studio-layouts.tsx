@@ -25,13 +25,12 @@ import { useWalkClock } from "@/hooks/use-walk-clock";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShareLinkButton } from "@/components/share-link";
 import { WalkDescription } from "@/components/walk-description";
 import { WalkEssentialPills } from "@/components/walk-essentials-context";
 import { useWalkNow } from "@/components/walk-header-styles";
 import type { WalkIdeaParts } from "@/components/walk-idea-layouts";
-import { AddToCalendarButton } from "@/components/add-to-calendar-button";
-import { WalkActionsBar, WalkManageMenu } from "@/components/walk-manage-menu";
+import { MemberShareMenu } from "@/components/member-share-menu";
+import { WalkActionsBar } from "@/components/walk-manage-menu";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 
 type Icon = ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
@@ -118,10 +117,7 @@ export function WalkStudioLayouts({ layout, parts }: { layout: WalkStudioLayout;
   );
   // Members: no organiser buttons, so their list is sharing and the calendar.
   const memberMenu = (
-    <WalkManageMenu label="Share or save">
-      <ShareLinkButton url={p.walk.shareUrl} />
-      <AddToCalendarButton href={p.walk.calendarHref} timing={p.timing} />
-    </WalkManageMenu>
+    <MemberShareMenu calendarHref={p.walk.calendarHref} shareUrl={p.walk.shareUrl} timing={p.timing} />
   );
   const actions = (className?: string) =>
     p.share || p.tools ? (
