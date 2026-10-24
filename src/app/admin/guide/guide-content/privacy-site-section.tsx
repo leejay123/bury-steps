@@ -129,7 +129,7 @@ export function PrivacySiteSection() {
               phones: the original ☰ menu (logo in the middle), or a <strong>bottom bar</strong> (logo on the
               left) with four main pages plus <strong>More</strong>, which slides up everything else. Signed-out visitors get their own bar — Home, Contact, the Facebook group
               and More — with Sign in and Join staying at the top. The bar steps aside
-              while you type, so the keyboard doesn&apos;t push it over the form. Walk cards (Manage walks,
+              while you type, so the keyboard doesn&apos;t push it over the form, and goes back to the bottom of the screen once the keyboard closes (on an iPhone Home Screen app it could stay stuck halfway up). Walk cards (Manage walks,
               and Upcoming and All walks on Walks) open with a thin header strip showing the status
               (Upcoming, Starting soon…) on the left and the day on the right, in the same plain grey as
               the Members list&apos;s group headings, with the

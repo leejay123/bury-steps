@@ -29,6 +29,7 @@ import {
 import { isNavItemActive, navLinkPrefetch } from "@/components/site-nav-items";
 import { BAR_COOKIE, MORE_COOKIE } from "@/lib/remembered-nav";
 import { writeClientCookie } from "@/lib/remembered-rows-key";
+import { bottomBarShift } from "@/lib/bottom-bar-shift";
 import {
   Drawer,
   DrawerContent,
@@ -172,6 +173,8 @@ export function BottomNavBar({
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
   const [typing, setTyping] = useState(false);
+  const [shift, setShift] = useState(0);
+  const anchorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onFocusIn = (event: FocusEvent) => setTyping(isTypingTarget(event.target));
@@ -180,6 +183,49 @@ export function BottomNavBar({
     document.addEventListener("focusout", onFocusOut);
     return () => {
       document.removeEventListener("focusin", onFocusIn);
+      document.removeEventListener("focusout", onFocusOut);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Puts the bar back on the bottom when iOS leaves it stuck where the
+    // keyboard's top edge was (see bottomBarShift). Measured from an empty
+    // probe at bottom: 0 rather than the bar, which slides while typing.
+    const viewport = window.visualViewport;
+    const anchor = anchorRef.current;
+    if (!viewport || !anchor) return;
+    let frame = 0;
+    let settle = 0;
+    const measure = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        setShift(
+          bottomBarShift({
+            anchor: anchor.getBoundingClientRect().top,
+            visibleHeight: viewport.height,
+            scale: viewport.scale,
+          }),
+        );
+      });
+    };
+    // The keyboard finishes sliding away a beat after the field loses focus.
+    const onFocusOut = () => {
+      window.clearTimeout(settle);
+      settle = window.setTimeout(measure, 400);
+    };
+    viewport.addEventListener("resize", measure);
+    viewport.addEventListener("scroll", measure);
+    window.addEventListener("resize", measure);
+    window.addEventListener("pageshow", measure);
+    document.addEventListener("focusout", onFocusOut);
+    measure();
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(settle);
+      viewport.removeEventListener("resize", measure);
+      viewport.removeEventListener("scroll", measure);
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("pageshow", measure);
       document.removeEventListener("focusout", onFocusOut);
     };
   }, []);
@@ -246,6 +292,7 @@ export function BottomNavBar({
   return (
     <>
       <div aria-hidden className="h-[var(--bottom-nav-offset,0px)] md:hidden" />
+      <div aria-hidden className="pointer-events-none invisible fixed inset-x-0 bottom-0 h-0" ref={anchorRef} />
       <nav
         aria-label="Main"
         className={cn(
@@ -253,6 +300,7 @@ export function BottomNavBar({
           typing && "translate-y-full",
         )}
         data-bottom-nav=""
+        style={shift ? { bottom: -shift } : undefined}
       >
         <ul className="mx-auto grid h-15 max-w-md" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
           {tabs.map(renderTab)}
