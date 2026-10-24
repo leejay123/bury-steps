@@ -488,7 +488,11 @@ export function WalksSection({
               section heading (Title, Map, Precise location, Facts, Timeline,
               Essentials, Description) to open it — the others shut — and
               each shut heading shows a short summary of what&apos;s chosen. The
-              less-used settings in a section are under More … options. Block layout (on every block) folds away the
+              less-used settings in a section are under More … options. Block layout&apos;s Show when the walk is (tick Upcoming, Clock-in
+              open, In progress, Finished or Cancelled; none ticked = always)
+              shows a block only at those stages — e.g. the attendance block
+              only once clock-in opens. A tab left with nothing in it because
+              of this disappears until its stage comes. Block layout (on every block) folds away the
               same way, at the bottom, with a summary such as No frame ·
               Everywhere; opening it shuts the other sections. Card
               table (in Facts shown as) shows the facts in the same outlined

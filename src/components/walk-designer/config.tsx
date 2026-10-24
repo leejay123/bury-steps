@@ -13,6 +13,8 @@ import {
   useViewerAudience,
   useWalkParts,
 } from "./parts";
+import { useWalkClock } from "@/hooks/use-walk-clock";
+import { walkStatus } from "@/lib/walk-window";
 import { ReadyLayoutBlock } from "./ready-layout-block";
 import { READY_LAYOUTS } from "./ready-layouts";
 import { cn } from "@/lib/utils";
@@ -1024,6 +1026,8 @@ type BlockLayout = {
   boxes?: BoxLook;
   spaceAbove?: "header" | "closer" | "normal" | "more" | "lots";
   spaceBelow?: "closer" | "normal" | "more" | "lots";
+  /** Only while the walk is at these stages (none ticked: always). */
+  stages?: string[];
 };
 const BLOCK_LAYOUT: BlockLayout = {
   frame: "none",
@@ -1036,6 +1040,78 @@ const BLOCK_LAYOUT: BlockLayout = {
   spaceAbove: "normal",
   spaceBelow: "normal",
 };
+/** The walk's stages a block can be limited to (walkStatus's words). */
+const STAGES: [string, string][] = [
+  ["upcoming", "Upcoming (before clock-in opens)"],
+  ["starting-soon", "Clock-in open (before it starts)"],
+  ["in-progress", "In progress"],
+  ["completed", "Finished"],
+  ["cancelled", "Cancelled"],
+];
+
+/** Tick boxes for the stages (Puck has no tick-box field of its own). */
+const stagesField = {
+  type: "custom" as const,
+  label: "Show when the walk is",
+  render: ({
+    value,
+    onChange,
+  }: {
+    value?: string[];
+    onChange: (value: string[]) => void;
+  }) => {
+    const ticked = value ?? [];
+    return (
+      <fieldset className="flex flex-col gap-1.5">
+        <legend className="mb-1 text-sm font-medium">Show when the walk is</legend>
+        {STAGES.map(([stage, words]) => (
+          <label className="flex cursor-pointer items-center gap-2 text-sm" key={stage}>
+            <input
+              checked={ticked.includes(stage)}
+              className="size-4 accent-foreground"
+              onChange={(event) =>
+                onChange(
+                  event.target.checked
+                    ? [...ticked, stage]
+                    : ticked.filter((item) => item !== stage),
+                )
+              }
+              type="checkbox"
+            />
+            {words}
+          </label>
+        ))}
+        <span className="text-xs text-muted-foreground">
+          None ticked: always shown.
+        </span>
+      </fieldset>
+    );
+  },
+};
+
+/** Whether the walk is at one of these stages now (none given: yes). */
+function useAtStage(stages: string[] | undefined): boolean {
+  const p = useWalkParts();
+  const timing = p?.timing ?? {
+    cancelledAt: null,
+    durationMins: 0,
+    endedAt: null,
+    startsAt: new Date(0).toISOString(),
+  };
+  const now = useWalkClock(timing);
+  if (!stages?.length || !p) return true;
+  const status = walkStatus(
+    {
+      cancelledAt: timing.cancelledAt ? new Date(timing.cancelledAt) : null,
+      durationMins: timing.durationMins,
+      endedAt: timing.endedAt ? new Date(timing.endedAt) : null,
+      startsAt: new Date(timing.startsAt),
+    },
+    now,
+  );
+  return stages.includes(status);
+}
+
 const blockLayoutField = {
   type: "object" as const,
   label: "Frame, spacing and where it shows",
@@ -1092,6 +1168,7 @@ const blockLayoutField = {
         ["none", "Remove"],
       ]),
     },
+    stages: stagesField,
     showOn: {
       type: "radio" as const,
       label: "Show on",
@@ -1247,6 +1324,9 @@ function TabsView({
   const inner = GAP[innerSpace] ?? "gap-6";
   const panels = useRef<(HTMLDivElement | null)[]>([]);
   const [empty, setEmpty] = useState<boolean[]>([]);
+  // Empty only because its blocks are for another stage of the walk (Block
+  // layout: Show when the walk is): the tab goes, rather than a note.
+  const [staged, setStaged] = useState<boolean[]>([]);
   const [value, setValue] = useState("tab-0");
   const viewer = useViewerAudience();
   const count = list.length;
@@ -1261,6 +1341,15 @@ function TabsView({
         prev.length === next.length && prev.every((v, i) => v === next[i])
           ? prev
           : next,
+      );
+      const byStage = next.map(
+        (isEmpty, i) =>
+          isEmpty && Boolean(panels.current[i]?.querySelector("[data-stage-hidden]")),
+      );
+      setStaged((prev) =>
+        prev.length === byStage.length && prev.every((v, i) => v === byStage[i])
+          ? prev
+          : byStage,
       );
     };
     check();
@@ -1285,7 +1374,9 @@ function TabsView({
     .filter(
       ({ tab, i }) =>
         editing ||
-        (shownTo(tab.showTo, viewer) && (emptyTabs === "note" || !empty[i])),
+        (shownTo(tab.showTo, viewer) &&
+          !staged[i] &&
+          (emptyTabs === "note" || !empty[i])),
     );
   if (shown.length === 0) return null;
   const active = shown.some(({ i }) => `tab-${i}` === value)
@@ -1755,6 +1846,10 @@ function BlockFrame({
     ...layout,
   };
   const framed = frame !== "none";
+  // Only at the chosen stages of the walk. Outside them: nothing, and a
+  // marker so a tab left with nothing in it goes too (not an empty box).
+  const atStage = useAtStage(layout?.stages);
+  if (!editing && !atStage) return <div data-stage-hidden="" hidden />;
   return (
     <div
       data-guest-home={!editing && audience === "visitors" ? "" : undefined}
