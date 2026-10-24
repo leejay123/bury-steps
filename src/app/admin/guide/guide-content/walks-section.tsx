@@ -22,7 +22,21 @@ export function WalksSection({
             The visitors&apos; &quot;You need to sign in to join this walk&quot;
             box only shows where you add the <strong>Sign in to join
             (visitors)</strong> block to a design (signed-out visitors only, while
-            the walk can still be joined).
+            the walk can still be joined). Its <strong>Look</strong> setting
+            picks how the box looks: a grey box, an outlined box (with or
+            without an icon), an empty dashed box with an icon in the middle,
+            one grey line, grey with a dark bar down the side, a black box, or
+            just the words.
+          </p>
+          <p>
+            In the Details card&apos;s title settings, <strong>Where Share or
+            save / Manage sit</strong> moves the buttons: beside the name, above
+            the name on the right, under Created by, the full width under the
+            name, or at the bottom of the title box. Its map settings also have
+            a <strong>Map design</strong> (card, no frame, map only, details
+            floating over the map, or details beside it) and <strong>Map
+            colours</strong> (full colour, toned down, grey, pale grey or
+            dark); the Map block has Map colours too.
           </p>
           <p>
             <strong>Stories</strong> sit at the top of the Walks page (yours
@@ -45,6 +59,9 @@ export function WalksSection({
             story — organisers then see &quot;Reported&quot; under that
             person&apos;s photo and &quot;Reported by …&quot; on the story, and can
             delete it. Photos are kept in the group&apos;s free Supabase storage.
+            To turn stories off for everyone, use <strong>Show stories</strong>{" "}
+            in Settings → Site behaviour: the row disappears and no new stories
+            can be posted (any already posted still go after 24 hours).
           </p>
           <p>
             Open <Link href="/admin/walks">Walks</Link> from the menu. Upcoming

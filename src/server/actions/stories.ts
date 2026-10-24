@@ -1,6 +1,7 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
+import { getStoriesEnabled } from "@/lib/stories-settings";
 import { z } from "zod";
 import { guardArgs, guardForm } from "@/lib/safe-action";
 import { prisma } from "@/lib/db";
@@ -25,6 +26,7 @@ export const postStory = guardForm(
   async (_prev, formData): Promise<ActionResult> => {
     const user = await requireUser();
     if (!storiesConfigured()) return { ok: false, error: "Stories aren't set up yet." };
+    if (!(await getStoriesEnabled())) return { ok: false, error: "Stories are switched off." };
     const photo = formData.get("photo");
     if (!(photo instanceof Blob) || photo.size === 0)
       return { ok: false, error: "Choose a photo first." };

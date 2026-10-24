@@ -272,6 +272,36 @@ async function updateProgressEnabledWork(
   };
 }
 
+/** Site-wide switch for stories (see getStoriesEnabled). */
+async function updateStoriesEnabledWork(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  const enabled = String(formData.get("storiesEnabled") ?? "") === "on";
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: {
+        id: SITE_SETTING_ID,
+        primaryColor: DEFAULT_PRIMARY_COLOR,
+        storiesEnabled: enabled,
+      },
+      update: { storiesEnabled: enabled },
+    });
+  } catch (err) {
+    return logActionError("updateStoriesEnabled", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/walks");
+  revalidatePath("/admin/walks");
+  revalidatePath("/admin/settings/behaviour");
+  return { ok: true, message: enabled ? "Stories are on." : "Stories are off for everyone." };
+}
+
 /** Toggles whether promoting a member to organiser sends an invite email
  * (taking effect only once accepted) instead of promoting immediately. */
 async function updateOrganiserInviteRequiredWork(
@@ -1926,6 +1956,7 @@ export const updateSectionBgPattern = guardForm(
 );
 export const updateMemberNoticesEnabled = guardForm("organiser", pass, readPass, updateMemberNoticesEnabledWork);
 export const updateProgressEnabled = guardForm("organiser", pass, readPass, updateProgressEnabledWork);
+export const updateStoriesEnabled = guardForm("organiser", pass, readPass, updateStoriesEnabledWork);
 export const updateOrganiserInviteRequired = guardForm(
   "organiser",
   pass,

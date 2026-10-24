@@ -97,6 +97,7 @@ export {
   updateCarouselEnabled,
   updateMemberNoticesEnabled,
   updateProgressEnabled,
+  updateStoriesEnabled,
   updateAccidentReportRetentionDays,
   updateCancelledWalkRetentionDays,
   updateContactMessagesOwner,

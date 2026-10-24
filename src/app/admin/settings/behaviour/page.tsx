@@ -14,6 +14,7 @@ import { CookieConsentSettings } from "./cookie-consent-settings";
 import { MobileNavSettings } from "./mobile-nav-settings";
 import { DisplaySettings, FooterWordmarkMobileSettings, FooterWordmarkSettings } from "./display-form";
 import { ProgressToggle } from "./progress-toggle";
+import { StoriesToggle } from "./stories-toggle";
 import { OrganiserInviteToggle } from "./organiser-invite-toggle";
 import { EmergencyContactToggle } from "./emergency-contact-toggle";
 import { ContactMessagesOwnerSettings } from "./contact-messages-owner-settings";
@@ -62,6 +63,7 @@ async function SiteBehaviourSettingsPageContent() {
         emergencyContactRequired: true,
         organiserInviteRequired: true,
         progressEnabled: true,
+        storiesEnabled: true,
       },
     }),
   ]);
@@ -83,6 +85,7 @@ function SettingsView({
     emergencyContactRequired: boolean;
     organiserInviteRequired: boolean;
     progressEnabled: boolean;
+    storiesEnabled: boolean;
   } | null;
   theme: SiteTheme;
 }) {
@@ -105,6 +108,7 @@ function SettingsView({
         <FooterWordmarkSettings enabled={theme.footerWordmarkEnabled} />
         {theme.footerWordmarkEnabled ? <FooterWordmarkMobileSettings enabled={theme.footerWordmarkMobile} /> : null}
         <ProgressToggle enabled={settings?.progressEnabled ?? true} />
+        <StoriesToggle enabled={settings?.storiesEnabled ?? true} />
         {admin.isOwner ? <PlaceholderPreviewToggle /> : null}
       </SettingsSectionGroup>
 

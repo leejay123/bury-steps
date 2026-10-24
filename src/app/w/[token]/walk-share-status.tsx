@@ -16,6 +16,71 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { WalkDescription } from "@/components/walk-description";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { WalkFacts } from "@/components/walk-facts";
+import { LogIn } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+/** How the "You need to sign in to join this walk" box looks (the designer's Sign in block). */
+export type SignInLook =
+  | "box"
+  | "outline"
+  | "empty"
+  | "band"
+  | "bar"
+  | "dark"
+  | "icon"
+  | "plain";
+
+const SIGN_IN_TITLE = "You need to sign in to join this walk";
+const SIGN_IN_TEXT =
+  "Clock-in is only for signed-in members. If you do not have an account yet, use Join the group at the top of the page; if you already have one, use Sign in.";
+
+/** The sign-in box in one of its looks: greys and black, 8px corners. */
+export function SignInPrompt({ look = "box" }: { look?: SignInLook }) {
+  if (look === "empty")
+    return (
+      <div className="flex min-h-48 flex-col items-center justify-center gap-2 rounded-lg border border-dashed bg-muted/30 p-6 text-center">
+        <span className="mb-1 flex size-10 items-center justify-center rounded-lg bg-muted">
+          <LogIn aria-hidden className="size-5" />
+        </span>
+        <p className="font-medium">{SIGN_IN_TITLE}</p>
+        <p className="max-w-md text-sm text-muted-foreground">{SIGN_IN_TEXT}</p>
+      </div>
+    );
+  if (look === "band")
+    return (
+      <p className="truncate rounded-lg bg-muted px-4 py-3 text-sm font-medium">
+        {SIGN_IN_TITLE} · use Sign in or Join the group at the top
+      </p>
+    );
+  if (look === "icon")
+    return (
+      <div className="flex gap-4 rounded-lg border p-5">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+          <LogIn aria-hidden className="size-5" />
+        </span>
+        <div className="space-y-1">
+          <p className="font-medium">{SIGN_IN_TITLE}</p>
+          <p className="text-sm text-muted-foreground">{SIGN_IN_TEXT}</p>
+        </div>
+      </div>
+    );
+  return (
+    <div
+      className={cn(
+        "space-y-1",
+        look === "box" && "rounded-lg border bg-muted/40 p-5",
+        look === "outline" && "rounded-lg border p-5",
+        look === "bar" && "rounded-lg border-l-4 border-l-foreground bg-muted p-5",
+        look === "dark" && "rounded-lg bg-neutral-950 p-5 text-white",
+      )}
+    >
+      <p className="font-medium">{SIGN_IN_TITLE}</p>
+      <p className={cn("text-sm", look === "dark" ? "text-white/70" : "text-muted-foreground")}>
+        {SIGN_IN_TEXT}
+      </p>
+    </div>
+  );
+}
 
 /**
  * Status-dependent chrome on the public share page: top alerts, title card,
@@ -45,7 +110,10 @@ export function WalkShareStatusChrome({
   walkLeader,
   withoutSignIn = false,
   audience,
+  signInLook = "box",
 }: {
+  /** The sign-in box's look (the designer's Sign in block). */
+  signInLook?: SignInLook;
   /** Whether this viewer clocked in; unknown on the shared page (see signedIn). */
   attended?: boolean;
   /**
@@ -117,15 +185,7 @@ export function WalkShareStatusChrome({
     ) : null;
   const closedNotice = <WalkClosedNoClockInNotice />;
   // No buttons of its own: Sign in and Join are in the site header.
-  const signInPrompt = completed ? null : (
-    <div className="space-y-1 rounded-lg border bg-muted/40 p-5">
-      <p className="font-medium">You need to sign in to join this walk</p>
-      <p className="text-sm text-muted-foreground">
-        Clock-in is only for signed-in members. If you do not have an account yet, use Join the group at the
-        top of the page; if you already have one, use Sign in.
-      </p>
-    </div>
-  );
+  const signInPrompt = completed ? null : <SignInPrompt look={signInLook} />;
   const guestNotice = completed ? (
     <Alert variant="info">
       <AlertDescription>{words.visitorFinished}</AlertDescription>

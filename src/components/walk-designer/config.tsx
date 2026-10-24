@@ -607,6 +607,7 @@ const FOLDS: {
       "clockinLook",
       "countdownLook",
       "showActions",
+      "actionsAt",
     ],
     extra: [
       "bandStyle",
@@ -621,7 +622,7 @@ const FOLDS: {
   {
     key: "_mapSection",
     more: "_mapMore",
-    main: ["map", "mapButtons", "mapHeight"],
+    main: ["map", "mapLook", "mapTiles", "mapButtons", "mapHeight"],
     extra: ["mapButtonsLook", "mapCorners", "mapTitle", "mapNote"],
   },
   {
@@ -869,6 +870,7 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
       "statusAt",
       "bigTitle",
       "showActions",
+      "actionsAt",
       "titleMessages",
       "bandStyle",
       "titleGap",
@@ -891,6 +893,9 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
       ["statusLook", "statusAt", "bigTitle"].forEach((k) => hide.add(k));
     }
     if (props.statusLook === "none") hide.add("statusAt");
+    // The buttons' place: only with the buttons and the name shown.
+    if (props.showActions === false || props.showTitle === false)
+      hide.add("actionsAt");
   }
   // Only the looks with a frame round them all have one to turn off.
   const framed = ["spec-sheet", "card-table"];
@@ -907,6 +912,8 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
   if (inTitle("map")) hide.add("map");
   else if (!props.map || props.map === "none") {
     [
+      "mapLook",
+      "mapTiles",
       "mapButtons",
       "mapButtonsLook",
       "mapHeight",
@@ -1041,6 +1048,28 @@ const BLOCK_LAYOUT: BlockLayout = {
   spaceBelow: "normal",
 };
 /** The walk's stages a block can be limited to (walkStatus's words). */
+const mapTilesField = {
+  type: "select" as const,
+  label: "Map colours",
+  options: [
+    { value: "colour", label: "As it comes (full colour)" },
+    { value: "muted", label: "Toned down" },
+    { value: "grey", label: "Grey" },
+    { value: "pale", label: "Pale grey" },
+    { value: "dark", label: "Dark" },
+  ],
+};
+const actionsAtField = {
+  type: "select" as const,
+  label: "Where Share or save / Manage sit",
+  options: [
+    { value: "beside", label: "Beside the name" },
+    { value: "top", label: "Above the name, on the right" },
+    { value: "under-name", label: "Under Created by" },
+    { value: "full", label: "Full width, under the name" },
+    { value: "bottom", label: "At the bottom of the title box" },
+  ],
+};
 const STAGES: [string, string][] = [
   ["upcoming", "Upcoming (before clock-in opens)"],
   ["starting-soon", "Clock-in open (before it starts)"],
@@ -2064,7 +2093,26 @@ export const walkDesignConfig: Config = {
     },
     SignIn: {
       label: "Sign in to join (visitors)",
-      render: ({ puck }) => <SignInBlock editing={Boolean(puck?.isEditing)} />,
+      fields: {
+        look: {
+          type: "select",
+          label: "Look",
+          options: [
+            { value: "box", label: "Grey box" },
+            { value: "outline", label: "Outlined box" },
+            { value: "icon", label: "Outlined box with an icon" },
+            { value: "empty", label: "Empty box (dashed, icon in the middle)" },
+            { value: "band", label: "One grey line" },
+            { value: "bar", label: "Grey with a dark bar down the side" },
+            { value: "dark", label: "Black box" },
+            { value: "plain", label: "Just the words" },
+          ],
+        },
+      },
+      defaultProps: { look: "box" },
+      render: ({ puck, look }) => (
+        <SignInBlock editing={Boolean(puck?.isEditing)} look={look} />
+      ),
     },
     BackLink: {
       label: "Back link (← All walks)",
@@ -2435,6 +2483,7 @@ export const walkDesignConfig: Config = {
           label: "Clock in + Manage",
           options: yesNo,
         },
+        actionsAt: actionsAtField,
         titleMessages: {
           type: "select",
           label: "Messages in the title box",
@@ -2478,6 +2527,18 @@ export const walkDesignConfig: Config = {
             ["bottom", "Along the bottom"],
           ]),
         },
+        mapLook: {
+          type: "select",
+          label: "Map design",
+          options: options([
+            ["card", "Card"],
+            ["flat", "No frame"],
+            ["bare", "Map only"],
+            ["overlay", "Details floating over the map"],
+            ["split", "Details beside the map"],
+          ]),
+        },
+        mapTiles: mapTilesField,
         mapButtons: {
           type: "select",
           label: "Map's directions buttons",
@@ -2697,6 +2758,8 @@ export const walkDesignConfig: Config = {
         facts: "grid",
         factsArrange: "fill",
         map: "none",
+        mapLook: "card",
+        mapTiles: "colour",
         mapButtons: "below",
         mapHeight: "medium",
         mapTitle: true,
@@ -2711,6 +2774,7 @@ export const walkDesignConfig: Config = {
         tone: "card",
         showTitle: true,
         showActions: true,
+        actionsAt: "beside",
         showEssentials: true,
         showDescription: true,
         ribbon: "none",
@@ -2761,6 +2825,9 @@ export const walkDesignConfig: Config = {
         facts,
         factsArrange,
         map,
+        mapLook,
+        mapTiles,
+        actionsAt,
         mapButtons,
         mapHeight,
         mapTitle,
@@ -2830,6 +2897,9 @@ export const walkDesignConfig: Config = {
           facts={facts}
           factsArrange={factsArrange}
           map={map}
+          mapLook={mapLook}
+          mapTiles={mapTiles}
+          actionsAt={actionsAt}
           mapButtons={mapButtons}
           mapHeight={mapHeight}
           mapNote={mapNote}
@@ -3416,6 +3486,7 @@ export const walkDesignConfig: Config = {
     Map: {
       label: "Map",
       fields: {
+        tiles: mapTilesField,
         look: {
           type: "select",
           label: "Look",
@@ -3468,6 +3539,7 @@ export const walkDesignConfig: Config = {
         corners: cornersField,
       },
       defaultProps: {
+        tiles: "colour",
         corners: "rounded",
         buttonsLook: "default",
         look: "card",

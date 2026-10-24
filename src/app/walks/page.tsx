@@ -18,7 +18,7 @@ import { getAllWalksSiteWide, getWalkMemberCountsByWalkIds } from "@/lib/walk-me
 import { AdminWalkTable } from "@/app/admin/admin-walk-table";
 import { RecentWalksCarousel } from "./recent-walks-carousel";
 import { LiveUpcomingCount } from "./live-upcoming-count";
-import { StoriesRow } from "@/components/stories/stories-row";
+import { StoriesSlot } from "@/components/stories/stories-slot";
 
 
 
@@ -50,7 +50,7 @@ export default function DashboardPage() {
         </p>
       </div>
       {/* Stories: signed-in people only (it shows nothing for visitors). */}
-      <StoriesRow />
+      <StoriesSlot />
       <Suspense fallback={<MemberWalksHold />}>
         <PlaceholderPreview fallback={<MemberWalksHold />}>
           <WalksForMember />

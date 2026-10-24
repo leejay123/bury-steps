@@ -494,6 +494,7 @@ model SiteSetting {
   /// everyone — organisers included, not just members — and the nav
   /// drops the link (see Settings → Display → Site chrome).
   progressEnabled             Boolean  @default(true)
+  storiesEnabled              Boolean  @default(true)
   /// Homepage hero style: "default" (the usual light hero + optional photo
   /// carousel) or "cinematic" (a dark, full-bleed video hero). See
   /// HERO_VIDEO_OPTIONS in src/components/hero-cinematic.tsx for valid

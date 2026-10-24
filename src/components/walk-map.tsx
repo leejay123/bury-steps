@@ -33,11 +33,23 @@ export type MapLook = {
   showNote?: boolean;
   buttonsLook?: DirectionsLook;
   corners?: "rounded" | "square" | "very-rounded";
+  /** The map's own colours: as it comes, toned down, grey, pale grey or dark. */
+  tiles?: MapTiles;
   /** Something placed with the map, e.g. the precise location (the designer). */
   extra?: ReactNode;
   extraAt?: "above-map" | "on-map" | "below-map" | "after";
 };
+export type MapTiles = "colour" | "muted" | "grey" | "pale" | "dark";
+/** CSS filters on the map (the map service has no styles of its own to pick). */
+const TILE_FILTER: Record<MapTiles, string> = {
+  colour: "",
+  muted: "[filter:saturate(0.45)]",
+  grey: "grayscale",
+  pale: "[filter:grayscale(1)_contrast(0.8)_brightness(1.1)]",
+  dark: "[filter:grayscale(1)_invert(0.92)_contrast(0.9)]",
+};
 const DEFAULT_LOOK: Required<MapLook> = {
+  tiles: "colour",
   look: "card",
   buttons: "below",
   height: "medium",
@@ -200,6 +212,7 @@ export function WalkMap({
       className={cn(
         "block w-full border-0 bg-muted",
         height,
+        TILE_FILTER[o.tiles] ?? "",
         o.look === "split" && "lg:h-full lg:min-h-64",
       )}
       loading="lazy"

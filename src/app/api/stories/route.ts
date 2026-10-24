@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getOptionalUser, memberDisplayName } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getStoriesEnabled } from "@/lib/stories-settings";
 import { purgeExpiredStories } from "@/lib/stories";
 import { signStoryPhotos, storiesConfigured } from "@/lib/story-storage";
 
@@ -41,6 +42,7 @@ export async function GET() {
     organiser: user.role === "ADMIN",
   };
   if (!empty.configured) return NextResponse.json({ ...empty, me }, noStore);
+  if (!(await getStoriesEnabled())) return NextResponse.json({ ...empty, me }, noStore);
 
   await purgeExpiredStories();
   const stories = await prisma.story.findMany({

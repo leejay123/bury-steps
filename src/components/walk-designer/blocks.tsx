@@ -2,12 +2,16 @@
 
 import {
   Fragment,
+  cloneElement,
+  isValidElement,
   useEffect,
   useRef,
   useState,
   type ComponentType,
+  type ReactElement,
   type ReactNode,
 } from "react";
+import type { SignInLook } from "@/app/w/[token]/walk-share-status";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -66,6 +70,7 @@ import {
   MapLookProvider,
   type DirectionsLook,
   type MapLook,
+  type MapTiles,
 } from "@/components/walk-map";
 import { useWalkParts } from "./parts";
 
@@ -1320,6 +1325,15 @@ export function TitleBlock({
 export type TitleGap = "closer" | "normal" | "more";
 
 /**
+ * Where Share or save / Manage (and Clock in) sit in the title: beside the
+ * name, above it on the right, under Created by, the full width under the
+ * name, or at the bottom of the title box.
+ */
+export type ActionsAt = "beside" | "top" | "under-name" | "full" | "bottom";
+/** The buttons stretched across: each one takes an equal share. */
+const FULL_ACTIONS = "w-full sm:*:flex-1 [&_button]:w-full";
+
+/**
  * The gaps between the things in the title box — the band to the name, the
  * name to Created by, and between the facts, timeline and description —
  * never the space at the box's sides.
@@ -1348,7 +1362,10 @@ function Title({
   bandCountdown = false,
   bandStyle = "grey",
   gap = "normal",
+  actionsAt = "beside",
 }: {
+  /** Where the buttons sit (beside the name unless chosen). */
+  actionsAt?: ActionsAt;
   /** Right under "Created by", tucked in with the name (Your clock-in,
    * Countdown when placed there). */
   underNote?: ReactNode;
@@ -1368,16 +1385,33 @@ function Title({
 }) {
   const info = useWalkInfo(p);
   const h = p.headline;
+  // The buttons in a chosen place, other than beside the name.
+  const actAt = (where: ActionsAt) =>
+    actions && actionsAt === where ? (
+      <Actions
+        className={cn(
+          where === "top" && "sm:self-end",
+          where === "full" && FULL_ACTIONS,
+        )}
+        p={p}
+      />
+    ) : null;
   const note =
-    h.note || underNote ? (
+    h.note || underNote || actAt("under-name") ? (
       <>
         {h.note ? (
           <p className="text-xs text-muted-foreground">{h.note}</p>
         ) : null}
         {underNote}
+        {actAt("under-name") ? (
+          <div className="pt-2">{actAt("under-name")}</div>
+        ) : null}
       </>
     ) : null;
-  const act = actions ? <Actions className="sm:shrink-0" p={p} /> : null;
+  const act =
+    actions && actionsAt === "beside" ? (
+      <Actions className="sm:shrink-0" p={p} />
+    ) : null;
   const heading = (className?: string) => (
     <h1
       className={cn(
@@ -1390,7 +1424,19 @@ function Title({
   );
   const day = formatWalkDay(info.start);
   const time = formatTime(info.start);
-  switch (keptTitleVariant(variant)) {
+  const kept = keptTitleVariant(variant);
+  // The other looks: buttons above, or across / at the bottom, around them.
+  const above = actAt("top");
+  const below = actAt("full") ?? actAt("bottom");
+  if (kept !== "band" && (above || below))
+    return (
+      <div className="flex flex-col gap-4">
+        {above}
+        <Title {...{ p, variant, actions: false, underNote, gap }} />
+        {below}
+      </div>
+    );
+  switch (kept) {
     case "chips":
       return (
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -1509,6 +1555,7 @@ function Title({
             TITLE_GAP[gap].stack,
           )}
         >
+          {actAt("top")}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className={cn("flex min-w-0 flex-col", TITLE_GAP[gap].lines)}>
               {heading()}
@@ -1516,7 +1563,9 @@ function Title({
             </div>
             {act}
           </div>
+          {actAt("full")}
           {afterNote}
+          {actAt("bottom")}
         </div>
       );
       return (
@@ -1556,6 +1605,10 @@ export type DetailsOptions = {
   map?: "none" | "top" | "side" | "bottom";
   mapButtons?: "below" | "above" | "none";
   mapHeight?: "short" | "medium" | "tall";
+  /** The map's frame (card, no frame, just the map, floating box, side by side). */
+  mapLook?: MapLook["look"];
+  /** The map's own colours. */
+  mapTiles?: MapTiles;
   mapTitle?: boolean;
   mapNote?: boolean;
   preciseAt?: PreciseAt;
@@ -1643,6 +1696,8 @@ export type DetailsOptions = {
   bigTitle?: boolean;
   showTitle?: boolean;
   showActions?: boolean;
+  /** Where Share or save / Manage sit in the title. */
+  actionsAt?: ActionsAt;
   showEssentials?: boolean;
   showDescription?: boolean;
 };
@@ -1676,6 +1731,19 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   // (Shown even if computers have none: tablets or phones may have some.)
   const factsInTitle = inTitle("facts");
   const showActions = (o.showActions ?? true) && !ownTitle;
+  // Under Created by needs the name; without it they sit in their usual place.
+  const actionsAt: ActionsAt =
+    o.showTitle === false ? "beside" : (o.actionsAt ?? "beside");
+  const actionsHere = (where: ActionsAt) =>
+    showActions && actionsAt === where ? (
+      <Actions
+        className={cn(
+          where === "top" && "sm:self-end",
+          where === "full" && FULL_ACTIONS,
+        )}
+        p={p}
+      />
+    ) : null;
   // A map in the title box isn't placed anywhere else in the card.
   const map = inTitle("map") ? "none" : (o.map ?? "none");
   const padding =
@@ -2007,6 +2075,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
             <div className={cn("flex flex-col", gap.stack)}>
               <Title
                 actions={showActions}
+                actionsAt={actionsAt}
                 bandMessages={
                   titleMessagesAt === "in-band" &&
                   titleLook.startsWith("band") &&
@@ -2037,6 +2106,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
           ) : (
             /* The name and Manage on one row, then what's inside, full width. */
             <div className={cn("flex flex-col", gap.stack)}>
+              {actionsHere("top")}
               <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
                 {showTitle ? (
                   <div className={cn("flex min-w-0 flex-col", gap.head)}>
@@ -2067,13 +2137,18 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
                         {underName}
                       </div>
                     ) : null}
+                    {actionsHere("under-name")}
                   </div>
                 ) : (
                   <span />
                 )}
-                {showActions ? <Actions className="sm:shrink-0" p={p} /> : null}
+                {showActions && actionsAt === "beside" ? (
+                  <Actions className="sm:shrink-0" p={p} />
+                ) : null}
               </div>
+              {actionsHere("full")}
               {showTitle ? inside : null}
+              {actionsHere("bottom")}
             </div>
           )}
           {titleMessages("bottom")}
@@ -2097,6 +2172,8 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         buttonsLook: o.mapButtonsLook ?? "default",
         corners: o.mapCorners ?? "rounded",
         height: o.mapHeight ?? "medium",
+        look: o.mapLook ?? "card",
+        tiles: o.mapTiles ?? "colour",
         showTitle: o.mapTitle ?? true,
         showNote: o.mapNote ?? true,
         extra:
@@ -3813,10 +3890,20 @@ export type BackArrow = "arrow" | "chevron" | "none";
  * design, and only for signed-out visitors (nothing while the walk can't be
  * joined any more).
  */
-export function SignInBlock({ editing = false }: { editing?: boolean }) {
+export function SignInBlock({
+  editing = false,
+  look = "box",
+}: {
+  editing?: boolean;
+  look?: SignInLook;
+}) {
   const p = useWalkParts();
   if (!p)
     return <Placeholder label="Sign in to join (signed-out visitors only)" />;
+  if (isValidElement(p.signIn))
+    return cloneElement(p.signIn as ReactElement<{ signInLook?: SignInLook }>, {
+      signInLook: look,
+    });
   if (p.signIn) return <>{p.signIn}</>;
   return editing ? (
     <Placeholder label="Sign in to join: shows to signed-out visitors while the walk can still be joined (preview the Visitors design to see it)" />
