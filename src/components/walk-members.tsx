@@ -30,7 +30,8 @@ export function WalkMembers({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-1">
+      {/* data-edge-pad: keeps side space when the list runs edge to edge (walk designer sections). */}
+      <div className="flex flex-col gap-1" data-edge-pad="">
         <p className="text-sm font-medium">{completed ? "Who attended" : "Who’s coming"}</p>
         <p className="text-sm text-muted-foreground">{countLabel}</p>
       </div>
@@ -52,15 +53,17 @@ export function WalkMembers({
               </DataListItem>
             ))}
           </DataList>
-          <ListPagination
-            noun="people"
-            onPageChange={paging.setPage}
-            page={paging.page}
-            pageCount={paging.pageCount}
-            pageSize={paging.pageSize}
-            scrollToRef={listRef}
-            total={paging.total}
-          />
+          <div data-edge-pad="">
+            <ListPagination
+              noun="people"
+              onPageChange={paging.setPage}
+              page={paging.page}
+              pageCount={paging.pageCount}
+              pageSize={paging.pageSize}
+              scrollToRef={listRef}
+              total={paging.total}
+            />
+          </div>
         </div>
       )}
     </div>

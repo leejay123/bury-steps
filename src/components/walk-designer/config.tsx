@@ -1610,6 +1610,10 @@ function FoldingView({
                 "[&>*:not(:has([data-reveal-list],[data-slot=card],[data-edge],[data-slot=empty]))]:px-4 [&>*:last-child:has([data-slot=empty])]:pb-0 [&_[data-slot=empty]]:rounded-none [&_[data-slot=empty]]:border-x-0 [&_[data-slot=empty]]:border-b-0",
               side &&
                 "[&>*:has([data-edge])_h2]:px-4 [&_[data-edge-rows]>*]:px-4 [&_[data-edge-rows]>*:first-child]:pt-3 [&_[data-edge-rows]]:border-t",
+              // The words around an edge-to-edge list (Who attended, its
+              // count and page buttons) line up with the section's icon.
+              side &&
+                "[&>*:has([data-reveal-list])_[data-edge-pad]]:px-4 [&>*:has([data-reveal-list])_[data-edge-pad]:last-child]:pb-4",
             )}
             Content={Content}
             edgeEmpty={side && emptyEdge}

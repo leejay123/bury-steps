@@ -447,7 +447,9 @@ export function WalksSection({
               blocks have Inside each section: Full width, edge to edge makes a
               table or list in a section (like the attendance list) reach its
               edges and drop its own border, instead of a box inside a box (the
-              weather forecast card too). A section with nothing in it (Weather
+              weather forecast card too). The words around the list — Who attended,
+              its count, and the page buttons under it — keep their side space,
+              lined up with the section&apos;s icon. A section with nothing in it (Weather
               after the walk, say) shows the grey &quot;Nothing to show&quot; box,
               like an empty tab. The Facts block can use any Facts shown as design
               too (Spec sheet, Card table…), so a striped spec sheet can go in
