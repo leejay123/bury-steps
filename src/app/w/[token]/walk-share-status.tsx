@@ -17,6 +17,7 @@ import { WalkDescription } from "@/components/walk-description";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { WalkFacts } from "@/components/walk-facts";
 import { LogIn } from "lucide-react";
+import { createContext, useContext } from "react";
 import { cn } from "@/lib/utils";
 
 /** How the "You need to sign in to join this walk" box looks (the designer's Sign in block). */
@@ -29,6 +30,13 @@ export type SignInLook =
   | "dark"
   | "icon"
   | "plain";
+
+/**
+ * The Sign in block's chosen look, for the box inside it. A context, not a
+ * prop: the box is made on the server and can reach the browser wrapped
+ * (not as a plain element), so a prop added on the way in could be lost.
+ */
+export const SignInLookContext = createContext<SignInLook | null>(null);
 
 const SIGN_IN_TITLE = "You need to sign in to join this walk";
 const SIGN_IN_TEXT =
@@ -110,7 +118,7 @@ export function WalkShareStatusChrome({
   walkLeader,
   withoutSignIn = false,
   audience,
-  signInLook = "box",
+  signInLook: signInLookProp,
 }: {
   /** The sign-in box's look (the designer's Sign in block). */
   signInLook?: SignInLook;
@@ -185,6 +193,8 @@ export function WalkShareStatusChrome({
     ) : null;
   const closedNotice = <WalkClosedNoClockInNotice />;
   // No buttons of its own: Sign in and Join are in the site header.
+  const signInLookFromBlock = useContext(SignInLookContext);
+  const signInLook = signInLookProp ?? signInLookFromBlock ?? "box";
   const signInPrompt = completed ? null : <SignInPrompt look={signInLook} />;
   const guestNotice = completed ? (
     <Alert variant="info">

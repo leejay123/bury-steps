@@ -2,16 +2,17 @@
 
 import {
   Fragment,
-  cloneElement,
-  isValidElement,
   useEffect,
   useRef,
   useState,
   type ComponentType,
-  type ReactElement,
   type ReactNode,
 } from "react";
-import { SignInPrompt, type SignInLook } from "@/app/w/[token]/walk-share-status";
+import {
+  SignInLookContext,
+  SignInPrompt,
+  type SignInLook,
+} from "@/app/w/[token]/walk-share-status";
 import Link from "next/link";
 import {
   Copy,
@@ -3904,11 +3905,9 @@ export function SignInBlock({
   // In the designer you're signed in, so the real box would hide itself:
   // show it in the chosen look (on the page, only signed-out visitors see it).
   if (editing) return <SignInPrompt look={look} />;
-  if (isValidElement(p.signIn))
-    return cloneElement(p.signIn as ReactElement<{ signInLook?: SignInLook }>, {
-      signInLook: look,
-    });
-  return p.signIn ? <>{p.signIn}</> : null;
+  return p.signIn ? (
+    <SignInLookContext.Provider value={look}>{p.signIn}</SignInLookContext.Provider>
+  ) : null;
 }
 
 export function BackLinkBlock({
