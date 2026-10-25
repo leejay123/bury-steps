@@ -637,7 +637,12 @@ export type EssentialsLook =
   | "rows"
   | "big-icons"
   | "words"
-  | "segments";
+  | "segments"
+  | "spec-sheet"
+  | "spec-lines"
+  | "spec-columns"
+  | "spec-compact"
+  | "spec-grey";
 
 /** The walk's ticked essentials, in one of several looks. */
 function EssentialsView({
@@ -649,7 +654,10 @@ function EssentialsView({
   dark = false,
   box = "none",
   headingText,
+  border = true,
 }: {
+  /** The striped table looks: the outline round them. */
+  border?: boolean;
   headingText?: string;
   p: WalkIdeaParts;
   look: EssentialsLook;
@@ -682,7 +690,54 @@ function EssentialsView({
     return <Icon aria-hidden="true" className={cn(className, muted)} />;
   };
   let body: ReactNode;
-  if (look === "inline")
+  if (look.startsWith("spec-")) {
+    // The facts' striped table looks, one essential (icon and name) a row.
+    // Marked to run edge to edge in a full-width accordion section.
+    const columns = look === "spec-columns";
+    body = (
+      <ul
+        className={cn(
+          "overflow-hidden rounded-xl text-xs sm:text-[13px] lg:text-sm",
+          border && (dark ? "border border-white/15" : "border"),
+          look === "spec-lines" && "divide-y",
+          look === "spec-grey" && (dark ? "bg-white/10" : "bg-muted"),
+        )}
+        data-edge=""
+      >
+        {items.map((item, i) => (
+          <li
+            className={cn(
+              "flex items-center gap-3",
+              columns ? "gap-0" : "px-4",
+              !columns && (look === "spec-compact" ? "py-2" : "py-3"),
+              (look === "spec-sheet" || look === "spec-compact") &&
+                i % 2 === 1 &&
+                (dark ? "bg-white/5" : "bg-muted/50"),
+              look === "spec-grey" && i % 2 === 1 && "bg-background",
+              columns && i > 0 && "border-t",
+            )}
+            key={item.key}
+          >
+            {columns ? (
+              <span
+                className={cn(
+                  "flex items-center self-stretch px-4",
+                  dark ? "bg-white/10" : "bg-muted",
+                )}
+              >
+                {icon(item.icon, "size-4")}
+              </span>
+            ) : (
+              icon(item.icon, "size-4")
+            )}
+            <span className={cn("font-medium", columns && "px-4 py-3")}>
+              {item.label}
+            </span>
+          </li>
+        ))}
+      </ul>
+    );
+  } else if (look === "inline")
     body = (
       <p
         className={cn(
@@ -879,7 +934,7 @@ function EssentialsView({
     <Boxed box={box} dark={dark}>
       <div className="flex flex-col gap-2">
         {title}
-        {arrange === "carousel" ? (
+        {arrange === "carousel" && !look.startsWith("spec-") ? (
           <ScrollRow carousel natural>
             {body}
           </ScrollRow>
@@ -905,6 +960,8 @@ export type EssentialsOptions = {
   tabletBox?: ForDevice<PartBox>;
   /** The heading's words (blank: Essentials). */
   headingText?: string;
+  /** The striped table looks: the outline round them. */
+  border?: boolean;
 };
 
 function DeviceEssentials({
@@ -926,6 +983,7 @@ function DeviceEssentials({
       draw={(look) => (
         <EssentialsView
           headingText={o.headingText}
+          border={o.border ?? true}
           box={look.box}
           arrange={look.arrange}
           dark={dark}
@@ -2214,10 +2272,14 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
           // isn't shown (Your clock-in before clocking in, the Countdown once
           // the walk's over), its "when the part above isn't shown" size is
           // used instead: CSS picks it, so nothing jumps.
+          // Not chosen: it takes the hidden part's own Space above it (it
+          // moves up into that part's place).
           const shown = listed.filter((key) => insideParts[key]);
-          return shown.map((key) => {
+          return shown.map((key, i) => {
             const before = partSpace(key) ?? stackGap;
-            const alone = partSpace(key, "spaceAlone") ?? before;
+            const alone =
+              partSpace(key, "spaceAlone") ??
+              (i > 0 ? (partSpace(shown[i - 1]) ?? stackGap) : before);
             return (
               <div
                 className={cn(

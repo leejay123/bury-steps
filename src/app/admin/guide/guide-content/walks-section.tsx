@@ -62,7 +62,10 @@ export function WalksSection({
             for the rest (in a striped table it&apos;s the table&apos;s last row). When the description is the last thing in a boxed title box (or in
             its own box), its Read more is that box&apos;s bottom row in the same
             way. The folded facts section can use an arrow or a + (turns to ×)
-            as its open and close sign. The <strong>Precise location look</strong>{" "}
+            as its open and close sign. Essentials have the striped table looks too (striped, lines, icons
+            in a grey column, compact, grey with white stripes), one essential a
+            row, with an outline you can turn off; drop an Essentials block into
+            an Accordion section with Full width on to run it edge to edge. The <strong>Precise location look</strong>{" "}
             (the what3words address) can be the full card, a one-line chip, a thin
             full-width grey line (with the words Precise location), the same
             line with a dashed outline, a text link, a grey box, grey with a dark bar, a black box, big words
@@ -435,7 +438,8 @@ export function WalksSection({
               between any two parts can be set on its own. Each also has{" "}
               <strong>Space above it when the part above isn&apos;t shown</strong>{" "}
               — for example 16px for The day&apos;s timeline when Your clock-in
-              above it is hidden (before you clock in). Parts can touch but never overlap. <strong>Created by</strong> can be added to that list too, to place
+              above it is hidden (before you clock in). Left as it is, a part takes
+              the hidden part&apos;s own Space above it, moving up into its place. Parts can touch but never overlap. <strong>Created by</strong> can be added to that list too, to place
               it anywhere among the other parts instead of under the name. The Title section also has a <strong>Created by look</strong>{" "}
               (plain, grey box, dashed grey box, outlined, grey pill or a grey
               bar), and Your clock-in and Countdown have a dashed grey box look.

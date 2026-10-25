@@ -246,6 +246,11 @@ const essentialsLooks = options([
   ["cards", "Small outlined cards"],
   ["rows", "Rows with lines between"],
   ["segments", "One box split into sections"],
+  ["spec-sheet", "Striped table"],
+  ["spec-lines", "Table, lines instead of stripes"],
+  ["spec-columns", "Table, icons in a grey column"],
+  ["spec-compact", "Striped table, compact rows"],
+  ["spec-grey", "Table, grey with white stripes"],
 ]);
 const essentialsFields = {
   look: {
@@ -315,6 +320,14 @@ const essentialsFields = {
     type: "text" as const,
     label: "Heading words (blank: Essentials)",
   },
+  border: {
+    type: "radio" as const,
+    label: "Outer border round the table (table looks)",
+    options: [
+      { label: "On", value: true },
+      { label: "Off", value: false },
+    ],
+  },
   showEmpty: {
     type: "radio" as const,
     label: "When none are ticked",
@@ -337,6 +350,7 @@ const ESSENTIALS_DEFAULTS = {
   heading: true,
   headingText: "",
   showEmpty: false,
+  border: true,
 };
 // The same words as Block layout's space above and below.
 const spaceOptions = options([
@@ -2558,7 +2572,7 @@ export const walkDesignConfig: Config = {
               type: "select",
               label: "Space above it when the part above isn't shown (e.g. Your clock-in)",
               options: options([
-                ["same", "Same as Space above it"],
+                ["same", "The hidden part's Space above it"],
                 ["none", "None"],
                 ["8", "Very small (8px)"],
                 ["12", "Smaller (12px)"],
@@ -3338,8 +3352,10 @@ export const walkDesignConfig: Config = {
         box,
         tabletBox,
         phoneBox,
+        border,
       }) => (
         <EssentialsBlock
+          border={border}
           headingText={headingText}
           box={box}
           tabletBox={tabletBox}
