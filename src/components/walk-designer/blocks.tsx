@@ -1854,7 +1854,13 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   ) : null;
   // The walk's messages inside the title box, if chosen: as a row of the
   // box divided off by a line (a table look), or as their own boxes.
-  const titleMessagesAt = o.titleMessages ?? "none";
+  // (Not with the Status band look, which has no such setting; pages saved
+  // with the messages in its band keep them there.)
+  const savedMessagesAt = o.titleMessages ?? "none";
+  const titleMessagesAt =
+    titleLook.startsWith("band") && savedMessagesAt !== "in-band"
+      ? "none"
+      : savedMessagesAt;
   // The Status band has its own outline: no box around it as well.
   const titleBox = titleLook.startsWith("band") ? "none" : o.titleBox;
   const titleBoxed = (titleBox ?? "none") !== "none";

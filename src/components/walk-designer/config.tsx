@@ -903,7 +903,9 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
       ].forEach((k) => hide.add(k));
     }
     // The Status band has its own outline, so no box around it as well.
-    if (String(props.titleLook ?? "").startsWith("band")) hide.add("titleBox");
+    // The Status band shows the status in its band: no messages setting.
+    if (String(props.titleLook ?? "").startsWith("band"))
+      hide.add("titleBox").add("titleMessages");
     else hide.add("bandStyle");
     if ((props.titleLook ?? "standard") !== "standard") {
       ["statusLook", "statusAt", "bigTitle"].forEach((k) => hide.add(k));
