@@ -57,7 +57,9 @@ export function WalksSection({
             column. Left empty, the side holds just the map. The facts can also
             be shown as other Spec sheet looks: lines instead of stripes, a
             grey label column, compact rows, values on the left, label over
-            value, or grey with white stripes. The <strong>Precise location look</strong>{" "}
+            value, or grey with white stripes. <strong>Show first</strong> (with those looks) shows only the
+            first 2–6 facts, with a <strong>Show all</strong> button under them
+            for the rest. The <strong>Precise location look</strong>{" "}
             (the what3words address) can be the full card, a one-line chip, a thin
             full-width grey line (with the words Precise location), the same
             line with a dashed outline, a text link, a grey box, grey with a dark bar, a black box, big words

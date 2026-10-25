@@ -656,6 +656,7 @@ const FOLDS: {
       "tabletFactsAs",
       "phoneFactsAs",
       "factsBorder",
+      "factsLimit",
       "facts",
       "factsArrange",
       "tabletFacts",
@@ -916,6 +917,14 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
     if (props.showActions === false || props.showTitle === false)
       hide.add("actionsAt");
   }
+  // Show first works with the other designs' looks (not plain facts).
+  const plainish = ["facts", "none", "bento", "same", "", "undefined"];
+  if (
+    [props.factsAs, props.tabletFactsAs, props.phoneFactsAs].every((look) =>
+      plainish.includes(String(look)),
+    )
+  )
+    hide.add("factsLimit");
   // Only the looks with a frame round them all have one to turn off.
   const framed = [...SPEC_LOOKS, "card-table"];
   if (
@@ -2808,6 +2817,18 @@ export const walkDesignConfig: Config = {
             { label: "Open", value: true },
           ],
         },
+        factsLimit: {
+          type: "select",
+          label: "Show first (the rest under Show all)",
+          options: options([
+            ["0", "All the facts"],
+            ["2", "2 facts"],
+            ["3", "3 facts"],
+            ["4", "4 facts"],
+            ["5", "5 facts"],
+            ["6", "6 facts"],
+          ]),
+        },
         factsBorder: {
           type: "radio",
           label: "Outer border round the facts",
@@ -2977,6 +2998,7 @@ export const walkDesignConfig: Config = {
         countdownLook: "line",
         createdByLook: "plain",
         factsBorder: true,
+        factsLimit: "0",
         factsFold: "none",
         factsFoldTitle: "",
         factsFoldOpen: false,
@@ -3051,6 +3073,7 @@ export const walkDesignConfig: Config = {
         clockinLook,
         countdownLook,
         factsBorder,
+        factsLimit,
         factsFold,
         factsFoldTitle,
         factsFoldOpen,
@@ -3125,6 +3148,7 @@ export const walkDesignConfig: Config = {
           createdByLook={createdByLook}
           countdownLook={countdownLook}
           factsBorder={factsBorder}
+          factsLimit={factsLimit}
           factsFold={factsFold}
           factsFoldTitle={factsFoldTitle}
           factsFoldOpen={factsFoldOpen}

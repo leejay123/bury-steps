@@ -21,6 +21,7 @@ import {
   ArrowUpRight,
   CalendarDays,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   CircleCheck,
@@ -1672,6 +1673,8 @@ export type DetailsOptions = {
   factsAs?: "facts" | "bento" | "none" | FactsLook | (string & {});
   /** Looks with a frame round them all (Spec sheet): show the frame. */
   factsBorder?: boolean;
+  /** Show only the first few facts, with Show all for the rest. */
+  factsLimit?: string;
   /** Fold the facts into a tap-to-open section on these devices. */
   factsFold?: "none" | "phones" | "phones-tablets" | "computers" | "all";
   factsFoldTitle?: string;
@@ -2015,6 +2018,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
             <FactLooks
               arrange={arrange}
               border={o.factsBorder ?? true}
+              limit={Number(o.factsLimit ?? 0) || 0}
               look={as as FactsLook}
               p={p}
               showEmpty={o.showEmptyFacts}
@@ -4813,12 +4817,44 @@ export function FactLooks(props: {
   showEmpty?: boolean;
   /** Looks with a frame round them all (Spec sheet): show it or not. */
   border?: boolean;
+  /** Show only this many facts, with Show all for the rest (0: all). */
+  limit?: number;
 }) {
   const arrange = keptArrange(props.look, props.arrange);
-  return (
+  const [expanded, setExpanded] = useState(false);
+  const { facts } = useWalkInfo(props.p, props.showEmpty ?? false);
+  const limit = props.limit ?? 0;
+  const cut = limit > 0 && facts.length > limit;
+  const body = (
     <MaybeRow arrange={arrange}>
-      <FactLooksBody {...props} arrange={arrange} />
+      <FactLooksBody
+        {...props}
+        arrange={arrange}
+        limit={cut && !expanded ? limit : 0}
+      />
     </MaybeRow>
+  );
+  if (!cut) return body;
+  return (
+    <div className="flex flex-col gap-3">
+      {body}
+      {/* Plain text and a chevron, like the description's Read more. */}
+      <button
+        aria-expanded={expanded}
+        className="flex w-fit cursor-pointer items-center gap-1 text-sm font-medium text-muted-foreground"
+        onClick={() => setExpanded((open) => !open)}
+        type="button"
+      >
+        {expanded ? "Show less" : `Show all ${facts.length}`}
+        <ChevronDown
+          aria-hidden
+          className={cn(
+            "size-4 transition-transform duration-200",
+            expanded && "rotate-180",
+          )}
+        />
+      </button>
+    </div>
   );
 }
 
@@ -4828,14 +4864,17 @@ function FactLooksBody({
   arrange = "fill",
   showEmpty = false,
   border = true,
+  limit = 0,
 }: {
   p: WalkIdeaParts;
   look: FactsLook;
   arrange?: Arrange;
   showEmpty?: boolean;
   border?: boolean;
+  limit?: number;
 }) {
-  const { facts } = useWalkInfo(p, showEmpty);
+  const { facts: allFacts } = useWalkInfo(p, showEmpty);
+  const facts = limit > 0 ? allFacts.slice(0, limit) : allFacts;
   const flow = (basis: string, width: string, grid: string) =>
     arrange === "scroll"
       ? cn(SWIPE, "gap-[var(--facts-gap,1.5rem)]", width)
