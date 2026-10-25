@@ -2154,29 +2154,37 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   const inside =
     listed.length > 0 ? (
       <>
-        {listed.map((key) => {
-          if (!insideParts[key]) return null;
-          const space = partSpace(key, "space");
-          const below = partSpace(key, "spaceBelow");
-          return space === null && below === null ? (
-            <Fragment key={key}>{insideParts[key]}</Fragment>
-          ) : (
-            <div
-              className={cn(
-                "empty:hidden",
-                // Your clock-in hides itself until there's a line to show.
-                key === "clockin" && "[&:not(:has(p))]:hidden",
-              )}
-              key={key}
-              style={{
-                marginTop: space === null ? undefined : space - stackGap,
-                marginBottom: below === null ? undefined : below - stackGap,
-              }}
-            >
-              {insideParts[key]}
-            </div>
-          );
-        })}
+        {(() => {
+          // One setting decides each gap, so items can never overlap: the
+          // lower item's Space above it, or else the upper one's Space below
+          // it (the last item's Space below it is the space after it).
+          const shown = listed.filter((key) => insideParts[key]);
+          return shown.map((key, i) => {
+            const before =
+              partSpace(key, "space") ??
+              (i > 0 ? partSpace(shown[i - 1], "spaceBelow") : null);
+            const after =
+              i === shown.length - 1 ? partSpace(key, "spaceBelow") : null;
+            return before === null && after === null ? (
+              <Fragment key={key}>{insideParts[key]}</Fragment>
+            ) : (
+              <div
+                className={cn(
+                  "empty:hidden",
+                  // Your clock-in hides itself until there's a line to show.
+                  key === "clockin" && "[&:not(:has(p))]:hidden",
+                )}
+                key={key}
+                style={{
+                  marginTop: before === null ? undefined : before - stackGap,
+                  marginBottom: after === null ? undefined : after - stackGap,
+                }}
+              >
+                {insideParts[key]}
+              </div>
+            );
+          });
+        })()}
       </>
     ) : null;
   const body = (
