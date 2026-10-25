@@ -17,7 +17,7 @@ import {
   osmViewUrl,
 } from "@/lib/maps";
 import { cn } from "@/lib/utils";
-import { Map as MapIcon, Navigation } from "lucide-react";
+import { Map as MapIcon, MapPin, Navigation } from "lucide-react";
 
 /**
  * How the meeting-point map looks. Walk pages use the card; the walk page
@@ -26,7 +26,19 @@ import { Map as MapIcon, Navigation } from "lucide-react";
  * side by side — and where the directions buttons go, or none.
  */
 export type MapLook = {
-  look?: "card" | "flat" | "bare" | "overlay" | "split";
+  look?:
+    | "card"
+    | "flat"
+    | "bare"
+    | "overlay"
+    | "split"
+    | "map-first"
+    | "inset"
+    | "grey"
+    | "banner"
+    | "chip";
+  /** How "Meeting point" and the place show. */
+  titleStyle?: MapTitleStyle;
   buttons?: "below" | "above" | "over" | "none";
   height?: "short" | "medium" | "tall";
   showTitle?: boolean;
@@ -39,6 +51,12 @@ export type MapLook = {
   extra?: ReactNode;
   extraAt?: "above-map" | "on-map" | "below-map" | "after";
 };
+export type MapTitleStyle =
+  | "standard"
+  | "label"
+  | "icon"
+  | "place"
+  | "one-line";
 export type MapTiles = "colour" | "muted" | "grey" | "pale" | "dark";
 /** CSS filters on the map (the map service has no styles of its own to pick). */
 const TILE_FILTER: Record<MapTiles, string> = {
@@ -49,6 +67,7 @@ const TILE_FILTER: Record<MapTiles, string> = {
   dark: "[filter:grayscale(1)_invert(0.92)_contrast(0.9)]",
 };
 const DEFAULT_LOOK: Required<MapLook> = {
+  titleStyle: "standard",
   tiles: "colour",
   look: "card",
   buttons: "below",
@@ -82,7 +101,10 @@ export type DirectionsLook =
   | "pills"
   | "icons"
   | "links"
-  | "stacked";
+  | "stacked"
+  | "grey"
+  | "round-icons"
+  | "one";
 
 /** Get directions and Apple Maps, for the map or to place on their own, in a chosen look. */
 export function DirectionsButtons({
@@ -110,6 +132,34 @@ export function DirectionsButtons({
       primary: false,
     },
   ];
+  if (look === "round-icons")
+    return (
+      <div className={cn("flex gap-2", className)}>
+        {links.map(({ href, label, Icon, primary }) => (
+          <Button
+            aria-label={label}
+            asChild
+            className="rounded-full"
+            key={label}
+            size="icon"
+            variant={primary ? "default" : "outline"}
+          >
+            <a href={href} rel="noopener noreferrer" target="_blank" title={label}>
+              <Icon />
+            </a>
+          </Button>
+        ))}
+      </div>
+    );
+  if (look === "one")
+    return (
+      <Button asChild className={cn("w-full", className)}>
+        <a href={links[0].href} rel="noopener noreferrer" target="_blank">
+          <Navigation data-icon="inline-start" />
+          {links[0].label}
+        </a>
+      </Button>
+    );
   if (look === "links")
     return (
       <div className={cn("flex flex-wrap gap-x-4 gap-y-1 text-sm", className)}>
@@ -146,7 +196,9 @@ export function DirectionsButtons({
           key={label}
           size="sm"
           variant={
-            look === "outline"
+            look === "grey"
+              ? "secondary"
+              : look === "outline"
               ? "outline"
               : look === "solid"
                 ? "default"
@@ -249,12 +301,37 @@ export function WalkMap({
         point={point}
       />
     );
-  const title = o.showTitle ? (
+  // "Meeting point" and the place, in the chosen style.
+  const title = !o.showTitle ? null : o.titleStyle === "label" ? (
+    <div className="flex flex-col gap-1">
+      <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+        Meeting point
+      </p>
+      <h3 className="text-base font-semibold">{location}</h3>
+    </div>
+  ) : o.titleStyle === "icon" ? (
+    <div className="flex items-center gap-3">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+        <MapPin aria-hidden className="size-5" />
+      </span>
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <h3 className="text-base font-semibold">Meeting point</h3>
+        <p className="truncate text-sm text-muted-foreground">{location}</p>
+      </div>
+    </div>
+  ) : o.titleStyle === "place" ? (
+    <h3 className="text-base font-semibold">{location}</h3>
+  ) : o.titleStyle === "one-line" ? (
+    <p className="truncate text-sm">
+      <span className="font-semibold">Meeting point</span>
+      <span className="text-muted-foreground"> · {location}</span>
+    </p>
+  ) : (
     <div className="flex flex-col gap-1">
       <h3 className="text-base font-semibold">Meeting point</h3>
       <p className="text-sm text-muted-foreground">{location}</p>
     </div>
-  ) : null;
+  );
   const note = o.showNote ? (
     point ? (
       <p className="text-xs text-muted-foreground">
@@ -294,7 +371,8 @@ export function WalkMap({
               (o.buttons === "above" || at("above-map")) && "gap-3",
             )}
           >
-            {o.showTitle ? (
+            {o.showTitle && o.titleStyle !== "standard" ? title : null}
+            {o.showTitle && o.titleStyle === "standard" ? (
               <>
                 <CardTitle className="text-base">Meeting point</CardTitle>
                 <CardDescription>{location}</CardDescription>
@@ -377,6 +455,68 @@ export function WalkMap({
           {at("after")}
         </div>
         {mapArea("max-lg:order-first")}
+      </div>
+    );
+  }
+
+  if (o.look === "map-first" || o.look === "grey" || o.look === "inset") {
+    // A card with the map first (edge to edge, or inset with space round
+    // it), then the title, buttons and small print; or a grey box.
+    const inset = o.look === "inset";
+    return (
+      <div
+        className={cn(
+          "flex flex-col overflow-hidden rounded-xl",
+          o.look === "grey" ? "bg-muted" : "border bg-card",
+          inset && "gap-4 p-4",
+          round,
+        )}
+      >
+        {mapArea(
+          cn(
+            "[&>iframe]:rounded-[inherit]",
+            inset ? "overflow-hidden rounded-lg" : o.look === "grey" ? "" : "border-b",
+            !inset && cornerTop,
+          ),
+        )}
+        <div className={cn("flex flex-col gap-3", !inset && "p-5")}>
+          {title}
+          {at("above-map")}
+          {o.buttons === "none" || o.buttons === "over" ? null : buttons}
+          {at("below-map")}
+          {note}
+          {at("after")}
+        </div>
+      </div>
+    );
+  }
+
+  if (o.look === "banner" || o.look === "chip") {
+    // The map with the title on it: a bar along the bottom, or a small
+    // chip in the top corner; the buttons and small print under it.
+    return (
+      <div className="flex flex-col gap-3">
+        {at("above-map")}
+        {o.buttons === "above" ? buttons : null}
+        <div className={cn("relative overflow-hidden rounded-xl border", round)}>
+          {mapArea() ?? <div className={cn("bg-muted", height)} />}
+          {title ? (
+            <div
+              className={cn(
+                "absolute bg-background/95 backdrop-blur-sm",
+                o.look === "banner"
+                  ? "right-0 bottom-0 left-0 border-t px-4 py-3"
+                  : "top-3 left-3 max-w-[80%] rounded-lg border px-3 py-2 shadow-sm",
+              )}
+            >
+              {title}
+            </div>
+          ) : null}
+        </div>
+        {at("below-map")}
+        {o.buttons === "below" ? buttons : null}
+        {note}
+        {at("after")}
       </div>
     );
   }

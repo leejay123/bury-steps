@@ -36,8 +36,14 @@ export function WalksSection({
             save / Manage sit</strong> moves the buttons: beside the name, above
             the name on the right, under Created by, the full width under the
             name, or at the bottom of the title box. Its map settings also have
-            a <strong>Map design</strong> (card, no frame, map only, details
-            floating over the map, or details beside it) and <strong>Map
+            a <strong>Map design</strong> (card, card with the map on top, card
+            with the map inset, grey box, no frame, map only, the title in a bar
+            along the bottom of the map or in a small box on it, details
+            floating over the map, or details beside it), a{" "}
+            <strong>Meeting point title style</strong> (place under it, a small
+            label with the place big, with a pin icon, just the place, or one
+            line), more directions button looks (both grey, round icon buttons,
+            or just Get directions full width) and <strong>Map
             colours</strong> (full colour, toned down, grey, pale grey or
             dark); the Map block has Map colours too. With the map{" "}
             <strong>Down the side</strong>, a <strong>Down the side</strong> list

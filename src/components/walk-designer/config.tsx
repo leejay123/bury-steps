@@ -629,7 +629,15 @@ const FOLDS: {
   {
     key: "_mapSection",
     more: "_mapMore",
-    main: ["map", "sideParts", "mapLook", "mapTiles", "mapButtons", "mapHeight"],
+    main: [
+      "map",
+      "sideParts",
+      "mapLook",
+      "mapTitleStyle",
+      "mapTiles",
+      "mapButtons",
+      "mapHeight",
+    ],
     extra: ["mapButtonsLook", "mapCorners", "mapTitle", "mapNote"],
   },
   {
@@ -923,6 +931,7 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
     [
       "sideParts",
       "mapLook",
+      "mapTitleStyle",
       "mapTiles",
       "mapButtons",
       "mapButtonsLook",
@@ -987,7 +996,34 @@ const directionsLookField = {
     ["icons", "With map icons"],
     ["links", "Plain text links"],
     ["stacked", "Stacked, full width"],
+    ["grey", "Both grey"],
+    ["round-icons", "Round icon buttons"],
+    ["one", "Just Get directions, full width"],
   ]),
+};
+
+const MAP_DESIGNS: [string, string][] = [
+  ["card", "Card"],
+  ["map-first", "Card with the map on top"],
+  ["inset", "Card with the map inset (space round it)"],
+  ["grey", "Grey box, map on top"],
+  ["flat", "No frame"],
+  ["bare", "Map only"],
+  ["banner", "Title in a bar along the bottom of the map"],
+  ["chip", "Title in a small box on the map"],
+  ["overlay", "Details floating over the map"],
+  ["split", "Details beside the map"],
+];
+const mapTitleStyleField = {
+  type: "select" as const,
+  label: "Meeting point title style",
+  options: [
+    { value: "standard", label: "Meeting point, place under it" },
+    { value: "label", label: "Small MEETING POINT label, place big" },
+    { value: "icon", label: "With a pin icon" },
+    { value: "place", label: "Just the place" },
+    { value: "one-line", label: "One line: Meeting point · place" },
+  ],
 };
 
 const cornersField = {
@@ -2593,14 +2629,9 @@ export const walkDesignConfig: Config = {
         mapLook: {
           type: "select",
           label: "Map design",
-          options: options([
-            ["card", "Card"],
-            ["flat", "No frame"],
-            ["bare", "Map only"],
-            ["overlay", "Details floating over the map"],
-            ["split", "Details beside the map"],
-          ]),
+          options: options(MAP_DESIGNS),
         },
+        mapTitleStyle: mapTitleStyleField,
         sideParts: {
           type: "array",
           label: "Down the side — + Add, drag to reorder (none: just the map)",
@@ -2845,6 +2876,7 @@ export const walkDesignConfig: Config = {
         factsArrange: "fill",
         map: "none",
         mapLook: "card",
+        mapTitleStyle: "standard",
         mapTiles: "colour",
         sideParts: [],
         mapButtons: "below",
@@ -2913,6 +2945,7 @@ export const walkDesignConfig: Config = {
         factsArrange,
         map,
         mapLook,
+        mapTitleStyle,
         mapTiles,
         sideParts,
         actionsAt,
@@ -2986,6 +3019,7 @@ export const walkDesignConfig: Config = {
           factsArrange={factsArrange}
           map={map}
           mapLook={mapLook}
+          mapTitleStyle={mapTitleStyle}
           mapTiles={mapTiles}
           sideParts={sideParts}
           actionsAt={actionsAt}
@@ -3579,14 +3613,9 @@ export const walkDesignConfig: Config = {
         look: {
           type: "select",
           label: "Look",
-          options: options([
-            ["card", "Card"],
-            ["flat", "No frame"],
-            ["bare", "Map only"],
-            ["overlay", "Details floating over the map"],
-            ["split", "Details beside the map"],
-          ]),
+          options: options(MAP_DESIGNS),
         },
+        titleStyle: mapTitleStyleField,
         buttons: {
           type: "select",
           label: "Directions buttons",
@@ -3629,6 +3658,7 @@ export const walkDesignConfig: Config = {
       },
       defaultProps: {
         tiles: "colour",
+        titleStyle: "standard",
         corners: "rounded",
         buttonsLook: "default",
         look: "card",

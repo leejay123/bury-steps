@@ -1631,6 +1631,7 @@ export type DetailsOptions = {
   mapHeight?: "short" | "medium" | "tall";
   /** The map's frame (card, no frame, just the map, floating box, side by side). */
   mapLook?: MapLook["look"];
+  mapTitleStyle?: MapLook["titleStyle"];
   /** The map's own colours. */
   mapTiles?: MapTiles;
   mapTitle?: boolean;
@@ -2276,6 +2277,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         corners: o.mapCorners ?? "rounded",
         height: o.mapHeight ?? "medium",
         look: o.mapLook ?? "card",
+        titleStyle: o.mapTitleStyle ?? "standard",
         tiles: o.mapTiles ?? "colour",
         showTitle: o.mapTitle ?? true,
         showNote: o.mapNote ?? true,
