@@ -25,6 +25,8 @@ export type SignInLook =
   | "box"
   | "outline"
   | "empty"
+  | "dashed"
+  | "dashed-line"
   | "band"
   | "bar"
   | "dark"
@@ -53,6 +55,27 @@ export function SignInPrompt({ look = "box" }: { look?: SignInLook }) {
         <p className="font-medium">{SIGN_IN_TITLE}</p>
         <p className="max-w-md text-sm text-muted-foreground">{SIGN_IN_TEXT}</p>
       </div>
+    );
+  if (look === "dashed")
+    return (
+      <div className="flex gap-4 rounded-lg border border-dashed bg-muted/30 p-5">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+          <LogIn aria-hidden className="size-5" />
+        </span>
+        <div className="space-y-1">
+          <p className="font-medium">{SIGN_IN_TITLE}</p>
+          <p className="text-sm text-muted-foreground">{SIGN_IN_TEXT}</p>
+        </div>
+      </div>
+    );
+  if (look === "dashed-line")
+    return (
+      <p className="flex items-center gap-2 rounded-lg border border-dashed bg-muted/30 px-4 py-3 text-sm font-medium">
+        <LogIn aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+        <span className="min-w-0 truncate">
+          {SIGN_IN_TITLE} · use Sign in or Join the group at the top
+        </span>
+      </p>
     );
   if (look === "band")
     return (

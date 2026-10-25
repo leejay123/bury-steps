@@ -3998,7 +3998,8 @@ export type PreciseLook =
   | "button"
   | "copy"
   | "tile"
-  | "line";
+  | "line"
+  | "dashed";
 
 /** what3words with a Copy button (to paste into the app or a message). */
 function PreciseCopy({
@@ -4071,11 +4072,17 @@ export function PreciseLocation({
     </span>
   );
   if (look === "copy") return <PreciseCopy address={address} words={words} />;
-  if (look === "line")
-    // A thin grey one-line box, the full width: label left, words right.
+  if (look === "line" || look === "dashed")
+    // A thin one-line box, the full width: label left, words right (grey,
+    // or the empty box's dashed outline).
     return (
       <a
-        className="flex w-full items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm hover:bg-muted/70"
+        className={cn(
+          "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm",
+          look === "line"
+            ? "bg-muted hover:bg-muted/70"
+            : "border border-dashed bg-muted/30 hover:bg-muted/50",
+        )}
         href={href}
         rel="noopener noreferrer"
         target="_blank"
