@@ -1341,6 +1341,7 @@ export type TitleGap = "closer" | "normal" | "more";
 const TITLE_PART_SPACE = {
   none: 0,
   "8": 8,
+  "12": 12,
   "16": 16,
   "24": 24,
   "32": 32,
@@ -1700,7 +1701,7 @@ export type DetailsOptions = {
   /** (Old pages) the order of the facts, timeline and description in the title box. */
   titleOrder?: string;
   /** What goes inside the title box, under the name, in this order. */
-  titleParts?: { part?: string; space?: string; spaceBelow?: string }[];
+  titleParts?: { part?: string; space?: string }[];
   /** With the map down the side: what goes in that column, in order (the map too). */
   sideParts?: { part?: string }[];
   /** Your clock-in and Countdown: tucked under "Created by", or in the list. */
@@ -2145,8 +2146,8 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   ) : null;
   // Each part's own space above it, if chosen ("default": the title's gaps).
   const stackGap = { closer: 12, normal: 24, more: 32 }[o.titleGap ?? "normal"] ?? 24;
-  const partSpace = (key: TitlePart, side: "space" | "spaceBelow") => {
-    const chosen = o.titleParts?.find((item) => item?.part === key)?.[side];
+  const partSpace = (key: TitlePart) => {
+    const chosen = o.titleParts?.find((item) => item?.part === key)?.space;
     return chosen && chosen in TITLE_PART_SPACE
       ? TITLE_PART_SPACE[chosen as keyof typeof TITLE_PART_SPACE]
       : null;
@@ -2155,17 +2156,12 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
     listed.length > 0 ? (
       <>
         {(() => {
-          // One setting decides each gap, so items can never overlap: the
-          // lower item's Space above it, or else the upper one's Space below
-          // it (the last item's Space below it is the space after it).
+          // Each part's Space above it decides the gap before it (never
+          // less than none, so parts can't overlap).
           const shown = listed.filter((key) => insideParts[key]);
-          return shown.map((key, i) => {
-            const before =
-              partSpace(key, "space") ??
-              (i > 0 ? partSpace(shown[i - 1], "spaceBelow") : null);
-            const after =
-              i === shown.length - 1 ? partSpace(key, "spaceBelow") : null;
-            return before === null && after === null ? (
+          return shown.map((key) => {
+            const before = partSpace(key);
+            return before === null || before === stackGap ? (
               <Fragment key={key}>{insideParts[key]}</Fragment>
             ) : (
               <div
@@ -2175,10 +2171,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
                   key === "clockin" && "[&:not(:has(p))]:hidden",
                 )}
                 key={key}
-                style={{
-                  marginTop: before === null ? undefined : before - stackGap,
-                  marginBottom: after === null ? undefined : after - stackGap,
-                }}
+                style={{ marginTop: before - stackGap }}
               >
                 {insideParts[key]}
               </div>

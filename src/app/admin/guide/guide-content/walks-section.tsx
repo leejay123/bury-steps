@@ -425,12 +425,9 @@ export function WalksSection({
               circles, a spec sheet, a receipt, sticky notes and a journey
               line. With the walk ticket, the card&apos;s precise location,
               essentials and description go inside the ticket, so it&apos;s all
-              one card, with the same 24 pixels between everything. Each part in that list has its own <strong>Space above it</strong> and{" "}
-              <strong>Space below it</strong>{" "}
-              (none, 8, 16, 24, 32, 40 or 56 pixels, or as the title box&apos;s gaps), so the space
-              between any two parts can be set on its own. Between two parts only one setting counts — the lower one&apos;s
-              Space above it, or else the upper one&apos;s Space below it — so they
-              can touch but never overlap. <strong>Created by</strong> can be added to that list too, to place
+              one card, with the same 24 pixels between everything. Each part in that list has its own <strong>Space above it</strong>{" "}
+              (none, 8, 12, 16, 24, 32, 40 or 56 pixels), so the space
+              between any two parts can be set on its own. Parts can touch but never overlap. <strong>Created by</strong> can be added to that list too, to place
               it anywhere among the other parts instead of under the name. The Title section also has a <strong>Created by look</strong>{" "}
               (plain, grey box, dashed grey box, outlined, grey pill or a grey
               bar), and Your clock-in and Countdown have a dashed grey box look.

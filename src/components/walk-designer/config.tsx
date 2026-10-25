@@ -2297,6 +2297,17 @@ export const walkDesignConfig: Config = {
         const props: Record<string, unknown> = { ...data.props };
         if (!Array.isArray(props.titleParts))
           props.titleParts = titlePartsOf(props).map((part) => ({ part }));
+        // Each part's Space above it always shows a size: parts saved with
+        // "as the title box's gaps" (or none) get that gap's size.
+        const gapSize =
+          { closer: "12", normal: "24", more: "32" }[String(props.titleGap)] ??
+          "24";
+        props.titleParts = (props.titleParts as Record<string, unknown>[]).map(
+          ({ spaceBelow: _below, ...item }) =>
+            !item.space || item.space === "default"
+              ? { ...item, space: gapSize }
+              : item,
+        );
         const opened = FOLDS.find(
           (fold) =>
             (changed as Record<string, boolean | undefined>)[fold.key] &&
@@ -2523,22 +2534,9 @@ export const walkDesignConfig: Config = {
               type: "select",
               label: "Space above it",
               options: options([
-                ["default", "As the title box's gaps"],
                 ["none", "None"],
                 ["8", "Very small (8px)"],
-                ["16", "Small (16px)"],
-                ["24", "Normal (24px)"],
-                ["32", "Bigger (32px)"],
-                ["40", "Big (40px)"],
-                ["56", "Very big (56px)"],
-              ]),
-            },            spaceBelow: {
-              type: "select",
-              label: "Space below it",
-              options: options([
-                ["default", "As the title box's gaps"],
-                ["none", "None"],
-                ["8", "Very small (8px)"],
+                ["12", "Smaller (12px)"],
                 ["16", "Small (16px)"],
                 ["24", "Normal (24px)"],
                 ["32", "Bigger (32px)"],
@@ -2547,11 +2545,7 @@ export const walkDesignConfig: Config = {
               ]),
             },
           },
-          defaultItemProps: {
-            part: "description",
-            space: "default",
-            spaceBelow: "default",
-          },
+          defaultItemProps: { part: "description", space: "24" },
           getItemSummary: (item: { part?: string }) =>
             TITLE_PART_NAMES[item.part ?? ""] ?? "Choose a part",
         },
