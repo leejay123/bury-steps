@@ -45,6 +45,7 @@ import { getSiteTheme } from "@/lib/site-theme";
 import { siteFontById } from "@/lib/site-font";
 import { siteFontFace, siteFontVariableClassName, typesetFontVariables } from "@/app/fonts";
 import { DEFAULT_SITE_NAME, siteMetaDescription } from "@/lib/site-branding";
+import { ScrollRowArrows } from "@/components/scroll-row-arrows";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -168,6 +169,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <div className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
             <UnlockPageOnNavigate />
             <LiveUpdates />
+            <ScrollRowArrows />
             <KeepFormInputOnError />
             {/*
               Off-screen until focused, so a keyboard/screen-reader user's

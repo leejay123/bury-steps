@@ -613,6 +613,7 @@ const FOLDS: {
       "titleExtrasAt",
       "clockinLook",
       "countdownLook",
+      "createdByLook",
       "showActions",
       "actionsAt",
     ],
@@ -2541,6 +2542,19 @@ export const walkDesignConfig: Config = {
             ["card", "White card"],
             ["stacked", "Two lines in a grey box, with a tick"],
             ["underline", "With a line under it"],
+            ["dashed", "Dashed grey box"],
+          ]),
+        },
+        createdByLook: {
+          type: "select",
+          label: "Created by look",
+          options: options([
+            ["plain", "Plain words"],
+            ["grey", "Grey box"],
+            ["dashed", "Dashed grey box"],
+            ["outline", "Outlined box"],
+            ["pill", "Grey pill"],
+            ["bar", "Grey bar down the side"],
           ]),
         },
         countdownLook: {
@@ -2553,6 +2567,7 @@ export const walkDesignConfig: Config = {
             ["outline", "Outlined box"],
             ["bar", "Grey bar down the side"],
             ["big", "Big number"],
+            ["dashed", "Dashed grey box"],
             ["band", "In the status band (… · 7 days to go)"],
           ]),
         },
@@ -2931,6 +2946,7 @@ export const walkDesignConfig: Config = {
         titleExtrasAt: "list",
         clockinLook: "line",
         countdownLook: "line",
+        createdByLook: "plain",
         factsBorder: true,
         factsFold: "none",
         factsFoldTitle: "",
@@ -3002,6 +3018,7 @@ export const walkDesignConfig: Config = {
         titleOrder,
         titleParts,
         titleExtrasAt,
+        createdByLook,
         clockinLook,
         countdownLook,
         factsBorder,
@@ -3076,6 +3093,7 @@ export const walkDesignConfig: Config = {
           titleParts={titleParts}
           titleExtrasAt={titleExtrasAt}
           clockinLook={clockinLook}
+          createdByLook={createdByLook}
           countdownLook={countdownLook}
           factsBorder={factsBorder}
           factsFold={factsFold}

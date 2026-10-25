@@ -423,7 +423,13 @@ export function WalksSection({
               essentials and description go inside the ticket, so it&apos;s all
               one card, with the same 24 pixels between everything. Each part in that list has its own <strong>Space above it</strong>{" "}
               (none, 8, 16, 24, 32, 40 or 56 pixels, or as the title box&apos;s gaps), so the space
-              between any two parts can be set on its own. Inside the title box (in the Title section) is a list of what goes
+              between any two parts can be set on its own. The Title section also has a <strong>Created by look</strong>{" "}
+              (plain, grey box, dashed grey box, outlined, grey pill or a grey
+              bar), and Your clock-in and Countdown have a dashed grey box look.
+              Anything with nothing to show (such as Your clock-in before you
+              clock in) takes no space at all. On a computer with a mouse, rows
+              that scroll sideways show ‹ › buttons at their ends while the
+              pointer is over them. Inside the title box (in the Title section) is a list of what goes
               in the title box under the name: press + Add and choose Facts,
               Essentials, Precise location, The day&apos;s timeline, Description,
               Map, Your clock-in (You are clocked in · Recorded at…, once

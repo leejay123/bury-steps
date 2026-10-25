@@ -1387,7 +1387,10 @@ function Title({
   bandStyle = "grey",
   gap = "normal",
   actionsAt = "beside",
+  createdByLook = "plain",
 }: {
+  /** How "Created by …" looks. */
+  createdByLook?: CreatedByLook;
   /** Where the buttons sit (beside the name unless chosen). */
   actionsAt?: ActionsAt;
   /** Right under "Created by", tucked in with the name (Your clock-in,
@@ -1424,7 +1427,14 @@ function Title({
     h.note || underNote || actAt("under-name") ? (
       <>
         {h.note ? (
-          <p className="text-xs text-muted-foreground">{h.note}</p>
+          <p
+            className={cn(
+              "text-xs text-muted-foreground",
+              CREATED_BY_LOOK[createdByLook] ?? "",
+            )}
+          >
+            {h.note}
+          </p>
         ) : null}
         {underNote}
         {actAt("under-name") ? (
@@ -1456,7 +1466,9 @@ function Title({
     return (
       <div className="flex flex-col gap-4">
         {above}
-        <Title {...{ p, variant, actions: false, underNote, gap }} />
+        <Title
+          {...{ p, variant, actions: false, underNote, gap, createdByLook }}
+        />
         {below}
       </div>
     );
@@ -1725,6 +1737,8 @@ export type DetailsOptions = {
   showActions?: boolean;
   /** Where Share or save / Manage sit in the title. */
   actionsAt?: ActionsAt;
+  /** How "Created by …" looks. */
+  createdByLook?: CreatedByLook;
   showEssentials?: boolean;
   showDescription?: boolean;
 };
@@ -2093,7 +2107,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   const listed = titleParts.filter((key) => !tucked(key));
   const underName = titleParts.some(tucked) ? (
     // The same small text as "Created by" (the Big number look keeps its size).
-    <div className="flex flex-col gap-1.5 [&_p]:text-xs!">
+    <div className="flex flex-col gap-1.5 [&_p]:text-xs! [&:not(:has(p))]:hidden">
       {titleParts
         .filter(tucked)
         .map((key) =>
@@ -2121,7 +2135,11 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
             <Fragment key={key}>{insideParts[key]}</Fragment>
           ) : (
             <div
-              className="empty:hidden"
+              className={cn(
+                "empty:hidden",
+                // Your clock-in hides itself until there's a line to show.
+                key === "clockin" && "[&:not(:has(p))]:hidden",
+              )}
               key={key}
               style={{ marginTop: space - stackGap }}
             >
@@ -2153,6 +2171,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
               <Title
                 actions={showActions}
                 actionsAt={actionsAt}
+                createdByLook={o.createdByLook}
                 bandMessages={
                   titleMessagesAt === "in-band" &&
                   titleLook.startsWith("band") &&
@@ -2206,6 +2225,10 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
                             className={cn(
                               "text-xs",
                               dark ? "text-white/60" : "text-muted-foreground",
+                              CREATED_BY_LOOK[o.createdByLook ?? "plain"] ?? "",
+                              dark &&
+                                (o.createdByLook ?? "plain") !== "plain" &&
+                                "bg-white/10",
                             )}
                           >
                             {p.headline.note}
@@ -3822,7 +3845,8 @@ export type LineLook =
   | "badge"
   | "card"
   | "stacked"
-  | "underline";
+  | "underline"
+  | "dashed";
 
 /** The box each line look puts around Your clock-in or the Countdown. */
 const LINE_LOOK: Record<LineLook, string> = {
@@ -3840,6 +3864,18 @@ const LINE_LOOK: Record<LineLook, string> = {
   stacked:
     "items-start rounded-lg bg-muted px-4 py-3 [&_p>span]:block [&_p>span:last-child]:text-xs [&_[data-dot]]:hidden",
   underline: "border-b pb-2",
+  dashed: "rounded-lg border border-dashed bg-muted/30 px-3 py-2",
+};
+
+/** How "Created by …" looks under the walk's name. */
+export type CreatedByLook = "plain" | "grey" | "dashed" | "outline" | "pill" | "bar";
+const CREATED_BY_LOOK: Record<CreatedByLook, string> = {
+  plain: "",
+  grey: "w-fit rounded-lg bg-muted px-3 py-1.5",
+  dashed: "w-fit rounded-lg border border-dashed bg-muted/30 px-3 py-1.5",
+  outline: "w-fit rounded-lg border px-3 py-1.5",
+  pill: "w-fit rounded-full bg-muted px-3 py-1",
+  bar: "border-l-4 border-foreground/20 bg-muted/50 px-3 py-1.5",
 };
 
 /** One line, e.g. "3 days to go" or "48 min left"; nothing once it's over. */
@@ -3891,6 +3927,7 @@ function ClockInLook({
         "flex items-center gap-2 [&:not(:has(p))]:hidden [&_p]:text-sm",
         LINE_LOOK[look === "big" ? "grey" : look],
       )}
+      data-clockin=""
     >
       {look === "pill" || look === "tick" || look === "badge" ? (
         <CircleCheck
