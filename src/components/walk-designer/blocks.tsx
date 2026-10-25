@@ -1767,6 +1767,8 @@ export type DetailsOptions = {
   factsBorder?: boolean;
   /** Show only the first few facts, with Show all for the rest. */
   factsLimit?: string;
+  /** Striped table looks: an icon before each fact's name. */
+  factsIcons?: boolean;
   /** Fold the facts into a tap-to-open section on these devices. */
   factsFold?: "none" | "phones" | "phones-tablets" | "computers" | "all";
   factsFoldTitle?: string;
@@ -2140,6 +2142,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
             <FactLooks
               arrange={arrange}
               border={o.factsBorder ?? true}
+              icons={o.factsIcons ?? false}
               limit={Number(o.factsLimit ?? 0) || 0}
               look={as as FactsLook}
               p={p}
@@ -2558,7 +2561,10 @@ export function FactsBlock({
   gap,
   design = "facts",
   border = true,
+  icons = false,
 }: {
+  /** Striped table looks: an icon before each fact's name. */
+  icons?: boolean;
   /** Plain facts (the looks below), or one of the Details card's Facts
    * shown as designs (Spec sheet, Card table, colour blocks…). */
   design?: string;
@@ -2587,6 +2593,7 @@ export function FactsBlock({
         <FactLooks
           arrange={arrange}
           border={border}
+          icons={icons}
           look={chosen as FactsLook}
           p={p}
           showEmpty={showEmpty}
@@ -4969,6 +4976,8 @@ export function FactLooks(props: {
   border?: boolean;
   /** Show only this many facts, with Show all for the rest (0: all). */
   limit?: number;
+  /** The striped table looks: an icon before each label. */
+  icons?: boolean;
 }) {
   const arrange = keptArrange(props.look, props.arrange);
   const [expanded, setExpanded] = useState(false);
@@ -5023,6 +5032,7 @@ function FactLooksBody({
   border = true,
   limit = 0,
   footer = null,
+  icons = false,
 }: {
   p: WalkIdeaParts;
   look: FactsLook;
@@ -5030,6 +5040,8 @@ function FactLooksBody({
   showEmpty?: boolean;
   border?: boolean;
   limit?: number;
+  /** The striped table looks: an icon before each label. */
+  icons?: boolean;
   /** A last row inside a framed table (its Show all). */
   footer?: ReactNode;
 }) {
@@ -5202,8 +5214,15 @@ function FactLooksBody({
                 !stacked && "sm:font-semibold sm:text-foreground",
                 look === "spec-compact" && "text-xs",
                 columns && "sm:bg-muted sm:px-4 sm:py-3",
+                icons && "flex items-center gap-2",
               )}
             >
+              {icons ? (
+                <fact.icon
+                  aria-hidden
+                  className="size-4 shrink-0 text-muted-foreground"
+                />
+              ) : null}
               {fact.label}
             </dt>
             {/* Wider, the value sits on the far right of its row (or left). */}

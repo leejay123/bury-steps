@@ -670,6 +670,7 @@ const FOLDS: {
       "tabletFactsAs",
       "phoneFactsAs",
       "factsBorder",
+      "factsIcons",
       "factsLimit",
       "facts",
       "factsArrange",
@@ -948,6 +949,13 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
     )
   )
     hide.add("factsBorder");
+  // Icons before the names: the striped table looks only.
+  if (
+    ![props.factsAs, props.tabletFactsAs, props.phoneFactsAs].some((look) =>
+      SPEC_LOOKS.includes(String(look)),
+    )
+  )
+    hide.add("factsIcons");
   // The folded section's name and start only once the facts fold somewhere.
   if (!props.factsFold || props.factsFold === "none")
     hide.add("factsFoldTitle").add("factsFoldOpen").add("factsFoldIcon");
@@ -2862,6 +2870,14 @@ export const walkDesignConfig: Config = {
             ["plus", "Plus (turns to ×)"],
           ]),
         },
+        factsIcons: {
+          type: "radio",
+          label: "Icons before the names (table looks)",
+          options: [
+            { label: "On", value: true },
+            { label: "Off", value: false },
+          ],
+        },
         factsLimit: {
           type: "select",
           label: "Show first (the rest under Show all)",
@@ -3043,6 +3059,7 @@ export const walkDesignConfig: Config = {
         countdownLook: "line",
         createdByLook: "plain",
         factsBorder: true,
+        factsIcons: false,
         factsLimit: "0",
         factsFold: "none",
         factsFoldTitle: "",
@@ -3119,6 +3136,7 @@ export const walkDesignConfig: Config = {
         clockinLook,
         countdownLook,
         factsBorder,
+        factsIcons,
         factsLimit,
         factsFold,
         factsFoldTitle,
@@ -3195,6 +3213,7 @@ export const walkDesignConfig: Config = {
           createdByLook={createdByLook}
           countdownLook={countdownLook}
           factsBorder={factsBorder}
+          factsIcons={factsIcons}
           factsLimit={factsLimit}
           factsFold={factsFold}
           factsFoldTitle={factsFoldTitle}
@@ -3228,10 +3247,12 @@ export const walkDesignConfig: Config = {
           ])
             delete shown[key];
           if (![...SPEC_LOOKS, "card-table"].includes(design)) delete shown.border;
+          if (!SPEC_LOOKS.includes(design)) delete shown.icons;
           limitArranges(shown, [["arrange", design]]);
           return shown as typeof fields;
         }
         delete shown.border;
+        delete shown.icons;
         const computer = String(props.variant ?? "grid");
         const { tabletLook, phoneLook } = deviceLooks(
           computer,
@@ -3254,6 +3275,14 @@ export const walkDesignConfig: Config = {
         border: {
           type: "radio",
           label: "Outer border round the facts",
+          options: [
+            { label: "On", value: true },
+            { label: "Off", value: false },
+          ],
+        },
+        icons: {
+          type: "radio",
+          label: "Icons before the names (table looks)",
           options: [
             { label: "On", value: true },
             { label: "Off", value: false },
@@ -3301,10 +3330,12 @@ export const walkDesignConfig: Config = {
         showEmpty: false,
         design: "facts",
         border: true,
+        icons: false,
       },
       render: ({
         design,
         border,
+        icons,
         variant,
         arrange,
         phoneVariant,
@@ -3321,6 +3352,7 @@ export const walkDesignConfig: Config = {
       }) => (
         <FactsBlock
           border={border}
+          icons={icons}
           design={design}
           gap={gap}
           heading={heading}
