@@ -94,7 +94,7 @@ export function ScrollRowArrows() {
   const move = (direction: 1 | -1) =>
     row.scrollBy({ left: direction * row.clientWidth * 0.8, behavior: "smooth" });
   const button =
-    "pointer-events-auto fixed z-40 flex size-8 -translate-y-1/2 items-center justify-center rounded-full border bg-background text-foreground shadow-md hover:bg-muted";
+    "pointer-events-auto fixed z-40 flex size-6 -translate-y-1/2 items-center justify-center rounded-full border bg-background/95 text-foreground shadow-sm hover:bg-muted";
   return createPortal(
     <div className="pointer-events-none" ref={buttons}>
       {place.back ? (
@@ -102,10 +102,10 @@ export function ScrollRowArrows() {
           aria-label="Scroll back"
           className={button}
           onClick={() => move(-1)}
-          style={{ top: place.top, left: place.left + 4 }}
+          style={{ top: place.top, left: place.left + 2 }}
           type="button"
         >
-          <ChevronLeft aria-hidden className="size-4" />
+          <ChevronLeft aria-hidden className="size-3.5" />
         </button>
       ) : null}
       {place.forward ? (
@@ -113,10 +113,10 @@ export function ScrollRowArrows() {
           aria-label="Scroll forward"
           className={button}
           onClick={() => move(1)}
-          style={{ top: place.top, left: place.right - 36 }}
+          style={{ top: place.top, left: place.right - 26 }}
           type="button"
         >
-          <ChevronRight aria-hidden className="size-4" />
+          <ChevronRight aria-hidden className="size-3.5" />
         </button>
       ) : null}
     </div>,

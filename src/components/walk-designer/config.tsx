@@ -1015,6 +1015,14 @@ const MAP_DESIGNS: [string, string][] = [
   ["bare", "Map only"],
   ["banner", "Title in a bar along the bottom of the map"],
   ["chip", "Title in a small box on the map"],
+  ["dark", "Black card"],
+  ["dashed", "Dashed grey card"],
+  ["postcard", "Postcard (map framed, words under)"],
+  ["toolbar", "Card with the buttons in a grey bar"],
+  ["ticket", "Ticket (dashed tear lines)"],
+  ["header-band", "Card with the title in a grey band"],
+  ["strip", "Small square map beside the words"],
+  ["circle", "Small round map beside the words"],
   ["overlay", "Details floating over the map"],
   ["split", "Details beside the map"],
 ];
@@ -1027,6 +1035,12 @@ const mapTitleStyleField = {
     { value: "icon", label: "With a pin icon" },
     { value: "place", label: "Just the place" },
     { value: "one-line", label: "One line: Meeting point · place" },
+    { value: "big", label: "Place big, Meeting point small under it" },
+    { value: "pin", label: "Just the place, with a pin" },
+    { value: "badge", label: "Meeting point in a grey pill, place under" },
+    { value: "dark-icon", label: "With a black pin box" },
+    { value: "underline", label: "Meeting point with a line under it" },
+    { value: "bar", label: "Dark bar down the side" },
   ],
 };
 

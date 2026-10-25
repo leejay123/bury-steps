@@ -38,11 +38,15 @@ export function WalksSection({
             name, or at the bottom of the title box. Its map settings also have
             a <strong>Map design</strong> (card, card with the map on top, card
             with the map inset, grey box, no frame, map only, the title in a bar
-            along the bottom of the map or in a small box on it, details
+            along the bottom of the map or in a small box on it, a black card, a dashed grey card, a postcard, a card with the
+            buttons in a grey bar, a ticket with dashed tear lines, a card with
+            the title in a grey band, a small square or round map beside the
+            words, details
             floating over the map, or details beside it), a{" "}
             <strong>Meeting point title style</strong> (place under it, a small
-            label with the place big, with a pin icon, just the place, or one
-            line), more directions button looks (both grey, round icon buttons,
+            label with the place big, with a pin icon, just the place, one
+            line, the place big, the place with a pin, a grey pill, a black pin
+            box, a line under it, or a dark bar down the side), more directions button looks (both grey, round icon buttons,
             or just Get directions full width) and <strong>Map
             colours</strong> (full colour, toned down, grey, pale grey or
             dark); the Map block has Map colours too. With the map{" "}

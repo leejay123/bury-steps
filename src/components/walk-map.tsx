@@ -36,7 +36,15 @@ export type MapLook = {
     | "inset"
     | "grey"
     | "banner"
-    | "chip";
+    | "chip"
+    | "dark"
+    | "dashed"
+    | "strip"
+    | "toolbar"
+    | "postcard"
+    | "ticket"
+    | "circle"
+    | "header-band";
   /** How "Meeting point" and the place show. */
   titleStyle?: MapTitleStyle;
   buttons?: "below" | "above" | "over" | "none";
@@ -56,7 +64,13 @@ export type MapTitleStyle =
   | "label"
   | "icon"
   | "place"
-  | "one-line";
+  | "one-line"
+  | "big"
+  | "pin"
+  | "badge"
+  | "dark-icon"
+  | "underline"
+  | "bar";
 export type MapTiles = "colour" | "muted" | "grey" | "pale" | "dark";
 /** CSS filters on the map (the map service has no styles of its own to pick). */
 const TILE_FILTER: Record<MapTiles, string> = {
@@ -319,6 +333,43 @@ export function WalkMap({
         <p className="truncate text-sm text-muted-foreground">{location}</p>
       </div>
     </div>
+  ) : o.titleStyle === "big" ? (
+    <div className="flex flex-col gap-0.5">
+      <h3 className="text-xl font-semibold tracking-tight">{location}</h3>
+      <p className="text-xs text-muted-foreground">Meeting point</p>
+    </div>
+  ) : o.titleStyle === "pin" ? (
+    <h3 className="flex items-center gap-2 text-base font-semibold">
+      <MapPin aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+      <span className="min-w-0 truncate">{location}</span>
+    </h3>
+  ) : o.titleStyle === "badge" ? (
+    <div className="flex flex-col items-start gap-2">
+      <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium">
+        Meeting point
+      </span>
+      <h3 className="text-base font-semibold">{location}</h3>
+    </div>
+  ) : o.titleStyle === "dark-icon" ? (
+    <div className="flex items-center gap-3">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-foreground text-background">
+        <MapPin aria-hidden className="size-5" />
+      </span>
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <h3 className="text-base font-semibold">Meeting point</h3>
+        <p className="truncate text-sm text-muted-foreground">{location}</p>
+      </div>
+    </div>
+  ) : o.titleStyle === "underline" ? (
+    <div className="flex flex-col gap-2">
+      <h3 className="border-b pb-2 text-base font-semibold">Meeting point</h3>
+      <p className="text-sm text-muted-foreground">{location}</p>
+    </div>
+  ) : o.titleStyle === "bar" ? (
+    <div className="flex flex-col gap-0.5 border-l-4 border-l-foreground pl-3">
+      <h3 className="text-base font-semibold">Meeting point</h3>
+      <p className="text-sm text-muted-foreground">{location}</p>
+    </div>
   ) : o.titleStyle === "place" ? (
     <h3 className="text-base font-semibold">{location}</h3>
   ) : o.titleStyle === "one-line" ? (
@@ -517,6 +568,104 @@ export function WalkMap({
         {o.buttons === "below" ? buttons : null}
         {note}
         {at("after")}
+      </div>
+    );
+  }
+
+  const showButtons = o.buttons !== "none" && o.buttons !== "over";
+  const extras = (
+    <>
+      {at("above-map")}
+      {at("below-map")}
+    </>
+  );
+
+  if (o.look === "dark" || o.look === "dashed" || o.look === "postcard") {
+    // A black card, a dashed one, or a postcard (the map framed, words under).
+    const dark = o.look === "dark";
+    return (
+      <div
+        className={cn(
+          "flex flex-col gap-4 overflow-hidden rounded-xl p-4",
+          dark &&
+            "bg-neutral-950 text-white [&_.text-muted-foreground]:text-white/60 [&_[data-slot=button]]:border-white/20 [&_[data-slot=button]]:bg-white [&_[data-slot=button]]:text-neutral-950",
+          o.look === "dashed" && "border border-dashed bg-muted/30",
+          o.look === "postcard" && "border bg-card shadow-sm",
+          round,
+        )}
+      >
+        {o.look === "postcard" ? null : title}
+        {mapArea(
+          cn(
+            "overflow-hidden rounded-lg [&>iframe]:rounded-[inherit]",
+            o.look === "postcard" && "border",
+          ),
+        )}
+        {o.look === "postcard" ? (
+          <div className="flex flex-col items-center gap-3 text-center">
+            {title}
+          </div>
+        ) : null}
+        {extras}
+        {showButtons ? buttons : null}
+        {note}
+        {at("after")}
+      </div>
+    );
+  }
+
+  if (o.look === "strip" || o.look === "circle") {
+    // A small map (square, or round) beside the words: compact.
+    return (
+      <div className={cn("flex items-center gap-4 rounded-xl border p-3", round)}>
+        {mapArea(
+          cn(
+            "size-28 shrink-0 overflow-hidden [&>iframe]:h-full! [&>iframe]:min-h-0!",
+            o.look === "circle" ? "rounded-full" : "rounded-lg",
+          ),
+        )}
+        <div className="flex min-w-0 flex-1 flex-col gap-3">
+          {title}
+          {extras}
+          {showButtons ? buttons : null}
+          {at("after")}
+        </div>
+      </div>
+    );
+  }
+
+  if (o.look === "toolbar" || o.look === "ticket" || o.look === "header-band") {
+    // A card: the title on top (in a grey band for header-band), the map,
+    // then the buttons in a bar (a dashed tear line for the ticket).
+    return (
+      <div className={cn("flex flex-col overflow-hidden rounded-xl border bg-card", round)}>
+        {title ? (
+          <div
+            className={cn(
+              "px-5 py-4",
+              o.look === "header-band" && "bg-muted",
+              o.look === "ticket" && "border-b border-dashed",
+            )}
+          >
+            {title}
+          </div>
+        ) : null}
+        {at("above-map") ? <div className="px-5 pb-4">{at("above-map")}</div> : null}
+        {mapArea(o.look === "header-band" ? "" : "border-y")}
+        {at("below-map") ? <div className="px-5 pt-4">{at("below-map")}</div> : null}
+        {showButtons || note || at("after") ? (
+          <div
+            className={cn(
+              "flex flex-col gap-3 px-5 py-4",
+              o.look === "toolbar" && "bg-muted",
+              o.look === "ticket" && "border-t border-dashed",
+            )}
+          >
+            {showButtons ? buttons : null}
+            {note}
+            {at("after")}
+          </div>
+        ) : null}
       </div>
     );
   }
