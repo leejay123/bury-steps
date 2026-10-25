@@ -20,7 +20,14 @@ const LONG_DESCRIPTION_THRESHOLD = 400;
  * needs one continuous inline flow to count lines correctly); expanded view
  * gets real paragraph breaks too, via DescriptionText — at the same text size
  * as the preview (no `typeset` class, which bumps text up to 1.125em). */
-export function WalkDescription({ description }: { description: string }) {
+export function WalkDescription({
+  description,
+  footerClassName,
+}: {
+  description: string;
+  /** Read more as its box's bottom row (a line above it, the box's full width). */
+  footerClassName?: string;
+}) {
   const [expanded, setExpanded] = useState(false);
   // A first guess from the length (so the page doesn't jump on load), then
   // measured: Read more only shows when the six lines really cut text off.
@@ -43,6 +50,19 @@ export function WalkDescription({ description }: { description: string }) {
     return () => observer.disconnect();
   }, [description, expanded]);
 
+  // Plain text + chevron, no button chrome — only the chevron animates
+  // on toggle, no hover background/color change.
+  const toggle = (
+    <button
+      aria-expanded={expanded}
+      className="flex w-fit cursor-pointer items-center gap-1 text-sm font-medium text-muted-foreground"
+      onClick={() => setExpanded((prev) => !prev)}
+      type="button"
+    >
+      {expanded ? "Show less" : "Read more"}
+      <ChevronDown className={cn("size-4 transition-transform duration-200", expanded && "rotate-180")} />
+    </button>
+  );
   return (
     <div className="flex flex-col gap-2 text-sm leading-relaxed">
       {expanded ? (
@@ -53,17 +73,11 @@ export function WalkDescription({ description }: { description: string }) {
         </p>
       )}
       {isLong ? (
-        // Plain text + chevron, no button chrome — only the chevron animates
-        // on toggle, no hover background/color change.
-        <button
-          aria-expanded={expanded}
-          className="flex w-fit cursor-pointer items-center gap-1 text-sm font-medium text-muted-foreground"
-          onClick={() => setExpanded((prev) => !prev)}
-          type="button"
-        >
-          {expanded ? "Show less" : "Read more"}
-          <ChevronDown className={cn("size-4 transition-transform duration-200", expanded && "rotate-180")} />
-        </button>
+        footerClassName ? (
+          <div className={footerClassName}>{toggle}</div>
+        ) : (
+          toggle
+        )
       ) : null}
     </div>
   );

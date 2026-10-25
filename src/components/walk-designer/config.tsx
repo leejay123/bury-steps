@@ -666,6 +666,7 @@ const FOLDS: {
       "factsFold",
       "factsFoldTitle",
       "factsFoldOpen",
+      "factsFoldIcon",
     ],
     extra: [
       "factLines",
@@ -935,7 +936,7 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
     hide.add("factsBorder");
   // The folded section's name and start only once the facts fold somewhere.
   if (!props.factsFold || props.factsFold === "none")
-    hide.add("factsFoldTitle").add("factsFoldOpen");
+    hide.add("factsFoldTitle").add("factsFoldOpen").add("factsFoldIcon");
   // Map
   // The side list is only for a map down the side.
   if (props.map !== "side") hide.add("sideParts");
@@ -2836,6 +2837,14 @@ export const walkDesignConfig: Config = {
             { label: "Open", value: true },
           ],
         },
+        factsFoldIcon: {
+          type: "radio",
+          label: "Folded section's open and close sign",
+          options: options([
+            ["chevron", "Arrow"],
+            ["plus", "Plus (turns to ×)"],
+          ]),
+        },
         factsLimit: {
           type: "select",
           label: "Show first (the rest under Show all)",
@@ -3021,6 +3030,7 @@ export const walkDesignConfig: Config = {
         factsFold: "none",
         factsFoldTitle: "",
         factsFoldOpen: false,
+        factsFoldIcon: "chevron",
         tabletFactsAs: "same",
         phoneFactsAs: "same",
         bigTitle: false,
@@ -3096,6 +3106,7 @@ export const walkDesignConfig: Config = {
         factsFold,
         factsFoldTitle,
         factsFoldOpen,
+        factsFoldIcon,
         tabletFactsAs,
         phoneFactsAs,
         bigTitle,
@@ -3171,6 +3182,7 @@ export const walkDesignConfig: Config = {
           factsFold={factsFold}
           factsFoldTitle={factsFoldTitle}
           factsFoldOpen={factsFoldOpen}
+          factsFoldIcon={factsFoldIcon}
           tabletFactsAs={tabletFactsAs}
           phoneFactsAs={phoneFactsAs}
           tone={tone}

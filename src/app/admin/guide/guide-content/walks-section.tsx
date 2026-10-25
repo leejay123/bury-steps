@@ -59,7 +59,10 @@ export function WalksSection({
             grey label column, compact rows, values on the left, label over
             value, or grey with white stripes. <strong>Show first</strong> (with those looks) shows only the
             first 2–6 facts, with a <strong>Show all</strong> button under them
-            for the rest (in a striped table it&apos;s the table&apos;s last row). The <strong>Precise location look</strong>{" "}
+            for the rest (in a striped table it&apos;s the table&apos;s last row). When the description is the last thing in a boxed title box (or in
+            its own box), its Read more is that box&apos;s bottom row in the same
+            way. The folded facts section can use an arrow or a + (turns to ×)
+            as its open and close sign. The <strong>Precise location look</strong>{" "}
             (the what3words address) can be the full card, a one-line chip, a thin
             full-width grey line (with the words Precise location), the same
             line with a dashed outline, a text link, a grey box, grey with a dark bar, a black box, big words

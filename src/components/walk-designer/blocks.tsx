@@ -32,6 +32,7 @@ import {
   Flag,
   Footprints,
   MapPin,
+  Plus,
   Mountain,
   Navigation,
   PanelLeft,
@@ -417,10 +418,13 @@ const SWIPE =
 function FoldedFacts({
   title,
   open,
+  icon = "chevron",
   children,
 }: {
   title: string;
   open: boolean;
+  /** The open and close sign: an arrow, or a + that turns to × (as the Accordion block). */
+  icon?: "chevron" | "plus";
   children: ReactNode;
 }) {
   return (
@@ -431,8 +435,23 @@ function FoldedFacts({
       type="single"
     >
       <AccordionItem className="border-b-0" value="facts">
-        <AccordionTrigger className="items-center px-4 text-sm hover:no-underline">
+        <AccordionTrigger
+          className={cn(
+            "items-center px-4 text-sm hover:no-underline",
+            icon === "plus" &&
+              "[&>svg]:hidden [&[data-state=open]_[data-plus]]:rotate-45",
+          )}
+        >
           {title}
+          {icon === "plus" ? (
+            <span
+              aria-hidden
+              className="text-muted-foreground transition-transform duration-200"
+              data-plus=""
+            >
+              <Plus className="size-4" />
+            </span>
+          ) : null}
         </AccordionTrigger>
         <AccordionContent className="pb-0">
           <div className="[&:not(:has([data-edge],[data-reveal-list],[data-slot=card]))]:px-4 [&:not(:has([data-edge],[data-reveal-list],[data-slot=card]))]:pb-4 [&_[data-edge]]:rounded-none [&_[data-edge]]:border-x-0 [&_[data-edge]]:border-b-0 [&_[data-reveal-list]]:rounded-none [&_[data-reveal-list]]:border-x-0 [&_[data-reveal-list]]:border-b-0">
@@ -1680,6 +1699,7 @@ export type DetailsOptions = {
   factsFold?: "none" | "phones" | "phones-tablets" | "computers" | "all";
   factsFoldTitle?: string;
   factsFoldOpen?: boolean;
+  factsFoldIcon?: "chevron" | "plus";
   /** Facts shown as on tablets and phones ("same": as on computers). */
   tabletFactsAs?: string;
   phoneFactsAs?: string;
@@ -1922,6 +1942,28 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
     </div>
   );
   const descriptionInTitle = inTitle("description");
+  // The description last in a boxed title (the Status band, or a box round
+  // the title): its Read more is the box's bottom row, like Show all.
+  const lastInTitle = titleParts
+    .filter(
+      (key) =>
+        !(
+          o.titleExtrasAt === "under-name" &&
+          (key === "clockin" || key === "countdown" || key === "createdby")
+        ),
+    )
+    .at(-1);
+  const readMoreInTitle =
+    descriptionInTitle &&
+    lastInTitle === "description" &&
+    !titleMessagesAt.startsWith("bottom") &&
+    actionsAt !== "bottom"
+      ? titleLook.startsWith("band")
+        ? READ_MORE_ROW_BAND
+        : (titleBox ?? "none") !== "none"
+          ? READ_MORE_ROW
+          : undefined
+      : undefined;
   // Just below the title box (outside its outline), with its own box.
   const descriptionAfterTitle =
     !descriptionInTitle && o.descriptionAt === "after-title";
@@ -1931,12 +1973,17 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       descriptionInTitle ? (
         <DescriptionWithHeading
           description={p.walk.description}
+          footerClassName={readMoreInTitle}
           heading={o.descriptionTitle}
         />
       ) : (
         <Boxed box={o.descriptionBox} dark={dark}>
           <DescriptionWithHeading
             description={p.walk.description}
+            // In its own box: Read more is the box's bottom row.
+            footerClassName={
+              (o.descriptionBox ?? "none") === "none" ? undefined : READ_MORE_ROW
+            }
             heading={o.descriptionTitle}
           />
         </Boxed>
@@ -2070,6 +2117,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   if (foldOn !== "none" && factsAs !== "none") {
     const folded = (
       <FoldedFacts
+        icon={o.factsFoldIcon === "plus" ? "plus" : "chevron"}
         open={o.factsFoldOpen ?? false}
         title={o.factsFoldTitle?.trim() || "Walk details"}
       >
@@ -2505,19 +2553,33 @@ function PartHeading({ text }: { text?: string }) {
 function DescriptionWithHeading({
   description,
   heading,
+  footerClassName,
 }: {
   description: string;
   heading?: string;
+  /** Read more as the box's bottom row (see WalkDescription). */
+  footerClassName?: string;
 }) {
   const title = heading?.trim();
-  if (!title) return <WalkDescription description={description} />;
+  const text = (
+    <WalkDescription
+      description={description}
+      footerClassName={footerClassName}
+    />
+  );
+  if (!title) return text;
   return (
     <div className="flex flex-col gap-2">
       <h2 className="text-base font-semibold">{title}</h2>
-      <WalkDescription description={description} />
+      {text}
     </div>
   );
 }
+
+/** Read more as the bottom row of a box with 16px inside (20px wider for the Status band). */
+const READ_MORE_ROW = "mt-2 -mx-4 -mb-4 border-t px-4 py-3";
+const READ_MORE_ROW_BAND =
+  "mt-2 -mx-4 -mb-4 border-t px-4 py-3 sm:-mx-5 sm:-mb-5 sm:px-5";
 
 export function DescriptionBlock({ heading = "" }: { heading?: string }) {
   const p = useWalkParts();
