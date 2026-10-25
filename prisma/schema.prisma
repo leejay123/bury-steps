@@ -149,6 +149,8 @@ model Walk {
   backMarker      String?
   /// Where the walk stops for a drink or bite, e.g. "Hare & Hounds, Bolton Road, Abbey Village".
   refreshmentStop String?
+  /// Extra facts of the walk's own: [{ name, value }] (src/lib/extra-facts.ts).
+  extraFacts      Json?
   location        String?
   /// Optional UK postcode used to place the map pin. Members still see `location`.
   postcode        String?

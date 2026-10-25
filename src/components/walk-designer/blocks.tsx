@@ -31,6 +31,7 @@ import {
   Coffee,
   Flag,
   Footprints,
+  Info,
   MapPin,
   Plus,
   Mountain,
@@ -140,6 +141,13 @@ function useWalkInfo(p: WalkIdeaParts, showEmpty = false) {
         value: p.walk.refreshmentStop,
         wide: true,
       },
+      // The walk's own facts (+ Add a fact), after the standard ones.
+      ...(p.walk.extraFacts ?? []).map((fact) => ({
+        icon: Info,
+        label: fact.name,
+        value: fact.value as string | null,
+        wide: fact.value.length > 30,
+      })),
     ].flatMap((fact) =>
       // Empty facts are left out, unless the design asks to show organisers
       // "Not set" (to spot what's missing from Edit walk).

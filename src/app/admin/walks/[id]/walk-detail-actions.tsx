@@ -1,5 +1,6 @@
 "use client";
 
+import type { ExtraFact } from "@/lib/extra-facts";
 import { CalendarPlus, Download } from "lucide-react";
 import { useWalkClock } from "@/hooks/use-walk-clock";
 import {
@@ -25,6 +26,7 @@ export function WalkDetailActions({
   attendanceCount,
   backMarker,
   refreshmentStop,
+  extraFacts = [],
   cancelledAt,
   canCancel,
   canCreate,
@@ -54,6 +56,7 @@ export function WalkDetailActions({
   attendanceCount: number;
   backMarker: string | null;
   refreshmentStop: string | null;
+  extraFacts?: ExtraFact[];
   cancelledAt: string | null;
   canCancel: boolean;
   canCreate: boolean;
@@ -140,6 +143,7 @@ export function WalkDetailActions({
         <EditWalkButton
           backMarker={backMarker}
           refreshmentStop={refreshmentStop}
+          extraFacts={extraFacts}
           cancelled={Boolean(walk.cancelledAt)}
           description={description}
           distance={distance}

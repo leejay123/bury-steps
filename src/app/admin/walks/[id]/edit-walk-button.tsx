@@ -1,5 +1,6 @@
 "use client";
 
+import type { ExtraFact } from "@/lib/extra-facts";
 import { useEffect, useState } from "react";
 import { Pencil } from "lucide-react";
 import { updateWalk } from "@/server/actions";
@@ -76,6 +77,7 @@ function EditWalkForm({
 export function EditWalkButton({
   backMarker,
   refreshmentStop,
+  extraFacts = [],
   cancelled,
   description,
   distance,
@@ -96,6 +98,7 @@ export function EditWalkButton({
 }: {
   backMarker: string | null;
   refreshmentStop: string | null;
+  extraFacts?: ExtraFact[];
   cancelled: boolean;
   description: string | null;
   distance: string | null;
@@ -142,6 +145,7 @@ export function EditWalkButton({
           defaults={{
             backMarker,
             refreshmentStop,
+            extraFacts,
             description,
             distance,
             durationMins,

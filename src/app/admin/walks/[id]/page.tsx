@@ -1,4 +1,5 @@
 import { Suspense, type ReactNode } from "react";
+import { parseExtraFacts } from "@/lib/extra-facts";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { getSiteTheme } from "@/lib/site-theme";
@@ -89,6 +90,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
       walkLeader: true,
       backMarker: true,
       refreshmentStop: true,
+      extraFacts: true,
       location: true,
       postcode: true,
       latitude: true,
@@ -392,6 +394,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
         attendanceCount={walk.attendances.length}
         backMarker={walk.backMarker}
         refreshmentStop={walk.refreshmentStop}
+        extraFacts={parseExtraFacts(walk.extraFacts)}
         cancelledAt={walk.cancelledAt?.toISOString() ?? null}
         canCancel={admin.permWalksCancel}
         canCreate={admin.permWalksCreate}
@@ -634,6 +637,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
     walk: {
       backMarker: walk.backMarker,
       refreshmentStop: walk.refreshmentStop,
+      extraFacts: parseExtraFacts(walk.extraFacts),
       calendarHref: `/w/${slug}/ics`,
       description: walk.description,
       essentials: walk.essentials,

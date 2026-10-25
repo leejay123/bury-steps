@@ -1,5 +1,7 @@
 "use client";
 
+import { ExtraFactsField } from "./extra-facts-field";
+import type { ExtraFact } from "@/lib/extra-facts";
 import { utcToLondonWallClock } from "@/lib/dates";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { MeetingPointFields } from "@/components/meeting-point-fields";
@@ -38,6 +40,7 @@ export type WalkFormDefaults = {
   walkLeader: string | null;
   backMarker: string | null;
   refreshmentStop?: string | null;
+  extraFacts?: ExtraFact[];
   location: string | null;
   postcode: string | null;
   latitude: number | null;
@@ -217,6 +220,7 @@ export function WalkFormFields({
             <FieldHint>Where the walk stops for a drink or a bite. Leave blank if there isn&apos;t one.</FieldHint>
           </div>
         </div>
+        <ExtraFactsField defaults={defaults?.extraFacts ?? []} />
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 text-sm font-medium">Essentials</legend>
           <FieldHint>Tick what&apos;s there. Only ticked items show on the walk page.</FieldHint>

@@ -16,6 +16,7 @@ import {
   UserRound,
   UsersRound,
   X,
+  Info,
 } from "lucide-react";
 import { formatTime, formatWalkDay, formatWalkLength } from "@/lib/dates";
 import { cn } from "@/lib/utils";
@@ -94,6 +95,11 @@ export function WalkStudioLayouts({ layout, parts }: { layout: WalkStudioLayout;
       { icon: UserRound, label: "Walk leader", value: h.walkLeader },
       { icon: UsersRound, label: "Back marker", value: p.walk.backMarker },
       { icon: Coffee, label: "Refreshment stop", value: p.walk.refreshmentStop },
+      ...(p.walk.extraFacts ?? []).map((fact) => ({
+        icon: Info,
+        label: fact.name,
+        value: fact.value as string | null,
+      })),
     ].flatMap((fact) =>
       fact.value ? [{ ...fact, value: fact.value }] : [],
     ),

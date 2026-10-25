@@ -1,4 +1,5 @@
 import { WalkLinkLoading } from "./loading";
+import { parseExtraFacts } from "@/lib/extra-facts";
 import { Suspense, cache, cloneElement, isValidElement } from "react";
 import { cacheLife } from "next/cache";
 import Link from "next/link";
@@ -55,6 +56,7 @@ const WALK_PAGE_SELECT = {
   walkLeader: true,
   backMarker: true,
   refreshmentStop: true,
+  extraFacts: true,
   location: true,
   postcode: true,
   latitude: true,
@@ -475,6 +477,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
     walk: {
       backMarker: walk.backMarker,
       refreshmentStop: walk.refreshmentStop,
+      extraFacts: parseExtraFacts(walk.extraFacts),
       calendarHref: `/w/${slug}/ics`,
       description: walk.description,
       essentials: walk.essentials,

@@ -1,5 +1,6 @@
 "use server";
 
+import { parseExtraFacts } from "@/lib/extra-facts";
 import { revalidatePath } from "@/lib/revalidate";
 import { customAlphabet } from "nanoid";
 import { z } from "zod";
@@ -205,6 +206,7 @@ async function createWalkWork(_prev: ActionResult | null, formData: FormData): P
           walkLeader: parsed.data.walkLeader ?? null,
           backMarker: parsed.data.backMarker ?? null,
           refreshmentStop: parsed.data.refreshmentStop ?? null,
+          extraFacts: parseExtraFacts(formData.get("extraFacts")),
           location: parsed.data.location ?? null,
           postcode: pin.postcode,
           latitude: pin.latitude,
@@ -265,6 +267,7 @@ async function duplicateWalkWork(
       walkLeader: true,
       backMarker: true,
       refreshmentStop: true,
+      extraFacts: true,
       location: true,
       postcode: true,
       latitude: true,
@@ -299,6 +302,7 @@ async function duplicateWalkWork(
           walkLeader: source.walkLeader,
           backMarker: source.backMarker,
           refreshmentStop: source.refreshmentStop,
+          extraFacts: parseExtraFacts(source.extraFacts),
           location: source.location,
           postcode: source.postcode,
           latitude: source.latitude,
@@ -746,6 +750,7 @@ async function updateWalkWork(
             walkLeader: parsed.data.walkLeader ?? null,
             backMarker: parsed.data.backMarker ?? null,
             refreshmentStop: parsed.data.refreshmentStop ?? null,
+            extraFacts: parseExtraFacts(formData.get("extraFacts")),
             startsAt: nextStartsAt,
             durationMins: nextDurationMins,
             location: parsed.data.location ?? null,

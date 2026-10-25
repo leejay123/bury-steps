@@ -1,5 +1,6 @@
 "use client";
 
+import type { ExtraFact } from "@/lib/extra-facts";
 import { useState, type ReactNode } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { formatTime, formatWalkDay, formatWalkLength } from "@/lib/dates";
@@ -59,6 +60,8 @@ export type WalkIdeaParts = {
   walk: {
     backMarker: string | null;
     refreshmentStop: string | null;
+    /** The walk's own extra facts (+ Add a fact). */
+    extraFacts?: ExtraFact[];
     calendarHref: string;
     description: string | null;
     essentials: string[];
