@@ -1372,6 +1372,11 @@ export function MessagesBlock({
 }) {
   const p = useWalkParts();
   if (!p) return <Placeholder label="Messages (only when there are any)" />;
+  // The messages show in the Status band instead.
+  if (p.noticesInBand)
+    return editing ? (
+      <Placeholder label="Messages show in the Details card's Status band — to show them here instead, set Where the walk's messages go to Where I put the Messages block in the Page settings (click an empty part of the page)" />
+    ) : null;
   // The messages show as the strip under the header instead.
   if (p.noticesInStrip)
     return editing ? (
@@ -1943,10 +1948,12 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   // (Not with the Status band look, which has no such setting; pages saved
   // with the messages in its band keep them there.)
   const savedMessagesAt = o.titleMessages ?? "none";
-  const titleMessagesAt =
-    titleLook.startsWith("band") && savedMessagesAt !== "in-band"
-      ? "none"
-      : savedMessagesAt;
+  // The Page setting can put them in the band too.
+  const titleMessagesAt = titleLook.startsWith("band")
+    ? savedMessagesAt === "in-band" || p.noticesInBand
+      ? "in-band"
+      : "none"
+    : savedMessagesAt;
   // The Status band has its own outline: no box around it as well.
   const titleBox = titleLook.startsWith("band") ? "none" : o.titleBox;
   const titleBoxed = (titleBox ?? "none") !== "none";

@@ -1873,7 +1873,7 @@ function FoldingView({
 }
 
 /** The page; in the designer's preview it's marked with the audience being designed for (globals.css). */
-type MessagesAt = "top" | "strip" | "block";
+type MessagesAt = "top" | "strip" | "block" | "band";
 
 function PageRoot({
   children,
@@ -1895,7 +1895,8 @@ function PageRoot({
 }) {
   const audience = useContext(PreviewAudience);
   const p = useWalkParts();
-  const atTop = messagesAt !== "block";
+  const atTop = messagesAt === "top" || messagesAt === "strip";
+  const inBand = messagesAt === "band";
   const messages =
     p && atTop ? (
       <MessagesOrSample
@@ -1932,7 +1933,7 @@ function PageRoot({
           parts={
             atTop
               ? { ...p, notices: null, noticesInStrip: true }
-              : { ...p, noticesInStrip: false }
+              : { ...p, noticesInStrip: false, noticesInBand: inBand }
           }
         >
           {children}
@@ -4566,6 +4567,10 @@ export const walkDesignConfig: Config = {
         options: [
           { value: "block", label: "Where I put the Messages block" },
           { value: "top", label: "At the top, page width (like a block)" },
+          {
+            value: "band",
+            label: "In the Details card's Status band (in place of its status)",
+          },
         ],
       },
       messagesLook: { ...messageLookField, label: "Messages look" },

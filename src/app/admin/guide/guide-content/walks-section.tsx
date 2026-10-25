@@ -443,7 +443,11 @@ export function WalksSection({
               it anywhere among the other parts instead of under the name. The Title section also has a <strong>Created by look</strong>{" "}
               (plain, grey box, dashed grey box, outlined, grey pill or a grey
               bar), and Your clock-in and Countdown have a dashed grey box look.
-              Anything with nothing to show (such as Your clock-in before you
+              In the Page settings (click an empty part of the page),{" "}
+              <strong>Where the walk&apos;s messages go</strong> can be{" "}
+              <strong>In the Details card&apos;s Status band</strong>: while a
+              message applies (such as Clock-in opens at 12:45) it shows in the
+              band in place of the status. Anything with nothing to show (such as Your clock-in before you
               clock in) takes no space at all. On a computer with a mouse, rows
               that scroll sideways show ‹ › buttons at their ends while the
               pointer is over them. Inside the title box (in the Title section) is a list of what goes

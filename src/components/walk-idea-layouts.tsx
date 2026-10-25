@@ -46,6 +46,8 @@ export type WalkIdeaParts = {
   back?: { href: string; label: string };
   /** Designed pages: the messages are shown as a strip under the header instead. */
   noticesInStrip?: boolean;
+  /** Designed pages: the messages go in the Details card's Status band instead. */
+  noticesInBand?: boolean;
   /** How this group works (signed-out visitors), where the page has it. */
   howItWorks?: ReactNode;
   /** Its steps, for the designer's other looks of it. */
