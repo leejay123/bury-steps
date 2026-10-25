@@ -477,22 +477,22 @@ function ByDevice<L extends object>({
   if (same(onTablet, computer))
     return (
       <>
-        <div className="md:hidden">{draw(onPhone)}</div>
-        <div className="max-md:hidden">{draw(computer)}</div>
+        <div className="empty:hidden md:hidden">{draw(onPhone)}</div>
+        <div className="empty:hidden max-md:hidden">{draw(computer)}</div>
       </>
     );
   if (same(onTablet, onPhone))
     return (
       <>
-        <div className="lg:hidden">{draw(onPhone)}</div>
-        <div className="max-lg:hidden">{draw(computer)}</div>
+        <div className="empty:hidden lg:hidden">{draw(onPhone)}</div>
+        <div className="empty:hidden max-lg:hidden">{draw(computer)}</div>
       </>
     );
   return (
     <>
-      <div className="md:hidden">{draw(onPhone)}</div>
-      <div className="max-md:hidden lg:hidden">{draw(onTablet)}</div>
-      <div className="max-lg:hidden">{draw(computer)}</div>
+      <div className="empty:hidden md:hidden">{draw(onPhone)}</div>
+      <div className="empty:hidden max-md:hidden lg:hidden">{draw(onTablet)}</div>
+      <div className="empty:hidden max-lg:hidden">{draw(computer)}</div>
     </>
   );
 }
@@ -1326,6 +1326,17 @@ export function TitleBlock({
 
 export type TitleGap = "closer" | "normal" | "more";
 
+/** A title-box part's own space above it, in pixels. */
+const TITLE_PART_SPACE = {
+  none: 0,
+  "8": 8,
+  "16": 16,
+  "24": 24,
+  "32": 32,
+  "40": 40,
+  "56": 56,
+} as const;
+
 /**
  * Where Share or save / Manage (and Clock in) sit in the title: beside the
  * name, above it on the right, under Created by, the full width under the
@@ -1662,7 +1673,7 @@ export type DetailsOptions = {
   /** (Old pages) the order of the facts, timeline and description in the title box. */
   titleOrder?: string;
   /** What goes inside the title box, under the name, in this order. */
-  titleParts?: { part?: string }[];
+  titleParts?: { part?: string; space?: string }[];
   /** Your clock-in and Countdown: tucked under "Created by", or in the list. */
   titleExtrasAt?: "under-name" | "list";
   clockinLook?: LineLook;
@@ -1995,18 +2006,18 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         folded
       ) : foldOn === "phones" ? (
         <>
-          <div className="md:hidden">{folded}</div>
-          <div className="max-md:hidden">{factsPart}</div>
+          <div className="empty:hidden md:hidden">{folded}</div>
+          <div className="empty:hidden max-md:hidden">{factsPart}</div>
         </>
       ) : foldOn === "phones-tablets" ? (
         <>
-          <div className="lg:hidden">{folded}</div>
-          <div className="max-lg:hidden">{factsPart}</div>
+          <div className="empty:hidden lg:hidden">{folded}</div>
+          <div className="empty:hidden max-lg:hidden">{factsPart}</div>
         </>
       ) : (
         <>
-          <div className="lg:hidden">{factsPart}</div>
-          <div className="max-lg:hidden">{folded}</div>
+          <div className="empty:hidden lg:hidden">{factsPart}</div>
+          <div className="empty:hidden max-lg:hidden">{folded}</div>
         </>
       );
   }
@@ -2046,14 +2057,32 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         )}
     </div>
   ) : null;
+  // Each part's own space above it, if chosen ("default": the title's gaps).
+  const stackGap = { closer: 12, normal: 24, more: 32 }[o.titleGap ?? "normal"] ?? 24;
+  const spaceAbove = (key: TitlePart) => {
+    const chosen = o.titleParts?.find((item) => item?.part === key)?.space;
+    return chosen && chosen in TITLE_PART_SPACE
+      ? TITLE_PART_SPACE[chosen as keyof typeof TITLE_PART_SPACE]
+      : null;
+  };
   const inside =
     listed.length > 0 ? (
       <>
-        {listed.map((key) =>
-          insideParts[key] ? (
+        {listed.map((key) => {
+          if (!insideParts[key]) return null;
+          const space = spaceAbove(key);
+          return space === null ? (
             <Fragment key={key}>{insideParts[key]}</Fragment>
-          ) : null,
-        )}
+          ) : (
+            <div
+              className="empty:hidden"
+              key={key}
+              style={{ marginTop: space - stackGap }}
+            >
+              {insideParts[key]}
+            </div>
+          );
+        })}
       </>
     ) : null;
   const body = (
