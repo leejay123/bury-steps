@@ -127,14 +127,11 @@ export function ReportsDisplaySection() {
               <strong>FAQ</strong> heading and intro, and the walk-page cards (
               <strong>Before you set off</strong> and <strong>How this group works</strong> — edit
               the wording, or turn either card off). Walk page cards also has{" "}
-              <strong>Walk status wording</strong>: every line a walk page uses
-              for where the walk is up to — the status (Upcoming, Clock-in open,
-              In progress, Finished, Cancelled), the countdown (4 days to go, 30
-              min left…) and the walk&apos;s messages (before clock-in opens,
-              after the walk for members, visitors and organisers, and when
-              it&apos;s cancelled). Words in braces such as {"{opens}"} or{" "}
-              {"{count}"} are filled in for each walk; the arrow button or a blank
-              line puts a line back to its default. Signed-in members see
+              <strong>Walk status wording</strong>: one box for each stage of a
+              walk (Upcoming, Clock-in open, In progress, Finished, Cancelled),
+              written as &quot;Name · the rest&quot; — keep the · between them.
+              Words in braces such as {"{opens}"} or {"{count}"} are filled in for
+              each walk; the arrow button puts a box back to the standard words. Signed-in members see
               up to {HOMEPAGE_MEMBER_NOTICES_LIMIT} of the newest notices in the{" "}
               <strong>Latest notices</strong> carousel (not the pinned welcome — that stays in the
               bell only; each card shows a short teaser). Tap a bell-only notice to open it in the

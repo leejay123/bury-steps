@@ -670,8 +670,9 @@ function EssentialsView({
   const items = walkEssentialItems(p.walk.essentials, useWalkEssentials());
   const muted = dark ? "text-white/60" : "text-muted-foreground";
   // The same heading as the Description's and the other parts'.
+  // (Marked: inside an accordion section, whose name already says it, it's hidden.)
   const title = heading ? (
-    <h2 className="text-base font-semibold">
+    <h2 className="text-base font-semibold" data-essentials-heading="">
       {headingText?.trim() || "Essentials"}
     </h2>
   ) : null;

@@ -1802,6 +1802,8 @@ function FoldingView({
           <SectionBody
             className={cn(
               "flex flex-col gap-6",
+              // The section's name already says it: no Essentials heading too.
+              "[&_[data-essentials-heading]]:hidden",
               // Room to drop blocks into an open section in the designer.
               editing && "min-h-16",
               // Lists, tables and cards (the weather) run edge to edge; text
