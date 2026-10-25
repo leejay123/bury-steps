@@ -2518,9 +2518,26 @@ export const walkDesignConfig: Config = {
                 ["40", "Big (40px)"],
                 ["56", "Very big (56px)"],
               ]),
+            },            spaceBelow: {
+              type: "select",
+              label: "Space below it",
+              options: options([
+                ["default", "As the title box's gaps"],
+                ["none", "None"],
+                ["8", "Very small (8px)"],
+                ["16", "Small (16px)"],
+                ["24", "Normal (24px)"],
+                ["32", "Bigger (32px)"],
+                ["40", "Big (40px)"],
+                ["56", "Very big (56px)"],
+              ]),
             },
           },
-          defaultItemProps: { part: "description", space: "default" },
+          defaultItemProps: {
+            part: "description",
+            space: "default",
+            spaceBelow: "default",
+          },
           getItemSummary: (item: { part?: string }) =>
             TITLE_PART_NAMES[item.part ?? ""] ?? "Choose a part",
         },

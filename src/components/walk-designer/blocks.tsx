@@ -1700,7 +1700,7 @@ export type DetailsOptions = {
   /** (Old pages) the order of the facts, timeline and description in the title box. */
   titleOrder?: string;
   /** What goes inside the title box, under the name, in this order. */
-  titleParts?: { part?: string; space?: string }[];
+  titleParts?: { part?: string; space?: string; spaceBelow?: string }[];
   /** With the map down the side: what goes in that column, in order (the map too). */
   sideParts?: { part?: string }[];
   /** Your clock-in and Countdown: tucked under "Created by", or in the list. */
@@ -2143,8 +2143,8 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   ) : null;
   // Each part's own space above it, if chosen ("default": the title's gaps).
   const stackGap = { closer: 12, normal: 24, more: 32 }[o.titleGap ?? "normal"] ?? 24;
-  const spaceAbove = (key: TitlePart) => {
-    const chosen = o.titleParts?.find((item) => item?.part === key)?.space;
+  const partSpace = (key: TitlePart, side: "space" | "spaceBelow") => {
+    const chosen = o.titleParts?.find((item) => item?.part === key)?.[side];
     return chosen && chosen in TITLE_PART_SPACE
       ? TITLE_PART_SPACE[chosen as keyof typeof TITLE_PART_SPACE]
       : null;
@@ -2154,8 +2154,9 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       <>
         {listed.map((key) => {
           if (!insideParts[key]) return null;
-          const space = spaceAbove(key);
-          return space === null ? (
+          const space = partSpace(key, "space");
+          const below = partSpace(key, "spaceBelow");
+          return space === null && below === null ? (
             <Fragment key={key}>{insideParts[key]}</Fragment>
           ) : (
             <div
@@ -2165,7 +2166,10 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
                 key === "clockin" && "[&:not(:has(p))]:hidden",
               )}
               key={key}
-              style={{ marginTop: space - stackGap }}
+              style={{
+                marginTop: space === null ? undefined : space - stackGap,
+                marginBottom: below === null ? undefined : below - stackGap,
+              }}
             >
               {insideParts[key]}
             </div>
