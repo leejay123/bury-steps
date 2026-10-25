@@ -2125,9 +2125,11 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   };
   // Your clock-in and the Countdown can sit right under "Created by",
   // tucked in with the name, instead of in the list's order.
+  // Created by, when it's in the list, is tucked in with them, in the
+  // list's order (so Your clock-in can go under it, or above it).
   const tucked = (key: TitlePart) =>
     o.titleExtrasAt === "under-name" &&
-    (key === "clockin" || key === "countdown");
+    (key === "clockin" || key === "countdown" || key === "createdby");
   const listed = titleParts.filter((key) => !tucked(key));
   const underName = titleParts.some(tucked) ? (
     // The same small text as "Created by" (the Big number look keeps its size).

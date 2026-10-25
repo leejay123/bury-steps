@@ -2546,7 +2546,7 @@ export const walkDesignConfig: Config = {
           label: "Your clock-in and Countdown go",
           options: options([
             ["list", "In the list's order"],
-            ["under-name", "Right under Created by"],
+            ["under-name", "Right under the name (with Created by, in the list's order)"],
           ]),
         },
         clockinLook: {
