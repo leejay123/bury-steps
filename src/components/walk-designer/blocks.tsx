@@ -14,6 +14,7 @@ import {
 import { SignInPrompt, type SignInLook } from "@/app/w/[token]/walk-share-status";
 import Link from "next/link";
 import {
+  Copy,
   ArrowLeft,
   ArrowUpRight,
   CalendarDays,
@@ -3986,7 +3987,59 @@ export function BackLinkBlock({
 }
 
 // ── Precise location (what3words) ───────────────────────────────────────
-export type PreciseLook = "card" | "compact" | "text";
+export type PreciseLook =
+  | "card"
+  | "compact"
+  | "text"
+  | "grey"
+  | "row"
+  | "big"
+  | "bar"
+  | "dark"
+  | "button"
+  | "copy"
+  | "tile";
+
+/** what3words with a Copy button (to paste into the app or a message). */
+function PreciseCopy({
+  address,
+  words,
+}: {
+  address: string;
+  words: ReactNode;
+}) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="flex items-center gap-3 rounded-lg border p-3 pl-4">
+      <MapPin aria-hidden className="size-5 shrink-0 text-muted-foreground" />
+      <a
+        className="min-w-0 flex-1 truncate underline-offset-4 hover:underline"
+        href={what3wordsUrl(address)}
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        {words}
+      </a>
+      <Button
+        onClick={() => {
+          void navigator.clipboard
+            ?.writeText(`///${address}`)
+            .then(() => {
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            })
+            .catch(() => {});
+        }}
+        size="sm"
+        type="button"
+        variant="outline"
+      >
+        {copied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}
+        {copied ? "Copied" : "Copy"}
+      </Button>
+    </div>
+  );
+}
 export type PreciseAt =
   | "none"
   | "above-facts"
@@ -4011,6 +4064,75 @@ export function PreciseLocation({
       {address}
     </span>
   );
+  const href = what3wordsUrl(address);
+  const label = (dark = false) => (
+    <span className={cn("text-xs", dark ? "text-white/60" : "text-muted-foreground")}>
+      Precise location
+    </span>
+  );
+  if (look === "copy") return <PreciseCopy address={address} words={words} />;
+  if (look === "button")
+    return (
+      <Button asChild className="w-full" variant="outline">
+        <a href={href} rel="noopener noreferrer" target="_blank">
+          <MapPin data-icon="inline-start" />
+          <span className="truncate">Open {words} in Maps</span>
+        </a>
+      </Button>
+    );
+  if (look === "row")
+    return (
+      <a
+        className="flex items-center justify-between gap-4 border-y py-3 text-sm hover:bg-muted/40"
+        href={href}
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        <span className="text-muted-foreground">Precise location</span>
+        <span className="min-w-0 truncate">{words}</span>
+      </a>
+    );
+  if (look === "tile")
+    return (
+      <a
+        className="flex flex-col items-center gap-2 rounded-lg border bg-muted/30 p-6 text-center hover:bg-muted/50"
+        href={href}
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        <span className="flex size-10 items-center justify-center rounded-lg bg-muted">
+          <MapPin aria-hidden className="size-5" />
+        </span>
+        {label()}
+        <span className="max-w-full truncate text-lg">{words}</span>
+      </a>
+    );
+  if (look === "grey" || look === "bar" || look === "dark" || look === "big")
+    return (
+      <a
+        className={cn(
+          "flex items-center gap-3 rounded-lg p-4",
+          look === "grey" && "bg-muted hover:bg-muted/70",
+          look === "bar" && "border-l-4 border-l-foreground bg-muted hover:bg-muted/70",
+          look === "dark" && "bg-neutral-950 text-white hover:bg-neutral-900",
+          look === "big" && "border hover:bg-muted/40",
+        )}
+        href={href}
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          {label(look === "dark")}
+          <span className={cn("truncate", look === "big" && "text-xl sm:text-2xl")}>
+            {words}
+          </span>
+        </span>
+        <ArrowUpRight
+          aria-hidden
+          className={cn("size-4 shrink-0", look === "dark" ? "text-white/60" : "text-muted-foreground")}
+        />
+      </a>
+    );
   if (look === "text")
     return (
       <a

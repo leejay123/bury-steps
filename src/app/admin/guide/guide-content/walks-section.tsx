@@ -36,7 +36,11 @@ export function WalksSection({
             a <strong>Map design</strong> (card, no frame, map only, details
             floating over the map, or details beside it) and <strong>Map
             colours</strong> (full colour, toned down, grey, pale grey or
-            dark); the Map block has Map colours too.
+            dark); the Map block has Map colours too. The <strong>Precise location look</strong>{" "}
+            (the what3words address) can be the full card, a one-line chip, a
+            text link, a grey box, grey with a dark bar, a black box, big words
+            in an outlined box, a table row, a tile with an icon, a button
+            (Open ///… in Maps), or the words with a Copy button.
           </p>
           <p>
             <strong>Stories</strong> sit at the top of the Walks page (yours

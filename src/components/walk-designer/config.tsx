@@ -997,6 +997,14 @@ const preciseLookField = {
     { value: "card", label: "Full card (with its explanation)" },
     { value: "compact", label: "Compact one-line chip" },
     { value: "text", label: "Plain text link" },
+    { value: "grey", label: "Grey box" },
+    { value: "bar", label: "Grey with a dark bar down the side" },
+    { value: "dark", label: "Black box" },
+    { value: "big", label: "Big words in an outlined box" },
+    { value: "row", label: "Table row (label left, words right)" },
+    { value: "tile", label: "Tile with an icon in the middle" },
+    { value: "button", label: "Button (Open ///… in Maps)" },
+    { value: "copy", label: "With a Copy button" },
   ],
 };
 
