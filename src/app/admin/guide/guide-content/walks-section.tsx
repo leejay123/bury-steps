@@ -27,7 +27,9 @@ export function WalksSection({
             without an icon), an empty dashed box with an icon in the middle,
             a dashed box with the words on the left, one dashed line,
             one grey line, grey with a dark bar down the side, a black box, or
-            just the words.
+            just the words. Its <strong>Heading</strong> and <strong>Words
+            under it</strong> (or, for the one-line looks, the words after the
+            ·) can be changed there too; left blank, the standard words show.
           </p>
           <p>
             In the Details card&apos;s title settings, <strong>Where Share or
@@ -37,7 +39,15 @@ export function WalksSection({
             a <strong>Map design</strong> (card, no frame, map only, details
             floating over the map, or details beside it) and <strong>Map
             colours</strong> (full colour, toned down, grey, pale grey or
-            dark); the Map block has Map colours too. The <strong>Precise location look</strong>{" "}
+            dark); the Map block has Map colours too. With the map{" "}
+            <strong>Down the side</strong>, a <strong>Down the side</strong> list
+            appears: add anything (the map, facts, essentials, precise
+            location, timeline, description, your clock-in, countdown) and
+            drag them into order; whatever you put there moves out of the main
+            column. Left empty, the side holds just the map. The facts can also
+            be shown as other Spec sheet looks: lines instead of stripes, a
+            grey label column, compact rows, values on the left, label over
+            value, or grey with white stripes. The <strong>Precise location look</strong>{" "}
             (the what3words address) can be the full card, a one-line chip, a thin
             full-width grey line (with the words Precise location), the same
             line with a dashed outline, a text link, a grey box, grey with a dark bar, a black box, big words

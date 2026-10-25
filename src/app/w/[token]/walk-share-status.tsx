@@ -40,20 +40,28 @@ export type SignInLook =
  */
 export const SignInLookContext = createContext<SignInLook | null>(null);
 
+/** The sign-in box's words, from the Sign in block (blank: the standard words). */
+export type SignInWords = { title?: string; text?: string; line?: string };
+export const SignInWordsContext = createContext<SignInWords>({});
+
 const SIGN_IN_TITLE = "You need to sign in to join this walk";
-const SIGN_IN_TEXT =
-  "Clock-in is only for signed-in members. If you do not have an account yet, use Join the group at the top of the page; if you already have one, use Sign in.";
+const SIGN_IN_TEXT = "Only signed-in members can clock in. Use Sign in or Join the group at the top.";
+const SIGN_IN_LINE = "use Sign in or Join the group at the top";
 
 /** The sign-in box in one of its looks: greys and black, 8px corners. */
 export function SignInPrompt({ look = "box" }: { look?: SignInLook }) {
+  const words = useContext(SignInWordsContext);
+  const SIGN_IN_TITLE_NOW = words.title?.trim() || SIGN_IN_TITLE;
+  const SIGN_IN_TEXT_NOW = words.text?.trim() || SIGN_IN_TEXT;
+  const SIGN_IN_LINE_NOW = words.line?.trim() || SIGN_IN_LINE;
   if (look === "empty")
     return (
       <div className="flex min-h-48 flex-col items-center justify-center gap-2 rounded-lg border border-dashed bg-muted/30 p-6 text-center">
         <span className="mb-1 flex size-10 items-center justify-center rounded-lg bg-muted">
           <LogIn aria-hidden className="size-5" />
         </span>
-        <p className="font-medium">{SIGN_IN_TITLE}</p>
-        <p className="max-w-md text-sm text-muted-foreground">{SIGN_IN_TEXT}</p>
+        <p className="font-medium">{SIGN_IN_TITLE_NOW}</p>
+        <p className="max-w-md text-sm text-muted-foreground">{SIGN_IN_TEXT_NOW}</p>
       </div>
     );
   if (look === "dashed")
@@ -63,8 +71,8 @@ export function SignInPrompt({ look = "box" }: { look?: SignInLook }) {
           <LogIn aria-hidden className="size-5" />
         </span>
         <div className="space-y-1">
-          <p className="font-medium">{SIGN_IN_TITLE}</p>
-          <p className="text-sm text-muted-foreground">{SIGN_IN_TEXT}</p>
+          <p className="font-medium">{SIGN_IN_TITLE_NOW}</p>
+          <p className="text-sm text-muted-foreground">{SIGN_IN_TEXT_NOW}</p>
         </div>
       </div>
     );
@@ -73,14 +81,14 @@ export function SignInPrompt({ look = "box" }: { look?: SignInLook }) {
       <p className="flex items-center gap-2 rounded-lg border border-dashed bg-muted/30 px-4 py-3 text-sm font-medium">
         <LogIn aria-hidden className="size-4 shrink-0 text-muted-foreground" />
         <span className="min-w-0 truncate">
-          {SIGN_IN_TITLE} · use Sign in or Join the group at the top
+          {SIGN_IN_TITLE_NOW} · {SIGN_IN_LINE_NOW}
         </span>
       </p>
     );
   if (look === "band")
     return (
       <p className="truncate rounded-lg bg-muted px-4 py-3 text-sm font-medium">
-        {SIGN_IN_TITLE} · use Sign in or Join the group at the top
+        {SIGN_IN_TITLE_NOW} · {SIGN_IN_LINE_NOW}
       </p>
     );
   if (look === "icon")
@@ -90,8 +98,8 @@ export function SignInPrompt({ look = "box" }: { look?: SignInLook }) {
           <LogIn aria-hidden className="size-5" />
         </span>
         <div className="space-y-1">
-          <p className="font-medium">{SIGN_IN_TITLE}</p>
-          <p className="text-sm text-muted-foreground">{SIGN_IN_TEXT}</p>
+          <p className="font-medium">{SIGN_IN_TITLE_NOW}</p>
+          <p className="text-sm text-muted-foreground">{SIGN_IN_TEXT_NOW}</p>
         </div>
       </div>
     );
@@ -105,9 +113,9 @@ export function SignInPrompt({ look = "box" }: { look?: SignInLook }) {
         look === "dark" && "rounded-lg bg-neutral-950 p-5 text-white",
       )}
     >
-      <p className="font-medium">{SIGN_IN_TITLE}</p>
+      <p className="font-medium">{SIGN_IN_TITLE_NOW}</p>
       <p className={cn("text-sm", look === "dark" ? "text-white/70" : "text-muted-foreground")}>
-        {SIGN_IN_TEXT}
+        {SIGN_IN_TEXT_NOW}
       </p>
     </div>
   );

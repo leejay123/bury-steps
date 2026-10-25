@@ -11,6 +11,7 @@ import {
 import {
   SignInLookContext,
   SignInPrompt,
+  SignInWordsContext,
   type SignInLook,
 } from "@/app/w/[token]/walk-share-status";
 import Link from "next/link";
@@ -371,10 +372,20 @@ function MaybeRow({
  * into a swiping row, and pills and one-liners only wrap or swipe. Looks not
  * named here (cards and tiles) work with all of them.
  */
+/** The Spec sheet's other looks (striped tables too). */
+export const SPEC_LOOKS = [
+  "spec-sheet",
+  "spec-lines",
+  "spec-columns",
+  "spec-compact",
+  "spec-left",
+  "spec-stacked",
+  "spec-grey",
+];
 const NO_ARRANGE = [
+  ...SPEC_LOOKS,
   "list",
   "table",
-  "spec-sheet",
   "journey",
   "columns",
   "card-table",
@@ -1674,6 +1685,8 @@ export type DetailsOptions = {
   titleOrder?: string;
   /** What goes inside the title box, under the name, in this order. */
   titleParts?: { part?: string; space?: string }[];
+  /** With the map down the side: what goes in that column, in order (the map too). */
+  sideParts?: { part?: string }[];
   /** Your clock-in and Countdown: tucked under "Created by", or in the list. */
   titleExtrasAt?: "under-name" | "list";
   clockinLook?: LineLook;
@@ -1738,8 +1751,36 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   const savedLook = o.titleLook ?? "standard";
   const factsLook = savedLook === "chips" || savedLook === "stats";
   const titleLook = factsLook ? "plain" : savedLook;
-  // What's inside the title box (none without a title to hold it).
-  const titleParts = showTitle ? titlePartsOf(o) : [];
+  // Down the side (with Map in the card: Down the side): the chosen parts in
+  // order, the map among them. None chosen: just the map, as before.
+  const SIDE_PARTS: readonly string[] = [
+    "map",
+    "facts",
+    "essentials",
+    "precise",
+    "timeline",
+    "description",
+    "clockin",
+    "countdown",
+  ];
+  const chosenSide =
+    o.map === "side" && Array.isArray(o.sideParts)
+      ? [
+          ...new Set(
+            o.sideParts
+              .map((item) => String(item?.part ?? ""))
+              .filter((key) => SIDE_PARTS.includes(key)),
+          ),
+        ]
+      : [];
+  const sideKeys = (chosenSide.length ? chosenSide : ["map"]) as TitlePart[];
+  const onSide = (part: TitlePart) =>
+    o.map === "side" && part !== "map" && sideKeys.includes(part);
+  // What's inside the title box (none without a title to hold it), less
+  // anything moved down the side.
+  const titleParts = showTitle
+    ? titlePartsOf(o).filter((part) => !onSide(part))
+    : [];
   const inTitle = (part: TitlePart) => titleParts.includes(part);
   // (Shown even if computers have none: tablets or phones may have some.)
   const factsInTitle = inTitle("facts");
@@ -1792,7 +1833,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       />
     ) : null;
   const preciseHere = (where: PreciseAt) =>
-    preciseAt === where ? precise : null;
+    preciseAt === where && !onSide("precise") ? precise : null;
   const preciseInTitle = p.what3words ? (
     <PreciseLocation address={p.what3words} look={o.preciseLook ?? "card"} />
   ) : null;
@@ -1875,10 +1916,14 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   const cardExtras = (
     <>
       {preciseHere("below-facts")}
-      {(o.showEssentials ?? true) && !inTitle("essentials") ? (
+      {(o.showEssentials ?? true) &&
+      !inTitle("essentials") &&
+      !onSide("essentials") ? (
         <DeviceEssentials dark={dark} o={o.essentials ?? {}} p={p} />
       ) : null}
-      {descriptionInTitle || descriptionAfterTitle ? null : descriptionPart}
+      {descriptionInTitle || descriptionAfterTitle || onSide("description")
+        ? null
+        : descriptionPart}
       {preciseHere("bottom")}
     </>
   );
@@ -2185,17 +2230,44 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
           {titleMessages("bottom")}
         </Boxed>
       ) : null}
-      {descriptionAfterTitle ? descriptionPart : null}
-      {o.timeline && !timelineInTitle ? (
+      {descriptionAfterTitle && !onSide("description") ? descriptionPart : null}
+      {o.timeline && !timelineInTitle && !onSide("timeline") ? (
         <Boxed box={o.timelineBox} dark={dark}>
           {timelineView}
         </Boxed>
       ) : null}
       {preciseHere("above-facts")}
-      {factsInTitle ? null : factsPart}
+      {factsInTitle || onSide("facts") ? null : factsPart}
       {cardExtras}
     </div>
   );
+  // The side column's parts, in the chosen order.
+  const sidePart = (key: TitlePart): ReactNode => {
+    switch (key) {
+      case "map":
+        return p.map;
+      case "facts":
+        return factsPart;
+      case "essentials":
+        return <DeviceEssentials dark={dark} o={o.essentials ?? {}} p={p} />;
+      case "precise":
+        return preciseInTitle;
+      case "timeline":
+        return timelineView;
+      case "description":
+        return p.walk.description ? (
+          <Boxed box={o.descriptionBox} dark={dark}>
+            <DescriptionWithHeading
+              description={p.walk.description}
+              heading={o.descriptionTitle}
+            />
+          </Boxed>
+        ) : null;
+      default:
+        return insideParts[key];
+    }
+  };
+  const sideHasMore = sideKeys.some((key) => key !== "map" && sidePart(key));
   return (
     <MapLookProvider
       value={{
@@ -2235,7 +2307,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
         {map === "top" && p.map
           ? insetMap(padding === "none" ? "pb-6" : "pt-6")
           : null}
-        {map === "side" && p.map ? (
+        {map === "side" && (p.map || sideHasMore) ? (
           // Map down the side: whichever side is shorter stays in view
           // (under the site header) while the longer one scrolls past.
           <div
@@ -2249,12 +2321,18 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
             )}
           >
             <div className="min-w-0 lg:sticky lg:top-24">{body}</div>
-            {insetMap(
-              cn(
-                "lg:sticky lg:top-24 lg:pl-0",
-                padding !== "none" && "pb-6 lg:pt-6",
-              ),
-            )}
+            <div
+              className={cn(
+                "flex min-w-0 flex-col gap-6 empty:hidden lg:sticky lg:top-24",
+                padding !== "none" && "px-6 pb-6 lg:pt-6 lg:pl-0",
+              )}
+              data-card-map=""
+            >
+              {sideKeys.map((key) => {
+                const part = sidePart(key);
+                return part ? <Fragment key={key}>{part}</Fragment> : null;
+              })}
+            </div>
           </div>
         ) : (
           body
@@ -3924,18 +4002,32 @@ export type BackArrow = "arrow" | "chevron" | "none";
 export function SignInBlock({
   editing = false,
   look = "box",
+  title = "",
+  text = "",
+  line = "",
 }: {
   editing?: boolean;
   look?: SignInLook;
+  title?: string;
+  text?: string;
+  line?: string;
 }) {
   const p = useWalkParts();
   if (!p)
     return <Placeholder label="Sign in to join (signed-out visitors only)" />;
+  const words = { title, text, line };
   // In the designer you're signed in, so the real box would hide itself:
   // show it in the chosen look (on the page, only signed-out visitors see it).
-  if (editing) return <SignInPrompt look={look} />;
+  if (editing)
+    return (
+      <SignInWordsContext.Provider value={words}>
+        <SignInPrompt look={look} />
+      </SignInWordsContext.Provider>
+    );
   return p.signIn ? (
-    <SignInLookContext.Provider value={look}>{p.signIn}</SignInLookContext.Provider>
+    <SignInWordsContext.Provider value={words}>
+      <SignInLookContext.Provider value={look}>{p.signIn}</SignInLookContext.Provider>
+    </SignInWordsContext.Provider>
   ) : null;
 }
 
@@ -4590,6 +4682,12 @@ export type FactsLook =
   | "icon-circles"
   | "sticky-notes"
   | "spec-sheet"
+  | "spec-lines"
+  | "spec-columns"
+  | "spec-compact"
+  | "spec-left"
+  | "spec-stacked"
+  | "spec-grey"
   | "journey"
   | "top-bar"
   | "columns"
@@ -4785,10 +4883,20 @@ function FactLooksBody({
       </DataList>
     );
 
-  if (look === "spec-sheet")
+  if (SPEC_LOOKS.includes(look)) {
+    // The striped table and its other looks: lines instead of stripes, a grey
+    // label column, tighter rows, values on the left, label over value, or
+    // grey with white stripes.
+    const stacked = look === "spec-stacked";
+    const columns = look === "spec-columns";
     return (
       <dl
-        className={cn("overflow-hidden rounded-xl text-sm", border && "border")}
+        className={cn(
+          "overflow-hidden rounded-xl text-sm",
+          border && "border",
+          look === "spec-lines" && "divide-y",
+          look === "spec-grey" && "bg-muted",
+        )}
         data-edge=""
       >
         {facts.map((fact, i) => (
@@ -4797,18 +4905,43 @@ function FactLooksBody({
           // wrapping in a narrow column; wider, they share a row.
           <div
             className={cn(
-              "flex flex-col gap-0.5 px-4 py-3 sm:grid sm:grid-cols-[12rem_minmax(0,1fr)] sm:gap-6",
-              i % 2 === 1 && "bg-muted/50",
+              "flex flex-col gap-0.5",
+              !stacked &&
+                "sm:grid sm:grid-cols-[12rem_minmax(0,1fr)] sm:gap-6",
+              columns ? "sm:gap-0" : "px-4",
+              look === "spec-compact" ? "py-2" : "py-3",
+              (look === "spec-sheet" ||
+                look === "spec-compact" ||
+                look === "spec-left" ||
+                look === "spec-stacked") &&
+                i % 2 === 1 &&
+                "bg-muted/50",
+              look === "spec-grey" && i % 2 === 1 && "bg-background",
+              columns && "max-sm:px-4 sm:py-0",
+              columns && i > 0 && "border-t",
             )}
             data-wide={fact.wide ? "" : undefined}
             key={fact.label}
           >
-            <dt className="text-xs font-medium text-muted-foreground sm:text-sm sm:font-semibold sm:text-foreground">
+            <dt
+              className={cn(
+                "text-xs font-medium text-muted-foreground",
+                !stacked && "sm:text-sm sm:font-semibold sm:text-foreground",
+                look === "spec-compact" && "sm:text-xs",
+                columns && "sm:bg-muted sm:px-4 sm:py-3",
+              )}
+            >
               {fact.label}
             </dt>
-            {/* Wider, the value sits on the far right of its row. */}
+            {/* Wider, the value sits on the far right of its row (or left). */}
             <dd
-              className="font-medium [overflow-wrap:anywhere] sm:text-right sm:font-normal"
+              className={cn(
+                "font-medium [overflow-wrap:anywhere]",
+                !stacked && "sm:font-normal",
+                !stacked && look !== "spec-left" && !columns && "sm:text-right",
+                columns && "sm:px-4 sm:py-3",
+                look === "spec-compact" && "text-xs sm:text-sm",
+              )}
               suppressHydrationWarning
             >
               {fact.value}
@@ -4817,6 +4950,7 @@ function FactLooksBody({
         ))}
       </dl>
     );
+  }
 
   if (look === "journey")
     return (

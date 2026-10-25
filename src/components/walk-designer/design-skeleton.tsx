@@ -71,7 +71,19 @@ function BlockSkeleton({ item }: { item: Item }) {
 }
 
 /** The facts as tiles (cards and tiles looks) or rows (lists and tables). */
-const ROW_LOOKS = ["list", "table", "spec-sheet", "card-table", "columns"];
+const ROW_LOOKS = [
+  "list",
+  "table",
+  "spec-sheet",
+  "spec-lines",
+  "spec-columns",
+  "spec-compact",
+  "spec-left",
+  "spec-stacked",
+  "spec-grey",
+  "card-table",
+  "columns",
+];
 
 function FactsSkeleton({ look }: { look: string }) {
   if (ROW_LOOKS.includes(look))

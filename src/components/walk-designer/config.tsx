@@ -70,6 +70,7 @@ import {
   WeatherBlock,
   BackLinkBlock,
   SignInBlock,
+  SPEC_LOOKS,
   MessagesOrSample,
   CountdownBlock,
   DirectionsBlock,
@@ -408,6 +409,12 @@ const FACTS_AS_OPTIONS: { value: string; label: string }[] = [
   { value: "stat-cards", label: "Stat cards (big values)" },
   { value: "icon-circles", label: "Icons in coloured circles" },
   { value: "spec-sheet", label: "Spec sheet (striped table)" },
+  { value: "spec-lines", label: "Spec sheet — lines instead of stripes" },
+  { value: "spec-columns", label: "Spec sheet — grey label column" },
+  { value: "spec-compact", label: "Spec sheet — compact rows" },
+  { value: "spec-left", label: "Spec sheet — values on the left" },
+  { value: "spec-stacked", label: "Spec sheet — label over value" },
+  { value: "spec-grey", label: "Spec sheet — grey with white stripes" },
   { value: "sticky-notes", label: "Sticky notes" },
   { value: "journey", label: "Journey line (dots, swipe)" },
   { value: "top-bar", label: "Cards with a coloured top bar" },
@@ -622,7 +629,7 @@ const FOLDS: {
   {
     key: "_mapSection",
     more: "_mapMore",
-    main: ["map", "mapLook", "mapTiles", "mapButtons", "mapHeight"],
+    main: ["map", "sideParts", "mapLook", "mapTiles", "mapButtons", "mapHeight"],
     extra: ["mapButtonsLook", "mapCorners", "mapTitle", "mapNote"],
   },
   {
@@ -898,7 +905,7 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
       hide.add("actionsAt");
   }
   // Only the looks with a frame round them all have one to turn off.
-  const framed = ["spec-sheet", "card-table"];
+  const framed = [...SPEC_LOOKS, "card-table"];
   if (
     ![props.factsAs, props.tabletFactsAs, props.phoneFactsAs].some((look) =>
       framed.includes(String(look)),
@@ -909,9 +916,12 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
   if (!props.factsFold || props.factsFold === "none")
     hide.add("factsFoldTitle").add("factsFoldOpen");
   // Map
+  // The side list is only for a map down the side.
+  if (props.map !== "side") hide.add("sideParts");
   if (inTitle("map")) hide.add("map");
   else if (!props.map || props.map === "none") {
     [
+      "sideParts",
       "mapLook",
       "mapTiles",
       "mapButtons",
@@ -2120,10 +2130,37 @@ export const walkDesignConfig: Config = {
             { value: "plain", label: "Just the words" },
           ],
         },
+        title: {
+          type: "text",
+          label: "Heading (blank: You need to sign in to join this walk)",
+        },
+        text: {
+          type: "textarea",
+          label:
+            "Words under it (blank: Only signed-in members can clock in. Use Sign in or Join the group at the top.)",
+        },
+        line: {
+          type: "text",
+          label: "After the · (blank: use Sign in or Join the group at the top)",
+        },
       },
-      defaultProps: { look: "box" },
-      render: ({ puck, look }) => (
-        <SignInBlock editing={Boolean(puck?.isEditing)} look={look} />
+      defaultProps: { look: "box", title: "", text: "", line: "" },
+      resolveFields: (data, { fields }) => {
+        // One-line looks have a short line instead of the longer words.
+        const oneLine = ["band", "dashed-line"].includes(String(data.props.look));
+        const shown = { ...fields } as Record<string, unknown>;
+        if (oneLine) delete shown.text;
+        else delete shown.line;
+        return shown as typeof fields;
+      },
+      render: ({ puck, look, title, text, line }) => (
+        <SignInBlock
+          editing={Boolean(puck?.isEditing)}
+          line={line}
+          look={look}
+          text={text}
+          title={title}
+        />
       ),
     },
     BackLink: {
@@ -2564,6 +2601,29 @@ export const walkDesignConfig: Config = {
             ["split", "Details beside the map"],
           ]),
         },
+        sideParts: {
+          type: "array",
+          label: "Down the side — + Add, drag to reorder (none: just the map)",
+          arrayFields: {
+            part: {
+              type: "select",
+              label: "Part",
+              options: options([
+                ["map", "Map"],
+                ["facts", "Facts"],
+                ["essentials", "Essentials"],
+                ["precise", "Precise location"],
+                ["timeline", "The day's timeline"],
+                ["description", "Description"],
+                ["clockin", "Your clock-in (once clocked in)"],
+                ["countdown", "Countdown (e.g. 3 days to go)"],
+              ]),
+            },
+          },
+          defaultItemProps: { part: "precise" },
+          getItemSummary: (item: { part?: string }) =>
+            TITLE_PART_NAMES[item.part ?? ""] ?? "Choose a part",
+        },
         mapTiles: mapTilesField,
         mapButtons: {
           type: "select",
@@ -2786,6 +2846,7 @@ export const walkDesignConfig: Config = {
         map: "none",
         mapLook: "card",
         mapTiles: "colour",
+        sideParts: [],
         mapButtons: "below",
         mapHeight: "medium",
         mapTitle: true,
@@ -2853,6 +2914,7 @@ export const walkDesignConfig: Config = {
         map,
         mapLook,
         mapTiles,
+        sideParts,
         actionsAt,
         mapButtons,
         mapHeight,
@@ -2925,6 +2987,7 @@ export const walkDesignConfig: Config = {
           map={map}
           mapLook={mapLook}
           mapTiles={mapTiles}
+          sideParts={sideParts}
           actionsAt={actionsAt}
           mapButtons={mapButtons}
           mapHeight={mapHeight}
@@ -3011,7 +3074,7 @@ export const walkDesignConfig: Config = {
             "phoneBox",
           ])
             delete shown[key];
-          if (!["spec-sheet", "card-table"].includes(design)) delete shown.border;
+          if (![...SPEC_LOOKS, "card-table"].includes(design)) delete shown.border;
           limitArranges(shown, [["arrange", design]]);
           return shown as typeof fields;
         }
