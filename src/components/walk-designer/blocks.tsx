@@ -4996,9 +4996,10 @@ function FactLooksBody({
           >
             <dt
               className={cn(
-                "text-xs font-medium text-muted-foreground",
-                !stacked && "sm:text-sm sm:font-semibold sm:text-foreground",
-                look === "spec-compact" && "sm:text-xs",
+                // The same size as its value on every device.
+                "font-medium text-muted-foreground",
+                !stacked && "sm:font-semibold sm:text-foreground",
+                look === "spec-compact" && "text-xs",
                 columns && "sm:bg-muted sm:px-4 sm:py-3",
               )}
             >
@@ -5011,7 +5012,7 @@ function FactLooksBody({
                 !stacked && "sm:font-normal",
                 !stacked && look !== "spec-left" && !columns && "sm:text-right",
                 columns && "sm:px-4 sm:py-3",
-                look === "spec-compact" && "text-xs sm:text-sm",
+                look === "spec-compact" && "text-xs",
               )}
               suppressHydrationWarning
             >
