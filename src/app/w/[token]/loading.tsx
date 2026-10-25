@@ -33,19 +33,13 @@ export async function WalkLinkLoading() {
   if (choice.layout === "designed" && memberDesign && visitorDesign)
     return (
       <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6">
-        <span className="text-sm text-muted-foreground">
-          <Link className="hover:text-foreground" data-member-home="" href="/walks">
-            ← Walks
-          </Link>
-          <Link className="hover:text-foreground" data-guest-home="" href="/">
-            ← Home
-          </Link>
-        </span>
+        {/* Each design's own Back link (← Walks / ← Home), as on the page:
+            no extra link of its own, which swapped when the page arrived. */}
         <div data-member-home="">
-          <DesignSkeleton design={memberDesign} />
+          <DesignSkeleton backLabel="Walks" design={memberDesign} />
         </div>
         <div data-guest-home="">
-          <DesignSkeleton design={visitorDesign} />
+          <DesignSkeleton backLabel="Home" design={visitorDesign} />
         </div>
       </div>
     );

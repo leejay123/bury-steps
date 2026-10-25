@@ -14,24 +14,37 @@ import { keptFactsAs, titlePartsOf, type TitlePart } from "./design-rules";
  */
 type Item = { type?: string; props?: Record<string, unknown> };
 
-export function DesignSkeleton({ design }: { design: unknown }) {
+export function DesignSkeleton({
+  design,
+  backLabel = "All walks",
+}: {
+  design: unknown;
+  /** The Back link's words when the block has none of its own (as on that page). */
+  backLabel?: string;
+}) {
   const content = (design as { content?: Item[] } | null)?.content ?? [];
   return (
     <div aria-hidden className="flex flex-col gap-6">
       {content.map((item, i) => (
-        <BlockSkeleton item={item} key={i} />
+        <BlockSkeleton backLabel={backLabel} item={item} key={i} />
       ))}
     </div>
   );
 }
 
-function BlockSkeleton({ item }: { item: Item }) {
+function BlockSkeleton({
+  item,
+  backLabel,
+}: {
+  item: Item;
+  backLabel: string;
+}) {
   const p = item.props ?? {};
   switch (item.type) {
     case "BackLink": {
       // The same arrow and look as the real Back link block, so nothing
       // swaps when the page arrives.
-      const words = String(p.label || "All walks");
+      const words = String(p.label || backLabel);
       const Icon = p.arrow === "chevron" ? ChevronLeft : ArrowLeft;
       if ((p.look ?? "text") === "text")
         return (
