@@ -139,7 +139,9 @@ export function WalkDescriptionField({
         rows={3}
       />
       <p className="text-xs text-muted-foreground">
-        Select text and use the Bold/Italic buttons above. Leave one blank line between paragraphs.
+        Write 1–3 short paragraphs about the route and what makes it special — not a list. Distance, times,
+        grade, climb and essentials have their own fields, so there&apos;s no need to repeat them here. Leave
+        one blank line between paragraphs; select text and use Bold/Italic above.
       </p>
       {isPending ? (
         <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
