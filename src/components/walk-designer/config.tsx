@@ -655,6 +655,7 @@ const FOLDS: {
       "factsAs",
       "tabletFactsAs",
       "phoneFactsAs",
+      "factsBorder",
       "facts",
       "factsArrange",
       "tabletFacts",
@@ -666,7 +667,6 @@ const FOLDS: {
       "factsFoldOpen",
     ],
     extra: [
-      "factsBorder",
       "factLines",
       "showEmptyFacts",
       "factsGap",
