@@ -4963,7 +4963,8 @@ function FactLooksBody({
     return (
       <dl
         className={cn(
-          "overflow-hidden rounded-xl text-sm",
+          // Label and value the same size: 12px on phones, 13px wider.
+          "overflow-hidden rounded-xl text-xs sm:text-[13px]",
           border && "border",
           look === "spec-lines" && "divide-y",
           look === "spec-grey" && "bg-muted",
@@ -5012,7 +5013,7 @@ function FactLooksBody({
                 !stacked && "sm:font-normal",
                 !stacked && look !== "spec-left" && !columns && "sm:text-right",
                 columns && "sm:px-4 sm:py-3",
-                look === "spec-compact" && "text-xs",
+                look === "spec-compact" && "text-xs sm:text-xs",
               )}
               suppressHydrationWarning
             >
