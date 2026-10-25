@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
   type ComponentType,
+  type CSSProperties,
   type ReactNode,
 } from "react";
 import {
@@ -1704,7 +1705,7 @@ export type DetailsOptions = {
   /** (Old pages) the order of the facts, timeline and description in the title box. */
   titleOrder?: string;
   /** What goes inside the title box, under the name, in this order. */
-  titleParts?: { part?: string; space?: string }[];
+  titleParts?: { part?: string; space?: string; spaceAlone?: string }[];
   /** With the map down the side: what goes in that column, in order (the map too). */
   sideParts?: { part?: string }[];
   /** Your clock-in and Countdown: tucked under "Created by", or in the list. */
@@ -2150,8 +2151,8 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   ) : null;
   // Each part's own space above it, if chosen ("default": the title's gaps).
   const stackGap = { closer: 12, normal: 24, more: 32 }[o.titleGap ?? "normal"] ?? 24;
-  const partSpace = (key: TitlePart) => {
-    const chosen = o.titleParts?.find((item) => item?.part === key)?.space;
+  const partSpace = (key: TitlePart, which: "space" | "spaceAlone" = "space") => {
+    const chosen = o.titleParts?.find((item) => item?.part === key)?.[which];
     return chosen && chosen in TITLE_PART_SPACE
       ? TITLE_PART_SPACE[chosen as keyof typeof TITLE_PART_SPACE]
       : null;
@@ -2161,21 +2162,30 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       <>
         {(() => {
           // Each part's Space above it decides the gap before it (never
-          // less than none, so parts can't overlap).
+          // less than none, so parts can't overlap). When the part just above
+          // isn't shown (Your clock-in before clocking in, the Countdown once
+          // the walk's over), its "when the part above isn't shown" size is
+          // used instead: CSS picks it, so nothing jumps.
           const shown = listed.filter((key) => insideParts[key]);
           return shown.map((key) => {
-            const before = partSpace(key);
-            return before === null || before === stackGap ? (
-              <Fragment key={key}>{insideParts[key]}</Fragment>
-            ) : (
+            const before = partSpace(key) ?? stackGap;
+            const alone = partSpace(key, "spaceAlone") ?? before;
+            return (
               <div
                 className={cn(
-                  "empty:hidden",
+                  "mt-(--above) empty:hidden",
+                  "[[data-part]:empty+&]:mt-(--alone) [[data-part=clockin]:not(:has(p))+&]:mt-(--alone)",
                   // Your clock-in hides itself until there's a line to show.
                   key === "clockin" && "[&:not(:has(p))]:hidden",
                 )}
+                data-part={key}
                 key={key}
-                style={{ marginTop: before - stackGap }}
+                style={
+                  {
+                    "--above": `${before - stackGap}px`,
+                    "--alone": `${alone - stackGap}px`,
+                  } as CSSProperties
+                }
               >
                 {insideParts[key]}
               </div>
@@ -4825,21 +4835,12 @@ export function FactLooks(props: {
   const { facts } = useWalkInfo(props.p, props.showEmpty ?? false);
   const limit = props.limit ?? 0;
   const cut = limit > 0 && facts.length > limit;
-  const body = (
-    <MaybeRow arrange={arrange}>
-      <FactLooksBody
-        {...props}
-        arrange={arrange}
-        limit={cut && !expanded ? limit : 0}
-      />
-    </MaybeRow>
-  );
-  if (!cut) return body;
-  return (
-    <div className="flex flex-col gap-3">
-      {body}
-      {/* Plain text and a chevron, like the description's Read more. */}
-      <button
+  // A striped table (outline on or off): Show all is its last row, lined
+  // up with the rows (in a folded section too, edge to edge).
+  const inTable = SPEC_LOOKS.includes(props.look);
+  const showAll = (
+    // Plain text and a chevron, like the description's Read more.
+    <button
         aria-expanded={expanded}
         className="flex w-fit cursor-pointer items-center gap-1 text-sm font-medium text-muted-foreground"
         onClick={() => setExpanded((open) => !open)}
@@ -4854,6 +4855,22 @@ export function FactLooks(props: {
           )}
         />
       </button>
+  );
+  const body = (
+    <MaybeRow arrange={arrange}>
+      <FactLooksBody
+        {...props}
+        arrange={arrange}
+        footer={cut && inTable ? showAll : null}
+        limit={cut && !expanded ? limit : 0}
+      />
+    </MaybeRow>
+  );
+  if (!cut || inTable) return body;
+  return (
+    <div className="flex flex-col gap-3">
+      {body}
+      {showAll}
     </div>
   );
 }
@@ -4865,6 +4882,7 @@ function FactLooksBody({
   showEmpty = false,
   border = true,
   limit = 0,
+  footer = null,
 }: {
   p: WalkIdeaParts;
   look: FactsLook;
@@ -4872,6 +4890,8 @@ function FactLooksBody({
   showEmpty?: boolean;
   border?: boolean;
   limit?: number;
+  /** A last row inside a framed table (its Show all). */
+  footer?: ReactNode;
 }) {
   const { facts: allFacts } = useWalkInfo(p, showEmpty);
   const facts = limit > 0 ? allFacts.slice(0, limit) : allFacts;
@@ -5002,8 +5022,9 @@ function FactLooksBody({
     return (
       <dl
         className={cn(
-          // Label and value the same size: 12px on phones, 13px wider.
-          "overflow-hidden rounded-xl text-xs sm:text-[13px]",
+          // Label and value the same size: 12px on phones, 13px on
+          // tablets, 14px on computers.
+          "overflow-hidden rounded-xl text-xs sm:text-[13px] lg:text-sm",
           border && "border",
           look === "spec-lines" && "divide-y",
           look === "spec-grey" && "bg-muted",
@@ -5060,6 +5081,12 @@ function FactLooksBody({
             </dd>
           </div>
         ))}
+        {footer ? (
+          // Show all, as the table's last row (inside its outline).
+          <div className={cn("px-4 py-3", look !== "spec-lines" && "border-t")}>
+            {footer}
+          </div>
+        ) : null}
       </dl>
     );
   }

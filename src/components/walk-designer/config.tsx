@@ -2553,8 +2553,27 @@ export const walkDesignConfig: Config = {
                 ["56", "Very big (56px)"],
               ]),
             },
+            spaceAlone: {
+              type: "select",
+              label: "Space above it when the part above isn't shown (e.g. Your clock-in)",
+              options: options([
+                ["same", "Same as Space above it"],
+                ["none", "None"],
+                ["8", "Very small (8px)"],
+                ["12", "Smaller (12px)"],
+                ["16", "Small (16px)"],
+                ["24", "Normal (24px)"],
+                ["32", "Bigger (32px)"],
+                ["40", "Big (40px)"],
+                ["56", "Very big (56px)"],
+              ]),
+            },
           },
-          defaultItemProps: { part: "description", space: "24" },
+          defaultItemProps: {
+            part: "description",
+            space: "24",
+            spaceAlone: "same",
+          },
           getItemSummary: (item: { part?: string }) =>
             TITLE_PART_NAMES[item.part ?? ""] ?? "Choose a part",
         },

@@ -59,7 +59,7 @@ export function WalksSection({
             grey label column, compact rows, values on the left, label over
             value, or grey with white stripes. <strong>Show first</strong> (with those looks) shows only the
             first 2–6 facts, with a <strong>Show all</strong> button under them
-            for the rest. The <strong>Precise location look</strong>{" "}
+            for the rest (in a striped table it&apos;s the table&apos;s last row). The <strong>Precise location look</strong>{" "}
             (the what3words address) can be the full card, a one-line chip, a thin
             full-width grey line (with the words Precise location), the same
             line with a dashed outline, a text link, a grey box, grey with a dark bar, a black box, big words
@@ -429,7 +429,10 @@ export function WalksSection({
               essentials and description go inside the ticket, so it&apos;s all
               one card, with the same 24 pixels between everything. Each part in that list has its own <strong>Space above it</strong>{" "}
               (none, 8, 12, 16, 24, 32, 40 or 56 pixels), so the space
-              between any two parts can be set on its own. Parts can touch but never overlap. <strong>Created by</strong> can be added to that list too, to place
+              between any two parts can be set on its own. Each also has{" "}
+              <strong>Space above it when the part above isn&apos;t shown</strong>{" "}
+              — for example 16px for The day&apos;s timeline when Your clock-in
+              above it is hidden (before you clock in). Parts can touch but never overlap. <strong>Created by</strong> can be added to that list too, to place
               it anywhere among the other parts instead of under the name. The Title section also has a <strong>Created by look</strong>{" "}
               (plain, grey box, dashed grey box, outlined, grey pill or a grey
               bar), and Your clock-in and Countdown have a dashed grey box look.
