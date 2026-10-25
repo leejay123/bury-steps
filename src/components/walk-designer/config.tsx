@@ -996,6 +996,7 @@ const preciseLookField = {
   options: [
     { value: "card", label: "Full card (with its explanation)" },
     { value: "compact", label: "Compact one-line chip" },
+    { value: "line", label: "Thin grey line, full width (with Precise location)" },
     { value: "text", label: "Plain text link" },
     { value: "grey", label: "Grey box" },
     { value: "bar", label: "Grey with a dark bar down the side" },

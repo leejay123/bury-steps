@@ -3997,7 +3997,8 @@ export type PreciseLook =
   | "dark"
   | "button"
   | "copy"
-  | "tile";
+  | "tile"
+  | "line";
 
 /** what3words with a Copy button (to paste into the app or a message). */
 function PreciseCopy({
@@ -4070,6 +4071,21 @@ export function PreciseLocation({
     </span>
   );
   if (look === "copy") return <PreciseCopy address={address} words={words} />;
+  if (look === "line")
+    // A thin grey one-line box, the full width: label left, words right.
+    return (
+      <a
+        className="flex w-full items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm hover:bg-muted/70"
+        href={href}
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        <MapPin aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+        <span className="shrink-0 text-muted-foreground">Precise location</span>
+        <span className="ml-auto min-w-0 truncate">{words}</span>
+        <ArrowUpRight aria-hidden className="size-3.5 shrink-0 text-muted-foreground" />
+      </a>
+    );
   if (look === "button")
     return (
       <Button asChild className="w-full" variant="outline">
