@@ -164,6 +164,7 @@ function DetailsSkeleton({ p }: { p: Record<string, unknown> }) {
     />
   );
   const parts: Record<TitlePart, ReactNode> = {
+    createdby: <SkLine className="w-48" size="sm" />,
     facts,
     timeline: (
       <div className="flex flex-col gap-2">

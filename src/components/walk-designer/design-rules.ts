@@ -25,8 +25,10 @@ export type TitlePart =
   | "description"
   | "map"
   | "clockin"
-  | "countdown";
+  | "countdown"
+  | "createdby";
 const TITLE_PARTS: readonly string[] = [
+  "createdby",
   "facts",
   "essentials",
   "precise",

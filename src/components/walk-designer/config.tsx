@@ -389,6 +389,7 @@ const TITLE_PART_NAMES: Record<string, string> = {
   map: "Map",
   clockin: "Your clock-in",
   countdown: "Countdown",
+  createdby: "Created by",
 };
 
 // Every design for the Details card's facts.
@@ -2501,6 +2502,7 @@ export const walkDesignConfig: Config = {
                 ["map", "Map"],
                 ["clockin", "Your clock-in (once clocked in)"],
                 ["countdown", "Countdown (e.g. 3 days to go)"],
+                ["createdby", "Created by (moves it from under the name)"],
               ]),
             },
             space: {

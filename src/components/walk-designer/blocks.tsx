@@ -1388,7 +1388,10 @@ function Title({
   gap = "normal",
   actionsAt = "beside",
   createdByLook = "plain",
+  hideNote = false,
 }: {
+  /** "Created by" is placed in the title box's list instead (not under the name). */
+  hideNote?: boolean;
   /** How "Created by …" looks. */
   createdByLook?: CreatedByLook;
   /** Where the buttons sit (beside the name unless chosen). */
@@ -1411,7 +1414,7 @@ function Title({
   afterNote?: ReactNode;
 }) {
   const info = useWalkInfo(p);
-  const h = p.headline;
+  const h = hideNote ? { ...p.headline, note: null } : p.headline;
   // The buttons in a chosen place, other than beside the name.
   const actAt = (where: ActionsAt) =>
     actions && actionsAt === where ? (
@@ -1467,7 +1470,7 @@ function Title({
       <div className="flex flex-col gap-4">
         {above}
         <Title
-          {...{ p, variant, actions: false, underNote, gap, createdByLook }}
+          {...{ p, variant, actions: false, underNote, gap, createdByLook, hideNote }}
         />
         {below}
       </div>
@@ -2089,6 +2092,20 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
   }
   // What's inside the title box under the name, in the chosen order.
   const gap = TITLE_GAP[o.titleGap ?? "normal"] ?? TITLE_GAP.normal;
+  // "Created by …": under the name, or where it's put in the list.
+  const createdUnderName = !inTitle("createdby") && Boolean(p.headline.note);
+  const createdByLine = p.headline.note ? (
+    <p
+      className={cn(
+        "text-xs",
+        dark ? "text-white/60" : "text-muted-foreground",
+        CREATED_BY_LOOK[o.createdByLook ?? "plain"] ?? "",
+        dark && (o.createdByLook ?? "plain") !== "plain" && "bg-white/10",
+      )}
+    >
+      {p.headline.note}
+    </p>
+  ) : null;
   const insideParts: Record<TitlePart, ReactNode> = {
     facts: factsInTitle ? factsPart : null,
     essentials: <DeviceEssentials dark={dark} o={o.essentials ?? {}} p={p} />,
@@ -2099,6 +2116,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
     clockin: p.myClockIn ? (
       <ClockInLook look={o.clockinLook}>{p.myClockIn}</ClockInLook>
     ) : null,
+    createdby: createdByLine,
     countdown:
       // "In the status band": it's added to the band's line instead.
       o.countdownLook === "band" ? null : (
@@ -2177,6 +2195,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
               <Title
                 actions={showActions}
                 actionsAt={actionsAt}
+                hideNote={inTitle("createdby")}
                 createdByLook={o.createdByLook}
                 bandMessages={
                   titleMessagesAt === "in-band" &&
@@ -2224,9 +2243,9 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
                     {o.statusAt === "below" ? statusRow : null}
                     {/* Created by and anything tucked under it: one group,
                         so they sit as close as the band look's lines. */}
-                    {p.headline.note || underName ? (
+                    {createdUnderName || underName ? (
                       <div className="flex flex-col gap-1.5">
-                        {p.headline.note ? (
+                        {createdUnderName ? (
                           <p
                             className={cn(
                               "text-xs",
