@@ -11,7 +11,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import type { SignInLook } from "@/app/w/[token]/walk-share-status";
+import { SignInPrompt, type SignInLook } from "@/app/w/[token]/walk-share-status";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -3900,14 +3900,14 @@ export function SignInBlock({
   const p = useWalkParts();
   if (!p)
     return <Placeholder label="Sign in to join (signed-out visitors only)" />;
+  // In the designer you're signed in, so the real box would hide itself:
+  // show it in the chosen look (on the page, only signed-out visitors see it).
+  if (editing) return <SignInPrompt look={look} />;
   if (isValidElement(p.signIn))
     return cloneElement(p.signIn as ReactElement<{ signInLook?: SignInLook }>, {
       signInLook: look,
     });
-  if (p.signIn) return <>{p.signIn}</>;
-  return editing ? (
-    <Placeholder label="Sign in to join: shows to signed-out visitors while the walk can still be joined (preview the Visitors design to see it)" />
-  ) : null;
+  return p.signIn ? <>{p.signIn}</> : null;
 }
 
 export function BackLinkBlock({
