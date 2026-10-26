@@ -705,7 +705,7 @@ function EssentialsView({
     body = (
       <ul
         className={cn(
-          "overflow-hidden rounded-xl text-xs sm:text-[13px] lg:text-sm",
+          "overflow-hidden rounded-xl text-sm",
           border && (dark ? "border border-white/15" : "border"),
           look === "spec-lines" && "divide-y",
           look === "spec-grey" && (dark ? "bg-white/10" : "bg-muted"),
@@ -5173,9 +5173,8 @@ function FactLooksBody({
     return (
       <dl
         className={cn(
-          // Label and value the same size: 12px on phones, 13px on
-          // tablets, 14px on computers.
-          "overflow-hidden rounded-xl text-xs sm:text-[13px] lg:text-sm",
+          // Label and value the same size: 14px on every device.
+          "overflow-hidden rounded-xl text-sm",
           border && "border",
           look === "spec-lines" && "divide-y",
           look === "spec-grey" && "bg-muted",
@@ -5188,7 +5187,8 @@ function FactLooksBody({
           // wrapping in a narrow column; wider, they share a row.
           <div
             className={cn(
-              "flex flex-col gap-0.5",
+              // On a phone the name sits over its value, with room between.
+              "flex flex-col gap-1.5",
               !stacked &&
                 "sm:grid sm:grid-cols-[12rem_minmax(0,1fr)] sm:gap-6",
               columns ? "sm:gap-0" : "px-4",
