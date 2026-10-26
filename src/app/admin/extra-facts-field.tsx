@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { IconPicker } from "./settings/walk-essentials/walk-essentials-editor";
 import {
   MAX_EXTRA_FACT_NAME,
   MAX_EXTRA_FACT_VALUE,
@@ -31,6 +32,11 @@ export function ExtraFactsField({ defaults = [] }: { defaults?: ExtraFact[] }) {
       <input name="extraFacts" type="hidden" value={JSON.stringify(facts)} />
       {facts.map((fact, i) => (
         <div className="flex gap-2" key={i}>
+          <IconPicker
+            label={fact.name || `fact ${i + 1}`}
+            onChange={(icon) => setFacts((prev) => prev.map((f, at) => (at === i ? { ...f, icon } : f)))}
+            value={fact.icon ?? "info"}
+          />
           <Input
             aria-label={`Fact ${i + 1}: name`}
             className="w-2/5"
@@ -60,7 +66,7 @@ export function ExtraFactsField({ defaults = [] }: { defaults?: ExtraFact[] }) {
       {facts.length < MAX_EXTRA_FACTS ? (
         <Button
           className="w-fit"
-          onClick={() => setFacts((prev) => [...prev, { name: "", value: "" }])}
+          onClick={() => setFacts((prev) => [...prev, { name: "", value: "", icon: "info" }])}
           size="sm"
           type="button"
           variant="outline"

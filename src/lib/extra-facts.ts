@@ -2,7 +2,10 @@
  * A walk's own extra facts ("Parking: Bank Lane car park"), added with
  * + Add a fact on the walk form and shown with the other facts.
  */
-export type ExtraFact = { name: string; value: string };
+import { ESSENTIAL_ICONS } from "./walk-essentials";
+
+/** icon: a name from the essentials' icon set (ESSENTIAL_ICONS). */
+export type ExtraFact = { name: string; value: string; icon?: string };
 
 export const MAX_EXTRA_FACTS = 8;
 export const MAX_EXTRA_FACT_NAME = 40;
@@ -20,10 +23,14 @@ export function parseExtraFacts(raw: unknown): ExtraFact[] {
   }
   if (!Array.isArray(list)) return [];
   return list
-    .map((item) => ({
-      name: String((item as { name?: unknown })?.name ?? "").trim().slice(0, MAX_EXTRA_FACT_NAME),
-      value: String((item as { value?: unknown })?.value ?? "").trim().slice(0, MAX_EXTRA_FACT_VALUE),
-    }))
+    .map((item) => {
+      const icon = String((item as { icon?: unknown })?.icon ?? "");
+      return {
+        name: String((item as { name?: unknown })?.name ?? "").trim().slice(0, MAX_EXTRA_FACT_NAME),
+        value: String((item as { value?: unknown })?.value ?? "").trim().slice(0, MAX_EXTRA_FACT_VALUE),
+        icon: icon in ESSENTIAL_ICONS ? icon : "info",
+      };
+    })
     .filter((fact) => fact.name && fact.value)
     .slice(0, MAX_EXTRA_FACTS);
 }

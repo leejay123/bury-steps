@@ -31,7 +31,6 @@ import {
   Coffee,
   Flag,
   Footprints,
-  Info,
   MapPin,
   Plus,
   Mountain,
@@ -143,7 +142,7 @@ function useWalkInfo(p: WalkIdeaParts, showEmpty = false) {
       },
       // The walk's own facts (+ Add a fact), after the standard ones.
       ...(p.walk.extraFacts ?? []).map((fact) => ({
-        icon: Info,
+        icon: essentialIcon(fact.icon ?? "info"),
         label: fact.name,
         value: fact.value as string | null,
         wide: fact.value.length > 30,

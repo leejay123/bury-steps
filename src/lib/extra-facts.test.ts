@@ -11,11 +11,14 @@ describe("parseExtraFacts", () => {
           { name: "", value: "Rocky" },
         ]),
       ),
-    ).toEqual([{ name: "Parking", value: "Bank Lane car park" }]);
+    ).toEqual([{ name: "Parking", value: "Bank Lane car park", icon: "info" }]);
   });
 
   it("reads saved arrays and ignores anything else", () => {
-    expect(parseExtraFacts([{ name: "A", value: "B" }])).toEqual([{ name: "A", value: "B" }]);
+    expect(parseExtraFacts([{ name: "A", value: "B", icon: "parking" }])).toEqual([
+      { name: "A", value: "B", icon: "parking" },
+    ]);
+    expect(parseExtraFacts([{ name: "A", value: "B", icon: "nope" }])[0].icon).toBe("info");
     expect(parseExtraFacts(null)).toEqual([]);
     expect(parseExtraFacts("not json")).toEqual([]);
     expect(parseExtraFacts({ name: "A" })).toEqual([]);

@@ -167,7 +167,8 @@ export function WalksSection({
               <strong>Elevation gain</strong> (for example “213 m”), grade, walk
               leader and back marker, and any <strong>Refreshment stop</strong> (for example Hare &amp; Hounds, Bolton Road, Abbey Village). Under{" "}
               <strong>More facts</strong>, <strong>+ Add a fact</strong> adds up to 8 facts of the walk&apos;s own — a
-              name and a value, such as Parking: Bank Lane car park — shown after the other facts in every look.
+              name and a value, such as Parking: Bank Lane car park, and an icon picked from the same set as the
+              Essentials — shown after the other facts in every look.
               Tick any <strong>Essentials</strong> —
               toilets, parking, café, dog friendly, step-free, near public
               transport, boots recommended, stiles. Each shows on the walk page

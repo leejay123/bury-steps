@@ -26,7 +26,7 @@ const newKey = () => `c${Date.now().toString(36)}${Math.random().toString(36).sl
 
 /** Every icon as a labelled tile in a searchable grid — easier to scan
  * than a narrow list, and you see the icon you're picking. */
-function IconPicker({ label, onChange, value }: { label: string; onChange: (icon: string) => void; value: string }) {
+export function IconPicker({ label, onChange, value }: { label: string; onChange: (icon: string) => void; value: string }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const current = ESSENTIAL_ICONS[value] ?? ESSENTIAL_ICONS.info;

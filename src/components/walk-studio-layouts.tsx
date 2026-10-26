@@ -1,5 +1,6 @@
 "use client";
 
+import { essentialIcon } from "@/lib/walk-essentials";
 import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import {
   CalendarDays,
@@ -16,7 +17,6 @@ import {
   UserRound,
   UsersRound,
   X,
-  Info,
 } from "lucide-react";
 import { formatTime, formatWalkDay, formatWalkLength } from "@/lib/dates";
 import { cn } from "@/lib/utils";
@@ -96,7 +96,7 @@ export function WalkStudioLayouts({ layout, parts }: { layout: WalkStudioLayout;
       { icon: UsersRound, label: "Back marker", value: p.walk.backMarker },
       { icon: Coffee, label: "Refreshment stop", value: p.walk.refreshmentStop },
       ...(p.walk.extraFacts ?? []).map((fact) => ({
-        icon: Info,
+        icon: essentialIcon(fact.icon ?? "info"),
         label: fact.name,
         value: fact.value as string | null,
       })),
