@@ -1,3 +1,4 @@
+import { libraryIcon } from "@/components/library-icon";
 import {
   Accessibility,
   Baby,
@@ -184,7 +185,20 @@ export const ESSENTIAL_ICONS: Record<string, { icon: LucideIcon; label: string }
   muddy: { icon: Shovel, label: "Muddy" },
 };
 
+/** An icon from the whole free library, saved as "lucide:<name>" (e.g. lucide:tree-pine). */
+export const LIBRARY_ICON_PREFIX = "lucide:";
+
+/** A saved icon name we can draw: a hand-picked one, or a library one. */
+export function isIconName(name: unknown): name is string {
+  return (
+    typeof name === "string" &&
+    (name in ESSENTIAL_ICONS || /^lucide:[a-z0-9-]{1,60}$/.test(name))
+  );
+}
+
 export function essentialIcon(name: string): LucideIcon {
+  if (name.startsWith(LIBRARY_ICON_PREFIX))
+    return libraryIcon(name.slice(LIBRARY_ICON_PREFIX.length)) as unknown as LucideIcon;
   return ESSENTIAL_ICONS[name]?.icon ?? Info;
 }
 
@@ -222,7 +236,7 @@ export function parseEssentialList(raw: unknown): EssentialItem[] {
     items.push({
       key,
       label: label.trim().slice(0, MAX_WALK_ESSENTIAL_LABEL),
-      icon: typeof icon === "string" && icon in ESSENTIAL_ICONS ? icon : "info",
+      icon: isIconName(icon) ? icon : "info",
     });
     if (items.length >= MAX_WALK_ESSENTIALS) break;
   }

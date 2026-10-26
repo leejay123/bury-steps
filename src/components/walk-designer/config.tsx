@@ -1045,7 +1045,7 @@ const MAP_DESIGNS: [string, string][] = [
   ["grey", "Grey box, map on top"],
   ["flat", "No frame"],
   ["bare", "Map only"],
-  ["banner", "Title in a bar along the bottom of the map"],
+  ["banner", "Title in a bar along the top of the map"],
   ["chip", "Title in a small box on the map"],
   ["dark", "Black card"],
   ["dashed", "Dashed grey card"],

@@ -38,7 +38,7 @@ export function WalksSection({
             name, or at the bottom of the title box. Its map settings also have
             a <strong>Map design</strong> (card, card with the map on top, card
             with the map inset, grey box, no frame, map only, the title in a bar
-            along the bottom of the map or in a small box on it, a black card, a dashed grey card, a postcard, a card with the
+            along the top of the map or in a small box on it, a black card, a dashed grey card, a postcard, a card with the
             buttons in a grey bar, a ticket with dashed tear lines, a card with
             the title in a grey band, a small square or round map beside the
             words, details
@@ -168,7 +168,7 @@ export function WalksSection({
               leader and back marker, and any <strong>Refreshment stop</strong> (for example Hare &amp; Hounds, Bolton Road, Abbey Village). Under{" "}
               <strong>More facts</strong>, <strong>+ Add a fact</strong> adds up to 8 facts of the walk&apos;s own — a
               name and a value, such as Parking: Bank Lane car park, and an icon picked from the same set as the
-              Essentials — shown after the other facts in every look.
+              Essentials (typing in the icon picker&apos;s search also finds over 1,500 more free icons) — shown after the other facts in every look.
               Tick any <strong>Essentials</strong> —
               toilets, parking, café, dog friendly, step-free, near public
               transport, boots recommended, stiles. Each shows on the walk page

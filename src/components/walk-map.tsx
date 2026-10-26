@@ -299,7 +299,7 @@ export function WalkMap({
           </div>
         ) : null}
         {o.buttons === "over" && o.look !== "overlay" ? (
-          <div className="absolute right-3 bottom-3 left-3 sm:right-auto">
+          <div className="absolute right-3 bottom-12 left-3 sm:right-auto sm:bottom-8">
             {buttons}
           </div>
         ) : null}
@@ -478,7 +478,9 @@ export function WalkMap({
     return (
       <div className={cn("relative overflow-hidden rounded-2xl border", round)}>
         {mapArea() ?? <div className={cn("bg-muted", height)} />}
-        <div className="absolute right-3 bottom-3 left-3 flex flex-col gap-3 rounded-xl bg-background/95 p-4 shadow-lg backdrop-blur-sm sm:right-auto sm:max-w-sm">
+        {/* Clear of the map's © OpenStreetMap line (its licence needs it
+            seen), and as wide as its buttons need (they stuck out). */}
+        <div className="absolute right-3 bottom-12 left-3 flex flex-col gap-3 rounded-xl bg-background/95 p-4 shadow-lg backdrop-blur-sm sm:right-auto sm:bottom-8 sm:w-max sm:max-w-[calc(100%-1.5rem)]">
           {title}
           {at("above-map")}
           {buttons}
@@ -555,8 +557,10 @@ export function WalkMap({
             <div
               className={cn(
                 "absolute bg-background/95 backdrop-blur-sm",
+                // Along the top (the bottom has the map's © line), short of
+                // the + and − buttons.
                 o.look === "banner"
-                  ? "right-0 bottom-0 left-0 border-t px-4 py-3"
+                  ? "top-0 right-14 left-0 rounded-br-lg border-r border-b px-4 py-3"
                   : "top-3 left-3 max-w-[80%] rounded-lg border px-3 py-2 shadow-sm",
               )}
             >

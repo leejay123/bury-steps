@@ -2,9 +2,9 @@
  * A walk's own extra facts ("Parking: Bank Lane car park"), added with
  * + Add a fact on the walk form and shown with the other facts.
  */
-import { ESSENTIAL_ICONS } from "./walk-essentials";
+import { isIconName } from "./walk-essentials";
 
-/** icon: a name from the essentials' icon set (ESSENTIAL_ICONS). */
+/** icon: a name from the essentials' icon set, or "lucide:<name>" from the whole library. */
 export type ExtraFact = { name: string; value: string; icon?: string };
 
 export const MAX_EXTRA_FACTS = 8;
@@ -28,7 +28,7 @@ export function parseExtraFacts(raw: unknown): ExtraFact[] {
       return {
         name: String((item as { name?: unknown })?.name ?? "").trim().slice(0, MAX_EXTRA_FACT_NAME),
         value: String((item as { value?: unknown })?.value ?? "").trim().slice(0, MAX_EXTRA_FACT_VALUE),
-        icon: icon in ESSENTIAL_ICONS ? icon : "info",
+        icon: isIconName(icon) ? icon : "info",
       };
     })
     .filter((fact) => fact.name && fact.value)

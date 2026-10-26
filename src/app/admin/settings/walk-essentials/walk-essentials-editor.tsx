@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { createElement, useEffect, useState } from "react";
+import { libraryIconNames } from "@/components/library-icon";
 import { cn } from "@/lib/utils";
 import { ArrowDown, ArrowUp, ChevronDown, Plus, Search, Trash2 } from "lucide-react";
 import { updateWalkEssentials } from "@/server/actions";
@@ -10,6 +11,8 @@ import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import {
   DEFAULT_WALK_ESSENTIALS,
   ESSENTIAL_ICONS,
+  LIBRARY_ICON_PREFIX,
+  essentialIcon,
   MAX_WALK_ESSENTIALS,
   MAX_WALK_ESSENTIAL_LABEL,
   type EssentialItem,
@@ -29,11 +32,35 @@ const newKey = () => `c${Date.now().toString(36)}${Math.random().toString(36).sl
 export function IconPicker({ label, onChange, value }: { label: string; onChange: (icon: string) => void; value: string }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const current = ESSENTIAL_ICONS[value] ?? ESSENTIAL_ICONS.info;
+  // The whole free library's names, loaded the first time the picker opens.
+  const [libraryNames, setLibraryNames] = useState<string[] | null>(null);
+  useEffect(() => {
+    if (!open || libraryNames) return;
+    let live = true;
+    libraryIconNames()
+      .then((names) => {
+        if (live) setLibraryNames(names);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [open, libraryNames]);
   const q = query.trim().toLowerCase();
   const options = Object.entries(ESSENTIAL_ICONS).filter(
     ([name, option]) => !q || option.label.toLowerCase().includes(q) || name.includes(q),
   );
+  // Typing searches every library icon too (by its English name, e.g.
+  // "tree" finds tree-pine), the first 60 matches.
+  const words = q.replace(/\s+/g, "-");
+  const more =
+    words.length >= 2 && libraryNames
+      ? libraryNames.filter((name) => name.includes(words)).slice(0, 60)
+      : [];
+  const pick = (name: string) => {
+    onChange(name);
+    setOpen(false);
+  };
 
   return (
     <Popover
@@ -45,7 +72,7 @@ export function IconPicker({ label, onChange, value }: { label: string; onChange
     >
       <PopoverTrigger asChild>
         <Button aria-label={`Icon for ${label || "this item"}`} className="shrink-0 gap-1.5" type="button" variant="outline">
-          <current.icon aria-hidden className="size-4" />
+          {createElement(essentialIcon(value), { "aria-hidden": true, className: "size-4" })}
           <ChevronDown aria-hidden className="size-3.5 text-muted-foreground" />
         </Button>
       </PopoverTrigger>
@@ -69,18 +96,43 @@ export function IconPicker({ label, onChange, value }: { label: string; onChange
                 name === value && "bg-muted text-foreground ring-1 ring-foreground/30",
               )}
               key={name}
-              onClick={() => {
-                onChange(name);
-                setOpen(false);
-              }}
+              onClick={() => pick(name)}
               type="button"
             >
               <option.icon aria-hidden className="size-5" />
               <span className="line-clamp-2">{option.label}</span>
             </button>
           ))}
-          {options.length === 0 ? (
-            <p className="col-span-4 py-4 text-center text-sm text-muted-foreground">No icons match.</p>
+          {more.length > 0 ? (
+            <p className="col-span-4 pt-2 text-xs font-medium text-muted-foreground">More free icons</p>
+          ) : null}
+          {more.map((name) => {
+            const saved = `${LIBRARY_ICON_PREFIX}${name}`;
+            return (
+              <button
+                aria-pressed={saved === value}
+                className={cn(
+                  "flex flex-col items-center gap-1 rounded-md px-1 py-2 text-center text-[11px] leading-tight text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                  saved === value && "bg-muted text-foreground ring-1 ring-foreground/30",
+                )}
+                key={saved}
+                onClick={() => pick(saved)}
+                type="button"
+              >
+                {createElement(essentialIcon(saved), { "aria-hidden": true, className: "size-5" })}
+                <span className="line-clamp-2 break-all">{name.replaceAll("-", " ")}</span>
+              </button>
+            );
+          })}
+          {options.length === 0 && more.length === 0 ? (
+            <p className="col-span-4 py-4 text-center text-sm text-muted-foreground">
+              {words.length >= 2 && !libraryNames ? "Searching…" : "No icons match."}
+            </p>
+          ) : null}
+          {!q ? (
+            <p className="col-span-4 pt-2 text-center text-xs text-muted-foreground">
+              Type to search over 1,500 more free icons.
+            </p>
           ) : null}
         </div>
       </PopoverContent>
