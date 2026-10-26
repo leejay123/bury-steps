@@ -2355,6 +2355,10 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
                       className={cn(
                         "gap-1 font-medium text-foreground [&_[data-slot=alert]]:border-0 [&_[data-slot=alert]]:bg-transparent [&_[data-slot=alert]]:p-0 [&_[data-slot=alert]]:text-inherit [&_[data-slot=alert]_*]:text-inherit",
                         ONE_LINE_MESSAGE,
+                        // A long message with a heading (Cancelled…): just its
+                        // heading in the band; the whole of it shows under
+                        // the title box.
+                        "[&_[data-slot=alert]:has([data-slot=alert-title])_[data-slot=alert-description]]:hidden! [&_[data-slot=alert-title]]:after:content-none!",
                       )}
                       editing={o.editing ?? false}
                       p={p}
@@ -2427,6 +2431,21 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
           )}
           {titleMessages("bottom")}
         </Boxed>
+      ) : null}
+      {titleMessagesAt === "in-band" &&
+      titleLook.startsWith("band") &&
+      showTitle &&
+      !p.noticesInStrip ? (
+        // The whole of any long message whose heading is in the band (the
+        // cancelled one, with its reason and what to do); nothing otherwise.
+        <MessagesOrSample
+          className={cn(
+            MESSAGE_LOOK["as-is"],
+            "[&:not(:has([data-slot=alert-title]))]:hidden [&_[data-slot=alert]:not(:has([data-slot=alert-title]))]:hidden",
+          )}
+          editing={false}
+          p={p}
+        />
       ) : null}
       {descriptionAfterTitle && !onSide("description") ? descriptionPart : null}
       {o.timeline && !timelineInTitle && !onSide("timeline") ? (

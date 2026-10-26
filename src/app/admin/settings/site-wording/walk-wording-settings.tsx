@@ -16,6 +16,36 @@ import {
   type WalkWordingKey,
 } from "@/lib/walk-wording";
 
+/** One box per message: who sees it and when. */
+const MESSAGE_BOXES: { title: string; hint: string; key: WalkWordingKey }[] = [
+  {
+    title: "Members, before clock-in opens",
+    hint: "Members who haven't clocked in, until clock-in opens. {opens} and {opensDay} are when.",
+    key: "memberBefore",
+  },
+  {
+    title: "Members who didn't clock in, after the walk",
+    hint: "Signed-in members once the walk has finished.",
+    key: "memberMissed",
+  },
+  { title: "Visitors, after the walk", hint: "Signed-out visitors once the walk has finished.", key: "visitorFinished" },
+  {
+    title: "Organisers, after the walk",
+    hint: "Organisers who can edit, cancel or manage attendance, once it has finished.",
+    key: "organiserFinished",
+  },
+  {
+    title: "Cancelled: heading",
+    hint: "Everyone, when the walk is cancelled (in the Status band, just this shows).",
+    key: "cancelledTitle",
+  },
+  {
+    title: "Cancelled: what to do next",
+    hint: "Members and visitors, after the reason (if one was given).",
+    key: "cancelledNext",
+  },
+];
+
 /** One box per status: its name and the rest, written "Name · the rest". */
 const STATUS_BOXES: { title: string; hint: string; name: WalkWordingKey; rest: WalkWordingKey }[] = [
   {
@@ -67,7 +97,7 @@ export function WalkWordingSettings({ wording }: { wording: WalkWording }) {
 
   return (
     <SettingsSection
-      description="One line for each stage of a walk, shown in the Status band and on every walk page layout. Keep the · between the name and the rest. Words in braces, like {opens}, are filled in for each walk."
+      description="One line for each stage of a walk (shown in the Status band and on every walk page layout), then the walk's messages. Keep the · between a stage's name and the rest. Words in braces, like {opens}, are filled in for each walk."
       title="Walk status wording"
     >
       <form action={action} className="flex flex-col gap-8">
@@ -131,6 +161,51 @@ export function WalkWordingSettings({ wording }: { wording: WalkWording }) {
             );
           })}
         </div>
+        <fieldset className="flex flex-col gap-5">
+          <div className="flex flex-col gap-1">
+            <legend className="font-medium">Messages</legend>
+            <p className="text-sm text-muted-foreground">
+              The walk&apos;s messages, shown to the people they&apos;re for while they apply.
+            </p>
+          </div>
+          {MESSAGE_BOXES.map(({ key, title, hint }) => {
+            const changed = draft[key] !== WALK_WORDING_DEFAULTS[key];
+            const id = `walk-wording-${key}`;
+            return (
+              <div className="flex flex-col gap-2" key={key}>
+                <Label htmlFor={id}>{title}</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id={id}
+                    maxLength={MAX_WALK_WORDING}
+                    onChange={(event) => {
+                      const text = event.target.value;
+                      setDraft((prev) => ({ ...prev, [key]: text }));
+                      clearError();
+                    }}
+                    placeholder={WALK_WORDING_DEFAULTS[key]}
+                    value={draft[key]}
+                  />
+                  {changed ? (
+                    <Button
+                      aria-label={`Put ${title} back to the standard words`}
+                      onClick={() => setDraft((prev) => ({ ...prev, [key]: WALK_WORDING_DEFAULTS[key] }))}
+                      size="icon"
+                      title="Back to the standard words"
+                      type="button"
+                      variant="outline"
+                    >
+                      <RotateCcw />
+                    </Button>
+                  ) : null}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {hint} {changed ? `Standard: ${WALK_WORDING_DEFAULTS[key]}` : null}
+                </p>
+              </div>
+            );
+          })}
+        </fieldset>
         <FormError message={state && !state.ok ? state.error : null} />
         <div className="flex flex-wrap gap-2">
           <Button disabled={!dirty || isPending} type="submit">

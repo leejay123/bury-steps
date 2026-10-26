@@ -454,7 +454,8 @@ export function WalksSection({
               <strong>Where the walk&apos;s messages go</strong> can be{" "}
               <strong>In the Details card&apos;s Status band</strong>: while a
               message applies (such as Clock-in opens at 12:45) it shows in the
-              band in place of the status. Anything with nothing to show (such as Your clock-in before you
+              band in place of the status. A long one with a heading (the cancelled message) shows just its
+              heading in the band, and the whole message under the title box. Anything with nothing to show (such as Your clock-in before you
               clock in) takes no space at all. On a computer with a mouse, rows
               that scroll sideways show ‹ › buttons at their ends while the
               pointer is over them. Inside the title box (in the Title section) is a list of what goes

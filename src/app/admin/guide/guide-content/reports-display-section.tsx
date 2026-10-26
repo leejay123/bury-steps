@@ -131,7 +131,9 @@ export function ReportsDisplaySection() {
               walk (Upcoming, Clock-in open, In progress, Finished, Cancelled),
               written as &quot;Name · the rest&quot; — keep the · between them.
               Words in braces such as {"{opens}"} or {"{count}"} are filled in for
-              each walk; the arrow button puts a box back to the standard words. Signed-in members see
+              each walk; the arrow button puts a box back to the standard words. Under them, one box for each
+              of the walk&apos;s messages: members before clock-in opens, members who didn&apos;t clock in,
+              visitors and organisers after the walk, and the cancelled heading and next step. Signed-in members see
               up to {HOMEPAGE_MEMBER_NOTICES_LIMIT} of the newest notices in the{" "}
               <strong>Latest notices</strong> carousel (not the pinned welcome — that stays in the
               bell only; each card shows a short teaser). Tap a bell-only notice to open it in the
