@@ -447,6 +447,16 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
   input[type="week"]::-webkit-calendar-picker-indicator {
     cursor: pointer;
   }
+
+  /* iPhone/iPad Safari centres (or right-aligns) a date or time box's value,
+     leaving a gap on the left; keep it on the left like every other box. */
+  input[type="date"]::-webkit-date-and-time-value,
+  input[type="time"]::-webkit-date-and-time-value,
+  input[type="datetime-local"]::-webkit-date-and-time-value,
+  input[type="month"]::-webkit-date-and-time-value,
+  input[type="week"]::-webkit-date-and-time-value {
+    text-align: left;
+  }
 }
 
 .cl-userButtonTrigger,
