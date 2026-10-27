@@ -93,10 +93,9 @@ export function WalkFormFields({
       </div>
 
       <FormSection title="When">
-        <div className="grid gap-4 sm:grid-cols-2">
-          {/* The whole row: its calendar opens under it in the form, and in
-              half the row the weekend columns spilled out of the box. */}
-          <div className="flex flex-col gap-1.5 sm:col-span-2">
+        <div className="flex flex-col gap-4">
+          {/* One box under another in the drawer (not side by side). */}
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor={id("starts")} required>
               Date and start time
             </Label>
@@ -151,7 +150,7 @@ export function WalkFormFields({
       </FormSection>
 
       <FormSection title="Details">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor={id("distance")}>Distance</Label>
             <Input
@@ -210,7 +209,7 @@ export function WalkFormFields({
             />
             <FieldHint>Walks at the back of the group so nobody gets left behind.</FieldHint>
           </div>
-          <div className="flex flex-col gap-1.5 sm:col-span-2">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor={id("refreshmentStop")}>Refreshment stop</Label>
             <Input
               defaultValue={defaults?.refreshmentStop ?? ""}
