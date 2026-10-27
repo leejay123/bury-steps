@@ -73,7 +73,11 @@ export function ReportsDisplaySection() {
               font, ink and fine greys, 6px corners, soft layered card shadows and tighter headings; GitHub:
               GitHub&apos;s light look with the Mona Sans font, blue links, black buttons and 16px cards with no
               shadows; Claude: a cream page, coral buttons and links, serif headings in Source Serif 4 and 12px
-              cards — layouts stay the same and you can switch back any time), the <strong>site font</strong> (it changes the typeface
+              cards; and, from the shadcn.io design gallery, Stripe (indigo pill buttons, thin headings), Linear
+              (lavender buttons, firm headings), Apple (soft-grey page, Action Blue pill buttons, Apple&apos;s font
+              on Apple devices), Figma (black and white, pill buttons, 24px cards) and Framer (black pill buttons,
+              blue links, poster-tight headings) — all on light pages; layouts stay the same and you can switch back
+              any time), the <strong>site font</strong> (it changes the typeface
               across the whole website), <strong>text sizes</strong> (the homepage headline, section
               headings, intro lines, and everyday body text — set for computers, with phones getting
               smaller headings automatically), the logo and favicon, the accident-report banner, and the{" "}

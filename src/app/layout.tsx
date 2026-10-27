@@ -134,7 +134,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               ? "var(--font-geist)"
               : theme.siteDesign === "github"
                 ? "var(--font-mona-sans)"
-                : theme.siteDesign === "claude"
+                : theme.siteDesign !== "original"
                   ? "var(--font-inter)"
                   : `var(${font.cssVariable})`,
           ...textSizeCssVars(theme.textSizes),

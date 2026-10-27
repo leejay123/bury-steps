@@ -78,8 +78,27 @@ import {
 } from "@/lib/homepage-copy";
 
 /** Settings → Branding → Site design. */
-export type SiteDesign = "original" | "vercel" | "github" | "claude";
-export const SITE_DESIGNS: readonly SiteDesign[] = ["original", "vercel", "github", "claude"];
+export type SiteDesign =
+  | "original"
+  | "vercel"
+  | "github"
+  | "claude"
+  | "stripe"
+  | "linear"
+  | "apple"
+  | "figma"
+  | "framer";
+export const SITE_DESIGNS: readonly SiteDesign[] = [
+  "original",
+  "vercel",
+  "github",
+  "claude",
+  "stripe",
+  "linear",
+  "apple",
+  "figma",
+  "framer",
+];
 
 export type SiteTheme = {
   heroStyle: HeroStyle;

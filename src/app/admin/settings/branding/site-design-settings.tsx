@@ -27,6 +27,31 @@ const DESIGNS: { id: SiteDesign; label: string; note: string }[] = [
     label: "Claude",
     note: "Claude's warm look: a cream page, coral buttons and links, serif headings (Source Serif 4) with Inter text, 12px cards, no shadows.",
   },
+  {
+    id: "stripe",
+    label: "Stripe",
+    note: "Stripe's look: deep-navy text, indigo pill buttons and links, thin headings with tight spacing, 12px cards with a soft blue-tinted shadow.",
+  },
+  {
+    id: "linear",
+    label: "Linear",
+    note: "Linear's look on a light page: lavender-blue buttons and links, firm tight headings, crisp hairlines, 12px cards, no shadows.",
+  },
+  {
+    id: "apple",
+    label: "Apple",
+    note: "Apple's look: a soft-grey page with white cards, Action Blue pill buttons that shrink when pressed, Apple's own font on Apple devices, 18px cards.",
+  },
+  {
+    id: "figma",
+    label: "Figma",
+    note: "Figma's look: pure black and white, black pill buttons, light large headings, 24px rounded cards, no shadows.",
+  },
+  {
+    id: "framer",
+    label: "Framer",
+    note: "Framer's look on a light page: black pill buttons, blue links, poster-tight Mona Sans headings, 20px cards, no shadows.",
+  },
 ];
 
 /** The whole site's look, for everyone: the original, or the Vercel-inspired one. */

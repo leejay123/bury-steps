@@ -96,6 +96,6 @@ export function siteFontFace(id: SiteFontId) {
 export function pageFontFace(design: string, id: SiteFontId) {
   if (design === "vercel") return menuFont;
   if (design === "github") return monaSans;
-  if (design === "claude") return inter;
+  if (["claude", "stripe", "linear", "apple", "figma", "framer"].includes(design)) return inter;
   return siteFontFaces[id];
 }

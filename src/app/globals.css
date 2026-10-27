@@ -429,6 +429,117 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
   --ring: #8e8b82;
 }
 
+/*
+ * Site designs from shadcn.io/design (stripe, linear, apple, figma, framer
+ * .design.md), all on light pages with each brand's own colours; Linear's
+ * and Framer's files are dark-only, so they're turned light here.
+ */
+:root[data-design="stripe"] {
+  --radius: 0.5rem;
+  --background: #ffffff;
+  --foreground: #0d253d;
+  --card: #ffffff;
+  --card-foreground: #0d253d;
+  --popover: #ffffff;
+  --popover-foreground: #0d253d;
+  --primary: #533afd;
+  --primary-foreground: #ffffff;
+  --secondary: #f6f9fc;
+  --secondary-foreground: #0d253d;
+  --muted: #f6f9fc;
+  --muted-foreground: #64748d;
+  --accent: #f6f9fc;
+  --accent-foreground: #0d253d;
+  --destructive: #ea2261;
+  --border: #e3e8ee;
+  --input: #a8c3de;
+  --ring: #a8c3de;
+}
+:root[data-design="linear"] {
+  --radius: 0.5rem;
+  --background: #ffffff;
+  --foreground: #0f1011;
+  --card: #ffffff;
+  --card-foreground: #0f1011;
+  --popover: #ffffff;
+  --popover-foreground: #0f1011;
+  --primary: #5e6ad2;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f6f6;
+  --secondary-foreground: #0f1011;
+  --muted: #f5f6f6;
+  --muted-foreground: #62666d;
+  --accent: #f5f6f6;
+  --accent-foreground: #0f1011;
+  --destructive: #d14343;
+  --border: #e4e5e7;
+  --input: #e4e5e7;
+  --ring: #8a8f98;
+}
+:root[data-design="apple"] {
+  --radius: 0.5rem;
+  --background: #f5f5f7;
+  --foreground: #1d1d1f;
+  --card: #ffffff;
+  --card-foreground: #1d1d1f;
+  --popover: #ffffff;
+  --popover-foreground: #1d1d1f;
+  --primary: #0066cc;
+  --primary-foreground: #ffffff;
+  --secondary: #fafafc;
+  --secondary-foreground: #333333;
+  --muted: #e8e8ed;
+  --muted-foreground: #6e6e73;
+  --accent: #e8e8ed;
+  --accent-foreground: #1d1d1f;
+  --destructive: #e30000;
+  --border: #e0e0e0;
+  --input: #e0e0e0;
+  --ring: #0071e3;
+}
+:root[data-design="figma"] {
+  --radius: 0.5rem;
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
+  --primary: #000000;
+  --primary-foreground: #ffffff;
+  --secondary: #f7f7f5;
+  --secondary-foreground: #000000;
+  --muted: #f7f7f5;
+  --muted-foreground: #555555;
+  --accent: #f7f7f5;
+  --accent-foreground: #000000;
+  --destructive: #e5383b;
+  --border: #e6e6e6;
+  --input: #e6e6e6;
+  --ring: #999999;
+}
+:root[data-design="framer"] {
+  --radius: 0.625rem;
+  --background: #ffffff;
+  --foreground: #090909;
+  --card: #ffffff;
+  --card-foreground: #090909;
+  --popover: #ffffff;
+  --popover-foreground: #090909;
+  --primary: #090909;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f4;
+  --secondary-foreground: #090909;
+  --muted: #f4f4f4;
+  --muted-foreground: #666666;
+  --accent: #f4f4f4;
+  --accent-foreground: #090909;
+  --destructive: #e5383b;
+  --border: #e6e6e6;
+  --input: #e6e6e6;
+  --ring: #0099ff;
+}
+
 @theme inline {
   --color-brand: var(--brand);
   --color-brand-from: var(--brand-from);
@@ -899,4 +1010,113 @@ html[data-page-loader-on] #main-content {
 }
 [data-design="claude"] [data-slot="button"].bg-primary:active {
   background-color: #a9583e;
+}
+
+/* Stripe: indigo pill buttons, thin headings (Söhne 300's stand-in, Inter
+   300) with tight tracking, indigo links, 12px cards with Stripe's soft
+   blue-tinted lift; numbers in values and tables line up. */
+[data-design="stripe"] [data-slot="button"] {
+  border-radius: 9999px;
+}
+[data-design="stripe"] [data-slot="button"].bg-primary:active {
+  background-color: #2e2b8c;
+}
+[data-design="stripe"] [data-slot="card"] {
+  border-radius: 0.75rem;
+  box-shadow: rgba(0, 55, 112, 0.08) 0 1px 3px;
+}
+[data-design="stripe"] :is(h1, h2, h3) {
+  font-weight: 300;
+  letter-spacing: -0.025em;
+}
+[data-design="stripe"] :is(p, li) a:not([data-slot="button"]) {
+  color: #533afd;
+}
+/* Per element, as the file says, not the whole page: values, table cells, times. */
+[data-design="stripe"] :is(dd, td, time) {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Linear (made light): lavender buttons and links, firm headings with
+   tight tracking, crisp hairline cards, no shadows. */
+[data-design="linear"] [data-slot="card"] {
+  border-radius: 0.75rem;
+  box-shadow: none;
+}
+[data-design="linear"] h1 {
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+[data-design="linear"] :is(h2, h3) {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+[data-design="linear"] :is(p, li) a:not([data-slot="button"]) {
+  color: #5e6ad2;
+}
+
+/* Apple: Apple's own font where the device has it (Inter elsewhere),
+   Action Blue pill buttons that shrink when pressed, white 18px cards on
+   the soft-grey page with no shadow, 600 headings, blue links. */
+[data-design="apple"] body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-inter), system-ui, sans-serif;
+}
+[data-design="apple"] [data-slot="button"] {
+  border-radius: 9999px;
+}
+[data-design="apple"] [data-slot="button"]:active {
+  transform: scale(0.95);
+}
+[data-design="apple"] [data-slot="card"] {
+  border-radius: 1.125rem;
+  box-shadow: none;
+}
+[data-design="apple"] :is(h1, h2, h3) {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+[data-design="apple"] :is(p, li) a:not([data-slot="button"]) {
+  color: #0066cc;
+}
+
+/* Figma: black and white, pill buttons, light big headings with tight
+   tracking (figmaSans 340's stand-in), 24px cards, no shadows. */
+[data-design="figma"] [data-slot="button"] {
+  border-radius: 9999px;
+}
+[data-design="figma"] [data-slot="card"] {
+  border-radius: 1.5rem;
+  box-shadow: none;
+}
+[data-design="figma"] h1 {
+  font-weight: 340;
+  letter-spacing: -0.02em;
+}
+[data-design="figma"] :is(h2, h3) {
+  font-weight: 540;
+  letter-spacing: -0.01em;
+}
+
+/* Framer (made light): black pill buttons, blue links, poster-tight
+   headings in Mona Sans (the file's stand-in for GT Walsheim), 20px
+   cards, no shadows. */
+[data-design="framer"] [data-slot="button"] {
+  border-radius: 9999px;
+}
+[data-design="framer"] [data-slot="card"] {
+  border-radius: 1.25rem;
+  box-shadow: none;
+}
+[data-design="framer"] :is(h1, h2, h3) {
+  font-family: var(--font-mona-sans), var(--font-inter), sans-serif;
+  font-weight: 500;
+}
+[data-design="framer"] h1 {
+  letter-spacing: -0.045em;
+}
+[data-design="framer"] :is(h2, h3) {
+  letter-spacing: -0.03em;
+}
+[data-design="framer"] :is(p, li) a:not([data-slot="button"]) {
+  color: #0077cc;
 }

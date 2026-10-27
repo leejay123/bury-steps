@@ -823,7 +823,7 @@ async function updateSiteDesignWork(
     message:
       design === "original"
         ? "The site is back to its original design."
-        : `The site now uses the ${{ vercel: "Vercel", github: "GitHub", claude: "Claude" }[design]} design.`,
+        : `The site now uses the ${design.charAt(0).toUpperCase()}${design.slice(1)} design.`,
   };
 }
 
