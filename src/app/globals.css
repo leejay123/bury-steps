@@ -370,6 +370,65 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
   --ring: #a1a1a1;
 }
 
+/*
+ * Site design: GitHub (light). github.design.md documents only the dark
+ * marketing site, so this is GitHub's own light theme with that file's
+ * shape: white page, GitHub's greys (#1f2328 ink, #59636e muted, #d1d9e0
+ * borders, #f6f8fa panels), black buttons (the owners' choice, not green),
+ * blue (#0969da) links in text, 8px corners with 16px cards, no shadows,
+ * Mona Sans headings at its medium weights.
+ */
+:root[data-design="github"] {
+  --radius: 0.5rem;
+  --background: #ffffff;
+  --foreground: #1f2328;
+  --card: #ffffff;
+  --card-foreground: #1f2328;
+  --popover: #ffffff;
+  --popover-foreground: #1f2328;
+  --primary: #1f2328;
+  --primary-foreground: #ffffff;
+  --secondary: #f6f8fa;
+  --secondary-foreground: #1f2328;
+  --muted: #f6f8fa;
+  --muted-foreground: #59636e;
+  --accent: #f6f8fa;
+  --accent-foreground: #1f2328;
+  --destructive: #d1242f;
+  --border: #d1d9e0;
+  --input: #d1d9e0;
+  --ring: #818b98;
+}
+
+/*
+ * Site design: Claude (claude.design.md): a warm cream page (#faf9f5),
+ * warm ink (#141413), cream panels (#efe9de) with warm hairlines
+ * (#e6dfd8), coral (#cc785c) main buttons and links, 8px buttons and 12px
+ * cards, no shadows. Headings in Source Serif 4 at normal weight with
+ * tight spacing (Copernicus isn't a public font); text in Inter.
+ */
+:root[data-design="claude"] {
+  --radius: 0.5rem;
+  --background: #faf9f5;
+  --foreground: #141413;
+  --card: #faf9f5;
+  --card-foreground: #141413;
+  --popover: #faf9f5;
+  --popover-foreground: #141413;
+  --primary: #cc785c;
+  --primary-foreground: #ffffff;
+  --secondary: #efe9de;
+  --secondary-foreground: #141413;
+  --muted: #efe9de;
+  --muted-foreground: #6c6a64;
+  --accent: #efe9de;
+  --accent-foreground: #141413;
+  --destructive: #c64545;
+  --border: #e6dfd8;
+  --input: #e6dfd8;
+  --ring: #8e8b82;
+}
+
 @theme inline {
   --color-brand: var(--brand);
   --color-brand-from: var(--brand-from);
@@ -798,4 +857,41 @@ html[data-page-loader-on] #main-content {
 [data-design="vercel"] ::selection {
   background: #171717;
   color: #f2f2f2;
+}
+
+/* The GitHub design: cards with a plain GitHub border, no shadow, 16px
+   corners; Mona Sans headings at 425–480, never bold; blue links in text. */
+[data-design="github"] [data-slot="card"] {
+  border-radius: 1rem;
+  box-shadow: none;
+}
+[data-design="github"] h1 {
+  font-weight: 450;
+  letter-spacing: -0.035em;
+}
+[data-design="github"] :is(h2, h3) {
+  font-weight: 480;
+  letter-spacing: -0.01em;
+}
+[data-design="github"] :is(p, li) a:not([data-slot="button"]) {
+  color: #0969da;
+}
+
+/* The Claude design: cream cards with a warm hairline, no shadow, 12px
+   corners; serif headings at normal weight, tightly spaced; coral links in
+   text; the main button darkens on press (#a9583e). */
+[data-design="claude"] [data-slot="card"] {
+  border-radius: 0.75rem;
+  box-shadow: none;
+}
+[data-design="claude"] :is(h1, h2, h3) {
+  font-family: var(--font-source-serif), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+[data-design="claude"] :is(p, li) a:not([data-slot="button"]) {
+  color: #cc785c;
+}
+[data-design="claude"] [data-slot="button"].bg-primary:active {
+  background-color: #a9583e;
 }

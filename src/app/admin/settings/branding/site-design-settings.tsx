@@ -17,6 +17,16 @@ const DESIGNS: { id: SiteDesign; label: string; note: string }[] = [
     label: "Vercel",
     note: "Vercel's look: the Geist font, ink and fine greys, 6px corners, soft layered shadows and tighter headings.",
   },
+  {
+    id: "github",
+    label: "GitHub",
+    note: "GitHub's light look: the Mona Sans font, GitHub's greys, blue links, black buttons, 8px corners and 16px cards, no shadows.",
+  },
+  {
+    id: "claude",
+    label: "Claude",
+    note: "Claude's warm look: a cream page, coral buttons and links, serif headings (Source Serif 4) with Inter text, 12px cards, no shadows.",
+  },
 ];
 
 /** The whole site's look, for everyone: the original, or the Vercel-inspired one. */

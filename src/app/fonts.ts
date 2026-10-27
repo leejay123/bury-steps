@@ -1,4 +1,4 @@
-import { Figtree, Fraunces, Geist, Geist_Mono, Inter, Manrope, Outfit, Source_Serif_4 } from "next/font/google";
+import { Figtree, Fraunces, Geist, Geist_Mono, Inter, Manrope, Mona_Sans, Outfit, Source_Serif_4 } from "next/font/google";
 import { SITE_FONTS, type SiteFontId } from "@/lib/site-font";
 
 /**
@@ -61,8 +61,16 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
 });
 
-/** --font-geist and --font-geist-mono for shadcn/typeset. */
-export const typesetFontVariables = `${menuFont.variable} ${geistMono.variable}`;
+// The GitHub site design's font (Settings → Branding → Site design).
+const monaSans = Mona_Sans({
+  subsets: ["latin"],
+  display: "optional",
+  preload: false,
+  variable: "--font-mona-sans",
+});
+
+/** --font-geist and --font-geist-mono for shadcn/typeset, and the site designs' fonts. */
+export const typesetFontVariables = `${menuFont.variable} ${geistMono.variable} ${monaSans.variable}`;
 
 export const siteFontFaces = {
   inter,

@@ -78,7 +78,8 @@ import {
 } from "@/lib/homepage-copy";
 
 /** Settings → Branding → Site design. */
-export type SiteDesign = "original" | "vercel";
+export type SiteDesign = "original" | "vercel" | "github" | "claude";
+export const SITE_DESIGNS: readonly SiteDesign[] = ["original", "vercel", "github", "claude"];
 
 export type SiteTheme = {
   heroStyle: HeroStyle;
@@ -369,7 +370,9 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       parseCookieConsentVariant(row?.cookieConsentVariant ?? "") ??
       DEFAULT_COOKIE_CONSENT_VARIANT,
     siteFont: parseSiteFont(row?.siteFont ?? "") ?? DEFAULT_SITE_FONT,
-    siteDesign: row?.siteDesign === "vercel" ? "vercel" : "original",
+    siteDesign: SITE_DESIGNS.includes(row?.siteDesign as SiteDesign)
+      ? (row?.siteDesign as SiteDesign)
+      : "original",
     textSizes: {
       headline: parseTextSize("headline", row?.textHeadlinePx) ?? DEFAULT_TEXT_SIZES.headline,
       section: parseTextSize("section", row?.textSectionPx) ?? DEFAULT_TEXT_SIZES.section,

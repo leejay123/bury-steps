@@ -127,8 +127,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       lang="en-GB"
       style={
         {
-          // The Vercel design always uses Geist.
-          "--font-site": theme.siteDesign === "vercel" ? "var(--font-geist)" : `var(${font.cssVariable})`,
+          // The site designs bring their own font (Original: the chosen one).
+          "--font-site":
+            theme.siteDesign === "vercel"
+              ? "var(--font-geist)"
+              : theme.siteDesign === "github"
+                ? "var(--font-mona-sans)"
+                : theme.siteDesign === "claude"
+                  ? "var(--font-inter)"
+                  : `var(${font.cssVariable})`,
           ...textSizeCssVars(theme.textSizes),
         } as CSSProperties
       }

@@ -1,5 +1,6 @@
 "use server";
 
+import { SITE_DESIGNS, type SiteDesign } from "@/lib/site-theme";
 import { changedWalkWording, MAX_WALK_WORDING } from "@/lib/walk-wording";
 import { z } from "zod";
 import { parseTabStyle } from "@/lib/tab-style";
@@ -801,7 +802,8 @@ async function updateSiteDesignWork(
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
-  const design = String(formData.get("siteDesign") ?? "") === "vercel" ? "vercel" : "original";
+  const asked = String(formData.get("siteDesign") ?? "");
+  const design = SITE_DESIGNS.includes(asked as SiteDesign) ? (asked as SiteDesign) : "original";
 
   try {
     await prisma.siteSetting.upsert({
@@ -818,7 +820,10 @@ async function updateSiteDesignWork(
   revalidatePath("/admin/settings/branding");
   return {
     ok: true,
-    message: design === "vercel" ? "The site now uses the Vercel design." : "The site is back to its original design.",
+    message:
+      design === "original"
+        ? "The site is back to its original design."
+        : `The site now uses the ${{ vercel: "Vercel", github: "GitHub", claude: "Claude" }[design]} design.`,
   };
 }
 
