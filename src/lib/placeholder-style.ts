@@ -5,11 +5,12 @@
  * (shimmer-test.tsx), AutoSkeleton's ready-made shapes
  * (autoskeleton-test.tsx), or Boneyard's bones drawn from our shapes
  * (boneyard-test.tsx), or Skeleton Mammoth's CSS skeleton on our shapes
- * (mammoth-test.tsx). Only the browser it was picked in is affected.
+ * (mammoth-test.tsx), or a loader screen (logo and spinner,
+ * loader-test.tsx) instead of shapes. Only the browser it was picked in is affected.
  */
 export const PLACEHOLDER_STYLE_COOKIE = "bs-placeholder-style";
 
-export type PlaceholderStyle = "grey" | "shimmer" | "autoskeleton" | "boneyard" | "mammoth";
+export type PlaceholderStyle = "grey" | "shimmer" | "autoskeleton" | "boneyard" | "mammoth" | "loader";
 
 /** The Style button's order, and its labels. */
 export const PLACEHOLDER_STYLES: { value: PlaceholderStyle; label: string }[] = [
@@ -18,6 +19,7 @@ export const PLACEHOLDER_STYLES: { value: PlaceholderStyle; label: string }[] = 
   { value: "autoskeleton", label: "AutoSkeleton" },
   { value: "boneyard", label: "Boneyard" },
   { value: "mammoth", label: "Mammoth" },
+  { value: "loader", label: "Loader" },
 ];
 
 /** Fired on window when the style changes, so open pages switch at once. */
@@ -26,7 +28,7 @@ export const PLACEHOLDER_STYLE_EVENT = "bs-placeholder-style";
 export function readPlaceholderStyle(): PlaceholderStyle {
   try {
     const value = document.cookie.match(new RegExp(`(?:^|; )${PLACEHOLDER_STYLE_COOKIE}=([^;]*)`))?.[1];
-    return value === "shimmer" || value === "autoskeleton" || value === "boneyard" || value === "mammoth"
+    return value === "shimmer" || value === "autoskeleton" || value === "boneyard" || value === "mammoth" || value === "loader"
       ? value
       : "grey";
   } catch {

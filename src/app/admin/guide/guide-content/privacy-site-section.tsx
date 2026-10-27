@@ -76,8 +76,10 @@ export function PrivacySiteSection() {
               page, or press Alt+P (Option+P on a Mac). Next to it, <strong>Style</strong> (also in
               Site behaviour) is a test: it swaps the grey shapes for a shimmer drawn by the
               shimmer-from-structure library, or for AutoSkeleton&apos;s ready-made shapes (a
-              list, a form, an article and so on, not measured from the page), so you can
-              compare them. It too only affects that
+              list, a form, an article and so on, not measured from the page), or for a{" "}
+              <strong>Loader</strong> screen: the logo in a spinning ring in the middle of
+              the page instead of any grey shapes (the page keeps its space, so nothing
+              jumps when it arrives), so you can compare them. It too only affects that
               browser.
             </p>
             <p>

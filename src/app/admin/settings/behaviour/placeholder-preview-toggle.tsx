@@ -29,7 +29,7 @@ export function PlaceholderPreviewToggle() {
   const style = useSyncExternalStore(subscribePlaceholderStyle, readPlaceholderStyle, () => "grey" as const);
   return (
     <SettingsSection
-      description="Temporary, for checking the loading placeholders. In this browser only — nobody else is affected. Hold keeps each page's grey placeholder up for 5 seconds before its content, so you can click into a notice or a walk and see its placeholder too. Always shows only the placeholders. Style swaps our grey shapes for the shimmer-from-structure library's shimmer, for AutoSkeleton's ready-made shapes, for Boneyard's bones drawn from our shapes, or for Skeleton Mammoth's CSS skeleton on our shapes, to compare them. To switch quickly, use the small Placeholders button at the bottom left of any page, or press Alt+P (Option+P on a Mac)."
+      description="Temporary, for checking the loading placeholders. In this browser only — nobody else is affected. Hold keeps each page's grey placeholder up for 5 seconds before its content, so you can click into a notice or a walk and see its placeholder too. Always shows only the placeholders. Style swaps our grey shapes for the shimmer-from-structure library's shimmer, for AutoSkeleton's ready-made shapes, for Boneyard's bones drawn from our shapes, for Skeleton Mammoth's CSS skeleton on our shapes, or for a loader screen (the logo and a spinner instead of shapes), to compare them. To switch quickly, use the small Placeholders button at the bottom left of any page, or press Alt+P (Option+P on a Mac)."
       title="Preview loading placeholders (temporary)"
     >
       <div className="flex w-full flex-col gap-1.5">
@@ -65,6 +65,7 @@ export function PlaceholderPreviewToggle() {
             <SelectItem value="autoskeleton">AutoSkeleton (ready-made shapes)</SelectItem>
             <SelectItem value="boneyard">Boneyard (bones drawn from our shapes)</SelectItem>
             <SelectItem value="mammoth">Skeleton Mammoth (CSS skeleton on our shapes)</SelectItem>
+            <SelectItem value="loader">Loader screen (logo and spinner, no shapes)</SelectItem>
           </SelectContent>
         </Select>
       </div>
