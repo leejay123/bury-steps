@@ -13,6 +13,7 @@ import { FullWidthDivider } from "@/components/full-width-divider";
 import { ButtonRipple } from "@/components/button-ripple";
 import { HeaderScrollShadow } from "@/components/header-scroll-shadow";
 import { FocusRescue } from "@/components/focus-rescue";
+import { PageLoader } from "@/components/page-loader";
 import { PlaceholderPreviewBadge } from "@/components/placeholder-preview-badge";
 import { TabStyleProvider } from "@/components/ui/tabs";
 import { HeaderPartBoundary } from "@/components/header-part-boundary";
@@ -331,6 +332,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <HeaderScrollShadow />
           <FocusRescue />
           <PlaceholderPreviewBadge />
+          <PageLoader />
           <HeaderPartBoundary name="cookie-notice">
             <Suspense fallback={null}>
               <SiteCookieConsentGate />
