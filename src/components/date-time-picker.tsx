@@ -138,6 +138,8 @@ export function DateTimePicker({
         // As wide as the date button, the days stretched across it, but
         // each a normal row's height (square days stretched far too tall).
         className="w-full p-0 [&_.rdp-day]:aspect-auto! [&_.rdp-day]:h-9! [&_.rdp-day_button]:aspect-auto! [&_.rdp-day_button]:h-9!"
+        // Opens on the chosen day's month (not this month).
+        defaultMonth={date}
         disabled={disablePast ? { before: todayLondon } : undefined}
         endMonth={new Date(2035, 11)}
         locale={enGB}
@@ -303,6 +305,18 @@ export function DateTimePicker({
           data-vaul-no-drag=""
           onFocusOutside={(event) => {
             if (isOwnNestedSelectLayer(event.target)) event.preventDefault();
+          }}
+          // Radix focuses the month box as the pop-up opens, before it is in
+          // place; Safari (iPad) then scrolled the calendar (and the drawer)
+          // to it, cutting off the month row. Focus the pop-up itself once
+          // it has settled, from the top.
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            const content = event.currentTarget as HTMLElement;
+            window.requestAnimationFrame(() => {
+              content.focus({ preventScroll: true });
+              content.scrollTop = 0;
+            });
           }}
           onInteractOutside={(event) => {
             if (isOwnNestedSelectLayer(event.target)) event.preventDefault();
