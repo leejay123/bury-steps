@@ -680,23 +680,10 @@ html:has([data-bottom-nav]:not([hidden] *)) #bs-bottom-boot {
   visibility: hidden;
 }
 
-/* The loading screen (loading.tsx and the pages' loading fallbacks): a
-   blank page with loading-ui's Infinity loader (page-loader.tsx puts it in
-   the middle) instead of grey shapes. It only shows while a page that isn't
-   already in the browser is fetched; pages opened recently show at once. The
-   placeholder's own markup stays (hidden) and keeps its space, so nothing
-   jumps when the page arrives. */
-[data-page-loading]:not([data-page-loading] [data-page-loading]) {
-  position: relative;
-  min-height: 12rem;
-}
-/* A placeholder that is only a wrapper (display: contents) gets a box of its
-   own to hold the spinner — not the members-only or visitors-only ones, which
-   the rules above hide for the other audience. */
-.contents[data-page-loading]:not([data-page-loading] [data-page-loading]):not([data-member-home], [data-guest-home]) {
-  display: block;
-}
-[data-page-loading] > :not([data-page-loader]) {
+/* The loading screen: page-loader.tsx covers the whole screen with
+   loading-ui's Infinity loader while a page loads. Under it, the page's
+   loading placeholder is blank (no grey shapes) in case it shows through. */
+[data-page-loading] > * {
   visibility: hidden;
 }
 /* Pills tabs (ui/tabs.tsx, "transition"): the chosen tab's content drops
