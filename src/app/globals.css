@@ -494,6 +494,11 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    /* Every underline thin, a little below the words: some fonts (Mona
+       Sans, Geist) draw a heavy bar by default. Tailwind's decoration-*
+       and underline-offset-* still win where they're used. */
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
   }
   body {
     /* iOS 26 Safari: an absolute drawer/dialog backdrop only covers the
