@@ -84,10 +84,8 @@ export function DateTimePicker({
         day: "numeric",
         month: "short",
         year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
       }).format(londonWallClockToUtc(value))
-    : "Choose date and time";
+    : "Choose a date";
 
   const todayLondon = useMemo(() => {
     const parts = new Intl.DateTimeFormat("en-GB", {
@@ -146,6 +144,8 @@ export function DateTimePicker({
         mode="single"
         onSelect={(next) => {
           setDate(next);
+          // The day's picked: the calendar folds away (the time is below).
+          if (next) setOpen(false);
           if (!disablePast || !next) return;
           const sameDay =
             next.getFullYear() === todayLondon.getFullYear() &&
@@ -175,10 +175,18 @@ export function DateTimePicker({
         startMonth={disablePast ? todayLondon : new Date(2020, 0)}
         timeZone={LONDON}
       />
+    </div>
+  );
+
+  // The time: its own Hour and Minute boxes under the date (not in the
+  // calendar's pop-up).
+  const time = (
+    <div className="flex flex-col gap-2">
       <div className="grid grid-cols-2 gap-2">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor={`${id}-hour`}>Hour</Label>
           <Select
+            disabled={disabled}
             onValueChange={(next) => {
               setHour(next);
               if (
@@ -208,6 +216,7 @@ export function DateTimePicker({
         <div className="flex flex-col gap-1.5">
           <Label htmlFor={`${id}-minute`}>Minute</Label>
           <Select
+            disabled={disabled}
             onValueChange={setMinute}
             value={
               selectableMinutes.includes(minute)
@@ -302,9 +311,10 @@ export function DateTimePicker({
           {panel}
         </PopoverContent>
       </Popover>
+      {time}
       {missing && !value ? (
         <p className="text-sm text-destructive" role="alert">
-          Choose a date and time.
+          Choose a date.
         </p>
       ) : null}
     </div>

@@ -147,9 +147,9 @@ export function WalksSection({
             </li>
             <li>
               Set the date and start time in <strong>UK time</strong>. Choose
-              date and time opens the calendar just under the button, as wide as it
-              (on a small screen it scrolls inside itself): pick the day, then the hour
-              and minute. Length is the same kind of list,
+              a date opens the calendar just under the button, as wide as it
+              (on a small screen it scrolls inside itself); picking the day closes it. The
+              start time is its own Hour and Minute boxes under the date. Length is the same kind of list,
               and defaults to 90 minutes.
             </li>
             <li>
