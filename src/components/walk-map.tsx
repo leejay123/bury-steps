@@ -196,7 +196,10 @@ export function DirectionsButtons({
       className={cn(
         look === "stacked"
           ? "flex flex-col gap-2"
-          : "grid grid-cols-2 gap-2 sm:flex",
+          : // Side by side they share the row: a button never shrinks on
+            // its own (shrink-0), so two full-width ones pushed the second
+            // out of its box.
+            "grid grid-cols-2 gap-2 sm:flex sm:[&>*]:min-w-0 sm:[&>*]:shrink!",
         className,
       )}
     >
