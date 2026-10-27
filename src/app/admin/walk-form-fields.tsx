@@ -94,7 +94,9 @@ export function WalkFormFields({
 
       <FormSection title="When">
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
+          {/* The whole row: its calendar opens under it in the form, and in
+              half the row the weekend columns spilled out of the box. */}
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
             <Label htmlFor={id("starts")} required>
               Date and start time
             </Label>
