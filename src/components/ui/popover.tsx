@@ -25,6 +25,10 @@ function PopoverContent({
   // Keeps a popover a little in from the screen edge instead of touching it
   // (on a phone, one opened near the side would otherwise run to the edge).
   collisionPadding = 8,
+  // In a drawer or dialog, room is measured inside it (not the whole
+  // screen): a pop-up that flipped above its button was cut off by the
+  // drawer's top edge on Android.
+  collisionBoundary,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
   const overlayRoot = useOverlayRoot()
@@ -34,6 +38,7 @@ function PopoverContent({
       <PopoverPrimitive.Content
         data-slot="popover-content"
         align={align}
+        collisionBoundary={collisionBoundary ?? overlayRoot ?? undefined}
         collisionPadding={collisionPadding}
         sideOffset={sideOffset}
         className={cn(
