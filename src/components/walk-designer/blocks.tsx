@@ -5201,14 +5201,15 @@ function FactLooksBody({
         data-edge=""
       >
         {facts.map((fact, i) => (
-          // On a phone the label and its value share the row (a long value,
-          // like a meeting point, wraps on its own side); wider, the label
-          // gets a fixed column. Label over value only.
+          // On a phone the label sits over its value, so a long value (a
+          // meeting point, a what3words) gets the whole width instead of
+          // wrapping in a narrow column; wider, they share a row.
           <div
             className={cn(
-              stacked
-                ? "flex flex-col gap-1.5"
-                : "flex items-baseline justify-between gap-4 sm:grid sm:grid-cols-[12rem_minmax(0,1fr)] sm:gap-6",
+              // On a phone the name sits over its value, with room between.
+              "flex flex-col gap-1.5",
+              !stacked &&
+                "sm:grid sm:grid-cols-[12rem_minmax(0,1fr)] sm:gap-6",
               columns ? "sm:gap-0" : "px-4",
               look === "spec-compact" ? "py-2" : "py-3",
               (look === "spec-sheet" ||
@@ -5228,7 +5229,7 @@ function FactLooksBody({
               className={cn(
                 // The same size as its value on every device.
                 "font-medium text-muted-foreground",
-                !stacked && "shrink-0 sm:font-semibold sm:text-foreground",
+                !stacked && "sm:font-semibold sm:text-foreground",
                 look === "spec-compact" && "text-xs",
                 columns && "sm:bg-muted sm:px-4 sm:py-3",
                 icons && "flex items-center gap-2",
@@ -5246,9 +5247,14 @@ function FactLooksBody({
             <dd
               className={cn(
                 "font-medium [overflow-wrap:anywhere]",
-                !stacked && "min-w-0 text-right sm:font-normal",
-                (look === "spec-left" || columns) && "sm:text-left",
+                !stacked && "sm:font-normal",
+                !stacked && look !== "spec-left" && !columns && "sm:text-right",
                 columns && "sm:px-4 sm:py-3",
+                // Under its label, lined up with the label's text (past the
+                // icon), not with the icon. Wider, the value has its own column.
+                icons && "pl-6",
+                icons && !stacked && "sm:pl-0",
+                icons && columns && "sm:px-4",
                 look === "spec-compact" && "text-xs sm:text-xs",
               )}
               suppressHydrationWarning
