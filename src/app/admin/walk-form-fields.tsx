@@ -31,6 +31,101 @@ function walkLengthLabel(mins: number): string {
   return mins < 60 ? `${mins} minutes` : `${mins / 60} ${mins === 60 ? "hour" : "hours"}`;
 }
 
+// Other length: the server takes 15 minutes to 10 hours.
+const OTHER_LENGTH = "other";
+const LENGTH_HOURS = Array.from({ length: 11 }, (_, hour) => String(hour));
+const LENGTH_MINUTES = Array.from({ length: 12 }, (_, index) => String(index * 5).padStart(2, "0"));
+
+/**
+ * Expected length: the usual lengths in a list, and Other length for any
+ * other, picked as hours and minutes in their own boxes underneath.
+ */
+function WalkLengthField({
+  defaultMins,
+  disabled,
+  id,
+}: {
+  defaultMins: number;
+  disabled: boolean;
+  id: string;
+}) {
+  const preset = WALK_LENGTH_OPTIONS.includes(defaultMins);
+  const [choice, setChoice] = useState(preset ? String(defaultMins) : OTHER_LENGTH);
+  const [hours, setHours] = useState(String(Math.floor(defaultMins / 60)));
+  const [minutes, setMinutes] = useState(String(defaultMins % 60).padStart(2, "0"));
+  const other = choice === OTHER_LENGTH;
+  // An older walk saved at an odd minute keeps it as a choice.
+  const minuteOptions = (LENGTH_MINUTES.includes(minutes) ? LENGTH_MINUTES : [...LENGTH_MINUTES, minutes].sort())
+    // At least 15 minutes, at most 10 hours.
+    .filter((item) => (hours === "0" ? Number(item) >= 15 : hours === "10" ? item === "00" : true));
+  const shownMinutes = minuteOptions.includes(minutes) ? minutes : minuteOptions[0];
+  const value = other ? String(Number(hours) * 60 + Number(shownMinutes)) : choice;
+
+  return (
+    <div className="flex flex-col gap-2">
+      <input name="durationMins" type="hidden" value={value} />
+      <Select
+        disabled={disabled}
+        onValueChange={(next) => {
+          setChoice(next);
+          // Other length starts from the length last chosen.
+          if (next === OTHER_LENGTH && choice !== OTHER_LENGTH) {
+            setHours(String(Math.floor(Number(choice) / 60)));
+            setMinutes(String(Number(choice) % 60).padStart(2, "0"));
+          }
+        }}
+        value={choice}
+      >
+        <SelectTrigger id={id}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {WALK_LENGTH_OPTIONS.map((mins) => (
+            <SelectItem key={mins} value={String(mins)}>
+              {walkLengthLabel(mins)}
+            </SelectItem>
+          ))}
+          <SelectItem value={OTHER_LENGTH}>Other length…</SelectItem>
+        </SelectContent>
+      </Select>
+      {other ? (
+        <div className="grid grid-cols-2 gap-2">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor={`${id}-hours`}>Hours</Label>
+            <Select disabled={disabled} onValueChange={setHours} value={hours}>
+              <SelectTrigger id={`${id}-hours`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LENGTH_HOURS.map((item) => (
+                  <SelectItem key={item} value={item}>
+                    {item}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor={`${id}-minutes`}>Minutes</Label>
+            <Select disabled={disabled} onValueChange={setMinutes} value={shownMinutes}>
+              <SelectTrigger id={`${id}-minutes`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {minuteOptions.map((item) => (
+                  <SelectItem key={item} value={item}>
+                    {item}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export type WalkFormDefaults = {
   title: string;
   /** ISO string. */
@@ -154,13 +249,6 @@ export function WalkFormFields({
 }) {
   const id = (name: string) => `${idPrefix}-${name}`;
   const essentials = useWalkEssentials();
-  // A walk saved with a length that isn't one of the presets (an older walk,
-  // or one changed elsewhere) keeps it as a choice instead of a blank box.
-  const savedLength = defaults?.durationMins;
-  const lengthOptions =
-    savedLength && !WALK_LENGTH_OPTIONS.includes(savedLength)
-      ? [...WALK_LENGTH_OPTIONS, savedLength].sort((a, b) => a - b)
-      : WALK_LENGTH_OPTIONS;
 
   // One step at a time in the drawer (Next and Back in its footer, see
   // WalkFormSteps). Every step stays in the form while hidden, so all of it
@@ -232,22 +320,12 @@ export function WalkFormFields({
               <Label htmlFor={id("duration")} required>
                 Expected length
               </Label>
-              <Select
-                defaultValue={String(defaults?.durationMins ?? 90)}
+              {/* A walk saved at a length not in the list opens on Other length. */}
+              <WalkLengthField
+                defaultMins={defaults?.durationMins ?? 90}
                 disabled={scheduleLocked}
-                name="durationMins"
-              >
-                <SelectTrigger id={id("duration")}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {lengthOptions.map((mins) => (
-                    <SelectItem key={mins} value={String(mins)}>
-                      {walkLengthLabel(mins)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                id={id("duration")}
+              />
             </div>
           </div>
           {scheduleLocked ? (

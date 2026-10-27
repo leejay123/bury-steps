@@ -152,8 +152,13 @@ export function WalksSection({
               a date opens the calendar just under the button, as wide as it
               (on a small screen it scrolls inside itself, and in the drawer it
               always stays inside the drawer, never cut off at the top). It opens on the month of the date already chosen; picking the day closes it. The
-              start time is its own Hour and Minute boxes under the date. Length is the same kind of list,
-              and defaults to 90 minutes.
+              start time is its own Hour and Minute boxes under the date. Length is a list of the usual
+              lengths, and defaults to 90 minutes. For any other length, choose{" "}
+              <strong>Other length…</strong> at the bottom of the list and pick the
+              Hours and Minutes in the two boxes that appear under it (anything from
+              15 minutes to 10 hours, in 5-minute steps). A walk saved at a length
+              that isn&apos;t in the list opens on Other length with its hours and
+              minutes filled in.
             </li>
             <li>
               Add a meeting point if you can — a short label people will
