@@ -139,10 +139,8 @@ export function WalksSection({
           <Steps>
             <li>
               Choose <strong>Create a walk</strong> above the list — it opens a
-              panel with the form, in four tabs: <strong>Basics</strong> (title, date and
-              length), <strong>Where</strong>, <strong>Details</strong> and <strong>About</strong>{" "}
-              (essentials and description). Fill in a title (for example “Burrs Country
-              Park loop”). Pressing Create with a required box empty opens the tab it&apos;s on.
+              panel with the form. Fill in a title (for example “Burrs Country
+              Park loop”).
             </li>
             <li>
               Set the date and start time in <strong>UK time</strong>. Choose

@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
 import { ExtraFactsField } from "./extra-facts-field";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ExtraFact } from "@/lib/extra-facts";
 import { utcToLondonWallClock } from "@/lib/dates";
 import { DateTimePicker } from "@/components/date-time-picker";
@@ -58,55 +56,6 @@ export type WalkFormDefaults = {
  * time and length can no longer change (updateWalk keeps the stored values
  * regardless of what's posted).
  */
-/**
- * Create a walk and Edit walk split into tabs (Basics, Where, Details,
- * About) instead of one long form. A trial: false puts the one long form back.
- */
-const WALK_FORM_TABS = true;
-
-/**
- * The tabs. Every tab stays in the form while hidden (its fields are still
- * sent); pressing Create or Save with a required box empty on another tab
- * opens that tab, so the browser can point at the box.
- */
-function WalkFormTabs({
-  tabs,
-}: {
-  tabs: { value: string; label: string; content: React.ReactNode }[];
-}) {
-  const [tab, setTab] = useState(tabs[0]?.value ?? "");
-  return (
-    <Tabs
-      className="flex flex-col gap-6"
-      onInvalidCapture={(event) => {
-        const panel = (event.target as HTMLElement).closest<HTMLElement>("[data-walk-tab]");
-        if (panel?.dataset.walkTab && panel.dataset.walkTab !== tab) setTab(panel.dataset.walkTab);
-      }}
-      onValueChange={setTab}
-      value={tab}
-    >
-      <TabsList className="w-full">
-        {tabs.map((item) => (
-          <TabsTrigger className="flex-1" key={item.value} value={item.value}>
-            {item.label}
-          </TabsTrigger>
-        ))}
-      </TabsList>
-      {tabs.map((item) => (
-        <TabsContent
-          className="flex flex-col gap-6 data-[state=inactive]:hidden"
-          data-walk-tab={item.value}
-          forceMount
-          key={item.value}
-          value={item.value}
-        >
-          {item.content}
-        </TabsContent>
-      ))}
-    </Tabs>
-  );
-}
-
 export function WalkFormFields({
   defaults,
   idPrefix,
@@ -126,9 +75,8 @@ export function WalkFormFields({
       ? [...WALK_LENGTH_OPTIONS, savedLength].sort((a, b) => a - b)
       : WALK_LENGTH_OPTIONS;
 
-  // The parts of the form; the same fields in both layouts.
-  const titlePart = (
-    <>
+  return (
+    <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={id("title")} required>
           Title
@@ -143,10 +91,7 @@ export function WalkFormFields({
           required
         />
       </div>
-    </>
-  );
-  const whenPart = (
-    <>
+
       <FormSection title="When">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
@@ -191,10 +136,7 @@ export function WalkFormFields({
           </FieldHint>
         ) : null}
       </FormSection>
-    </>
-  );
-  const wherePart = (
-    <>
+
       <FormSection title="Where">
         <MeetingPointFields
           defaultLatitude={defaults?.latitude ?? null}
@@ -205,10 +147,7 @@ export function WalkFormFields({
           idPrefix={idPrefix}
         />
       </FormSection>
-    </>
-  );
-  const detailsPart = (
-    <>
+
       <FormSection title="Details">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
@@ -282,12 +221,6 @@ export function WalkFormFields({
           </div>
         </div>
         <ExtraFactsField defaults={defaults?.extraFacts ?? []} />
-      </FormSection>
-    </>
-  );
-  const aboutPart = (
-    <>
-      <FormSection title="About">
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 text-sm font-medium">Essentials</legend>
           <FieldHint>Tick what&apos;s there. Only ticked items show on the walk page.</FieldHint>
@@ -317,36 +250,6 @@ export function WalkFormFields({
         </fieldset>
         <WalkDescriptionField defaultValue={defaults?.description ?? ""} id={id("description")} />
       </FormSection>
-    </>
-  );
-
-  if (!WALK_FORM_TABS)
-    return (
-      <div className="flex flex-col gap-6">
-        {titlePart}
-        {whenPart}
-        {wherePart}
-        {detailsPart}
-        {aboutPart}
-      </div>
-    );
-  return (
-    <WalkFormTabs
-      tabs={[
-        {
-          value: "basics",
-          label: "Basics",
-          content: (
-            <>
-              {titlePart}
-              {whenPart}
-            </>
-          ),
-        },
-        { value: "where", label: "Where", content: wherePart },
-        { value: "details", label: "Details", content: detailsPart },
-        { value: "about", label: "About", content: aboutPart },
-      ]}
-    />
+    </div>
   );
 }
