@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import { createWalk } from "@/server/actions";
 import { FormError } from "@/components/form-error";
-import { DrawerFormFooter, useKeepFormOnError } from "@/components/drawer-form";
+import { useKeepFormOnError } from "@/components/drawer-form";
 import { useNotifyActionState } from "@/hooks/use-action-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +15,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { WalkFormFields } from "./walk-form-fields";
+import { WalkFormFields, WalkFormSteps, WalkStepsFooter } from "./walk-form-fields";
 
 /**
  * Was a form permanently on the page (see git history) — moved into a
@@ -51,11 +51,14 @@ export function CreateWalkDrawer() {
               You&apos;ll get a share link members use to join and clock in.
             </DrawerDescription>
           </DrawerHeader>
-          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain px-4 pb-4">
-            <WalkFormFields idPrefix="create-walk" key={formKey} />
-            <FormError message={state && !state.ok ? state.error : null} />
-          </div>
-          <DrawerFormFooter label="Create walk" pending={isPending} pendingLabel="Creating…" />
+          {/* One step at a time: Next until the last, then Create walk. */}
+          <WalkFormSteps key={formKey}>
+            <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain px-4 pb-4">
+              <WalkFormFields idPrefix="create-walk" />
+              <FormError message={state && !state.ok ? state.error : null} />
+            </div>
+            <WalkStepsFooter label="Create walk" pending={isPending} pendingLabel="Creating…" />
+          </WalkFormSteps>
         </form>
       </DrawerContent>
     </Drawer>

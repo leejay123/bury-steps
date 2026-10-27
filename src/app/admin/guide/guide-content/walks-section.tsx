@@ -139,8 +139,11 @@ export function WalksSection({
           <Steps>
             <li>
               Choose <strong>Create a walk</strong> above the list — it opens a
-              panel with the form. Fill in a title (for example “Burrs Country
-              Park loop”).
+              panel with the form, one step at a time: <strong>Title and when</strong>,{" "}
+              <strong>Where</strong>, <strong>Details</strong> and <strong>Description</strong>. Press{" "}
+              <strong>Next</strong> to move on (or Back), and <strong>Create walk</strong> on the last step;
+              Edit walk works the same way with Save at the end. Next won&apos;t move on while a required box on
+              that step is empty. Fill in a title (for example “Burrs Country Park loop”).
             </li>
             <li>
               Set the date and start time in <strong>UK time</strong>. Choose

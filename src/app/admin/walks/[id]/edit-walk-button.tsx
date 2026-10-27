@@ -7,7 +7,7 @@ import { updateWalk } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
-import { DrawerFormFooter, useKeepFormOnError } from "@/components/drawer-form";
+import { useKeepFormOnError } from "@/components/drawer-form";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -17,7 +17,12 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { WalkFormFields, type WalkFormDefaults } from "../../walk-form-fields";
+import {
+  WalkFormFields,
+  WalkFormSteps,
+  WalkStepsFooter,
+  type WalkFormDefaults,
+} from "../../walk-form-fields";
 
 function EditWalkForm({
   cancelled,
@@ -55,19 +60,22 @@ function EditWalkForm({
       </DrawerHeader>
       <input name="walkId" type="hidden" value={walkId} />
       <input name="wasCancelled" type="hidden" value={cancelled ? "on" : ""} />
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain px-4 pb-4">
-        <WalkFormFields
-          defaults={defaults}
-          idPrefix={`edit-${walkId}`}
-          scheduleLocked={scheduleLocked}
+      {/* One step at a time: Next until the last, then Save. */}
+      <WalkFormSteps>
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain px-4 pb-4">
+          <WalkFormFields
+            defaults={defaults}
+            idPrefix={`edit-${walkId}`}
+            scheduleLocked={scheduleLocked}
+          />
+          <FormError message={state && !state.ok ? state.error : null} />
+        </div>
+        <WalkStepsFooter
+          label={cancelled ? "Save and reopen" : "Save changes"}
+          pending={isPending}
+          pendingLabel="Saving…"
         />
-        <FormError message={state && !state.ok ? state.error : null} />
-      </div>
-      <DrawerFormFooter
-        pending={isPending}
-        label={cancelled ? "Save and reopen" : "Save changes"}
-        pendingLabel="Saving…"
-      />
+      </WalkFormSteps>
     </form>
   );
 }
