@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { CalendarIcon } from "lucide-react";
 import { enGB } from "react-day-picker/locale";
 import { Calendar } from "@/components/ui/calendar";
@@ -18,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useOverlayRoot } from "@/components/overlay-root";
 import { combineLondonDateAndTime, LONDON, londonWallClockToUtc } from "@/lib/dates";
 
 const HOURS = Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, "0"));
@@ -68,11 +67,6 @@ export function DateTimePicker({
   const [open, setOpen] = useState(false);
   const [missing, setMissing] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const inlinePanelRef = useRef<HTMLDivElement>(null);
-  // Inside a drawer or dialog the popover is clipped by the panel's edges —
-  // on a phone it flipped above the button and lost the top of the
-  // calendar. There, open the calendar in the form itself, under the button.
-  const inline = Boolean(useOverlayRoot());
   const [date, setDate] = useState<Date | undefined>(initial?.date);
   const [hour, setHour] = useState(initial?.hour ?? "13");
   const [minute, setMinute] = useState(initial?.minute ?? "00");
@@ -138,31 +132,14 @@ export function DateTimePicker({
     return base.filter((item) => Number(item) > nowLondon.minute);
   }, [disablePast, hour, isSelectedToday, minutes, nowLondon.hour, nowLondon.minute]);
 
-  useEffect(() => {
-    if (!inline || !open) return;
-    // Scroll only the drawer's own scroller: scrollIntoView also pans the
-    // page, which on iOS slides the drawer off the screen.
-    const panel = inlinePanelRef.current;
-    let scroller = panel?.parentElement ?? null;
-    while (scroller) {
-      const overflowY = window.getComputedStyle(scroller).overflowY;
-      if (overflowY === "auto" || overflowY === "scroll") break;
-      scroller = scroller.parentElement;
-    }
-    if (!panel || !scroller) return;
-    const box = scroller.getBoundingClientRect();
-    const rect = panel.getBoundingClientRect();
-    if (rect.bottom > box.bottom - 16) {
-      scroller.scrollTop += Math.min(rect.bottom - box.bottom + 16, rect.top - box.top - 16);
-    }
-  }, [inline, open]);
 
   const panel = (
     <div className="flex flex-col gap-3">
       <Calendar
         captionLayout="dropdown"
-        // In the form (drawers), stretch the days across the box's width.
-        className={inline ? "w-full p-0" : "p-0"}
+        // As wide as the date button, the days stretched across it, but
+        // each a normal row's height (square days stretched far too tall).
+        className="w-full p-0 [&_.rdp-day]:aspect-auto! [&_.rdp-day]:h-9! [&_.rdp-day_button]:aspect-auto! [&_.rdp-day_button]:h-9!"
         disabled={disablePast ? { before: todayLondon } : undefined}
         endMonth={new Date(2035, 11)}
         locale={enGB}
@@ -262,7 +239,6 @@ export function DateTimePicker({
       className="w-full justify-start font-normal"
       disabled={disabled}
       id={id}
-      onClick={inline ? () => setOpen((current) => !current) : undefined}
       ref={triggerRef}
       type="button"
       variant="outline"
@@ -298,42 +274,34 @@ export function DateTimePicker({
         tabIndex={-1}
         value={value}
       />
-      {inline ? (
-        <>
+      <Popover
+        onOpenChange={(next) => {
+          if (disabled) return;
+          setOpen(next);
+        }}
+        open={disabled ? false : open}
+      >
+        <PopoverTrigger asChild>
           {trigger}
-          {open && !disabled ? (
-            // No wider than a normal calendar: across a whole form row its
-            // days stretched far too big.
-            <div className="w-full max-w-sm rounded-md border p-3" ref={inlinePanelRef}>
-              {panel}
-            </div>
-          ) : null}
-        </>
-      ) : (
-        <Popover
-          onOpenChange={(next) => {
-            if (disabled) return;
-            setOpen(next);
+        </PopoverTrigger>
+        <PopoverContent
+          align="start"
+          // As wide as the button; never taller than the room left on the
+          // screen, scrolling inside if it must (a phone, or Android with
+          // its keyboard up). data-vaul-no-drag: in a drawer, a finger
+          // moving in here scrolls the calendar, not the drawer.
+          className="max-h-(--radix-popover-content-available-height) w-(--radix-popover-trigger-width) min-w-72 overflow-y-auto overscroll-contain p-3"
+          data-vaul-no-drag=""
+          onFocusOutside={(event) => {
+            if (isOwnNestedSelectLayer(event.target)) event.preventDefault();
           }}
-          open={disabled ? false : open}
+          onInteractOutside={(event) => {
+            if (isOwnNestedSelectLayer(event.target)) event.preventDefault();
+          }}
         >
-          <PopoverTrigger asChild>
-            {trigger}
-          </PopoverTrigger>
-          <PopoverContent
-            align="start"
-            className="w-auto p-3"
-            onFocusOutside={(event) => {
-              if (isOwnNestedSelectLayer(event.target)) event.preventDefault();
-            }}
-            onInteractOutside={(event) => {
-              if (isOwnNestedSelectLayer(event.target)) event.preventDefault();
-            }}
-          >
-            {panel}
-          </PopoverContent>
-        </Popover>
-      )}
+          {panel}
+        </PopoverContent>
+      </Popover>
       {missing && !value ? (
         <p className="text-sm text-destructive" role="alert">
           Choose a date and time.
