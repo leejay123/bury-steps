@@ -62,7 +62,9 @@ export function PageLoader() {
     <div
       aria-busy="true"
       aria-label="Loading"
-      className="absolute inset-0 z-50 bg-background text-foreground"
+      // Stops 1px short of the footer: the footer's top line (FullWidthDivider,
+      // -top-px) sits on the page area's last pixel.
+      className="absolute inset-x-0 top-0 bottom-px z-50 bg-background text-foreground"
       data-page-loader=""
       role="status"
     >
