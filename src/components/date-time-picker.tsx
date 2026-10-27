@@ -302,7 +302,9 @@ export function DateTimePicker({
         <>
           {trigger}
           {open && !disabled ? (
-            <div className="rounded-md border p-3" ref={inlinePanelRef}>
+            // No wider than a normal calendar: across a whole form row its
+            // days stretched far too big.
+            <div className="w-full max-w-sm rounded-md border p-3" ref={inlinePanelRef}>
               {panel}
             </div>
           ) : null}
