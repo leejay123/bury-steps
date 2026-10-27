@@ -229,7 +229,9 @@ export function WalkFormFields({
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor={id("duration")}>Expected length</Label>
+              <Label htmlFor={id("duration")} required>
+                Expected length
+              </Label>
               <Select
                 defaultValue={String(defaults?.durationMins ?? 90)}
                 disabled={scheduleLocked}
@@ -309,12 +311,15 @@ export function WalkFormFields({
               </Select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor={id("walkLeader")}>Walk leader</Label>
+              <Label htmlFor={id("walkLeader")} required>
+                Walk leader
+              </Label>
               <Input
                 defaultValue={defaults?.walkLeader ?? ""}
                 id={id("walkLeader")}
                 maxLength={100}
                 name="walkLeader"
+                required
                 placeholder="Glyn Beckwith"
               />
             </div>

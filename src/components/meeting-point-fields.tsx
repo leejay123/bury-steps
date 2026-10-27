@@ -117,12 +117,15 @@ export function MeetingPointFields({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={locationId}>Meeting point</Label>
+        <Label htmlFor={locationId} required>
+          Meeting point
+        </Label>
         <Input
           aria-describedby={locationHintId}
           id={locationId}
           maxLength={200}
           name="location"
+          required
           onChange={(event) => setLocation(event.target.value)}
           onKeyDown={onFindKeyDown}
           placeholder="Visitor centre, Burrs Country Park"
@@ -132,7 +135,9 @@ export function MeetingPointFields({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={postcodeId}>Postcode</Label>
+        <Label htmlFor={postcodeId} required>
+          Postcode
+        </Label>
         <div className="flex flex-col gap-2 sm:flex-row">
           <Input
             aria-describedby={postcodeHintId}
@@ -141,6 +146,7 @@ export function MeetingPointFields({
             id={postcodeId}
             maxLength={10}
             name="postcode"
+            required
             onChange={(event) => setPostcode(event.target.value)}
             onKeyDown={onFindKeyDown}
             placeholder="BL8 1DA"

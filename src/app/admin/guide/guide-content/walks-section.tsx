@@ -143,7 +143,9 @@ export function WalksSection({
               <strong>Where</strong>, <strong>Details</strong> and <strong>Description</strong>. Press{" "}
               <strong>Next</strong> to move on (or Back), and <strong>Create walk</strong> on the last step;
               Edit walk works the same way with Save at the end. Next won&apos;t move on while a required box on
-              that step is empty. Fill in a title (for example “Burrs Country Park loop”).
+              that step is empty. Required (marked with a red star): title, date and start time, expected
+              length, meeting point, postcode, walk leader and description — for Edit walk too, so an older
+              walk missing one needs it added before saving. Fill in a title (for example “Burrs Country Park loop”).
             </li>
             <li>
               Set the date and start time in <strong>UK time</strong>. Choose

@@ -148,9 +148,18 @@ const ADMIN = {
   permCacheReset: true,
 };
 
+/** The walk form's required boxes, filled in (a test can still override them). */
+const REQUIRED_WALK_FIELDS = {
+  location: "Visitor centre, Burrs Country Park",
+  postcode: "BL8 1DA",
+  walkLeader: "Glyn",
+  description: "A gentle loop round the park.",
+};
+
 function form(fields: Record<string, string>): FormData {
   const formData = new FormData();
-  for (const [key, value] of Object.entries(fields)) formData.set(key, value);
+  const all = "title" in fields ? { ...REQUIRED_WALK_FIELDS, ...fields } : fields;
+  for (const [key, value] of Object.entries(all)) formData.set(key, value);
   return formData;
 }
 
@@ -666,6 +675,17 @@ describe("updateWalk", () => {
       ...overrides,
     };
   }
+
+  it.each([
+    ["location", "Add the meeting point."],
+    ["postcode", "Add the postcode."],
+    ["walkLeader", "Add the walk leader."],
+    ["description", "Add a description of the walk."],
+  ])("won't save without the %s", async (field, error) => {
+    const result = await updateWalk(null, updateForm({ [field]: "  " }));
+    expect(result).toEqual({ ok: false, error });
+    expect(prismaMock.walk.update).not.toHaveBeenCalled();
+  });
 
   it("blocks editing a walk that has already finished", async () => {
     queryRaw.mockResolvedValueOnce([lockedWalk({ startsAt: new Date() })]);

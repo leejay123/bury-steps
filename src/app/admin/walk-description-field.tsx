@@ -97,7 +97,9 @@ export function WalkDescriptionField({
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center justify-between gap-2">
-        <Label htmlFor={id}>Description</Label>
+        <Label htmlFor={id} required>
+          Description
+        </Label>
         <Button disabled={isPending} onClick={onSummarize} size="sm" type="button" variant="ghost">
           {isPending ? <Loader2 className="animate-spin" data-icon="inline-start" /> : <Sparkles data-icon="inline-start" />}
           {isPending ? "Summarizing…" : "Summarize"}
@@ -130,6 +132,7 @@ export function WalkDescriptionField({
         id={id}
         maxLength={2000}
         name={name}
+        required
         placeholder="Roughly 4 miles, one steady climb. Boots recommended after rain."
         // Read-only, not disabled, while summarising: a disabled field is
         // left out when the form is sent, so saving mid-summary dropped

@@ -60,15 +60,31 @@ const walkDetailsSchema = z.object({
     .trim()
     .min(3, "Give the walk a title of at least 3 characters.")
     .max(120, "Keep the title to 120 characters or fewer."),
-  description: z.string().trim().max(2000, "Keep the description to 2,000 characters or fewer.").optional(),
+  description: z
+    .string({ required_error: "Add a description of the walk." })
+    .trim()
+    .min(1, "Add a description of the walk.")
+    .max(2000, "Keep the description to 2,000 characters or fewer."),
   distance: z.string().trim().max(60, "Keep the distance to 60 characters or fewer.").optional(),
   grade: z.string().trim().max(60, "Keep the grade to 60 characters or fewer.").optional(),
   elevationGain: z.string().trim().max(60, "Keep the elevation gain to 60 characters or fewer.").optional(),
-  walkLeader: z.string().trim().max(100, "Keep the walk leader to 100 characters or fewer.").optional(),
+  walkLeader: z
+    .string({ required_error: "Add the walk leader." })
+    .trim()
+    .min(1, "Add the walk leader.")
+    .max(100, "Keep the walk leader to 100 characters or fewer."),
   backMarker: z.string().trim().max(100, "Keep the back marker to 100 characters or fewer.").optional(),
   refreshmentStop: z.string().trim().max(150, "Keep the refreshment stop to 150 characters or fewer.").optional(),
-  location: z.string().trim().max(200, "Keep the meeting point to 200 characters or fewer.").optional(),
-  postcode: z.string().trim().max(10, "Keep the postcode to 10 characters or fewer.").optional(),
+  location: z
+    .string({ required_error: "Add the meeting point." })
+    .trim()
+    .min(1, "Add the meeting point.")
+    .max(200, "Keep the meeting point to 200 characters or fewer."),
+  postcode: z
+    .string({ required_error: "Add the postcode." })
+    .trim()
+    .min(1, "Add the postcode.")
+    .max(10, "Keep the postcode to 10 characters or fewer."),
   what3words: z.string().trim().max(120, "Keep the what3words address to 120 characters or fewer.").optional(),
   startsAt: z.string().min(16, "Choose a date and time."),
   durationMins: z.coerce.number().int().min(15).max(600),
