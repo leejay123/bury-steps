@@ -37,7 +37,7 @@ function SectionShell({
         </div>
       ) : null}
       <div className="relative">{children}</div>
-      {showDividerAfter ? <FullWidthDivider position="bottom" /> : null}
+      {showDividerAfter ? <FullWidthDivider data-section-divider="" position="bottom" /> : null}
     </div>
   );
 }

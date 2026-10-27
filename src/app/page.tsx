@@ -42,7 +42,11 @@ export default async function Home() {
   const globe = theme.heroStyle === "globe" ? await getHomepageGlobeData() : null;
 
   return (
-    <div className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
+    // Settings → Homepage layout → Framed sections (globals.css: [data-home-framed]).
+    <div
+      className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}
+      data-home-framed={theme.homeFramed ? "" : undefined}
+    >
       {theme.heroStyle === "cinematic" ? (
         <HeroCinematic
           overlayOpacity={theme.heroOverlayOpacity}

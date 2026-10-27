@@ -707,6 +707,34 @@ async function updateTitleRevealEnabledWork(
   return { ok: true, message: enabled ? "Section titles now animate in." : "Section titles are plain again." };
 }
 
+/** Settings → Homepage layout → Framed sections (shadcn.io style). */
+async function updateHomeFramedWork(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  const enabled = String(formData.get("homeFramed") ?? "") === "on";
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, homeFramed: enabled },
+      update: { homeFramed: enabled },
+    });
+  } catch (err) {
+    return logActionError("updateHomeFramed", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/");
+  revalidatePath("/admin/settings/homepage-layout");
+  return {
+    ok: true,
+    message: enabled ? "Homepage sections are framed (shadcn.io style)." : "Homepage sections are centred again.",
+  };
+}
+
 async function updateFooterWordmarkMobileWork(
   _prev: ActionResult | null,
   formData: FormData,
@@ -2025,6 +2053,7 @@ export const updateAnnouncementBanner = guardForm(
 export const updateMobileNav = guardForm("organiser", pass, readPass, updateMobileNavWork);
 export const updateSliderHeroWords = guardForm("organiser", pass, readPass, updateSliderHeroWordsWork);
 export const updateTitleRevealEnabled = guardForm("organiser", pass, readPass, updateTitleRevealEnabledWork);
+export const updateHomeFramed = guardForm("organiser", pass, readPass, updateHomeFramedWork);
 export const updateFooterWordmarkMobile = guardForm("organiser", pass, readPass, updateFooterWordmarkMobileWork);
 export const updateFooterWordmarkEnabled = guardForm("organiser", pass, readPass, updateFooterWordmarkEnabledWork);
 export const updateSiteDesign = guardForm("organiser", pass, readPass, updateSiteDesignWork);

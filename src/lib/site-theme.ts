@@ -126,6 +126,8 @@ export type SiteTheme = {
   sliderHeroWords: SliderHeroWords;
   /** Word-by-word reveal on homepage section titles (updateTitleRevealEnabled). */
   titleRevealEnabled: boolean;
+  /** Homepage sections in the shadcn.io style: left headings, button on the right, + marks. */
+  homeFramed: boolean;
   /** Announcement bar above the header (see updateAnnouncementBanner). */
   announcementEnabled: boolean;
   announcementText: string;
@@ -216,6 +218,7 @@ export function defaultTheme(): SiteTheme {
     sliderHeroWords: "site",
     mobileNav: "bottom",
     titleRevealEnabled: true,
+    homeFramed: false,
     announcementEnabled: false,
     announcementText: "",
     announcementLink: "",
@@ -290,6 +293,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       sliderHeroWords: true,
       mobileNav: true,
       titleRevealEnabled: true,
+      homeFramed: true,
       announcementEnabled: true,
       announcementText: true,
       announcementLink: true,
@@ -381,6 +385,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     sliderHeroWords: parseSliderHeroWords(row?.sliderHeroWords),
     mobileNav: row?.mobileNav === "menu" ? "menu" : "bottom",
     titleRevealEnabled: row?.titleRevealEnabled ?? true,
+    homeFramed: row?.homeFramed ?? false,
     announcementEnabled: row?.announcementEnabled ?? false,
     announcementText: row?.announcementText ?? "",
     announcementLink: row?.announcementLink ?? "",

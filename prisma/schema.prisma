@@ -400,6 +400,8 @@ model SiteSetting {
   mobileNav                   String   @default("bottom")
   /// Word-by-word reveal on the homepage section titles (Homepage layout).
   titleRevealEnabled          Boolean  @default(true)
+  /// Settings → Homepage layout → Framed sections (shadcn.io style).
+  homeFramed                  Boolean  @default(false)
   /// Announcement bar pinned above the header on every page (Site behaviour).
   announcementEnabled         Boolean  @default(false)
   announcementText            String   @default("")

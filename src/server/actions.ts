@@ -108,6 +108,7 @@ export {
   updateFooterWordmarkMobile,
   updateAnnouncementBanner,
   updateTitleRevealEnabled,
+  updateHomeFramed,
   updateSliderHeroWords,
   updateMobileNav,
   updateCookieConsentVariant,

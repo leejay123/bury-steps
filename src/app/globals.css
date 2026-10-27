@@ -1120,3 +1120,62 @@ html[data-page-loader-on] #main-content {
 [data-design="framer"] :is(p, li) a:not([data-slot="button"]) {
   color: #0077cc;
 }
+
+/*
+ * Settings → Homepage layout → Framed sections (shadcn.io style; app/page.tsx
+ * sets data-home-framed). Section headings (not the hero) sit left with their
+ * button on the right from tablets up, stacked and left-aligned on phones;
+ * small + marks where each section line meets the page frame.
+ */
+[data-home-framed] [data-section-head] {
+  align-items: flex-start;
+  padding-inline: 1.5rem;
+  text-align: left;
+}
+[data-home-framed] [data-section-head] :is([data-head="eyebrow"], [data-head="intro"], [data-head="title"] > *) {
+  text-align: left;
+}
+[data-home-framed] [data-section-head] [data-head="actions"] {
+  justify-content: flex-start;
+}
+@media (min-width: 768px) {
+  [data-home-framed] [data-section-head] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 2.5rem;
+    row-gap: 1rem;
+    align-items: end;
+    padding-inline: 3rem;
+  }
+  [data-home-framed] [data-section-head] > :not([data-head="actions"]) {
+    grid-column: 1;
+  }
+  [data-home-framed] [data-section-head] [data-head="actions"] {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    align-self: end;
+    padding-top: 0;
+  }
+  [data-home-framed] [data-section-head] [data-head="after"] {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
+[data-home-framed] [data-section-divider]::before,
+[data-home-framed] [data-section-divider]::after {
+  content: "";
+  position: absolute;
+  top: -6px;
+  width: 13px;
+  height: 13px;
+  background:
+    linear-gradient(var(--muted-foreground), var(--muted-foreground)) center / 100% 1px no-repeat,
+    linear-gradient(var(--muted-foreground), var(--muted-foreground)) center / 1px 100% no-repeat;
+  opacity: 0.6;
+}
+[data-home-framed] [data-section-divider]::before {
+  left: -6px;
+}
+[data-home-framed] [data-section-divider]::after {
+  right: -6px;
+}
