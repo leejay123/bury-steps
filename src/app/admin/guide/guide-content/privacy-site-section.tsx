@@ -70,17 +70,14 @@ export function PrivacySiteSection() {
               is not created on every visit. A <strong>Back to top</strong> button can be turned
               off in <Link href="/admin/settings/behaviour">Site behaviour</Link>. Owners also have{" "}
               <strong>Preview loading placeholders (temporary)</strong> there: in that browser only,
-              pages hold their grey loading placeholder for 5 seconds before the content (or show
-              only the placeholder), so you can check how it looks. Nobody else sees it. To switch it
+              pages hold their loading screen for 5 seconds before the content (or show only the
+              loading screen), so you can check how it looks. Nobody else sees it. To switch it
               quickly, use the small <strong>Placeholders</strong> button at the bottom left of any
-              page, or press Alt+P (Option+P on a Mac). Next to it, <strong>Style</strong> (also in
-              Site behaviour) is a test: it swaps the grey shapes for a shimmer drawn by the
-              shimmer-from-structure library, or for AutoSkeleton&apos;s ready-made shapes (a
-              list, a form, an article and so on, not measured from the page), or for a{" "}
-              <strong>Loader</strong> screen: the logo in a spinning ring in the middle of
-              the page instead of any grey shapes (the page keeps its space, so nothing
-              jumps when it arrives), so you can compare them. It too only affects that
-              browser.
+              page, or press Alt+P (Option+P on a Mac). While a page with new content is loading,
+              everyone sees a blank page with an infinity (∞) spinner in the middle, instead of grey
+              shapes. It only appears while a page that isn&apos;t already in the browser is
+              fetched: pages opened in the last few minutes show straight away. The page keeps
+              its space while it loads, so nothing jumps when it arrives.
             </p>
             <p>
               First-time visitors see a cookie notice at the bottom of the screen, with Accept

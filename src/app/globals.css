@@ -680,58 +680,38 @@ html:has([data-bottom-nav]:not([hidden] *)) #bs-bottom-boot {
   visibility: hidden;
 }
 
-/* Temporary owner test (shimmer-test.tsx): with the shimmer-from-structure
-   look picked, placeholders keep their boxes, borders and backgrounds but
-   lose their text, pictures and pulse, and the library's measured shimmer
-   blocks (in the same grey) are drawn over them. */
-html[data-placeholder-style="shimmer"] [data-page-loading] * {
-  color: transparent !important;
-  animation: none !important;
-}
-html[data-placeholder-style="shimmer"] [data-page-loading] :is(img, svg, video) {
-  opacity: 0;
-}
-/* Temporary owner test (loader-test.tsx): a loader screen instead of the
-   grey shapes. The shapes keep their space (hidden), and the logo with a
-   spinning ring sits in the middle, near the top on a long page. Only the
-   outermost placeholder gets one. */
-html[data-placeholder-style="loader"] [data-page-loading]:not([data-page-loading] [data-page-loading]) {
+/* The loading screen (loading.tsx and the pages' loading fallbacks): a
+   blank page with an infinity spinner instead of grey shapes. It only shows
+   while a page that isn't already in the browser is fetched; pages opened
+   recently show at once. The placeholder's own markup stays (hidden) and
+   keeps its space, so nothing jumps when the page arrives; the spinner sits
+   in the middle, near the top on a long page. Only the outermost placeholder
+   gets one. */
+[data-page-loading]:not([data-page-loading] [data-page-loading]) {
   position: relative;
   min-height: 12rem;
 }
-html[data-placeholder-style="loader"] [data-page-loading] > * {
+/* A placeholder that is only a wrapper (display: contents) gets a box of its
+   own to hold the spinner — not the members-only or visitors-only ones, which
+   the rules above hide for the other audience. */
+.contents[data-page-loading]:not([data-page-loading] [data-page-loading]):not([data-member-home], [data-guest-home]) {
+  display: block;
+}
+[data-page-loading] > * {
   visibility: hidden;
 }
-html[data-placeholder-style="loader"] [data-page-loading]:not([data-page-loading] [data-page-loading])::before,
-html[data-placeholder-style="loader"] [data-page-loading]:not([data-page-loading] [data-page-loading])::after {
+[data-page-loading]:not([data-page-loading] [data-page-loading])::after {
   content: "";
   position: absolute;
   left: 50%;
   top: min(50%, 35vh);
-  border-radius: 9999px;
+  width: 4.5rem;
+  height: 2.25rem;
   translate: -50% -50%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 50'%3E%3Cstyle%3E%40keyframes d%7Bto%7Bstroke-dashoffset:-100%7D%7D.d%7Banimation:d 1.6s linear infinite%7D%40media %28prefers-reduced-motion:reduce%29%7B.d%7Banimation-duration:4s%7D%7D%3C/style%3E%3Cpath d='M50 25C40 7 12 7 12 25s28 18 38 0 38-18 38 0-28 18-38 0Z' fill='none' stroke='%23e5e5e5' stroke-width='6' stroke-linecap='round'/%3E%3Cpath class='d' d='M50 25C40 7 12 7 12 25s28 18 38 0 38-18 38 0-28 18-38 0Z' pathLength='100' fill='none' stroke='%23171717' stroke-width='6' stroke-linecap='round' stroke-dasharray='28 72'/%3E%3C/svg%3E") center / contain no-repeat;
 }
-html[data-placeholder-style="loader"] [data-page-loading]:not([data-page-loading] [data-page-loading])::before {
-  width: 3.5rem;
-  height: 3.5rem;
-  background: url("/bury-steps-logo.png") center / contain no-repeat;
-}
-html[data-placeholder-style="loader"] [data-page-loading]:not([data-page-loading] [data-page-loading])::after {
-  width: 5.25rem;
-  height: 5.25rem;
-  border: 3px solid var(--color-muted);
-  border-top-color: var(--color-primary);
-  animation: loader-spin 0.8s linear infinite;
-}
-@keyframes loader-spin {
-  to {
-    rotate: 360deg;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  html[data-placeholder-style="loader"] [data-page-loading]::after {
-    animation-duration: 2.4s;
-  }
+.dark [data-page-loading]:not([data-page-loading] [data-page-loading])::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 50'%3E%3Cstyle%3E%40keyframes d%7Bto%7Bstroke-dashoffset:-100%7D%7D.d%7Banimation:d 1.6s linear infinite%7D%40media %28prefers-reduced-motion:reduce%29%7B.d%7Banimation-duration:4s%7D%7D%3C/style%3E%3Cpath d='M50 25C40 7 12 7 12 25s28 18 38 0 38-18 38 0-28 18-38 0Z' fill='none' stroke='%23404040' stroke-width='6' stroke-linecap='round'/%3E%3Cpath class='d' d='M50 25C40 7 12 7 12 25s28 18 38 0 38-18 38 0-28 18-38 0Z' pathLength='100' fill='none' stroke='%23fafafa' stroke-width='6' stroke-linecap='round' stroke-dasharray='28 72'/%3E%3C/svg%3E");
 }
 /* Pills tabs (ui/tabs.tsx, "transition"): the chosen tab's content drops
    in from above, sharpening from a slight blur. */
@@ -759,25 +739,6 @@ html[data-placeholder-style="loader"] [data-page-loading]:not([data-page-loading
     opacity: 1;
   }
 }
-/* Temporary owner test (autoskeleton-test.tsx): AutoSkeleton's ready-made
-   shapes are drawn over each placeholder, so ours is hidden underneath
-   (still taking its space, so nothing on the page moves). */
-html[data-placeholder-style="autoskeleton"] [data-page-loading] {
-  visibility: hidden;
-}
-.shimmer-test-sweep {
-  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--background) 70%, transparent), transparent);
-  animation: shimmer-test-sweep 1.5s infinite;
-}
-@keyframes shimmer-test-sweep {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(100%);
-  }
-}
-
 /* Stories (stories/story-viewer.tsx): the current story's bar fills over 5
    seconds and the viewer moves on when it ends. It stays 5 seconds with
    reduced motion too (the catch-all rule above would end every story at once).

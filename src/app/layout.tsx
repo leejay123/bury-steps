@@ -14,11 +14,6 @@ import { ButtonRipple } from "@/components/button-ripple";
 import { HeaderScrollShadow } from "@/components/header-scroll-shadow";
 import { FocusRescue } from "@/components/focus-rescue";
 import { PlaceholderPreviewBadge } from "@/components/placeholder-preview-badge";
-import { ShimmerTest } from "@/components/shimmer-test";
-import { AutoSkeletonTest } from "@/components/autoskeleton-test";
-import { BoneyardTest } from "@/components/boneyard-test";
-import { MammothTest } from "@/components/mammoth-test";
-import { LoaderTest } from "@/components/loader-test";
 import { TabStyleProvider } from "@/components/ui/tabs";
 import { HeaderPartBoundary } from "@/components/header-part-boundary";
 import type { Metadata, Viewport } from "next";
@@ -336,11 +331,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <HeaderScrollShadow />
           <FocusRescue />
           <PlaceholderPreviewBadge />
-          <ShimmerTest />
-          <AutoSkeletonTest />
-          <BoneyardTest />
-          <MammothTest />
-          <LoaderTest />
           <HeaderPartBoundary name="cookie-notice">
             <Suspense fallback={null}>
               <SiteCookieConsentGate />
