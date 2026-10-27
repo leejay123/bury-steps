@@ -74,9 +74,9 @@ export function PrivacySiteSection() {
               loading screen), so you can check how it looks. Nobody else sees it. To switch it
               quickly, use the small <strong>Placeholders</strong> button at the bottom left of any
               page, or press Alt+P (Option+P on a Mac). While a page with new content is loading,
-              everyone sees a blank screen with an infinity (∞) loader in the middle, instead of grey
-              shapes. It covers the whole screen, header and phone menu bar too, until the page has
-              loaded (if a page never arrives, it steps aside after 20 seconds). It only appears while a page that isn&apos;t already in the browser is
+              everyone sees the page&apos;s area blank with an infinity (∞) loader in the middle, instead
+              of grey shapes, until the page has loaded (if a page never arrives, it steps aside after
+              20 seconds). The header, footer and phone menu bar show straight away around it. It only appears while a page that isn&apos;t already in the browser is
               fetched: pages opened in the last few minutes show straight away.
             </p>
             <p>

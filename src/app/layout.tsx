@@ -296,7 +296,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               below the footer. A page long enough to fill the viewport on
               its own looks identical either way.
             */}
-            <main className={`flex flex-1 flex-col ${PAGE_Y} ${PAGE_X}`} id="main-content">
+            <main className={`relative flex flex-1 flex-col ${PAGE_Y} ${PAGE_X}`} id="main-content">
               {/* No page-change animation: a new page simply replaces the old one. */}
               <div className="flex min-w-0 flex-1 flex-col">
                 <WalkEssentialsProvider items={theme.walkEssentials}>

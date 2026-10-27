@@ -15,10 +15,9 @@ const PLACEHOLDER = "[data-page-loading]";
 
 /**
  * The loading screen: while any part of the page is still loading (a
- * placeholder marked data-page-loading is on screen), a blank screen with
- * loading-ui's Infinity loader in the middle covers everything, header and
- * phone bar too, until the page has arrived. Owners' Placeholders button
- * stays on top, so a held preview can be turned off.
+ * placeholder marked data-page-loading is on screen), the page's own area
+ * is blank with loading-ui's Infinity loader in the middle, until the page
+ * has arrived. The header, footer and phone bar stay on show around it.
  */
 export function PageLoader() {
   const [loading, setLoading] = useState(false);
@@ -50,16 +49,19 @@ export function PageLoader() {
   }, [loading]);
 
   if (!loading || gaveUp) return null;
+  const main = document.getElementById("main-content");
+  if (!main) return null;
   return createPortal(
     <div
       aria-busy="true"
       aria-label="Loading"
-      className="fixed inset-0 z-[58] flex items-center justify-center bg-background text-foreground"
+      className="absolute inset-0 z-50 bg-background text-foreground"
       data-page-loader=""
       role="status"
     >
-      <InfinityLoop className="size-20" />
+      {/* In the middle of the page's area, or of the screen on a long one. */}
+      <InfinityLoop className="absolute top-[min(50%,40vh)] left-1/2 size-20 -translate-x-1/2 -translate-y-1/2" />
     </div>,
-    document.body,
+    main,
   );
 }

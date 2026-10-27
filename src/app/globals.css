@@ -680,11 +680,12 @@ html:has([data-bottom-nav]:not([hidden] *)) #bs-bottom-boot {
   visibility: hidden;
 }
 
-/* The loading screen: page-loader.tsx covers the whole screen with
-   loading-ui's Infinity loader while a page loads. Under it, the page's
-   loading placeholder is blank (no grey shapes) in case it shows through. */
-[data-page-loading] > * {
-  visibility: hidden;
+/* The loading screen: page-loader.tsx blanks the page's area (not the
+   header, footer or phone bar) with loading-ui's Infinity loader while a
+   page loads. The loading placeholders themselves take no room, so a long
+   one doesn't push the footer off the screen. */
+[data-page-loading] {
+  display: none !important;
 }
 /* Pills tabs (ui/tabs.tsx, "transition"): the chosen tab's content drops
    in from above, sharpening from a slight blur. */
