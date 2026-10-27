@@ -341,6 +341,35 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
   --ring: oklch(0.708 0 0);
 }
 
+/*
+ * Settings → Branding → Site design: Vercel (layout.tsx sets data-design;
+ * the Geist font comes with it). From Vercel's DESIGN.md: ink #171717 on a
+ * #fafafa page with white cards, hairline greys, 6px corners, stacked soft
+ * shadows instead of one heavy drop, and Geist headings at 600 with tight
+ * tracking. Unlayered (below), so it wins over the utilities.
+ */
+:root[data-design="vercel"] {
+  --radius: 0.375rem;
+  --background: #fafafa;
+  --foreground: #171717;
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+  --primary: #171717;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #171717;
+  --muted: #f5f5f5;
+  --muted-foreground: #4d4d4d;
+  --accent: #f5f5f5;
+  --accent-foreground: #171717;
+  --destructive: #ee0000;
+  --border: #ebebeb;
+  --input: #ebebeb;
+  --ring: #a1a1a1;
+}
+
 @theme inline {
   --color-brand: var(--brand);
   --color-brand-from: var(--brand-from);
@@ -746,4 +775,27 @@ html[data-page-loader-on] #main-content {
   .story-fill {
     animation-duration: 5s !important;
   }
+}
+
+/* The Vercel design (see :root[data-design="vercel"] above): cards sit on
+   the page with a hairline ring and stacked soft shadows; headings at 600
+   with Vercel's tight tracking; ink selection. */
+[data-design="vercel"] [data-slot="card"] {
+  border-color: transparent;
+  box-shadow:
+    0 0 0 1px #00000014,
+    0 2px 2px #0000000a,
+    0 8px 8px -8px #0000000a;
+}
+[data-design="vercel"] h1 {
+  font-weight: 600;
+  letter-spacing: -0.05em;
+}
+[data-design="vercel"] :is(h2, h3) {
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+[data-design="vercel"] ::selection {
+  background: #171717;
+  color: #f2f2f2;
 }

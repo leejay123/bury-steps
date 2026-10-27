@@ -69,7 +69,9 @@ export function ReportsDisplaySection() {
             <p>
               Open <Link href="/admin/settings/branding">Branding</Link> to set the public{" "}
               <strong>site name</strong> and <strong>homepage tagline</strong> (also used in browser
-              tabs and share previews), the <strong>site font</strong> (it changes the typeface
+              tabs and share previews), the <strong>site design</strong> (Original, or Vercel: the Geist
+              font, ink and fine greys, 6px corners, soft layered card shadows and tighter headings, for
+              everyone; layouts stay the same and you can switch back any time), the <strong>site font</strong> (it changes the typeface
               across the whole website), <strong>text sizes</strong> (the homepage headline, section
               headings, intro lines, and everyday body text — set for computers, with phones getting
               smaller headings automatically), the logo and favicon, the accident-report banner, and the{" "}

@@ -48,6 +48,7 @@ import {
 } from "@/lib/hero-style";
 import { SECTION_BG_DEFAULTS, parseSectionBgPattern, type SectionBgPattern } from "@/lib/section-background";
 import {
+
   DEFAULT_ABOUT_EXPECT,
   DEFAULT_ABOUT_EXPECT_HEADING,
   DEFAULT_ABOUT_EXPECT_TEXT,
@@ -75,6 +76,9 @@ import {
   serializeAboutRules,
   type AboutRule,
 } from "@/lib/homepage-copy";
+
+/** Settings → Branding → Site design. */
+export type SiteDesign = "original" | "vercel";
 
 export type SiteTheme = {
   heroStyle: HeroStyle;
@@ -109,6 +113,8 @@ export type SiteTheme = {
   announcementPages: string;
   cookieConsentVariant: CookieConsentVariant;
   siteFont: SiteFontId;
+  /** The whole site's look: the original, or the Vercel-inspired one. */
+  siteDesign: SiteDesign;
   textSizes: TextSizes;
   siteName: string;
   siteTagline: string;
@@ -196,6 +202,7 @@ export function defaultTheme(): SiteTheme {
     announcementPages: "all",
     cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
     siteFont: DEFAULT_SITE_FONT,
+    siteDesign: "original",
     textSizes: DEFAULT_TEXT_SIZES,
     siteName: DEFAULT_SITE_NAME,
     siteTagline: DEFAULT_SITE_TAGLINE,
@@ -269,6 +276,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       announcementPages: true,
       cookieConsentVariant: true,
       siteFont: true,
+      siteDesign: true,
       textHeadlinePx: true,
       textSectionPx: true,
       textIntroPx: true,
@@ -361,6 +369,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       parseCookieConsentVariant(row?.cookieConsentVariant ?? "") ??
       DEFAULT_COOKIE_CONSENT_VARIANT,
     siteFont: parseSiteFont(row?.siteFont ?? "") ?? DEFAULT_SITE_FONT,
+    siteDesign: row?.siteDesign === "vercel" ? "vercel" : "original",
     textSizes: {
       headline: parseTextSize("headline", row?.textHeadlinePx) ?? DEFAULT_TEXT_SIZES.headline,
       section: parseTextSize("section", row?.textSectionPx) ?? DEFAULT_TEXT_SIZES.section,

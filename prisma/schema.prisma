@@ -389,6 +389,8 @@ model SiteSetting {
   footerWordmarkEnabled       Boolean  @default(true)
   /// When false, the footer name is hidden on phones (still shows on wider screens).
   footerWordmarkMobile        Boolean  @default(true)
+  /// Settings → Branding → Site design: "original" or "vercel".
+  siteDesign                  String   @default("original")
   /// Words on the Photo slider hero: "site" (site name + tagline on every
   /// photo), "slides" (each photo's own heading/caption), or "none".
   sliderHeroWords             String   @default("site")

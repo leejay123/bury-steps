@@ -112,6 +112,7 @@ export {
   updateMobileNav,
   updateCookieConsentVariant,
   updateSiteFont,
+  updateSiteDesign,
   updateTextSizes,
   updateSiteBranding,
   updateFacebookGroupUrl,

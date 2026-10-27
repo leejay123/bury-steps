@@ -794,6 +794,34 @@ async function updateSiteFontWork(
   return { ok: true, message: "Site font saved. The whole website is using it now." };
 }
 
+/** Settings → Branding → Site design: the whole site's look, for everyone. */
+async function updateSiteDesignWork(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  const design = String(formData.get("siteDesign") ?? "") === "vercel" ? "vercel" : "original";
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, siteDesign: design },
+      update: { siteDesign: design },
+    });
+  } catch (err) {
+    return logActionError("updateSiteDesign", err, "Could not save that setting. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings/branding");
+  return {
+    ok: true,
+    message: design === "vercel" ? "The site now uses the Vercel design." : "The site is back to its original design.",
+  };
+}
+
 async function updateTextSizesWork(
   _prev: ActionResult | null,
   formData: FormData,
@@ -1994,6 +2022,7 @@ export const updateSliderHeroWords = guardForm("organiser", pass, readPass, upda
 export const updateTitleRevealEnabled = guardForm("organiser", pass, readPass, updateTitleRevealEnabledWork);
 export const updateFooterWordmarkMobile = guardForm("organiser", pass, readPass, updateFooterWordmarkMobileWork);
 export const updateFooterWordmarkEnabled = guardForm("organiser", pass, readPass, updateFooterWordmarkEnabledWork);
+export const updateSiteDesign = guardForm("organiser", pass, readPass, updateSiteDesignWork);
 export const updateSiteFont = guardForm(
   "organiser",
   siteFontSchema,

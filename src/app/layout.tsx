@@ -122,8 +122,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       // in, so phone layout rules for the bottom bar (logo on the left, room
       // at the bottom) apply from the first paint — see globals.css.
       data-phone-menu={theme.mobileNav}
+      // Settings → Branding → Site design (globals.css: [data-design=vercel]).
+      data-design={theme.siteDesign}
       lang="en-GB"
-      style={{ "--font-site": `var(${font.cssVariable})`, ...textSizeCssVars(theme.textSizes) } as CSSProperties}
+      style={
+        {
+          // The Vercel design always uses Geist.
+          "--font-site": theme.siteDesign === "vercel" ? "var(--font-geist)" : `var(${font.cssVariable})`,
+          ...textSizeCssVars(theme.textSizes),
+        } as CSSProperties
+      }
       suppressHydrationWarning
     >
       <head>
