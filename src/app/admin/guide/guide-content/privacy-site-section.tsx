@@ -76,7 +76,10 @@ export function PrivacySiteSection() {
               page, or press Alt+P (Option+P on a Mac). While a page with new content is loading,
               everyone sees the page&apos;s area blank with an infinity (∞) loader in the middle, instead
               of grey shapes, until the page has loaded (if a page never arrives, it steps aside after
-              20 seconds). The header, footer and phone menu bar show straight away around it. It only appears while a page that isn&apos;t already in the browser is
+              20 seconds). The header, footer and phone menu bar show straight away around it. Next to the Placeholders button,{" "}
+              <strong>Loading</strong> (also in Site behaviour, as Loading screen) switches between{" "}
+              <strong>Loader</strong> and <strong>Skeletons</strong> (grey shapes of the page) in that
+              browser only, so you can compare them; everyone else keeps the loader. It only appears while a page that isn&apos;t already in the browser is
               fetched: pages opened in the last few minutes show straight away.
             </p>
             <p>

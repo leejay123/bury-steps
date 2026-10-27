@@ -683,8 +683,9 @@ html:has([data-bottom-nav]:not([hidden] *)) #bs-bottom-boot {
 /* The loading screen: page-loader.tsx blanks the page's area (not the
    header, footer or phone bar) with loading-ui's Infinity loader while a
    page loads. The loading placeholders themselves take no room, so a long
-   one doesn't push the footer off the screen. */
-[data-page-loading] {
+   one doesn't push the footer off the screen — unless an owner is trying the
+   grey skeletons instead in this browser (lib/loading-style.ts). */
+html:not([data-loading-style="skeletons"]) [data-page-loading] {
   display: none !important;
 }
 /* Pills tabs (ui/tabs.tsx, "transition"): the chosen tab's content drops

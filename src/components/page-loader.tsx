@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { InfinityLoop } from "@/components/ui/infinity-loop";
 import { readPlaceholderPreview } from "@/lib/placeholder-preview-cookie";
+import { applyLoadingStyle, readLoadingStyle, subscribeLoadingStyle } from "@/lib/loading-style";
 
 // If a page never arrives (a lost connection, an error), the cover steps
 // aside after this long instead of hiding the page for ever — except while
@@ -22,6 +23,12 @@ const PLACEHOLDER = "[data-page-loading]";
 export function PageLoader() {
   const [loading, setLoading] = useState(false);
   const [gaveUp, setGaveUp] = useState(false);
+  // An owner trying the grey skeletons instead (lib/loading-style.ts).
+  const style = useSyncExternalStore(subscribeLoadingStyle, readLoadingStyle, () => "loader" as const);
+
+  useEffect(() => {
+    applyLoadingStyle(style);
+  }, [style]);
 
   useEffect(() => {
     let frame = 0;
@@ -48,7 +55,7 @@ export function PageLoader() {
     return () => window.clearTimeout(timer);
   }, [loading]);
 
-  if (!loading || gaveUp) return null;
+  if (!loading || gaveUp || style === "skeletons") return null;
   const main = document.getElementById("main-content");
   if (!main) return null;
   return createPortal(
@@ -60,7 +67,7 @@ export function PageLoader() {
       role="status"
     >
       {/* In the middle of the page's area, or of the screen on a long one. */}
-      <InfinityLoop className="absolute top-[min(50%,40vh)] left-1/2 size-20 -translate-x-1/2 -translate-y-1/2" />
+      <InfinityLoop className="absolute top-[min(50%,40vh)] left-1/2 size-10 -translate-x-1/2 -translate-y-1/2" />
     </div>,
     main,
   );

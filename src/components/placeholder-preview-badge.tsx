@@ -8,6 +8,7 @@ import {
   setPlaceholderPreview,
   type PlaceholderPreviewMode,
 } from "@/lib/placeholder-preview-cookie";
+import { LOADING_STYLES, readLoadingStyle, setLoadingStyle, subscribeLoadingStyle } from "@/lib/loading-style";
 
 const noopSubscribe = () => () => {};
 const NEXT: Record<"off" | PlaceholderPreviewMode, PlaceholderPreviewMode | null> = {
@@ -42,6 +43,8 @@ export function PlaceholderPreviewBadge() {
   const saved = useSyncExternalStore(noopSubscribe, readPlaceholderPreview, () => null);
   const [override, setOverride] = useState<PlaceholderPreviewMode | "off" | null>(null);
   const mode = override ?? saved ?? "off";
+  const loadingStyle = useSyncExternalStore(subscribeLoadingStyle, readLoadingStyle, () => "loader" as const);
+  const loadingLabel = LOADING_STYLES.find((option) => option.value === loadingStyle)?.label ?? "Loader";
 
   const cycle = useCallback(() => {
     const next = NEXT[mode];
@@ -78,6 +81,15 @@ export function PlaceholderPreviewBadge() {
         type="button"
       >
         Placeholders: <span className="font-medium">{LABEL[mode]}</span>
+      </button>
+      {/* Loader (everyone's) or the grey skeletons, in this browser only. */}
+      <button
+        aria-label={`Loading screen: ${loadingLabel}. Change`}
+        className="flex items-center gap-1.5 rounded-full border bg-background px-3 py-1.5 text-xs text-muted-foreground shadow-md"
+        onClick={() => setLoadingStyle(loadingStyle === "loader" ? "skeletons" : "loader")}
+        type="button"
+      >
+        Loading: <span className="font-medium">{loadingLabel}</span>
       </button>
     </div>
   );
