@@ -90,3 +90,12 @@ export const siteFontVariableClassName = SITE_FONTS.map((font) => siteFontFaces[
 export function siteFontFace(id: SiteFontId) {
   return siteFontFaces[id];
 }
+
+/** The face the page's text uses: the site design's own (Vercel: Geist,
+ * GitHub: Mona Sans, Claude: Inter), or the Branding font for Original. */
+export function pageFontFace(design: string, id: SiteFontId) {
+  if (design === "vercel") return menuFont;
+  if (design === "github") return monaSans;
+  if (design === "claude") return inter;
+  return siteFontFaces[id];
+}

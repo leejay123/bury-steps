@@ -40,7 +40,7 @@ import { StaleDeployReload } from "@/components/stale-deploy-reload";
 import { ImpersonationBannerSlot } from "@/components/impersonation-banner-slot";
 import { getSiteTheme } from "@/lib/site-theme";
 import { siteFontById } from "@/lib/site-font";
-import { siteFontFace, siteFontVariableClassName, typesetFontVariables } from "@/app/fonts";
+import { pageFontFace, siteFontVariableClassName, typesetFontVariables } from "@/app/fonts";
 import { DEFAULT_SITE_NAME, siteMetaDescription } from "@/lib/site-branding";
 import { ScrollRowArrows } from "@/components/scroll-row-arrows";
 import "./globals.css";
@@ -113,7 +113,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // (the hero's buttons) wait for this, each in its own placeholder.
   const signedIn = isSignedIn();
   const font = siteFontById(theme.siteFont);
-  const face = siteFontFace(theme.siteFont);
+  // The site design's own font, or the Branding font for Original.
+  const face = pageFontFace(theme.siteDesign, theme.siteFont);
 
   return (
     <html
