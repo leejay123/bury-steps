@@ -23,7 +23,9 @@ export function HomepageNoticesSection() {
               and slides back down the same way. You can drag it down to close it, or
               use the button. On a wider screen the same drawer slides in from the
               right and slides back out the same way, and you can drag it off to the
-              right. On a phone, an edit form fills the screen, with
+              right. On a phone turned on its side, the drawer runs the full height
+              of the screen and its title bar and buttons are slimmer (a long line
+              under the title is cut to one line), leaving more room for the form. On a phone, an edit form fills the screen, with
               rounded corners only at the top. It does not swipe away — close it with
               the button, so what you have typed is not thrown away. While you type, that sheet shortens to
               the space above the keyboard: the title stays put, the fields scroll, and

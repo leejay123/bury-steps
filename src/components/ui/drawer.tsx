@@ -13,7 +13,7 @@ import { lockBackgroundScroll } from "@/components/overlay-scroll-lock";
 import { mergeRefs } from "@/lib/merge-refs";
 
 const overlayCloseClassName =
-  "absolute top-3.5 right-3.5 z-20 flex size-8 cursor-pointer after:absolute after:-inset-1.5 items-center justify-center rounded-full opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
+  "absolute top-3.5 right-3.5 short:top-2 z-20 flex size-8 cursor-pointer after:absolute after:-inset-1.5 items-center justify-center rounded-full opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
 
 /**
  * Same motion as the Base UI drawer: the panel stays on its own layer, slides
@@ -348,7 +348,7 @@ function DrawerContent({
           className={cn(
             "group/drawer-popup",
             POPUP_MOTION,
-            "bg-popover text-popover-foreground rounded-lg text-sm shadow-xl [--drawer-bleed-background:transparent] [--drawer-inset:0.5rem] max-sm:rounded-b-none max-sm:[--drawer-bleed-background:var(--color-popover)] max-sm:[--drawer-inset:0px]",
+            "bg-popover text-popover-foreground rounded-lg text-sm shadow-xl [--drawer-bleed-background:transparent] [--drawer-inset:0.5rem] max-sm:rounded-b-none max-sm:[--drawer-bleed-background:var(--color-popover)] max-sm:[--drawer-inset:0px] short:rounded-none short:[--drawer-inset:0px]",
             className,
           )}
           finalFocus={() => triggerRef?.current ?? true}
@@ -392,7 +392,7 @@ function DrawerHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="drawer-header"
-      className={cn("mb-3 flex shrink-0 flex-col gap-0.5 border-b p-4 pr-12 md:gap-1.5", className)}
+      className={cn("mb-3 flex shrink-0 flex-col gap-0.5 border-b p-4 pr-12 md:gap-1.5 short:mb-2 short:gap-0 short:py-2", className)}
       {...props}
     />
   );
@@ -402,7 +402,7 @@ function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="drawer-footer"
-      className={cn("mt-auto flex shrink-0 flex-col gap-2 border-t bg-background p-4", className)}
+      className={cn("mt-auto flex shrink-0 flex-col gap-2 border-t bg-background p-4 short:py-2", className)}
       {...props}
     />
   );
@@ -425,7 +425,7 @@ function DrawerDescription({
   return (
     <DrawerPrimitive.Description
       data-slot="drawer-description"
-      className={cn("text-sm text-muted-foreground", className)}
+      className={cn("text-sm text-muted-foreground short:line-clamp-1", className)}
       {...props}
     />
   );

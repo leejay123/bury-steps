@@ -302,6 +302,8 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
 }
 
 @custom-variant dark (&:is(.dark *));
+/* A phone on its side: little height, so drawers keep their title and buttons slim. */
+@custom-variant short (@media (max-height: 500px) and (orientation: landscape));
 
 :root {
   --radius: 0.5rem;
