@@ -161,7 +161,8 @@ export function DateTimePicker({
     <div className="flex flex-col gap-3">
       <Calendar
         captionLayout="dropdown"
-        className="p-0"
+        // In the form (drawers), stretch the days across the box's width.
+        className={inline ? "w-full p-0" : "p-0"}
         disabled={disablePast ? { before: todayLondon } : undefined}
         endMonth={new Date(2035, 11)}
         locale={enGB}
