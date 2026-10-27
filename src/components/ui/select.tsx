@@ -307,10 +307,20 @@ function SelectContent({
           enabledOptions(list)[0];
         if (!chosen) return;
         event.preventDefault();
-        focusOption(list, chosen);
+        chosen.focus({ preventScroll: true });
+        // Scroll the choice into the middle once the list is in place: done
+        // straight away, the list wasn't positioned yet and (Safari) opened
+        // scrolled past the choice.
+        window.requestAnimationFrame(() => {
+          const listBox = list.getBoundingClientRect();
+          const box = chosen.getBoundingClientRect();
+          list.scrollTop += box.top - listBox.top - (listBox.height - box.height) / 2;
+        });
       }}
       className={cn(
-        "max-h-72 w-auto overflow-y-auto overscroll-y-contain p-1",
+        // Never taller than the room on screen (a phone on its side): the
+        // whole list stays visible and scrolls inside itself.
+        "max-h-[min(18rem,var(--radix-popover-content-available-height))] w-auto overflow-y-auto overscroll-y-contain p-1",
         // Slide-in from shadcn studio's Combobox 13: rises into place instead of zooming.
         "duration-400 data-[side=bottom]:slide-in-from-bottom-10! data-[state=open]:zoom-in-100",
         className,

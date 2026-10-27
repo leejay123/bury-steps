@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import { CalendarIcon } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { CalendarIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { enGB } from "react-day-picker/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -18,10 +18,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import { combineLondonDateAndTime, LONDON, londonWallClockToUtc } from "@/lib/dates";
 
 const HOURS = Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, "0"));
 const MINUTES = Array.from({ length: 12 }, (_, index) => String(index * 5).padStart(2, "0"));
+const MONTH_NAMES = Array.from({ length: 12 }, (_, index) =>
+  firstOf(2026, index).toLocaleString("en-GB", { month: "short" }),
+);
+const LAST_MONTH = new Date(2035, 11, 1, 12);
+
+/** The 1st of a month, at midday (the calendar works in UK time: a midnight
+ * here could be the day before in the UK). */
+function firstOf(year: number, monthIndex: number) {
+  return new Date(year, monthIndex, 1, 12);
+}
+
+/** A month as a number that orders (2026 Nov → 2026 * 12 + 10). */
+function monthNumber(date: Date) {
+  return date.getFullYear() * 12 + date.getMonth();
+}
 
 function parseWallClock(value?: string): { date: Date; hour: string; minute: string } | null {
   if (!value || value.length < 16) return null;
@@ -43,6 +59,20 @@ function parseWallClock(value?: string): { date: Date; hour: string; minute: str
 // every select on the page: an unrelated field (e.g. a "linked walk" select
 // elsewhere in the same form) must still be able to close this popover when
 // opened, or the two floating panels end up open and overlapping at once.
+// A phone on its side (globals.css's `short`): too little height for the
+// calendar to float under its button, so it opens in the form instead.
+const SHORT_SCREEN = "(max-height: 500px) and (orientation: landscape)";
+
+function subscribeShortScreen(onChange: () => void) {
+  const query = window.matchMedia(SHORT_SCREEN);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
+function readShortScreen() {
+  return window.matchMedia(SHORT_SCREEN).matches;
+}
+
 function isOwnNestedSelectLayer(target: EventTarget | null) {
   return target instanceof Element && Boolean(target.closest("[data-date-time-picker-select]"));
 }
@@ -68,6 +98,17 @@ export function DateTimePicker({
   const [missing, setMissing] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [date, setDate] = useState<Date | undefined>(initial?.date);
+  // The month on show, and whether the month-and-year grid is up instead
+  // of the days. Picking the month here, in the calendar itself, instead
+  // of a list popping up over the calendar: a list inside a pop-up inside
+  // a drawer couldn't always scroll (a phone on its side).
+  const [month, setMonth] = useState<Date>(() => {
+    const from = initial?.date ?? new Date();
+    return firstOf(from.getFullYear(), from.getMonth());
+  });
+  const [picking, setPicking] = useState(false);
+  const short = useSyncExternalStore(subscribeShortScreen, readShortScreen, () => false);
+  const inlinePanelRef = useRef<HTMLDivElement>(null);
   const [hour, setHour] = useState(initial?.hour ?? "13");
   const [minute, setMinute] = useState(initial?.minute ?? "00");
 
@@ -131,19 +172,144 @@ export function DateTimePicker({
   }, [disablePast, hour, isSelectedToday, minutes, nowLondon.hour, nowLondon.minute]);
 
 
+  const openChange = (next: boolean) => {
+    if (disabled) return;
+    if (next) {
+      // Opens on the chosen day's month (or this month), with its days.
+      const from = date ?? todayLondon;
+      setMonth(firstOf(from.getFullYear(), from.getMonth()));
+      setPicking(false);
+    }
+    setOpen(next);
+  };
+
+  // Opened in the form (a phone on its side): bring the calendar into view
+  // in the drawer's own scroller (scrollIntoView also pans the page, which
+  // on iOS slides the drawer off the screen).
+  const inlineOpen = short && open && !disabled;
+  useEffect(() => {
+    if (!inlineOpen) return;
+    const frame = window.requestAnimationFrame(() => {
+      const panel = inlinePanelRef.current;
+      let scroller = panel?.parentElement ?? null;
+      while (scroller) {
+        const overflowY = window.getComputedStyle(scroller).overflowY;
+        if (overflowY === "auto" || overflowY === "scroll") break;
+        scroller = scroller.parentElement;
+      }
+      if (!panel || !scroller) return;
+      const box = scroller.getBoundingClientRect();
+      const rect = panel.getBoundingClientRect();
+      // The button just above the calendar stays in sight.
+      const button = triggerRef.current?.getBoundingClientRect();
+      const top = button ? button.top : rect.top;
+      if (rect.bottom > box.bottom - 8) {
+        scroller.scrollTop += Math.min(rect.bottom - box.bottom + 8, top - box.top - 8);
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [inlineOpen, picking]);
+
+  const firstMonth = disablePast
+    ? firstOf(todayLondon.getFullYear(), todayLondon.getMonth())
+    : firstOf(2020, 0);
+  const showMonth = (next: Date) => {
+    const clamped = Math.min(Math.max(monthNumber(next), monthNumber(firstMonth)), monthNumber(LAST_MONTH));
+    setMonth(firstOf(Math.floor(clamped / 12), clamped % 12));
+  };
+  const step = picking ? 12 : 1;
+  const canGoBack = monthNumber(month) - (picking ? month.getMonth() : 0) > monthNumber(firstMonth);
+  const canGoOn = monthNumber(month) + (picking ? 11 - month.getMonth() : 0) < monthNumber(LAST_MONTH);
+
+  // ‹ November 2026 › — tap the name for the month-and-year grid.
+  const header = (
+    <div className="flex items-center justify-between gap-1">
+      <Button
+        aria-label={picking ? "Previous year" : "Previous month"}
+        className="size-9"
+        disabled={!canGoBack}
+        onClick={() => showMonth(firstOf(month.getFullYear(), month.getMonth() - step))}
+        size="icon"
+        type="button"
+        variant="ghost"
+      >
+        <ChevronLeftIcon />
+      </Button>
+      <Button
+        aria-expanded={picking}
+        className="h-9 gap-1 px-3 font-medium"
+        onClick={() => setPicking((open) => !open)}
+        type="button"
+        variant="ghost"
+      >
+        {picking
+          ? month.getFullYear()
+          : month.toLocaleString("en-GB", { month: "long", year: "numeric" })}
+        <ChevronDownIcon className={picking ? "rotate-180" : undefined} />
+      </Button>
+      <Button
+        aria-label={picking ? "Next year" : "Next month"}
+        className="size-9"
+        disabled={!canGoOn}
+        onClick={() => showMonth(firstOf(month.getFullYear(), month.getMonth() + step))}
+        size="icon"
+        type="button"
+        variant="ghost"
+      >
+        <ChevronRightIcon />
+      </Button>
+    </div>
+  );
+
+  // The twelve months of the year on show; picking one shows its days.
+  const monthGrid = (
+    <div className="grid grid-cols-3 gap-2 py-1">
+      {MONTH_NAMES.map((name, index) => {
+        const option = firstOf(month.getFullYear(), index);
+        const outside =
+          monthNumber(option) < monthNumber(firstMonth) || monthNumber(option) > monthNumber(LAST_MONTH);
+        const current = index === month.getMonth();
+        return (
+          <Button
+            aria-pressed={current}
+            className="h-11"
+            disabled={outside}
+            key={name}
+            onClick={() => {
+              setMonth(option);
+              setPicking(false);
+            }}
+            type="button"
+            variant={current ? "default" : "outline"}
+          >
+            {name}
+          </Button>
+        );
+      })}
+    </div>
+  );
+
   const panel = (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
+      {header}
+      {picking ? monthGrid : null}
       <Calendar
-        captionLayout="dropdown"
+        captionLayout="label"
         // As wide as the date button, the days stretched across it, but
         // each a normal row's height (square days stretched far too tall).
-        className="w-full p-0 [&_.rdp-day]:aspect-auto! [&_.rdp-day]:h-9! [&_.rdp-day_button]:aspect-auto! [&_.rdp-day_button]:h-9!"
-        // Opens on the chosen day's month (not this month).
-        defaultMonth={date}
+        className={cn(
+          "w-full p-0 [&_.rdp-day]:aspect-auto! [&_.rdp-day]:h-9! [&_.rdp-day_button]:aspect-auto! [&_.rdp-day_button]:h-9!",
+          picking && "hidden",
+        )}
         disabled={disablePast ? { before: todayLondon } : undefined}
         endMonth={new Date(2035, 11)}
         locale={enGB}
+        // Our own header above shows the month (and picks it).
+        classNames={{ month_caption: "hidden" }}
+        hideNavigation
         mode="single"
+        month={month}
+        onMonthChange={showMonth}
         onSelect={(next) => {
           setDate(next);
           // The day's picked: the calendar folds away (the time is below).
@@ -174,7 +340,7 @@ export function DateTimePicker({
           }
         }}
         selected={date}
-        startMonth={disablePast ? todayLondon : new Date(2020, 0)}
+        startMonth={firstMonth}
         timeZone={LONDON}
       />
     </div>
@@ -250,6 +416,9 @@ export function DateTimePicker({
       className="w-full justify-start font-normal"
       disabled={disabled}
       id={id}
+      // In the form (a phone on its side) it opens and folds away the
+      // calendar under it; otherwise the pop-up does that.
+      onClick={short ? () => openChange(!open) : undefined}
       ref={triggerRef}
       type="button"
       variant="outline"
@@ -285,46 +454,54 @@ export function DateTimePicker({
         tabIndex={-1}
         value={value}
       />
-      <Popover
-        onOpenChange={(next) => {
-          if (disabled) return;
-          setOpen(next);
-        }}
-        open={disabled ? false : open}
-      >
-        <PopoverTrigger asChild>
+      {short ? (
+        <>
           {trigger}
-        </PopoverTrigger>
-        <PopoverContent
-          align="start"
-          // As wide as the button; never taller than the room left on the
-          // screen, scrolling inside if it must (a phone, or Android with
-          // its keyboard up). data-vaul-no-drag: in a drawer, a finger
-          // moving in here scrolls the calendar, not the drawer.
-          className="max-h-(--radix-popover-content-available-height) w-(--radix-popover-trigger-width) min-w-72 overflow-y-auto overscroll-contain p-3"
-          data-vaul-no-drag=""
-          onFocusOutside={(event) => {
-            if (isOwnNestedSelectLayer(event.target)) event.preventDefault();
-          }}
-          // Radix focuses the month box as the pop-up opens, before it is in
-          // place; Safari (iPad) then scrolled the calendar (and the drawer)
-          // to it, cutting off the month row. Focus the pop-up itself once
-          // it has settled, from the top.
-          onOpenAutoFocus={(event) => {
-            event.preventDefault();
-            const content = event.currentTarget as HTMLElement;
-            window.requestAnimationFrame(() => {
-              content.focus({ preventScroll: true });
-              content.scrollTop = 0;
-            });
-          }}
-          onInteractOutside={(event) => {
-            if (isOwnNestedSelectLayer(event.target)) event.preventDefault();
-          }}
+          {inlineOpen ? (
+            <div className="rounded-md border p-3" ref={inlinePanelRef}>
+              {panel}
+            </div>
+          ) : null}
+        </>
+      ) : (
+        <Popover
+          onOpenChange={openChange}
+          open={disabled ? false : open}
         >
-          {panel}
-        </PopoverContent>
-      </Popover>
+          <PopoverTrigger asChild>
+            {trigger}
+          </PopoverTrigger>
+          <PopoverContent
+            align="start"
+            // As wide as the button; never taller than the room left on the
+            // screen, scrolling inside if it must (a phone, or Android with
+            // its keyboard up). data-vaul-no-drag: in a drawer, a finger
+            // moving in here scrolls the calendar, not the drawer.
+            className="max-h-(--radix-popover-content-available-height) w-(--radix-popover-trigger-width) min-w-72 overflow-y-auto overscroll-contain p-3"
+            data-vaul-no-drag=""
+            onFocusOutside={(event) => {
+              if (isOwnNestedSelectLayer(event.target)) event.preventDefault();
+            }}
+            // Radix focuses the month box as the pop-up opens, before it is in
+            // place; Safari (iPad) then scrolled the calendar (and the drawer)
+            // to it, cutting off the month row. Focus the pop-up itself once
+            // it has settled, from the top.
+            onOpenAutoFocus={(event) => {
+              event.preventDefault();
+              const content = event.currentTarget as HTMLElement;
+              window.requestAnimationFrame(() => {
+                content.focus({ preventScroll: true });
+                content.scrollTop = 0;
+              });
+            }}
+            onInteractOutside={(event) => {
+              if (isOwnNestedSelectLayer(event.target)) event.preventDefault();
+            }}
+          >
+            {panel}
+          </PopoverContent>
+        </Popover>
+      )}
       {time}
       {missing && !value ? (
         <p className="text-sm text-destructive" role="alert">

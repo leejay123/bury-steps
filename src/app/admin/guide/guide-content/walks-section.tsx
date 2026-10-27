@@ -151,7 +151,13 @@ export function WalksSection({
               Set the date and start time in <strong>UK time</strong>. Choose
               a date opens the calendar just under the button, as wide as it
               (on a small screen it scrolls inside itself, and in the drawer it
-              always stays inside the drawer, never cut off at the top). It opens on the month of the date already chosen; picking the day closes it. The
+              always stays inside the drawer, never cut off at the top). On a phone turned on its
+              side it opens in the form itself, under the button, and the form scrolls as normal.
+              It opens on the month of the date already chosen. Use the arrows for the month
+              before or after, or tap the month&apos;s name (for example &quot;November 2026&quot;) to see
+              the year&apos;s twelve months as buttons, with arrows for the year before or after:
+              tap a month to see its days. Picking the day closes it. Every list (hour, minute,
+              length and the rest) is never taller than the screen and opens on the current choice. The
               start time is its own Hour and Minute boxes under the date. Length is a list of the usual
               lengths, and defaults to 90 minutes. For any other length, choose{" "}
               <strong>Other length…</strong> at the bottom of the list and pick the
