@@ -55,21 +55,31 @@ export function PageLoader() {
     return () => window.clearTimeout(timer);
   }, [loading]);
 
-  if (!loading || gaveUp || style === "skeletons") return null;
+  const showing = loading && !gaveUp && style !== "skeletons";
+
+  // While it shows, the page's area holds nothing else (globals.css), so the
+  // loading screen is the same size every time: one screen, the footer at
+  // the bottom, and the loader in the middle of the space between.
+  useEffect(() => {
+    const html = document.documentElement;
+    if (showing) html.setAttribute("data-page-loader-on", "");
+    else html.removeAttribute("data-page-loader-on");
+  }, [showing]);
+
+  if (!showing) return null;
   const main = document.getElementById("main-content");
   if (!main) return null;
   return createPortal(
     <div
       aria-busy="true"
       aria-label="Loading"
-      // Stops 1px short of the footer: the footer's top line (FullWidthDivider,
-      // -top-px) sits on the page area's last pixel.
-      className="absolute inset-x-0 top-0 bottom-px z-50 bg-background text-foreground"
+      // No z-index: the footer (and its top line, which reaches 1px up into
+      // this area) stays drawn over it.
+      className="absolute inset-0 flex items-center justify-center bg-background text-foreground"
       data-page-loader=""
       role="status"
     >
-      {/* In the middle of the page's area, or of the screen on a long one. */}
-      <InfinityLoop className="absolute top-[min(50%,40vh)] left-1/2 size-10 -translate-x-1/2 -translate-y-1/2" />
+      <InfinityLoop className="size-10" />
     </div>,
     main,
   );

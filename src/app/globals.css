@@ -688,6 +688,15 @@ html:has([data-bottom-nav]:not([hidden] *)) #bs-bottom-boot {
 html:not([data-loading-style="skeletons"]) [data-page-loading] {
   display: none !important;
 }
+/* While the loader shows (page-loader.tsx), the page's area holds only the
+   loader: everything already loaded is hidden too, so the area is the room
+   left between the header and the footer every time, never longer. */
+html[data-page-loader-on] #main-content > :not([data-page-loader]) {
+  display: none !important;
+}
+html[data-page-loader-on] #main-content {
+  min-height: 16rem;
+}
 /* Pills tabs (ui/tabs.tsx, "transition"): the chosen tab's content drops
    in from above, sharpening from a slight blur. */
 @keyframes tab-drop-in {
