@@ -479,8 +479,9 @@ export function WalkMap({
       <div className={cn("relative overflow-hidden rounded-2xl border", round)}>
         {mapArea() ?? <div className={cn("bg-muted", height)} />}
         {/* Clear of the map's © OpenStreetMap line (its licence needs it
-            seen), and as wide as its buttons need (they stuck out). */}
-        <div className="absolute right-3 bottom-12 left-3 flex flex-col gap-3 rounded-xl bg-background/95 p-4 shadow-lg backdrop-blur-sm sm:right-auto sm:bottom-8 sm:w-max sm:max-w-[calc(100%-1.5rem)]">
+            seen). A set width the two buttons share (as wide as its
+            content, full-width buttons had nothing to share and stuck out). */}
+        <div className="absolute right-3 bottom-12 left-3 flex flex-col gap-3 rounded-xl bg-background/95 p-4 shadow-lg backdrop-blur-sm sm:right-auto sm:bottom-8 sm:w-[26rem] sm:max-w-[calc(100%-1.5rem)]">
           {title}
           {at("above-map")}
           {buttons}
