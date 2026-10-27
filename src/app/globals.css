@@ -681,7 +681,8 @@ html:has([data-bottom-nav]:not([hidden] *)) #bs-bottom-boot {
 }
 
 /* The loading screen (loading.tsx and the pages' loading fallbacks): a
-   blank page with an infinity spinner instead of grey shapes. It only shows
+   blank page with loading-ui's Infinity loader (loading-ui.com, drawn here
+   as an image so it shows before any script runs) instead of grey shapes. It only shows
    while a page that isn't already in the browser is fetched; pages opened
    recently show at once. The placeholder's own markup stays (hidden) and
    keeps its space, so nothing jumps when the page arrives; the spinner sits
@@ -705,13 +706,13 @@ html:has([data-bottom-nav]:not([hidden] *)) #bs-bottom-boot {
   position: absolute;
   left: 50%;
   top: min(50%, 35vh);
-  width: 4.5rem;
-  height: 2.25rem;
+  width: 5rem;
+  height: 5rem;
   translate: -50% -50%;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 50'%3E%3Cstyle%3E%40keyframes d%7Bto%7Bstroke-dashoffset:-100%7D%7D.d%7Banimation:d 1.6s linear infinite%7D%40media %28prefers-reduced-motion:reduce%29%7B.d%7Banimation-duration:4s%7D%7D%3C/style%3E%3Cpath d='M50 25C40 7 12 7 12 25s28 18 38 0 38-18 38 0-28 18-38 0Z' fill='none' stroke='%23e5e5e5' stroke-width='6' stroke-linecap='round'/%3E%3Cpath class='d' d='M50 25C40 7 12 7 12 25s28 18 38 0 38-18 38 0-28 18-38 0Z' pathLength='100' fill='none' stroke='%23171717' stroke-width='6' stroke-linecap='round' stroke-dasharray='28 72'/%3E%3C/svg%3E") center / contain no-repeat;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Cstyle%3E%40keyframes d%7Bto%7Bstroke-dashoffset:256.58892822265625%7D%7Dpath%7Btransform:scale%28.8%29%3Btransform-origin:50px 50px%3Banimation:d 2s linear infinite%7D%3C/style%3E%3Cpath d='M24.3 30C11.4 30 5 43.3 5 50s6.4 20 19.3 20c19.3 0 32.1-40 51.4-40C88.6 30 95 43.3 95 50s-6.4 20-19.3 20C56.4 70 43.6 30 24.3 30z' stroke='%23171717' stroke-width='10' stroke-linecap='round' stroke-dasharray='205.271142578125 51.317785644531256'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 .dark [data-page-loading]:not([data-page-loading] [data-page-loading])::after {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 50'%3E%3Cstyle%3E%40keyframes d%7Bto%7Bstroke-dashoffset:-100%7D%7D.d%7Banimation:d 1.6s linear infinite%7D%40media %28prefers-reduced-motion:reduce%29%7B.d%7Banimation-duration:4s%7D%7D%3C/style%3E%3Cpath d='M50 25C40 7 12 7 12 25s28 18 38 0 38-18 38 0-28 18-38 0Z' fill='none' stroke='%23404040' stroke-width='6' stroke-linecap='round'/%3E%3Cpath class='d' d='M50 25C40 7 12 7 12 25s28 18 38 0 38-18 38 0-28 18-38 0Z' pathLength='100' fill='none' stroke='%23fafafa' stroke-width='6' stroke-linecap='round' stroke-dasharray='28 72'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Cstyle%3E%40keyframes d%7Bto%7Bstroke-dashoffset:256.58892822265625%7D%7Dpath%7Btransform:scale%28.8%29%3Btransform-origin:50px 50px%3Banimation:d 2s linear infinite%7D%3C/style%3E%3Cpath d='M24.3 30C11.4 30 5 43.3 5 50s6.4 20 19.3 20c19.3 0 32.1-40 51.4-40C88.6 30 95 43.3 95 50s-6.4 20-19.3 20C56.4 70 43.6 30 24.3 30z' stroke='%23fafafa' stroke-width='10' stroke-linecap='round' stroke-dasharray='205.271142578125 51.317785644531256'/%3E%3C/svg%3E");
 }
 /* Pills tabs (ui/tabs.tsx, "transition"): the chosen tab's content drops
    in from above, sharpening from a slight blur. */
