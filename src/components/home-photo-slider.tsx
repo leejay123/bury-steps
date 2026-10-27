@@ -7,7 +7,10 @@ import type { SlideView } from "@/lib/slides";
 export function WalkPhotoSlider({ slides }: { slides: SlideView[] }) {
   return (
     <ImageSlider
-      className="aspect-[2/1] h-auto"
+      // Shorter on wider screens; each photo shown whole, a blurred copy of
+      // it filling the sides (it was cropped to fill a taller box).
+      className="aspect-video h-auto md:aspect-[3/1]"
+      fit="whole"
       images={slides.map((slide) => ({ src: slide.src, alt: slide.alt }))}
       interval={5500}
       label="Photos from our walks"

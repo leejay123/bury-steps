@@ -212,6 +212,7 @@ export function WalkStepsFooter({
     return (
       <DrawerFormFooter
         cancelLabel={steps ? "Back" : undefined}
+        halves
         label={label}
         onCancel={steps ? () => steps.go(steps.step - 1) : undefined}
         pending={pending}
@@ -219,7 +220,8 @@ export function WalkStepsFooter({
       />
     );
   return (
-    <DrawerFooter className="grid grid-cols-2 sm:flex sm:flex-row sm:justify-end">
+    // Two buttons, half the drawer's width each on every screen.
+    <DrawerFooter className="grid grid-cols-2">
       {steps.step === 0 ? (
         <DrawerClose asChild>
           <Button type="button" variant="outline">

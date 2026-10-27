@@ -30,7 +30,11 @@ export function DrawerFormFooter({
   onCancel,
   pending: pendingProp,
   pendingLabel,
+  halves = false,
 }: {
+  /** The two buttons half the drawer's width each on every screen (not
+   * just phones). */
+  halves?: boolean;
   cancelLabel?: string;
   /** For forms submitted by hand (see useKeepFormOnError) — useFormStatus
    * only sees <form action> submissions. */
@@ -50,7 +54,9 @@ export function DrawerFormFooter({
     </Button>
   );
   return (
-    <DrawerFooter className="grid grid-cols-2 sm:flex sm:flex-row sm:justify-end">
+    <DrawerFooter
+      className={cn("grid grid-cols-2", !halves && "sm:flex sm:flex-row sm:justify-end")}
+    >
       {onCancel ? cancel : <DrawerClose asChild>{cancel}</DrawerClose>}
       <Button disabled={pending || disabled} type="submit">
         {pending ? pendingLabel : label}

@@ -40,6 +40,9 @@ interface ImageSliderProps extends React.HTMLAttributes<HTMLElement> {
   scrim?: boolean;
   /** Accessible name for the carousel region */
   label?: string;
+  /** "whole": each photo shown whole (never cropped), with a blurred copy
+   * of it filling any space around it so the colours match. */
+  fit?: "cover" | "whole";
 }
 
 const button =
@@ -58,6 +61,7 @@ export function ImageSlider({
   interval = 5000,
   scrim = true,
   label = "Image slider",
+  fit = "cover",
   className,
   ...props
 }: ImageSliderProps) {
@@ -171,9 +175,21 @@ export function ImageSlider({
                 }
                 className="absolute inset-0"
               >
+                {fit === "whole" ? (
+                  <Image
+                    alt=""
+                    aria-hidden
+                    className="size-full scale-110 object-cover blur-2xl"
+                    draggable={false}
+                    fill
+                    // A small copy is plenty once it is blurred.
+                    sizes="25vw"
+                    src={image.src}
+                  />
+                ) : null}
                 <Image
                   alt={image.alt}
-                  className="size-full object-cover"
+                  className={cn("size-full", fit === "whole" ? "object-contain" : "object-cover")}
                   draggable={false}
                   fill
                   priority={index === 0}
