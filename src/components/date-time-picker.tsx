@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CalendarIcon } from "lucide-react";
 import { enGB } from "react-day-picker/locale";
 import { Calendar } from "@/components/ui/calendar";
@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useOverlayRoot } from "@/components/overlay-root";
 import { combineLondonDateAndTime, LONDON, londonWallClockToUtc } from "@/lib/dates";
 
 const HOURS = Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, "0"));
@@ -67,6 +68,11 @@ export function DateTimePicker({
   const [open, setOpen] = useState(false);
   const [missing, setMissing] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const inlinePanelRef = useRef<HTMLDivElement>(null);
+  // Inside a drawer or dialog the popover is clipped by the panel's edges —
+  // on a phone it flipped above the button and lost the top of the
+  // calendar. There, open the calendar in the form itself, under the button.
+  const inline = Boolean(useOverlayRoot());
   const [date, setDate] = useState<Date | undefined>(initial?.date);
   const [hour, setHour] = useState(initial?.hour ?? "13");
   const [minute, setMinute] = useState(initial?.minute ?? "00");
@@ -132,6 +138,139 @@ export function DateTimePicker({
     return base.filter((item) => Number(item) > nowLondon.minute);
   }, [disablePast, hour, isSelectedToday, minutes, nowLondon.hour, nowLondon.minute]);
 
+  useEffect(() => {
+    if (!inline || !open) return;
+    // Scroll only the drawer's own scroller: scrollIntoView also pans the
+    // page, which on iOS slides the drawer off the screen.
+    const panel = inlinePanelRef.current;
+    let scroller = panel?.parentElement ?? null;
+    while (scroller) {
+      const overflowY = window.getComputedStyle(scroller).overflowY;
+      if (overflowY === "auto" || overflowY === "scroll") break;
+      scroller = scroller.parentElement;
+    }
+    if (!panel || !scroller) return;
+    const box = scroller.getBoundingClientRect();
+    const rect = panel.getBoundingClientRect();
+    if (rect.bottom > box.bottom - 16) {
+      scroller.scrollTop += Math.min(rect.bottom - box.bottom + 16, rect.top - box.top - 16);
+    }
+  }, [inline, open]);
+
+  const panel = (
+    <div className="flex flex-col gap-3">
+      <Calendar
+        captionLayout="dropdown"
+        className="p-0"
+        disabled={disablePast ? { before: todayLondon } : undefined}
+        endMonth={new Date(2035, 11)}
+        locale={enGB}
+        mode="single"
+        onSelect={(next) => {
+          setDate(next);
+          if (!disablePast || !next) return;
+          const sameDay =
+            next.getFullYear() === todayLondon.getFullYear() &&
+            next.getMonth() === todayLondon.getMonth() &&
+            next.getDate() === todayLondon.getDate();
+          if (!sameDay) return;
+          if (Number(hour) < nowLondon.hour) {
+            setHour(String(nowLondon.hour).padStart(2, "0"));
+            const nextMinute = MINUTES.find((item) => Number(item) > nowLondon.minute);
+            if (nextMinute) setMinute(nextMinute);
+          } else if (
+            Number(hour) === nowLondon.hour &&
+            Number(minute) <= nowLondon.minute
+          ) {
+            const nextMinute = MINUTES.find((item) => Number(item) > nowLondon.minute);
+            if (nextMinute) setMinute(nextMinute);
+            else {
+              const nextHour = HOURS.find((item) => Number(item) > nowLondon.hour);
+              if (nextHour) {
+                setHour(nextHour);
+                setMinute("00");
+              }
+            }
+          }
+        }}
+        selected={date}
+        startMonth={disablePast ? todayLondon : new Date(2020, 0)}
+        timeZone={LONDON}
+      />
+      <div className="grid grid-cols-2 gap-2">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={`${id}-hour`}>Hour</Label>
+          <Select
+            onValueChange={(next) => {
+              setHour(next);
+              if (
+                disablePast &&
+                isSelectedToday &&
+                Number(next) === nowLondon.hour &&
+                Number(minute) <= nowLondon.minute
+              ) {
+                const nextMinute = MINUTES.find((item) => Number(item) > nowLondon.minute);
+                if (nextMinute) setMinute(nextMinute);
+              }
+            }}
+            value={hours.includes(hour) ? hour : (hours[0] ?? hour)}
+          >
+            <SelectTrigger id={`${id}-hour`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent data-date-time-picker-select="">
+              {hours.map((item) => (
+                <SelectItem key={item} value={item}>
+                  {item}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={`${id}-minute`}>Minute</Label>
+          <Select
+            onValueChange={setMinute}
+            value={
+              selectableMinutes.includes(minute)
+                ? minute
+                : (selectableMinutes[0] ?? minute)
+            }
+          >
+            <SelectTrigger id={`${id}-minute`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent data-date-time-picker-select="">
+              {selectableMinutes.map((item) => (
+                <SelectItem key={item} value={item}>
+                  {item}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground">UK time.</p>
+    </div>
+  );
+
+  const trigger = (
+    <Button
+      aria-expanded={open}
+      aria-invalid={missing && !value ? true : undefined}
+      className="w-full justify-start font-normal"
+      disabled={disabled}
+      id={id}
+      onClick={inline ? () => setOpen((current) => !current) : undefined}
+      ref={triggerRef}
+      type="button"
+      variant="outline"
+    >
+      <CalendarIcon data-icon="inline-start" />
+      {label}
+    </Button>
+  );
+
   return (
     <div className="flex flex-col gap-2">
       {/*
@@ -158,134 +297,40 @@ export function DateTimePicker({
         tabIndex={-1}
         value={value}
       />
-      <Popover
-        onOpenChange={(next) => {
-          if (disabled) return;
-          setOpen(next);
-        }}
-        open={disabled ? false : open}
-      >
-        <PopoverTrigger asChild>
-          <Button
-            aria-expanded={open}
-            aria-invalid={missing && !value ? true : undefined}
-            className="w-full justify-start font-normal"
-            disabled={disabled}
-            id={id}
-            ref={triggerRef}
-            type="button"
-            variant="outline"
-          >
-            <CalendarIcon data-icon="inline-start" />
-            {label}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          align="start"
-          className="w-auto p-3"
-          onFocusOutside={(event) => {
-            if (isOwnNestedSelectLayer(event.target)) event.preventDefault();
-          }}
-          onInteractOutside={(event) => {
-            if (isOwnNestedSelectLayer(event.target)) event.preventDefault();
-          }}
-        >
-          <div className="flex flex-col gap-3">
-            <Calendar
-              captionLayout="dropdown"
-              className="p-0"
-              disabled={disablePast ? { before: todayLondon } : undefined}
-              endMonth={new Date(2035, 11)}
-              locale={enGB}
-              mode="single"
-              onSelect={(next) => {
-                setDate(next);
-                if (!disablePast || !next) return;
-                const sameDay =
-                  next.getFullYear() === todayLondon.getFullYear() &&
-                  next.getMonth() === todayLondon.getMonth() &&
-                  next.getDate() === todayLondon.getDate();
-                if (!sameDay) return;
-                if (Number(hour) < nowLondon.hour) {
-                  setHour(String(nowLondon.hour).padStart(2, "0"));
-                  const nextMinute = MINUTES.find((item) => Number(item) > nowLondon.minute);
-                  if (nextMinute) setMinute(nextMinute);
-                } else if (
-                  Number(hour) === nowLondon.hour &&
-                  Number(minute) <= nowLondon.minute
-                ) {
-                  const nextMinute = MINUTES.find((item) => Number(item) > nowLondon.minute);
-                  if (nextMinute) setMinute(nextMinute);
-                  else {
-                    const nextHour = HOURS.find((item) => Number(item) > nowLondon.hour);
-                    if (nextHour) {
-                      setHour(nextHour);
-                      setMinute("00");
-                    }
-                  }
-                }
-              }}
-              selected={date}
-              startMonth={disablePast ? todayLondon : new Date(2020, 0)}
-              timeZone={LONDON}
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor={`${id}-hour`}>Hour</Label>
-                <Select
-                  onValueChange={(next) => {
-                    setHour(next);
-                    if (
-                      disablePast &&
-                      isSelectedToday &&
-                      Number(next) === nowLondon.hour &&
-                      Number(minute) <= nowLondon.minute
-                    ) {
-                      const nextMinute = MINUTES.find((item) => Number(item) > nowLondon.minute);
-                      if (nextMinute) setMinute(nextMinute);
-                    }
-                  }}
-                  value={hours.includes(hour) ? hour : (hours[0] ?? hour)}
-                >
-                  <SelectTrigger id={`${id}-hour`}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent data-date-time-picker-select="">
-                    {hours.map((item) => (
-                      <SelectItem key={item} value={item}>
-                        {item}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor={`${id}-minute`}>Minute</Label>
-                <Select
-                  onValueChange={setMinute}
-                  value={
-                    selectableMinutes.includes(minute)
-                      ? minute
-                      : (selectableMinutes[0] ?? minute)
-                  }
-                >
-                  <SelectTrigger id={`${id}-minute`}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent data-date-time-picker-select="">
-                    {selectableMinutes.map((item) => (
-                      <SelectItem key={item} value={item}>
-                        {item}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+      {inline ? (
+        <>
+          {trigger}
+          {open && !disabled ? (
+            <div className="rounded-md border p-3" ref={inlinePanelRef}>
+              {panel}
             </div>
-            <p className="text-xs text-muted-foreground">UK time.</p>
-          </div>
-        </PopoverContent>
-      </Popover>
+          ) : null}
+        </>
+      ) : (
+        <Popover
+          onOpenChange={(next) => {
+            if (disabled) return;
+            setOpen(next);
+          }}
+          open={disabled ? false : open}
+        >
+          <PopoverTrigger asChild>
+            {trigger}
+          </PopoverTrigger>
+          <PopoverContent
+            align="start"
+            className="w-auto p-3"
+            onFocusOutside={(event) => {
+              if (isOwnNestedSelectLayer(event.target)) event.preventDefault();
+            }}
+            onInteractOutside={(event) => {
+              if (isOwnNestedSelectLayer(event.target)) event.preventDefault();
+            }}
+          >
+            {panel}
+          </PopoverContent>
+        </Popover>
+      )}
       {missing && !value ? (
         <p className="text-sm text-destructive" role="alert">
           Choose a date and time.
