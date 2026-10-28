@@ -1333,3 +1333,12 @@ html[data-view="dashboard"][data-dash-design="4"] #main-content {
   border-radius: 0.75rem;
   background: var(--background);
 }
+
+/* The dashboard view: the cookie notice sits beside the side menu, not under it. */
+@media (min-width: 768px) {
+  html[data-view="dashboard"] [data-cookie-consent] {
+    left: 15rem;
+    max-width: none;
+    width: auto;
+  }
+}

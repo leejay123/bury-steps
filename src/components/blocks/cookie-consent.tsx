@@ -161,6 +161,8 @@ const CookieConsent = React.forwardRef<HTMLDivElement, CookieConsentProps>(
 
     const commonWrapperProps = {
       ...props,
+      // The dashboard view moves it clear of its side menu (globals.css).
+      "data-cookie-consent": "",
       "aria-labelledby": titleId,
       "aria-live": "polite" as const,
       className: cn(
