@@ -86,6 +86,13 @@ function cssFor(choice: Customize) {
   return `:root {\n  /* Bury Steps — shadcn.io design: theme ${choice.theme}, base ${choice.base}, style ${choice.style}, radius ${choice.radius} */\n  --preset: ${encodePreset(choice)};\n}`;
 }
 
+/** The dot on the wand, as on shadcn.io: shown while this browser's look differs from the default. */
+export function CustomizeDot() {
+  const choice = useCustomize();
+  if (encodePreset(choice) === encodePreset(DEFAULT_CUSTOMIZE)) return null;
+  return <span aria-hidden="true" className="globalnav-customize-dot" />;
+}
+
 /** shadcn.io's Customize panel: theme, base, style, radius and a preset code, for this browser. */
 export function CustomizePanel() {
   const choice = useCustomize();

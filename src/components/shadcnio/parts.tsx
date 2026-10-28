@@ -360,43 +360,6 @@ export function MiniWalk({ title, when, detail }: { title: string; when: string;
   );
 }
 
-export function MiniQuestion({ question }: { question: string }) {
-  return (
-    <span className="flex size-full flex-col gap-1.5 p-3 text-[8px] leading-tight text-foreground">
-      <span className="flex items-center gap-1.5">
-        <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-foreground text-[8px] font-semibold text-background">
-          ?
-        </span>
-        <span className="line-clamp-2 font-semibold text-[9px]">{question}</span>
-      </span>
-      <span className="h-1 w-11/12 rounded-full bg-muted-foreground/25" />
-      <span className="h-1 w-10/12 rounded-full bg-muted-foreground/25" />
-      <span className="h-1 w-7/12 rounded-full bg-muted-foreground/25" />
-    </span>
-  );
-}
-
-export function MiniPage({ title, icon }: { title: string; icon: ReactNode }) {
-  return (
-    <span className="flex size-full flex-col text-[8px] leading-tight text-foreground">
-      <span className="flex items-center gap-1 border-b border-foreground/10 px-2.5 py-1.5">
-        <span className="size-1.5 rounded-full bg-foreground/20" />
-        <span className="size-1.5 rounded-full bg-foreground/20" />
-        <span className="size-1.5 rounded-full bg-foreground/20" />
-      </span>
-      <span className="flex flex-1 flex-col gap-1.5 p-2.5">
-        <span className="flex items-center gap-1.5 font-semibold text-[10px] [&_svg]:size-3">
-          {icon}
-          {title}
-        </span>
-        <span className="h-1 w-11/12 rounded-full bg-muted-foreground/25" />
-        <span className="h-1 w-9/12 rounded-full bg-muted-foreground/25" />
-        <span className="mt-auto h-3.5 w-14 rounded-full bg-foreground" />
-      </span>
-    </span>
-  );
-}
-
 export function MiniNote({ text, icon }: { text: string; icon: ReactNode }) {
   return (
     <span className="flex size-full flex-col gap-2 p-3 text-foreground">

@@ -370,6 +370,11 @@ html[data-auth="in"] .globalnav-account-trigger { display: flex; }
 /* Bury Steps: the bell and avatar menu sit centred in the bar like their icons. */
 .globalnav-bell, .globalnav-avatar-item { align-items: center; display: flex; }
 .globalnav-bell > *, .globalnav-avatar-item > * { align-items: center; display: flex; }
+/* Phones: the bell, Dashboard and avatar step aside while the menu or a panel is open, like their own icons, and sit closer together. */
+@media (max-width: 1023.98px) {
+  .globalnav-with-flyout-open :is(.globalnav-bell, .globalnav-dashboard, .globalnav-avatar-item) > * { visibility: hidden; opacity: 0; transition: opacity .24s var(--gn-ease), visibility .24s step-end; }
+  :is(.globalnav-bell, .globalnav-avatar-item, .globalnav-dashboard) { width: auto; padding-inline: 4px; }
+}
 @media (min-width: 1024px) { .globalnav-account .globalnav-flyout-content { padding-top: 40px; padding-bottom: 80px; } }
 .globalnav-account-caption { color: var(--gn-color-tertiary); letter-spacing: -0.01em; margin: 0px; font-size: 12px; font-weight: 400; line-height: 1.33337; display: block; }
 .globalnav-account-plan { color: var(--gn-accent); }

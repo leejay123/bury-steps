@@ -1,4 +1,4 @@
-import { createElement } from "react";
+import { createElement, type ReactNode } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -18,7 +18,6 @@ import {
   Mountain,
   Phone,
   ShieldCheck,
-  Smartphone,
   Smile,
   Star,
   Sun,
@@ -32,7 +31,7 @@ import type { TestimonialView } from "@/lib/testimonials";
 import type { EssentialItem } from "@/lib/walk-essentials";
 import { essentialIcon } from "@/lib/walk-essentials";
 import { CARD_GRID, GALLERY_GRID, REVIEW_GRID } from "./grids";
-import { BUTTON_OUTLINE, BUTTON_PRIMARY, GRID, MiniNote, MiniPage, MiniQuestion, MiniWalk, Section, SectionHead, Tile } from "./parts";
+import { BUTTON_OUTLINE, BUTTON_PRIMARY, GRID, MiniNote, MiniWalk, Section, SectionHead, Tile } from "./parts";
 import type { ShadcnHomeData } from "./home-data";
 import { ShadcnFaq } from "./faq";
 import { BandField, HeroField } from "./ascii-field";
@@ -52,6 +51,8 @@ export type ShadcnHomeProps = {
   facebookUrl: string;
   joinHref: string;
   signInHref: string;
+  /** The original homepage's "How this started" part, with its Read more drawer. */
+  about: { title: string; teaser: string; readMore: ReactNode };
 };
 
 const number = new Intl.NumberFormat("en-GB");
@@ -61,13 +62,12 @@ export function ShadcnHome(props: ShadcnHomeProps) {
   return (
     <main aria-label="Home">
       <Hero {...props} />
+      <AboutSection about={props.about} />
       <WalksSection data={data} />
       <ExpectSection expect={props.expect} />
       <HowItWorksSection />
       <GoalsSection goals={props.goals} />
       <RulesSection rules={props.rules} />
-      <ExploreSection facebookUrl={props.facebookUrl} />
-      <FaqTopicsSection categories={props.faqCategories} faqs={props.faqs} />
       <EssentialsSection essentials={props.essentials} />
       <ReviewsSection testimonials={props.testimonials} />
       <ShadcnFaq categories={props.faqCategories} faqs={props.faqs} facebookUrl={props.facebookUrl} />
@@ -132,6 +132,26 @@ function Hero({ data, siteName, tagline, logo, joinHref }: ShadcnHomeProps) {
         </div>
       </div>
     </section>
+  );
+}
+
+/** The group's story, as on the original homepage: a short teaser and Read more for the whole of it. */
+function AboutSection({ about }: { about: ShadcnHomeProps["about"] }) {
+  const [lead, ...rest] = about.teaser.split(/(?<=[.!?])\s+/);
+  return (
+    <Section id="home-about-heading">
+      <div className="px-5 md:px-12 flex flex-col gap-5 pt-12 pb-12 md:flex-row md:items-end md:justify-between md:gap-8 md:pt-16 md:pb-16">
+        <div className="flex flex-col max-w-2xl gap-3 lg:gap-4">
+          <h2 className="text-balance font-semibold text-3xl tracking-tighter md:text-4xl" id="home-about-heading">
+            {about.title}
+          </h2>
+          <p className="text-pretty text-muted-foreground md:text-lg">
+            <span className="font-medium text-foreground">{lead}</span> {rest.join(" ")}
+          </p>
+        </div>
+        <div className="flex shrink-0 gap-2">{about.readMore}</div>
+      </div>
+    </Section>
   );
 }
 
@@ -279,89 +299,6 @@ function RulesSection({ rules }: { rules: AboutRule[] }) {
             sub={rule.body}
             title={rule.title}
             visual={{ kind: "stack", icons: RULE_ICONS[i % RULE_ICONS.length]! }}
-          />
-        ))}
-      </ul>
-    </Section>
-  );
-}
-
-function ExploreSection({ facebookUrl }: { facebookUrl: string }) {
-  const pages = [
-    { href: "/walks", title: "Walks", sub: "Coming up", icon: <Footprints /> },
-    { href: "/notices", title: "Notices", sub: "News", icon: <Bell /> },
-    { href: "/progress", title: "Progress", sub: "The group's miles", icon: <BarChart3 /> },
-    { href: "/history", title: "Your history", sub: "Walks you've done", icon: <History /> },
-    { href: "/contact", title: "Contact us", sub: "Ask a question", icon: <Mail /> },
-    { href: "/apps", title: "Walking apps", sub: "Apps we like", icon: <Smartphone /> },
-    ...(facebookUrl ? [{ href: facebookUrl, title: "Facebook group", sub: "Chat with members", icon: <Users /> }] : []),
-    { href: "/email-preferences", title: "Email preferences", sub: "Choose your emails", icon: <Bell /> },
-  ].slice(0, 8);
-  return (
-    <Section id="home-explore-heading">
-      <SectionHead
-        action={{ href: "/walks", label: "Start exploring" }}
-        id="home-explore-heading"
-        lead="Everything in one place:"
-        rest="the walks, the notices, the group's progress and your own walk history. Free with an account."
-        title="Explore the site"
-      />
-      <ul aria-label="Pages" className={CARD_GRID}>
-        {pages.map((page, i) => (
-          <li className={i >= 4 ? "max-sm:hidden" : ""} key={page.title}>
-            {page.href.startsWith("http") ? (
-              <a href={page.href} rel="noopener noreferrer" target="_blank">
-                <strong>{page.title}</strong>
-                <small>{page.sub}</small>
-                <i />
-                <span>
-                  <MiniPage icon={page.icon} title={page.title} />
-                </span>
-              </a>
-            ) : (
-              <Link href={page.href}>
-                <strong>{page.title}</strong>
-                <small>{page.sub}</small>
-                <i />
-                <span>
-                  <MiniPage icon={page.icon} title={page.title} />
-                </span>
-              </Link>
-            )}
-          </li>
-        ))}
-      </ul>
-    </Section>
-  );
-}
-
-function FaqTopicsSection({ categories, faqs }: { categories: FaqCategoryView[]; faqs: FaqView[] }) {
-  const total = categories.reduce((sum, category) => sum + category.faqCount, 0);
-  return (
-    <Section id="home-topics-heading">
-      <SectionHead
-        action={{ href: "#faq", label: "Read the answers" }}
-        id="home-topics-heading"
-        lead={`${total} questions, answered,`}
-        rest="from joining and what to bring to how clock-in works. Still unsure? Ask us any time."
-        title="Questions people ask"
-      />
-      <ul aria-label="Question topics" className={GRID}>
-        {categories.slice(0, 8).map((category, i) => (
-          <Tile
-            className={i >= 4 ? "max-sm:hidden" : undefined}
-            href="#faq"
-            key={category.id}
-            sub={category.faqCount === 1 ? "1 question" : `${category.faqCount} questions`}
-            title={category.label}
-            visual={{
-              kind: "fan",
-              cards: (() => {
-                const questions = faqs.filter((faq) => faq.categoryId === category.id);
-                const list = questions.length ? questions : faqs;
-                return [2, 1, 0].map((k) => <MiniQuestion key={k} question={list[k % list.length]?.question ?? category.label} />);
-              })(),
-            }}
           />
         ))}
       </ul>

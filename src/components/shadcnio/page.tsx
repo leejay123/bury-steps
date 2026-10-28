@@ -12,6 +12,8 @@ import { ShadcnHome } from "./home";
 import { getShadcnHomeData } from "./home-data";
 import { PromoBar } from "./promo-bar";
 import { ShadcnAccountTools } from "./account-tools";
+import { HomeAboutDrawer } from "@/components/home-about-drawer";
+import { BUTTON_PRIMARY } from "./parts";
 
 /**
  * The whole homepage in the shadcn.io site design — their announcement bar,
@@ -156,6 +158,31 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
         <div className="mx-auto max-w-3xl px-4 sm:px-5 lg:max-w-6xl lg:px-6 flex w-full flex-1 flex-col">
           <div className="flex flex-1 scroll-mt-(--header-height) flex-col border-x outline-none" id="content" tabIndex={-1}>
             <ShadcnHome
+              about={{
+                title: theme.howThisStartedTitle,
+                teaser: theme.howThisStartedTeaser,
+                readMore: (
+                  <HomeAboutDrawer
+                    aboutExpect={theme.aboutExpect}
+                    aboutExpectHeading={theme.aboutExpectHeading}
+                    aboutGoals={theme.aboutGoals}
+                    aboutGoalsHeading={theme.aboutGoalsHeading}
+                    aboutPlaces={theme.aboutPlaces}
+                    aboutPlacesHeading={theme.aboutPlacesHeading}
+                    aboutRules={theme.aboutRules}
+                    aboutRulesHeading={theme.aboutRulesHeading}
+                    facebookGroupUrl={theme.facebookGroupUrl}
+                    howThisStartedBody={theme.howThisStartedBody}
+                    howThisStartedTitle={theme.howThisStartedTitle}
+                    trigger={
+                      <button className={`${BUTTON_PRIMARY} gap-2`} type="button">
+                        Read more
+                        <ArrowRight aria-hidden className="size-4 rtl:rotate-180" />
+                      </button>
+                    }
+                  />
+                ),
+              }}
               data={data}
               essentials={theme.walkEssentials}
               expect={theme.aboutExpect}

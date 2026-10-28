@@ -4,7 +4,7 @@ import { useEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { NAV_COOKIE, parseRememberedNav } from "@/lib/remembered-nav";
-import { CustomizePanel } from "./customize-panel";
+import { CustomizeDot, CustomizePanel } from "./customize-panel";
 import { GlobalnavController } from "./globalnav-controller";
 import { shortMenu, type NavSection } from "./nav-sections";
 import { SearchPanel, type SearchItem, type SearchPanelHandle } from "./search-panel";
@@ -280,6 +280,7 @@ export function GlobalNav({
                       <path d="M21 16h-4" />
                       <path d="M11 3H9" />
                     </svg>
+                    <CustomizeDot />
                   </button>
                   <div className="globalnav-flyout" id="globalnav-flyout-customize">
                     <div className="globalnav-flyout-scroll">
