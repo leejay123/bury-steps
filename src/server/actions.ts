@@ -115,6 +115,7 @@ export {
   updateSiteFont,
   updateSiteDesign,
   updatePageTopStyle,
+  updateDashboardDesign,
   updateTextSizes,
   updateSiteBranding,
   updateFacebookGroupUrl,

@@ -1,4 +1,6 @@
 import { SerwistProvider } from "@serwist/turbopack/react";
+import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { DASHBOARD_VIEW_SCRIPT } from "@/components/dashboard/dashboard-view";
 import type { CSSProperties } from "react";
 import { ClientPathnameProvider } from "@/components/client-pathname";
 import { SiteMotionConfig } from "@/components/site-motion-config";
@@ -127,6 +129,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       data-design={theme.siteDesign}
       // Settings → Branding → Page tops (globals.css: [data-page-top]).
       data-page-top={theme.pageTopStyle}
+      // Settings → Branding → Dashboard design (globals.css: [data-dash-design]).
+      data-dash-design={theme.dashboardDesign}
       lang="en-GB"
       style={
         {
@@ -166,6 +170,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           makes every refresh start at the top instead — predictable, if
           less clever than a correct restore would be.
         */}
+        {/* The dashboard view (a test): on before the first paint, so a refresh doesn't flash the normal header. */}
+        <Script id="dashboard-view" strategy="beforeInteractive">
+          {DASHBOARD_VIEW_SCRIPT}
+        </Script>
         <Script id="scroll-restoration" strategy="beforeInteractive">
           {`try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch {}`}
         </Script>
@@ -181,7 +189,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             the outermost shell (rather than on individual pages) so it also
             covers content that intentionally bleeds edge-to-edge.
           */}
-          <div className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
+          <div
+            className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"
+            data-site-shell=""
+          >
+            {/* The dashboard view's frame (only drawn when it's on). */}
+            <DashboardShell design={theme.dashboardDesign} />
             <UnlockPageOnNavigate />
             <LiveUpdates />
             <ScrollRowArrows />
@@ -327,9 +340,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </div>
             </main>
             <HeaderPartBoundary name="footer">
-              <SiteFooter theme={theme} year={year} />
+              <div className="contents" data-site-footer="">
+                <SiteFooter theme={theme} year={year} />
+              </div>
             </HeaderPartBoundary>
             <HeaderPartBoundary name="bottom-nav">
+              <div className="contents" data-site-bottom="">
               {/* Last visit's phone bar is drawn in here by the script below,
                   before the first paint. Raw HTML so React leaves it alone
                   when the page wakes up (same as #bs-header-boot). */}
@@ -338,6 +354,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <Suspense fallback={null}>
                 <SiteBottomNav />
               </Suspense>
+              </div>
             </HeaderPartBoundary>
           </div>
           <Toaster

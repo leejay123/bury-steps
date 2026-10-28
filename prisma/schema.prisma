@@ -393,6 +393,8 @@ model SiteSetting {
   siteDesign                  String   @default("original")
   /// Settings → Branding → Page tops: "plain", "grey", "big" or "dark".
   pageTopStyle                String   @default("plain")
+  /// Settings → Branding → Dashboard design: "1"–"4" (Efferd dashboards).
+  dashboardDesign             String   @default("1")
   /// Words on the Photo slider hero: "site" (site name + tagline on every
   /// photo), "slides" (each photo's own heading/caption), or "none".
   sliderHeroWords             String   @default("site")

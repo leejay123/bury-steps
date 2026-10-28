@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { DashboardButton } from "@/components/dashboard/dashboard-button";
 import { cookies } from "next/headers";
 import { getOptionalUser } from "@/lib/auth";
 import { syncOwnClerkRole } from "@/lib/clerk-role";
@@ -141,6 +142,7 @@ export async function SiteNav() {
                 <SiteSearchDialog />
               </HeaderPartBoundary>
             ) : null}
+            <DashboardButton />
             <HeaderPartBoundary name="bell">
               <Suspense fallback={<BellPlaceholder />}>
                 <SiteNavBell firstName={user.firstName} userId={user.id} />

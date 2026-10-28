@@ -1268,3 +1268,68 @@ html[data-page-loader-on] #main-content {
   color: var(--primary);
 }
 
+
+/*
+ * The dashboard view (a test; components/dashboard): the site's header,
+ * footer and phone bar give way to the dashboard frame (a 15rem side menu
+ * and a 3.5rem top bar), and the page fills the space beside them.
+ */
+html[data-view="dashboard"] :is([data-site-header], [data-site-footer], [data-site-bottom]) {
+  display: none !important;
+}
+html[data-view="dashboard"] [data-site-shell] {
+  max-width: none;
+  border-inline: 0;
+  padding-top: 3.5rem;
+}
+@media (min-width: 768px) {
+  html[data-view="dashboard"] [data-site-shell] {
+    padding-left: 15rem;
+  }
+}
+/* The page's own space stays as on the normal site. */
+
+/* Dashboard designs (Settings → Branding → Dashboard design), after Efferd's
+   dashboards 1–4. 1: plain white frame with hairlines (the base above). */
+/* 2: section labels in capitals, + marks at the menu's top corners. */
+html[data-dash-design="2"] [data-dash-nav] p {
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+html[data-dash-design="2"] [data-dash-brand] {
+  position: relative;
+}
+html[data-dash-design="2"] [data-dash-brand]::after {
+  content: "";
+  position: absolute;
+  right: -7px;
+  bottom: -7px;
+  width: 13px;
+  height: 13px;
+  background:
+    linear-gradient(var(--muted-foreground), var(--muted-foreground)) center / 100% 1px no-repeat,
+    linear-gradient(var(--muted-foreground), var(--muted-foreground)) center / 1px 100% no-repeat;
+  opacity: 0.6;
+}
+/* 3: a soft grey menu with white chosen items. */
+html[data-dash-design="3"] [data-dash-sidebar] {
+  background: color-mix(in oklab, var(--muted) 60%, var(--background));
+}
+html[data-dash-design="3"] [data-dash-item][aria-current="page"] {
+  background: var(--background);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+/* 4: inset — a grey frame with the page as a rounded white panel inside it. */
+html[data-view="dashboard"][data-dash-design="4"] body,
+html[data-dash-design="4"] [data-dash-sidebar],
+html[data-dash-design="4"] [data-dash-topbar] {
+  background: var(--muted);
+  border-color: transparent;
+}
+html[data-view="dashboard"][data-dash-design="4"] #main-content {
+  margin: 0 0.5rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--background);
+}

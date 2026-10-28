@@ -72,7 +72,11 @@ export function ReportsDisplaySection() {
               tabs and share previews), the <strong>page tops</strong> (the edge-to-edge band at the top of pages like Walks, Members,
               Messages, Reports and the Guide, with the title, intro and button: Plain, Grey, Big title, Dark,
               Centred, Compact, Side bar, Soft fade, Dotted or Main colour),
-              the <strong>site design</strong> for everyone (Original; Vercel: the Geist
+              the <strong>dashboard design</strong> (a test alongside the normal site: signed-in people get a{" "}
+              <strong>Dashboard</strong> button by their photo, which shows every page inside a dashboard frame
+              with a side menu and an Overview of their walks, or the group&apos;s for organisers, in design 1 to 4;
+              owners can switch design on the Overview, and <strong>Back to the site</strong> in the menu returns to
+              the normal look), the <strong>site design</strong> for everyone (Original; Vercel: the Geist
               font, ink and fine greys, 6px corners, soft layered card shadows and tighter headings; GitHub:
               GitHub&apos;s light look with the Mona Sans font, blue links, black buttons and 16px cards with no
               shadows; Claude: a cream page, coral buttons and links, serif headings in Source Serif 4 and 12px

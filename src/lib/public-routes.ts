@@ -94,6 +94,7 @@ export const APP_TOP_LEVEL_SEGMENTS = [
   "apple-icon.png",
   "apps",
   "contact",
+  "dashboard",
   "email-preferences",
   "history",
   "home",

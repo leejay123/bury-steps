@@ -15,6 +15,7 @@ import { FacebookGroupSettings } from "./facebook-group-settings";
 import { SiteFontSettings } from "./site-font-settings";
 import { SiteDesignSettings } from "./site-design-settings";
 import { PageTopSettings } from "./page-top-settings";
+import { DashboardDesignSettings } from "./dashboard-design-settings";
 import { TextSizeSettings } from "./text-size-settings";
 
 
@@ -62,6 +63,7 @@ function SettingsView({ theme }: { theme: SiteTheme }) {
         <SiteBrandingSettings siteName={theme.siteName} siteTagline={theme.siteTagline} />
         <SiteDesignSettings design={theme.siteDesign} />
         <PageTopSettings style={theme.pageTopStyle} />
+        <DashboardDesignSettings design={theme.dashboardDesign} />
         <SiteFontSettings font={theme.siteFont} />
         <TextSizeSettings sizes={theme.textSizes} />
         <SiteLogoSettings hasCustomLogo={theme.hasCustomLogo} logoSrc={theme.logoSrc} />
