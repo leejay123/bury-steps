@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ArrowRight, Footprints } from "lucide-react";
-import { getHomepageSlides } from "@/lib/homepage-slides";
 import { getHomepageTestimonials } from "@/lib/homepage-testimonials";
 import { getHomepageFaqData } from "@/lib/homepage-faqs";
 import { getInlineLogo } from "@/lib/inline-logo";
@@ -12,6 +11,7 @@ import { GlobalFooter, type FooterGroup } from "./globalfooter";
 import { ShadcnHome } from "./home";
 import { getShadcnHomeData } from "./home-data";
 import { PromoBar } from "./promo-bar";
+import { ShadcnAccountTools } from "./account-tools";
 
 /**
  * The whole homepage in the shadcn.io site design — their announcement bar,
@@ -21,9 +21,8 @@ import { PromoBar } from "./promo-bar";
  * [data-shadcnio-home]).
  */
 export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
-  const [data, photos, testimonials, faqData, logo, year] = await Promise.all([
+  const [data, testimonials, faqData, logo, year] = await Promise.all([
     getShadcnHomeData(),
-    getHomepageSlides(),
     getHomepageTestimonials(),
     getHomepageFaqData(),
     getInlineLogo(),
@@ -42,15 +41,16 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
     ...(facebookUrl ? [{ href: facebookUrl, label: "Facebook group" }] : []),
   ];
   const search: SearchItem[] = [
-    { href: "/walks", label: "Walks", caption: "Coming up" },
-    { href: "/notices", label: "Notices" },
-    { href: "/progress", label: "Group progress" },
-    { href: "/history", label: "Your walk history" },
-    { href: "/contact", label: "Contact us" },
-    { href: "/apps", label: "Walking apps" },
-    { href: "/#faq", label: "Questions people ask" },
-    ...data.upcoming.map((walk) => ({ href: walk.href, label: walk.title, caption: walk.when })),
-    ...faqData.faqs.map((faq) => ({ href: "/#faq", label: faq.question, caption: "FAQ" })),
+    { href: "/walks", label: "Walks", caption: "Coming up", scope: "pages" },
+    { href: "/notices", label: "Notices", scope: "pages" },
+    { href: "/progress", label: "Group progress", scope: "pages" },
+    { href: "/history", label: "Your walk history", scope: "pages" },
+    { href: "/contact", label: "Contact us", scope: "pages" },
+    { href: "/apps", label: "Walking apps", scope: "pages" },
+    { href: "/email-preferences", label: "Email preferences", scope: "pages" },
+    { href: "/dashboard", label: "Dashboard", scope: "pages" },
+    ...data.upcoming.map((walk) => ({ href: walk.href, label: walk.title, caption: walk.when, scope: "walks" as const })),
+    ...faqData.faqs.map((faq) => ({ href: "/#faq", label: faq.question, caption: faq.categoryLabel, scope: "questions" as const })),
   ];
   const columns: FooterGroup[][] = [
     [
@@ -144,7 +144,14 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
           </span>
         </Link>
       </aside>
-      <GlobalNav links={links} logoSrc={logo.src} search={search} signInHref={signInHref} siteName={theme.siteName} />
+      <GlobalNav
+        account={<ShadcnAccountTools signInHref={signInHref} />}
+        facebookUrl={facebookUrl}
+        links={links}
+        logoSrc={logo.src}
+        search={search}
+        siteName={theme.siteName}
+      />
       <div className="flex w-full flex-1 flex-col overflow-x-clip">
         <div className="mx-auto max-w-3xl px-4 sm:px-5 lg:max-w-6xl lg:px-6 flex w-full flex-1 flex-col">
           <div className="flex flex-1 scroll-mt-(--header-height) flex-col border-x outline-none" id="content" tabIndex={-1}>
@@ -158,7 +165,6 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
               goals={theme.aboutGoals}
               joinHref={joinHref}
               logo={logo}
-              photos={photos}
               rules={theme.aboutRules}
               signInHref={signInHref}
               siteName={theme.siteName}

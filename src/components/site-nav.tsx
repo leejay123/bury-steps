@@ -95,7 +95,7 @@ export function SiteNavFallback({
 
 // The bell's notices load separately so they never hold up the rest of the
 // header (links, search, avatar), which render as soon as the user is known.
-async function SiteNavBell({ firstName, userId }: { firstName: string | null; userId: string }) {
+export async function SiteNavBell({ firstName, userId }: { firstName: string | null; userId: string }) {
   const { notices, unreadIds } = await getSiteNoticeState(userId, firstName);
   return <NotificationBell notices={notices} unreadIds={unreadIds} />;
 }

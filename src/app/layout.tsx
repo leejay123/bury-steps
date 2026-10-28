@@ -4,6 +4,7 @@ import { LazyDashboardSignOut } from "@/components/efferd/dashboard-sign-out-laz
 import { ClerkIsland } from "@/components/clerk-island";
 import { DASHBOARD_VIEW_SCRIPT } from "@/components/dashboard/dashboard-view";
 import { COLOR_MODE_SCRIPT } from "@/lib/color-mode-script";
+import { CUSTOMIZE_SCRIPT } from "@/lib/shadcnio-customize";
 import type { CSSProperties } from "react";
 import { ClientPathnameProvider } from "@/components/client-pathname";
 import { SiteMotionConfig } from "@/components/site-motion-config";
@@ -181,6 +182,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* Light/dark mode (shadcn.io design only): set before the first paint, so a refresh doesn't flash. */}
         <Script id="color-mode" strategy="beforeInteractive">
           {COLOR_MODE_SCRIPT}
+        </Script>
+        {/* The shadcn.io design's Customize choices (theme, base, style, radius), before the first paint. */}
+        <Script id="shadcnio-customize" strategy="beforeInteractive">
+          {CUSTOMIZE_SCRIPT}
         </Script>
         <Script id="dashboard-view" strategy="beforeInteractive">
           {DASHBOARD_VIEW_SCRIPT}

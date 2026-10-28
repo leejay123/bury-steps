@@ -204,22 +204,13 @@ const FAN_POSES = [
 const FAN_IMAGE =
   "size-full object-cover opacity-80 grayscale transition-[filter,opacity,scale] duration-300 ease-out motion-reduce:transition-none group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0 motion-safe:group-focus-visible:scale-[1.04] motion-safe:group-hover:scale-[1.04]";
 
-/** Three photos fanned out in the tile's corner (shadcn.io's block and campus tiles). */
-function Fan({ images }: { images: string[] }) {
+/** Three small cards fanned out in the tile's corner (shadcn.io's block tiles), each a little drawing. */
+function Fan({ cards }: { cards: ReactNode[] }) {
   return (
     <>
       {FAN_POSES.map((pose, i) => (
         <span aria-hidden="true" className={cn(FAN_CARD, pose)} key={pose}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            alt=""
-            className={FAN_IMAGE}
-            decoding="async"
-            height={120}
-            loading="lazy"
-            src={images[i % images.length]}
-            width={192}
-          />
+          <span className={cn(FAN_IMAGE, "block")}>{cards[i % cards.length]}</span>
         </span>
       ))}
     </>
@@ -290,7 +281,7 @@ function Stack({ icons }: { icons: ReactNode[] }) {
 }
 
 export type TileVisual =
-  | { kind: "fan"; images: string[] }
+  | { kind: "fan"; cards: ReactNode[] }
   | { kind: "square"; icon: ReactNode }
   | { kind: "circle"; icon: ReactNode }
   | { kind: "stack"; icons: ReactNode[] };
@@ -315,7 +306,7 @@ export function Tile({
   const body = (
     <>
       <Rings shape={shape} />
-      {visual.kind === "fan" ? <Fan images={visual.images} /> : null}
+      {visual.kind === "fan" ? <Fan cards={visual.cards} /> : null}
       {visual.kind === "square" ? <IconSquare icon={visual.icon} /> : null}
       {visual.kind === "circle" ? <IconCircle icon={visual.icon} /> : null}
       {visual.kind === "stack" ? <Stack icons={visual.icons} /> : null}
@@ -343,5 +334,73 @@ export function Tile({
         </div>
       )}
     </li>
+  );
+}
+
+/*
+ * Small drawings for the tiles' cards, in the spirit of shadcn.io's own
+ * (theirs are little pictures of each block): a walk card, a question, a
+ * page and a note. Drawn with the page's colours, so light and dark both work.
+ */
+export function MiniWalk({ title, when, detail }: { title: string; when: string; detail?: string }) {
+  return (
+    <span className="flex size-full flex-col gap-1.5 p-3 text-[8px] leading-tight text-foreground">
+      <span className="flex items-center justify-between">
+        <span className="rounded-full bg-muted px-1.5 py-0.5 font-medium text-muted-foreground">Walk</span>
+        <span className="text-muted-foreground">{when}</span>
+      </span>
+      <span className="line-clamp-2 font-semibold text-[10px] tracking-tight">{title}</span>
+      {detail ? <span className="truncate text-muted-foreground">{detail}</span> : null}
+      <span className="mt-auto flex gap-1">
+        <span className="h-3.5 flex-1 rounded-full bg-foreground" />
+        <span className="h-3.5 w-8 rounded-full border border-foreground/20" />
+      </span>
+    </span>
+  );
+}
+
+export function MiniQuestion({ question }: { question: string }) {
+  return (
+    <span className="flex size-full flex-col gap-1.5 p-3 text-[8px] leading-tight text-foreground">
+      <span className="flex items-center gap-1.5">
+        <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-foreground text-[8px] font-semibold text-background">
+          ?
+        </span>
+        <span className="line-clamp-2 font-semibold text-[9px]">{question}</span>
+      </span>
+      <span className="h-1 w-11/12 rounded-full bg-muted-foreground/25" />
+      <span className="h-1 w-10/12 rounded-full bg-muted-foreground/25" />
+      <span className="h-1 w-7/12 rounded-full bg-muted-foreground/25" />
+    </span>
+  );
+}
+
+export function MiniPage({ title, icon }: { title: string; icon: ReactNode }) {
+  return (
+    <span className="flex size-full flex-col text-[8px] leading-tight text-foreground">
+      <span className="flex items-center gap-1 border-b border-foreground/10 px-2.5 py-1.5">
+        <span className="size-1.5 rounded-full bg-foreground/20" />
+        <span className="size-1.5 rounded-full bg-foreground/20" />
+        <span className="size-1.5 rounded-full bg-foreground/20" />
+      </span>
+      <span className="flex flex-1 flex-col gap-1.5 p-2.5">
+        <span className="flex items-center gap-1.5 font-semibold text-[10px] [&_svg]:size-3">
+          {icon}
+          {title}
+        </span>
+        <span className="h-1 w-11/12 rounded-full bg-muted-foreground/25" />
+        <span className="h-1 w-9/12 rounded-full bg-muted-foreground/25" />
+        <span className="mt-auto h-3.5 w-14 rounded-full bg-foreground" />
+      </span>
+    </span>
+  );
+}
+
+export function MiniNote({ text, icon }: { text: string; icon: ReactNode }) {
+  return (
+    <span className="flex size-full flex-col gap-2 p-3 text-foreground">
+      <span className="flex size-6 items-center justify-center rounded-full bg-muted [&_svg]:size-3.5">{icon}</span>
+      <span className="line-clamp-3 font-semibold text-[10px] leading-tight tracking-tight">{text}</span>
+    </span>
   );
 }

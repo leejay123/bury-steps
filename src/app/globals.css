@@ -1540,3 +1540,69 @@ html:has([data-shadcnio-home]) #main-content {
   padding: 0;
   border: 0;
 }
+
+/*
+ * The shadcn.io design's Customize panel (lib/shadcnio-customize.ts): each
+ * visitor's colour theme, base grey, style (typeface) and corners, set on
+ * <html> as data-sc-*. Neutral, Nova and the default radius are the design itself.
+ */
+:root[data-design="shadcnio"][data-sc-theme="red"] { --primary: var(--color-red-600); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-red-600); }
+:root[data-design="shadcnio"][data-sc-theme="red"].dark { --primary: var(--color-red-500); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-red-500); }
+:root[data-design="shadcnio"][data-sc-theme="orange"] { --primary: var(--color-orange-600); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-orange-600); }
+:root[data-design="shadcnio"][data-sc-theme="orange"].dark { --primary: var(--color-orange-500); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-orange-500); }
+:root[data-design="shadcnio"][data-sc-theme="amber"] { --primary: var(--color-amber-600); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-amber-600); }
+:root[data-design="shadcnio"][data-sc-theme="amber"].dark { --primary: var(--color-amber-500); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-amber-500); }
+:root[data-design="shadcnio"][data-sc-theme="yellow"] { --primary: var(--color-yellow-600); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-yellow-600); }
+:root[data-design="shadcnio"][data-sc-theme="yellow"].dark { --primary: var(--color-yellow-500); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-yellow-500); }
+:root[data-design="shadcnio"][data-sc-theme="lime"] { --primary: var(--color-lime-600); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-lime-600); }
+:root[data-design="shadcnio"][data-sc-theme="lime"].dark { --primary: var(--color-lime-500); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-lime-500); }
+:root[data-design="shadcnio"][data-sc-theme="green"] { --primary: var(--color-green-600); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-green-600); }
+:root[data-design="shadcnio"][data-sc-theme="green"].dark { --primary: var(--color-green-500); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-green-500); }
+:root[data-design="shadcnio"][data-sc-theme="emerald"] { --primary: var(--color-emerald-600); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-emerald-600); }
+:root[data-design="shadcnio"][data-sc-theme="emerald"].dark { --primary: var(--color-emerald-500); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-emerald-500); }
+:root[data-design="shadcnio"][data-sc-theme="teal"] { --primary: var(--color-teal-600); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-teal-600); }
+:root[data-design="shadcnio"][data-sc-theme="teal"].dark { --primary: var(--color-teal-500); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-teal-500); }
+:root[data-design="shadcnio"][data-sc-theme="cyan"] { --primary: var(--color-cyan-600); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-cyan-600); }
+:root[data-design="shadcnio"][data-sc-theme="cyan"].dark { --primary: var(--color-cyan-500); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-cyan-500); }
+:root[data-design="shadcnio"][data-sc-theme="sky"] { --primary: var(--color-sky-600); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-sky-600); }
+:root[data-design="shadcnio"][data-sc-theme="sky"].dark { --primary: var(--color-sky-500); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-sky-500); }
+:root[data-design="shadcnio"][data-sc-theme="blue"] { --primary: var(--color-blue-600); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-blue-600); }
+:root[data-design="shadcnio"][data-sc-theme="blue"].dark { --primary: var(--color-blue-500); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-blue-500); }
+:root[data-design="shadcnio"][data-sc-theme="indigo"] { --primary: var(--color-indigo-600); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-indigo-600); }
+:root[data-design="shadcnio"][data-sc-theme="indigo"].dark { --primary: var(--color-indigo-500); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-indigo-500); }
+:root[data-design="shadcnio"][data-sc-theme="violet"] { --primary: var(--color-violet-600); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-violet-600); }
+:root[data-design="shadcnio"][data-sc-theme="violet"].dark { --primary: var(--color-violet-500); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-violet-500); }
+:root[data-design="shadcnio"][data-sc-theme="purple"] { --primary: var(--color-purple-600); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-purple-600); }
+:root[data-design="shadcnio"][data-sc-theme="purple"].dark { --primary: var(--color-purple-500); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-purple-500); }
+:root[data-design="shadcnio"][data-sc-theme="fuchsia"] { --primary: var(--color-fuchsia-600); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-fuchsia-600); }
+:root[data-design="shadcnio"][data-sc-theme="fuchsia"].dark { --primary: var(--color-fuchsia-500); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-fuchsia-500); }
+:root[data-design="shadcnio"][data-sc-theme="pink"] { --primary: var(--color-pink-600); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-pink-600); }
+:root[data-design="shadcnio"][data-sc-theme="pink"].dark { --primary: var(--color-pink-500); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-pink-500); }
+:root[data-design="shadcnio"][data-sc-theme="rose"] { --primary: var(--color-rose-600); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-rose-600); }
+:root[data-design="shadcnio"][data-sc-theme="rose"].dark { --primary: var(--color-rose-500); --primary-foreground: oklch(98.5% 0 0); --ring: var(--color-rose-500); }
+:root[data-design="shadcnio"][data-sc-base="zinc"] { --foreground: var(--color-zinc-950); --card-foreground: var(--color-zinc-950); --popover-foreground: var(--color-zinc-950); --secondary: var(--color-zinc-100); --muted: var(--color-zinc-100); --accent: var(--color-zinc-100); --border: var(--color-zinc-200); --input: var(--color-zinc-200); --muted-foreground: var(--color-zinc-500); --site-header-bg: var(--color-zinc-50); --site-footer-bg: var(--color-zinc-50); }
+:root[data-design="shadcnio"][data-sc-base="zinc"].dark { --background: var(--color-zinc-950); --foreground: var(--color-zinc-50); --card: var(--color-zinc-900); --card-foreground: var(--color-zinc-50); --popover: var(--color-zinc-900); --popover-foreground: var(--color-zinc-50); --secondary: var(--color-zinc-800); --muted: var(--color-zinc-800); --accent: var(--color-zinc-700); --muted-foreground: var(--color-zinc-400); --border: oklch(100% 0 0 / 0.1); --input: oklch(100% 0 0 / 0.15); --site-header-bg: var(--color-zinc-900); --site-footer-bg: var(--color-zinc-900); }
+:root[data-design="shadcnio"][data-sc-base="stone"] { --foreground: var(--color-stone-950); --card-foreground: var(--color-stone-950); --popover-foreground: var(--color-stone-950); --secondary: var(--color-stone-100); --muted: var(--color-stone-100); --accent: var(--color-stone-100); --border: var(--color-stone-200); --input: var(--color-stone-200); --muted-foreground: var(--color-stone-500); --site-header-bg: var(--color-stone-50); --site-footer-bg: var(--color-stone-50); }
+:root[data-design="shadcnio"][data-sc-base="stone"].dark { --background: var(--color-stone-950); --foreground: var(--color-stone-50); --card: var(--color-stone-900); --card-foreground: var(--color-stone-50); --popover: var(--color-stone-900); --popover-foreground: var(--color-stone-50); --secondary: var(--color-stone-800); --muted: var(--color-stone-800); --accent: var(--color-stone-700); --muted-foreground: var(--color-stone-400); --border: oklch(100% 0 0 / 0.1); --input: oklch(100% 0 0 / 0.15); --site-header-bg: var(--color-stone-900); --site-footer-bg: var(--color-stone-900); }
+:root[data-design="shadcnio"][data-sc-base="mauve"] { --foreground: var(--color-mauve-950); --card-foreground: var(--color-mauve-950); --popover-foreground: var(--color-mauve-950); --secondary: var(--color-mauve-100); --muted: var(--color-mauve-100); --accent: var(--color-mauve-100); --border: var(--color-mauve-200); --input: var(--color-mauve-200); --muted-foreground: var(--color-mauve-500); --site-header-bg: var(--color-mauve-50); --site-footer-bg: var(--color-mauve-50); }
+:root[data-design="shadcnio"][data-sc-base="mauve"].dark { --background: var(--color-mauve-950); --foreground: var(--color-mauve-50); --card: var(--color-mauve-900); --card-foreground: var(--color-mauve-50); --popover: var(--color-mauve-900); --popover-foreground: var(--color-mauve-50); --secondary: var(--color-mauve-800); --muted: var(--color-mauve-800); --accent: var(--color-mauve-700); --muted-foreground: var(--color-mauve-400); --border: oklch(100% 0 0 / 0.1); --input: oklch(100% 0 0 / 0.15); --site-header-bg: var(--color-mauve-900); --site-footer-bg: var(--color-mauve-900); }
+:root[data-design="shadcnio"][data-sc-base="olive"] { --foreground: var(--color-olive-950); --card-foreground: var(--color-olive-950); --popover-foreground: var(--color-olive-950); --secondary: var(--color-olive-100); --muted: var(--color-olive-100); --accent: var(--color-olive-100); --border: var(--color-olive-200); --input: var(--color-olive-200); --muted-foreground: var(--color-olive-500); --site-header-bg: var(--color-olive-50); --site-footer-bg: var(--color-olive-50); }
+:root[data-design="shadcnio"][data-sc-base="olive"].dark { --background: var(--color-olive-950); --foreground: var(--color-olive-50); --card: var(--color-olive-900); --card-foreground: var(--color-olive-50); --popover: var(--color-olive-900); --popover-foreground: var(--color-olive-50); --secondary: var(--color-olive-800); --muted: var(--color-olive-800); --accent: var(--color-olive-700); --muted-foreground: var(--color-olive-400); --border: oklch(100% 0 0 / 0.1); --input: oklch(100% 0 0 / 0.15); --site-header-bg: var(--color-olive-900); --site-footer-bg: var(--color-olive-900); }
+:root[data-design="shadcnio"][data-sc-base="mist"] { --foreground: var(--color-mist-950); --card-foreground: var(--color-mist-950); --popover-foreground: var(--color-mist-950); --secondary: var(--color-mist-100); --muted: var(--color-mist-100); --accent: var(--color-mist-100); --border: var(--color-mist-200); --input: var(--color-mist-200); --muted-foreground: var(--color-mist-500); --site-header-bg: var(--color-mist-50); --site-footer-bg: var(--color-mist-50); }
+:root[data-design="shadcnio"][data-sc-base="mist"].dark { --background: var(--color-mist-950); --foreground: var(--color-mist-50); --card: var(--color-mist-900); --card-foreground: var(--color-mist-50); --popover: var(--color-mist-900); --popover-foreground: var(--color-mist-50); --secondary: var(--color-mist-800); --muted: var(--color-mist-800); --accent: var(--color-mist-700); --muted-foreground: var(--color-mist-400); --border: oklch(100% 0 0 / 0.1); --input: oklch(100% 0 0 / 0.15); --site-header-bg: var(--color-mist-900); --site-footer-bg: var(--color-mist-900); }
+:root[data-design="shadcnio"][data-sc-base="taupe"] { --foreground: var(--color-taupe-950); --card-foreground: var(--color-taupe-950); --popover-foreground: var(--color-taupe-950); --secondary: var(--color-taupe-100); --muted: var(--color-taupe-100); --accent: var(--color-taupe-100); --border: var(--color-taupe-200); --input: var(--color-taupe-200); --muted-foreground: var(--color-taupe-500); --site-header-bg: var(--color-taupe-50); --site-footer-bg: var(--color-taupe-50); }
+:root[data-design="shadcnio"][data-sc-base="taupe"].dark { --background: var(--color-taupe-950); --foreground: var(--color-taupe-50); --card: var(--color-taupe-900); --card-foreground: var(--color-taupe-50); --popover: var(--color-taupe-900); --popover-foreground: var(--color-taupe-50); --secondary: var(--color-taupe-800); --muted: var(--color-taupe-800); --accent: var(--color-taupe-700); --muted-foreground: var(--color-taupe-400); --border: oklch(100% 0 0 / 0.1); --input: oklch(100% 0 0 / 0.15); --site-header-bg: var(--color-taupe-900); --site-footer-bg: var(--color-taupe-900); }
+:root[data-design="shadcnio"][data-sc-style="vega"] { --font-site: var(--font-inter) !important; }
+:root[data-design="shadcnio"][data-sc-style="maia"] { --font-site: var(--font-figtree) !important; }
+:root[data-design="shadcnio"][data-sc-style="lyra"] { --font-site: var(--font-manrope) !important; }
+:root[data-design="shadcnio"][data-sc-style="mira"] { --font-site: var(--font-outfit) !important; }
+:root[data-design="shadcnio"][data-sc-style="luma"] { --font-site: var(--font-geist) !important; }
+:root[data-design="shadcnio"][data-sc-style="sera"] { --font-site: var(--font-source-serif) !important; }
+:root[data-design="shadcnio"][data-sc-style="rhea"] { --font-site: var(--font-fraunces) !important; }
+:root[data-design="shadcnio"][data-sc-radius="none"] { --radius: 0rem; }
+:root[data-design="shadcnio"][data-sc-radius="small"] { --radius: 0.25rem; }
+:root[data-design="shadcnio"][data-sc-radius="medium"] { --radius: 0.5rem; }
+:root[data-design="shadcnio"][data-sc-radius="large"] { --radius: 0.75rem; }
+
+/* The shadcn.io design uses shadcn.io's own text sizes everywhere (Tailwind's scale), not the Branding text-size settings. */
+:root[data-design="shadcnio"] { --text-headline-n: 72 !important; --text-section-n: 36 !important; --text-intro-n: 18 !important; --text-body-n: 14 !important; }

@@ -18,9 +18,10 @@ export type { ColorMode };
 function readMode(): ColorMode {
   try {
     const saved = localStorage.getItem(KEY);
-    if (saved === "light" || saved === "dark") return saved;
+    if (saved === "dark" || saved === "system") return saved;
   } catch {}
-  return "system";
+  // Light unless the visitor picks dark or "same as device".
+  return "light";
 }
 
 function apply(mode: ColorMode) {
@@ -34,8 +35,7 @@ function apply(mode: ColorMode) {
 
 export function setColorMode(mode: ColorMode) {
   try {
-    if (mode === "system") localStorage.removeItem(KEY);
-    else localStorage.setItem(KEY, mode);
+    localStorage.setItem(KEY, mode);
   } catch {}
   apply(mode);
   window.dispatchEvent(new Event("bs-color-mode"));
@@ -62,9 +62,9 @@ function subscribe(onChange: () => void) {
   };
 }
 
-/** The visitor's choice (the server draws "system"). */
+/** The visitor's choice (the server draws "light", the default). */
 export function useColorMode(): ColorMode {
-  return useSyncExternalStore(subscribe, readMode, () => "system");
+  return useSyncExternalStore(subscribe, readMode, () => "light");
 }
 
 function isDarkNow() {

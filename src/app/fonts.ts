@@ -30,7 +30,8 @@ const inter = Inter({
 /** The shadcn.io design's face. */
 const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],
-  display: "optional",
+  // Swap, not optional: the shadcn.io design must always show shadcn.io's own face.
+  display: "swap",
   preload: false,
   variable: "--font-hanken",
 });
