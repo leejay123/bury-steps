@@ -50,6 +50,7 @@ import { pageFontFace, siteFontVariableClassName, typesetFontVariables } from "@
 import { DEFAULT_SITE_NAME, siteMetaDescription } from "@/lib/site-branding";
 import { ScrollRowArrows } from "@/components/scroll-row-arrows";
 import "./globals.css";
+import "@/components/shadcnio/shadcnio.css";
 
 export async function generateMetadata(): Promise<Metadata> {
   const theme = await getSiteTheme();

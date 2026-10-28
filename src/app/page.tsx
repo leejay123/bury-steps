@@ -23,6 +23,7 @@ import { getHomepageGlobeData } from "@/lib/homepage-globe";
 import { heroVideoPoster, heroVideoSrc, type HeroStyle } from "@/lib/hero-style";
 import { PAGE_X_BLEED } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
+import { ShadcnHomePage } from "@/components/shadcnio/page";
 
 
 
@@ -39,14 +40,15 @@ export default async function Home() {
   // style is chosen — is part of the first paint, never a guessed skeleton.
   // The sections below stream in behind their own Suspense boundary.
   const [theme, slides] = await Promise.all([getSiteTheme(), getHomepageSlides()]);
+  // Settings → Branding → Site design → shadcn.io: shadcn.io's homepage, header and footer.
+  if (theme.siteDesign === "shadcnio") return <ShadcnHomePage theme={theme} />;
   const globe = theme.heroStyle === "globe" ? await getHomepageGlobeData() : null;
 
   return (
     // Settings → Homepage layout → Framed sections (globals.css: [data-home-framed]).
     <div
       className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}
-      // The shadcn.io site design always uses them (it is that layout).
-      data-home-framed={theme.homeFramed || theme.siteDesign === "shadcnio" ? "" : undefined}
+      data-home-framed={theme.homeFramed ? "" : undefined}
     >
       {theme.heroStyle === "cinematic" ? (
         <HeroCinematic

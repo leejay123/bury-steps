@@ -1523,3 +1523,20 @@ html[data-view="dashboard"] #main-content {
     -100vw 0 0 var(--border),
     100vw 0 0 var(--border);
 }
+
+/* The shadcn.io design's homepage brings shadcn.io's own header, footer and
+   bottom bar (components/shadcnio), so the site's usual ones step aside on
+   that page and the page fills the window. */
+html:has([data-shadcnio-home]) :is([data-site-header], [data-site-footer], [data-site-bottom]) {
+  display: none !important;
+}
+html:has([data-shadcnio-home]) [data-site-shell] {
+  max-width: none;
+  border-inline: 0;
+}
+html:has([data-shadcnio-home]) #main-content {
+  width: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}

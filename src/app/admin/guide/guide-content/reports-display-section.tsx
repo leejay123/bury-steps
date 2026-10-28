@@ -88,7 +88,10 @@ export function ReportsDisplaySection() {
               on Apple devices), Figma (black and white, pill buttons, 24px cards) and Framer (black pill buttons,
               blue links, poster-tight headings) — all on light pages; and shadcn.io (used with their permission:
               the Hanken Grotesk font, black and white with fine grey lines, pill buttons, and a light/dark switch
-              in the header that each visitor can use — dark mode exists only in this design); layouts stay the same and you can switch back
+              in the header that each visitor can use — dark mode exists only in this design; the homepage becomes
+              a copy of shadcn.io&apos;s own homepage layout, with its header, search, phone menu, footer and a bar
+              counting down to the next walk, filled with Bury Steps&apos; walks, photos, rules, essentials,
+              testimonials and FAQs); layouts stay the same and you can switch back
               any time), the <strong>site font</strong> (it changes the typeface
               across the whole website), <strong>text sizes</strong> (the homepage headline, section
               headings, intro lines, and everyday body text — set for computers, with phones getting
