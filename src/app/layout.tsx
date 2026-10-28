@@ -36,6 +36,7 @@ import { SiteMobileNav, SiteNavSlot, SiteBottomNav } from "@/components/site-nav
 import { BottomBarBootScript, HeaderBootScript } from "@/components/header-boot";
 import { MobileMenuShell } from "@/components/mobile-menu-shell";
 import { SiteFooter, copyrightYear } from "@/components/site-footer";
+import { ShadcnFooter } from "@/components/shadcn-footer";
 import { SiteBrandLink } from "@/components/site-brand-link";
 import { SiteLogo } from "@/components/site-logo";
 import { BackToTopGate } from "@/components/back-to-top-gate";
@@ -270,7 +271,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   content, so when Sign in + Join the group are wider than
                   half the space the logo moves left rather than overlapping.
                 */}
-                <div className={`group/header-row grid h-14 grid-cols-[1fr_auto_1fr] items-center gap-3 ${PAGE_X} md:grid-cols-[1fr_auto_1fr]`}>
+                <div
+                  className={`group/header-row grid h-14 grid-cols-[1fr_auto_1fr] items-center gap-3 ${PAGE_X} md:grid-cols-[1fr_auto_1fr]`}
+                  data-header-row=""
+                >
                   <HeaderPartBoundary name="mobile-nav">
                     <Suspense fallback={<MobileMenuShell />}>
                       <SiteMobileNav />
@@ -360,7 +364,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </main>
             <HeaderPartBoundary name="footer">
               <div className="contents" data-site-footer="">
-                <SiteFooter theme={theme} year={year} />
+                {theme.siteDesign === "shadcnio" ? (
+                  <ShadcnFooter theme={theme} year={year} />
+                ) : (
+                  <SiteFooter theme={theme} year={year} />
+                )}
               </div>
             </HeaderPartBoundary>
             <HeaderPartBoundary name="bottom-nav">

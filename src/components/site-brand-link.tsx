@@ -17,6 +17,10 @@ export async function SiteBrandLink() {
         src={logo.src}
         width={logo.width}
       />
+      {/* The site's name beside the logo — shown only in the shadcn.io design (globals.css). */}
+      <span className="hidden" data-brand-name="">
+        {theme.siteName}
+      </span>
     </UnlockingLink>
   );
 }

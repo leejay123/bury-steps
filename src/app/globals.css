@@ -571,8 +571,9 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
   --border: oklch(92.2% 0 0);
   --input: oklch(92.2% 0 0);
   --ring: oklch(70.8% 0 0);
-  /* The header bar sits a shade off the page. */
+  /* The header bar and footer sit a shade off the page. */
   --site-header-bg: oklch(98.5% 0 0);
+  --site-footer-bg: oklch(98.5% 0 0);
 }
 :root[data-design="shadcnio"].dark {
   --background: oklch(14.5% 0 0);
@@ -599,6 +600,7 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
   --chart-4: oklch(45% 0 0);
   --chart-5: oklch(32% 0 0);
   --site-header-bg: oklch(18% 0 0);
+  --site-footer-bg: oklch(21.9% 0 0);
 }
 
 @theme inline {
@@ -1377,4 +1379,105 @@ html[data-view="dashboard"] #main-content {
 }
 :root:not([data-design="shadcnio"]) [data-color-mode-toggle] {
   display: none;
+}
+
+/*
+ * The shadcn.io design's header, measured from shadcn.io: a 56px bar (48px on
+ * phones) across the window, its contents in a 1104px column — the logo and
+ * name, the menu links straight after (14px, softened text), then search, the
+ * light/dark switch and pill buttons on the right. Phones: logo on the left,
+ * the menu button on the far right.
+ */
+[data-design="shadcnio"] [data-site-shell] {
+  max-width: none;
+  border-inline: 0;
+}
+[data-design="shadcnio"] [data-header-row] {
+  width: min(69rem, 100%);
+  margin-inline: auto;
+  column-gap: 0;
+}
+[data-design="shadcnio"] [data-site-logo-cell] a {
+  gap: 0.625rem;
+}
+[data-design="shadcnio"] [data-site-logo-cell] img {
+  height: 1.625rem;
+}
+[data-design="shadcnio"] [data-brand-name] {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+[data-design="shadcnio"] [data-header-row] nav {
+  justify-content: flex-start;
+  gap: 0;
+}
+[data-design="shadcnio"] [data-header-row] nav a {
+  height: 3.5rem;
+  border-radius: 0;
+  padding: 0 0.5rem;
+  background: transparent;
+  color: color-mix(in oklab, var(--foreground) 80%, transparent);
+  letter-spacing: -0.01em;
+}
+[data-design="shadcnio"] [data-header-row] nav a:hover,
+[data-design="shadcnio"] [data-header-row] nav a[aria-current="page"] {
+  color: var(--foreground);
+}
+[data-design="shadcnio"] [data-header-row] nav a[aria-current="page"] {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+[data-design="shadcnio"] [data-header-row] [data-slot="button"] {
+  height: 1.875rem;
+  padding-inline: 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+@media (min-width: 768px) {
+  [data-design="shadcnio"] [data-header-row] {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding-inline: 0;
+  }
+  [data-design="shadcnio"] [data-header-row] .justify-center.md\:flex {
+    justify-content: flex-start;
+    margin-left: 1rem;
+  }
+  [data-design="shadcnio"] [data-brand-name] {
+    display: inline;
+  }
+}
+@media (min-width: 768px) and (max-width: 1135px) {
+  [data-design="shadcnio"] [data-header-row] {
+    padding-inline: 1rem;
+  }
+}
+@media (max-width: 767.98px) {
+  [data-design="shadcnio"] [data-header-row] {
+    height: 3rem;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    padding-left: 1rem;
+    padding-right: 0;
+  }
+  [data-design="shadcnio"] [data-site-logo-cell] {
+    grid-column: 1;
+    justify-content: flex-start;
+  }
+  [data-design="shadcnio"] [data-header-row] .justify-self-end {
+    grid-column: 3;
+  }
+  [data-design="shadcnio"] [data-mobile-nav] {
+    grid-column: 4;
+    grid-row: 1;
+    width: 3rem;
+    height: 3rem;
+  }
+}
+
+/* The shadcn.io design's framed column: the page sits in a 1104px column
+   with fine lines down both sides (16px in from the edges on phones). */
+[data-design="shadcnio"] #main-content {
+  width: min(69rem, calc(100% - 2rem));
+  margin-inline: auto;
+  border-inline: 1px solid var(--border);
 }
