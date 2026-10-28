@@ -45,7 +45,8 @@ export default async function Home() {
     // Settings → Homepage layout → Framed sections (globals.css: [data-home-framed]).
     <div
       className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}
-      data-home-framed={theme.homeFramed ? "" : undefined}
+      // The shadcn.io site design always uses them (it is that layout).
+      data-home-framed={theme.homeFramed || theme.siteDesign === "shadcnio" ? "" : undefined}
     >
       {theme.heroStyle === "cinematic" ? (
         <HeroCinematic

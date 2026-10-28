@@ -1481,3 +1481,45 @@ html[data-view="dashboard"] #main-content {
   margin-inline: auto;
   border-inline: 1px solid var(--border);
 }
+
+/* The shadcn.io design's homepage sections (on top of Framed sections):
+   no eyebrow or glow; a 36px title, an 18px grey intro and a large pill
+   button on the right, as on shadcn.io; section lines run the full width
+   of the window, with the + marks where they cross the column. */
+[data-design="shadcnio"] [data-section-head] {
+  padding-top: 4rem;
+  padding-bottom: 3rem;
+  gap: 1rem;
+}
+[data-design="shadcnio"] [data-section-head] > [aria-hidden="true"]:first-child,
+[data-design="shadcnio"] [data-section-head] [data-head="eyebrow"] {
+  display: none;
+}
+[data-design="shadcnio"] [data-section-head] [data-head="title"] > * {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+  font-weight: 600;
+  letter-spacing: -0.05em;
+}
+[data-design="shadcnio"] [data-section-head] [data-head="intro"] {
+  max-width: 42rem;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  letter-spacing: normal;
+}
+[data-design="shadcnio"] [data-section-head] [data-head="actions"] [data-slot="button"] {
+  height: 2.625rem;
+  padding-inline: 1.5rem;
+  font-size: 1rem;
+}
+@media (min-width: 768px) {
+  [data-design="shadcnio"] [data-section-head] [data-head="title"] > * {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+  }
+}
+[data-design="shadcnio"] [data-section-divider] {
+  box-shadow:
+    -100vw 0 0 var(--border),
+    100vw 0 0 var(--border);
+}
