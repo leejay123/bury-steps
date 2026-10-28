@@ -78,8 +78,29 @@ import {
 } from "@/lib/homepage-copy";
 
 /** Settings → Branding → Page tops. */
-export type PageTopStyle = "plain" | "grey" | "big" | "dark";
-export const PAGE_TOP_STYLES: readonly PageTopStyle[] = ["plain", "grey", "big", "dark"];
+export type PageTopStyle =
+  | "plain"
+  | "grey"
+  | "big"
+  | "dark"
+  | "centred"
+  | "compact"
+  | "bar"
+  | "fade"
+  | "dots"
+  | "brand";
+export const PAGE_TOP_STYLES: readonly PageTopStyle[] = [
+  "plain",
+  "grey",
+  "big",
+  "dark",
+  "centred",
+  "compact",
+  "bar",
+  "fade",
+  "dots",
+  "brand",
+];
 
 /** Settings → Branding → Site design. */
 export type SiteDesign =

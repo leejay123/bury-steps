@@ -15,6 +15,12 @@ const STYLES: { id: PageTopStyle; label: string; note: string }[] = [
   { id: "grey", label: "Grey", note: "A light grey band across the full width." },
   { id: "big", label: "Big title", note: "In the style of shadcn.io: a larger title and intro, with + marks on the line under it." },
   { id: "dark", label: "Dark", note: "A near-black band with white words and a white button." },
+  { id: "centred", label: "Centred", note: "The title and intro centred, with the button underneath." },
+  { id: "compact", label: "Compact", note: "A slim band: smaller space above and below, the intro on one line where it fits." },
+  { id: "bar", label: "Side bar", note: "A grey band with a dark bar down its left edge." },
+  { id: "fade", label: "Soft fade", note: "A light grey that fades to white towards the bottom." },
+  { id: "dots", label: "Dotted", note: "A faint dot pattern behind the title." },
+  { id: "brand", label: "Main colour", note: "The site design's main colour (black in Original) with white words." },
 ];
 
 /** The band at the top of each page (title, intro, button), for everyone. */

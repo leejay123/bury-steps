@@ -70,7 +70,8 @@ export function ReportsDisplaySection() {
               Open <Link href="/admin/settings/branding">Branding</Link> to set the public{" "}
               <strong>site name</strong> and <strong>homepage tagline</strong> (also used in browser
               tabs and share previews), the <strong>page tops</strong> (the edge-to-edge band at the top of pages like Walks, Members,
-              Messages, Reports and the Guide, with the title, intro and button: Plain, Grey, Big title or Dark),
+              Messages, Reports and the Guide, with the title, intro and button: Plain, Grey, Big title, Dark,
+              Centred, Compact, Side bar, Soft fade, Dotted or Main colour),
               the <strong>site design</strong> for everyone (Original; Vercel: the Geist
               font, ink and fine greys, 6px corners, soft layered card shadows and tighter headings; GitHub:
               GitHub&apos;s light look with the Mona Sans font, blue links, black buttons and 16px cards with no

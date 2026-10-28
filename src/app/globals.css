@@ -1229,4 +1229,42 @@ html[data-page-loader-on] #main-content {
   background: #ffffff;
   color: #0a0a0a;
 }
+[data-page-top="centred"] [data-page-top-band] {
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+}
+[data-page-top="centred"] [data-page-top-band] > div:first-child {
+  align-items: center;
+}
+[data-page-top="compact"] [data-page-top-band] {
+  align-items: center;
+  padding-block: 0.875rem;
+}
+[data-page-top="compact"] [data-page-top-intro] {
+  font-size: 0.8125rem;
+}
+[data-page-top="bar"] [data-page-top-band] {
+  background: var(--muted);
+  box-shadow: inset 4px 0 0 var(--foreground);
+}
+[data-page-top="fade"] [data-page-top-band] {
+  background: linear-gradient(to bottom, var(--muted), var(--background));
+}
+[data-page-top="dots"] [data-page-top-band] {
+  background-image: radial-gradient(color-mix(in oklab, var(--foreground) 14%, transparent) 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+[data-page-top="brand"] [data-page-top-band] {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+}
+[data-page-top="brand"] [data-page-top-intro] {
+  color: color-mix(in oklab, var(--primary-foreground) 75%, transparent);
+}
+[data-page-top="brand"] [data-page-top-band] [data-slot="button"].bg-primary {
+  background: var(--primary-foreground);
+  color: var(--primary);
+}
 
