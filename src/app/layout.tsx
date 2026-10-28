@@ -125,6 +125,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       data-phone-menu={theme.mobileNav}
       // Settings → Branding → Site design (globals.css: [data-design=vercel]).
       data-design={theme.siteDesign}
+      // Settings → Branding → Page tops (globals.css: [data-page-top]).
+      data-page-top={theme.pageTopStyle}
       lang="en-GB"
       style={
         {

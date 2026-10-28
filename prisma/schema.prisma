@@ -391,6 +391,8 @@ model SiteSetting {
   footerWordmarkMobile        Boolean  @default(true)
   /// Settings → Branding → Site design: "original" or "vercel".
   siteDesign                  String   @default("original")
+  /// Settings → Branding → Page tops: "plain", "grey", "big" or "dark".
+  pageTopStyle                String   @default("plain")
   /// Words on the Photo slider hero: "site" (site name + tagline on every
   /// photo), "slides" (each photo's own heading/caption), or "none".
   sliderHeroWords             String   @default("site")

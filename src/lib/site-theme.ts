@@ -77,6 +77,10 @@ import {
   type AboutRule,
 } from "@/lib/homepage-copy";
 
+/** Settings → Branding → Page tops. */
+export type PageTopStyle = "plain" | "grey" | "big" | "dark";
+export const PAGE_TOP_STYLES: readonly PageTopStyle[] = ["plain", "grey", "big", "dark"];
+
 /** Settings → Branding → Site design. */
 export type SiteDesign =
   | "original"
@@ -137,6 +141,8 @@ export type SiteTheme = {
   siteFont: SiteFontId;
   /** The whole site's look: the original, or the Vercel-inspired one. */
   siteDesign: SiteDesign;
+  /** How the edge-to-edge band at the top of a page looks (title, intro, button). */
+  pageTopStyle: PageTopStyle;
   textSizes: TextSizes;
   siteName: string;
   siteTagline: string;
@@ -226,6 +232,7 @@ export function defaultTheme(): SiteTheme {
     cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
     siteFont: DEFAULT_SITE_FONT,
     siteDesign: "original",
+    pageTopStyle: "plain",
     textSizes: DEFAULT_TEXT_SIZES,
     siteName: DEFAULT_SITE_NAME,
     siteTagline: DEFAULT_SITE_TAGLINE,
@@ -301,6 +308,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       cookieConsentVariant: true,
       siteFont: true,
       siteDesign: true,
+      pageTopStyle: true,
       textHeadlinePx: true,
       textSectionPx: true,
       textIntroPx: true,
@@ -394,6 +402,9 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       parseCookieConsentVariant(row?.cookieConsentVariant ?? "") ??
       DEFAULT_COOKIE_CONSENT_VARIANT,
     siteFont: parseSiteFont(row?.siteFont ?? "") ?? DEFAULT_SITE_FONT,
+    pageTopStyle: PAGE_TOP_STYLES.includes(row?.pageTopStyle as PageTopStyle)
+      ? (row?.pageTopStyle as PageTopStyle)
+      : "plain",
     siteDesign: SITE_DESIGNS.includes(row?.siteDesign as SiteDesign)
       ? (row?.siteDesign as SiteDesign)
       : "original",

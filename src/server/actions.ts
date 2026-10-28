@@ -114,6 +114,7 @@ export {
   updateCookieConsentVariant,
   updateSiteFont,
   updateSiteDesign,
+  updatePageTopStyle,
   updateTextSizes,
   updateSiteBranding,
   updateFacebookGroupUrl,

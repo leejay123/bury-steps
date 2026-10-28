@@ -1179,3 +1179,54 @@ html[data-page-loader-on] #main-content {
 [data-home-framed] [data-section-divider]::after {
   right: -6px;
 }
+
+/*
+ * Settings → Branding → Page tops (layout.tsx sets data-page-top): the
+ * edge-to-edge band at the top of a page (admin-page-intro.tsx). Plain is
+ * the band's own look; the others restyle it.
+ */
+[data-page-top="grey"] [data-page-top-band] {
+  background: var(--muted);
+}
+[data-page-top="big"] [data-page-top-band] {
+  padding-block: 2.5rem;
+}
+[data-page-top="big"] [data-page-top-title] {
+  font-size: 1.875rem;
+  line-height: 1.15;
+}
+[data-page-top="big"] [data-page-top-intro] {
+  font-size: 1rem;
+  max-width: 42rem;
+}
+[data-page-top="big"] [data-page-top-band]::before,
+[data-page-top="big"] [data-page-top-band]::after {
+  content: "";
+  position: absolute;
+  bottom: -7px;
+  width: 13px;
+  height: 13px;
+  background:
+    linear-gradient(var(--muted-foreground), var(--muted-foreground)) center / 100% 1px no-repeat,
+    linear-gradient(var(--muted-foreground), var(--muted-foreground)) center / 1px 100% no-repeat;
+  opacity: 0.6;
+}
+[data-page-top="big"] [data-page-top-band]::before {
+  left: -6px;
+}
+[data-page-top="big"] [data-page-top-band]::after {
+  right: -6px;
+}
+[data-page-top="dark"] [data-page-top-band] {
+  background: #0a0a0a;
+  border-color: #0a0a0a;
+  color: #ffffff;
+}
+[data-page-top="dark"] [data-page-top-intro] {
+  color: rgb(255 255 255 / 0.7);
+}
+[data-page-top="dark"] [data-page-top-band] [data-slot="button"].bg-primary {
+  background: #ffffff;
+  color: #0a0a0a;
+}
+
