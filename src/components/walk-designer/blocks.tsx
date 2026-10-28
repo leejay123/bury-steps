@@ -5228,8 +5228,9 @@ function FactLooksBody({
             <dt
               className={cn(
                 // The same size as its value on every device.
-                "font-medium text-muted-foreground",
-                !stacked && "sm:font-semibold sm:text-foreground",
+                // The same on phones as on computers: the name dark and
+                // firm, its value plain (label over value keeps a grey label).
+                stacked ? "font-medium text-muted-foreground" : "font-semibold text-foreground",
                 look === "spec-compact" && "text-xs",
                 columns && "sm:bg-muted sm:px-4 sm:py-3",
                 icons && "flex items-center gap-2",
@@ -5246,8 +5247,8 @@ function FactLooksBody({
             {/* Wider, the value sits on the far right of its row (or left). */}
             <dd
               className={cn(
-                "font-medium [overflow-wrap:anywhere]",
-                !stacked && "sm:font-normal",
+                "[overflow-wrap:anywhere]",
+                stacked ? "font-medium" : "font-normal",
                 !stacked && look !== "spec-left" && !columns && "sm:text-right",
                 columns && "sm:px-4 sm:py-3",
                 // Under its label, lined up with the label's text (past the
