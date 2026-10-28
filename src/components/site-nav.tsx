@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { DashboardButton } from "@/components/dashboard/dashboard-button";
+import { ColorModeToggle } from "@/components/color-mode";
 import { cookies } from "next/headers";
 import { getOptionalUser } from "@/lib/auth";
 import { syncOwnClerkRole } from "@/lib/clerk-role";
@@ -84,6 +85,7 @@ export function SiteNavFallback({
         data-nav-ready=""
       >
         {search ? <SiteSearchBar /> : null}
+        <ColorModeToggle />
         <BellPlaceholder />
         <AvatarPlaceholder image={image} initial={initial} />
       </div>
@@ -143,6 +145,7 @@ export async function SiteNav() {
               </HeaderPartBoundary>
             ) : null}
             <DashboardButton />
+            <ColorModeToggle />
             <HeaderPartBoundary name="bell">
               <Suspense fallback={<BellPlaceholder />}>
                 <SiteNavBell firstName={user.firstName} userId={user.id} />
@@ -180,6 +183,7 @@ export async function SiteNav() {
           </>
         ) : (
           <>
+            <ColorModeToggle />
             <Button asChild size="sm" variant="outline">
               <a href={accountPortalHref("sign-in", afterAuth)}>Sign in</a>
             </Button>

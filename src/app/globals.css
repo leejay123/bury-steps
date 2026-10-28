@@ -546,6 +546,61 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
   --ring: #0099ff;
 }
 
+/*
+ * Settings → Branding → Site design: shadcn.io (used with their permission).
+ * Their exact colours, light and dark (dark only in this design: <html
+ * class="dark">, set by the visitor's switch — components/color-mode.tsx).
+ */
+:root[data-design="shadcnio"] {
+  --radius: 0.625rem;
+  --background: oklch(100% 0 0);
+  --foreground: oklch(0% 0 0);
+  --card: oklch(100% 0 0);
+  --card-foreground: oklch(0% 0 0);
+  --popover: oklch(100% 0 0);
+  --popover-foreground: oklch(0% 0 0);
+  --primary: oklch(0% 0 0);
+  --primary-foreground: oklch(98.5% 0 0);
+  --secondary: oklch(97% 0 0);
+  --secondary-foreground: oklch(20.5% 0 0);
+  --muted: oklch(97% 0 0);
+  --muted-foreground: oklch(55.6% 0 0);
+  --accent: oklch(97% 0 0);
+  --accent-foreground: oklch(20.5% 0 0);
+  --destructive: oklch(57.7% 0.245 27.325);
+  --border: oklch(92.2% 0 0);
+  --input: oklch(92.2% 0 0);
+  --ring: oklch(70.8% 0 0);
+  /* The header bar sits a shade off the page. */
+  --site-header-bg: oklch(98.5% 0 0);
+}
+:root[data-design="shadcnio"].dark {
+  --background: oklch(14.5% 0 0);
+  --foreground: oklch(98.5% 0 0);
+  --card: oklch(20.5% 0 0);
+  --card-foreground: oklch(98.5% 0 0);
+  --popover: oklch(20.5% 0 0);
+  --popover-foreground: oklch(98.5% 0 0);
+  --primary: oklch(92.2% 0 0);
+  --primary-foreground: oklch(20.5% 0 0);
+  --secondary: oklch(26.9% 0 0);
+  --secondary-foreground: oklch(98.5% 0 0);
+  --muted: oklch(26.9% 0 0);
+  --muted-foreground: oklch(70.8% 0 0);
+  --accent: oklch(37.1% 0 0);
+  --accent-foreground: oklch(98.5% 0 0);
+  --destructive: oklch(70.4% 0.191 22.216);
+  --border: oklch(100% 0 0 / 0.1);
+  --input: oklch(100% 0 0 / 0.15);
+  --ring: oklch(55.6% 0 0);
+  --chart-1: oklch(92% 0 0);
+  --chart-2: oklch(75% 0 0);
+  --chart-3: oklch(60% 0 0);
+  --chart-4: oklch(45% 0 0);
+  --chart-5: oklch(32% 0 0);
+  --site-header-bg: oklch(18% 0 0);
+}
+
 @theme inline {
   --color-brand: var(--brand);
   --color-brand-from: var(--brand-from);
@@ -1298,4 +1353,28 @@ html[data-view="dashboard"] #main-content {
     max-width: none;
     width: auto;
   }
+}
+
+/* The shadcn.io design: tight bold headings (600, -0.05em), pill buttons,
+   flat cards, the header bar a shade off the page, and the light/dark
+   switch (hidden in every other design). */
+[data-design="shadcnio"] :is(h1, h2) {
+  font-weight: 600;
+  letter-spacing: -0.05em;
+}
+[data-design="shadcnio"] h3 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+[data-design="shadcnio"] [data-slot="button"] {
+  border-radius: 9999px;
+}
+[data-design="shadcnio"] [data-slot="card"] {
+  box-shadow: none;
+}
+[data-design="shadcnio"] [data-site-header] {
+  background: var(--site-header-bg);
+}
+:root:not([data-design="shadcnio"]) [data-color-mode-toggle] {
+  display: none;
 }

@@ -116,7 +116,8 @@ export type SiteDesign =
   | "linear"
   | "apple"
   | "figma"
-  | "framer";
+  | "framer"
+  | "shadcnio";
 export const SITE_DESIGNS: readonly SiteDesign[] = [
   "original",
   "vercel",
@@ -127,6 +128,7 @@ export const SITE_DESIGNS: readonly SiteDesign[] = [
   "apple",
   "figma",
   "framer",
+  "shadcnio",
 ];
 
 export type SiteTheme = {

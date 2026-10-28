@@ -8,6 +8,7 @@
 import { BELL_CLAPPER_PATH, BELL_DOME_PATH } from "@/components/header-placeholders";
 import { Button } from "@/components/ui/button";
 import { JoinGroupButton } from "@/components/join-group-button";
+import { ColorModeToggle } from "@/components/color-mode";
 import { RIGHT_CLUSTER } from "@/components/site-nav";
 import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
 
@@ -145,6 +146,7 @@ export function HeaderBootScript({ facebookUrl = "" }: { facebookUrl?: string })
         <div
           className={`flex min-w-0 items-center justify-end gap-1.5 justify-self-end max-md:col-start-3 max-md:min-w-max md:gap-3 ${RIGHT_CLUSTER}`}
         >
+          <ColorModeToggle />
           <Button asChild size="sm" variant="outline">
             <a href={accountPortalHref("sign-in", afterAuth)}>Sign in</a>
           </Button>

@@ -3,6 +3,7 @@ import { DashboardFrame } from "@/components/efferd/dashboard-frame";
 import { LazyDashboardSignOut } from "@/components/efferd/dashboard-sign-out-lazy";
 import { ClerkIsland } from "@/components/clerk-island";
 import { DASHBOARD_VIEW_SCRIPT } from "@/components/dashboard/dashboard-view";
+import { COLOR_MODE_SCRIPT } from "@/lib/color-mode-script";
 import type { CSSProperties } from "react";
 import { ClientPathnameProvider } from "@/components/client-pathname";
 import { SiteMotionConfig } from "@/components/site-motion-config";
@@ -142,7 +143,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               ? "var(--font-geist)"
               : theme.siteDesign === "github"
                 ? "var(--font-mona-sans)"
-                : theme.siteDesign !== "original"
+                : theme.siteDesign === "shadcnio"
+                  ? "var(--font-hanken)"
+                  : theme.siteDesign !== "original"
                   ? "var(--font-inter)"
                   : `var(${font.cssVariable})`,
           ...textSizeCssVars(theme.textSizes),
@@ -173,6 +176,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           less clever than a correct restore would be.
         */}
         {/* The dashboard view (a test): on before the first paint, so a refresh doesn't flash the normal header. */}
+        {/* Light/dark mode (shadcn.io design only): set before the first paint, so a refresh doesn't flash. */}
+        <Script id="color-mode" strategy="beforeInteractive">
+          {COLOR_MODE_SCRIPT}
+        </Script>
         <Script id="dashboard-view" strategy="beforeInteractive">
           {DASHBOARD_VIEW_SCRIPT}
         </Script>

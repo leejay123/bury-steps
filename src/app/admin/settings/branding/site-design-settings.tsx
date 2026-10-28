@@ -52,6 +52,11 @@ const DESIGNS: { id: SiteDesign; label: string; note: string }[] = [
     label: "Framer",
     note: "Framer's look on a light page: black pill buttons, blue links, poster-tight Mona Sans headings, 20px cards, no shadows.",
   },
+  {
+    id: "shadcnio",
+    label: "shadcn.io",
+    note: "shadcn.io's look (with their permission): the Hanken Grotesk font, black and white with fine grey lines, pill buttons, tight bold headings, and a light/dark switch for everyone.",
+  },
 ];
 
 /** The whole site's look, for everyone: the original, or the Vercel-inspired one. */

@@ -86,7 +86,9 @@ export function ReportsDisplaySection() {
               cards; and, from the shadcn.io design gallery, Stripe (indigo pill buttons, thin headings), Linear
               (lavender buttons, firm headings), Apple (soft-grey page, Action Blue pill buttons, Apple&apos;s font
               on Apple devices), Figma (black and white, pill buttons, 24px cards) and Framer (black pill buttons,
-              blue links, poster-tight headings) — all on light pages; layouts stay the same and you can switch back
+              blue links, poster-tight headings) — all on light pages; and shadcn.io (used with their permission:
+              the Hanken Grotesk font, black and white with fine grey lines, pill buttons, and a light/dark switch
+              in the header that each visitor can use — dark mode exists only in this design); layouts stay the same and you can switch back
               any time), the <strong>site font</strong> (it changes the typeface
               across the whole website), <strong>text sizes</strong> (the homepage headline, section
               headings, intro lines, and everyday body text — set for computers, with phones getting

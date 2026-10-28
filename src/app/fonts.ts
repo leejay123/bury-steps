@@ -1,4 +1,15 @@
-import { Figtree, Fraunces, Geist, Geist_Mono, Inter, Manrope, Mona_Sans, Outfit, Source_Serif_4 } from "next/font/google";
+import {
+  Figtree,
+  Fraunces,
+  Geist,
+  Geist_Mono,
+  Hanken_Grotesk,
+  Inter,
+  Manrope,
+  Mona_Sans,
+  Outfit,
+  Source_Serif_4,
+} from "next/font/google";
 import { SITE_FONTS, type SiteFontId } from "@/lib/site-font";
 
 /**
@@ -15,6 +26,13 @@ const inter = Inter({
   display: "optional",
   preload: false,
   variable: "--font-inter",
+});
+/** The shadcn.io design's face. */
+const hankenGrotesk = Hanken_Grotesk({
+  subsets: ["latin"],
+  display: "optional",
+  preload: false,
+  variable: "--font-hanken",
 });
 const manrope = Manrope({
   subsets: ["latin"],
@@ -70,7 +88,7 @@ const monaSans = Mona_Sans({
 });
 
 /** --font-geist and --font-geist-mono for shadcn/typeset, and the site designs' fonts. */
-export const typesetFontVariables = `${menuFont.variable} ${geistMono.variable} ${monaSans.variable}`;
+export const typesetFontVariables = `${menuFont.variable} ${geistMono.variable} ${monaSans.variable} ${hankenGrotesk.variable}`;
 
 export const siteFontFaces = {
   inter,
@@ -96,6 +114,7 @@ export function siteFontFace(id: SiteFontId) {
 export function pageFontFace(design: string, id: SiteFontId) {
   if (design === "vercel") return menuFont;
   if (design === "github") return monaSans;
+  if (design === "shadcnio") return hankenGrotesk;
   if (["claude", "stripe", "linear", "apple", "figma", "framer"].includes(design)) return inter;
   return siteFontFaces[id];
 }
