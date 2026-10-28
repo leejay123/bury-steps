@@ -40,8 +40,9 @@ function toRow(
   };
 }
 
-const WALKS_INTRO =
-  "Upcoming walks, and every finished or cancelled walk under History. Filter by status, sort by date, or search. When a walk is starting soon or in progress, the row says Clock in now — open it and clock in with the same pre-walk check members use. You can also share the link, cancel, reopen, or remove a walk. Long walks stay under Upcoming until clock-in closes.";
+// One short line; the details (filters, Clock in now, sharing, cancelling)
+// are in the organiser Guide.
+const WALKS_INTRO = "Upcoming walks first. Finished and cancelled walks are under History.";
 
 /**
  * The organiser's Walks page, as a private saved copy: kept in this browser
