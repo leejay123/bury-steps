@@ -311,8 +311,9 @@ export function Tile({
       {visual.kind === "circle" ? <IconCircle icon={visual.icon} /> : null}
       {visual.kind === "stack" ? <Stack icons={visual.icons} /> : null}
       <span className="absolute inset-x-5 top-5 flex flex-col gap-0.5" data-slot="sketch-label">
-        <span className="text-pretty font-medium text-[0.9375rem] text-foreground leading-5 tracking-tight">{title}</span>
-        <span className="text-muted-foreground text-xs tabular-nums leading-4">{sub}</span>
+        {/* One line each, as theirs, so the cards below never cover them. */}
+        <span className="truncate font-medium text-[0.9375rem] text-foreground leading-5 tracking-tight">{title}</span>
+        <span className="truncate text-muted-foreground text-xs tabular-nums leading-4">{sub}</span>
       </span>
     </>
   );

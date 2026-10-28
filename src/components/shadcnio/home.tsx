@@ -35,7 +35,7 @@ import { CARD_GRID, GALLERY_GRID, REVIEW_GRID } from "./grids";
 import { BUTTON_OUTLINE, BUTTON_PRIMARY, GRID, MiniNote, MiniPage, MiniQuestion, MiniWalk, Section, SectionHead, Tile } from "./parts";
 import type { ShadcnHomeData } from "./home-data";
 import { ShadcnFaq } from "./faq";
-import { AsciiField } from "./ascii-field";
+import { BandField, HeroField } from "./ascii-field";
 
 export type ShadcnHomeProps = {
   data: ShadcnHomeData;
@@ -83,7 +83,7 @@ function Hero({ data, siteName, tagline, logo, joinHref }: ShadcnHomeProps) {
         className="px-5 md:px-12 flex flex-col items-center relative isolate justify-center min-h-[29rem] sm:min-h-[30rem] md:min-h-[36rem] lg:min-h-[35rem] xl:min-h-[34rem] gap-8 pt-6 pb-8 sm:pt-8 sm:pb-12 md:pt-10 md:pb-14"
         data-slot="hero"
       >
-        <AsciiField />
+        <HeroField heading="home-heading" />
         <div className="flex flex-col gap-4 md:gap-5 max-w-5xl mx-auto min-w-0 items-center text-center">
           <p className="text-center text-muted-foreground text-xs leading-4 mb-1 md:mb-2" data-slot="docs-affiliation">
             <span>
@@ -441,7 +441,11 @@ function ReviewsSection({ testimonials }: { testimonials: TestimonialView[] }) {
 
 function CallToAction({ data, joinHref, testimonials }: ShadcnHomeProps) {
   return (
-    <Section className="relative isolate overflow-hidden" id="home-cta-heading">
+    <Section
+      className="relative isolate overflow-hidden [&>canvas]:[mask-image:radial-gradient(ellipse_50%_62%_at_50%_50%,#000_55%,transparent_100%)]"
+      id="home-cta-heading"
+    >
+      <BandField heading="home-cta-heading" />
       <div className="px-5 md:px-12 flex flex-col items-center py-20 text-center md:py-28">
         <div className="flex max-w-2xl flex-col items-center gap-5 md:px-10">
           <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm">

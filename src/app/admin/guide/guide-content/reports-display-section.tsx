@@ -92,7 +92,7 @@ export function ReportsDisplaySection() {
               this design; a wand in the header lets each visitor pick a colour theme, base grey, typeface and corners
               for themselves; the homepage becomes
               a copy of shadcn.io&apos;s own homepage layout, with its header (a short menu of drop-downs, search,
-              the bell, Dashboard and your avatar), phone menu with sub-menus, a moving letter field behind the hero,
+              the bell, Dashboard and your avatar), phone menu with sub-menus, their moving letter field behind the hero and the closing band (the mouse leaves a trail of letters), FAQ answers that slide open,
               footer and a bar
               counting down to the next walk, filled with Bury Steps&apos; walks, photos, rules, essentials,
               testimonials and FAQs); layouts stay the same and you can switch back

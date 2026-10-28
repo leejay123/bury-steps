@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import type { FaqCategoryView, FaqView } from "@/lib/faqs";
 import { SectionHead, Section } from "./parts";
@@ -71,7 +71,7 @@ export function ShadcnFaq({
               className={PANEL}
               data-inactive={active === topic.id ? undefined : ""}
               data-slot="tabs-content"
-              hidden={active !== topic.id}
+              inert={active !== topic.id}
               key={topic.id}
               role="tabpanel"
             >
@@ -97,13 +97,11 @@ export function ShadcnFaq({
                             />
                           </button>
                         </h3>
-                        <div className="cn-accordion-content overflow-hidden" data-slot="accordion-content" hidden={!expanded} role="region">
-                          <div className={ANSWER}>
-                            <p className="max-w-3xl whitespace-pre-line text-pretty ps-9 text-muted-foreground text-sm leading-relaxed md:ps-11 md:text-base">
-                              {faq.answer}
-                            </p>
-                          </div>
-                        </div>
+                        <Answer open={expanded}>
+                          <p className="max-w-3xl whitespace-pre-line text-pretty ps-9 text-muted-foreground text-sm leading-relaxed md:ps-11 md:text-base">
+                            {faq.answer}
+                          </p>
+                        </Answer>
                       </div>
                     );
                   })}
@@ -113,5 +111,47 @@ export function ShadcnFaq({
         </div>
       </div>
     </Section>
+  );
+}
+
+/**
+ * An answer that slides open and shut like theirs (Base UI's accordion panel):
+ * their stylesheet animates the height from 0 to --accordion-panel-height
+ * while it carries data-open or data-closed; it is hidden once shut.
+ */
+function Answer({ open, children }: { open: boolean; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const first = useRef(true);
+  // Shut answers start hidden; after that the effect below owns `hidden`.
+  const [startOpen] = useState(open);
+  // Drives the panel straight on the page (as Base UI does), so React doesn't re-render mid-animation.
+  useLayoutEffect(() => {
+    const panel = ref.current;
+    if (!panel) return;
+    if (first.current) {
+      first.current = false;
+      panel.hidden = !open;
+      return;
+    }
+    panel.hidden = false;
+    panel.style.setProperty("--accordion-panel-height", `${panel.scrollHeight}px`);
+    const done = window.setTimeout(() => {
+      if (open) panel.style.setProperty("--accordion-panel-height", "auto");
+      else panel.hidden = true;
+    }, 200);
+    return () => clearTimeout(done);
+  }, [open]);
+  return (
+    <div
+      className="cn-accordion-content overflow-hidden"
+      data-closed={open ? undefined : ""}
+      data-open={open ? "" : undefined}
+      data-slot="accordion-content"
+      hidden={!startOpen}
+      ref={ref}
+      role="region"
+    >
+      <div className={ANSWER}>{children}</div>
+    </div>
   );
 }

@@ -367,6 +367,9 @@ html[data-auth="in"] .globalnav-account-trigger { display: flex; }
 .globalnav-avatar-initials { color: var(--muted-foreground); letter-spacing: 0.01em; font-size: 11px; font-weight: 600; line-height: 1; }
 @media (max-width: 1023.98px) { .globalnav-avatar { width: 24px; height: 24px; } }
 .globalnav-account .globalnav-flyout-content { display: block; }
+/* Bury Steps: the bell and avatar menu sit centred in the bar like their icons. */
+.globalnav-bell, .globalnav-avatar-item { align-items: center; display: flex; }
+.globalnav-bell > *, .globalnav-avatar-item > * { align-items: center; display: flex; }
 @media (min-width: 1024px) { .globalnav-account .globalnav-flyout-content { padding-top: 40px; padding-bottom: 80px; } }
 .globalnav-account-caption { color: var(--gn-color-tertiary); letter-spacing: -0.01em; margin: 0px; font-size: 12px; font-weight: 400; line-height: 1.33337; display: block; }
 .globalnav-account-plan { color: var(--gn-accent); }
