@@ -1,5 +1,7 @@
 import { SerwistProvider } from "@serwist/turbopack/react";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { DashboardFrame } from "@/components/efferd/dashboard-frame";
+import { LazyDashboardSignOut } from "@/components/efferd/dashboard-sign-out-lazy";
+import { ClerkIsland } from "@/components/clerk-island";
 import { DASHBOARD_VIEW_SCRIPT } from "@/components/dashboard/dashboard-view";
 import type { CSSProperties } from "react";
 import { ClientPathnameProvider } from "@/components/client-pathname";
@@ -193,8 +195,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"
             data-site-shell=""
           >
-            {/* The dashboard view's frame (only drawn when it's on). */}
-            <DashboardShell design={theme.dashboardDesign} />
             <UnlockPageOnNavigate />
             <LiveUpdates />
             <ScrollRowArrows />
@@ -333,7 +333,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <WalkEssentialsProvider items={theme.walkEssentials}>
                   <WalkWordingProvider wording={theme.walkWording}>
                     <TabStyleProvider style={theme.tabStyle}>
-                      <SignedInProvider signedIn={signedIn}>{children}</SignedInProvider>
+                      <SignedInProvider signedIn={signedIn}>
+                        {/* The dashboard view (a test): the page inside Efferd's app shell when it's on. */}
+                        <DashboardFrame
+                          design={theme.dashboardDesign}
+                          signOut={
+                            <ClerkIsland>
+                              <LazyDashboardSignOut />
+                            </ClerkIsland>
+                          }
+                        >
+                          {children}
+                        </DashboardFrame>
+                      </SignedInProvider>
                     </TabStyleProvider>
                   </WalkWordingProvider>
                 </WalkEssentialsProvider>

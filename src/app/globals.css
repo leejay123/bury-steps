@@ -339,6 +339,12 @@ html:has([data-display-settings] [data-slot="drawer-content"][data-state="open"]
    * every one of those a soft grey on focus instead of a black outline.
    */
   --ring: oklch(0.708 0 0);
+  /* Chart colours (the dashboard's Efferd charts): black through light grey. */
+  --chart-1: oklch(0.2 0 0);
+  --chart-2: oklch(0.4 0 0);
+  --chart-3: oklch(0.58 0 0);
+  --chart-4: oklch(0.72 0 0);
+  --chart-5: oklch(0.84 0 0);
 }
 
 /*
@@ -1270,9 +1276,9 @@ html[data-page-loader-on] #main-content {
 
 
 /*
- * The dashboard view (a test; components/dashboard): the site's header,
- * footer and phone bar give way to the dashboard frame (a 15rem side menu
- * and a 3.5rem top bar), and the page fills the space beside them.
+ * The dashboard view (a test; components/efferd): the site's header, footer
+ * and phone bar give way to Efferd's app shell (its own side menu and top
+ * bar, drawn by DashboardFrame), which fills the whole window.
  */
 html[data-view="dashboard"] :is([data-site-header], [data-site-footer], [data-site-bottom]) {
   display: none !important;
@@ -1280,64 +1286,15 @@ html[data-view="dashboard"] :is([data-site-header], [data-site-footer], [data-si
 html[data-view="dashboard"] [data-site-shell] {
   max-width: none;
   border-inline: 0;
-  padding-top: 3.5rem;
 }
-@media (min-width: 768px) {
-  html[data-view="dashboard"] [data-site-shell] {
-    padding-left: 15rem;
-  }
-}
-/* The page's own space stays as on the normal site. */
-
-/* Dashboard designs (Settings → Branding → Dashboard design), after Efferd's
-   dashboards 1–4. 1: plain white frame with hairlines (the base above). */
-/* 2: section labels in capitals, + marks at the menu's top corners. */
-html[data-dash-design="2"] [data-dash-nav] p {
-  font-size: 0.6875rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-html[data-dash-design="2"] [data-dash-brand] {
-  position: relative;
-}
-html[data-dash-design="2"] [data-dash-brand]::after {
-  content: "";
-  position: absolute;
-  right: -7px;
-  bottom: -7px;
-  width: 13px;
-  height: 13px;
-  background:
-    linear-gradient(var(--muted-foreground), var(--muted-foreground)) center / 100% 1px no-repeat,
-    linear-gradient(var(--muted-foreground), var(--muted-foreground)) center / 1px 100% no-repeat;
-  opacity: 0.6;
-}
-/* 3: a soft grey menu with white chosen items. */
-html[data-dash-design="3"] [data-dash-sidebar] {
-  background: color-mix(in oklab, var(--muted) 60%, var(--background));
-}
-html[data-dash-design="3"] [data-dash-item][aria-current="page"] {
-  background: var(--background);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
-}
-/* 4: inset — a grey frame with the page as a rounded white panel inside it. */
-html[data-view="dashboard"][data-dash-design="4"] body,
-html[data-dash-design="4"] [data-dash-sidebar],
-html[data-dash-design="4"] [data-dash-topbar] {
-  background: var(--muted);
-  border-color: transparent;
-}
-html[data-view="dashboard"][data-dash-design="4"] #main-content {
-  margin: 0 0.5rem 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: 0.75rem;
-  background: var(--background);
+html[data-view="dashboard"] #main-content {
+  padding: 0;
 }
 
 /* The dashboard view: the cookie notice sits beside the side menu, not under it. */
 @media (min-width: 768px) {
   html[data-view="dashboard"] [data-cookie-consent] {
-    left: 15rem;
+    left: 16rem;
     max-width: none;
     width: auto;
   }

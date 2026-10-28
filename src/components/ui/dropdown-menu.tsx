@@ -95,8 +95,14 @@ function DropdownMenuSeparator({
   );
 }
 
+/** A group of menu items (used by the Efferd dashboard test). */
+function DropdownMenuGroup(props: React.ComponentProps<typeof DropdownMenuPrimitive.Group>) {
+  return <DropdownMenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />;
+}
+
 export {
   DropdownMenu,
+  DropdownMenuGroup,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
