@@ -29,7 +29,7 @@ export function siteChrome(theme: SiteTheme) {
     { href: "/contact", label: "Contact us", scope: "pages" },
     { href: "/apps", label: "Walking apps", scope: "pages" },
     { href: "/email-preferences", label: "Email preferences", scope: "pages" },
-    { href: "/dashboard", label: "Dashboard", scope: "pages" },
+    { href: "/overview", label: "Dashboard", scope: "pages" },
   ];
   const columns: FooterGroup[][] = [
     [
@@ -75,7 +75,7 @@ export function siteChrome(theme: SiteTheme) {
           { href: signInHref, label: "Sign in" },
           { href: joinHref, label: "Join the group" },
           { href: "/email-preferences", label: "Email preferences" },
-          { href: "/dashboard", label: "Dashboard" },
+          { href: "/overview", label: "Dashboard" },
         ],
       },
     ],

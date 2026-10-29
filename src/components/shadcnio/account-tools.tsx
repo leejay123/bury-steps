@@ -41,7 +41,7 @@ async function AccountTools({ signInHref }: { signInHref: string }) {
         </HeaderPartBoundary>
       </li>
       <li className="globalnav-item globalnav-item-icon globalnav-account globalnav-dashboard" data-gn-id="dashboard">
-        <Link className={PILL} href="/dashboard">
+        <Link className={PILL} href="/overview">
           Dashboard
         </Link>
       </li>
@@ -74,7 +74,7 @@ export function ShadcnAccountTools({ signInHref }: { signInHref: string }) {
             <BellPlaceholder />
           </li>
           <li className="globalnav-item globalnav-item-icon globalnav-account globalnav-dashboard" data-gn-audience="member">
-            <Link className={PILL} href="/dashboard">
+            <Link className={PILL} href="/overview">
               Dashboard
             </Link>
           </li>

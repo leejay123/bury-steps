@@ -4,30 +4,21 @@ import { getInlineLogo } from "@/lib/inline-logo";
 import { getProgressEnabled } from "@/lib/progress-settings";
 import { ShadcnAccountTools } from "./account-tools";
 import { siteChrome } from "./chrome";
-import { DashSidebarParts } from "./dash-sidebar";
+import { EfferdHeaderTools, EfferdSidebarBody, EfferdSidebarHead } from "./efferd-sidebar";
 import { GlobalFooter } from "./globalfooter";
 import { GlobalNav, type SearchItem } from "./globalnav";
 import { getShadcnHomeData } from "./home-data";
 import { ShadcnSiteShell } from "./site-shell";
 import { TopLoader } from "./top-loader";
 
-/** The sidebar's shape while it loads (signed-in members only ever see it). */
+/** The sidebar menu's shape while it loads (signed-in people only ever see it). */
 function SidebarSkeleton() {
   return (
-    <div aria-hidden="true" className="flex flex-1 flex-col">
-      <div className="flex h-14 items-center gap-3 border-b px-4">
-        <span className="size-8 rounded-md bg-muted" />
-        <span className="h-3 w-32 rounded bg-muted" />
-      </div>
-      <div className="flex flex-col gap-3 px-4 pt-5">
-        {[0, 1, 2, 3, 4, 5].map((i) => (
-          <span
-            className="h-3 rounded bg-muted"
-            key={i}
-            style={{ width: `${55 + ((i * 13) % 35)}%` }}
-          />
-        ))}
-      </div>
+    <div aria-hidden="true" className="flex flex-1 flex-col gap-1 p-2">
+      <span className="mx-2 my-2.5 h-3 w-20 rounded bg-muted" />
+      {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+        <span className="mx-2 my-2.5 h-3 rounded bg-muted" key={i} style={{ width: `${45 + ((i * 13) % 35)}%` }} />
+      ))}
     </div>
   );
 }
@@ -86,10 +77,14 @@ export async function ShadcnLayoutFrame({
           />
         }
         sidebar={
-          <Suspense fallback={<SidebarSkeleton />}>
-            <DashSidebarParts siteName={theme.siteName} />
-          </Suspense>
+          <>
+            <EfferdSidebarHead logoSrc={logo.src} siteName={theme.siteName} />
+            <Suspense fallback={<SidebarSkeleton />}>
+              <EfferdSidebarBody siteName={theme.siteName} year={year} />
+            </Suspense>
+          </>
         }
+        tools={<EfferdHeaderTools />}
       >
         {children}
       </ShadcnSiteShell>

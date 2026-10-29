@@ -165,7 +165,7 @@ function Hero({ data, logo, joinHref }: ShadcnHomeProps) {
           <Link className={BUTTON_PRIMARY} data-guest-home="" href={joinHref}>
             Join the group
           </Link>
-          <Link className={BUTTON_PRIMARY} data-member-home="" href="/dashboard">
+          <Link className={BUTTON_PRIMARY} data-member-home="" href="/overview">
             Your dashboard
           </Link>
           <Link className={BUTTON_OUTLINE} href="/walks">

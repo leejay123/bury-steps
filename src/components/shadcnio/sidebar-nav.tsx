@@ -40,6 +40,7 @@ const ICONS = {
   stats: BarChart3,
 } as const;
 
+export const SIDEBAR_ICONS = ICONS;
 export type SidebarIcon = keyof typeof ICONS;
 export type SidebarLink = { href: string; label: string; icon: SidebarIcon; tag?: string };
 export type SidebarGroup = { title: string; links: SidebarLink[] };
@@ -53,7 +54,7 @@ const ACTIVE =
 const LABEL = "font-medium font-mono text-muted-foreground text-xs uppercase leading-4 tracking-widest";
 
 function isCurrent(path: string, href: string) {
-  if (href === "/dashboard") return path === "/dashboard";
+  if (href === "/overview") return path === "/overview";
   return path === href || path.startsWith(`${href}/`);
 }
 

@@ -105,6 +105,7 @@ export const APP_TOP_LEVEL_SEGMENTS = [
   "onboarding",
   "opengraph-image",
   "organiser-invite",
+  "overview",
   "privacy",
   "privacy-policy",
   "progress",

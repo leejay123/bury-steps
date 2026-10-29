@@ -690,7 +690,7 @@ html[data-page-kind="home"] [data-shadcnio-shell] :is([data-slot="docs-shell"], 
 /* ---- Every page's own head (PageTop, AdminPageIntro, Settings), as shadcn.io's page head:
    a small capital label, a large title, a larger intro, buttons on the right and a line
    across the page underneath. Same markup as the usual look; only this design restyles it. ---- */
-:root[data-design="shadcnio"] [data-shadcn-top] {
+:root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -704,11 +704,11 @@ html[data-page-kind="home"] [data-shadcnio-shell] :is([data-slot="docs-shell"], 
   text-align: start !important;
 }
 @media (min-width: 48rem) {
-  :root[data-design="shadcnio"] [data-shadcn-top] { flex-direction: row; align-items: flex-end; justify-content: space-between; gap: 2rem; padding-top: 1rem !important; padding-bottom: 2.5rem !important; }
+  :root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] { flex-direction: row; align-items: flex-end; justify-content: space-between; gap: 2rem; padding-top: 1rem !important; padding-bottom: 2.5rem !important; }
 }
-:root[data-design="shadcnio"] [data-shadcn-top]::before { content: none !important; }
+:root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top]::before { content: none !important; }
 /* Their + marks on that line are drawn by the frame (site-shell.tsx, docs-marks). */
-:root[data-design="shadcnio"] [data-shadcn-top]::after {
+:root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top]::after {
   content: "" !important;
   position: absolute;
   inset: auto -100vw -1px -100vw !important;
@@ -717,23 +717,23 @@ html[data-page-kind="home"] [data-shadcnio-shell] :is([data-slot="docs-shell"], 
   background: none !important;
   pointer-events: none;
 }
-:root[data-design="shadcnio"] [data-shadcn-top] > div:first-child { display: flex; flex-direction: column; gap: 0.75rem; max-width: 42rem; }
-@media (min-width: 64rem) { :root[data-design="shadcnio"] [data-shadcn-top] > div:first-child { gap: 1rem; } }
-:root[data-design="shadcnio"] [data-shadcn-top] [data-page-top-eyebrow] {
+:root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] > div:first-child { display: flex; flex-direction: column; gap: 0.75rem; max-width: 42rem; }
+@media (min-width: 64rem) { :root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] > div:first-child { gap: 1rem; } }
+:root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] [data-page-top-eyebrow] {
   display: block !important;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 0.75rem; line-height: 1rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--muted-foreground);
 }
-:root[data-design="shadcnio"] [data-shadcn-top] [data-page-top-title] {
+:root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] [data-page-top-title] {
   font-size: 1.875rem !important; line-height: 2.25rem !important; font-weight: 600 !important;
   letter-spacing: -0.05em !important; text-wrap: balance; color: var(--foreground) !important;
 }
-@media (min-width: 48rem) { :root[data-design="shadcnio"] [data-shadcn-top] [data-page-top-title] { font-size: 2.25rem !important; line-height: 2.5rem !important; } }
-:root[data-design="shadcnio"] [data-shadcn-top] [data-page-top-intro] {
+@media (min-width: 48rem) { :root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] [data-page-top-title] { font-size: 2.25rem !important; line-height: 2.5rem !important; } }
+:root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] [data-page-top-intro] {
   font-size: 1rem !important; line-height: 1.5rem !important; text-wrap: pretty; color: var(--muted-foreground) !important;
 }
-@media (min-width: 48rem) { :root[data-design="shadcnio"] [data-shadcn-top] [data-page-top-intro] { font-size: 1.125rem !important; line-height: 1.75rem !important; } }
+@media (min-width: 48rem) { :root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] [data-page-top-intro] { font-size: 1.125rem !important; line-height: 1.75rem !important; } }
 
 /* ---- Their form pieces (the Contact page): fields, labels, inputs and the default button size. ---- */
 .style-nova .cn-button-size-default { height: calc(var(--spacing) * 8); gap: calc(var(--spacing) * 1.5); padding-inline: calc(var(--spacing) * 2.5); }
@@ -761,3 +761,31 @@ html[data-remembered-in] .globalnav-menu-list { --gn-items: var(--gn-items-membe
 /* On the dashboard pages (signed in, with the sidebar) the sidebar is the menu: no top menu
    and no Dashboard button; search, Customize, light/dark, the bell and the avatar stay. */
 html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcnio-shell] :is([data-gn-id="menu"], .globalnav-menutrigger, .globalnav-dashboard) { display: none !important; }
+
+/* ---- Signed-in pages: Efferd's app shell 2 (their layout, the site's colours). A full-height
+   sidebar (16rem) that folds to its icons (3rem), a top bar inside the page with the sidebar
+   button, the page's name, the bell and the avatar, and the page in their padded area up to
+   80rem wide. Chosen before the first paint from html[data-remembered-in] and the page's kind
+   (site-shell.tsx, efferd-sidebar.tsx). ---- */
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-header"] { display: none !important; }
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="efferd-header"] { display: flex; }
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) :is([data-slot="docs-end"], [data-slot="docs-marks"], [data-slot="guides"], [data-slot="docs-sidebar-edge"]) { display: none !important; }
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar-drawer"] aside { background: var(--background); }
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-container"] { max-width: 80rem; padding: 1rem; min-height: 0; }
+@media (min-width: 48rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-container"] { padding: 1.5rem; } }
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-column"] { border-inline: 0; }
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] { padding: 0 !important; }
+@media (min-width: 64rem) {
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-shell"] { --sidebar-width: 16rem; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); transition: grid-template-columns .2s linear; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] { margin-top: 0; height: 100svh; background: var(--background); }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-main"] { padding-top: 0; }
+  html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-shell"] { --sidebar-width: 3rem; grid-template-columns: 3rem minmax(0, 1fr); }
+  html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] { visibility: visible; pointer-events: auto; transition: none; }
+  html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-button] { width: 2rem; height: 2rem; padding: 0.5rem; }
+  html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-button] > span { display: none; }
+  html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-slot="efferd-nav"] > div > [data-efferd-label] { margin-top: -2rem; opacity: 0; }
+  html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-foot] > [data-efferd-label] { display: none; }
+  html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-slot="efferd-nav"] { overflow: hidden; }
+}
+@media (prefers-reduced-motion: reduce) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-shell"] { transition: none; } }
+html.dark[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] { background: radial-gradient(60% 18% at 10% 0%, color-mix(in oklab, var(--foreground) 8%, transparent), transparent), var(--background); }

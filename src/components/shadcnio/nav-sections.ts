@@ -80,7 +80,7 @@ const GROUPS: Record<string, NavGroup[]> = {
       links: [
         { href: "/progress", label: "Group progress" },
         { href: "/history", label: "Your history" },
-        { href: "/dashboard", label: "Dashboard" },
+        { href: "/overview", label: "Dashboard" },
       ],
     },
     HELP,
@@ -92,7 +92,7 @@ const GROUPS: Record<string, NavGroup[]> = {
       links: [
         { href: "/history", label: "Your history" },
         { href: "/progress", label: "Group progress" },
-        { href: "/dashboard", label: "Dashboard" },
+        { href: "/overview", label: "Dashboard" },
       ],
     },
     HELP,
@@ -137,7 +137,7 @@ const ORGANISER: NavGroup[] = [
     links: [
       { href: "/admin/settings", label: "Settings" },
       { href: "/admin/guide", label: "Guide" },
-      { href: "/dashboard", label: "Dashboard" },
+      { href: "/overview", label: "Dashboard" },
     ],
   },
 ];
@@ -189,7 +189,7 @@ function organiserSection(id: string, href: string, label: string, links: { href
         links: [
           ...rest.slice(3),
           { href: "/admin/walks", label: "Manage walks" },
-          { href: "/dashboard", label: "Dashboard" },
+          { href: "/overview", label: "Dashboard" },
         ],
       },
     ],

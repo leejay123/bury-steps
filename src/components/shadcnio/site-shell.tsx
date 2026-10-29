@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { PanelLeft } from "lucide-react";
 import { useClientPathname } from "@/components/client-pathname";
 import { Guides } from "./parts";
 import { SIDEBAR_KEY, SIDEBAR_TOGGLE_EVENT } from "./sidebar-state";
@@ -22,11 +23,15 @@ import { SIDEBAR_KEY, SIDEBAR_TOGGLE_EVENT } from "./sidebar-state";
 export function ShadcnSiteShell({
   nav,
   sidebar,
+  tools,
   footer,
   children,
 }: {
   nav: ReactNode;
+  /** Signed-in pages' sidebar (Efferd's app shell 2). */
   sidebar: ReactNode;
+  /** Signed-in pages' top bar, right end: the bell and the avatar. */
+  tools: ReactNode;
   footer: ReactNode;
   children: ReactNode;
 }) {
@@ -52,8 +57,19 @@ export function ShadcnSiteShell({
         } catch {}
       } else setDrawer((open) => !open);
     };
+    // ⌘B / Ctrl+B folds the sidebar, as in Efferd's app shell.
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== "b" || !(event.metaKey || event.ctrlKey) || event.altKey) return;
+      if (!document.documentElement.hasAttribute("data-remembered-in")) return;
+      event.preventDefault();
+      onToggle();
+    };
     window.addEventListener(SIDEBAR_TOGGLE_EVENT, onToggle);
-    return () => window.removeEventListener(SIDEBAR_TOGGLE_EVENT, onToggle);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener(SIDEBAR_TOGGLE_EVENT, onToggle);
+      window.removeEventListener("keydown", onKey);
+    };
   }, []);
 
   // Each page's head (data-shadcn-top) draws its line across the window (shadcnio.css);
@@ -123,6 +139,30 @@ export function ShadcnSiteShell({
           className="min-h-[calc(100svh-var(--header-height))] min-w-0 bg-background lg:col-start-2 lg:row-start-1 lg:h-svh lg:min-h-0 lg:overflow-y-scroll lg:overscroll-contain lg:pt-(--header-height)"
           data-slot="docs-main"
         >
+          {/* Signed-in pages: Efferd's top bar (shown by shadcnio.css). */}
+          <header
+            className="sticky top-0 z-40 hidden h-14 shrink-0 items-center justify-between gap-2 border-b bg-background/95 px-4 backdrop-blur-sm supports-backdrop-filter:bg-background/50 md:px-6"
+            data-slot="efferd-header"
+          >
+            <div className="flex min-w-0 items-center gap-3">
+              <button
+                aria-label="Toggle sidebar"
+                className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-4"
+                onClick={() => window.dispatchEvent(new Event(SIDEBAR_TOGGLE_EVENT))}
+                title="Toggle sidebar (⌘B)"
+                type="button"
+              >
+                <PanelLeft aria-hidden />
+              </button>
+              <span aria-hidden="true" className="mr-2 h-4 w-px shrink-0 bg-border" />
+              <nav aria-label="Breadcrumb" className="min-w-0">
+                <p className="truncate font-normal text-foreground text-sm" aria-current="page">
+                  {pageTitle(path)}
+                </p>
+              </nav>
+            </div>
+            <div className="flex shrink-0 items-center gap-3">{tools}</div>
+          </header>
           <div className="overflow-x-clip" data-slot="docs-scroll">
             <div
               className="mx-auto flex min-h-[calc(100svh-3.5rem)] w-full max-w-6xl flex-col px-4 sm:px-5 lg:min-h-[calc(100svh-4.5rem)] lg:px-6"
@@ -190,4 +230,27 @@ function plusMark(y: number, side: "start" | "end") {
   path.setAttribute("d", "M7 0v14M0 7h14");
   svg.append(path);
   return svg;
+}
+
+/** The page's name for the top bar, from its address (the sidebar's names). */
+const PAGE_TITLES: [string, string][] = [
+  ["/overview", "Overview"],
+  ["/admin/walks", "Walks"],
+  ["/admin/members", "Members"],
+  ["/admin/messages", "Messages"],
+  ["/admin/reports", "Reports"],
+  ["/admin/settings", "Settings"],
+  ["/admin/guide", "Guide"],
+  ["/walks", "Walks"],
+  ["/w/", "Walk"],
+  ["/notices", "Notices"],
+  ["/progress", "Progress"],
+  ["/history", "History"],
+  ["/email-preferences", "Email preferences"],
+  ["/contact", "Contact"],
+  ["/apps", "Walking apps"],
+];
+function pageTitle(path: string | null) {
+  if (!path) return "";
+  return PAGE_TITLES.find(([href]) => path === href || path.startsWith(href.endsWith("/") ? href : `${href}/`))?.[1] ?? "";
 }

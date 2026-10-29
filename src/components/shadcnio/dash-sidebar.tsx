@@ -29,7 +29,7 @@ export async function sidebarGroups(): Promise<SidebarGroup[] | null> {
       title: "Dashboard",
       links: [
         { href: "/", label: "Home", icon: "home" },
-        { href: "/dashboard", label: "Overview", icon: "overview" },
+        { href: "/overview", label: "Overview", icon: "overview" },
         { href: organiser && perms.permWalksView ? "/admin/walks" : "/walks", label: "Walks", icon: "walks" },
         { href: "/notices", label: "Notices", icon: "notices" },
         ...(progressEnabled ? [{ href: "/progress", label: "Progress", icon: "progress" as const }] : []),
