@@ -225,17 +225,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <WalkWordingProvider wording={theme.walkWording}>
                     <TabStyleProvider style={theme.tabStyle}>
                       <SignedInProvider signedIn={signedIn}>
-                        {/* The dashboard view (a test): the page inside Efferd's app shell when it's on. */}
-                        <DashboardFrame
-                          design={theme.dashboardDesign}
-                          signOut={
-                            <ClerkIsland>
-                              <LazyDashboardSignOut />
-                            </ClerkIsland>
-                          }
-                        >
-                          {children}
-                        </DashboardFrame>
+                        {/* No dashboard-view test frame here: the frame itself is Efferd's app
+                            shell for signed-in people (a browser that had the test on drew a
+                            second frame inside it). */}
+                        {children}
                       </SignedInProvider>
                     </TabStyleProvider>
                   </WalkWordingProvider>

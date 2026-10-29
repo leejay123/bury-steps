@@ -9,7 +9,8 @@
 export const DASHBOARD_VIEW_KEY = "bs-view";
 
 /** Runs before the page paints: dashboard view only for someone signed in (their menu cookie). */
-export const DASHBOARD_VIEW_SCRIPT = `try{if(localStorage.getItem("${DASHBOARD_VIEW_KEY}")==="dashboard"&&document.cookie.indexOf("bs-nav=")!==-1)document.documentElement.setAttribute("data-view","dashboard")}catch(e){}`;
+// Not in the shadcn.io design, whose frame is already Efferd's app shell for signed-in people.
+export const DASHBOARD_VIEW_SCRIPT = `try{if(document.documentElement.getAttribute("data-design")!=="shadcnio"&&localStorage.getItem("${DASHBOARD_VIEW_KEY}")==="dashboard"&&document.cookie.indexOf("bs-nav=")!==-1)document.documentElement.setAttribute("data-view","dashboard")}catch(e){}`;
 
 export function enterDashboardView() {
   try {
