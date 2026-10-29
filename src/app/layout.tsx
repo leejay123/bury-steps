@@ -27,7 +27,6 @@ import { TabStyleProvider } from "@/components/ui/tabs";
 import { HeaderPartBoundary } from "@/components/header-part-boundary";
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
-import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { auth } from "@clerk/nextjs/server";
@@ -158,6 +157,22 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       suppressHydrationWarning
     >
       <head>
+        {/* Run as the page arrives, before anything is drawn, so a refresh shows the right
+            look straight away: light/dark mode, the shadcn.io Customize choices, signed in
+            (the sidebar and the signed-in menu) with the sidebar's folded state, the
+            dashboard view (a test), and scroll restoration off. Plain scripts: next/script's
+            beforeInteractive only queues them for Next's own code, which runs after the
+            first paint, so the signed-out menu used to show first. */}
+        <script dangerouslySetInnerHTML={{ __html: COLOR_MODE_SCRIPT }} id="color-mode" />
+        <script dangerouslySetInnerHTML={{ __html: CUSTOMIZE_SCRIPT }} id="shadcnio-customize" />
+        <script dangerouslySetInnerHTML={{ __html: SIDEBAR_SCRIPT }} id="docs-sidebar" />
+        <script dangerouslySetInnerHTML={{ __html: DASHBOARD_VIEW_SCRIPT }} id="dashboard-view" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch {}`,
+          }}
+          id="scroll-restoration"
+        />
         {/* Don't draw anything until the ready-made page has been read down to
             the phone bar's slot (the end of the layout). The page streams in,
             and the browser drew whatever had arrived: the header first, then
@@ -186,25 +201,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           makes every refresh start at the top instead — predictable, if
           less clever than a correct restore would be.
         */}
-        {/* The dashboard view (a test): on before the first paint, so a refresh doesn't flash the normal header. */}
-        {/* Light/dark mode (shadcn.io design only): set before the first paint, so a refresh doesn't flash. */}
-        <Script id="color-mode" strategy="beforeInteractive">
-          {COLOR_MODE_SCRIPT}
-        </Script>
-        {/* The shadcn.io design's Customize choices (theme, base, style, radius), before the first paint. */}
-        <Script id="shadcnio-customize" strategy="beforeInteractive">
-          {CUSTOMIZE_SCRIPT}
-        </Script>
-        {/* The shadcn.io design: signed-in members get the sidebar from the first paint (and its folded state). */}
-        <Script id="docs-sidebar" strategy="beforeInteractive">
-          {SIDEBAR_SCRIPT}
-        </Script>
-        <Script id="dashboard-view" strategy="beforeInteractive">
-          {DASHBOARD_VIEW_SCRIPT}
-        </Script>
-        <Script id="scroll-restoration" strategy="beforeInteractive">
-          {`try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch {}`}
-        </Script>
         <StaleDeployReload />
         <ClientPathnameProvider>
         <SiteMotionConfig>

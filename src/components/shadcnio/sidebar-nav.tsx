@@ -10,6 +10,7 @@ import {
   Calendar,
   ClipboardList,
   History,
+  House,
   LayoutDashboard,
   Mail,
   MailCheck,
@@ -21,6 +22,7 @@ import {
 } from "lucide-react";
 
 const ICONS = {
+  home: House,
   overview: LayoutDashboard,
   walks: Calendar,
   notices: Bell,

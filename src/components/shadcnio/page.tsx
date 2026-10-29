@@ -15,6 +15,7 @@ import { siteChrome } from "./chrome";
 import { AboutReadMore } from "./about-read-more";
 import { ShadcnNewsletter } from "./newsletter";
 import { getOptionalUser } from "@/lib/auth";
+import { getProgressEnabled } from "@/lib/progress-settings";
 import { Suspense } from "react";
 import { PageKindMark } from "./page-kind";
 
@@ -26,12 +27,13 @@ import { PageKindMark } from "./page-kind";
  * html[data-page-kind="home"], set by PageKindMark).
  */
 export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
-  const [data, testimonials, faqData, logo, year] = await Promise.all([
+  const [data, testimonials, faqData, logo, year, progressEnabled] = await Promise.all([
     getShadcnHomeData(),
     getHomepageTestimonials(),
     getHomepageFaqData(),
     getInlineLogo(),
     copyrightYear(),
+    getProgressEnabled(),
   ]);
   const chrome = siteChrome(theme);
   const { links, columns, joinHref, signInHref, facebookUrl } = chrome;
@@ -79,6 +81,7 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
         facebookUrl={facebookUrl}
         links={links}
         logoSrc={logo.src}
+        progressEnabled={progressEnabled}
         search={search}
         siteName={theme.siteName}
       />

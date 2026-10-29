@@ -751,3 +751,13 @@ html[data-page-kind="home"] [data-shadcnio-shell] :is([data-slot="docs-shell"], 
 .style-nova :is(.cn-input, .cn-textarea)[aria-invalid=true] { border-color: var(--destructive); box-shadow: 0 0 0 3px color-mix(in oklab, var(--destructive) 20%, transparent); }
 .style-nova :is(.cn-input, .cn-textarea):is(.dark *) { background-color: color-mix(in oklab, var(--input) 30%, transparent); }
 @media (min-width: 48rem) { .style-nova :is(.cn-input, .cn-textarea) { font-size: 0.875rem; line-height: calc(1.25 / .875); } }
+
+/* ---- Header: the right menu from the first paint. Both menus (and both ends: Sign in, or the
+   bell, Dashboard and avatar) are in the page; html[data-remembered-in], set before the first
+   paint, shows the signed-in ones (globalnav.tsx, account-tools.tsx). ---- */
+html[data-remembered-in] .globalnav [data-gn-audience="visitor"],
+html:not([data-remembered-in]) .globalnav [data-gn-audience="member"] { display: none !important; }
+html[data-remembered-in] .globalnav-menu-list { --gn-items: var(--gn-items-member) !important; }
+/* On the dashboard pages (signed in, with the sidebar) the sidebar is the menu: no top menu
+   and no Dashboard button; search, Customize, light/dark, the bell and the avatar stay. */
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcnio-shell] :is([data-gn-id="menu"], .globalnav-menutrigger, .globalnav-dashboard) { display: none !important; }

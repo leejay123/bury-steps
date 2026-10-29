@@ -1,38 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useClientPathname } from "@/components/client-pathname";
 import { PanelLeft } from "lucide-react";
 import { SIDEBAR_TOGGLE_EVENT } from "./sidebar-state";
-import { NAV_COOKIE, parseRememberedNav } from "@/lib/remembered-nav";
 import { CustomizeDot, CustomizePanel } from "./customize-panel";
 import { setColorMode } from "@/components/color-mode";
 import { GlobalnavController } from "./globalnav-controller";
-import { shortMenu, type NavSection } from "./nav-sections";
+import { memberMenu, shortMenu, type NavSection } from "./nav-sections";
 import { SearchPanel, type SearchItem, type SearchPanelHandle } from "./search-panel";
 
 export type { SearchItem };
 export type GlobalNavLink = { href: string; label: string };
-
-function readMenu() {
-  return (
-    document.cookie
-      .split("; ")
-      .find((part) => part.startsWith(`${NAV_COOKIE}=`))
-      ?.slice(NAV_COOKIE.length + 1) ?? ""
-  );
-}
-
-/** The signed-in person's menu (remembered by the site's own header), or "" for a visitor. */
-function useRememberedMenu() {
-  return useSyncExternalStore(
-    () => () => {},
-    readMenu,
-    () => "",
-  );
-}
 
 /**
  * shadcn.io's header (their "globalnav", used with their permission): the
@@ -49,10 +30,11 @@ export function GlobalNav({
   account,
   facebookUrl,
   sidebar = false,
+  progressEnabled = true,
 }: {
   siteName: string;
   logoSrc: string;
-  /** The visitor's menu; a signed-in member's remembered menu replaces it. */
+  /** The visitor's menu (signed-in people get memberMenu). */
   links: GlobalNavLink[];
   search: SearchItem[];
   /** Sign in, or the bell, Dashboard and avatar (rendered on the server). */
@@ -60,10 +42,18 @@ export function GlobalNav({
   facebookUrl: string;
   /** Pages with their dashboard sidebar: the sidebar button sits before the logo (theirs, exactly). */
   sidebar?: boolean;
+  /** Whether Group progress is on (its menu link). */
+  progressEnabled?: boolean;
 }) {
-  const remembered = useRememberedMenu();
-  const memberLinks = remembered ? parseRememberedNav(remembered) : [];
-  const menu: NavSection[] = shortMenu(memberLinks.length ? memberLinks : links, facebookUrl);
+  // Both menus are in the page; html[data-remembered-in] (set before the first paint)
+  // shows the signed-in one, so the right menu is there from the start (shadcnio.css)
+  // instead of the visitor's menu being swapped out a moment later.
+  const visitor: NavSection[] = shortMenu(links, facebookUrl);
+  const member: NavSection[] = memberMenu(progressEnabled, facebookUrl);
+  const entries = [
+    ...visitor.map((section, i) => ({ section, i, audience: "visitor" })),
+    ...member.map((section, i) => ({ section, i, audience: "member" })),
+  ];
 
   const navRef = useRef<HTMLElement>(null);
   const searchRef = useRef<SearchPanelHandle>(null);
@@ -71,8 +61,7 @@ export function GlobalNav({
   const pathname = useClientPathname();
   const controller = useRef<GlobalnavController | null>(null);
 
-  // Their controller runs the whole header; it is rebuilt when the menu changes
-  // (a member's remembered menu arrives after the first paint).
+  // Their controller runs the whole header.
   useEffect(() => {
     const nav = navRef.current;
     if (!nav) return;
@@ -92,11 +81,11 @@ export function GlobalNav({
       control.destroy();
       controller.current = null;
     };
-  }, [router, remembered]);
+  }, [router]);
 
   useEffect(() => {
     if (pathname) controller.current?.route(pathname);
-  }, [pathname, remembered]);
+  }, [pathname]);
 
   const toggleTheme = () => setColorMode(document.documentElement.classList.contains("dark") ? "light" : "dark");
   // D switches light / dark, as on shadcn.io (not while typing).
@@ -159,13 +148,17 @@ export function GlobalNav({
             </li>
             <li className="globalnav-item globalnav-menu" data-gn-id="menu">
               <div className="globalnav-menu-flyout">
-                <ul className="globalnav-menu-list" style={{ "--gn-items": String(menu.length) } as React.CSSProperties}>
-                  {menu.map((section, i) => {
+                <ul
+                  className="globalnav-menu-list"
+                  style={{ "--gn-items": String(visitor.length), "--gn-items-member": String(member.length) } as React.CSSProperties}
+                >
+                  {entries.map(({ section, i, audience }) => {
                     const hasFlyout = section.groups.length > 0;
                     const items = section.groups.reduce((n, group) => n + group.links.length + 1, 0);
                     return (
                       <li
                         className="globalnav-item globalnav-item-menu"
+                        data-gn-audience={audience}
                         data-gn-id={section.id}
                         data-gn-kind={hasFlyout ? "section" : undefined}
                         key={section.id}

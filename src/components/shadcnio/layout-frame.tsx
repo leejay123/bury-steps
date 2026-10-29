@@ -1,6 +1,7 @@
 import { Suspense, type ReactNode } from "react";
 import type { SiteTheme } from "@/lib/site-theme";
 import { getInlineLogo } from "@/lib/inline-logo";
+import { getProgressEnabled } from "@/lib/progress-settings";
 import { ShadcnAccountTools } from "./account-tools";
 import { siteChrome } from "./chrome";
 import { DashSidebarParts } from "./dash-sidebar";
@@ -45,9 +46,10 @@ export async function ShadcnLayoutFrame({
   year: number;
   children: ReactNode;
 }) {
-  const [logo, data] = await Promise.all([
+  const [logo, data, progressEnabled] = await Promise.all([
     getInlineLogo(),
     getShadcnHomeData(),
+    getProgressEnabled(),
   ]);
   const { links, columns, signInHref, facebookUrl, ...chrome } =
     siteChrome(theme);
@@ -77,6 +79,7 @@ export async function ShadcnLayoutFrame({
             facebookUrl={facebookUrl}
             links={links}
             logoSrc={logo.src}
+            progressEnabled={progressEnabled}
             search={search}
             sidebar
             siteName={theme.siteName}

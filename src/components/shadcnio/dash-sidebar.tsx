@@ -28,6 +28,7 @@ export async function sidebarGroups(): Promise<SidebarGroup[] | null> {
     {
       title: "Dashboard",
       links: [
+        { href: "/", label: "Home", icon: "home" },
         { href: "/dashboard", label: "Overview", icon: "overview" },
         { href: organiser && perms.permWalksView ? "/admin/walks" : "/walks", label: "Walks", icon: "walks" },
         { href: "/notices", label: "Notices", icon: "notices" },

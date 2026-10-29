@@ -204,6 +204,24 @@ function organiserSection(id: string, href: string, label: string, links: { href
  * Help. Organisers swap Apps and Contact (kept in Help) for Members,
  * Messages, Reports and Settings.
  */
+/** Home, first in every menu: straight back to the homepage. */
+const HOME: NavSection = { id: "home", href: "/", label: "Home", groups: [] };
+
+/**
+ * The signed-in menu, the same for every member and organiser (organisers'
+ * own pages are in the dashboard sidebar), so it can be built into the
+ * ready-made page and shown from the first paint (globalnav.tsx).
+ */
+export function memberMenu(progressEnabled: boolean, facebookUrl: string): NavSection[] {
+  const links = [
+    { href: "/walks", label: "Walks" },
+    { href: "/notices", label: "Notices" },
+    ...(progressEnabled ? [{ href: "/progress", label: "Progress" }] : []),
+    { href: "/history", label: "History" },
+  ];
+  return shortMenu(links, facebookUrl).map((section) => ({ ...section, id: `m-${section.id}` }));
+}
+
 export function shortMenu(links: { href: string; label: string }[], facebookUrl: string): NavSection[] {
   const has = (href: string) => links.some((link) => link.href === href);
   const walksHref = has("/admin/walks") ? "/admin/walks" : "/walks";
@@ -232,7 +250,8 @@ export function shortMenu(links: { href: string; label: string }[], facebookUrl:
 
   if (!signedIn) {
     return [
-      { ...navSection({ href: "/", label: "About" }), id: "about" },
+      HOME,
+      { ...navSection({ href: "/", label: "About" }), id: "about", href: "/#home-about-heading" },
       walks,
       { id: "how", href: "/#home-how-heading", label: "How it works", groups: HOW },
       { ...help, id: "questions", href: "/#faq", label: "Questions" },
@@ -241,7 +260,7 @@ export function shortMenu(links: { href: string; label: string }[], facebookUrl:
     ];
   }
 
-  const sections: NavSection[] = [walks];
+  const sections: NavSection[] = [HOME, walks];
   if (has("/notices")) sections.push({ ...navSection({ href: "/notices", label: "Notices" }), id: "notices" });
   if (has("/progress")) sections.push({ ...navSection({ href: "/progress", label: "Progress" }), id: "progress" });
   if (has("/history")) sections.push({ ...navSection({ href: "/history", label: "History" }), id: "history" });

@@ -60,9 +60,28 @@ export function ShadcnAccountTools({ signInHref }: { signInHref: string }) {
   return (
     <Suspense
       fallback={
-        <li className="globalnav-item globalnav-item-icon globalnav-account" data-gn-id="account">
-          <span className="inline-block h-[30px] w-[70px] rounded-full bg-muted" />
-        </li>
+        // While the page works out who's looking: Sign in for a visitor, or the bell,
+        // Dashboard and avatar shapes for someone signed in. html[data-remembered-in]
+        // (set before the first paint) picks which (shadcnio.css), so the right one
+        // shows from the start and is simply filled in.
+        <>
+          <li className="globalnav-item globalnav-item-icon globalnav-account" data-gn-audience="visitor">
+            <a className={PILL} href={signInHref}>
+              Sign in
+            </a>
+          </li>
+          <li className="globalnav-item globalnav-item-icon globalnav-bell" data-gn-audience="member">
+            <BellPlaceholder />
+          </li>
+          <li className="globalnav-item globalnav-item-icon globalnav-account globalnav-dashboard" data-gn-audience="member">
+            <Link className={PILL} href="/dashboard">
+              Dashboard
+            </Link>
+          </li>
+          <li className="globalnav-item globalnav-item-icon globalnav-avatar-item" data-gn-audience="member">
+            <AvatarPlaceholder />
+          </li>
+        </>
       }
     >
       <AccountTools signInHref={signInHref} />
