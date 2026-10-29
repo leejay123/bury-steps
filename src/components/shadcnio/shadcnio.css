@@ -631,3 +631,50 @@ html:has([data-slot="promo-bar"]) .globalfooter, html:has([data-slot="promo-bar"
 
 /* Bury Steps: on phones an opened footer group's links line up with its title. */
 @media (max-width: 1023.98px) { .globalfooter-directory-section-link { padding-inline-start: var(--gf-inset); } }
+
+/* ---- shadcn.io's dashboard frame (their docs.css rules, used with permission) ---- */
+.bg-chrome { background-color: color-mix(in oklab, var(--muted) 60%, var(--background)); }
+[data-slot="docs-sidebar"] { display: none; }
+@media (min-width: 64rem) { [data-slot="docs-shell"] { position: relative; display: grid; height: 100svh; min-height: 0px; grid-template-columns: var(--sidebar-width, 288px) minmax(0, 1fr); overflow: hidden; background: var(--background); --header-height: 3.5rem; --top-spacing: 2rem; --sidebar-width: var(--docs-sidebar-width, 288px); transition: grid-template-columns .2s; } }
+@media (min-width: 64rem) { [data-slot="docs-sidebar"] { display: flex; grid-area: 1 / 1; flex-direction: column; margin-top: var(--header-height); height: calc(100svh - var(--header-height)); min-width: 0px; overflow: hidden; z-index: 30; background: color-mix(in oklab, var(--muted) 60%, var(--background)); transition: visibility; } }
+@media (min-width: 64rem) { [data-slot="docs-main"] { grid-area: 1 / 2; min-width: 0px; height: 100svh; min-height: 0px; padding-top: var(--header-height); overflow-y: scroll; overscroll-behavior: contain; scrollbar-width: thin; background: var(--background); transition: margin .2s; } }
+@media (min-width: 64rem) { html[data-docs-sidebar="collapsed"] [data-slot="docs-shell"] { --sidebar-width: 0px; grid-template-columns: 0 minmax(0, 1fr); } }
+@media (min-width: 64rem) { html[data-docs-sidebar="collapsed"] [data-slot="docs-sidebar-edge"] { display: none; } }
+@media (min-width: 64rem) { html[data-docs-sidebar="collapsed"] [data-slot="docs-sidebar"] { visibility: hidden; pointer-events: none; transition: visibility 0s linear .2s; } }
+@media (prefers-reduced-motion: reduce) { [data-slot="docs-shell"], [data-slot="docs-main"], [data-slot="docs-sidebar"] { transition: none; } }
+.globalnav-leading { z-index: 1; align-items: center; display: flex; position: relative; }
+.globalnav-leading [data-slot="button"] { color: var(--gn-color); }
+@media (min-width: 1024px) { .globalnav-leading { height: var(--gn-height); inset-inline-start: 12px; position: absolute; top: 0; } }
+@media (min-width: 1024px) { .globalnav-with-leading .globalnav-content { padding-inline-start: max(var(--gn-gutter), calc(56px - max(0px, (100vw - var(--gn-width)) / 2))); } }
+@media (max-width: 1023.98px) { .globalnav-leading + .globalnav-brand { padding-inline-start: 8px; } }
+@media (max-width: 1023.98px) { .globalnav-leading { transition: opacity .24s var(--gn-ease) 80ms, visibility .24s step-start 80ms; padding-inline-start: 8px; } }
+@media (max-width: 1023.98px) { .globalnav-with-flyout-open .globalnav-leading { visibility: hidden; opacity: 0; transition: opacity .24s var(--gn-ease), visibility .24s step-end; } }
+.scrollbar-none, [data-slot="docs-sidebar-nav"] { -ms-overflow-style: none; scrollbar-width: none; }
+[data-slot="docs-sidebar-nav"]::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+/* Bury Steps: only signed-in members get the sidebar (html[data-remembered-in], set before
+   the first paint). Everyone else, and the legal pages, get the header, the page and the
+   footer: the frame lies flat and scrolls with the window. */
+:is(html:not([data-remembered-in]) [data-shadcnio-shell], [data-shadcnio-shell="plain"]) :is([data-slot="docs-sidebar"], [data-slot="docs-sidebar-edge"], [data-slot="docs-sidebar-drawer"], .globalnav-leading) { display: none !important; }
+:is(html:not([data-remembered-in]) [data-shadcnio-shell], [data-shadcnio-shell="plain"]) .globalnav-with-leading .globalnav-content { padding-inline-start: max(var(--gn-gutter), env(safe-area-inset-left)); }
+:is(html:not([data-remembered-in]) [data-shadcnio-shell], [data-shadcnio-shell="plain"]) [data-slot="docs-header"] { display: block; position: sticky; top: 0; z-index: 40; }
+:is(html:not([data-remembered-in]) [data-shadcnio-shell], [data-shadcnio-shell="plain"]) [data-slot="docs-shell"] { display: block; height: auto; overflow: visible; }
+:is(html:not([data-remembered-in]) [data-shadcnio-shell], [data-shadcnio-shell="plain"]) [data-slot="docs-main"] { height: auto; padding-top: 0; overflow: visible; }
+/* Members' pages have no footer, as on their dashboard. */
+html[data-remembered-in] [data-shadcnio-shell="docs"] [data-slot="docs-footer"] { display: none; }
+
+/* Bury Steps: the site sets every phone text box to 16px (so iPhones don't zoom into forms);
+   the search field keeps shadcn.io's own size (28px on phones, larger than 16px, so no zoom). */
+@media (max-width: 1023.98px) { .globalnav .globalnav-searchfield-input { font-size: 28px !important; } }
+
+/* shadcn.io's breadcrumb (style-nova), used on the legal pages. */
+.style-nova .cn-breadcrumb-list { gap: calc(var(--spacing) * 1.5); font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); color: var(--muted-foreground); }
+.style-nova .cn-breadcrumb-item { gap: var(--spacing); }
+.style-nova .cn-breadcrumb-link:hover { color: var(--foreground); }
+.style-nova .cn-breadcrumb-page { font-weight: var(--font-weight-normal); color: var(--foreground); }
+.style-nova .cn-breadcrumb-separator > svg { width: calc(var(--spacing) * 3.5); height: calc(var(--spacing) * 3.5); }
+
+/* shadcn.io's monospace (the small capital labels and numbers): the system mono stack, as theirs.
+   The site maps font-mono to its sans font for the other designs. */
+:root[data-design="shadcnio"] { --font-mono: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+:root[data-design="shadcnio"] .font-mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }

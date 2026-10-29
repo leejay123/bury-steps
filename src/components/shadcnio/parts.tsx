@@ -13,6 +13,9 @@ const BUTTON_BASE =
   "cn-button group/button relative inline-flex shrink-0 select-none items-center justify-center whitespace-nowrap outline-none transition-transform disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 data-disabled:pointer-events-none data-disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[state=loading]:pointer-events-none active:not-aria-[haspopup]:scale-[0.98] cn-button-size-lg rounded-[calc(var(--radius)*100)] h-11 px-6 font-medium text-[15px]";
 export const BUTTON_PRIMARY = `${BUTTON_BASE} cn-button-variant-default`;
 export const BUTTON_OUTLINE = `${BUTTON_BASE} cn-button-variant-outline bg-background hover:bg-muted`;
+/** The small pill (theirs: size sm), for compact rows like Read more under a grid. */
+export const BUTTON_SMALL_OUTLINE =
+  "cn-button group/button relative inline-flex shrink-0 select-none items-center justify-center whitespace-nowrap outline-none transition-transform disabled:pointer-events-none disabled:opacity-50 active:not-aria-[haspopup]:scale-[0.98] cn-button-size-sm cn-button-variant-outline rounded-[calc(var(--radius)*100)] h-8 px-4 font-medium text-sm bg-background hover:bg-muted";
 
 export function PillLink({
   href,

@@ -3,6 +3,8 @@
 import { useEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { PanelLeft } from "lucide-react";
+import { SIDEBAR_TOGGLE_EVENT } from "./sidebar-state";
 import { NAV_COOKIE, parseRememberedNav } from "@/lib/remembered-nav";
 import { CustomizeDot, CustomizePanel } from "./customize-panel";
 import { setColorMode } from "@/components/color-mode";
@@ -45,6 +47,7 @@ export function GlobalNav({
   search,
   account,
   facebookUrl,
+  sidebar = false,
 }: {
   siteName: string;
   logoSrc: string;
@@ -54,6 +57,8 @@ export function GlobalNav({
   /** Sign in, or the bell, Dashboard and avatar (rendered on the server). */
   account: ReactNode;
   facebookUrl: string;
+  /** Pages with their dashboard sidebar: the sidebar button sits before the logo (theirs, exactly). */
+  sidebar?: boolean;
 }) {
   const remembered = useRememberedMenu();
   const memberLinks = remembered ? parseRememberedNav(remembered) : [];
@@ -118,7 +123,7 @@ export function GlobalNav({
 
   return (
     <header className="globalnav-header" data-slot="site-header">
-      <nav aria-label="Global" className="globalnav" ref={navRef}>
+      <nav aria-label="Global" className={sidebar ? "globalnav globalnav-with-leading" : "globalnav"} ref={navRef}>
         <div className="globalnav-content">
           <div className="globalnav-item globalnav-menuback">
             <button aria-label="Main menu" className="globalnav-menuback-button" data-gn-action="back" type="button">
@@ -129,6 +134,21 @@ export function GlobalNav({
           </div>
           <ul className="globalnav-list" id="globalnav-list">
             <li className="globalnav-item globalnav-start" data-gn-id="start">
+              {sidebar ? (
+                <div className="globalnav-leading">
+                  <button
+                    aria-label="Toggle sidebar"
+                    className="cn-button group/button relative inline-flex select-none items-center justify-center whitespace-nowrap outline-none transition-transform disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 cn-button-size-icon cn-button-variant-ghost size-8 shrink-0"
+                    data-size="icon-md"
+                    data-slot="button"
+                    data-variant="ghost"
+                    onClick={() => window.dispatchEvent(new Event(SIDEBAR_TOGGLE_EVENT))}
+                    type="button"
+                  >
+                    <PanelLeft aria-hidden className="cn-rtl-flip rtl:rotate-180" />
+                  </button>
+                </div>
+              ) : null}
               <Link aria-label={`${siteName}, home`} className="globalnav-link globalnav-brand" href="/">
                 <span className="brand-mark globalnav-brand-mark">
                   {/* eslint-disable-next-line @next/next/no-img-element */}

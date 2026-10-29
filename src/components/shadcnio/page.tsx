@@ -4,14 +4,14 @@ import { getHomepageTestimonials } from "@/lib/homepage-testimonials";
 import { getHomepageFaqData } from "@/lib/homepage-faqs";
 import { getInlineLogo } from "@/lib/inline-logo";
 import type { SiteTheme } from "@/lib/site-theme";
-import { AFTER_AUTH_PATH, accountPortalHref, appUrl } from "@/lib/urls";
 import { copyrightYear } from "@/components/site-footer";
-import { GlobalNav, type GlobalNavLink, type SearchItem } from "./globalnav";
-import { GlobalFooter, type FooterGroup } from "./globalfooter";
+import { GlobalNav, type SearchItem } from "./globalnav";
+import { GlobalFooter } from "./globalfooter";
 import { ShadcnHome } from "./home";
 import { getShadcnHomeData } from "./home-data";
 import { PromoBar } from "./promo-bar";
 import { ShadcnAccountTools } from "./account-tools";
+import { siteChrome } from "./chrome";
 import { AboutReadMore } from "./about-read-more";
 import { ShadcnNewsletter } from "./newsletter";
 import { getOptionalUser } from "@/lib/auth";
@@ -32,88 +32,12 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
     getInlineLogo(),
     copyrightYear(),
   ]);
-  const afterAuth = `${appUrl()}${AFTER_AUTH_PATH}`;
-  const joinHref = accountPortalHref("sign-up", afterAuth);
-  const signInHref = accountPortalHref("sign-in", afterAuth);
-  const facebookUrl = theme.facebookGroupUrl.trim();
-
-  const links: GlobalNavLink[] = [
-    { href: "/", label: "Home" },
-    { href: "/walks", label: "Walks" },
-    { href: "/contact", label: "Contact us" },
-    { href: "/apps", label: "Walking apps" },
-    ...(facebookUrl ? [{ href: facebookUrl, label: "Facebook group" }] : []),
-  ];
+  const chrome = siteChrome(theme);
+  const { links, columns, joinHref, signInHref, facebookUrl } = chrome;
   const search: SearchItem[] = [
-    { href: "/walks", label: "Walks", caption: "Coming up", scope: "pages" },
-    { href: "/notices", label: "Notices", scope: "pages" },
-    { href: "/progress", label: "Group progress", scope: "pages" },
-    { href: "/history", label: "Your walk history", scope: "pages" },
-    { href: "/contact", label: "Contact us", scope: "pages" },
-    { href: "/apps", label: "Walking apps", scope: "pages" },
-    { href: "/email-preferences", label: "Email preferences", scope: "pages" },
-    { href: "/dashboard", label: "Dashboard", scope: "pages" },
+    ...chrome.search,
     ...data.upcoming.map((walk) => ({ href: walk.href, label: walk.title, caption: walk.when, scope: "walks" as const })),
     ...faqData.faqs.map((faq) => ({ href: "/#faq", label: faq.question, caption: faq.categoryLabel, scope: "questions" as const })),
-  ];
-  const columns: FooterGroup[][] = [
-    [
-      {
-        id: "explore",
-        title: "Explore",
-        links: [
-          { href: "/", label: "Home" },
-          { href: "/walks", label: "Walks" },
-          { href: "/notices", label: "Notices" },
-          { href: "/progress", label: "Progress" },
-          { href: "/history", label: "Your history" },
-        ],
-      },
-    ],
-    [
-      {
-        id: "group",
-        title: "The group",
-        links: [
-          { href: "/contact", label: "Contact us" },
-          { href: "/apps", label: "Walking apps" },
-          ...(facebookUrl ? [{ href: facebookUrl, label: "Facebook group" }] : []),
-        ],
-      },
-    ],
-    [
-      {
-        id: "help",
-        title: "Help",
-        links: [
-          { href: "/#faq", label: "Questions people ask" },
-          { href: "/#home-how-heading", label: "How it works" },
-          { href: "/#home-rules-heading", label: "Group rules" },
-        ],
-      },
-    ],
-    [
-      {
-        id: "account",
-        title: "Account",
-        links: [
-          { href: signInHref, label: "Sign in" },
-          { href: joinHref, label: "Join the group" },
-          { href: "/email-preferences", label: "Email preferences" },
-          { href: "/dashboard", label: "Dashboard" },
-        ],
-      },
-    ],
-    [
-      {
-        id: "legal",
-        title: "Legal",
-        links: [
-          { href: "/privacy-policy", label: "Privacy Policy" },
-          { href: "/terms-of-service", label: "Terms of Service" },
-        ],
-      },
-    ],
   ];
   const announcement = theme.announcementEnabled && theme.announcementText ? theme.announcementText : null;
 

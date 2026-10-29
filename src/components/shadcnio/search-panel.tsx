@@ -64,12 +64,17 @@ export const SearchPanel = forwardRef<SearchPanelHandle, { items: SearchItem[]; 
     const words = query.trim().toLowerCase();
     const matches = (item: SearchItem) => `${item.label} ${item.caption ?? ""}`.toLowerCase().includes(words);
     const found = words ? items.filter(matches) : [];
+    const upcoming = items.filter((item) => item.scope === "walks").slice(0, 6);
     const inScope = scope === "all" ? found : found.filter((item) => item.scope === scope);
     const groups = words
       ? SCOPES.filter((s) => s.id !== "all" && (scope === "all" || scope === s.id))
           .map((s) => ({ ...s, list: inScope.filter((item) => item.scope === s.id).slice(0, 8) }))
           .filter((group) => group.list.length > 0)
-      : [{ id: "quick", label: "", header: "Quick Links", list: QUICK_LINKS.map((link) => ({ ...link, scope: "pages" as const })) }];
+      : [
+          { id: "quick", label: "", header: "Quick Links", list: QUICK_LINKS.map((link) => ({ ...link, scope: "pages" as const })) },
+          // As their "Popular Components": the next few walks, with their dates beside them.
+          ...(upcoming.length ? [{ id: "upcoming", label: "", header: "Walks Coming Up", list: upcoming }] : []),
+        ];
     const flat = groups.flatMap((group) => group.list);
     const current = Math.min(active, Math.max(0, flat.length - 1));
 

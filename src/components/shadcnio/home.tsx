@@ -35,6 +35,7 @@ import { BUTTON_OUTLINE, BUTTON_PRIMARY, GRID, MiniNote, MiniWalk, Section, Sect
 import type { ShadcnHomeData } from "./home-data";
 import { ShadcnFaq } from "./faq";
 import { ShadcnReviews } from "./reviews";
+import { MoreRows } from "./more-rows";
 import { BandField, HeroField } from "./ascii-field";
 
 export type ShadcnHomeProps = {
@@ -278,17 +279,16 @@ function HowItWorksSection() {
         rest="that's all there is to it. The leader knows who's out walking, and you can look back on every walk you've done."
         title="How it works"
       />
-      <ul aria-label="How it works" className={GRID}>
-        {STEPS.map((step, i) => (
+      <MoreRows className={GRID} label="How it works">
+        {STEPS.map((step) => (
           <Tile
-            className={i >= 4 ? "max-sm:hidden" : undefined}
             key={step.title}
             sub={step.sub}
             title={step.title}
             visual={{ kind: "square", icon: step.icon }}
           />
         ))}
-      </ul>
+      </MoreRows>
     </Section>
   );
 }
@@ -329,20 +329,16 @@ function RulesSection({ rules }: { rules: AboutRule[] }) {
         rest="that keep every walk safe, kind and enjoyable for everyone in the group."
         title="Group rules"
       />
-      <ul
-        aria-label="Group rules"
-        className="grid border-t [clip-path:inset(1px_0_0_1px)] *:border-t *:border-l grid-cols-2 lg:grid-cols-4"
-      >
-        {rules.slice(0, 8).map((rule, i) => (
+      <MoreRows className={GRID} label="Group rules">
+        {rules.map((rule, i) => (
           <Tile
-            className={i >= 4 ? "max-sm:hidden" : undefined}
             key={rule.title}
             sub={rule.body}
             title={rule.title}
             visual={{ kind: "stack", icons: RULE_ICONS[i % RULE_ICONS.length]! }}
           />
         ))}
-      </ul>
+      </MoreRows>
     </Section>
   );
 }
@@ -356,9 +352,9 @@ function EssentialsSection({ essentials }: { essentials: EssentialItem[] }) {
         rest="each walk shows what's at the meeting point, so you know before you set off."
         title="Know before you go"
       />
-      <ul aria-label="Walk essentials" className={CARD_GRID}>
-        {essentials.slice(0, 8).map((item, i) => (
-          <li className={i >= 4 ? "max-sm:hidden" : ""} key={item.key}>
+      <MoreRows className={CARD_GRID} label="Walk essentials">
+        {essentials.map((item) => (
+          <li key={item.key}>
             <Link href="/walks">
               <strong>{item.label}</strong>
               <small>On the walk page</small>
@@ -371,7 +367,7 @@ function EssentialsSection({ essentials }: { essentials: EssentialItem[] }) {
             </Link>
           </li>
         ))}
-      </ul>
+      </MoreRows>
     </Section>
   );
 }

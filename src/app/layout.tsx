@@ -1,5 +1,7 @@
 import { SerwistProvider } from "@serwist/turbopack/react";
 import { DashboardFrame } from "@/components/efferd/dashboard-frame";
+import { ShadcnLayoutFrame } from "@/components/shadcnio/layout-frame";
+import { SIDEBAR_SCRIPT } from "@/components/shadcnio/sidebar-state";
 import { LazyDashboardSignOut } from "@/components/efferd/dashboard-sign-out-lazy";
 import { ClerkIsland } from "@/components/clerk-island";
 import { DASHBOARD_VIEW_SCRIPT } from "@/components/dashboard/dashboard-view";
@@ -37,7 +39,6 @@ import { SiteMobileNav, SiteNavSlot, SiteBottomNav } from "@/components/site-nav
 import { BottomBarBootScript, HeaderBootScript } from "@/components/header-boot";
 import { MobileMenuShell } from "@/components/mobile-menu-shell";
 import { SiteFooter, copyrightYear } from "@/components/site-footer";
-import { ShadcnFooter } from "@/components/shadcn-footer";
 import { SiteBrandLink } from "@/components/site-brand-link";
 import { SiteLogo } from "@/components/site-logo";
 import { BackToTopGate } from "@/components/back-to-top-gate";
@@ -187,6 +188,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Script id="shadcnio-customize" strategy="beforeInteractive">
           {CUSTOMIZE_SCRIPT}
         </Script>
+        {/* The shadcn.io design: signed-in members get the sidebar from the first paint (and its folded state). */}
+        <Script id="docs-sidebar" strategy="beforeInteractive">
+          {SIDEBAR_SCRIPT}
+        </Script>
         <Script id="dashboard-view" strategy="beforeInteractive">
           {DASHBOARD_VIEW_SCRIPT}
         </Script>
@@ -205,6 +210,35 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             the outermost shell (rather than on individual pages) so it also
             covers content that intentionally bleeds edge-to-edge.
           */}
+          {theme.siteDesign === "shadcnio" ? (
+            // The shadcn.io design: their header, sidebar (signed-in members) and footer on every
+            // page; the homepage draws its own page inside this (see ShadcnSiteShell).
+            <ShadcnLayoutFrame theme={theme} year={year}>
+              <UnlockPageOnNavigate />
+              <LiveUpdates />
+              <ScrollRowArrows />
+              <KeepFormInputOnError />
+                <WalkEssentialsProvider items={theme.walkEssentials}>
+                  <WalkWordingProvider wording={theme.walkWording}>
+                    <TabStyleProvider style={theme.tabStyle}>
+                      <SignedInProvider signedIn={signedIn}>
+                        {/* The dashboard view (a test): the page inside Efferd's app shell when it's on. */}
+                        <DashboardFrame
+                          design={theme.dashboardDesign}
+                          signOut={
+                            <ClerkIsland>
+                              <LazyDashboardSignOut />
+                            </ClerkIsland>
+                          }
+                        >
+                          {children}
+                        </DashboardFrame>
+                      </SignedInProvider>
+                    </TabStyleProvider>
+                  </WalkWordingProvider>
+                </WalkEssentialsProvider>
+            </ShadcnLayoutFrame>
+          ) : (
           <div
             className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"
             data-site-shell=""
@@ -370,11 +404,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </main>
             <HeaderPartBoundary name="footer">
               <div className="contents" data-site-footer="">
-                {theme.siteDesign === "shadcnio" ? (
-                  <ShadcnFooter theme={theme} year={year} />
-                ) : (
-                  <SiteFooter theme={theme} year={year} />
-                )}
+                <SiteFooter theme={theme} year={year} />
               </div>
             </HeaderPartBoundary>
             <HeaderPartBoundary name="bottom-nav">
@@ -390,6 +420,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </div>
             </HeaderPartBoundary>
           </div>
+          )}
           <Toaster
             duration={2800}
             // Above the phone bottom bar when it's there (globals.css sets the var).

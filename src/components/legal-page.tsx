@@ -3,6 +3,8 @@ import Link from "next/link";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { PAGE_X_BLEED } from "@/lib/page-x";
 import { typesetFont } from "@/app/typeset-font";
+import { ShadcnLegal } from "@/components/shadcnio/legal";
+import { getSiteTheme } from "@/lib/site-theme";
 
 export const LEGAL_LAST_UPDATED = "28 August 2026";
 
@@ -20,7 +22,7 @@ function LegalBody({ children }: { children: ReactNode }) {
   );
 }
 
-export function LegalPage({
+export async function LegalPage({
   title,
   description,
   sections,
@@ -29,6 +31,26 @@ export function LegalPage({
   description: string;
   sections: LegalSection[];
 }) {
+  const theme = await getSiteTheme();
+  if (theme.siteDesign === "shadcnio") {
+    // The shadcn.io design: their Terms page layout.
+    const terms = title.toLowerCase().includes("terms");
+    return (
+      <ShadcnLegal
+        current={terms ? "/terms-of-service" : "/privacy-policy"}
+        icon={terms ? "terms" : "privacy"}
+        lead={terms ? "The rules for using Bury Steps:" : "How Bury Steps uses your information:"}
+        rest={
+          terms
+            ? "your account, walks and your safety, acceptable use, and our responsibilities."
+            : "what we collect, why we need it, who can see it, and your rights."
+        }
+        sections={sections}
+        title={title}
+        updated={LEGAL_LAST_UPDATED}
+      />
+    );
+  }
   return (
     <div className={`-mt-6 -mb-6 flex flex-1 flex-col ${PAGE_X_BLEED}`}>
       <div className="relative px-4 py-6 md:px-6">

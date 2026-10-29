@@ -3,11 +3,9 @@
 import { useState } from "react";
 import type { TestimonialView } from "@/lib/testimonials";
 import { REVIEW_GRID } from "./grids";
-import { BUTTON_OUTLINE } from "./parts";
+import { BUTTON_SMALL_OUTLINE } from "./parts";
 
-/** shadcn.io's striped filler cell (as beside their FAQ topics), so a row is never left with a hole. */
-const FILLER =
-  "border-border bg-[repeating-linear-gradient(-45deg,var(--border)_0_1px,transparent_1px_6px)]";
+import { FILLER } from "./more-rows";
 const FIRST = 4;
 
 /**
@@ -59,8 +57,8 @@ export function ShadcnReviews({ testimonials }: { testimonials: TestimonialView[
         ))}
       </ul>
       {more ? (
-        <div className="flex justify-center border-t px-5 py-6 md:px-12">
-          <button aria-expanded={open} className={BUTTON_OUTLINE} onClick={() => setOpen(!open)} type="button">
+        <div className="flex justify-center border-t px-5 py-3">
+          <button aria-expanded={open} className={BUTTON_SMALL_OUTLINE} onClick={() => setOpen(!open)} type="button">
             {open ? "Show less" : "Read more"}
           </button>
         </div>
