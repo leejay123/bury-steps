@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRight, ChevronRight, Mail, Scale, ShieldCheck } from "lucide-react";
-import { GRID, Section, Tile } from "./parts";
+import { Guides, Section, Tile } from "./parts";
+import { HeroField } from "./ascii-field";
 
 export type ShadcnLegalSection = { id: string; title: string; content: ReactNode };
 
@@ -14,7 +15,7 @@ const DOCS = [
 /**
  * A legal page laid out as shadcn.io's Terms page (their classes, used with
  * permission): a centred hero with the breadcrumb, the title and its icon,
- * a line and "Last updated · Ask a question"; the legal documents as tiles;
+ * a line and "Last updated · Ask a question", their moving letters behind it; the legal documents as tiles;
  * then each section numbered, its title on the left and the text on the right.
  */
 export function ShadcnLegal({
@@ -43,6 +44,7 @@ export function ShadcnLegal({
           className="px-5 md:px-12 flex flex-col items-center relative isolate justify-center min-h-[29rem] sm:min-h-[30rem] md:min-h-[36rem] lg:min-h-[35rem] xl:min-h-[34rem] gap-8 pt-6 pb-8 sm:pt-8 sm:pb-12 md:pt-10 md:pb-14"
           data-slot="hero"
         >
+          <HeroField heading="legal-title" word={icon === "terms" ? "TERMS" : "PRIVACY"} />
           <div className="flex flex-col max-w-4xl gap-4 md:gap-5 mx-auto min-w-0 items-center text-center">
             <div className="flex justify-center">
               <nav aria-label="breadcrumb" className="cn-breadcrumb" data-slot="breadcrumb">
@@ -99,17 +101,18 @@ export function ShadcnLegal({
           </div>
         </div>
       </section>
-      <Section id="legal-documents">
+      {/* As theirs: only the guide line above the row (no border of its own), and on
+          phones short tiles with the title alone. */}
+      <div className="relative">
+        <Guides />
         <nav aria-label="Legal documents">
-          <h2 className="sr-only" id="legal-documents">
-            Legal documents
-          </h2>
-          <ul className={GRID.replace("grid-cols-2 lg:grid-cols-4", "grid-cols-3")}>
+          <ul className="grid grid-cols-3 [clip-path:inset(0_0_0_1px)] *:border-l">
             {DOCS.map((doc) => (
               <Tile
-                className={doc.href === current ? "[&>*]:bg-muted/40" : undefined}
+                current={doc.href === current}
                 href={doc.href}
                 key={doc.href}
+                phoneShort
                 sub={doc.sub}
                 title={doc.title}
                 visual={{ kind: "square", icon: doc.icon }}
@@ -117,7 +120,7 @@ export function ShadcnLegal({
             ))}
           </ul>
         </nav>
-      </Section>
+      </div>
       {sections.map((section, i) => (
         <Section id={`legal-${section.id}`} key={section.id}>
           <div

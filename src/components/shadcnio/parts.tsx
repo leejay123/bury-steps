@@ -297,6 +297,8 @@ export function Tile({
   visual,
   className,
   style,
+  current,
+  phoneShort,
 }: {
   href?: string;
   title: ReactNode;
@@ -304,15 +306,34 @@ export function Tile({
   visual: TileVisual;
   className?: string;
   style?: CSSProperties;
+  /** The page being shown (lightly shaded, as theirs). */
+  current?: boolean;
+  /** On phones, a short tile with the title alone (their legal pages' row). */
+  phoneShort?: boolean;
 }) {
   const shape = visual.kind === "fan" ? "card" : visual.kind;
-  const body = (
+  const picture = (
     <>
       <Rings shape={shape} />
       {visual.kind === "fan" ? <Fan cards={visual.cards} /> : null}
       {visual.kind === "square" ? <IconSquare icon={visual.icon} /> : null}
       {visual.kind === "circle" ? <IconCircle icon={visual.icon} /> : null}
       {visual.kind === "stack" ? <Stack icons={visual.icons} /> : null}
+    </>
+  );
+  const body = phoneShort ? (
+    <>
+      <span className="max-sm:hidden">{picture}</span>
+      <span className="flex flex-col gap-0.5 sm:absolute sm:start-5 sm:end-5 sm:top-5" data-slot="sketch-label">
+        <span className="font-medium text-[0.9375rem] leading-5 tracking-tight max-sm:text-muted-foreground max-sm:text-sm max-sm:group-aria-[current=page]:text-foreground">
+          {title}
+        </span>
+        <span className="text-muted-foreground text-xs leading-4 max-sm:hidden">{sub}</span>
+      </span>
+    </>
+  ) : (
+    <>
+      {picture}
       <span className="absolute inset-x-5 top-5 flex flex-col gap-0.5" data-slot="sketch-label">
         {/* One line each, as theirs, so the cards below never cover them. */}
         <span className="truncate font-medium text-[0.9375rem] text-foreground leading-5 tracking-tight">{title}</span>
@@ -320,20 +341,24 @@ export function Tile({
       </span>
     </>
   );
+  const tile = phoneShort
+    ? TILE.replace("h-40", "h-12 items-center justify-center aria-[current=page]:bg-muted/40 sm:h-40 sm:items-stretch sm:justify-start")
+    : TILE;
+  const here = current ? ("page" as const) : undefined;
   return (
     <li className={className} style={style}>
       {href ? (
         href.startsWith("http") ? (
-          <a className={TILE} data-sketch="" href={href} rel="noopener noreferrer" target="_blank">
+          <a aria-current={here} className={tile} data-sketch="" href={href} rel="noopener noreferrer" target="_blank">
             {body}
           </a>
         ) : (
-          <Link className={TILE} data-sketch="" href={href}>
+          <Link aria-current={here} className={tile} data-sketch="" href={href}>
             {body}
           </Link>
         )
       ) : (
-        <div className={TILE} data-sketch="">
+        <div className={tile} data-sketch="">
           {body}
         </div>
       )}

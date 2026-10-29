@@ -8,9 +8,10 @@ const load = () => import("./letter-field");
 /**
  * Starts shadcn.io's moving letter field behind the hero, as they do: once the
  * browser is idle, around the block holding `heading`, inside the closest
- * `[data-slot="hero"]` box. Renders nothing itself; the field adds its canvas.
+ * `[data-slot="hero"]` box, spelling `word` (as their Privacy page spells
+ * PRIVACY). Renders nothing itself; the field adds its canvas.
  */
-export function HeroField({ heading }: { heading: string }) {
+export function HeroField({ heading, word = WORD }: { heading: string; word?: string }) {
   useLayoutEffect(() => {
     const title = document.getElementById(heading);
     const host = title?.closest<HTMLElement>('[data-slot="hero"]');
@@ -21,7 +22,7 @@ export function HeroField({ heading }: { heading: string }) {
     const start = () => {
       load()
         .then(({ mountHeroField }) => {
-          if (!gone) unmount = mountHeroField(host, text, WORD);
+          if (!gone) unmount = mountHeroField(host, text, word);
         })
         .catch(() => undefined);
     };
@@ -38,7 +39,7 @@ export function HeroField({ heading }: { heading: string }) {
       cancel();
       unmount?.();
     };
-  }, [heading]);
+  }, [heading, word]);
   return null;
 }
 
