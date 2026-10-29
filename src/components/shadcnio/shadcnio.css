@@ -663,8 +663,9 @@ html:has([data-slot="promo-bar"]) .globalfooter, html:has([data-slot="promo-bar"
 :is(html:not([data-remembered-in]) [data-shadcnio-shell], [data-shadcnio-shell]:has([data-shadcn-plain]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *))) [data-slot="docs-main"] { height: auto; padding-top: 0; overflow: visible; }
 /* Members' pages have no footer, as on their dashboard (the legal pages keep it). */
 html[data-remembered-in] [data-shadcnio-shell]:not(:has([data-shadcn-plain]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *))) [data-slot="docs-footer"] { display: none; }
+html[data-remembered-in] [data-shadcnio-shell]:not(:has([data-shadcn-plain]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *))) [data-slot="docs-end"] { display: block; }
 /* The homepage draws its whole own page (header, footer and all): the frame steps aside. */
-[data-shadcnio-shell]:has([data-shadcnio-home]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *)) :is([data-slot="docs-header"], [data-slot="docs-sidebar"], [data-slot="docs-sidebar-edge"], [data-slot="docs-sidebar-drawer"], [data-slot="docs-footer"]) { display: none !important; }
+[data-shadcnio-shell]:has([data-shadcnio-home]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *)) :is([data-slot="docs-header"], [data-slot="docs-sidebar"], [data-slot="docs-sidebar-edge"], [data-slot="docs-sidebar-drawer"], [data-slot="docs-footer"], [data-slot="docs-end"]) { display: none !important; }
 [data-shadcnio-shell]:has([data-shadcnio-home]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *)),
 [data-shadcnio-shell]:has([data-shadcnio-home]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *)) :is([data-slot="docs-shell"], [data-slot="docs-main"], [data-slot="docs-scroll"], [data-slot="docs-container"], [data-slot="docs-column"], [data-slot="docs-page"]) { display: contents !important; }
 
@@ -703,7 +704,20 @@ html[data-remembered-in] [data-shadcnio-shell]:not(:has([data-shadcn-plain]:not(
 @media (min-width: 48rem) {
   :root[data-design="shadcnio"] [data-shadcn-top] { flex-direction: row; align-items: flex-end; justify-content: space-between; gap: 2rem; padding-top: 1rem !important; padding-bottom: 2.5rem !important; }
 }
-:root[data-design="shadcnio"] [data-shadcn-top]::before { content: none !important; }
+/* Their + marks where the line meets the column's side lines (site-shell.tsx sets the insets). */
+:root[data-design="shadcnio"] [data-shadcn-top]::before {
+  content: "" !important;
+  position: absolute;
+  inset: auto calc(-1 * var(--top-end, 0px) - 7px) -8px calc(-1 * var(--top-start, 0px) - 7px) !important;
+  height: 14px !important;
+  border: 0 !important;
+  background: var(--muted-foreground) !important;
+  --plus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M7 0v14M0 7h14' stroke='black' stroke-width='1' fill='none'/%3E%3C/svg%3E");
+  -webkit-mask: var(--plus) left center / 14px 14px no-repeat, var(--plus) right center / 14px 14px no-repeat;
+  mask: var(--plus) left center / 14px 14px no-repeat, var(--plus) right center / 14px 14px no-repeat;
+  pointer-events: none;
+  z-index: 1;
+}
 :root[data-design="shadcnio"] [data-shadcn-top]::after {
   content: "" !important;
   position: absolute;
@@ -730,3 +744,20 @@ html[data-remembered-in] [data-shadcnio-shell]:not(:has([data-shadcn-plain]:not(
   font-size: 1rem !important; line-height: 1.5rem !important; text-wrap: pretty; color: var(--muted-foreground) !important;
 }
 @media (min-width: 48rem) { :root[data-design="shadcnio"] [data-shadcn-top] [data-page-top-intro] { font-size: 1.125rem !important; line-height: 1.75rem !important; } }
+
+/* ---- Their form pieces (the Contact page): fields, labels, inputs and the default button size. ---- */
+.style-nova .cn-button-size-default { height: calc(var(--spacing) * 8); gap: calc(var(--spacing) * 1.5); padding-inline: calc(var(--spacing) * 2.5); }
+.style-nova .cn-button-size-default:has([data-icon=inline-start]) { padding-inline-start: calc(var(--spacing) * 2); }
+.style-nova .cn-field-group { gap: calc(var(--spacing) * 5); }
+.style-nova .cn-field { gap: calc(var(--spacing) * 2); }
+.style-nova .cn-field-label { gap: calc(var(--spacing) * 2); line-height: 1.375; }
+.style-nova .cn-field-description { text-align: start; font-size: 0.875rem; line-height: calc(1.25 / .875); color: var(--muted-foreground); }
+.style-nova .cn-label { gap: calc(var(--spacing) * 2); font-size: 0.875rem; line-height: 1; font-weight: 500; }
+.style-nova :is(.cn-input, .cn-textarea) { border-radius: var(--radius); border: 1px solid var(--input); padding-inline: calc(var(--spacing) * 2.5); font-size: 1rem; line-height: 1.5; background-color: transparent; transition: color .15s, background-color .15s, border-color .15s, box-shadow .15s; }
+.style-nova .cn-input { height: calc(var(--spacing) * 8); padding-block: var(--spacing); }
+.style-nova .cn-textarea { padding-block: calc(var(--spacing) * 2); }
+.style-nova :is(.cn-input, .cn-textarea):focus-visible { border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent); }
+.style-nova :is(.cn-input, .cn-textarea):disabled { background-color: color-mix(in oklab, var(--input) 50%, transparent); }
+.style-nova :is(.cn-input, .cn-textarea)[aria-invalid=true] { border-color: var(--destructive); box-shadow: 0 0 0 3px color-mix(in oklab, var(--destructive) 20%, transparent); }
+.style-nova :is(.cn-input, .cn-textarea):is(.dark *) { background-color: color-mix(in oklab, var(--input) 30%, transparent); }
+@media (min-width: 48rem) { .style-nova :is(.cn-input, .cn-textarea) { font-size: 0.875rem; line-height: calc(1.25 / .875); } }

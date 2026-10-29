@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useClientPathname } from "@/components/client-pathname";
+import { Guides } from "./parts";
 import { SIDEBAR_KEY, SIDEBAR_TOGGLE_EVENT } from "./sidebar-state";
 
 /**
@@ -55,6 +56,32 @@ export function ShadcnSiteShell({
     return () => window.removeEventListener(SIDEBAR_TOGGLE_EVENT, onToggle);
   }, []);
 
+  // Each page's head (data-shadcn-top) draws its line across the window with a + where it
+  // meets the column's side lines (shadcnio.css). Heads sit at different insets on
+  // different pages, so tell each one how far the column's edges are from its own.
+  useEffect(() => {
+    const column = document.querySelector<HTMLElement>('[data-slot="docs-column"]');
+    if (!column) return;
+    const place = () => {
+      const edges = column.getBoundingClientRect();
+      for (const head of column.querySelectorAll<HTMLElement>("[data-shadcn-top]")) {
+        const box = head.getBoundingClientRect();
+        if (!box.width) continue;
+        head.style.setProperty("--top-start", `${box.left - edges.left}px`);
+        head.style.setProperty("--top-end", `${edges.right - box.right}px`);
+      }
+    };
+    place();
+    const resize = new ResizeObserver(place);
+    resize.observe(column);
+    const changes = new MutationObserver(place);
+    changes.observe(column, { childList: true, subtree: true });
+    return () => {
+      resize.disconnect();
+      changes.disconnect();
+    };
+  }, [path]);
+
   useEffect(() => {
     if (!drawer) return;
     const onKey = (event: KeyboardEvent) => {
@@ -89,19 +116,27 @@ export function ShadcnSiteShell({
               className="mx-auto flex min-h-[calc(100svh-3.5rem)] w-full max-w-6xl flex-col px-4 sm:px-5 lg:min-h-[calc(100svh-4.5rem)] lg:px-6"
               data-slot="docs-container"
             >
-              <div className="flex flex-1 flex-col border-x pb-16 *:last:border-b" data-slot="docs-column">
+              <div className="flex flex-1 flex-col border-x" data-slot="docs-column">
                 {/* Pages not yet laid out as shadcn.io sections get their sections' spacing; a page
                     built from their sections (data-shadcn-page) fills the column itself. */}
                 <div
-                  className="flex flex-1 flex-col px-5 py-6 md:px-12 has-[[data-shadcn-page]]:p-0"
+                  className="flex flex-col px-5 py-6 md:px-12 has-[[data-shadcn-page]]:p-0"
                   data-slot="docs-page"
                   id="main-content"
                 >
                   {children}
                 </div>
+                {/* Members' pages (no footer, as their dashboard): the closing line across the
+                    window with its + marks right under the page, then their blank space. Shown by
+                    shadcnio.css. */}
+                <div className="relative hidden flex-1" data-slot="docs-end">
+                  <Guides />
+                  <div className="h-16" />
+                </div>
+                {/* Everyone else: the homepage's footer, inside the column as on the homepage. */}
+                <div className="mt-auto" data-slot="docs-footer">{footer}</div>
               </div>
             </div>
-            <div data-slot="docs-footer">{footer}</div>
           </div>
         </div>
         <div

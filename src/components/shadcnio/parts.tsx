@@ -49,13 +49,15 @@ export function PillLink({
   );
 }
 
-/** The line across the window between two sections, with a + where it meets the column. */
-export function Guides() {
+/** The line across the window between two sections, with a + where it meets the column
+    (at the top of the box, or under it as on their page heads). */
+export function Guides({ at = "top" }: { at?: "top" | "bottom" }) {
   const mark = (side: "start" | "end") => (
     <svg
       aria-hidden="true"
       className={cn(
-        "absolute size-3.5 text-muted-foreground top-0 -translate-y-[calc(50%+0.5px)]",
+        "absolute size-3.5 text-muted-foreground",
+        at === "top" ? "top-0 -translate-y-[calc(50%+0.5px)]" : "bottom-0 translate-y-[calc(50%+0.5px)]",
         side === "start"
           ? "start-0 -translate-x-[calc(50%+0.5px)] rtl:translate-x-[calc(50%+0.5px)]"
           : "end-0 translate-x-[calc(50%+0.5px)] rtl:-translate-x-[calc(50%+0.5px)]",
@@ -72,10 +74,16 @@ export function Guides() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 border-0 [--guides-inset:1rem] sm:[--guides-inset:2rem] only:hidden"
+      className={cn(
+        "pointer-events-none absolute inset-0 border-0 [--guides-inset:1rem] sm:[--guides-inset:2rem]",
+        at === "top" && "only:hidden",
+      )}
       data-slot="guides"
     >
-      <div className="absolute -top-px h-px border-t -inset-x-[100vw]" data-slot="guides-line" />
+      <div
+        className={cn("absolute h-px border-t -inset-x-[100vw]", at === "top" ? "-top-px" : "-bottom-px")}
+        data-slot="guides-line"
+      />
       {mark("start")}
       {mark("end")}
     </div>

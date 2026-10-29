@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRight, ChevronRight, Mail, Scale, ShieldCheck } from "lucide-react";
-import { Guides, Section, Tile } from "./parts";
+import { BUTTON_OUTLINE, Guides, Section, Tile } from "./parts";
 import { HeroField } from "./ascii-field";
 
 export type ShadcnLegalSection = { id: string; title: string; content: ReactNode };
@@ -16,7 +16,8 @@ const DOCS = [
  * A legal page laid out as shadcn.io's Terms page (their classes, used with
  * permission): a centred hero with the breadcrumb, the title and its icon,
  * a line and "Last updated · Ask a question", their moving letters behind it; the legal documents as tiles;
- * then each section numbered, its title on the left and the text on the right.
+ * then each section numbered, its title on the left and the text on the right;
+ * then their closing line with Ask a question.
  */
 export function ShadcnLegal({
   title,
@@ -144,6 +145,19 @@ export function ShadcnLegal({
           </div>
         </Section>
       ))}
+      <div className="relative">
+        <Guides />
+        <div className="px-5 md:px-12 flex flex-col items-center gap-6 py-14 text-center md:py-20">
+          <div className="max-w-2xl text-pretty [&_.typeset-docs>*]:mx-auto [&_.typeset-docs>:first-child]:mt-0 [&_.typeset-docs_p]:text-muted-foreground md:[&_.typeset-docs_p]:text-lg">
+            <div className="typeset typeset-docs w-full flex-1">
+              <p>By using Bury Steps, you agree to this {title}.</p>
+            </div>
+          </div>
+          <Link className={BUTTON_OUTLINE} href="/contact">
+            Ask a question
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
