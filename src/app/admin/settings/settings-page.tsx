@@ -39,10 +39,17 @@ export function SettingsPage({
       <div className="relative px-4 py-6 md:px-6">
         <div className={cn(SETTINGS_WIDTH, "flex flex-col gap-4")}>
           {showBackLink ? <SettingsBackLink /> : null}
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6" data-shadcn-top="">
             <div className="flex max-w-2xl flex-col gap-1.5">
-              <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
-              <p className="text-sm text-muted-foreground">{description}</p>
+              <p className="hidden" data-page-top-eyebrow="">
+                Organisers
+              </p>
+              <h1 className="text-lg font-semibold tracking-tight" data-page-top-title="">
+                {title}
+              </h1>
+              <p className="text-sm text-muted-foreground" data-page-top-intro="">
+                {description}
+              </p>
             </div>
             {previewHref ? (
               <Button asChild className="shrink-0 self-start sm:self-auto" size="sm" variant="outline">

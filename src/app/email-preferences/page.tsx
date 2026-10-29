@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { vapidConfig } from "@/lib/vapid";
 import { PhoneAlertsSwitch } from "@/components/phone-alerts-switch";
 import { MyEmailPreferencesForm } from "./my-email-preferences-form";
+import { PageTop } from "@/components/page-top";
 
 export const metadata: Metadata = {
   title: "Email preferences",
@@ -22,10 +23,7 @@ export default async function MyEmailPreferencesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="space-y-1">
-        <h1 className="text-lg font-semibold tracking-tight">Email preferences</h1>
-        <p className="text-sm text-muted-foreground">{user.email}</p>
-      </div>
+      <PageTop className="space-y-1" eyebrow="Settings" intro={user.email} title="Email preferences" />
       <MyEmailPreferencesForm
         emailAccidentAlerts={user.emailAccidentAlerts}
         emailNewsletter={user.emailNewsletter}

@@ -10,6 +10,7 @@ import { AttendanceHistory } from "@/components/attendance-history";
 import { RememberListCount } from "@/components/remember-list-count";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { walkSharePath } from "@/lib/walk-slug";
+import { PageTop } from "@/components/page-top";
 
 /**
  * Fetched ahead from the menu, so History opens with your walks already
@@ -107,12 +108,8 @@ async function WalkHistoryContent() {
   return (
     <div className="flex flex-col gap-6">
       <RememberListCount count={Math.min(rows.length, LIST_PAGE_SIZE)} id="history" />
-      <div className="flex flex-col gap-1.5">
-        <h1 className="text-lg font-semibold tracking-tight">Your walk history</h1>
-        {/* Fixed wording, so the loading placeholder shows it for real too. */}
-        <p className="text-sm text-muted-foreground">
-          Every walk you clock in to will be kept here, once it&apos;s finished.
-        </p>
+      {/* Fixed wording, so the loading placeholder shows it for real too. */}
+      <PageTop eyebrow="Dashboard" intro="Every walk you clock in to will be kept here, once it's finished." title="Your walk history">
         {count > 0 ? (
           <p className="text-sm text-muted-foreground">
             {count === 1 ? "You have clocked in to 1 walk." : `You have clocked in to ${count} walks.`}
@@ -123,7 +120,7 @@ async function WalkHistoryContent() {
             Showing the {rows.length.toLocaleString("en-GB")} most recent.
           </p>
         ) : null}
-      </div>
+      </PageTop>
 
       <AttendanceHistory rows={rows} />
     </div>

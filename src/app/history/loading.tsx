@@ -1,5 +1,6 @@
 import { HistoryFilterChrome } from "@/components/list-chrome";
 import { HistoryRowsSkeleton, SkLine } from "@/components/list-skeletons";
+import { PageTop } from "@/components/page-top";
 
 /** The page's real heading, description, search and filters, then rows
  * shaped like the history list. The count line and year heading depend on
@@ -8,17 +9,13 @@ import { HistoryRowsSkeleton, SkLine } from "@/components/list-skeletons";
 export function HistoryLoading() {
   return (
     <div data-page-loading="" className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1.5">
-        <h1 className="text-lg font-semibold tracking-tight">Your walk history</h1>
-        <p className="text-sm text-muted-foreground">
-          Every walk you clock in to will be kept here, once it&apos;s finished.
-        </p>
+      <PageTop eyebrow="Dashboard" intro="Every walk you clock in to will be kept here, once it's finished." title="Your walk history">
         {/* "You have clocked in to 12 walks." — depends on your walks; not
             there when the list was empty last time. */}
         <div className="[[data-page-loading]:has([data-reveal-list][hidden])_&]:hidden">
           <SkLine className="w-56" size="sm" />
         </div>
-      </div>
+      </PageTop>
       {/* As many rows as last time, from the first paint; with none last
           time the list hides itself, and the filters with it. */}
       <div className="flex flex-col gap-6 [&:has([data-reveal-list][hidden])>[data-sk-filters]]:hidden">

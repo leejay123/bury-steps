@@ -3,6 +3,7 @@ import { Facebook, Mail } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSiteTheme } from "@/lib/site-theme";
 import { ContactForm } from "./contact-form";
+import { PageTop } from "@/components/page-top";
 
 
 
@@ -16,12 +17,12 @@ export default async function ContactPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-lg font-semibold tracking-tight">Contact us</h1>
-        <p className="text-sm text-muted-foreground">
-          {"Questions about joining, a walk, or anything else — send us a message and we'll get back to you."}
-        </p>
-      </div>
+      <PageTop
+        className="flex flex-col gap-2"
+        eyebrow="Help"
+        intro="Questions about joining, a walk, or anything else — send us a message and we'll get back to you."
+        title="Contact us"
+      />
 
       {/* Only the card animates on a page change; the heading stays still. */}
       <Card className="overflow-hidden p-0" data-page-motion="">

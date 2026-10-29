@@ -885,8 +885,8 @@ html body [data-preview-audience="organiser"] [data-guest-home] {
    The real one first arrives in React's hidden holding area (<div hidden>)
    and is moved into place a little later; stepping aside on arrival left the
    header empty in between, which flashed on every refresh. */
-html:has([data-nav-ready]:not([hidden] *)) #bs-header-boot,
-html:has([data-nav-ready]:not([hidden] *)) #bs-guest-boot {
+html:has([data-nav-ready]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *)) #bs-header-boot,
+html:has([data-nav-ready]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *)) #bs-guest-boot {
   display: none;
 }
 
@@ -895,7 +895,7 @@ html[data-cookie-answered] [data-slot="cookie-consent"] {
   display: none;
 }
 
-html:has([data-bottom-nav]:not([hidden] *)) #bs-bottom-boot {
+html:has([data-bottom-nav]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *)) #bs-bottom-boot {
   display: none;
 }
 
@@ -1527,14 +1527,14 @@ html[data-view="dashboard"] #main-content {
 /* The shadcn.io design's homepage brings shadcn.io's own header, footer and
    bottom bar (components/shadcnio), so the site's usual ones step aside on
    that page and the page fills the window. */
-html:has([data-shadcnio-home]) :is([data-site-header], [data-site-footer], [data-site-bottom]) {
+html:has([data-shadcnio-home]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *)) :is([data-site-header], [data-site-footer], [data-site-bottom]) {
   display: none !important;
 }
-html:has([data-shadcnio-home]) [data-site-shell] {
+html:has([data-shadcnio-home]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *)) [data-site-shell] {
   max-width: none;
   border-inline: 0;
 }
-html:has([data-shadcnio-home]) #main-content {
+html:has([data-shadcnio-home]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *)) #main-content {
   width: auto;
   margin: 0;
   padding: 0;

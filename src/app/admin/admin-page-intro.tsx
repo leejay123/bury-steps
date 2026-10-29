@@ -24,8 +24,15 @@ export function AdminPageIntro({
           : "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
       }
       data-page-top-band={band ? "" : undefined}
+      data-shadcn-top={band ? "" : undefined}
     >
       <div className="flex flex-col gap-1.5">
+        {/* The small capital label above the title, shown in the shadcn.io design only. */}
+        {band ? (
+          <p className="hidden" data-page-top-eyebrow="">
+            Organisers
+          </p>
+        ) : null}
         <Heading className="font-semibold text-lg tracking-tight" data-page-top-title={band ? "" : undefined}>
           {title}
         </Heading>

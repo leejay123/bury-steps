@@ -15,6 +15,7 @@ import type { WalkGameView } from "@/lib/walk-game";
 import { EmptyState } from "@/components/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { ProgressBoard } from "./progress-board";
+import { PageTop } from "@/components/page-top";
 
 /**
  * Fetched ahead from the menu, so Progress opens with your numbers already
@@ -48,13 +49,11 @@ function Stat({ label, value }: { label: string; value: string }) {
 export default function ProgressPage() {
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-1.5">
-        <h1 className="text-lg font-semibold tracking-tight">Progress</h1>
-        <p className="text-sm text-muted-foreground">
-          How we walk together this month — clock-ins, not miles or speed. No winners, no losers.
-          Only signed-in members see this.
-        </p>
-      </div>
+      <PageTop
+        eyebrow="Dashboard"
+        intro="How we walk together this month — clock-ins, not miles or speed. No winners, no losers. Only signed-in members see this."
+        title="Progress"
+      />
       {/* The heading shows straight away; one placeholder, shaped like last
           time from the first paint, until the numbers arrive. */}
       <Suspense fallback={<ProgressFallback />}>

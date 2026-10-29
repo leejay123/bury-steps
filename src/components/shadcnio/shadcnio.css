@@ -656,17 +656,17 @@ html:has([data-slot="promo-bar"]) .globalfooter, html:has([data-slot="promo-bar"
    the first paint). Everyone else, and the legal pages (they mark themselves with
    data-shadcn-plain), get the header, the page and the footer: the frame lies flat and
    scrolls with the window. */
-:is(html:not([data-remembered-in]) [data-shadcnio-shell], [data-shadcnio-shell]:has([data-shadcn-plain])) :is([data-slot="docs-sidebar"], [data-slot="docs-sidebar-edge"], [data-slot="docs-sidebar-drawer"], .globalnav-leading) { display: none !important; }
-:is(html:not([data-remembered-in]) [data-shadcnio-shell], [data-shadcnio-shell]:has([data-shadcn-plain])) .globalnav-with-leading .globalnav-content { padding-inline-start: max(var(--gn-gutter), env(safe-area-inset-left)); }
-:is(html:not([data-remembered-in]) [data-shadcnio-shell], [data-shadcnio-shell]:has([data-shadcn-plain])) [data-slot="docs-header"] { display: block; position: sticky; top: 0; z-index: 40; }
-:is(html:not([data-remembered-in]) [data-shadcnio-shell], [data-shadcnio-shell]:has([data-shadcn-plain])) [data-slot="docs-shell"] { display: block; height: auto; overflow: visible; }
-:is(html:not([data-remembered-in]) [data-shadcnio-shell], [data-shadcnio-shell]:has([data-shadcn-plain])) [data-slot="docs-main"] { height: auto; padding-top: 0; overflow: visible; }
+:is(html:not([data-remembered-in]) [data-shadcnio-shell], [data-shadcnio-shell]:has([data-shadcn-plain]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *))) :is([data-slot="docs-sidebar"], [data-slot="docs-sidebar-edge"], [data-slot="docs-sidebar-drawer"], .globalnav-leading) { display: none !important; }
+:is(html:not([data-remembered-in]) [data-shadcnio-shell], [data-shadcnio-shell]:has([data-shadcn-plain]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *))) .globalnav-with-leading .globalnav-content { padding-inline-start: max(var(--gn-gutter), env(safe-area-inset-left)); }
+:is(html:not([data-remembered-in]) [data-shadcnio-shell], [data-shadcnio-shell]:has([data-shadcn-plain]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *))) [data-slot="docs-header"] { display: block; position: sticky; top: 0; z-index: 40; }
+:is(html:not([data-remembered-in]) [data-shadcnio-shell], [data-shadcnio-shell]:has([data-shadcn-plain]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *))) [data-slot="docs-shell"] { display: block; height: auto; overflow: visible; }
+:is(html:not([data-remembered-in]) [data-shadcnio-shell], [data-shadcnio-shell]:has([data-shadcn-plain]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *))) [data-slot="docs-main"] { height: auto; padding-top: 0; overflow: visible; }
 /* Members' pages have no footer, as on their dashboard (the legal pages keep it). */
-html[data-remembered-in] [data-shadcnio-shell]:not(:has([data-shadcn-plain])) [data-slot="docs-footer"] { display: none; }
+html[data-remembered-in] [data-shadcnio-shell]:not(:has([data-shadcn-plain]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *))) [data-slot="docs-footer"] { display: none; }
 /* The homepage draws its whole own page (header, footer and all): the frame steps aside. */
-[data-shadcnio-shell]:has([data-shadcnio-home]) :is([data-slot="docs-header"], [data-slot="docs-sidebar"], [data-slot="docs-sidebar-edge"], [data-slot="docs-sidebar-drawer"], [data-slot="docs-footer"]) { display: none !important; }
-[data-shadcnio-shell]:has([data-shadcnio-home]),
-[data-shadcnio-shell]:has([data-shadcnio-home]) :is([data-slot="docs-shell"], [data-slot="docs-main"], [data-slot="docs-scroll"], [data-slot="docs-container"], [data-slot="docs-column"], [data-slot="docs-page"]) { display: contents !important; }
+[data-shadcnio-shell]:has([data-shadcnio-home]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *)) :is([data-slot="docs-header"], [data-slot="docs-sidebar"], [data-slot="docs-sidebar-edge"], [data-slot="docs-sidebar-drawer"], [data-slot="docs-footer"]) { display: none !important; }
+[data-shadcnio-shell]:has([data-shadcnio-home]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *)),
+[data-shadcnio-shell]:has([data-shadcnio-home]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *)) :is([data-slot="docs-shell"], [data-slot="docs-main"], [data-slot="docs-scroll"], [data-slot="docs-container"], [data-slot="docs-column"], [data-slot="docs-page"]) { display: contents !important; }
 
 /* Bury Steps: the site sets every phone text box to 16px (so iPhones don't zoom into forms);
    the search field keeps shadcn.io's own size (28px on phones, larger than 16px, so no zoom). */
@@ -683,3 +683,50 @@ html[data-remembered-in] [data-shadcnio-shell]:not(:has([data-shadcn-plain])) [d
    The site maps font-mono to its sans font for the other designs. */
 :root[data-design="shadcnio"] { --font-mono: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 :root[data-design="shadcnio"] .font-mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+/* ---- Every page's own head (PageTop, AdminPageIntro, Settings), as shadcn.io's page head:
+   a small capital label, a large title, a larger intro, buttons on the right and a line
+   across the page underneath. Same markup as the usual look; only this design restyles it. ---- */
+:root[data-design="shadcnio"] [data-shadcn-top] {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 0.5rem;
+  padding-top: 1rem !important;
+  padding-bottom: 2rem !important;
+  border-bottom: 0 !important;
+  background: none !important;
+  color: inherit !important;
+  text-align: start !important;
+}
+@media (min-width: 48rem) {
+  :root[data-design="shadcnio"] [data-shadcn-top] { flex-direction: row; align-items: flex-end; justify-content: space-between; gap: 2rem; padding-top: 1rem !important; padding-bottom: 2.5rem !important; }
+}
+:root[data-design="shadcnio"] [data-shadcn-top]::before { content: none !important; }
+:root[data-design="shadcnio"] [data-shadcn-top]::after {
+  content: "" !important;
+  position: absolute;
+  inset: auto -100vw -1px -100vw !important;
+  height: 0 !important;
+  border-top: 1px solid var(--border);
+  background: none !important;
+  pointer-events: none;
+}
+:root[data-design="shadcnio"] [data-shadcn-top] > div:first-child { display: flex; flex-direction: column; gap: 0.75rem; max-width: 42rem; }
+@media (min-width: 64rem) { :root[data-design="shadcnio"] [data-shadcn-top] > div:first-child { gap: 1rem; } }
+:root[data-design="shadcnio"] [data-shadcn-top] [data-page-top-eyebrow] {
+  display: block !important;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.75rem; line-height: 1rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+:root[data-design="shadcnio"] [data-shadcn-top] [data-page-top-title] {
+  font-size: 1.875rem !important; line-height: 2.25rem !important; font-weight: 600 !important;
+  letter-spacing: -0.05em !important; text-wrap: balance; color: var(--foreground) !important;
+}
+@media (min-width: 48rem) { :root[data-design="shadcnio"] [data-shadcn-top] [data-page-top-title] { font-size: 2.25rem !important; line-height: 2.5rem !important; } }
+:root[data-design="shadcnio"] [data-shadcn-top] [data-page-top-intro] {
+  font-size: 1rem !important; line-height: 1.5rem !important; text-wrap: pretty; color: var(--muted-foreground) !important;
+}
+@media (min-width: 48rem) { :root[data-design="shadcnio"] [data-shadcn-top] [data-page-top-intro] { font-size: 1.125rem !important; line-height: 1.75rem !important; } }

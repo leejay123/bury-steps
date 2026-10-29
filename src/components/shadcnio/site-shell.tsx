@@ -93,7 +93,7 @@ export function ShadcnSiteShell({
                 {/* Pages not yet laid out as shadcn.io sections get their sections' spacing; a page
                     built from their sections (data-shadcn-page) fills the column itself. */}
                 <div
-                  className="flex flex-1 flex-col px-5 pt-8 md:px-12 md:pt-10 has-[[data-shadcn-page]]:p-0"
+                  className="flex flex-1 flex-col px-5 py-6 md:px-12 has-[[data-shadcn-page]]:p-0"
                   data-slot="docs-page"
                   id="main-content"
                 >

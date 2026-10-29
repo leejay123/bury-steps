@@ -19,6 +19,7 @@ import { AdminWalkTable } from "@/app/admin/admin-walk-table";
 import { RecentWalksCarousel } from "./recent-walks-carousel";
 import { LiveUpcomingCount } from "./live-upcoming-count";
 import { StoriesSlot } from "@/components/stories/stories-slot";
+import { PageTop } from "@/components/page-top";
 
 
 
@@ -36,19 +37,18 @@ export default function DashboardPage() {
   // the ready-made page; who you are and your walks fill in just after.
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-1.5">
-        <h1 className="text-lg font-semibold tracking-tight">Walks</h1>
-        <p className="text-sm text-muted-foreground">
-          Upcoming walks you can clock in to. Cancelled walks are in All walks, alongside completed
-          ones. Past walks you attended are in History.
-        </p>
+      <PageTop
+        eyebrow="Dashboard"
+        intro="Upcoming walks you can clock in to. Cancelled walks are in All walks, alongside completed ones. Past walks you attended are in History."
+        title="Walks"
+      >
         {/* Its own line, held open while it loads, so arriving doesn't push the list down. */}
         <p className="min-h-5 text-sm text-muted-foreground">
           <Suspense fallback={null}>
             <MemberSince />
           </Suspense>
         </p>
-      </div>
+      </PageTop>
       {/* Stories: signed-in people only (it shows nothing for visitors). */}
       <StoriesSlot />
       <Suspense fallback={<MemberWalksHold />}>

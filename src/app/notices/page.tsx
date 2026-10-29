@@ -16,6 +16,7 @@ import { FULL_ORGANISER_PERMISSIONS, ORGANISER_PERMISSIONS } from "@/lib/organis
 import type { NoticeCategoryView } from "@/lib/notices";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { NoticeRowsSkeleton } from "@/components/list-skeletons";
+import { PageTop } from "@/components/page-top";
 
 
 
@@ -139,13 +140,11 @@ function NoticesFallback({
     <div data-page-loading="" aria-busy="true" className={`relative -mt-6 -mb-6 ${PAGE_X_BLEED}`}>
       <section className="flex flex-col gap-0">
         <div className="flex flex-col gap-3 px-4 py-6 md:px-6">
-          <div className="flex flex-col gap-1.5">
-            <h1 className="text-lg font-semibold tracking-tight">Notices</h1>
-            <p className="text-sm text-muted-foreground">
-              Updates from the organisers for signed-in members. Short messages stay in the bell; open a
-              row here for the full write-up.
-            </p>
-          </div>
+          <PageTop
+            eyebrow="Dashboard"
+            intro="Updates from the organisers for signed-in members. Short messages stay in the bell; open a row here for the full write-up."
+            title="Notices"
+          />
           <NoticesSearchChrome />
         </div>
         {categories ? <NoticeCategoryBar labels={categories} /> : null}
