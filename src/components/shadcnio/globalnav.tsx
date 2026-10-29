@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useClientPathname } from "@/components/client-pathname";
 import { PanelLeft } from "lucide-react";
 import { SIDEBAR_TOGGLE_EVENT } from "./sidebar-state";
 import { NAV_COOKIE, parseRememberedNav } from "@/lib/remembered-nav";
@@ -67,7 +68,7 @@ export function GlobalNav({
   const navRef = useRef<HTMLElement>(null);
   const searchRef = useRef<SearchPanelHandle>(null);
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = useClientPathname();
   const controller = useRef<GlobalnavController | null>(null);
 
   // Their controller runs the whole header; it is rebuilt when the menu changes
@@ -94,7 +95,7 @@ export function GlobalNav({
   }, [router, remembered]);
 
   useEffect(() => {
-    controller.current?.route(pathname);
+    if (pathname) controller.current?.route(pathname);
   }, [pathname, remembered]);
 
   const toggleTheme = () => setColorMode(document.documentElement.classList.contains("dark") ? "light" : "dark");
