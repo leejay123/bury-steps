@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { DashboardButton } from "@/components/dashboard/dashboard-button";
 import { ColorModeToggle } from "@/components/color-mode";
 import { cookies } from "next/headers";
 import { getOptionalUser } from "@/lib/auth";
@@ -144,7 +143,6 @@ export async function SiteNav() {
                 <SiteSearchDialog />
               </HeaderPartBoundary>
             ) : null}
-            <DashboardButton />
             <ColorModeToggle />
             <HeaderPartBoundary name="bell">
               <Suspense fallback={<BellPlaceholder />}>

@@ -77,9 +77,6 @@ import {
   type AboutRule,
 } from "@/lib/homepage-copy";
 
-/** Settings → Branding → Dashboard design: the four Efferd dashboards. */
-export type DashboardDesign = "1" | "2" | "3" | "4";
-export const DASHBOARD_DESIGNS: readonly DashboardDesign[] = ["1", "2", "3", "4"];
 
 /** Settings → Branding → Page tops. */
 export type PageTopStyle =
@@ -106,30 +103,9 @@ export const PAGE_TOP_STYLES: readonly PageTopStyle[] = [
   "brand",
 ];
 
-/** Settings → Branding → Site design. */
-export type SiteDesign =
-  | "original"
-  | "vercel"
-  | "github"
-  | "claude"
-  | "stripe"
-  | "linear"
-  | "apple"
-  | "figma"
-  | "framer"
-  | "shadcnio";
-export const SITE_DESIGNS: readonly SiteDesign[] = [
-  "original",
-  "vercel",
-  "github",
-  "claude",
-  "stripe",
-  "linear",
-  "apple",
-  "figma",
-  "framer",
-  "shadcnio",
-];
+/** Settings → Branding → Site design: the original look, or shadcn.io's. */
+export type SiteDesign = "original" | "shadcnio";
+export const SITE_DESIGNS: readonly SiteDesign[] = ["original", "shadcnio"];
 
 export type SiteTheme = {
   heroStyle: HeroStyle;
@@ -170,8 +146,6 @@ export type SiteTheme = {
   siteDesign: SiteDesign;
   /** How the edge-to-edge band at the top of a page looks (title, intro, button). */
   pageTopStyle: PageTopStyle;
-  /** The dashboard's design (Efferd dashboard 1–4), for everyone. */
-  dashboardDesign: DashboardDesign;
   textSizes: TextSizes;
   siteName: string;
   siteTagline: string;
@@ -262,7 +236,6 @@ export function defaultTheme(): SiteTheme {
     siteFont: DEFAULT_SITE_FONT,
     siteDesign: "original",
     pageTopStyle: "plain",
-    dashboardDesign: "1",
     textSizes: DEFAULT_TEXT_SIZES,
     siteName: DEFAULT_SITE_NAME,
     siteTagline: DEFAULT_SITE_TAGLINE,
@@ -339,7 +312,6 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       siteFont: true,
       siteDesign: true,
       pageTopStyle: true,
-      dashboardDesign: true,
       textHeadlinePx: true,
       textSectionPx: true,
       textIntroPx: true,
@@ -433,9 +405,6 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       parseCookieConsentVariant(row?.cookieConsentVariant ?? "") ??
       DEFAULT_COOKIE_CONSENT_VARIANT,
     siteFont: parseSiteFont(row?.siteFont ?? "") ?? DEFAULT_SITE_FONT,
-    dashboardDesign: DASHBOARD_DESIGNS.includes(row?.dashboardDesign as DashboardDesign)
-      ? (row?.dashboardDesign as DashboardDesign)
-      : "1",
     pageTopStyle: PAGE_TOP_STYLES.includes(row?.pageTopStyle as PageTopStyle)
       ? (row?.pageTopStyle as PageTopStyle)
       : "plain",

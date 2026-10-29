@@ -1,10 +1,8 @@
 "use server";
 
 import {
-  DASHBOARD_DESIGNS,
   PAGE_TOP_STYLES,
   SITE_DESIGNS,
-  type DashboardDesign,
   type PageTopStyle,
   type SiteDesign,
 } from "@/lib/site-theme";
@@ -828,31 +826,6 @@ async function updateSiteFontWork(
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/branding");
   return { ok: true, message: "Site font saved. The whole website is using it now." };
-}
-
-/** Settings → Branding → Dashboard design (also the dashboard's own quick switch). */
-async function updateDashboardDesignWork(
-  _prev: ActionResult | null,
-  formData: FormData,
-): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  if (!admin.permDisplay) return permissionDenied("permDisplay");
-  const asked = String(formData.get("dashboardDesign") ?? "");
-  const design = DASHBOARD_DESIGNS.includes(asked as DashboardDesign) ? (asked as DashboardDesign) : "1";
-
-  try {
-    await prisma.siteSetting.upsert({
-      where: { id: SITE_SETTING_ID },
-      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, dashboardDesign: design },
-      update: { dashboardDesign: design },
-    });
-  } catch (err) {
-    return logActionError("updateDashboardDesign", err, "Could not save that setting. Try again.");
-  }
-
-  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
-  revalidatePath("/", "layout");
-  return { ok: true, message: `The dashboard now uses design ${design}.` };
 }
 
 /** Settings → Branding → Page tops: the band at the top of a page, for everyone. */
@@ -2116,7 +2089,6 @@ export const updateFooterWordmarkMobile = guardForm("organiser", pass, readPass,
 export const updateFooterWordmarkEnabled = guardForm("organiser", pass, readPass, updateFooterWordmarkEnabledWork);
 export const updateSiteDesign = guardForm("organiser", pass, readPass, updateSiteDesignWork);
 export const updatePageTopStyle = guardForm("organiser", pass, readPass, updatePageTopStyleWork);
-export const updateDashboardDesign = guardForm("organiser", pass, readPass, updateDashboardDesignWork);
 export const updateSiteFont = guardForm(
   "organiser",
   siteFontSchema,

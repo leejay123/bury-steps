@@ -1,10 +1,6 @@
 import { SerwistProvider } from "@serwist/turbopack/react";
-import { DashboardFrame } from "@/components/efferd/dashboard-frame";
 import { ShadcnLayoutFrame } from "@/components/shadcnio/layout-frame";
 import { SIDEBAR_SCRIPT } from "@/components/shadcnio/sidebar-state";
-import { LazyDashboardSignOut } from "@/components/efferd/dashboard-sign-out-lazy";
-import { ClerkIsland } from "@/components/clerk-island";
-import { DASHBOARD_VIEW_SCRIPT } from "@/components/dashboard/dashboard-view";
 import { COLOR_MODE_SCRIPT } from "@/lib/color-mode-script";
 import { CUSTOMIZE_SCRIPT } from "@/lib/shadcnio-customize";
 import type { CSSProperties } from "react";
@@ -131,26 +127,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       // in, so phone layout rules for the bottom bar (logo on the left, room
       // at the bottom) apply from the first paint — see globals.css.
       data-phone-menu={theme.mobileNav}
-      // Settings → Branding → Site design (globals.css: [data-design=vercel]).
+      // Settings → Branding → Site design (globals.css: [data-design="shadcnio"]).
       data-design={theme.siteDesign}
       // Settings → Branding → Page tops (globals.css: [data-page-top]).
       data-page-top={theme.pageTopStyle}
-      // Settings → Branding → Dashboard design (globals.css: [data-dash-design]).
-      data-dash-design={theme.dashboardDesign}
       lang="en-GB"
       style={
         {
           // The site designs bring their own font (Original: the chosen one).
           "--font-site":
-            theme.siteDesign === "vercel"
-              ? "var(--font-geist)"
-              : theme.siteDesign === "github"
-                ? "var(--font-mona-sans)"
-                : theme.siteDesign === "shadcnio"
-                  ? "var(--font-hanken)"
-                  : theme.siteDesign !== "original"
-                  ? "var(--font-inter)"
-                  : `var(${font.cssVariable})`,
+            theme.siteDesign === "shadcnio" ? "var(--font-hanken)" : `var(${font.cssVariable})`,
           ...textSizeCssVars(theme.textSizes),
         } as CSSProperties
       }
@@ -159,14 +145,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         {/* Run as the page arrives, before anything is drawn, so a refresh shows the right
             look straight away: light/dark mode, the shadcn.io Customize choices, signed in
-            (the sidebar and the signed-in menu) with the sidebar's folded state, the
-            dashboard view (a test), and scroll restoration off. Plain scripts: next/script's
+            (the sidebar and the signed-in menu) with the sidebar's folded state, and
+            scroll restoration off. Plain scripts: next/script's
             beforeInteractive only queues them for Next's own code, which runs after the
             first paint, so the signed-out menu used to show first. */}
         <script dangerouslySetInnerHTML={{ __html: COLOR_MODE_SCRIPT }} id="color-mode" />
         <script dangerouslySetInnerHTML={{ __html: CUSTOMIZE_SCRIPT }} id="shadcnio-customize" />
         <script dangerouslySetInnerHTML={{ __html: SIDEBAR_SCRIPT }} id="docs-sidebar" />
-        <script dangerouslySetInnerHTML={{ __html: DASHBOARD_VIEW_SCRIPT }} id="dashboard-view" />
         <script
           dangerouslySetInnerHTML={{
             __html: `try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch {}`,
@@ -381,17 +366,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <WalkWordingProvider wording={theme.walkWording}>
                     <TabStyleProvider style={theme.tabStyle}>
                       <SignedInProvider signedIn={signedIn}>
-                        {/* The dashboard view (a test): the page inside Efferd's app shell when it's on. */}
-                        <DashboardFrame
-                          design={theme.dashboardDesign}
-                          signOut={
-                            <ClerkIsland>
-                              <LazyDashboardSignOut />
-                            </ClerkIsland>
-                          }
-                        >
-                          {children}
-                        </DashboardFrame>
+                        {children}
                       </SignedInProvider>
                     </TabStyleProvider>
                   </WalkWordingProvider>

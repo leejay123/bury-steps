@@ -13,53 +13,13 @@ import { SettingsSection } from "../settings-page";
 const DESIGNS: { id: SiteDesign; label: string; note: string }[] = [
   { id: "original", label: "Original", note: "The site as it has always looked: your chosen font, 8px corners." },
   {
-    id: "vercel",
-    label: "Vercel",
-    note: "Vercel's look: the Geist font, ink and fine greys, 6px corners, soft layered shadows and tighter headings.",
-  },
-  {
-    id: "github",
-    label: "GitHub",
-    note: "GitHub's light look: the Mona Sans font, GitHub's greys, blue links, black buttons, 8px corners and 16px cards, no shadows.",
-  },
-  {
-    id: "claude",
-    label: "Claude",
-    note: "Claude's warm look: a cream page, coral buttons and links, serif headings (Source Serif 4) with Inter text, 12px cards, no shadows.",
-  },
-  {
-    id: "stripe",
-    label: "Stripe",
-    note: "Stripe's look: deep-navy text, indigo pill buttons and links, thin headings with tight spacing, 12px cards with a soft blue-tinted shadow.",
-  },
-  {
-    id: "linear",
-    label: "Linear",
-    note: "Linear's look on a light page: lavender-blue buttons and links, firm tight headings, crisp hairlines, 12px cards, no shadows.",
-  },
-  {
-    id: "apple",
-    label: "Apple",
-    note: "Apple's look: a soft-grey page with white cards, Action Blue pill buttons that shrink when pressed, Apple's own font on Apple devices, 18px cards.",
-  },
-  {
-    id: "figma",
-    label: "Figma",
-    note: "Figma's look: pure black and white, black pill buttons, light large headings, 24px rounded cards, no shadows.",
-  },
-  {
-    id: "framer",
-    label: "Framer",
-    note: "Framer's look on a light page: black pill buttons, blue links, poster-tight Mona Sans headings, 20px cards, no shadows.",
-  },
-  {
     id: "shadcnio",
     label: "shadcn.io",
-    note: "shadcn.io's look (with their permission): the Hanken Grotesk font, black and white with fine grey lines, pill buttons, tight bold headings, and a light/dark switch for everyone.",
+    note: "shadcn.io's look (with their permission): the Hanken Grotesk font, black and white with fine grey lines, pill buttons, a light/dark switch for everyone, and Efferd's dashboard for signed-in people.",
   },
 ];
 
-/** The whole site's look, for everyone: the original, or the Vercel-inspired one. */
+/** The whole site's look, for everyone: the original, or shadcn.io's. */
 export function SiteDesignSettings({ design }: { design: SiteDesign }) {
   const [selected, setSelected] = useState(design);
   const [state, dispatch, isPending] = useSafeActionState(updateSiteDesign);
