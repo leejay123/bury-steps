@@ -628,3 +628,6 @@ html:has([data-slot="promo-bar"]) .globalfooter, html:has([data-slot="promo-bar"
   0% { height: var(--radix-accordion-content-height,var(--accordion-panel-height,var(--disclosure-panel-height,var(--radix-collapsible-content-height,var(--collapsible-panel-height,auto))))); }
   100% { height: 0px; }
 }
+
+/* Bury Steps: on phones an opened footer group's links line up with its title. */
+@media (max-width: 1023.98px) { .globalfooter-directory-section-link { padding-inline-start: var(--gf-inset); } }

@@ -154,19 +154,63 @@ export function navSection(link: { href: string; label: string }): NavSection {
   return { id, href: link.href, label: link.label, groups };
 }
 
+const HOW: NavGroup[] = [
+  {
+    title: "Getting started",
+    elevated: true,
+    links: [
+      { href: "/#home-how-heading", label: "How it works" },
+      { href: "/#home-expect-heading", label: "What to expect" },
+      { href: "/#home-rules-heading", label: "Group rules" },
+      { href: "/#home-essentials-heading", label: "Walk essentials" },
+    ],
+  },
+  {
+    title: "The group",
+    links: [
+      { href: "/#home-about-heading", label: "How this started" },
+      { href: "/#home-goals-heading", label: "Why people walk" },
+      { href: "/#home-reviews-heading", label: "What members say" },
+    ],
+  },
+];
+
+/** Each organiser page leads its own drop-down; the rest of the organiser pages follow. */
+function organiserSection(id: string, href: string, label: string, links: { href: string; label: string }[]): NavSection {
+  const rest = links.filter((link) => link.href !== href);
+  return {
+    id,
+    href,
+    label,
+    groups: [
+      { title: `Explore ${label}`, elevated: true, links: [{ href, label: `All ${label.toLowerCase()}` }, ...rest.slice(0, 3)] },
+      {
+        title: "Set up",
+        links: [
+          ...rest.slice(3),
+          { href: "/admin/walks", label: "Manage walks" },
+          { href: "/dashboard", label: "Dashboard" },
+        ],
+      },
+    ],
+  };
+}
+
 /**
- * The header's short menu, built from the links this person can open (their
- * remembered menu, or a visitor's): Walks, Notices, Manage for organisers and
- * Help, each a drop-down holding the rest, as shadcn.io groups its pages.
+ * The header's menu, laid out like shadcn.io's (a row of links, each a
+ * drop-down), built from the pages this person can open (their remembered
+ * menu, or a visitor's). Visitors: About, Walks, How it works, Questions,
+ * Apps, Contact. Members: Walks, Notices, Progress, History, Apps, Contact,
+ * Help. Organisers swap Apps and Contact (kept in Help) for Members,
+ * Messages, Reports and Settings.
  */
 export function shortMenu(links: { href: string; label: string }[], facebookUrl: string): NavSection[] {
   const has = (href: string) => links.some((link) => link.href === href);
   const walksHref = has("/admin/walks") ? "/admin/walks" : "/walks";
   const signedIn = has("/notices") || has("/history");
-  const walks: NavSection = {
-    ...navSection({ href: walksHref, label: "Walks" }),
-    id: "walks",
-  };
+  const walks: NavSection = { ...navSection({ href: walksHref, label: "Walks" }), id: "walks" };
+  const apps: NavSection = { ...navSection({ href: "/apps", label: "Apps" }), id: "apps" };
+  const contact: NavSection = { ...navSection({ href: "/contact", label: "Contact" }), id: "contact" };
   const help: NavSection = {
     id: "help",
     href: "/contact",
@@ -181,20 +225,26 @@ export function shortMenu(links: { href: string; label: string }[], facebookUrl:
           ...(facebookUrl ? [{ href: facebookUrl, label: "Facebook group" }] : []),
         ],
       },
-      {
-        title: "About the group",
-        links: [
-          { href: "/#home-how-heading", label: "How it works" },
-          { href: "/#home-expect-heading", label: "What to expect" },
-          { href: "/#home-rules-heading", label: "Group rules" },
-          { href: "/#home-essentials-heading", label: "Walk essentials" },
-        ],
-      },
-      { title: "More", links: [{ href: "/apps", label: "Walking apps" }] },
+      ...HOW.slice(0, 1).map((group) => ({ ...group, elevated: false, title: "About the group" })),
+      { title: "More", links: [{ href: "/apps", label: "Walking apps" }, { href: "/email-preferences", label: "Email preferences" }] },
     ],
   };
+
+  if (!signedIn) {
+    return [
+      { ...navSection({ href: "/", label: "About" }), id: "about" },
+      walks,
+      { id: "how", href: "/#home-how-heading", label: "How it works", groups: HOW },
+      { ...help, id: "questions", href: "/#faq", label: "Questions" },
+      apps,
+      contact,
+    ];
+  }
+
   const sections: NavSection[] = [walks];
-  if (signedIn) sections.push({ ...navSection({ href: "/notices", label: "Notices" }), id: "notices" });
+  if (has("/notices")) sections.push({ ...navSection({ href: "/notices", label: "Notices" }), id: "notices" });
+  if (has("/progress")) sections.push({ ...navSection({ href: "/progress", label: "Progress" }), id: "progress" });
+  if (has("/history")) sections.push({ ...navSection({ href: "/history", label: "History" }), id: "history" });
   const manage = [
     { href: "/admin/members", label: "Members" },
     { href: "/admin/messages", label: "Messages" },
@@ -203,23 +253,11 @@ export function shortMenu(links: { href: string; label: string }[], facebookUrl:
     { href: "/admin/guide", label: "Guide" },
   ].filter((link) => has(link.href));
   if (manage.length) {
-    sections.push({
-      id: "manage",
-      href: manage[0]!.href,
-      label: "Manage",
-      groups: [
-        { title: "Manage the group", elevated: true, links: manage },
-        {
-          title: "Walks",
-          links: [
-            { href: "/admin/walks", label: "All walks" },
-            { href: "/dashboard", label: "Dashboard" },
-          ],
-        },
-      ],
-    });
+    for (const link of manage.filter((link) => link.href !== "/admin/guide"))
+      sections.push(organiserSection(link.href.split("/").pop()!, link.href, link.label, manage));
+  } else {
+    sections.push(apps, contact);
   }
-  if (!signedIn) sections.unshift({ ...navSection({ href: "/", label: "About" }), id: "about" });
   sections.push(help);
   return sections;
 }

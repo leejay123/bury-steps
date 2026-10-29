@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { NAV_COOKIE, parseRememberedNav } from "@/lib/remembered-nav";
 import { CustomizeDot, CustomizePanel } from "./customize-panel";
+import { setColorMode } from "@/components/color-mode";
 import { GlobalnavController } from "./globalnav-controller";
 import { shortMenu, type NavSection } from "./nav-sections";
 import { SearchPanel, type SearchItem, type SearchPanelHandle } from "./search-panel";
@@ -91,6 +92,26 @@ export function GlobalNav({
     controller.current?.route(pathname);
   }, [pathname, remembered]);
 
+  const toggleTheme = () => setColorMode(document.documentElement.classList.contains("dark") ? "light" : "dark");
+  // D switches light / dark, as on shadcn.io (not while typing).
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "d" && event.key !== "D") return;
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement ||
+        (target instanceof HTMLElement && target.isContentEditable)
+      )
+        return;
+      event.preventDefault();
+      setColorMode(document.documentElement.classList.contains("dark") ? "light" : "dark");
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
   const dismiss = () => navRef.current?.dispatchEvent(new CustomEvent("globalnav:dismiss"));
 
   const part = (i: number) => ({ "--gn-item": String(i) }) as React.CSSProperties;
@@ -291,6 +312,34 @@ export function GlobalNav({
                       </div>
                     </div>
                   </div>
+                </li>
+                <li className="globalnav-item globalnav-item-icon globalnav-item-tool" data-gn-kind="icon">
+                  {/* Their light / dark switch, with their icon (D on the keyboard, as on shadcn.io). */}
+                  <button
+                    aria-keyshortcuts="D"
+                    aria-label="Toggle theme"
+                    className="globalnav-link"
+                    onClick={toggleTheme}
+                    title="Toggle theme (D)"
+                    type="button"
+                  >
+                    <svg
+                      aria-hidden="true"
+                      className="globalnav-glyph globalnav-theme-glyph"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                      <path d="M12 3l0 18" />
+                      <path d="M12 9l4.65 -4.65" />
+                      <path d="M12 14.3l7.37 -7.37" />
+                      <path d="M12 19.6l8.85 -8.85" />
+                    </svg>
+                  </button>
                 </li>
                 {account}
               </ul>

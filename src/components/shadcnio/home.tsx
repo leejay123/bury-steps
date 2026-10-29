@@ -1,4 +1,4 @@
-import { createElement, type ReactNode } from "react";
+import { Fragment, createElement, type ReactNode } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -30,10 +30,11 @@ import type { FaqCategoryView, FaqView } from "@/lib/faqs";
 import type { TestimonialView } from "@/lib/testimonials";
 import type { EssentialItem } from "@/lib/walk-essentials";
 import { essentialIcon } from "@/lib/walk-essentials";
-import { CARD_GRID, GALLERY_GRID, REVIEW_GRID } from "./grids";
+import { CARD_GRID, GALLERY_GRID } from "./grids";
 import { BUTTON_OUTLINE, BUTTON_PRIMARY, GRID, MiniNote, MiniWalk, Section, SectionHead, Tile } from "./parts";
 import type { ShadcnHomeData } from "./home-data";
 import { ShadcnFaq } from "./faq";
+import { ShadcnReviews } from "./reviews";
 import { BandField, HeroField } from "./ascii-field";
 
 export type ShadcnHomeProps = {
@@ -76,7 +77,28 @@ export function ShadcnHome(props: ShadcnHomeProps) {
   );
 }
 
-function Hero({ data, siteName, tagline, logo, joinHref }: ShadcnHomeProps) {
+/** A walk's place as a short name: "MOSES GATE COUNTRY PARK CARPARK" becomes "Moses Gate Country Park". */
+function tidyPlace(name: string) {
+  const words = name
+    .replace(/\b(car ?park|parking)\b/gi, "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  const shouting = name === name.toUpperCase();
+  return words.map((word) => (shouting ? word.charAt(0) + word.slice(1).toLowerCase() : word)).join(" ");
+}
+
+function Hero({ data, logo, joinHref }: ShadcnHomeProps) {
+  // Four places, as they list four frameworks; Bury first.
+  const places = [
+    "Bury",
+    ...data.places
+      .map((place) => tidyPlace(place.name))
+      // Short names only, so the line keeps their three-line shape.
+      .filter((name) => name.length >= 3 && name.length <= 14 && !/^(bury|test)\b/i.test(name) && /[aeiou]/i.test(name)),
+  ]
+    .filter((name, i, all) => all.indexOf(name) === i)
+    .slice(0, 4);
   return (
     <section aria-labelledby="home-heading" className="border-t first-of-type:border-t-0">
       <div
@@ -86,9 +108,15 @@ function Hero({ data, siteName, tagline, logo, joinHref }: ShadcnHomeProps) {
         <HeroField heading="home-heading" />
         <div className="flex flex-col gap-4 md:gap-5 max-w-5xl mx-auto min-w-0 items-center text-center">
           <p className="text-center text-muted-foreground text-xs leading-4 mb-1 md:mb-2" data-slot="docs-affiliation">
+            {/* Same length and shape as theirs ("shadcn.io is an independent project built on shadcn/ui"). */}
             <span>
-              {siteName} is free to join.{" "}
-              <span className="max-sm:hidden">{tagline}</span>
+              Bury Steps is a free, friendly walking group from{" "}
+              <a
+                className="text-foreground underline decoration-foreground/30 underline-offset-2 transition-colors hover:decoration-foreground"
+                href="#home-about-heading"
+              >
+                Bury
+              </a>
             </span>
           </p>
           <h1
@@ -105,26 +133,39 @@ function Hero({ data, siteName, tagline, logo, joinHref }: ShadcnHomeProps) {
                 src={logo.src}
                 width={96}
               />
-              friendly
+              walking
             </span>{" "}
-            walking group that gets Bury moving.
+            group
+            {/* Two lines on wider screens, split where theirs is. */}
+            <br className="max-sm:hidden" /> all of Bury steps out with.
           </h1>
           <p className="max-w-2xl text-muted-foreground sm:text-lg md:text-xl text-balance">
             <span className="font-medium text-foreground">
-              {number.format(data.upcomingCount)} walks coming up, {number.format(data.members)} members and{" "}
-              {number.format(data.walksThisYear)} walks so far in {data.year}
+              {number.format(data.upcomingCount)} upcoming walks, {number.format(data.members)} members and{" "}
+              {number.format(data.walksThisYear)} walks so far
             </span>{" "}
-            in and around{" "}
-            <span className="whitespace-nowrap font-medium text-foreground">
-              <MapPin aria-hidden className="inline-block shrink-0 align-middle me-1 size-[1.05em] -translate-y-[0.1em]" />
-              Bury
-            </span>
-            . Join free, then clock in on the day.
+            around{" "}
+            {places.map((place, i) => (
+              <Fragment key={place}>
+                <span className="whitespace-nowrap font-medium text-foreground">
+                  <MapPin aria-hidden className="inline-block shrink-0 align-middle me-1 size-[1.05em] -translate-y-[0.1em]" />
+                  {place}
+                </span>
+                {i < places.length - 2 ? ", " : i === places.length - 2 ? " and " : ""}
+              </Fragment>
+            ))}
+            .{" "}
+            {/* Visitors are asked to join; signed-in members (marked before the page paints) get their own line. */}
+            <span data-guest-home="">Join for free, and clock in on the day of the walk.</span>
+            <span data-member-home="">Pick your next walk, and clock in when you get there.</span>
           </p>
         </div>
         <div className="flex flex-wrap justify-center gap-2">
-          <Link className={BUTTON_PRIMARY} href={joinHref}>
+          <Link className={BUTTON_PRIMARY} data-guest-home="" href={joinHref}>
             Join the group
+          </Link>
+          <Link className={BUTTON_PRIMARY} data-member-home="" href="/dashboard">
+            Your dashboard
           </Link>
           <Link className={BUTTON_OUTLINE} href="/walks">
             See the walks
@@ -345,33 +386,7 @@ function ReviewsSection({ testimonials }: { testimonials: TestimonialView[] }) {
         rest="Here's what a few of them say about the group, the walks and the people."
         title="From the group"
       />
-      <ul aria-label="What members say" className={REVIEW_GRID}>
-        {testimonials.slice(0, 8).map((review, i) => (
-          <li className={i >= 4 ? "max-sm:hidden" : ""} key={review.id}>
-            <a className="group" href="#faq">
-              <strong>{review.name}</strong>
-              <small>{review.role}</small>
-              <blockquote className="relative z-10 mt-3 min-h-0 flex-1 text-pretty text-muted-foreground text-sm leading-5 transition-[color] group-hover:text-foreground group-focus-visible:text-foreground duration-300 ease-out motion-reduce:transition-none">
-                <span aria-hidden="true" className="float-end h-[calc(100%-5.25rem)] w-px" />
-                <span
-                  aria-hidden="true"
-                  className="float-end clear-end size-21 [shape-outside:circle(4rem_at_4rem_4rem)] rtl:[shape-outside:circle(4rem_at_1.25rem_4rem)]"
-                />
-                <p>“{review.quote}”</p>
-              </blockquote>
-              <i />
-              <span aria-hidden="true">
-                {review.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img alt="" decoding="async" height={48} loading="lazy" src={review.image} width={48} />
-                ) : (
-                  <span>{review.name.charAt(0)}</span>
-                )}
-              </span>
-            </a>
-          </li>
-        ))}
-      </ul>
+      <ShadcnReviews testimonials={testimonials} />
     </Section>
   );
 }
@@ -426,11 +441,21 @@ function CallToAction({ data, joinHref, testimonials }: ShadcnHomeProps) {
             Come for a walk this week
           </h2>
           <p className="max-w-xl text-pretty text-muted-foreground md:text-lg">
-            <span className="font-medium text-foreground">Joining is free.</span> Make an account, pick a walk and meet us
-            there. Walk at your own pace; nobody gets left behind.
+            <span data-guest-home="">
+              <span className="font-medium text-foreground">Joining is free.</span> Make an account, pick a walk and meet us
+              there. Walk at your own pace; nobody gets left behind.
+            </span>
+            <span data-member-home="">
+              <span className="font-medium text-foreground">Your next walk is waiting.</span> Pick one, meet us there and
+              clock in on the day. Walk at your own pace; nobody gets left behind.
+            </span>
           </p>
-          <Link className={`${BUTTON_PRIMARY} mt-4 h-12 gap-2 px-8 text-base`} href={joinHref}>
+          <Link className={`${BUTTON_PRIMARY} mt-4 h-12 gap-2 px-8 text-base`} data-guest-home="" href={joinHref}>
             Join the group
+            <ArrowRight aria-hidden className="size-4 rtl:rotate-180" />
+          </Link>
+          <Link className={`${BUTTON_PRIMARY} mt-4 h-12 gap-2 px-8 text-base`} data-member-home="" href="/walks">
+            See the walks
             <ArrowRight aria-hidden className="size-4 rtl:rotate-180" />
           </Link>
         </div>

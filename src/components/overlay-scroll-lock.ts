@@ -39,8 +39,19 @@ function clearBodyPositionFixedLock() {
   if (y) window.scrollTo(0, y);
 }
 
+/**
+ * The header on screen. Some site designs (the shadcn.io homepage) hide the
+ * usual header and show their own, so the first <header> isn't always it.
+ */
+function visibleSiteHeader(): HTMLElement | null {
+  for (const header of document.querySelectorAll<HTMLElement>("header")) {
+    if (header.getClientRects().length > 0) return header;
+  }
+  return null;
+}
+
 function pinSiteHeaderInPlace(): HeaderPin | null {
-  const header = document.querySelector<HTMLElement>("header");
+  const header = visibleSiteHeader();
   if (!header || header.dataset.scrollLockPinned === "1") return null;
 
   const rect = header.getBoundingClientRect();
@@ -162,7 +173,7 @@ function applyBackgroundScrollLock() {
   const headerPin = lockedX || lockedY ? pinSiteHeaderInPlace() : null;
   // The header is z-66; the blur overlay is z-60. Drop it under the overlay
   // even when it isn't pinned.
-  const siteHeader = headerPin ? null : document.querySelector<HTMLElement>("header");
+  const siteHeader = headerPin ? null : visibleSiteHeader();
   const prevHeaderZ = siteHeader?.style.zIndex ?? "";
   if (siteHeader) siteHeader.style.zIndex = "55";
   const html = document.documentElement;

@@ -12,8 +12,10 @@ import { ShadcnHome } from "./home";
 import { getShadcnHomeData } from "./home-data";
 import { PromoBar } from "./promo-bar";
 import { ShadcnAccountTools } from "./account-tools";
-import { HomeAboutDrawer } from "@/components/home-about-drawer";
-import { BUTTON_PRIMARY } from "./parts";
+import { AboutReadMore } from "./about-read-more";
+import { ShadcnNewsletter } from "./newsletter";
+import { getOptionalUser } from "@/lib/auth";
+import { Suspense } from "react";
 
 /**
  * The whole homepage in the shadcn.io site design — their announcement bar,
@@ -162,7 +164,7 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
                 title: theme.howThisStartedTitle,
                 teaser: theme.howThisStartedTeaser,
                 readMore: (
-                  <HomeAboutDrawer
+                  <AboutReadMore
                     aboutExpect={theme.aboutExpect}
                     aboutExpectHeading={theme.aboutExpectHeading}
                     aboutGoals={theme.aboutGoals}
@@ -174,12 +176,6 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
                     facebookGroupUrl={theme.facebookGroupUrl}
                     howThisStartedBody={theme.howThisStartedBody}
                     howThisStartedTitle={theme.howThisStartedTitle}
-                    trigger={
-                      <button className={`${BUTTON_PRIMARY} gap-2`} type="button">
-                        Read more
-                        <ArrowRight aria-hidden className="size-4 rtl:rotate-180" />
-                      </button>
-                    }
                   />
                 ),
               }}
@@ -198,6 +194,9 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
               tagline={theme.siteTagline}
               testimonials={testimonials}
             />
+            <Suspense fallback={null}>
+              <MemberNewsletter />
+            </Suspense>
             <GlobalFooter columns={columns} facebookUrl={facebookUrl} siteName={theme.siteName} year={year} />
           </div>
         </div>
@@ -205,4 +204,10 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
       <PromoBar next={data.next} />
     </div>
   );
+}
+
+/** The newsletter band for signed-in members only (as the usual footer does). */
+async function MemberNewsletter() {
+  const user = await getOptionalUser();
+  return user ? <ShadcnNewsletter /> : null;
 }
