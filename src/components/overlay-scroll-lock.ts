@@ -148,13 +148,20 @@ let releaseSharedLock: (() => void) | null = null;
 
 export function lockBackgroundScroll() {
   lockHolders += 1;
-  if (lockHolders === 1) releaseSharedLock = applyBackgroundScrollLock();
+  if (lockHolders === 1) {
+    releaseSharedLock = applyBackgroundScrollLock();
+    // A plain flag for the stylesheet (globals.css: html[data-overlay-open]) instead of
+    // html:has(…[data-state="open"]), which made the browser recheck the whole page on
+    // every change and slowed drawers right down.
+    document.documentElement.setAttribute("data-overlay-open", "");
+  }
   let released = false;
   return () => {
     if (released) return;
     released = true;
     lockHolders = Math.max(0, lockHolders - 1);
     if (lockHolders === 0) {
+      document.documentElement.removeAttribute("data-overlay-open");
       const release = releaseSharedLock;
       releaseSharedLock = null;
       release?.();

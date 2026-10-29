@@ -63,15 +63,15 @@
 .style-nova .cn-button-size-lg:has([data-icon="inline-start"]) { padding-inline-start: calc(var(--spacing) * 2); }
 .style-nova .cn-radio-group { gap: calc(var(--spacing) * 2); display: grid; }
 .style-nova .cn-radio-group-item { width: calc(var(--spacing) * 4); height: calc(var(--spacing) * 4); border-color: var(--input); border-radius: 3.40282e+38px; display: flex; }
-.style-nova .cn-radio-group-item:is(:where(.group\/field-label):has(:focus-visible) *) { --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(0px + var(--tw-ring-offset-width)) var(--tw-ring-color,currentcolor); box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow); }
-.style-nova .cn-radio-group-item:is(:where(.group\/field-label):has(:focus-visible) *):not(:where([data-state="checked"]), :where([data-checked]:not([data-checked="false"]))) { border-color: var(--input); }
+.style-nova .cn-radio-group-item:is(:where(.group\/field-label):focus-within *) { --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(0px + var(--tw-ring-offset-width)) var(--tw-ring-color,currentcolor); box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow); }
+.style-nova .cn-radio-group-item:is(:where(.group\/field-label):focus-within *):not(:where([data-state="checked"]), :where([data-checked]:not([data-checked="false"]))) { border-color: var(--input); }
 .style-nova .cn-radio-group-item:focus-visible { border-color: var(--ring); --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color,currentcolor); box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow); --tw-ring-color: color-mix(in oklab, var(--ring) 50%, transparent); }
 .style-nova .cn-radio-group-item[aria-invalid="true"] { border-color: var(--destructive); --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color,currentcolor); box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow); --tw-ring-color: color-mix(in oklab, var(--destructive) 20%, transparent); }
 .style-nova .cn-radio-group-item[aria-invalid="true"][aria-checked="true"] { border-color: var(--primary); }
 .style-nova .cn-radio-group-item:is(.dark *) { background-color: color-mix(in oklab, var(--input) 30%, transparent); }
 .style-nova .cn-radio-group-item:is(.dark *)[aria-invalid="true"] { border-color: color-mix(in oklab, var(--destructive) 50%, transparent); --tw-ring-color: color-mix(in oklab, var(--destructive) 40%, transparent); }
 .style-nova .cn-radio-group-item:where([data-state="checked"]), .style-nova .cn-radio-group-item:where([data-checked]:not([data-checked="false"])) { border-color: var(--primary); background-color: var(--primary); color: var(--primary-foreground); }
-.style-nova .cn-radio-group-item:is(:where(.group\/field-label):has(:focus-visible) *):where([data-state="checked"]), .style-nova .cn-radio-group-item:is(:where(.group\/field-label):has(:focus-visible) *):where([data-checked]:not([data-checked="false"])) { border-color: var(--primary); }
+.style-nova .cn-radio-group-item:is(:where(.group\/field-label):focus-within *):where([data-state="checked"]), .style-nova .cn-radio-group-item:is(:where(.group\/field-label):focus-within *):where([data-checked]:not([data-checked="false"])) { border-color: var(--primary); }
 .style-nova .cn-radio-group-item:is(.dark *):where([data-state="checked"]), .style-nova .cn-radio-group-item:is(.dark *):where([data-checked]:not([data-checked="false"])) { background-color: var(--primary); }
 .style-nova .cn-radio-group-indicator { width: calc(var(--spacing) * 4); height: calc(var(--spacing) * 4); justify-content: center; align-items: center; display: flex; }
 .style-nova .cn-radio-group-indicator-icon { width: calc(var(--spacing) * 2); height: calc(var(--spacing) * 2); --tw-translate-x: calc(calc(1 / 2 * 100%) * -1); --tw-translate-y: calc(calc(1 / 2 * 100%) * -1); translate: var(--tw-translate-x) var(--tw-translate-y); background-color: var(--primary-foreground); border-radius: 3.40282e+38px; position: absolute; top: 50%; left: 50%; }
@@ -497,7 +497,7 @@ html.globalnav-noscroll body { overflow: visible !important; }
 .rn-mount { user-select: none; display: inline-block; }
 .readable-tint { color: oklch(from var(--tint,var(--primary)) min(l, .5) c h); }
 .dark .readable-tint { color: oklch(from var(--tint,var(--primary)) max(l, .8) c h); }
-html:has([data-slot="promo-bar"]) .globalfooter, html:has([data-slot="promo-bar"]) [data-slot="docs-main"] { padding-bottom: calc(var(--promo-bar) + env(safe-area-inset-bottom)); }
+html[data-promo-bar] .globalfooter, html[data-promo-bar] [data-slot="docs-main"] { padding-bottom: calc(var(--promo-bar) + env(safe-area-inset-bottom)); }
 .brand-mark { position: relative; display: inline-flex; flex-shrink: 0; }
 
 @keyframes globalnav-chevron-slide-in-hover { 
@@ -656,18 +656,20 @@ html:has([data-slot="promo-bar"]) .globalfooter, html:has([data-slot="promo-bar"
    the first paint). Everyone else, and the legal pages (they mark themselves with
    data-shadcn-plain), get the header, the page and the footer: the frame lies flat and
    scrolls with the window. */
-:is(html:not([data-remembered-in]) [data-shadcnio-shell], [data-shadcnio-shell]:has([data-shadcn-plain]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *))) :is([data-slot="docs-sidebar"], [data-slot="docs-sidebar-edge"], [data-slot="docs-sidebar-drawer"], .globalnav-leading) { display: none !important; }
-:is(html:not([data-remembered-in]) [data-shadcnio-shell], [data-shadcnio-shell]:has([data-shadcn-plain]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *))) .globalnav-with-leading .globalnav-content { padding-inline-start: max(var(--gn-gutter), env(safe-area-inset-left)); }
-:is(html:not([data-remembered-in]) [data-shadcnio-shell], [data-shadcnio-shell]:has([data-shadcn-plain]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *))) [data-slot="docs-header"] { display: block; position: sticky; top: 0; z-index: 40; }
-:is(html:not([data-remembered-in]) [data-shadcnio-shell], [data-shadcnio-shell]:has([data-shadcn-plain]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *))) [data-slot="docs-shell"] { display: block; height: auto; overflow: visible; }
-:is(html:not([data-remembered-in]) [data-shadcnio-shell], [data-shadcnio-shell]:has([data-shadcn-plain]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *))) [data-slot="docs-main"] { height: auto; padding-top: 0; overflow: visible; }
+:is(html:not([data-remembered-in]) [data-shadcnio-shell], html[data-page-kind="plain"] [data-shadcnio-shell]) :is([data-slot="docs-sidebar"], [data-slot="docs-sidebar-edge"], [data-slot="docs-sidebar-drawer"], .globalnav-leading) { display: none !important; }
+:is(html:not([data-remembered-in]) [data-shadcnio-shell], html[data-page-kind="plain"] [data-shadcnio-shell]) .globalnav-with-leading .globalnav-content { padding-inline-start: max(var(--gn-gutter), env(safe-area-inset-left)); }
+:is(html:not([data-remembered-in]) [data-shadcnio-shell], html[data-page-kind="plain"] [data-shadcnio-shell]) [data-slot="docs-header"] { display: block; position: sticky; top: 0; z-index: 40; }
+:is(html:not([data-remembered-in]) [data-shadcnio-shell], html[data-page-kind="plain"] [data-shadcnio-shell]) [data-slot="docs-shell"] { display: block; height: auto; overflow: visible; }
+:is(html:not([data-remembered-in]) [data-shadcnio-shell], html[data-page-kind="plain"] [data-shadcnio-shell]) [data-slot="docs-main"] { height: auto; padding-top: 0; overflow: visible; }
 /* Members' pages have no footer, as on their dashboard (the legal pages keep it). */
-html[data-remembered-in] [data-shadcnio-shell]:not(:has([data-shadcn-plain]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *))) [data-slot="docs-footer"] { display: none; }
-html[data-remembered-in] [data-shadcnio-shell]:not(:has([data-shadcn-plain]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *))) [data-slot="docs-end"] { display: block; }
+html[data-remembered-in]:not([data-page-kind="plain"]) [data-shadcnio-shell] [data-slot="docs-footer"] { display: none; }
+html[data-remembered-in]:not([data-page-kind="plain"]) [data-shadcnio-shell] [data-slot="docs-end"] { display: block; }
 /* The homepage draws its whole own page (header, footer and all): the frame steps aside. */
-[data-shadcnio-shell]:has([data-shadcnio-home]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *)) :is([data-slot="docs-header"], [data-slot="docs-sidebar"], [data-slot="docs-sidebar-edge"], [data-slot="docs-sidebar-drawer"], [data-slot="docs-footer"], [data-slot="docs-end"]) { display: none !important; }
-[data-shadcnio-shell]:has([data-shadcnio-home]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *)),
-[data-shadcnio-shell]:has([data-shadcnio-home]:not([hidden], [hidden] *, [style*="display: none"], [style*="display: none"] *)) :is([data-slot="docs-shell"], [data-slot="docs-main"], [data-slot="docs-scroll"], [data-slot="docs-container"], [data-slot="docs-column"], [data-slot="docs-page"]) { display: contents !important; }
+html[data-page-kind="home"] [data-shadcnio-shell] :is([data-slot="docs-header"], [data-slot="docs-sidebar"], [data-slot="docs-sidebar-edge"], [data-slot="docs-sidebar-drawer"], [data-slot="docs-footer"], [data-slot="docs-end"], [data-slot="docs-marks"]) { display: none !important; }
+/* Pages built from their sections fill the column themselves. */
+html:is([data-page-kind="plain"], [data-page-kind="sections"]) [data-slot="docs-page"] { padding: 0; }
+html[data-page-kind="home"] [data-shadcnio-shell],
+html[data-page-kind="home"] [data-shadcnio-shell] :is([data-slot="docs-shell"], [data-slot="docs-main"], [data-slot="docs-scroll"], [data-slot="docs-container"], [data-slot="docs-column"], [data-slot="docs-page"]) { display: contents !important; }
 
 /* Bury Steps: the site sets every phone text box to 16px (so iPhones don't zoom into forms);
    the search field keeps shadcn.io's own size (28px on phones, larger than 16px, so no zoom). */
@@ -704,20 +706,8 @@ html[data-remembered-in] [data-shadcnio-shell]:not(:has([data-shadcn-plain]:not(
 @media (min-width: 48rem) {
   :root[data-design="shadcnio"] [data-shadcn-top] { flex-direction: row; align-items: flex-end; justify-content: space-between; gap: 2rem; padding-top: 1rem !important; padding-bottom: 2.5rem !important; }
 }
-/* Their + marks where the line meets the column's side lines (site-shell.tsx sets the insets). */
-:root[data-design="shadcnio"] [data-shadcn-top]::before {
-  content: "" !important;
-  position: absolute;
-  inset: auto calc(-1 * var(--top-end, 0px) - 7px) -8px calc(-1 * var(--top-start, 0px) - 7px) !important;
-  height: 14px !important;
-  border: 0 !important;
-  background: var(--muted-foreground) !important;
-  --plus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M7 0v14M0 7h14' stroke='black' stroke-width='1' fill='none'/%3E%3C/svg%3E");
-  -webkit-mask: var(--plus) left center / 14px 14px no-repeat, var(--plus) right center / 14px 14px no-repeat;
-  mask: var(--plus) left center / 14px 14px no-repeat, var(--plus) right center / 14px 14px no-repeat;
-  pointer-events: none;
-  z-index: 1;
-}
+:root[data-design="shadcnio"] [data-shadcn-top]::before { content: none !important; }
+/* Their + marks on that line are drawn by the frame (site-shell.tsx, docs-marks). */
 :root[data-design="shadcnio"] [data-shadcn-top]::after {
   content: "" !important;
   position: absolute;

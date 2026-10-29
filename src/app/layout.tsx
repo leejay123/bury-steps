@@ -162,8 +162,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             the phone bar's slot (the end of the layout). The page streams in,
             and the browser drew whatever had arrived: the header first, then
             the hero, then the rest, with the logo a beat behind. Now the first
-            paint is the whole page. Chrome/Edge; other browsers ignore it. */}
-        <link blocking="render" href="#bs-bottom-boot" rel="expect" />
+            paint is the whole page. Chrome/Edge; other browsers ignore it. The
+            shadcn.io frame has no phone bar, so it waits for its own end instead
+            (waiting for a slot that never comes held the page back until it had
+            all arrived). */}
+        <link
+          blocking="render"
+          href={theme.siteDesign === "shadcnio" ? "#bs-frame-end" : "#bs-bottom-boot"}
+          rel="expect"
+        />
       </head>
       <body
         className={`${face.className} min-h-dvh overflow-x-clip touch-manipulation bg-background text-foreground antialiased`}

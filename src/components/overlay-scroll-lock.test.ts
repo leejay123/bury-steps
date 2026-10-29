@@ -16,18 +16,30 @@ function fakeStyle() {
 }
 
 describe("lockBackgroundScroll", () => {
-  let html: { style: ReturnType<typeof fakeStyle> };
+  let html: {
+    style: ReturnType<typeof fakeStyle>;
+    attrs: Set<string>;
+    setAttribute: (name: string) => void;
+    removeAttribute: (name: string) => void;
+  };
   let body: { style: ReturnType<typeof fakeStyle>; hasAttribute: () => boolean };
 
   beforeEach(() => {
     vi.resetModules();
-    html = { style: fakeStyle() };
+    const attrs = new Set<string>();
+    html = {
+      style: fakeStyle(),
+      attrs,
+      setAttribute: (name) => attrs.add(name),
+      removeAttribute: (name) => attrs.delete(name),
+    };
     body = { style: fakeStyle(), hasAttribute: () => false };
     vi.stubGlobal("document", {
       documentElement: html,
       body,
       activeElement: null,
       querySelector: () => null,
+      querySelectorAll: () => [],
       addEventListener: () => {},
       removeEventListener: () => {},
     });
@@ -58,11 +70,15 @@ describe("lockBackgroundScroll", () => {
     const releaseDialog = lockBackgroundScroll();
     expect(html.style.overflow).toBe("hidden");
 
+    expect(html.attrs.has("data-overlay-open")).toBe(true);
+
     releaseDrawer();
     expect(html.style.overflow).toBe("hidden");
+    expect(html.attrs.has("data-overlay-open")).toBe(true);
 
     releaseDialog();
     expect(html.style.overflow).toBe("");
+    expect(html.attrs.has("data-overlay-open")).toBe(false);
     expect(body.style.overflow).toBe("");
   });
 

@@ -5,6 +5,7 @@ import { getSiteTheme } from "@/lib/site-theme";
 import { ContactForm, ShadcnContactForm } from "./contact-form";
 import { PageTop } from "@/components/page-top";
 import { BUTTON_OUTLINE, Guides } from "@/components/shadcnio/parts";
+import { PageKindMark } from "@/components/shadcnio/page-kind";
 
 export const metadata: Metadata = {
   title: "Contact us",
@@ -19,6 +20,7 @@ export default async function ContactPage() {
     // with its line and + marks, then the form edge to edge beneath it.
     return (
       <div className="flex flex-1 flex-col" data-shadcn-page="">
+        <PageKindMark kind="sections" />
         <section aria-labelledby="contact-heading" className="border-t first-of-type:border-t-0">
           <div className="relative">
             <Guides at="bottom" />

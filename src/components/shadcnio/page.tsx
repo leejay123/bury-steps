@@ -16,13 +16,14 @@ import { AboutReadMore } from "./about-read-more";
 import { ShadcnNewsletter } from "./newsletter";
 import { getOptionalUser } from "@/lib/auth";
 import { Suspense } from "react";
+import { PageKindMark } from "./page-kind";
 
 /**
  * The whole homepage in the shadcn.io site design — their announcement bar,
  * header, page, footer and bottom bar, laid out exactly as on shadcn.io (used
  * with their permission) with Bury Steps' own words, links and data. The
  * site's usual header and footer step aside on this page (globals.css:
- * [data-shadcnio-home]).
+ * html[data-page-kind="home"], set by PageKindMark).
  */
 export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
   const [data, testimonials, faqData, logo, year] = await Promise.all([
@@ -43,6 +44,7 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
 
   return (
     <div className="style-nova theme-neutral radius-default flex min-h-dvh flex-col" data-shadcnio-home="">
+      <PageKindMark kind="home" />
       <aside aria-label="Announcement" className="border-b lg:relative lg:z-41">
         <Link
           className="bg-muted/60 transition-none group flex h-10 items-center justify-center gap-2 px-4 text-sm outline-none hover:bg-muted focus-visible:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:gap-3"

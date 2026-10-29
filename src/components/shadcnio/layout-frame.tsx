@@ -90,6 +90,8 @@ export async function ShadcnLayoutFrame({
       >
         {children}
       </ShadcnSiteShell>
+      {/* The end of the frame: the first paint waits for it (layout.tsx, rel="expect"). */}
+      <div hidden id="bs-frame-end" />
     </TopLoader>
   );
 }

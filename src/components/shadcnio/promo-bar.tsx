@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import Link from "next/link";
 
 function countdown(ms: number) {
@@ -21,6 +21,15 @@ export function PromoBar({ next }: { next: { title: string; startsAt: string; hr
     const timer = window.setInterval(tick, 1000);
     return () => window.clearInterval(timer);
   }, []);
+  // html[data-promo-bar] gives the footer room above the bar (shadcnio.css): a plain label
+  // rather than html:has(…), which rechecked the whole page on every change.
+  const shown = Boolean(next);
+  useLayoutEffect(() => {
+    if (!shown) return;
+    const html = document.documentElement;
+    html.setAttribute("data-promo-bar", "");
+    return () => html.removeAttribute("data-promo-bar");
+  }, [shown]);
   if (!next) return null;
   return (
     <aside
@@ -28,6 +37,10 @@ export function PromoBar({ next }: { next: { title: string; startsAt: string; hr
       className="fixed inset-x-0 bottom-0 z-40 flex h-[calc(var(--promo-bar)+env(safe-area-inset-bottom))] items-center border-border border-t bg-background/80 px-4 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm"
       data-slot="promo-bar"
     >
+      <script
+        dangerouslySetInnerHTML={{ __html: 'document.documentElement.setAttribute("data-promo-bar","")' }}
+        suppressHydrationWarning
+      />
       <div className="mx-auto flex w-full max-w-4xl items-center justify-center">
         <Link className="group flex min-w-0 cursor-pointer items-center gap-2 text-sm transition-colors hover:text-foreground" href={next.href}>
           <span className="min-w-0 truncate text-muted-foreground">

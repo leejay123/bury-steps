@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, ChevronRight, Mail, Scale, ShieldCheck } from "lucide-react";
 import { BUTTON_OUTLINE, Guides, Section, Tile } from "./parts";
 import { HeroField } from "./ascii-field";
+import { PageKindMark } from "./page-kind";
 
 export type ShadcnLegalSection = { id: string; title: string; content: ReactNode };
 
@@ -40,6 +41,7 @@ export function ShadcnLegal({
   const Icon = icon === "terms" ? Scale : ShieldCheck;
   return (
     <div className="flex flex-1 flex-col" data-shadcn-page="" data-shadcn-plain="">
+      <PageKindMark kind="plain" />
       <section aria-labelledby="legal-title" className="border-t first-of-type:border-t-0">
         <div
           className="px-5 md:px-12 flex flex-col items-center relative isolate justify-center min-h-[29rem] sm:min-h-[30rem] md:min-h-[36rem] lg:min-h-[35rem] xl:min-h-[34rem] gap-8 pt-6 pb-8 sm:pt-8 sm:pb-12 md:pt-10 md:pb-14"

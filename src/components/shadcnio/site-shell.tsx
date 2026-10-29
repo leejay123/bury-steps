@@ -16,8 +16,8 @@ import { SIDEBAR_KEY, SIDEBAR_TOGGLE_EVENT } from "./sidebar-state";
  * Which page this is isn't read here (that would stop pages with a changing
  * address from being ready-made); the pages mark themselves instead, and
  * shadcnio.css lays the frame out from those marks: the homepage
- * (data-shadcnio-home) draws its whole own page, the legal pages
- * (data-shadcn-plain) get no sidebar.
+ * draws its whole own page, the legal pages get no sidebar (PageKindMark sets
+ * html[data-page-kind]).
  */
 export function ShadcnSiteShell({
   nav,
@@ -56,27 +56,39 @@ export function ShadcnSiteShell({
     return () => window.removeEventListener(SIDEBAR_TOGGLE_EVENT, onToggle);
   }, []);
 
-  // Each page's head (data-shadcn-top) draws its line across the window with a + where it
-  // meets the column's side lines (shadcnio.css). Heads sit at different insets on
-  // different pages, so tell each one how far the column's edges are from its own.
+  // Each page's head (data-shadcn-top) draws its line across the window (shadcnio.css);
+  // the + marks where it meets the column's side lines go in the frame's own layer
+  // (docs-marks), which React leaves empty, so nothing on the page itself is touched
+  // (writing onto a page's head before React had finished setting it up confused it).
   useEffect(() => {
     const column = document.querySelector<HTMLElement>('[data-slot="docs-column"]');
-    if (!column) return;
+    const page = column?.querySelector<HTMLElement>('[data-slot="docs-page"]');
+    const layer = column?.querySelector<HTMLElement>('[data-slot="docs-marks"]');
+    if (!(column && page && layer)) return;
+    let frame = 0;
     const place = () => {
-      const edges = column.getBoundingClientRect();
-      for (const head of column.querySelectorAll<HTMLElement>("[data-shadcn-top]")) {
+      frame = 0;
+      const top = column.getBoundingClientRect().top;
+      const ys: number[] = [];
+      for (const head of page.querySelectorAll<HTMLElement>("[data-shadcn-top]")) {
         const box = head.getBoundingClientRect();
-        if (!box.width) continue;
-        head.style.setProperty("--top-start", `${box.left - edges.left}px`);
-        head.style.setProperty("--top-end", `${edges.right - box.right}px`);
+        if (box.width) ys.push(Math.round(box.bottom - top));
       }
+      const key = ys.join(",");
+      if (layer.dataset.key === key) return;
+      layer.dataset.key = key;
+      layer.replaceChildren(...ys.flatMap((y) => [plusMark(y, "start"), plusMark(y, "end")]));
+    };
+    const soon = () => {
+      if (!frame) frame = requestAnimationFrame(place);
     };
     place();
-    const resize = new ResizeObserver(place);
+    const resize = new ResizeObserver(soon);
     resize.observe(column);
-    const changes = new MutationObserver(place);
-    changes.observe(column, { childList: true, subtree: true });
+    const changes = new MutationObserver(soon);
+    changes.observe(page, { attributeFilter: ["hidden", "style"], childList: true, subtree: true });
     return () => {
+      cancelAnimationFrame(frame);
       resize.disconnect();
       changes.disconnect();
     };
@@ -116,11 +128,13 @@ export function ShadcnSiteShell({
               className="mx-auto flex min-h-[calc(100svh-3.5rem)] w-full max-w-6xl flex-col px-4 sm:px-5 lg:min-h-[calc(100svh-4.5rem)] lg:px-6"
               data-slot="docs-container"
             >
-              <div className="flex flex-1 flex-col border-x" data-slot="docs-column">
+              <div className="relative flex flex-1 flex-col border-x" data-slot="docs-column">
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-10" data-slot="docs-marks" />
                 {/* Pages not yet laid out as shadcn.io sections get their sections' spacing; a page
-                    built from their sections (data-shadcn-page) fills the column itself. */}
+                    built from their sections fills the column itself (shadcnio.css, from
+                    html[data-page-kind]). */}
                 <div
-                  className="flex flex-col px-5 py-6 md:px-12 has-[[data-shadcn-page]]:p-0"
+                  className="flex flex-col px-5 py-6 md:px-12"
                   data-slot="docs-page"
                   id="main-content"
                 >
@@ -162,4 +176,18 @@ export function ShadcnSiteShell({
       </div>
     </div>
   );
+}
+
+/** One of their + marks, centred where a 1px line crosses the column's side line. */
+function plusMark(y: number, side: "start" | "end") {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 14 14");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "1");
+  svg.style.cssText = `position:absolute;width:14px;height:14px;top:${y - 6.5}px;${side === "start" ? "left" : "right"}:-6.5px;color:var(--muted-foreground)`;
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", "M7 0v14M0 7h14");
+  svg.append(path);
+  return svg;
 }
