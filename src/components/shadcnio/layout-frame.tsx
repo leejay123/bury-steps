@@ -80,10 +80,12 @@ export async function ShadcnLayoutFrame({
           <>
             <EfferdSidebarHead logoSrc={logo.src} siteName={theme.siteName} />
             <Suspense fallback={<SidebarSkeleton />}>
-              <EfferdSidebarBody siteName={theme.siteName} year={year} />
+              <EfferdSidebarBody />
             </Suspense>
           </>
         }
+        search={search}
+        siteName={theme.siteName}
         tools={<EfferdHeaderTools />}
       >
         {children}

@@ -20,7 +20,7 @@ export default async function ContactPage() {
     // with its line and + marks, then the form edge to edge beneath it.
     return (
       <div className="flex flex-1 flex-col" data-shadcn-page="">
-        <PageKindMark kind="sections" />
+        <PageKindMark kind="plain" />
         <section aria-labelledby="contact-heading" className="border-t first-of-type:border-t-0">
           <div className="relative">
             <Guides at="bottom" />

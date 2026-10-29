@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { BookOpen, Mail } from "lucide-react";
+import { BookOpen, ChevronsUpDown, Mail } from "lucide-react";
 import { ClerkIsland } from "@/components/clerk-island";
 import { LazySiteUserButton } from "@/components/clerk-lazy";
 import { AvatarPlaceholder, BellPlaceholder } from "@/components/header-placeholders";
@@ -32,19 +32,25 @@ export function EfferdSidebarHead({ siteName, logoSrc }: { siteName: string; log
         href="/"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img alt="" className="size-5 shrink-0 rounded-full object-contain" src={logoSrc} />
-        <span className="truncate font-medium text-foreground">{siteName}</span>
+        <img alt="" className="size-7 shrink-0 rounded-full object-contain" src={logoSrc} />
       </Link>
     </div>
   );
 }
 
 /** The menu and the footer, for whoever is signed in. */
-export async function EfferdSidebarBody({ siteName, year }: { siteName: string; year: number }) {
-  const [user, groups, data] = await Promise.all([getOptionalUser(), sidebarGroups(), getShadcnHomeData()]);
+export async function EfferdSidebarBody() {
+  const [user, groups, data, progressEnabled] = await Promise.all([
+    getOptionalUser(),
+    sidebarGroups(),
+    getShadcnHomeData(),
+    getProgressEnabled(),
+  ]);
   // Signed out: no sidebar, ever.
   if (!user || !groups) return <SignedInMark signedIn={false} />;
   const organiser = user.role === "ADMIN";
+  const name = [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email.split("@")[0]!;
+  const initial = (user.firstName || user.email || "?").charAt(0);
   const next = data.next ? data.upcoming[0] : null;
   return (
     <>
@@ -88,10 +94,23 @@ export async function EfferdSidebarBody({ siteName, year }: { siteName: string; 
             </li>
           ) : null}
         </ul>
-        <div className="px-4 pt-4 pb-2" data-efferd-label="">
-          <p className="text-nowrap text-[9px] text-muted-foreground">
-            © {year} {siteName}
-          </p>
+        {/* The person, as in Efferd's shell: their photo, name and email; the whole row opens
+            their account menu (the photo's button covers it). */}
+        <div className="border-t p-2">
+          <div
+            className="relative flex h-12 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-sm hover:bg-muted [&_button]:after:absolute [&_button]:after:inset-0 [&_button]:after:content-['']"
+            data-efferd-button=""
+            title={name}
+          >
+            <ClerkIsland>
+              <LazySiteUserButton image={user.imageUrl} initial={initial} progressEnabled={progressEnabled} />
+            </ClerkIsland>
+            <span className="grid min-w-0 flex-1 leading-tight">
+              <span className="truncate font-medium text-foreground">{name}</span>
+              <span className="truncate text-muted-foreground text-xs">{user.email}</span>
+            </span>
+            <ChevronsUpDown aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+          </div>
         </div>
       </div>
     </>

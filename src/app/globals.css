@@ -1594,7 +1594,9 @@ html[data-page-kind="home"] #main-content {
 /* A chosen corner size shows everywhere: the pill buttons and the tiles' little
    cards take it too (otherwise pills stay round and cards keep fixed corners,
    so most choices looked the same). "The style's own" keeps shadcn.io's look. */
-:root[data-design="shadcnio"][data-sc-radius]:not([data-sc-radius="default"]) [data-shadcnio-home] [class*="rounded-[calc(var(--radius)*100)]"] {
+/* Every button on every page (the site's own buttons, including drawers' Next and Cancel,
+   and the shadcn.io pills), not only the homepage's. */
+:root[data-design="shadcnio"][data-sc-radius]:not([data-sc-radius="default"]) :is([class*="rounded-[calc(var(--radius)*100)]"], [data-slot="button"], [data-slot="drawer-close"]) {
   border-radius: calc(var(--radius) * 1.5);
 }
 :root[data-design="shadcnio"][data-sc-radius]:not([data-sc-radius="default"]) [data-shadcnio-home] :is(span[class*="rounded-[1rem]"], ul[class*="rounded-[1rem]"] > li > a > span, span[class*="rounded-[1.75rem]"]) {

@@ -42,7 +42,14 @@ const ICONS = {
 
 export const SIDEBAR_ICONS = ICONS;
 export type SidebarIcon = keyof typeof ICONS;
-export type SidebarLink = { href: string; label: string; icon: SidebarIcon; tag?: string };
+export type SidebarLink = {
+  href: string;
+  label: string;
+  icon: SidebarIcon;
+  tag?: string;
+  /** Pages listed under it, opened and closed with its row (Efferd's sub-menu). */
+  children?: { href: string; label: string }[];
+};
 export type SidebarGroup = { title: string; links: SidebarLink[] };
 
 // shadcn.io's sidebar links, class for class (used with their permission).

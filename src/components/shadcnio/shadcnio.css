@@ -776,16 +776,28 @@ html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) 
 html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-column"] { border-inline: 0; }
 html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] { padding: 0 !important; }
 @media (min-width: 64rem) {
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-shell"] { --sidebar-width: 16rem; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); transition: grid-template-columns .2s linear; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] { margin-top: 0; height: 100svh; background: var(--background); }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-shell"] { --sidebar-width: 16rem; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); }
+  /* The sidebar sits over its column and only it changes width when folded, so the page
+     beside it isn't laid out again at every step (it glides across instead, site-shell.tsx). */
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] { position: fixed; inset-block: 0; inset-inline-start: 0; width: var(--sidebar-width); margin-top: 0; height: 100svh; background: var(--background); }
+  html[data-sidebar-animating] [data-slot="docs-sidebar"] { transition: width .2s linear; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-main"] { padding-top: 0; }
   html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-shell"] { --sidebar-width: 3rem; grid-template-columns: 3rem minmax(0, 1fr); }
   html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] { visibility: visible; pointer-events: auto; transition: none; }
   html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-button] { width: 2rem; height: 2rem; padding: 0.5rem; }
-  html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-button] > span { display: none; }
+  html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-button] > :not(:first-child) { display: none; }
   html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-slot="efferd-nav"] > div > [data-efferd-label] { margin-top: -2rem; opacity: 0; }
   html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-foot] > [data-efferd-label] { display: none; }
   html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-slot="efferd-nav"] { overflow: hidden; }
 }
-@media (prefers-reduced-motion: reduce) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-shell"] { transition: none; } }
+@media (prefers-reduced-motion: reduce) { html[data-sidebar-animating] [data-slot="docs-sidebar"] { transition: none; } }
+/* The search and Customize panels opened from the signed-in top bar: the main header's
+   colours and spacing, which they're drawn with (efferd-top-tools.tsx). */
+[data-efferd-pop] { --gn-ease: cubic-bezier(.4, 0, .6, 1); --gn-color: color-mix(in srgb, var(--foreground) 80%, transparent); --gn-color-secondary: color-mix(in srgb, var(--foreground) 80%, var(--background)); --gn-color-hover: var(--foreground); --gn-color-tertiary: var(--muted-foreground); --gn-rule: var(--border); --gn-focus: var(--ring); --gn-accent: var(--primary); font-size: 17px; }
+[data-efferd-pop][data-search-pop] { padding: 1.25rem 1.5rem; }
+[data-slot="efferd-nav"] { scrollbar-width: thin; scrollbar-color: color-mix(in oklab, var(--foreground) 18%, transparent) transparent; }
 html.dark[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] { background: radial-gradient(60% 18% at 10% 0%, color-mix(in oklab, var(--foreground) 8%, transparent), transparent), var(--background); }
+[data-slot="efferd-header"] { --gn-background-opened: var(--background); }
+[data-slot="efferd-header"] .globalnav-customize-dot { top: 3px; inset-inline-end: 3px; }
+[data-efferd-pop] .globalnav-group-header { opacity: 1; transform: none; }
+@media (min-width: 64rem) { html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-sub] { display: none; } }

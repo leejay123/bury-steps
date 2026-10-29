@@ -3,7 +3,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { PanelLeft } from "lucide-react";
 import { useClientPathname } from "@/components/client-pathname";
+import { EfferdTopTools } from "./efferd-top-tools";
 import { Guides } from "./parts";
+import type { SearchItem } from "./search-panel";
 import { SIDEBAR_KEY, SIDEBAR_TOGGLE_EVENT } from "./sidebar-state";
 
 /**
@@ -24,6 +26,8 @@ export function ShadcnSiteShell({
   nav,
   sidebar,
   tools,
+  search,
+  siteName,
   footer,
   children,
 }: {
@@ -32,6 +36,9 @@ export function ShadcnSiteShell({
   sidebar: ReactNode;
   /** Signed-in pages' top bar, right end: the bell and the avatar. */
   tools: ReactNode;
+  /** The search's pages and walks (the same as the main header's). */
+  search: SearchItem[];
+  siteName: string;
   footer: ReactNode;
   children: ReactNode;
 }) {
@@ -45,12 +52,28 @@ export function ShadcnSiteShell({
   }
 
   useEffect(() => {
+    let animating = 0;
     const onToggle = () => {
       if (window.matchMedia("(min-width: 64rem)").matches) {
         const root = document.documentElement;
         const collapsed = root.getAttribute("data-docs-sidebar") !== "collapsed";
+        // Only the sidebar animates its width (shadcnio.css, data-sidebar-animating); the page
+        // takes its new place at once and glides there from where it was, so it isn't laid
+        // out again at every step (that was the lag). Nothing animates on arrival.
+        const main = document.querySelector<HTMLElement>('[data-slot="docs-main"]');
+        const before = main?.getBoundingClientRect().left ?? 0;
+        root.setAttribute("data-sidebar-animating", "");
+        window.clearTimeout(animating);
+        animating = window.setTimeout(() => root.removeAttribute("data-sidebar-animating"), 260);
         if (collapsed) root.setAttribute("data-docs-sidebar", "collapsed");
         else root.removeAttribute("data-docs-sidebar");
+        const after = main?.getBoundingClientRect().left ?? 0;
+        if (main && before !== after && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          main.animate([{ transform: `translateX(${before - after}px)` }, { transform: "none" }], {
+            duration: 200,
+            easing: "linear",
+          });
+        }
         try {
           if (collapsed) localStorage.setItem(SIDEBAR_KEY, "collapsed");
           else localStorage.removeItem(SIDEBAR_KEY);
@@ -161,7 +184,12 @@ export function ShadcnSiteShell({
                 </p>
               </nav>
             </div>
-            <div className="flex shrink-0 items-center gap-3">{tools}</div>
+            <div className="flex shrink-0 items-center gap-3">
+              <div className="flex items-center gap-2">
+                <EfferdTopTools search={search} siteName={siteName} />
+              </div>
+              {tools}
+            </div>
           </header>
           <div className="overflow-x-clip" data-slot="docs-scroll">
             <div

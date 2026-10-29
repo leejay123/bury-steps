@@ -6,6 +6,7 @@ import { getOptionalUser } from "@/lib/auth";
 import { getInlineLogo } from "@/lib/inline-logo";
 import { FULL_ORGANISER_PERMISSIONS, ORGANISER_PERMISSIONS } from "@/lib/organiser-permissions";
 import { getProgressEnabled } from "@/lib/progress-settings";
+import { SETTINGS_PAGE_GROUPS } from "@/lib/settings-pages";
 import { getShadcnHomeData } from "./home-data";
 import { SidebarNav, type SidebarGroup } from "./sidebar-nav";
 import { SignedInMark } from "./signed-in-mark";
@@ -34,7 +35,6 @@ export async function sidebarGroups(): Promise<SidebarGroup[] | null> {
         { href: "/notices", label: "Notices", icon: "notices" },
         ...(progressEnabled ? [{ href: "/progress", label: "Progress", icon: "progress" as const }] : []),
         { href: "/history", label: "History", icon: "history" },
-        { href: "/contact", label: "Contact", icon: "contact" },
       ],
     },
   ];
@@ -43,7 +43,16 @@ export async function sidebarGroups(): Promise<SidebarGroup[] | null> {
     if (perms.permMembersView) links.push({ href: "/admin/members", label: "Members", icon: "members" });
     if (perms.permMessages) links.push({ href: "/admin/messages", label: "Messages", icon: "messages" });
     if (perms.permReportsView) links.push({ href: "/admin/reports", label: "Reports", icon: "reports" });
-    if (user.isOwner) links.push({ href: "/admin/settings", label: "Settings", icon: "settings" });
+    if (user.isOwner)
+      links.push({
+        href: "/admin/settings",
+        label: "Settings",
+        icon: "settings",
+        children: [
+          { href: "/admin/settings", label: "All settings" },
+          ...SETTINGS_PAGE_GROUPS.flatMap((group) => group.pages.map((page) => ({ href: page.href, label: page.title }))),
+        ],
+      });
     links.push({ href: "/admin/guide", label: "Guide", icon: "guide" });
     groups.push({ title: "Organisers", links });
   }
