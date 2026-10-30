@@ -801,3 +801,34 @@ html.dark[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plai
 [data-slot="efferd-header"] .globalnav-customize-dot { top: 3px; inset-inline-end: 3px; }
 [data-efferd-pop] .globalnav-group-header { opacity: 1; transform: none; }
 @media (min-width: 64rem) { html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-sub] { display: none; } }
+
+/* ---- Signed-in pages' tops: a short version of the homepage hero (their classes' sizes): the
+   moving letters spelling the page's name behind (page-top-field.tsx), a small grey line, the
+   title, the grey intro and the page's button underneath, centred, edge to edge across the
+   page with a line under it. ---- */
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] {
+  position: relative !important; isolation: isolate; overflow: hidden;
+  display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important;
+  gap: 1.25rem !important; text-align: center !important;
+  min-height: 15rem; margin: -1rem -1rem 1.5rem !important; padding: 2rem 1.25rem 2.25rem !important;
+  border: 0 !important; border-bottom: 1px solid var(--border) !important; background: none !important;
+}
+@media (min-width: 48rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] { min-height: 17rem; margin: -1.5rem -1.5rem 2rem !important; padding: 2.5rem 3rem 2.75rem !important; } }
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top]::before, html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top]::after { content: none !important; }
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] > div:not(:last-child), html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] > div:only-of-type { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; max-width: 48rem; margin-inline: auto; }
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] > div > :is(p, h1, h2) { text-align: center; }
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-eyebrow] { display: block !important; color: var(--muted-foreground); font-size: 0.75rem; line-height: 1rem; font-weight: 400; margin-bottom: 0.25rem; }
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-title] { font-size: 2.25rem !important; line-height: 1.05 !important; font-weight: 600 !important; letter-spacing: -0.05em !important; text-wrap: balance; color: var(--foreground) !important; }
+@media (min-width: 48rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-title] { font-size: 3rem !important; } }
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-intro] { color: var(--muted-foreground) !important; font-size: 1rem !important; line-height: 1.5rem !important; max-width: 42rem; text-wrap: balance; }
+@media (min-width: 48rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-intro] { font-size: 1.125rem !important; line-height: 1.75rem !important; } }
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] > div:last-child:not(:only-of-type) { display: flex; justify-content: center; }
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] > a { align-self: center !important; }
+/* Settings pages in the dashboard: their top runs edge to edge like the others, with the way
+   back ("All settings / group") in its top corner and no second line under it. */
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-head] { padding: 0 !important; }
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-head] > div { max-width: none !important; position: relative; }
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-divider] { display: none !important; }
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-back] { position: absolute; top: 0.75rem; inset-inline-start: 1rem; z-index: 2; border-radius: var(--radius); background: color-mix(in oklab, var(--background) 85%, transparent); padding: 0.125rem 0.5rem; backdrop-filter: blur(4px); }
+@media (min-width: 48rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-back] { inset-inline-start: 1.5rem; } }
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-body] { padding-top: 0 !important; }

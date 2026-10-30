@@ -75,7 +75,9 @@ export function Guides({ at = "top" }: { at?: "top" | "bottom" }) {
     <div
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute inset-0 border-0 [--guides-inset:1rem] sm:[--guides-inset:2rem]",
+        // Above the section before it: Safari on iPhones drew the hero's moving letters (a
+        // canvas) over the line, which sits on the hero's bottom edge, leaving only the + marks.
+        "pointer-events-none absolute inset-0 z-[1] border-0 [--guides-inset:1rem] sm:[--guides-inset:2rem]",
         at === "top" && "only:hidden",
       )}
       data-slot="guides"

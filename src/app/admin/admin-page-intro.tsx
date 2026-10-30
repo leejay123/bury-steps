@@ -1,3 +1,5 @@
+import { PageTopField } from "@/components/shadcnio/page-top-field";
+
 export function AdminPageIntro({
   title,
   description,
@@ -26,6 +28,7 @@ export function AdminPageIntro({
       data-page-top-band={band ? "" : undefined}
       data-shadcn-top={band ? "" : undefined}
     >
+      {band ? <PageTopField word={title} /> : null}
       <div className="flex flex-col gap-1.5">
         {/* The small capital label above the title, shown in the shadcn.io design only. */}
         {band ? (

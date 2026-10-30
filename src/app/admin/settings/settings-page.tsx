@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PageTopField } from "@/components/shadcnio/page-top-field";
 import { ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FullWidthDivider } from "@/components/full-width-divider";
@@ -36,10 +37,15 @@ export function SettingsPage({
 }) {
   return (
     <div className="flex flex-col">
-      <div className="relative px-4 py-6 md:px-6">
+      <div className="relative px-4 py-6 md:px-6" data-settings-head="">
         <div className={cn(SETTINGS_WIDTH, "flex flex-col gap-4")}>
-          {showBackLink ? <SettingsBackLink /> : null}
+          {showBackLink ? (
+            <div data-settings-back="">
+              <SettingsBackLink />
+            </div>
+          ) : null}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6" data-shadcn-top="">
+            <PageTopField word={title} />
             <div className="flex max-w-2xl flex-col gap-1.5">
               <p className="hidden" data-page-top-eyebrow="">
                 Organisers
@@ -62,9 +68,9 @@ export function SettingsPage({
           </div>
           <SettingsSubPageTabs />
         </div>
-        <FullWidthDivider position="bottom" />
+        <FullWidthDivider data-settings-divider="" position="bottom" />
       </div>
-      <div className="px-4 py-6 md:px-6">
+      <div className="px-4 py-6 md:px-6" data-settings-body="">
         <div className={cn(SETTINGS_WIDTH, "flex flex-col gap-8", contentClassName)}>{children}</div>
       </div>
     </div>

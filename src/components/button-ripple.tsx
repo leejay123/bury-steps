@@ -15,7 +15,10 @@ export function ButtonRipple() {
       const target = event.target instanceof Element ? event.target : null;
       // Only the solid black (default) and red (destructive) Buttons ripple.
       // data-variant survives Radix triggers replacing the Button's data-slot.
-      const button = target?.closest<HTMLElement>('[data-variant="default"], [data-variant="destructive"]');
+      // The shadcn.io design's own buttons say so with a class instead.
+      const button = target?.closest<HTMLElement>(
+        '[data-variant="default"], [data-variant="destructive"], .cn-button-variant-default, .cn-button-variant-destructive',
+      );
       if (!button) return;
       // Not on tabs, or choices inside dropdowns, menus or search results.
       if (button.closest("[data-ripple='off'], [role='tablist'], [role='tab'], [role='listbox'], [role='menu'], [role='option'], [cmdk-list]")) return;

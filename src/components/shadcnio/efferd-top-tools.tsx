@@ -6,9 +6,9 @@ import { setColorMode } from "@/components/color-mode";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SearchPanel, type SearchItem, type SearchPanelHandle } from "./search-panel";
 
-// Efferd's top-bar buttons (their "icon-sm" outline buttons).
+// The top bar's icon buttons: plain (no outline), shaded on hover.
 const ICON_BUTTON =
-  "relative inline-flex size-7 shrink-0 items-center justify-center rounded-md border bg-background text-foreground shadow-xs outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-3.5";
+  "relative inline-flex size-8 shrink-0 items-center justify-center rounded-md text-foreground outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-4";
 
 /**
  * The signed-in top bar's search and light / dark switch, in Efferd's button style:
