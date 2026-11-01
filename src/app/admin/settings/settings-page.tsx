@@ -105,10 +105,11 @@ export function SettingsSection({
         !flush && tone === "danger" && "border-destructive/40",
         className,
       )}
+      data-edge-group={flush ? "" : undefined}
       data-edge-panel={flush ? undefined : ""}
     >
       {title || description ? (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1" data-edge-group-head={flush ? "" : undefined}>
           {title ? (
             <h2
               className={cn(
@@ -146,8 +147,8 @@ export function SettingsSectionGroup({
   title: string;
 }) {
   return (
-    <section className="scroll-mt-28 flex flex-col gap-3" id={id}>
-      <div className="flex flex-col gap-1">
+    <section className="scroll-mt-28 flex flex-col gap-3" data-edge-group="" id={id}>
+      <div className="flex flex-col gap-1" data-edge-group-head="">
         <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{title}</h2>
         {description ? (
           <p className="text-sm text-muted-foreground">{description}</p>
@@ -158,7 +159,7 @@ export function SettingsSectionGroup({
           "flex flex-col gap-px overflow-hidden rounded-xl border bg-border",
           groupedSectionClassName,
         )}
-        data-edge-list=""
+        data-edge-group-body=""
       >
         {children}
       </div>

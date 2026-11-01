@@ -321,8 +321,9 @@ function SelectContent({
         // Never taller than the room on screen (a phone on its side): the
         // whole list stays visible and scrolls inside itself.
         "max-h-[min(18rem,var(--radix-popover-content-available-height))] w-auto overflow-y-auto overscroll-y-contain p-1",
-        // Slide-in from shadcn studio's Combobox 13: rises into place instead of zooming.
-        "duration-400 data-[side=bottom]:slide-in-from-bottom-10! data-[state=open]:zoom-in-100",
+        // Opens quickly, straight out of its button (a short drop, no zoom): filters are
+        // used all the time, so the list mustn't keep anyone waiting.
+        "duration-150 data-[side=bottom]:slide-in-from-top-1! data-[side=top]:slide-in-from-bottom-1! data-[state=open]:zoom-in-100",
         className,
       )}
       data-select-dropdown=""

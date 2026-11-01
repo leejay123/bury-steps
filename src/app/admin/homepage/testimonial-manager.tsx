@@ -305,7 +305,7 @@ export function HomepageTestimonialManager({
         title={`Quotes (${testimonials.length} of ${maxTestimonials})`}
       />
       {atLimit ? (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground" data-edge-note="">
           You already have {maxTestimonials} testimonials. Remove one to add another.
         </p>
       ) : null}

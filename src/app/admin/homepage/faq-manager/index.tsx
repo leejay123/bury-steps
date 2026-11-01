@@ -88,7 +88,7 @@ export function HomepageFaqManager({
           <p className="text-sm text-muted-foreground">Add a category before you add a question.</p>
         ) : null}
         {atLimit ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground" data-edge-note="">
             You already have {maxFaqs} FAQs. Remove one to add another.
           </p>
         ) : null}

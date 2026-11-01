@@ -274,7 +274,7 @@ export function NoticeCategoryManager({
         title={`Categories (${categories.length} of ${maxCategories})`}
       />
       {atLimit ? (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground" data-edge-note="">
           You already have {maxCategories} categories. Remove one to add another.
         </p>
       ) : null}

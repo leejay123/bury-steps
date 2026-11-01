@@ -49,7 +49,7 @@ export function PageTopSettings({ style }: { style: PageTopStyle }) {
 
   return (
     <SettingsSection
-      description="The band at the top of pages like Walks, Members, Messages, Reports and the Guide: the page title, its short intro and its button. It runs edge to edge; everything below keeps its usual space."
+      description="The band at the top of pages like Walks, Members, Messages and Reports: the page title, its short intro and its button. It runs edge to edge; everything below keeps its usual space."
       title="Page tops"
     >
       <div aria-label="Page tops" className="grid w-full gap-2 sm:grid-cols-2" role="radiogroup">

@@ -917,7 +917,7 @@ html:is([data-sb-role="owner"], [data-sb-role="organiser"]) [data-sb-only="membe
 @media (min-width: 48rem) {
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-panel] { margin-inline: -1.5rem; padding: 1.5rem !important; border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-panel]) { row-gap: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-panel]) > :not([data-edge-panel], [data-edge-list], [data-reveal-list], [data-edge-bar], [data-edge-foot], [data-edge-head], [hidden]) { padding-block: 1.5rem; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-panel]) > :not([data-edge-panel], [data-edge-list], [data-reveal-list], [data-edge-bar], [data-edge-foot], [data-edge-head], [data-edge-group], [hidden]):not(:has(> [data-edge-head]:first-child)) { padding-block: 1.5rem; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-panel]:last-child { border-bottom: 0 !important; }
 }
 /* A list's heading row on a settings page (title left, its button right) is a strip too. */
@@ -925,3 +925,26 @@ html:is([data-sb-role="owner"], [data-sb-role="organiser"]) [data-sb-only="membe
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-head] { margin-inline: -1.5rem; padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border); align-items: center !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-head] ~ :is([data-edge-list], [data-reveal-list], [data-walk-table]), html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-head]) { border-top: 0 !important; row-gap: 0 !important; }
 }
+/* Settings sub-pages, as the main Settings table: a group is a grey header strip (its
+   small uppercase title and line of explanation) over its settings, each a full-width row
+   split by one line. No box, no grey showing between rows, nothing shifted. */
+@media (min-width: 48rem) {
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group] { margin-inline: -1.5rem; row-gap: 0 !important; padding-block: 0 !important; border-bottom: 1px solid var(--border); }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group]:last-child { border-bottom: 0; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group-head] { padding: 0.625rem 1.5rem; background: color-mix(in oklab, var(--muted) 50%, transparent); border-bottom: 1px solid var(--border); }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group-body] { row-gap: 0 !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group-body] > [data-edge-panel] { margin-inline: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group-body] > [data-edge-panel]:last-child { border-bottom: 0 !important; }
+}
+@media (min-width: 48rem) {
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group] > :is([data-walk-table], [data-reveal-list], [data-edge-list]) { margin-inline: 0 !important; border-inline: 0 !important; border-radius: 0 !important; border-top: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group] > :not([data-edge-group-head], [data-edge-group-body], [data-edge-panel], [data-edge-head], [hidden]):not(:is([data-walk-table], [data-reveal-list], [data-edge-list])) { padding: 1.5rem; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group] > [data-edge-head] { margin-inline: 0; }
+}
+/* List headings and group headings share the main Settings table's grey header strip. */
+@media (min-width: 48rem) {
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-head] { padding: 0.625rem 1.5rem !important; background: color-mix(in oklab, var(--muted) 50%, transparent); }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-head]:first-child) { row-gap: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-head] + [data-edge-note], html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-note] { padding-inline: 1.5rem; }
+}
+@media (min-width: 48rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-head] ~ :is([data-reveal-list], [data-edge-list]) > * { padding-inline: 1.5rem; } }

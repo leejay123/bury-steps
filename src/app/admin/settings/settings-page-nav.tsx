@@ -108,7 +108,7 @@ export function SettingsSubPageTabs() {
                   aria-hidden
                   className="absolute inset-0 rounded-sm bg-background shadow-sm"
                   layoutId="settings-subpage-tab"
-                  transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 30 }}
                 />
               ) : null}
               <Link
