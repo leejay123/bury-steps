@@ -132,7 +132,7 @@ function NoticesBlogSectionInner({
           title="Notices"
         />
         <div data-edge-bar="" data-edge-top="">
-        <InputGroup className="w-full max-w-md">
+        <InputGroup className="w-full">
           <InputGroupInput
             aria-label="Search notices"
             ref={searchRef}

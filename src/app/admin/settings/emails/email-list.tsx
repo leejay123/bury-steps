@@ -259,7 +259,7 @@ export function EmailList({
 
   return (
     <>
-      <div className="flex flex-col divide-y overflow-hidden rounded-xl border bg-card">
+      <div className="flex flex-col divide-y overflow-hidden rounded-xl border bg-card" data-edge-list="">
         {groups.map((group) => (
           <div className="flex flex-col" key={group.category}>
             <p className="px-5 pt-4 pb-1 text-xs font-medium text-muted-foreground md:px-6">{group.category}</p>

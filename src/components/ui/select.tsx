@@ -326,9 +326,12 @@ function SelectContent({
         className,
       )}
       data-select-dropdown=""
+      // At least as wide as its button, and wide enough for the longest choice on
+      // one line (never wider than the screen), so no choice wraps.
       style={{
         minWidth: triggerWidth ? `${triggerWidth}px` : "8rem",
-        width: triggerWidth ? `${triggerWidth}px` : undefined,
+        width: "max-content",
+        maxWidth: "var(--radix-popover-content-available-width)",
       }}
       {...props}
     >

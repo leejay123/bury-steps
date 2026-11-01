@@ -309,7 +309,7 @@ export function MemberWalksHold() {
 export function NoticesSearchChrome() {
   return (
     <div data-edge-bar="" data-edge-top="">
-      <InputGroup className="w-full max-w-md">
+      <InputGroup className="w-full">
         <InputGroupInput aria-label="Search notices" defaultValue="" placeholder="Search notices…" readOnly />
         <InputGroupAddon>
           <Search data-icon="inline-start" />

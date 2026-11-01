@@ -105,6 +105,7 @@ export function SettingsSection({
         !flush && tone === "danger" && "border-destructive/40",
         className,
       )}
+      data-edge-panel={flush ? undefined : ""}
     >
       {title || description ? (
         <div className="flex flex-col gap-1">
@@ -188,7 +189,7 @@ export function SettingsSwitchSection({
   title: string;
 }) {
   return (
-    <section className="flex items-start justify-between gap-6 rounded-xl border bg-card p-5 md:p-6">
+    <section className="flex items-start justify-between gap-6 rounded-xl border bg-card p-5 md:p-6" data-edge-panel="">
       <div className="flex min-w-0 flex-col gap-1">
         <h2 className="font-medium tracking-tight">
           <label className="cursor-pointer" htmlFor={id}>
@@ -231,7 +232,7 @@ export function SettingsListHeader({
   title: string;
 }) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between" data-edge-head="">
       <div className="flex min-w-0 flex-col gap-1">
         <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{title}</h2>
         {description ? (

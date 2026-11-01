@@ -892,12 +892,36 @@ html:is([data-sb-role="owner"], [data-sb-role="organiser"]) [data-sb-only="membe
 }
 /* A page of separate boxes (Progress): each becomes a full-width band split by lines. */
 @media (min-width: 48rem) {
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > :not([data-shadcn-top], .contents), html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > .contents > * { margin: 0 -1.5rem !important; padding: 1.5rem !important; border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > :has(> .grid), html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > .contents > :has(> .grid) { padding: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > :not([data-shadcn-top], .contents), html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > .contents:not([data-shadcn-top]) > * { margin: 0 -1.5rem !important; padding: 1.5rem !important; border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > :has(> .grid), html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > .contents:not([data-shadcn-top]) > :has(> .grid) { padding: 0 !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] :has(> .grid) > .grid > * { padding: 1.5rem; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > :last-child, html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > .contents:last-child > :last-child { border-bottom: 0 !important; padding-bottom: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > :last-child, html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > .contents:not([data-shadcn-top]):last-child > :last-child { border-bottom: 0 !important; }
 }
 @media (min-width: 48rem) {
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is([data-edge-list], [data-reveal-list], [data-walk-table])[data-edge-top] { border-top: 0 !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-band] { margin-inline: -1.5rem; width: auto; border-radius: 0 !important; border-inline: 0 !important; border-top: 0 !important; padding-inline: 1.5rem; }
+}
+/* The card ends where its content ends: no empty band at the foot (a list's last line is
+   the card's own), the page-number row keeps its own space, an empty filter row disappears,
+   and a page with no page top (a single notice, say) keeps the card's space all round. */
+@media (min-width: 48rem) {
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:has([data-shadcn-top]) { padding-bottom: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is([data-walk-table], [data-reveal-list], [data-edge-list]):last-child { border-bottom: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-foot]:last-child { padding-bottom: 0.75rem; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar]:not(:has(*)) { display: none !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:not(:has([data-shadcn-top])) { padding: 1.5rem !important; }
+}
+/* A line about the filters (Members' "Needs attention") is its own strip under the filter row. */
+@media (min-width: 48rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-note] { margin: 0 -1.5rem !important; padding: 0.625rem 0.75rem; border-bottom: 1px solid var(--border); } }
+/* Settings boxes (settings-page.tsx) become full-width bands split by lines — no card in the card. */
+@media (min-width: 48rem) {
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-panel] { margin-inline: -1.5rem; padding: 1.5rem !important; border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-panel]) { row-gap: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-panel]) > :not([data-edge-panel], [data-edge-list], [data-reveal-list], [data-edge-bar], [data-edge-foot], [data-edge-head], [hidden]) { padding-block: 1.5rem; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-panel]:last-child { border-bottom: 0 !important; }
+}
+/* A list's heading row on a settings page (title left, its button right) is a strip too. */
+@media (min-width: 48rem) {
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-head] { margin-inline: -1.5rem; padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border); align-items: center !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-head] ~ :is([data-edge-list], [data-reveal-list], [data-walk-table]), html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-head]) { border-top: 0 !important; row-gap: 0 !important; }
 }

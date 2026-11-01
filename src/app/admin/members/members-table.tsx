@@ -577,7 +577,7 @@ function MembersTableInner({
       </div>
 
       {needsAttention ? (
-        <p className="-mt-2 text-xs text-muted-foreground">
+        <p className="-mt-2 text-xs text-muted-foreground" data-edge-note="">
           Showing members who&rsquo;ve never clocked in, or whose organiser invite has expired.
         </p>
       ) : null}
