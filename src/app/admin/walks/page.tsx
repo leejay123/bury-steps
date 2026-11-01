@@ -184,10 +184,12 @@ async function AdminWalksTabs() {
     <RememberListCount count={upcoming.length} id="admin-walks-upcoming" max={10000} />
     <RememberListCount count={past.length} id="admin-walks-past" max={10000} />
     <Tabs className="w-full" defaultValue="upcoming">
-      <TabsList>
-        <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
-        <TabsTrigger value="past">History ({past.length})</TabsTrigger>
-      </TabsList>
+      <div data-edge-bar="" data-edge-top="">
+        <TabsList>
+          <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
+          <TabsTrigger value="past">History ({past.length})</TabsTrigger>
+        </TabsList>
+      </div>
       <TabsContent className="mt-4 data-[state=inactive]:hidden" forceMount value="upcoming">
         <AdminWalkTable
           attendanceLabel="On the walk"

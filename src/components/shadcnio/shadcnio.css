@@ -865,3 +865,39 @@ html:is([data-sb-role="owner"], [data-sb-role="organiser"]) [data-sb-only="membe
 [data-me-photo] { background-image: var(--me-img, none); }
 /* Until the account button loads, its empty grey circle mustn't hide the remembered photo. */
 [data-me-photo] span[aria-hidden].rounded-full { background: transparent; }
+
+/* ---- Edge to edge inside the page card (tablets up), as the Overview: whatever sits
+   under the page top starts right at its line; search/filter rows and tab rows are
+   full-width strips (data-edge-bar) with one line under them; lists butt onto them;
+   the page-number row (data-edge-foot) is a strip too; empty states lose their box.
+   Labels over the filters stay for screen readers but are hidden, so a row is one line. ---- */
+@media (min-width: 48rem) {
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-shadcn-top] { margin-bottom: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-shadcn-top]) { row-gap: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-shadcn-top]) > [data-shadcn-top] ~ * { margin-top: 1.5rem; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-shadcn-top]) > [data-shadcn-top] + :is([data-edge-top], :has([data-edge-top])) { margin-top: 0; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] { margin-inline: -1.5rem; padding: 0.75rem; border-bottom: 1px solid var(--border); align-items: center !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] [data-slot="tabs-list"] { margin-block: -0.125rem; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-bar]) { row-gap: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] ~ [data-slot="tabs-content"] { margin-top: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] ~ :is([data-walk-table], [data-reveal-list], [data-edge-list]), html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] ~ [data-slot="tabs-content"] > :is([data-walk-table], [data-reveal-list], [data-edge-list]), html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] ~ [data-slot="tabs-content"] > * > :is([data-walk-table], [data-reveal-list], [data-edge-list]) { border-top: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-foot] { margin-inline: -1.5rem; padding: 0.75rem 0.75rem 0; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-slot="empty"] { border: 0 !important; background: transparent !important; border-radius: 0 !important; }
+}
+@media (min-width: 48rem) {
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-bar]:last-child) { padding-bottom: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-notice-cats] { border-top: 0 !important; padding-inline: 0.75rem !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-notice-cats] + [data-edge-wrap] > [data-edge-list]:first-child { border-top: 0 !important; }
+}
+/* A page of separate boxes (Progress): each becomes a full-width band split by lines. */
+@media (min-width: 48rem) {
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > :not([data-shadcn-top], .contents), html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > .contents > * { margin: 0 -1.5rem !important; padding: 1.5rem !important; border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > :has(> .grid), html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > .contents > :has(> .grid) { padding: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] :has(> .grid) > .grid > * { padding: 1.5rem; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > :last-child, html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > .contents:last-child > :last-child { border-bottom: 0 !important; padding-bottom: 0 !important; }
+}
+@media (min-width: 48rem) {
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is([data-edge-list], [data-reveal-list], [data-walk-table])[data-edge-top] { border-top: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-band] { margin-inline: -1.5rem; width: auto; border-radius: 0 !important; border-inline: 0 !important; border-top: 0 !important; padding-inline: 1.5rem; }
+}

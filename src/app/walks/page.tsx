@@ -253,12 +253,14 @@ function WalksBody({ view }: { view: WalksView }) {
       <MemberWelcomeDialog firstName={view.firstName} hasNoWalks={view.showWelcome} userId={view.userId} />
 
       <Tabs defaultValue="upcoming">
-        <TabsList>
-          <TabsTrigger value="upcoming">
-            <LiveUpcomingCount walks={upcoming} />
-          </TabsTrigger>
-          <TabsTrigger value="all-walks">All walks ({allWalks.length})</TabsTrigger>
-        </TabsList>
+        <div data-edge-bar="" data-edge-top="">
+          <TabsList>
+            <TabsTrigger value="upcoming">
+              <LiveUpcomingCount walks={upcoming} />
+            </TabsTrigger>
+            <TabsTrigger value="all-walks">All walks ({allWalks.length})</TabsTrigger>
+          </TabsList>
+        </div>
         <TabsContent
           className="mt-4 data-[state=inactive]:hidden"
           forceMount

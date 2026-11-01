@@ -36,7 +36,7 @@ export function MyEmailPreferencesForm(prefs: EmailPreferences & { isAdmin: bool
 
   return (
     <form className="flex flex-col gap-5" onSubmit={submit}>
-      <div className="flex flex-col divide-y rounded-xl border" data-edge-list="">
+      <div className="flex flex-col divide-y rounded-xl border" data-edge-list="" data-edge-top="">
         {options.map((option) => (
           <div className="flex items-start gap-3 px-4 py-3.5" key={option.name}>
             <Checkbox

@@ -101,7 +101,7 @@ export function AccidentReportManager({
         title={intro.title}
       />
       <div className="flex flex-col gap-4" ref={listRef}>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between" data-edge-bar="" data-edge-top="">
           {hasAnyReports ? (
             <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-end">
               <InputGroup className="w-full min-w-0 sm:flex-1">

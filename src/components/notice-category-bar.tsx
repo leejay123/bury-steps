@@ -13,7 +13,7 @@ export function NoticeCategoryBar({
 }) {
   if (labels.length <= 1) return null;
   return (
-    <div className="flex gap-2 overflow-x-auto overscroll-x-contain border-y px-4 [scrollbar-width:none] [-ms-overflow-style:none] sm:flex-wrap sm:overflow-visible md:px-6 [&::-webkit-scrollbar]:hidden">
+    <div data-notice-cats="" className="flex gap-2 overflow-x-auto overscroll-x-contain border-y px-4 [scrollbar-width:none] [-ms-overflow-style:none] sm:flex-wrap sm:overflow-visible md:px-6 [&::-webkit-scrollbar]:hidden">
       {labels.map((category) => {
         const pressed = active === category.id;
         return (

@@ -111,7 +111,7 @@ export function AttendanceHistory({
 
   return (
     <div className="flex flex-col gap-6" ref={listRef}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end" data-edge-bar="" data-edge-top="">
         <InputGroup className="w-full min-w-0 sm:min-w-[16rem] sm:flex-1">
           <InputGroupInput
             aria-label="Search your walk history"

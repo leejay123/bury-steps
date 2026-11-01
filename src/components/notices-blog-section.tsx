@@ -131,6 +131,7 @@ function NoticesBlogSectionInner({
           intro="Updates from the organisers for signed-in members. Short messages stay in the bell; open a row here for the full write-up."
           title="Notices"
         />
+        <div data-edge-bar="" data-edge-top="">
         <InputGroup className="w-full max-w-md">
           <InputGroupInput
             aria-label="Search notices"
@@ -143,6 +144,7 @@ function NoticesBlogSectionInner({
             <Search data-icon="inline-start" />
           </InputGroupAddon>
         </InputGroup>
+        </div>
       </div>
 
       <NoticeCategoryBar active={activeCategory} labels={filters} onSelect={selectCategory} />

@@ -61,20 +61,22 @@ export function WalkListChrome() {
   // search and filters with it, as on the real page.
   return (
     <Tabs className="w-full" defaultValue="upcoming">
-      <TabsList>
-        <TabsTrigger value="upcoming">
-          Upcoming
-          <RememberedCount remember="admin-walks-upcoming" />
-        </TabsTrigger>
-        <TabsTrigger value="past">
-          History
-          <RememberedCount remember="admin-walks-past" />
-        </TabsTrigger>
-      </TabsList>
+      <div data-edge-bar="" data-edge-top="">
+        <TabsList>
+          <TabsTrigger value="upcoming">
+            Upcoming
+            <RememberedCount remember="admin-walks-upcoming" />
+          </TabsTrigger>
+          <TabsTrigger value="past">
+            History
+            <RememberedCount remember="admin-walks-past" />
+          </TabsTrigger>
+        </TabsList>
+      </div>
       {
         <TabsContent className="mt-4" value="upcoming">
           <div className="flex flex-col gap-4 has-[>[data-reveal-list][hidden]]:hidden">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end" data-edge-bar="">
               <ListSearch label="Search upcoming walks" placeholder="Search by walk or meeting point…" />
               <FilterSelect
                 id="walk-status-upcoming-hold"
@@ -108,7 +110,7 @@ export function WalkListChrome() {
 /** Role, sort and Needs attention — the same bar the members list uses. */
 export function MembersFilterChrome() {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end" data-edge-bar="" data-edge-top="">
       <InputGroup className="w-full min-w-0 sm:min-w-56 sm:flex-1">
         <InputGroupInput
           aria-label="Search members"
@@ -153,7 +155,7 @@ export function MembersFilterChrome() {
 
 export function ReportsFilterChrome() {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-end" data-edge-bar="" data-edge-top="">
       <ListSearch label="Search accident reports" placeholder="Search by walk, people involved, or what happened…" />
       <FilterSelect
         id="report-link-filter-hold"
@@ -180,7 +182,7 @@ export function ReportsFilterChrome() {
 
 export function MessagesFilterChrome() {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end" data-edge-bar="" data-edge-top="">
       <InputGroup className="w-full min-w-0 sm:min-w-56 sm:flex-1">
         <InputGroupInput
           aria-label="Search messages"
@@ -210,7 +212,7 @@ export function MessagesFilterChrome() {
 
 export function HistoryFilterChrome() {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end" data-edge-bar="" data-edge-top="">
       <InputGroup className="w-full min-w-0 sm:min-w-[16rem] sm:flex-1">
         <InputGroupInput
           aria-label="Search your walk history"
@@ -244,19 +246,21 @@ export function MemberWalksHold() {
   return (
     <div className="contents" data-page-loading="">
       <Tabs defaultValue="upcoming">
-        <TabsList>
-          <TabsTrigger value="upcoming">
-            Upcoming
-            <RememberedCount remember="member-walks" />
-          </TabsTrigger>
-          <TabsTrigger value="all-walks">
-            All walks
-            <RememberedCount remember="member-walks-all" />
-          </TabsTrigger>
-        </TabsList>
+        <div data-edge-bar="" data-edge-top="">
+          <TabsList>
+            <TabsTrigger value="upcoming">
+              Upcoming
+              <RememberedCount remember="member-walks" />
+            </TabsTrigger>
+            <TabsTrigger value="all-walks">
+              All walks
+              <RememberedCount remember="member-walks-all" />
+            </TabsTrigger>
+          </TabsList>
+        </div>
         <TabsContent className="mt-4" value="upcoming">
           <div aria-busy="true" className="flex flex-col gap-4 has-[>[data-reveal-list][hidden]]:hidden">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end" data-edge-bar="">
               <ListSearch label="Search walks" placeholder="Search by walk or meeting point…" />
               <FilterSelect
                 id="walk-status-hold"
@@ -304,11 +308,13 @@ export function MemberWalksHold() {
 
 export function NoticesSearchChrome() {
   return (
-    <InputGroup className="w-full max-w-md">
-      <InputGroupInput aria-label="Search notices" defaultValue="" placeholder="Search notices…" readOnly />
-      <InputGroupAddon>
-        <Search data-icon="inline-start" />
-      </InputGroupAddon>
-    </InputGroup>
+    <div data-edge-bar="" data-edge-top="">
+      <InputGroup className="w-full max-w-md">
+        <InputGroupInput aria-label="Search notices" defaultValue="" placeholder="Search notices…" readOnly />
+        <InputGroupAddon>
+          <Search data-icon="inline-start" />
+        </InputGroupAddon>
+      </InputGroup>
+    </div>
   );
 }

@@ -230,7 +230,7 @@ export function SettingsHub({ groups }: { groups: SettingsHubGroup[] }) {
   return (
     <div className="flex flex-col gap-5">
       {needsAttention.length > 0 ? (
-        <Alert variant="warning">
+        <Alert data-edge-band="" variant="warning">
           <AlertCircle aria-hidden />
           <AlertTitle>
             {needsAttention.length === 1
@@ -252,6 +252,7 @@ export function SettingsHub({ groups }: { groups: SettingsHubGroup[] }) {
         </Alert>
       ) : null}
 
+      <div data-edge-bar="">
       <InputGroup>
         <InputGroupInput
           aria-label="Search settings"
@@ -264,6 +265,7 @@ export function SettingsHub({ groups }: { groups: SettingsHubGroup[] }) {
           <Search data-icon="inline-start" />
         </InputGroupAddon>
       </InputGroup>
+      </div>
 
       {filtered.length === 0 ? (
         <EmptyState

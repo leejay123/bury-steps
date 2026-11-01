@@ -40,7 +40,7 @@ export function ListPagination({
   }
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" data-edge-foot="">
       <p className="text-sm text-muted-foreground">
         {start}–{end} of {total} {noun}
       </p>

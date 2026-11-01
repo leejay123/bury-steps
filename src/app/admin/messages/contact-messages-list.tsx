@@ -287,7 +287,7 @@ export function ContactMessagesList({ messages }: { messages: ContactMessageRow[
 
   return (
     <>
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end" data-edge-bar="" data-edge-top="">
         <InputGroup className="w-full min-w-0 sm:min-w-56 sm:flex-1">
           <InputGroupInput
             aria-label="Search messages"

@@ -111,7 +111,7 @@ function AllWalksListInner({ rows }: { rows: AllWalksRow[] }) {
 
   return (
     <div className="flex flex-col gap-4" ref={listRef}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end" data-edge-bar="">
         <InputGroup className="w-full min-w-0 sm:flex-1">
           <InputGroupInput
             aria-label="Search all walks"
