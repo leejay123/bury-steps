@@ -932,6 +932,10 @@ html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) 
    card's top border, stop strips short of the sides, and clip the last line of
    a list. Edge pieces still pull themselves out by exactly 1.5rem. */
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] > * { margin: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; padding-inline: 0 !important; }
+  /* Progress is one shell, so its bands meet the card. Admin pages add a
+     second px-4 / py-6 shell inside the layout. Leaving that on keeps Walks
+     a step in from the edges, which is why it never matched Progress. */
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] > * > .px-4 { padding: 0 !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is([data-settings-head], [data-settings-body]) { padding: 0 !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-shadcn-top] { overflow: hidden !important; contain: paint; flex: 0 0 auto !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-shadcn-top] > canvas { position: absolute !important; inset: 0 !important; z-index: 0 !important; width: 100% !important; height: 100% !important; pointer-events: none; }
