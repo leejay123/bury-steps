@@ -836,3 +836,13 @@ html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) 
 @media (min-width: 48rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-back] { inset-inline-start: 1.5rem; } }
 html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-body] { padding-top: 0 !important; }
 @media (min-width: 48rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-head] { padding-top: 1.5rem !important; } }
+/* A page whose top, Stories and list share one card (Walks): from tablets up one border round
+   them all, with lines between; phones keep them as they are. */
+@media (min-width: 48rem) {
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-page-card] { gap: 0 !important; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-page-card] [data-shadcn-top] { margin: 0 !important; border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-page-card] section[aria-label="Stories"] { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-page-card] [data-slot="tabs"] > [data-slot="tabs-list"] { margin: 1.25rem 1.5rem 0; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-page-card] [data-slot="tabs-content"] { margin-top: 1.25rem !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-page-card] [data-walk-table] { border-width: 1px 0 0 !important; border-radius: 0 !important; }
+}

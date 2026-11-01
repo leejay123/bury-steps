@@ -245,7 +245,6 @@ function AdminWalkTableInner({
               />
             )
           }
-          now={now}
           onQuery={setQuery}
           onSort={(value) => setSortOrder(value)}
           onStatus={(value) => setStatusFilter(value)}

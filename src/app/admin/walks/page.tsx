@@ -75,7 +75,8 @@ async function AdminPageContent() {
   return (
     <div className="flex flex-col gap-8 px-4 py-6 md:px-6">
       {admin.permWalksView ? (
-        <section className="flex flex-col gap-4">
+        // One card in the shadcn.io dashboard from tablets up: the top, Stories and the list.
+        <section className="flex flex-col gap-4" data-page-card="">
           <AdminPageIntro
             action={admin.permWalksCreate ? <CreateWalkDrawer /> : null}
             description={WALKS_INTRO}
