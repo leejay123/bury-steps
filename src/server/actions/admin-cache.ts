@@ -105,9 +105,6 @@ async function resetSiteToDefaultWork(
       await tx.newsletterSubscriber.deleteMany();
       await tx.emailTemplateOverride.deleteMany();
       await tx.emailEvent.deleteMany();
-      // Denormalized admin/target emails would otherwise survive the wipe
-      // and still show under Members → Sign-in log.
-      await tx.impersonationEvent.deleteMany();
       await tx.siteNoticeCategory.create({
         data: {
           id: "noticecat_general",

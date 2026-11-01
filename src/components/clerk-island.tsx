@@ -5,7 +5,7 @@ import { AFTER_AUTH_PATH, SIGN_IN_URL, SIGN_UP_URL } from "@/lib/urls";
 
 /**
  * Clerk's browser code around just one signed-in-only part of a page (the
- * avatar menu, the impersonation banner, the invite page's sign-out).
+ * avatar menu, the invite page's sign-out).
  *
  * It used to wrap the whole site, which meant the root layout had to check
  * the session before drawing anything — so no page could be ready-made in

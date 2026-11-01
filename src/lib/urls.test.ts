@@ -40,20 +40,8 @@ describe("accountPortalUrl", () => {
     expect(new URL(url).searchParams.get("redirect_url")).toBe(`${appUrl()}/walks`);
   });
 
-  // Regression: Clerk's actor-token ("log in as this member") flow signs
-  // the admin out and redirects back to /sign-in with __clerk_ticket in
-  // the querystring — this app's /sign-in just forwards to the Account
-  // Portal via this function, and it used to only forward redirect_url,
-  // silently dropping the ticket. The Account Portal never saw it, so
-  // impersonation looked like it did nothing at all.
-  it("forwards __clerk_ticket so the actor-token sign-in flow can complete", () => {
-    const url = accountPortalUrl("sign-in", { __clerk_ticket: "abc123" });
-    expect(new URL(url).searchParams.get("__clerk_ticket")).toBe("abc123");
-  });
-
-  it("omits __clerk_ticket entirely when there isn't one, while still defaulting redirect_url", () => {
+  it("defaults redirect_url when none is given", () => {
     const url = accountPortalUrl("sign-in", {});
-    expect(new URL(url).searchParams.has("__clerk_ticket")).toBe(false);
     expect(new URL(url).searchParams.get("redirect_url")).toBe(`${appUrl()}/walks`);
   });
 });

@@ -13,13 +13,13 @@ enum Role {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  clerkId   String   @unique
-  email     String
-  firstName String?
-  lastName  String?
-  role      Role     @default(MEMBER)
-  createdAt DateTime @default(now())
+  id             String    @id @default(cuid())
+  clerkId        String    @unique
+  email          String
+  firstName      String?
+  lastName       String?
+  role           Role      @default(MEMBER)
+  createdAt      DateTime  @default(now())
   /// Their own profile photo from Clerk, or null when they haven't added
   /// one (Clerk's default picture isn't copied). See src/lib/member-photos.ts.
   imageUrl       String?
@@ -82,8 +82,6 @@ model User {
   noticeReads             SiteNoticeRead[]
   accidentReports         AccidentReport[]
   journeyEvents           WalkJourneyEvent[]     @relation("JourneyCreator")
-  impersonationsPerformed ImpersonationEvent[]   @relation("ImpersonationAdmin")
-  impersonationsReceived  ImpersonationEvent[]   @relation("ImpersonationTarget")
   reportInvolvements      AccidentReportMember[]
   /// At most one SiteSetting row ever exists, so this is really 0-or-1 —
   /// Prisma still requires the relation's other side to be declared.
@@ -99,13 +97,13 @@ model User {
 /// can have several (phone and computer). The endpoint is the browser's
 /// own address for this device — deleting the row is how they opt out.
 model PushSubscription {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  endpoint  String   @unique
-  p256dh    String
-  auth      String
-  createdAt DateTime @default(now())
+  id         String              @id @default(cuid())
+  userId     String
+  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint   String              @unique
+  p256dh     String
+  auth       String
+  createdAt  DateTime            @default(now())
   deliveries WalkAlertDelivery[]
 
   @@index([userId])
@@ -128,43 +126,43 @@ model WalkAlertDelivery {
 }
 
 model Walk {
-  id              String    @id @default(cuid())
+  id                     String    @id @default(cuid())
   /// Stable id used in clock-in forms and as a fallback share path: /w/<token>
-  token           String    @unique
+  token                  String    @unique
   /// Public share path: /w/<slug>. First place word, e.g. burrs. Same place again is burrs-2.
-  slug            String?   @unique
-  title           String
-  description     String?
+  slug                   String?   @unique
+  title                  String
+  description            String?
   /// Free text, e.g. "4 to 5 miles" — varies too much for a numeric field.
-  distance        String?
+  distance               String?
   /// Free text, e.g. "Moderate" — a select in the form, but stored as text
   /// so a future custom grade never needs a migration.
-  grade           String?
+  grade                  String?
   /// Free text, e.g. "213 m" — like distance, organisers write it their way.
-  elevationGain   String?
+  elevationGain          String?
   /// Tick-box facilities (toilets, parking, …) as keys from
   /// src/lib/walk-essentials.ts.
-  essentials      String[]  @default([])
-  walkLeader      String?
-  backMarker      String?
+  essentials             String[]  @default([])
+  walkLeader             String?
+  backMarker             String?
   /// Where the walk stops for a drink or bite, e.g. "Hare & Hounds, Bolton Road, Abbey Village".
-  refreshmentStop String?
+  refreshmentStop        String?
   /// Extra facts of the walk's own: [{ name, value }] (src/lib/extra-facts.ts).
-  extraFacts      Json?
-  location        String?
+  extraFacts             Json?
+  location               String?
   /// Optional UK postcode used to place the map pin. Members still see `location`.
-  postcode        String?
+  postcode               String?
   /// Set from the meeting point via OpenStreetMap Nominatim. Null if unknown.
-  latitude        Float?
-  longitude       Float?
+  latitude               Float?
+  longitude              Float?
   /// Optional what3words address (e.g. "filled.count.soap"), stored as
   /// plain text and never resolved via their API — see src/lib/what3words.ts.
   /// Members get a link to what3words.com's own free page for pinpoint
   /// directions; the map above still comes from `location`/`postcode`.
-  what3words      String?
+  what3words             String?
   /// Stored in UTC. Always render with timeZone: "Europe/London".
-  startsAt        DateTime
-  durationMins    Int       @default(90)
+  startsAt               DateTime
+  durationMins           Int       @default(90)
   /// Set when an organiser ends the walk before its scheduled length is up
   /// (see endWalkEarly) — "now" for an immediate end, or a few minutes in
   /// the past if they're correcting the record after the fact. Always
@@ -173,14 +171,14 @@ model Walk {
   /// where the scheduled length alone decides when it's done — see
   /// effectiveEndsAt in src/lib/walk-window.ts, which every finish-time
   /// check goes through instead of the raw duration.
-  endedAt         DateTime?
-  cancelledAt     DateTime?
-  cancelledReason String?
-  createdAt       DateTime  @default(now())
+  endedAt                DateTime?
+  cancelledAt            DateTime?
+  cancelledReason        String?
+  createdAt              DateTime  @default(now())
   /// Flagged by an organiser to exempt this walk from the cancelled-walk
   /// auto-delete cron, regardless of SiteSetting.cancelledWalkRetentionDays.
   /// Meaningless (and harmless) for a walk that was never cancelled.
-  retentionLocked Boolean   @default(false)
+  retentionLocked        Boolean   @default(false)
   /// Set once this walk's starting-soon alerts are finished. While it is
   /// null, each look still tries any phone that has not had the alert yet.
   startingSoonPushSentAt DateTime?
@@ -190,8 +188,8 @@ model Walk {
 
   attendances     Attendance[]
   accidentReports AccidentReport[]
-  journeyEvents    WalkJourneyEvent[]
-  alertDeliveries  WalkAlertDelivery[]
+  journeyEvents   WalkJourneyEvent[]
+  alertDeliveries WalkAlertDelivery[]
 
   @@index([startsAt])
   @@index([createdById])
@@ -519,11 +517,11 @@ model SiteSetting {
   /// "stripes". See src/lib/section-background.ts. Hero defaults to "dots"
   /// (it always showed a dot grid before this setting existed); every other
   /// section defaults to "none" (no pattern, as before).
-  heroBgPattern                String   @default("dots")
-  howThisStartedBgPattern      String   @default("none")
-  testimonialsBgPattern        String   @default("none")
-  memberNoticesBgPattern       String   @default("none")
-  faqsBgPattern                String   @default("none")
+  heroBgPattern               String   @default("dots")
+  howThisStartedBgPattern     String   @default("none")
+  testimonialsBgPattern       String   @default("none")
+  memberNoticesBgPattern      String   @default("none")
+  faqsBgPattern               String   @default("none")
   /// Uploaded site logo (header, print reports). Null uses the bundled default.
   logoMime                    String?
   logoData                    Bytes?
@@ -704,29 +702,6 @@ model EmailEvent {
 
   @@index([resendId])
   @@index([recipient])
-  @@index([createdAt])
-}
-
-/// Audit trail for "log in as this member" (Clerk actor tokens) — see
-/// src/server/actions/impersonation.ts. Rows are never deleted, including
-/// when either User row is later removed (SetNull), so the log stays
-/// accurate even after someone's account is deleted.
-model ImpersonationEvent {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-
-  adminId    String?
-  admin      User?   @relation("ImpersonationAdmin", fields: [adminId], references: [id], onDelete: SetNull)
-  /// Kept even if the admin row is later deleted/demoted — the log line
-  /// should still say who did this.
-  adminName  String
-  adminEmail String
-
-  targetId    String?
-  target      User?   @relation("ImpersonationTarget", fields: [targetId], references: [id], onDelete: SetNull)
-  targetName  String
-  targetEmail String
-
   @@index([createdAt])
 }
 

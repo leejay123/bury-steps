@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { IntentLink as Link } from "@/components/intent-link";
 import { usePathname, useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
@@ -22,8 +22,27 @@ function isCurrent(path: string, href: string) {
   return path === href || path.startsWith(`${href}/`);
 }
 
-export function EfferdNav({ groups, onNavigate }: { groups: SidebarGroup[]; onNavigate?: () => void }) {
-  const path = usePathname() ?? "";
+type NavProps = { groups: SidebarGroup[]; onNavigate?: () => void };
+
+/**
+ * The menu, with the current page marked. On pages whose address has a part only
+ * known when visited (a member's own page, say), the address can't be read while
+ * the ready-made page is built, so the same menu without a mark stands in until it
+ * can (Next.js's advice for sidebars: docs, usePathname, "cacheComponents").
+ */
+export function EfferdNav(props: NavProps) {
+  return (
+    <Suspense fallback={<NavList {...props} path="" />}>
+      <CurrentNav {...props} />
+    </Suspense>
+  );
+}
+
+function CurrentNav(props: NavProps) {
+  return <NavList {...props} path={usePathname() ?? ""} />;
+}
+
+function NavList({ groups, onNavigate, path }: NavProps & { path: string }) {
   return (
     <nav aria-label="Dashboard" className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain" data-slot="efferd-nav">
       {groups.map((group) => (
