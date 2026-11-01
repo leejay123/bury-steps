@@ -11,6 +11,7 @@ import { KeepFormInputOnError } from "@/components/keep-form-input-on-error";
 import { WalkEssentialsProvider } from "@/components/walk-essentials-context";
 import { WalkWordingProvider } from "@/components/walk-wording-context";
 import { SignedInProvider } from "@/components/signed-in-context";
+import { SiteDesignProvider } from "@/components/site-design-context";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 import { textSizeCssVars } from "@/lib/text-sizes";
 import { FullWidthDivider } from "@/components/full-width-divider";
@@ -213,7 +214,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                         {/* No dashboard-view test frame here: the frame itself is Efferd's app
                             shell for signed-in people (a browser that had the test on drew a
                             second frame inside it). */}
-                        {children}
+                        <SiteDesignProvider design="shadcnio">{children}</SiteDesignProvider>
                       </SignedInProvider>
                     </TabStyleProvider>
                   </WalkWordingProvider>

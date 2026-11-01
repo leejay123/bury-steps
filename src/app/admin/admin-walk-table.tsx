@@ -15,6 +15,8 @@ import { ListPagination } from "@/components/list-pagination";
 import { usePagedList } from "@/hooks/use-paged-list";
 import { useLiveNow } from "@/hooks/use-live-now";
 import { WalkStatusHeader } from "@/components/walk-status-badge";
+import { useSiteDesign } from "@/components/site-design-context";
+import { WalkTableCard, type WalkTableRow } from "@/components/walk-table-card";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import {
@@ -108,6 +110,7 @@ function AdminWalkTableInner({
   const allStatusOptions = scope === "upcoming" ? UPCOMING_STATUS_OPTIONS : PAST_STATUS_OPTIONS;
   const now = useLiveNow();
   const router = useRouter();
+  const design = useSiteDesign();
 
   // Only offer statuses that at least one walk on this tab actually has —
   // no picking "Cancelled" when nothing's cancelled.
@@ -197,6 +200,68 @@ function AdminWalkTableInner({
 
   if (walks.length === 0) {
     return <EmptyState description={emptyDescription} icon={Footprints} title={emptyTitle} />;
+  }
+
+  // The shadcn.io design: the list as one table card (search, Filter, Columns, Show,
+  // grouped rows and Previous / Next).
+  if (design === "shadcnio") {
+    const rows: WalkTableRow[] = filtered.map((walk) => {
+      const status = walkStatus(
+        {
+          cancelledAt: walk.cancelledAt ? new Date(walk.cancelledAt) : null,
+          startsAt: new Date(walk.startsAt),
+          durationMins: walk.durationMins,
+          endedAt: walk.endedAt ? new Date(walk.endedAt) : null,
+        },
+        now,
+      );
+      const canClockIn = status === "starting-soon" || status === "in-progress";
+      return {
+        id: walk.id,
+        title: walk.title,
+        location: walk.location,
+        startsAt: walk.startsAt,
+        durationMins: walk.durationMins,
+        endedAt: walk.endedAt,
+        cancelledAt: walk.cancelledAt,
+        count: scope === "upcoming" && walk.attendanceCount === 0 ? null : walk.attendanceCount,
+        cue:
+          scope === "upcoming" && canClockIn ? (walk.selfClockedIn ? "You're clocked in" : "Clock in now") : null,
+        href: walk.href === undefined ? `/admin/walks/${walk.id}` : walk.href,
+      };
+    });
+    return (
+      <div ref={listRef}>
+        <WalkTableCard
+          countLabel={attendanceLabel}
+          empty={
+            query.trim() || statusFilter !== "all" ? (
+              <EmptyState description="Try a different search, status, or sort." icon={Search} title="No matching walks" />
+            ) : (
+              <EmptyState
+                description={upcomingNeedsServerSplit ? "Moving finished walks to History…" : emptyDescription}
+                icon={Footprints}
+                title={upcomingNeedsServerSplit ? "Updating upcoming walks…" : emptyTitle}
+              />
+            )
+          }
+          now={now}
+          onQuery={setQuery}
+          onSort={(value) => setSortOrder(value)}
+          onStatus={(value) => setStatusFilter(value)}
+          query={query}
+          rows={rows}
+          searchLabel={scope === "past" ? "Search past walks" : "Search upcoming walks"}
+          sort={sortOrder}
+          sortOptions={[
+            { value: "asc", label: "Soonest first" },
+            { value: "desc", label: "Latest first" },
+          ]}
+          status={statusFilter}
+          statusOptions={statusOptions}
+        />
+      </div>
+    );
   }
 
   return (

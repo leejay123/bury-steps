@@ -21,7 +21,7 @@ export function DashboardActivity() {
 	return (
 		<DashboardCard className="gap-0">
 			<CardHeader className="border-b">
-				<CardTitle >Activity</CardTitle>
+				<CardTitle className="text-base">Activity</CardTitle>
 				<CardDescription>{organiser ? "Who clocked in most recently." : "Latest walks and notices."}</CardDescription>
 			</CardHeader>
 			<CardContent className="px-0">

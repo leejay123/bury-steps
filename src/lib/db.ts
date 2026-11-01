@@ -16,11 +16,15 @@ function withQueryParam(url: string, key: string, value: string) {
 /**
  * Serverless isolates each open their own Prisma client. Supabase session
  * pooling (port 5432) caps that at ~15 connections and then 500s the site.
- * Transaction pooling (6543) multiplexes those isolates, so a small
- * per-client connection_limit (5) is safe and lets one isolate's parallel
- * queries (e.g. the homepage's Promise.all) run without queuing behind a
- * single connection. Migrations still use DATABASE_URL as stored in Vercel
- * (session / 5432).
+ * Transaction pooling (6543) multiplexes those isolates, but the pooler
+ * only has 15 real connections to the database (Supabase's default pool
+ * size). After a deploy every page is rebuilt at once, several fresh
+ * isolates each asked for up to 5, the database slowed under them and
+ * requests waited over 60s for a turn (ECHECKOUTTIMEOUT, then P2024). So
+ * each client takes at most 2 (Prisma's serverless advice: start small and
+ * raise only if spikes stay under the database's limit); a page's other
+ * queries wait their turn inside the client instead. Migrations still use
+ * DATABASE_URL as stored in Vercel (session / 5432).
  */
 function runtimeDatasourceUrl(url = process.env.DATABASE_URL) {
   if (!url) return undefined;
@@ -29,7 +33,7 @@ function runtimeDatasourceUrl(url = process.env.DATABASE_URL) {
   if (/pooler\.supabase\.com:6543/i.test(next)) {
     next = withQueryParam(next, "pgbouncer", "true");
   }
-  next = withQueryParam(next, "connection_limit", "5");
+  next = withQueryParam(next, "connection_limit", "2");
   return withQueryParam(next, "pool_timeout", "20");
 }
 

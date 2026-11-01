@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { PanelLeft } from "lucide-react";
+import { lockBackgroundScroll } from "@/components/overlay-scroll-lock";
 import { useClientPathname } from "@/components/client-pathname";
 import { EfferdTopTools } from "./efferd-top-tools";
 import { Guides } from "./parts";
@@ -133,6 +134,13 @@ export function ShadcnSiteShell({
     };
   }, [path]);
 
+  // While the phone menu is open the page behind it stays still (the site's overlay lock,
+  // as its drawers and dialogs use).
+  useEffect(() => {
+    if (!drawer) return;
+    return lockBackgroundScroll();
+  }, [drawer]);
+
   useEffect(() => {
     if (!drawer) return;
     const onKey = (event: KeyboardEvent) => {
@@ -229,15 +237,25 @@ export function ShadcnSiteShell({
         />
       </div>
       <div
-        className="fixed inset-0 z-50 lg:hidden"
+        aria-hidden={drawer ? undefined : true}
+        // Slides in and out (the panel and its backdrop animate; hidden from clicks and
+        // screen readers while closed, and out of sight once it has slid away).
+        className="group/drawer fixed inset-0 z-[60] transition-[visibility] duration-[450ms] data-[state=closed]:invisible lg:hidden"
         data-slot="docs-sidebar-drawer"
         data-state={drawer ? "open" : "closed"}
-        hidden={!drawer}
+        inert={!drawer}
       >
-        <button aria-label="Close sidebar" className="absolute inset-0 bg-black/30" onClick={() => setDrawer(false)} type="button" />
+        {/* The site's drawer backdrop (dimmed and blurred), fading in as the menu slides in. */}
+        <button
+          aria-label="Close sidebar"
+          className="absolute inset-0 bg-black/30 opacity-0 transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] supports-backdrop-filter:backdrop-blur-sm group-data-[state=open]/drawer:opacity-100"
+          onClick={() => setDrawer(false)}
+          tabIndex={drawer ? 0 : -1}
+          type="button"
+        />
         <aside
           aria-label="Dashboard"
-          className="relative flex h-full w-[min(18rem,85vw)] flex-col overflow-hidden border-e bg-chrome shadow-xl"
+          className="relative flex h-full w-[min(18rem,85vw)] -translate-x-full flex-col overflow-hidden overscroll-contain border-e bg-chrome shadow-xl transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] group-data-[state=open]/drawer:translate-x-0 rtl:translate-x-full motion-reduce:transition-none"
         >
           {sidebar}
         </aside>

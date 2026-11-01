@@ -10,6 +10,7 @@ import { isNoticeReadInThisTab, noticesReadVersion, subscribeNoticesRead } from 
 import { usePagedList } from "@/hooks/use-paged-list";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PageTop } from "@/components/page-top";
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { ListPagination } from "@/components/list-pagination";
@@ -123,17 +124,13 @@ function NoticesBlogSectionInner({
   return (
     <section className="flex flex-col gap-0">
       <div className="flex flex-col gap-3 px-4 py-6 md:px-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          {/* 6px between the title and its line, like the other pages. */}
-          <div className="flex flex-col gap-1.5">
-            <h1 className="text-lg font-semibold tracking-tight">Notices</h1>
-            <p className="text-sm text-muted-foreground">
-              Updates from the organisers for signed-in members. Short messages stay in the bell; open a
-              row here for the full write-up.
-            </p>
-          </div>
-          {action}
-        </div>
+        {/* The page's own top (the same as the other pages', so the dashboard's hero). */}
+        <PageTop
+          action={action}
+          eyebrow="Dashboard"
+          intro="Updates from the organisers for signed-in members. Short messages stay in the bell; open a row here for the full write-up."
+          title="Notices"
+        />
         <InputGroup className="w-full max-w-md">
           <InputGroupInput
             aria-label="Search notices"
