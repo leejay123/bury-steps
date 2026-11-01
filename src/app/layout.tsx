@@ -41,7 +41,6 @@ import { BackToTopGate } from "@/components/back-to-top-gate";
 import { UnlockPageOnNavigate } from "@/components/overlay-root";
 import { SiteCookieConsentGate } from "@/components/site-cookie-consent-gate";
 import { StaleDeployReload } from "@/components/stale-deploy-reload";
-import { ImpersonationBannerSlot } from "@/components/impersonation-banner-slot";
 import { getSiteTheme } from "@/lib/site-theme";
 import { siteFontById } from "@/lib/site-font";
 import { pageFontFace, siteFontVariableClassName, typesetFontVariables } from "@/app/fonts";
@@ -262,11 +261,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     text={theme.announcementText}
                   />
                 ) : null}
-              </HeaderPartBoundary>
-              <HeaderPartBoundary name="impersonation">
-                <Suspense fallback={null}>
-                  <ImpersonationBannerSlot />
-                </Suspense>
               </HeaderPartBoundary>
               <div className="relative">
                 {/*

@@ -50,7 +50,6 @@ export function navItems(
           ...(perms.permMessages ? [{ href: "/admin/messages", label: "Messages" }] : []),
           ...(perms.permReportsView ? [{ href: "/admin/reports", label: "Reports" }] : []),
           ...(hasAnySettingsPermission(perms) ? [{ href: "/admin/settings", label: "Settings" }] : []),
-          { href: "/admin/guide", label: "Guide" },
         ]
       : []),
   ];

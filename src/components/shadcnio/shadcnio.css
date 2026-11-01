@@ -850,3 +850,18 @@ html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) 
   /* The Overview is already one card (its grid): no page card round it. */
   html[data-page-kind="bare"] [data-slot="docs-page"] { border: 0 !important; padding: 0 !important; border-radius: 0 !important; overflow: visible !important; }
 }
+/* A list right under its tabs (Notices): no gap above it in the page card. */
+@media (min-width: 48rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-wrap] { padding-block: 0 !important; } }
+
+/* ---- The sidebar shows at once (efferd-sidebar.tsx): links only some see follow
+   html[data-sb-role] (owner, organiser or member; member until known), and the person's
+   row reads the --me-* values, all set before the first paint from this browser's memory. ---- */
+[data-sb-only="staff"], [data-sb-only="owner"] { display: none; }
+html:is([data-sb-role="owner"], [data-sb-role="organiser"]) [data-sb-only="staff"] { display: block; }
+html[data-sb-role="owner"] [data-sb-only="owner"] { display: block; }
+html:is([data-sb-role="owner"], [data-sb-role="organiser"]) [data-sb-only="member"] { display: none; }
+[data-me-name]::before { content: var(--me-name, ""); }
+[data-me-email]::before { content: var(--me-email, ""); }
+[data-me-photo] { background-image: var(--me-img, none); }
+/* Until the account button loads, its empty grey circle mustn't hide the remembered photo. */
+[data-me-photo] span[aria-hidden].rounded-full { background: transparent; }

@@ -9,14 +9,12 @@ import { prisma } from "@/lib/db";
 import { getOptionalAdmin } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
-import { formatCompactDateTime } from "@/lib/dates";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import type { MemberRoleFilter } from "@/server/actions";
 import { loadMembersPage } from "@/lib/members-search";
 import { MembersTable } from "./members-table";
 import { AdminPageIntro } from "../admin-page-intro";
 import { EmptyState } from "@/components/empty-state";
-import { DataList, DataListBody, DataListItem } from "@/components/data-list";
 
 function parseRoleFilter(raw: string | undefined): MemberRoleFilter {
   if (raw === "ADMIN" || raw === "MEMBER") return raw;
@@ -67,14 +65,9 @@ async function getMembersView(role: MemberRoleFilter) {
   // Only the first page loads here — search and later pages are fetched
   // live from searchMembers, so this stays fast and correct no matter how
   // many members the group has.
-  const [{ rows, total, groupTotals }, totalMembers, impersonations, setting] = await Promise.all([
+  const [{ rows, total, groupTotals }, totalMembers, setting] = await Promise.all([
     loadMembersPage({ role }),
     prisma.user.count(),
-    prisma.impersonationEvent.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 20,
-      select: { id: true, adminName: true, targetName: true, createdAt: true },
-    }),
     prisma.siteSetting.findUnique({
       where: { id: SITE_SETTING_ID },
       select: { organiserInviteRequired: true },
@@ -86,15 +79,6 @@ async function getMembersView(role: MemberRoleFilter) {
     total,
     groupTotals,
     totalMembers,
-    // Dates written out here, inside the saved copy: the format checks the
-    // current year, and reading the clock while drawing stops the page
-    // being prepared ahead.
-    impersonations: impersonations.map((event) => ({
-      id: event.id,
-      adminName: event.adminName,
-      targetName: event.targetName,
-      when: formatCompactDateTime(event.createdAt),
-    })),
     inviteRequired: setting?.organiserInviteRequired ?? false,
     viewerIsOwner: admin.isOwner,
     // "Member for…" and "invited… ago" are worked out from this, not from
@@ -117,7 +101,7 @@ function MembersBody({
   role: MemberRoleFilter;
   view: NonNullable<Awaited<ReturnType<typeof getMembersView>>>;
 }) {
-  const { adminId, rows, total, groupTotals, totalMembers, impersonations, inviteRequired, viewerIsOwner, now } = view;
+  const { adminId, rows, total, groupTotals, totalMembers, inviteRequired, viewerIsOwner, now } = view;
 
   return (
     <>
@@ -141,28 +125,6 @@ function MembersBody({
         />
       )}
 
-      {impersonations.length > 0 ? (
-        <section className="flex flex-col gap-3">
-          <AdminPageIntro
-            as="h2"
-            description="Every time an organiser has used “Log in as” on a member account. Most recent 20."
-            title="Sign-in log"
-          />
-          <DataList>
-            {impersonations.map((event) => (
-              <DataListItem className="cursor-default hover:bg-transparent" key={event.id}>
-                <DataListBody>
-                  <p className="text-sm">
-                    <span className="font-medium">{event.adminName}</span> logged in as{" "}
-                    <span className="font-medium">{event.targetName}</span>
-                  </p>
-                  <p className="text-xs text-muted-foreground">{event.when}</p>
-                </DataListBody>
-              </DataListItem>
-            ))}
-          </DataList>
-        </section>
-      ) : null}
     </>
   );
 }

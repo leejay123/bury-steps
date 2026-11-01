@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { IntentLink as Link } from "@/components/intent-link";
-import { BookOpen, ChevronsUpDown, Mail } from "lucide-react";
+import { ChevronsUpDown, Mail } from "lucide-react";
 import { ClerkIsland } from "@/components/clerk-island";
 import { LazySiteUserButton } from "@/components/clerk-lazy";
 import { AvatarPlaceholder, BellPlaceholder } from "@/components/header-placeholders";
@@ -8,9 +8,10 @@ import { HeaderPartBoundary } from "@/components/header-part-boundary";
 import { SiteNavBell } from "@/components/site-nav";
 import { getOptionalUser } from "@/lib/auth";
 import { getProgressEnabled } from "@/lib/progress-settings";
-import { sidebarGroups } from "./dash-sidebar";
+import { staticSidebarGroups } from "./dash-sidebar";
+import type { SidebarMe as SidebarMeData } from "./sidebar-state";
 import { EfferdNav } from "./efferd-nav";
-import { getShadcnHomeData } from "./home-data";
+import type { ShadcnHomeData } from "./home-data";
 import { SignedInMark } from "./signed-in-mark";
 
 /*
@@ -38,24 +39,21 @@ export function EfferdSidebarHead({ siteName, logoSrc }: { siteName: string; log
   );
 }
 
-/** The menu and the footer, for whoever is signed in. */
-export async function EfferdSidebarBody() {
-  const [user, groups, data, progressEnabled] = await Promise.all([
-    getOptionalUser(),
-    sidebarGroups(),
-    getShadcnHomeData(),
-    getProgressEnabled(),
-  ]);
-  // Signed out: no sidebar, ever.
-  if (!user || !groups) return <SignedInMark signedIn={false} />;
-  const organiser = user.role === "ADMIN";
-  const name = [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email.split("@")[0]!;
-  const initial = (user.firstName || user.email || "?").charAt(0);
+/**
+ * The menu and the footer, the same for everyone, so they are part of the ready-made
+ * page and show at once: links only some people see, and the person's own row (name,
+ * email, photo), come from what this browser remembers (html[data-sb-role] and the
+ * --me-* values, set before the first paint; sidebar-state.ts). Only SidebarMe waits
+ * for the server, to keep that memory up to date; it draws nothing.
+ */
+export function EfferdSidebarBody({ data, progressEnabled }: { data: ShadcnHomeData; progressEnabled: boolean }) {
   const next = data.next ? data.upcoming[0] : null;
   return (
     <>
-      <SignedInMark signedIn />
-      <EfferdNav groups={groups} />
+      <Suspense fallback={null}>
+        <SidebarMe />
+      </Suspense>
+      <EfferdNav groups={staticSidebarGroups(progressEnabled)} />
       <div className="flex shrink-0 flex-col" data-efferd-foot="">
         {next ? (
           // Efferd's "latest change" card, here the next walk.
@@ -80,34 +78,23 @@ export async function EfferdSidebarBody() {
               <span className="truncate">Contact us</span>
             </Link>
           </li>
-          {organiser ? (
-            <li>
-              <Link
-                className="flex h-7 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-muted-foreground text-xs hover:bg-muted hover:text-foreground [&>svg]:size-4 [&>svg]:shrink-0"
-                data-efferd-button=""
-                href="/admin/guide"
-                title="Organiser guide"
-              >
-                <BookOpen aria-hidden />
-                <span className="truncate">Organiser guide</span>
-              </Link>
-            </li>
-          ) : null}
         </ul>
-        {/* The person, as in Efferd's shell: their photo, name and email; the whole row opens
-            their account menu (the photo's button covers it). */}
+        {/* The person, as in Efferd's shell: their photo, name and email (from this browser's
+            memory, so at once); the whole row opens their account menu (the photo's button
+            covers it). */}
         <div className="border-t p-2">
           <div
             className="relative flex h-12 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-sm hover:bg-muted [&_button]:after:absolute [&_button]:after:inset-0 [&_button]:after:content-['']"
             data-efferd-button=""
-            title={name}
           >
-            <ClerkIsland>
-              <LazySiteUserButton image={user.imageUrl} initial={initial} progressEnabled={progressEnabled} />
-            </ClerkIsland>
+            <span className="relative size-7 shrink-0 overflow-hidden rounded-full bg-muted bg-cover bg-center" data-me-photo="">
+              <ClerkIsland>
+                <LazySiteUserButton image={null} progressEnabled={progressEnabled} />
+              </ClerkIsland>
+            </span>
             <span className="grid min-w-0 flex-1 leading-tight">
-              <span className="truncate font-medium text-foreground">{name}</span>
-              <span className="truncate text-muted-foreground text-xs">{user.email}</span>
+              <span className="truncate font-medium text-foreground" data-me-name="" />
+              <span className="truncate text-muted-foreground text-xs" data-me-email="" />
             </span>
             <ChevronsUpDown aria-hidden className="size-4 shrink-0 text-muted-foreground" />
           </div>
@@ -115,6 +102,19 @@ export async function EfferdSidebarBody() {
       </div>
     </>
   );
+}
+
+/** Keeps this browser's memory of who's signed in up to date (draws nothing). */
+async function SidebarMe() {
+  const user = await getOptionalUser();
+  if (!user) return <SignedInMark signedIn={false} />;
+  const me: SidebarMeData = {
+    role: user.isOwner ? "owner" : user.role === "ADMIN" ? "organiser" : "member",
+    name: [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email.split("@")[0]!,
+    email: user.email,
+    image: user.imageUrl,
+  };
+  return <SignedInMark me={me} signedIn />;
 }
 
 /** The top bar's right end: the notices bell and the avatar menu. */

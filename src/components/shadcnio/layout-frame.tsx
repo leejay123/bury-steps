@@ -1,4 +1,4 @@
-import { Suspense, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import type { SiteTheme } from "@/lib/site-theme";
 import { getInlineLogo } from "@/lib/inline-logo";
 import { getProgressEnabled } from "@/lib/progress-settings";
@@ -10,18 +10,6 @@ import { GlobalNav, type SearchItem } from "./globalnav";
 import { getShadcnHomeData } from "./home-data";
 import { ShadcnSiteShell } from "./site-shell";
 import { TopLoader } from "./top-loader";
-
-/** The sidebar menu's shape while it loads (signed-in people only ever see it). */
-function SidebarSkeleton() {
-  return (
-    <div aria-hidden="true" className="flex flex-1 flex-col gap-1 p-2">
-      <span className="mx-2 my-2.5 h-3 w-20 rounded bg-muted" />
-      {[0, 1, 2, 3, 4, 5, 6].map((i) => (
-        <span className="mx-2 my-2.5 h-3 rounded bg-muted" key={i} style={{ width: `${45 + ((i * 13) % 35)}%` }} />
-      ))}
-    </div>
-  );
-}
 
 /**
  * Every page but the homepage in the shadcn.io design: their header, their
@@ -79,9 +67,7 @@ export async function ShadcnLayoutFrame({
         sidebar={
           <>
             <EfferdSidebarHead logoSrc={logo.src} siteName={theme.siteName} />
-            <Suspense fallback={<SidebarSkeleton />}>
-              <EfferdSidebarBody />
-            </Suspense>
+            <EfferdSidebarBody data={data} progressEnabled={progressEnabled} />
           </>
         }
         search={search}

@@ -136,7 +136,6 @@ const ORGANISER: NavGroup[] = [
     title: "Set up",
     links: [
       { href: "/admin/settings", label: "Settings" },
-      { href: "/admin/guide", label: "Guide" },
       { href: "/overview", label: "Dashboard" },
     ],
   },
@@ -269,10 +268,9 @@ export function shortMenu(links: { href: string; label: string }[], facebookUrl:
     { href: "/admin/messages", label: "Messages" },
     { href: "/admin/reports", label: "Reports" },
     { href: "/admin/settings", label: "Settings" },
-    { href: "/admin/guide", label: "Guide" },
   ].filter((link) => has(link.href));
   if (manage.length) {
-    for (const link of manage.filter((link) => link.href !== "/admin/guide"))
+    for (const link of manage)
       sections.push(organiserSection(link.href.split("/").pop()!, link.href, link.label, manage));
   } else {
     sections.push(apps, contact);

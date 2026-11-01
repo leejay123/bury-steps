@@ -29,18 +29,17 @@ describe("navItems", () => {
       "/admin/messages",
       "/admin/reports",
       "/admin/settings",
-      "/admin/guide",
     ]);
   });
 });
 
 describe("navItems with limited organiser permissions", () => {
-  it("hides each section behind its own permission, keeps Guide unconditional", () => {
+  it("hides each section behind its own permission", () => {
     expect(
       navItems(true, "/admin/walks", { ...NO_ORGANISER_PERMISSIONS, permMembersView: true }).map(
         (item) => item.href,
       ),
-    ).toEqual(["/", "/walks", "/notices", "/progress", "/history", "/admin/members", "/admin/guide"]);
+    ).toEqual(["/", "/walks", "/notices", "/progress", "/history", "/admin/members"]);
   });
 
   it("hides every organiser section for someone with no permissions at all", () => {
@@ -50,7 +49,6 @@ describe("navItems with limited organiser permissions", () => {
       "/notices",
       "/progress",
       "/history",
-      "/admin/guide",
     ]);
   });
 

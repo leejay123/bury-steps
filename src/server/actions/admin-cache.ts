@@ -348,7 +348,6 @@ async function resetSiteToDefaultWork(
   revalidatePath("/walks");
   revalidatePath("/progress");
   revalidatePath("/history");
-  revalidatePath("/admin/guide");
 
   if (clerkFailed > 0) {
     return {

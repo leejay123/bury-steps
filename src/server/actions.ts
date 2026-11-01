@@ -150,7 +150,6 @@ export {
 
 export { clearSiteCache, resetSiteToDefault } from "./actions/admin-cache";
 
-export { startImpersonation } from "./actions/impersonation";
 
 export {
   getContactFormDefaults,

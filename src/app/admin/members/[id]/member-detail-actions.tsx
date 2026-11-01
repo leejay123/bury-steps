@@ -4,7 +4,6 @@ import type React from "react";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { AddOwnerButton } from "../add-owner-button";
 import { DeleteMemberButton } from "../delete-member-button";
-import { ImpersonateButton } from "../impersonate-button";
 import { MemberRoleButton } from "../member-role-button";
 import { MemberRowActionsMenu } from "../member-row-actions-menu";
 import { RemoveOwnerButton } from "../remove-owner-button";
@@ -53,11 +52,8 @@ export function MemberDetailActions({
   walkCount: number;
 }) {
   // Every applicable action collapses behind a single "⋯" menu — even when
-  // there's only one — so the header's controls are always just Impersonate
-  // (when it applies) plus that one button, never a mix of bare buttons and
-  // a menu depending on the count. Impersonate stays a direct button on its
-  // own regardless — it's unrelated to role changes and only ever appears
-  // for a plain member.
+  // there's only one — so the header's controls are always just that one
+  // button, never a mix of bare buttons and a menu depending on the count.
   //
   // For an action that opens a dialog/drawer, `menuItem` never renders that
   // widget itself — it only proxies a click to the real (always-mounted,
@@ -201,9 +197,6 @@ export function MemberDetailActions({
 
   return (
     <div className="flex flex-wrap gap-2 sm:shrink-0 sm:justify-end">
-      {role === "MEMBER" && !pendingInvite && viewerIsOwner ? (
-        <ImpersonateButton name={name} userId={id} />
-      ) : null}
       {actions.length > 0 ? (
         <MemberRowActionsMenu>{actions.map((a) => a.menuItem)}</MemberRowActionsMenu>
       ) : null}

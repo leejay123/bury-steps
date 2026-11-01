@@ -148,7 +148,7 @@ function NoticesFallback({
           <NoticesSearchChrome />
         </div>
         {categories ? <NoticeCategoryBar labels={categories} /> : null}
-        <div className="flex flex-col gap-4 px-4 py-6 md:px-6">
+        <div className="flex flex-col gap-4 px-4 py-6 md:px-6" data-edge-wrap="">
           {/* Exactly as many rows as there are notices, from the first paint. */}
           <NoticeRowsSkeleton known={rows} remember="notices" />
         </div>

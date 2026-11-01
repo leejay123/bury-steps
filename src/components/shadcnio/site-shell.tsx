@@ -286,7 +286,6 @@ const PAGE_TITLES: [string, string][] = [
   ["/admin/messages", "Messages"],
   ["/admin/reports", "Reports"],
   ["/admin/settings", "Settings"],
-  ["/admin/guide", "Guide"],
   ["/walks", "Walks"],
   ["/w/", "Walk"],
   ["/notices", "Notices"],

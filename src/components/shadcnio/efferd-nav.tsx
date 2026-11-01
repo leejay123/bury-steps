@@ -27,7 +27,7 @@ export function EfferdNav({ groups, onNavigate }: { groups: SidebarGroup[]; onNa
   return (
     <nav aria-label="Dashboard" className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain" data-slot="efferd-nav">
       {groups.map((group) => (
-        <div className={GROUP} key={group.title}>
+        <div className={GROUP} data-sb-only={group.only} key={group.title}>
           <p className={GROUP_LABEL} data-efferd-label="">
             {group.title}
           </p>
@@ -36,9 +36,9 @@ export function EfferdNav({ groups, onNavigate }: { groups: SidebarGroup[]; onNa
               const Icon = SIDEBAR_ICONS[link.icon];
               const current = isCurrent(path, link.href);
               if (link.children?.length)
-                return <SubMenu current={current} key={link.href} link={link} onNavigate={onNavigate} path={path} />;
+                return <SubMenu current={current} key={`${link.href}-sub`} link={link} onNavigate={onNavigate} path={path} />;
               return (
-                <li className="relative" key={link.href}>
+                <li className="relative" data-sb-only={link.only} key={`${link.href}-${link.only ?? ""}`}>
                   <Link
                     aria-current={current ? "page" : undefined}
                     className={`${BUTTON} ${current ? "bg-muted font-medium text-foreground" : "text-foreground/75"}`}
@@ -92,7 +92,7 @@ function SubMenu({
     } else setOpen((was) => !was);
   };
   return (
-    <li className="relative">
+    <li className="relative" data-sb-only={link.only}>
       <button
         aria-expanded={open}
         className={`${BUTTON} ${current ? "font-medium text-foreground" : "text-foreground/75"}`}

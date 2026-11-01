@@ -425,7 +425,6 @@ async function updateCancelledWalkRetentionDaysWork(
   revalidatePath("/walks");
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/retention");
-  revalidatePath("/admin/guide");
   return {
     ok: true,
     message: parsed
@@ -477,7 +476,6 @@ async function updateAccidentReportRetentionDaysWork(
   revalidatePath("/admin/reports");
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/retention");
-  revalidatePath("/admin/guide");
   return {
     ok: true,
     message: parsed

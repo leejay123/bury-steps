@@ -147,7 +147,7 @@ function NoticesBlogSectionInner({
 
       <NoticeCategoryBar active={activeCategory} labels={filters} onSelect={selectCategory} />
 
-      <div className="flex flex-col gap-4 px-4 py-6 md:px-6" ref={listRef}>
+      <div className="flex flex-col gap-4 px-4 py-6 md:px-6" data-edge-wrap="" ref={listRef}>
         {filtered.length === 0 ? (
           <Empty className="border">
             <EmptyHeader>

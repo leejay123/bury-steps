@@ -53,7 +53,6 @@ export async function sidebarGroups(): Promise<SidebarGroup[] | null> {
           ...SETTINGS_PAGE_GROUPS.flatMap((group) => group.pages.map((page) => ({ href: page.href, label: page.title }))),
         ],
       });
-    links.push({ href: "/admin/guide", label: "Guide", icon: "guide" });
     groups.push({ title: "Organisers", links });
   }
   groups.push({
@@ -61,6 +60,45 @@ export async function sidebarGroups(): Promise<SidebarGroup[] | null> {
     links: [{ href: "/email-preferences", label: "Email preferences", icon: "emails" }],
   });
   return groups;
+}
+
+/**
+ * Every link anyone's sidebar can hold, the same for everyone so it is part of the
+ * ready-made page: links only some see are marked (`only`) and shown from
+ * html[data-sb-role] before the first paint (shadcnio.css). Organisers who aren't
+ * the owner have a fixed set (ORGANISER_PERMISSIONS: Walks and Reports); the owner
+ * has every page.
+ */
+export function staticSidebarGroups(progressEnabled: boolean): SidebarGroup[] {
+  const settings = [
+    { href: "/admin/settings", label: "All settings" },
+    ...SETTINGS_PAGE_GROUPS.flatMap((group) => group.pages.map((page) => ({ href: page.href, label: page.title }))),
+  ];
+  return [
+    {
+      title: "Dashboard",
+      links: [
+        { href: "/", label: "Home", icon: "home" },
+        { href: "/overview", label: "Overview", icon: "overview" },
+        { href: "/walks", label: "Walks", icon: "walks", only: "member" },
+        { href: "/admin/walks", label: "Walks", icon: "walks", only: "staff" },
+        { href: "/notices", label: "Notices", icon: "notices" },
+        ...(progressEnabled ? [{ href: "/progress", label: "Progress", icon: "progress" as const }] : []),
+        { href: "/history", label: "History", icon: "history" },
+      ],
+    },
+    {
+      title: "Organisers",
+      only: "staff",
+      links: [
+        { href: "/admin/members", label: "Members", icon: "members", only: "owner" },
+        { href: "/admin/messages", label: "Messages", icon: "messages", only: "owner" },
+        { href: "/admin/reports", label: "Reports", icon: "reports" },
+        { href: "/admin/settings", label: "Settings", icon: "settings", only: "owner", children: settings },
+      ],
+    },
+    { title: "Settings", links: [{ href: "/email-preferences", label: "Email preferences", icon: "emails" }] },
+  ];
 }
 
 /** The sidebar's own parts (shadcn.io's, class for class), for the frame to place. */

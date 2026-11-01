@@ -49,8 +49,11 @@ export type SidebarLink = {
   tag?: string;
   /** Pages listed under it, opened and closed with its row (Efferd's sub-menu). */
   children?: { href: string; label: string }[];
+  /** Shown only to some (html[data-sb-role], set before the first paint): members only,
+   * organisers and the owner ("staff"), or the owner alone. */
+  only?: "member" | "staff" | "owner";
 };
-export type SidebarGroup = { title: string; links: SidebarLink[] };
+export type SidebarGroup = { title: string; links: SidebarLink[]; only?: SidebarLink["only"] };
 
 // shadcn.io's sidebar links, class for class (used with their permission).
 const LINK =

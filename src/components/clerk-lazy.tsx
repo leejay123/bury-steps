@@ -18,9 +18,6 @@ const ClerkProviderInner = lazy(() => import("@clerk/nextjs").then((mod) => ({ d
 const SiteUserButtonInner = lazy(() =>
   import("@/components/site-user-button").then((mod) => ({ default: mod.SiteUserButton })),
 );
-const ImpersonationBannerInner = lazy(() =>
-  import("@/components/impersonation-banner").then((mod) => ({ default: mod.ImpersonationBanner })),
-);
 
 export function LazyClerkProvider(props: ComponentProps<typeof ClerkProviderInner>) {
   return (
@@ -38,14 +35,6 @@ export function LazySiteUserButton(props: ComponentProps<typeof SiteUserButtonIn
       fallback={<AvatarPlaceholder image={props.image} initial={props.initial} />}
     >
       <SiteUserButtonInner {...props} />
-    </Suspense>
-  );
-}
-
-export function LazyImpersonationBanner(props: ComponentProps<typeof ImpersonationBannerInner>) {
-  return (
-    <Suspense fallback={null}>
-      <ImpersonationBannerInner {...props} />
     </Suspense>
   );
 }

@@ -1,12 +1,32 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { ChevronRight, Search, SearchX, SlidersHorizontal } from "lucide-react";
+import {
+  Check,
+  ChevronRight,
+  Search,
+  SearchX,
+  SlidersHorizontal,
+} from "lucide-react";
 import { WalkStatusHeader } from "@/components/walk-status-badge";
 import { IntentLink } from "@/components/intent-link";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { formatTime } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 
@@ -33,8 +53,9 @@ const PAGE_SIZES = [10, 20, 50] as const;
 // The toolbar's buttons: outline, the site's corners.
 const TOOL =
   "inline-flex h-9 shrink-0 items-center gap-2 rounded-md border bg-background px-3 text-sm font-medium outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-4 [&_svg]:shrink-0";
+// One choice in the Filter menu: grey only under the pointer; the chosen one has a tick.
 const CHOICE =
-  "flex w-full items-center justify-between gap-3 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted aria-pressed:bg-muted aria-pressed:font-medium";
+  "flex w-full items-center justify-between gap-3 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted aria-pressed:font-medium [&>svg]:invisible aria-pressed:[&>svg]:visible";
 
 /**
  * The Walks list as one card (the shadcn.io design): search, Filter (status and sort)
@@ -87,11 +108,15 @@ export function WalkTableCard<S extends string, O extends string>({
   const start = (current - 1) * pageSize;
   const paged = rows.slice(start, start + pageSize);
 
-
-  const filtersOn = (status !== statusOptions[0]?.value ? 1 : 0) + (sort !== sortOptions[0]?.value ? 1 : 0);
+  const filtersOn =
+    (status !== statusOptions[0]?.value ? 1 : 0) +
+    (sort !== sortOptions[0]?.value ? 1 : 0);
 
   return (
-    <div className="overflow-hidden rounded-xl border bg-background" data-walk-table="">
+    <div
+      className="overflow-hidden rounded-xl border bg-background"
+      data-walk-table=""
+    >
       <div className="flex flex-wrap items-center gap-2 border-b p-3">
         <InputGroup className="min-w-0 flex-1 basis-60">
           <InputGroupInput
@@ -110,39 +135,57 @@ export function WalkTableCard<S extends string, O extends string>({
               <SlidersHorizontal aria-hidden />
               Filter
               {filtersOn ? (
-                <span className="rounded-full bg-foreground px-1.5 text-background text-xs tabular-nums">{filtersOn}</span>
+                <span className="rounded-full bg-foreground px-1.5 text-background text-xs tabular-nums">
+                  {filtersOn}
+                </span>
               ) : null}
             </button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-60 p-2">
-            <p className="px-2 pt-1 pb-1.5 font-medium text-muted-foreground text-xs">Status</p>
-            {statusOptions.map((option) => (
-              <button
-                aria-pressed={status === option.value}
-                className={CHOICE}
-                key={option.value}
-                onClick={() => onStatus(option.value)}
-                type="button"
-              >
-                {option.label}
-              </button>
-            ))}
-            <p className="mt-2 border-t px-2 pt-2.5 pb-1.5 font-medium text-muted-foreground text-xs">Sort</p>
-            {sortOptions.map((option) => (
-              <button
-                aria-pressed={sort === option.value}
-                className={CHOICE}
-                key={option.value}
-                onClick={() => onSort(option.value)}
-                type="button"
-              >
-                {option.label}
-              </button>
-            ))}
+            <p className="px-2 pt-1 pb-1.5 font-medium text-muted-foreground text-xs">
+              Status
+            </p>
+            <div className="flex flex-col gap-0.5">
+              {statusOptions.map((option) => (
+                <button
+                  aria-pressed={status === option.value}
+                  className={CHOICE}
+                  key={option.value}
+                  onClick={() => onStatus(option.value)}
+                  type="button"
+                >
+                  {option.label}
+                  <Check aria-hidden className="size-4" />
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 border-t px-2 pt-2.5 pb-1.5 font-medium text-muted-foreground text-xs">
+              Sort
+            </p>
+            <div className="flex flex-col gap-0.5">
+              {sortOptions.map((option) => (
+                <button
+                  aria-pressed={sort === option.value}
+                  className={CHOICE}
+                  key={option.value}
+                  onClick={() => onSort(option.value)}
+                  type="button"
+                >
+                  {option.label}
+                  <Check aria-hidden className="size-4" />
+                </button>
+              ))}
+            </div>
           </PopoverContent>
         </Popover>
-        <Select onValueChange={(value) => setPageSize(Number(value))} value={String(pageSize)}>
-          <SelectTrigger aria-label="Walks per page" className="h-9 w-auto gap-2">
+        <Select
+          onValueChange={(value) => setPageSize(Number(value))}
+          value={String(pageSize)}
+        >
+          <SelectTrigger
+            aria-label="Walks per page"
+            className="h-9 w-auto gap-2"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent align="end">
@@ -162,7 +205,14 @@ export function WalkTableCard<S extends string, O extends string>({
           {/* Each walk as before: its status and day on a grey strip, then its details. */}
           <ul className="divide-y">
             {paged.map((row) => (
-              <li className={cn("relative", row.href && "hover:bg-muted/40", !row.href && "opacity-70")} key={row.id}>
+              <li
+                className={cn(
+                  "relative",
+                  row.href && "hover:bg-muted/40",
+                  !row.href && "opacity-70",
+                )}
+                key={row.id}
+              >
                 <WalkStatusHeader
                   cancelledAt={row.cancelledAt}
                   durationMins={row.durationMins}
@@ -171,9 +221,18 @@ export function WalkTableCard<S extends string, O extends string>({
                 />
                 <div className="flex items-center gap-3 px-4 py-3">
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <p className={cn("font-medium", !row.href && "text-muted-foreground")}>
+                    <p
+                      className={cn(
+                        "font-medium",
+                        !row.href && "text-muted-foreground",
+                      )}
+                    >
                       {row.href ? (
-                        <IntentLink className="after:absolute after:inset-0" full href={row.href}>
+                        <IntentLink
+                          className="after:absolute after:inset-0"
+                          full
+                          href={row.href}
+                        >
                           {row.title}
                         </IntentLink>
                       ) : (
@@ -189,9 +248,16 @@ export function WalkTableCard<S extends string, O extends string>({
                         {row.count} {countLabel.toLowerCase()}
                       </p>
                     )}
-                    {row.cue ? <p className="font-medium text-sm">{row.cue}</p> : null}
+                    {row.cue ? (
+                      <p className="font-medium text-sm">{row.cue}</p>
+                    ) : null}
                   </div>
-                  {row.href ? <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" /> : null}
+                  {row.href ? (
+                    <ChevronRight
+                      aria-hidden
+                      className="size-4 shrink-0 text-muted-foreground"
+                    />
+                  ) : null}
                 </div>
               </li>
             ))}
@@ -204,11 +270,15 @@ export function WalkTableCard<S extends string, O extends string>({
           ) : null}
           <div className="flex items-center justify-between gap-3 border-t px-4 py-3 text-muted-foreground text-sm">
             <span className="tabular-nums">
-              Showing {start + 1}–{Math.min(start + pageSize, rows.length)} of {rows.length} {noun}
+              Showing {start + 1}–{Math.min(start + pageSize, rows.length)} of{" "}
+              {rows.length} {noun}
             </span>
             <span className="flex gap-2">
               <button
-                className={cn(TOOL, "h-8 disabled:pointer-events-none disabled:opacity-50")}
+                className={cn(
+                  TOOL,
+                  "h-8 disabled:pointer-events-none disabled:opacity-50",
+                )}
                 disabled={current <= 1}
                 onClick={() => setPage(current - 1)}
                 type="button"
@@ -216,7 +286,10 @@ export function WalkTableCard<S extends string, O extends string>({
                 Previous
               </button>
               <button
-                className={cn(TOOL, "h-8 disabled:pointer-events-none disabled:opacity-50")}
+                className={cn(
+                  TOOL,
+                  "h-8 disabled:pointer-events-none disabled:opacity-50",
+                )}
                 disabled={current >= pageCount}
                 onClick={() => setPage(current + 1)}
                 type="button"
