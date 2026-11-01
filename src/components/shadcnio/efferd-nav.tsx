@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { IntentLink as Link } from "@/components/intent-link";
 import { usePathname, useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { SIDEBAR_ICONS, type SidebarGroup } from "./sidebar-nav";

@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import Link from "next/link";
+import { IntentLink as Link } from "@/components/intent-link";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 

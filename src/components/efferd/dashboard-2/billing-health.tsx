@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { IntentLink as Link } from "@/components/intent-link";
 import { ArrowRightIcon, CircleCheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {

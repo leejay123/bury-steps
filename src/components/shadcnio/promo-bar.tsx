@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useState } from "react";
-import Link from "next/link";
+import { IntentLink as Link } from "@/components/intent-link";
 
 function countdown(ms: number) {
   if (ms <= 0) return "Starting now";

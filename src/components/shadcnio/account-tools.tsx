@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import Link from "next/link";
+import { IntentLink as Link } from "@/components/intent-link";
 import { cookies } from "next/headers";
 import { ClerkIsland } from "@/components/clerk-island";
 import { LazySiteUserButton } from "@/components/clerk-lazy";

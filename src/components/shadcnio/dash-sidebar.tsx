@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { IntentLink as Link } from "@/components/intent-link";
 import { ChevronsUpDown } from "lucide-react";
 import { ClerkIsland } from "@/components/clerk-island";
 import { LazySiteUserButton } from "@/components/clerk-lazy";

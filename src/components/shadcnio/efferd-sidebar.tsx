@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import Link from "next/link";
+import { IntentLink as Link } from "@/components/intent-link";
 import { BookOpen, ChevronsUpDown, Mail } from "lucide-react";
 import { ClerkIsland } from "@/components/clerk-island";
 import { LazySiteUserButton } from "@/components/clerk-lazy";
