@@ -255,6 +255,7 @@ export function ShadcnSiteShell({
         />
         <aside
           aria-label="Dashboard"
+          data-overlay-panel=""
           className="relative flex h-full w-[min(18rem,85vw)] -translate-x-full flex-col overflow-hidden overscroll-contain border-e bg-chrome shadow-xl transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] group-data-[state=open]/drawer:translate-x-0 rtl:translate-x-full motion-reduce:transition-none"
         >
           {sidebar}

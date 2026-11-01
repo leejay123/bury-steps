@@ -142,7 +142,7 @@ export const SearchPanel = forwardRef<SearchPanelHandle, { items: SearchItem[]; 
                 <circle cx="7" cy="7" fill="currentColor" r="7" />
                 <path
                   d="m4.7 4.7 4.6 4.6m0-4.6L4.7 9.3"
-                  stroke="var(--gn-background-opened)"
+                  stroke="var(--gn-background-opened, var(--background))"
                   strokeLinecap="round"
                   strokeWidth="1.1"
                 />

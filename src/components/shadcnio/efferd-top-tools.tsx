@@ -79,6 +79,7 @@ export function EfferdTopTools({ search, siteName }: { search: SearchItem[]; sit
         aria-modal="true"
         className="group/sheet fixed inset-0 z-[70] flex flex-col bg-background opacity-0 transition-[opacity,visibility,translate] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] -translate-y-2 data-[state=closed]:invisible data-[state=open]:translate-y-0 data-[state=open]:opacity-100 lg:hidden"
         data-efferd-pop=""
+        data-overlay-panel=""
         data-state={sheetOpen ? "open" : "closed"}
         inert={!sheetOpen}
         role="dialog"

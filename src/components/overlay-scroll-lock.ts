@@ -119,14 +119,14 @@ function eventTargetInsideOpenOverlay(target: EventTarget | null) {
   if (!(target instanceof Element)) return false;
   return Boolean(
     target.closest(
-      '[data-slot="drawer-content"], [data-slot="dialog-content"], [data-slot="alert-dialog-content"], [data-slot="popover-content"]',
+      '[data-slot="drawer-content"], [data-slot="dialog-content"], [data-slot="alert-dialog-content"], [data-slot="popover-content"], [data-overlay-panel]',
     ),
   );
 }
 
 function eventTargetInsideDrawer(target: EventTarget | null) {
   if (!(target instanceof Element)) return false;
-  return Boolean(target.closest('[data-slot="drawer-content"], [data-slot="popover-content"]'));
+  return Boolean(target.closest('[data-slot="drawer-content"], [data-slot="popover-content"], [data-overlay-panel]'));
 }
 
 const SCROLL_KEYS = new Set(["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "]);
@@ -136,7 +136,8 @@ const SCROLL_KEYS = new Set(["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home
  * overlay. overflow:hidden alone still leaks on iOS/trackpads sometimes, so
  * this also pins scrollY/scrollX directly and blocks the keyboard's own
  * scroll keys outside the open panel — the panel itself sets touch-pan-y so
- * it can still scroll/drag.
+ * it can still scroll/drag. A hand-made panel (not a shadcn drawer, dialog or
+ * popover) marks itself with data-overlay-panel so it can still scroll.
  */
 // Overlays overlap (a drawer still sliding away while a dialog opens, the
 // phone menu closing as search opens). Each lock used to snapshot the page's
