@@ -558,17 +558,32 @@ class Field {
   }
 
   measure(wide: boolean) {
-    if (!(this.host && this.text)) return;
+    if (!this.host) return;
     const hostBox = this.host.getBoundingClientRect();
-    const textBox = this.text.getBoundingClientRect();
-    const pad = wide ? 0 : 40;
+    let left = Infinity;
+    let top = Infinity;
+    let right = -Infinity;
+    let bottom = -Infinity;
+    const nodes: HTMLElement[] = this.text ? [this.text] : [];
+    for (const child of this.host.children) {
+      if (child instanceof HTMLElement && child !== this.canvas) nodes.push(child);
+    }
+    for (const node of nodes) {
+      const box = node.getBoundingClientRect();
+      if (box.width <= 0 || box.height <= 0) continue;
+      left = Math.min(left, box.left);
+      top = Math.min(top, box.top);
+      right = Math.max(right, box.right);
+      bottom = Math.max(bottom, box.bottom);
+    }
+    const pad = wide ? 36 : 48;
     this.clear =
-      hostBox.width > 0 && hostBox.height > 0
+      hostBox.width > 0 && hostBox.height > 0 && Number.isFinite(left)
         ? [
-            (textBox.left - pad - hostBox.left) / hostBox.width,
-            (textBox.top - pad - hostBox.top) / hostBox.height,
-            (textBox.width + 2 * pad) / hostBox.width,
-            (textBox.height + 2 * pad) / hostBox.height,
+            (left - pad - hostBox.left) / hostBox.width,
+            (top - pad - hostBox.top) / hostBox.height,
+            (right - left + 2 * pad) / hostBox.width,
+            (bottom - top + 2 * pad) / hostBox.height,
           ]
         : [0, 0, 0, 0];
     this.dirty = true;

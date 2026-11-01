@@ -840,10 +840,11 @@ html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) 
    the page, its hero across the top with a line under it, the rest padded inside, and lists
    running edge to edge across the card rather than boxed inside it (no doubled borders). */
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] { border: 1px solid var(--border); border-radius: var(--radius); overflow: clip; padding: 0 1.5rem 1.5rem !important; background: var(--background); }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-shadcn-top] { margin: 0 -1.5rem 1.5rem !important; width: calc(100% + 3rem); max-width: none; border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; }
-  /* The list is not a card inside the card. Its own border sat on the page
-     border and on the strip above it (a double line). Rows keep their hairlines. */
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is([data-walk-table], [data-reveal-list], [data-edge-list]) { margin-inline: -1.5rem; width: calc(100% + 3rem); max-width: none; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; overflow: visible; background: transparent; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-shadcn-top] { margin: 0 -1.5rem 1.5rem !important; width: auto !important; max-width: none; border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; }
+  /* The list is not a card inside the card. A set width made it stick out and
+     get clipped, so the rows never met both edges (Progress uses the margin
+     only, and the band grows to fill it). Rows keep their hairlines. */
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is([data-walk-table], [data-reveal-list], [data-edge-list]) { margin-inline: -1.5rem !important; width: auto !important; max-width: none; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; overflow: visible; background: transparent; align-self: stretch; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-page-card] { gap: 1.25rem !important; }
   /* The Overview is already one card (its grid): no page card round it. */
   html[data-page-kind="bare"] [data-slot="docs-page"] { border: 0 !important; padding: 0 !important; border-radius: 0 !important; overflow: visible !important; }
@@ -872,7 +873,7 @@ html:is([data-sb-role="owner"], [data-sb-role="organiser"]) [data-sb-only="membe
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-shadcn-top]) { row-gap: 0 !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-shadcn-top]) > [data-shadcn-top] ~ * { margin-top: 1.5rem; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-shadcn-top]) > [data-shadcn-top] + :is([data-edge-top], :has([data-edge-top])) { margin-top: 0; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] { margin-inline: -1.5rem; width: calc(100% + 3rem); max-width: none; padding: 0.75rem; border-bottom: 1px solid var(--border); border-top: 0; align-items: center !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] { margin-inline: -1.5rem !important; width: auto !important; max-width: none; padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border); border-top: 0; align-self: stretch; align-items: center !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] [data-slot="tabs-list"] { margin-block: -0.125rem; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-bar]) { row-gap: 0 !important; }
@@ -939,7 +940,7 @@ html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) 
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is(.gap-8, .gap-6, .gap-4, .gap-3):not(form):has(> :is([data-edge-group], [data-edge-panel], [data-edge-head], [data-edge-list], [data-reveal-list], [data-edge-bar], [data-walk-table], [data-edge-stats], [data-edge-stories])) { row-gap: 0 !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-settings-body] :is(.gap-8, .gap-6):not(form):has([data-edge-group], [data-edge-panel], [data-edge-head]) { row-gap: 0 !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-shadcn-top]) > [data-shadcn-top] ~ :is([data-edge-stories], [data-edge-bar], :has([data-edge-stories]), :has([data-edge-bar]), :has([data-edge-top])) { margin-top: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stories] { margin-inline: -1.5rem; width: calc(100% + 3rem); max-width: none; padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border); border-top: 0; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stories] { margin-inline: -1.5rem !important; width: auto !important; max-width: none; padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border); border-top: 0; align-self: stretch; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] { row-gap: 0 !important; gap: 0 !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > :is([data-slot="separator"], hr) { display: none !important; }
   /* One line between bands: the band above keeps its bottom border. A head does
