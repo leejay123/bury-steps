@@ -24,7 +24,7 @@ function StatCardSkeleton({ label }: { label: string }) {
  */
 export function MemberDetailSkeleton() {
   return (
-    <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6 px-4 py-6 md:px-6">
+    <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6 px-4 py-6 md:px-6" data-edge-sections="">
       <Link className="text-sm text-muted-foreground hover:text-foreground" href="/admin/members">
         &larr; All members
       </Link>
@@ -66,7 +66,7 @@ export function MemberDetailSkeleton() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2" data-edge-stats="">
         <StatCardSkeleton label="Total walks" />
         <StatCardSkeleton label="Cancelled after clock-in" />
       </div>

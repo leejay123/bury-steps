@@ -202,7 +202,7 @@ export function StoriesRow() {
   if (!feed) {
     if (skeletonCount === 0) return null;
     return (
-      <div aria-hidden className="flex gap-4 overflow-hidden py-1.5">
+      <div aria-hidden className="flex gap-4 overflow-hidden py-1.5" data-edge-stories="">
         {Array.from({ length: skeletonCount }, (_, i) => (
           <div
             className="flex w-16 shrink-0 flex-col items-center gap-1.5"
@@ -287,7 +287,7 @@ export function StoriesRow() {
   return (
     <section aria-label="Stories" className="flex flex-col gap-2">
       {/* Room around the circles, or the scrolling row clips their rings. */}
-      <div className="-mx-1.5 flex gap-4 overflow-x-auto px-1.5 py-1.5">
+      <div className="-mx-1.5 flex gap-4 overflow-x-auto px-1.5 py-1.5" data-edge-stories="">
         {canAdd ? (
           <button
             className="flex w-16 shrink-0 cursor-pointer flex-col items-center gap-1.5 text-center"

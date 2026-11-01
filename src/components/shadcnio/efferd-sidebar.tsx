@@ -28,7 +28,7 @@ export function EfferdSidebarHead({ siteName, logoSrc }: { siteName: string; log
     <div className="flex h-14 shrink-0 items-center border-b px-2">
       <Link
         aria-label={`${siteName}, back to home`}
-        className="flex h-8 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-sm outline-hidden hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex h-8 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
         data-efferd-button=""
         href="/"
       >

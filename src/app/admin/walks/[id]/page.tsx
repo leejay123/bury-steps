@@ -653,9 +653,9 @@ async function WalkDetailPageContent({ id }: { id: string }) {
   );
   // Every layout: the page, with the walk handed to Design this page (in
   // the Manage list) for anyone allowed to change the site's look.
-  const page = (content: ReactNode, { withBack = true }: { withBack?: boolean } = {}) => {
+  const page = (content: ReactNode, { withBack = true, sections = true }: { withBack?: boolean; sections?: boolean } = {}) => {
     const body = (
-      <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
+      <div className="flex flex-col gap-6 px-4 py-6 md:px-6" data-edge-sections={sections ? "" : undefined}>
         {withBack ? backRow : null}
         {content}
       </div>
@@ -675,7 +675,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
         <WalkDesignRender audience="organiser" data={designs.organiser} parts={ideaParts} />
       </>,
       // Designed pages: the back link is the design's Back link block, if it has one.
-      { withBack: false },
+      { withBack: false, sections: false },
     );
   }
 

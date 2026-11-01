@@ -109,7 +109,7 @@ export function SettingsSection({
       data-edge-panel={flush ? undefined : ""}
     >
       {title || description ? (
-        <div className="flex flex-col gap-1" data-edge-group-head={flush ? "" : undefined}>
+        <div className="flex flex-col gap-1" data-edge-group-head="">
           {title ? (
             <h2
               className={cn(

@@ -91,6 +91,8 @@ export function SettingsSubPageTabs() {
     <nav
       aria-label="Pages in this section"
       className="-mx-1 overflow-x-auto overscroll-x-contain px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      data-edge-bar=""
+      data-edge-top=""
       ref={scrollerRef}
     >
       {/* Styled after shadcn studio's Tabs 27: a spring-animated pill slides

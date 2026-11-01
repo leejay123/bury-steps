@@ -209,7 +209,7 @@ function NoticesBlogSectionInner({
                   <p className="text-xs text-muted-foreground">
                     {noticeDateLabel(notice)}
                   </p>
-                  <p className="line-clamp-3 text-sm text-muted-foreground">{notice.body}</p>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{notice.body}</p>
                 </Link>
               ))}
             </div>

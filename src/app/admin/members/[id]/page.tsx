@@ -56,7 +56,7 @@ async function MemberDetailPageContent({ id }: { id: string }) {
   const cancelledCount = member.items.filter((item) => item.cancelledAt).length;
 
   return (
-    <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
+    <div className="flex flex-col gap-6 px-4 py-6 md:px-6" data-edge-sections="">
       {/* For a refresh of this page (a click from the list saves it too). */}
       <RememberListCount count={Math.min(member.items.length, LIST_PAGE_SIZE)} id="member-detail" />
       <Link className="text-sm text-muted-foreground hover:text-foreground" href="/admin/members">
@@ -148,7 +148,7 @@ async function MemberDetailPageContent({ id }: { id: string }) {
         searchable, paginated table below is still there for the detail; this
         is the "at a glance" answer to "what has this person been doing".
       */}
-      <div className={`grid gap-3 ${member.role === "ADMIN" ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+      <div className={`grid gap-3 ${member.role === "ADMIN" ? "sm:grid-cols-3" : "sm:grid-cols-2"}`} data-edge-stats="">
         <StatCard label="Total walks" value={attendanceCount} />
         {/* Only organisers create walks — showing this for a member is
             always a confusing "0" that looks like a broken stat. */}

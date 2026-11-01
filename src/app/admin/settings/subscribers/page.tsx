@@ -104,7 +104,7 @@ async function AdminSubscribersSettingsPageContent() {
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5" data-edge-stats="">
         <StatTile label="Newsletter (footer)" value={activeFooterCount} />
         <StatTile label="Newsletter (members)" value={newsletterMemberCount} />
         <StatTile label="Walk announcements on" value={walkAnnouncementCount} />
@@ -194,7 +194,7 @@ async function SubscribersFallback() {
   const widths = ["w-56", "w-44", "w-64", "w-48", "w-52", "w-40"];
   return (
     <div aria-hidden className="flex flex-col gap-8" data-page-loading="">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5" data-edge-stats="">
         {STAT_LABELS.map((label) => (
           <div className="flex flex-col gap-1 rounded-lg border p-4" key={label}>
             <GreyLine className="w-10" h="h-8" />

@@ -38,11 +38,13 @@ export function ProgressBoard({ board }: { board: WalkGamePerson[] }) {
   const pageGroups = useMemo(() => groupBoard(paging.paged), [paging.paged]);
 
   return (
-    <div className="flex flex-col gap-4" ref={listRef}>
-      <div className="flex flex-col gap-6">
+    <div className="flex flex-col" ref={listRef}>
+      <div className="flex flex-col">
         {pageGroups.map((group) => (
-          <div className="flex flex-col gap-2" key={group.monthCount}>
-            <h3 className="text-sm font-medium text-muted-foreground">{group.label}</h3>
+          <section className="flex flex-col" data-edge-group="" key={group.monthCount}>
+            <div className="flex flex-col gap-1" data-edge-group-head="">
+              <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{group.label}</h3>
+            </div>
             <DataList>
               {group.people.map((row) => (
                 <DataListItem className="cursor-default hover:bg-transparent" key={row.userId}>
@@ -63,7 +65,7 @@ export function ProgressBoard({ board }: { board: WalkGamePerson[] }) {
                 </DataListItem>
               ))}
             </DataList>
-          </div>
+          </section>
         ))}
       </div>
       <ListPagination

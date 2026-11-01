@@ -948,3 +948,34 @@ html:is([data-sb-role="owner"], [data-sb-role="organiser"]) [data-sb-only="membe
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-head] + [data-edge-note], html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-note] { padding-inline: 1.5rem; }
 }
 @media (min-width: 48rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-head] ~ :is([data-reveal-list], [data-edge-list]) > * { padding-inline: 1.5rem; } }
+
+/* The card's 1.5rem inset is the only gutter. Page shells also add px-4 py-6
+   (and -mt-6 / -mx-6 to cancel it). Together they leave a white band under the
+   card's top border, stop strips short of the sides, and clip the last line of
+   a list. Edge pieces still pull themselves out by exactly 1.5rem. */
+@media (min-width: 48rem) {
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] > * { margin: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; padding-inline: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is([data-settings-head], [data-settings-body]) { padding: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-shadcn-top] { overflow: hidden !important; contain: paint; }
+  /* Stacks of edge pieces sit on each other. A form keeps the space between its fields. */
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is(.gap-8, .gap-6, .gap-4, .gap-3):not(form):has(> :is([data-edge-group], [data-edge-panel], [data-edge-head], [data-edge-list], [data-reveal-list], [data-edge-bar], [data-walk-table], [data-edge-stats], [data-edge-stories])) { row-gap: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-settings-body] :is(.gap-8, .gap-6):not(form):has([data-edge-group], [data-edge-panel], [data-edge-head]) { row-gap: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-shadcn-top]) > [data-shadcn-top] ~ :is([data-edge-stories], [data-edge-bar], :has([data-edge-stories]), :has([data-edge-bar]), :has([data-edge-top])) { margin-top: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stories] { margin-inline: -1.5rem; padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border); }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] { row-gap: 0 !important; gap: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > :is([data-slot="separator"], hr) { display: none !important; }
+  /* A group head carries the line above it, so two groups don't draw a double rule
+     and a head that follows a gap still has its top border (Show or hide). */
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group-head] { border-top: 1px solid var(--border); }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group]:first-child > [data-edge-group-head],
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-shadcn-top] + [data-edge-group] > [data-edge-group-head],
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group-body] > [data-edge-panel]:first-child > [data-edge-group-head] { border-top: 0; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group]:has(+ [data-edge-group]) { border-bottom: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group-body] > [data-edge-panel]:not(:last-child) { border-bottom: 0 !important; }
+  /* A setting's own title is the grey strip, full width, with the fields under it. */
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-panel]:has(> [data-edge-group-head]) { padding-top: 0 !important; gap: 1.5rem !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-panel] > [data-edge-group-head] { margin-inline: -1.5rem; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stats] { margin-inline: -1.5rem; gap: 0 !important; border-bottom: 1px solid var(--border); border-radius: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stats] > * { border: 0 !important; border-radius: 0 !important; border-inline-end: 1px solid var(--border) !important; box-shadow: none !important; background: transparent !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stats] > *:last-child { border-inline-end: 0 !important; }
+}
