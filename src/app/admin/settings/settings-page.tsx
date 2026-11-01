@@ -157,6 +157,7 @@ export function SettingsSectionGroup({
           "flex flex-col gap-px overflow-hidden rounded-xl border bg-border",
           groupedSectionClassName,
         )}
+        data-edge-list=""
       >
         {children}
       </div>

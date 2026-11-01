@@ -27,7 +27,7 @@ export function DashboardInvoices() {
 	const { recent: invoices, organiser } = useDashboardData();
 	return (
 		<DashboardCard className="relative gap-0 md:col-span-2">
-			<CardHeader className="border-b">
+			<CardHeader className="border-b pb-6">
 				<CardTitle className="text-base">Recent walks</CardTitle>
 				<CardDescription>The latest walks and how many came.</CardDescription>
 			</CardHeader>

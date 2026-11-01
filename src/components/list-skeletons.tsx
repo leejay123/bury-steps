@@ -166,6 +166,7 @@ export function NoticeRowsSkeleton({
     return (
       <RememberedRows
         className="flex flex-col divide-y rounded-xl border"
+        data-edge-list=""
         known={known}
         remember={remember}
         rowClassName="flex flex-col gap-2 p-4"

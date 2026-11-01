@@ -2,13 +2,14 @@
 
 import { useLayoutEffect } from "react";
 
-export type PageKind = "home" | "plain" | "sections";
+export type PageKind = "home" | "plain" | "sections" | "bare";
 
 /**
  * Tells the shadcn.io frame what kind of page this is, as a plain label on <html>
  * (html[data-page-kind]): "home" draws its whole own page, "plain" (Terms, Privacy)
  * has no sidebar and keeps the footer, "sections" is built from their sections and
- * fills the column itself. shadcnio.css lays the frame out from the label.
+ * fills the column itself, "bare" (the Overview, already a card) skips the dashboard's
+ * page card. shadcnio.css lays the frame out from the label.
  *
  * A label rather than html:has([data-…]), which made the browser recheck the whole
  * page after every small change and slowed buttons and drawers right down. The

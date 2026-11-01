@@ -20,7 +20,7 @@ export function DashboardActivity() {
 	const { activity, organiser } = useDashboardData();
 	return (
 		<DashboardCard className="gap-0">
-			<CardHeader className="border-b">
+			<CardHeader className="border-b pb-6">
 				<CardTitle className="text-base">Activity</CardTitle>
 				<CardDescription>{organiser ? "Who clocked in most recently." : "Latest walks and notices."}</CardDescription>
 			</CardHeader>

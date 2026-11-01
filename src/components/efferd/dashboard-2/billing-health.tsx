@@ -24,7 +24,7 @@ export function BillingHealth() {
 	const { notice } = useDashboardData();
 	return (
 		<DashboardCard className="gap-0">
-			<CardHeader className="border-b">
+			<CardHeader className="border-b pb-6">
 				<CardTitle className="text-balance text-base">Notices</CardTitle>
 				<CardDescription className="text-pretty">
 					{notice ? "The latest from the organisers." : "Nothing new from the organisers."}

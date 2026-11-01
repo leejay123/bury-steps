@@ -179,7 +179,7 @@ function NoticesBlogSectionInner({
           </Empty>
         ) : (
           <>
-            <div className="flex flex-col divide-y rounded-xl border">
+            <div className="flex flex-col divide-y rounded-xl border" data-edge-list="">
               {paging.paged.map((notice) => (
                 <Link
                   className="group relative flex flex-col gap-2 p-4 hover:bg-muted/50"
