@@ -208,15 +208,16 @@ export function ShadcnSiteShell({
                           <Link href={parent.href}>{parent.label}</Link>
                         </BreadcrumbLink>
                       </BreadcrumbItem>
-                      <BreadcrumbSeparator />
-                      <BreadcrumbItem className="min-w-0">
-                        {crumb ? (
-                          <BreadcrumbPage className="truncate">{crumb}</BreadcrumbPage>
-                        ) : (
-                          // Until the page names itself: a grey shape where its name goes.
-                          <span aria-hidden="true" className="h-4 w-32 rounded bg-muted" />
-                        )}
-                      </BreadcrumbItem>
+                      {/* The page's own name joins once the page has named itself (nothing in
+                          its place before: it only adds words at the end, so nothing moves). */}
+                      {crumb ? (
+                        <>
+                          <BreadcrumbSeparator />
+                          <BreadcrumbItem className="min-w-0">
+                            <BreadcrumbPage className="truncate">{crumb}</BreadcrumbPage>
+                          </BreadcrumbItem>
+                        </>
+                      ) : null}
                     </>
                   ) : (
                     <BreadcrumbItem className="min-w-0">

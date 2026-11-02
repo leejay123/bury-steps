@@ -1035,3 +1035,6 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
    stretch out to the card's edges needs the card's own side space, which a section hasn't
    got, so its names and buttons stuck out past the box (and let the page shift sideways). */
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-slot="accordion-content"] :is([data-walk-table], [data-reveal-list], [data-edge-list]) { margin-inline: 0 !important; width: auto !important; }
+/* The walks table's placeholder rows (walk-table-card.tsx) sit inside the table's own box, like
+   its real rows: no stretch out to the card's edges (their words and arrows were cut off). */
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-walk-table] [data-reveal-list] { margin-inline: 0 !important; width: auto !important; }

@@ -6,6 +6,7 @@ import { loadDashboard } from "@/components/efferd/dashboard-data";
 import { Dashboard } from "@/components/efferd/dashboard-2/dashboard";
 import { DashboardSkeleton } from "@/components/efferd/dashboard-skeleton";
 import { PageKindMark } from "@/components/shadcnio/page-kind";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
 
 export const metadata: Metadata = { title: "Overview", robots: { index: false, follow: false } };
 
@@ -22,7 +23,9 @@ export default function OverviewPage() {
       {/* Already one card (its grid), so not inside the dashboard's page card too. */}
       <PageKindMark kind="bare" />
       <Suspense fallback={<DashboardSkeleton />}>
-        <OverviewContent />
+        <PlaceholderPreview fallback={<DashboardSkeleton />}>
+          <OverviewContent />
+        </PlaceholderPreview>
       </Suspense>
     </>
   );
