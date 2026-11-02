@@ -903,11 +903,16 @@ html:is([data-sb-role="owner"], [data-sb-role="organiser"]) [data-sb-only="membe
 /* The card ends where its content ends: no empty band at the foot (a list's last line is
    the card's own), the page-number row keeps its own space, an empty filter row disappears,
    and a page with no page top (a single notice, say) keeps the card's space all round. */
-  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:has([data-shadcn-top]) { padding-bottom: 0 !important; }
+/* The page-level checks below (does the page have a page top, a joined or separate-boxes
+   walk design?) look only at the page that's showing (a marker not inside a hidden page, at any depth):
+   the site keeps the pages you left in the page, hidden (display: none), so going back is
+   instant, and a hidden walk design took the
+   card off Notices and every page after it. */
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:has([data-shadcn-top]:where(:not([style*="display: none"] *, [style*="display:none"] *))) { padding-bottom: 0 !important; }
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is([data-walk-table], [data-reveal-list], [data-edge-list]):last-child { border-bottom: 0 !important; }
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-foot]:last-child { padding-bottom: 0.75rem; }
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar]:not(:has(*)) { display: none !important; }
-  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:not(:has([data-shadcn-top])) { padding: 1.5rem !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:not(:has([data-shadcn-top]:where(:not([style*="display: none"] *, [style*="display:none"] *)))) { padding: 1.5rem !important; }
 /* A line about the filters (Members' "Needs attention") is its own strip under the filter row. */
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-note] { margin: 0 -1.5rem !important; padding: 0.625rem 0.75rem; border-bottom: 1px solid var(--border); }
 /* Settings boxes (settings-page.tsx) become full-width bands split by lines — no card in the card. */
@@ -1002,7 +1007,7 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
    corners and fill the page card's width, split by single lines — no card in the card.
    The card's own top and bottom space goes too, as each band keeps its own. "Separate
    boxes" (no data-edge-join) keeps the framed look. Phones too: the page card is there at every size. */
-  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:has([data-edge-join]) { padding-block: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:has([data-edge-join]:where(:not([style*="display: none"] *, [style*="display:none"] *))) { padding-block: 0 !important; }
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]):has(> * > :is(section.overflow-clip, [data-slot="accordion"])) { padding: 0 !important; }
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]) section.overflow-clip section.rounded-xl.border { border: 0 !important; border-radius: 0 !important; }
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-card-map] { padding-top: 0 !important; }
@@ -1011,7 +1016,7 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-slot="accordion-item"] { border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; }
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-slot="accordion-item"]:last-child { border-bottom: 0 !important; }/* A designed walk set to "Separate boxes" (data-edge-inset): each block is its own
    bordered box, so the page card around them goes — no card round the cards (as Overview). */
-html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:has([data-edge-inset]) { border: 0 !important; padding: 0 !important; border-radius: 0 !important; overflow: visible !important; background: transparent !important; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:has([data-edge-inset]:where(:not([style*="display: none"] *, [style*="display:none"] *))) { border: 0 !important; padding: 0 !important; border-radius: 0 !important; overflow: visible !important; background: transparent !important; }
 /* The "All walks" row at the top of a joined walk is one short line: a slim band. */
 /* A page top's line of explanation is one line on a computer: the full width of the
    band, a little smaller (the wording is kept short enough to fit). It still wraps on a phone. */
