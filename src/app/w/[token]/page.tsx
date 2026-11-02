@@ -1,6 +1,6 @@
 import { WalkLinkLoading } from "./loading";
 import { parseExtraFacts } from "@/lib/extra-facts";
-import { Suspense, cache, cloneElement, isValidElement } from "react";
+import { Fragment, Suspense, cache, cloneElement, isValidElement } from "react";
 import { cacheLife } from "next/cache";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -91,6 +91,19 @@ export async function generateMetadata({
   params: Promise<{ token: string }>;
 }): Promise<Metadata> {
   const { token } = await params;
+  return getWalkMetadata(token);
+}
+
+/**
+ * The link's title and preview, as a saved copy refreshed with the walk's
+ * details (getSharedWalk): it reads the time (finished yet?), which Next.js
+ * only allows in a saved copy or after the request has started, and a share
+ * preview doesn't need to be up to the second. Cancelling or ending a walk
+ * refreshes its page, and this with it.
+ */
+async function getWalkMetadata(token: string): Promise<Metadata> {
+  "use cache: remote";
+  cacheLife({ revalidate: HOMEPAGE_REVALIDATE_SECONDS });
   const walk = await getWalkByShareKey(token);
   if (!walk) return { title: "Walk not found" };
 
@@ -289,7 +302,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
     </>
   );
   const live = (
-    <>
+    <Fragment key="live">
       {/* What the member came to do (clock in, or their clock-in status) sits
           straight under the title card. Always live: never a saved copy. */}
       {cancelled ? null : (
@@ -308,13 +321,14 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
           />
         </Suspense>
       )}
-    </>
+    </Fragment>
   );
   // Designed pages: Clock in (then Clock out) beside Share or save, like the
   // organisers' Clock in beside Manage — a design copied from the organisers
   // has no Clock-in block, and members had nowhere to clock in.
+  // (Keyed: the designed page's Actions puts it in a row beside Share or save.)
   const liveCompact = cancelled ? null : (
-    <Suspense fallback={null}>
+    <Suspense fallback={null} key="live-compact">
       <WalkLivePart
         beforeYouSetOffTips={theme.beforeYouSetOffTips}
         compact
@@ -349,7 +363,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
       };
   // Designed pages: People clocked in, with their photos (once allowed).
   const peopleStack = cancelled ? null : (
-    <Suspense fallback={null}>
+    <Suspense fallback={null} key="peopleStack">
       <WalkLivePart
         beforeYouSetOffTips={theme.beforeYouSetOffTips}
         durationMins={walk.durationMins}
@@ -363,7 +377,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
   );
   // Designed pages: "You are clocked in · Recorded at…" (Your clock-in).
   const myClockIn = cancelled ? null : (
-    <Suspense fallback={null}>
+    <Suspense fallback={null} key="myClockIn">
       <WalkLivePart
         beforeYouSetOffTips={theme.beforeYouSetOffTips}
         durationMins={walk.durationMins}
