@@ -635,7 +635,9 @@ html[data-promo-bar] .globalfooter, html[data-promo-bar] [data-slot="docs-main"]
 /* ---- shadcn.io's dashboard frame (their docs.css rules, used with permission) ---- */
 .bg-chrome { background-color: color-mix(in oklab, var(--muted) 60%, var(--background)); }
 [data-slot="docs-sidebar"] { display: none; }
-@media (min-width: 64rem) { [data-slot="docs-shell"] { position: relative; display: grid; height: 100svh; min-height: 0px; grid-template-columns: var(--sidebar-width, 288px) minmax(0, 1fr); overflow: hidden; background: var(--background); --header-height: 3.5rem; --top-spacing: 2rem; --sidebar-width: var(--docs-sidebar-width, 288px); transition: grid-template-columns .2s; } }
+/* clip, not hidden: a hidden box can still be scrolled by the browser (bringing something into
+   view during a page change), which left the whole page shifted sideways, sidebar cut off. */
+@media (min-width: 64rem) { [data-slot="docs-shell"] { position: relative; display: grid; height: 100svh; min-height: 0px; grid-template-columns: var(--sidebar-width, 288px) minmax(0, 1fr); overflow: clip; background: var(--background); --header-height: 3.5rem; --top-spacing: 2rem; --sidebar-width: var(--docs-sidebar-width, 288px); transition: grid-template-columns .2s; } }
 @media (min-width: 64rem) { [data-slot="docs-sidebar"] { display: flex; grid-area: 1 / 1; flex-direction: column; margin-top: var(--header-height); height: calc(100svh - var(--header-height)); min-width: 0px; overflow: hidden; z-index: 30; background: color-mix(in oklab, var(--muted) 60%, var(--background)); transition: visibility; } }
 @media (min-width: 64rem) { [data-slot="docs-main"] { grid-area: 1 / 2; min-width: 0px; height: 100svh; min-height: 0px; padding-top: var(--header-height); overflow-y: scroll; overscroll-behavior: contain; scrollbar-width: thin; background: var(--background); transition: margin .2s; } }
 @media (min-width: 64rem) { html[data-docs-sidebar="collapsed"] [data-slot="docs-shell"] { --sidebar-width: 0px; grid-template-columns: 0 minmax(0, 1fr); } }
@@ -1024,3 +1026,7 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
 /* A placeholder's filters sit in a wrapper (data-sk-filters, hidden with an empty list): the
    list still butts onto their strip, as on the real page. */
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-sk-filters] > [data-edge-bar]) { row-gap: 0 !important; }
+/* A list inside a folding section (a walk's Attended) stays inside its box: the page-wide
+   stretch out to the card's edges needs the card's own side space, which a section hasn't
+   got, so its names and buttons stuck out past the box (and let the page shift sideways). */
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-slot="accordion-content"] :is([data-walk-table], [data-reveal-list], [data-edge-list]) { margin-inline: 0 !important; width: auto !important; }
