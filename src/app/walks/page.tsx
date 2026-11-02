@@ -20,6 +20,7 @@ import { RecentWalksCarousel } from "./recent-walks-carousel";
 import { LiveUpcomingCount } from "./live-upcoming-count";
 import { StoriesSlot } from "@/components/stories/stories-slot";
 import { PageTop } from "@/components/page-top";
+import { getUpcomingWalkLines } from "@/lib/upcoming-walk-lines";
 
 
 
@@ -51,13 +52,27 @@ export default function DashboardPage() {
       </PageTop>
       {/* Stories: signed-in people only (it shows nothing for visitors). */}
       <StoriesSlot />
-      <Suspense fallback={<MemberWalksHold />}>
-        <PlaceholderPreview fallback={<MemberWalksHold />}>
+      <Suspense fallback={<MemberWalksFallback />}>
+        <PlaceholderPreview fallback={<MemberWalksFallback />}>
           <WalksForMember />
         </PlaceholderPreview>
       </Suspense>
     </div>
   );
+}
+
+/** The list's placeholder, its rows over the next walks' names (a shared saved copy) so each is the real row's height. */
+function MemberWalksFallback() {
+  // Drawn at once; the rows take the walks' names as soon as that saved copy is read.
+  return (
+    <Suspense fallback={<MemberWalksHold />}>
+      <MemberWalksHoldWithNames />
+    </Suspense>
+  );
+}
+
+async function MemberWalksHoldWithNames() {
+  return <MemberWalksHold lines={await getUpcomingWalkLines()} />;
 }
 
 async function MemberSince() {

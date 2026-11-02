@@ -313,7 +313,27 @@ export function WalkTableCard<S extends string, O extends string>({
  * Previous/Next row, as many rows as the list showed last time, so the
  * table drops in without anything moving.
  */
-export function WalkTableCardSkeleton({ remember }: { remember: string }) {
+/**
+ * Grey bars over invisible words: the words keep the line breaks and height of the real
+ * text, the grey follows each line's own length (it never covers empty space).
+ */
+function GreyWords({ text }: { text: string }) {
+  return (
+    <span className="animate-pulse rounded-md bg-accent text-transparent [-webkit-box-decoration-break:clone] [box-decoration-break:clone]">
+      {text}
+    </span>
+  );
+}
+
+export function WalkTableCardSkeleton({
+  remember,
+  lines = [],
+}: {
+  remember: string;
+  /** The next walks' names and time lines (upcoming-walk-lines.ts): each row's grey sits over
+   * them, so a long name wraps to two lines just as it will (rows past them: plain grey lines). */
+  lines?: { title: string; detail: string }[];
+}) {
   return (
     <div aria-busy="true" className="overflow-hidden rounded-xl border bg-background" data-walk-table="">
       <div className="flex flex-wrap items-center gap-2 border-b p-3">
@@ -354,10 +374,22 @@ export function WalkTableCardSkeleton({ remember }: { remember: string }) {
               <SkLine className="w-16" size="xs" />
             </div>
             <div className="flex items-center gap-3 px-4 py-3">
-              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <SkLine className={i % 2 ? "w-64" : "w-80"} />
-                <SkLine className={i % 3 ? "w-48" : "w-36"} size="sm" />
-              </div>
+              {lines[i] ? (
+                // The real row's two lines (font-medium, then text-sm), in grey.
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <p className="font-medium">
+                    <GreyWords text={lines[i].title} />
+                  </p>
+                  <p className="text-sm">
+                    <GreyWords text={lines[i].detail} />
+                  </p>
+                </div>
+              ) : (
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <SkLine className={i % 2 ? "w-64" : "w-80"} />
+                  <SkLine className={i % 3 ? "w-48" : "w-36"} size="sm" />
+                </div>
+              )}
               <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />
             </div>
           </div>

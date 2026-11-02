@@ -57,7 +57,7 @@ function FilterSelect({
 }
 
 /** Upcoming / History, search, status and sort — the same controls the loaded list uses. */
-export function WalkListChrome() {
+export function WalkListChrome({ lines }: { lines?: { title: string; detail: string }[] } = {}) {
   // Tab counts and rows as last time, from the first paint (RememberedCount /
   // RememberedRows); with no rows last time the list hides itself, and the
   // search and filters with it, as on the real page.
@@ -79,7 +79,7 @@ export function WalkListChrome() {
         <TabsContent className="mt-4" value="upcoming">
           {/* The shadcn.io design's table (walk-table-card.tsx), as its placeholder. */}
           <div className="hidden [html[data-design=shadcnio]_&]:contents">
-            <WalkTableCardSkeleton remember="admin-walks" />
+            <WalkTableCardSkeleton lines={lines} remember="admin-walks" />
           </div>
           <div className="flex flex-col gap-4 has-[>[data-reveal-list][hidden]]:hidden [html[data-design=shadcnio]_&]:hidden">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end" data-edge-bar="">
@@ -253,7 +253,7 @@ export function HistoryFilterChrome() {
 /** Member Walks: the real Upcoming / All walks tabs, search and filters, then
  * card-shaped placeholders — counts, cards and recent walks as last time,
  * from the first paint (RememberedCount / RememberedRows). */
-export function MemberWalksHold() {
+export function MemberWalksHold({ lines }: { lines?: { title: string; detail: string }[] } = {}) {
   return (
     <div className="contents" data-page-loading="">
       <Tabs defaultValue="upcoming">
@@ -272,7 +272,7 @@ export function MemberWalksHold() {
         <TabsContent className="mt-4" value="upcoming">
           {/* The shadcn.io design's table (walk-table-card.tsx), which members use too, as its placeholder. */}
           <div className="hidden [html[data-design=shadcnio]_&]:contents">
-            <WalkTableCardSkeleton remember="member-walks-rows" />
+            <WalkTableCardSkeleton lines={lines} remember="member-walks-rows" />
           </div>
           <div aria-busy="true" className="flex flex-col gap-4 has-[>[data-reveal-list][hidden]]:hidden [html[data-design=shadcnio]_&]:hidden">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end" data-edge-bar="">

@@ -13,6 +13,7 @@ import { AdminWalkTable } from "../admin-walk-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { upcomingListLookbackFrom, walkStatus } from "@/lib/walk-window";
 import { StoriesSlot } from "@/components/stories/stories-slot";
+import { getUpcomingWalkLines } from "@/lib/upcoming-walk-lines";
 
 function toRow(
   walk: {
@@ -198,11 +199,19 @@ async function AdminWalksTabs() {
 /** Tabs, search and filters stay as the real controls. Only the walk rows
  * are placeholders — as many as the list last showed, from the first paint. */
 function AdminWalksSkeleton() {
+  // Drawn at once with plain grey lines; its rows take the next walks' names as soon as
+  // that saved copy is read (normally at once), so each row is the real row's height.
   return (
     <div className="contents" data-page-loading="">
-      <WalkListChrome />
+      <Suspense fallback={<WalkListChrome />}>
+        <WalkListChromeWithNames />
+      </Suspense>
     </div>
   );
+}
+
+async function WalkListChromeWithNames() {
+  return <WalkListChrome lines={await getUpcomingWalkLines()} />;
 }
 
 /**
