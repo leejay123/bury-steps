@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { TestimonialView } from "@/lib/testimonials";
-import { REVIEW_GRID } from "./grids";
+import { PHONE_REVIEW_LIST, REVIEW_GRID } from "./grids";
 import { BUTTON_SMALL_OUTLINE } from "./parts";
 
 import { FILLER } from "./more-rows";
@@ -22,7 +22,7 @@ export function ShadcnReviews({ testimonials }: { testimonials: TestimonialView[
   const fillTablet = shown.length % 2;
   return (
     <>
-      <ul aria-label="What members say" className={REVIEW_GRID}>
+      <ul aria-label="What members say" className={`${REVIEW_GRID} ${PHONE_REVIEW_LIST}`}>
         {shown.map((review) => (
           <li key={review.id}>
             <a className="group" href="#faq">

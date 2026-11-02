@@ -148,6 +148,8 @@ export function SectionHead({
 }
 
 export const GRID = "grid border-t [clip-path:inset(1px_0_0_1px)] *:border-t *:border-l grid-cols-2 lg:grid-cols-4";
+/** GRID as a list on phones (one row each); its tiles take phoneRow. */
+export const GRID_PHONE_LIST = `${GRID} max-sm:grid-cols-1`;
 
 const TILE =
   "group flex flex-col outline-none hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset relative h-40 overflow-hidden";
@@ -309,6 +311,7 @@ export function Tile({
   style,
   current,
   phoneShort,
+  phoneRow,
 }: {
   href?: string;
   title: ReactNode;
@@ -320,8 +323,11 @@ export function Tile({
   current?: boolean;
   /** On phones, a short tile with the title alone (their legal pages' row). */
   phoneShort?: boolean;
+  /** On phones, a list row: the words alone, as tall as they are (a fan tile always is). */
+  phoneRow?: boolean;
 }) {
   const shape = visual.kind === "fan" ? "card" : visual.kind;
+  const row = phoneRow || visual.kind === "fan";
   const picture = (
     <>
       <Rings shape={shape} />
@@ -345,11 +351,11 @@ export function Tile({
     <>
       {/* On phones the fanned cards (two to a row) are too cramped, and some Android
           browsers draw them flat and cut off, so a fan tile shows its words alone there. */}
-      {visual.kind === "fan" ? <span className="max-sm:hidden">{picture}</span> : picture}
+      {row ? <span className="max-sm:hidden">{picture}</span> : picture}
       <span
         className={cn(
           "absolute inset-x-5 top-5 flex flex-col gap-0.5",
-          visual.kind === "fan" && "max-sm:static max-sm:p-4",
+          row && "max-sm:static max-sm:p-4",
         )}
         data-slot="sketch-label"
       >
@@ -357,18 +363,18 @@ export function Tile({
         <span
           className={cn(
             "truncate font-medium text-[0.9375rem] text-foreground leading-5 tracking-tight",
-            visual.kind === "fan" && "max-sm:line-clamp-2 max-sm:whitespace-normal",
+            row && "max-sm:line-clamp-2 max-sm:whitespace-normal",
           )}
         >
           {title}
         </span>
-        <span className="truncate text-muted-foreground text-xs tabular-nums leading-4">{sub}</span>
+        <span className={cn("truncate text-muted-foreground text-xs tabular-nums leading-4", phoneRow && "max-sm:whitespace-normal")}>{sub}</span>
       </span>
     </>
   );
   const tile = phoneShort
     ? TILE.replace("h-40", "h-12 items-center justify-center aria-[current=page]:bg-muted/40 sm:h-40 sm:items-stretch sm:justify-start")
-    : visual.kind === "fan"
+    : row
       ? TILE.replace("h-40", "h-auto sm:h-40")
       : TILE;
   const here = current ? ("page" as const) : undefined;

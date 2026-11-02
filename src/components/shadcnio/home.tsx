@@ -30,8 +30,8 @@ import type { FaqCategoryView, FaqView } from "@/lib/faqs";
 import type { TestimonialView } from "@/lib/testimonials";
 import type { EssentialItem } from "@/lib/walk-essentials";
 import { essentialIcon } from "@/lib/walk-essentials";
-import { CARD_GRID, GALLERY_GRID } from "./grids";
-import { BUTTON_OUTLINE, BUTTON_PRIMARY, GRID, MiniNote, MiniWalk, Section, SectionHead, Tile } from "./parts";
+import { CARD_GRID, GALLERY_GRID, PHONE_LIST } from "./grids";
+import { BUTTON_OUTLINE, BUTTON_PRIMARY, GRID, GRID_PHONE_LIST, MiniNote, MiniWalk, Section, SectionHead, Tile } from "./parts";
 import type { ShadcnHomeData } from "./home-data";
 import { ShadcnFaq } from "./faq";
 import { ShadcnReviews } from "./reviews";
@@ -207,7 +207,7 @@ function WalksSection({ data }: { data: ShadcnHomeData }) {
         rest="each one led by a volunteer walk leader, with the meeting point, distance and grade. Members see every detail and clock in on the day."
         title="Walks coming up, every week"
       />
-      <ul aria-label="Walks coming up" className={GRID}>
+      <ul aria-label="Walks coming up" className={GRID_PHONE_LIST}>
         {data.upcoming.map((walk, i) => (
           <Tile
             className={i >= 4 ? "max-sm:hidden" : undefined}
@@ -240,7 +240,7 @@ function ExpectSection({ expect }: { expect: string[] }) {
         rest="for every age and every pace. No pressure, no judgement, just good company on the paths."
         title="What you can expect"
       />
-      <ul aria-label="What you can expect" className={GALLERY_GRID}>
+      <ul aria-label="What you can expect" className={`${GALLERY_GRID} ${PHONE_LIST}`}>
         {expect.slice(0, 8).map((item, i) => (
           <li className={i >= 4 ? "max-sm:hidden" : ""} key={item}>
             <a href="#faq">
@@ -279,10 +279,11 @@ function HowItWorksSection() {
         rest="that's all there is to it. The leader knows who's out walking, and you can look back on every walk you've done."
         title="How it works"
       />
-      <MoreRows className={GRID} label="How it works">
+      <MoreRows className={GRID_PHONE_LIST} label="How it works">
         {STEPS.map((step) => (
           <Tile
             key={step.title}
+            phoneRow
             sub={step.sub}
             title={step.title}
             visual={{ kind: "square", icon: step.icon }}
@@ -304,9 +305,9 @@ function GoalsSection({ goals }: { goals: string[] }) {
         rest="at whatever pace suits you. Members walk to get moving again, to feel better and to make friends."
         title="More than just a walking group"
       />
-      <ul aria-label="Group goals" className={GRID}>
+      <ul aria-label="Group goals" className={GRID_PHONE_LIST}>
         {goals.slice(0, 4).map((goal, i) => (
-          <Tile key={goal} sub="A reason to walk" title={goal} visual={{ kind: "circle", icon: GOAL_ICONS[i % 4] }} />
+          <Tile key={goal} phoneRow sub="A reason to walk" title={goal} visual={{ kind: "circle", icon: GOAL_ICONS[i % 4] }} />
         ))}
       </ul>
     </Section>
@@ -329,10 +330,11 @@ function RulesSection({ rules }: { rules: AboutRule[] }) {
         rest="that keep every walk safe, kind and enjoyable for everyone in the group."
         title="Group rules"
       />
-      <MoreRows className={GRID} label="Group rules">
+      <MoreRows className={GRID_PHONE_LIST} label="Group rules">
         {rules.map((rule, i) => (
           <Tile
             key={rule.title}
+            phoneRow
             sub={rule.body}
             title={rule.title}
             visual={{ kind: "stack", icons: RULE_ICONS[i % RULE_ICONS.length]! }}
@@ -352,7 +354,7 @@ function EssentialsSection({ essentials }: { essentials: EssentialItem[] }) {
         rest="each walk shows what's at the meeting point, so you know before you set off."
         title="Know before you go"
       />
-      <MoreRows className={CARD_GRID} label="Walk essentials">
+      <MoreRows className={`${CARD_GRID} ${PHONE_LIST}`} label="Walk essentials">
         {essentials.map((item) => (
           <li key={item.key}>
             <Link href="/walks">
