@@ -1,7 +1,8 @@
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { ChevronRight } from "lucide-react";
 import { RememberedRows } from "@/components/remembered-rows";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
+import type { MembersPageGroup } from "@/lib/list-counts";
 import { Empty, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -14,9 +15,10 @@ import { cn } from "@/lib/utils";
  * a box the height of the text line it stands for, and fills 64% of it.
  */
 
-const LINE_HEIGHT = { xs: "h-4", sm: "h-5", base: "h-6", lg: "h-8" } as const;
+const LINE_HEIGHT = { xs: "h-4", sm: "h-5", smRelaxed: "h-[22.75px]", base: "h-6", lg: "h-8" } as const;
 
-/** One line of text: base = a row's bold title, sm = grey detail, xs = small print. */
+/** One line of text: base = a row's bold title, sm = grey detail, smRelaxed = grey detail with
+ * relaxed line spacing (text-sm leading-relaxed), xs = small print. */
 export function SkLine({ size = "base", className }: { size?: keyof typeof LINE_HEIGHT; className?: string }) {
   return (
     <div className={cn("flex items-center", LINE_HEIGHT[size])}>
@@ -148,7 +150,8 @@ function NoticeRow({ i }: { i: number }) {
         <SkChevron className="mt-1" />
       </div>
       <SkLine className="w-24" size="xs" />
-      <SkLine className="w-full" size="sm" />
+      {/* The notice's short message: text-sm leading-relaxed (notices-blog-section.tsx). */}
+      <SkLine className="w-full" size="smRelaxed" />
     </>
   );
 }
@@ -311,7 +314,10 @@ export function NameRowsSkeleton({ rows = 0, remember }: { rows?: number; rememb
  * photo circle, name, email, joined · clock-ins, arrow, and the empty space
  * where the row's actions button sits (members-table.tsx).
  */
-function MemberRow({ i }: { i: number }) {
+/** `actions`: "always" (an invite note, or the remembered-rows placeholder); "owner-viewer",
+ * only when the person looking is the site owner (html[data-sb-role], set before the first
+ * paint), as the real row's … menu. */
+function MemberRow({ i, actions = "always" }: { i: number; actions?: "always" | "owner-viewer" }) {
   return (
     <>
       <div className="flex min-w-0 flex-1 items-start gap-2 sm:items-center">
@@ -323,7 +329,12 @@ function MemberRow({ i }: { i: number }) {
         </div>
         <SkChevron className="mt-1 sm:mt-0" />
       </div>
-      <div className="relative z-10 flex shrink-0 flex-wrap items-center justify-end gap-2 border-t pt-2 sm:border-0 sm:pt-0">
+      <div
+        className={cn(
+          "relative z-10 flex shrink-0 flex-wrap items-center justify-end gap-2 border-t pt-2 sm:border-0 sm:pt-0",
+          actions === "owner-viewer" && "hidden [html[data-sb-role=owner]_&]:flex",
+        )}
+      >
         <SkButtonSpace className="w-7" />
       </div>
     </>
@@ -337,7 +348,45 @@ function MemberRow({ i }: { i: number }) {
  * where the row's actions button sits (members-table.tsx). As many rows as
  * last time, from the first paint.
  */
-export function MemberRowsSkeleton({ remember = "members", known }: { remember?: string; known?: number }) {
+const MEMBER_ROW =
+  "relative flex flex-col items-stretch gap-2 border-b p-3 last:border-0 [&:has(+[hidden])]:border-0 sm:flex-row sm:items-center sm:gap-3";
+
+export function MemberRowsSkeleton({
+  remember = "members",
+  known,
+  groups,
+}: {
+  remember?: string;
+  known?: number;
+  /** The first page's group sizes (list-counts.ts): when known, the strips sit exactly where the
+   * real list draws them, and none at all when there's only one group (as the real list). */
+  groups?: MembersPageGroup[];
+}) {
+  if (groups && groups.length > 0)
+    return (
+      <ul aria-busy="true" className="flex flex-col overflow-hidden rounded-xl border bg-card" data-reveal-list="">
+        {groups.map(({ invites }, g) => (
+          <Fragment key={g}>
+            {groups.length > 1 ? (
+              <li
+                aria-hidden="true"
+                className="flex items-baseline gap-1.5 border-b bg-muted/50 px-3 py-2.5 text-xs font-semibold tracking-wide uppercase"
+              >
+                <span className="invisible">Members</span>
+              </li>
+            ) : null}
+            {invites.map((invite, i) => (
+              <li className={MEMBER_ROW} data-sk-row="" key={i}>
+                {/* An invite note always shows; otherwise the … menu line, which the real list shows on
+                    every row when the owner is looking (except their own row, which can't be known
+                    ahead: on a phone the placeholder is one line taller than the page). */}
+                <MemberRow actions={invite ? "always" : "owner-viewer"} i={i} />
+              </li>
+            ))}
+          </Fragment>
+        ))}
+      </ul>
+    );
   return (
     <RememberedRows
       as="ul"
@@ -353,7 +402,7 @@ export function MemberRowsSkeleton({ remember = "members", known }: { remember?:
       }
       remember={remember}
       rowAs="li"
-      rowClassName="relative flex flex-col items-stretch gap-2 border-b p-3 last:border-0 [&:has(+[hidden])]:border-0 sm:flex-row sm:items-center sm:gap-3"
+      rowClassName={MEMBER_ROW}
       rows={Array.from({ length: LIST_PAGE_SIZE }, (_, i) => (
         <MemberRow i={i} key={i} />
       ))}

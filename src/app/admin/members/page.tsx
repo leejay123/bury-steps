@@ -3,7 +3,9 @@ import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { MemberRowsSkeleton } from "@/components/list-skeletons";
 import { Users } from "lucide-react";
 import { MembersFilterChrome } from "@/components/list-chrome";
-import { membersListRows } from "@/lib/list-counts";
+import { membersFirstPageGroups, membersListRows, membersListTotal } from "@/lib/list-counts";
+import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
+import { ListPaginationPlaceholder } from "@/components/list-pagination";
 import { RememberListCount } from "@/components/remember-list-count";
 import { prisma } from "@/lib/db";
 import { getOptionalAdmin } from "@/lib/auth";
@@ -132,11 +134,12 @@ function MembersBody({
 /** The real filter bar, then member-shaped rows — exactly as many as the
  * first page has (list-counts.ts), from the first paint. */
 async function MembersListSkeleton() {
-  const rows = await membersListRows();
+  const [rows, total, groups] = await Promise.all([membersListRows(), membersListTotal(), membersFirstPageGroups()]);
   return (
     <div data-page-loading="" aria-busy="true" className="flex flex-col gap-4">
       <MembersFilterChrome />
-      <MemberRowsSkeleton known={rows} remember="members" />
+      <MemberRowsSkeleton groups={groups} known={rows} remember="members" />
+      {total ? <ListPaginationPlaceholder noun="members" pageSize={LIST_PAGE_SIZE} total={total} /> : null}
     </div>
   );
 }

@@ -4,6 +4,8 @@ import { z } from "zod";
 import { guardForm } from "@/lib/safe-action";
 
 import { revalidatePath } from "@/lib/revalidate";
+import { revalidateTag } from "next/cache";
+import { DISABLED_EMAILS_TAG } from "@/lib/email/switches";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import {
@@ -178,6 +180,7 @@ async function setEmailEnabledWork(
   }
 
   revalidatePath("/admin/settings/emails");
+  revalidateTag(DISABLED_EMAILS_TAG, { expire: 0 });
   const label = getEmailTemplateMeta(key).label;
   return { ok: true, message: enabled ? `“${label}” emails are on.` : `“${label}” emails are off.` };
 }

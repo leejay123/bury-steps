@@ -3,7 +3,7 @@ import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { prisma } from "@/lib/db";
 import { requirePermission, displayName } from "@/lib/auth";
-import { defaultTheme, getSiteTheme, type SiteTheme } from "@/lib/site-theme";
+import { getSiteTheme, type SiteTheme } from "@/lib/site-theme";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { SettingsPage, SettingsSectionGroup } from "../settings-page";
 import { SettingsMask } from "../settings-mask";
@@ -125,10 +125,13 @@ function SettingsView({
 }
 
 /** While it loads: the page drawn with the site's default values, greyed (SettingsMask). */
-function SettingsFallback() {
+/** While it loads: the page drawn with the site's saved look (a shared saved copy, so the same
+ * settings show and hide as on the page, e.g. the footer name's phone switch), greyed. */
+async function SettingsFallback() {
+  const theme = await getSiteTheme();
   return (
     <SettingsMask>
-      <SettingsView admin={{ isOwner: true }} organisers={[]} settings={null} theme={defaultTheme()} />
+      <SettingsView admin={{ isOwner: true }} organisers={[]} settings={null} theme={theme} />
     </SettingsMask>
   );
 }

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SkLine, WalkRowsSkeleton } from "@/components/list-skeletons";
+import { Skeleton } from "@/components/ui/skeleton";
 import { RememberedRows } from "@/components/remembered-rows";
 import { WalkTableCardSkeleton } from "@/components/walk-table-card";
 import { RememberedCount } from "@/components/remembered-text";
@@ -269,7 +270,11 @@ export function MemberWalksHold() {
           </TabsList>
         </div>
         <TabsContent className="mt-4" value="upcoming">
-          <div aria-busy="true" className="flex flex-col gap-4 has-[>[data-reveal-list][hidden]]:hidden">
+          {/* The shadcn.io design's table (walk-table-card.tsx), which members use too, as its placeholder. */}
+          <div className="hidden [html[data-design=shadcnio]_&]:contents">
+            <WalkTableCardSkeleton remember="member-walks-rows" />
+          </div>
+          <div aria-busy="true" className="flex flex-col gap-4 has-[>[data-reveal-list][hidden]]:hidden [html[data-design=shadcnio]_&]:hidden">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end" data-edge-bar="">
               <ListSearch label="Search walks" placeholder="Search by walk or meeting point…" />
               <FilterSelect
@@ -298,19 +303,35 @@ export function MemberWalksHold() {
           </div>
         </TabsContent>
       </Tabs>
-      <section className="flex flex-col gap-3 has-[>[hidden]]:hidden">
-        <h2 className="text-sm font-medium text-muted-foreground">Your recent walks</h2>
-        <RememberedRows
-          className="grid gap-4 md:grid-cols-2"
-          max={3}
-          remember="member-recent"
-          rows={Array.from({ length: 3 }, (_, i) => (
-            <div aria-hidden className="rounded-xl border p-4" data-reveal-card="" key={i}>
-              <SkLine className="w-40" />
-              <SkLine className="w-56" size="sm" />
-            </div>
-          ))}
-        />
+      {/* Your recent walks, as the page draws them (walks/page.tsx and recent-walks-carousel.tsx):
+          the heading with its View all button, then the carousel's cards (two across from
+          tablets), and its ‹ › buttons when there's more than one. Hidden with no recent walks. */}
+      <section className="flex flex-col gap-3 has-[[data-reveal-list][hidden]]:hidden">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="text-sm font-medium text-muted-foreground">Your recent walks</h2>
+          <Skeleton className="h-8 w-24 rounded-md" />
+        </div>
+        <div className="w-full">
+          <div className="overflow-hidden">
+            <RememberedRows
+              className="-ml-4 flex"
+              inline
+              max={3}
+              remember="member-recent"
+              rowClassName="min-w-0 shrink-0 grow-0 basis-full pl-4 md:basis-1/2"
+              rows={Array.from({ length: 3 }, (_, i) => (
+                <div aria-hidden className="h-full rounded-xl border p-4" data-reveal-card="" key={i}>
+                  <SkLine className="w-40" />
+                  <SkLine className="w-56" size="sm" />
+                </div>
+              ))}
+            />
+          </div>
+          <div className="mt-3 hidden justify-end gap-2 [section:has([data-sk-row]:nth-child(2):not([hidden]))_&]:flex">
+            <Skeleton className="size-8 rounded-full" />
+            <Skeleton className="size-8 rounded-full" />
+          </div>
+        </div>
       </section>
     </div>
   );

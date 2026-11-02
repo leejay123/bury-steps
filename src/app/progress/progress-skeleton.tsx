@@ -115,6 +115,7 @@ export function ProgressPersonalSkeleton() {
         <h2 className="text-sm font-medium text-muted-foreground">Your badges</h2>
         <RememberedRows
           className="flex flex-wrap gap-2"
+          inline
           max={12}
           remember="progress-badges"
           rows={Array.from({ length: 12 }, (_, i) => (

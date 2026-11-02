@@ -39,6 +39,7 @@ export function RememberedRows({
   empty,
   max = LIST_PAGE_SIZE,
   known,
+  inline = false,
 }: {
   /** The list's key, as given to RememberListCount. */
   remember: string;
@@ -57,6 +58,9 @@ export function RememberedRows({
    * drawn exactly, instead of last time's count. A filtered address (?role=…)
    * can only have fewer, so there it's capped by last time's count too. */
   known?: number;
+  /** Placeholder shapes laid out inside something (badges, a carousel), not a full-width
+   * list: the dashboard doesn't stretch them out to the card's edges (shadcnio.css). */
+  inline?: boolean;
 }) {
   const id = useId();
   const name = rememberedRowsCookie(remember);
@@ -83,6 +87,7 @@ export function RememberedRows({
           "aria-busy": "true",
           className,
           "data-reveal-list": "",
+          "data-sk-inline": inline ? "" : undefined,
           hidden: count === 0 || undefined,
           id,
           suppressHydrationWarning: true,

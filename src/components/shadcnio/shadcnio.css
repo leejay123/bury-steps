@@ -848,7 +848,7 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
   /* The list is not a card inside the card. A set width made it stick out and
      get clipped, so the rows never met both edges (Progress uses the margin
      only, and the band grows to fill it). Rows keep their hairlines. */
-  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is([data-walk-table], [data-reveal-list], [data-edge-list]) { margin-inline: -1.5rem !important; width: auto !important; max-width: none; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; overflow: visible; background: transparent; align-self: stretch; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is([data-walk-table], [data-reveal-list]:not([data-sk-inline]), [data-edge-list]) { margin-inline: -1.5rem !important; width: auto !important; max-width: none; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; overflow: visible; background: transparent; align-self: stretch; }
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-page-card] { gap: 1.25rem !important; }
   /* The Overview is already one card (its grid): no page card round it. */
   /* (As specific as the dashboard's page-card rules, plus one, or their padding won and the
@@ -1025,9 +1025,6 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
 /* A visitor on a shared walk page (html[data-guest-dash], sidebar-state.ts): their short menu
    and Sign in; everyone else, the members' menu and their own row. */
 html:not([data-guest-dash]) [data-sb-for="guest"], html[data-remembered-in] [data-sb-for="guest"], html[data-guest-dash]:not([data-remembered-in]) [data-sb-for="member"] { display: none !important; }
-/* Rows that wrap inside a band (Progress's badges placeholder) are not a full-width list:
-   they keep the band's own inset. */
-html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-reveal-card] > [data-reveal-list].flex-wrap { margin-inline: 0 !important; width: auto !important; }
 /* A placeholder's filters sit in a wrapper (data-sk-filters, hidden with an empty list): the
    list still butts onto their strip, as on the real page. */
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-sk-filters] > [data-edge-bar]) { row-gap: 0 !important; }
@@ -1038,3 +1035,7 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
 /* The walks table's placeholder rows (walk-table-card.tsx) sit inside the table's own box, like
    its real rows: no stretch out to the card's edges (their words and arrows were cut off). */
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-walk-table] [data-reveal-list] { margin-inline: 0 !important; width: auto !important; }
+/* A placeholder list's last visible row draws no line under itself, as the real lists: its
+   line sat on the card's own bottom edge, a double line (Notices). Rows beyond last time's
+   count are hidden, so "last" is the last one not hidden. */
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-reveal-list] > [data-sk-row]:not([hidden]):not(:has(~ [data-sk-row]:not([hidden]))) { border-bottom-width: 0 !important; }

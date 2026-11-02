@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
-import { defaultTheme, getSiteTheme, type SiteTheme } from "@/lib/site-theme";
+import { getSiteTheme, type SiteTheme } from "@/lib/site-theme";
 import { SettingsPage, SettingsSectionGroup } from "../settings-page";
 import { SettingsMask } from "../settings-mask";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
@@ -70,11 +70,13 @@ function SettingsView({ theme }: { theme: SiteTheme }) {
   );
 }
 
-/** While it loads: the page drawn with the site's default values, greyed (SettingsMask). */
-function SettingsFallback() {
+/** While it loads: the page drawn with the site's saved values (a shared saved copy, so the
+ * same sections show and hide as on the page), greyed (SettingsMask). */
+async function SettingsFallback() {
+  const theme = await getSiteTheme();
   return (
     <SettingsMask>
-      <SettingsView theme={defaultTheme()} />
+      <SettingsView theme={theme} />
     </SettingsMask>
   );
 }

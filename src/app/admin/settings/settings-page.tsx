@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { PageTopField } from "@/components/shadcnio/page-top-field";
 import { ExternalLink } from "lucide-react";
@@ -92,7 +93,7 @@ export function SettingsSection({
 }: {
   children: React.ReactNode;
   className?: string;
-  description?: string;
+  description?: ReactNode;
   flush?: boolean;
   title?: string;
   tone?: "default" | "danger";

@@ -1,3 +1,4 @@
+import { getSavedDisabledEmailKeys } from "@/lib/email/switches";
 import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
@@ -96,11 +97,13 @@ const NO_OVERRIDES = Object.fromEntries(
   EMAIL_TEMPLATES.map((meta) => [meta.key, { subject: null, body: null }]),
 ) as Awaited<ReturnType<typeof getEmailTemplateOverrides>>;
 
-/** While it loads: the page drawn with the site's default values, greyed (SettingsMask). */
-function SettingsFallback() {
+/** While it loads: the page drawn with the emails' real on/off switches (a shared saved copy,
+ * so each row has the same line as on the page) and their standard wording, greyed. */
+async function SettingsFallback() {
+  const disabled = await getSavedDisabledEmailKeys().catch(() => []);
   return (
     <SettingsMask>
-      <SettingsView disabled={[]} groups={EMAIL_GROUPS} overrides={NO_OVERRIDES} owner />
+      <SettingsView disabled={disabled} groups={EMAIL_GROUPS} overrides={NO_OVERRIDES} owner />
     </SettingsMask>
   );
 }

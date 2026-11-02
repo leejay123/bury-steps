@@ -1,3 +1,4 @@
+import { loadMembersPage } from "@/lib/members-search";
 import { cacheLife } from "next/cache";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { prisma } from "./db";
@@ -46,6 +47,14 @@ async function cachedMembersCount(): Promise<number> {
 export const messagesListRows = () => firstPage(cachedMessagesCount);
 export const reportsListRows = () => firstPage(cachedReportsCount);
 export const membersListRows = () => firstPage(cachedMembersCount);
+/** Every member (for the page-number row's "1–20 of 60 members"); undefined when it can't be read. */
+export async function membersListTotal(): Promise<number | undefined> {
+  try {
+    return await cachedMembersCount();
+  } catch {
+    return undefined;
+  }
+}
 
 async function cachedNewsletterCounts(): Promise<{ members: number; footer: number }> {
   "use cache: remote";
@@ -62,6 +71,41 @@ async function cachedNewsletterCounts(): Promise<{ members: number; footer: numb
 export async function newsletterListRows(): Promise<{ members: number; footer: number } | undefined> {
   try {
     return await cachedNewsletterCounts();
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * How many of the Members list's first page fall in each group (Owner, Organisers,
+ * Members; empty groups left out), as the page shows it with no search or filter:
+ * the same for every organiser, so its placeholder can draw the group strips where
+ * the real list will. Refreshed hourly, with the members count.
+ */
+/** One group of the first page: owners or not, and for each row whether it shows an invite
+ * note (so the row keeps its actions line on phones, whoever is looking). */
+export type MembersPageGroup = { owner: boolean; invites: boolean[] };
+
+async function cachedMembersFirstPageGroups(): Promise<MembersPageGroup[]> {
+  "use cache: remote";
+  cacheLife({ revalidate: 60 * 60 });
+  const { rows } = await loadMembersPage({});
+  const pick = (owner: boolean, keep: (row: (typeof rows)[number]) => boolean): MembersPageGroup => ({
+    owner,
+    invites: rows.filter(keep).map((row) => Boolean(row.pendingInvite)),
+  });
+  return [
+    pick(true, (row) => row.isOwner),
+    pick(false, (row) => !row.isOwner && row.role === "ADMIN"),
+    pick(false, (row) => !row.isOwner && row.role !== "ADMIN"),
+  ].filter((group) => group.invites.length > 0);
+}
+
+export async function membersFirstPageGroups(): Promise<MembersPageGroup[] | undefined> {
+  try {
+    const groups = await cachedMembersFirstPageGroups();
+    // A saved copy from an older shape (or anything unexpected): the plain placeholder instead.
+    return Array.isArray(groups) && groups.every((group) => Array.isArray(group?.invites)) ? groups : undefined;
   } catch {
     return undefined;
   }
