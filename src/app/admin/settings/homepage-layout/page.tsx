@@ -7,15 +7,10 @@ import { defaultTheme, getSiteTheme, type SiteTheme } from "@/lib/site-theme";
 import { SettingsPage, SettingsSection, SettingsSectionGroup } from "../settings-page";
 import { SettingsMask } from "../settings-mask";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
-import { HomepageSectionsSettings } from "./homepage-sections-settings";
 import { CarouselToggle } from "./carousel-toggle";
 import { TitleRevealToggle } from "./title-reveal-toggle";
 import { MemberNoticesToggle } from "./member-notices-toggle";
-import { HeroStyleSettings } from "./hero-style-settings";
-import { SliderHeroWordsSettings } from "./slider-hero-words-settings";
 import { SectionBgPatternSelect } from "./section-bg-pattern-select";
-
-
 
 /** Fetched ahead (from the menu, the Settings table, or its tabs), so it opens with its settings there. */
 export const prefetch = "partial";
@@ -25,7 +20,7 @@ export default function HomepageLayoutSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description="Choose the order of the homepage sections, and whether the photos and latest notices show."
+      description="Show or hide homepage sections, and optional background patterns behind them."
       previewHref="/"
       title="Homepage layout"
     >
@@ -53,15 +48,6 @@ async function HomepageLayoutSettingsPageContent() {
 function SettingsView({ theme }: { theme: SiteTheme }) {
   return (
     <>
-      <HeroStyleSettings
-        heroBgPattern={theme.heroBgPattern}
-        heroOverlayOpacity={theme.heroOverlayOpacity}
-        heroStyle={theme.heroStyle}
-        heroTextColor={theme.heroTextColor}
-        heroVideoKey={theme.heroVideoKey}
-      />
-      {theme.heroStyle === "slider" ? <SliderHeroWordsSettings words={theme.sliderHeroWords} /> : null}
-      <HomepageSectionsSettings sectionOrder={theme.homepageSectionOrder} />
       <SettingsSectionGroup title="Show or hide">
         <CarouselToggle enabled={theme.carouselEnabled} />
         <TitleRevealToggle enabled={theme.titleRevealEnabled} />

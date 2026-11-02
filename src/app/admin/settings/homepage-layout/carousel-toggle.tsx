@@ -14,7 +14,7 @@ export function CarouselToggle({ enabled }: { enabled: boolean }) {
   return (
     <SettingsSwitchSection
       checked={on}
-      description="The Photo slider section of the homepage (move it with Section order). Turning this off hides it without deleting any photos."
+      description="The Photo slider section of the homepage. Turning this off hides it without deleting any photos."
       id="carousel-enabled"
       onCheckedChange={toggle}
       pending={isPending}

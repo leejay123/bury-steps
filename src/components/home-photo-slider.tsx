@@ -3,7 +3,7 @@ import type { SlideView } from "@/lib/slides";
 
 /** The homepage photos (Admin → Homepage photos) as Velora's crossfading
  * image slider, edge to edge — the homepage's "Photo slider" section (placed
- * with Settings → Homepage layout → Section order). */
+ * from Settings → Homepage layout). */
 export function WalkPhotoSlider({ slides }: { slides: SlideView[] }) {
   return (
     <ImageSlider

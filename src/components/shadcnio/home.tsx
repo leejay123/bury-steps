@@ -31,7 +31,7 @@ import type { TestimonialView } from "@/lib/testimonials";
 import type { EssentialItem } from "@/lib/walk-essentials";
 import { essentialIcon } from "@/lib/walk-essentials";
 import { CARD_GRID, GALLERY_GRID, PHONE_LIST } from "./grids";
-import { BUTTON_OUTLINE, BUTTON_PRIMARY, GRID, GRID_PHONE_LIST, MiniNote, MiniWalk, Section, SectionHead, Tile } from "./parts";
+import { BUTTON_OUTLINE, BUTTON_PRIMARY, GRID, GRID_PHONE_LIST, WALKS_GRID, MiniNote, MiniWalk, Section, SectionHead, Tile } from "./parts";
 import type { ShadcnHomeData } from "./home-data";
 import { ShadcnFaq } from "./faq";
 import { ShadcnReviews } from "./reviews";
@@ -207,10 +207,9 @@ function WalksSection({ data }: { data: ShadcnHomeData }) {
         rest="each one led by a volunteer walk leader, with the meeting point, distance and grade. Members see every detail and clock in on the day."
         title="Walks coming up, every week"
       />
-      <ul aria-label="Walks coming up" className={GRID_PHONE_LIST}>
-        {data.upcoming.map((walk, i) => (
+      <ul aria-label="Walks coming up" className={WALKS_GRID}>
+        {data.upcoming.slice(0, 4).map((walk, i, shownWalks) => (
           <Tile
-            className={i >= 4 ? "max-sm:hidden" : undefined}
             href={walk.href}
             key={walk.id}
             sub={walk.detail}
@@ -218,7 +217,7 @@ function WalksSection({ data }: { data: ShadcnHomeData }) {
             visual={{
               kind: "fan",
               cards: [2, 1, 0].map((k) => {
-                const shown = data.upcoming[(i + k) % data.upcoming.length]!;
+                const shown = shownWalks[(i + k) % shownWalks.length]!;
                 return <MiniWalk detail={shown.detail.split(" · ").slice(1).join(" · ")} key={k} title={shown.title} when={shown.when} />;
               }),
             }}

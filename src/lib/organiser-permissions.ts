@@ -214,7 +214,7 @@ export const ORGANISER_PERMISSION_OPTIONS: {
   {
     name: "permDisplay",
     label: "Site display & branding",
-    hint: "Site name, logo, colours, homepage copy and section order, cookie notice, and retention settings.",
+    hint: "Site name, logo, colours, homepage copy, cookie notice, and retention settings.",
     group: "Settings & homepage",
   },
   {

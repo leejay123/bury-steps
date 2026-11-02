@@ -85,8 +85,8 @@ export const SETTINGS_PAGE_GROUPS: SettingsPageGroup[] = [
       {
         href: "/admin/settings/homepage-layout",
         title: "Homepage layout",
-        description: "Choose the order of the homepage sections, and show or hide the photos and latest notices.",
-        keywords: "order sections carousel reorder hero style parallax marquee photo slider words background patterns animate titles latest notices",
+        description: "Show or hide homepage sections, and optional background patterns behind them.",
+        keywords: "sections carousel photo slider background patterns animate titles latest notices",
         permission: "permDisplay",
       },
       {
