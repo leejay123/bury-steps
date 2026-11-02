@@ -33,6 +33,14 @@ import {
 } from "./presets";
 import { isPuckData } from "./render";
 
+/** Older designs have no page-card setting. They join, and the switch shows that. */
+function withJoinDefault(data: Data): Data {
+  const root = data.root ?? { props: {} };
+  const props = { ...(root.props ?? {}) } as { join?: string };
+  if (props.join === "join" || props.join === "inset") return data;
+  return { ...data, root: { ...root, props: { ...props, join: "join" } } };
+}
+
 const AUDIENCES: { id: WalkDesignAudience; label: string }[] = [
   { id: "organiser", label: "Organisers and owners" },
   { id: "member", label: "Members" },
@@ -141,9 +149,9 @@ export function WalkDesignEditor({
   const [saved, setSaved] = useState<WalkDesigns>(designs);
   const [start, setStart] = useState<{ key: number; data: Data }>(() => ({
     key: 0,
-    data: isPuckData(designs.organiser)
-      ? designs.organiser
-      : DEFAULT_WALK_DESIGN(),
+    data: withJoinDefault(
+      isPuckData(designs.organiser) ? designs.organiser : DEFAULT_WALK_DESIGN(),
+    ),
   }));
   // What's in the editor right now (published or not), for Copy to.
   const current = useRef<Data | null>(null);
@@ -158,7 +166,7 @@ export function WalkDesignEditor({
   function open(next: WalkDesignAudience) {
     setAudience(next);
     const existing = saved[next];
-    const data = isPuckData(existing) ? existing : defaultDesignFor(next);
+    const data = withJoinDefault(isPuckData(existing) ? existing : defaultDesignFor(next));
     current.current = data;
     setStart((was) => ({ key: was.key + 1, data }));
   }
@@ -181,7 +189,7 @@ export function WalkDesignEditor({
       (item) => item.id === id,
     );
     if (!preset) return;
-    const data = preset.data();
+    const data = withJoinDefault(preset.data());
     current.current = data;
     setStart((was) => ({ key: was.key + 1, data }));
     toast.info(`Started from "${preset.label}". Publish to save it.`);

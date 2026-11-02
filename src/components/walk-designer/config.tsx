@@ -5,7 +5,7 @@ import {
   type ComponentConfig,
   type Config,
 } from "@puckeditor/core";
-import { useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   PreviewAudience,
   WalkPartsProvider,
@@ -1885,11 +1885,19 @@ function FoldingView({
 /** The page; in the designer's preview it's marked with the audience being designed for (globals.css). */
 type MessagesAt = "top" | "strip" | "block" | "band";
 
+/** Missing means join: designs saved before this setting have no value. */
+function joinsCard(join?: string) {
+  return join !== "inset";
+}
+
+const JoinCard = createContext(true);
+
 function PageRoot({
   children,
   editing = false,
   messagesLook = "as-is",
   messagesAt = "block",
+  join,
 }: {
   children: ReactNode;
   editing?: boolean;
@@ -1902,35 +1910,49 @@ function PageRoot({
    * block is placed.
    */
   messagesAt?: MessagesAt;
+  /**
+   * "join" fills the page card edge to edge (one line between blocks).
+   * "inset" keeps each block its own box. Missing joins.
+   */
+  join?: string;
 }) {
   const audience = useContext(PreviewAudience);
   const p = useWalkParts();
+  const joinCard = joinsCard(join);
   const atTop = messagesAt === "top" || messagesAt === "strip";
   const inBand = messagesAt === "band";
   const messages =
     p && atTop ? (
-      <MessagesOrSample
-        className={MESSAGE_LOOK[messagesLook]}
-        editing={editing}
-        p={p}
-      />
+      <div data-edge-join-band={joinCard ? "" : undefined}>
+        <MessagesOrSample
+          className={MESSAGE_LOOK[messagesLook]}
+          editing={editing}
+          p={p}
+        />
+      </div>
     ) : (
       // Keeps the blocks' box the last child (it gets the 24px gaps).
       <div hidden />
     );
   return (
+    <JoinCard.Provider value={joinCard}>
     <div
       className={cn(
-        "flex flex-col gap-6",
+        "flex flex-col",
+        joinCard ? "gap-0" : "gap-6",
         // Puck wraps the page's blocks in one more box (its last child here,
         // after the messages); the 24px between blocks goes on that, or
         // blocks sit touching and "Closer" pulls one over another.
-        "[&>:last-child]:flex [&>:last-child]:flex-col [&>:last-child]:gap-6",
+        joinCard
+          ? "[&>:last-child]:flex [&>:last-child]:flex-col [&>:last-child]:gap-0"
+          : "[&>:last-child]:flex [&>:last-child]:flex-col [&>:last-child]:gap-6",
         // The real page puts its own space around the design (16px on a
         // phone, 24px on a computer); the designer's preview has no page
-        // around it, so it adds the same space to look the same.
-        editing && "px-4 py-6 md:px-6",
+        // around it, so it adds the same space to look the same. A joined
+        // page fills that space, so the preview does too.
+        editing && !joinCard && "px-4 py-6 md:px-6",
       )}
+      data-edge-join={joinCard ? "" : undefined}
       data-preview-audience={audience ?? undefined}
     >
       {/* Phones' way to the tabs (the Tabs block's Jump to tabs on phones). */}
@@ -1952,6 +1974,7 @@ function PageRoot({
         children
       )}
     </div>
+    </JoinCard.Provider>
   );
 }
 
@@ -1983,7 +2006,10 @@ function BlockFrame({
     ...BLOCK_LAYOUT,
     ...layout,
   };
-  const framed = frame !== "none";
+  const joinCard = useContext(JoinCard);
+  // Joined pages are already the one card. A block's own box would sit
+  // inside it. The page draws one line between blocks instead.
+  const framed = frame !== "none" && !joinCard;
   // Only at the chosen stages of the walk. Outside them: nothing, and a
   // marker so a tab left with nothing in it goes too (not an empty box).
   const atStage = useAtStage(layout?.stages);
@@ -4608,21 +4634,32 @@ export const walkDesignConfig: Config = {
         ],
       },
       messagesLook: { ...messageLookField, label: "Messages look" },
+      join: {
+        type: "radio" as const,
+        label: "Inside the page card",
+        options: [
+          { value: "join", label: "Join the card, edge to edge" },
+          { value: "inset", label: "Separate boxes" },
+        ],
+      },
     },
-    defaultProps: { messagesAt: "block", messagesLook: "as-is" },
+    defaultProps: { messagesAt: "block", messagesLook: "as-is", join: "join" },
     render: ({
       children,
       puck,
       messagesLook,
       messagesAt,
+      join,
     }: {
       children: React.ReactNode;
       puck?: { isEditing?: boolean };
       messagesLook?: MessageLook;
       messagesAt?: MessagesAt;
+      join?: string;
     }) => (
       <PageRoot
         editing={Boolean(puck?.isEditing)}
+        join={join}
         messagesAt={messagesAt}
         messagesLook={messagesLook}
       >

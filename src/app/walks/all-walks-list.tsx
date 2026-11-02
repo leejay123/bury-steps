@@ -175,7 +175,7 @@ function AllWalksListInner({ rows }: { rows: AllWalksRow[] }) {
         </Empty>
       ) : (
         <>
-          <div className="flex flex-col divide-y overflow-hidden rounded-xl border">
+          <div className="flex flex-col divide-y overflow-hidden rounded-xl border" data-edge-list="">
             {paging.paged.map((row) => {
               const startsAt = new Date(row.startsAt);
               return (

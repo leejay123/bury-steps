@@ -97,7 +97,7 @@ async function NoticeContent({ params }: { params: Promise<{ slug: string }> }) 
   return (
     // No padding of its own: <main> already gives every page its frame, and
     // this used to sit further in and lower than every other page.
-    <article className="flex w-full flex-col gap-6">
+    <article className="flex w-full flex-col gap-6" data-edge-sections="">
       <MarkNoticeReadOnView noticeId={notice.id} />
       <Link className="text-sm text-muted-foreground hover:text-foreground" href="/notices">
         ← All notices

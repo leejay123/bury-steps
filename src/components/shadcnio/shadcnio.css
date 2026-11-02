@@ -882,7 +882,7 @@ html:is([data-sb-role="owner"], [data-sb-role="organiser"]) [data-sb-only="membe
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-foot] { margin-inline: -1.5rem; padding: 0.75rem 0.75rem 0; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-slot="empty"] { border: 0 !important; background: transparent !important; border-radius: 0 !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-bar]:last-child) { padding-bottom: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-notice-cats] { border-top: 0 !important; padding-inline: 0.75rem !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-notice-cats] { margin-inline: -1.5rem !important; width: auto !important; max-width: none; border-top: 0 !important; padding-inline: 1.5rem !important; align-self: stretch; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-notice-cats] + [data-edge-wrap] > [data-edge-list]:first-child { border-top: 0 !important; }
 /* A page of separate boxes (Progress): each becomes a full-width band split by lines. */
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > :not([data-shadcn-top], .contents), html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > .contents:not([data-shadcn-top]) > * { margin: 0 -1.5rem !important; padding: 1.5rem !important; border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; }
@@ -936,6 +936,10 @@ html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) 
      second px-4 / py-6 shell inside the layout. Leaving that on keeps Walks
      a step in from the edges, which is why it never matched Progress. */
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] > * > .px-4 { padding: 0 !important; }
+  /* Notices (and any page whose shell is nested past that) still pads
+     px-4 py-6 under a section, so the bands stop short of the card. The
+     hero and the designer's own preview keep their padding. */
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] div.px-4.py-6:not([data-preview-audience], [data-shadcn-top]) { padding: 0 !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is([data-settings-head], [data-settings-body]) { padding: 0 !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-shadcn-top] { overflow: hidden !important; contain: paint; flex: 0 0 auto !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-shadcn-top] > canvas { position: absolute !important; inset: 0 !important; z-index: 0 !important; width: 100% !important; height: 100% !important; pointer-events: none; }
@@ -961,3 +965,22 @@ html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) 
 @media (max-width: 47.98rem) {
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stats] > *:nth-child(2n) { border-inline-end: 0 !important; }
 }
+
+/* A designed walk joins the page card (Page settings → Inside the page card).
+   Each block is one band: full width, one line under it. The designer's
+   preview is not inside that card, so it does not pull outward. */
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join],
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child { gap: 0 !important; row-gap: 0 !important; }
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]),
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > [data-edge-join-band] {
+  width: auto !important; max-width: none; align-self: stretch;
+  padding: 1.5rem !important; border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; box-shadow: none !important;
+}
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join]:not([data-preview-audience]) > :last-child > :not([hidden]),
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join]:not([data-preview-audience]) > [data-edge-join-band] { margin-inline: -1.5rem !important; }
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]):last-child { border-bottom: 0 !important; }
+/* A block that is itself a card fills the band. Cards in a grid stay put. */
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]) > * > :is(.rounded-xl.border, .rounded-2xl.border, [data-slot="card"]) {
+  margin-inline: -1.5rem; width: auto; max-width: none; border-radius: 0 !important; border-inline: 0 !important; box-shadow: none !important;
+}
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]) > * > :is(.rounded-xl.border, .rounded-2xl.border, [data-slot="card"]):last-child { border-bottom: 0 !important; }
