@@ -112,7 +112,7 @@ export function Section({
   );
 }
 
-/** Title, intro (its first words in full colour) and the pill button on the right. */
+/** Title, intro (its first words in full colour) and optional pill — centred like the hero. */
 export function SectionHead({
   id,
   title,
@@ -127,8 +127,8 @@ export function SectionHead({
   action?: { href: string; label: string };
 }) {
   return (
-    <div className="px-5 md:px-12 flex flex-col gap-5 pt-12 pb-8 md:flex-row md:items-end md:justify-between md:gap-8 md:pt-16 md:pb-10">
-      <div className="flex flex-col max-w-2xl gap-3 lg:gap-4">
+    <div className="px-5 md:px-12 flex flex-col items-center gap-5 pt-12 pb-8 text-center md:pt-16 md:pb-10">
+      <div className="mx-auto flex max-w-2xl min-w-0 flex-col items-center gap-3 lg:gap-4">
         <h2 className="text-balance font-semibold text-3xl tracking-tighter md:text-4xl" id={id}>
           {title}
         </h2>
@@ -137,7 +137,7 @@ export function SectionHead({
         </p>
       </div>
       {action ? (
-        <div className="flex shrink-0 gap-2">
+        <div className="flex shrink-0 justify-center gap-2">
           <PillLink arrow href={action.href}>
             {action.label}
           </PillLink>

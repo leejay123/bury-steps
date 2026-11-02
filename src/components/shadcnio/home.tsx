@@ -182,8 +182,8 @@ function AboutSection({ about }: { about: ShadcnHomeProps["about"] }) {
   const [lead, ...rest] = about.teaser.split(/(?<=[.!?])\s+/);
   return (
     <Section id="home-about-heading">
-      <div className="px-5 md:px-12 flex flex-col gap-5 pt-12 pb-12 md:flex-row md:items-end md:justify-between md:gap-8 md:pt-16 md:pb-16">
-        <div className="flex flex-col max-w-2xl gap-3 lg:gap-4">
+      <div className="px-5 md:px-12 flex flex-col items-center gap-5 pt-12 pb-12 text-center md:pt-16 md:pb-16">
+        <div className="mx-auto flex max-w-2xl min-w-0 flex-col items-center gap-3 lg:gap-4">
           <h2 className="text-balance font-semibold text-3xl tracking-tighter md:text-4xl" id="home-about-heading">
             {about.title}
           </h2>
@@ -191,7 +191,7 @@ function AboutSection({ about }: { about: ShadcnHomeProps["about"] }) {
             <span className="font-medium text-foreground">{lead}</span> {rest.join(" ")}
           </p>
         </div>
-        <div className="flex shrink-0 gap-2">{about.readMore}</div>
+        <div className="flex shrink-0 justify-center gap-2">{about.readMore}</div>
       </div>
     </Section>
   );
