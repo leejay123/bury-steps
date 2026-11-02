@@ -18,6 +18,8 @@ export const PUBLIC_ROUTE_PATTERNS = [
   "/terms-of-service",
   "/contact",
   "/apps",
+  // The About page (homepage Read more), public like Terms and Privacy.
+  "/about",
   // Saved page the service worker shows when a walk page can't be reached.
   "/offline",
   // The service worker itself (phone alerts and offline walk pages).
@@ -92,6 +94,7 @@ export const APP_TOP_LEVEL_SEGMENTS = [
   "admin",
   "api",
   "apple-icon.png",
+  "about",
   "apps",
   "contact",
   "dashboard",
