@@ -128,7 +128,7 @@ export function SectionHead({
   action?: { href: string; label: string };
 }) {
   return (
-    <div className="px-5 md:px-12 flex flex-col items-center gap-5 pt-12 pb-8 text-center md:pt-16 md:pb-10">
+    <div className="px-5 md:px-12 flex flex-col items-center gap-5 py-12 text-center md:py-16">
       <div className="mx-auto flex max-w-2xl min-w-0 flex-col items-center gap-3 lg:gap-4">
         <SectionTitle
           className="text-balance font-semibold text-3xl tracking-tighter md:text-4xl"

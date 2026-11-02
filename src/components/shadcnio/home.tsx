@@ -183,7 +183,7 @@ function AboutSection({ about }: { about: ShadcnHomeProps["about"] }) {
   const [lead, ...rest] = about.teaser.split(/(?<=[.!?])\s+/);
   return (
     <Section id="home-about-heading">
-      <div className="px-5 md:px-12 flex flex-col items-center gap-5 pt-12 pb-12 text-center md:pt-16 md:pb-16">
+      <div className="px-5 md:px-12 flex flex-col items-center gap-5 py-12 text-center md:py-16">
         <div className="mx-auto flex max-w-2xl min-w-0 flex-col items-center gap-3 lg:gap-4">
           <SectionTitle
             className="text-balance font-semibold text-3xl tracking-tighter md:text-4xl"
