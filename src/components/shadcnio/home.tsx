@@ -30,8 +30,8 @@ import type { FaqCategoryView, FaqView } from "@/lib/faqs";
 import type { TestimonialView } from "@/lib/testimonials";
 import type { EssentialItem } from "@/lib/walk-essentials";
 import { essentialIcon } from "@/lib/walk-essentials";
-import { CARD_GRID, GALLERY_GRID, PHONE_LIST } from "./grids";
-import { BUTTON_OUTLINE, BUTTON_PRIMARY, GRID, GRID_PHONE_LIST, WALKS_GRID, MiniNote, MiniWalk, Section, SectionHead, Tile } from "./parts";
+import { CARD_GRID_3, GALLERY_GRID_3, PHONE_LIST } from "./grids";
+import { BUTTON_OUTLINE, BUTTON_PRIMARY, WALKS_GRID, MiniNote, MiniWalk, Section, SectionHead, Tile } from "./parts";
 import type { ShadcnHomeData } from "./home-data";
 import { ShadcnFaq } from "./faq";
 import { ShadcnReviews } from "./reviews";
@@ -239,9 +239,9 @@ function ExpectSection({ expect }: { expect: string[] }) {
         rest="for every age and every pace. No pressure, no judgement, just good company on the paths."
         title="What you can expect"
       />
-      <ul aria-label="What you can expect" className={`${GALLERY_GRID} ${PHONE_LIST}`}>
-        {expect.slice(0, 8).map((item, i) => (
-          <li className={i >= 4 ? "max-sm:hidden" : ""} key={item}>
+      <MoreRows className={`${GALLERY_GRID_3} ${PHONE_LIST}`} columns={3} first={3} label="What you can expect">
+        {expect.slice(0, 6).map((item, i) => (
+          <li key={item}>
             <a href="#faq">
               <strong>{item}</strong>
               <small>What to expect</small>
@@ -252,7 +252,7 @@ function ExpectSection({ expect }: { expect: string[] }) {
             </a>
           </li>
         ))}
-      </ul>
+      </MoreRows>
     </Section>
   );
 }
@@ -278,8 +278,8 @@ function HowItWorksSection() {
         rest="that's all there is to it. The leader knows who's out walking, and you can look back on every walk you've done."
         title="How it works"
       />
-      <MoreRows className={GRID_PHONE_LIST} label="How it works">
-        {STEPS.map((step) => (
+      <MoreRows className={WALKS_GRID} columns={3} first={3} label="How it works">
+        {STEPS.slice(0, 6).map((step) => (
           <Tile
             key={step.title}
             phoneRow
@@ -304,11 +304,11 @@ function GoalsSection({ goals }: { goals: string[] }) {
         rest="at whatever pace suits you. Members walk to get moving again, to feel better and to make friends."
         title="More than just a walking group"
       />
-      <ul aria-label="Group goals" className={GRID_PHONE_LIST}>
-        {goals.slice(0, 4).map((goal, i) => (
+      <MoreRows className={WALKS_GRID} columns={3} first={3} label="Group goals">
+        {goals.slice(0, 6).map((goal, i) => (
           <Tile key={goal} phoneRow sub="A reason to walk" title={goal} visual={{ kind: "circle", icon: GOAL_ICONS[i % 4] }} />
         ))}
-      </ul>
+      </MoreRows>
     </Section>
   );
 }
@@ -329,8 +329,8 @@ function RulesSection({ rules }: { rules: AboutRule[] }) {
         rest="that keep every walk safe, kind and enjoyable for everyone in the group."
         title="Group rules"
       />
-      <MoreRows className={GRID_PHONE_LIST} label="Group rules">
-        {rules.map((rule, i) => (
+      <MoreRows className={WALKS_GRID} columns={3} first={3} label="Group rules">
+        {rules.slice(0, 6).map((rule, i) => (
           <Tile
             key={rule.title}
             phoneRow
@@ -353,8 +353,8 @@ function EssentialsSection({ essentials }: { essentials: EssentialItem[] }) {
         rest="each walk shows what's at the meeting point, so you know before you set off."
         title="Know before you go"
       />
-      <MoreRows className={`${CARD_GRID} ${PHONE_LIST}`} label="Walk essentials">
-        {essentials.map((item) => (
+      <MoreRows className={`${CARD_GRID_3} ${PHONE_LIST}`} columns={3} first={3} label="Walk essentials">
+        {essentials.slice(0, 6).map((item) => (
           <li key={item.key}>
             <Link href="/walks">
               <strong>{item.label}</strong>

@@ -2,27 +2,30 @@
 
 import { useState } from "react";
 import type { TestimonialView } from "@/lib/testimonials";
-import { PHONE_REVIEW_LIST, REVIEW_GRID } from "./grids";
+import { PHONE_REVIEW_LIST, REVIEW_GRID_3 } from "./grids";
 import { BUTTON_SMALL_OUTLINE } from "./parts";
 
 import { FILLER } from "./more-rows";
-const FIRST = 4;
+
+const FIRST = 3;
+const MAX = 6;
+const COLUMNS = 3;
 
 /**
- * Members' reviews in shadcn.io's grid: one full row to start, and Read more
- * opens the rest in place, as the original homepage's reviews do. Rows are
- * always full; a short last row is finished with striped filler cells.
+ * Members' reviews in shadcn.io's grid: one full row of three to start, and
+ * Read more opens up to six in place. Rows are always full; a short last row
+ * is finished with striped filler cells.
  */
 export function ShadcnReviews({ testimonials }: { testimonials: TestimonialView[] }) {
   const [open, setOpen] = useState(false);
-  const more = testimonials.length > FIRST;
-  const shown = open || !more ? testimonials : testimonials.slice(0, FIRST);
-  // Two across on tablets, four on computers: fill whatever is left of the last row.
-  const fillLarge = (4 - (shown.length % 4)) % 4;
+  const list = testimonials.slice(0, MAX);
+  const more = list.length > FIRST;
+  const shown = open || !more ? list : list.slice(0, FIRST);
+  const fillLarge = (COLUMNS - (shown.length % COLUMNS)) % COLUMNS;
   const fillTablet = shown.length % 2;
   return (
     <>
-      <ul aria-label="What members say" className={`${REVIEW_GRID} ${PHONE_REVIEW_LIST}`}>
+      <ul aria-label="What members say" className={`${REVIEW_GRID_3} ${PHONE_REVIEW_LIST}`}>
         {shown.map((review) => (
           <li key={review.id}>
             <a className="group" href="#faq">

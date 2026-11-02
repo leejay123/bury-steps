@@ -19,3 +19,12 @@ export const PHONE_LIST =
 /** On phones, the members' quotes as a list: as tall as the words (no fixed height, no round photo). */
 export const PHONE_REVIEW_LIST =
   "max-sm:[&>li>a]:h-auto max-sm:[&>li>a]:p-4 max-sm:[&>li>a>i]:hidden max-sm:[&>li>a>span]:hidden max-sm:[&_blockquote>span]:hidden";
+
+/** Three columns on large screens — same as homepage walks, so titles fit. */
+function threeCols(classes: string) {
+  return classes.replaceAll("xl:grid-cols-4", "xl:grid-cols-3").replaceAll("lg:grid-cols-4", "lg:grid-cols-3");
+}
+
+export const GALLERY_GRID_3 = threeCols(GALLERY_GRID);
+export const CARD_GRID_3 = threeCols(CARD_GRID);
+export const REVIEW_GRID_3 = threeCols(REVIEW_GRID);
