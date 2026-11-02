@@ -988,8 +988,7 @@ html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) 
    the map and the folding sections (Walk Details, Attended…) lose their own border and
    corners and fill the page card's width, split by single lines — no card in the card.
    The card's own top and bottom space goes too, as each band keeps its own. "Separate
-   boxes" (no data-edge-join) keeps the framed look. */
-@media (min-width: 48rem) {
+   boxes" (no data-edge-join) keeps the framed look. Phones too: the page card is there at every size. */
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:has([data-edge-join]) { padding-block: 0 !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]):has(> * > :is(section.overflow-clip, [data-slot="accordion"])) { padding: 0 !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]) section.overflow-clip section.rounded-xl.border { border: 0 !important; border-radius: 0 !important; }
@@ -998,4 +997,3 @@ html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) 
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-slot="accordion"] { row-gap: 0 !important; gap: 0 !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-slot="accordion-item"] { border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-slot="accordion-item"]:last-child { border-bottom: 0 !important; }
-}
